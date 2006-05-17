@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.23 2005/10/13 13:42:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.24 2006/02/03 21:55:39 pcanal Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -2228,24 +2228,24 @@ Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x)
    Double_t r   = 0;
 
    switch(p) {
-  case 1:
-     r = 1;
-     break;
-  case 2:
-     r =  x;
-     break;
-  default:
-     p2 = x;
-     for (i = 3; i <= p; i++) {
-        p3 = p2 * x;
-        if (fPolyType == kLegendre)
-           p3 = ((2 * i - 3) * p2 * x - (i - 2) * p1) / (i - 1);
-        else if (fPolyType == kChebyshev)
-           p3 = 2 * x * p2 - p1;
-        p1 = p2;
-        p2 = p3;
-     }
-     r = p3;
+      case 1:
+         r = 1;
+         break;
+      case 2:
+         r =  x;
+         break;
+      default:
+         p2 = x;
+         for (i = 3; i <= p; i++) {
+            p3 = p2 * x;
+            if (fPolyType == kLegendre)
+            p3 = ((2 * i - 3) * p2 * x - (i - 2) * p1) / (i - 1);
+            else if (fPolyType == kChebyshev)
+            p3 = 2 * x * p2 - p1;
+            p1 = p2;
+            p2 = p3;
+         }
+         r = p3;
    }
 
    return r;
@@ -3482,17 +3482,17 @@ void TMultiDimFit::Print(Option_t *option) const
       }
       cout << endl << " Loop over candidates stopped because " << flush;
       switch(fParameterisationCode){
-    case PARAM_MAXSTUDY:
-       cout << "max allowed studies reached" << endl; break;
-    case PARAM_SEVERAL:
-       cout << "all candidates considered several times" << endl; break;
-    case PARAM_RELERR:
-       cout << "wanted relative error obtained" << endl; break;
-    case PARAM_MAXTERMS:
-       cout << "max number of terms reached" << endl; break;
-    default:
-       cout << "some unknown reason" << endl;
-       break;
+         case PARAM_MAXSTUDY:
+            cout << "max allowed studies reached" << endl; break;
+         case PARAM_SEVERAL:
+            cout << "all candidates considered several times" << endl; break;
+         case PARAM_RELERR:
+            cout << "wanted relative error obtained" << endl; break;
+         case PARAM_MAXTERMS:
+            cout << "max number of terms reached" << endl; break;
+         default:
+            cout << "some unknown reason" << endl;
+            break;
       }
       cout << endl;
    }
@@ -3564,14 +3564,14 @@ void TMultiDimFit::Print(Option_t *option) const
          for (Int_t j = 0; j < fNVariables; j++) {
             Int_t p = fPowers[fPowerIndex[i] * fNVariables + j];
             switch (p) { 
-        case 1: break;
-        case 2: cout << " * y_" << j; break;
-        default:
-           switch(fPolyType) {
-        case kLegendre:  cout << " * L_" << p-1 << "(y_" << j << ")"; break;
-        case kChebyshev: cout << " * C_" << p-1 << "(y_" << j << ")"; break;
-        default:         cout << " * y_" << j << "^" << p-1; break;
-           }
+               case 1: break;
+               case 2: cout << " * y_" << j; break;
+               default:
+                  switch(fPolyType) {
+                     case kLegendre:  cout << " * L_" << p-1 << "(y_" << j << ")"; break;
+                     case kChebyshev: cout << " * C_" << p-1 << "(y_" << j << ")"; break;
+                     default:         cout << " * y_" << j << "^" << p-1; break;
+                  }
             }
 
          }

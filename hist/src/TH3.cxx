@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.77 2006/04/18 06:58:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.78 2006/04/19 08:22:23 rdm Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1597,187 +1597,187 @@ TH1 *TH3::Project3D(Option_t *option) const
    const TArrayD *ybins;
    const TArrayD *zbins;
    switch (pcase) {
-     case 1:
-        // "x"
-        if (h1obj && h1obj->InheritsFrom("TH1D")) {
-           h1 = (TH1D*)h1obj;
-           h1->Reset();
-           break;
-        }
-        bins = fXaxis.GetXbins();
-        if (bins->fN == 0) {
-           h1 = new TH1D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
-        } else {
-           h1 = new TH1D(name,title,nx,&bins->fArray[ixmin-1]);
-        }
-        break;
+      case 1:
+         // "x"
+         if (h1obj && h1obj->InheritsFrom("TH1D")) {
+            h1 = (TH1D*)h1obj;
+            h1->Reset();
+            break;
+         }
+         bins = fXaxis.GetXbins();
+         if (bins->fN == 0) {
+            h1 = new TH1D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
+         } else {
+            h1 = new TH1D(name,title,nx,&bins->fArray[ixmin-1]);
+         }
+         break;
 
-     case 2:
-        // "y"
-        if (h1obj && h1obj->InheritsFrom("TH1D")) {
-           h1 = (TH1D*)h1obj;
-           h1->Reset();
-           break;
-        }
-        bins = fYaxis.GetXbins();
-        if (bins->fN == 0) {
-           h1 = new TH1D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
-        } else {
-           h1 = new TH1D(name,title,ny,&bins->fArray[iymin-1]);
-        }
-        break;
+      case 2:
+         // "y"
+         if (h1obj && h1obj->InheritsFrom("TH1D")) {
+            h1 = (TH1D*)h1obj;
+            h1->Reset();
+            break;
+         }
+         bins = fYaxis.GetXbins();
+         if (bins->fN == 0) {
+            h1 = new TH1D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
+         } else {
+            h1 = new TH1D(name,title,ny,&bins->fArray[iymin-1]);
+         }
+         break;
 
-     case 3:
-        // "z"
-        if (h1obj && h1obj->InheritsFrom("TH1D")) {
-           h1 = (TH1D*)h1obj;
-           h1->Reset();
-           break;
-        }
-        bins = fZaxis.GetXbins();
-        if (bins->fN == 0) {
-           h1 = new TH1D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
-        } else {
-           h1 = new TH1D(name,title,nz,&bins->fArray[izmin-1]);
-        }
-        break;
-     case 4:
-        // "xy"
-        if (h1obj && h1obj->InheritsFrom("TH2D")) {
-           h2 = (TH2D*)h1obj;
-           h2->Reset();
-           break;
-        }
-        xbins = fXaxis.GetXbins();
-        ybins = fYaxis.GetXbins();
-        if (xbins->fN == 0 && ybins->fN == 0) {
-           h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
-              ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
-        } else if (ybins->fN == 0) {
-           h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
-              ,nx,&xbins->fArray[ixmin-1]);
-        } else if (xbins->fN == 0) {
-           h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1]
-           ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
-        } else {
-           h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
-        }
-        break;
+      case 3:
+         // "z"
+         if (h1obj && h1obj->InheritsFrom("TH1D")) {
+            h1 = (TH1D*)h1obj;
+            h1->Reset();
+            break;
+         }
+         bins = fZaxis.GetXbins();
+         if (bins->fN == 0) {
+            h1 = new TH1D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
+         } else {
+            h1 = new TH1D(name,title,nz,&bins->fArray[izmin-1]);
+         }
+         break;
+      case 4:
+         // "xy"
+         if (h1obj && h1obj->InheritsFrom("TH2D")) {
+            h2 = (TH2D*)h1obj;
+            h2->Reset();
+            break;
+         }
+         xbins = fXaxis.GetXbins();
+         ybins = fYaxis.GetXbins();
+         if (xbins->fN == 0 && ybins->fN == 0) {
+            h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
+               ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
+         } else if (ybins->fN == 0) {
+            h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
+               ,nx,&xbins->fArray[ixmin-1]);
+         } else if (xbins->fN == 0) {
+            h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1]
+            ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
+         } else {
+            h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
+         }
+         break;
 
-     case 5:
-        // "yx"
-        if (h1obj && h1obj->InheritsFrom("TH2D")) {
-           h2 = (TH2D*)h1obj;
-           h2->Reset();
-           break;
-        }
-        xbins = fXaxis.GetXbins();
-        ybins = fYaxis.GetXbins();
-        if (xbins->fN == 0 && ybins->fN == 0) {
-           h2 = new TH2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
-              ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
-        } else if (xbins->fN == 0) {
-           h2 = new TH2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
-              ,ny,&ybins->fArray[iymin-1]);
-        } else if (ybins->fN == 0) {
-           h2 = new TH2D(name,title,nx,&xbins->fArray[ixmin-1]
-           ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
-        } else {
-           h2 = new TH2D(name,title,nx,&xbins->fArray[ixmin-1],ny,&ybins->fArray[iymin-1]);
-        }
-        break;
+      case 5:
+         // "yx"
+         if (h1obj && h1obj->InheritsFrom("TH2D")) {
+            h2 = (TH2D*)h1obj;
+            h2->Reset();
+            break;
+         }
+         xbins = fXaxis.GetXbins();
+         ybins = fYaxis.GetXbins();
+         if (xbins->fN == 0 && ybins->fN == 0) {
+            h2 = new TH2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
+               ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
+         } else if (xbins->fN == 0) {
+            h2 = new TH2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
+               ,ny,&ybins->fArray[iymin-1]);
+         } else if (ybins->fN == 0) {
+            h2 = new TH2D(name,title,nx,&xbins->fArray[ixmin-1]
+            ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
+         } else {
+            h2 = new TH2D(name,title,nx,&xbins->fArray[ixmin-1],ny,&ybins->fArray[iymin-1]);
+         }
+         break;
 
-     case 6:
-        // "xz"
-        if (h1obj && h1obj->InheritsFrom("TH2D")) {
-           h2 = (TH2D*)h1obj;
-           h2->Reset();
-           break;
-        }
-        xbins = fXaxis.GetXbins();
-        zbins = fZaxis.GetXbins();
-        if (xbins->fN == 0 && zbins->fN == 0) {
-           h2 = new TH2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
-              ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
-        } else if (zbins->fN == 0) {
-           h2 = new TH2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
-              ,nx,&xbins->fArray[ixmin-1]);
-        } else if (xbins->fN == 0) {
-           h2 = new TH2D(name,title,nz,&zbins->fArray[izmin-1]
-           ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
-        } else {
-           h2 = new TH2D(name,title,nz,&zbins->fArray[izmin-1],nx,&xbins->fArray[ixmin-1]);
-        }
-        break;
+      case 6:
+         // "xz"
+         if (h1obj && h1obj->InheritsFrom("TH2D")) {
+            h2 = (TH2D*)h1obj;
+            h2->Reset();
+            break;
+         }
+         xbins = fXaxis.GetXbins();
+         zbins = fZaxis.GetXbins();
+         if (xbins->fN == 0 && zbins->fN == 0) {
+            h2 = new TH2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
+               ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
+         } else if (zbins->fN == 0) {
+            h2 = new TH2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
+               ,nx,&xbins->fArray[ixmin-1]);
+         } else if (xbins->fN == 0) {
+            h2 = new TH2D(name,title,nz,&zbins->fArray[izmin-1]
+            ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
+         } else {
+            h2 = new TH2D(name,title,nz,&zbins->fArray[izmin-1],nx,&xbins->fArray[ixmin-1]);
+         }
+         break;
 
-     case 7:
-        // "zx"
-        if (h1obj && h1obj->InheritsFrom("TH2D")) {
-           h2 = (TH2D*)h1obj;
-           h2->Reset();
-           break;
-        }
-        xbins = fXaxis.GetXbins();
-        zbins = fZaxis.GetXbins();
-        if (xbins->fN == 0 && zbins->fN == 0) {
-           h2 = new TH2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
-              ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
-        } else if (xbins->fN == 0) {
-           h2 = new TH2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
-              ,nz,&zbins->fArray[izmin-1]);
-        } else if (zbins->fN == 0) {
-           h2 = new TH2D(name,title,nx,&xbins->fArray[ixmin-1]
-           ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
-        } else {
-           h2 = new TH2D(name,title,nx,&xbins->fArray[ixmin-1],nz,&zbins->fArray[izmin-1]);
-        }
-        break;
+      case 7:
+         // "zx"
+         if (h1obj && h1obj->InheritsFrom("TH2D")) {
+            h2 = (TH2D*)h1obj;
+            h2->Reset();
+            break;
+         }
+         xbins = fXaxis.GetXbins();
+         zbins = fZaxis.GetXbins();
+         if (xbins->fN == 0 && zbins->fN == 0) {
+            h2 = new TH2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
+               ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
+         } else if (xbins->fN == 0) {
+            h2 = new TH2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
+               ,nz,&zbins->fArray[izmin-1]);
+         } else if (zbins->fN == 0) {
+            h2 = new TH2D(name,title,nx,&xbins->fArray[ixmin-1]
+            ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
+         } else {
+            h2 = new TH2D(name,title,nx,&xbins->fArray[ixmin-1],nz,&zbins->fArray[izmin-1]);
+         }
+         break;
 
-     case 8:
-        // "yz"
-        if (h1obj && h1obj->InheritsFrom("TH2D")) {
-           h2 = (TH2D*)h1obj;
-           h2->Reset();
-           break;
-        }
-        ybins = fYaxis.GetXbins();
-        zbins = fZaxis.GetXbins();
-        if (ybins->fN == 0 && zbins->fN == 0) {
-           h2 = new TH2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
-              ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
-        } else if (zbins->fN == 0) {
-           h2 = new TH2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
-              ,ny,&ybins->fArray[iymin-1]);
-        } else if (ybins->fN == 0) {
-           h2 = new TH2D(name,title,nz,&zbins->fArray[izmin-1]
-           ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
-        } else {
-           h2 = new TH2D(name,title,nz,&zbins->fArray[izmin-1],ny,&ybins->fArray[iymin-1]);
-        }
-        break;
+      case 8:
+         // "yz"
+         if (h1obj && h1obj->InheritsFrom("TH2D")) {
+            h2 = (TH2D*)h1obj;
+            h2->Reset();
+            break;
+         }
+         ybins = fYaxis.GetXbins();
+         zbins = fZaxis.GetXbins();
+         if (ybins->fN == 0 && zbins->fN == 0) {
+            h2 = new TH2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
+               ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
+         } else if (zbins->fN == 0) {
+            h2 = new TH2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
+               ,ny,&ybins->fArray[iymin-1]);
+         } else if (ybins->fN == 0) {
+            h2 = new TH2D(name,title,nz,&zbins->fArray[izmin-1]
+            ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
+         } else {
+            h2 = new TH2D(name,title,nz,&zbins->fArray[izmin-1],ny,&ybins->fArray[iymin-1]);
+         }
+         break;
 
-     case 9:
-        // "zy"
-        if (h1obj && h1obj->InheritsFrom("TH2D")) {
-           h2 = (TH2D*)h1obj;
-           h2->Reset();
-           break;
-        }
-        ybins = fYaxis.GetXbins();
-        zbins = fZaxis.GetXbins();
-        if (ybins->fN == 0 && zbins->fN == 0) {
-           h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
-              ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
-        } else if (ybins->fN == 0) {
-           h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
-              ,nz,&zbins->fArray[izmin-1]);
-        } else if (zbins->fN == 0) {
-           h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1]
-           ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
-        } else {
-           h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1],nz,&zbins->fArray[izmin-1]);
-        }
-        break;
+      case 9:
+         // "zy"
+         if (h1obj && h1obj->InheritsFrom("TH2D")) {
+            h2 = (TH2D*)h1obj;
+            h2->Reset();
+            break;
+         }
+         ybins = fYaxis.GetXbins();
+         zbins = fZaxis.GetXbins();
+         if (ybins->fN == 0 && zbins->fN == 0) {
+            h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
+               ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
+         } else if (ybins->fN == 0) {
+            h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
+               ,nz,&zbins->fArray[izmin-1]);
+         } else if (zbins->fN == 0) {
+            h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1]
+            ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
+         } else {
+            h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1],nz,&zbins->fArray[izmin-1]);
+         }
+         break;
 
    }
 
@@ -1809,116 +1809,116 @@ TH1 *TH3::Project3D(Option_t *option) const
             Int_t bin = GetBin(ixbin,iybin,izbin);
             cont = GetBinContent(bin);
             switch (pcase) {
-           case 1:
-              // "x"
-              if (iybin < iymin || iybin > iymax) continue;
-              if (izbin < izmin || izbin > izmax) continue;
-              e1       = h1->GetBinError(ix);
-              if (cont) h1->Fill(fXaxis.GetBinCenter(ixbin), cont);
-              if (computeErrors) {
-                 e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
-                 h1->SetBinError(ix,newerror);
-              }
-              break;
+               case 1:
+                  // "x"
+                  if (iybin < iymin || iybin > iymax) continue;
+                  if (izbin < izmin || izbin > izmax) continue;
+                  e1       = h1->GetBinError(ix);
+                  if (cont) h1->Fill(fXaxis.GetBinCenter(ixbin), cont);
+                  if (computeErrors) {
+                     e        = GetBinError(bin);
+                     newerror = TMath::Sqrt(e*e + e1*e1);
+                     h1->SetBinError(ix,newerror);
+                  }
+                  break;
 
-           case 2:
-              // "y"
-              if (ixbin < ixmin || ixbin > ixmax) continue;
-              if (izbin < izmin || izbin > izmax) continue;
-              e1       = h1->GetBinError(iy);
-              if (cont) h1->Fill(fYaxis.GetBinCenter(iybin), cont);
-              if (computeErrors) {
-                 e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
-                 h1->SetBinError(iy,newerror);
-              }
-              break;
+               case 2:
+                  // "y"
+                  if (ixbin < ixmin || ixbin > ixmax) continue;
+                  if (izbin < izmin || izbin > izmax) continue;
+                  e1       = h1->GetBinError(iy);
+                  if (cont) h1->Fill(fYaxis.GetBinCenter(iybin), cont);
+                  if (computeErrors) {
+                     e        = GetBinError(bin);
+                     newerror = TMath::Sqrt(e*e + e1*e1);
+                     h1->SetBinError(iy,newerror);
+                  }
+                  break;
 
-           case 3:
-              // "z"
-              if (ixbin < ixmin || ixbin > ixmax) continue;
-              if (iybin < iymin || iybin > iymax) continue;
-              e1       = h1->GetBinError(iz);
-              if (cont) h1->Fill(fZaxis.GetBinCenter(izbin), cont);
-              if (computeErrors) {
-                 e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
-                 h1->SetBinError(iz,newerror);
-              }
-              break;
+               case 3:
+                  // "z"
+                  if (ixbin < ixmin || ixbin > ixmax) continue;
+                  if (iybin < iymin || iybin > iymax) continue;
+                  e1       = h1->GetBinError(iz);
+                  if (cont) h1->Fill(fZaxis.GetBinCenter(izbin), cont);
+                  if (computeErrors) {
+                     e        = GetBinError(bin);
+                     newerror = TMath::Sqrt(e*e + e1*e1);
+                     h1->SetBinError(iz,newerror);
+                  }
+                  break;
 
-           case 4:
-              // "xy"
-              if (izbin < izmin || izbin > izmax) continue;
-              e1       = h2->GetCellError(iy,ix);
-              if (cont) h2->Fill(fYaxis.GetBinCenter(iybin),fXaxis.GetBinCenter(ixbin), cont);
-              if (computeErrors) {
-                 e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
-                 h2->SetCellError(iy,ix,newerror);
-              }
-              break;
+               case 4:
+                  // "xy"
+                  if (izbin < izmin || izbin > izmax) continue;
+                  e1       = h2->GetCellError(iy,ix);
+                  if (cont) h2->Fill(fYaxis.GetBinCenter(iybin),fXaxis.GetBinCenter(ixbin), cont);
+                  if (computeErrors) {
+                     e        = GetBinError(bin);
+                     newerror = TMath::Sqrt(e*e + e1*e1);
+                     h2->SetCellError(iy,ix,newerror);
+                  }
+                  break;
 
-           case 5:
-              // "yx"
-              if (izbin < izmin || izbin > izmax) continue;
-              e1       = h2->GetCellError(ix,iy);
-              if (cont) h2->Fill(fXaxis.GetBinCenter(ixbin),fYaxis.GetBinCenter(iybin), cont);
-              if (computeErrors) {
-                 e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
-                 h2->SetCellError(ix,iy,newerror);
-              }
-              break;
+               case 5:
+                  // "yx"
+                  if (izbin < izmin || izbin > izmax) continue;
+                  e1       = h2->GetCellError(ix,iy);
+                  if (cont) h2->Fill(fXaxis.GetBinCenter(ixbin),fYaxis.GetBinCenter(iybin), cont);
+                  if (computeErrors) {
+                     e        = GetBinError(bin);
+                     newerror = TMath::Sqrt(e*e + e1*e1);
+                     h2->SetCellError(ix,iy,newerror);
+                  }
+                  break;
 
-           case 6:
-              // "xz"
-              if (iybin < iymin || iybin > iymax) continue;
-              e1       = h2->GetCellError(iz,ix);
-              if (cont) h2->Fill(fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(ixbin), cont);
-              if (computeErrors) {
-                 e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
-                 h2->SetCellError(iz,ix,newerror);
-              }
-              break;
+               case 6:
+                  // "xz"
+                  if (iybin < iymin || iybin > iymax) continue;
+                  e1       = h2->GetCellError(iz,ix);
+                  if (cont) h2->Fill(fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(ixbin), cont);
+                  if (computeErrors) {
+                     e        = GetBinError(bin);
+                     newerror = TMath::Sqrt(e*e + e1*e1);
+                     h2->SetCellError(iz,ix,newerror);
+                  }
+                  break;
 
-           case 7:
-              // "zx"
-              if (iybin < iymin || iybin > iymax) continue;
-              e1       = h2->GetCellError(ix,iz);
-              if (cont) h2->Fill(fXaxis.GetBinCenter(ixbin),fZaxis.GetBinCenter(izbin), cont);
-              if (computeErrors) {
-                 e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
-                 h2->SetCellError(ix,iz,newerror);
-              }
-              break;
+               case 7:
+                  // "zx"
+                  if (iybin < iymin || iybin > iymax) continue;
+                  e1       = h2->GetCellError(ix,iz);
+                  if (cont) h2->Fill(fXaxis.GetBinCenter(ixbin),fZaxis.GetBinCenter(izbin), cont);
+                  if (computeErrors) {
+                     e        = GetBinError(bin);
+                     newerror = TMath::Sqrt(e*e + e1*e1);
+                     h2->SetCellError(ix,iz,newerror);
+                  }
+                  break;
 
-           case 8:
-              // "yz"
-              if (ixbin < ixmin || ixbin > ixmax) continue;
-              e1       = h2->GetCellError(iz,iy);
-              if (cont) h2->Fill(fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(iybin), cont);
-              if (computeErrors) {
-                 e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
-                 h2->SetCellError(iz,iy,newerror);
-              }
-              break;
+               case 8:
+                  // "yz"
+                  if (ixbin < ixmin || ixbin > ixmax) continue;
+                  e1       = h2->GetCellError(iz,iy);
+                  if (cont) h2->Fill(fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(iybin), cont);
+                  if (computeErrors) {
+                     e        = GetBinError(bin);
+                     newerror = TMath::Sqrt(e*e + e1*e1);
+                     h2->SetCellError(iz,iy,newerror);
+                  }
+                  break;
 
-           case 9:
-              // "zy"
-              if (ixbin < ixmin || ixbin > ixmax) continue;
-              e1       = h2->GetCellError(iy,iz);
-              if (cont) h2->Fill(fYaxis.GetBinCenter(iybin),fZaxis.GetBinCenter(izbin), cont);
-              if (computeErrors) {
-                 e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
-                 h2->SetCellError(iy,iz,newerror);
-              }
-              break;
+               case 9:
+                  // "zy"
+                  if (ixbin < ixmin || ixbin > ixmax) continue;
+                  e1       = h2->GetCellError(iy,iz);
+                  if (cont) h2->Fill(fYaxis.GetBinCenter(iybin),fZaxis.GetBinCenter(izbin), cont);
+                  if (computeErrors) {
+                     e        = GetBinError(bin);
+                     newerror = TMath::Sqrt(e*e + e1*e1);
+                     h2->SetCellError(iy,iz,newerror);
+                  }
+                  break;
             }
             if (cont) {
                entries += cont;
@@ -1992,113 +1992,113 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    const TArrayD *ybins;
    const TArrayD *zbins;
    switch (pcase) {
-     case 4:
-        // "xy"
-        xbins = fXaxis.GetXbins();
-        ybins = fYaxis.GetXbins();
-        if (xbins->fN == 0 && ybins->fN == 0) {
-           p2 = new TProfile2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
-              ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
-        } else if (ybins->fN == 0) {
-           p2 = new TProfile2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
-              ,nx,&xbins->fArray[ixmin-1]);
-        } else if (xbins->fN == 0) {
-           p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1]
-           ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
-        } else {
-           p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
-        }
-        break;
+      case 4:
+         // "xy"
+         xbins = fXaxis.GetXbins();
+         ybins = fYaxis.GetXbins();
+         if (xbins->fN == 0 && ybins->fN == 0) {
+            p2 = new TProfile2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
+               ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
+         } else if (ybins->fN == 0) {
+            p2 = new TProfile2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
+               ,nx,&xbins->fArray[ixmin-1]);
+         } else if (xbins->fN == 0) {
+            p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1]
+            ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
+         } else {
+            p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
+         }
+         break;
 
-     case 5:
-        // "yx"
-        xbins = fXaxis.GetXbins();
-        ybins = fYaxis.GetXbins();
-        if (xbins->fN == 0 && ybins->fN == 0) {
-           p2 = new TProfile2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
-              ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
-        } else if (xbins->fN == 0) {
-           p2 = new TProfile2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
-              ,ny,&ybins->fArray[iymin-1]);
-        } else if (ybins->fN == 0) {
-           p2 = new TProfile2D(name,title,nx,&xbins->fArray[ixmin-1]
-           ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
-        } else {
-           p2 = new TProfile2D(name,title,nx,&xbins->fArray[ixmin-1],ny,&ybins->fArray[iymin-1]);
-        }
-        break;
+      case 5:
+         // "yx"
+         xbins = fXaxis.GetXbins();
+         ybins = fYaxis.GetXbins();
+         if (xbins->fN == 0 && ybins->fN == 0) {
+            p2 = new TProfile2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
+               ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
+         } else if (xbins->fN == 0) {
+            p2 = new TProfile2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
+               ,ny,&ybins->fArray[iymin-1]);
+         } else if (ybins->fN == 0) {
+            p2 = new TProfile2D(name,title,nx,&xbins->fArray[ixmin-1]
+            ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
+         } else {
+            p2 = new TProfile2D(name,title,nx,&xbins->fArray[ixmin-1],ny,&ybins->fArray[iymin-1]);
+         }
+         break;
 
-     case 6:
-        // "xz"
-        xbins = fXaxis.GetXbins();
-        zbins = fZaxis.GetXbins();
-        if (xbins->fN == 0 && zbins->fN == 0) {
-           p2 = new TProfile2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
-              ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
-        } else if (zbins->fN == 0) {
-           p2 = new TProfile2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
-              ,nx,&xbins->fArray[ixmin-1]);
-        } else if (xbins->fN == 0) {
-           p2 = new TProfile2D(name,title,nz,&zbins->fArray[izmin-1]
-           ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
-        } else {
-           p2 = new TProfile2D(name,title,nz,&zbins->fArray[izmin-1],nx,&xbins->fArray[ixmin-1]);
-        }
-        break;
+      case 6:
+         // "xz"
+         xbins = fXaxis.GetXbins();
+         zbins = fZaxis.GetXbins();
+         if (xbins->fN == 0 && zbins->fN == 0) {
+            p2 = new TProfile2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
+               ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
+         } else if (zbins->fN == 0) {
+            p2 = new TProfile2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
+               ,nx,&xbins->fArray[ixmin-1]);
+         } else if (xbins->fN == 0) {
+            p2 = new TProfile2D(name,title,nz,&zbins->fArray[izmin-1]
+            ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
+         } else {
+            p2 = new TProfile2D(name,title,nz,&zbins->fArray[izmin-1],nx,&xbins->fArray[ixmin-1]);
+         }
+         break;
 
-     case 7:
-        // "zx"
-        xbins = fXaxis.GetXbins();
-        zbins = fZaxis.GetXbins();
-        if (xbins->fN == 0 && zbins->fN == 0) {
-           p2 = new TProfile2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
-              ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
-        } else if (xbins->fN == 0) {
-           p2 = new TProfile2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
-              ,nz,&zbins->fArray[izmin-1]);
-        } else if (zbins->fN == 0) {
-           p2 = new TProfile2D(name,title,nx,&xbins->fArray[ixmin-1]
-           ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
-        } else {
-           p2 = new TProfile2D(name,title,nx,&xbins->fArray[ixmin-1],nz,&zbins->fArray[izmin-1]);
-        }
-        break;
+      case 7:
+         // "zx"
+         xbins = fXaxis.GetXbins();
+         zbins = fZaxis.GetXbins();
+         if (xbins->fN == 0 && zbins->fN == 0) {
+            p2 = new TProfile2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
+               ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
+         } else if (xbins->fN == 0) {
+            p2 = new TProfile2D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax)
+               ,nz,&zbins->fArray[izmin-1]);
+         } else if (zbins->fN == 0) {
+            p2 = new TProfile2D(name,title,nx,&xbins->fArray[ixmin-1]
+            ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
+         } else {
+            p2 = new TProfile2D(name,title,nx,&xbins->fArray[ixmin-1],nz,&zbins->fArray[izmin-1]);
+         }
+         break;
 
-     case 8:
-        // "yz"
-        ybins = fYaxis.GetXbins();
-        zbins = fZaxis.GetXbins();
-        if (ybins->fN == 0 && zbins->fN == 0) {
-           p2 = new TProfile2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
-              ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
-        } else if (zbins->fN == 0) {
-           p2 = new TProfile2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
-              ,ny,&ybins->fArray[iymin-1]);
-        } else if (ybins->fN == 0) {
-           p2 = new TProfile2D(name,title,nz,&zbins->fArray[izmin-1]
-           ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
-        } else {
-           p2 = new TProfile2D(name,title,nz,&zbins->fArray[izmin-1],ny,&ybins->fArray[iymin-1]);
-        }
-        break;
+      case 8:
+         // "yz"
+         ybins = fYaxis.GetXbins();
+         zbins = fZaxis.GetXbins();
+         if (ybins->fN == 0 && zbins->fN == 0) {
+            p2 = new TProfile2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
+               ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
+         } else if (zbins->fN == 0) {
+            p2 = new TProfile2D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax)
+               ,ny,&ybins->fArray[iymin-1]);
+         } else if (ybins->fN == 0) {
+            p2 = new TProfile2D(name,title,nz,&zbins->fArray[izmin-1]
+            ,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
+         } else {
+            p2 = new TProfile2D(name,title,nz,&zbins->fArray[izmin-1],ny,&ybins->fArray[iymin-1]);
+         }
+         break;
 
-     case 9:
-        // "zy"
-        ybins = fYaxis.GetXbins();
-        zbins = fZaxis.GetXbins();
-        if (ybins->fN == 0 && zbins->fN == 0) {
-           p2 = new TProfile2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
-              ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
-        } else if (ybins->fN == 0) {
-           p2 = new TProfile2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
-              ,nz,&zbins->fArray[izmin-1]);
-        } else if (zbins->fN == 0) {
-           p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1]
-           ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
-        } else {
-           p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1],nz,&zbins->fArray[izmin-1]);
-        }
-        break;
+      case 9:
+         // "zy"
+         ybins = fYaxis.GetXbins();
+         zbins = fZaxis.GetXbins();
+         if (ybins->fN == 0 && zbins->fN == 0) {
+            p2 = new TProfile2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
+               ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
+         } else if (ybins->fN == 0) {
+            p2 = new TProfile2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
+               ,nz,&zbins->fArray[izmin-1]);
+         } else if (zbins->fN == 0) {
+            p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1]
+            ,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
+         } else {
+            p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1],nz,&zbins->fArray[izmin-1]);
+         }
+         break;
 
    }
 
@@ -2126,41 +2126,41 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
             e    = GetBinError(bin);
             e2   = e*e;
             switch (pcase) {
-           case 4:
-              // "xy"
-              if (izbin < izmin || izbin > izmax) continue;
-              if (cont) p2->Fill(fYaxis.GetBinCenter(iybin),fXaxis.GetBinCenter(ixbin),fZaxis.GetBinCenter(izbin), e2);
-              break;
+               case 4:
+                  // "xy"
+                  if (izbin < izmin || izbin > izmax) continue;
+                  if (cont) p2->Fill(fYaxis.GetBinCenter(iybin),fXaxis.GetBinCenter(ixbin),fZaxis.GetBinCenter(izbin), e2);
+                  break;
 
-           case 5:
-              // "yx"
-              if (izbin < izmin || izbin > izmax) continue;
-              if (cont) p2->Fill(fXaxis.GetBinCenter(ixbin),fYaxis.GetBinCenter(iybin),fZaxis.GetBinCenter(izbin), e2);
-              break;
+               case 5:
+                  // "yx"
+                  if (izbin < izmin || izbin > izmax) continue;
+                  if (cont) p2->Fill(fXaxis.GetBinCenter(ixbin),fYaxis.GetBinCenter(iybin),fZaxis.GetBinCenter(izbin), e2);
+                  break;
 
-           case 6:
-              // "xz"
-              if (iybin < iymin || iybin > iymax) continue;
-              if (cont) p2->Fill(fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(ixbin),fYaxis.GetBinCenter(izbin), e2);
-              break;
+               case 6:
+                  // "xz"
+                  if (iybin < iymin || iybin > iymax) continue;
+                  if (cont) p2->Fill(fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(ixbin),fYaxis.GetBinCenter(izbin), e2);
+                  break;
 
-           case 7:
-              // "zx"
-              if (iybin < iymin || iybin > iymax) continue;
-              if (cont) p2->Fill(fXaxis.GetBinCenter(ixbin),fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(izbin), e2);
-              break;
+               case 7:
+                  // "zx"
+                  if (iybin < iymin || iybin > iymax) continue;
+                  if (cont) p2->Fill(fXaxis.GetBinCenter(ixbin),fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(izbin), e2);
+                  break;
 
-           case 8:
-              // "yz"
-              if (ixbin < ixmin || ixbin > ixmax) continue;
-              if (cont) p2->Fill(fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(iybin),fXaxis.GetBinCenter(izbin), e2);
-              break;
+               case 8:
+                  // "yz"
+                  if (ixbin < ixmin || ixbin > ixmax) continue;
+                  if (cont) p2->Fill(fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(iybin),fXaxis.GetBinCenter(izbin), e2);
+                  break;
 
-           case 9:
-              // "zy"
-              if (ixbin < ixmin || ixbin > ixmax) continue;
-              if (cont) p2->Fill(fYaxis.GetBinCenter(iybin),fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(izbin), e2);
-              break;
+               case 9:
+                  // "zy"
+                  if (ixbin < ixmin || ixbin > ixmax) continue;
+                  if (cont) p2->Fill(fYaxis.GetBinCenter(iybin),fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(izbin), e2);
+                  break;
             }
             if (cont) {
                entries += cont;

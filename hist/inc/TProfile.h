@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.31 2005/09/22 08:55:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.32 2005/12/04 10:51:27 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -58,63 +58,63 @@ private:
    Double_t *GetW2() {return &fSumw2.fArray[0];}
 
 public:
-    TProfile();
-    TProfile(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup, Option_t *option="");
-    TProfile(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup,Double_t ylow,Double_t yup,Option_t *option="");
-    TProfile(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins, Option_t *option="");
-    TProfile(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins, Option_t *option="");
-    TProfile(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins, Double_t ylow,Double_t yup, Option_t *option="");
-    TProfile(const TProfile &profile);
-    virtual ~TProfile();
-    virtual void     Add(TF1 *h1, Double_t c1=1, Option_t *option="");
-    virtual void     Add(const TH1 *h1, Double_t c1=1);
-    virtual void     Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
-    static  void     Approximate(Bool_t approx=kTRUE);
-    virtual Int_t    BufferEmpty(Int_t action=0);
-            void     BuildOptions(Double_t ymin, Double_t ymax, Option_t *option);
-    virtual void     Copy(TObject &hnew) const;
-    virtual void     Divide(TF1 *h1, Double_t c1=1);
-    virtual void     Divide(const TH1 *h1);
-    virtual void     Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
-    virtual TH1     *DrawCopy(Option_t *option="") const;
-    virtual Int_t    Fill(Double_t x, Double_t y);
-    virtual Int_t    Fill(const char *namex, Double_t y);
-    virtual Int_t    Fill(Double_t x, Double_t y, Double_t w);
-    virtual Int_t    Fill(const char *namex, Double_t y, Double_t w);
-    virtual void     FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double_t *w, Int_t stride=1);
-    virtual Double_t GetBinContent(Int_t bin) const;
-    virtual Double_t GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
-    virtual Double_t GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
-    virtual Double_t GetBinError(Int_t bin) const;
-    virtual Double_t GetBinError(Int_t bin, Int_t) const {return GetBinError(bin);}
-    virtual Double_t GetBinError(Int_t bin, Int_t, Int_t) const {return GetBinError(bin);}
-    virtual Double_t GetBinEntries(Int_t bin) const;
-    Option_t        *GetErrorOption() const;
-    virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
-    virtual void     GetStats(Double_t *stats) const;
-    virtual Double_t GetYmin() const {return fYmin;}
-    virtual Double_t GetYmax() const {return fYmax;}
-    virtual void     LabelsDeflate(Option_t *axis="X");
-    virtual void     LabelsInflate(Option_t *axis="X");
-    virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");
-    virtual Long64_t Merge(TCollection *list);
-    virtual void     Multiply(TF1 *h1, Double_t c1=1);
-    virtual void     Multiply(const TH1 *h1);
-    virtual void     Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
-            TH1D    *ProjectionX(const char *name="_px", Option_t *option="e") const;
-    virtual void     PutStats(Double_t *stats);
-            TH1     *Rebin(Int_t ngroup=2, const char*newname="");
-    virtual void     RebinAxis(Double_t x, const char *ax);
-    virtual void     Reset(Option_t *option="");
-    virtual void     SavePrimitive(ofstream &out, Option_t *option);
-    virtual void     Scale(Double_t c1=1);
-    virtual void     SetBinEntries(Int_t bin, Double_t w);
-    virtual void     SetBins(Int_t nbins, Double_t xmin, Double_t xmax);
-    virtual void     SetBins(Int_t nx, const Double_t *xbins);
-    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
-    virtual void     SetErrorOption(Option_t *option=""); // *MENU*
+   TProfile();
+   TProfile(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup, Option_t *option="");
+   TProfile(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup,Double_t ylow,Double_t yup,Option_t *option="");
+   TProfile(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins, Option_t *option="");
+   TProfile(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins, Option_t *option="");
+   TProfile(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins, Double_t ylow,Double_t yup, Option_t *option="");
+   TProfile(const TProfile &profile);
+   virtual ~TProfile();
+   virtual void     Add(TF1 *h1, Double_t c1=1, Option_t *option="");
+   virtual void     Add(const TH1 *h1, Double_t c1=1);
+   virtual void     Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
+   static  void     Approximate(Bool_t approx=kTRUE);
+   virtual Int_t    BufferEmpty(Int_t action=0);
+           void     BuildOptions(Double_t ymin, Double_t ymax, Option_t *option);
+   virtual void     Copy(TObject &hnew) const;
+   virtual void     Divide(TF1 *h1, Double_t c1=1);
+   virtual void     Divide(const TH1 *h1);
+   virtual void     Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+   virtual TH1     *DrawCopy(Option_t *option="") const;
+   virtual Int_t    Fill(Double_t x, Double_t y);
+   virtual Int_t    Fill(const char *namex, Double_t y);
+   virtual Int_t    Fill(Double_t x, Double_t y, Double_t w);
+   virtual Int_t    Fill(const char *namex, Double_t y, Double_t w);
+   virtual void     FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double_t *w, Int_t stride=1);
+   virtual Double_t GetBinContent(Int_t bin) const;
+   virtual Double_t GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
+   virtual Double_t GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
+   virtual Double_t GetBinError(Int_t bin) const;
+   virtual Double_t GetBinError(Int_t bin, Int_t) const {return GetBinError(bin);}
+   virtual Double_t GetBinError(Int_t bin, Int_t, Int_t) const {return GetBinError(bin);}
+   virtual Double_t GetBinEntries(Int_t bin) const;
+   Option_t        *GetErrorOption() const;
+   virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
+   virtual void     GetStats(Double_t *stats) const;
+   virtual Double_t GetYmin() const {return fYmin;}
+   virtual Double_t GetYmax() const {return fYmax;}
+   virtual void     LabelsDeflate(Option_t *axis="X");
+   virtual void     LabelsInflate(Option_t *axis="X");
+   virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");
+   virtual Long64_t Merge(TCollection *list);
+   virtual void     Multiply(TF1 *h1, Double_t c1=1);
+   virtual void     Multiply(const TH1 *h1);
+   virtual void     Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+           TH1D    *ProjectionX(const char *name="_px", Option_t *option="e") const;
+   virtual void     PutStats(Double_t *stats);
+           TH1     *Rebin(Int_t ngroup=2, const char*newname="");
+   virtual void     RebinAxis(Double_t x, const char *ax);
+   virtual void     Reset(Option_t *option="");
+   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     Scale(Double_t c1=1);
+   virtual void     SetBinEntries(Int_t bin, Double_t w);
+   virtual void     SetBins(Int_t nbins, Double_t xmin, Double_t xmax);
+   virtual void     SetBins(Int_t nx, const Double_t *xbins);
+   virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
+   virtual void     SetErrorOption(Option_t *option=""); // *MENU*
 
-    ClassDef(TProfile,5)  //Profile histogram class
+   ClassDef(TProfile,5)  //Profile histogram class
 };
 
 #endif

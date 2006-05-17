@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.11 2006/01/20 14:35:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.12 2006/02/03 21:55:39 pcanal Exp $
 // Author: Miroslav Morhac   17/01/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,7 @@
 //                                                                         //
 //   email:fyzimiro@savba.sk,    fax:+421 7 54772479                       //
 //                                                                         //
-//  The original code in C has been repackaged as a C++ class by R.Brun    //                        //
+//  The original code in C has been repackaged as a C++ class by R.Brun    //
 //                                                                         //
 //  The algorithms in this class have been published in the following      //
 //  references:                                                            //
@@ -120,7 +120,7 @@ TSpectrum2::TSpectrum2(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum
 
 
 //______________________________________________________________________________
- TSpectrum2::~TSpectrum2() 
+TSpectrum2::~TSpectrum2() 
 {
    delete [] fPosition;
    delete [] fPositionX;
@@ -1095,7 +1095,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
          else
             a = TMath::Sqrt(a + nip);            
          b = b / a;
-         b = TMath::Exp(b);                        	                                                                   
+         b = TMath::Exp(b);
          sp = sp + b;
          if(i - l + 1 < xmin)
             a = source[xmin][ymin] / maxch;
@@ -1109,7 +1109,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
          else
             a = TMath::Sqrt(a + nim);            
          b = b / a;
-         b = TMath::Exp(b);                        	                                                                            
+         b = TMath::Exp(b);
          sm = sm + b;
       }
       a = sp / sm;
@@ -1133,7 +1133,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
          else
             a = TMath::Sqrt(a + nip);            
          b = b / a;
-         b = TMath::Exp(b);                        	                                                                            
+         b = TMath::Exp(b);
          sp = sp + b;
          if(i - l + 1 < ymin)
             a = source[xmin][ymin] / maxch;
@@ -1147,7 +1147,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
          else
             a = TMath::Sqrt(a + nim);            
          b = b / a;
-         b = TMath::Exp(b);                        	                                                                                     
+         b = TMath::Exp(b);
          sm = sm + b;
       }
       a = sp / sm;
@@ -1172,7 +1172,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
             else
                a = TMath::Sqrt(a + nip);            
             b = b / a;
-            b = TMath::Exp(b);                        	                                                                               
+            b = TMath::Exp(b);
             spx = spx + b;
             if(i - l + 1 < xmin)
                a = source[xmin][j] / maxch;
@@ -1186,40 +1186,28 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
             else
                a = TMath::Sqrt(a + nim);            
             b = b / a;
-            b = TMath::Exp(b);                        	                                                                                                 
+            b = TMath::Exp(b);
             smx = smx + b;
          }
          spy = 0,smy = 0;
          nip = source[i + 1][j] / maxch;
          nim = source[i + 1][j + 1] / maxch;
-         for(l = 1; l <= averWindow; l++){
-            if(j + l > ymax)
-               a = source[i][ymax]/maxch;
-
-            else
-               a = source[i][j + l] / maxch;
+         for (l = 1; l <= averWindow; l++) {
+            if (j + l > ymax) a = source[i][ymax]/maxch;
+            else              a = source[i][j + l] / maxch;
             b = a - nip;
-            if(a + nip <= 0)
-               a = 1;
-
-            else
-               a = TMath::Sqrt(a + nip);            
+            if (a + nip <= 0) a = 1;
+            else              a = TMath::Sqrt(a + nip);            
             b = b / a;
-            b = TMath::Exp(b);                        	                                                                                           
+            b = TMath::Exp(b);
             spy = spy + b;
-            if(j - l + 1 < ymin)
-               a = source[i][ymin] / maxch;
-
-            else
-               a = source[i][j - l + 1] / maxch;
+            if (j - l + 1 < ymin) a = source[i][ymin] / maxch;
+            else                  a = source[i][j - l + 1] / maxch;
             b = a - nim;
-            if(a + nim <= 0)
-               a = 1;
-
-            else
-               a = TMath::Sqrt(a + nim);            
+            if (a + nim <= 0) a = 1;
+            else              a = TMath::Sqrt(a + nim);            
             b = b / a;
-            b = TMath::Exp(b);                        	                                                                                                             
+            b = TMath::Exp(b);
             smy = smy + b;
        	 }
          a = (spx * working_space[i][j + 1] + spy * working_space[i + 1][j]) / (smx +smy);
@@ -1633,37 +1621,37 @@ Processing 13 (2003) 144. </span></p>
       for (lindex = 0; lindex < numberIterations; lindex++) {
          for (i2 = 0; i2 < ssizey; i2++) {
             for (i1 = 0; i1 < ssizex; i1++) {
-                ldb = 0;                 
-                j2min = i2;
-                if (j2min > lhy - 1)
-                   j2min = lhy - 1;
-                j2min = -j2min;
-                j2max = ssizey - i2 - 1;
-                if (j2max > lhy - 1)
-                   j2max = lhy - 1;
-                j1min = i1;
-                if (j1min > lhx - 1)
-                   j1min = lhx - 1;
-                j1min = -j1min;
-                j1max = ssizex - i1 - 1;
-                if (j1max > lhx - 1)
-                   j1max = lhx - 1;
-                for (j2 = j2min; j2 <= j2max; j2++) {
-                   for (j1 = j1min; j1 <= j1max; j1++) {
-                        ldc =  working_space[j1 - i1min][j2 - i2min + 2 * ssizey];
-                        lda = working_space[i1 + j1][i2 + j2 + 3 * ssizey];
-                        ldb = ldb + lda * ldc;
-                   }
-                }
-                lda = working_space[i1][i2 + 3 * ssizey];
-                ldc = working_space[i1][i2 + 1 * ssizey];
-                if (ldc * lda != 0 && ldb != 0) {
-                   lda = lda * ldc / ldb;
-                }
-               
-                else
-                   lda = 0;
-                working_space[i1][i2 + 4 * ssizey] = lda;
+               ldb = 0;                 
+               j2min = i2;
+               if (j2min > lhy - 1)
+                  j2min = lhy - 1;
+               j2min = -j2min;
+               j2max = ssizey - i2 - 1;
+               if (j2max > lhy - 1)
+                  j2max = lhy - 1;
+               j1min = i1;
+               if (j1min > lhx - 1)
+                  j1min = lhx - 1;
+               j1min = -j1min;
+               j1max = ssizex - i1 - 1;
+               if (j1max > lhx - 1)
+                  j1max = lhx - 1;
+               for (j2 = j2min; j2 <= j2max; j2++) {
+                  for (j1 = j1min; j1 <= j1max; j1++) {
+                     ldc =  working_space[j1 - i1min][j2 - i2min + 2 * ssizey];
+                     lda = working_space[i1 + j1][i2 + j2 + 3 * ssizey];
+                     ldb = ldb + lda * ldc;
+                  }
+               }
+               lda = working_space[i1][i2 + 3 * ssizey];
+               ldc = working_space[i1][i2 + 1 * ssizey];
+               if (ldc * lda != 0 && ldb != 0) {
+                  lda = lda * ldc / ldb;
+               }
+
+               else
+                  lda = 0;
+               working_space[i1][i2 + 4 * ssizey] = lda;
             }
          }
          for (i2 = 0; i2 < ssizey; i2++) {
@@ -2400,7 +2388,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
    if(markov == true){
       for(i = 0;i < ssizex_ext; i++){
          for(j = 0; j < ssizey_ext; j++)
-            working_space[i][j + 2 * ssizex_ext] = working_space[i][ssizey_ext + j];
+         working_space[i][j + 2 * ssizex_ext] = working_space[i][ssizey_ext + j];
       }
       xmin = 0;
       xmax = ssizex_ext - 1;

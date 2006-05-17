@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPrincipal.cxx,v 1.28 2005/09/05 10:02:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPrincipal.cxx,v 1.29 2006/02/03 21:55:39 pcanal Exp $
 // Author: Christian Holm Christensen    1/8/2000
 
 /*************************************************************************
@@ -667,9 +667,9 @@ in the transformed space.
 <!--*/
 // -->End_Html
 
-// $Id: TPrincipal.cxx,v 1.28 2005/09/05 10:02:38 brun Exp $
-// $Date: 2005/09/05 10:02:38 $
-// $Author: brun $
+// $Id: TPrincipal.cxx,v 1.29 2006/02/03 21:55:39 pcanal Exp $
+// $Date: 2006/02/03 21:55:39 $
+// $Author: pcanal $
 
 #include "TPrincipal.h"
 
@@ -724,16 +724,16 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
    fNumberOfVariables  = nVariables;
    while (strlen(opt) > 0) {
       switch(*opt++) {
-    case 'N':
-    case 'n':
-       fIsNormalised = kTRUE;
-       break;
-    case 'D':
-    case 'd':
-       fStoreData    = kTRUE;
-       break;
-    default:
-       break;
+         case 'N':
+         case 'n':
+            fIsNormalised = kTRUE;
+            break;
+         case 'D':
+         case 'd':
+            fStoreData    = kTRUE;
+            break;
+         default:
+            break;
       }
    }
 
@@ -1090,7 +1090,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
          default:
             Warning("MakeHistograms","Unknown option: %c",opt[i]);
       }
-  }
+   }
 
    // If no option was given, then exit gracefully
    if (!makeX && !makeD && !makeP && !makeE && !makeS)

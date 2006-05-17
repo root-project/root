@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.16 2006/01/18 15:38:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.17 2006/01/25 08:21:06 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -56,7 +56,7 @@ public:
    virtual Int_t       Search(const TH1 *hist, Double_t sigma=2, Option_t *option="goff", Double_t threshold=0.05);
    static void         SetAverageWindow(Int_t w=3);   //set average window
    static void         SetDeconIterations(Int_t n=3); //set max number of decon iterations
-    void               SetResolution(Float_t resolution=1);
+   void                SetResolution(Float_t resolution=1);
 
    //new functions January 2006
    const char         *Background(float *spectrum, Int_t ssize,Int_t numberIterations,Int_t direction, Int_t filterOrder,bool smoothing,Int_t smoothWindow,bool compton);

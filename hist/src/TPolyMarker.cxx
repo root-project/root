@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.17 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.18 2006/03/20 21:43:43 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 
 ClassImp(TPolyMarker)
 
+
 //______________________________________________________________________________
 //
 //  a PolyMarker is defined by an array on N points in a 2-D space.
@@ -25,18 +26,23 @@ ClassImp(TPolyMarker)
 // See TMarker for the list of possible marker types.
 //
 
+
 //______________________________________________________________________________
 TPolyMarker::TPolyMarker(): TObject()
 {
+   // Default constructor.
+   
    fN = 0;
    fX = fY = 0;
    fLastPoint = -1;
 }
 
+
 //______________________________________________________________________________
 TPolyMarker::TPolyMarker(Int_t n, Option_t *option)
       :TObject(), TAttMarker()
 {
+   // Constructor.
 
    fOption = option;
    SetBit(kCanDelete);
@@ -51,11 +57,13 @@ TPolyMarker::TPolyMarker(Int_t n, Option_t *option)
    fX = new Double_t [fN];
    fY = new Double_t [fN];
 }
+
 
 //______________________________________________________________________________
 TPolyMarker::TPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option)
       :TObject(), TAttMarker()
 {
+   // Constructor.
 
    fOption = option;
    SetBit(kCanDelete);
@@ -73,11 +81,13 @@ TPolyMarker::TPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option)
    for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i]; }
    fLastPoint = fN-1;
 }
+
 
 //______________________________________________________________________________
 TPolyMarker::TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       :TObject(), TAttMarker()
 {
+   // Constructor.
 
    fOption = option;
    SetBit(kCanDelete);
@@ -96,23 +106,32 @@ TPolyMarker::TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
    fLastPoint = fN-1;
 }
 
+
 //______________________________________________________________________________
 TPolyMarker::~TPolyMarker()
 {
+   // Desctructor.
+
    if (fX) delete [] fX;
    if (fY) delete [] fY;
    fLastPoint = -1;
 }
 
+
 //______________________________________________________________________________
 TPolyMarker::TPolyMarker(const TPolyMarker &polymarker) : TObject(polymarker), TAttMarker(polymarker)
 {
+   // Copy constructor.
+
    ((TPolyMarker&)polymarker).Copy(*this);
 }
+
 
 //______________________________________________________________________________
 void TPolyMarker::Copy(TObject &obj) const
 {
+
+   // Copy.
 
    TObject::Copy(obj);
    TAttMarker::Copy(((TPolyMarker&)obj));
@@ -129,19 +148,20 @@ void TPolyMarker::Copy(TObject &obj) const
    ((TPolyMarker&)obj).fLastPoint = fLastPoint;
 }
 
+
 //______________________________________________________________________________
 Int_t TPolyMarker::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*Compute distance from point px,py to a polymarker*-*-*-*-*-*
-//*-*              ===============================================
-//  Compute the closest distance of approach from point px,py to each point
-//  of the polymarker.
-//  Returns when the distance found is below DistanceMaximum.
-//  The distance is computed in pixels units.
-//
+   // Compute distance from point px,py to a polymarker.
+   //
+   //  Compute the closest distance of approach from point px,py to each point
+   //  of the polymarker.
+   //  Returns when the distance found is below DistanceMaximum.
+   //  The distance is computed in pixels units.
+
    const Int_t big = 9999;
 
-//*-*- check if point is near one of the points
+   // check if point is near one of the points
    Int_t i, pxp, pyp, d;
    Int_t distance = big;
 
@@ -154,17 +174,21 @@ Int_t TPolyMarker::DistancetoPrimitive(Int_t px, Int_t py)
    return distance;
 }
 
+
 //______________________________________________________________________________
 void TPolyMarker::Draw(Option_t *option)
 {
+   // Draw.
 
    AppendPad(option);
-
 }
+
 
 //______________________________________________________________________________
 void TPolyMarker::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *)
 {
+   // Draw polymarker.
+   
    TPolyMarker *newpolymarker = new TPolyMarker(n,x,y);
    TAttMarker::Copy(*newpolymarker);
    newpolymarker->fOption = fOption;
@@ -172,27 +196,31 @@ void TPolyMarker::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *)
    newpolymarker->AppendPad();
 }
 
+
 //______________________________________________________________________________
 void TPolyMarker::ExecuteEvent(Int_t, Int_t, Int_t)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//  This member function must be implemented to realize the action
-//  corresponding to the mouse click on the object in the window
-//
+   // Execute action corresponding to one event.
+   //
+   //  This member function must be implemented to realize the action
+   //  corresponding to the mouse click on the object in the window
 }
+
 
 //______________________________________________________________________________
 void TPolyMarker::ls(Option_t *) const
 {
+   // ls.
+
    TROOT::IndentLevel();
    printf("TPolyMarker  N=%d\n",fN);
 }
 
+
 //______________________________________________________________________________
 Int_t TPolyMarker::Merge(TCollection *li)
 {
-// Merge polymarkers in the collection in this polymarker
+   // Merge polymarkers in the collection in this polymarker.
 
    if (!li) return 0;
    TIter next(li);
@@ -225,15 +253,20 @@ Int_t TPolyMarker::Merge(TCollection *li)
    return npoints;
 }
 
+
 //______________________________________________________________________________
 void TPolyMarker::Paint(Option_t *option)
 {
+   // Paint.
+
    PaintPolyMarker(fLastPoint+1, fX, fY, option);
 }
+
 
 //______________________________________________________________________________
 void TPolyMarker::PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
+   // Paint polymarker.
 
    if (n <= 0) return;
    TAttMarker::Modify();  //Change marker attributes only if necessary
@@ -252,17 +285,20 @@ void TPolyMarker::PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *o
    if (y != yy) delete [] yy;
 }
 
+
 //______________________________________________________________________________
 void TPolyMarker::Print(Option_t *) const
 {
+   // Print polymarker.
 
    printf("TPolyMarker  N=%d\n",fN);
 }
 
+
 //______________________________________________________________________________
 void TPolyMarker::SavePrimitive(ofstream &out, Option_t *option)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out.
 
    char quote = '"';
    out<<"   "<<endl;
@@ -283,6 +319,7 @@ void TPolyMarker::SavePrimitive(ofstream &out, Option_t *option)
       <<quote<<option<<quote<<");"<<endl;
 }
 
+
 //______________________________________________________________________________
 Int_t TPolyMarker::SetNextPoint(Double_t x, Double_t y)
 {
@@ -294,10 +331,11 @@ Int_t TPolyMarker::SetNextPoint(Double_t x, Double_t y)
    return fLastPoint;
 }
 
+
 //______________________________________________________________________________
 void TPolyMarker::SetPoint(Int_t n, Double_t x, Double_t y)
 {
-   // set point number n
+   // Set point number n.
    // if n is greater than the current size, the arrays are automatically
    // extended
    
@@ -326,17 +364,21 @@ void TPolyMarker::SetPoint(Int_t n, Double_t x, Double_t y)
    fLastPoint = TMath::Max(fLastPoint,n);
 }
 
+
 //______________________________________________________________________________
 void TPolyMarker::SetPolyMarker(Int_t n)
 {
-   // if n <= 0 the current arrays of points are deleted.
+   // If n <= 0 the current arrays of points are deleted.
+
    SetPoint(n-1,0,0);
 }
+
 
 //______________________________________________________________________________
 void TPolyMarker::SetPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 {
-   // if n <= 0 the current arrays of points are deleted.
+   // If n <= 0 the current arrays of points are deleted.
+   
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
@@ -358,10 +400,12 @@ void TPolyMarker::SetPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *optio
    fLastPoint = fN-1;
 }
 
+
 //______________________________________________________________________________
 void TPolyMarker::SetPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
-   // if n <= 0 the current arrays of points are deleted.
+   // If n <= 0 the current arrays of points are deleted.
+   
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
@@ -383,11 +427,12 @@ void TPolyMarker::SetPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *opt
    fLastPoint = fN-1;
 }
 
+
 //_______________________________________________________________________
 void TPolyMarker::Streamer(TBuffer &R__b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
+   // Stream a class object.
+
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

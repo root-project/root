@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.39 2006/03/07 11:36:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.40 2006/03/15 13:31:07 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -2584,7 +2584,7 @@ Processing 13 (2003) 144. </span></p>
 
 // move vector at*y
    for (i = 0; i < ssize; i++){
-       working_space[2 * ssize + i] = working_space[3 * ssize + i];
+      working_space[2 * ssize + i] = working_space[3 * ssize + i];
    }
    
 //initialization of resulting vector
