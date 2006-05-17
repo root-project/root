@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.60 2006/04/11 06:58:23 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.61 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1803,6 +1803,13 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
 
    char quote = '"';
 
+   TString fname = GetName();
+   TString cname = ClassName();
+   cname.Replace(0,2,'f');
+   fname.Remove(0,5);
+   cname = cname + fname;
+   SetName(cname);
+
    out << "   TGPopupMenu *";
    out << GetName() << " = new TGPopupMenu(gClient->GetRoot()"
        << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() << ");" << endl;
@@ -1962,6 +1969,13 @@ void TGMenuTitle::SavePrimitive(ofstream &out, Option_t *option)
 void TGMenuBar::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save a menu bar widget as a C++ statement(s) on output stream out.
+
+   TString fname = GetName();
+   TString cname = ClassName();
+   cname.Replace(0,2,'f');
+   fname.Remove(0,5);
+   cname = cname + fname;
+   SetName(cname);
 
    out << endl;
    out << "   // menu bar" << endl;

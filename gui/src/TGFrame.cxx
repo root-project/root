@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.127 2006/04/18 12:32:20 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.128 2006/04/24 13:48:49 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2228,9 +2228,18 @@ void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
    TQConnection *conn;
    TString signal_name, slot_name;
 
+   TString sname, s1, s2;
+
    TIter next(fList);
 
    while ((el = (TGFrameElement *) next())) {
+      sname = s1 = el->fFrame->GetName();
+      s2 = el->fFrame->ClassName();
+      s2.Replace(0,2,'f');
+      s1.Remove(0,5);
+      s1 = s2+s1;
+      el->fFrame->SetName(s1);
+      
       el->fFrame->SavePrimitive(out, option);
       out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
       el->fLayout->SavePrimitive(out, option);
@@ -2241,7 +2250,6 @@ void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
          out << el->fFrame->GetWidth() << ","  << el->fFrame->GetHeight();
          out << ");" << endl;
       }
-
       if (!el->fState & kIsVisible) {
          gListOfHiddenFrames->Add(el->fFrame);
       }
@@ -2258,7 +2266,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
          Int_t rb = slot_name.First(')');
          if (eq != -1) 
             slot_name.Remove(eq, rb-eq);
-         out << "   " << el->fFrame->GetName() << "->Connect(" << quote << signal_name 
+         out << "   " << s1 << "->Connect(" << quote << signal_name 
              << quote << ", 0, 0, " << quote << slot_name << quote << ");" << endl;
 
          TList *lsl = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfSlots");
@@ -2575,6 +2583,14 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
 {
    // Save a main frame widget as a C++ statement(s) on output stream out.
+
+   TString fname = GetName();
+   TString cname = ClassName();
+   cname.Replace(0,2,'f');
+   fname.Remove(0,5);
+   cname = cname + fname;
+   SetName(cname);
+
 
    if (fParent != gClient->GetDefaultRoot()) { // frame is embedded
       fOptions &= ~kMainFrame;
@@ -3056,6 +3072,12 @@ void TGTransientFrame::SavePrimitive(ofstream &out, Option_t *option)
    // Save a transient frame widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
+   TString fname = GetName();
+   TString cname = ClassName();
+   cname.Replace(0,2,'f');
+   fname.Remove(0,5);
+   cname = cname + fname;
+   SetName(cname);
 
    out << endl << "   // transient frame" << endl;
    out << "   TGTransientFrame *";

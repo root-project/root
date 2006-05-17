@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.62 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.63 2006/03/20 21:43:42 pcanal Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -1339,26 +1339,26 @@ void TGButton::SavePrimitive(ofstream &out, Option_t *option)
    char quote = '"';
 
    if (fState == kButtonDown) {
-      out << "   " << GetName() << "->SetState(kButtonDown);"  << endl;
+      out << "   " << option << "->SetState(kButtonDown);"  << endl;
    }
    if (fState == kButtonDisabled) {
-      out << "   " << GetName() << "->SetState(kButtonDisabled);"  << endl;
+      out << "   " << option << "->SetState(kButtonDisabled);"  << endl;
    }
    if (fState == kButtonEngaged) {
-      out << "   " << GetName() << "->SetState(kButtonEngaged);"  << endl;
+      out << "   " << option << "->SetState(kButtonEngaged);"  << endl;
    }
    if (fBackground != fgDefaultFrameBackground) {
       SaveUserColor(out, option);
-      out << "   " << GetName() << "->ChangeBackground(ucolor);" << endl;
+      out << "   " << option << "->ChangeBackground(ucolor);" << endl;
    }
 
    if (fTip) {
       out << "   ";
-      out << GetName() << "->SetToolTipText(" << quote
+      out << option << "->SetToolTipText(" << quote
           << fTip->GetText()->GetString() << quote << ");"  << endl;
    }
    if (strlen(fCommand)) {
-      out << "   " << GetName() << "->SetCommand(" << quote << fCommand
+      out << "   " << option << "->SetCommand(" << quote << fCommand
           << quote << ");" << endl;
    }
 }
@@ -1435,7 +1435,7 @@ void TGTextButton::SavePrimitive(ofstream &out, Option_t *option)
    out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight()
        << ");" << endl;
 
-   TGButton::SavePrimitive(out,option);
+   TGButton::SavePrimitive(out,GetName());
 }
 
 //______________________________________________________________________________
@@ -1483,7 +1483,7 @@ void TGPictureButton::SavePrimitive(ofstream &out, Option_t *option)
           << ");" << endl;
    }
 
-   TGButton::SavePrimitive(out,option);
+   TGButton::SavePrimitive(out,GetName());
 }
 
 //______________________________________________________________________________
@@ -1556,7 +1556,7 @@ void TGCheckButton::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");" << endl;
    }
 
-   TGButton::SavePrimitive(out,option);
+   TGButton::SavePrimitive(out,GetName());
 }
 
 //______________________________________________________________________________
@@ -1625,5 +1625,5 @@ void TGRadioButton::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");" << endl;
    }
 
-   TGButton::SavePrimitive(out,option);
+   TGButton::SavePrimitive(out,GetName());
 }
