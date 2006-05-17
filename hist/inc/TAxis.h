@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.34 2006/05/12 12:25:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.35 2006/05/16 16:50:02 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -113,6 +113,10 @@ public:
            Double_t   GetXmin() const {return fXmin;}
            Double_t   GetXmax() const {return fXmax;}
    virtual void       ImportAttributes(const TAxis *axis);
+   Bool_t             IsVariableBinSize() const {
+                         // true if axis has variable bin sizes, false otherwise
+                         return (fXbins.GetSize() != 0);
+                      }
    virtual void       LabelsOption(Option_t *option="h");  // *MENU*
    virtual void       RotateTitle(Bool_t rotate=kTRUE); // *TOGGLE* *GETTER=GetRotateTitle
    virtual void       SaveAttributes(ofstream &out, const char *name, const char *subname);
