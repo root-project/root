@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.11 2005/12/09 11:44:15 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.12 2006/05/16 08:13:31 brun Exp $
 // Author: Jan Conrad    9/2/2004
 
 /*************************************************************************
@@ -537,10 +537,10 @@ Double_t TRolke::EvalLikeMod3(Double_t mu, Int_t x, Double_t bm, Double_t em, Do
 
 
    if (what == 2) {
-       mu = (x-bm)/em;
-       b  = bm;
-       e  = em;
-       f  = LikeMod3(mu,b,e,x,bm,em,u,v);
+      mu = (x-bm)/em;
+      b  = bm;
+      e  = em;
+      f  = LikeMod3(mu,b,e,x,bm,em,u,v);
    }
 
 
@@ -586,9 +586,9 @@ Double_t TRolke::EvalLikeMod4(Double_t mu, Int_t x, Int_t y, Double_t tau, Doubl
 
    if (what == 1) f = x-y/tau;
    if (what == 2) {
-       mu = x-y/tau;
-       b  = Double_t(y)/tau;
-       f  = LikeMod4(mu,b,x,y,tau);
+      mu = x-y/tau;
+      b  = Double_t(y)/tau;
+      f  = LikeMod4(mu,b,x,y,tau);
    }
    if (what == 3) {
       if (mu == 0.0) {

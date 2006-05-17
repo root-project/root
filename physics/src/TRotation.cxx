@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.9 2005/09/04 09:51:19 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.10 2006/05/16 08:13:31 brun Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -470,9 +470,9 @@ TRotation & TRotation::RotateXEulerAngles(Double_t phi,
                                          Double_t theta,
                                          Double_t psi) {
    // Rotate using the x-convention.
-  TRotation euler;
-  euler.SetXEulerAngles(phi,theta,psi);
-  return Transform(euler);
+   TRotation euler;
+   euler.SetXEulerAngles(phi,theta,psi);
+   return Transform(euler);
 }
 
 TRotation & TRotation::RotateYEulerAngles(Double_t phi,

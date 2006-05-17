@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzRotation.cxx,v 1.3 2003/09/03 06:08:34 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzRotation.cxx,v 1.4 2006/05/16 08:13:31 brun Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -251,17 +251,14 @@ TLorentzRotation TLorentzRotation::MatrixMultiplication(const TLorentzRotation &
     fxx*b.fxy + fxy*b.fyy + fxz*b.fzy + fxt*b.fty,
     fxx*b.fxz + fxy*b.fyz + fxz*b.fzz + fxt*b.ftz,
     fxx*b.fxt + fxy*b.fyt + fxz*b.fzt + fxt*b.ftt,
-
     fyx*b.fxx + fyy*b.fyx + fyz*b.fzx + fyt*b.ftx,
     fyx*b.fxy + fyy*b.fyy + fyz*b.fzy + fyt*b.fty,
     fyx*b.fxz + fyy*b.fyz + fyz*b.fzz + fyt*b.ftz,
     fyx*b.fxt + fyy*b.fyt + fyz*b.fzt + fyt*b.ftt,
-
     fzx*b.fxx + fzy*b.fyx + fzz*b.fzx + fzt*b.ftx,
     fzx*b.fxy + fzy*b.fyy + fzz*b.fzy + fzt*b.fty,
     fzx*b.fxz + fzy*b.fyz + fzz*b.fzz + fzt*b.ftz,
     fzx*b.fxt + fzy*b.fyt + fzz*b.fzt + fzt*b.ftt,
-
     ftx*b.fxx + fty*b.fyx + ftz*b.fzx + ftt*b.ftx,
     ftx*b.fxy + fty*b.fyy + ftz*b.fzy + ftt*b.fty,
     ftx*b.fxz + fty*b.fyz + ftz*b.fzz + ftt*b.ftz,
