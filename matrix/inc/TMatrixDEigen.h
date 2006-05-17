@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.7 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.8 2005/02/15 16:17:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -31,22 +31,22 @@ class TMatrixDEigen
 {
 protected :
 
-  static void MakeHessenBerg  (TMatrixD &v,TVectorD &ortho,TMatrixD &H);
-  static void MakeSchurr      (TMatrixD &v,TVectorD &d,    TVectorD &e,TMatrixD &H);
-  static void Sort            (TMatrixD &v,TVectorD &d,    TVectorD &e);
+   static void MakeHessenBerg  (TMatrixD &v,TVectorD &ortho,TMatrixD &H);
+   static void MakeSchurr      (TMatrixD &v,TVectorD &d,    TVectorD &e,TMatrixD &H);
+   static void Sort            (TMatrixD &v,TVectorD &d,    TVectorD &e);
 
-  TMatrixD fEigenVectors;   // Eigen-vectors of matrix
-  TVectorD fEigenValuesRe;  // Eigen-values
-  TVectorD fEigenValuesIm;  // Eigen-values
+   TMatrixD fEigenVectors;   // Eigen-vectors of matrix
+   TVectorD fEigenValuesRe;  // Eigen-values
+   TVectorD fEigenValuesIm;  // Eigen-values
 
 public :
 
-  enum {kWorkMax = 100}; // size of work array
+   enum {kWorkMax = 100}; // size of work array
 
-  TMatrixDEigen() {};
-  TMatrixDEigen(const TMatrixD &a);
-  TMatrixDEigen(const TMatrixDEigen &another);
-  virtual ~TMatrixDEigen() {}
+   TMatrixDEigen() {};
+   TMatrixDEigen(const TMatrixD &a);
+   TMatrixDEigen(const TMatrixDEigen &another);
+   virtual ~TMatrixDEigen() {}
 
 // If matrix A has shape (rowLwb,rowUpb,rowLwb,rowUpb), then each eigen-vector
 // must have an index running between (rowLwb,rowUpb) .
@@ -55,13 +55,13 @@ public :
 // has also index/shape (rowLwb,rowUpb,rowLwb,rowUpb) .
 // The same is true for the eigen-value vectors an matrix .
 
-  const TMatrixD &GetEigenVectors () const { return fEigenVectors;  }
-  const TVectorD &GetEigenValuesRe() const { return fEigenValuesRe; }
-  const TVectorD &GetEigenValuesIm() const { return fEigenValuesIm; }
-  const TMatrixD  GetEigenValues  () const;
+   const TMatrixD &GetEigenVectors () const { return fEigenVectors;  }
+   const TVectorD &GetEigenValuesRe() const { return fEigenValuesRe; }
+   const TVectorD &GetEigenValuesIm() const { return fEigenValuesIm; }
+   const TMatrixD  GetEigenValues  () const;
 
-  TMatrixDEigen &operator= (const TMatrixDEigen &source);
+   TMatrixDEigen &operator= (const TMatrixDEigen &source);
 
-  ClassDef(TMatrixDEigen,1) // Eigen-Vectors/Values of a Matrix
+   ClassDef(TMatrixDEigen,1) // Eigen-Vectors/Values of a Matrix
 };
 #endif

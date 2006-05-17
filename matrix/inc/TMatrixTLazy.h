@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTLazy.h,v 1.4 2004/01/26 20:57:35 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTLazy.h,v 1.1 2005/12/22 09:19:13 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -49,31 +49,31 @@ friend class TMatrixT    <Element>;
 friend class TVectorT    <Element>;
 
 protected:
-  Int_t fRowUpb;
-  Int_t fRowLwb;
-  Int_t fColUpb;
-  Int_t fColLwb;
+   Int_t fRowUpb;
+   Int_t fRowLwb;
+   Int_t fColUpb;
+   Int_t fColLwb;
 
-  TMatrixTLazy(const TMatrixTLazy<Element> &) : TObject() { }
-  void operator=(const TMatrixTLazy<Element> &) { }
+   TMatrixTLazy(const TMatrixTLazy<Element> &) : TObject() { }
+   void operator=(const TMatrixTLazy<Element> &) { }
 
 private:
-  virtual void FillIn(TMatrixT<Element> &m) const = 0;
+   virtual void FillIn(TMatrixT<Element> &m) const = 0;
 
 public:
-  TMatrixTLazy() { fRowUpb = fRowLwb = fColUpb = fColLwb = 0; }
-  TMatrixTLazy(Int_t nrows, Int_t ncols)
-     : fRowUpb(nrows-1),fRowLwb(0),fColUpb(ncols-1),fColLwb(0) { }
-  TMatrixTLazy(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
-     : fRowUpb(row_upb),fRowLwb(row_lwb),fColUpb(col_upb),fColLwb(col_lwb) { }
-  virtual ~TMatrixTLazy() {}
+   TMatrixTLazy() { fRowUpb = fRowLwb = fColUpb = fColLwb = 0; }
+   TMatrixTLazy(Int_t nrows, Int_t ncols)
+       : fRowUpb(nrows-1),fRowLwb(0),fColUpb(ncols-1),fColLwb(0) { }
+   TMatrixTLazy(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
+       : fRowUpb(row_upb),fRowLwb(row_lwb),fColUpb(col_upb),fColLwb(col_lwb) { }
+   virtual ~TMatrixTLazy() {}
 
-  inline Int_t GetRowLwb() const { return fRowLwb; }
-  inline Int_t GetRowUpb() const { return fRowUpb; }
-  inline Int_t GetColLwb() const { return fColLwb; }
-  inline Int_t GetColUpb() const { return fColUpb; }
+   inline Int_t GetRowLwb() const { return fRowLwb; }
+   inline Int_t GetRowUpb() const { return fRowUpb; }
+   inline Int_t GetColLwb() const { return fColLwb; }
+   inline Int_t GetColUpb() const { return fColUpb; }
 
-  ClassDef(TMatrixTLazy,3)  // Template of Lazy Matrix class
+   ClassDef(TMatrixTLazy,3)  // Template of Lazy Matrix class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -92,27 +92,27 @@ friend class TMatrixTSym <Element>;
 friend class TVectorT    <Element>;
 
 protected:
-  Int_t fRowUpb;
-  Int_t fRowLwb;
+   Int_t fRowUpb;
+   Int_t fRowLwb;
 
-  TMatrixTSymLazy(const TMatrixTSymLazy<Element> &) : TObject() { }
-  void operator=(const TMatrixTSymLazy<Element> &) { }
+   TMatrixTSymLazy(const TMatrixTSymLazy<Element> &) : TObject() { }
+   void operator=(const TMatrixTSymLazy<Element> &) { }
 
 private:
-  virtual void FillIn(TMatrixTSym<Element> &m) const = 0;
+   virtual void FillIn(TMatrixTSym<Element> &m) const = 0;
 
 public:
-  TMatrixTSymLazy() { fRowUpb = fRowLwb = 0; }
-  TMatrixTSymLazy(Int_t nrows)
-     : fRowUpb(nrows-1),fRowLwb(0) { }
-  TMatrixTSymLazy(Int_t row_lwb,Int_t row_upb)
-     : fRowUpb(row_upb),fRowLwb(row_lwb) { }
-  virtual ~TMatrixTSymLazy() {}
+   TMatrixTSymLazy() { fRowUpb = fRowLwb = 0; }
+   TMatrixTSymLazy(Int_t nrows)
+       : fRowUpb(nrows-1),fRowLwb(0) { }
+   TMatrixTSymLazy(Int_t row_lwb,Int_t row_upb)
+       : fRowUpb(row_upb),fRowLwb(row_lwb) { }
+   virtual ~TMatrixTSymLazy() {}
 
-  inline Int_t GetRowLwb() const { return fRowLwb; }
-  inline Int_t GetRowUpb() const { return fRowUpb; }
+   inline Int_t GetRowLwb() const { return fRowLwb; }
+   inline Int_t GetRowUpb() const { return fRowUpb; }
 
-  ClassDef(TMatrixTSymLazy,2)  // Template of Lazy Symmeytric class
+   ClassDef(TMatrixTSymLazy,2)  // Template of Lazy Symmeytric class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -124,14 +124,14 @@ public:
 template<class Element> class THaarMatrixT: public TMatrixTLazy<Element> {
 
 private:
-  void FillIn(TMatrixT<Element> &m) const;
+   void FillIn(TMatrixT<Element> &m) const;
 
 public:
-  THaarMatrixT() {}
-  THaarMatrixT(Int_t n,Int_t no_cols = 0);
-  virtual ~THaarMatrixT() {}
+   THaarMatrixT() {}
+   THaarMatrixT(Int_t n,Int_t no_cols = 0);
+   virtual ~THaarMatrixT() {}
 
-  ClassDef(THaarMatrixT,2)  // Template of Haar Matrix class
+   ClassDef(THaarMatrixT,2)  // Template of Haar Matrix class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -143,15 +143,15 @@ public:
 template<class Element> class THilbertMatrixT : public TMatrixTLazy<Element> {
 
 private:
-  void FillIn(TMatrixT<Element> &m) const;
+   void FillIn(TMatrixT<Element> &m) const;
 
 public:
-  THilbertMatrixT() {}
-  THilbertMatrixT(Int_t no_rows,Int_t no_cols);
-  THilbertMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
-  virtual ~THilbertMatrixT() {}
+   THilbertMatrixT() {}
+   THilbertMatrixT(Int_t no_rows,Int_t no_cols);
+   THilbertMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
+   virtual ~THilbertMatrixT() {}
 
-  ClassDef(THilbertMatrixT,2)  // Template of Hilbert Matrix class
+   ClassDef(THilbertMatrixT,2)  // Template of Hilbert Matrix class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -163,15 +163,15 @@ public:
 template<class Element> class THilbertMatrixTSym : public TMatrixTSymLazy<Element> {
 
 private:
-  void FillIn(TMatrixTSym<Element> &m) const;
+   void FillIn(TMatrixTSym<Element> &m) const;
 
 public:
-  THilbertMatrixTSym() {}
-  THilbertMatrixTSym(Int_t no_rows);
-  THilbertMatrixTSym(Int_t row_lwb,Int_t row_upb);
-  virtual ~THilbertMatrixTSym() {}
+   THilbertMatrixTSym() {}
+   THilbertMatrixTSym(Int_t no_rows);
+   THilbertMatrixTSym(Int_t row_lwb,Int_t row_upb);
+   virtual ~THilbertMatrixTSym() {}
   
-  ClassDef(THilbertMatrixTSym,2)  // Template of Symmetric Hilbert Matrix class
+   ClassDef(THilbertMatrixTSym,2)  // Template of Symmetric Hilbert Matrix class
 };
 
 #endif

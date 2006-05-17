@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.h,v 1.4 2005/02/15 16:17:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.h,v 1.5 2005/12/22 08:41:31 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -34,20 +34,20 @@ class TMatrixDSymEigen
 {
 protected :
 
-  static void MakeTridiagonal (TMatrixD &v,TVectorD &d,TVectorD &e);
-  static void MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e);
+   static void MakeTridiagonal (TMatrixD &v,TVectorD &d,TVectorD &e);
+   static void MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e);
 
-  TMatrixD fEigenVectors; // Eigen-vectors of matrix
-  TVectorD fEigenValues;  // Eigen-values
+   TMatrixD fEigenVectors; // Eigen-vectors of matrix
+   TVectorD fEigenValues;  // Eigen-values
 
 public :
 
-  enum {kWorkMax = 100}; // size of work array
+   enum {kWorkMax = 100}; // size of work array
 
-  TMatrixDSymEigen() {};
-  TMatrixDSymEigen(const TMatrixDSym      &a);
-  TMatrixDSymEigen(const TMatrixDSymEigen &another);
-  virtual ~TMatrixDSymEigen() {}
+   TMatrixDSymEigen() {};
+   TMatrixDSymEigen(const TMatrixDSym      &a);
+   TMatrixDSymEigen(const TMatrixDSymEigen &another);
+   virtual ~TMatrixDSymEigen() {}
 
 // If matrix A has shape (rowLwb,rowUpb,rowLwb,rowUpb), then each eigen-vector
 // must have an index running between (rowLwb,rowUpb) .
@@ -56,11 +56,11 @@ public :
 // has also index/shape (rowLwb,rowUpb,rowLwb,rowUpb) .
 // The same is true for the eigen-value vector .
 
-  const TMatrixD &GetEigenVectors() const { return fEigenVectors; }
-  const TVectorD &GetEigenValues () const { return fEigenValues; }
+   const TMatrixD &GetEigenVectors() const { return fEigenVectors; }
+   const TVectorD &GetEigenValues () const { return fEigenValues; }
 
-  TMatrixDSymEigen &operator= (const TMatrixDSymEigen &source);
+   TMatrixDSymEigen &operator= (const TMatrixDSymEigen &source);
 
-  ClassDef(TMatrixDSymEigen,1) // Eigen-Vectors/Values of a Matrix
+   ClassDef(TMatrixDSymEigen,1) // Eigen-Vectors/Values of a Matrix
 };
 #endif

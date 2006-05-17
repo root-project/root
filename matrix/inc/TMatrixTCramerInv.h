@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixTCramerInv.h,v 1.4 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixTCramerInv.h,v 1.1 2005/12/22 09:19:13 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Jan 2004
 
 /*************************************************************************
@@ -33,11 +33,11 @@
 
 namespace TMatrixTCramerInv {
 
-  template<class Element> Bool_t Inv2x2(TMatrixT<Element> &m,Double_t *determ);
-  template<class Element> Bool_t Inv3x3(TMatrixT<Element> &m,Double_t *determ);
-  template<class Element> Bool_t Inv4x4(TMatrixT<Element> &m,Double_t *determ);
-  template<class Element> Bool_t Inv5x5(TMatrixT<Element> &m,Double_t *determ);
-  template<class Element> Bool_t Inv6x6(TMatrixT<Element> &m,Double_t *determ);
+   template<class Element> Bool_t Inv2x2(TMatrixT<Element> &m,Double_t *determ);
+   template<class Element> Bool_t Inv3x3(TMatrixT<Element> &m,Double_t *determ);
+   template<class Element> Bool_t Inv4x4(TMatrixT<Element> &m,Double_t *determ);
+   template<class Element> Bool_t Inv5x5(TMatrixT<Element> &m,Double_t *determ);
+   template<class Element> Bool_t Inv6x6(TMatrixT<Element> &m,Double_t *determ);
 
 }
 
