@@ -10,56 +10,59 @@ TYPE=`bin/root-config --arch`
 if [ "x$TYPE" = "xmacosx" ]; then
    TYPE=$TYPE-`uname -p`
 fi
-if [ "x$1" = "x" ]; then
-   TARFILE=root_v$ROOTVERS.$TYPE.tar
-else
-   TARFILE=root_v$ROOTVERS.$TYPE-$1.tar
+
+# debug build?
+DEBUG=`grep ROOTBUILD config/Makefile.config | sed 's,^ROOTBUILD.*= \([^[:space:]]*\)$,\1,'`
+if [ "x${DEBUG}" != "x" ]; then
+   DEBUG=".debug"
 fi
 
-rm -f ../${TARFILE}.gz
-
-if [ "x`which gtar 2>/dev/null | awk '{if ($1~/gtar/) print $1;}'`" != "x" ]
-then
-   TAR="gtar zcvf"
-   TARFILE=$TARFILE".gz"
-   EXCLUDE="--exclude CVS --exclude .cvsignore"
-else
-   TAR="tar cvf"
-   EXCLUDE=
-   DOGZIP="y"
+# MSI?
+if [ "x$1" = "x-msi" ]; then
+   MSI=1
+   shift
 fi
 
-for i in include/precompile.*; do
-   if [ "x$i" != "xinclude/precompile.h" ]; then
-      EXCLUDE="--exclude $i "$EXCLUDE
+# compiler specified?
+COMPILER=$1
+if [ "x${COMPILER}" != "x" ]; then
+   COMPILER="-${COMPILER}"
+fi
+
+TARFILE=root_v${ROOTVERS}.${TYPE}${COMPILER}${DEBUG}
+# figure out what tar to use
+if [ "x$MSI" == "x1" ]; then
+   TAR=build/package/msi/makemsi.sh
+   TARFILE=../${TARFILE}.msi
+else
+   TARFILE=${TARFILE}.tar
+   if [ "x`which gtar 2>/dev/null | awk '{if ($1~/gtar/) print $1;}'`" != "x" ]; then
+      TAR="gtar zcvf"
+      TARFILE=${TARFILE}".gz"
+   else
+      TAR="tar cvf"
+      DOGZIP="y"
    fi
-done
+fi
 
 cp -f main/src/rmain.cxx include/
 pwd=`pwd`
-dir=`basename $pwd`
-cd ..
-$TAR $TARFILE $EXCLUDE $dir/LICENSE $dir/README $dir/bin \
-   $dir/include $dir/lib $dir/cint/MAKEINFO $dir/cint/include \
-   $dir/cint/lib $dir/cint/stl $dir/tutorials/*.cxx $dir/tutorials/*.C \
-   $dir/tutorials/*.h $dir/tutorials/*.dat $dir/tutorials/mlpHiggs.root \
-   $dir/tutorials/gallery.root $dir/tutorials/galaxy.root \
-   $dir/tutorials/stock.root $dir/tutorials/worldmap.jpg \
-   $dir/tutorials/mditestbg.xpm $dir/tutorials/fore.xpm \
-   $dir/tutorials/runcatalog.sql $dir/tutorials/*.py $dir/tutorials/*.rb \
-   $dir/tutorials/saxexample.xml $dir/tutorials/person.xml \
-   $dir/tutorials/person.dtd \
-   $dir/test/*.cxx $dir/test/*.h $dir/test/Makefile* $dir/test/README \
-   $dir/test/RootShower/*.h $dir/test/RootShower/*.cxx \
-   $dir/test/RootShower/*.rc $dir/test/RootShower/*.ico \
-   $dir/test/RootShower/*.png $dir/test/RootShower/Makefile \
-   $dir/test/RootShower/anim $dir/test/RootShower/icons $dir/test/ProofBench \
-   $dir/macros $dir/icons $dir/fonts $dir/etc
+if [ "x${MSI}" = "x" ]; then
+   dir=`basename $pwd`
+   cd ..
+fi
+
+${pwd}/build/unix/distfilelist.sh $dir > ${TARFILE}.filelist
+rm -f ${TARFILE}
+$TAR ${TARFILE} -T ${TARFILE}.filelist || exit 1
+rm ${TARFILE}.filelist 
+
 if [ "x$DOGZIP" = "xy" ]; then
+   rm -f ${TARFILE}.gz
    gzip $TARFILE
 fi
 
-cd $dir
+cd $pwd
 rm -f include/rmain.cxx
 
 exit 0

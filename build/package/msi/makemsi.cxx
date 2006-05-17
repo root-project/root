@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.136 2006/04/27 15:07:57 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: makemsi.cxx,v 1.1 2006/05/11 12:06:44 brun Exp $
 // Author: Axel Naumann 2006-05-09
 
 /*************************************************************************
@@ -12,12 +12,16 @@
 // WiX MSI Installer Package Utility
 // Creates a WiX source file
 
-#include <windows.h>
+// USAGE: makemsi outputfile.msi -T filelist.txt
+// will create a MSI file for files in filelist.txt
+
+#if !defined(VERSION) || !defined(PRODUCT)
+#  error "Define the CPP macros PRODUCT and VERSION!"
+#endif
+
 #include <rpc.h>
 #include <stdio.h>
-#include <io.h>
 #include <list>
-#include <vector>
 #include <map>
 #include <iostream>
 #include <fstream>
@@ -25,161 +29,175 @@
 #include <string>
 #include <algorithm>
 
-#ifndef FILEROOT
-#  define FILEROOT ""
-#endif
+using std::string;
+using std::list;
+using std::map;
+using std::cerr;
+using std::endl;
+using std::ostream;
 
-#ifndef DEFAULTFILTER
-#  define DEFAULTFILTER "*.*"
-#endif
+////////////////////////////////////////////////////////////////////////////////
+// CLASS DECLARATIONS
+////////////////////////////////////////////////////////////////////////////////
 
-#if !defined(VERSION) || !defined(PRODUCT)
-#  error "Define the CPP macros PRODUCT and VERSION!"
-#endif
+class MSIDir;
 
-class Subdir {
+class MSIDirEntry {
 public:
-   typedef std::pair<std::string, std::string> LongShortName;
-   typedef std::list<Subdir*> Subdirs;
-   typedef Subdirs::const_iterator CISubdirs;
-   typedef std::list<LongShortName> Files;
-   typedef Files::const_iterator CIFiles;
-   typedef std::vector<std::string> Slices;
-   typedef Slices::const_iterator CISlices;
+   MSIDirEntry(const char* name, MSIDir* parent, bool dir);
+   virtual ~MSIDirEntry() {}
 
-   Subdir() {}
-   Subdir(LongShortName relpath, Subdir* parent=0, const char* fileFilter = 0, bool recurse = false): 
-      fName(relpath), fParent(parent) {
-      if (!parent && !fgGuids.size()) SetupGuids(relpath.first.c_str());
+   string GetLongName() const {return fLongName;}
+   string GetShortName() const {return fShortName;}
+   string GetPath() const {return fPath;}
+   string GetId() const;
+   MSIDir* GetParent() const {return fParent;}
 
-      if (fParent) {
-         std::cout << "processing ";
-         Subdir* parent = this;
-         std::string path = relpath.first;
-         while (parent = parent->GetParent()) 
-            path = parent->GetName().first + "/" + path;;
-         std::cout << path << "..." << std::endl;
-      }
+   virtual void WriteRecurse(ostream& out, string indent) const = 0;
+   ostream& WriteLongShort(ostream& out) const;
 
-      std::replace(fName.first.begin(), fName.first.end(), '\\', '/');
-      if (!fName.first.empty() && fName.first[fName.first.length()-1] == '/') 
-         fName.first.erase(fName.first.length()-1,1);
+private:
+   void SetShortName(bool dir);
+   string GetMyId() const;
 
-      std::replace(fName.second.begin(), fName.second.end(), '\\', '/');
-      if (!fName.second.empty() && fName.second[fName.second.length()-1] == '/') 
-         fName.second.erase(fName.second.length()-1,1);
+   string fLongName; // regular name
+   string fShortName; // 8.3 name
+   string fPath; // path incl parents
+   MSIDir* fParent; // parent dir
+};
 
-      if (fileFilter) {
-         AddFiles(fileFilter);
-         if (recurse) AddSubdirs(DEFAULTFILTER, fileFilter);
-      }
-   }
+////////////////////////////////////////////////////////////////////////////////
 
-   ~Subdir() { if (IsValid() && !fParent) UpdateGuids(fName.first.c_str()); }
+class MSIFile;
 
-   bool IsValid() const { return !fName.first.empty(); }
-   LongShortName GetName() const { return fParent ? fName : LongShortName(fName.second,fName.second); }
-   const LongShortName& GetPath() const { return fName; }
-   Subdir* GetParent() const { return fParent; }
+class MSIDir: public MSIDirEntry {
+public:
+   MSIDir(const char* name, MSIDir* parent=0): MSIDirEntry(name, parent, true) {}
+   ~MSIDir() {if (!GetParent()) UpdateGuids();}
 
-   std::string GetSubId(const char* file = 0) const {
-      std::string ret(GetName().first);
-      if (file) ret += std::string("_") + file;
-      std::replace(ret.begin(), ret.end(), '/', '_');
-      std::replace(ret.begin(), ret.end(), '-', '_');
-      return ret; 
-   }
+   void AddFile(const char* file);
 
-   std::string GetId(const char* file = 0) const { 
-      return fParent ? fParent->GetId() + "_" + GetSubId(file) : GetSubId(file);
-   }
+   void Write(ostream& out) const;
 
-   std::string GetFullPath() const { 
-      return fParent ? fParent->GetFullPath() + "/" + fName.first : "."; }
-
+private:
+   void WriteRecurse(ostream& out, string indent) const;
+   void WriteComponentsRecurse(ostream& out, string indent) const;
    const char* GetGuid() const {
-      CIMapGUIDs iGuid = fgGuids.find(GetId());
+      if (!fgGuids.size() && !fgNewGuids.size()) SetupGuids();
+      map<string, string>::const_iterator iGuid = fgGuids.find(GetId());
       if (iGuid == fgGuids.end()) return CreateGuid();
       return iGuid->second.c_str();
    }
+   const char* CreateGuid() const;
+   static void SetupGuids();
+   static void UpdateGuids();
 
-   void Write(std::ostream& out) const;
+   map<string, MSIDir*> fSubdirs;
+   list<MSIFile*> fFiles;
 
-   int AddFiles(const char* filter = DEFAULTFILTER);
-   const Files &GetFiles() const { return fFiles; }
-
-   Subdir& AddSubdir(const char* relpath, const char* filefilter = DEFAULTFILTER);
-   int AddSubdirs(const char* dirfilter = DEFAULTFILTER, const char* filefilter = DEFAULTFILTER);
-   const Subdirs &GetSubdirs() const { return fSubdirs; }
-
-   static Slices Slice(const std::string& in, const char* delim=";", bool requireAll = true);
-   static void SetupGuids(const char* root);
-   static void UpdateGuids(const char* root);
-
-private:
-   std::ostream& WriteLongShort(std::ostream& out, const LongShortName& what) const {
-      if (!what.second.empty()) 
-         out << "LongName=\"" << what.first <<"\" Name=\"" << what.second << "\" ";
-      else out << "Name=\"" << what.first << "\" ";
-      return out;
-   }
-   const char* CreateGuid() const {
-      UUID uuid;
-      ::UuidCreate(&uuid);
-      unsigned char* str = 0;
-      ::UuidToString(&uuid, &str);
-      std::string id = GetId();
-      const std::string& ret = fgGuids[id] = (char*)str;
-      fgNewGuids[id] = ret;
-      RpcStringFree(&str);
-      return ret.c_str();
-   }
-   void WriteRecurse(std::ostream& out, std::string& indent) const;
-   void WriteComponentsRecurse(std::ostream& out, std::string& indent) const;
-
-   typedef std::map<std::string, std::string> MapGUIDs;
-   typedef std::map<std::string, std::string>::const_iterator CIMapGUIDs;
-
-   Subdir* fParent; // parent dir
-   LongShortName fName; // name
-   Subdirs fSubdirs; // subdirs
-   Files fFiles; // files in dir
-   static MapGUIDs fgGuids;
-   static MapGUIDs fgNewGuids; // guids created during this process
+   static map<string, string> fgGuids;
+   static map<string, string> fgNewGuids; // guids created during this process
    static const char* fgGuidFileName; // location of the GUID file
 };
 
-Subdir::MapGUIDs Subdir::fgGuids;
-Subdir::MapGUIDs Subdir::fgNewGuids;
-const char* Subdir::fgGuidFileName = "build/package/msi/guids.txt";
+////////////////////////////////////////////////////////////////////////////////
 
-void Subdir::SetupGuids(const char* root) {
-   std::ifstream in((std::string(root)+ "/" + fgGuidFileName).c_str());
-   std::string line;
-   while (std::getline(in, line)) {
-      std::istringstream sin(line);
-      std::string id, guid;
-      sin >> id >> guid;
-      fgGuids[id] = guid;
-   }
+class MSIFile: public MSIDirEntry {
+public:
+   MSIFile(const char* name, MSIDir* parent): MSIDirEntry(name, parent, false) {}
+
+   void WriteRecurse(ostream& out, string indent) const {
+      out << indent << "<File Id=\"" << GetId() << "\" ";
+      WriteLongShort(out) << "DiskId=\"1\"></File>" << std::endl;
+   };
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// MSIDirEntry DEFINITIONS
+////////////////////////////////////////////////////////////////////////////////
+
+MSIDirEntry::MSIDirEntry(const char* name, MSIDir* parent, bool dir): fLongName(name), fParent(parent) 
+{ 
+   if (fParent) fPath = fParent->GetPath() + '/' + name;
+   else fPath = ".";
+   SetShortName(dir); 
 }
 
-void Subdir::UpdateGuids(const char* root) {
-   if (!fgNewGuids.size()) return;
+void MSIDirEntry::SetShortName(bool dir) {
+   WIN32_FIND_DATA findData;
+   string filename(GetPath());
+   HANDLE hFind = ::FindFirstFile(filename.c_str(), &findData);
+   if (hFind == INVALID_HANDLE_VALUE) {
+      cerr << "Cannot find " << filename << endl;
+   } else {
+      bool foundDir = (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) > 0;
+      if (foundDir == !dir)
+         cerr << filename << " is not what I expected it to be!" << endl;
+      else
+         fShortName = findData.cAlternateFileName;
+   } 
+   FindClose(hFind);
+}
 
-   std::ofstream out((std::string(root)+"/" + fgGuidFileName).c_str(), std::ios_base::app);
-   if (!out) {
-      std::cerr << "ERROR: cannot write to GUID file " 
-         << root << "/" << fgGuidFileName << "!" << std::endl;
+string MSIDirEntry::GetId() const { 
+   string ret;
+   if (fParent) ret = fParent->GetId() + "_";
+   return ret + GetMyId();
+}
+
+string MSIDirEntry::GetMyId() const { 
+   string ret(fLongName);
+   std::replace(ret.begin(), ret.end(), '/', '_');
+   std::replace(ret.begin(), ret.end(), '-', '_');
+   std::replace(ret.begin(), ret.end(), '#', '_');
+   std::replace(ret.begin(), ret.end(), '~', '_');
+   return ret;
+}
+
+ostream& MSIDirEntry::WriteLongShort(ostream& out) const {
+   if (!fShortName.empty()) 
+      out << "LongName=\"" << fLongName <<"\" Name=\"" << fShortName << "\" ";
+   else out << "Name=\"" << fLongName << "\" ";
+   return out;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// MSIDir DEFINITIONS
+////////////////////////////////////////////////////////////////////////////////
+
+map<string, string> MSIDir::fgGuids;
+map<string, string> MSIDir::fgNewGuids;
+const char* MSIDir::fgGuidFileName = 0; // set to e.g. "guids.txt" make GUIDs persistent
+
+void MSIDir::AddFile(const char* file) {
+   string subdir(file);
+   string filename(file);
+
+   string::size_type posSlash = subdir.find('/');
+   if (posSlash != string::npos) {
+      subdir.erase(posSlash, subdir.length());
+      filename.erase(0, posSlash+1);
+   } else subdir.erase();
+
+   if (filename.empty()) {
+      cerr << "Cannot add empty filename!" << endl;
       return;
    }
-   for (CIMapGUIDs iGuid = fgNewGuids.begin(); iGuid != fgNewGuids.end(); ++iGuid)
-      out << iGuid->first << " " << iGuid->second << std::endl;
-   std::cout << "WARNING: new GUIDs created; cvs checkin " << fgGuidFileName << "!" << std::endl;
+   if (subdir.empty()) fFiles.push_back(new MSIFile(filename.c_str(), this));
+   else {
+      if (!fSubdirs[subdir]) fSubdirs[subdir] = new MSIDir(subdir.c_str(), this);
+      fSubdirs[subdir]->AddFile(filename.c_str());
+   }
 }
 
-void Subdir::Write(std::ostream& out) const {
-   if (!fFiles.size() && !fSubdirs.size() || !IsValid()) return;
+void MSIDir::Write(ostream& out) const {
+   const DWORD bufsize = MAX_PATH;
+   char pwd[bufsize];
+   ::GetCurrentDirectory(bufsize, pwd);
 
    out << "<?xml version=\"1.0\" encoding=\"windows-1252\" ?>" << std::endl;
    out << "<Wix xmlns=\"http://schemas.microsoft.com/wix/2003/01/wi\">" << std::endl;
@@ -212,7 +230,7 @@ void Subdir::Write(std::ostream& out) const {
    out << "         </Directory>" << std::endl;
    out << "      </Directory>" << std::endl;
    out << "      <Directory Id=\"WindowsVolume\" Name=\"WinVol\">" << std::endl;
-   out << "         <Directory Id=\"INSTALLLOCATION\" Name=\"root\" FileSource=\"" << fName.first << "\">" << std::endl;
+   out << "         <Directory Id=\"INSTALLLOCATION\" Name=\"root\" FileSource=\"" << pwd << "\">" << std::endl;
 
    WriteRecurse(out, std::string("             "));
 
@@ -240,20 +258,20 @@ void Subdir::Write(std::ostream& out) const {
    out << "      <RegistrySearch Id=\"RegInstallLocation\" Type=\"raw\" " << std::endl;
    out << "         Root=\"HKLM\" Key=\"Software\\CERN\\ROOT\" Name=\"InstallDir\" />" << std::endl;
    out << "   </Property>" << std::endl;
-   out << "   <Icon Id=\"root.exe\" SourceFile=\"" << fName.first << "/bin/root.exe\" />" << std::endl;
+   out << "   <Icon Id=\"root.exe\" SourceFile=\"" << pwd << "/bin/root.exe\" />" << std::endl;
    out << "   <UIRef Id=\"WixUI\" />" << std::endl;
    out << "</Product>" << std::endl;
    out << "</Wix>" << std::endl;
 }
 
-void Subdir::WriteRecurse(std::ostream& out, std::string& indent) const {
+void MSIDir::WriteRecurse(ostream& out, string indent) const {
    // write to out recursively
-   if (!fFiles.size() && !fSubdirs.size() || !IsValid()) return;
+   if (!fFiles.size() && !fSubdirs.size()) return;
 
-   if (fParent) {
+   if (GetParent()) {
       // assume that Write takes care of the root dir.
       out << indent << "<Directory Id=\"" << GetId() << "\" ";
-      WriteLongShort(out, GetPath()) << ">" << std::endl;
+      WriteLongShort(out) << ">" << std::endl;
       indent+="   ";
    }
 
@@ -262,190 +280,102 @@ void Subdir::WriteRecurse(std::ostream& out, std::string& indent) const {
          << GetGuid() << "\">" << std::endl;
       indent+="   ";
 
-      for (CIFiles iFile = GetFiles().begin(); iFile != GetFiles().end(); ++iFile) {
-         out << indent << "<File Id=\"" << GetId(iFile->first.c_str()) << "\" ";
-         WriteLongShort(out, *iFile) << "DiskId=\"1\"></File>" << std::endl;
+      for (list<MSIFile*>::const_iterator iFile = fFiles.begin(); iFile != fFiles.end(); ++iFile) {
+         (*iFile)->WriteRecurse(out, indent);
       }
       indent.erase(indent.length()-3, 3);
       out << indent << "</Component>" << std::endl;
    }
-   for (CISubdirs iSubdir = fSubdirs.begin(); iSubdir != fSubdirs.end(); ++iSubdir)
-      (*iSubdir)->WriteRecurse(out, indent);
+   for (map<string, MSIDir*>::const_iterator iSubdir = fSubdirs.begin(); iSubdir != fSubdirs.end(); ++iSubdir)
+      iSubdir->second->WriteRecurse(out, indent);
 
    indent.erase(indent.length()-3, 3);
-   if (fParent) {
+   if (GetParent()) {
       // assume that Write takes care of the root dir.
       out << indent << "</Directory>" << std::endl;
    }
 }
 
-void Subdir::WriteComponentsRecurse(std::ostream& out, std::string& indent) const {
+void MSIDir::WriteComponentsRecurse(ostream& out, string indent) const {
    // write all components to out
-   if (!IsValid()) return;
    if (!fFiles.empty()) 
       out << indent << "<ComponentRef Id=\"Component_" << GetId() << "\" />" << std::endl;
-   for (CISubdirs iSubdir = fSubdirs.begin(); iSubdir != fSubdirs.end(); ++iSubdir)
-      (*iSubdir)->WriteComponentsRecurse(out, indent);
+   for (map<string, MSIDir*>::const_iterator iSubdir = fSubdirs.begin(); iSubdir != fSubdirs.end(); ++iSubdir)
+      iSubdir->second->WriteComponentsRecurse(out, indent);
 }
 
-Subdir::Slices Subdir::Slice(const std::string& in, const char* delim, bool requireAll) {
-// Return the parts of in delimited by delim. 
-// If requireAll, the string delim is used as delimiter, otherwise
-// any character of delim found in in will serve as delimiter.
-   typedef std::string::size_type PosDelim;
-   typedef std::list<PosDelim> PosDelimList;
-   typedef PosDelimList::const_iterator CIPosDelimList;
-   PosDelimList listPosDelim;
-   PosDelim posDelim = 0;
-   while (requireAll && std::string::npos != (posDelim = in.find(delim, posDelim))
-      || !requireAll && std::string::npos != (posDelim = in.find_first_of(delim, posDelim))) {
-      listPosDelim.push_back(posDelim);
-      ++posDelim;
+
+const char* MSIDir::CreateGuid() const {
+   UUID uuid;
+   ::UuidCreate(&uuid);
+   unsigned char* str = 0;
+   ::UuidToString(&uuid, &str);
+   std::string id = GetId();
+   const std::string& ret = fgGuids[id] = (char*)str;
+   fgNewGuids[id] = ret;
+   RpcStringFree(&str);
+   return ret.c_str();
+}
+
+void MSIDir::SetupGuids() {
+   if (!fgGuidFileName) return;
+
+   std::ifstream in(fgGuidFileName);
+   std::string line;
+   while (std::getline(in, line)) {
+      std::istringstream sin(line);
+      std::string id, guid;
+      sin >> id >> guid;
+      fgGuids[id] = guid;
    }
-   listPosDelim.push_back(in.length());
+}
 
-   std::vector<std::string> ret(listPosDelim.size());
-   size_t idx = 0;
-   CIPosDelimList nextPosDelim = listPosDelim.begin();
-   ++nextPosDelim;
-   ret[idx++] = in.substr(0, *listPosDelim.begin());
-   for (CIPosDelimList iPosDelim = listPosDelim.begin(); 
-      nextPosDelim != listPosDelim.end(); ++iPosDelim) {
-      PosDelim len = *nextPosDelim - *iPosDelim;
-      ret[idx++] = in.substr(*iPosDelim + 1, len - 1);
-      ++nextPosDelim;
+void MSIDir::UpdateGuids() {
+   if (!fgNewGuids.size() || !fgGuidFileName) return;
+
+   std::ofstream out(fgGuidFileName, std::ios_base::app);
+   if (!out) {
+      cerr << "ERROR: cannot write to GUID file " 
+         << fgGuidFileName << "!" << endl;
+      cerr << "ERROR: You should NOT use this MSI file, but re-generate with with accessible GUID file!"
+         << endl;
+      return;
    }
-   return ret;
+   for (map<string, string>::const_iterator iGuid = fgNewGuids.begin(); iGuid != fgNewGuids.end(); ++iGuid)
+      out << iGuid->first << " " << iGuid->second << endl;
+   std::cout << "WARNING: new GUIDs created; please cvs checkin " << fgGuidFileName << "!" << endl;
 }
 
-int Subdir::AddFiles(const char* filter) {
-   if (!IsValid()) return 0;
 
-   size_t oldSize = fFiles.size();
-   Slices filters = Slice(std::string(filter));
-   for (CISlices iFilter = filters.begin(); iFilter != filters.end(); ++iFilter) {
-      WIN32_FIND_DATA findData;
-      std::string filename(GetFullPath() + "/" + *iFilter);
-      HANDLE hFind = ::FindFirstFile((LPCTSTR)filename.c_str(), &findData);
-      if (hFind == INVALID_HANDLE_VALUE) continue;
-      do {
-         if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
-         fFiles.push_back(
-            std::make_pair(
-               std::string((const char*)findData.cFileName), 
-               std::string((const char*)findData.cAlternateFileName)));
-      }  while (FindNextFile(hFind, &findData));
-      FindClose(hFind);
-   }
 
-   return (int)(fFiles.size() - oldSize);
-}
-
-Subdir &Subdir::AddSubdir(const char* relpath, const char* filefilter) {
-   static Subdir invalid;
-   if (!IsValid()) return invalid;
-
-   WIN32_FIND_DATA findData;
-   std::string filename(GetFullPath() + "/" + relpath);
-   HANDLE hFind = FindFirstFile((LPCTSTR)filename.c_str(), &findData);
-   if (hFind == INVALID_HANDLE_VALUE || !(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) 
-      return invalid;
-
-   fSubdirs.push_back(
-      new Subdir(
-         std::make_pair(
-            std::string((const char*)findData.cFileName), 
-            std::string((const char*)findData.cAlternateFileName)),
-         this, filefilter));
-   FindClose(hFind);
-   return *fSubdirs.back();
-}
-
-int Subdir::AddSubdirs(const char* dirfilter, const char* filefilter) {
-   if (!IsValid()) return 0;
-
-   size_t oldSize = fSubdirs.size();
-   Slices filters = Slice(std::string(dirfilter));
-   for (CISlices iFilter = filters.begin(); iFilter != filters.end(); ++iFilter) {
-      WIN32_FIND_DATA findData;
-      std::string filename(GetFullPath() + "/" + *iFilter);
-      HANDLE hFind = FindFirstFile((LPCTSTR)filename.c_str(), &findData);
-      if (hFind == INVALID_HANDLE_VALUE) continue;
-      do {
-         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) continue;
-         if (findData.cFileName[0] == '.') continue; // ., .., hidden
-         if (!strcmp(findData.cFileName, "CVS")) continue;
-         fSubdirs.push_back(
-            new Subdir(
-               std::make_pair(
-                  std::string((const char*)findData.cFileName), 
-                  std::string((const char*)findData.cAlternateFileName)),
-               this, filefilter, dirfilter && !strcmp(dirfilter, DEFAULTFILTER)));
-      }  while (FindNextFile(hFind, &findData));
-      FindClose(hFind);
-   }
-
-   return (int)(fSubdirs.size() - oldSize);
-}
-
-int CreateXMSForROOT(const char* fileroot, const char* outpath) {
-   // that's the workhorse for ROOT.
-
-   Subdir root(Subdir::LongShortName(fileroot, "ROOTSYS"), 0, "LICENSE");
-   root.AddSubdir("bin", "*.dll;*.exe;*.pdb;*.bat;*.py;*.pyc;*.pyo;memprobe;root-config");
-   root.AddSubdir("lib", "*.lib;*.exp;*.def")
-       .AddSubdir("python", 0)
-       .AddSubdir("genreflex", "*.py;*.pyc");
-
-   root.AddSubdir("include").AddSubdirs();
-
-   Subdir &cint = root.AddSubdir("cint", "MAKEINFO");
-   Subdir &cintinc = cint.AddSubdir("include");
-   cintinc.AddSubdirs("GL;sys;X11");
-   Subdir &cintlib = cint.AddSubdir("lib");
-   cintlib.AddSubdirs("gl;stdstrct;qt;vcstream;vc7strm;win32api;xlib");
-   cintlib.AddSubdir("dll_stl","*.h;README.txt;setup*.*");
-   cint.AddSubdir("stl");
-
-   root.AddSubdir("icons", "*.png;*.xpm");
-   root.AddSubdir("fonts", "*.ttf;LICENSE");
-   root.AddSubdir("tutorials");
-   root.AddSubdir("macros");
-   root.AddSubdir("test").AddSubdirs();
-   root.AddSubdir("man", 0).AddSubdir("man1");
-   root.AddSubdir("etc").AddSubdirs("daemons;proof");
-   root.AddSubdir("build", 0).AddSubdir("misc", "root.m4;root-help.el");
-   root.AddSubdir("config", "Makefile.win32;Makefile.config");
-   root.AddSubdir("README");
-
-   std::cout << "Writing " << outpath << std::endl;
-   std::ofstream out(outpath);
-   root.Write(out);
-
-   return 0;
-}
+////////////////////////////////////////////////////////////////////////////////
+// main()
+////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char *argv[]) {
-   const DWORD bufsize = MAX_PATH;
-   char buf[bufsize];
-   std::string fileroot = FILEROOT;
-   if (fileroot.empty()) {
-      ::GetCurrentDirectory(bufsize, buf);
-      fileroot = buf;
-   }
-   if (::_access(fileroot.c_str(), 04 /*r*/)) {
-      std::cerr << "ERROR: Cannot access " << fileroot << std::endl;
+   if (argc<4 || string(argv[2]) != "-T") {
+      cerr << "USAGE: " << argv[0] << " <msifile> -T <inputlistfile>" << endl;
       return 1;
    }
 
-   std::string outpath = "./";
-   if (argc>1) outpath = argv[1];
-   if (::_access(outpath.c_str(), 06 /*rw*/)) {
-      std::cerr << "ERROR: Cannot access output path " << outpath << std::endl;
+   string outfile = argv[1];
+   std::ofstream out(outfile.c_str());
+   if (!out) {
+      cerr << "Cannot open output file " << outfile << "!" << endl;
       return 2;
    }
-   if (outpath[outpath.length()-1]!='/' && outpath[outpath.length()-1]!='\\')
-      outpath += "/";
-   outpath += "ROOT.xms";
-   return CreateXMSForROOT(fileroot.c_str(), outpath.c_str());
+
+   string infile = argv[3];
+   std::ifstream in(infile.c_str());
+   if (!in) {
+      cerr << "Cannot open input file " << infile << "!" << endl;
+      return 2;
+   }
+
+   MSIDir fileroot("ROOTSYS");
+   string line;
+   while (std::getline(in, line))
+      fileroot.AddFile(line.c_str());
+
+   fileroot.Write(out);
 }

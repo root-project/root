@@ -1,4 +1,4 @@
-/* @(#)build/win:$Name:  $:$Id: w32pragma.h,v 1.3 2006/03/16 23:43:37 rdm Exp $ */
+/* @(#)build/win:$Name:  $:$Id: w32pragma.h,v 1.4 2006/03/23 10:31:21 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -52,7 +52,7 @@
 #endif
 
 #if (_MSC_VER >= 1400)
-#define _CRT_SECURE_NO_DEPRECATE
+#define _CRT_SECURE_NO_DEPRECATE 1
 #define _SECURE_SCL 0
 #define _HAS_ITERATOR_DEBUGGING 0
 #endif

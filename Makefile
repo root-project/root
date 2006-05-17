@@ -353,7 +353,6 @@ MAKESTATIC    = build/unix/makestatic.sh
 RECONFIGURE   = build/unix/reconfigure.sh
 ifeq ($(PLATFORM),win32)
 MAKELIB       = build/win/makelib.sh
-MAKEDIST      = build/win/makedist.sh
 MAKECOMPDATA  = build/win/compiledata.sh
 MAKEMAKEINFO  = build/win/makeinfo.sh
 endif
@@ -558,8 +557,10 @@ dist:
 distsrc:
 	@$(MAKEDISTSRC)
 
-distmsi: map build/package/msi/makemsi$(EXEEXT) 
-	build/package/msi/makemsi.sh $(HOME)/
+distmsi: build/package/msi/makemsi$(EXEEXT) 
+	@rm -f $(ROOTMAP)
+	@$(MAKE) map
+	$(MAKEDIST) -msi
 
 build/package/msi/makemsi$(EXEEXT): build/package/msi/makemsi.cxx build/version_number
 	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` && \
