@@ -256,7 +256,15 @@ void portfolio()
   const Int_t sDay = 20000809;
   const Int_t eDay = 20040602;
 
-  TFile *f = new TFile("stock.root");
+  const char *fname = "stock.root";
+  TFile *f = 0;
+  if (!gSystem->AccessPathName(fname)) {
+     f = TFile::Open(fname);
+  } else {
+     printf("accessing %s file from http://root.cern.ch/files\n",fname);
+     f = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
+  }
+  if (!f) return;
 
   TArrayF *data = new TArrayF[nrStocks];
   for (Int_t i = 0; i < nrStocks; i++) {

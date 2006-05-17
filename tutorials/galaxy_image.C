@@ -9,7 +9,15 @@ void galaxy_image()
 
    // read the pixel data from file "galaxy.root"
    // the size of the image is 401 X 401 pixels
-   TFile *gal = new TFile("galaxy.root", "READ");
+   const char *fname = "galaxy.root";
+   TFile *gal = 0;
+   if (!gSystem->AccessPathName(fname)) {
+      gal = TFile::Open(fname);
+   } else {
+      printf("accessing %s file from http://root.cern.ch/files\n",fname);
+      gal = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
+   }
+   if (!gal) return;
    TImage *img = (TImage*)gal->Get("n4254");
    img->Draw();
 

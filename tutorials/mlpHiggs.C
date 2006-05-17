@@ -12,9 +12,18 @@ void mlpHiggs(Int_t ntrain=100) {
    // Prepare inputs
    // The 2 trees are merged into one, and a "type" branch, 
    // equal to 1 for the signal and 0 for the background is added.
-   TFile input("mlpHiggs.root");
-   TTree *signal = (TTree *) input.Get("sig_filtered");
-   TTree *background = (TTree *) input.Get("bg_filtered");
+   const char *fname = "mlpHiggs.root";
+   TFile *input = 0;
+   if (!gSystem->AccessPathName(fname)) {
+      input = TFile::Open(fname);
+   } else {
+      printf("accessing %s file from http://root.cern.ch/files\n",fname);
+      input = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
+   }
+   if (!input) return;
+
+   TTree *signal = (TTree *) input->Get("sig_filtered");
+   TTree *background = (TTree *) input->Get("bg_filtered");
    TTree *simu = new TTree("MonteCarlo", "Filtered Monte Carlo Events");
    Float_t ptsumf, qelep, nch, msumf, minvis, acopl, acolin;
    Int_t type;
@@ -114,4 +123,5 @@ void mlpHiggs(Int_t ntrain=100) {
    legend->AddEntry(sig, "Signal (Higgs)");
    legend->Draw();
    mlpa_canvas->cd(0);
+   delete input;
 }
