@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.138 2006/05/15 16:30:10 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.139 2006/05/15 17:43:43 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -137,8 +137,8 @@ namespace {
 
    ////// static functions providing interface to raw WinNT ////////////////////
    struct  itimerval {
-   struct  timeval it_interval;
-   struct  timeval it_value;
+      struct  timeval it_interval;
+      struct  timeval it_value;
    };
 
    static UINT   timer_active = 0;
@@ -152,56 +152,56 @@ namespace {
    //______________________________________________________________________________
    static int setitimer(int which, const struct itimerval *value, struct itimerval *oldvalue)
    {
-   //
+      //
 
-   UINT elapse;
+      UINT elapse;
 
-   if (which != ITIMER_REAL) {
-      return -1;
-   }
-   // Check if we will wrap
-   if (itv.it_value.tv_sec >= (long) (UINT_MAX/1000)) {
-      return -1;
-   }
-   if (timer_active) {
-      ::KillTimer(NULL, timer_active);
-      timer_active = 0;
-   }
-   if (oldvalue) {
-      *oldvalue = itv;
-   }
-   if (value == NULL) {
-      return -1;
-   }
-   itv = *value;
-   elapse = itv.it_value.tv_sec * 1000 + itv.it_value.tv_usec / 1000;
-   if (elapse == 0) {
-      if (itv.it_value.tv_usec) {
-         elapse = 1;
-      } else {
-         return 0;
+      if (which != ITIMER_REAL) {
+         return -1;
       }
-   }
-   if (!(timer_active = ::SetTimer(NULL, 1, elapse, NULL))) {
-      return -1;
-   }
-   start_time = ::GetTickCount();
-   return 0;
+      // Check if we will wrap
+      if (itv.it_value.tv_sec >= (long) (UINT_MAX/1000)) {
+         return -1;
+      }
+      if (timer_active) {
+         ::KillTimer(NULL, timer_active);
+         timer_active = 0;
+      }
+      if (oldvalue) {
+         *oldvalue = itv;
+      }
+      if (value == NULL) {
+         return -1;
+      }
+      itv = *value;
+      elapse = itv.it_value.tv_sec * 1000 + itv.it_value.tv_usec / 1000;
+      if (elapse == 0) {
+         if (itv.it_value.tv_usec) {
+            elapse = 1;
+         } else {
+            return 0;
+         }
+      }
+      if (!(timer_active = ::SetTimer(NULL, 1, elapse, NULL))) {
+         return -1;
+      }
+      start_time = ::GetTickCount();
+      return 0;
    }
 
    //______________________________________________________________________________
    static int WinNTSetitimer(Long_t ms)
    {
-   // Set interval timer to time-out in ms milliseconds.
+      // Set interval timer to time-out in ms milliseconds.
 
-   struct itimerval itval;
-   itval.it_interval.tv_sec = itval.it_interval.tv_usec = 0;
-   itval.it_value.tv_sec = itval.it_value.tv_usec = 0;
-   if (ms >= 0) {
-      itval.it_value.tv_sec  = ms / 1000;
-      itval.it_value.tv_usec = (ms % 1000) * 1000;
-   }
-   return setitimer(ITIMER_REAL, &itval, 0);
+      struct itimerval itval;
+      itval.it_interval.tv_sec = itval.it_interval.tv_usec = 0;
+      itval.it_value.tv_sec = itval.it_value.tv_usec = 0;
+      if (ms >= 0) {
+         itval.it_value.tv_sec  = ms / 1000;
+         itval.it_value.tv_usec = (ms % 1000) * 1000;
+      }
+      return setitimer(ITIMER_REAL, &itval, 0);
    }
 
    //---- RPC -------------------------------------------------------------------
@@ -216,191 +216,191 @@ namespace {
    //______________________________________________________________________________
    static int WinNTRecv(int socket, void *buffer, int length, int flag)
    {
-   // Receive exactly length bytes into buffer. Returns number of bytes
-   // received. Returns -1 in case of error, -2 in case of MSG_OOB
-   // and errno == EWOULDBLOCK, -3 in case of MSG_OOB and errno == EINVAL
-   // and -4 in case of kNonBlock and errno == EWOULDBLOCK.
-   // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
+      // Receive exactly length bytes into buffer. Returns number of bytes
+      // received. Returns -1 in case of error, -2 in case of MSG_OOB
+      // and errno == EWOULDBLOCK, -3 in case of MSG_OOB and errno == EINVAL
+      // and -4 in case of kNonBlock and errno == EWOULDBLOCK.
+      // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
 
-   if (socket == -1) return -1;
-   SOCKET sock = socket;
+      if (socket == -1) return -1;
+      SOCKET sock = socket;
 
-   int once = 0;
-   if (flag == -1) {
-      flag = 0;
-      once = 1;
-   }
+      int once = 0;
+      if (flag == -1) {
+         flag = 0;
+         once = 1;
+      }
 
-   int nrecv, n;
-   char *buf = (char *)buffer;
+      int nrecv, n;
+      char *buf = (char *)buffer;
 
-   for (n = 0; n < length; n += nrecv) {
-      if ((nrecv = ::recv(sock, buf+n, length-n, flag)) <= 0) {
-         if (nrecv == 0) {
-            break;        // EOF
-         }
-         if (flag == MSG_OOB) {
+      for (n = 0; n < length; n += nrecv) {
+         if ((nrecv = ::recv(sock, buf+n, length-n, flag)) <= 0) {
+            if (nrecv == 0) {
+               break;        // EOF
+            }
+            if (flag == MSG_OOB) {
+               if (::WSAGetLastError() == WSAEWOULDBLOCK) {
+                  return -2;
+               } else if (::WSAGetLastError() == WSAEINVAL) {
+                  return -3;
+               }
+            }
             if (::WSAGetLastError() == WSAEWOULDBLOCK) {
-               return -2;
-            } else if (::WSAGetLastError() == WSAEINVAL) {
-               return -3;
+               return -4;
+            } else {
+               if (::WSAGetLastError() != WSAEINTR)
+                  ::SysError("TWinNTSystem::WinNTRecv", "recv");
+               if (::WSAGetLastError() == EPIPE ||
+                  ::WSAGetLastError() == WSAECONNRESET)
+                  return -5;
+               else
+                  return -1;
             }
          }
-         if (::WSAGetLastError() == WSAEWOULDBLOCK) {
-            return -4;
-         } else {
-            if (::WSAGetLastError() != WSAEINTR)
-               ::SysError("TWinNTSystem::WinNTRecv", "recv");
-            if (::WSAGetLastError() == EPIPE ||
-                ::WSAGetLastError() == WSAECONNRESET)
-               return -5;
-            else
-               return -1;
+         if (once) {
+            return nrecv;
          }
       }
-      if (once) {
-         return nrecv;
-      }
-   }
-   return n;
+      return n;
    }
 
    //______________________________________________________________________________
    static int WinNTSend(int socket, const void *buffer, int length, int flag)
    {
-   // Send exactly length bytes from buffer. Returns -1 in case of error,
-   // otherwise number of sent bytes. Returns -4 in case of kNoBlock and
-   // errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
-   // (EPIPE || ECONNRESET).
+      // Send exactly length bytes from buffer. Returns -1 in case of error,
+      // otherwise number of sent bytes. Returns -4 in case of kNoBlock and
+      // errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
+      // (EPIPE || ECONNRESET).
 
-   if (socket < 0) return -1;
-   SOCKET sock = socket;
+      if (socket < 0) return -1;
+      SOCKET sock = socket;
 
-   int once = 0;
-   if (flag == -1) {
-      flag = 0;
-      once = 1;
-   }
+      int once = 0;
+      if (flag == -1) {
+         flag = 0;
+         once = 1;
+      }
 
-   int nsent, n;
-   const char *buf = (const char *)buffer;
+      int nsent, n;
+      const char *buf = (const char *)buffer;
 
-   for (n = 0; n < length; n += nsent) {
-      if ((nsent = ::send(sock, buf+n, length-n, flag)) <= 0) {
-         if (nsent == 0) {
-            break;
+      for (n = 0; n < length; n += nsent) {
+         if ((nsent = ::send(sock, buf+n, length-n, flag)) <= 0) {
+            if (nsent == 0) {
+               break;
+            }
+            if (::WSAGetLastError() == WSAEWOULDBLOCK) {
+               return -4;
+            } else {
+               if (::WSAGetLastError() != WSAEINTR)
+                  ::SysError("TWinNTSystem::WinNTSend", "send");
+               if (::WSAGetLastError() == EPIPE ||
+                  ::WSAGetLastError() == WSAECONNRESET)
+                  return -5;
+               else
+                  return -1;
+            }
          }
-         if (::WSAGetLastError() == WSAEWOULDBLOCK) {
-            return -4;
-         } else {
-            if (::WSAGetLastError() != WSAEINTR)
-               ::SysError("TWinNTSystem::WinNTSend", "send");
-            if (::WSAGetLastError() == EPIPE ||
-                ::WSAGetLastError() == WSAECONNRESET)
-               return -5;
-            else
-               return -1;
+         if (once) {
+            return nsent;
          }
       }
-      if (once) {
-         return nsent;
-      }
-   }
-   return n;
+      return n;
    }
 
    //______________________________________________________________________________
    static int WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout)
    {
-   // Wait for events on the file descriptors specified in the readready and
-   // writeready masks or for timeout (in milliseconds) to occur.
+      // Wait for events on the file descriptors specified in the readready and
+      // writeready masks or for timeout (in milliseconds) to occur.
 
-   int retcode;
-   fd_set* rbits = readready ? (fd_set*)readready->GetBits() : 0;
-   fd_set* wbits = writeready ? (fd_set*)writeready->GetBits() : 0;
+      int retcode;
+      fd_set* rbits = readready ? (fd_set*)readready->GetBits() : 0;
+      fd_set* wbits = writeready ? (fd_set*)writeready->GetBits() : 0;
 
-   if (timeout >= 0) {
-      timeval tv;
-      tv.tv_sec  = timeout / 1000;
-      tv.tv_usec = (timeout % 1000) * 1000;
+      if (timeout >= 0) {
+         timeval tv;
+         tv.tv_sec  = timeout / 1000;
+         tv.tv_usec = (timeout % 1000) * 1000;
 
-      retcode = ::select(0, rbits, wbits, 0, &tv);
-   } else {
-      retcode = ::select(0, rbits, wbits, 0, 0);
-   }
+         retcode = ::select(0, rbits, wbits, 0, &tv);
+      } else {
+         retcode = ::select(0, rbits, wbits, 0, 0);
+      }
 
-   if (retcode == SOCKET_ERROR) {
-      int errcode = ::WSAGetLastError();
+      if (retcode == SOCKET_ERROR) {
+         int errcode = ::WSAGetLastError();
 
-      // if file descriptor is not a socket, assume it is the pipe used
-      // by TXSocket
-      if (errcode == WSAENOTSOCK) {
-         struct __stat64 buf;
-         int result = _fstat64( readready->GetFd(0), &buf );
-         if ( result == 0 ) {
-            if (buf.st_size > 0)
-               return 1;
+         // if file descriptor is not a socket, assume it is the pipe used
+         // by TXSocket
+         if (errcode == WSAENOTSOCK) {
+            struct __stat64 buf;
+            int result = _fstat64( readready->GetFd(0), &buf );
+            if ( result == 0 ) {
+               if (buf.st_size > 0)
+                  return 1;
+            }
+            // yield execution to another thread that is ready to run 
+            // if no other thread is ready, sleep 1 ms before to return
+            if (!SwitchToThread())
+               SleepEx(1, TRUE);
+            return 0;
          }
-         // yield execution to another thread that is ready to run 
-         // if no other thread is ready, sleep 1 ms before to return
-         if (!SwitchToThread())
-            SleepEx(1, TRUE);
-         return 0;
-      }
 
-      if ( errcode == WSAEINTR) {
-         TSystem::ResetErrno();  // errno is not self reseting
-         return -2;
+         if ( errcode == WSAEINTR) {
+            TSystem::ResetErrno();  // errno is not self reseting
+            return -2;
+         }
+         if (errcode == EBADF) {
+            return -3;
+         }
+         return -1;
       }
-      if (errcode == EBADF) {
-         return -3;
-      }
-      return -1;
-   }
-   return retcode;
+      return retcode;
    }
 
    //______________________________________________________________________________
    static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
    {
-   // Get shared library search path.
+      // Get shared library search path.
 
-   static const char *dynpath = 0;
+      static const char *dynpath = 0;
 
-   if ((reset || newpath) && dynpath) {
-      delete [] (char*)dynpath;
-      dynpath = 0;
-   }
-   if (newpath) {
-
-      dynpath = StrDup(newpath);
-
-   } else if (dynpath == 0) {
-      dynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
-      if (dynpath == 0) {
-         dynpath = StrDup(Form("%s;%s/bin;%s,", gProgPath, gRootDir, gSystem->Getenv("PATH")));
+      if ((reset || newpath) && dynpath) {
+         delete [] (char*)dynpath;
+         dynpath = 0;
       }
-   }
-   return dynpath;
+      if (newpath) {
+
+         dynpath = StrDup(newpath);
+
+      } else if (dynpath == 0) {
+         dynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
+         if (dynpath == 0) {
+            dynpath = StrDup(Form("%s;%s/bin;%s,", gProgPath, gRootDir, gSystem->Getenv("PATH")));
+         }
+      }
+      return dynpath;
    }
 
    //______________________________________________________________________________
    static void sighandler(int sig)
    {
-   // Call the signal handler associated with the signal.
+      // Call the signal handler associated with the signal.
 
-   for (int i = 0; i < kMAXSIGNALS; i++) {
-      if (signal_map[i].code == sig) {
-         (*signal_map[i].handler)((ESignals)i);
-         return;
+      for (int i = 0; i < kMAXSIGNALS; i++) {
+         if (signal_map[i].code == sig) {
+            (*signal_map[i].handler)((ESignals)i);
+            return;
+         }
       }
-   }
    }
 
    //______________________________________________________________________________
    static void WinNTSignal(ESignals sig, SigHandler_t handler)
    {
-   // Set a signal handler for a signal.
+      // Set a signal handler for a signal.
       signal_map[sig].handler = handler;
       if (signal_map[sig].code != -1)
          (SigHandler_t)signal(signal_map[sig].code, sighandler);
@@ -409,127 +409,133 @@ namespace {
    //______________________________________________________________________________
    static char *WinNTSigname(ESignals sig)
    {
-   // Return the signal name associated with a signal.
+      // Return the signal name associated with a signal.
 
-   return signal_map[sig].signame;
+      return signal_map[sig].signame;
    }
 
    //______________________________________________________________________________
    static BOOL ConsoleSigHandler(DWORD sig)
    {
-   // WinNT signal handler.
+      // WinNT signal handler.
 
-   switch (sig) {
-   case CTRL_C_EVENT:
-   if (!G__get_security_error()) {
-      G__genericerror("\n *** Break *** keyboard interrupt");
-   } else {
-      Break("TInterruptHandler::Notify", "keyboard interrupt");
-      if (TROOT::Initialized()) {
-         gInterpreter->RewindDictionary();
+      switch (sig) {
+         case CTRL_C_EVENT:
+            if (!G__get_security_error()) {
+               G__genericerror("\n *** Break *** keyboard interrupt");
+            } else {
+               Break("TInterruptHandler::Notify", "keyboard interrupt");
+               if (TROOT::Initialized()) {
+                  gInterpreter->RewindDictionary();
+               }
+            }
+            return kTRUE;
+         case CTRL_BREAK_EVENT:
+         case CTRL_LOGOFF_EVENT:
+         case CTRL_SHUTDOWN_EVENT:
+         case CTRL_CLOSE_EVENT:
+         default:
+            printf("\n *** Break *** keyboard interrupt - ROOT is terminated\n");
+            gSystem->Exit(-1);
+            return kTRUE;
       }
-   }
-   return kTRUE;
-   case CTRL_BREAK_EVENT:
-   case CTRL_LOGOFF_EVENT:
-   case CTRL_SHUTDOWN_EVENT:
-   case CTRL_CLOSE_EVENT:
-   default:
-      printf("\n *** Break *** keyboard interrupt - ROOT is terminated\n");
-      gSystem->Exit(-1);
-      return kTRUE;
-   }
    }
 
    static CONTEXT *fgXcptContext = 0;
    //______________________________________________________________________________
    static void SigHandler(ESignals sig)
    {
-   if (gSystem) {
+      if (gSystem) {
          gSystem->StackTrace();
-      if (TROOT::Initialized()) {
-         ::Throw(sig);
+         if (TROOT::Initialized()) {
+            ::Throw(sig);
+         }
+         gSystem->Abort(-1);
       }
-      gSystem->Abort(-1);
-   }
    }
 
-   LONG WINAPI ExceptionFilter(LPEXCEPTION_POINTERS pXcp) {
+   //______________________________________________________________________________
+   LONG WINAPI ExceptionFilter(LPEXCEPTION_POINTERS pXcp) 
+   {
+      // Function that's called when an unhandled exception occurs.
+      // Produces a stack trace, and lets the system deal with it
+      // as if it was an unhandled excecption (usually ::abort)
       fgXcptContext = pXcp->ContextRecord;
       gSystem->StackTrace();
       return EXCEPTION_CONTINUE_SEARCH;
    }
 
 
-   #pragma intrinsic(_ReturnAddress)
-   #pragma auto_inline(off)
+#pragma intrinsic(_ReturnAddress)
+#pragma auto_inline(off)
    DWORD_PTR GetProgramCounter()
    {
+      // Returns the current program counter.
       return (DWORD_PTR)_ReturnAddress();
    }
-   #pragma auto_inline(on)
+#pragma auto_inline(on)
 
    ///////////////////////////////////////////////////////////////////////////////
    class TTermInputLine :  public  TWin32HookViaThread {
 
    protected:
-   void ExecThreadCB(TWin32SendClass *sentclass);
+      void ExecThreadCB(TWin32SendClass *sentclass);
    public:
-   TTermInputLine::TTermInputLine();
+      TTermInputLine::TTermInputLine();
    };
 
    //______________________________________________________________________________
    TTermInputLine::TTermInputLine()
    {
-   //
+      //
 
-   TWin32SendWaitClass CodeOp(this);
-   ExecCommandThread(&CodeOp, kFALSE);
-   CodeOp.Wait();
+      TWin32SendWaitClass CodeOp(this);
+      ExecCommandThread(&CodeOp, kFALSE);
+      CodeOp.Wait();
    }
 
    //______________________________________________________________________________
    void TTermInputLine::ExecThreadCB(TWin32SendClass *code)
    {
-   // Dispatch a single event.
+      // Dispatch a single event.
 
-   gROOT->GetApplication()->HandleTermInput();
-   ((TWin32SendWaitClass *)code)->Release();
+      gROOT->GetApplication()->HandleTermInput();
+      ((TWin32SendWaitClass *)code)->Release();
    }
 
    //______________________________________________________________________________
    unsigned __stdcall HandleConsoleThread(void *pArg )
    {
-   //
+      //
 
-   while (1) {
-      if(gROOT->GetApplication()) {
-         if (gConsoleEvent) {
-            ::WaitForSingleObject(gConsoleEvent, INFINITE);
+      while (1) {
+         if(gROOT->GetApplication()) {
+            if (gConsoleEvent) {
+               ::WaitForSingleObject(gConsoleEvent, INFINITE);
+            }
+
+            if(!gApplication->HandleTermInput()) break; // no terminal input
+
+            if (gSplash) {    // terminate splash window after first key press
+               delete gSplash;
+               gSplash = 0;
+            }
+            ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE),
+               ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+            if (gConsoleEvent)
+               ::ResetEvent(gConsoleEvent);
+         } else {
+            static int i = 0;
+            ::SleepEx(100, 1);
+            i++;
+            if (i > 20) break; // TApplication object doesn't exist
          }
-
-         if(!gApplication->HandleTermInput()) break; // no terminal input
-
-         if (gSplash) {    // terminate splash window after first key press
-            delete gSplash;
-            gSplash = 0;
-         }
-         ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE),
-                          ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
-         if (gConsoleEvent)
-            ::ResetEvent(gConsoleEvent);
-      } else {
-         static int i = 0;
-         ::SleepEx(100, 1);
-         i++;
-         if (i > 20) break; // TApplication object doesn't exist
       }
-   }
 
-   ::CloseHandle(gConsoleThreadHandle);
-   gConsoleThreadHandle = 0;
-   _endthreadex( 0 );
-   return 0;
+      ::CloseHandle(gConsoleThreadHandle);
+      gConsoleThreadHandle = 0;
+      _endthreadex( 0 );
+      return 0;
    }
 
    //=========================================================================
@@ -564,6 +570,12 @@ namespace {
 
    BOOL InitImagehlpFunctions()
    {
+      // Fetches function addresses from IMAGEHLP.DLL at run-time, so we 
+      // don't need to link against its import library. These functions
+      // are used in StackTrace; if they cannot be found (e.g. because
+      // IMAGEHLP.DLL doesn't exist or has the wrong version) we cannot
+      // produce a stack trace.
+
       HMODULE hModImagehlp = LoadLibrary( "IMAGEHLP.DLL" );
       if (!hModImagehlp)
          return FALSE;
@@ -616,7 +628,10 @@ namespace {
    * Copyright (C) 2000-2004 Computer Graphics Systems Group at the 
    * Hasso-Plattner-Institute (HPI), Potsdam, Germany.
    ******************************************************************************/
-   std::string GetModuleName(DWORD64 address) {
+   std::string GetModuleName(DWORD64 address)
+   {
+      // Return the name of the module that contains the function at address.
+      // Used by StackTrace.
       std::ostringstream out;
       HANDLE process = ::GetCurrentProcess();
 
@@ -640,7 +655,10 @@ namespace {
       return out.str();
    }
 
-   std::string GetFunctionName(DWORD64 address) {
+   std::string GetFunctionName(DWORD64 address)
+   {
+      // Return the name of the function at address.
+      // Used by StackTrace.
       DWORD64 symbolDisplacement = 0;
       HANDLE process = ::GetCurrentProcess();
 
@@ -781,6 +799,10 @@ Bool_t TWinNTSystem::Init()
    fNfd    = 0;
 
    //--- install default handlers
+   // Actually: don't. If we want a stack trace we need a context for the
+   // signal. Signals don't have one. If we don't handle them, Windows will
+   // raise an exception, which has a context, and which is handled by
+   // ExceptionFilter.
    /*
    WinNTSignal(kSigChild,                 SigHandler);
    WinNTSignal(kSigBus,                   SigHandler);
@@ -1195,7 +1217,12 @@ void TWinNTSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
 //______________________________________________________________________________
 void TWinNTSystem::StackTrace()
 {
-   // Print a stack trace.
+   // Print a stack trace, if gEnv entry "Root.Stacktrace" is unset or 1,
+   // and if the image helper functions can be found (see InitImagehlpFunctions()).
+   // The stack trace is printed for each thread; if fgXcptContext is set (e.g. 
+   // because there was an exception) use it to define the current thread's context.
+   // For each frame in the stack, the frame's module name, the frame's function
+   // name, and the frame's line number are printed.
 
    if (!gEnv->GetValue("Root.Stacktrace", 1))
       return;
