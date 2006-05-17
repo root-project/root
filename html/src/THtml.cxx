@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.96 2006/05/05 15:34:30 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.97 2006/05/16 08:27:12 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -3986,13 +3986,13 @@ void THtml::ReplaceSpecialChars(ofstream & out, const char c)
    else {
       switch (c) {
       case '<':
-         out << "&lt; ";
+         out << "&lt;";
          break;
       case '&':
          out << "&amp;";
          break;
       case '>':
-         out << " &gt;";
+         out << "&gt;";
          break;
       default:
          out << c;
