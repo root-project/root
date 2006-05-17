@@ -5,7 +5,7 @@
 //directory, it is automatically read from the ROOT web site.
 // Author: Rene Brun
       
-void geomAlice() {
+void geomAlice()
 {
    if (!gSystem->AccessPathName("alice.root")) {
       TGeoManager::Import("alice.root");
@@ -34,7 +34,6 @@ void geomAlice() {
    gGeoManager->GetVolume("DY2")->SetTransparency(90);
    gGeoManager->GetVolume("DY11")->SetTransparency(70);
    gGeoManager->GetVolume("DY22")->SetTransparency(70);
-   gGeoManager->GetVolume("L3IR")->SetTransparency(100);
    gGeoManager->GetVolume("ALIC")->Draw("ogl");
    new TBrowser;
 }
