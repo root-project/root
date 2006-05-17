@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.41 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.42 2006/03/20 21:43:43 pcanal Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -312,6 +312,8 @@ void THStack::Add(TH1 *h1, Option_t *option)
 //______________________________________________________________________________
 void THStack::Browse(TBrowser *b)
 {
+   // Browse.
+
    Draw(b ? b->GetDrawOption() : "");
    gPad->Update();
 }
@@ -792,6 +794,8 @@ void THStack::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void THStack::SetMaximum(Double_t maximum)
 {
+   // Set maximum.
+
    fMaximum = maximum;
    if (fHistogram)  fHistogram->SetMaximum(maximum);
 }
@@ -799,6 +803,8 @@ void THStack::SetMaximum(Double_t maximum)
 //______________________________________________________________________________
 void THStack::SetMinimum(Double_t minimum)
 {
+   // Set minimum.
+
    fMinimum = minimum;
    if (fHistogram) fHistogram->SetMinimum(minimum);
 }

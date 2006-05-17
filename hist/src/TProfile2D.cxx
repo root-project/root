@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.49 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.50 2006/04/20 14:36:48 rdm Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -219,6 +219,8 @@ void TProfile2D::BuildOptions(Double_t zmin, Double_t zmax, Option_t *option)
 //______________________________________________________________________________
 TProfile2D::TProfile2D(const TProfile2D &profile) : TH2D()
 {
+   // Copy constructor.
+
    ((TProfile2D&)profile).Copy(*this);
 }
 

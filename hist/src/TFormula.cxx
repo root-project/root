@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.119 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.120 2006/05/16 16:50:02 couet Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -241,6 +241,8 @@ TFormula::TFormula(const char *name,const char *expression) :
 //______________________________________________________________________________
 TFormula::TFormula(const TFormula &formula) : TNamed()
 {
+   // Default constructor.
+
    fNdim   = 0;
    fNpar   = 0;
    fNoper  = 0;
@@ -264,6 +266,8 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
 //______________________________________________________________________________
 TFormula& TFormula::operator=(const TFormula &rhs)
 {
+   // Operator =
+
    if (this != &rhs) {
       rhs.Copy(*this);
    }
@@ -2859,6 +2863,8 @@ TString TFormula::GetExpFormula() const
 //______________________________________________________________________________
 const TObject* TFormula::GetLinearPart(Int_t i)
 {
+   // Return linear part.
+   
    if (!fLinearParts.IsEmpty())
       return fLinearParts.UncheckedAt(i);
    return 0;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.12 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.13 2006/05/17 09:37:21 couet Exp $
 // Author: Miroslav Morhac   17/01/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -88,6 +88,8 @@ ClassImp(TSpectrum2)
 //______________________________________________________________________________
 TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder") 
 {
+   // Constructor.
+
    Int_t n = 100;
    fMaxPeaks   = n;
    fPosition   = new Float_t[n];
@@ -122,6 +124,8 @@ TSpectrum2::TSpectrum2(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum
 //______________________________________________________________________________
 TSpectrum2::~TSpectrum2() 
 {
+   // Destructor.
+
    delete [] fPosition;
    delete [] fPositionX;
    delete [] fPositionY;
@@ -929,17 +933,17 @@ const char* TSpectrum2::SmoothMarkov(float **source, Int_t ssizex, Int_t ssizey,
 {
 /////////////////////////////////////////////////////////////////////////////
 //   TWO-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION               
-//                                              			 
+//
 //   This function calculates smoothed spectrum from source spectrum    
 //      based on Markov chain method.                                     
 //   The result is placed in the array pointed by source pointer.      
-//   								   
-//   Function parameters:						   
-//   source-pointer to the array of source spectrum   		  
-//   ssizex-x length of source					   
-//   ssizey-y length of source					   
-//   averWindow-width of averaging smoothing window                	  
-//   								   
+//
+//   Function parameters:
+//   source-pointer to the array of source spectrum
+//   ssizex-x length of source
+//   ssizey-y length of source
+//   averWindow-width of averaging smoothing window
+//
 /////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
@@ -1209,7 +1213,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
             b = b / a;
             b = TMath::Exp(b);
             smy = smy + b;
-       	 }
+         }
          a = (spx * working_space[i][j + 1] + spy * working_space[i + 1][j]) / (smx +smy);
          working_space[i + 1][j + 1] = a;
          nom = nom + a;
@@ -1343,20 +1347,20 @@ const char *TSpectrum2::Deconvolution(float **source, float **resp,
                                        Double_t boost)                                        
 {   
 /////////////////////////////////////////////////////////////////////////////
-//   TWO-DIMENSIONAL DECONVOLUTION FUNCTION          		 
-//   This function calculates deconvolution from source spectrum	 
-//   according to response spectrum					  
-//   The result is placed in the matrix pointed by source pointer.	  
-//   								   
-//   Function parameters:						  
-//   source-pointer to the matrix of source spectrum		   
-//   resp-pointer to the matrix of response spectrum		   
-//   ssizex-x length of source and response spectra			  
-//   ssizey-y length of source and response spectra			   
-//   numberIterations, for details we refer to manual		   
-//   numberRepetitions, for details we refer to manual		   
-//   boost, boosting factor, for details we refer to manual		   
-//   								   
+//   TWO-DIMENSIONAL DECONVOLUTION FUNCTION
+//   This function calculates deconvolution from source spectrum
+//   according to response spectrum
+//   The result is placed in the matrix pointed by source pointer.
+//
+//   Function parameters:
+//   source-pointer to the matrix of source spectrum
+//   resp-pointer to the matrix of response spectrum
+//   ssizex-x length of source and response spectra
+//   ssizey-y length of source and response spectra
+//   numberIterations, for details we refer to manual
+//   numberRepetitions, for details we refer to manual
+//   boost, boosting factor, for details we refer to manual
+//
 /////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
@@ -1608,7 +1612,7 @@ Processing 13 (2003) 144. </span></p>
       }
    }
    
-	//START OF ITERATIONS 
+   //START OF ITERATIONS 
    for (repet = 0; repet < numberRepetitions; repet++) {
       if (repet != 0) {
          for (i = 0; i < ssizex; i++) {
@@ -1617,7 +1621,7 @@ Processing 13 (2003) 144. </span></p>
                    TMath::Power(working_space[i][j + 3 * ssizey], boost);
             }
          }
-      }	
+      }
       for (lindex = 0; lindex < numberIterations; lindex++) {
          for (i2 = 0; i2 < ssizey; i2++) {
             for (i1 = 0; i1 < ssizex; i1++) {
@@ -2059,19 +2063,19 @@ Int_t TSpectrum2::SearchHighRes(float **source,float **dest, Int_t ssizex, Int_t
                                      
 {
 /////////////////////////////////////////////////////////////////////////////
-//   TWO-DIMENSIONAL HIGH-RESOLUTION PEAK SEARCH FUNCTION		   //
-//   This function searches for peaks in source spectrum		   //
+//   TWO-DIMENSIONAL HIGH-RESOLUTION PEAK SEARCH FUNCTION                  //
+//   This function searches for peaks in source spectrum                   //
 //      It is based on deconvolution method. First the background is       //
 //      removed (if desired), then Markov spectrum is calculated           //
 //      (if desired), then the response function is generated              //
 //      according to given sigma and deconvolution is carried out.         //
-//   								           //
-//   Function parameters:						   //
-//   source-pointer to the matrix of source spectrum		           //
-//   dest-pointer to the matrix of resulting deconvolved spectrum	   //
-//   ssizex-x length of source spectrum				           //
-//   ssizey-y length of source spectrum				           //
-//   sigma-sigma of searched peaks, for details we refer to manual	   //
+//                                                                         //
+//   Function parameters:                                                  //
+//   source-pointer to the matrix of source spectrum                       //
+//   dest-pointer to the matrix of resulting deconvolved spectrum          //
+//   ssizex-x length of source spectrum                                    //
+//   ssizey-y length of source spectrum                                    //
+//   sigma-sigma of searched peaks, for details we refer to manual         //
 //   threshold-threshold value in % for selected peaks, peaks with         //
 //                amplitude less than threshold*highest_peak/100           //
 //                are ignored, see manual                                  //
@@ -2083,7 +2087,7 @@ Int_t TSpectrum2::SearchHighRes(float **source,float **dest, Int_t ssizex, Int_t
 //             chains method.                                              //
 //   averWindow-averanging window of searched peaks, for details           //
 //                  we refer to manual (applies only for Markov method)    //
-//   								           //
+//                                                                         //
 /////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
@@ -2235,7 +2239,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
       Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");
       return 0;
    }
-   	
+ 
    if(threshold<=0||threshold>=100){
       Error("SearchHighRes", "Invalid threshold, must be positive and less than 100");
       return 0;
@@ -2256,7 +2260,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
    if(backgroundRemove == true){
       if(ssizex_ext < 2 * number_of_iterations + 1 || ssizey_ext < 2 * number_of_iterations + 1){
          Error("SearchHighRes", "Too large clipping window");
-         return 0;      	
+         return 0;
       }
    }   
    i = (int)(4 * sigma + 0.5);
@@ -2377,7 +2381,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
                else
                   working_space[i][j + ssizey_ext] = source[i - shift][j - shift] - working_space[i][j + ssizey_ext];
             }
-       	 }
+         }
       }
    }
    for(j = 0; j < ssizey_ext; j++){
@@ -2425,7 +2429,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
             else
                a=TMath::Sqrt(a + nip);            
             b = b / a;
-            b = TMath::Exp(b);                        	    
+            b = TMath::Exp(b);
             sp = sp + b;
             if(i - l + 1 < xmin)
                a = working_space[xmin][ymin + 2 * ssizey_ext] / maxch;
@@ -2439,7 +2443,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
             else
                a=TMath::Sqrt(a + nim);                        
             b = b / a;
-            b = TMath::Exp(b);                        	    	    
+            b = TMath::Exp(b);
             sm = sm + b;
          }
          a = sp / sm;
@@ -2463,7 +2467,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
             else
                a=TMath::Sqrt(a + nip);            
             b = b / a;
-            b = TMath::Exp(b);                        	                
+            b = TMath::Exp(b);
             sp = sp + b;
             if(i - l + 1 < ymin)
                a = working_space[xmin][ymin + 2 * ssizey_ext] / maxch;
@@ -2477,7 +2481,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
             else
                a=TMath::Sqrt(a + nim);            
             b = b / a;
-            b = TMath::Exp(b);                        	                            
+            b = TMath::Exp(b);
             sm = sm + b;
          }
          a = sp / sm;
@@ -2502,7 +2506,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
                else
                   a=TMath::Sqrt(a + nip);            
                b = b / a;
-               b = TMath::Exp(b);                        	                                  
+               b = TMath::Exp(b);
                spx = spx + b;
                if(i - l + 1 < xmin)
                   a = working_space[xmin][j + 2 * ssizey_ext] / maxch;
@@ -2516,7 +2520,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
                else
                   a=TMath::Sqrt(a + nim);            
                b = b / a;
-               b = TMath::Exp(b);                        	                                              
+               b = TMath::Exp(b);
                smx = smx + b;
             }
             spy = 0,smy = 0;
@@ -2535,7 +2539,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
                else
                   a=TMath::Sqrt(a + nip);            
                b = b / a;
-               b = TMath::Exp(b);                        	                                                    
+               b = TMath::Exp(b);
                spy = spy + b;
                if(j - l + 1 < ymin)
                   a = working_space[i][ymin + 2 * ssizey_ext] / maxch;
@@ -2548,7 +2552,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
                else
                   a=TMath::Sqrt(a + nim);            
                b = b / a;
-               b = TMath::Exp(b);                        	                                                                
+               b = TMath::Exp(b);
                smy = smy + b;
             }
             a = (spx * working_space[i][j + 1] + spy * working_space[i + 1][j]) / (smx + smy);
@@ -2753,7 +2757,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
          if(working_space[i][j] > working_space[i - 1][j] && working_space[i][j] > working_space[i - 1][j - 1] && working_space[i][j] > working_space[i][j - 1] && working_space[i][j] > working_space[i + 1][j - 1] && working_space[i][j] > working_space[i + 1][j] && working_space[i][j] > working_space[i + 1][j + 1] && working_space[i][j] > working_space[i][j + 1] && working_space[i][j] > working_space[i - 1][j + 1]){
             if(i >= shift && i < ssizex + shift && j >= shift && j < ssizey + shift){
                if(working_space[i][j] > threshold * maximum / 100.0){
-                  if(peak_index < fMaxPeaks){            	               	
+                  if(peak_index < fMaxPeaks){
                      for(k = i - 1,a = 0,b = 0; k <= i + 1; k++){
                         a += (double)(k - shift) * working_space[k][j];
                         b += working_space[k][j];
@@ -2763,7 +2767,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
                         ax = 0;
 
                      if(ax >= ssizex)
-                        ax = ssizex - 1;	
+                        ax = ssizex - 1;
 
                      for(k = j - 1,a = 0,b = 0; k <= j + 1; k++){
                         a += (double)(k - shift) * working_space[i][k];
@@ -2774,7 +2778,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
                         ay = 0;
 
                      if(ay >= ssizey)
-                        ay = ssizey - 1;	
+                        ay = ssizey - 1;
 
                      if(peak_index == 0){
                         fPositionX[0] = ax;
@@ -2784,29 +2788,29 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
 
                      else{
                         for(k = 0, priz = 0; k < peak_index && priz == 0; k++){
-                           if(working_space[shift+(int)(ax+0.5)][15 * ssizey_ext + shift + (int)(ay+0.5)] > working_space[shift+(int)(fPositionX[k]+0.5)][15 * ssizey_ext + shift + (int)(fPositionY[k]+0.5)])	
+                           if(working_space[shift+(int)(ax+0.5)][15 * ssizey_ext + shift + (int)(ay+0.5)] > working_space[shift+(int)(fPositionX[k]+0.5)][15 * ssizey_ext + shift + (int)(fPositionY[k]+0.5)])
                               priz = 1;
                         }
                         if(priz == 0){
                            if(k < fMaxPeaks){
                               fPositionX[k] = ax;
-                              fPositionY[k] = ay;	
+                              fPositionY[k] = ay;
                            }
                         }
 
                         else{
                            for(l = peak_index; l >= k; l--){
-                              if(l < fMaxPeaks){                     	
+                              if(l < fMaxPeaks){
                                  fPositionX[l] = fPositionX[l - 1];
-                                 fPositionY[l] = fPositionY[l - 1];                              
+                                 fPositionY[l] = fPositionY[l - 1];
                               }
-                           }      
-                           fPositionX[k - 1] = ax;                        
-                           fPositionY[k - 1] = ay;                                                
+                           }
+                           fPositionX[k - 1] = ax;
+                           fPositionY[k - 1] = ay;
                         }
                         if(peak_index < fMaxPeaks)
                            peak_index += 1;
-                     }                                           	
+                     }
                   }
                }
             }

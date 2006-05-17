@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.17 2005/12/10 11:17:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.18 2006/02/03 21:55:39 pcanal Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -344,6 +344,8 @@ TConfidenceLevel *TLimit::ComputeLimit(TH1* s, TH1* b, TH1* d,
                                                              Double_t,
                                                              Double_t))
 {
+   // Compute limit.
+
    TLimitDataSource* lds = new TLimitDataSource(s,b,d);
    TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator,statistic);
    delete lds;
@@ -358,6 +360,8 @@ TConfidenceLevel *TLimit::ComputeLimit(TH1* s, TH1* b, TH1* d,
                                                              Double_t,
                                                              Double_t))
 {
+   // Compute limit.
+
    TLimitDataSource* lds = new TLimitDataSource(s,b,d,se,be,l);
    TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator,statistic);
    delete lds;
@@ -372,6 +376,8 @@ TConfidenceLevel *TLimit::ComputeLimit(Double_t s, Double_t b, Int_t d,
                                                              Double_t,
                                                              Double_t))
 {
+   // Compute limit.
+
    TH1D* sh = new TH1D("__sh","__sh",1,0,2);
    sh->Fill(1,s);
    TH1D* bh = new TH1D("__bh","__bh",1,0,2);
@@ -396,6 +402,8 @@ TConfidenceLevel *TLimit::ComputeLimit(Double_t s, Double_t b, Int_t d,
                                                              Double_t,
                                                              Double_t))
 {
+   // Compute limit.
+
    TH1D* sh = new TH1D("__sh","__sh",1,0,2);
    sh->Fill(1,s);
    TH1D* bh = new TH1D("__bh","__bh",1,0,2);

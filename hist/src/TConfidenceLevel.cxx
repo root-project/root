@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.4 2003/06/23 20:37:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.5 2005/11/03 17:08:32 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -33,9 +33,12 @@ Double_t const TConfidenceLevel::fgMCL5S1S = 5.7330E-7;
 Double_t const TConfidenceLevel::fgMCL3S2S = 1.349898E-3;
 Double_t const TConfidenceLevel::fgMCL5S2S = 2.866516E-7;
 
+
+//______________________________________________________________________________
 TConfidenceLevel::TConfidenceLevel()
 {
    // Default constructor
+
    fStot = 0;
    fBtot = 0;
    fDtot = 0;
@@ -52,11 +55,14 @@ TConfidenceLevel::TConfidenceLevel()
    fMCL5S = fgMCL5S1S;
 }
 
+
+//______________________________________________________________________________
 TConfidenceLevel::TConfidenceLevel(Int_t mc, bool onesided)
 {
    // a constructor that fix some conventions:
    // mc is the number of Monte Carlo experiments
    // while onesided specifies if the intervals are one-sided or not.
+
    fStot = 0;
    fBtot = 0;
    fDtot = 0;
@@ -73,9 +79,12 @@ TConfidenceLevel::TConfidenceLevel(Int_t mc, bool onesided)
    fMCL5S = onesided ? fgMCL5S1S : fgMCL5S2S;
 }
 
+
+//______________________________________________________________________________
 TConfidenceLevel::~TConfidenceLevel()
 {
    // The destructor
+
    if (fISS)
       delete[]fISS;
    if (fISB)
@@ -90,9 +99,12 @@ TConfidenceLevel::~TConfidenceLevel()
       delete[]fLRB;
 }
 
+
+//______________________________________________________________________________
 Double_t TConfidenceLevel::GetExpectedStatistic_b(Int_t sigma) const
 {
    // Get the expected statistic value in the background only hypothesis
+
    switch (sigma) {
    case -2:
       return (-2 *((fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP2S)))]]) - fStot));
@@ -109,9 +121,12 @@ Double_t TConfidenceLevel::GetExpectedStatistic_b(Int_t sigma) const
    }
 }
 
+
+//______________________________________________________________________________
 Double_t TConfidenceLevel::GetExpectedStatistic_sb(Int_t sigma) const
 {
    // Get the expected statistic value in the signal plus background hypothesis
+
    switch (sigma) {
    case -2:
       return (-2 *((fTSS[fISS[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP2S)))]]) - fStot));
@@ -128,9 +143,12 @@ Double_t TConfidenceLevel::GetExpectedStatistic_sb(Int_t sigma) const
    }
 }
 
+
+//______________________________________________________________________________
 Double_t TConfidenceLevel::CLb(bool use_sMC) const
 {
    // Get the Confidence Level for the background only
+
    Double_t result = 0;
    switch (use_sMC) {
    case kFALSE:
@@ -151,9 +169,12 @@ Double_t TConfidenceLevel::CLb(bool use_sMC) const
    return result;
 }
 
+
+//______________________________________________________________________________
 Double_t TConfidenceLevel::CLsb(bool use_sMC) const
 {
    // Get the Confidence Level for the signal plus background hypothesis
+
    Double_t result = 0;
    switch (use_sMC) {
    case kFALSE:
@@ -174,20 +195,26 @@ Double_t TConfidenceLevel::CLsb(bool use_sMC) const
    return result;
 }
 
+
+//______________________________________________________________________________
 Double_t TConfidenceLevel::CLs(bool use_sMC) const
 {
    // Get the Confidence Level defined by CLs = CLsb/CLb.
    // This quantity is stable w.r.t. background fluctuations.
+
    Double_t clb = CLb(kFALSE);
    Double_t clsb = CLsb(use_sMC);
    if(clb==0) { cout << "Warning: clb = 0 !" << endl; return 0;}
    else return clsb/clb;
 }
 
+
+//______________________________________________________________________________
 Double_t TConfidenceLevel::GetExpectedCLsb_b(Int_t sigma) const
 {
    // Get the expected Confidence Level for the signal plus background hypothesis
    // if there is only background.
+
    Double_t result = 0;
    switch (sigma) {
    case -2:
@@ -230,10 +257,13 @@ Double_t TConfidenceLevel::GetExpectedCLsb_b(Int_t sigma) const
    }
 }
 
+
+//______________________________________________________________________________
 Double_t TConfidenceLevel::GetExpectedCLb_sb(Int_t sigma) const
 {
    // Get the expected Confidence Level for the background only 
    // if there is signal and background.
+
    Double_t result = 0;
    switch (sigma) {
    case 2:
@@ -276,10 +306,13 @@ Double_t TConfidenceLevel::GetExpectedCLb_sb(Int_t sigma) const
    }
 }
 
+
+//______________________________________________________________________________
 Double_t TConfidenceLevel::GetExpectedCLb_b(Int_t sigma) const
 {
    // Get the expected Confidence Level for the background only
    // if there is only background.
+
    Double_t result = 0;
    switch (sigma) {
    case 2:
@@ -321,8 +354,12 @@ Double_t TConfidenceLevel::GetExpectedCLb_b(Int_t sigma) const
    return result;
 }
 
+
+//______________________________________________________________________________
 Double_t TConfidenceLevel::GetAverageCLsb() const
 {
+   // Get average CLsb.
+
    Double_t result = 0;
    Double_t psumsb = 0;
    for (Int_t i = 0; i < fNMC; i++) {
@@ -332,8 +369,12 @@ Double_t TConfidenceLevel::GetAverageCLsb() const
    return result;
 }
 
+
+//______________________________________________________________________________
 Double_t TConfidenceLevel::GetAverageCLs() const
 {
+   // Get average CLs.
+
    Double_t result = 0;
    Double_t psumsb = 0;
    for (Int_t i = 0; i < fNMC; i++) {
@@ -343,8 +384,12 @@ Double_t TConfidenceLevel::GetAverageCLs() const
    return result;
 }
 
+
+//______________________________________________________________________________
 Double_t TConfidenceLevel::Get3sProbability() const
 {
+   // Get 3s probability.
+
    Double_t result = 0;
    Double_t psumbs = 0;
    for (Int_t i = 0; i < fNMC; i++) {
@@ -355,8 +400,12 @@ Double_t TConfidenceLevel::Get3sProbability() const
    return result;
 }
 
+
+//______________________________________________________________________________
 Double_t TConfidenceLevel::Get5sProbability() const
 {
+   // Get 5s probability.
+
    Double_t result = 0;
    Double_t psumbs = 0;
    for (Int_t i = 0; i < fNMC; i++) {
@@ -367,6 +416,8 @@ Double_t TConfidenceLevel::Get5sProbability() const
    return result;
 }
 
+
+//______________________________________________________________________________
 void  TConfidenceLevel::Draw(const Option_t*)
 {
    // Display sort of a "canonical" -2lnQ plot.
@@ -374,6 +425,7 @@ void  TConfidenceLevel::Draw(const Option_t*)
    // - The histogram of -2lnQ for background hypothesis (full)
    // - The histogram of -2lnQ for signal and background hypothesis (dashed)
    // The 2 histograms are respectively named b_hist and sb_hist.
+
    TH1F h("TConfidenceLevel_Draw","",50,0,0);
    Int_t i;
    for (i=0; i<fNMC; i++) {

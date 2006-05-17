@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.40 2006/03/15 13:31:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.41 2006/05/17 09:37:21 couet Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -61,6 +61,8 @@ ClassImp(TSpectrum)
 //______________________________________________________________________________
 TSpectrum::TSpectrum() :TNamed("Spectrum", "Miroslav Morhac peak finder") 
 {
+   // Constructor.
+
    Int_t n = 100;
    fMaxPeaks  = n;
    fPosition   = new Float_t[n];
@@ -97,6 +99,8 @@ TSpectrum::TSpectrum(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum",
 //______________________________________________________________________________
 TSpectrum::~TSpectrum() 
 {
+   // Destructor.
+
    delete [] fPosition;
    delete [] fPositionX;
    delete [] fPositionY;

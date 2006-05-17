@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.291 2006/05/13 14:04:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.292 2006/05/16 16:50:02 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3862,6 +3862,8 @@ static Bool_t AlmostInteger(Double_t a, Double_t epsilon = 0.00000001)
 //______________________________________________________________________________
 Bool_t TH1::SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2)
 {
+   // Same limits and bins.
+
    if ((axis1.GetNbins() == axis2.GetNbins())
       && (axis1.GetXmin() == axis2.GetXmin())
       && (axis1.GetXmax() == axis2.GetXmax()))
@@ -6550,6 +6552,8 @@ void TH1::SetBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t content)
 //______________________________________________________________________________
 void TH1::SetCellContent(Int_t binx, Int_t biny, Double_t content)
 {
+   // Set cell content.
+
    if (binx <0 || binx>fXaxis.GetNbins()+1) return;
    if (biny <0 || biny>fYaxis.GetNbins()+1) return;
    SetBinContent(biny*(fXaxis.GetNbins()+2) + binx,content);
@@ -6707,6 +6711,8 @@ ClassImp(TH1C)
 //______________________________________________________________________________
 TH1C::TH1C(): TH1(), TArrayC()
 {
+   // Constructor.
+
    fDimension = 1;
    SetBinsLength(3);
 }
@@ -6755,12 +6761,14 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 //______________________________________________________________________________
 TH1C::~TH1C()
 {
-
+   // Destructor.
 }
 
 //______________________________________________________________________________
 TH1C::TH1C(const TH1C &h1c) : TH1(), TArrayC()
 {
+   // Copy constructor.
+
    ((TH1C&)h1c).Copy(*this);
 }
 
@@ -6788,6 +6796,8 @@ void TH1C::AddBinContent(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TH1C::Copy(TObject &newth1) const
 {
+   // Copy.
+   
    TH1::Copy(newth1);
    TArrayC::Copy((TH1C&)newth1);
 }
@@ -6795,6 +6805,7 @@ void TH1C::Copy(TObject &newth1) const
 //______________________________________________________________________________
 TH1 *TH1C::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
 
    TString opt = option;
    opt.ToLower();
@@ -6821,6 +6832,8 @@ Double_t TH1C::GetBinContent(Int_t bin) const
 //______________________________________________________________________________
 void TH1C::Reset(Option_t *option)
 {
+   // Reset.
+
    TH1::Reset(option);
    TArrayC::Reset();
 }
@@ -6859,6 +6872,8 @@ void TH1C::SetBinsLength(Int_t n)
 //______________________________________________________________________________
 TH1C& TH1C::operator=(const TH1C &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH1C&)h1).Copy(*this);
    return *this;
 }
@@ -6867,6 +6882,8 @@ TH1C& TH1C::operator=(const TH1C &h1)
 //______________________________________________________________________________
 TH1C operator*(Double_t c1, const TH1C &h1)
 {
+   // Operator *
+
    TH1C hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -6876,6 +6893,8 @@ TH1C operator*(Double_t c1, const TH1C &h1)
 //______________________________________________________________________________
 TH1C operator+(const TH1C &h1, const TH1C &h2)
 {
+   // Operator +
+
    TH1C hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -6885,6 +6904,8 @@ TH1C operator+(const TH1C &h1, const TH1C &h2)
 //______________________________________________________________________________
 TH1C operator-(const TH1C &h1, const TH1C &h2)
 {
+   // Operator -
+
    TH1C hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -6894,6 +6915,8 @@ TH1C operator-(const TH1C &h1, const TH1C &h2)
 //______________________________________________________________________________
 TH1C operator*(const TH1C &h1, const TH1C &h2)
 {
+   // Operator *
+
    TH1C hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -6903,6 +6926,8 @@ TH1C operator*(const TH1C &h1, const TH1C &h2)
 //______________________________________________________________________________
 TH1C operator/(const TH1C &h1, const TH1C &h2)
 {
+   // Operator /
+
    TH1C hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -6916,6 +6941,8 @@ ClassImp(TH1S)
 //______________________________________________________________________________
 TH1S::TH1S(): TH1(), TArrayS()
 {
+   // Constructor.
+
    fDimension = 1;
    SetBinsLength(3);
 }
@@ -6964,12 +6991,14 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 //______________________________________________________________________________
 TH1S::~TH1S()
 {
-
+   // Destructor.
 }
 
 //______________________________________________________________________________
 TH1S::TH1S(const TH1S &h1s) : TH1(), TArrayS()
 {
+   // Copy constructor.
+
    ((TH1S&)h1s).Copy(*this);
 }
 
@@ -6997,6 +7026,8 @@ void TH1S::AddBinContent(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TH1S::Copy(TObject &newth1) const
 {
+   // Copy.
+
    TH1::Copy(newth1);
    TArrayS::Copy((TH1S&)newth1);
 }
@@ -7004,6 +7035,8 @@ void TH1S::Copy(TObject &newth1) const
 //______________________________________________________________________________
 TH1 *TH1S::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -7028,6 +7061,8 @@ Double_t TH1S::GetBinContent(Int_t bin) const
 //______________________________________________________________________________
 void TH1S::Reset(Option_t *option)
 {
+   // Reset.
+
    TH1::Reset(option);
    TArrayS::Reset();
 }
@@ -7066,6 +7101,8 @@ void TH1S::SetBinsLength(Int_t n)
 //______________________________________________________________________________
 TH1S& TH1S::operator=(const TH1S &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH1S&)h1).Copy(*this);
    return *this;
 }
@@ -7074,6 +7111,8 @@ TH1S& TH1S::operator=(const TH1S &h1)
 //______________________________________________________________________________
 TH1S operator*(Double_t c1, const TH1S &h1)
 {
+   // Operator *
+
    TH1S hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -7083,6 +7122,8 @@ TH1S operator*(Double_t c1, const TH1S &h1)
 //______________________________________________________________________________
 TH1S operator+(const TH1S &h1, const TH1S &h2)
 {
+   // Operator +
+
    TH1S hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -7092,6 +7133,8 @@ TH1S operator+(const TH1S &h1, const TH1S &h2)
 //______________________________________________________________________________
 TH1S operator-(const TH1S &h1, const TH1S &h2)
 {
+   // Operator -
+
    TH1S hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -7101,6 +7144,8 @@ TH1S operator-(const TH1S &h1, const TH1S &h2)
 //______________________________________________________________________________
 TH1S operator*(const TH1S &h1, const TH1S &h2)
 {
+   // Operator *
+
    TH1S hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -7110,6 +7155,8 @@ TH1S operator*(const TH1S &h1, const TH1S &h2)
 //______________________________________________________________________________
 TH1S operator/(const TH1S &h1, const TH1S &h2)
 {
+   // Operator /
+
    TH1S hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -7123,6 +7170,8 @@ ClassImp(TH1I)
 //______________________________________________________________________________
 TH1I::TH1I(): TH1(), TArrayI()
 {
+   // Constructor.
+
    fDimension = 1;
    SetBinsLength(3);
 }
@@ -7171,12 +7220,14 @@ TH1I::TH1I(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 //______________________________________________________________________________
 TH1I::~TH1I()
 {
-
+   // Destructor.
 }
 
 //______________________________________________________________________________
 TH1I::TH1I(const TH1I &h1i) : TH1(), TArrayI()
 {
+   // Copy constructor.
+
    ((TH1I&)h1i).Copy(*this);
 }
 
@@ -7204,6 +7255,8 @@ void TH1I::AddBinContent(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TH1I::Copy(TObject &newth1) const
 {
+   // Copy.
+
    TH1::Copy(newth1);
    TArrayI::Copy((TH1I&)newth1);
 }
@@ -7211,6 +7264,8 @@ void TH1I::Copy(TObject &newth1) const
 //______________________________________________________________________________
 TH1 *TH1I::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -7235,6 +7290,8 @@ Double_t TH1I::GetBinContent(Int_t bin) const
 //______________________________________________________________________________
 void TH1I::Reset(Option_t *option)
 {
+   // Reset.
+
    TH1::Reset(option);
    TArrayI::Reset();
 }
@@ -7273,6 +7330,8 @@ void TH1I::SetBinsLength(Int_t n)
 //______________________________________________________________________________
 TH1I& TH1I::operator=(const TH1I &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH1I&)h1).Copy(*this);
    return *this;
 }
@@ -7281,6 +7340,8 @@ TH1I& TH1I::operator=(const TH1I &h1)
 //______________________________________________________________________________
 TH1I operator*(Double_t c1, const TH1I &h1)
 {
+   // Operator *
+
    TH1I hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -7290,6 +7351,8 @@ TH1I operator*(Double_t c1, const TH1I &h1)
 //______________________________________________________________________________
 TH1I operator+(const TH1I &h1, const TH1I &h2)
 {
+   // Operator +
+
    TH1I hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -7299,6 +7362,8 @@ TH1I operator+(const TH1I &h1, const TH1I &h2)
 //______________________________________________________________________________
 TH1I operator-(const TH1I &h1, const TH1I &h2)
 {
+   // Operator -
+
    TH1I hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -7308,6 +7373,8 @@ TH1I operator-(const TH1I &h1, const TH1I &h2)
 //______________________________________________________________________________
 TH1I operator*(const TH1I &h1, const TH1I &h2)
 {
+   // Operator *
+
    TH1I hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -7317,6 +7384,8 @@ TH1I operator*(const TH1I &h1, const TH1I &h2)
 //______________________________________________________________________________
 TH1I operator/(const TH1I &h1, const TH1I &h2)
 {
+   // Operator /
+
    TH1I hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -7330,6 +7399,8 @@ ClassImp(TH1F)
 //______________________________________________________________________________
 TH1F::TH1F(): TH1(), TArrayF()
 {
+   // Constructor.
+
    fDimension = 1;
    SetBinsLength(3);
 }
@@ -7394,18 +7465,22 @@ TH1F::TH1F(const TVectorF &v)
 //______________________________________________________________________________
 TH1F::TH1F(const TH1F &h) : TH1(), TArrayF()
 {
+   // Constructor.
+
    ((TH1F&)h).Copy(*this);
 }
 
 //______________________________________________________________________________
 TH1F::~TH1F()
 {
-
+   // Destructor.
 }
 
 //______________________________________________________________________________
 void TH1F::Copy(TObject &newth1) const
 {
+   // Copy constructor.
+
    TH1::Copy(newth1);
    TArrayF::Copy((TH1F&)newth1);
 }
@@ -7413,6 +7488,8 @@ void TH1F::Copy(TObject &newth1) const
 //______________________________________________________________________________
 TH1 *TH1F::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -7437,6 +7514,8 @@ Double_t TH1F::GetBinContent(Int_t bin) const
 //______________________________________________________________________________
 void TH1F::Reset(Option_t *option)
 {
+   // Reset.
+
    TH1::Reset(option);
    TArrayF::Reset();
 }
@@ -7475,6 +7554,8 @@ void TH1F::SetBinsLength(Int_t n)
 //______________________________________________________________________________
 TH1F& TH1F::operator=(const TH1F &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH1F&)h1).Copy(*this);
    return *this;
 }
@@ -7483,6 +7564,8 @@ TH1F& TH1F::operator=(const TH1F &h1)
 //______________________________________________________________________________
 TH1F operator*(Double_t c1, const TH1F &h1)
 {
+   // Operator *
+
    TH1F hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -7492,6 +7575,8 @@ TH1F operator*(Double_t c1, const TH1F &h1)
 //______________________________________________________________________________
 TH1F operator+(const TH1F &h1, const TH1F &h2)
 {
+   // Operator +
+
    TH1F hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -7501,6 +7586,8 @@ TH1F operator+(const TH1F &h1, const TH1F &h2)
 //______________________________________________________________________________
 TH1F operator-(const TH1F &h1, const TH1F &h2)
 {
+   // Operator -
+
    TH1F hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -7510,6 +7597,8 @@ TH1F operator-(const TH1F &h1, const TH1F &h2)
 //______________________________________________________________________________
 TH1F operator*(const TH1F &h1, const TH1F &h2)
 {
+   // Operator *
+
    TH1F hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -7519,6 +7608,8 @@ TH1F operator*(const TH1F &h1, const TH1F &h2)
 //______________________________________________________________________________
 TH1F operator/(const TH1F &h1, const TH1F &h2)
 {
+   // Operator /
+
    TH1F hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -7533,6 +7624,8 @@ ClassImp(TH1D)
 //______________________________________________________________________________
 TH1D::TH1D(): TH1(), TArrayD()
 {
+   // Constructor.
+
    fDimension = 1;
    SetBinsLength(3);
 }
@@ -7597,18 +7690,22 @@ TH1D::TH1D(const TVectorD &v)
 //______________________________________________________________________________
 TH1D::~TH1D()
 {
-
+   // Destructor.
 }
 
 //______________________________________________________________________________
 TH1D::TH1D(const TH1D &h1d) : TH1(), TArrayD()
 {
+   // Constructor.
+
    ((TH1D&)h1d).Copy(*this);
 }
 
 //______________________________________________________________________________
 void TH1D::Copy(TObject &newth1) const
 {
+   // Copy.
+   
    TH1::Copy(newth1);
    TArrayD::Copy((TH1D&)newth1);
 }
@@ -7616,6 +7713,8 @@ void TH1D::Copy(TObject &newth1) const
 //______________________________________________________________________________
 TH1 *TH1D::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -7640,6 +7739,8 @@ Double_t TH1D::GetBinContent(Int_t bin) const
 //______________________________________________________________________________
 void TH1D::Reset(Option_t *option)
 {
+   // Reset.
+
    TH1::Reset(option);
    TArrayD::Reset();
 }
@@ -7678,6 +7779,8 @@ void TH1D::SetBinsLength(Int_t n)
 //______________________________________________________________________________
 TH1D& TH1D::operator=(const TH1D &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH1D&)h1).Copy(*this);
    return *this;
 }
@@ -7685,6 +7788,8 @@ TH1D& TH1D::operator=(const TH1D &h1)
 //______________________________________________________________________________
 TH1D operator*(Double_t c1, const TH1D &h1)
 {
+   // Operator *
+
    TH1D hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -7694,6 +7799,8 @@ TH1D operator*(Double_t c1, const TH1D &h1)
 //______________________________________________________________________________
 TH1D operator+(const TH1D &h1, const TH1D &h2)
 {
+   // Operator +
+
    TH1D hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -7703,6 +7810,8 @@ TH1D operator+(const TH1D &h1, const TH1D &h2)
 //______________________________________________________________________________
 TH1D operator-(const TH1D &h1, const TH1D &h2)
 {
+   // Operator -
+
    TH1D hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -7712,6 +7821,8 @@ TH1D operator-(const TH1D &h1, const TH1D &h2)
 //______________________________________________________________________________
 TH1D operator*(const TH1D &h1, const TH1D &h2)
 {
+   // Operator *
+
    TH1D hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -7721,6 +7832,8 @@ TH1D operator*(const TH1D &h1, const TH1D &h2)
 //______________________________________________________________________________
 TH1D operator/(const TH1D &h1, const TH1D &h2)
 {
+   // Operator /
+
    TH1D hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);

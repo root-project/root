@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.78 2006/04/19 08:22:23 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.79 2006/05/17 09:37:20 couet Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -43,6 +43,7 @@ ClassImp(TH3)
 //______________________________________________________________________________
 TH3::TH3()
 {
+   // Default constructor.
    fDimension   = 3;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
@@ -122,11 +123,14 @@ TH3::TH3(const TH3 &h) : TH1(), TAtt3D()
 //______________________________________________________________________________
 TH3::~TH3()
 {
+   // Destructor.
 }
 
 //______________________________________________________________________________
 void TH3::Copy(TObject &obj) const
 {
+   // Copy.
+
    TH1::Copy(obj);
    ((TH3&)obj).fTsumwy      = fTsumwy;
    ((TH3&)obj).fTsumwy2     = fTsumwy2;
@@ -2238,11 +2242,13 @@ ClassImp(TH3C)
 //______________________________________________________________________________
 TH3C::TH3C(): TH3()
 {
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TH3C::~TH3C()
 {
+   // Destructor.
 }
 
 //______________________________________________________________________________
@@ -2284,6 +2290,8 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 //______________________________________________________________________________
 TH3C::TH3C(const TH3C &h3c) : TH3(), TArrayC()
 {
+   // Copy constructor.
+
    ((TH3C&)h3c).Copy(*this);
 }
 
@@ -2321,6 +2329,8 @@ void TH3C::Copy(TObject &newth3) const
 //______________________________________________________________________________
 TH1 *TH3C::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -2334,6 +2344,8 @@ TH1 *TH3C::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Double_t TH3C::GetBinContent(Int_t bin) const
 {
+   // Get bin content.
+
    if (fBuffer) ((TH3C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -2437,6 +2449,8 @@ void TH3C::Streamer(TBuffer &R__b)
 //______________________________________________________________________________
 TH3C& TH3C::operator=(const TH3C &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH3C&)h1).Copy(*this);
    return *this;
 }
@@ -2444,6 +2458,8 @@ TH3C& TH3C::operator=(const TH3C &h1)
 //______________________________________________________________________________
 TH3C operator*(Float_t c1, TH3C &h1)
 {
+   // Operator *
+
    TH3C hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -2453,6 +2469,8 @@ TH3C operator*(Float_t c1, TH3C &h1)
 //______________________________________________________________________________
 TH3C operator+(TH3C &h1, TH3C &h2)
 {
+   // Operator +
+
    TH3C hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -2462,6 +2480,8 @@ TH3C operator+(TH3C &h1, TH3C &h2)
 //______________________________________________________________________________
 TH3C operator-(TH3C &h1, TH3C &h2)
 {
+   // Operator -
+
    TH3C hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -2471,6 +2491,8 @@ TH3C operator-(TH3C &h1, TH3C &h2)
 //______________________________________________________________________________
 TH3C operator*(TH3C &h1, TH3C &h2)
 {
+   // Operator *
+
    TH3C hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -2480,6 +2502,8 @@ TH3C operator*(TH3C &h1, TH3C &h2)
 //______________________________________________________________________________
 TH3C operator/(TH3C &h1, TH3C &h2)
 {
+   // Operator /
+
    TH3C hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -2493,11 +2517,13 @@ ClassImp(TH3S)
 //______________________________________________________________________________
 TH3S::TH3S(): TH3()
 {
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TH3S::~TH3S()
 {
+   // Destructor.
 }
 
 //______________________________________________________________________________
@@ -2538,6 +2564,8 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 //______________________________________________________________________________
 TH3S::TH3S(const TH3S &h3s) : TH3(), TArrayS()
 {
+   // Copy Constructor.
+   
    ((TH3S&)h3s).Copy(*this);
 }
 
@@ -2575,6 +2603,8 @@ void TH3S::Copy(TObject &newth3) const
 //______________________________________________________________________________
 TH1 *TH3S::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -2588,6 +2618,8 @@ TH1 *TH3S::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Double_t TH3S::GetBinContent(Int_t bin) const
 {
+   // Get bin content.
+
    if (fBuffer) ((TH3S*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -2663,6 +2695,8 @@ void TH3S::Streamer(TBuffer &R__b)
 //______________________________________________________________________________
 TH3S& TH3S::operator=(const TH3S &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH3S&)h1).Copy(*this);
    return *this;
 }
@@ -2670,6 +2704,8 @@ TH3S& TH3S::operator=(const TH3S &h1)
 //______________________________________________________________________________
 TH3S operator*(Float_t c1, TH3S &h1)
 {
+   // Operator *
+
    TH3S hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -2679,6 +2715,8 @@ TH3S operator*(Float_t c1, TH3S &h1)
 //______________________________________________________________________________
 TH3S operator+(TH3S &h1, TH3S &h2)
 {
+   // Operator +
+
    TH3S hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -2688,6 +2726,8 @@ TH3S operator+(TH3S &h1, TH3S &h2)
 //______________________________________________________________________________
 TH3S operator-(TH3S &h1, TH3S &h2)
 {
+   // Operator -
+
    TH3S hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -2697,6 +2737,8 @@ TH3S operator-(TH3S &h1, TH3S &h2)
 //______________________________________________________________________________
 TH3S operator*(TH3S &h1, TH3S &h2)
 {
+   // Operator *
+
    TH3S hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -2706,6 +2748,8 @@ TH3S operator*(TH3S &h1, TH3S &h2)
 //______________________________________________________________________________
 TH3S operator/(TH3S &h1, TH3S &h2)
 {
+   // Operator /
+
    TH3S hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -2719,11 +2763,13 @@ ClassImp(TH3I)
 //______________________________________________________________________________
 TH3I::TH3I(): TH3()
 {
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TH3I::~TH3I()
 {
+   // Destructor.
 }
 
 //______________________________________________________________________________
@@ -2764,6 +2810,8 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 //______________________________________________________________________________
 TH3I::TH3I(const TH3I &h3i) : TH3(), TArrayI()
 {
+   // Copy constructor.
+
    ((TH3I&)h3i).Copy(*this);
 }
 
@@ -2801,6 +2849,8 @@ void TH3I::Copy(TObject &newth3) const
 //______________________________________________________________________________
 TH1 *TH3I::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -2814,6 +2864,8 @@ TH1 *TH3I::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Double_t TH3I::GetBinContent(Int_t bin) const
 {
+   // Get bin content.
+
    if (fBuffer) ((TH3I*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -2856,6 +2908,8 @@ void TH3I::SetBinsLength(Int_t n)
 //______________________________________________________________________________
 TH3I& TH3I::operator=(const TH3I &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH3I&)h1).Copy(*this);
    return *this;
 }
@@ -2863,6 +2917,8 @@ TH3I& TH3I::operator=(const TH3I &h1)
 //______________________________________________________________________________
 TH3I operator*(Float_t c1, TH3I &h1)
 {
+   // Operator *
+
    TH3I hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -2872,6 +2928,8 @@ TH3I operator*(Float_t c1, TH3I &h1)
 //______________________________________________________________________________
 TH3I operator+(TH3I &h1, TH3I &h2)
 {
+   // Operator +
+
    TH3I hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -2881,6 +2939,8 @@ TH3I operator+(TH3I &h1, TH3I &h2)
 //______________________________________________________________________________
 TH3I operator-(TH3I &h1, TH3I &h2)
 {
+   // Operator _
+
    TH3I hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -2890,6 +2950,8 @@ TH3I operator-(TH3I &h1, TH3I &h2)
 //______________________________________________________________________________
 TH3I operator*(TH3I &h1, TH3I &h2)
 {
+   // Operator *
+
    TH3I hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -2899,6 +2961,8 @@ TH3I operator*(TH3I &h1, TH3I &h2)
 //______________________________________________________________________________
 TH3I operator/(TH3I &h1, TH3I &h2)
 {
+   // Operator /
+
    TH3I hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -2912,11 +2976,13 @@ ClassImp(TH3F)
 //______________________________________________________________________________
 TH3F::TH3F(): TH3()
 {
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TH3F::~TH3F()
 {
+   // Destructor.
 }
 
 //______________________________________________________________________________
@@ -2957,6 +3023,8 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 //______________________________________________________________________________
 TH3F::TH3F(const TH3F &h3f) : TH3(), TArrayF()
 {
+   // Copy constructor.
+
    ((TH3F&)h3f).Copy(*this);
 }
 
@@ -2973,6 +3041,8 @@ void TH3F::Copy(TObject &newth3) const
 //______________________________________________________________________________
 TH1 *TH3F::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -2986,6 +3056,8 @@ TH1 *TH3F::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Double_t TH3F::GetBinContent(Int_t bin) const
 {
+   // Get bin content.
+   
    if (fBuffer) ((TH3F*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -3061,6 +3133,8 @@ void TH3F::Streamer(TBuffer &R__b)
 //______________________________________________________________________________
 TH3F& TH3F::operator=(const TH3F &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH3F&)h1).Copy(*this);
    return *this;
 }
@@ -3068,6 +3142,8 @@ TH3F& TH3F::operator=(const TH3F &h1)
 //______________________________________________________________________________
 TH3F operator*(Float_t c1, TH3F &h1)
 {
+   // Operator *
+
    TH3F hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -3077,6 +3153,8 @@ TH3F operator*(Float_t c1, TH3F &h1)
 //______________________________________________________________________________
 TH3F operator+(TH3F &h1, TH3F &h2)
 {
+   // Operator +
+
    TH3F hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -3086,6 +3164,8 @@ TH3F operator+(TH3F &h1, TH3F &h2)
 //______________________________________________________________________________
 TH3F operator-(TH3F &h1, TH3F &h2)
 {
+   // Operator -
+
    TH3F hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -3095,6 +3175,8 @@ TH3F operator-(TH3F &h1, TH3F &h2)
 //______________________________________________________________________________
 TH3F operator*(TH3F &h1, TH3F &h2)
 {
+   // Operator *
+
    TH3F hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -3104,6 +3186,8 @@ TH3F operator*(TH3F &h1, TH3F &h2)
 //______________________________________________________________________________
 TH3F operator/(TH3F &h1, TH3F &h2)
 {
+   // Operator /
+
    TH3F hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -3117,11 +3201,13 @@ ClassImp(TH3D)
 //______________________________________________________________________________
 TH3D::TH3D(): TH3()
 {
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TH3D::~TH3D()
 {
+   // Destructor.
 }
 
 //______________________________________________________________________________
@@ -3162,6 +3248,8 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 //______________________________________________________________________________
 TH3D::TH3D(const TH3D &h3d) : TH3(), TArrayD()
 {
+   // Copy constructor.
+
    ((TH3D&)h3d).Copy(*this);
 }
 
@@ -3178,6 +3266,8 @@ void TH3D::Copy(TObject &newth3) const
 //______________________________________________________________________________
 TH1 *TH3D::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -3191,6 +3281,8 @@ TH1 *TH3D::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Double_t TH3D::GetBinContent(Int_t bin) const
 {
+   // Get bin content.
+
    if (fBuffer) ((TH3D*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -3267,6 +3359,8 @@ void TH3D::Streamer(TBuffer &R__b)
 //______________________________________________________________________________
 TH3D& TH3D::operator=(const TH3D &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH3D&)h1).Copy(*this);
    return *this;
 }
@@ -3274,6 +3368,8 @@ TH3D& TH3D::operator=(const TH3D &h1)
 //______________________________________________________________________________
 TH3D operator*(Float_t c1, TH3D &h1)
 {
+   // Operator *
+
    TH3D hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -3283,6 +3379,8 @@ TH3D operator*(Float_t c1, TH3D &h1)
 //______________________________________________________________________________
 TH3D operator+(TH3D &h1, TH3D &h2)
 {
+   // Operator +
+
    TH3D hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -3292,6 +3390,8 @@ TH3D operator+(TH3D &h1, TH3D &h2)
 //______________________________________________________________________________
 TH3D operator-(TH3D &h1, TH3D &h2)
 {
+   // Operator -
+
    TH3D hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -3301,6 +3401,8 @@ TH3D operator-(TH3D &h1, TH3D &h2)
 //______________________________________________________________________________
 TH3D operator*(TH3D &h1, TH3D &h2)
 {
+   // Operator *
+
    TH3D hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -3310,6 +3412,8 @@ TH3D operator*(TH3D &h1, TH3D &h2)
 //______________________________________________________________________________
 TH3D operator/(TH3D &h1, TH3D &h2)
 {
+   // Operator /
+
    TH3D hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);

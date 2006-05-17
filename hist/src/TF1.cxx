@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.124 2006/04/26 06:10:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.125 2006/05/16 16:50:02 couet Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -589,6 +589,8 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 //______________________________________________________________________________
 TF1& TF1::operator=(const TF1 &rhs) 
 {
+   // Operator =
+
    if (this != &rhs) {
       rhs.Copy(*this);
    }
@@ -637,6 +639,7 @@ TF1::~TF1()
 //______________________________________________________________________________
 TF1::TF1(const TF1 &f1) : TFormula(), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
 {
+   // Constuctor.
 
    fXmin      = 0;
    fXmax      = 0;
@@ -679,6 +682,8 @@ void TF1::AbsValue(Bool_t flag)
 //______________________________________________________________________________
 void TF1::Browse(TBrowser *b)
 {
+   // Browse.
+
    Draw(b ? b->GetDrawOption() : "");
    gPad->Update();
 }

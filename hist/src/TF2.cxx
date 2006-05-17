@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.33 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.34 2006/05/16 16:50:02 couet Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -154,6 +154,8 @@ TF2::TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
 //______________________________________________________________________________
 TF2& TF2::operator=(const TF2 &rhs)
 {
+   // Operator =
+
    if (this != &rhs) {
       rhs.Copy(*this);
    }
@@ -171,6 +173,8 @@ TF2::~TF2()
 //______________________________________________________________________________
 TF2::TF2(const TF2 &f2) : TF1()
 {
+   // Copy constructor.
+
    ((TF2&)f2).Copy(*this);
 }
 

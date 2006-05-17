@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.73 2006/04/27 09:26:38 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.74 2006/04/28 08:43:05 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -39,6 +39,8 @@ ClassImp(TAxis)
 //______________________________________________________________________________
 TAxis::TAxis(): TNamed(), TAttAxis()
 {
+   // Default constructor.
+
    fNbins   = 1;
    fXmin    = 0;
    fXmax    = 1;
@@ -53,8 +55,7 @@ TAxis::TAxis(): TNamed(), TAttAxis()
 //______________________________________________________________________________
 TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
 {
-//*-*-*-*-*-*-*-*Axis constructor for axis with fix bin size*-*-*-*-*-*-*-*
-//*-*            ===========================================
+   // Axis constructor for axis with fix bin size
 
    fParent  = 0;
    fLabels  = 0;
@@ -64,8 +65,7 @@ TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
 //______________________________________________________________________________
 TAxis::TAxis(Int_t nbins,const Double_t *xbins): TNamed(), TAttAxis()
 {
-//*-*-*-*-*-*-*-*Axis constructor for variable bin size*-*-*-*-*-*-*-*-*-*-*
-//*-*            ======================================
+   // Axis constructor for variable bin size
 
    fParent  = 0;
    fLabels  = 0;
@@ -75,6 +75,8 @@ TAxis::TAxis(Int_t nbins,const Double_t *xbins): TNamed(), TAttAxis()
 //______________________________________________________________________________
 TAxis::~TAxis()
 {
+   // Destructor.
+
    if (fLabels) {
       fLabels->Delete();
       delete fLabels;
@@ -85,16 +87,18 @@ TAxis::~TAxis()
 //______________________________________________________________________________
 TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis)
 {
+   // Copy constructor.
+
    ((TAxis&)axis).Copy(*this);
 }
 
 //______________________________________________________________________________
 void TAxis::CenterLabels(Bool_t center)
 {
-//   if center = kTRUE axis labels will be centered (hori axes only)
-//   on the bin center
-//   default is to center on the primary tick marks
-//   This option does not make sense if there are more bins than tick marks
+   //   if center = kTRUE axis labels will be centered (hori axes only)
+   //   on the bin center
+   //   default is to center on the primary tick marks
+   //   This option does not make sense if there are more bins than tick marks
 
    if (center) SetBit(kCenterLabels);
    else        ResetBit(kCenterLabels);
@@ -111,8 +115,8 @@ Bool_t TAxis::GetCenterLabels() const
 //______________________________________________________________________________
 void TAxis::CenterTitle(Bool_t center)
 {
-//   if center = kTRUE axis title will be centered
-//   default is right adjusted
+   //   if center = kTRUE axis title will be centered
+   //   default is right adjusted
 
    if (center) SetBit(kCenterTitle);
    else        ResetBit(kCenterTitle);
@@ -129,10 +133,10 @@ Bool_t TAxis::GetCenterTitle() const
 //______________________________________________________________________________
 const char *TAxis::ChooseTimeFormat(Double_t axislength)
 {
-// Choose a reasonable time format from the coordinates in the active pad
-// and the number of divisions in this axis
-// If orientation = "X", the horizontal axis of the pad will be used for ref.
-// If orientation = "Y", the vertical axis of the pad will be used for ref.
+   // Choose a reasonable time format from the coordinates in the active pad
+   // and the number of divisions in this axis
+   // If orientation = "X", the horizontal axis of the pad will be used for ref.
+   // If orientation = "Y", the vertical axis of the pad will be used for ref.
 
    const char *formatstr;
    Int_t reasformat = 0;
@@ -219,8 +223,7 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
 //______________________________________________________________________________
 void TAxis::Copy(TObject &obj) const
 {
-//*-*-*-*-*-*-*-*-*-*Copy axis structure to another axis-*-*-*-*-*-*-*-*-*-*-*
-//*-*                ===================================
+   // Copy axis structure to another axis
 
    TNamed::Copy(obj);
    TAttAxis::Copy(((TAxis&)obj));
@@ -239,8 +242,7 @@ void TAxis::Copy(TObject &obj) const
 //______________________________________________________________________________
 Int_t TAxis::DistancetoPrimitive(Int_t, Int_t)
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to an axis*-*-*-*-*-*
-//*-*                  ============================================
+   // Compute distance from point px,py to an axis
 
    return 9999;
 }
@@ -248,16 +250,16 @@ Int_t TAxis::DistancetoPrimitive(Int_t, Int_t)
 //______________________________________________________________________________
 void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//  This member function is called when an axis is clicked with the locator
-//
-//  The axis range is set between the position where the mouse is pressed
-//  and the position where it is released.
-//  If the mouse position is outside the current axis range when it is released
-//  the axis is unzoomed with the corresponding proportions.
-//  Note that the mouse does not need to be in the pad or even canvas
-//  when it is released.
+   // Execute action corresponding to one event
+   //
+   //  This member function is called when an axis is clicked with the locator
+   //
+   //  The axis range is set between the position where the mouse is pressed
+   //  and the position where it is released.
+   //  If the mouse position is outside the current axis range when it is released
+   //  the axis is unzoomed with the corresponding proportions.
+   //  Note that the mouse does not need to be in the pad or even canvas
+   //  when it is released.
 
    if (!gPad->IsEditable()) return;
 
@@ -438,10 +440,9 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 Int_t TAxis::FindBin(Double_t x)
 {
-//*-*-*-*-*-*-*-*-*Find bin number corresponding to abscissa x-*-*-*-*-*-*
-//*-*              ===========================================
-//
-// If x is underflow or overflow, attempt to rebin histogram
+   // Find bin number corresponding to abscissa x
+   //
+   // If x is underflow or overflow, attempt to rebin histogram
 
    Int_t bin;
    if (x < fXmin) {              //*-* underflow
@@ -470,11 +471,10 @@ Int_t TAxis::FindBin(Double_t x)
 //______________________________________________________________________________
 Int_t TAxis::FindBin(const char *label)
 {
-// Find bin number with label.
-// If label is not in the list of labels, add it.
-// If the number of labels exceeds the number of bins, double the number
-// of bins via TH1::LabelsInflate (if the histogram can be rebinned).
-//
+   // Find bin number with label.
+   // If label is not in the list of labels, add it.
+   // If the number of labels exceeds the number of bins, double the number
+   // of bins via TH1::LabelsInflate (if the histogram can be rebinned).
 
    //create list of labels if it does not exist yet
    if (!fLabels) {
@@ -512,8 +512,8 @@ Int_t TAxis::FindBin(const char *label)
 //______________________________________________________________________________
 Int_t TAxis::FindFixBin(Double_t x) const
 {
-//*-*-*-*-*-*-*-*-*Find bin number corresponding to abscissa x-*-*-*-*-*-*
-//*-*              ===========================================
+   // Find bin number corresponding to abscissa x
+
    Int_t bin;
    if (x < fXmin) {              //*-* underflow
       bin = 0;
@@ -533,7 +533,7 @@ Int_t TAxis::FindFixBin(Double_t x) const
 //______________________________________________________________________________
 const char *TAxis::GetBinLabel(Int_t bin) const
 {
-// Return label for bin
+   // Return label for bin
 
    if (!fLabels) return "";
    if (bin <= 0 || bin > fNbins) return "";
@@ -549,8 +549,8 @@ const char *TAxis::GetBinLabel(Int_t bin) const
 //______________________________________________________________________________
 Int_t TAxis::GetFirst() const
 {
-//             return first bin on the axis
-//       - 0 if no range defined
+   //             return first bin on the axis
+   //       - 0 if no range defined
 
    if (!TestBit(kAxisRange)) return 1;
    return fFirst;
@@ -559,8 +559,8 @@ Int_t TAxis::GetFirst() const
 //______________________________________________________________________________
 Int_t TAxis::GetLast() const
 {
-//             return last bin on the axis
-//       - fNbins if no range defined
+   //             return last bin on the axis
+   //       - fNbins if no range defined
 
    if (!TestBit(kAxisRange)) return fNbins;
    return fLast;
@@ -569,8 +569,8 @@ Int_t TAxis::GetLast() const
 //______________________________________________________________________________
 Double_t TAxis::GetBinCenter(Int_t bin) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Return center of bin*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ====================
+   // Return center of bin
+
    Double_t binwidth;
    if (!fXbins.fN || bin<1 || bin>fNbins) {
       binwidth = (fXmax - fXmin) / Double_t(fNbins);
@@ -584,8 +584,7 @@ Double_t TAxis::GetBinCenter(Int_t bin) const
 //______________________________________________________________________________
 Double_t TAxis::GetBinLowEdge(Int_t bin) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Return low edge of bin-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================
+   // Return low edge of bin
 
    if (fXbins.fN && bin > 0 && bin <=fNbins) return fXbins.fArray[bin-1];
    Double_t binwidth = (fXmax - fXmin) / Double_t(fNbins);
@@ -595,8 +594,7 @@ Double_t TAxis::GetBinLowEdge(Int_t bin) const
 //______________________________________________________________________________
 Double_t TAxis::GetBinUpEdge(Int_t bin) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Return up edge of bin-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================
+   // Return up edge of bin
 
    Double_t binwidth;
    if (!fXbins.fN || bin<1 || bin>fNbins) {
@@ -611,8 +609,8 @@ Double_t TAxis::GetBinUpEdge(Int_t bin) const
 //______________________________________________________________________________
 Double_t TAxis::GetBinWidth(Int_t bin) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Return bin width-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ================
+   // Return bin width
+
    if (bin <1 ) bin = 1;
    if (bin >fNbins) bin = fNbins;
    if (!fXbins.fN)  return (fXmax - fXmin) / Double_t(fNbins);
@@ -623,8 +621,8 @@ Double_t TAxis::GetBinWidth(Int_t bin) const
 //______________________________________________________________________________
 void TAxis::GetCenter(Double_t *center) const
 {
-//*-*-*-*-*-*-*-*-*Return an array with the center of all bins-*-*-*-*-*-*-*
-//*-*              ===========================================
+   // Return an array with the center of all bins
+
    Int_t bin;
    for (bin=1; bin<=fNbins; bin++) *(center + bin-1) = GetBinCenter(bin);
 }
@@ -632,8 +630,8 @@ void TAxis::GetCenter(Double_t *center) const
 //______________________________________________________________________________
 void TAxis::GetLowEdge(Double_t *edge) const
 {
-//*-*-*-*-*-*-*-*-*Return an array with the lod edge of all bins-*-*-*-*-*-*-*
-//*-*              =============================================
+   // Return an array with the lod edge of all bins
+
    Int_t bin;
    for (bin=1; bin<=fNbins; bin++) *(edge + bin-1) = GetBinLowEdge(bin);
 }
@@ -642,6 +640,7 @@ void TAxis::GetLowEdge(Double_t *edge) const
 const char *TAxis::GetTimeFormatOnly() const
 {
    // Return *only* the time format from the string fTimeFormat
+
    static TString timeformat;
    Int_t idF = fTimeFormat.Index("%F");
    if (idF>=0) {
@@ -655,7 +654,7 @@ const char *TAxis::GetTimeFormatOnly() const
 //______________________________________________________________________________
 const char *TAxis::GetTicks() const
 {
-// return the ticks option (see SetTicks)
+   // Return the ticks option (see SetTicks)
 
    if (TestBit(kTickPlus) && TestBit(kTickMinus)) return "+-";
    if (TestBit(kTickMinus)) return "-";
@@ -665,15 +664,14 @@ const char *TAxis::GetTicks() const
 //______________________________________________________________________________
 void TAxis::LabelsOption(Option_t *option)
 {
-//  Set option(s) to draw axis with labels
-//  option = "a" sort by alphabetic order
-//         = ">" sort by decreasing values
-//         = "<" sort by increasing values
-//         = "h" draw labels horizonthal
-//         = "v" draw labels vertical
-//         = "u" draw labels up (end of label right adjusted)
-//         = "d" draw labels down (start of label left adjusted)
-
+   //  Set option(s) to draw axis with labels
+   //  option = "a" sort by alphabetic order
+   //         = ">" sort by decreasing values
+   //         = "<" sort by increasing values
+   //         = "h" draw labels horizonthal
+   //         = "v" draw labels vertical
+   //         = "u" draw labels up (end of label right adjusted)
+   //         = "d" draw labels down (start of label left adjusted)
 
    if (!fLabels) {
       Warning("Sort","Cannot sort. No labels");
@@ -699,7 +697,7 @@ Bool_t TAxis::GetRotateTitle() const
 //______________________________________________________________________________
 void TAxis::ImportAttributes(const TAxis *axis)
 {
-// Copy axis attributes to this 
+   // Copy axis attributes to this 
 
    SetTitle(axis->GetTitle());
    SetNdivisions(axis->GetNdivisions());
@@ -727,10 +725,10 @@ void TAxis::ImportAttributes(const TAxis *axis)
 //___________________________________________________________________________
 void TAxis::RotateTitle(Bool_t rotate)
 {
-//    rotate title by 180 degrees
-//    by default the title is drawn right adjusted.
-//    if rotate is TRUE, the title is left adjusted at the end of the axis
-//    and rotated by 180 degrees
+   //    rotate title by 180 degrees
+   //    by default the title is drawn right adjusted.
+   //    if rotate is TRUE, the title is left adjusted at the end of the axis
+   //    and rotated by 180 degrees
 
    if (rotate) SetBit(kRotateTitle);
    else        ResetBit(kRotateTitle);
@@ -799,8 +797,8 @@ void TAxis::SaveAttributes(ofstream &out, const char *name, const char *subname)
 //______________________________________________________________________________
 void TAxis::Set(Int_t nbins, Double_t xlow, Double_t xup)
 {
-//*-*-*-*-*-*-*-*-*Initialize axis with fix bins*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =============================
+   // Initialize axis with fix bins
+
    fNbins   = nbins;
    fXmin    = xlow;
    fXmax    = xup;
@@ -810,8 +808,8 @@ void TAxis::Set(Int_t nbins, Double_t xlow, Double_t xup)
 //______________________________________________________________________________
 void TAxis::Set(Int_t nbins, const Float_t *xbins)
 {
-//*-*-*-*-*-*-*-*-*Initialize axis with variable bins*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              ==================================
+   // Initialize axis with variable bins
+
    Int_t bin;
    fNbins  = nbins;
    fXbins.Set(fNbins+1);
@@ -828,8 +826,8 @@ void TAxis::Set(Int_t nbins, const Float_t *xbins)
 //______________________________________________________________________________
 void TAxis::Set(Int_t nbins, const Double_t *xbins)
 {
-//*-*-*-*-*-*-*-*-*Initialize axis with variable bins*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              ==================================
+   // Initialize axis with variable bins
+
    Int_t bin;
    fNbins  = nbins;
    fXbins.Set(fNbins+1);
@@ -846,7 +844,7 @@ void TAxis::Set(Int_t nbins, const Double_t *xbins)
 //______________________________________________________________________________
 void TAxis::SetDefaults()
 {
-// Set axis default values (from TStyle)
+   // Set axis default values (from TStyle)
    
    fFirst   = 0;
    fLast    = 0;
@@ -872,12 +870,12 @@ Bool_t TAxis::GetDecimals() const
 //______________________________________________________________________________
 void TAxis::SetDecimals(Bool_t dot)
 {
-// Set the Decimals flag
-// By default, blank characters are stripped, and then the
-// label is correctly aligned. The dot, if last character of the string, 
-// is also stripped, unless this option is specified.
-// One can disable the option by calling axis.SetDecimals(kTRUE).
-// The flag (in fBits2) is passed to the drawing function TGaxis::PaintAxis
+   // Set the Decimals flag
+   // By default, blank characters are stripped, and then the
+   // label is correctly aligned. The dot, if last character of the string, 
+   // is also stripped, unless this option is specified.
+   // One can disable the option by calling axis.SetDecimals(kTRUE).
+   // The flag (in fBits2) is passed to the drawing function TGaxis::PaintAxis
 
    if (dot) fBits2 |=  kDecimals;
    else     fBits2 &= ~kDecimals;
@@ -886,7 +884,7 @@ void TAxis::SetDecimals(Bool_t dot)
 //______________________________________________________________________________
 void TAxis::SetBinLabel(Int_t bin, const char *label)
 {
-// Set label for bin
+   // Set label for bin
 
    if (!fLabels) fLabels = new THashList(fNbins,3);
    if (bin <= 0 || bin > fNbins) {
@@ -913,7 +911,7 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
 //______________________________________________________________________________
 void TAxis::SetLimits(Double_t xmin, Double_t xmax)
 {
-//          Set the axis limits
+   //          Set the axis limits
 
    fXmin = xmin;
    fXmax = xmax;
@@ -930,10 +928,10 @@ Bool_t TAxis::GetMoreLogLabels() const
 //______________________________________________________________________________
 void TAxis::SetMoreLogLabels(Bool_t more)
 {
-// Set the kMoreLogLabels bit flag
-// When this option is selected more labels are drawn when in log scale
-// and there is a small number of decades  (<3).
-// The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
+   // Set the kMoreLogLabels bit flag
+   // When this option is selected more labels are drawn when in log scale
+   // and there is a small number of decades  (<3).
+   // The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
 
    if (more) SetBit(kMoreLogLabels);
    else      ResetBit(kMoreLogLabels);
@@ -951,11 +949,11 @@ Bool_t TAxis::GetNoExponent() const
 //______________________________________________________________________________
 void TAxis::SetNoExponent(Bool_t noExponent)
 {
-// Set the NoExponent flag
-// By default, an exponent of the form 10^N is used when the label values
-// are either all very small or very large.
-// One can disable the exponent by calling axis.SetNoExponent(kTRUE).
-// The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
+   // Set the NoExponent flag
+   // By default, an exponent of the form 10^N is used when the label values
+   // are either all very small or very large.
+   // One can disable the exponent by calling axis.SetNoExponent(kTRUE).
+   // The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
 
    if (noExponent) SetBit(kNoExponent);
    else            ResetBit(kNoExponent);
@@ -964,8 +962,8 @@ void TAxis::SetNoExponent(Bool_t noExponent)
 //______________________________________________________________________________
 void TAxis::SetRange(Int_t first, Int_t last)
 {
-//  Set the viewing range for the axis from bin first to last
-//  To set a range using the axis coordinates, use TAxis::SetRangeUser.
+   //  Set the viewing range for the axis from bin first to last
+   //  To set a range using the axis coordinates, use TAxis::SetRangeUser.
 
    if (last == 0) last = fNbins;
    if (last > fNbins) last = fNbins;
@@ -986,8 +984,8 @@ void TAxis::SetRange(Int_t first, Int_t last)
 //______________________________________________________________________________
 void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
 {
-//  Set the viewing range for the axis from ufirst to ulast (in user coordinates)
-//  To set a range using the axis bin numbers, use TAxis::SetRange.
+   //  Set the viewing range for the axis from ufirst to ulast (in user coordinates)
+   //  To set a range using the axis bin numbers, use TAxis::SetRange.
 
    if (!strstr(GetName(),"xaxis")) {
       TH1 *hobj = (TH1*)GetParent();
@@ -1004,10 +1002,10 @@ void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
 //______________________________________________________________________________
 void TAxis::SetTicks(Option_t *option)
 {
-//  set ticks orientation
-//  option = "+"  ticks drawn on the "positive side" (default)
-//  option = "-"  ticks drawn on the "negative side"
-//  option = "+-" ticks drawn on both sides
+   //  set ticks orientation
+   //  option = "+"  ticks drawn on the "positive side" (default)
+   //  option = "-"  ticks drawn on the "negative side"
+   //  option = "+-" ticks drawn on both sides
 
    ResetBit(kTickPlus);
    ResetBit(kTickMinus);
@@ -1018,43 +1016,43 @@ void TAxis::SetTicks(Option_t *option)
 //______________________________________________________________________________
 void TAxis::SetTimeFormat(const char *tformat)
 {
-//*-*-*-*-*-*-*-*-*-*-*Change the format used for time plotting *-*-*-*-*-*-*-*
-//*-*                  ========================================
-//  The format string for date and time use the same options as the one used
-//  in the standard strftime C function, i.e. :
-//    for date :
-//      %a abbreviated weekday name
-//      %b abbreviated month name
-//      %d day of the month (01-31)
-//      %m month (01-12)
-//      %y year without century
-//
-//    for time :
-//      %H hour (24-hour clock)
-//      %I hour (12-hour clock)
-//      %p local equivalent of AM or PM
-//      %M minute (00-59)
-//      %S seconds (00-61)
-//      %% %
-//
-//    This function allows also to define the time offset. It is done via %F
-//    which should be appended at the end of the format string. The time
-//    offset has the following format: 'yyyy-mm-dd hh:mm:ss'
-//    Example:
-//
-//          h = new TH1F("Test","h",3000,0.,200000.);
-//          h->GetXaxis()->SetTimeDisplay(1);
-//          h->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F2000-02-28 13:00:01");
-//
-//    This defines the time format being "dd/mm/yy" and the time offset as the
-//    February 28th 2003 at 13:00:01
-//
-//    If %F is not specified, the time offset used will be the one defined by:
-//    gStyle->SetTimeOffset. For example like that:
-//
-//          TDatime da(2003,02,28,12,00,00);
-//          gStyle->SetTimeOffset(da.Convert());
-//
+   // Change the format used for time plotting
+   //
+   //  The format string for date and time use the same options as the one used
+   //  in the standard strftime C function, i.e. :
+   //    for date :
+   //      %a abbreviated weekday name
+   //      %b abbreviated month name
+   //      %d day of the month (01-31)
+   //      %m month (01-12)
+   //      %y year without century
+   //
+   //    for time :
+   //      %H hour (24-hour clock)
+   //      %I hour (12-hour clock)
+   //      %p local equivalent of AM or PM
+   //      %M minute (00-59)
+   //      %S seconds (00-61)
+   //      %% %
+   //
+   //    This function allows also to define the time offset. It is done via %F
+   //    which should be appended at the end of the format string. The time
+   //    offset has the following format: 'yyyy-mm-dd hh:mm:ss'
+   //    Example:
+   //
+   //          h = new TH1F("Test","h",3000,0.,200000.);
+   //          h->GetXaxis()->SetTimeDisplay(1);
+   //          h->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F2000-02-28 13:00:01");
+   //
+   //    This defines the time format being "dd/mm/yy" and the time offset as the
+   //    February 28th 2003 at 13:00:01
+   //
+   //    If %F is not specified, the time offset used will be the one defined by:
+   //    gStyle->SetTimeOffset. For example like that:
+   //
+   //          TDatime da(2003,02,28,12,00,00);
+   //          gStyle->SetTimeOffset(da.Convert());
+
    TString timeformat = tformat;
 
    if (timeformat.Index("%F")>=0 || timeformat.IsNull()) {

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.91 2006/04/18 06:58:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.92 2006/04/19 08:22:23 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -37,6 +37,8 @@ ClassImp(TH2)
 //______________________________________________________________________________
 TH2::TH2()
 {
+   // Constructor.
+
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -128,6 +130,7 @@ TH2::TH2(const TH2 &h) : TH1()
 //______________________________________________________________________________
 TH2::~TH2()
 {
+   // Destructor.
 }
 
 //______________________________________________________________________________
@@ -371,6 +374,8 @@ Double_t TH2::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
 //______________________________________________________________________________
 void TH2::Copy(TObject &obj) const
 {
+   // Copy.
+
    TH1::Copy(obj);
    ((TH2&)obj).fScalefactor = fScalefactor;
    ((TH2&)obj).fTsumwy      = fTsumwy;
@@ -1493,7 +1498,6 @@ Long64_t TH2::Merge(TCollection *list)
 }
 
 //______________________________________________________________________________
-
 TH2 *TH2::RebinX(Int_t ngroup, const char *newname)
 {
    // Rebin only the X axis
@@ -1503,7 +1507,6 @@ TH2 *TH2::RebinX(Int_t ngroup, const char *newname)
 }
 
 //______________________________________________________________________________
-
 TH2 *TH2::RebinY(Int_t ngroup, const char *newname)
 {
    // Rebin only the Y axis
@@ -1514,8 +1517,6 @@ TH2 *TH2::RebinY(Int_t ngroup, const char *newname)
 
 
 //______________________________________________________________________________
-
-
 TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 {
    //   -*-*-*Rebin this histogram grouping nxgroup/nygroup bins along the xaxis/yaxis together*-*-*-*-
@@ -2268,11 +2269,13 @@ ClassImp(TH2C)
 //______________________________________________________________________________
 TH2C::TH2C(): TH2()
 {
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TH2C::~TH2C()
 {
+   // Destructor.
 }
 
 //______________________________________________________________________________
@@ -2280,6 +2283,8 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup)
 {
+   // Constructor.
+
    TArrayC::Set(fNcells);
 
    //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
@@ -2290,6 +2295,8 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
+   // Constructor.
+
    TArrayC::Set(fNcells);
 }
 
@@ -2298,6 +2305,8 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayC::Set(fNcells);
 }
 
@@ -2306,6 +2315,8 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayC::Set(fNcells);
 }
 
@@ -2314,12 +2325,16 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayC::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH2C::TH2C(const TH2C &h2c) : TH2(), TArrayC()
 {
+   // Copy constructor.
+
    ((TH2C&)h2c).Copy(*this);
 }
 
@@ -2347,6 +2362,8 @@ void TH2C::AddBinContent(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TH2C::Copy(TObject &newth2) const
 {
+   // Copy.
+
    TH2::Copy((TH2C&)newth2);
    TArrayC::Copy((TH2C&)newth2);
 }
@@ -2354,6 +2371,8 @@ void TH2C::Copy(TObject &newth2) const
 //______________________________________________________________________________
 TH1 *TH2C::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -2367,6 +2386,8 @@ TH1 *TH2C::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Double_t TH2C::GetBinContent(Int_t bin) const
 {
+   // Get bin content.
+
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -2442,6 +2463,8 @@ void TH2C::Streamer(TBuffer &R__b)
 //______________________________________________________________________________
 TH2C& TH2C::operator=(const TH2C &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH2C&)h1).Copy(*this);
    return *this;
 }
@@ -2450,6 +2473,8 @@ TH2C& TH2C::operator=(const TH2C &h1)
 //______________________________________________________________________________
 TH2C operator*(Float_t c1, TH2C &h1)
 {
+   // Operator *
+
    TH2C hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -2459,6 +2484,8 @@ TH2C operator*(Float_t c1, TH2C &h1)
 //______________________________________________________________________________
 TH2C operator+(TH2C &h1, TH2C &h2)
 {
+   // Operator +
+
    TH2C hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -2468,6 +2495,8 @@ TH2C operator+(TH2C &h1, TH2C &h2)
 //______________________________________________________________________________
 TH2C operator-(TH2C &h1, TH2C &h2)
 {
+   // Operator -
+
    TH2C hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -2477,6 +2506,8 @@ TH2C operator-(TH2C &h1, TH2C &h2)
 //______________________________________________________________________________
 TH2C operator*(TH2C &h1, TH2C &h2)
 {
+   // Operator *
+
    TH2C hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -2486,6 +2517,8 @@ TH2C operator*(TH2C &h1, TH2C &h2)
 //______________________________________________________________________________
 TH2C operator/(TH2C &h1, TH2C &h2)
 {
+   // Operator /
+
    TH2C hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -2499,12 +2532,13 @@ ClassImp(TH2S)
 //______________________________________________________________________________
 TH2S::TH2S(): TH2()
 {
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TH2S::~TH2S()
 {
-
+   // Destructor.
 }
 
 //______________________________________________________________________________
@@ -2512,6 +2546,8 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup)
 {
+   // Constructor.
+
    TArrayS::Set(fNcells);
 
    //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
@@ -2522,6 +2558,8 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
+   // Constructor.
+
    TArrayS::Set(fNcells);
 }
 
@@ -2530,6 +2568,8 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayS::Set(fNcells);
 }
 
@@ -2538,6 +2578,8 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayS::Set(fNcells);
 }
 
@@ -2546,12 +2588,16 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayS::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH2S::TH2S(const TH2S &h2s) : TH2(), TArrayS()
 {
+   // Copy constructor.
+
    ((TH2S&)h2s).Copy(*this);
 }
 
@@ -2579,6 +2625,8 @@ void TH2S::AddBinContent(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TH2S::Copy(TObject &newth2) const
 {
+   // Copy.
+   
    TH2::Copy((TH2S&)newth2);
    TArrayS::Copy((TH2S&)newth2);
 }
@@ -2586,6 +2634,8 @@ void TH2S::Copy(TObject &newth2) const
 //______________________________________________________________________________
 TH1 *TH2S::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -2599,6 +2649,8 @@ TH1 *TH2S::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Double_t TH2S::GetBinContent(Int_t bin) const
 {
+   // Get bin content.
+
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -2674,6 +2726,8 @@ void TH2S::Streamer(TBuffer &R__b)
 //______________________________________________________________________________
 TH2S& TH2S::operator=(const TH2S &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH2S&)h1).Copy(*this);
    return *this;
 }
@@ -2682,6 +2736,8 @@ TH2S& TH2S::operator=(const TH2S &h1)
 //______________________________________________________________________________
 TH2S operator*(Float_t c1, TH2S &h1)
 {
+   // Operator *
+
    TH2S hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -2691,6 +2747,8 @@ TH2S operator*(Float_t c1, TH2S &h1)
 //______________________________________________________________________________
 TH2S operator+(TH2S &h1, TH2S &h2)
 {
+   // Operator +
+
    TH2S hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -2700,6 +2758,8 @@ TH2S operator+(TH2S &h1, TH2S &h2)
 //______________________________________________________________________________
 TH2S operator-(TH2S &h1, TH2S &h2)
 {
+   // Operator -
+
    TH2S hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -2709,6 +2769,8 @@ TH2S operator-(TH2S &h1, TH2S &h2)
 //______________________________________________________________________________
 TH2S operator*(TH2S &h1, TH2S &h2)
 {
+   // Operator *
+
    TH2S hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -2718,6 +2780,8 @@ TH2S operator*(TH2S &h1, TH2S &h2)
 //______________________________________________________________________________
 TH2S operator/(TH2S &h1, TH2S &h2)
 {
+   // Operator /
+
    TH2S hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -2731,12 +2795,13 @@ ClassImp(TH2I)
 //______________________________________________________________________________
 TH2I::TH2I(): TH2()
 {
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TH2I::~TH2I()
 {
-
+   // Destructor.
 }
 
 //______________________________________________________________________________
@@ -2744,6 +2809,8 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup)
 {
+   // Constructor.
+
    TArrayI::Set(fNcells);
 
    //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
@@ -2754,6 +2821,8 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
+   // Constructor.
+
    TArrayI::Set(fNcells);
 }
 
@@ -2762,6 +2831,8 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayI::Set(fNcells);
 }
 
@@ -2770,6 +2841,8 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayI::Set(fNcells);
 }
 
@@ -2778,12 +2851,16 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayI::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH2I::TH2I(const TH2I &h2i) : TH2(), TArrayI()
 {
+   // Copy constructor.
+
    ((TH2I&)h2i).Copy(*this);
 }
 
@@ -2811,6 +2888,8 @@ void TH2I::AddBinContent(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TH2I::Copy(TObject &newth2) const
 {
+   // Copy.
+
    TH2::Copy((TH2I&)newth2);
    TArrayI::Copy((TH2I&)newth2);
 }
@@ -2818,6 +2897,8 @@ void TH2I::Copy(TObject &newth2) const
 //______________________________________________________________________________
 TH1 *TH2I::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -2831,6 +2912,8 @@ TH1 *TH2I::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Double_t TH2I::GetBinContent(Int_t bin) const
 {
+   // Get bin content.
+
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -2872,6 +2955,8 @@ void TH2I::SetBinsLength(Int_t n)
 //______________________________________________________________________________
 TH2I& TH2I::operator=(const TH2I &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH2I&)h1).Copy(*this);
    return *this;
 }
@@ -2880,6 +2965,8 @@ TH2I& TH2I::operator=(const TH2I &h1)
 //______________________________________________________________________________
 TH2I operator*(Float_t c1, TH2I &h1)
 {
+   // Operator *
+
    TH2I hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -2889,6 +2976,8 @@ TH2I operator*(Float_t c1, TH2I &h1)
 //______________________________________________________________________________
 TH2I operator+(TH2I &h1, TH2I &h2)
 {
+   // Operator +
+
    TH2I hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -2898,6 +2987,8 @@ TH2I operator+(TH2I &h1, TH2I &h2)
 //______________________________________________________________________________
 TH2I operator-(TH2I &h1, TH2I &h2)
 {
+   // Operator -
+
    TH2I hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -2907,6 +2998,8 @@ TH2I operator-(TH2I &h1, TH2I &h2)
 //______________________________________________________________________________
 TH2I operator*(TH2I &h1, TH2I &h2)
 {
+   // Operator *
+
    TH2I hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -2916,6 +3009,8 @@ TH2I operator*(TH2I &h1, TH2I &h2)
 //______________________________________________________________________________
 TH2I operator/(TH2I &h1, TH2I &h2)
 {
+   // Operator /
+
    TH2I hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -2929,11 +3024,13 @@ ClassImp(TH2F)
 //______________________________________________________________________________
 TH2F::TH2F(): TH2()
 {
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TH2F::~TH2F()
 {
+   // Destructor.
 }
 
 //______________________________________________________________________________
@@ -2941,6 +3038,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup)
 {
+   // Constructor.
+
    TArrayF::Set(fNcells);
 
    //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
@@ -2951,6 +3050,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
+   // Constructor.
 
    TArrayF::Set(fNcells);
 }
@@ -2960,6 +3060,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
+   // Constructor.
 
    TArrayF::Set(fNcells);
 }
@@ -2969,6 +3070,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayF::Set(fNcells);
 }
 
@@ -2977,6 +3080,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayF::Set(fNcells);
 }
 
@@ -2984,6 +3089,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 TH2F::TH2F(const TMatrixFBase &m)
 :TH2("TMatrixFBase","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
 {
+   // Constructor.
+
    TArrayF::Set(fNcells);
    Int_t ilow = m.GetRowLwb();
    Int_t iup  = m.GetRowUpb();
@@ -2999,12 +3106,16 @@ TH2F::TH2F(const TMatrixFBase &m)
 //______________________________________________________________________________
 TH2F::TH2F(const TH2F &h2f) : TH2(), TArrayF()
 {
+   // Copy constructor.
+
    ((TH2F&)h2f).Copy(*this);
 }
 
 //______________________________________________________________________________
 void TH2F::Copy(TObject &newth2) const
 {
+   // Copy.
+
    TH2::Copy((TH2F&)newth2);
    TArrayF::Copy((TH2F&)newth2);
 }
@@ -3012,6 +3123,8 @@ void TH2F::Copy(TObject &newth2) const
 //______________________________________________________________________________
 TH1 *TH2F::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -3025,6 +3138,8 @@ TH1 *TH2F::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Double_t TH2F::GetBinContent(Int_t bin) const
 {
+   // Get bin content.
+
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -3100,6 +3215,8 @@ void TH2F::Streamer(TBuffer &R__b)
 //______________________________________________________________________________
 TH2F& TH2F::operator=(const TH2F &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH2F&)h1).Copy(*this);
    return *this;
 }
@@ -3108,6 +3225,8 @@ TH2F& TH2F::operator=(const TH2F &h1)
 //______________________________________________________________________________
 TH2F operator*(Float_t c1, TH2F &h1)
 {
+   // Operator *
+
    TH2F hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -3118,6 +3237,8 @@ TH2F operator*(Float_t c1, TH2F &h1)
 //______________________________________________________________________________
 TH2F operator*(TH2F &h1, Float_t c1)
 {
+   // Operator *
+
    TH2F hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -3127,6 +3248,8 @@ TH2F operator*(TH2F &h1, Float_t c1)
 //______________________________________________________________________________
 TH2F operator+(TH2F &h1, TH2F &h2)
 {
+   // Operator +
+
    TH2F hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -3136,6 +3259,8 @@ TH2F operator+(TH2F &h1, TH2F &h2)
 //______________________________________________________________________________
 TH2F operator-(TH2F &h1, TH2F &h2)
 {
+   // Operator -
+
    TH2F hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -3145,6 +3270,8 @@ TH2F operator-(TH2F &h1, TH2F &h2)
 //______________________________________________________________________________
 TH2F operator*(TH2F &h1, TH2F &h2)
 {
+   // Operator *
+
    TH2F hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -3154,6 +3281,8 @@ TH2F operator*(TH2F &h1, TH2F &h2)
 //______________________________________________________________________________
 TH2F operator/(TH2F &h1, TH2F &h2)
 {
+   // Operator /
+
    TH2F hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -3167,11 +3296,13 @@ ClassImp(TH2D)
 //______________________________________________________________________________
 TH2D::TH2D(): TH2()
 {
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TH2D::~TH2D()
 {
+   // Destructor.
 }
 
 //______________________________________________________________________________
@@ -3179,6 +3310,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup)
 {
+   // Constructor.
+
    TArrayD::Set(fNcells);
 
    //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
@@ -3189,6 +3322,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
+   // Constructor.
+
    TArrayD::Set(fNcells);
 }
 
@@ -3197,6 +3332,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayD::Set(fNcells);
 }
 
@@ -3205,6 +3342,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayD::Set(fNcells);
 }
 
@@ -3213,6 +3352,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
+   // Constructor.
+
    TArrayD::Set(fNcells);
 }
 
@@ -3220,6 +3361,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 TH2D::TH2D(const TMatrixDBase &m)
 :TH2("TMatrixDBase","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
 {
+   // Constructor.
+
    TArrayD::Set(fNcells);
    Int_t ilow = m.GetRowLwb();
    Int_t iup  = m.GetRowUpb();
@@ -3235,12 +3378,16 @@ TH2D::TH2D(const TMatrixDBase &m)
 //______________________________________________________________________________
 TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 {
+   // Copy constructor.
+
    ((TH2D&)h2d).Copy(*this);
 }
 
 //______________________________________________________________________________
 void TH2D::Copy(TObject &newth2) const
 {
+   // Copy.
+
    TH2::Copy((TH2D&)newth2);
    TArrayD::Copy((TH2D&)newth2);
 }
@@ -3248,6 +3395,8 @@ void TH2D::Copy(TObject &newth2) const
 //______________________________________________________________________________
 TH1 *TH2D::DrawCopy(Option_t *option) const
 {
+   // Draw copy.
+
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -3261,6 +3410,8 @@ TH1 *TH2D::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Double_t TH2D::GetBinContent(Int_t bin) const
 {
+   // Get bin content.
+
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -3336,6 +3487,8 @@ void TH2D::Streamer(TBuffer &R__b)
 //______________________________________________________________________________
 TH2D& TH2D::operator=(const TH2D &h1)
 {
+   // Operator =
+
    if (this != &h1)  ((TH2D&)h1).Copy(*this);
    return *this;
 }
@@ -3344,6 +3497,8 @@ TH2D& TH2D::operator=(const TH2D &h1)
 //______________________________________________________________________________
 TH2D operator*(Float_t c1, TH2D &h1)
 {
+   // Operator *
+
    TH2D hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -3353,6 +3508,8 @@ TH2D operator*(Float_t c1, TH2D &h1)
 //______________________________________________________________________________
 TH2D operator+(TH2D &h1, TH2D &h2)
 {
+   // Operator +
+
    TH2D hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -3362,6 +3519,8 @@ TH2D operator+(TH2D &h1, TH2D &h2)
 //______________________________________________________________________________
 TH2D operator-(TH2D &h1, TH2D &h2)
 {
+   // Operator -
+
    TH2D hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -3371,6 +3530,8 @@ TH2D operator-(TH2D &h1, TH2D &h2)
 //______________________________________________________________________________
 TH2D operator*(TH2D &h1, TH2D &h2)
 {
+   // Operator *
+
    TH2D hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -3380,6 +3541,8 @@ TH2D operator*(TH2D &h1, TH2D &h2)
 //______________________________________________________________________________
 TH2D operator/(TH2D &h1, TH2D &h2)
 {
+   // Operator /
+
    TH2D hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);

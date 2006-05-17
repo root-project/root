@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.26 2006/03/13 15:04:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.27 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -131,6 +131,8 @@ TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 //______________________________________________________________________________
 TF3& TF3::operator=(const TF3 &rhs) 
 {
+   // Operator =
+
    if (this != &rhs) {
       rhs.Copy(*this);
    }
@@ -148,6 +150,8 @@ TF3::~TF3()
 //______________________________________________________________________________
 TF3::TF3(const TF3 &f3) : TF2()
 {
+   // Copy constructor.
+
    ((TF3&)f3).Copy(*this);
 }
 
