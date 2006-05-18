@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.h,v 1.7 2004/06/09 06:46:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.h,v 1.8 2006/05/06 08:25:15 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 //                                                                      //
 // TRandom                                                              //
 //                                                                      //
-// Simple prototype random number generator class.                      //
+// Simple prototype random number generator class (periodicity = 10**9) //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -56,7 +56,7 @@ public:
    virtual  Double_t Uniform(Double_t x1, Double_t x2);
    virtual  void     WriteRandom(const char *filename);
 
-   ClassDef(TRandom,1)  // Random number generators
+   ClassDef(TRandom,1)  //Simple Random number generator (periodicity = 10**9)
 };
 
 R__EXTERN TRandom *gRandom;

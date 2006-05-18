@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.8 2006/05/17 17:32:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.9 2006/05/18 07:34:25 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta  17/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -44,16 +44,6 @@ TRandom2::~TRandom2()
 //*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================
 
-}
-
-//______________________________________________________________________________
-void TRandom2::GetSeed3(UInt_t &seed1, UInt_t &seed2, UInt_t & seed3)
-{
-//  Set the random generator seeds
-
-   seed1 = UInt_t(fSeed1);
-   seed2 = UInt_t(fSeed2);
-   seed3 = UInt_t(fSeed);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.24 2006/05/06 08:25:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.25 2006/05/17 17:32:40 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //
 // TRandom
 //
-// basic Random number generator class (periodicity = 10**8).
+// basic Random number generator class (periodicity = 10**9).
 //
 // The following basic Random generators are provided:
 // ===================================================
@@ -592,7 +592,6 @@ Double_t TRandom::Rndm(Int_t)
 //  Produces uniformly-distributed floating points between 0 and 1.
 //  Identical sequence on all machines of >= 32 bits.
 //  Periodicity = 2**31 
-//  Universal version (Fred James 1985).
 //  generates a number in ]0,1]
 //  Note that this is a generator which is known to have defects 
 //  (the lower random bits are correlated) and therefore should NOT be 
