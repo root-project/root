@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCResult.cxx,v 1.2 2006/04/18 09:59:41 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCResult.cxx,v 1.3 2006/04/24 14:22:51 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -18,6 +18,7 @@ ClassImp(TODBCResult)
 //______________________________________________________________________________
 TODBCResult::TODBCResult(SQLHSTMT stmt)
 {
+   //constructor
    fHstmt = stmt;
    fFieldCount = 0;
 
@@ -40,6 +41,7 @@ TODBCResult::~TODBCResult()
 //______________________________________________________________________________
 void TODBCResult::Close(Option_t *)
 {
+   //close
    SQLFreeHandle(SQL_HANDLE_STMT, fHstmt);
    fHstmt = 0;
 }

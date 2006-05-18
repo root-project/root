@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.3 2006/04/24 14:22:51 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.4 2006/05/16 09:37:57 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -33,6 +33,7 @@ ClassImp(TODBCStatement)
 TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize) :
    TSQLStatement()
 {
+   //constructor
    fHstmt = stmt;
    fBufferPreferredSize = rowarrsize;
 
@@ -104,12 +105,14 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize) :
 //______________________________________________________________________________
 TODBCStatement::~TODBCStatement()
 {
+   //destructor
    Close();
 }
 
 //______________________________________________________________________________
 void TODBCStatement::Close(Option_t *)
 {
+   //close
    SQLFreeHandle(SQL_HANDLE_STMT, fHstmt);
 
    fHstmt=0;
@@ -118,7 +121,7 @@ void TODBCStatement::Close(Option_t *)
 //______________________________________________________________________________
 Bool_t TODBCStatement::Process()
 {
-
+   //process
    SQLRETURN retcode = SQL_SUCCESS;
 
    if (IsParSettMode()) {
@@ -151,6 +154,7 @@ Bool_t TODBCStatement::Process()
 //______________________________________________________________________________
 Int_t TODBCStatement::GetNumAffectedRows()
 {
+   //get number of affected rows
    SQLLEN    rowCount;
    SQLRETURN retcode = SQL_SUCCESS;
 
@@ -164,6 +168,7 @@ Int_t TODBCStatement::GetNumAffectedRows()
 //______________________________________________________________________________
 Bool_t TODBCStatement::StoreResult()
 {
+   //store result
    if (IsParSettMode()) {
       Error("StoreResult()","Call Process() method before");
       return kFALSE;
@@ -204,8 +209,8 @@ Bool_t TODBCStatement::StoreResult()
       BindColumn(n, dataType, columnSize);
 
       if (nameLength>0) {
-         fBuffer[n].namebuffer = new char[nameLength+1];
-         strcpy(fBuffer[n].namebuffer, (const char*) columnName);
+         fBuffer[n].fBnamebuffer = new char[nameLength+1];
+         strcpy(fBuffer[n].fBnamebuffer, (const char*) columnName);
       }
    }
 
@@ -219,21 +224,24 @@ Bool_t TODBCStatement::StoreResult()
 //______________________________________________________________________________
 Int_t TODBCStatement::GetNumFields()
 {
+   //return number of fields
    return IsResultSet() ? fNumBuffers : -1;
 }
 
 //______________________________________________________________________________
 const char* TODBCStatement::GetFieldName(Int_t nfield)
 {
+   //return field name
    if (!IsResultSet() || (nfield<0) || (nfield>=fNumBuffers)) return 0;
 
-   return fBuffer[nfield].namebuffer;
+   return fBuffer[nfield].fBnamebuffer;
 }
 
 
 //______________________________________________________________________________
 Bool_t TODBCStatement::NextResultRow()
 {
+   //next result row
    if (!IsResultSet()) return kFALSE;
 
    if ((fNumRowsFetched==0) ||
@@ -260,6 +268,7 @@ Bool_t TODBCStatement::NextResultRow()
 //______________________________________________________________________________
 Bool_t TODBCStatement::ExtractErrors(SQLRETURN retcode, const char* method)
 {
+   //extract errors
    if ((retcode== SQL_SUCCESS) || (retcode == SQL_SUCCESS_WITH_INFO)) return kFALSE;
 
    SQLINTEGER i = 0;
@@ -281,6 +290,7 @@ Bool_t TODBCStatement::ExtractErrors(SQLRETURN retcode, const char* method)
 //______________________________________________________________________________
 Bool_t TODBCStatement::NextIteration()
 {
+   //run next iteration
    if (!IsParSettMode() || (fBuffer==0) || (fBufferLength<=0)) return kFALSE;
 
    if (fBufferCounter>=fBufferLength-1) {
@@ -299,12 +309,14 @@ Bool_t TODBCStatement::NextIteration()
 //______________________________________________________________________________
 Int_t TODBCStatement::GetNumParameters()
 {
+   //return number of parameters
    return IsParSettMode() ? fNumBuffers : 0;
 }
 
 //______________________________________________________________________________
 void TODBCStatement::SetNumBuffers(Int_t isize, Int_t ilen)
 {
+   //set number of buffers
    FreeBuffers();
 
    fNumBuffers = isize;
@@ -313,14 +325,14 @@ void TODBCStatement::SetNumBuffers(Int_t isize, Int_t ilen)
 
    fBuffer = new ODBCBufferRec_t[fNumBuffers];
    for (Int_t n=0;n<fNumBuffers;n++) {
-      fBuffer[n].roottype = 0;
-      fBuffer[n].sqltype = 0;
-      fBuffer[n].sqlctype = 0;
-      fBuffer[n].buffer = 0;
-      fBuffer[n].elementsize = 0;
-      fBuffer[n].lenarray = 0;
-      fBuffer[n].strbuffer = 0;
-      fBuffer[n].namebuffer = 0;
+      fBuffer[n].fBroottype = 0;
+      fBuffer[n].fBsqltype = 0;
+      fBuffer[n].fBsqlctype = 0;
+      fBuffer[n].fBbuffer = 0;
+      fBuffer[n].fBelementsize = 0;
+      fBuffer[n].fBlenarray = 0;
+      fBuffer[n].fBstrbuffer = 0;
+      fBuffer[n].fBnamebuffer = 0;
    }
 
    fStatusBuffer = new SQLUSMALLINT[fBufferLength];
@@ -331,13 +343,14 @@ void TODBCStatement::SetNumBuffers(Int_t isize, Int_t ilen)
 //______________________________________________________________________________
 void TODBCStatement::FreeBuffers()
 {
+   //free buffers
    if (fBuffer==0) return;
    for (Int_t n=0;n<fNumBuffers;n++) {
-      if (fBuffer[n].buffer!=0)
-        free(fBuffer[n].buffer);
-      delete[] fBuffer[n].lenarray;
-      delete[] fBuffer[n].strbuffer;
-      delete[] fBuffer[n].namebuffer;
+      if (fBuffer[n].fBbuffer!=0)
+        free(fBuffer[n].fBbuffer);
+      delete[] fBuffer[n].fBlenarray;
+      delete[] fBuffer[n].fBstrbuffer;
+      delete[] fBuffer[n].fBnamebuffer;
    }
 
    delete[] fStatusBuffer;
@@ -351,9 +364,10 @@ void TODBCStatement::FreeBuffers()
 //______________________________________________________________________________
 Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER size)
 {
+   //bind column
    if ((ncol<0) || (ncol>=fNumBuffers)) return kFALSE;
 
-   if (fBuffer[ncol].sqltype!=0) {
+   if (fBuffer[ncol].fBsqltype!=0) {
       Error("BindColumn","Column %d already binded", ncol);
       return kFALSE;
    }
@@ -401,17 +415,17 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
       }
    }
 
-   fBuffer[ncol].roottype    = 0;
-   fBuffer[ncol].sqltype     = sqltype;
-   fBuffer[ncol].sqlctype    = sqlctype;
-   fBuffer[ncol].buffer      = malloc(elemsize * fBufferLength);
-   fBuffer[ncol].elementsize = elemsize;
-   fBuffer[ncol].lenarray    = new SQLLEN[fBufferLength];
+   fBuffer[ncol].fBroottype    = 0;
+   fBuffer[ncol].fBsqltype     = sqltype;
+   fBuffer[ncol].fBsqlctype    = sqlctype;
+   fBuffer[ncol].fBbuffer      = malloc(elemsize * fBufferLength);
+   fBuffer[ncol].fBelementsize = elemsize;
+   fBuffer[ncol].fBlenarray    = new SQLLEN[fBufferLength];
 
    SQLRETURN retcode =
-      SQLBindCol(fHstmt, ncol+1, sqlctype, fBuffer[ncol].buffer,
+      SQLBindCol(fHstmt, ncol+1, sqlctype, fBuffer[ncol].fBbuffer,
                  elemsize,
-                 fBuffer[ncol].lenarray);
+                 fBuffer[ncol].fBlenarray);
 
    return !ExtractErrors(retcode, "BindColumn");
 }
@@ -419,9 +433,10 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
 //______________________________________________________________________________
 Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
 {
+   //bind parameter
    if ((npar<0) || (npar>=fNumBuffers)) return kFALSE;
 
-   if (fBuffer[npar].roottype!=0) {
+   if (fBuffer[npar].fBroottype!=0) {
       Error("SetParameterType","ParameterType for par %d already specified", npar);
       return kFALSE;
    }
@@ -464,12 +479,12 @@ Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
       return kFALSE;
    }
 
-   fBuffer[npar].roottype = roottype;
-   fBuffer[npar].sqlctype = sqlctype;
-   fBuffer[npar].sqltype = sqltype;
-   fBuffer[npar].buffer = buffer;
-   fBuffer[npar].elementsize = elemsize;
-   fBuffer[npar].lenarray = lenarray;
+   fBuffer[npar].fBroottype = roottype;
+   fBuffer[npar].fBsqlctype = sqlctype;
+   fBuffer[npar].fBsqltype = sqltype;
+   fBuffer[npar].fBbuffer = buffer;
+   fBuffer[npar].fBelementsize = elemsize;
+   fBuffer[npar].fBlenarray = lenarray;
 
    return kTRUE;
 }
@@ -477,29 +492,31 @@ Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
 //______________________________________________________________________________
 void* TODBCStatement::GetParAddr(Int_t npar, Int_t roottype, Int_t length)
 {
+   //get parameter address
    if ((fBuffer==0) || (npar<0) || (npar>=fNumBuffers) || (fBufferCounter<0)) return 0;
 
-   if (fBuffer[npar].buffer==0) {
+   if (fBuffer[npar].fBbuffer==0) {
       if (IsParSettMode() && (roottype!=0) && (fBufferCounter==0))
          if (!BindParam(npar, roottype, length)) return 0;
 
-      if (fBuffer[npar].buffer==0) return 0;
+      if (fBuffer[npar].fBbuffer==0) return 0;
    }
 
    if (roottype!=0)
-      if (fBuffer[npar].roottype!=roottype) return 0;
+      if (fBuffer[npar].fBroottype!=roottype) return 0;
 
-   return (char*)fBuffer[npar].buffer + fBufferCounter*fBuffer[npar].elementsize;
+   return (char*)fBuffer[npar].fBbuffer + fBufferCounter*fBuffer[npar].fBelementsize;
 }
 
 
 //______________________________________________________________________________
 long double TODBCStatement::ConvertToNumeric(Int_t npar)
 {
+   //convert to numeric type
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
-   switch (fBuffer[npar].sqlctype) {
+   switch (fBuffer[npar].fBsqlctype) {
       case SQL_C_ULONG:    return *((unsigned long int*) addr); break;
       case SQL_C_SLONG:    return *((long int*) addr); break;
       case SQL_C_UBIGINT:  return *((ULong64_t*) addr); break;
@@ -517,14 +534,15 @@ long double TODBCStatement::ConvertToNumeric(Int_t npar)
 //______________________________________________________________________________
 const char* TODBCStatement::ConvertToString(Int_t npar)
 {
+   //convert to string
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
-   if (fBuffer[npar].strbuffer==0)
-      fBuffer[npar].strbuffer = new char[100];
+   if (fBuffer[npar].fBstrbuffer==0)
+      fBuffer[npar].fBstrbuffer = new char[100];
 
-   char* buf = fBuffer[npar].strbuffer;
+   char* buf = fBuffer[npar].fBstrbuffer;
 
-   switch(fBuffer[npar].sqlctype) {
+   switch(fBuffer[npar].fBsqlctype) {
       case SQL_C_SLONG:   snprintf(buf,100,"%ld",*((long*) addr)); break;
       case SQL_C_ULONG:   snprintf(buf,100,"%lu",*((unsigned long*) addr)); break;
       case SQL_C_SBIGINT: snprintf(buf,100,"%lld",*((long long*) addr)); break;
@@ -544,10 +562,11 @@ const char* TODBCStatement::ConvertToString(Int_t npar)
 //______________________________________________________________________________
 Int_t TODBCStatement::GetInt(Int_t npar)
 {
+   //get parameter as integer
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
-   if (fBuffer[npar].sqlctype==SQL_C_SLONG)
+   if (fBuffer[npar].fBsqlctype==SQL_C_SLONG)
       return (Int_t) *((long int*) addr);
 
    return (Int_t) ConvertToNumeric(npar);
@@ -556,10 +575,11 @@ Int_t TODBCStatement::GetInt(Int_t npar)
 //______________________________________________________________________________
 UInt_t TODBCStatement::GetUInt(Int_t npar)
 {
+   //get parameter as unsigned integer
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
-   if (fBuffer[npar].sqlctype==SQL_C_ULONG)
+   if (fBuffer[npar].fBsqlctype==SQL_C_ULONG)
       return (UInt_t) *((unsigned long int*) addr);
 
    return (UInt_t) ConvertToNumeric(npar);
@@ -568,10 +588,11 @@ UInt_t TODBCStatement::GetUInt(Int_t npar)
 //______________________________________________________________________________
 Long_t TODBCStatement::GetLong(Int_t npar)
 {
+   //get parameter as Long_t
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
-   if (fBuffer[npar].sqlctype==SQL_C_SLONG)
+   if (fBuffer[npar].fBsqlctype==SQL_C_SLONG)
      return (Long_t) *((long int*) addr);
 
    return (Long_t) ConvertToNumeric(npar);
@@ -580,10 +601,11 @@ Long_t TODBCStatement::GetLong(Int_t npar)
 //______________________________________________________________________________
 Long64_t TODBCStatement::GetLong64(Int_t npar)
 {
+   //get parameter as Long64_t
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
-   if (fBuffer[npar].sqlctype==SQL_C_SBIGINT)
+   if (fBuffer[npar].fBsqlctype==SQL_C_SBIGINT)
      return *((Long64_t*) addr);
 
    return (Long64_t) ConvertToNumeric(npar);
@@ -592,10 +614,11 @@ Long64_t TODBCStatement::GetLong64(Int_t npar)
 //______________________________________________________________________________
 ULong64_t TODBCStatement::GetULong64(Int_t npar)
 {
+   //get parameter as ULong64_t
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
-   if (fBuffer[npar].sqlctype==SQL_C_UBIGINT)
+   if (fBuffer[npar].fBsqlctype==SQL_C_UBIGINT)
      return *((ULong64_t*) addr);
 
    return (ULong64_t) ConvertToNumeric(npar);
@@ -604,10 +627,11 @@ ULong64_t TODBCStatement::GetULong64(Int_t npar)
 //______________________________________________________________________________
 Double_t TODBCStatement::GetDouble(Int_t npar)
 {
+   //get parameter as Double_t
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
-   if (fBuffer[npar].sqlctype==SQL_C_DOUBLE)
+   if (fBuffer[npar].fBsqlctype==SQL_C_DOUBLE)
      return *((double*) addr);
 
    return (Double_t) ConvertToNumeric(npar);
@@ -616,33 +640,34 @@ Double_t TODBCStatement::GetDouble(Int_t npar)
 //______________________________________________________________________________
 const char* TODBCStatement::GetString(Int_t npar)
 {
+   //get parameter as string
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
-   if (fBuffer[npar].sqlctype==SQL_C_CHAR) {
+   if (fBuffer[npar].fBsqlctype==SQL_C_CHAR) {
       // first check if string is null
 
-      int len = fBuffer[npar].lenarray[fBufferCounter];
+      int len = fBuffer[npar].fBlenarray[fBufferCounter];
 
       if ((len == SQL_NULL_DATA) || (len==0)) return 0;
 
       char* res = (char*) addr;
-      if (len < fBuffer[npar].elementsize) {
+      if (len < fBuffer[npar].fBelementsize) {
          *(res + len) = 0;
          return res;
       }
 
-      if (len > fBuffer[npar].elementsize) {
+      if (len > fBuffer[npar].fBelementsize) {
          Error("getString","Problems with string size %d", len);
          return 0;
       }
 
-      if (fBuffer[npar].strbuffer==0)
-         fBuffer[npar].strbuffer = new char[len+1];
+      if (fBuffer[npar].fBstrbuffer==0)
+         fBuffer[npar].fBstrbuffer = new char[len+1];
 
-      strncpy(fBuffer[npar].strbuffer, res, len);
+      strncpy(fBuffer[npar].fBstrbuffer, res, len);
 
-      res = fBuffer[npar].strbuffer;
+      res = fBuffer[npar].fBstrbuffer;
       *(res + len) = 0;
       return res;
    }
@@ -654,12 +679,13 @@ const char* TODBCStatement::GetString(Int_t npar)
 //______________________________________________________________________________
 Bool_t TODBCStatement::SetInt(Int_t npar, Int_t value)
 {
+   //set parameter as Int_t
    void* addr = GetParAddr(npar, kInt_t);
    if (addr==0) return kFALSE;
 
    *((long int*) addr) = value;
 
-   fBuffer[npar].lenarray[fBufferCounter] = 0;
+   fBuffer[npar].fBlenarray[fBufferCounter] = 0;
 
    return kTRUE;
 }
@@ -667,12 +693,13 @@ Bool_t TODBCStatement::SetInt(Int_t npar, Int_t value)
 //______________________________________________________________________________
 Bool_t TODBCStatement::SetUInt(Int_t npar, UInt_t value)
 {
+   //set parameter as UInt_t
    void* addr = GetParAddr(npar, kUInt_t);
    if (addr==0) return kFALSE;
 
    *((unsigned long int*) addr) = value;
 
-   fBuffer[npar].lenarray[fBufferCounter] = 0;
+   fBuffer[npar].fBlenarray[fBufferCounter] = 0;
 
    return kTRUE;
 }
@@ -680,12 +707,13 @@ Bool_t TODBCStatement::SetUInt(Int_t npar, UInt_t value)
 //______________________________________________________________________________
 Bool_t TODBCStatement::SetLong(Int_t npar, Long_t value)
 {
+   //set parameter as Long_t
    void* addr = GetParAddr(npar, kLong_t);
    if (addr==0) return kFALSE;
 
    *((long int*) addr) = value;
 
-   fBuffer[npar].lenarray[fBufferCounter] = 0;
+   fBuffer[npar].fBlenarray[fBufferCounter] = 0;
 
    return kTRUE;
 }
@@ -693,12 +721,13 @@ Bool_t TODBCStatement::SetLong(Int_t npar, Long_t value)
 //______________________________________________________________________________
 Bool_t TODBCStatement::SetLong64(Int_t npar, Long64_t value)
 {
+   //set parameter as Long64_t
    void* addr = GetParAddr(npar, kLong64_t);
    if (addr==0) return kFALSE;
 
    *((Long64_t*) addr) = value;
 
-   fBuffer[npar].lenarray[fBufferCounter] = 0;
+   fBuffer[npar].fBlenarray[fBufferCounter] = 0;
 
    return kTRUE;
 }
@@ -706,12 +735,13 @@ Bool_t TODBCStatement::SetLong64(Int_t npar, Long64_t value)
 //______________________________________________________________________________
 Bool_t TODBCStatement::SetULong64(Int_t npar, ULong64_t value)
 {
+   //set parameter as ULong64_t
    void* addr = GetParAddr(npar, kULong64_t);
    if (addr==0) return kFALSE;
 
    *((ULong64_t*) addr) = value;
 
-   fBuffer[npar].lenarray[fBufferCounter] = 0;
+   fBuffer[npar].fBlenarray[fBufferCounter] = 0;
 
    return kTRUE;
 }
@@ -719,12 +749,13 @@ Bool_t TODBCStatement::SetULong64(Int_t npar, ULong64_t value)
 //______________________________________________________________________________
 Bool_t TODBCStatement::SetDouble(Int_t npar, Double_t value)
 {
+   //set parameter as Double_t
    void* addr = GetParAddr(npar, kDouble_t);
    if (addr==0) return kFALSE;
 
    *((double*) addr) = value;
 
-   fBuffer[npar].lenarray[fBufferCounter] = 0;
+   fBuffer[npar].fBlenarray[fBufferCounter] = 0;
 
    return kTRUE;
 }
@@ -732,23 +763,24 @@ Bool_t TODBCStatement::SetDouble(Int_t npar, Double_t value)
 //______________________________________________________________________________
 Bool_t TODBCStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
+   //set parameter as string
    void* addr = GetParAddr(npar, kCharStar, maxsize);
 
    if (addr==0) return kFALSE;
 
    int len = value==0 ? 0 : strlen(value);
 
-   if (len>=fBuffer[npar].elementsize) {
-      len = fBuffer[npar].elementsize;
+   if (len>=fBuffer[npar].fBelementsize) {
+      len = fBuffer[npar].fBelementsize;
       strncpy((char*) addr, value, len);
-      fBuffer[npar].lenarray[fBufferCounter] = len;
+      fBuffer[npar].fBlenarray[fBufferCounter] = len;
    } else
    if (len>0) {
       strcpy((char*) addr, value);
-      fBuffer[npar].lenarray[fBufferCounter] = SQL_NTS;
+      fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NTS;
    } else {
       *((char*) addr) = 0;
-      fBuffer[npar].lenarray[fBufferCounter] = SQL_NTS;
+      fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NTS;
    }
 
    return kTRUE;

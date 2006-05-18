@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.h,v 1.3 2006/04/24 14:22:51 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.h,v 1.4 2006/05/16 09:37:57 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -37,14 +37,14 @@ protected:
     struct ODBCBufferRec_t;
     #else
     struct ODBCBufferRec_t {
-       Int_t       roottype;
-       Int_t       sqltype;
-       Int_t       sqlctype;
-       void       *buffer;
-       Int_t       elementsize;
-       SQLLEN     *lenarray;
-       char       *strbuffer;
-       char       *namebuffer;
+       Int_t       fBroottype;
+       Int_t       fBsqltype;
+       Int_t       fBsqlctype;
+       void       *fBbuffer;
+       Int_t       fBelementsize;
+       SQLLEN     *fBlenarray;
+       char       *fBstrbuffer;
+       char       *fBnamebuffer;
     };
     #endif
 

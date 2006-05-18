@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.3 2006/05/16 09:37:57 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.4 2006/05/16 10:59:35 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -195,6 +195,7 @@ TODBCServer::~TODBCServer()
 //______________________________________________________________________________
 Bool_t TODBCServer::ExtractErrors(SQLRETURN retcode, const char* method)
 {
+   //extract errors
    if ((retcode==SQL_SUCCESS) || (retcode==SQL_SUCCESS_WITH_INFO)) return kFALSE;
 
    SQLINTEGER i = 0;
@@ -412,6 +413,7 @@ const char *TODBCServer::ServerInfo()
 //______________________________________________________________________________
 TSQLStatement *TODBCServer::Statement(const char *sql, Int_t bufsize)
 {
+   //return statement result of query
    if (!IsConnected()) {
       Error("Statement", "not connected");
       return 0;
