@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.37 2006/03/06 21:59:30 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.38 2006/03/28 16:35:00 brun Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -486,6 +486,11 @@ const TSeqCol *TTabCom::GetListOfClasses()
          //               to reduce probablility that        filename which overflows
          //               these keywords will occur in       its field.
          //               filename or classname.
+         else if (line.Length()>1 && line[0]==' ')
+            // skip leading space (in the case of autoload class)
+            line = line(1, 32000);
+
+         // Select the type name itself.
          line = line("[^ ]*");
 
          // If we find namespace names then add them to the fpNamespaces array and
