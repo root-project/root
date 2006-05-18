@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.1 2006/05/18 16:12:09 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.2 2006/05/18 16:41:32 couet Exp $
 // Author: Sebastian Boser, 02/02/06
 
 /*************************************************************************
@@ -14,6 +14,15 @@
 //  TPolarGraph creates a polar graph (including error bars). 
 //  It uses the class TGraphPolargram to draw the polar axis.
 //
+//  An example of TGraphPolar is given in the tutorial graphpolar.C
+//  with the following output:
+//Begin_Html
+/*
+<img src="gif/graphpolar.gif">
+*/
+//End_Html
+//
+//______________________________________________________________________________
 
 #include "TGraphPolar.h"
 
