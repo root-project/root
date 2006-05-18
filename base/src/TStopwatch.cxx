@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.11 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.12 2005/11/21 11:17:18 rdm Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -195,10 +195,10 @@ Double_t TStopwatch::GetCPUTime()
          __int64  ftInt64;
       } ftUser;   // time the process has spent in user mode
 
-      HANDLE hProcess = GetCurrentProcess();
-      ret = GetProcessTimes (hProcess, &ftCreate, &ftExit,
-                                       &ftKernel.ftFileTime,
-                                       &ftUser.ftFileTime);
+      HANDLE hThread = GetCurrentThread();
+      ret = GetThreadTimes (hThread, &ftCreate, &ftExit,
+                                     &ftKernel.ftFileTime,
+                                     &ftUser.ftFileTime);
       if (ret != TRUE) {
          ret = GetLastError ();
          ::Error ("GetCPUTime", " Error on GetProcessTimes 0x%lx", (int)ret);

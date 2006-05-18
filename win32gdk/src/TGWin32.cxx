@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.112 2006/05/02 16:53:40 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.113 2006/05/15 13:31:01 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -760,6 +760,7 @@ TGWin32MainThread::TGWin32MainThread()
    fMessageMutex = new CRITICAL_SECTION;
    ::InitializeCriticalSection(fMessageMutex);
    fHandle = ::CreateThread( NULL, 0, &MessageProcessingLoop, 0, 0, &fId );
+   SetThreadAffinityMask(fHandle, 1);
 }
 
 

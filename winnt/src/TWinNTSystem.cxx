@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.139 2006/05/15 17:43:43 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.140 2006/05/17 13:31:02 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -834,6 +834,8 @@ Bool_t TWinNTSystem::Init()
 #else
    gRootDir= ROOTPREFIX;
 #endif
+
+   SetThreadAffinityMask(GetCurrentThread(), 1);
 
    if (!gROOT->IsBatch()) {
       gConsoleEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -3672,9 +3674,10 @@ Double_t TWinNTSystem::GetCPUTime()
          __int64  ftInt64;
       } ftUser;   // time the process has spent in user mode
 
-      HANDLE hProcess = ::GetCurrentProcess();
-      ret = ::GetProcessTimes(hProcess, &ftCreate, &ftExit,
-                              &ftKernel.ftFileTime, &ftUser.ftFileTime);
+      HANDLE hThread = GetCurrentThread();
+      ret = GetThreadTimes (hThread, &ftCreate, &ftExit,
+                                     &ftKernel.ftFileTime,
+                                     &ftUser.ftFileTime);
       if (ret != TRUE){
          ret = ::GetLastError();
          ::Error("GetCPUTime", " Error on GetProcessTimes 0x%lx", (int)ret);
