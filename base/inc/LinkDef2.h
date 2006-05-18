@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.33 2006/05/04 13:06:15 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.34 2006/05/09 09:42:50 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -111,6 +111,7 @@
 #pragma link C++ class TStopwatch+;
 #pragma link C++ class TStorage;
 #pragma link C++ class TString-!;
+#pragma link C++ class TStringRef-!;
 #pragma link C++ class TStringLong-;
 #pragma link C++ class TSubString;
 #pragma link C++ class TSysEvtHandler;
