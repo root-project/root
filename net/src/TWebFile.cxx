@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.9 2006/04/18 14:23:20 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.10 2006/05/16 13:19:02 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -40,7 +40,7 @@ TWebFile::TWebFile(const char *url) : TFile(url, "WEB")
 
    fOffset = 0;
 
-   Init(kFALSE);
+   TWebFile::Init(kFALSE);
 }
 
 //______________________________________________________________________________
@@ -55,7 +55,7 @@ TWebFile::TWebFile(TUrl url) : TFile(url.GetUrl(), "WEB")
 
    fOffset = 0;
 
-   Init(kFALSE);
+   TWebFile::Init(kFALSE);
 }
 
 //______________________________________________________________________________
@@ -130,8 +130,13 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
 
    // Give full URL so Apache's virtual hosts solution works.
    // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
+#ifdef WIN32
+   sprintf(msg, "GET %s://%s:%d/%s?%I64d:%d\r\n", fUrl.GetProtocol(),
+           fUrl.GetHost(), fUrl.GetPort(), fUrl.GetFile(), fOffset, len);
+#else
    sprintf(msg, "GET %s://%s:%d/%s?%lld:%d\r\n", fUrl.GetProtocol(),
            fUrl.GetHost(), fUrl.GetPort(), fUrl.GetFile(), fOffset, len);
+#endif
    s.SendRaw(msg, strlen(msg));
    s.RecvRaw(buf, len);
 
