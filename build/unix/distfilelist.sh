@@ -56,4 +56,4 @@ echo `echo ${FILES} | tr ' ' '\n' | sed \
   -e 's,^lib/.*\.dll$,,' \
   -e 's,^.*.cvsignore$,,' \
   -e 's,^.*/CVS/.*$,,' \
-   | grep -v -e '^$'` ${HAVEPRECOMP} | tr ' ' '\n' | sort | uniq | sed -e 's,^,'${PREPENDDIR}','
+   | grep -v '^$'` ${HAVEPRECOMP} | tr ' ' '\n' | sort | uniq | sed -e 's,^,'${PREPENDDIR}','
