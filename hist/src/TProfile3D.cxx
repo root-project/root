@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile3D.cxx,v 1.1 2006/05/17 06:59:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile3D.cxx,v 1.2 2006/05/17 10:01:04 brun Exp $
 // Author: Rene Brun   17/05/2006
 
 /*************************************************************************
@@ -184,6 +184,7 @@ void TProfile3D::BuildOptions(Double_t tmin, Double_t tmax, Option_t *option)
 //______________________________________________________________________________
 TProfile3D::TProfile3D(const TProfile3D &profile) : TH3D()
 {
+   //copy constructor
    ((TProfile3D&)profile).Copy(*this);
 }
 
