@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.25 2006/05/17 17:32:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.26 2006/05/18 08:04:25 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -14,6 +14,10 @@
 // TRandom
 //
 // basic Random number generator class (periodicity = 10**9).
+// Note that this is a very simple generator (linear congruential) 
+// which is known to have defects 0(the lower random bits are correlated) 
+// and therefore should NOT be used in any statistical study.
+// One should use instead TRandom1, TRandom2 or TRandom3 
 //
 // The following basic Random generators are provided:
 // ===================================================
@@ -610,7 +614,8 @@ Double_t TRandom::Rndm(Int_t)
    const Double_t kCONS = 4.6566128730774E-10; // (1/pow(2,31))
    fSeed = (1103515245 * fSeed + 12345) & 0x7fffffffUL;
 
-   return  kCONS*fSeed;
+   if (fSeed) return  kCONS*fSeed;
+   return Rndm();
 }
 
 //______________________________________________________________________________
@@ -622,8 +627,7 @@ void TRandom::RndmArray(Int_t n, Double_t *array)
    Int_t i=0;
    while (i<n) {
       fSeed = (1103515245 * fSeed + 12345) & 0x7fffffffUL;
-      array[i] = kCONS*fSeed;
-      i++;
+      if (fSeed) {array[i] = kCONS*fSeed; i++;}
    }
 }
 
@@ -639,8 +643,7 @@ void TRandom::RndmArray(Int_t n, Float_t *array)
    while (i<n) {
       fSeed = (1103515245 * fSeed + 12345) & 0x7fffffffUL;
       jy = (fSeed&kMASK24);  // Set lower 8 bits to zero to assure exact float
-      array[i] = kCONS*jy;
-      i++;
+      if (fSeed) {array[i] = Float_t(kCONS*fSeed); i++;}
    }
 }
    

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.10 2006/05/04 13:01:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.11 2006/05/14 08:19:30 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ TRandom3::~TRandom3()
 Double_t TRandom3::Rndm(Int_t)
 {
 //  Machine independent random number generator.
-//  Produces uniformly-distributed floating points in [0,1]
+//  Produces uniformly-distributed floating points in ]0,1]
 //  Method: Mersenne Twistor
 
    UInt_t y;

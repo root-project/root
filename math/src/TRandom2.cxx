@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.9 2006/05/18 07:34:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.10 2006/05/18 08:04:25 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta  17/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -62,7 +62,8 @@ Double_t TRandom2::Rndm(Int_t)
    fSeed2 = TAUSWORTHE (fSeed2, 3, 11, 4294967280UL, 17);
     
    UInt_t iy = fSeed ^ fSeed1 ^ fSeed2; 
-   return  kScale*static_cast<Double_t>(iy);
+   if (iy) return  kScale*static_cast<Double_t>(iy);
+   return Rndm();
 }
 
 //______________________________________________________________________________
@@ -80,7 +81,8 @@ void TRandom2::RndmArray(Int_t n, Float_t *array)
       fSeed2 = TAUSWORTHE (fSeed2, 3, 11, 4294967280UL, 17);
     
       iy = fSeed ^ fSeed1 ^ fSeed2; 
-      array[i] = kScale*static_cast<Double_t>(iy);
+      if (iy) array[i] = (Float_t)(kScale*static_cast<Double_t>(iy));
+      else    array[i] = Rndm();
    }
 }
 
@@ -98,7 +100,8 @@ void TRandom2::RndmArray(Int_t n, Double_t *array)
       fSeed2 = TAUSWORTHE (fSeed2, 3, 11, 4294967280UL, 17);
     
       iy = fSeed ^ fSeed1 ^ fSeed2; 
-      array[i] = kScale*static_cast<Double_t>(iy);
+      if (iy) array[i] = kScale*static_cast<Double_t>(iy);
+      else    array[i] = Rndm();
    }
 }
 
