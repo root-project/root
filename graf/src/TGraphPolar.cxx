@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.1  Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.1 2006/05/18 16:12:09 couet Exp $
 // Author: Sebastian Boser, 02/02/06
 
 /*************************************************************************
@@ -296,8 +296,8 @@ Int_t TGraphPolargram::DistancetoPrimitive(Int_t px, Int_t py)
    // Check if close to a (major) radial line.
    Double_t rad = TMath::Sqrt(x*x+y*y);
    Int_t div    = (Int_t)rad*(fNdivRad%100);
-   Double_t dr  = TMath::Min(fabs(rad-div*1./(fNdivRad%100)),
-                             fabs(rad-(div+1)*1./(fNdivRad%100)));
+   Double_t dr  = TMath::Min(TMath::Abs(rad-div*1./(fNdivRad%100)),
+                             TMath::Abs(rad-(div+1)*1./(fNdivRad%100)));
    Int_t drad   = gPad->XtoPixel(dr)-gPad->XtoPixel(0);
    
    // Check if close to a (major) polar line.
@@ -322,14 +322,14 @@ Int_t TGraphPolargram::DistancetoPrimitive(Int_t px, Int_t py)
          } else {
 
             // Check for horizontal line 
-            if (((fabs(theta-kPi)<0.1)&&((px-gPad->XtoPixel(0))<0))
-              ||((fabs(theta)<0.1)&&((px-gPad->XtoPixel(0))>0))) {
+            if (((TMath::Abs(theta-kPi)<0.1)&&((px-gPad->XtoPixel(0))<0))
+              ||((TMath::Abs(theta)<0.1)&&((px-gPad->XtoPixel(0))>0))) {
                dthis = abs(py-gPad->YtoPixel(0.));
             }
 
             //Check for vertical line
-            if (((fabs(theta-kPi/2)<0.1)&&((py-gPad->YtoPixel(0))>0))
-              ||((fabs(theta-3*kPi/2)<0.1)&&(py-gPad->YtoPixel(0))<0)) {
+            if (((TMath::Abs(theta-kPi/2)<0.1)&&((py-gPad->YtoPixel(0))>0))
+              ||((TMath::Abs(theta-3*kPi/2)<0.1)&&(py-gPad->YtoPixel(0))<0)) {
                dthis = abs(px-gPad->XtoPixel(0.));
             }
             if (dthis==9999) {
@@ -504,8 +504,8 @@ void TGraphPolargram::Paint(Option_t* /* options */)
       else SetTextAlign(32);
 
       // Adjust text centerted top/bottom at bottom/top.
-      if (fabs(theta - kPi/2)<0.2) SetTextAlign(21);
-      if (fabs(theta - 3*kPi/2)<0.2) SetTextAlign(23);
+      if (TMath::Abs(theta - kPi/2)<0.2) SetTextAlign(21);
+      if (TMath::Abs(theta - 3*kPi/2)<0.2) SetTextAlign(23);
       TAttText::Modify(); //Get current text settings if changed
       gPad->PaintText((1+fLabelOffset)*TMath::Cos(theta),
                       (1+fLabelOffset)*TMath::Sin(theta),
