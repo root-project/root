@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStringLong.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStringLong.cxx,v 1.2 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   15/11/95
 
 /*************************************************************************
@@ -33,51 +33,61 @@ ClassImp(TStringLong)
 //______________________________________________________________________________
 TStringLong::TStringLong() : TString()
 {
+   //constructor
 }
 
 //______________________________________________________________________________
 TStringLong::TStringLong(Ssiz_t ic) : TString(ic)
 {
+   //constructor
 }
 
 //______________________________________________________________________________
 TStringLong::TStringLong(const TString& s) : TString(s)
 {
+   //copy constructor
 }
 
 //______________________________________________________________________________
 TStringLong::TStringLong(const char* cs) : TString(cs)
 {
+   //copy constructor
 }
 
 //______________________________________________________________________________
 TStringLong::TStringLong(const char* cs, Ssiz_t n) : TString(cs,n)
 {
+   //constructor from a char*
 }
 
 //______________________________________________________________________________
 TStringLong::TStringLong(char c) : TString(c)
 {
+   //constructor from a char
 }
 
 //______________________________________________________________________________
 TStringLong::TStringLong(char c, Ssiz_t n) : TString(c,n)
 {
+   //constructor from a char
 }
 
 //______________________________________________________________________________
 TStringLong::TStringLong(const TSubString& substr) : TString(substr)
 {
+   //constructor from a substring
 }
 
 //______________________________________________________________________________
 TStringLong::~TStringLong()
 {
+   //destructor
 }
 
 //______________________________________________________________________________
 void TStringLong::FillBuffer(char *&buffer)
 {
+   //fill buffer
    Int_t nchars = Length();
    tobuf(buffer, nchars);
    for (Int_t i = 0; i < nchars; i++) buffer[i] = fData[i];

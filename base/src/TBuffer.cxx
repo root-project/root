@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.94 2006/04/20 16:53:59 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.95 2006/04/23 21:48:03 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -202,6 +202,7 @@ static void frombufOld(char *&buf, Long_t *x)
 //______________________________________________________________________________
 TBuffer &TBuffer::operator>>(Long_t &l)
 {
+   //operator >>
    TFile *file = (TFile*)fParent;
    if (file && file->GetVersion() < 30006) {
       frombufOld(fBufCur, &l);
@@ -549,6 +550,7 @@ void TBuffer::InitMap()
 //______________________________________________________________________________
 void TBuffer::IncrementLevel(TStreamerInfo* info)
 {
+   //increment level
    fInfos.push_back(fInfo);
    fInfo = info;
 }
@@ -556,6 +558,7 @@ void TBuffer::IncrementLevel(TStreamerInfo* info)
 //______________________________________________________________________________
 void TBuffer::DecrementLevel(TStreamerInfo* /*info*/)
 {
+   //decrement level
    fInfo = fInfos.back();
    fInfos.pop_back();
 }

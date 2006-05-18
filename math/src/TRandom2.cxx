@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.7 2006/05/14 08:19:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.8 2006/05/17 17:32:40 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta  17/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -89,8 +89,8 @@ void TRandom2::RndmArray(Int_t n, Float_t *array)
       fSeed1 = TAUSWORTHE (fSeed1, 2, 25, 4294967288UL, 4);
       fSeed2 = TAUSWORTHE (fSeed2, 3, 11, 4294967280UL, 17);
     
-     iy = fSeed ^ fSeed1 ^ fSeed2; 
-     array[i] = kScale*static_cast<Double_t>(iy);
+      iy = fSeed ^ fSeed1 ^ fSeed2; 
+      array[i] = kScale*static_cast<Double_t>(iy);
    }
 }
 

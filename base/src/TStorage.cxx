@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.21 2005/12/03 08:01:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.22 2006/02/09 20:38:53 pcanal Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -457,30 +457,35 @@ void TStorage::EnableStatistics(int size, int ix)
 //______________________________________________________________________________
 ULong_t TStorage::GetHeapBegin()
 {
+   //return begin of heap
    return fgHeapBegin;
 }
 
 //______________________________________________________________________________
 ULong_t TStorage::GetHeapEnd()
 {
+   //return end of heap
    return fgHeapEnd;
 }
 
 //______________________________________________________________________________
 void *TStorage::GetFreeHookData()
 {
+   //return static free hook data
    return fgFreeHookData;
 }
 
 //______________________________________________________________________________
 Bool_t TStorage::HasCustomNewDelete()
 {
+   //return the has custom delete flag
    return fgHasCustomNewDelete;
 }
 
 //______________________________________________________________________________
 void TStorage::SetCustomNewDelete()
 {
+   //set the has custom delete flag
    fgHasCustomNewDelete = kTRUE;
 }
 
@@ -489,6 +494,7 @@ void TStorage::SetCustomNewDelete()
 //______________________________________________________________________________
 void TStorage::AddToHeap(ULong_t begin, ULong_t end)
 {
+   //add a range to the heap
    if (begin < fgHeapBegin) fgHeapBegin = begin;
    if (end   > fgHeapEnd)   fgHeapEnd   = end;
 }
@@ -496,24 +502,28 @@ void TStorage::AddToHeap(ULong_t begin, ULong_t end)
 //______________________________________________________________________________
 Bool_t TStorage::IsOnHeap(void *p)
 {
+   //is object at p in the heap?
    return (ULong_t)p >= fgHeapBegin && (ULong_t)p < fgHeapEnd;
 }
 
 //______________________________________________________________________________
 size_t TStorage::GetMaxBlockSize()
 {
+   //return max block size
    return fgMaxBlockSize;
 }
 
 //______________________________________________________________________________
 void TStorage::SetMaxBlockSize(size_t size)
 {
+   //set max block size
    fgMaxBlockSize = size;
 }
 
 //______________________________________________________________________________
 FreeHookFun_t TStorage::GetFreeHook()
 {
+   //return free hook
    return fgFreeHook;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.178 2006/05/04 13:03:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.179 2006/05/10 14:07:40 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1880,6 +1880,7 @@ Int_t TROOT::DecreaseDirLevel()
 //______________________________________________________________________________
 Int_t TROOT::GetDirLevel()
 {
+   //return directory level
    return fgDirLevel;
 }
 

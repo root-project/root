@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.2 2006/05/14 08:19:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.3 2006/05/15 06:31:19 brun Exp $
 // Author: Rene Brun from CLHEP & CERNLIB  04/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -279,6 +279,7 @@ TRandom1::TRandom1()
           fMantissaBit24( pow(0.5,24.) ),
           fMantissaBit12( pow(0.5,12.) )
 {
+   //default constructor
    fTheSeeds = &fTheSeed;
    Long64_t seed;
    Long64_t seedlist[2]={0,0};
@@ -304,6 +305,7 @@ TRandom1::TRandom1(int rowIndex, int colIndex, int lux)
           fMantissaBit24( pow(0.5,24.) ),
           fMantissaBit12( pow(0.5,12.) )
 {
+   //constructor
    fTheSeeds = &fTheSeed;
    Long64_t seed;
    Long64_t seedlist[2]={0,0};
@@ -324,12 +326,15 @@ TRandom1::TRandom1(int rowIndex, int colIndex, int lux)
 }
 
 //______________________________________________________________________________
-TRandom1::~TRandom1() {}
+TRandom1::~TRandom1() 
+{
+   //destructor
+}
 
 //______________________________________________________________________________
 void TRandom1::GetTableSeeds(Long64_t* seeds, Int_t index)
-//static function
 {
+   //static function returning the table of seeds
    if ((index >= 0) && (index < 215)) {
       seeds[0] = fgSeedTable[index][0];
       seeds[1] = fgSeedTable[index][1];
@@ -338,8 +343,9 @@ void TRandom1::GetTableSeeds(Long64_t* seeds, Int_t index)
 }
 
 //______________________________________________________________________________
-Double_t TRandom1::Rndm(Int_t) {
-
+Double_t TRandom1::Rndm(Int_t) 
+{
+   //return a random number in ]0,1]
    float next_random;
    float uni;
    int i;
@@ -391,12 +397,14 @@ Double_t TRandom1::Rndm(Int_t) {
 //______________________________________________________________________________
 void TRandom1::RndmArray(const Int_t size, Float_t *vect)
 {
+   //return an array of random numbers in ]0,1]
    for (Int_t i=0;i<size;i++) vect[i] = Rndm();
 }
 
 //______________________________________________________________________________
 void TRandom1::RndmArray(const Int_t size, Double_t *vect)
 {
+   //return an array of random numbers in ]0,1]
    float next_random;
    float uni;
    int i;
@@ -450,8 +458,9 @@ void TRandom1::RndmArray(const Int_t size, Double_t *vect)
 
 
 //______________________________________________________________________________
-void TRandom1::SetSeeds(const Long64_t *seeds, int lux) {
-
+void TRandom1::SetSeeds(const Long64_t *seeds, int lux) 
+{
+   //set seeds
    const int ecuyer_a = 53668;
    const int ecuyer_b = 40014;
    const int ecuyer_c = 12211;
@@ -517,8 +526,8 @@ void TRandom1::SetSeeds(const Long64_t *seeds, int lux) {
 }
 
 //______________________________________________________________________________
-void TRandom1::SetSeed2(Long64_t seed, int lux) {
-
+void TRandom1::SetSeed2(Long64_t seed, int lux) 
+{
 // The initialisation is carried out using a Multiplicative
 // Congruential generator using formula constants of L'Ecuyer 
 // as described in "A review of pseudorandom number generators"

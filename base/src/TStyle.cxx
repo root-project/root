@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.63 2006/01/03 09:33:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.64 2006/01/31 10:22:26 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -50,7 +50,7 @@ ClassImp(TStyle)
 //______________________________________________________________________________
 TStyle::TStyle() :TNamed()
 {
-
+   //default constructor
    Reset();
 }
 
@@ -206,6 +206,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 //______________________________________________________________________________
 TStyle::~TStyle()
 {
+   //destructor
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfStyles()->Remove(this);
    if (gStyle == this) gStyle = (TStyle*)gROOT->GetListOfStyles()->Last();
@@ -214,6 +215,7 @@ TStyle::~TStyle()
 //______________________________________________________________________________
 TStyle::TStyle(const TStyle &style) : TNamed(style), TAttLine(style), TAttFill(style), TAttMarker(style), TAttText(style)
 {
+   //copy constructor
    ((TStyle&)style).Copy(*this);
 }
 
@@ -590,6 +592,7 @@ void TStyle::Reset(Option_t *opt)
 //______________________________________________________________________________
 Int_t TStyle::AxisChoice( Option_t *axis) const
 {
+   //return axis number
    char achoice = toupper(axis[0]);
    if (achoice == 'X') return 1;
    if (achoice == 'Y') return 2;
@@ -600,6 +603,7 @@ Int_t TStyle::AxisChoice( Option_t *axis) const
 //______________________________________________________________________________
 Int_t TStyle::GetNdivisions( Option_t *axis) const
 {
+   //return number of divisions
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetNdivisions();
    if (ax == 2) return fYaxis.GetNdivisions();
@@ -643,6 +647,7 @@ Color_t TStyle::GetLabelColor( Option_t *axis) const
 //______________________________________________________________________________
 Style_t TStyle::GetLabelFont( Option_t *axis) const
 {
+   //return label font
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelFont();
    if (ax == 2) return fYaxis.GetLabelFont();
@@ -653,6 +658,7 @@ Style_t TStyle::GetLabelFont( Option_t *axis) const
 //______________________________________________________________________________
 Float_t TStyle::GetLabelOffset( Option_t *axis) const
 {
+   //return label offset
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelOffset();
    if (ax == 2) return fYaxis.GetLabelOffset();
@@ -663,6 +669,7 @@ Float_t TStyle::GetLabelOffset( Option_t *axis) const
 //______________________________________________________________________________
 Float_t TStyle::GetLabelSize( Option_t *axis) const
 {
+   //return label size
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelSize();
    if (ax == 2) return fYaxis.GetLabelSize();
@@ -674,8 +681,8 @@ Float_t TStyle::GetLabelSize( Option_t *axis) const
 //______________________________________________________________________________
 const char *TStyle::GetLineStyleString(Int_t i) const
 {
-//   return line style string (used by PostScript).
-//   See SetLineStyleString for more explanations
+   //   return line style string (used by PostScript).
+   //   See SetLineStyleString for more explanations
 
    if (i < 1 || i > 29) return fLineStyle[0].Data();
    return fLineStyle[i].Data();
@@ -684,8 +691,8 @@ const char *TStyle::GetLineStyleString(Int_t i) const
 //______________________________________________________________________________
 void TStyle::GetPaperSize(Float_t &xsize, Float_t &ysize)
 {
-//    Set paper size for PostScript output
-//
+   //    Set paper size for PostScript output
+   //
    xsize = fPaperSizeX;
    ysize = fPaperSizeY;
 }
@@ -693,6 +700,7 @@ void TStyle::GetPaperSize(Float_t &xsize, Float_t &ysize)
 //______________________________________________________________________________
 Float_t TStyle::GetTickLength( Option_t *axis) const
 {
+   //return tick length
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTickLength();
    if (ax == 2) return fYaxis.GetTickLength();
@@ -703,6 +711,7 @@ Float_t TStyle::GetTickLength( Option_t *axis) const
 //______________________________________________________________________________
 Color_t TStyle::GetTitleColor( Option_t *axis) const
 {
+   //return title color
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleColor();
    if (ax == 2) return fYaxis.GetTitleColor();
@@ -713,6 +722,7 @@ Color_t TStyle::GetTitleColor( Option_t *axis) const
 //______________________________________________________________________________
 Style_t TStyle::GetTitleFont( Option_t *axis) const
 {
+   //return title font
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleFont();
    if (ax == 2) return fYaxis.GetTitleFont();
@@ -723,6 +733,7 @@ Style_t TStyle::GetTitleFont( Option_t *axis) const
 //______________________________________________________________________________
 Float_t TStyle::GetTitleOffset( Option_t *axis) const
 {
+   //return title offset
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleOffset();
    if (ax == 2) return fYaxis.GetTitleOffset();
@@ -733,6 +744,7 @@ Float_t TStyle::GetTitleOffset( Option_t *axis) const
 //______________________________________________________________________________
 Float_t TStyle::GetTitleSize( Option_t *axis) const
 {
+   //return title size
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleSize();
    if (ax == 2) return fYaxis.GetTitleSize();

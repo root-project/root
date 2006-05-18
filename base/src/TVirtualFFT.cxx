@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFFT.cxx,v 1.2 2006/04/11 16:17:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFFT.cxx,v 1.3 2006/05/11 10:31:41 brun Exp $
 // Author: Anna Kreshuk  10/04/2006
 
 /*************************************************************************
@@ -23,6 +23,7 @@ ClassImp(TVirtualFFT)
 //_____________________________________________________________________________
 TVirtualFFT::~TVirtualFFT()
 {
+   //destructor
    if (this==fgFFT)
       fgFFT = 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.74 2006/02/17 05:16:38 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.75 2006/04/20 16:54:41 pcanal Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -937,18 +937,21 @@ void TObject::SetObjectStat(Bool_t stat)
 //______________________________________________________________________________
 Long_t TObject::GetDtorOnly()
 {
+   //return destructor only flag
    return fgDtorOnly;
 }
 
 //______________________________________________________________________________
 void TObject::SetDtorOnly(void *obj)
 {
+   //set destructor only flag
    fgDtorOnly = (Long_t) obj;
 }
 
 //______________________________________________________________________________
 void TObject::operator delete(void *ptr)
 {
+   //operator delete
    if ((Long_t) ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr);
    else
@@ -958,6 +961,7 @@ void TObject::operator delete(void *ptr)
 //______________________________________________________________________________
 void TObject::operator delete[](void *ptr)
 {
+   //operator delete []
    if ((Long_t) ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr);
    else

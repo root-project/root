@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.5 2002/05/03 10:48:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.6 2004/12/21 17:52:20 brun Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -25,18 +25,20 @@ ClassImp(TAttPad)
 //______________________________________________________________________________
 TAttPad::TAttPad()
 {
+   //constructor
    ResetAttPad();
 }
 
 //______________________________________________________________________________
 TAttPad::~TAttPad()
 {
-
+   //destructor
 }
 
 //______________________________________________________________________________
 void TAttPad::Copy(TAttPad &attpad) const
 {
+   //copy function
    attpad.fLeftMargin   = fLeftMargin;
    attpad.fRightMargin  = fRightMargin;
    attpad.fBottomMargin = fBottomMargin;
@@ -59,11 +61,13 @@ void TAttPad::Copy(TAttPad &attpad) const
 //______________________________________________________________________________
 void TAttPad::Print(Option_t *) const
 {
+   //print function
 }
 
 //______________________________________________________________________________
 void TAttPad::ResetAttPad(Option_t *)
 {
+   //reset pad attributes
    fLeftMargin   = gStyle->GetPadLeftMargin();
    fRightMargin  = gStyle->GetPadRightMargin();
    fBottomMargin = gStyle->GetPadBottomMargin();

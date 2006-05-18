@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.35 2006/04/28 08:43:05 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.36 2006/05/15 06:31:19 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1353,6 +1353,7 @@ void TView::SetOutlineToCube()
 //______________________________________________________________________________
 void TView::SetParallel()
 {
+   //set the parallel option (default)
    if (!IsPerspective()) return;
    SetBit(kPerspective, kFALSE);
    Int_t irep;
@@ -1362,6 +1363,7 @@ void TView::SetParallel()
 //______________________________________________________________________________
 void TView::SetPerspective()
 {
+   //set perspective option
    if (IsPerspective()) return;
    SetBit(kPerspective, kTRUE);
    Int_t irep;
@@ -1444,6 +1446,8 @@ void TView::SetWindow(Double_t u0, Double_t v0, Double_t du, Double_t dv)
 //______________________________________________________________________________
 void TView::SetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep)
 {
+   //set view parameters
+   
    ResetView(longitude, latitude, psi, irep);
 }
 

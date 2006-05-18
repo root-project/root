@@ -215,7 +215,6 @@ TBuffer3D::TBuffer3D(Int_t type,
                      UInt_t reqSegs, UInt_t reqSegsCapacity, 
                      UInt_t reqPols, UInt_t reqPolsCapacity) :
       fType(type)
-   // Initialise buffer
 {
    // Destructor
    // Construct from supplied shape type and raw sizes
@@ -226,7 +225,6 @@ TBuffer3D::TBuffer3D(Int_t type,
 
 //______________________________________________________________________________
 TBuffer3D::~TBuffer3D()
-   // Initialise buffer
 {
    // Destructor
    if (fPnts) delete [] fPnts;
@@ -397,6 +395,7 @@ TBuffer3DSphere::TBuffer3DSphere(UInt_t reqPnts, UInt_t reqPntsCapacity,
    fRadiusInner(0.0), fRadiusOuter(0.0),
    fThetaMin(0.0), fThetaMax(180.0),
    fPhiMin(0.0), fPhiMax(360.0)
+   //constructor
 {
 }
 
@@ -422,6 +421,7 @@ TBuffer3DTube::TBuffer3DTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
    TBuffer3D(TBuffer3DTypes::kTube, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
    fRadiusInner(0.0), fRadiusOuter(1.0), fHalfLength(1.0)   
 {
+   //constructor
 }
 
 //______________________________________________________________________________
@@ -432,6 +432,7 @@ TBuffer3DTube::TBuffer3DTube(Int_t type,
    TBuffer3D(type, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
    fRadiusInner(0.0), fRadiusOuter(1.0), fHalfLength(1.0)
 {
+   //constructor
 }
 
 //______________________________________________________________________________
@@ -441,6 +442,7 @@ TBuffer3DTubeSeg::TBuffer3DTubeSeg(UInt_t reqPnts, UInt_t reqPntsCapacity,
    TBuffer3DTube(TBuffer3DTypes::kTubeSeg, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
    fPhiMin(0.0), fPhiMax(360.0)
 {
+   //constructor
 }
 
 //______________________________________________________________________________
@@ -451,6 +453,7 @@ TBuffer3DTubeSeg::TBuffer3DTubeSeg(Int_t type,
    TBuffer3DTube(type, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
    fPhiMin(0.0), fPhiMax(360.0)
 {
+   //constructor
 }
 
 //______________________________________________________________________________
@@ -459,6 +462,7 @@ TBuffer3DCutTube::TBuffer3DCutTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
                                    UInt_t reqPols, UInt_t reqPolsCapacity) :
    TBuffer3DTubeSeg(TBuffer3DTypes::kCutTube, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity)
 {
+   //constructor
    fLowPlaneNorm[0] = 0.0; fLowPlaneNorm[0] = 0.0; fLowPlaneNorm[0] = -1.0;
    fHighPlaneNorm[0] = 0.0; fHighPlaneNorm[0] = 0.0; fHighPlaneNorm[0] = 1.0;
 }
@@ -469,17 +473,20 @@ UInt_t TBuffer3D::fgCSLevel = 0;
 //______________________________________________________________________________
 UInt_t TBuffer3D::GetCSLevel()
 {
+   //return CS level
    return fgCSLevel;
 }
 
 //______________________________________________________________________________
 void TBuffer3D::IncCSLevel()
 {
+   //increment CS level
    ++fgCSLevel;
 }
 
 //______________________________________________________________________________
 UInt_t TBuffer3D::DecCSLevel()
 {
+   //decrement CS level
    return --fgCSLevel;
 }
