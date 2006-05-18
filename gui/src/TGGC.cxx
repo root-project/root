@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.11 2004/09/06 14:12:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.12 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -633,7 +633,7 @@ void TGGC::SavePrimitive(ofstream &out, Option_t *option)
    Mask_t fmask = GetMask();
 
    const char *colorname;
-   char valname[10];
+   char valname[50];
    char quote ='"';
    ULong_t color;
 

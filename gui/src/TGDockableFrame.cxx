@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.11 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.12 2005/11/25 15:58:16 rdm Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -468,19 +468,20 @@ void TGDockableFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << fWidgetId << "," << GetOptionString() << ");" << endl;
    }
 
-   out << "   TGCompositeFrame *" << GetContainer()->GetName() << " = "
-       << GetName() << "->GetContainer();" << endl;
+   if (GetContainer()->GetList()->First()) {
+      out << "   TGCompositeFrame *" << GetContainer()->GetName() << " = "
+          << GetName() << "->GetContainer();" << endl;
 
-   TGFrameElement *el;
-   TIter next(GetContainer()->GetList());
+      TGFrameElement *el;
+      TIter next(GetContainer()->GetList());
 
-   while ((el = (TGFrameElement *) next())) {
-      el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
-      el->fLayout->SavePrimitive(out, option);
-      out << ");"<< endl;
+      while ((el = (TGFrameElement *) next())) {
+         el->fFrame->SavePrimitive(out, option);
+         out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
+         el->fLayout->SavePrimitive(out, option);
+         out << ");"<< endl;
+      }
    }
-
    out << endl << "   // next lines belong to the dockable frame widget" << endl;
    if (EnableUndock())
       out << "   " << GetName() << "->EnableUndock(kTRUE);" << endl;

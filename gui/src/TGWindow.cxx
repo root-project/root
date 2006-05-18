@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.24 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.25 2006/03/23 15:56:03 antcheva Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -214,4 +214,26 @@ Int_t TGWindow::GetCounter()
    // Return global window counter (total number of created windows).
 
    return fgCounter;
+}
+
+//______________________________________________________________________________
+const char *TGWindow::GetName()const
+{
+   // Return unique name, used in SavePrimitive methods.
+
+   TGWindow *w = (TGWindow*)this;
+
+   if (fName.BeginsWith("frame")) {
+      TString cname = ClassName();
+      if (cname.BeginsWith("TGed")) 
+         cname.Replace(0, 1, 'f');
+      else if (cname.BeginsWith("TG"))
+         cname.Replace(0,2,'f');
+      else
+         cname.Replace(0, 1, 'f');
+      w->fName.Remove(0,5);
+      w->fName = cname + w->fName;
+   }
+
+   return fName.Data();
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.14 2006/03/30 08:50:28 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.15 2006/04/24 13:55:14 antcheva Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -397,7 +397,7 @@ void TGStatusBar::SavePrimitive(ofstream &out, Option_t *option)
              << fStatusPart[i]->GetText()->GetString()
              << quote << "," << i << ");" << endl;
       } else {
-         if (!fStatusPart[i]->GetList()) continue;
+         if (!fStatusPart[i]->GetList()->First()) continue;
          out << "   TGCompositeFrame *" << fStatusPart[i]->GetName()
              << " = " << GetName() << "->GetBarPart(" << i << ");" << endl;
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.40 2006/04/24 13:57:11 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.41 2006/05/17 08:09:42 antcheva Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -2164,14 +2164,6 @@ void TGCanvas::SavePrimitive(ofstream &out, Option_t *option)
    }
 
    TGViewPort *vp = GetViewPort();
-   
-   TString fname = vp->GetName();
-   TString cname = vp->ClassName();
-   cname.Replace(0,2,'f');
-   fname.Remove(0,5);
-   cname = cname + fname;
-   vp->SetName(cname);
-   
    out << endl << "   // canvas viewport" << endl;
    out << "   TGViewPort *" << vp->GetName() << " = " << GetName()
        << "->GetViewPort();" << endl;
