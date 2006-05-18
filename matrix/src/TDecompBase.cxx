@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.19 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.20 2006/04/19 08:22:24 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -119,18 +119,18 @@ ClassImp(TDecompBase)
 //______________________________________________________________________________
 TDecompBase::TDecompBase()
 {
-  fTol       = std::numeric_limits<double>::epsilon();
-  fDet1      = 0;
-  fDet2      = 0;
-  fCondition = -1.0;
-  fRowLwb    = 0;
-  fColLwb    = 0;
+   fTol       = std::numeric_limits<double>::epsilon();
+   fDet1      = 0;
+   fDet2      = 0;
+   fCondition = -1.0;
+   fRowLwb    = 0;
+   fColLwb    = 0;
 }
 
 //______________________________________________________________________________
 TDecompBase::TDecompBase(const TDecompBase &another) : TObject(another)
 {
-  *this = another;
+   *this = another;
 }
 
 //______________________________________________________________________________
@@ -144,52 +144,52 @@ Int_t TDecompBase::Hager(Double_t &est,Int_t iter)
 // This routine uses Hager's Convex Optimisation Algorithm.
 // See Applied Numerical Linear Algebra, p139 & SIAM J Sci Stat Comp 1984 pp 311-16
 
-  est = -1.0;
+   est = -1.0;
 
-  const TMatrixDBase &m = GetDecompMatrix();
-  if (!m.IsValid())
-    return iter;
-
-  const Int_t n = m.GetNrows();
-
-  TVectorD b(n); TVectorD y(n); TVectorD z(n);
-  b = Double_t(1.0/n);
-  Double_t inv_norm1 = 0.0;
-  Bool_t stop = kFALSE;
-  do {
-    y = b;
-    if (!Solve(y))
+   const TMatrixDBase &m = GetDecompMatrix();
+   if (!m.IsValid())
       return iter;
-    const Double_t ynorm1 = y.Norm1();
-    if ( ynorm1 <= inv_norm1 ) {
-      stop = kTRUE;
-    } else {
-      inv_norm1 = ynorm1;
-      Int_t i;
-      for (i = 0; i < n; i++)
-        z(i) = ( y(i) >= 0.0 ? 1.0 : -1.0 );
-      if (!TransSolve(z))
-        return iter;
-      Int_t imax = 0;
-      Double_t maxz = TMath::Abs(z(0));
-      for (i = 1; i < n; i++) {
-        const Double_t absz = TMath::Abs(z(i));
-        if ( absz > maxz ) {
-          maxz = absz;
-          imax = i;
-        }
-      }
-      stop = (maxz <= b*z);
-      if (!stop) {
-        b = 0.0;
-        b(imax) = 1.0;
-      }
-    }
-    iter--;
-  } while (!stop && iter);
-  est = inv_norm1;
 
-  return iter;
+   const Int_t n = m.GetNrows();
+
+   TVectorD b(n); TVectorD y(n); TVectorD z(n);
+   b = Double_t(1.0/n);
+   Double_t inv_norm1 = 0.0;
+   Bool_t stop = kFALSE;
+   do {
+      y = b;
+      if (!Solve(y))
+         return iter;
+      const Double_t ynorm1 = y.Norm1();
+      if ( ynorm1 <= inv_norm1 ) {
+         stop = kTRUE;
+      } else {
+         inv_norm1 = ynorm1;
+         Int_t i;
+         for (i = 0; i < n; i++)
+            z(i) = ( y(i) >= 0.0 ? 1.0 : -1.0 );
+         if (!TransSolve(z))
+            return iter;
+         Int_t imax = 0;
+         Double_t maxz = TMath::Abs(z(0));
+         for (i = 1; i < n; i++) {
+            const Double_t absz = TMath::Abs(z(i));
+            if ( absz > maxz ) {
+               maxz = absz;
+              imax = i;
+            }
+         }
+         stop = (maxz <= b*z);
+         if (!stop) {
+            b = 0.0;
+            b(imax) = 1.0;
+         }
+      }
+      iter--;
+   } while (!stop && iter);
+   est = inv_norm1;
+
+   return iter;
 }
 
 //______________________________________________________________________________
@@ -201,57 +201,57 @@ void TDecompBase::DiagProd(const TVectorD &diag,Double_t tol,Double_t &d1,Double
 // will be the determinant.
 // Based on Bowler, Martin, Peters and Wilkinson in HACLA
 
-  const Double_t zero      = 0.0;
-  const Double_t one       = 1.0;
-  const Double_t four      = 4.0;
-  const Double_t sixteen   = 16.0;
-  const Double_t sixteenth = 0.0625;
+   const Double_t zero      = 0.0;
+   const Double_t one       = 1.0;
+   const Double_t four      = 4.0;
+   const Double_t sixteen   = 16.0;
+   const Double_t sixteenth = 0.0625;
 
-  const Int_t n = diag.GetNrows();
+   const Int_t n = diag.GetNrows();
 
-  Double_t t1 = 1.0;
-  Double_t t2 = 0.0;
-  for (Int_t i = 0; (i < n) && (t1 != zero); i++) {
-    if (TMath::Abs(diag(i)) > tol) {
-      t1 *= (Double_t) diag(i);
-      while (TMath::Abs(t1) > one) {
-        t1 *= sixteenth;
-        t2 += four;
+   Double_t t1 = 1.0;
+   Double_t t2 = 0.0;
+   for (Int_t i = 0; (i < n) && (t1 != zero); i++) {
+      if (TMath::Abs(diag(i)) > tol) {
+         t1 *= (Double_t) diag(i);
+         while (TMath::Abs(t1) > one) {
+            t1 *= sixteenth;
+            t2 += four;
+         }
+         while (TMath::Abs(t1) < sixteenth) {
+            t1 *= sixteen;
+            t2 -= four;
+         }
+      } else {
+         t1 = zero;
+         t2 = zero;
       }
-      while (TMath::Abs(t1) < sixteenth) {
-        t1 *= sixteen;
-        t2 -= four;
-      }
-    } else {
-      t1 = zero;
-      t2 = zero;
-    }
-  }
-  d1 = t1;
-  d2 = t2;
+   }
+   d1 = t1;
+   d2 = t2;
 
-  return;
+   return;
 }
 
 //______________________________________________________________________________
 Double_t TDecompBase::Condition()
 {
   if ( !TestBit(kCondition) ) {
-    fCondition = -1;
-    if (TestBit(kSingular))
-      return fCondition;
-    if ( !TestBit(kDecomposed) ) {
-      if (!Decompose())
+     fCondition = -1;
+     if (TestBit(kSingular))
         return fCondition;
-    }
-    Double_t invNorm;
-    if (Hager(invNorm))
-      fCondition *= invNorm;
-    else // no convergence in Hager
-      Error("Condition()","Hager procedure did NOT converge");
-    SetBit(kCondition);
-  }
-  return fCondition;
+     if ( !TestBit(kDecomposed) ) {
+        if (!Decompose())
+           return fCondition;
+      }
+      Double_t invNorm;
+      if (Hager(invNorm))
+         fCondition *= invNorm;
+      else // no convergence in Hager
+         Error("Condition()","Hager procedure did NOT converge");
+      SetBit(kCondition);
+   }
+   return fCondition;
 }
 
 //______________________________________________________________________________
@@ -259,70 +259,70 @@ Bool_t TDecompBase::MultiSolve(TMatrixD &B)
 {
 // Solve set of equations with RHS in columns of B
 
-  const TMatrixDBase &m = GetDecompMatrix();
-  R__ASSERT(m.IsValid() && B.IsValid());
+   const TMatrixDBase &m = GetDecompMatrix();
+   R__ASSERT(m.IsValid() && B.IsValid());
 
-  const Int_t colLwb = B.GetColLwb();
-  const Int_t colUpb = B.GetColUpb();
-  Bool_t status = kTRUE;
-  for (Int_t icol = colLwb; icol <= colUpb && status; icol++) {
-    TMatrixDColumn b(B,icol);
-    status &= Solve(b);
-  }
+   const Int_t colLwb = B.GetColLwb();
+   const Int_t colUpb = B.GetColUpb();
+   Bool_t status = kTRUE;
+   for (Int_t icol = colLwb; icol <= colUpb && status; icol++) {
+      TMatrixDColumn b(B,icol);
+      status &= Solve(b);
+   }
 
-  if (!status)
-    B.Invalidate();
+   if (!status)
+      B.Invalidate();
 
-  return status;
+   return status;
 }
 
 //______________________________________________________________________________
 void TDecompBase::Det(Double_t &d1,Double_t &d2)
 {
-  if ( !TestBit(kDetermined) ) {
-    if ( !TestBit(kDecomposed) )
-      Decompose();
-    if (TestBit(kSingular) ) {
-      fDet1 = 0.0;
-      fDet2 = 0.0;
-    } else {
-      const TMatrixDBase &m = GetDecompMatrix();
-      R__ASSERT(m.IsValid());
-      TVectorD diagv(m.GetNrows());
-      for (Int_t i = 0; i < diagv.GetNrows(); i++)
-        diagv(i) = m(i,i);
-      DiagProd(diagv,fTol,fDet1,fDet2);
-    }
-    SetBit(kDetermined);
-  }
-  d1 = fDet1;
-  d2 = fDet2;
+   if ( !TestBit(kDetermined) ) {
+      if ( !TestBit(kDecomposed) )
+         Decompose();
+      if (TestBit(kSingular) ) {
+         fDet1 = 0.0;
+         fDet2 = 0.0;
+      } else {
+         const TMatrixDBase &m = GetDecompMatrix();
+         R__ASSERT(m.IsValid());
+         TVectorD diagv(m.GetNrows());
+         for (Int_t i = 0; i < diagv.GetNrows(); i++)
+            diagv(i) = m(i,i);
+         DiagProd(diagv,fTol,fDet1,fDet2);
+      }
+      SetBit(kDetermined);
+   }
+   d1 = fDet1;
+   d2 = fDet2;
 }
 
 //______________________________________________________________________________
 void TDecompBase::Print(Option_t * /*opt*/) const
 {
-  printf("fTol       = %.4e\n",fTol);
-  printf("fDet1      = %.4e\n",fDet1);
-  printf("fDet2      = %.4e\n",fDet2);
-  printf("fCondition = %.4e\n",fCondition);
-  printf("fRowLwb    = %d\n",fRowLwb);
-  printf("fColLwb    = %d\n",fColLwb);
+   printf("fTol       = %.4e\n",fTol);
+   printf("fDet1      = %.4e\n",fDet1);
+   printf("fDet2      = %.4e\n",fDet2);
+   printf("fCondition = %.4e\n",fCondition);
+   printf("fRowLwb    = %d\n",fRowLwb);
+   printf("fColLwb    = %d\n",fColLwb);
 }
 
 //______________________________________________________________________________
 TDecompBase &TDecompBase::operator=(const TDecompBase &source)
 {
-  if (this != &source) {
-    TObject::operator=(source);
-    fTol       = source.fTol;
-    fDet1      = source.fDet1;
-    fDet2      = source.fDet2;
-    fCondition = source.fCondition;
-    fRowLwb    = source.fRowLwb;
-    fColLwb    = source.fColLwb;
-  }
-  return *this;
+   if (this != &source) {
+      TObject::operator=(source);
+      fTol       = source.fTol;
+      fDet1      = source.fDet1;
+      fDet2      = source.fDet2;
+      fCondition = source.fCondition;
+      fRowLwb    = source.fRowLwb;
+      fColLwb    = source.fColLwb;
+   }
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -331,91 +331,91 @@ Bool_t DefHouseHolder(const TVectorD &vc,Int_t lp,Int_t l,Double_t &up,Double_t 
 {
 // Define a Householder-transformation through the parameters up and b .
 
-  const Int_t n = vc.GetNrows();
-  const Double_t * const vp = vc.GetMatrixArray();
+   const Int_t n = vc.GetNrows();
+   const Double_t * const vp = vc.GetMatrixArray();
 
-  Double_t c = TMath::Abs(vp[lp]);
-  Int_t i;
-  for (i = l; i < n; i++)
-    c = TMath::Max(TMath::Abs(vp[i]),c);
+   Double_t c = TMath::Abs(vp[lp]);
+   Int_t i;
+   for (i = l; i < n; i++)
+      c = TMath::Max(TMath::Abs(vp[i]),c);
 
-  up   = 0.0;
-  beta = 0.0;
-  if (c <= tol) {
-//    Warning("DefHouseHolder","max vector=%.4e < %.4e",c,tol);
-    return kFALSE;
-  }
+   up   = 0.0;
+   beta = 0.0;
+   if (c <= tol) {
+//     Warning("DefHouseHolder","max vector=%.4e < %.4e",c,tol);
+      return kFALSE;
+   }
 
-  Double_t sd = vp[lp]/c; sd *= sd;
-  for (i = l; i < n; i++) {
-    const Double_t tmp = vp[i]/c;
-    sd += tmp*tmp;
-  }
+   Double_t sd = vp[lp]/c; sd *= sd;
+   for (i = l; i < n; i++) {
+      const Double_t tmp = vp[i]/c;
+      sd += tmp*tmp;
+   }
 
-  Double_t vpprim = c*TMath::Sqrt(sd);
-  if (vp[lp] > 0.) vpprim = -vpprim;
-  up = vp[lp]-vpprim;
-  beta = 1./(vpprim*up);
+   Double_t vpprim = c*TMath::Sqrt(sd);
+   if (vp[lp] > 0.) vpprim = -vpprim;
+   up = vp[lp]-vpprim;
+   beta = 1./(vpprim*up);
 
-  return kTRUE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
 void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
                       Int_t lp,Int_t l,TMatrixDRow &cr)
 {
-//  Apply Householder-transformation.
+// Apply Householder-transformation.
 
-  const Int_t nv = vc.GetNrows();
-  const Int_t nc = (cr.GetMatrix())->GetNcols();
+   const Int_t nv = vc.GetNrows();
+   const Int_t nc = (cr.GetMatrix())->GetNcols();
 
-  if (nv > nc) {
-    Error("ApplyHouseHolder(const TVectorD &,..,TMatrixDRow &)","matrix row too short");
-    return;
-  }
+   if (nv > nc) {
+      Error("ApplyHouseHolder(const TVectorD &,..,TMatrixDRow &)","matrix row too short");
+      return;
+   }
 
-  const Int_t inc_c = cr.GetInc();
-  const Double_t * const vp = vc.GetMatrixArray();
-        Double_t *       cp = cr.GetPtr();
+   const Int_t inc_c = cr.GetInc();
+   const Double_t * const vp = vc.GetMatrixArray();
+         Double_t *       cp = cr.GetPtr();
 
-  Double_t s = cp[lp*inc_c]*up;
-  Int_t i;
-  for (i = l; i < nv; i++)
-    s += cp[i*inc_c]*vp[i];
+   Double_t s = cp[lp*inc_c]*up;
+   Int_t i;
+   for (i = l; i < nv; i++)
+      s += cp[i*inc_c]*vp[i];
 
-  s = s*beta;
-  cp[lp*inc_c] += s*up;
-  for (i = l; i < nv; i++)
-    cp[i*inc_c] += s*vp[i];
+   s = s*beta;
+   cp[lp*inc_c] += s*up;
+   for (i = l; i < nv; i++)
+      cp[i*inc_c] += s*vp[i];
 }
 
 //______________________________________________________________________________
 void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
                       Int_t lp,Int_t l,TMatrixDColumn &cc)
 {
-//  Apply Householder-transformation.
+// Apply Householder-transformation.
 
-  const Int_t nv = vc.GetNrows();
-  const Int_t nc = (cc.GetMatrix())->GetNrows();
+   const Int_t nv = vc.GetNrows();
+   const Int_t nc = (cc.GetMatrix())->GetNrows();
 
-  if (nv > nc) {
-    Error("ApplyHouseHolder(const TVectorD &,..,TMatrixDRow &)","matrix column too short");
-    return;
-  }
+   if (nv > nc) {
+      Error("ApplyHouseHolder(const TVectorD &,..,TMatrixDRow &)","matrix column too short");
+      return;
+   }
 
-  const Int_t inc_c = cc.GetInc();
-  const Double_t * const vp = vc.GetMatrixArray();
-        Double_t *       cp = cc.GetPtr();
+   const Int_t inc_c = cc.GetInc();
+   const Double_t * const vp = vc.GetMatrixArray();
+         Double_t *       cp = cc.GetPtr();
 
-  Double_t s = cp[lp*inc_c]*up;
-  Int_t i;
-  for (i = l; i < nv; i++)
-    s += cp[i*inc_c]*vp[i];
+   Double_t s = cp[lp*inc_c]*up;
+   Int_t i;
+   for (i = l; i < nv; i++)
+      s += cp[i*inc_c]*vp[i];
 
-  s = s*beta;
-  cp[lp*inc_c] += s*up;
-  for (i = l; i < nv; i++)
-    cp[i*inc_c] += s*vp[i];
+   s = s*beta;
+   cp[lp*inc_c] += s*up;
+   for (i = l; i < nv; i++)
+      cp[i*inc_c] += s*vp[i];
 }
 
 //______________________________________________________________________________
@@ -424,26 +424,26 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
 {
 //  Apply Householder-transformation.
 
-  const Int_t nv = vc.GetNrows();
-  const Int_t nc = cv.GetNrows();
+   const Int_t nv = vc.GetNrows();
+   const Int_t nc = cv.GetNrows();
 
-  if (nv > nc) {
-    Error("ApplyHouseHolder(const TVectorD &,..,TVectorD &)","vector too short");
-    return;
-  }
+   if (nv > nc) {
+      Error("ApplyHouseHolder(const TVectorD &,..,TVectorD &)","vector too short");
+      return;
+   }
 
-  const Double_t * const vp = vc.GetMatrixArray();
-        Double_t *       cp = cv.GetMatrixArray();
+   const Double_t * const vp = vc.GetMatrixArray();
+         Double_t *       cp = cv.GetMatrixArray();
 
-  Double_t s = cp[lp]*up;
-  Int_t i;
-  for (i = l; i < nv; i++)
-    s += cp[i]*vp[i];
+   Double_t s = cp[lp]*up;
+   Int_t i;
+   for (i = l; i < nv; i++)
+      s += cp[i]*vp[i];
 
-  s = s*beta;
-  cp[lp] += s*up;
-  for (i = l; i < nv; i++)
-    cp[i] += s*vp[i];
+   s = s*beta;
+   cp[lp] += s*up;
+   for (i = l; i < nv; i++)
+      cp[i] += s*vp[i];
 }
 
 //______________________________________________________________________________
@@ -452,26 +452,26 @@ void DefGivens(Double_t v1,Double_t v2,Double_t &c,Double_t &s)
 // Defines a Givens-rotation by calculating 2 rotation parameters c and s.
 // The rotation is defined with the vector components v1 and v2.
 
-  const Double_t a1 = TMath::Abs(v1);
-  const Double_t a2 = TMath::Abs(v2);
-  if (a1 > a2) {
-    const Double_t w = v2/v1;
-    const Double_t q = TMath::Hypot(1.,w);
-    c = 1./q;
-    if (v1 < 0.) c = -c;
-    s = c*w;
-  } else {
-    if (v2 != 0) {
-      const Double_t w = v1/v2;
+   const Double_t a1 = TMath::Abs(v1);
+   const Double_t a2 = TMath::Abs(v2);
+   if (a1 > a2) {
+      const Double_t w = v2/v1;
       const Double_t q = TMath::Hypot(1.,w);
-      s = 1./q;
-      if (v2 < 0.) s = -s;
-      c = s*w;
-    } else {
-      c = 1.;
-      s = 0.;
-    }
-  }
+      c = 1./q;
+      if (v1 < 0.) c = -c;
+      s = c*w;
+   } else {
+      if (v2 != 0) {
+         const Double_t w = v1/v2;
+         const Double_t q = TMath::Hypot(1.,w);
+         s = 1./q;
+         if (v2 < 0.) s = -s;
+         c = s*w;
+      } else {
+         c = 1.;
+         s = 0.;
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -481,30 +481,30 @@ void DefAplGivens(Double_t &v1,Double_t &v2,Double_t &c,Double_t &s)
 // parameters c and s. The rotation is defined with and applied to the vector
 // components v1 and v2.
 
-  const Double_t a1 = TMath::Abs(v1);
-  const Double_t a2 = TMath::Abs(v2);
-  if (a1 > a2) {
-    const Double_t w = v2/v1;
-    const Double_t q = TMath::Hypot(1.,w);
-    c = 1./q;
-    if (v1 < 0.) c = -c;
-    s  = c*w;
-    v1 = a1*q;
-    v2 = 0.;
-  } else {
-    if (v2 != 0) {
-      const Double_t w = v1/v2;
+   const Double_t a1 = TMath::Abs(v1);
+   const Double_t a2 = TMath::Abs(v2);
+   if (a1 > a2) {
+      const Double_t w = v2/v1;
       const Double_t q = TMath::Hypot(1.,w);
-      s = 1./q;
-      if (v2 < 0.) s = -s;
-      c  = s*w;
-      v1 = a2*q;
+      c = 1./q;
+      if (v1 < 0.) c = -c;
+      s  = c*w;
+      v1 = a1*q;
       v2 = 0.;
-    } else {
-      c = 1.;
-      s = 0.;
-    }
-  }
+   } else {
+      if (v2 != 0) {
+         const Double_t w = v1/v2;
+         const Double_t q = TMath::Hypot(1.,w);
+         s = 1./q;
+         if (v2 < 0.) s = -s;
+         c  = s*w;
+         v1 = a2*q;
+         v2 = 0.;
+      } else {
+         c = 1.;
+         s = 0.;
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -513,7 +513,7 @@ void ApplyGivens(Double_t &z1,Double_t &z2,Double_t c,Double_t s)
 // Apply a Givens transformation as defined by c and s to the vector compenents
 // v1 and v2 .
 
-  const Double_t w = z1*c+z2*s;
-  z2 = -z1*s+z2*c;
-  z1 = w;
+   const Double_t w = z1*c+z2*s;
+   z2 = -z1*s+z2*c;
+   z1 = w;
 }

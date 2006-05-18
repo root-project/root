@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.25 2006/01/25 18:49:03 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.26 2006/04/19 08:22:24 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -46,96 +46,96 @@ ClassImp(TDecompSVD)
 //______________________________________________________________________________
 TDecompSVD::TDecompSVD(Int_t nrows,Int_t ncols)
 {
-  if (nrows < ncols) {
-    Error("TDecompSVD(Int_t,Int_t","matrix rows should be >= columns");
-    return;
-  }
-  fU.ResizeTo(nrows,nrows);
-  fSig.ResizeTo(ncols);
-  fV.ResizeTo(nrows,ncols); // In the end we only need the nColxnCol part
+   if (nrows < ncols) {
+      Error("TDecompSVD(Int_t,Int_t","matrix rows should be >= columns");
+      return;
+   }
+   fU.ResizeTo(nrows,nrows);
+   fSig.ResizeTo(ncols);
+   fV.ResizeTo(nrows,ncols); // In the end we only need the nColxnCol part
 }
 
 //______________________________________________________________________________
 TDecompSVD::TDecompSVD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
 {
-  const Int_t nrows = row_upb-row_lwb+1;
-  const Int_t ncols = col_upb-col_lwb+1;
+   const Int_t nrows = row_upb-row_lwb+1;
+   const Int_t ncols = col_upb-col_lwb+1;
 
-  if (nrows < ncols) {
-    Error("TDecompSVD(Int_t,Int_t,Int_t,Int_t","matrix rows should be >= columns");
-    return;
-  }
-  fRowLwb = row_lwb;
-  fColLwb = col_lwb;
-  fU.ResizeTo(nrows,nrows);
-  fSig.ResizeTo(ncols);
-  fV.ResizeTo(nrows,ncols); // In the end we only need the nColxnCol part
+   if (nrows < ncols) {
+      Error("TDecompSVD(Int_t,Int_t,Int_t,Int_t","matrix rows should be >= columns");
+      return;
+   }
+   fRowLwb = row_lwb;
+   fColLwb = col_lwb;
+   fU.ResizeTo(nrows,nrows);
+   fSig.ResizeTo(ncols);
+   fV.ResizeTo(nrows,ncols); // In the end we only need the nColxnCol part
 }
 
 //______________________________________________________________________________
 TDecompSVD::TDecompSVD(const TMatrixD &a,Double_t tol)
 {
-  R__ASSERT(a.IsValid());
-  if (a.GetNrows() < a.GetNcols()) {
-    Error("TDecompSVD(const TMatrixD &","matrix rows should be >= columns");
-    return;
-  }
+   R__ASSERT(a.IsValid());
+   if (a.GetNrows() < a.GetNcols()) {
+      Error("TDecompSVD(const TMatrixD &","matrix rows should be >= columns");
+      return;
+   }
 
-  SetBit(kMatrixSet);
-  fTol = a.GetTol();
-  if (tol > 0)
-    fTol = tol;
+   SetBit(kMatrixSet);
+   fTol = a.GetTol();
+   if (tol > 0)
+      fTol = tol;
 
-  fRowLwb = a.GetRowLwb();
-  fColLwb = a.GetColLwb();
-  const Int_t nRow = a.GetNrows();
-  const Int_t nCol = a.GetNcols();
+   fRowLwb = a.GetRowLwb();
+   fColLwb = a.GetColLwb();
+   const Int_t nRow = a.GetNrows();
+   const Int_t nCol = a.GetNcols();
 
-  fU.ResizeTo(nRow,nRow);
-  fSig.ResizeTo(nCol);
-  fV.ResizeTo(nRow,nCol); // In the end we only need the nColxnCol part
+   fU.ResizeTo(nRow,nRow);
+   fSig.ResizeTo(nCol);
+   fV.ResizeTo(nRow,nCol); // In the end we only need the nColxnCol part
 
-  fU.UnitMatrix();
-  memcpy(fV.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
+   fU.UnitMatrix();
+   memcpy(fV.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
 }
 
 //______________________________________________________________________________
 TDecompSVD::TDecompSVD(const TDecompSVD &another): TDecompBase(another)
 {
-  *this = another;
+   *this = another;
 }
 
 //______________________________________________________________________________
 Bool_t TDecompSVD::Decompose()
 {
-  if ( !TestBit(kMatrixSet) )
-    return kFALSE;
+   if ( !TestBit(kMatrixSet) )
+      return kFALSE;
 
-  const Int_t nCol   = this->GetNcols();
-  const Int_t rowLwb = this->GetRowLwb();
-  const Int_t colLwb = this->GetColLwb();
+   const Int_t nCol   = this->GetNcols();
+   const Int_t rowLwb = this->GetRowLwb();
+   const Int_t colLwb = this->GetColLwb();
 
-  TVectorD offDiag;
-  Double_t work[kWorkMax];
-  if (nCol > kWorkMax) offDiag.ResizeTo(nCol);
-  else                 offDiag.Use(nCol,work);
+   TVectorD offDiag;
+   Double_t work[kWorkMax];
+   if (nCol > kWorkMax) offDiag.ResizeTo(nCol);
+   else                 offDiag.Use(nCol,work);
 
-  // step 1: bidiagonalization of A
-  if (!Bidiagonalize(fV,fU,fSig,offDiag))
-    return kFALSE;
+   // step 1: bidiagonalization of A
+   if (!Bidiagonalize(fV,fU,fSig,offDiag))
+      return kFALSE;
 
-  // step 2: diagonalization of bidiagonal matrix
-  if (!Diagonalize(fV,fU,fSig,offDiag))
-    return kFALSE;
+   // step 2: diagonalization of bidiagonal matrix
+   if (!Diagonalize(fV,fU,fSig,offDiag))
+      return kFALSE;
 
-  // step 3: order singular values and perform permutations
-  SortSingular(fV,fU,fSig);
-  fV.ResizeTo(nCol,nCol); fV.Shift(colLwb,colLwb);
-  fSig.Shift(colLwb);
-  fU.Transpose(fU);       fU.Shift(rowLwb,colLwb);
-  SetBit(kDecomposed);
+   // step 3: order singular values and perform permutations
+   SortSingular(fV,fU,fSig);
+   fV.ResizeTo(nCol,nCol); fV.Shift(colLwb,colLwb);
+   fSig.Shift(colLwb);
+   fU.Transpose(fU);       fU.Shift(rowLwb,colLwb);
+   SetBit(kDecomposed);
 
-  return kTRUE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -171,90 +171,90 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
 //    TMatrixD A = Q*C*Ht;
 //    ok &= VerifyMatrixIdentity(A,a,kTRUE,1.0e-13);
 
-  const Int_t nRow_v = v.GetNrows();
-  const Int_t nCol_v = v.GetNcols();
-  const Int_t nCol_u = u.GetNcols();
+   const Int_t nRow_v = v.GetNrows();
+   const Int_t nCol_v = v.GetNcols();
+   const Int_t nCol_u = u.GetNcols();
 
-  TArrayD ups(nCol_v);
-  TArrayD betas(nCol_v);
+   TArrayD ups(nCol_v);
+   TArrayD betas(nCol_v);
 
-  Int_t i,j;
-  for (i = 0; i < nCol_v; i++) {
-    // Set up Householder Transformation q(i)
+   Int_t i,j;
+   for (i = 0; i < nCol_v; i++) {
+      // Set up Householder Transformation q(i)
 
-    Double_t up,beta;
-    if (i < nCol_v-1 || nRow_v > nCol_v) {
-      const TVectorD vc_i = TMatrixDColumn_const(v,i);
-      //if (!DefHouseHolder(vc_i,i,i+1,up,beta))
-      //  return kFALSE;
-      DefHouseHolder(vc_i,i,i+1,up,beta);
+      Double_t up,beta;
+      if (i < nCol_v-1 || nRow_v > nCol_v) {
+         const TVectorD vc_i = TMatrixDColumn_const(v,i);
+         //if (!DefHouseHolder(vc_i,i,i+1,up,beta))
+         //  return kFALSE;
+         DefHouseHolder(vc_i,i,i+1,up,beta);
 
-      // Apply q(i) to v
-      for (j = i; j < nCol_v; j++) {
-        TMatrixDColumn vc_j = TMatrixDColumn(v,j);
-        ApplyHouseHolder(vc_i,up,beta,i,i+1,vc_j);
+         // Apply q(i) to v
+         for (j = i; j < nCol_v; j++) {
+            TMatrixDColumn vc_j = TMatrixDColumn(v,j);
+            ApplyHouseHolder(vc_i,up,beta,i,i+1,vc_j);
+         }
+
+         // Apply q(i) to u
+         for (j = 0; j < nCol_u; j++)
+         {
+            TMatrixDColumn uc_j = TMatrixDColumn(u,j);
+            ApplyHouseHolder(vc_i,up,beta,i,i+1,uc_j);
+         }
       }
+      if (i < nCol_v-2) {
+         // set up Householder Transformation h(i)
+         const TVectorD vr_i = TMatrixDRow_const(v,i);
 
-      // Apply q(i) to u
-      for (j = 0; j < nCol_u; j++)
-      {
-        TMatrixDColumn uc_j = TMatrixDColumn(u,j);
-        ApplyHouseHolder(vc_i,up,beta,i,i+1,uc_j);
+         //if (!DefHouseHolder(vr_i,i+1,i+2,up,beta))
+         //  return kFALSE;
+         DefHouseHolder(vr_i,i+1,i+2,up,beta);
+
+         // save h(i)
+         ups[i]   = up;
+         betas[i] = beta;
+
+         // apply h(i) to v
+         for (j = i; j < nRow_v; j++) {
+            TMatrixDRow vr_j = TMatrixDRow(v,j);
+            ApplyHouseHolder(vr_i,up,beta,i+1,i+2,vr_j);
+
+            // save elements i+2,...in row j of matrix v
+            if (j == i) {
+               for (Int_t k = i+2; k < nCol_v; k++)
+                  vr_j(k) = vr_i(k);
+            }
+         }
       }
-    }
-    if (i < nCol_v-2) {
-      // set up Householder Transformation h(i)
-      const TVectorD vr_i = TMatrixDRow_const(v,i);
+   }
 
-      //if (!DefHouseHolder(vr_i,i+1,i+2,up,beta))
-      //  return kFALSE;
-      DefHouseHolder(vr_i,i+1,i+2,up,beta);
+   // copy diagonal of transformed matrix v to sDiag and upper parallel v to oDiag
+   if (nCol_v > 1) {
+      sDiag = TMatrixDDiag(v);
+      for (Int_t i = 1; i < nCol_v; i++)
+         oDiag(i) = v(i-1,i);
+   }
+   oDiag(0) = 0.;
 
-      // save h(i)
-      ups[i]   = up;
-      betas[i] = beta;
+   // construct product matrix h = h(1)*h(2)*...*h(nCol_v-1), h(nCol_v-1) = I
 
-      // apply h(i) to v
-      for (j = i; j < nRow_v; j++) {
-        TMatrixDRow vr_j = TMatrixDRow(v,j);
-        ApplyHouseHolder(vr_i,up,beta,i+1,i+2,vr_j);
+   TVectorD vr_i(nCol_v);
+   for (i = nCol_v-1; i >= 0; i--) {
+      if (i < nCol_v-1)
+         vr_i = TMatrixDRow_const(v,i);
+      TMatrixDRow(v,i) = 0.0;
+      v(i,i) = 1.;
 
-        // save elements i+2,...in row j of matrix v
-        if (j == i) {
-          for (Int_t k = i+2; k < nCol_v; k++)
-            vr_j(k) = vr_i(k);
-        }
+      if (i < nCol_v-2) {
+         for (Int_t k = i; k < nCol_v; k++) {
+            // householder transformation on k-th column
+            TMatrixDColumn vc_k = TMatrixDColumn(v,k);
+            ApplyHouseHolder(vr_i,ups[i],betas[i],i+1,i+2,vc_k);
+         }
       }
-    }
-  }
+   }
 
-  // copy diagonal of transformed matrix v to sDiag and upper parallel v to oDiag
-  if (nCol_v > 1) {
-    sDiag = TMatrixDDiag(v);
-    for (Int_t i = 1; i < nCol_v; i++)
-      oDiag(i) = v(i-1,i);
-  }
-  oDiag(0) = 0.;
-
-  // construct product matrix h = h(1)*h(2)*...*h(nCol_v-1), h(nCol_v-1) = I
-
-  TVectorD vr_i(nCol_v);
-  for (i = nCol_v-1; i >= 0; i--) {
-    if (i < nCol_v-1)
-      vr_i = TMatrixDRow_const(v,i);
-    TMatrixDRow(v,i) = 0.0;
-    v(i,i) = 1.;
-
-    if (i < nCol_v-2) {
-      for (Int_t k = i; k < nCol_v; k++) {
-        // householder transformation on k-th column
-        TMatrixDColumn vc_k = TMatrixDColumn(v,k);
-        ApplyHouseHolder(vr_i,ups[i],betas[i],i+1,i+2,vc_k);
-      }
-    }
-  }
-
-  return kTRUE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -285,179 +285,176 @@ Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD 
 //    ok &= VerifyMatrixIdentity(Uprimet * C * Vprime,Sprime,kTRUE,1.0e-13);
 //    ok &= VerifyMatrixIdentity(Q*Uprime * Sprime * Vprimet * Ht,a,kTRUE,1.0e-13);
 
-  Bool_t ok    = kTRUE;
-  Int_t niter  = 0;
-  Double_t bmx = sDiag(0);
+   Bool_t ok    = kTRUE;
+   Int_t niter  = 0;
+   Double_t bmx = sDiag(0);
 
-  const Int_t nCol_v = v.GetNcols();
+   const Int_t nCol_v = v.GetNcols();
 
-  if (nCol_v > 1) {
-    for (Int_t i = 1; i < nCol_v; i++)
-      bmx = TMath::Max(TMath::Abs(sDiag(i))+TMath::Abs(oDiag(i)),bmx);
-  }
-
-  const Double_t eps = std::numeric_limits<double>::epsilon();
-
-  const Int_t niterm = 10*nCol_v;
-  for (Int_t k = nCol_v-1; k >= 0; k--) {
-    loop:
-      if (k != 0) {
-        // since sDiag(k) == 0 perform Givens transform with result oDiag[k] = 0
-        if (TMath::Abs(sDiag(k)) < eps*bmx)
-          Diag_1(v,sDiag,oDiag,k);
-
-        // find l (1 <= l <=k) so that either oDiag(l) = 0 or sDiag(l-1) = 0.
-        // In the latter case transform oDiag(l) to zero. In both cases the matrix
-        // splits and the bottom right minor begins with row l.
-        // If no such l is found set l = 1.
-
-        Int_t elzero = 0;
-        Int_t l = 0;
-        for (Int_t ll = k; ll >= 0 ; ll--) {
-          l = ll;
-          if (l == 0) {
-            elzero = 0;
-            break;
-          }
-          else if (TMath::Abs(oDiag(l)) < eps*bmx) {
-            elzero = 1;
-            break;
-          }
-          else if (TMath::Abs(sDiag(l-1)) < eps*bmx)
-            elzero = 0;
-        }
-        if (l > 0 && !elzero)
-          Diag_2(sDiag,oDiag,k,l);
-        if (l != k) {
-          // one more QR pass with order k
-          Diag_3(v,u,sDiag,oDiag,k,l);
-          niter++;
-          if (niter <= niterm) goto loop;
-          ::Error("TDecompSVD::Diagonalize","no convergence after %d steps",niter);
-          ok = kFALSE;
-        }
-     }
-
-    if (sDiag(k) < 0.) {
-     // for negative singular values perform change of sign
-      sDiag(k) = -sDiag(k);
-      TMatrixDColumn(v,k) *= -1.0;
+   if (nCol_v > 1) {
+      for (Int_t i = 1; i < nCol_v; i++)
+         bmx = TMath::Max(TMath::Abs(sDiag(i))+TMath::Abs(oDiag(i)),bmx);
     }
-    // order is decreased by one in next pass
-  }
 
-  return ok;
+   const Double_t eps = std::numeric_limits<double>::epsilon();
+
+   const Int_t niterm = 10*nCol_v;
+   for (Int_t k = nCol_v-1; k >= 0; k--) {
+      loop:
+         if (k != 0) {
+            // since sDiag(k) == 0 perform Givens transform with result oDiag[k] = 0
+            if (TMath::Abs(sDiag(k)) < eps*bmx)
+               Diag_1(v,sDiag,oDiag,k);
+
+            // find l (1 <= l <=k) so that either oDiag(l) = 0 or sDiag(l-1) = 0.
+            // In the latter case transform oDiag(l) to zero. In both cases the matrix
+            // splits and the bottom right minor begins with row l.
+            // If no such l is found set l = 1.
+
+            Int_t elzero = 0;
+            Int_t l = 0;
+            for (Int_t ll = k; ll >= 0 ; ll--) {
+               l = ll;
+               if (l == 0) {
+                  elzero = 0;
+                  break;
+               } else if (TMath::Abs(oDiag(l)) < eps*bmx) {
+                  elzero = 1;
+                  break;
+               } else if (TMath::Abs(sDiag(l-1)) < eps*bmx)
+                  elzero = 0;
+            }
+            if (l > 0 && !elzero)
+               Diag_2(sDiag,oDiag,k,l);
+            if (l != k) {
+               // one more QR pass with order k
+               Diag_3(v,u,sDiag,oDiag,k,l);
+               niter++;
+               if (niter <= niterm) goto loop;
+               ::Error("TDecompSVD::Diagonalize","no convergence after %d steps",niter);
+               ok = kFALSE;
+            }
+         }
+
+         if (sDiag(k) < 0.) {
+            // for negative singular values perform change of sign
+            sDiag(k) = -sDiag(k);
+            TMatrixDColumn(v,k) *= -1.0;
+         }
+      // order is decreased by one in next pass
+   }
+
+   return ok;
 }
 
 //______________________________________________________________________________
 void TDecompSVD::Diag_1(TMatrixD &v,TVectorD &sDiag,TVectorD &oDiag,Int_t k)
 {
-  const Int_t nCol_v = v.GetNcols();
+   const Int_t nCol_v = v.GetNcols();
 
-  TMatrixDColumn vc_k = TMatrixDColumn(v,k);
-  for (Int_t i = k-1; i >= 0; i--) {
-    TMatrixDColumn vc_i = TMatrixDColumn(v,i);
-    Double_t h,cs,sn;
-    if (i == k-1)
-      DefAplGivens(sDiag[i],oDiag[i+1],cs,sn);
-    else
-      DefAplGivens(sDiag[i],h,cs,sn);
-    if (i > 0) {
-      h = 0.;
-      ApplyGivens(oDiag[i],h,cs,sn);
-    }
-    for (Int_t j = 0; j < nCol_v; j++)
-      ApplyGivens(vc_i(j),vc_k(j),cs,sn);
-  }
+   TMatrixDColumn vc_k = TMatrixDColumn(v,k);
+   for (Int_t i = k-1; i >= 0; i--) {
+      TMatrixDColumn vc_i = TMatrixDColumn(v,i);
+      Double_t h,cs,sn;
+      if (i == k-1)
+         DefAplGivens(sDiag[i],oDiag[i+1],cs,sn);
+      else
+         DefAplGivens(sDiag[i],h,cs,sn);
+      if (i > 0) {
+         h = 0.;
+         ApplyGivens(oDiag[i],h,cs,sn);
+      }
+      for (Int_t j = 0; j < nCol_v; j++)
+         ApplyGivens(vc_i(j),vc_k(j),cs,sn);
+   }
 }
 
 //______________________________________________________________________________
 void TDecompSVD::Diag_2(TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l)
 {
-  for (Int_t i = l; i <= k; i++) {
-    Double_t h,cs,sn;
-    if (i == l)
-      DefAplGivens(sDiag(i),oDiag(i),cs,sn);
-    else
-      DefAplGivens(sDiag(i),h,cs,sn);
-    if (i < k) {
-      h = 0.;
-      ApplyGivens(oDiag(i+1),h,cs,sn);
-    }
-  }
+   for (Int_t i = l; i <= k; i++) {
+      Double_t h,cs,sn;
+      if (i == l)
+         DefAplGivens(sDiag(i),oDiag(i),cs,sn);
+      else
+         DefAplGivens(sDiag(i),h,cs,sn);
+      if (i < k) {
+         h = 0.;
+         ApplyGivens(oDiag(i+1),h,cs,sn);
+      }
+   }
 }
 
 //______________________________________________________________________________
 void TDecompSVD::Diag_3(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l)
 {
-  Double_t *pS = sDiag.GetMatrixArray();
-  Double_t *pO = oDiag.GetMatrixArray();
+   Double_t *pS = sDiag.GetMatrixArray();
+   Double_t *pO = oDiag.GetMatrixArray();
 
-  // determine shift parameter
+   // determine shift parameter
 
-  const Double_t psk1 = pS[k-1];
-  const Double_t psk  = pS[k];
-  const Double_t pok1 = pO[k-1];
-  const Double_t pok  = pO[k];
-  const Double_t psl  = pS[l];
+   const Double_t psk1 = pS[k-1];
+   const Double_t psk  = pS[k];
+   const Double_t pok1 = pO[k-1];
+   const Double_t pok  = pO[k];
+   const Double_t psl  = pS[l];
 
-  Double_t f;
-  if (psl == 0.0 || pok == 0.0 || psk1 == 0.0) {
-    const Double_t b = ((psk1-psk)*(psk1+psk)+pok1*pok1)/2.0;
-    const Double_t c = (psk*pok1)*(psk*pok1);
+   Double_t f;
+   if (psl == 0.0 || pok == 0.0 || psk1 == 0.0) {
+      const Double_t b = ((psk1-psk)*(psk1+psk)+pok1*pok1)/2.0;
+      const Double_t c = (psk*pok1)*(psk*pok1);
 
-    Double_t shift = 0.0;
-    if ((b != 0.0) | (c != 0.0)) {
-      shift = TMath::Sqrt(b*b+c);
-      if (b < 0.0)
-        shift = -shift;
-      shift = c/(b+shift);
-    }
+      Double_t shift = 0.0;
+      if ((b != 0.0) | (c != 0.0)) {
+         shift = TMath::Sqrt(b*b+c);
+         if (b < 0.0)
+            shift = -shift;
+         shift = c/(b+shift);
+      }
 
-    f = (psl+psk)*(psl-psk)+shift;
-  }
-  else {
-    f = ((psk1-psk)*(psk1+psk)+(pok1-pok)*(pok1+pok))/(2.*pok*psk1);
-    const Double_t g = TMath::Hypot(1.,f);
-    const Double_t t = (f >= 0.) ? f+g : f-g;
+      f = (psl+psk)*(psl-psk)+shift;
+   } else {
+      f = ((psk1-psk)*(psk1+psk)+(pok1-pok)*(pok1+pok))/(2.*pok*psk1);
+      const Double_t g = TMath::Hypot(1.,f);
+      const Double_t t = (f >= 0.) ? f+g : f-g;
 
-    f = ((psl-psk)*(psl+psk)+pok*(psk1/t-pok))/psl;
-  }
+      f = ((psl-psk)*(psl+psk)+pok*(psk1/t-pok))/psl;
+   }
 
-  const Int_t nCol_v = v.GetNcols();
-  const Int_t nCol_u = u.GetNcols();
+   const Int_t nCol_v = v.GetNcols();
+   const Int_t nCol_u = u.GetNcols();
 
-  Double_t h,cs,sn;
-  Int_t j;
-  for (Int_t i = l; i <= k-1; i++) {
-    if (i == l)
-      // define r[l]
-      DefGivens(f,pO[i+1],cs,sn);
-    else
-      // define r[i]
-      DefAplGivens(pO[i],h,cs,sn);
+   Double_t h,cs,sn;
+   Int_t j;
+   for (Int_t i = l; i <= k-1; i++) {
+      if (i == l)
+         // define r[l]
+         DefGivens(f,pO[i+1],cs,sn);
+      else
+         // define r[i]
+         DefAplGivens(pO[i],h,cs,sn);
 
-    ApplyGivens(pS[i],pO[i+1],cs,sn);
-    h = 0.;
-    ApplyGivens(h,pS[i+1],cs,sn);
-
-    TMatrixDColumn vc_i  = TMatrixDColumn(v,i);
-    TMatrixDColumn vc_i1 = TMatrixDColumn(v,i+1);
-    for (j = 0; j < nCol_v; j++)
-      ApplyGivens(vc_i(j),vc_i1(j),cs,sn);
-    // define t[i]
-    DefAplGivens(pS[i],h,cs,sn);
-    ApplyGivens(pO[i+1],pS[i+1],cs,sn);
-    if (i < k-1) {
+      ApplyGivens(pS[i],pO[i+1],cs,sn);
       h = 0.;
-      ApplyGivens(h,pO[i+2],cs,sn);
-    }
+      ApplyGivens(h,pS[i+1],cs,sn);
 
-    TMatrixDRow ur_i  = TMatrixDRow(u,i);
-    TMatrixDRow ur_i1 = TMatrixDRow(u,i+1);
-    for (j = 0; j < nCol_u; j++)
-      ApplyGivens(ur_i(j),ur_i1(j),cs,sn);
-  }
+      TMatrixDColumn vc_i  = TMatrixDColumn(v,i);
+      TMatrixDColumn vc_i1 = TMatrixDColumn(v,i+1);
+      for (j = 0; j < nCol_v; j++)
+         ApplyGivens(vc_i(j),vc_i1(j),cs,sn);
+      // define t[i]
+      DefAplGivens(pS[i],h,cs,sn);
+      ApplyGivens(pO[i+1],pS[i+1],cs,sn);
+      if (i < k-1) {
+         h = 0.;
+         ApplyGivens(h,pO[i+2],cs,sn);
+      }
+
+      TMatrixDRow ur_i  = TMatrixDRow(u,i);
+      TMatrixDRow ur_i1 = TMatrixDRow(u,i+1);
+      for (j = 0; j < nCol_u; j++)
+         ApplyGivens(ur_i(j),ur_i1(j),cs,sn);
+   }
 }
 
 //______________________________________________________________________________
@@ -472,59 +469,59 @@ void TDecompSVD::SortSingular(TMatrixD &v,TMatrixD &u,TVectorD &sDiag)
 //   u     - (m x m) - matrix U''^T . U'^T . Q^T
 //   sDiag - diagonal of the (m x n) S''
 
-  const Int_t nCol_v = v.GetNcols();
-  const Int_t nCol_u = u.GetNcols();
+   const Int_t nCol_v = v.GetNcols();
+   const Int_t nCol_u = u.GetNcols();
 
-  Double_t *pS = sDiag.GetMatrixArray();
-  Double_t *pV = v.GetMatrixArray();
-  Double_t *pU = u.GetMatrixArray();
+   Double_t *pS = sDiag.GetMatrixArray();
+   Double_t *pV = v.GetMatrixArray();
+   Double_t *pU = u.GetMatrixArray();
 
-  // order singular values
+   // order singular values
 
-  Int_t i,j;
-  if (nCol_v > 1) {
-    while (1) {
-      Bool_t found = kFALSE;
-      i = 1;
-      while (!found && i < nCol_v) {
-        if (pS[i] > pS[i-1])
-          found = kTRUE;
-        else
-          i++;
+   Int_t i,j;
+   if (nCol_v > 1) {
+      while (1) {
+         Bool_t found = kFALSE;
+         i = 1;
+         while (!found && i < nCol_v) {
+            if (pS[i] > pS[i-1])
+               found = kTRUE;
+            else
+               i++;
+         }
+         if (!found) break;
+         for (i = 1; i < nCol_v; i++) {
+            Double_t t = pS[i-1];
+            Int_t k = i-1;
+            for (j = i; j < nCol_v; j++) {
+               if (t < pS[j]) {
+                  t = pS[j];
+                  k = j;
+               }
+            }
+            if (k != i-1) {
+               // perform permutation on singular values
+               pS[k]   = pS[i-1];
+               pS[i-1] = t;
+               // perform permutation on matrix v
+               for (j = 0; j < nCol_v; j++) {
+                  const Int_t off_j = j*nCol_v;
+                  t             = pV[off_j+k];
+                  pV[off_j+k]   = pV[off_j+i-1];
+                  pV[off_j+i-1] = t;
+               }
+               // perform permutation on vector u
+               for (j = 0; j < nCol_u; j++) {
+                  const Int_t off_k  = k*nCol_u;
+                  const Int_t off_i1 = (i-1)*nCol_u;
+                  t            = pU[off_k+j];
+                  pU[off_k+j]  = pU[off_i1+j];
+                  pU[off_i1+j] = t;
+               }
+            }
+         }
       }
-      if (!found) break;
-      for (i = 1; i < nCol_v; i++) {
-        Double_t t = pS[i-1];
-        Int_t k = i-1;
-        for (j = i; j < nCol_v; j++) {
-          if (t < pS[j]) {
-            t = pS[j];
-            k = j;
-          }
-        }
-        if (k != i-1) {
-          // perform permutation on singular values
-          pS[k]   = pS[i-1];
-          pS[i-1] = t;
-          // perform permutation on matrix v
-          for (j = 0; j < nCol_v; j++) {
-            const Int_t off_j = j*nCol_v;
-            t             = pV[off_j+k];
-            pV[off_j+k]   = pV[off_j+i-1];
-            pV[off_j+i-1] = t;
-          }
-          // perform permutation on vector u
-          for (j = 0; j < nCol_u; j++) {
-            const Int_t off_k  = k*nCol_u;
-            const Int_t off_i1 = (i-1)*nCol_u;
-            t            = pU[off_k+j];
-            pU[off_k+j]  = pU[off_i1+j];
-            pU[off_i1+j] = t;
-          }
-        }
-      }
-    }
-  }
+   }
 }
 
 //______________________________________________________________________________
@@ -532,51 +529,51 @@ const TMatrixD TDecompSVD::GetMatrix()
 {
 // Reconstruct the original matrix using the decomposition parts
 
-  if (TestBit(kSingular)) {
-    TMatrixD tmp; tmp.Invalidate();
-    return tmp;
-  }
-  if ( !TestBit(kDecomposed) ) {
-    if (!Decompose()) {
+   if (TestBit(kSingular)) {
       TMatrixD tmp; tmp.Invalidate();
       return tmp;
-    }
-  }
+   }
+   if ( !TestBit(kDecomposed) ) {
+      if (!Decompose()) {
+         TMatrixD tmp; tmp.Invalidate();
+         return tmp;
+      }
+   }
 
-  const Int_t nRows  = fU.GetNrows();
-  const Int_t nCols  = fV.GetNcols();
-  const Int_t colLwb = this->GetColLwb();
-  TMatrixD s(nRows,nCols); s.Shift(colLwb,colLwb);
-  TMatrixDDiag diag(s); diag = fSig;
-  const TMatrixD vt(TMatrixD::kTransposed,fV);
-  return fU * s * vt;
+   const Int_t nRows  = fU.GetNrows();
+   const Int_t nCols  = fV.GetNcols();
+   const Int_t colLwb = this->GetColLwb();
+   TMatrixD s(nRows,nCols); s.Shift(colLwb,colLwb);
+   TMatrixDDiag diag(s); diag = fSig;
+   const TMatrixD vt(TMatrixD::kTransposed,fV);
+   return fU * s * vt;
 }
 
 //______________________________________________________________________________
 void TDecompSVD::SetMatrix(const TMatrixD &a)
 {
-  R__ASSERT(a.IsValid());
+   R__ASSERT(a.IsValid());
 
-  ResetStatus();
-  if (a.GetNrows() < a.GetNcols()) {
-    Error("TDecompSVD(const TMatrixD &","matrix rows should be >= columns");
-    return;
-  }
+   ResetStatus();
+   if (a.GetNrows() < a.GetNcols()) {
+      Error("TDecompSVD(const TMatrixD &","matrix rows should be >= columns");
+      return;
+   }
 
-  SetBit(kMatrixSet);
-  fCondition = -1.0;
+   SetBit(kMatrixSet);
+   fCondition = -1.0;
 
-  fRowLwb = a.GetRowLwb();
-  fColLwb = a.GetColLwb();
-  const Int_t nRow = a.GetNrows();
-  const Int_t nCol = a.GetNcols();
+   fRowLwb = a.GetRowLwb();
+   fColLwb = a.GetColLwb();
+   const Int_t nRow = a.GetNrows();
+   const Int_t nCol = a.GetNcols();
 
-  fU.ResizeTo(nRow,nRow);
-  fSig.ResizeTo(nCol);
-  fV.ResizeTo(nRow,nCol); // In the end we only need the nColxnCol part
+   fU.ResizeTo(nRow,nRow);
+   fSig.ResizeTo(nCol);
+   fV.ResizeTo(nRow,nCol); // In the end we only need the nColxnCol part
 
-  fU.UnitMatrix();
-  memcpy(fV.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
+   fU.UnitMatrix();
+   memcpy(fV.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
 }
 
 //______________________________________________________________________________
@@ -588,52 +585,52 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
 //
 // For m > n , x  is the least-squares solution of min(A . x - b)
 
-  R__ASSERT(b.IsValid());
-  if (TestBit(kSingular)) {
-    b.Invalidate();
-    return kFALSE;
-  }
-  if ( !TestBit(kDecomposed) ) {
-    if (!Decompose()) {
+   R__ASSERT(b.IsValid());
+   if (TestBit(kSingular)) {
       b.Invalidate();
       return kFALSE;
-    }
-  }
+   }
+   if ( !TestBit(kDecomposed) ) {
+      if (!Decompose()) {
+         b.Invalidate();
+         return kFALSE;
+      }
+   }
 
-  if (fU.GetNrows() != b.GetNrows() || fU.GetRowLwb() != b.GetLwb())
-  {
-    Error("Solve(TVectorD &","vector and matrix incompatible");
-    b.Invalidate();
-    return kFALSE;
-  }
+   if (fU.GetNrows() != b.GetNrows() || fU.GetRowLwb() != b.GetLwb())
+   {
+      Error("Solve(TVectorD &","vector and matrix incompatible");
+      b.Invalidate();
+      return kFALSE;
+   }
 
-  // We start with fU fSig fV^T x = b, and turn it into  fV^T x = fSig^-1 fU^T b
-  // Form tmp = fSig^-1 fU^T b but ignore diagonal elements with
-  // fSig(i) < fTol * max(fSig)
+   // We start with fU fSig fV^T x = b, and turn it into  fV^T x = fSig^-1 fU^T b
+   // Form tmp = fSig^-1 fU^T b but ignore diagonal elements with
+   // fSig(i) < fTol * max(fSig)
 
-  const Int_t    lwb       = fU.GetColLwb();
-  const Int_t    upb       = lwb+fV.GetNcols()-1;
-  const Double_t threshold = fSig(lwb)*fTol;
+   const Int_t    lwb       = fU.GetColLwb();
+   const Int_t    upb       = lwb+fV.GetNcols()-1;
+   const Double_t threshold = fSig(lwb)*fTol;
 
-  TVectorD tmp(lwb,upb);
-  for (Int_t irow = lwb; irow <= upb; irow++) {
-    Double_t r = 0.0;
-    if (fSig(irow) > threshold) {
-      const TVectorD uc_i = TMatrixDColumn(fU,irow);
-      r = uc_i * b;
-      r /= fSig(irow);
-    }
-    tmp(irow) = r;
-  }
+   TVectorD tmp(lwb,upb);
+   for (Int_t irow = lwb; irow <= upb; irow++) {
+      Double_t r = 0.0;
+      if (fSig(irow) > threshold) {
+         const TVectorD uc_i = TMatrixDColumn(fU,irow);
+         r = uc_i * b;
+         r /= fSig(irow);
+      }
+      tmp(irow) = r;
+   }
 
-  if (b.GetNrows() > fV.GetNrows()) {
+   if (b.GetNrows() > fV.GetNrows()) {
       TVectorD tmp2;
       tmp2.Use(lwb,upb,b.GetMatrixArray());
       tmp2 = fV*tmp;
-  } else
-    b = fV*tmp;
+   } else
+     b = fV*tmp;
 
-  return kTRUE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -646,55 +643,55 @@ Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
 //
 // For m > n , x  is the least-squares solution of min(A . x - b)
 
-  TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
-  R__ASSERT(b->IsValid());
-  if (TestBit(kSingular)) {
-    b->Invalidate();
-    return kFALSE;
-  }
-  if ( !TestBit(kDecomposed) ) {
-    if (!Decompose()) {
+   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
+   R__ASSERT(b->IsValid());
+   if (TestBit(kSingular)) {
       b->Invalidate();
       return kFALSE;
-    }
-  }
+   }
+   if ( !TestBit(kDecomposed) ) {
+      if (!Decompose()) {
+         b->Invalidate();
+         return kFALSE;
+      }
+   }
 
-  if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb())
-  {
-    Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
-    b->Invalidate();
-    return kFALSE;
-  }
+   if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb())
+   {
+      Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
+      b->Invalidate();
+      return kFALSE;
+   }
 
-  // We start with fU fSig fV^T x = b, and turn it into  fV^T x = fSig^-1 fU^T b
-  // Form tmp = fSig^-1 fU^T b but ignore diagonal elements in
-  // fSig(i) < fTol * max(fSig)
+   // We start with fU fSig fV^T x = b, and turn it into  fV^T x = fSig^-1 fU^T b
+   // Form tmp = fSig^-1 fU^T b but ignore diagonal elements in
+   // fSig(i) < fTol * max(fSig)
 
-  const Int_t    lwb       = fU.GetColLwb();
-  const Int_t    upb       = lwb+fV.GetNcols()-1;
-  const Double_t threshold = fSig(lwb)*fTol;
+   const Int_t    lwb       = fU.GetColLwb();
+   const Int_t    upb       = lwb+fV.GetNcols()-1;
+   const Double_t threshold = fSig(lwb)*fTol;
 
-  TVectorD tmp(lwb,upb);
-  const TVectorD vb = cb;
-  for (Int_t irow = lwb; irow <= upb; irow++) {
-    Double_t r = 0.0;
-    if (fSig(irow) > threshold) {
-      const TVectorD uc_i = TMatrixDColumn(fU,irow);
-      r = uc_i * vb;
-      r /= fSig(irow);
-    }
-    tmp(irow) = r;
-  }
+   TVectorD tmp(lwb,upb);
+   const TVectorD vb = cb;
+   for (Int_t irow = lwb; irow <= upb; irow++) {
+      Double_t r = 0.0;
+      if (fSig(irow) > threshold) {
+         const TVectorD uc_i = TMatrixDColumn(fU,irow);
+         r = uc_i * vb;
+         r /= fSig(irow);
+      }
+      tmp(irow) = r;
+   }
 
-  if (b->GetNrows() > fV.GetNrows()) {
-    const TVectorD tmp2 = fV*tmp;
-    TVectorD tmp3(cb);
-    tmp3.SetSub(tmp2.GetLwb(),tmp2);
-    cb = tmp3;
-  } else
-    cb = fV*tmp;
+   if (b->GetNrows() > fV.GetNrows()) {
+      const TVectorD tmp2 = fV*tmp;
+      TVectorD tmp3(cb);
+      tmp3.SetSub(tmp2.GetLwb(),tmp2);
+      cb = tmp3;
+   } else
+      cb = fV*tmp;
 
-  return kTRUE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -702,207 +699,207 @@ Bool_t TDecompSVD::TransSolve(TVectorD &b)
 {
 // Solve A^T x=b assuming the SVD form of A is stored . Solution returned in b.
 
-  R__ASSERT(b.IsValid());
-  if (TestBit(kSingular)) {
-    b.Invalidate();
-    return kFALSE;
-  }
-  if ( !TestBit(kDecomposed) ) {
-    if (!Decompose()) {
+   R__ASSERT(b.IsValid());
+   if (TestBit(kSingular)) {
       b.Invalidate();
       return kFALSE;
-    }
-  }
+   }
+   if ( !TestBit(kDecomposed) ) {
+      if (!Decompose()) {
+         b.Invalidate();
+         return kFALSE;
+      }
+   }
 
-  if (fU.GetNrows() != fV.GetNrows() || fU.GetRowLwb() != fV.GetRowLwb()) {
-    Error("TransSolve(TVectorD &","matrix should be square");
-    b.Invalidate();
-    return kFALSE;
-  }
+   if (fU.GetNrows() != fV.GetNrows() || fU.GetRowLwb() != fV.GetRowLwb()) {
+      Error("TransSolve(TVectorD &","matrix should be square");
+      b.Invalidate();
+      return kFALSE;
+   }
 
-  if (fV.GetNrows() != b.GetNrows() || fV.GetRowLwb() != b.GetLwb())
-  {
-    Error("TransSolve(TVectorD &","vector and matrix incompatible");
-    b.Invalidate();
-    return kFALSE;
-  }
+   if (fV.GetNrows() != b.GetNrows() || fV.GetRowLwb() != b.GetLwb())
+   {
+      Error("TransSolve(TVectorD &","vector and matrix incompatible");
+      b.Invalidate();
+      return kFALSE;
+   }
 
-  // We start with fV fSig fU^T x = b, and turn it into  fU^T x = fSig^-1 fV^T b
-  // Form tmp = fSig^-1 fV^T b but ignore diagonal elements in
-  // fSig(i) < fTol * max(fSig)
+   // We start with fV fSig fU^T x = b, and turn it into  fU^T x = fSig^-1 fV^T b
+   // Form tmp = fSig^-1 fV^T b but ignore diagonal elements in
+   // fSig(i) < fTol * max(fSig)
 
-  const Int_t    lwb       = fU.GetColLwb();
-  const Int_t    upb       = lwb+fV.GetNcols()-1;
-  const Double_t threshold = fSig(lwb)*fTol;
+   const Int_t    lwb       = fU.GetColLwb();
+   const Int_t    upb       = lwb+fV.GetNcols()-1;
+   const Double_t threshold = fSig(lwb)*fTol;
 
-  TVectorD tmp(lwb,upb);
-  for (Int_t i = lwb; i <= upb; i++) {
-    Double_t r = 0.0;
-    if (fSig(i) > threshold) {
-      const TVectorD vc = TMatrixDColumn(fV,i);
-      r = vc * b;
-      r /= fSig(i);
-    }
-    tmp(i) = r;
-  }
-  b = fU*tmp;
+   TVectorD tmp(lwb,upb);
+   for (Int_t i = lwb; i <= upb; i++) {
+      Double_t r = 0.0;
+      if (fSig(i) > threshold) {
+         const TVectorD vc = TMatrixDColumn(fV,i);
+         r = vc * b;
+         r /= fSig(i);
+      }
+      tmp(i) = r;
+   }
+   b = fU*tmp;
 
-  return kTRUE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
 Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
 {
-  TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
-  R__ASSERT(b->IsValid());
-  if (TestBit(kSingular)) {
-    b->Invalidate();
-    return kFALSE;
-  }
-  if ( !TestBit(kDecomposed) ) {
-    if (!Decompose()) {
+   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
+   R__ASSERT(b->IsValid());
+   if (TestBit(kSingular)) {
       b->Invalidate();
       return kFALSE;
-    }
-  }
+   }
+   if ( !TestBit(kDecomposed) ) {
+      if (!Decompose()) {
+         b->Invalidate();
+         return kFALSE;
+      }
+   }
 
-  if (fU.GetNrows() != fV.GetNrows() || fU.GetRowLwb() != fV.GetRowLwb()) {
-    Error("TransSolve(TMatrixDColumn &","matrix should be square");
-    b->Invalidate();
-    return kFALSE;
-  }
+   if (fU.GetNrows() != fV.GetNrows() || fU.GetRowLwb() != fV.GetRowLwb()) {
+      Error("TransSolve(TMatrixDColumn &","matrix should be square");
+      b->Invalidate();
+      return kFALSE;
+   }
 
-  if (fV.GetNrows() != b->GetNrows() || fV.GetRowLwb() != b->GetRowLwb())
-  {
-    Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
-    b->Invalidate();
-    return kFALSE;
-  }
+   if (fV.GetNrows() != b->GetNrows() || fV.GetRowLwb() != b->GetRowLwb())
+   {
+      Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
+      b->Invalidate();
+      return kFALSE;
+   }
 
-  // We start with fV fSig fU^T x = b, and turn it into  fU^T x = fSig^-1 fV^T b
-  // Form tmp = fSig^-1 fV^T b but ignore diagonal elements in
-  // fSig(i) < fTol * max(fSig)
+   // We start with fV fSig fU^T x = b, and turn it into  fU^T x = fSig^-1 fV^T b
+   // Form tmp = fSig^-1 fV^T b but ignore diagonal elements in
+   // fSig(i) < fTol * max(fSig)
 
-  const Int_t    lwb       = fU.GetColLwb();
-  const Int_t    upb       = lwb+fV.GetNcols()-1;
-  const Double_t threshold = fSig(lwb)*fTol;
+   const Int_t    lwb       = fU.GetColLwb();
+   const Int_t    upb       = lwb+fV.GetNcols()-1;
+   const Double_t threshold = fSig(lwb)*fTol;
 
-  const TVectorD vb = cb;
-  TVectorD tmp(lwb,upb);
-  for (Int_t i = lwb; i <= upb; i++) {
-    Double_t r = 0.0;
-    if (fSig(i) > threshold) {
-      const TVectorD vc = TMatrixDColumn(fV,i);
-      r = vc * vb;
-      r /= fSig(i);
-    }
-    tmp(i) = r;
-  }
-  cb = fU*tmp;
+   const TVectorD vb = cb;
+   TVectorD tmp(lwb,upb);
+   for (Int_t i = lwb; i <= upb; i++) {
+      Double_t r = 0.0;
+      if (fSig(i) > threshold) {
+         const TVectorD vc = TMatrixDColumn(fV,i);
+         r = vc * vb;
+         r /= fSig(i);
+      }
+      tmp(i) = r;
+   }
+   cb = fU*tmp;
 
-  return kTRUE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
 Double_t TDecompSVD::Condition()
 {
-  if ( !TestBit(kCondition) ) {
-    fCondition = -1;
-    if (TestBit(kSingular))
-      return fCondition;
-    if ( !TestBit(kDecomposed) ) {
-      if (!Decompose())
-        return fCondition;
-    }
-    const Int_t colLwb = GetColLwb();
-    const Int_t nCols  = GetNcols();
-    const Double_t max = fSig(colLwb);
-    const Double_t min = fSig(colLwb+nCols-1);
-    fCondition = (min > 0.0) ? max/min : -1.0;
-    SetBit(kCondition);
-  }
-  return fCondition;
+   if ( !TestBit(kCondition) ) {
+      fCondition = -1;
+      if (TestBit(kSingular))
+         return fCondition;
+      if ( !TestBit(kDecomposed) ) {
+         if (!Decompose())
+            return fCondition;
+      }
+      const Int_t colLwb = GetColLwb();
+      const Int_t nCols  = GetNcols();
+      const Double_t max = fSig(colLwb);
+      const Double_t min = fSig(colLwb+nCols-1);
+      fCondition = (min > 0.0) ? max/min : -1.0;
+      SetBit(kCondition);
+   }
+   return fCondition;
 }
 
 //______________________________________________________________________________
 void TDecompSVD::Det(Double_t &d1,Double_t &d2)
 {
-  if ( !TestBit(kDetermined) ) {
-    if ( !TestBit(kDecomposed) )
-      Decompose();
-    if (TestBit(kSingular)) {
-      fDet1 = 0.0;
-      fDet2 = 0.0;
-    } else {
-      R__ASSERT(fSig.IsValid());
-      DiagProd(fSig,fTol,fDet1,fDet2);
-    }
-    SetBit(kDetermined);
-  }
-  d1 = fDet1;
-  d2 = fDet2;
+   if ( !TestBit(kDetermined) ) {
+      if ( !TestBit(kDecomposed) )
+         Decompose();
+      if (TestBit(kSingular)) {
+         fDet1 = 0.0;
+         fDet2 = 0.0;
+      } else {
+         R__ASSERT(fSig.IsValid());
+         DiagProd(fSig,fTol,fDet1,fDet2);
+      }
+      SetBit(kDetermined);
+   }
+   d1 = fDet1;
+   d2 = fDet2;
 }
 
 //______________________________________________________________________________
 void TDecompSVD::Invert(TMatrixD &inv)
 {
-  // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
-  // The user should always supply a matrix of size (m x m) !
-  // If m > n , only the (n x m) part of the returned (pseudo inverse) matrix
-  // should be used .
+// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+// The user should always supply a matrix of size (m x m) !
+// If m > n , only the (n x m) part of the returned (pseudo inverse) matrix
+// should be used .
 
-  const Int_t rowLwb = GetRowLwb();
-  const Int_t colLwb = GetColLwb();
-  const Int_t nRows  = GetNrows();
+   const Int_t rowLwb = GetRowLwb();
+   const Int_t colLwb = GetColLwb();
+   const Int_t nRows  = GetNrows();
 
-  if (inv.GetNrows()  != nRows  || inv.GetNcols()  != nRows ||
-      inv.GetRowLwb() != rowLwb || inv.GetColLwb() != colLwb) {
-    Error("Invert(TMatrixD &","Input matrix has wrong shape");
-    inv.Invalidate();
-    return;
-  }
+   if (inv.GetNrows()  != nRows  || inv.GetNcols()  != nRows ||
+       inv.GetRowLwb() != rowLwb || inv.GetColLwb() != colLwb) {
+      Error("Invert(TMatrixD &","Input matrix has wrong shape");
+      inv.Invalidate();
+      return;
+   }
 
-  inv.UnitMatrix();
-  MultiSolve(inv);
+   inv.UnitMatrix();
+   MultiSolve(inv);
 }
 
 //______________________________________________________________________________
 TMatrixD TDecompSVD::Invert()
 {
-  // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
-  // (n x m) Ainv is returned .
+// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+// (n x m) Ainv is returned .
 
-  const Int_t rowLwb = GetRowLwb();
-  const Int_t colLwb = GetColLwb();
-  const Int_t rowUpb = rowLwb+GetNrows()-1;
-  TMatrixD inv(rowLwb,rowUpb,colLwb,colLwb+GetNrows()-1);
-  inv.UnitMatrix();
-  MultiSolve(inv);
-  inv.ResizeTo(rowLwb,rowLwb+GetNcols()-1,colLwb,colLwb+GetNrows()-1);
+   const Int_t rowLwb = GetRowLwb();
+   const Int_t colLwb = GetColLwb();
+   const Int_t rowUpb = rowLwb+GetNrows()-1;
+   TMatrixD inv(rowLwb,rowUpb,colLwb,colLwb+GetNrows()-1);
+   inv.UnitMatrix();
+   MultiSolve(inv);
+   inv.ResizeTo(rowLwb,rowLwb+GetNcols()-1,colLwb,colLwb+GetNrows()-1);
 
-  return inv;
+   return inv;
 }
 
 //______________________________________________________________________________
 void TDecompSVD::Print(Option_t *opt) const
 {
-  TDecompBase::Print(opt);
-  fU.Print("fU");
-  fV.Print("fV");
-  fSig.Print("fSig");
+   TDecompBase::Print(opt);
+   fU.Print("fU");
+   fV.Print("fV");
+   fSig.Print("fSig");
 }
 
 //______________________________________________________________________________
 TDecompSVD &TDecompSVD::operator=(const TDecompSVD &source)
 {
-  if (this != &source) {
-    TDecompBase::operator=(source);
-    fU.ResizeTo(source.fU);
-    fU = source.fU;
-    fV.ResizeTo(source.fV);
-    fV = source.fV;
-    fSig.ResizeTo(source.fSig);
-    fSig = source.fSig;
-  }
-  return *this;
+   if (this != &source) {
+      TDecompBase::operator=(source);
+      fU.ResizeTo(source.fU);
+      fU = source.fU;
+      fV.ResizeTo(source.fV);
+      fV = source.fV;
+      fSig.ResizeTo(source.fSig);
+      fSig = source.fSig;
+   }
+   return *this;
 }
