@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.11 2004/07/07 17:44:44 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.12 2006/05/16 08:13:31 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 // Permission to use, copy, modify and distribute this software and its
 // documentation for non-commercial purposes is hereby granted without fee,
 // provided that the above copyright notice appears in all copies and
-// that both the copyright notice and this permission notice appear in
+// that both the copyright no:tice and this permission notice appear in
 // the supporting documentation. The authors make no claims about the
 // suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
@@ -106,7 +106,7 @@ public:
    TVector2 Norm(const TVector2& v) const;
 
                                         // rotates 2-vector by phi radians
-   TVector2 Rotate (Double_t phi);
+   TVector2 Rotate (Double_t phi) const;
 
                                         // returns phi angle in the interval [0,2*PI)
    static Double_t Phi_0_2pi(Double_t x);                                                                               // returns phi angle in the interval

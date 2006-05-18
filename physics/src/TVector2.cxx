@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.5 2006/05/16 08:13:31 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.6 2006/05/17 06:49:59 brun Exp $
 // Author: Pasha Murat   12/02/99
 //------------------------------------------------------------------------------
 // Copyright(c) 1995-1997, P.Murat (CDF collaboration, FNAL)
@@ -76,7 +76,7 @@ Double_t TVector2::Phi_mpi_pi(Double_t x) {
 }
 
 //______________________________________________________________________________
-TVector2 TVector2::Rotate (Double_t phi)
+TVector2 TVector2::Rotate (Double_t phi) const
 {
    //rotation by phi
    return TVector2( fX*TMath::Cos(phi)-fY*TMath::Sin(phi), fX*TMath::Sin(phi)+fY*TMath::Cos(phi) );
