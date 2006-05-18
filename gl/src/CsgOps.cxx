@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.11 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.12 2006/05/14 08:25:48 brun Exp $
 // Author:  Timur Pocheptsov  01/04/2005
 /*
   CSGLib - Software Library for Constructive Solid Geometry
@@ -1849,7 +1849,7 @@ namespace RootCsg {
    };
 
    template <typename PROP>
-   class DefaultSplitFunctionBinder {
+   class TDefaultSplitFunctionBinder {
    public :
       void DisconnectPolygon(Int_t){}
       void ConnectPolygon(Int_t){}
@@ -1917,8 +1917,8 @@ namespace RootCsg {
                                          Double_t onEpsilon)
    {
       typedef typename TMesh::Polygon::TVProp mesh;
-      DefaultSplitFunctionBinder<mesh> defaultSplitFunction;
-      TSplitFunction<MyType,DefaultSplitFunctionBinder<mesh> >
+      TDefaultSplitFunctionBinder<mesh> defaultSplitFunction;
+      TSplitFunction<MyType,TDefaultSplitFunctionBinder<mesh> >
          splitFunction(*this,defaultSplitFunction);
       splitFunction.SplitPolygon(p1Index,plane,inPiece,outPiece,onEpsilon);
    }
