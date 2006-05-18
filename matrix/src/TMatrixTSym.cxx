@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.11 2006/04/04 05:51:06 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.12 2006/04/19 08:22:24 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -968,9 +968,18 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Invert(Double_t *det)
   // Bunch-Kaufman guarantees a symmetric inverted matrix but is slower than LU .
   // The user can access Bunch-Kaufman through the TDecompBK class .
 
-  TMatrixD tmp(*this);
-  TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
-  memcpy(this->GetMatrixArray(),tmp.GetMatrixArray(),this->GetNoElements()*sizeof(Element));
+  R__ASSERT(this->IsValid());
+  if (typeid(Element) == typeid(Double_t))
+    TDecompLU::InvertLU(*dynamic_cast<TMatrixD *>(this),Double_t(this->fTol),det);
+  else {
+    TMatrixD tmp(*this);
+    TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
+    const Double_t *p1 = tmp.GetMatrixArray();
+          Element  *p2 = this->GetMatrixArray();
+    for (Int_t i = 0; i < this->GetNoElements(); i++)
+      p2[i] = p1[i];
+  }
+
   return *this;
 }
 
@@ -1026,9 +1035,16 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::InvertFast(Double_t *det)
 
     default:
     {
-      TMatrixD tmp(*this);
-      TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
-      memcpy(this->GetMatrixArray(),tmp.GetMatrixArray(),this->GetNoElements()*sizeof(Element));
+      if(typeid(Element) == typeid(Double_t))
+        TDecompLU::InvertLU(*dynamic_cast<TMatrixD *>(this),Double_t(this->fTol),det);
+      else {
+        TMatrixD tmp(*this);
+        TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
+        const Double_t *p1 = tmp.GetMatrixArray();
+              Element  *p2 = this->GetMatrixArray();
+        for (Int_t i = 0; i < this->GetNoElements(); i++)
+          p2[i] = p1[i];
+      }
       return *this;
     }
   }

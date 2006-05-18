@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.16 2006/04/04 05:51:06 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.17 2006/04/19 08:22:24 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1391,9 +1391,16 @@ TMatrixT<Element> &TMatrixT<Element>::Invert(Double_t *det)
   // Invert the matrix and calculate its determinant
 
   R__ASSERT(this->IsValid());
-  TMatrixD tmp(*this);
-  TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
-  memcpy(this->GetMatrixArray(),tmp.GetMatrixArray(),this->GetNoElements()*sizeof(Element));
+  if (typeid(Element) == typeid(Double_t))
+    TDecompLU::InvertLU(*dynamic_cast<TMatrixD *>(this),Double_t(this->fTol),det);
+  else {
+    TMatrixD tmp(*this);
+    TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
+    const Double_t *p1 = tmp.GetMatrixArray();
+          Element  *p2 = this->GetMatrixArray();
+    for (Int_t i = 0; i < this->GetNoElements(); i++)
+      p2[i] = p1[i];
+  }
 
   return *this;
 }
@@ -1455,9 +1462,16 @@ TMatrixT<Element> &TMatrixT<Element>::InvertFast(Double_t *det)
 
     default:
     {
-      TMatrixD tmp(*this);
-      TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
-      memcpy(this->GetMatrixArray(),tmp.GetMatrixArray(),this->GetNoElements()*sizeof(Element));
+      if(typeid(Element) == typeid(Double_t))
+        TDecompLU::InvertLU(*dynamic_cast<TMatrixD *>(this),Double_t(this->fTol),det);
+      else {
+        TMatrixD tmp(*this);
+        TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
+        const Double_t *p1 = tmp.GetMatrixArray();
+              Element  *p2 = this->GetMatrixArray();
+        for (Int_t i = 0; i < this->GetNoElements(); i++)
+          p2[i] = p1[i];
+      }
       return *this;
     }
   }
@@ -1804,7 +1818,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTLazy<Element> &laz
       lazy_constructor.GetColUpb() != this->GetColUpb() ||
       lazy_constructor.GetRowLwb() != this->GetRowLwb() ||
       lazy_constructor.GetColLwb() != this->GetColLwb()) {
-    Error("operator=(const TMatrixDLazy&)", "matrix is incompatible with "
+    Error("operator=(const TMatrixTLazy&)", "matrix is incompatible with "
           "the assigned Lazy matrix");
     this->Invalidate();
     return *this;
@@ -2103,7 +2117,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTDiag_const<Elemen
     R__ASSERT(diag.GetMatrix()->IsValid());
     R__ASSERT(this->fNcols == diag.GetNdiags());
     if (this->fNcols != diag.GetNdiags()) {
-      Error("operator*=(const TMatrixDDiag_const &)","wrong diagonal length");
+      Error("operator*=(const TMatrixTDiag_const &)","wrong diagonal length");
       this->Invalidate();
       return *this;
     }
@@ -2134,7 +2148,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTDiag_const<Elemen
     R__ASSERT(this->IsValid());
     R__ASSERT(diag.GetMatrix()->IsValid());
     if (this->fNcols != diag.GetNdiags()) {
-      Error("operator/=(const TMatrixDDiag_const &)","wrong diagonal length");
+      Error("operator/=(const TMatrixTDiag_const &)","wrong diagonal length");
       this->Invalidate();
       return *this;
     }
@@ -2449,7 +2463,7 @@ TMatrixT<Element> operator&&(const TMatrixT<Element> &source1,const TMatrixT<Ele
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator&&(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    Error("operator&&(const TMatrixT&,const TMatrixT&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2475,7 +2489,7 @@ TMatrixT<Element> operator&&(const TMatrixT<Element> &source1,const TMatrixTSym<
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator&&(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    Error("operator&&(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2509,7 +2523,7 @@ TMatrixT<Element> operator||(const TMatrixT<Element> &source1,const TMatrixT<Ele
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator||(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    Error("operator||(const TMatrixT&,const TMatrixT&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2535,7 +2549,7 @@ TMatrixT<Element> operator||(const TMatrixT<Element> &source1,const TMatrixTSym<
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator||(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    Error("operator||(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2569,7 +2583,7 @@ TMatrixT<Element> operator>(const TMatrixT<Element> &source1,const TMatrixT<Elem
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator|(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    Error("operator|(const TMatrixT&,const TMatrixT&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2596,7 +2610,7 @@ TMatrixT<Element> operator>(const TMatrixT<Element> &source1,const TMatrixTSym<E
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator>(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    Error("operator>(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2631,7 +2645,7 @@ TMatrixT<Element> operator>=(const TMatrixT<Element> &source1,const TMatrixT<Ele
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator>=(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    Error("operator>=(const TMatrixT&,const TMatrixT&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2658,7 +2672,7 @@ TMatrixT<Element> operator>=(const TMatrixT<Element> &source1,const TMatrixTSym<
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator>=(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    Error("operator>=(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2693,7 +2707,7 @@ TMatrixT<Element> operator<=(const TMatrixT<Element> &source1,const TMatrixT<Ele
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator<=(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    Error("operator<=(const TMatrixT&,const TMatrixT&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2720,7 +2734,7 @@ TMatrixT<Element> operator<=(const TMatrixT<Element> &source1,const TMatrixTSym<
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator<=(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    Error("operator<=(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2755,7 +2769,7 @@ TMatrixT<Element> operator<(const TMatrixT<Element> &source1,const TMatrixT<Elem
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator<(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    Error("operator<(const TMatrixT&,const TMatrixT&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2780,7 +2794,7 @@ TMatrixT<Element> operator<(const TMatrixT<Element> &source1,const TMatrixTSym<E
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator<(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    Error("operator<(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2815,7 +2829,7 @@ TMatrixT<Element> operator!=(const TMatrixT<Element> &source1,const TMatrixT<Ele
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator!=(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    Error("operator!=(const TMatrixT&,const TMatrixT&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
@@ -2842,7 +2856,7 @@ TMatrixT<Element> operator!=(const TMatrixT<Element> &source1,const TMatrixTSym<
   TMatrixT<Element> target;
 
   if (gMatrixCheck && !AreCompatible(source1,source2)) {
-    Error("operator!=(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    Error("operator!=(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
     target.Invalidate();
     return target;
   }
