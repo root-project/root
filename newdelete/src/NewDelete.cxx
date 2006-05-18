@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.6 2005/09/02 19:39:26 brun Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.7 2005/09/18 13:19:22 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -67,7 +67,6 @@
 #include "TMapFile.h"
 #include "TSystem.h"
 #include "mmalloc.h"
-
 
 void *CustomReAlloc1(void *ovp, size_t size);
 void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize);
@@ -170,15 +169,6 @@ static TReAllocInit gReallocInit;
 
 //------------------------------------------------------------------------------
 
-#ifndef NOCINT
-#define G__PVOID (-1)
-#ifndef WIN32
-extern long G__globalvarpointer;
-#else
-#include "G__ci.h"
-#endif
-#endif
-
 #ifdef R__THROWNEWDELETE
 # ifdef R__OLDHPACC
 # define R__THROW_BAD  throw(bad_alloc)
@@ -210,21 +200,6 @@ void *operator new(size_t size) R__THROW_BAD
       gNewInit++;
    }
 
-#ifndef NOCINT
-#ifndef WIN32
-   if (G__globalvarpointer != G__PVOID) {
-      long temp = G__globalvarpointer;
-      G__globalvarpointer = G__PVOID;
-      return (void*)temp;
-   }
-#else
-   long gvp = G__getgvp();
-   if (gvp != G__PVOID) {
-      G__setgvp(G__PVOID);
-      return (void*)gvp;
-   }
-#endif
-#endif
    register void *vp;
    if (gMmallocDesc)
       vp = ::mcalloc(gMmallocDesc, RealSize(size), sizeof(char));
@@ -249,16 +224,6 @@ void *operator new(size_t size, void *vp) R__THROW_NULL
       gNewInit++;
    }
 
-#ifndef NOCINT
-#ifndef WIN32
-   if ((long)vp == G__globalvarpointer && G__globalvarpointer != G__PVOID)
-      return(vp);
-#else
-   long gvp = G__getgvp();
-   if ((long)vp == gvp && gvp != G__PVOID)
-      return(vp);
-#endif
-#endif
    if (vp == 0) {
       // use memory checker
       if (TROOT::MemCheck())
@@ -294,16 +259,6 @@ void operator delete(void *ptr) R__THROW_NULL
    if (!gNewInit)
       Fatal(where, "space was not allocated via custom new");
 
-#ifndef NOCINT
-#ifndef WIN32
-   if ((long)ptr == G__globalvarpointer && G__globalvarpointer!=G__PVOID)
-      return;
-#else
-   long gvp = G__getgvp();
-   if ((long)ptr == gvp && gvp != G__PVOID)
-      return;
-#endif
-#endif
    if (ptr) {
       CheckObjPtr(ptr, where);
       CallFreeHook(ptr, storage_size(ptr));
