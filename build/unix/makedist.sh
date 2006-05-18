@@ -31,7 +31,7 @@ fi
 
 TARFILE=root_v${ROOTVERS}.${TYPE}${COMPILER}${DEBUG}
 # figure out what tar to use
-if [ "x$MSI" == "x1" ]; then
+if [ "x$MSI" = "x1" ]; then
    TAR=build/package/msi/makemsi.sh
    TARFILE=../${TARFILE}.msi
 else
