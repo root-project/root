@@ -486,11 +486,6 @@ const TSeqCol *TTabCom::GetListOfClasses()
          //               to reduce probablility that        filename which overflows
          //               these keywords will occur in       its field.
          //               filename or classname.
-         else if (line.Length()>1 && line[0]==' ')
-            // skip leading space (in the case of autoload class)
-            line = line(1, 32000);
-
-         // Select the type name itself.
          line = line("[^ ]*");
 
          // If we find namespace names then add them to the fpNamespaces array and
@@ -547,6 +542,7 @@ const TSeqCol *TTabCom::GetListOfFilesInPath(const char path[])
       ClearFiles();
 
       fpFiles = NewListOfFilesInPath(path);
+      previousPath = path;
    }
 
    return fpFiles;
@@ -1106,7 +1102,7 @@ Bool_t TTabCom::IsDirectory(const char fileName[])
 
    Long_t flags = 0;
    gSystem->GetPathInfo(fileName, 0, (Long_t*)0, &flags, 0);
-   return (int) flags & 2;
+   return (int) flags & 1;
 }
 
 //______________________________________________________________________________
@@ -1123,6 +1119,7 @@ TSeqCol *TTabCom::NewListOfFilesInPath(const char path1[])
    //////////////////////////////////////////////////////////////////////
 
    assert(path1 != 0);
+   if (!path1[0]) path1 = ".";
 
    TContainer *pList = new TContainer;  // maybe use RTTI here? (since its a static function)
 #ifdef R__SSTREAM
