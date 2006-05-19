@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.12 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.13 2006/05/18 18:57:11 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -969,16 +969,12 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Invert(Double_t *det)
   // The user can access Bunch-Kaufman through the TDecompBK class .
 
   R__ASSERT(this->IsValid());
-  if (typeid(Element) == typeid(Double_t))
-    TDecompLU::InvertLU(*dynamic_cast<TMatrixD *>(this),Double_t(this->fTol),det);
-  else {
-    TMatrixD tmp(*this);
-    TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
-    const Double_t *p1 = tmp.GetMatrixArray();
-          Element  *p2 = this->GetMatrixArray();
-    for (Int_t i = 0; i < this->GetNoElements(); i++)
-      p2[i] = p1[i];
-  }
+  TMatrixD tmp(*this);
+  TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
+  const Double_t *p1 = tmp.GetMatrixArray();
+        Element  *p2 = this->GetMatrixArray();
+  for (Int_t i = 0; i < this->GetNoElements(); i++)
+    p2[i] = p1[i];
 
   return *this;
 }
@@ -1035,16 +1031,12 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::InvertFast(Double_t *det)
 
     default:
     {
-      if(typeid(Element) == typeid(Double_t))
-        TDecompLU::InvertLU(*dynamic_cast<TMatrixD *>(this),Double_t(this->fTol),det);
-      else {
-        TMatrixD tmp(*this);
-        TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
-        const Double_t *p1 = tmp.GetMatrixArray();
-              Element  *p2 = this->GetMatrixArray();
-        for (Int_t i = 0; i < this->GetNoElements(); i++)
-          p2[i] = p1[i];
-      }
+      TMatrixD tmp(*this);
+      TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
+      const Double_t *p1 = tmp.GetMatrixArray();
+            Element  *p2 = this->GetMatrixArray();
+      for (Int_t i = 0; i < this->GetNoElements(); i++)
+        p2[i] = p1[i];
       return *this;
     }
   }
