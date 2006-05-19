@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.21 2006/02/22 06:57:49 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.22 2006/02/23 18:55:30 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -98,10 +98,10 @@ void TEmulatedCollectionProxy::DeleteArray(void* p, Bool_t dtorOnly)
 
 TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
 {
+   // Proxy initializer
    R__LOCKGUARD2(gCollectionMutex);
    if (fClass) return this;
 
-   // Proxy initializer
 
    TClass *cl = gROOT->GetClass(fName.c_str());
    fEnv = 0;
@@ -204,7 +204,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                   fKey->fType->Destructor(addr, kTRUE);
                }
                break;
-            case R__BIT_ISSTRING:
+            case kBIT_ISSTRING:
                for( i=left; i<nCurr; ++i, addr += fValDiff ) {
                   ((std::string*)addr)->~String_t();
                }
@@ -218,7 +218,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                   //fKey->fType->Destructor(ptr);
                   h->set(0);
                }
-            case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+            case G__BIT_ISPOINTER|kBIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   //Eventually we'll need to delete this
@@ -227,7 +227,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                   h->set(0);
                }
                break;
-            case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+            case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   //delete (TString*)h->ptr();
@@ -250,7 +250,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                   fVal->fType->Destructor(addr,kTRUE);
                }
                break;
-            case R__BIT_ISSTRING:
+            case kBIT_ISSTRING:
                for( i=left; i<nCurr; ++i, addr += fValDiff )
                   ((std::string*)addr)->~String_t();
                break;
@@ -263,14 +263,14 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                   }
                   h->set(0);
                }
-            case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+            case G__BIT_ISPOINTER|kBIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   //delete (std::string*)h->ptr();
                   h->set(0);
                }
                break;
-            case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+            case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   //delete (TString*)h->ptr();
@@ -303,13 +303,13 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
                for( i=nCurr; i<left; ++i, addr += fValDiff )
                   fKey->fType->New(addr);
                break;
-            case R__BIT_ISSTRING:
+            case kBIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )
                   ::new(addr) std::string();
                break;
             case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-            case G__BIT_ISPOINTER|R__BIT_ISSTRING:
-            case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+            case G__BIT_ISPOINTER|kBIT_ISSTRING:
+            case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
                for( i=nCurr; i<left; ++i, addr += fValDiff )
                   *(void**)addr = 0;
                break;
@@ -328,13 +328,13 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
                   fVal->fType->New(addr);
                }
                break;
-            case R__BIT_ISSTRING:
+            case kBIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )
                   ::new(addr) std::string();
                break;
             case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-            case G__BIT_ISPOINTER|R__BIT_ISSTRING:
-            case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+            case G__BIT_ISPOINTER|kBIT_ISSTRING:
+            case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
                for( i=nCurr; i<left; ++i, addr += fValDiff )
                   *(void**)addr = 0;
                break;
@@ -426,13 +426,13 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)
 
       case G__BIT_ISCLASS:
          DOLOOP( b.StreamObject(i,fVal->fType) );
-      case R__BIT_ISSTRING:
+      case kBIT_ISSTRING:
          DOLOOP( i->read_std_string(b) );
       case G__BIT_ISPOINTER|G__BIT_ISCLASS:
          DOLOOP( i->read_any_object(fVal,b) );
-      case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+      case G__BIT_ISPOINTER|kBIT_ISSTRING:
          DOLOOP( i->read_std_string_pointer(b) );
-      case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+      case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
          DOLOOP( i->read_tstring_pointer(vsn3,b) );
    }
 
@@ -473,13 +473,13 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
       case G__BIT_ISCLASS:
          DOLOOP( b.StreamObject(i,fVal->fType) );
-      case R__BIT_ISSTRING:
+      case kBIT_ISSTRING:
          DOLOOP( TString(i->c_str()).Streamer(b) );
       case G__BIT_ISPOINTER|G__BIT_ISCLASS:
          DOLOOP( b.WriteObjectAny(i->ptr(),fVal->fType) );
-      case R__BIT_ISSTRING|G__BIT_ISPOINTER:
+      case kBIT_ISSTRING|G__BIT_ISPOINTER:
          DOLOOP( i->write_std_string_pointer(b) );
-      case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
+      case kBIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
          DOLOOP( i->write_tstring_pointer(b) );
    }
 #undef DOLOOP

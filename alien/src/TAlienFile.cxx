@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.16 2006/04/18 14:23:19 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.17 2006/05/09 10:24:26 brun Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -140,6 +140,7 @@ zombie:
 TString TAlienFile::AccessURL(const char *url, Option_t *option,
                               const char *, Int_t)
 {
+   //access a URL
    TString stmp;
    Bool_t create;
    Bool_t recreate;

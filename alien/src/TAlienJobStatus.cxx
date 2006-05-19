@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJobStatus.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJobStatus.cxx,v 1.2 2005/08/12 15:46:40 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -89,6 +89,7 @@ void TAlienJobStatus::Browse(TBrowser* b)
 //______________________________________________________________________________
 const char *TAlienJobStatus::GetJdlKey(const char* key)
 {
+   //return the JDL key
    const char *jdl = GetKey("jdl");
    if (!jdl)
       return 0;
@@ -116,6 +117,7 @@ const char *TAlienJobStatus::GetJdlKey(const char* key)
 //______________________________________________________________________________
 const char *TAlienJobStatus::GetKey(const char* key)
 {
+   //return a key
    TObject* obj = fStatus.FindObject(key);
    TPair* pair = dynamic_cast<TPair*>(obj);
    if (pair) {

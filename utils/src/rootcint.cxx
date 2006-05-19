@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.245 2006/05/14 07:43:40 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.246 2006/05/15 11:01:14 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1486,7 +1486,7 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
    enum {
       R__BIT_ISTOBJECT   = 0x10000000,
       R__BIT_HASSTREAMER = 0x20000000,
-      R__BIT_ISSTRING    = 0x40000000
+      kBIT_ISSTRING    = 0x40000000
    };
 
    long prop = ti.Property();
@@ -1502,8 +1502,8 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
 
    long kase = prop & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM);
    if (isTObj)                      kase |= R__BIT_ISTOBJECT;
-   if (strcmp("string" ,tiName)==0) kase |= R__BIT_ISSTRING;
-   if (strcmp("string*",tiName)==0) kase |= R__BIT_ISSTRING;
+   if (strcmp("string" ,tiName)==0) kase |= kBIT_ISSTRING;
+   if (strcmp("string*",tiName)==0) kase |= kBIT_ISSTRING;
    if (isStre)                      kase |= R__BIT_HASSTREAMER;
 
 //    if (strcmp(objType,"string")==0) RStl::inst().GenerateTClassFor( "string"  );
@@ -1555,14 +1555,14 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
                 << "            }" << std::endl;
             break;
 
-         case R__BIT_ISSTRING:
+         case kBIT_ISSTRING:
             if (!R__t)  return 0;
             (*dictSrcOut) << "            {TString R__str;" << std::endl
                 << "             R__str.Streamer(R__b);" << std::endl
                 << "             " << R__t << " = R__str.Data();}" << std::endl;
             break;
 
-         case R__BIT_ISSTRING|G__BIT_ISPOINTER:
+         case kBIT_ISSTRING|G__BIT_ISPOINTER:
             if (!R__t)  return 0;
             (*dictSrcOut) << "            {TString R__str;"  << std::endl
                 << "             R__str.Streamer(R__b);" << std::endl
@@ -1606,13 +1606,13 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
             (*dictSrcOut) << "            R__b.WriteObjectAny(" << R__t << "," << tcl << ");" << std::endl;
             break;
 
-         case R__BIT_ISSTRING:
+         case kBIT_ISSTRING:
             if (!R__t)  return 0;
             (*dictSrcOut) << "            {TString R__str(" << R__t << ".c_str());" << std::endl
                 << "             R__str.Streamer(R__b);};" << std::endl;
             break;
 
-         case R__BIT_ISSTRING|G__BIT_ISPOINTER:
+         case kBIT_ISSTRING|G__BIT_ISPOINTER:
             if (!R__t)  return 0;
             (*dictSrcOut) << "            {TString R__str(" << R__t << "->c_str());" << std::endl
                 << "             R__str.Streamer(R__b);}" << std::endl;

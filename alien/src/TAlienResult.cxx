@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.10 2005/12/09 16:24:34 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.11 2005/12/09 18:36:52 rdm Exp $
 // Author: Fons Rademakers   23/5/2002
 
 /*************************************************************************
@@ -62,6 +62,7 @@ void TAlienResult::DumpResult()
 //______________________________________________________________________________
 const char *TAlienResult::GetFileName(UInt_t i) const
 {
+   //return a file name
    if (At(i)) {
       TObjString* entry;
       if ((entry=(TObjString*)((TMap*)At(i))->GetValue("name"))) {
@@ -74,6 +75,7 @@ const char *TAlienResult::GetFileName(UInt_t i) const
 //______________________________________________________________________________
 const char *TAlienResult::GetFileNamePath(UInt_t i) const
 {
+   //return file name path
    if (At(i)) {
       TObjString* entry;
       if ((entry=(TObjString*)((TMap*)At(i))->GetValue("name"))) {
@@ -90,6 +92,7 @@ const char *TAlienResult::GetFileNamePath(UInt_t i) const
 //______________________________________________________________________________
 const char *TAlienResult::GetPath(UInt_t i) const
 {
+   //return path
    if (At(i)) {
       TObjString* entry;
       if ((entry=(TObjString*)((TMap*)At(i))->GetValue("path"))) {
@@ -102,6 +105,7 @@ const char *TAlienResult::GetPath(UInt_t i) const
 //______________________________________________________________________________
 const char *TAlienResult::GetKey(UInt_t i, const char* key) const
 {
+   //return the key
    if (At(i)) {
       TObjString* entry;
       if ((entry=(TObjString*)((TMap*)At(i))->GetValue(key))) {
@@ -114,6 +118,7 @@ const char *TAlienResult::GetKey(UInt_t i, const char* key) const
 //______________________________________________________________________________
 Bool_t TAlienResult::SetKey(UInt_t i, const char* key, const char* value)
 {
+   //set the key
    if (At(i)) {
       TPair* entry;
       if ((entry=(TPair*)((TMap*)At(i))->FindObject(key))) {
@@ -132,6 +137,7 @@ Bool_t TAlienResult::SetKey(UInt_t i, const char* key, const char* value)
 //______________________________________________________________________________
 TList *TAlienResult::GetFileInfoList() const
 {
+   //return a file info list
    TList* newfileinfolist = new TList();
 
    newfileinfolist->SetOwner(kTRUE);
@@ -172,6 +178,7 @@ TList *TAlienResult::GetFileInfoList() const
 //______________________________________________________________________________
 void TAlienResult::Print(Option_t * /*wildcard*/, Option_t *option) const
 {
+   //print the AlienResult info
    Long64_t totaldata=0;
    Int_t totalfiles=0;
 
@@ -212,5 +219,6 @@ void TAlienResult::Print(Option_t * /*wildcard*/, Option_t *option) const
 //______________________________________________________________________________
 void TAlienResult::Print(Option_t *option) const
 {
+   //print the AlienResult info
    Print("", option);
 }

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.26 2006/02/22 06:55:36 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.27 2006/04/19 08:22:22 rdm Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -234,7 +234,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
    fKind = kNoType_t;
    std::string intype = TClassEdit::ShortType(inside.c_str(),TClassEdit::kDropTrailStar );
    if ( inside.substr(0,6) == "string" || inside.substr(0,11) == "std::string" ) {
-      fCase = R__BIT_ISSTRING;
+      fCase = kBIT_ISSTRING;
       fType = gROOT->GetClass("string");
       fCtor = fType->GetNew();
       fDtor = fType->GetDestructor();
@@ -317,7 +317,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
             }
             fCase = prop & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM|G__BIT_ISCLASS);
             if (fType == TString::Class() && (fCase&G__BIT_ISPOINTER)) {
-               fCase |= R__BIT_ISTSTRING;
+               fCase |= kBIT_ISTSTRING;
             }
          }
       }
@@ -500,10 +500,10 @@ void TGenCollectionProxy::CheckFunctions() const
 //______________________________________________________________________________
 TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
 {
+   // Proxy initializer
    R__LOCKGUARD2(gCollectionMutex);
    if (fClass) return this;
 
-   // Proxy initializer
    TClass *cl = gROOT->GetClass(fTypeinfo);
    if ( cl ) {
       fEnv    = 0;

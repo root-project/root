@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.7 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.8 2006/02/09 20:41:12 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 TEmulatedMapProxy::TEmulatedMapProxy(const TEmulatedMapProxy& copy)
    : TEmulatedCollectionProxy(copy)
 {
-   // Build a Streamer for an emulated vector whose type is 'name'.
+   // copy constructor
    if ( !(fSTL_type == TClassEdit::kMap || fSTL_type == TClassEdit::kMultiMap) )  {
       Fatal("TEmulatedMapProxy","Class %s is not a map-type!",fName.c_str());
    }
@@ -40,6 +40,7 @@ TEmulatedMapProxy::TEmulatedMapProxy(const TEmulatedMapProxy& copy)
 TEmulatedMapProxy::TEmulatedMapProxy(const char* cl_name)
    : TEmulatedCollectionProxy(cl_name)
 {
+   // Build a Streamer for an emulated vector whose type is 'name'.
    if ( !(fSTL_type == TClassEdit::kMap || fSTL_type == TClassEdit::kMultiMap) )  {
       Fatal("TEmulatedMapProxy","Class %s is not a map-type!",fName.c_str());
    }
@@ -124,16 +125,16 @@ void TEmulatedMapProxy::ReadMap(int nElements, TBuffer &b)
          case G__BIT_ISCLASS:
             b.StreamObject(helper,v->fType);
             break;
-         case R__BIT_ISSTRING:
+         case kBIT_ISSTRING:
             helper->read_std_string(b);
             break;
          case G__BIT_ISPOINTER|G__BIT_ISCLASS:
             helper->set(b.ReadObjectAny(v->fType));
             break;
-         case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+         case G__BIT_ISPOINTER|kBIT_ISSTRING:
             helper->read_std_string_pointer(b);
             break;
-         case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+         case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
             helper->read_tstring_pointer(vsn3,b);
             break;
          }
@@ -183,16 +184,16 @@ void TEmulatedMapProxy::WriteMap(int nElements, TBuffer &b)
          case G__BIT_ISCLASS:
             b.StreamObject(i,v->fType);
             break;
-         case R__BIT_ISSTRING:
+         case kBIT_ISSTRING:
             TString(i->c_str()).Streamer(b);
             break;
          case G__BIT_ISPOINTER|G__BIT_ISCLASS:
             b.WriteObjectAny(i->ptr(),v->fType);
             break;
-         case R__BIT_ISSTRING|G__BIT_ISPOINTER:
+         case kBIT_ISSTRING|G__BIT_ISPOINTER:
             i->write_std_string_pointer(b);
             break;
-         case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
+         case kBIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
             i->write_tstring_pointer(b);
             break;
          }

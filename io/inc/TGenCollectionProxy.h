@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.9 2005/08/30 02:45:05 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.10 2005/11/16 20:04:47 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -43,8 +43,8 @@ public:
    enum {
       // Those 'bits' are used in conjunction with CINT's bit to store the 'type'
       // info into one int
-      R__BIT_ISSTRING   = 0x20000000,  // We can optimized a value operation when the content are strings
-      R__BIT_ISTSTRING  = 0x40000000,
+      kBIT_ISSTRING   = 0x20000000,  // We can optimized a value operation when the content are strings
+      kBIT_ISTSTRING  = 0x40000000,
       kBOOL_t = 21
    };
 

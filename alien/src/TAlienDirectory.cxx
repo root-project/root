@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienDirectory.cxx,v 1.2 2005/08/18 14:16:28 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienDirectory.cxx,v 1.3 2005/08/18 17:46:31 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
 
 /*************************************************************************
@@ -31,6 +31,7 @@ ClassImp(TAlienDirectoryEntry)
 //______________________________________________________________________________
 void TAlienDirectoryEntry::Browse(TBrowser* b)
 {
+   //browse an Alien directory
    if (b) {
       TAlienFile* newfile  = new TAlienFile(fLfn);
       b->Add(newfile);
@@ -43,6 +44,7 @@ ClassImp(TAlienDirectory)
 //______________________________________________________________________________
 TAlienDirectory::TAlienDirectory(const char *ldn, const char *name)
 {
+   //constructor
    if (!gGrid->Cd(ldn)) {
       MakeZombie();
       return;
@@ -98,5 +100,6 @@ void TAlienDirectory::Browse(TBrowser *b)
 //______________________________________________________________________________
 TAlienDirectory::~TAlienDirectory()
 {
+   //destructor
    fEntries.Clear();
 }

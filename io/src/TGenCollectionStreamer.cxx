@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.8 2005/08/30 02:45:05 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.9 2005/11/16 20:07:50 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -122,13 +122,13 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
    switch (fVal->fCase) {
    case G__BIT_ISCLASS:
       DOLOOP( b.StreamObject(i,fVal->fType) );
-   case R__BIT_ISSTRING:
+   case kBIT_ISSTRING:
       DOLOOP( i->read_std_string(b) );
    case G__BIT_ISPOINTER|G__BIT_ISCLASS:
       DOLOOP( i->set(b.ReadObjectAny(fVal->fType)) );
-   case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+   case G__BIT_ISPOINTER|kBIT_ISSTRING:
       DOLOOP( i->read_std_string_pointer(b) );
-   case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+   case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
       DOLOOP( i->read_tstring_pointer(vsn3,b) );
    }
 #undef DOLOOP
@@ -143,13 +143,13 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
    switch (fVal->fCase) {
    case G__BIT_ISCLASS:
       DOLOOP( b.StreamObject(i,fVal->fType) );
-   case R__BIT_ISSTRING:
+   case kBIT_ISSTRING:
       DOLOOP( i->read_std_string(b) );
    case G__BIT_ISPOINTER|G__BIT_ISCLASS:
       DOLOOP( i->set( b.ReadObjectAny(fVal->fType) ) );
-   case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+   case G__BIT_ISPOINTER|kBIT_ISSTRING:
       DOLOOP( i->read_std_string_pointer(b) );
-   case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+   case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
       DOLOOP( i->read_tstring_pointer(vsn3,b) );
    }
 #undef DOLOOP
@@ -168,7 +168,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
          fFeed.invoke(fEnv);
       fDestruct.invoke(fEnv);
       break;
-   case R__BIT_ISSTRING:
+   case kBIT_ISSTRING:
       DOLOOP( i->read_std_string(b) )
          fFeed.invoke(fEnv);
       fDestruct.invoke(fEnv);
@@ -177,11 +177,11 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
       DOLOOP( i->set(b.ReadObjectAny(fVal->fType)) );
       fFeed.invoke(fEnv);
       break;
-   case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+   case G__BIT_ISPOINTER|kBIT_ISSTRING:
       DOLOOP( i->read_std_string_pointer(b) )
          fFeed.invoke(fEnv);
       break;
-   case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+   case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
       DOLOOP( i->read_tstring_pointer(vsn3,b) )
          fFeed.invoke(fEnv);
       break;
@@ -244,16 +244,16 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b)
          case G__BIT_ISCLASS:
             b.StreamObject(i,v->fType);
             break;
-         case R__BIT_ISSTRING:
+         case kBIT_ISSTRING:
             i->read_std_string(b);
             break;
          case G__BIT_ISPOINTER|G__BIT_ISCLASS:
             i->set(b.ReadObjectAny(v->fType));
             break;
-         case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+         case G__BIT_ISPOINTER|kBIT_ISSTRING:
             i->read_std_string_pointer(b);
             break;
-         case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+         case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
             i->read_tstring_pointer(vsn3,b);
             break;
          }
@@ -325,16 +325,16 @@ void TGenCollectionStreamer::WriteObjects(int nElements, TBuffer &b)
    case G__BIT_ISCLASS:
       DOLOOP( b.StreamObject(i,fVal->fType));
       break;
-   case R__BIT_ISSTRING:
+   case kBIT_ISSTRING:
       DOLOOP( TString(i->c_str()).Streamer(b));
       break;
    case G__BIT_ISPOINTER|G__BIT_ISCLASS:
       DOLOOP( b.WriteObjectAny(i->ptr(),fVal->fType) );
       break;
-   case R__BIT_ISSTRING|G__BIT_ISPOINTER:
+   case kBIT_ISSTRING|G__BIT_ISPOINTER:
       DOLOOP( i->write_std_string_pointer(b));
       break;
-   case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
+   case kBIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
       DOLOOP( i->write_tstring_pointer(b));
       break;
    }
@@ -351,13 +351,13 @@ void TGenCollectionStreamer::WriteObjects(int nElements, TBuffer &b)
    switch (fVal->fCase) {
    case G__BIT_ISCLASS:
       DOLOOP( b.StreamObject(i,fVal->fType));
-   case R__BIT_ISSTRING:
+   case kBIT_ISSTRING:
       DOLOOP( TString(i->c_str()).Streamer(b));
    case G__BIT_ISPOINTER|G__BIT_ISCLASS:
       DOLOOP( b.WriteObjectAny(i->ptr(),fVal->fType) );
-   case R__BIT_ISSTRING|G__BIT_ISPOINTER:
+   case kBIT_ISSTRING|G__BIT_ISPOINTER:
       DOLOOP( i->write_std_string_pointer(b));
-   case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
+   case kBIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
       DOLOOP( i->write_tstring_pointer(b));
    }
 #undef DOLOOP
@@ -406,16 +406,16 @@ void TGenCollectionStreamer::WriteMap(int nElements, TBuffer &b)
          case G__BIT_ISCLASS:
             b.StreamObject(i,v->fType);
             break;
-         case R__BIT_ISSTRING:
+         case kBIT_ISSTRING:
             TString(i->c_str()).Streamer(b);
             break;
          case G__BIT_ISPOINTER|G__BIT_ISCLASS:
             b.WriteObjectAny(i->ptr(),v->fType);
             break;
-         case R__BIT_ISSTRING|G__BIT_ISPOINTER:
+         case kBIT_ISSTRING|G__BIT_ISPOINTER:
             i->write_std_string_pointer(b);
             break;
-         case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
+         case kBIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
             i->write_tstring_pointer(b);
             break;
          }

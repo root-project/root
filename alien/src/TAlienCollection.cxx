@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.6 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.7 2006/05/09 10:24:26 brun Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -215,6 +215,7 @@ void TAlienCollection::Print(Option_t *) const
 TDSet *TAlienCollection::GetDataset(const char *type, const char *objname ,
                                     const char *dir)
 {
+   //Get data set
    Reset();
    TMap* mapp;
    TDSet* dset = new TDSet(type,objname,dir);
@@ -232,6 +233,7 @@ TDSet *TAlienCollection::GetDataset(const char *type, const char *objname ,
 //______________________________________________________________________________
 TGridResult *TAlienCollection::GetGridResult(const char *filename,Bool_t publicaccess)
 {
+   //return grid result
    Reset();
    TMap* mapp;
    TGridResult* result = new TAlienResult();
