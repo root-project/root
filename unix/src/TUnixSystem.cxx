@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.150 2006/04/06 21:39:03 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.151 2006/05/13 19:44:35 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1334,7 +1334,7 @@ int TUnixSystem::Unlink(const char *name)
 
 // expand the metacharacters as in the shell
 
-static const char
+const char
 #ifdef G__OLDEXPAND
    kShellEscape     = '\\',
    *kShellStuff     = "(){}<>\"'",

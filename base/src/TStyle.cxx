@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.64 2006/01/31 10:22:26 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.65 2006/05/18 07:34:25 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -247,6 +247,8 @@ void TStyle::cd()
 //______________________________________________________________________________
 void TStyle::Copy(TObject &obj) const
 {
+   //copy this style
+   
    TAttLine::Copy(((TStyle&)obj));
    TAttFill::Copy(((TStyle&)obj));
    TAttMarker::Copy(((TStyle&)obj));
