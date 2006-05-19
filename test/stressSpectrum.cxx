@@ -157,9 +157,9 @@ void stress1(Int_t ntimes) {
    Double_t ep2 = hgood->GetFunction("gaus")->GetParError(1);
    Double_t p3  = hghost->GetFunction("gaus")->GetParameter(1);
    Double_t ep3 = hghost->GetFunction("gaus")->GetParError(1);
-   Double_t p1ref = 68.94; //ref numbers obtained with ntimes=1000
-   Double_t p2ref = 67.11;
-   Double_t p3ref =  8.56;
+   Double_t p1ref = 73.75; //ref numbers obtained with ntimes=1000
+   Double_t p2ref = 68.60;
+   Double_t p3ref =  8.39;
       
    //printf("p1=%g+-%g, p2=%g+-%g, p3=%g+-%g\n",p1,ep1,p2,ep2,p3,ep3);
 
@@ -231,16 +231,16 @@ void stress2(Int_t np2) {
    delete s;
    delete f2;
    delete h2;
-   Int_t nfoundRef = 174;
-   Int_t ngoodRef  = 174;
-   Int_t nghostRef = 7;
+   Int_t nfoundRef = 165;
+   Int_t ngoodRef  = 165;
+   Int_t nghostRef = 12;
    char sok[20];
    if (nfound == nfoundRef && ngood == ngoodRef && nghost == nghostRef) {
       sprintf(sok,"OK");
    } else {
       sprintf(sok,"failed");
    }
-   printf("Peak2 : found =%d/%d, good =%d, ghost =%d,----------------------------- %s\n",
+   printf("Peak2 : found =%d/%d, good =%d, ghost =%d,---------------------------- %s\n",
           nfound,npeaks,ngood,nghost,sok);
 }
    
