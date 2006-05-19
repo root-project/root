@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.38 2006/03/28 16:35:00 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.40 2006/05/18 21:23:27 pcanal Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -428,7 +428,7 @@ void TTabCom::RehashAll()
 }
 
 //______________________________________________________________________________
-const TSeqCol *TTabCom::GetListOfClasses()
+const TSeqCollection *TTabCom::GetListOfClasses()
 {
    // Return the list of classes.
    if (!fpClasses) {
@@ -505,7 +505,7 @@ const TSeqCol *TTabCom::GetListOfClasses()
 }
 
 //______________________________________________________________________________
-const TSeqCol *TTabCom::GetListOfCppDirectives()
+const TSeqCollection *TTabCom::GetListOfCppDirectives()
 {
    // Return the list of CPP directives.
    if (!fpDirectives) {
@@ -529,7 +529,7 @@ const TSeqCol *TTabCom::GetListOfCppDirectives()
 }
 
 //______________________________________________________________________________
-const TSeqCol *TTabCom::GetListOfFilesInPath(const char path[])
+const TSeqCollection *TTabCom::GetListOfFilesInPath(const char path[])
 {
    // "path" should be initialized with a colon separated list of
    // system directories
@@ -549,7 +549,7 @@ const TSeqCol *TTabCom::GetListOfFilesInPath(const char path[])
 }
 
 //______________________________________________________________________________
-const TSeqCol *TTabCom::GetListOfEnvVars()
+const TSeqCollection *TTabCom::GetListOfEnvVars()
 {
    // calls "/bin/env"
 
@@ -594,7 +594,7 @@ const TSeqCol *TTabCom::GetListOfEnvVars()
 }
 
 //______________________________________________________________________________
-const TSeqCol *TTabCom::GetListOfGlobals()
+const TSeqCollection *TTabCom::GetListOfGlobals()
 {
    // Return the list of globals.
    if (!fpGlobals) {
@@ -631,7 +631,7 @@ const TSeqCol *TTabCom::GetListOfGlobals()
 }
 
 //______________________________________________________________________________
-const TSeqCol *TTabCom::GetListOfGlobalFunctions()
+const TSeqCollection *TTabCom::GetListOfGlobalFunctions()
 {
    // Return the list of global functions.
    if (!fpGlobalFuncs) {
@@ -668,7 +668,7 @@ const TSeqCol *TTabCom::GetListOfGlobalFunctions()
 }
 
 //______________________________________________________________________________
-const TSeqCol *TTabCom::GetListOfPragmas()
+const TSeqCollection *TTabCom::GetListOfPragmas()
 {
    // Return the list of pragmas
    if (!fpPragmas) {
@@ -698,7 +698,7 @@ const TSeqCol *TTabCom::GetListOfPragmas()
 }
 
 //______________________________________________________________________________
-const TSeqCol *TTabCom::GetListOfSysIncFiles()
+const TSeqCollection *TTabCom::GetListOfSysIncFiles()
 {
    // Return the list of system include files.
    if (!fpSysIncFiles) {
@@ -709,7 +709,7 @@ const TSeqCol *TTabCom::GetListOfSysIncFiles()
 }
 
 //______________________________________________________________________________
-const TSeqCol *TTabCom::GetListOfUsers()
+const TSeqCollection *TTabCom::GetListOfUsers()
 {
    // reads from "/etc/passwd"
 
@@ -742,7 +742,7 @@ const TSeqCol *TTabCom::GetListOfUsers()
 //
 
 //______________________________________________________________________________
-Char_t TTabCom::AllAgreeOnChar(int i, const TSeqCol * pList,
+Char_t TTabCom::AllAgreeOnChar(int i, const TSeqCollection * pList,
                                Int_t & nGoodStrings)
 {
    //[static utility function]///////////////////////////////////////////
@@ -814,7 +814,7 @@ Char_t TTabCom::AllAgreeOnChar(int i, const TSeqCol * pList,
 
 //______________________________________________________________________________
 void TTabCom::AppendListOfFilesInDirectory(const char dirName[],
-                                           TSeqCol * pList)
+                                           TSeqCollection * pList)
 {
    //[static utility function]/////////////////////////////
    //
@@ -1106,7 +1106,7 @@ Bool_t TTabCom::IsDirectory(const char fileName[])
 }
 
 //______________________________________________________________________________
-TSeqCol *TTabCom::NewListOfFilesInPath(const char path1[])
+TSeqCollection *TTabCom::NewListOfFilesInPath(const char path1[])
 {
    //[static utility function]/////////////////////////////
    //
@@ -1229,7 +1229,7 @@ void TTabCom::NoMsg(Int_t errorLevel)
 
 //______________________________________________________________________________
 Int_t TTabCom::Complete(const TRegexp & re,
-                        const TSeqCol * pListOfCandidates,
+                        const TSeqCollection * pListOfCandidates,
                         const char appendage[])
 {
    // [private]
@@ -1621,14 +1621,14 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
    case kSYS_UserName:
       {
-         const TSeqCol *pListOfUsers = GetListOfUsers();
+         const TSeqCollection *pListOfUsers = GetListOfUsers();
 
          pos = Complete("[^~]*$", pListOfUsers, "/");
       }
       break;
    case kSYS_EnvVar:
       {
-         const TSeqCol *pEnv = GetListOfEnvVars();
+         const TSeqCollection *pEnv = GetListOfEnvVars();
 
          pos = Complete("[^$]*$", pEnv, "");
       }
@@ -1641,7 +1641,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          auto TString fileName = s3("[^ ><]*$");
          gSystem->ExpandPathName(fileName);
          const TString filePath = gSystem->DirName(fileName);
-         const TSeqCol *pListOfFiles =
+         const TSeqCollection *pListOfFiles =
              GetListOfFilesInPath(filePath.Data());
 
 //             pos = Complete( "[^ /]*$", pListOfFiles, " " );
@@ -1657,7 +1657,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          const TString fileName = s3("[^ ]*$");
          const TString macroPath =
              DeterminePath(fileName, TROOT::GetMacroPath());
-         const TSeqCol *pListOfFiles =
+         const TSeqCollection *pListOfFiles =
              GetListOfFilesInPath(macroPath.Data());
 
 //             pos = Complete( "[^ /]*$", pListOfFiles, " " );
@@ -1692,7 +1692,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
       {
          const TString fileName = s3("[^\"]*$");
          const TString includePath = DeterminePath(fileName, ".");
-         const TSeqCol *pListOfFiles =
+         const TSeqCollection *pListOfFiles =
              GetListOfFilesInPath(includePath.Data());
 
 //             pos = Complete( "[^\"/]*$", pListOfFiles, "\" " );
@@ -1715,7 +1715,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
                                                    GetValue
                                                    ("Root.DynamicPath",
                                                     (char *) 0));
-         const TSeqCol *pListOfFiles = GetListOfFilesInPath(dynamicPath);
+         const TSeqCollection *pListOfFiles = GetListOfFilesInPath(dynamicPath);
 
 //             pos = Complete( "[^\"/]*$", pListOfFiles, "\");" );
          pos = Complete("[^\"/]*$", pListOfFiles, "filename\");");
@@ -1727,7 +1727,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          auto TString fileName = s3("[^ \"]*$");
          gSystem->ExpandPathName(fileName);
          const TString filePath = gSystem->DirName(fileName);
-         const TSeqCol *pListOfFiles =
+         const TSeqCollection *pListOfFiles =
              GetListOfFilesInPath(filePath.Data());
 
 //             pos = Complete( "[^\" /]*$", pListOfFiles, "\"" );
@@ -1795,7 +1795,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
             // Add all classes to pList that contain the prefix, i.e. are in the
             // specified namespace.
-            const TSeqCol *tmp = GetListOfClasses();
+            const TSeqCollection *tmp = GetListOfClasses();
             if (!tmp) break;
 
             Int_t i;
@@ -2144,15 +2144,15 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
          TContainer *pList = new TContainer;
 
-         const TSeqCol *pL2 = GetListOfClasses();
+         const TSeqCollection *pL2 = GetListOfClasses();
          if (pL2) pList->AddAll(pL2);
 
          if (fpNamespaces) pList->AddAll(fpNamespaces); //rdm
          //
-         const TSeqCol *pC1 = GetListOfGlobals();
+         const TSeqCollection *pC1 = GetListOfGlobals();
          if (pC1) pList->AddAll(pC1);
          //
-         const TSeqCol *pC3 = GetListOfGlobalFunctions();
+         const TSeqCollection *pC3 = GetListOfGlobalFunctions();
          if (pC3) pList->AddAll(pC3);
 
          pos = Complete("[_a-zA-Z][_a-zA-Z0-9]*$", pList, "");

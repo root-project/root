@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.8 2005/09/03 02:26:31 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.9 2005/09/29 09:16:23 pcanal Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -53,10 +53,6 @@ class TListIter;
 class TSeqCollection;
 class TClass;
 
-// save typing
-typedef TSeqCollection TSeqCol;
-
-
 
 class TTabCom {
 
@@ -71,15 +67,15 @@ public: // typedefs
 public: // member functions
    Int_t Hook(char *buf, int *pLoc);
 
-   const TSeqCol* GetListOfClasses();
-   const TSeqCol* GetListOfCppDirectives();
-   const TSeqCol* GetListOfFilesInPath( const char path[] );
-   const TSeqCol* GetListOfEnvVars();
-   const TSeqCol* GetListOfGlobalFunctions();
-   const TSeqCol* GetListOfGlobals();
-   const TSeqCol* GetListOfPragmas();
-   const TSeqCol* GetListOfSysIncFiles();
-   const TSeqCol* GetListOfUsers();
+   const TSeqCollection* GetListOfClasses();
+   const TSeqCollection* GetListOfCppDirectives();
+   const TSeqCollection* GetListOfFilesInPath( const char path[] );
+   const TSeqCollection* GetListOfEnvVars();
+   const TSeqCollection* GetListOfGlobalFunctions();
+   const TSeqCollection* GetListOfGlobals();
+   const TSeqCollection* GetListOfPragmas();
+   const TSeqCollection* GetListOfSysIncFiles();
+   const TSeqCollection* GetListOfUsers();
 
    void ClearClasses();
    void ClearCppDirectives();
@@ -106,13 +102,13 @@ public: // member functions
    void RehashAll();
 
 public: // static utility functions
-   static Char_t   AllAgreeOnChar( int i, const TSeqCol* pList, Int_t& nGoodStrings );
-   static void     AppendListOfFilesInDirectory( const char dirName[], TSeqCol* pList );
+   static Char_t   AllAgreeOnChar( int i, const TSeqCollection* pList, Int_t& nGoodStrings );
+   static void     AppendListOfFilesInDirectory( const char dirName[], TSeqCollection* pList );
    static TString  DetermineClass( const char varName[] ); // TROOT
    static Bool_t   ExcludedByFignore( TString s );
    static TString  GetSysIncludePath(); // TROOT
    static Bool_t   IsDirectory( const char fileName[] ); // TSystem
-   static TSeqCol* NewListOfFilesInPath( const char path[] );
+   static TSeqCollection* NewListOfFilesInPath( const char path[] );
    static Bool_t   PathIsSpecifiedInFileName( const TString& fileName );
    static void     NoMsg( Int_t errorLevel );
 
@@ -198,7 +194,7 @@ public: // enums
 private: // member functions
    TTabCom(const TTabCom &);  //private and not implemented
 
-   Int_t      Complete( const TRegexp& re, const TSeqCol* pListOfCandidates, const char appendage[] );
+   Int_t      Complete( const TRegexp& re, const TSeqCollection* pListOfCandidates, const char appendage[] );
    void       CopyMatch( char dest[], const char localName[], const char appendage[]=0, const char fullName[]=0 ) const;
    EContext_t DetermineContext() const;
    TString    DeterminePath( const TString& fileName, const char defaultPath[] ) const;
@@ -212,16 +208,16 @@ private: // member functions
    int        ParseReverse(const char *var_str, int start);
 
 private: // data members
-   TSeqCol* fpClasses;
-   TSeqCol* fpNamespaces;  // Contains the names of namespaces registered in CINT.
-   TSeqCol* fpDirectives;
-   TSeqCol* fpEnvVars;
-   TSeqCol* fpFiles;
-   TSeqCol* fpGlobals;
-   TSeqCol* fpGlobalFuncs;
-   TSeqCol* fpPragmas;
-   TSeqCol* fpSysIncFiles;
-   TSeqCol* fpUsers;
+   TSeqCollection* fpClasses;
+   TSeqCollection* fpNamespaces;  // Contains the names of namespaces registered in CINT.
+   TSeqCollection* fpDirectives;
+   TSeqCollection* fpEnvVars;
+   TSeqCollection* fpFiles;
+   TSeqCollection* fpGlobals;
+   TSeqCollection* fpGlobalFuncs;
+   TSeqCollection* fpPragmas;
+   TSeqCollection* fpSysIncFiles;
+   TSeqCollection* fpUsers;
 
    char* fBuf;  // initialized by Hook()
    int*  fpLoc; // initialized by Hook()

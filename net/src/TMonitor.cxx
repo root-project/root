@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.8 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.9 2006/04/19 10:50:01 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -53,6 +53,7 @@ TSocketHandler::TSocketHandler(TMonitor *m, TSocket *s,
                                Int_t interest, Bool_t mainloop)
                : TFileHandler(s->GetDescriptor(), interest)
 {
+   //constructor
    fMonitor = m;
    fSocket  = s;
 
@@ -62,6 +63,7 @@ TSocketHandler::TSocketHandler(TMonitor *m, TSocket *s,
 
 Bool_t TSocketHandler::Notify()
 {
+   //notifier
    fMonitor->SetReady(fSocket);
    return kTRUE;
 }
@@ -83,12 +85,14 @@ public:
 TTimeOutTimer::TTimeOutTimer(TMonitor *m, Long_t ms)
               : TTimer(ms, kTRUE)
 {
+   //constructor
    fMonitor = m;
    gSystem->AddTimer(this);
 }
 
 Bool_t TTimeOutTimer::Notify()
 {
+   //notifier
    fMonitor->SetReady((TSocket *)-1);
    Remove();       // one shot only
    return kTRUE;
