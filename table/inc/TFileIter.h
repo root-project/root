@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TFileIter.h,v 1.5 2004/02/13 14:27:00 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TFileIter.h,v 1.6 2005/09/08 05:33:41 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************
@@ -60,81 +60,80 @@
 
 class TFileIter : public TListIter {
 
-  private:
+private:
 
-    TFile      *fFileBackUp;       //! temporary data-members
-    TDirectory *fDirectoryBackUp;  //! to save/restore TFile/TDirectory global scope
+   TFile      *fFileBackUp;       //! temporary data-members
+   TDirectory *fDirectoryBackUp;  //! to save/restore TFile/TDirectory global scope
 
-    virtual TIterator &operator=(const TIterator &) { return *this; }
+   virtual TIterator &operator=(const TIterator &) { return *this; }
 
-  protected:
-    TFile   *fRootFile;            // Tfile to be iterated over
-    TString  fEventName;           // current key name
-    UInt_t   fRunNumber;           // current "run number"
-    UInt_t   fEventNumber;         // current "event number"
-    Int_t    fCursorPosition;      // the position of the current key in the sorted TKey list
-    Bool_t   fOwnTFile;            // Bit whether this classs creates TFile on its own to delete
+protected:
+   TFile   *fRootFile;            // Tfile to be iterated over
+   TString  fEventName;           // current key name
+   UInt_t   fRunNumber;           // current "run number"
+   UInt_t   fEventNumber;         // current "event number"
+   Int_t    fCursorPosition;      // the position of the current key in the sorted TKey list
+   Bool_t   fOwnTFile;            // Bit whether this classs creates TFile on its own to delete
 
-  protected:
-    void     Initialize();
-    TObject *ReadObj(const TKey *key) const;
-    void     RestoreFileScope();
-    void     SaveFileScope();
-    TKey    *NextEventKey(UInt_t eventNumber=UInt_t(-1), UInt_t runNumber=UInt_t(-1), const char *name="*");
+   void     Initialize();
+   TObject *ReadObj(const TKey *key) const;
+   void     RestoreFileScope();
+   void     SaveFileScope();
+   TKey    *NextEventKey(UInt_t eventNumber=UInt_t(-1), UInt_t runNumber=UInt_t(-1), const char *name="*");
 
-  public:
+public:
 
-    TFileIter(const char *name, Option_t *option = "",
-              const char *ftitle = "", Int_t compress = 1,
-              Int_t netopt = 0);
-    TFileIter(TFile *file=0);
-    TFileIter(const TFileIter &);
-    virtual ~TFileIter();
+   TFileIter(const char *name, Option_t *option = "",
+             const char *ftitle = "", Int_t compress = 1,
+             Int_t netopt = 0);
+   TFileIter(TFile *file=0);
+   TFileIter(const TFileIter &);
+   virtual ~TFileIter();
 // --- draft !!!     virtual Int_t Copy(TFile *destFile);
-    Int_t   CurrentCursorPosition() const;
-    virtual const TFile *GetTFile() const;
-    static  TString MapName(const char *name, const char *localSystemKey = 0
+   Int_t   CurrentCursorPosition() const;
+   virtual const TFile *GetTFile() const;
+   static  TString MapName(const char *name, const char *localSystemKey = 0
                                             , const char *mountedFileSystemKey = 0);
-    static  const char *GetResourceName();
-    static  const char *GetDefaultMapFileName();
-    static  const char *GetLocalFileNameKey();
-    static  const char *GetForeignFileSystemKey();
-    virtual TObject *NextEventGet(UInt_t eventNumber=UInt_t(-1), UInt_t runNumber=UInt_t(-1), const char *name="*");
-    virtual Int_t    NextEventPut(TObject *obj, UInt_t eventNum, UInt_t runNumber, const char *name=0);
-            void     SetCursorPosition(Int_t cursorPosition);
-            void     SetCursorPosition(const char *keyNameToFind);
-            Int_t    GetObjlen() const;
-    virtual Int_t    TotalKeys() const;
-    virtual TObject *SkipObjects(Int_t  nSkip=1);
-    virtual TObject *GetObject() const;
+   static  const char *GetResourceName();
+   static  const char *GetDefaultMapFileName();
+   static  const char *GetLocalFileNameKey();
+   static  const char *GetForeignFileSystemKey();
+   virtual TObject    *NextEventGet(UInt_t eventNumber=UInt_t(-1), UInt_t runNumber=UInt_t(-1), const char *name="*");
+   virtual Int_t       NextEventPut(TObject *obj, UInt_t eventNum, UInt_t runNumber, const char *name=0);
+   void                SetCursorPosition(Int_t cursorPosition);
+   void                SetCursorPosition(const char *keyNameToFind);
+   Int_t               GetObjlen() const;
+   virtual Int_t       TotalKeys() const;
+   virtual TObject    *SkipObjects(Int_t  nSkip=1);
+   virtual TObject    *GetObject() const;
 
-    TKey    *GetCurrentKey() const;
-    const char *GetKeyName() const;
+   TKey               *GetCurrentKey() const;
+   const char         *GetKeyName() const;
 
-    TFileIter &operator=(Int_t cursorPosition);
-    TFileIter &operator=(const char *keyNameToFind);
-    TFileIter &operator+=(Int_t shift);
-    TFileIter &operator-=(Int_t shift);
-    TFileIter &operator++();
-    TFileIter &operator--();
+   TFileIter &operator=(Int_t cursorPosition);
+   TFileIter &operator=(const char *keyNameToFind);
+   TFileIter &operator+=(Int_t shift);
+   TFileIter &operator-=(Int_t shift);
+   TFileIter &operator++();
+   TFileIter &operator--();
 
-    TObject *operator*() const;
-    operator const char *() const;
-    operator const TFile *() const;
-    operator int () const;
-    int operator==(const char *name) const;
-    int operator!=(const char *name) const;
+   TObject *operator*() const;
+   operator const char *() const;
+   operator const TFile *() const;
+   operator int () const;
+   int operator==(const char *name) const;
+   int operator!=(const char *name) const;
 
-  public:  // abstract TIterator methods implementations:
+public:  // abstract TIterator methods implementations:
 
-    virtual TObject *Next();
-    virtual TObject *Next(Int_t  nSkip);
-    virtual void Reset();
-    virtual void Rewind();
-    TObject *operator()(Int_t  nSkip);
-    TObject *operator()();
+   virtual TObject *Next();
+   virtual TObject *Next(Int_t  nSkip);
+   virtual void Reset();
+   virtual void Rewind();
+   TObject *operator()(Int_t  nSkip);
+   TObject *operator()();
 
-    ClassDef(TFileIter,0) // TFile class iterator
+   ClassDef(TFileIter,0) // TFile class iterator
 };
 
 //__________________________________________________________________________

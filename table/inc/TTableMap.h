@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTableMap.h,v 1.4 2005/05/08 13:50:55 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TTableMap.h,v 1.5 2005/09/08 05:33:41 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************
@@ -33,45 +33,45 @@ class TTableMap : public TObject
  , public std::vector<Long_t>
 #endif
 {
-  protected:
-     TTable  *fTable;         // pointer to the refered TTable
+protected:
+   TTable  *fTable;         // pointer to the refered TTable
 
-  public:
+public:
 
-    TTableMap(const TTable *table=0);
-    TTableMap(const TTableMap &map) : TObject(map)
+   TTableMap(const TTable *table=0);
+   TTableMap(const TTableMap &map) : TObject(map)
 #ifndef __CINT__
       , std::vector<Long_t>(map)
 #endif
     , fTable(map.fTable)	{;}
-    ~TTableMap(){;}
-    Bool_t  IsValid() const;
-    Bool_t  IsFolder() const;
-    void Push_back(Long_t next); // workaround for Cint
-    TTable *Table(){return fTable;}
+   virtual ~TTableMap(){;}
+   Bool_t  IsValid() const;
+   Bool_t  IsFolder() const;
+   void Push_back(Long_t next); // workaround for Cint
+   TTable *Table(){return fTable;}
 
-    TTable::iterator Begin();
-    TTable::iterator Begin() const;
-    TTable::iterator End();
-    TTable::iterator End()   const;
+   TTable::iterator Begin();
+   TTable::iterator Begin() const;
+   TTable::iterator End();
+   TTable::iterator End()   const;
 
-    ClassDef(TTableMap,1) // "Map" array for TTable object
+   ClassDef(TTableMap,1) // "Map" array for TTable object
 };
 
 //___________________________________________________________________________________________________________
 inline  Bool_t TTableMap::IsValid() const
 {
-    // Check whether all "map" values do belong the table
-    TTable::iterator i      = Begin();
-    TTable::iterator finish = End();
-    Int_t totalSize          = fTable->GetNRows();
+   // Check whether all "map" values do belong the table
+   TTable::iterator i      = Begin();
+   TTable::iterator finish = End();
+   Int_t totalSize          = fTable->GetNRows();
 
-    for (; i != finish; i++) {
-        Long_t th = *i;
-        if (  th == -1 || (0 <= th && th < totalSize) ) continue;
-        return kFALSE;
-    }
-    return kTRUE;
+   for (; i != finish; i++) {
+       Long_t th = *i;
+       if (  th == -1 || (0 <= th && th < totalSize) ) continue;
+       return kFALSE;
+   }
+   return kTRUE;
 }
 //___________________________________________________________________________________________________________
 inline TTable::iterator TTableMap::Begin()          { std::vector<Long_t>::iterator bMap = this->begin(); return TTable::iterator(*fTable, bMap);}

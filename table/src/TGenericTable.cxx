@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $Id: TGenericTable.cxx,v 1.3 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $Id: TGenericTable.cxx,v 1.4 2005/09/08 05:33:41 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
  
@@ -92,8 +92,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-  ClassImp(TGenericTable) 
-  TableClassStreamerImp(TGenericTable)
+   ClassImp(TGenericTable) 
+   TableClassStreamerImp(TGenericTable)
 
 // Create TGenericTable by TTableDescriptor pointer
 //______________________________________________________________________________
@@ -108,7 +108,7 @@ TGenericTable::TGenericTable(const TTableDescriptor &dsc, const Text_t *name) : 
   //
   ///////////////////////////////////////////////////////////
 
-  // Create a private copy of the descriptor provided;
+   // Create a private copy of the descriptor provided;
    SetDescriptorPointer(new TTableDescriptor(dsc));
    SetGenericType();
 }     
@@ -161,13 +161,13 @@ TGenericTable::TGenericTable(const char *structName, const Text_t *name) : TTabl
   //   n     - The initial number of allocated rows
   //
   ///////////////////////////////////////////////////////////
-  TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
-  if (dsc) {
-    SetDescriptorPointer(dsc);
-    fSize = dsc->Sizeof();
-  } 
-  if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format");
-  SetGenericType();
+   TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
+   if (dsc) {
+      SetDescriptorPointer(dsc);
+      fSize = dsc->Sizeof();
+   } 
+   if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format");
+   SetGenericType();
 }     
 //______________________________________________________________________________
 TGenericTable::TGenericTable(const char *structName, Int_t n) : TTable("TGenericTable",-1),fColDescriptors(0)
@@ -182,14 +182,14 @@ TGenericTable::TGenericTable(const char *structName, Int_t n) : TTable("TGeneric
   //
   ///////////////////////////////////////////////////////////
 
-  TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
-  if (dsc) {
-    SetDescriptorPointer(dsc);
-    fSize = dsc->Sizeof();
-  } 
-  if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format");
-  if (n > 0) Set(n);
-  SetGenericType();
+   TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
+   if (dsc) {
+      SetDescriptorPointer(dsc);
+      fSize = dsc->Sizeof();
+   } 
+   if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format");
+   if (n > 0) Set(n);
+   SetGenericType();
 }
 //______________________________________________________________________________
 TGenericTable::TGenericTable(const char *structName, const Text_t *name,Int_t n) : TTable(name,-1),fColDescriptors(0)
@@ -204,18 +204,19 @@ TGenericTable::TGenericTable(const char *structName, const Text_t *name,Int_t n)
   //
   ///////////////////////////////////////////////////////////
 
-  TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
-  if (dsc) {
-    SetDescriptorPointer(dsc);
-    fSize = dsc->Sizeof();
-  } 
-  if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format dsc=0x%x, size=%d",dsc,fSize);
-  if (n > 0) Set(n);
-  SetGenericType();
+   TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
+   if (dsc) {
+      SetDescriptorPointer(dsc);
+      fSize = dsc->Sizeof();
+   } 
+   if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format dsc=0x%x, size=%d",dsc,fSize);
+   if (n > 0) Set(n);
+   SetGenericType();
 }
 
 //______________________________________________________________________________
 TGenericTable::~TGenericTable()
 {
-  delete fColDescriptors;
+   //destructor
+   delete fColDescriptors;
 }

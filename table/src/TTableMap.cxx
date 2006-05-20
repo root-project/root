@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:$:$Id:$
+// @(#)root/table:$Name:  $:$Id: TTableMap.cxx,v 1.2 2004/02/13 14:27:00 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************
@@ -51,7 +51,11 @@
 
 ClassImp(TTableMap)
 
-TTableMap::TTableMap(const TTable *table) : fTable((TTable *)table){;}
+TTableMap::TTableMap(const TTable *table) 
+          : fTable((TTable *)table)
+{
+   //to be documented
+}
 
 //___________________________________________________________________
 void TTableMap::Streamer(TBuffer &R__b)
@@ -59,26 +63,26 @@ void TTableMap::Streamer(TBuffer &R__b)
    // UInt_t R__s, R__c;
    TArrayL vecIO;
    if (R__b.IsReading()) {
-     Version_t v =  R__b.ReadVersion();
-     if (v);
-     // read Table
-     R__b >> fTable;
-     // Read index array
-     vecIO.Streamer(R__b);
-     Int_t n = vecIO.GetSize();
-     Int_t i = 0;
-     reserve(n);
-     Long_t *thisArr = vecIO.GetArray();
-     for (i=0; i<n; i++,thisArr++) push_back(*thisArr);
+      Version_t v =  R__b.ReadVersion();
+      if (v);
+      // read Table
+      R__b >> fTable;
+      // Read index array
+      vecIO.Streamer(R__b);
+      Int_t n = vecIO.GetSize();
+      Int_t i = 0;
+      reserve(n);
+      Long_t *thisArr = vecIO.GetArray();
+      for (i=0; i<n; i++,thisArr++) push_back(*thisArr);
    } else {
-     // Write TTable
-     assert(IsValid());
-     R__b.WriteVersion(IsA());
-     R__b << fTable;
-     //  Write index array
-     TTableMap::iterator ptr = begin();
-     vecIO.Adopt(size(),&(*ptr));
-     vecIO.Streamer(R__b);
-     vecIO.fArray=0;  // we should not destroy the real array
+      // Write TTable
+      assert(IsValid());
+      R__b.WriteVersion(IsA());
+      R__b << fTable;
+      //  Write index array
+      TTableMap::iterator ptr = begin();
+      vecIO.Adopt(size(),&(*ptr));
+      vecIO.Streamer(R__b);
+      vecIO.fArray=0;  // we should not destroy the real array
    }
 }

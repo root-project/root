@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TPointsArray3D.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TPointsArray3D.h,v 1.3 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************
@@ -29,43 +29,43 @@
 class TPointsArray3D : public TPoints3DABC {
 
 protected:
-        Int_t        fN;            // Number of points
-        Float_t     *fP;            // Array of 3-D coordinates  (x,y,z)
-        TString      fOption;       // options
-        UInt_t       fGLList;       // The list number for OpenGL view
-        Int_t        fLastPoint;    // The index of the last filled point
+   Int_t        fN;            // Number of points
+   Float_t     *fP;            // Array of 3-D coordinates  (x,y,z)
+   TString      fOption;       // options
+   UInt_t       fGLList;       // The list number for OpenGL view
+   Int_t        fLastPoint;    // The index of the last filled point
 
 public:
-        TPointsArray3D();
-        TPointsArray3D(Int_t n, Option_t *option="");
-        TPointsArray3D(Int_t n, Float_t *p, Option_t *option="");
-        TPointsArray3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *option="");
-        TPointsArray3D(const TPointsArray3D &points);
-        virtual ~TPointsArray3D();
+   TPointsArray3D();
+   TPointsArray3D(Int_t n, Option_t *option="");
+   TPointsArray3D(Int_t n, Float_t *p, Option_t *option="");
+   TPointsArray3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *option="");
+   TPointsArray3D(const TPointsArray3D &points);
+   virtual ~TPointsArray3D();
 
-        virtual void      Copy(TObject &points) const;
-        virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
-        virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        virtual Int_t     GetLastPosition() const;
-        virtual Int_t     GetN() const;
-        virtual Float_t  *GetP() const;
-        virtual Float_t   GetX(Int_t idx)  const;
-        virtual Float_t   GetY(Int_t idx)  const;
-        virtual Float_t   GetZ(Int_t idx)  const;
-        virtual Float_t  *GetXYZ(Float_t *xyz,Int_t idx,Int_t num=1)  const;
-        virtual const Float_t  *GetXYZ(Int_t idx);
-        virtual Option_t *GetOption() const ;
-        virtual Bool_t    Is3D() const;
-        virtual void      ls(Option_t *option="") const;
-        virtual void      PaintPoints(Int_t , Float_t *,Option_t *){;}
-        virtual void      Print(Option_t *option="") const;
-        virtual Int_t     SetLastPosition(Int_t idx);
-        virtual void      SetOption(Option_t *option="");
-        virtual Int_t     SetPoint(Int_t point, Float_t x, Float_t y, Float_t z); // *MENU*
-        virtual Int_t     SetPoints(Int_t n, Float_t *p=0, Option_t *option="");
-        virtual Int_t     Size() const;
+   virtual void      Copy(TObject &points) const;
+   virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
+   virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   virtual Int_t     GetLastPosition() const;
+   virtual Int_t     GetN() const;
+   virtual Float_t  *GetP() const;
+   virtual Float_t   GetX(Int_t idx)  const;
+   virtual Float_t   GetY(Int_t idx)  const;
+   virtual Float_t   GetZ(Int_t idx)  const;
+   virtual Float_t  *GetXYZ(Float_t *xyz,Int_t idx,Int_t num=1)  const;
+   virtual const Float_t  *GetXYZ(Int_t idx);
+   virtual Option_t *GetOption() const ;
+   virtual Bool_t    Is3D() const;
+   virtual void      ls(Option_t *option="") const;
+   virtual void      PaintPoints(Int_t , Float_t *,Option_t *){;}
+   virtual void      Print(Option_t *option="") const;
+   virtual Int_t     SetLastPosition(Int_t idx);
+   virtual void      SetOption(Option_t *option="");
+   virtual Int_t     SetPoint(Int_t point, Float_t x, Float_t y, Float_t z); // *MENU*
+   virtual Int_t     SetPoints(Int_t n, Float_t *p=0, Option_t *option="");
+   virtual Int_t     Size() const;
 
-        ClassDef(TPointsArray3D,1)  //A 3-D PolyLine
+   ClassDef(TPointsArray3D,1)  //A 3-D PolyLine
 };
 
 

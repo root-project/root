@@ -1,7 +1,7 @@
-// @(#)root/star:$Name:  $:$Id: TPoints3D.cxx,v 1.4 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TPoints3D.cxx,v 1.5 2003/02/11 12:17:19 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
-// $Id: TPoints3D.cxx,v 1.4 2003/01/27 20:41:36 brun Exp $
+// $Id: TPoints3D.cxx,v 1.5 2003/02/11 12:17:19 rdm Exp $
 // ***********************************************************************
 // *  C++ class to define the abstract array of 3D points
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -72,12 +72,12 @@ TPoints3D::TPoints3D(TPoints3DABC *points) : fPoints(points)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine default constructor*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ================================
-  DoOwner(kFALSE);
-  fPoints = points;
-  if (!fPoints) {
-    fPoints = new TPointsArray3D;
-    DoOwner();
-  }
+   DoOwner(kFALSE);
+   fPoints = points;
+   if (!fPoints) {
+      fPoints = new TPointsArray3D;
+      DoOwner();
+   }
 }
 
 //______________________________________________________________________________
@@ -123,6 +123,7 @@ TPoints3D::~TPoints3D()
 //______________________________________________________________________________
 TPoints3D::TPoints3D(const TPoints3D &point) : TPoints3DABC(point)
 {
+   //to be documented
    ((TPoints3D&)point).Copy(*this);
 }
 //______________________________________________________________________________
@@ -136,25 +137,27 @@ void TPoints3D::Copy(TObject &obj) const
    thatObject.Delete();
    if (thatObject.IsOwner()) {
       thatObject.fPoints =  new TPoints3D(GetN(),GetP(),GetOption());
-     (thatObject.fPoints)->SetLastPosition(GetLastPosition());
+      (thatObject.fPoints)->SetLastPosition(GetLastPosition());
    }
    else
-     thatObject.fPoints = fPoints;
+      thatObject.fPoints = fPoints;
 }
 
 //______________________________________________________________________________
 void TPoints3D::Delete()
 {
-  // Delete only own object
-  if (fPoints && IsOwner()) delete fPoints;
-  fPoints = 0;
+   // Delete only own object
+   if (fPoints && IsOwner()) delete fPoints;
+   fPoints = 0;
 }
 
 //______________________________________________________________________________
-Bool_t TPoints3D::DoOwner(Bool_t done) {
-  if (done) SetBit(kIsOwner);
-  else ResetBit(kIsOwner);
-  return IsOwner();
+Bool_t TPoints3D::DoOwner(Bool_t done) 
+{
+   //to be documented
+   if (done) SetBit(kIsOwner);
+   else ResetBit(kIsOwner);
+   return IsOwner();
 }
 
 //______________________________________________________________________________
@@ -162,7 +165,7 @@ void TPoints3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
 //*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*-*-*-*-*-*-*
 //*-*                =========================================
-  if (fPoints)
+   if (fPoints)
       fPoints->ExecuteEvent(event,px,py);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TFileSet.h,v 1.2 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TFileSet.h,v 1.3 2005/11/24 17:08:36 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -25,16 +25,15 @@
 #include "TDataSet.h"
 #include "TString.h"
 
-class TFileSet : public TDataSet
-{
- public:
-    TFileSet();
-    TFileSet(const TString &dirname, const Char_t *filename=0,Bool_t expand=kTRUE,Int_t maxDepth=10);
-    virtual ~TFileSet();
-    virtual Long_t HasData() const;
-    virtual Bool_t IsEmpty() const;
-    virtual Bool_t IsFolder() const;
-    ClassDef(TFileSet,1)  // TDataSet class to read the native file system directory structure in
+class TFileSet : public TDataSet {
+public:
+   TFileSet();
+   TFileSet(const TString &dirname, const Char_t *filename=0,Bool_t expand=kTRUE,Int_t maxDepth=10);
+   virtual ~TFileSet();
+   virtual Long_t HasData() const;
+   virtual Bool_t IsEmpty() const;
+   virtual Bool_t IsFolder() const;
+   ClassDef(TFileSet,1)  // TDataSet class to read the native file system directory structure in
 };
 
 #endif

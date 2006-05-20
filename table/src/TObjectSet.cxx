@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.4 2005/07/05 15:11:42 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.5 2005/11/24 17:08:36 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TObjectSet.cxx,v 1.4 2005/07/05 15:11:42 brun Exp $
+// $Id: TObjectSet.cxx,v 1.5 2005/11/24 17:08:36 rdm Exp $
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -29,19 +29,22 @@ ClassImp(TObjectSet)
 //_____________________________________________________________________________
 TObjectSet::TObjectSet(const Char_t *name, TObject *obj, Bool_t makeOwner):TDataSet(name)
 {
-  SetTitle("TObjectSet");
-  SetObject(obj,makeOwner);
+   //to be documented
+   SetTitle("TObjectSet");
+   SetObject(obj,makeOwner);
 }
 
 //_____________________________________________________________________________
 TObjectSet::TObjectSet(TObject *obj,Bool_t makeOwner) : TDataSet("unknown","TObjectSet")
 {
-  SetObject(obj,makeOwner);
+   //to be documented
+   SetObject(obj,makeOwner);
 }
 
 //_____________________________________________________________________________
 TObjectSet::~TObjectSet()
 {
+   //to be documented
    if (fObj && IsOwner() && (TObject::TestBit(kNotDeleted))  ) delete fObj;
    fObj = 0;
 }
@@ -49,21 +52,22 @@ TObjectSet::~TObjectSet()
 //______________________________________________________________________________
 TObject *TObjectSet::AddObject(TObject *obj,Bool_t makeOwner)
 {
-  // Aliase for SetObject method
- return SetObject(obj,makeOwner);
+   // Aliase for SetObject method
+   return SetObject(obj,makeOwner);
 }
 
 //______________________________________________________________________________
 void TObjectSet::Browse(TBrowser *b)
 {
-  // Browse this dataset (called by TBrowser).
+   // Browse this dataset (called by TBrowser).
    if (b && fObj) b->Add(fObj);
-  TDataSet::Browse(b);
+   TDataSet::Browse(b);
 }
 
 //_____________________________________________________________________________
 void TObjectSet::Delete(Option_t *opt)
 {
+   //to be documented
    if (opt) {/* no used */}
    if (fObj && IsOwner()) delete fObj;
    fObj = 0;
@@ -72,32 +76,31 @@ void TObjectSet::Delete(Option_t *opt)
 //______________________________________________________________________________
 Bool_t TObjectSet::DoOwner(Bool_t done)
 {
- // Set / Reset the ownerships and returns the previous
- // status of the ownerships.
+  // Set / Reset the ownerships and returns the previous
+  // status of the ownerships.
 
-  Bool_t own = IsOwner();
-  if (own != done) {
-    if (done) SetBit(kIsOwner);
-    else ResetBit(kIsOwner);
-  }
-  return own;
+   Bool_t own = IsOwner();
+   if (own != done) {
+      if (done) SetBit(kIsOwner);
+      else ResetBit(kIsOwner);
+   }
+   return own;
 }
 //______________________________________________________________________________
 TDataSet *TObjectSet::Instance() const
 { 
- // apply the class default ctor to instantiate a new object of the same kind.
- // This is a base method to be overriden by the classes 
- // derived from TDataSet (to support TDataSetIter::Mkdir for example)
- return instance();
+   // apply the class default ctor to instantiate a new object of the same kind.
+   // This is a base method to be overriden by the classes 
+   // derived from TDataSet (to support TDataSetIter::Mkdir for example)
+   return instance();
 }
 //______________________________________________________________________________
 TObject *TObjectSet::SetObject(TObject *obj,Bool_t makeOwner)
 {
-  //
-  // - Replace the embedded object with a new supplied
-  // - Destroy the preivous embedded object if this is its owner
-  // - Return the previous embedded object if any
-  //
+   // - Replace the embedded object with a new supplied
+   // - Destroy the preivous embedded object if this is its owner
+   // - Return the previous embedded object if any
+
    TObject *oldObject = fObj;
    if (IsOwner()) { delete oldObject; oldObject = 0;} // the object has been killed
    fObj = obj;

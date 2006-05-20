@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.3 2003/12/30 13:16:51 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-// $Id: TFileSet.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
+// $Id: TFileSet.cxx,v 1.3 2003/12/30 13:16:51 brun Exp $
 
 #include "TFileSet.h"
 #include "TBrowser.h"
@@ -31,9 +31,10 @@
 ClassImp(TFileSet)
 
 //______________________________________________________________________________
-  TFileSet::TFileSet()
-           : TDataSet()
+TFileSet::TFileSet()
+         : TDataSet()
 {
+   //to be documented
 }
 
 //______________________________________________________________________________
@@ -57,78 +58,79 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
   //  Note: If the "dirname" points to non-existent object, for examoe it is dead-link
   //  ----  the object is marked as "Zombie" and this flag is propagated upwards
 
-  if (!maxDepth) return;
+   if (!maxDepth) return;
 
-  Long64_t size;
-  Long_t id, flags, modtime;
-  TString dirbuf = dirname;
+   Long64_t size;
+   Long_t id, flags, modtime;
+   TString dirbuf = dirname;
 
-  if (expand) gSystem->ExpandPathName(dirbuf);
-  const char *name= dirbuf;
-  if (gSystem->GetPathInfo(name, &id, &size, &flags, &modtime)==0) {
+   if (expand) gSystem->ExpandPathName(dirbuf);
+   const char *name= dirbuf;
+   if (gSystem->GetPathInfo(name, &id, &size, &flags, &modtime)==0) {
 
-    if (!setname) {
-      setname = strrchr(name,'/');
-      if (setname) setname++;      
-    }
-    if (setname) SetName(setname);
-    else SetName(name);
-
-    // Check if "dirname" is a directory.
-    void *dir = 0;
-    if (flags & 2 ) {
-       dir = gSystem->OpenDirectory(name);
-       if (!dir) {
-#ifndef WIN32
-         perror("can not be open due error\n");
-         fprintf(stderr, " directory: %s",name);
-#endif
-       }
-    }
-    if (dir) {   // this is a directory
-      SetTitle("directory");
-      while ( (name = gSystem->GetDirEntry(dir)) ) {
-         // skip some "special" names
-         if (!name[0] || strcmp(name,"..")==0 || strcmp(name,".")==0) continue;
-         Char_t *file = gSystem->ConcatFileName(dirbuf,name);
-         TString nextdir = file;
-         delete [] file;
-         TFileSet *fs = new TFileSet(nextdir,name,kFALSE,maxDepth-1);
-         if (fs->IsZombie())  {
-           // propagate "Zombie flag upwards
-           MakeZombie(); 
-         }
-         Add(fs);
+      if (!setname) {
+         setname = strrchr(name,'/');
+         if (setname) setname++;      
       }
-      gSystem->FreeDirectory(dir);
-    }
-    else
-       SetTitle("file");
-  } else { 
-    // Set Zombie flag
-    MakeZombie(); 
-    SetTitle("Zombie");
-  }
+      if (setname) SetName(setname);
+      else SetName(name);
+
+      // Check if "dirname" is a directory.
+      void *dir = 0;
+      if (flags & 2 ) {
+         dir = gSystem->OpenDirectory(name);
+         if (!dir) {
+#ifndef WIN32
+            perror("can not be open due error\n");
+            fprintf(stderr, " directory: %s",name);
+#endif
+         }
+      }
+      if (dir) {   // this is a directory
+         SetTitle("directory");
+         while ( (name = gSystem->GetDirEntry(dir)) ) {
+            // skip some "special" names
+            if (!name[0] || strcmp(name,"..")==0 || strcmp(name,".")==0) continue;
+            Char_t *file = gSystem->ConcatFileName(dirbuf,name);
+            TString nextdir = file;
+            delete [] file;
+            TFileSet *fs = new TFileSet(nextdir,name,kFALSE,maxDepth-1);
+            if (fs->IsZombie())  {
+              // propagate "Zombie flag upwards
+              MakeZombie(); 
+            }
+            Add(fs);
+         }
+         gSystem->FreeDirectory(dir);
+      } else
+         SetTitle("file");
+   } else { 
+      // Set Zombie flag
+      MakeZombie(); 
+      SetTitle("Zombie");
+   }
 }
 
 //______________________________________________________________________________
 TFileSet::~TFileSet()
 {
+   //to be documented
 }
 
 //______________________________________________________________________________
 Bool_t TFileSet::IsEmpty() const
 {
- return  strcmp(GetTitle(),"file")!=0 ? kTRUE : kFALSE ;
+   //to be documented
+   return  strcmp(GetTitle(),"file")!=0 ? kTRUE : kFALSE ;
 }
 
 //______________________________________________________________________________
 Long_t TFileSet::HasData() const
 {
-  // This implementation is done in the TDataSet::Purge() method in mind
-  // Since this method returns non-zero for files the last are NOT "purged"
-  // by TDataSet::Purge()
-  //
+   // This implementation is done in the TDataSet::Purge() method in mind
+   // Since this method returns non-zero for files the last are NOT "purged"
+   // by TDataSet::Purge()
+   //
    return strcmp(GetTitle(),"file")==0 ? 1 : 0;
 
    //  this must be like this:
@@ -139,8 +141,8 @@ Long_t TFileSet::HasData() const
 //______________________________________________________________________________
 Bool_t TFileSet::IsFolder() const
 {
- // If the title of this TFileSet is "file" it is NOT folder
- // see: TFileSet(TString &dirname,const Char_t *setname,Bool_t expand)
- //
- return strcmp(GetTitle(),"file")!=0;
+   // If the title of this TFileSet is "file" it is NOT folder
+   // see: TFileSet(TString &dirname,const Char_t *setname,Bool_t expand)
+   //
+   return strcmp(GetTitle(),"file")!=0;
 }

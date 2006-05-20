@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.4 2005/01/19 18:30:58 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.5 2005/09/09 12:32:59 brun Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
-// $Id: TTableSorter.cxx,v 1.4 2005/01/19 18:30:58 brun Exp $
+// $Id: TTableSorter.cxx,v 1.5 2005/09/09 12:32:59 brun Exp $
 
 #include <stdlib.h>
 #include "TTableSorter.h"
@@ -10,7 +10,7 @@
 #include "TDataType.h"
 #include "TMemberInspector.h"
 extern "C" {
-typedef Int_t (*CALLQSORT)    (const void *, const void *);
+   typedef Int_t (*CALLQSORT)    (const void *, const void *);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -77,16 +77,16 @@ ClassImp(TTableSorter)
 //TTableSorter::TTableSorter() : fsimpleArray(0),fParentTable(*((const TTable *)0))
 TTableSorter::TTableSorter() : fsimpleArray(0),fParentTable(0)
 {
-  // default ctor for RootCint dictionary
-  fLastFound    = -1;
-  fSortIndex    = 0;
-  fSearchMethod = 0;
-  fNumberOfRows = 0;
-  fColType = TTable::kNAN;
-  fsimpleArray=0;
-  fParentRowSize = 0;
-  fFirstParentRow= 0;
-  fCompareMethod = 0;
+   // default ctor for RootCint dictionary
+   fLastFound    = -1;
+   fSortIndex    = 0;
+   fSearchMethod = 0;
+   fNumberOfRows = 0;
+   fColType = TTable::kNAN;
+   fsimpleArray=0;
+   fParentRowSize = 0;
+   fFirstParentRow= 0;
+   fCompareMethod = 0;
 }
 
 //_____________________________________________________________________________
@@ -104,10 +104,10 @@ TTableSorter::TTableSorter(const TTable &table, TString &colName,Int_t firstRow
   //                   = 0 means sort all rows from the "firstRow" by the end of table
   //
 
-  fCompareMethod =  0;
-  fSearchMethod  =  0;
+   fCompareMethod =  0;
+   fSearchMethod  =  0;
 
-  BuildSorter(colName, firstRow, numberRows);
+   BuildSorter(colName, firstRow, numberRows);
 }
 
 //_____________________________________________________________________________
@@ -125,10 +125,10 @@ TTableSorter::TTableSorter(const TTable *table, TString &colName,Int_t firstRow
   //                   = 0 means sort all rows from the "firstRow" by the end of table
   //
 
-  fCompareMethod =  0;
-  fSearchMethod  =  0;
+   fCompareMethod =  0;
+   fSearchMethod  =  0;
 
-  BuildSorter(colName, firstRow, numberRows);
+   BuildSorter(colName, firstRow, numberRows);
 }
 //_____________________________________________________________________________
 TTableSorter::TTableSorter(const TTable &table, SEARCHMETHOD search, 
@@ -152,10 +152,10 @@ TTableSorter::TTableSorter(const TTable &table, SEARCHMETHOD search,
   //         providing a derived class with the appropriated type
   //         of the parameters.
   //  
-  fCompareMethod =  compare;
-  fSearchMethod  =  search;
-  TString colName = "user's defined";
-  BuildSorter(colName, firstRow, numberRows);
+   fCompareMethod =  compare;
+   fSearchMethod  =  search;
+   TString colName = "user's defined";
+   BuildSorter(colName, firstRow, numberRows);
 }
 //_____________________________________________________________________________
 TTableSorter::TTableSorter(const TTable *table, SEARCHMETHOD search, 
@@ -180,10 +180,10 @@ TTableSorter::TTableSorter(const TTable *table, SEARCHMETHOD search,
   //         of the parameters.
   //  
 
-  fCompareMethod =  compare;
-  fSearchMethod  =  search;
-  TString colName = "user's defined";
-  BuildSorter(colName, firstRow, numberRows);
+   fCompareMethod =  compare;
+   fSearchMethod  =  search;
+   TString colName = "user's defined";
+   BuildSorter(colName, firstRow, numberRows);
 }
 
 //_____________________________________________________________________________
@@ -200,78 +200,77 @@ void TTableSorter::BuildSorter(TString &colName, Int_t firstRow, Int_t numberRow
   //                   = 0 means sort all rows from the "firstRow" by the end of table
   //
 
-  assert(fParentTable!=0);
+   assert(fParentTable!=0);
 
-  fLastFound     = -1;
-  fNumberOfRows  =  0;
-  fColType       =  TTable::kNAN;
-  fsimpleArray   =  0;
-  //yf  fCompareMethod =  0;
-  fSortIndex     =  0;
-  //yf fSearchMethod  =  0;
-  fColDimensions =  0;
-  fColOffset     =  0;
+   fLastFound     = -1;
+   fNumberOfRows  =  0;
+   fColType       =  TTable::kNAN;
+   fsimpleArray   =  0;
+   //yf  fCompareMethod =  0;
+   fSortIndex     =  0;
+   //yf fSearchMethod  =  0;
+   fColDimensions =  0;
+   fColOffset     =  0;
 
-  // Generate new object name 
-  TString n = fParentTable->GetName();
-  n += ".";
-  n += colName;
-  SetName(n);
+   // Generate new object name 
+   TString n = fParentTable->GetName();
+   n += ".";
+   n += colName;
+   SetName(n);
 
-  Char_t *name = (Char_t *) colName.Data();
-  if (!(name || strlen(colName.Data()))) { MakeZombie(); return; }
-  name = StrDup(colName.Data());
+   Char_t *name = (Char_t *) colName.Data();
+   if (!(name || strlen(colName.Data()))) { MakeZombie(); return; }
+   name = StrDup(colName.Data());
 
-  // check bounds:
-  if (firstRow > fParentTable->GetNRows()) { MakeZombie(); return; }
-  fFirstRow = firstRow;
+   // check bounds:
+   if (firstRow > fParentTable->GetNRows()) { MakeZombie(); return; }
+   fFirstRow = firstRow;
 
-  fNumberOfRows = fParentTable->GetNRows()- fFirstRow;
-  if (numberRows > 0)  fNumberOfRows = TMath::Min(numberRows,fNumberOfRows);
-  fParentRowSize = fParentTable->GetRowSize();
-  fFirstParentRow= (const char *)fParentTable->GetArray();
+   fNumberOfRows = fParentTable->GetNRows()- fFirstRow;
+   if (numberRows > 0)  fNumberOfRows = TMath::Min(numberRows,fNumberOfRows);
+   fParentRowSize = fParentTable->GetRowSize();
+   fFirstParentRow= (const char *)fParentTable->GetArray();
 
-  // Allocate index array
-  if (fNumberOfRows <=0 ) { MakeZombie(); return; }
-  fSortIndex = new void*[fNumberOfRows];
+   // Allocate index array
+   if (fNumberOfRows <=0 ) { MakeZombie(); return; }
+   fSortIndex = new void*[fNumberOfRows];
 
-  // define dimensions if any;
-  // count the open "["
-  Char_t *br = name - 1;
-  while((br = strchr(br+1,'['))) {
-    if (!fColDimensions) *br = 0;
-    fColDimensions++;
-  }
+   // define dimensions if any;
+   // count the open "["
+   Char_t *br = name - 1;
+   while((br = strchr(br+1,'['))) {
+      if (!fColDimensions) *br = 0;
+      fColDimensions++;
+   }
 
-  // Define the column name
-  fColName = name;
-  delete [] name;
+   // Define the column name
+   fColName = name;
+   delete [] name;
 
-  fIndexArray = 0;
-  if (fColDimensions) {
-     fIndexArray = new Int_t[fColDimensions];
-     memset(fIndexArray,0,fColDimensions*sizeof(Int_t));
-     // Define the index
-     const char *openBracket  = colName.Data()-1;
-     const char *closeBracket = colName.Data()-1;
-     for (Int_t i=0; i< fColDimensions; i++)
-     {
-          openBracket  = strchr(openBracket+1, '[');
-          closeBracket = strchr(closeBracket+1,']');
-          if (closeBracket > openBracket)
-             fIndexArray[i] = atoi(openBracket+1);
-          else {
+   fIndexArray = 0;
+   if (fColDimensions) {
+      fIndexArray = new Int_t[fColDimensions];
+      memset(fIndexArray,0,fColDimensions*sizeof(Int_t));
+      // Define the index
+      const char *openBracket  = colName.Data()-1;
+      const char *closeBracket = colName.Data()-1;
+      for (Int_t i=0; i< fColDimensions; i++) {
+         openBracket  = strchr(openBracket+1, '[');
+         closeBracket = strchr(closeBracket+1,']');
+         if (closeBracket > openBracket)
+            fIndexArray[i] = atoi(openBracket+1);
+         else {
             Error("TTable ctor", "Wrong parethethis <%s>",colName.Data());
             MakeZombie();
             return;
-          }
-     }
-  }
-  if (colName != "user's defined") {
-  LearnTable();
-  SetSearchMethod();
-  }
-  if (!FillIndexArray()) QSort();
+         }
+      }
+   }
+   if (colName != "user's defined") {
+      LearnTable();
+      SetSearchMethod();
+   }
+   if (!FillIndexArray()) QSort();
 }
 
 //_____________________________________________________________________________
@@ -289,33 +288,33 @@ TTableSorter::TTableSorter(const Float_t *simpleArray, Int_t arraySize, Int_t fi
   //                   = 0 means sort all rows from the "firstRow" by the end of table
   //
 
-  fLastFound    = -1;
+   fLastFound    = -1;
 
-  SetSimpleArray(arraySize,firstRow,numberRows);
-  if (!fsimpleArray) { MakeZombie(); return; }
+   SetSimpleArray(arraySize,firstRow,numberRows);
+   if (!fsimpleArray) { MakeZombie(); return; }
 
  //  LearnTable();
 
-      fColName = "Float";
-      fColType   = TTable::kFloat;
-      fColSize   = sizeof(Float_t);
-      fParentRowSize = fColSize;
+   fColName = "Float";
+   fColType   = TTable::kFloat;
+   fColSize   = sizeof(Float_t);
+   fParentRowSize = fColSize;
 
   // FillIndexArray();
 
-    Float_t *p = ((Float_t *)fsimpleArray) + fFirstRow;
-    Bool_t isPreSorted = kTRUE;
-    Float_t sample = *p;
-    for (Int_t i=0; i < fNumberOfRows;i++,p++) {
+   Float_t *p = ((Float_t *)fsimpleArray) + fFirstRow;
+   Bool_t isPreSorted = kTRUE;
+   Float_t sample = *p;
+   for (Int_t i=0; i < fNumberOfRows;i++,p++) {
       fSortIndex[i-fFirstRow] = p;
       if ( isPreSorted) {
-        if (sample > *p) isPreSorted = kFALSE; 
-        else sample = *p;
+         if (sample > *p) isPreSorted = kFALSE; 
+         else sample = *p;
       }
-    }
+   }
 
-  SetSearchMethod();
-  if (!isPreSorted) QSort();
+   SetSearchMethod();
+   if (!isPreSorted) QSort();
 }
 
 //_____________________________________________________________________________
@@ -333,33 +332,33 @@ TTableSorter::TTableSorter(const Double_t *simpleArray, Int_t arraySize, Int_t f
   //                   = 0 means sort all rows from the "firstRow" by the end of table
   //
 
-  fLastFound    = -1;
+   fLastFound    = -1;
 
-  SetSimpleArray(arraySize,firstRow,numberRows);
-  if (!fsimpleArray)  {MakeZombie(); return; }
+   SetSimpleArray(arraySize,firstRow,numberRows);
+   if (!fsimpleArray)  {MakeZombie(); return; }
 
  //  LearnTable();
 
-      fColName = "Double";
-      fColType = TTable::kDouble;
-      fColSize = sizeof(Double_t);
-      fParentRowSize = fColSize;
+   fColName = "Double";
+   fColType = TTable::kDouble;
+   fColSize = sizeof(Double_t);
+   fParentRowSize = fColSize;
       
   // FillIndexArray();
 
-    Double_t *p = ((Double_t *)simpleArray) + fFirstRow;
-    Bool_t isPreSorted = kTRUE;
-    Double_t sample = *p;
-    for (Int_t i=0; i < fNumberOfRows;i++,p++) {
-       fSortIndex[i-fFirstRow] = p;
-       if ( isPreSorted) {
+   Double_t *p = ((Double_t *)simpleArray) + fFirstRow;
+   Bool_t isPreSorted = kTRUE;
+   Double_t sample = *p;
+   for (Int_t i=0; i < fNumberOfRows;i++,p++) {
+      fSortIndex[i-fFirstRow] = p;
+      if ( isPreSorted) {
          if (sample > *p) isPreSorted = kFALSE; 
          else sample = *p;
-       }
-    }
+      }
+   }
 
-  SetSearchMethod();
-  if (!isPreSorted) QSort();
+   SetSearchMethod();
+   if (!isPreSorted) QSort();
 }
 
 //_____________________________________________________________________________
@@ -377,56 +376,56 @@ TTableSorter::TTableSorter(const Long_t *simpleArray, Int_t arraySize, Int_t fir
   //                   = 0 means sort all rows from the "firstRow" by the end of table
   //
 
-  fLastFound    = -1;
+   fLastFound    = -1;
 
-  SetSimpleArray(arraySize,firstRow,numberRows);
-  if (!simpleArray) { MakeZombie(); return; }
+   SetSimpleArray(arraySize,firstRow,numberRows);
+   if (!simpleArray) { MakeZombie(); return; }
 
  //  LearnTable();
 
-      fColName = "Long";
-      fColType = TTable::kLong;
-      fColSize = sizeof(Long_t);
-      fParentRowSize = fColSize;
+   fColName = "Long";
+   fColType = TTable::kLong;
+   fColSize = sizeof(Long_t);
+   fParentRowSize = fColSize;
 
   // FillIndexArray();
 
-    Long_t *p = ((Long_t *)simpleArray) + fFirstRow;
-    Bool_t isPreSorted = kTRUE;
-    Long_t sample = *p;
-    for (Int_t i=0; i < fNumberOfRows;i++,p++) {
+   Long_t *p = ((Long_t *)simpleArray) + fFirstRow;
+   Bool_t isPreSorted = kTRUE;
+   Long_t sample = *p;
+   for (Int_t i=0; i < fNumberOfRows;i++,p++) {
       fSortIndex[i-fFirstRow] = p;
       if ( isPreSorted) {
-        if (sample > *p) isPreSorted = kFALSE; 
-        else sample = *p;
+         if (sample > *p) isPreSorted = kFALSE; 
+         else sample = *p;
       }
-    }
-  SetSearchMethod();
-  if (!isPreSorted) QSort();
+   }
+   SetSearchMethod();
+   if (!isPreSorted) QSort();
 
 }
 
 //_____________________________________________________________________________
 void TTableSorter::SetSimpleArray(Int_t arraySize, Int_t firstRow,Int_t numberRows)
 {
-  // Set some common parameteres for the "simple" arrays
-  SetName("Array");
+   // Set some common parameteres for the "simple" arrays
+   SetName("Array");
 
-  fSortIndex     = 0;
-  fSearchMethod  = 0;
-  fColDimensions = 0;
-  fIndexArray    = 0;
-  fColOffset     = 0;
+   fSortIndex     = 0;
+   fSearchMethod  = 0;
+   fColDimensions = 0;
+   fIndexArray    = 0;
+   fColOffset     = 0;
 
-  // check bounds:
-  if (firstRow > arraySize) return;
-  fFirstRow = firstRow;
+   // check bounds:
+   if (firstRow > arraySize) return;
+   fFirstRow = firstRow;
 
-  fNumberOfRows = arraySize - fFirstRow;
-  if (numberRows > 0)  fNumberOfRows = TMath::Min(numberRows,fNumberOfRows);
+   fNumberOfRows = arraySize - fFirstRow;
+   if (numberRows > 0)  fNumberOfRows = TMath::Min(numberRows,fNumberOfRows);
 
-  // Allocate index array
-  if (fNumberOfRows > 0) fSortIndex = new void*[fNumberOfRows];
+   // Allocate index array
+   if (fNumberOfRows > 0) fSortIndex = new void*[fNumberOfRows];
 }
 
 //_____________________________________________________________________________
@@ -576,79 +575,82 @@ int TTableSorter::Compare##valuetype  (const void **elem1, const void **elem2) {
 }                                                     \
 BINARYSEARCH(valuetype)
 
-  COMPAREFLOATVALUES(Float_t)
-  COMPAREVALUES(Int_t)
-  COMPAREVALUES(Long_t)
-  COMPAREVALUES(ULong_t)
-  COMPAREVALUES(UInt_t)
-  COMPAREVALUES(Short_t)
-  COMPAREFLOATVALUES(Double_t)
-  COMPAREVALUES(UShort_t)
-  COMPAREVALUES(UChar_t)
-  COMPAREVALUES(Char_t)
-  COMPAREVALUES(Bool_t)
+   COMPAREFLOATVALUES(Float_t)
+   COMPAREVALUES(Int_t)
+   COMPAREVALUES(Long_t)
+   COMPAREVALUES(ULong_t)
+   COMPAREVALUES(UInt_t)
+   COMPAREVALUES(Short_t)
+   COMPAREFLOATVALUES(Double_t)
+   COMPAREVALUES(UShort_t)
+   COMPAREVALUES(UChar_t)
+   COMPAREVALUES(Char_t)
+   COMPAREVALUES(Bool_t)
 
 #define COMPAREORDER(valuetype) Compare##valuetype
 #define SEARCHORDER(valuetype) Search##valuetype
 
 //_____________________________________________________________________________
-Int_t TTableSorter::BSearch(const void *value) const {
-  Int_t index = -1;
-  if (fSearchMethod) {
-    void **p = (void **)::bsearch((void *) value,  // Object to search for
+Int_t TTableSorter::BSearch(const void *value) const 
+{
+   //to be documented
+   Int_t index = -1;
+   if (fSearchMethod) {
+      void **p = (void **)::bsearch((void *) value,  // Object to search for
                    fSortIndex,          // Pointer to base of search data
                    fNumberOfRows,       // Number of elements
                    sizeof(void *),       // Width of elements
                    CALLQSORT(fSearchMethod));
-    ((TTableSorter *)this)->fLastFound = -1;
-    if (p) {
-       const Char_t *res = (const Char_t *)(*p);
-       ((TTableSorter *)this)->fLastFound = ((Char_t *)p - (Char_t *)fSortIndex)/sizeof(void *);
-        // calculate index:
-       if (!fsimpleArray)
-          index =  fFirstRow +
-                   (res - (At(fFirstRow)+ fColOffset))/fParentRowSize;
-       else
-         index = ULong_t(res) - ULong_t(fsimpleArray)/fColSize;
-    }
-  }
-  return index;
+      ((TTableSorter *)this)->fLastFound = -1;
+      if (p) {
+         const Char_t *res = (const Char_t *)(*p);
+         ((TTableSorter *)this)->fLastFound = ((Char_t *)p - (Char_t *)fSortIndex)/sizeof(void *);
+         // calculate index:
+         if (!fsimpleArray)
+            index =  fFirstRow + (res - (At(fFirstRow)+ fColOffset))/fParentRowSize;
+         else
+            index = ULong_t(res) - ULong_t(fsimpleArray)/fColSize;
+      }
+   }
+   return index;
 }
 
 //_____________________________________________________________________________
 Int_t TTableSorter::GetIndex(UInt_t sortedIndex) const
 {
-  // returns the original index of the row by its sorted index
+   // returns the original index of the row by its sorted index
    Int_t indx = -1;
    if (sortedIndex < UInt_t(fNumberOfRows) )  {
-     void *p = fSortIndex[sortedIndex];
-     if (p) {
+      void *p = fSortIndex[sortedIndex];
+      if (p) {
          const Char_t *res = (const Char_t *)p;
          // calculate index:
-       if (!fsimpleArray)
-         indx = fFirstRow + (res - (At(fFirstRow) + fColOffset))/fParentRowSize;
-       else
-         indx = (ULong_t(res) - ULong_t(fsimpleArray))/fColSize;
-     }
-  }
-  return indx;
+         if (!fsimpleArray)
+            indx = fFirstRow + (res - (At(fFirstRow) + fColOffset))/fParentRowSize;
+         else
+            indx = (ULong_t(res) - ULong_t(fsimpleArray))/fColSize;
+      }
+   }
+   return indx;
 }
 
 #if 0
 //_____________________________________________________________________________
 int TTableSorter::CompareUChar  (const void *elem1, const void *elem2)
 {
-  UChar_t *value1 = (UChar_t *)(*elem1);
-  UChar_t *value2 = (UChar_t *)(*elem2);
-  COMPAREVALUES(value1,value2)
+   //to be documented
+   UChar_t *value1 = (UChar_t *)(*elem1);
+   UChar_t *value2 = (UChar_t *)(*elem2);
+   COMPAREVALUES(value1,value2)
 }
 
 //_____________________________________________________________________________
 int TTableSorter::CompareChar   (const void *elem1, const void *elem2)
 {
-  Char_t *value1 = (Char_t *)(*elem1);
-  Char_t *value2 = (Char_t *)(*elem2);
-  COMPAREVALUES(value1,value2)
+   //to be documented
+   Char_t *value1 = (Char_t *)(*elem1);
+   Char_t *value2 = (Char_t *)(*elem2);
+   COMPAREVALUES(value1,value2)
 }
 #endif
 
@@ -664,47 +666,47 @@ Int_t TTableSorter::CountKey(const void *key, Int_t firstIndx, Bool_t bSearch, I
  //  bSearch  = kTRUE - binary search (by default) is used otherwise linear one
  //
 
-  Int_t count = 0;
-  if (firstRow) *firstRow = -1;
-  if (fSearchMethod) {
-    Int_t indx = firstIndx;
-    Int_t nRows = GetNRows();
-    if (!bSearch) {
-       while ( indx < nRows && fSearchMethod(key,(const void **)&fSortIndex[indx])){indx++;}
-       // Remember the first row been asked:
-    } else {
-       indx = FindFirstKey(key);
-       if (indx >= 0 ) {  // Key was found let's count it
-         count = TMath::Max(0,GetLastFound() - indx + 1);
-         indx  = TMath::Max(GetLastFound()+1,firstIndx);
-         // Forward pass
-       }
-    }
-    if (indx >= 0) {
-       while ( indx < nRows &&!fSearchMethod(key,(const void **)&fSortIndex[indx])){indx++; count++;}
-       if (firstRow && count) *firstRow = indx-count;
-    }
-  }
-  return count;
+   Int_t count = 0;
+   if (firstRow) *firstRow = -1;
+   if (fSearchMethod) {
+      Int_t indx = firstIndx;
+      Int_t nRows = GetNRows();
+      if (!bSearch) {
+         while ( indx < nRows && fSearchMethod(key,(const void **)&fSortIndex[indx])){indx++;}
+         // Remember the first row been asked:
+      } else {
+         indx = FindFirstKey(key);
+         if (indx >= 0 ) {  // Key was found let's count it
+            count = TMath::Max(0,GetLastFound() - indx + 1);
+            indx  = TMath::Max(GetLastFound()+1,firstIndx);
+            // Forward pass
+         }
+      }
+      if (indx >= 0) {
+         while ( indx < nRows &&!fSearchMethod(key,(const void **)&fSortIndex[indx])){indx++; count++;}
+         if (firstRow && count) *firstRow = indx-count;
+      }
+   }
+   return count;
 }
 
 //_____________________________________________________________________________
 Int_t TTableSorter::CountKeys() const
 {
- //
- // Counts the number of different key values
- //
-  Int_t count = 0;
-  if (fSortIndex && fSortIndex[0]) {
-    void *key = fSortIndex[0];
-    Int_t indx = 0;
-    while (indx < GetNRows()){
-      indx += CountKey(key,indx,kFALSE);
-      count++;
-      key = fSortIndex[indx];
-    }
-  }
-  return count;
+   //
+   // Counts the number of different key values
+   //
+   Int_t count = 0;
+   if (fSortIndex && fSortIndex[0]) {
+      void *key = fSortIndex[0];
+      Int_t indx = 0;
+      while (indx < GetNRows()){
+         indx += CountKey(key,indx,kFALSE);
+         count++;
+         key = fSortIndex[indx];
+      }
+   }
+   return count;
 }
 
 //_____________________________________________________________________________
@@ -716,18 +718,18 @@ Bool_t TTableSorter::FillIndexArray(){
   // Return: kTRUE  - the table has been sorted
   //         kFALSE - otherwise
   //////////////////////////////////////////////////////////////
-  assert(fSortIndex!=0);
-  const char *row = At(fFirstRow) + fColOffset;
-  Bool_t isPreSorted = kTRUE;
-  const void  *sample = row;
-  for (Int_t i=fFirstRow; i < fFirstRow+fNumberOfRows;i++,row += fParentRowSize) { 
-    fSortIndex[i-fFirstRow] = (char *)row;
-    if ( isPreSorted) {
-      if (fCompareMethod(&sample,(const void **)&row)>0) isPreSorted = kFALSE; 
-      else sample = row;
-    }
-  }
-  return isPreSorted;
+   assert(fSortIndex!=0);
+   const char *row = At(fFirstRow) + fColOffset;
+   Bool_t isPreSorted = kTRUE;
+   const void  *sample = row;
+   for (Int_t i=fFirstRow; i < fFirstRow+fNumberOfRows;i++,row += fParentRowSize) { 
+      fSortIndex[i-fFirstRow] = (char *)row;
+      if ( isPreSorted) {
+         if (fCompareMethod(&sample,(const void **)&row)>0) isPreSorted = kFALSE; 
+         else sample = row;
+      }
+   }
+   return isPreSorted;
 }
 
 //_____________________________________________________________________________
@@ -747,95 +749,98 @@ Int_t TTableSorter::FindFirstKey(const void *key) const
  //       may be used like this:
  //       GetIndex(FindFirstKey(key))
  //
-  Int_t indx = -1;
-  if (BSearch(key)>=0)
-  {
-    indx = GetLastFound();
-    if (indx >=0)
-        while (indx > 0 && !fSearchMethod(key,(const void **)&fSortIndex[indx-1])) indx--;
-  }
-  return indx;
+   Int_t indx = -1;
+   if (BSearch(key)>=0) {
+      indx = GetLastFound();
+      if (indx >=0)
+         while (indx > 0 && !fSearchMethod(key,(const void **)&fSortIndex[indx-1])) indx--;
+   }
+   return indx;
 }
 
 //_____________________________________________________________________________
 const Text_t * TTableSorter::GetTableName() const
 {
-  return fParentTable ? fParentTable->GetName():"";
+   //to be documented
+   return fParentTable ? fParentTable->GetName():"";
 }
 
 //_____________________________________________________________________________
 const Text_t * TTableSorter::GetTableTitle() const
 {
- return fParentTable ? fParentTable->GetTitle():"";
+   //to be documented
+   return fParentTable ? fParentTable->GetTitle():"";
 }
 
  //_____________________________________________________________________________
 const Text_t * TTableSorter::GetTableType() const
 {
- return fParentTable ? fParentTable->GetType():"";
+   //to be documented
+   return fParentTable ? fParentTable->GetType():"";
 }
 
 //_____________________________________________________________________________
 TTable *TTableSorter::GetTable() const
 {
+   //to be documented
    return (TTable *)fParentTable;
 }
 
 //_____________________________________________________________________________
 void  TTableSorter::SetSearchMethod()
 {
-  // Select search function at once
-  if (!fSearchMethod) {
-     switch (fColType) {
+   // Select search function at once
+   if (!fSearchMethod) {
+      switch (fColType) {
          case  TTable::kFloat:
-           fSearchMethod  = SEARCHORDER(Float_t);
-           fCompareMethod = COMPAREORDER(Float_t);
-           break;
+            fSearchMethod  = SEARCHORDER(Float_t);
+            fCompareMethod = COMPAREORDER(Float_t);
+            break;
          case  TTable::kInt :
-           fSearchMethod = SEARCHORDER(Int_t);
-           fCompareMethod = COMPAREORDER(Int_t);
-           break;
+            fSearchMethod = SEARCHORDER(Int_t);
+            fCompareMethod = COMPAREORDER(Int_t);
+            break;
          case  TTable::kLong :
-           fSearchMethod = SEARCHORDER(Long_t);
-           fCompareMethod = COMPAREORDER(Long_t);
-           break;
+            fSearchMethod = SEARCHORDER(Long_t);
+            fCompareMethod = COMPAREORDER(Long_t);
+            break;
          case  TTable::kShort :
-           fSearchMethod  = SEARCHORDER(Short_t);
-           fCompareMethod = COMPAREORDER(Short_t);
-           break;
+            fSearchMethod  = SEARCHORDER(Short_t);
+            fCompareMethod = COMPAREORDER(Short_t);
+            break;
          case  TTable::kDouble :
-           fSearchMethod = SEARCHORDER(Double_t);
-           fCompareMethod = COMPAREORDER(Double_t);
-           break;
+            fSearchMethod = SEARCHORDER(Double_t);
+            fCompareMethod = COMPAREORDER(Double_t);
+            break;
          case  TTable::kUInt:
-           fSearchMethod = SEARCHORDER(UInt_t);
-           fCompareMethod = COMPAREORDER(UInt_t);
-           break;
+            fSearchMethod = SEARCHORDER(UInt_t);
+            fCompareMethod = COMPAREORDER(UInt_t);
+            break;
          case  TTable::kULong :
-           fSearchMethod= SEARCHORDER(ULong_t);
-           fCompareMethod = COMPAREORDER(ULong_t);
-           break;
+            fSearchMethod= SEARCHORDER(ULong_t);
+            fCompareMethod = COMPAREORDER(ULong_t);
+            break;
          case  TTable::kUShort:
-           fSearchMethod = SEARCHORDER(UShort_t);
-           fCompareMethod = COMPAREORDER(UShort_t);
-           break;
+            fSearchMethod = SEARCHORDER(UShort_t);
+            fCompareMethod = COMPAREORDER(UShort_t);
+            break;
          case  TTable::kUChar:
-           fSearchMethod = SEARCHORDER(UChar_t);
-           fCompareMethod = COMPAREORDER(UChar_t);
-           break;
+            fSearchMethod = SEARCHORDER(UChar_t);
+            fCompareMethod = COMPAREORDER(UChar_t);
+            break;
          case  TTable::kChar:
-           fSearchMethod = SEARCHORDER(Char_t);
-           fCompareMethod = COMPAREORDER(Char_t);
-           break;
+            fSearchMethod = SEARCHORDER(Char_t);
+            fCompareMethod = COMPAREORDER(Char_t);
+            break;
          case  TTable::kBool:
-           fSearchMethod = SEARCHORDER(Bool_t);
-           fCompareMethod = COMPAREORDER(Bool_t);
-           break;
+            fSearchMethod = SEARCHORDER(Bool_t);
+            fCompareMethod = COMPAREORDER(Bool_t);
+            break;
          default:
             break;
 
       };
-  }
+   }
 }
 
 //____________________________________________________________________________
@@ -843,10 +848,10 @@ void  TTableSorter::QSort(){
  // Call the standard C run-time library "qsort" function
  //
    if (fCompareMethod)
-           ::qsort(fSortIndex,       //Start of target array
-                fNumberOfRows,       //Array size in elements
-                sizeof(void *),      //Element size in bytes
-                CALLQSORT(fCompareMethod));
+      ::qsort(fSortIndex,       //Start of target array
+              fNumberOfRows,       //Array size in elements
+              sizeof(void *),      //Element size in bytes
+              CALLQSORT(fCompareMethod));
 }
 
 //____________________________________________________________________________
@@ -859,70 +864,70 @@ void TTableSorter::LearnTable()
 //  buildTree - if kTRUE, then add TBranches to the TTree for each table
 //              column (default=kFALSE)
 //
-  TClass *classPtr = fParentTable->GetRowClass();
-  if (!classPtr) return;
+   TClass *classPtr = fParentTable->GetRowClass();
+   if (!classPtr) return;
 
-  if (!classPtr->GetListOfRealData()) classPtr->BuildRealData();
-  if (!(classPtr->GetNdata())) return;
+   if (!classPtr->GetListOfRealData()) classPtr->BuildRealData();
+   if (!(classPtr->GetNdata())) return;
 
-  const Char_t *types;
-  Char_t *varname;
+   const Char_t *types;
+   Char_t *varname;
 
-  TIter next(classPtr->GetListOfDataMembers());
-  TDataMember *member = 0;
-  while ( (member = (TDataMember *) next()) ) {
-    varname = (Char_t *) member->GetName();
+   TIter next(classPtr->GetListOfDataMembers());
+   TDataMember *member = 0;
+   while ( (member = (TDataMember *) next()) ) {
+      varname = (Char_t *) member->GetName();
 
-    if (strcmp(varname,fColName.Data())) continue;
+      if (strcmp(varname,fColName.Data())) continue;
 
-    TDataType *memberType = member->GetDataType();
-    types = memberType->GetTypeName();
-    SetTitle(types);
-    if (!strcmp("float", types))
-      fColType = TTable::kFloat ;
-    else if (!strcmp("int", types))
-      fColType = TTable::kInt   ;
-    else if (!strcmp("long", types))
-      fColType = TTable::kLong  ;
-    else if (!strcmp("short", types))
-      fColType = TTable::kShort ;
-    else if (!strcmp("double", types))
-      fColType = TTable::kDouble;
-    else if (!strcmp("unsigned int", types))
-      fColType = TTable::kUInt  ;
-    else if (!strcmp("unsigned long", types))
-      fColType = TTable::kULong ;
-    else if (!strcmp("unsigned short", types))
-      fColType = TTable::kUShort;
-    else if (!strcmp("unsigned char", types))
-      fColType = TTable::kUChar;
-    else if (!strcmp("char", types))
-      fColType= TTable::kChar;
-    else if (!strcmp("bool", types))
-      fColType= TTable::kBool;
+      TDataType *memberType = member->GetDataType();
+      types = memberType->GetTypeName();
+      SetTitle(types);
+      if (!strcmp("float", types))
+         fColType = TTable::kFloat ;
+      else if (!strcmp("int", types))
+         fColType = TTable::kInt   ;
+      else if (!strcmp("long", types))
+         fColType = TTable::kLong  ;
+      else if (!strcmp("short", types))
+         fColType = TTable::kShort ;
+      else if (!strcmp("double", types))
+         fColType = TTable::kDouble;
+      else if (!strcmp("unsigned int", types))
+         fColType = TTable::kUInt  ;
+      else if (!strcmp("unsigned long", types))
+         fColType = TTable::kULong ;
+      else if (!strcmp("unsigned short", types))
+         fColType = TTable::kUShort;
+      else if (!strcmp("unsigned char", types))
+         fColType = TTable::kUChar;
+      else if (!strcmp("char", types))
+         fColType= TTable::kChar;
+      else if (!strcmp("bool", types))
+         fColType= TTable::kBool;
 
-    if (fColType != TTable::kNAN) {
-      Int_t dim = 0;
-      Int_t globalIndex = 0;
-      if ( (dim = member->GetArrayDim()) ) {
-      // Check dimensions
-        if (dim != fColDimensions) {
-           Error("LearnTable","Wrong dimension");
-           TTable *t = (TTable *)fParentTable;
-           t->Print();
-           return;
-        }
-        // Calculate the global index
-        for( Int_t indx=0; indx < fColDimensions; indx++ ){
-           globalIndex *= member->GetMaxIndex(indx);
-           globalIndex += fIndexArray[indx];
-        }
+      if (fColType != TTable::kNAN) {
+         Int_t dim = 0;
+         Int_t globalIndex = 0;
+         if ( (dim = member->GetArrayDim()) ) {
+            // Check dimensions
+            if (dim != fColDimensions) {
+               Error("LearnTable","Wrong dimension");
+               TTable *t = (TTable *)fParentTable;
+               t->Print();
+               return;
+            }
+            // Calculate the global index
+            for( Int_t indx=0; indx < fColDimensions; indx++ ){
+               globalIndex *= member->GetMaxIndex(indx);
+               globalIndex += fIndexArray[indx];
+            }
+         }
+         fColSize   = memberType->Size();
+         fColOffset = member->GetOffset() + memberType->Size() * globalIndex;
       }
-      fColSize   = memberType->Size();
-      fColOffset = member->GetOffset() + memberType->Size() * globalIndex;
+      break;
    }
-    break;
-  }
 }
 
 #undef COMPAREVALUES

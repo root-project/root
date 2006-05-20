@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:$:$Id:$
+// @(#)root/table:$Name:  $:$Id: TIndexTable.h,v 1.3 2004/02/13 14:27:00 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************
@@ -25,8 +25,7 @@
 //////////////////////////////////////////////////////
 
 
-class TIndexTable : public TTable
-{
+class TIndexTable : public TTable {
 protected:
    const TTable *fRefTable;
 public:
@@ -68,20 +67,20 @@ protected:
    static TTableDescriptor *CreateDescriptor();
 
 // define ClassDefTable(TIndexTable,int)
-  protected:
-     static TTableDescriptor *fgColDescriptors;
-     virtual TTableDescriptor *GetDescriptorPointer() const { return fgColDescriptors;}
-     virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = list;}
-  public:
-    TIndexTable() : TTable("TIndexTable",sizeof(int))    {SetType("int");}
-    TIndexTable(const Text_t *name) : TTable(name,sizeof(int)) {SetType("int");}
-    TIndexTable(Int_t n) : TTable("TIndexTable",n,sizeof(int)) {SetType("int");}
-    TIndexTable(const Text_t *name,Int_t n) : TTable(name,n,sizeof(int)) {SetType("int");}
-    virtual ~TIndexTable() {}
-    const int *GetTable(Int_t i=0) const;
-    int &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }
-    const int &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const int *)(GetTable(i))); }
-    ClassDef(TIndexTable,4) // "Index" array for TTable object
+protected:
+   static TTableDescriptor *fgColDescriptors;
+   virtual TTableDescriptor *GetDescriptorPointer() const { return fgColDescriptors;}
+   virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = list;}
+public:
+   TIndexTable() : TTable("TIndexTable",sizeof(int))    {SetType("int");}
+   TIndexTable(const Text_t *name) : TTable(name,sizeof(int)) {SetType("int");}
+   TIndexTable(Int_t n) : TTable("TIndexTable",n,sizeof(int)) {SetType("int");}
+   TIndexTable(const Text_t *name,Int_t n) : TTable(name,n,sizeof(int)) {SetType("int");}
+   virtual ~TIndexTable() {}
+   const int *GetTable(Int_t i=0) const;
+   int &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }
+   const int &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const int *)(GetTable(i))); }
+   ClassDef(TIndexTable,4) // "Index" array for TTable object
 };
 
 //___________________________________________________________________________________________________________
@@ -91,20 +90,20 @@ inline  const int *TIndexTable::GetTable(Int_t i) const { return ((int *)GetArra
 //___________________________________________________________________________________________________________
 inline  Bool_t TIndexTable::IsValid() const
 {
-    // Check whether all "map" values do belong the table
-    const TTable *cont= Table();
-    if (!cont) return kFALSE;
+   // Check whether all "map" values do belong the table
+   const TTable *cont= Table();
+   if (!cont) return kFALSE;
 
-    iterator i      = begin();
-    iterator finish = end();
-    Int_t totalSize         = cont->GetNRows();
+   iterator i      = begin();
+   iterator finish = end();
+   Int_t totalSize         = cont->GetNRows();
 
-    for (; i != finish; i++) {
-       int th = i;
-       if (  th == -1 || (0 <= th && th < totalSize) ) continue;
-       return kFALSE;
-    }
-    return kTRUE;
+   for (; i != finish; i++) {
+      int th = i;
+      if (  th == -1 || (0 <= th && th < totalSize) ) continue;
+      return kFALSE;
+   }
+   return kTRUE;
 }
 //___________________________________________________________________________________________________________
 inline void TIndexTable::push_back(Long_t next){ AddAt(&next); }

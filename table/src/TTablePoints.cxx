@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTablePoints.cxx,v 1.1.1.2 2002/12/02 21:57:35 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTablePoints.cxx,v 1.3 2003/01/27 20:41:37 brun Exp $
 // Author: Valery Fine   14/05/99  (E-mail: fine@bnl.gov)
 
 // ***********************************************************************
@@ -47,42 +47,45 @@ ClassImp(TTablePoints)
 //____________________________________________________________________________
 TTablePoints::TTablePoints()
 {
-  fTableSorter =  0;
-  fKey         =  0;
-  fFirstRow    = -1;
-  fSize        =  0;
+   //to be documented
+   fTableSorter =  0;
+   fKey         =  0;
+   fFirstRow    = -1;
+   fSize        =  0;
 }
 
 //____________________________________________________________________________
 TTablePoints::TTablePoints(TTableSorter *sorter,const void *key,Option_t *opt)
 {
-  fTableSorter =  0;
-  fKey         =  0;
-  fFirstRow    = -1;
-  fSize        =  0;
-  if (sorter) {
-     fTableSorter = sorter;
-     fKey         = key;
-     fSize        = sorter->CountKey(fKey,0,kTRUE,&fFirstRow);
-     SetTablePointer(GetTable());
-  }
-  SetOption(opt);
+   //to be documented
+   fTableSorter =  0;
+   fKey         =  0;
+   fFirstRow    = -1;
+   fSize        =  0;
+   if (sorter) {
+      fTableSorter = sorter;
+      fKey         = key;
+      fSize        = sorter->CountKey(fKey,0,kTRUE,&fFirstRow);
+      SetTablePointer(GetTable());
+   }
+   SetOption(opt);
 }
 
 //____________________________________________________________________________
 TTablePoints::TTablePoints(TTableSorter *sorter, Int_t keyIndex,Option_t *opt)
 {
-  fTableSorter =  0;
-  fKey         =  0;
-  fFirstRow    = -1;
-  fSize        =  0;
-  if (sorter) {
-     fTableSorter = sorter;
-     fKey         = sorter->GetKeyAddress(keyIndex);
-     fSize        = sorter->CountKey(fKey,keyIndex,kFALSE,&fFirstRow);
-     SetTablePointer(GetTable());
-  }
-  SetOption(opt);
+   //to be documented
+   fTableSorter =  0;
+   fKey         =  0;
+   fFirstRow    = -1;
+   fSize        =  0;
+   if (sorter) {
+      fTableSorter = sorter;
+      fKey         = sorter->GetKeyAddress(keyIndex);
+      fSize        = sorter->CountKey(fKey,keyIndex,kFALSE,&fFirstRow);
+      SetTablePointer(GetTable());
+   }
+   SetOption(opt);
 }
 
 //______________________________________________________________________________

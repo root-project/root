@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $Id: TResponseTable.cxx,v 1.1 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $Id: TResponseTable.cxx,v 1.2 2003/02/11 12:17:19 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/04/2002
 // Copyright(c) 2002 [BNL] Brookhaven National Laboratory, Valeri Fine (fine@bnl.gov)
 // All right reserved
@@ -9,7 +9,10 @@ ClassImp(TResponseTable)
 TableClassStreamerImp(TResponseTable)
 
 //______________________________________________________________________________
-TResponseTable::TResponseTable():TGenericTable(), fResponseLocation(-1){}
+TResponseTable::TResponseTable():TGenericTable(), fResponseLocation(-1)
+{
+   //to be documented
+}
 
 //______________________________________________________________________________
 TResponseTable::TResponseTable(const char *name,const char *volumePath, const char *responseDefinition, Int_t /*allocSize*/) 
@@ -29,27 +32,27 @@ TResponseTable::TResponseTable(const char *name,const char *volumePath, const ch
 //______________________________________________________________________________
 void TResponseTable::AddVolumePath(const char *path)
 {
+   //to be documented
    Int_t counter = 0;
    const Int_t maxResponseCounter = 15;
    const char *next = &path[0];
-   while( ( *next && *next != ' ') &&  counter < maxResponseCounter )
-   {  
-     TString elName;
-      for (int j=0; j<4 && (next[j] != ' ');j++)  elName += next[j];
-      AddElement(elName,kInt);
-      next += 4; 
-      counter++;
-   }
+   while( ( *next && *next != ' ') &&  counter < maxResponseCounter ) {  
+      TString elName;
+       for (int j=0; j<4 && (next[j] != ' ');j++)  elName += next[j];
+       AddElement(elName,kInt);
+       next += 4; 
+       counter++;
+    }
 }
 //______________________________________________________________________________
 void TResponseTable::AddResponse(const char *chit)
 {
+   //to be documented
    Int_t counter = 0;
    const Int_t maxResponseCounter = 15;
    const char *next = &chit[0];
-   while( ( *next != ' ' ) &&  counter < maxResponseCounter ) 
-   {  
-     TString elName;
+   while( ( *next != ' ' ) &&  counter < maxResponseCounter )  {  
+      TString elName;
       for (int j=0; j<4 && (next[j] != ' ');j++)  elName += next[j];
       AddElement(elName,kFloat);
       next += 4; 
@@ -59,11 +62,12 @@ void TResponseTable::AddResponse(const char *chit)
 //______________________________________________________________________________
 void TResponseTable::AddElement(const char *path,EColumnType type)
 { 
-  assert( (type == kInt || type == kFloat ) );
+   //to be documented
+   assert( (type == kInt || type == kFloat ) );
 
-  TTableDescriptor  &dsc = *GetTableDescriptors();
-  Int_t nRow = dsc.GetNRows();
-  tableDescriptor_st row;
+   TTableDescriptor  &dsc = *GetTableDescriptors();
+   Int_t nRow = dsc.GetNRows();
+   tableDescriptor_st row;
 
    memset(&row,0,sizeof(row));
    strncpy(row.fColumnName,path,sizeof(row.fColumnName));
@@ -82,28 +86,28 @@ void TResponseTable::AddElement(const char *path,EColumnType type)
 //______________________________________________________________________________
 void TResponseTable::SetResponse(int track, int *nvl, float *response)
 {
-  // Add one extra his/digit to the table
-  // Reallocate the table if needed
-  char    *charBuffer     = new char[GetRowSize()];
-  Int_t   *nvlBuffer      = (Int_t *)charBuffer;
-  Float_t *responseBuffer = (Float_t *)charBuffer;
-  Int_t jResponse  = 0;
-  Int_t jNvl       = 0;
+   // Add one extra his/digit to the table
+   // Reallocate the table if needed
+   char    *charBuffer     = new char[GetRowSize()];
+   Int_t   *nvlBuffer      = (Int_t *)charBuffer;
+   Float_t *responseBuffer = (Float_t *)charBuffer;
+   Int_t jResponse  = 0;
+   Int_t jNvl       = 0;
 
-  // Loop for the response information
-  TTableDescriptor  &dsc = *GetTableDescriptors();
-  Int_t nRow = dsc.GetNRows();
-  tableDescriptor_st *row = dsc.GetTable();
-  nvlBuffer[0] =  track; row++;
-  for (int i=1;i<nRow;i++,row++) {
-    if (row->fType == kFloat) {
-      responseBuffer[i] = response[jResponse++];
-    } else {
-      nvlBuffer[i] = nvl[jNvl++];
-    }
-  }
-  AddAt(charBuffer);
-  delete [] charBuffer;
+   // Loop for the response information
+   TTableDescriptor  &dsc = *GetTableDescriptors();
+   Int_t nRow = dsc.GetNRows();
+   tableDescriptor_st *row = dsc.GetTable();
+   nvlBuffer[0] =  track; row++;
+   for (int i=1;i<nRow;i++,row++) {
+      if (row->fType == kFloat) {
+         responseBuffer[i] = response[jResponse++];
+      } else {
+         nvlBuffer[i] = nvl[jNvl++];
+      }
+   }
+   AddAt(charBuffer);
+   delete [] charBuffer;
 }
 
 //______________________________________________________________________________
@@ -121,16 +125,16 @@ Int_t TResponseTable::FindResponseLocation(TTableDescriptor  &dsc)
  //   ...   response values
  //  RowSize
 
- // responseLocation is an offset of the first float data-member
-  Int_t responseLocation = -1;
-  Int_t nRow = dsc.GetNRows();
-  tableDescriptor_st *row = dsc.GetTable();
-  for (int i=0;i<nRow;i++,row++) {
-    if (row->fType == kFloat) {
-     // found
-     responseLocation = i;   
-     break;
-    }
-  }
-  return responseLocation;
+   // responseLocation is an offset of the first float data-member
+   Int_t responseLocation = -1;
+   Int_t nRow = dsc.GetNRows();
+   tableDescriptor_st *row = dsc.GetTable();
+   for (int i=0;i<nRow;i++,row++) {
+      if (row->fType == kFloat) {
+         // found
+         responseLocation = i;   
+         break;
+      }
+   }
+   return responseLocation;
 }

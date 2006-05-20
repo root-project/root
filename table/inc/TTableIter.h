@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableIter.h,v 1.1.1.2 2002/12/02 21:57:32 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTableIter.h,v 1.3 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/12/99
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TTableIter
 #define ROOT_TTableIter
-// $Id: TTableIter.h,v 1.1.1.2 2002/12/02 21:57:32 fisyak Exp $
+// $Id: TTableIter.h,v 1.3 2003/01/27 20:41:36 brun Exp $
 // Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
 // Author                  Valerie Fine  (fine@bnl.gov)
 // Copyright(c) 1997~1999  Valerie Fine  (fine@bnl.gov)
@@ -25,16 +25,16 @@
 class TTableSorter;
 
 class TTableIter : public TObject {
- private:
-       const TTableSorter *fTableSorter;
-       Int_t  fIndx;
-       Int_t  fTotalKeys;
-       Int_t  fFirstIndx;
- protected:
+private:
+   const TTableSorter *fTableSorter;
+   Int_t  fIndx;
+   Int_t  fTotalKeys;
+   Int_t  fFirstIndx;
+protected:
    TTableIter(){;}
    TTableIter(const TTableIter &org) : TObject(org) {;}
 
- public:
+public:
    TTableIter(const TTableSorter *table, Float_t  &keyvalue);
    TTableIter(const TTableSorter *table, Double_t &keyvalue);
    TTableIter(const TTableSorter *table, Int_t    &keyvalue);

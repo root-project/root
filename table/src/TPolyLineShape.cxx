@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.3 2004/11/18 18:08:48 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.4 2005/09/08 05:33:41 brun Exp $
 // Author: 
-// $Id: TPolyLineShape.cxx,v 1.3 2004/11/18 18:08:48 brun Exp $
+// $Id: TPolyLineShape.cxx,v 1.4 2005/09/08 05:33:41 brun Exp $
 // ***********************************************************************
 // *  C++ class library to define an abstract 3D shape os STAR "event" geometry
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -91,6 +91,7 @@ ClassImp(TPolyLineShape)
 //______________________________________________________________________________
 TPolyLineShape::TPolyLineShape()
 {
+   //to be documented
    fShape = 0;
    fSmooth = kFALSE;
    fConnection= 0;
@@ -107,7 +108,7 @@ TPolyLineShape::TPolyLineShape()
 TPolyLineShape::TPolyLineShape(TPoints3DABC  *points,Option_t* option)
 {
   //  fShape       = new TTUBE("tube","tube","void",0.5,0.5);
-    fShape      = 0;
+   fShape      = 0;
    fShapeType   = kNULL;
    fSmooth      = kFALSE;
    fConnection  = 0;
@@ -116,8 +117,8 @@ TPolyLineShape::TPolyLineShape(TPoints3DABC  *points,Option_t* option)
    fSizeX3D     = 0;
    // Take in account the current node if any
    if (!fPoints) {
-     Error("TPolyLineShape","No polyline is defined");
-     return;
+      Error("TPolyLineShape","No polyline is defined");
+      return;
    }
    fPointFlag = strchr(option,'P')?kTRUE:kFALSE;
    fLineFlag  = strchr(option,'L')?kTRUE:kFALSE;
@@ -129,63 +130,65 @@ TPolyLineShape::TPolyLineShape(TPoints3DABC  *points,Option_t* option)
 //______________________________________________________________________________
 TPolyLineShape::~TPolyLineShape()
 {
-  SafeDelete(fShape);
-  SafeDelete(fSizeX3D);
+   //to be documented
+   SafeDelete(fShape);
+   SafeDelete(fSizeX3D);
 }
 
 //______________________________________________________________________________
 void TPolyLineShape::Create()
 {
-    if (!fConnection) SetConnection(kBrik);
+   //to be documented
+   if (!fConnection) SetConnection(kBrik);
 }
 
 //______________________________________________________________________________
 Size3D *TPolyLineShape::CreateX3DSize(Bool_t marker)
 {
-  if (!fSizeX3D) fSizeX3D = new Size3D;
-  fSizeX3D->numPoints = 0;
-  fSizeX3D->numSegs   = 0;
-  fSizeX3D->numPolys  = 0;         //NOTE: Because of different structure, our
-  if (fPoints) {
-    Int_t size = fPoints->Size();
-    if (marker) {
-      Int_t mode;
+   //to be documented
+   if (!fSizeX3D) fSizeX3D = new Size3D;
+   fSizeX3D->numPoints = 0;
+   fSizeX3D->numSegs   = 0;
+   fSizeX3D->numPolys  = 0;         //NOTE: Because of different structure, our
+   if (fPoints) {
+      Int_t size = fPoints->Size();
+      if (marker) {
+         Int_t mode;
+         if (size > 10000) mode = 1;         // One line marker    '-'
+         else if (size > 3000) mode = 2;     // Two lines marker   '+'
+         else mode = 3;                      // Three lines marker '*'
 
-      if (size > 10000) mode = 1;         // One line marker    '-'
-      else if (size > 3000) mode = 2;     // Two lines marker   '+'
-      else mode = 3;                      // Three lines marker '*'
-
-      fSizeX3D->numSegs   = size*mode;
-      fSizeX3D->numPoints = size*mode*2;
-      fSizeX3D->numPolys  = 0;
-    }
-    else {
-      fSizeX3D->numSegs   = size-1;
-      fSizeX3D->numPoints = size;
-    }
-    fSizeX3D->numPolys  = 0;         //NOTE: Because of different structure, our
-  }
-  return fSizeX3D;
+         fSizeX3D->numSegs   = size*mode;
+         fSizeX3D->numPoints = size*mode*2;
+         fSizeX3D->numPolys  = 0;
+      } else {
+         fSizeX3D->numSegs   = size-1;
+         fSizeX3D->numPoints = size;
+      }
+      fSizeX3D->numPolys  = 0;         //NOTE: Because of different structure, our
+   }
+   return fSizeX3D;
 }
 
 //______________________________________________________________________________
 Int_t TPolyLineShape::SetConnection(EShapeTypes connection)
 {
- Float_t size = 0.5*GetWidthFactor()*GetLineWidth();
+   //to be documented
+   Float_t size = 0.5*GetWidthFactor()*GetLineWidth();
 
- if (fShapeType != connection) {
-   SafeDelete(fConnection);
-   fShapeType = connection;
-   switch (fShapeType) {
-     case  kSphere:
-          SetConnection(new TSPHE("connection","sphere","void",0,size,0,90,0,360));
-          break;
-     default:
-          SetConnection(new TBRIK("connection","brik","void",size,size,size));
-          break;
-     };
-  }
-  return 0;
+   if (fShapeType != connection) {
+      SafeDelete(fConnection);
+      fShapeType = connection;
+      switch (fShapeType) {
+         case  kSphere:
+            SetConnection(new TSPHE("connection","sphere","void",0,size,0,90,0,360));
+            break;
+         default:
+            SetConnection(new TBRIK("connection","brik","void",size,size,size));
+            break;
+      };
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -200,12 +203,12 @@ Int_t TPolyLineShape::DistancetoPrimitive(Int_t px, Int_t py)
 //*-*  The distance is computed in pixels units.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
- if (fPoints) {
-   Int_t ret = fPoints->DistancetoPrimitive( px, py);
-   if (ret == -1) ret = PointDistancetoPrimitive(px, py);
-   return ret;
- }
- return 999999;
+   if (fPoints) {
+      Int_t ret = fPoints->DistancetoPrimitive( px, py);
+      if (ret == -1) ret = PointDistancetoPrimitive(px, py);
+      return ret;
+   }
+   return 999999;
 }
 
 //______________________________________________________________________________
@@ -238,20 +241,20 @@ Int_t TPolyLineShape::PointDistancetoPrimitive(Int_t px, Int_t py)
 
    view = gPad->GetView();
    if (view) {
-     Int_t i;
-     Float_t dpoint;
-     Float_t xndc[3];
-     Int_t x1,y1;
-     Int_t pointSize = fPoints->Size();
-     for (i=0;i<pointSize;i++) {
-        Float_t thisPoints[3];
-        view->WCtoNDC(fPoints->GetXYZ(thisPoints,i), xndc);
-        x1     = gPad->XtoAbsPixel(xndc[0]);
-        y1     = gPad->YtoAbsPixel(xndc[1]);
-        dpoint = (px-x1)*(px-x1) + (py-y1)*(py-y1);
-        if (dpoint < dist) dist = dpoint;
-     }
-     dist = (TMath::Sqrt(dist));
+      Int_t i;
+      Float_t dpoint;
+      Float_t xndc[3];
+      Int_t x1,y1;
+      Int_t pointSize = fPoints->Size();
+      for (i=0;i<pointSize;i++) {
+         Float_t thisPoints[3];
+         view->WCtoNDC(fPoints->GetXYZ(thisPoints,i), xndc);
+         x1     = gPad->XtoAbsPixel(xndc[0]);
+         y1     = gPad->YtoAbsPixel(xndc[1]);
+         dpoint = (px-x1)*(px-x1) + (py-y1)*(py-y1);
+         if (dpoint < dist) dist = dpoint;
+      }
+      dist = (TMath::Sqrt(dist));
    }
 END:
    return Int_t(dist);
@@ -260,8 +263,9 @@ END:
 //______________________________________________________________________________
 void TPolyLineShape::Draw(Option_t *)
 {
-  Create();
-  AppendPad();
+   //to be documented
+   Create();
+   AppendPad();
 }
 
 //______________________________________________________________________________
@@ -274,7 +278,8 @@ void TPolyLineShape::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 Color_t TPolyLineShape::GetColorAttribute() const
 {
-  return ((TPolyLineShape *)this)->GetLineColor();
+   //to be documented
+   return ((TPolyLineShape *)this)->GetLineColor();
 }
 //______________________________________________________________________________
 const char  *TPolyLineShape::GetName()  const
@@ -292,12 +297,14 @@ char  *TPolyLineShape::GetObjectInfo(Int_t px, Int_t py) const
 //______________________________________________________________________________
 Size_t TPolyLineShape::GetSizeAttribute() const
 {
+   //to be documented
    return ((TPolyLineShape *)this)->GetMarkerSize();
 }
 
 //______________________________________________________________________________
 Style_t TPolyLineShape::GetStyleAttribute() const
 {
+   //to be documented
    return ((TPolyLineShape *)this)->GetLineStyle();
 }
 
@@ -364,8 +371,8 @@ void TPolyLineShape::PaintNode(Float_t *start,Float_t *end,Option_t *option)
                                   ,nodeposition[2],&matrix);
 
     if (!(fSmooth || fConnection))  {
-         node.PaintNodePosition(option, &position);
-         return;
+        node.PaintNodePosition(option, &position);
+        return;
     }
 
     // Add the connection
@@ -389,41 +396,41 @@ void TPolyLineShape::PaintNode(Float_t *start,Float_t *end,Option_t *option)
 //______________________________________________________________________________
 void TPolyLineShape::Paint(Option_t *opt)
 {
-  if (!GetPoints()) return;
+   //to be documented
+   if (!GetPoints()) return;
 
-  Bool_t rangeView = opt && opt[0] && strcmp(opt,"range")==0 ? kTRUE : kFALSE;
-  TPadView3D *view3D = 0;
-  if (!rangeView  && (view3D = (TPadView3D*)gPad->GetView3D()) ) {
-    TString mode;
+   Bool_t rangeView = opt && opt[0] && strcmp(opt,"range")==0 ? kTRUE : kFALSE;
+   TPadView3D *view3D = 0;
+   if (!rangeView  && (view3D = (TPadView3D*)gPad->GetView3D()) ) {
+      TString mode;
 
-    mode="";
-    if (fLineFlag)  mode  = "L";
-    if (fPointFlag) mode += "P";
+      mode="";
+      if (fLineFlag)  mode  = "L";
+      if (fPointFlag) mode += "P";
 
-    view3D->SetLineAttr(GetColorAttribute(), (Int_t)GetSizeAttribute());
-    view3D->PaintPoints3D(GetPoints(), mode.Data());
-  }
-  if (!strstr(opt, "x3d")) {
-    if (fPointFlag) {
+      view3D->SetLineAttr(GetColorAttribute(), (Int_t)GetSizeAttribute());
+      view3D->PaintPoints3D(GetPoints(), mode.Data());
+   }
+   if (!strstr(opt, "x3d")) {
+      if (fPointFlag) {
          SetMarkerColor(GetColorAttribute());
          SetMarkerSize(GetSizeAttribute());
          PaintPolyMarker(fPoints->Size());
-    }
-    if (fLineFlag) {
+      }
+      if (fLineFlag) {
          SetLineColor(GetColorAttribute());
          SetLineWidth((Width_t)GetSizeAttribute());
          PaintPoints(fPoints->Size());
-    }
+      }
 
-  }
-  else {
-    if (fLineFlag) {
-       CreateX3DSize(kFALSE); PaintX3DLine(opt);
-    } else {
-       CreateX3DSize(kTRUE);  PaintX3DMarker(opt);
-    }
+   } else {
+      if (fLineFlag) {
+         CreateX3DSize(kFALSE); PaintX3DLine(opt);
+      } else {
+         CreateX3DSize(kTRUE);  PaintX3DMarker(opt);
+      }
 //     Paint3d(opt);
-  }
+   }
 }
 
 //______________________________________________________________________________
@@ -493,22 +500,24 @@ void TPolyLineShape::PaintPolyMarker(Int_t n, Float_t *, Marker_t, Option_t *)
 //______________________________________________________________________________
 void TPolyLineShape::Paint3d(Option_t *opt)
 {
- if (!fPoints) return;
+   //to be documented
+   if (!fPoints) return;
 
- Create();
+   Create();
 
- struct XYZ { Float_t xyz[3]; } *points;
- points  = (XYZ *)(fPoints->GetP());
- Int_t size      = fPoints->GetN()-1;
+   struct XYZ { Float_t xyz[3]; } *points;
+   points  = (XYZ *)(fPoints->GetP());
+   Int_t size      = fPoints->GetN()-1;
 
- for (Int_t i=0;i<size;i++)
+   for (Int_t i=0;i<size;i++)
       PaintNode((Float_t *)(points+i+1),(Float_t *)(points+i),opt);
- fHasDrawn = kTRUE;
+   fHasDrawn = kTRUE;
 }
 
 //______________________________________________________________________________
 void TPolyLineShape::PaintX3DLine(Option_t *)
 {
+   //to be documented
 #ifndef WIN32
    X3DBuffer *buff = new X3DBuffer;
    if (!buff) return;
@@ -529,34 +538,35 @@ void TPolyLineShape::PaintX3DLine(Option_t *)
    Int_t c = ((GetColorAttribute() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 8
    if (c < 0) c = 0;
 
-    //*-* Allocate memory for segments *-*
-    buff->segs = new Int_t[buff->numSegs*3];
-    if (buff->segs) {
-         for (Int_t i = 0; i < buff->numSegs; i++) {
-             buff->segs[3*i  ] = c;
-             buff->segs[3*i+1] = i;
-             buff->segs[3*i+2] = i+1;
-         }
-     }
+   //*-* Allocate memory for segments *-*
+   buff->segs = new Int_t[buff->numSegs*3];
+   if (buff->segs) {
+      for (Int_t i = 0; i < buff->numSegs; i++) {
+         buff->segs[3*i  ] = c;
+         buff->segs[3*i+1] = i;
+         buff->segs[3*i+2] = i+1;
+      }
+   }
 
 
-     if (buff && buff->points && buff->segs) //If everything seems to be OK ...
-         FillX3DBuffer(buff);
-     else {                            // ... something very bad was happened
-         gSize3D.numPoints -= buff->numPoints;
-         gSize3D.numSegs   -= buff->numSegs;
-         gSize3D.numPolys  -= buff->numPolys;
-     }
+   if (buff && buff->points && buff->segs) //If everything seems to be OK ...
+      FillX3DBuffer(buff);
+   else {                            // ... something very bad was happened
+      gSize3D.numPoints -= buff->numPoints;
+      gSize3D.numSegs   -= buff->numSegs;
+      gSize3D.numPolys  -= buff->numPolys;
+   }
 
-     if (buff->segs)     delete [] buff->segs;
-     if (buff->polys)    delete [] buff->polys;
-     if (buff)           delete    buff;
+   if (buff->segs)     delete [] buff->segs;
+   if (buff->polys)    delete [] buff->polys;
+   if (buff)           delete    buff;
 #endif
 }
 
 //______________________________________________________________________________
 void TPolyLineShape::PaintX3DMarker(Option_t *)
 {
+   //to be documented
 #ifndef WIN32
    Int_t size = 0;
    if (fPoints) size = fPoints->Size();
@@ -583,19 +593,19 @@ void TPolyLineShape::PaintX3DMarker(Option_t *)
 
    buff->points = new Float_t[buff->numPoints*3];
    if (buff->points) {
-       for (i = 0; i < size; i++) {
-           for (j = 0; j < mode; j++) {
-               for (k = 0; k < 2; k++) {
-                   delta *= -1;
-                   for (n = 0; n < 3; n++) {
-                       Float_t xyz[3];
-                       fPoints->GetXYZ(xyz,i);
-                       buff->points[mode*6*i+6*j+3*k+n] =
-                           xyz[n] * (1 + (j == n ? delta : 0));
-                   }
+      for (i = 0; i < size; i++) {
+         for (j = 0; j < mode; j++) {
+            for (k = 0; k < 2; k++) {
+               delta *= -1;
+               for (n = 0; n < 3; n++) {
+                  Float_t xyz[3];
+                  fPoints->GetXYZ(xyz,i);
+                  buff->points[mode*6*i+6*j+3*k+n] =
+                  xyz[n] * (1 + (j == n ? delta : 0));
                }
-           }
-       }
+            }
+         }
+      }
    }
 
    Int_t c = ((GetColorAttribute() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 8
@@ -604,19 +614,19 @@ void TPolyLineShape::PaintX3DMarker(Option_t *)
     //*-* Allocate memory for segments *-*
    buff->segs = new Int_t[buff->numSegs*3];
    if (buff->segs) {
-       for (i = 0; i < buff->numSegs; i++) {
-           buff->segs[3*i  ] = c;
-           buff->segs[3*i+1] = 2*i;
-           buff->segs[3*i+2] = 2*i+1;
-       }
+      for (i = 0; i < buff->numSegs; i++) {
+         buff->segs[3*i  ] = c;
+         buff->segs[3*i+1] = 2*i;
+         buff->segs[3*i+2] = 2*i+1;
+      }
    }
 
    if (buff->points && buff->segs)    //If everything seems to be OK ...
-       FillX3DBuffer(buff);
+      FillX3DBuffer(buff);
    else {                            // ... something very bad was happened
-       gSize3D.numPoints -= buff->numPoints;
-       gSize3D.numSegs   -= buff->numSegs;
-       gSize3D.numPolys  -= buff->numPolys;
+      gSize3D.numPoints -= buff->numPoints;
+      gSize3D.numSegs   -= buff->numSegs;
+      gSize3D.numPolys  -= buff->numPolys;
    }
 
    if (buff->points)   delete [] buff->points;
@@ -629,19 +639,21 @@ void TPolyLineShape::PaintX3DMarker(Option_t *)
 //______________________________________________________________________________
 Float_t TPolyLineShape::Product(Float_t *v1, Float_t *v2,Int_t ndim)
 {
-  Float_t p = 0;
-  if (v1 && v2 && ndim > 0)
-    for (Int_t i=0; i<ndim; i++) p+= v1[i]*v2[i];
-  return p;
+   //to be documented
+   Float_t p = 0;
+   if (v1 && v2 && ndim > 0)
+      for (Int_t i=0; i<ndim; i++) p+= v1[i]*v2[i];
+   return p;
 }
 
 //______________________________________________________________________________
 Double_t TPolyLineShape::Product(Double_t *v1, Double_t *v2,Int_t ndim)
 {
-  Double_t p = 0;
-  if (v1 && v2 && ndim > 0)
-    for (Int_t i=0;i<ndim;i++) p+= v1[i]*v2[i];
-  return p;
+   //to be documented
+   Double_t p = 0;
+   if (v1 && v2 && ndim > 0)
+      for (Int_t i=0;i<ndim;i++) p+= v1[i]*v2[i];
+   return p;
 }
 
 //______________________________________________________________________________
@@ -663,61 +675,61 @@ Double_t *TPolyLineShape::Gyrot(Double_t *dirc, Double_t cosang, Double_t sinang
 //*  This code is provided by Victor Perevoztchikov                      *
 //************************************************************************
 
-      Double_t ax[3];
+   Double_t ax[3];
 
-      memcpy(ax,dirc,3*sizeof(Double_t));
-      TMath::Normalize(ax);
+   memcpy(ax,dirc,3*sizeof(Double_t));
+   TMath::Normalize(ax);
 
-      Double_t ca  = cosang;
-      Double_t sa  = sinang;
-      Double_t ca1;
+   Double_t ca  = cosang;
+   Double_t sa  = sinang;
+   Double_t ca1;
 
-      if (ca < 0.5)
-        ca1 = 1. - ca ;
-      else
-        ca1 = (sa*sa)/(1.+ca) ;
+   if (ca < 0.5)
+      ca1 = 1. - ca ;
+   else
+      ca1 = (sa*sa)/(1.+ca) ;
 
-      Int_t j1 = 0;
-      Int_t j2 = 0;
-      for(j1 = 0; j1 < 3; j1++) {
-        for(j2 = 0; j2 < 3; j2++)
-              trans[j1][j2] = ca1*ax[j1]*ax[j2];
-        trans[j1][j1]   += ca;
-      }
+   Int_t j1 = 0;
+   Int_t j2 = 0;
+   for(j1 = 0; j1 < 3; j1++) {
+      for(j2 = 0; j2 < 3; j2++)
+         trans[j1][j2] = ca1*ax[j1]*ax[j2];
+      trans[j1][j1]   += ca;
+   }
 
-      trans[0][1] = trans[0][1] - sa*ax[2];
-      trans[1][0] = trans[1][0] + sa*ax[2];
-      trans[0][2] = trans[0][2] + sa*ax[1];
-      trans[2][0] = trans[2][0] - sa*ax[1];
-      trans[1][2] = trans[1][2] - sa*ax[0];
-      trans[2][1] = trans[2][1] + sa*ax[0];
+   trans[0][1] = trans[0][1] - sa*ax[2];
+   trans[1][0] = trans[1][0] + sa*ax[2];
+   trans[0][2] = trans[0][2] + sa*ax[1];
+   trans[2][0] = trans[2][0] - sa*ax[1];
+   trans[1][2] = trans[1][2] - sa*ax[0];
+   trans[2][1] = trans[2][1] + sa*ax[0];
 
-      return (Double_t *)trans;
+   return (Double_t *)trans;
 
 }
 
 //______________________________________________________________________________
 Color_t TPolyLineShape::SetColorAttribute(Color_t color)
 {
-  Color_t currentColor = GetColorAttribute();
-  if (color != currentColor)
-  {
-    SetLineColor(color);
-    SetMarkerColor(color);
-  }
-  return currentColor;
+   //to be documented
+   Color_t currentColor = GetColorAttribute();
+   if (color != currentColor) {
+      SetLineColor(color);
+      SetMarkerColor(color);
+   }
+   return currentColor;
 }
 
 //______________________________________________________________________________
 Size_t TPolyLineShape::SetSizeAttribute(Size_t size)
 {
-  Size_t currentSize = GetSizeAttribute();
-  if (size != currentSize)
-  {
-    SetLineWidth(Width_t(size));
-    SetMarkerSize(size);
-  }
-  return currentSize;
+   //to be documented
+   Size_t currentSize = GetSizeAttribute();
+   if (size != currentSize) {
+      SetLineWidth(Width_t(size));
+      SetMarkerSize(size);
+   }
+   return currentSize;
 }
 
 //______________________________________________________________________________
@@ -737,6 +749,7 @@ Style_t TPolyLineShape::SetStyleAttribute(Style_t style)
 //______________________________________________________________________________
 void TPolyLineShape::SetShape(TShape *shape)
 {
+   //to be documented
    SafeDelete(fShape)
    fShape = shape;
 }
@@ -744,6 +757,7 @@ void TPolyLineShape::SetShape(TShape *shape)
 //_______________________________________________________________________
 Int_t TPolyLineShape::Size() const
 {
+   //to be documented
    return fPoints ? fPoints->Size():0;
 }
 
@@ -752,15 +766,15 @@ void TPolyLineShape::Sizeof3D() const
 {
 //*-*-*-*-*-*-*Return total X3D size of this shape with its attributes*-*-*-*-*-*
 //*-*          =======================================================
-  TPolyLineShape *line = (TPolyLineShape *)this;
-  if (fLineFlag )
-    line->CreateX3DSize(kFALSE);
-  else
-    line->CreateX3DSize(kTRUE);
-  if (fSizeX3D) {
-     gSize3D.numPoints += fSizeX3D->numPoints;
-     gSize3D.numSegs   += fSizeX3D->numSegs;
-     gSize3D.numPolys  += fSizeX3D->numPolys;
-  }
-  else Error("Sizeof3D()","buffer size has not been defined yet");
+   TPolyLineShape *line = (TPolyLineShape *)this;
+   if (fLineFlag )
+      line->CreateX3DSize(kFALSE);
+   else
+      line->CreateX3DSize(kTRUE);
+   if (fSizeX3D) {
+      gSize3D.numPoints += fSizeX3D->numPoints;
+      gSize3D.numSegs   += fSizeX3D->numSegs;
+      gSize3D.numPolys  += fSizeX3D->numPolys;
+   }
+   else Error("Sizeof3D()","buffer size has not been defined yet");
 }

@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.10 2005/09/09 04:57:59 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.11 2005/10/12 21:02:46 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.10 2005/09/09 04:57:59 brun Exp $
+// $Id: TTableDescriptor.cxx,v 1.11 2005/10/12 21:02:46 brun Exp $
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -20,53 +20,56 @@ TableClassImp(TTableDescriptor,tableDescriptor_st)
 //______________________________________________________________________________
 void TTableDescriptor::Streamer(TBuffer &R__b)
 {
-  // The custom Streamer for this table
-  fSecondDescriptor = 0;
-  TTable::Streamer(R__b);
+   // The custom Streamer for this table
+   fSecondDescriptor = 0;
+   TTable::Streamer(R__b);
 }
 
 //______________________________________________________________________________
 TTableDescriptor::TTableDescriptor(const TTable *parentTable)
  : TTable("tableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0),fSecondDescriptor(0)
 {
-  if (parentTable) {
-     TClass *classPtr = parentTable->GetRowClass();
-     Init(classPtr);
-  }
-  else MakeZombie();
+   //to be documented
+   if (parentTable) {
+      TClass *classPtr = parentTable->GetRowClass();
+      Init(classPtr);
+   }
+   else MakeZombie();
 }
 
 //______________________________________________________________________________
 TTableDescriptor::TTableDescriptor(TClass *classPtr)
  : TTable("tableDescriptor",sizeof(tableDescriptor_st)),fRowClass(0),fSecondDescriptor(0)
 {
-  // Create a descriptor of the C-structure defined by TClass
-  // TClass *classPtr must be a valid pointer to TClass object for
-  // "plain" C_struture only !!!
-  Init(classPtr);
+   // Create a descriptor of the C-structure defined by TClass
+   // TClass *classPtr must be a valid pointer to TClass object for
+   // "plain" C_struture only !!!
+   Init(classPtr);
 }
 //______________________________________________________________________________
 TTableDescriptor::~TTableDescriptor()
 {
+   //to be documented
 #ifdef NORESTRICTIONS
-  if (!IsZombie()) {
-    for (Int_t i=0;i<GetNRows();i++) {
-      Char_t *name = (Char_t *)ColumnName(i);
-      if (name) delete [] name;
-      UInt_t  *indxArray = (UInt_t *)IndexArray(i);
-      if (indxArray) delete [] indxArray;
-    }
-  }
+   if (!IsZombie()) {
+      for (Int_t i=0;i<GetNRows();i++) {
+         Char_t *name = (Char_t *)ColumnName(i);
+         if (name) delete [] name;
+         UInt_t  *indxArray = (UInt_t *)IndexArray(i);
+         if (indxArray) delete [] indxArray;
+      }
+   }
 #endif
-  if (fSecondDescriptor != this) {
-    delete fSecondDescriptor;
-    fSecondDescriptor = 0;
-  }
+   if (fSecondDescriptor != this) {
+      delete fSecondDescriptor;
+      fSecondDescriptor = 0;
+   }
 }
 
 //____________________________________________________________________________
 Int_t TTableDescriptor::AddAt(const void *c)
 { 
+   //to be documented
    if (!c) return -1;
    TDataSet *cmnt = MakeCommentField();
    assert(cmnt!=0);
@@ -79,10 +82,12 @@ Int_t TTableDescriptor::AddAt(const void *c)
 //____________________________________________________________________________
 void  TTableDescriptor::AddAt(const void *c, Int_t i) 
 {
+   //to be documented
    AddAt(*(tableDescriptor_st *)c,"N/A",i);
 }
 //____________________________________________________________________________
 void  TTableDescriptor::AddAt(TDataSet *dataset,Int_t idx){
+   //to be documented
    TTable::AddAt(dataset,idx);
 }
 //____________________________________________________________________________
@@ -162,6 +167,7 @@ void TTableDescriptor::Init(TClass *classPtr)
 //____________________________________________________________________________
 void TTableDescriptor::LearnTable(const TTable *parentTable)
 {
+   //to be documented
    if (!parentTable) {
       MakeZombie();
       return;
@@ -261,7 +267,7 @@ TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
    //
    ///////////////////////////////////////////////////////////
    TTableDescriptor *dsc = 0;
-      TClass *cl = gROOT->GetClass(structName, kTRUE);
+   TClass *cl = gROOT->GetClass(structName, kTRUE);
 //    TClass *cl = new TClass(structName,1,0,0);
    assert(cl!=0);
    dsc = new TTableDescriptor(cl);
@@ -299,21 +305,20 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
 #endif
       if (    colNewIndx >=0
          && Dimensions(colCounter) == newDescriptor->Dimensions(colNewIndx)
-         && ColumnType(colCounter) == newType
-       )  {
+         && ColumnType(colCounter) == newType)  {
          SetOffset(newDescriptor->Offset(colNewIndx),colCounter);
          if (colNewIndx != colCounter) {
             printf("Schema evolution: \t%d column of the \"%s\" table has been moved to %d-th column\n",
             colCounter,ColumnName(colCounter),colNewIndx);
-           mismathes++;
+            mismathes++;
          }
-       } else {
+      } else {
          printf("Schema evolution: \t%d column \"%s\" of %d type has been lost\n",
          colCounter,ColumnName(colCounter),ColumnType(colCounter));
          printf(" Indx = %d, name = %s \n", colNewIndx, ColumnName(colCounter));
          SetOffset(UInt_t(-1),colCounter);
          mismathes++;
-       }
+      }
    }
    if (!mismathes && UInt_t(maxColumns) != newDescriptor->NumberOfColumns()) {
       mismathes++;
@@ -368,43 +373,48 @@ Int_t TTableDescriptor::Offset(const Char_t *columnName) const
 //____________________________________________________________________________
 Int_t TTableDescriptor::ColumnSize(const Char_t *columnName) const
 {
-  Int_t indx = ColumnByName(columnName);
-  if (indx >= 0 ) indx = ColumnSize(indx);
-  return indx;
+   //to be documented
+   Int_t indx = ColumnByName(columnName);
+   if (indx >= 0 ) indx = ColumnSize(indx);
+   return indx;
 }
 
 //____________________________________________________________________________
 Int_t TTableDescriptor::TypeSize(const Char_t *columnName) const
 {
-  Int_t indx = ColumnByName(columnName);
-  if (indx >= 0 ) indx = TypeSize(indx);
-  return indx;
+   //to be documented
+   Int_t indx = ColumnByName(columnName);
+   if (indx >= 0 ) indx = TypeSize(indx);
+   return indx;
 }
 
 //____________________________________________________________________________
 Int_t TTableDescriptor::Dimensions(const Char_t *columnName) const
 {
-  Int_t indx = ColumnByName(columnName);
-  if (indx >= 0 ) indx = Dimensions(indx);
-  return indx;
+   //to be documented
+   Int_t indx = ColumnByName(columnName);
+   if (indx >= 0 ) indx = Dimensions(indx);
+   return indx;
 }
 
 //____________________________________________________________________________
 TTable::EColumnType TTableDescriptor::ColumnType(const Char_t *columnName) const
 {
-  Int_t indx = ColumnByName(columnName);
-  if (indx >= 0 ) indx = ColumnType(indx);
-  return EColumnType(indx);
+   //to be documented
+   Int_t indx = ColumnByName(columnName);
+   if (indx >= 0 ) indx = ColumnType(indx);
+   return EColumnType(indx);
 }
 //____________________________________________________________________________
 Int_t   TTableDescriptor::Sizeof() const 
 { 
+   //to be documented
    Int_t fullRowSize = 0;
    if (RowClass() ) fullRowSize = RowClass()->Size();
    else {
-     // Calculate the size myslef.
-     Int_t iLastRows = GetNRows()-1;
-     if (iLastRows >=0) fullRowSize = Offset(iLastRows)  + ColumnSize(iLastRows);
+      // Calculate the size myslef.
+      Int_t iLastRows = GetNRows()-1;
+      if (iLastRows >=0) fullRowSize = Offset(iLastRows)  + ColumnSize(iLastRows);
    }
    return fullRowSize;
 }

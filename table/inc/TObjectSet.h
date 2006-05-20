@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TObjectSet.h,v 1.2 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TObjectSet.h,v 1.3 2005/11/24 17:08:36 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -26,27 +26,27 @@
 
 class TObjectSet : public TDataSet {
 protected:
-  enum EOwnerBits { kIsOwner         = BIT(23) };
-  TObject *fObj;                              // TObject to be inserted
+   enum EOwnerBits { kIsOwner         = BIT(23) };
+   TObject *fObj;                              // TObject to be inserted
 
 public:
-  TObjectSet(const Char_t *name, TObject *obj=0,Bool_t makeOwner=kTRUE);
-  TObjectSet(TObject *obj=0,Bool_t makeOwner=kTRUE);
-  virtual ~TObjectSet();
-  virtual TObject *AddObject(TObject *obj,Bool_t makeOwner=kTRUE);
-  virtual void     Browse(TBrowser *b);
-  virtual void     Delete(Option_t *opt="");
-  virtual Bool_t   DoOwner(Bool_t done=kTRUE);
-  virtual Long_t   HasData() const;
-  virtual TObject *GetObject() const; 
-  virtual TDataSet *Instance() const;
-  virtual Bool_t   IsOwner() const;
-  virtual void     SetObject(TObject *obj);
-  virtual TObject *SetObject(TObject *obj,Bool_t makeOwner);
+   TObjectSet(const Char_t *name, TObject *obj=0,Bool_t makeOwner=kTRUE);
+   TObjectSet(TObject *obj=0,Bool_t makeOwner=kTRUE);
+   virtual ~TObjectSet();
+   virtual TObject *AddObject(TObject *obj,Bool_t makeOwner=kTRUE);
+   virtual void     Browse(TBrowser *b);
+   virtual void     Delete(Option_t *opt="");
+   virtual Bool_t   DoOwner(Bool_t done=kTRUE);
+   virtual Long_t   HasData() const;
+   virtual TObject *GetObject() const; 
+   virtual TDataSet *Instance() const;
+   virtual Bool_t   IsOwner() const;
+   virtual void     SetObject(TObject *obj);
+   virtual TObject *SetObject(TObject *obj,Bool_t makeOwner);
 
-  static TObjectSet *instance();
+   static TObjectSet *instance();
 
-  ClassDef(TObjectSet,1) // TDataSet wrapper for TObject class objects
+   ClassDef(TObjectSet,1) // TDataSet wrapper for TObject class objects
 };
 
 inline TObjectSet *TObjectSet::instance()

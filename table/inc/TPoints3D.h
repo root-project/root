@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TPoints3D.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TPoints3D.h,v 1.3 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TPoints3D
 #define ROOT_TPoints3D
-// $Id: TPoints3D.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
+// $Id: TPoints3D.h,v 1.3 2003/01/27 20:41:36 brun Exp $
 // ***********************************************************************
 // *  C++ class to define the abstract array of 3D points
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -46,47 +46,47 @@
 class TPoints3D : public TPoints3DABC {
 
 protected:
-         enum EOwnerBits {
-           kIsOwner         = BIT(23)
-         };
+   enum EOwnerBits {
+       kIsOwner         = BIT(23)
+   };
 
-        TPoints3DABC *fPoints;
+   TPoints3DABC *fPoints;
 
-        Bool_t IsOwner() const {return TestBit(kIsOwner);}
-        Bool_t DoOwner(Bool_t done=kTRUE);
+   Bool_t IsOwner() const {return TestBit(kIsOwner);}
+   Bool_t DoOwner(Bool_t done=kTRUE);
 
 public:
-        TPoints3D(TPoints3DABC *points=0);
-        TPoints3D(Int_t n, Option_t *option="");
-        TPoints3D(Int_t n, Float_t *p, Option_t *option="");
-        TPoints3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *option="");
-        TPoints3D(const TPoints3D &points);
-        virtual ~TPoints3D();
+   TPoints3D(TPoints3DABC *points=0);
+   TPoints3D(Int_t n, Option_t *option="");
+   TPoints3D(Int_t n, Float_t *p, Option_t *option="");
+   TPoints3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *option="");
+   TPoints3D(const TPoints3D &points);
+   virtual ~TPoints3D();
 
-        virtual void      Copy(TObject &points) const;
-        virtual void      Delete(Option_t *);
-        virtual void      Delete();
-        virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
-        virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        virtual Int_t     GetLastPosition()       const;
-        virtual Int_t     GetN() const;
-        virtual Float_t  *GetP() const;
-        virtual Float_t   GetX(Int_t idx)  const;
-        virtual Float_t   GetY(Int_t idx)  const;
-        virtual Float_t   GetZ(Int_t idx)  const;
-        virtual Float_t  *GetXYZ(Float_t *xyz,Int_t idx,Int_t num=1)  const;
-        virtual const Float_t  *GetXYZ(Int_t idx);
-        virtual Option_t *GetOption() const ;
-        virtual void      ls(Option_t *option="") const;
-        virtual void      PaintPoints(Int_t, Float_t *,Option_t *){;}
-        virtual void      Print(Option_t *option="") const;
-        virtual Int_t     SetLastPosition(Int_t idx);
-        virtual void      SetOption(Option_t *option="");
-        virtual Int_t     SetPoint(Int_t point, Float_t x, Float_t y, Float_t z); // *MENU*
-        virtual Int_t     SetPoints(Int_t n, Float_t *p=0, Option_t *option="");
-        virtual Int_t     Size() const;
+   virtual void      Copy(TObject &points) const;
+   virtual void      Delete(Option_t *);
+   virtual void      Delete();
+   virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
+   virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   virtual Int_t     GetLastPosition()       const;
+   virtual Int_t     GetN() const;
+   virtual Float_t  *GetP() const;
+   virtual Float_t   GetX(Int_t idx)  const;
+   virtual Float_t   GetY(Int_t idx)  const;
+   virtual Float_t   GetZ(Int_t idx)  const;
+   virtual Float_t  *GetXYZ(Float_t *xyz,Int_t idx,Int_t num=1)  const;
+   virtual const Float_t  *GetXYZ(Int_t idx);
+   virtual Option_t *GetOption() const ;
+   virtual void      ls(Option_t *option="") const;
+   virtual void      PaintPoints(Int_t, Float_t *,Option_t *){;}
+   virtual void      Print(Option_t *option="") const;
+   virtual Int_t     SetLastPosition(Int_t idx);
+   virtual void      SetOption(Option_t *option="");
+   virtual Int_t     SetPoint(Int_t point, Float_t x, Float_t y, Float_t z); // *MENU*
+   virtual Int_t     SetPoints(Int_t n, Float_t *p=0, Option_t *option="");
+   virtual Int_t     Size() const;
 
-        ClassDef(TPoints3D,1)  // Defines the abstract array of 3D points
+   ClassDef(TPoints3D,1)  // Defines the abstract array of 3D points
 };
 
 inline void      TPoints3D::Delete(Option_t *opt){ TObject::Delete(opt);}

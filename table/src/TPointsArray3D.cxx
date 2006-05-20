@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TPointsArray3D.cxx,v 1.4 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TPointsArray3D.cxx,v 1.5 2003/02/11 12:17:19 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
-// $Id: TPointsArray3D.cxx,v 1.4 2003/01/27 20:41:36 brun Exp $
+// $Id: TPointsArray3D.cxx,v 1.5 2003/02/11 12:17:19 rdm Exp $
 #include "Riostream.h"
 
 #include "TPointsArray3D.h"
@@ -88,12 +88,11 @@ TPointsArray3D::TPointsArray3D(Int_t n, Float_t *p, Option_t *option)
 
    fP = new Float_t[3*fN];
    if (n > 0) {
-     memcpy(fP,p,3*fN*sizeof(Float_t));
-     fLastPoint = fN-1;
-   }
-   else {
-     memset(fP,0,3*fN*sizeof(Float_t));
-     fLastPoint = -1;
+      memcpy(fP,p,3*fN*sizeof(Float_t));
+      fLastPoint = fN-1;
+   } else {
+      memset(fP,0,3*fN*sizeof(Float_t));
+      fLastPoint = -1;
    }
    fOption = option;
 }
@@ -114,14 +113,13 @@ TPointsArray3D::TPointsArray3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Opti
    fP = new Float_t[3*fN];
    Int_t j = 0;
    if (n > 0) {
-       for (Int_t i=0; i<n;i++) {
-           fP[j++] = x[i];
-           fP[j++] = y[i];
-           fP[j++] = z[i];
-       }
-       fLastPoint = fN-1;
-   }
-   else {
+      for (Int_t i=0; i<n;i++) {
+         fP[j++] = x[i];
+         fP[j++] = y[i];
+         fP[j++] = z[i];
+      }
+      fLastPoint = fN-1;
+   } else {
       memset(fP,0,3*fN*sizeof(Float_t));
    }
    fOption = option;
@@ -142,6 +140,7 @@ TPointsArray3D::~TPointsArray3D()
 //______________________________________________________________________________
 TPointsArray3D::TPointsArray3D(const TPointsArray3D &point) : TPoints3DABC(point)
 {
+   //to be documented
    ((TPointsArray3D&)point).Copy(*this);
 }
 
@@ -214,7 +213,7 @@ void TPointsArray3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*-*-*-*-*-*-*
 //*-*                =========================================
    if (gPad->GetView())
-       gPad->GetView()->ExecuteRotateView(event, px, py);
+      gPad->GetView()->ExecuteRotateView(event, px, py);
 }
 
 //______________________________________________________________________________
@@ -238,8 +237,9 @@ void TPointsArray3D::Print(Option_t *option) const
 //______________________________________________________________________________
 Int_t TPointsArray3D::SetLastPosition(Int_t idx)
 {
-  fLastPoint = TMath::Min(idx,GetN()-1);
-  return idx;
+   //to be documented
+   fLastPoint = TMath::Min(idx,GetN()-1);
+   return idx;
 }
 
 //______________________________________________________________________________

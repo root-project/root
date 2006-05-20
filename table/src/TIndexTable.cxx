@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:$:$Id:$
+// @(#)root/table:$Name:  $:$Id: TIndexTable.cxx,v 1.3 2004/02/13 16:32:23 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************
@@ -51,59 +51,64 @@
 // TableClassImpl(TIndexTable,int);
   TTableDescriptor *TIndexTable::fgColDescriptors = TIndexTable::CreateDescriptor();
   ClassImp(TIndexTable)
+     
 #if 0
-  void TIndexTable::Dictionary()
-   {
-      TClass *c = CreateClass(_QUOTE_(className), Class_Version(),
-                              DeclFileName(), ImplFileName(),
-                              DeclFileLine(), ImplFileLine());
+void TIndexTable::Dictionary()
+{
+   //to be documented
+   TClass *c = CreateClass(_QUOTE_(className), Class_Version(),
+                           DeclFileName(), ImplFileName(),
+                           DeclFileLine(), ImplFileLine());
 
-      char *structBuf = new char[strlen(_QUOTE2_(structName,.h))+2];
-      strcpy(structBuf,_QUOTE2_(structName,.h));
-      char *s = strstr(structBuf,"_st.h");
-      if (s) { *s = 0;  strcat(structBuf,".h"); }
-      TClass *r = CreateClass(_QUOTE_(structName), Class_Version(),
-                              structBuf, structBuf, 1,  1 );
-      fgIsA = c;
-      fgColDescriptors = new TTableDescriptor(r);
-   }
+   char *structBuf = new char[strlen(_QUOTE2_(structName,.h))+2];
+   strcpy(structBuf,_QUOTE2_(structName,.h));
+   char *s = strstr(structBuf,"_st.h");
+   if (s) { *s = 0;  strcat(structBuf,".h"); }
+   TClass *r = CreateClass(_QUOTE_(structName), Class_Version(),
+                           structBuf, structBuf, 1,  1 );
+   fgIsA = c;
+   fgColDescriptors = new TTableDescriptor(r);
+}
    _TableClassImp_(TIndexTable,int)
 #endif
-  TableClassStreamerImp(TIndexTable)
+   TableClassStreamerImp(TIndexTable)
 
 //___________________________________________________________________
      TIndexTable::TIndexTable(const TTable *table):TTable("Index",-1), fRefTable(table)
 {
+   //to be documented
    if (!fgColDescriptors)    CreateDescriptor();
    fSize = fgColDescriptors->Sizeof();
-  // Add refered table to this index.
+   // Add refered table to this index.
    // yf  if (table) Add((TDataSet *)table);
 }
 //___________________________________________________________________
 TTableDescriptor *TIndexTable::CreateDescriptor()
 {
-  if (!fgColDescriptors) {
-     // Set an empty descriptor
-     fgColDescriptors= new TTableDescriptor("int");
+   //to be documented
+   if (!fgColDescriptors) {
+      // Set an empty descriptor
+      fgColDescriptors= new TTableDescriptor("int");
       // Create one
-     if (fgColDescriptors) {
-       TTableDescriptor  &dsc = *fgColDescriptors;
-       tableDescriptor_st row;
+      if (fgColDescriptors) {
+         TTableDescriptor  &dsc = *fgColDescriptors;
+         tableDescriptor_st row;
 
-       memset(&row,0,sizeof(row));
-       strncpy(row.fColumnName,"index",sizeof(row.fColumnName));
+         memset(&row,0,sizeof(row));
+         strncpy(row.fColumnName,"index",sizeof(row.fColumnName));
 
-       row.fType = kInt;
-       row.fTypeSize = sizeof(Int_t);
-       row.fSize = row.fTypeSize;
-       dsc.AddAt(&row);
-     }
-  }
-  return fgColDescriptors;
+         row.fType = kInt;
+         row.fTypeSize = sizeof(Int_t);
+         row.fSize = row.fTypeSize;
+         dsc.AddAt(&row);
+      }
+   }
+   return fgColDescriptors;
 }
 
 //___________________________________________________________________
 const TTable *TIndexTable::Table() const
 {
-  return fRefTable;
+   //to be documented
+   return fRefTable;
 }
