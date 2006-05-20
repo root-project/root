@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.54 2005/11/29 19:02:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.55 2006/02/22 14:57:43 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -72,9 +72,6 @@ protected:
    static Bool_t fgAbsValue;  //use absolute value of function when computing integral
    static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
    static TF1   *fgCurrent;   //pointer to current function being processed
-
-   Double_t MinimBrent(Int_t type, Double_t &xmin, Double_t &xmax, Double_t xmiddle, Double_t fy, Bool_t &ok) const;
-   Double_t MinimStep(Int_t type, Double_t &xmin, Double_t &xmax, Double_t fy) const;
          
 public:
     // TF1 status bits
@@ -150,6 +147,8 @@ public:
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t minpts, Int_t maxpts, Double_t epsilon, Double_t &relerr,Int_t &nfnevl, Int_t &ifail);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsilon, Double_t &relerr);
    virtual Bool_t   IsInside(const Double_t *x) const;
+   Double_t         MinimBrent(Int_t type, Double_t &xmin, Double_t &xmax, Double_t xmiddle, Double_t fy, Bool_t &ok) const;
+   Double_t         MinimStep(Int_t type, Double_t &xmin, Double_t &xmax, Double_t fy) const;
    virtual void     Paint(Option_t *option="");
    virtual void     Print(Option_t *option="") const;
    virtual void     ReleaseParameter(Int_t ipar);
