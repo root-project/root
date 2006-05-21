@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.140 2006/05/17 13:31:02 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.141 2006/05/18 10:46:26 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3964,6 +3964,8 @@ void TWinNTSystem::CloseConnection(int socket, Bool_t force)
    if (force) {
       ::shutdown(sock, 2);
    }
+   struct linger linger = {1, 0};
+   ::setsockopt(sock, SOL_SOCKET, SO_LINGER, (char *) &linger, sizeof(linger));
    while (::closesocket(sock) == SOCKET_ERROR && WSAGetLastError() == WSAEINTR) {
       TSystem::ResetErrno();
    }
