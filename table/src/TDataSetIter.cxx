@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.4 2005/09/08 05:33:41 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.5 2005/09/09 04:57:59 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 #include "Riosfwd.h"
@@ -39,6 +39,7 @@ ClassImp(TDataSetIter)
 //______________________________________________________________________________
 TDataSetIter::TDataSetIter(TDataSet *link, Bool_t dir)
 {
+   //to be documented
    fWorkingDataSet= fRootDataSet   =link;
    fMaxDepth      = fDepth         =1;
    fDataSet= fgNullDataSet ;
@@ -48,6 +49,7 @@ TDataSetIter::TDataSetIter(TDataSet *link, Bool_t dir)
 //______________________________________________________________________________
 TDataSetIter::TDataSetIter(TDataSet *link, Int_t depth, Bool_t dir)
 {
+   //to be documented
    fRootDataSet = fWorkingDataSet = link;
    fMaxDepth    = depth;
    fDepth       = 1;
@@ -68,6 +70,7 @@ TDataSetIter::TDataSetIter(TDataSet *link, Int_t depth, Bool_t dir)
 //______________________________________________________________________________
 TDataSetIter::~TDataSetIter()
 {
+   //to be documented
    if (fMaxDepth != 1) {
       Int_t level = fDepth;
       if (level) level--;
@@ -231,11 +234,15 @@ Int_t TDataSetIter::Du() const {
 
 //______________________________________________________________________________
 TDataSet  *TDataSetIter::FindByName(const Char_t *name,const Char_t *path,Option_t *opt)
-{ return FindDataSet(name,path,opt);}
+{ 
+   //to be documented
+   return FindDataSet(name,path,opt);
+}
 
 //______________________________________________________________________________
 TDataSet  *TDataSetIter::FindByTitle(const Char_t *title,const Char_t *path,Option_t *opt)
 { 
+   //to be documented
    TString optt = "-t";
    optt += opt;
    return FindDataSet(title,path,optt.Data());
@@ -351,6 +358,7 @@ TDataSet *TDataSetIter::FindByPointer(TDataSet *set,const Char_t *path,Option_t 
 //______________________________________________________________________________
 Int_t TDataSetIter::Flag(const Char_t *path,UInt_t flag,TDataSet::EBitOpt reset)
 {
+   //to be documented
    TDataSet *set = Find(path);
    if (set) set->SetBit(flag,reset);
    return 0;
@@ -358,6 +366,7 @@ Int_t TDataSetIter::Flag(const Char_t *path,UInt_t flag,TDataSet::EBitOpt reset)
 //______________________________________________________________________________
 Int_t TDataSetIter::Flag(TDataSet *dataset,UInt_t flag,TDataSet::EBitOpt reset)
 {
+   //to be documented
    if (dataset) dataset->SetBit(flag,reset);
    return 0;
 }
@@ -405,6 +414,7 @@ TDataSet *TDataSetIter::Ls(const Char_t *dirname,Int_t depth) const {
 //______________________________________________________________________________
 TDataSet *TDataSetIter::Mkdir(const Char_t *dirname)
 {
+   //to be documented
    TDataSet *set = 0;
    set = Find(dirname,0,kTRUE);
    if (!fNext)  Reset();  // Create a new iterator
@@ -509,7 +519,9 @@ TDataSet *TDataSetIter::Next( TDataSet::EDataSetPass mode)
    return (TDataSet *)fDataSet;
 }
 //______________________________________________________________________________
-TDataSet *TDataSetIter::NextDataSet(TIter &next){
+TDataSet *TDataSetIter::NextDataSet(TIter &next)
+{
+   //to be documented
    TDataSet *ds = (TDataSet *)next();
    if (ds) Notify(ds);
    return ds;
@@ -525,7 +537,10 @@ TDataSet *TDataSetIter::NextDataSet(Int_t nDataSet)
 }
 //______________________________________________________________________________
 TDataSet  *TDataSetIter::FindByPath(const Char_t *path, TDataSet *rootset,Bool_t mkdir)
-{ return Find(path,rootset,mkdir);}
+{ 
+   //to be documented
+   return Find(path,rootset,mkdir);
+}
 
 //______________________________________________________________________________
 TDataSet *TDataSetIter::Find(const Char_t *path, TDataSet *rootset,

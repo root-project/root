@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.11 2005/10/12 21:02:46 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.12 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.11 2005/10/12 21:02:46 brun Exp $
+// $Id: TTableDescriptor.cxx,v 1.12 2006/05/20 14:06:09 brun Exp $
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -125,27 +125,27 @@ TString TTableDescriptor::CreateLeafList() const
             return string;
          }
          for (k=0;k< nDim; k++) totalSize *= indx[k];
-    }
-    const Char_t *colName = ColumnName(i);
-    if (totalSize > 1) {
-       for ( k = 0; k < totalSize; k++) {
-          Char_t buf[10];
-          sprintf(buf,"_%d",k);
-          string += colName;
-          string += buf;
-          if (k==0) {
-             string += "/";
-             string += typeMapTBranch[ColumnType(i)];
-          }
-          if (k != totalSize -1) string += ":";
-       }
-    } else {
-       string += ColumnName(i);
-       string += "/";
-       string += typeMapTBranch[ColumnType(i)];
-    }
-  }
-  return string;
+      }
+      const Char_t *colName = ColumnName(i);
+      if (totalSize > 1) {
+         for ( k = 0; k < totalSize; k++) {
+            Char_t buf[10];
+            sprintf(buf,"_%d",k);
+            string += colName;
+            string += buf;
+            if (k==0) {
+               string += "/";
+               string += typeMapTBranch[ColumnType(i)];
+            }
+            if (k != totalSize -1) string += ":";
+         }
+      } else {
+         string += ColumnName(i);
+         string += "/";
+         string += typeMapTBranch[ColumnType(i)];
+      }
+   }
+   return string;
 }
 
 //______________________________________________________________________________
@@ -235,16 +235,16 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
 #ifdef NORESTRICTIONS
                                               elementDescriptor.fIndexArray = new UInt_t(dim);
 #else
-             UInt_t maxDim = sizeof(elementDescriptor.fIndexArray)/sizeof(UInt_t *);
-             if (UInt_t(dim) > maxDim) {
-                Error("LearnTable","Too many dimenstions - %d", dim);
-                dim =  maxDim;
-             }
+            UInt_t maxDim = sizeof(elementDescriptor.fIndexArray)/sizeof(UInt_t *);
+            if (UInt_t(dim) > maxDim) {
+               Error("LearnTable","Too many dimenstions - %d", dim);
+               dim =  maxDim;
+            }
 #endif
-             for( Int_t indx=0; indx < dim; indx++ ){
-                                              elementDescriptor.fIndexArray[indx] = member->GetMaxIndex(indx);
-                globalIndex *= elementDescriptor.fIndexArray[indx];
-             }
+            for( Int_t indx=0; indx < dim; indx++ ){
+                                             elementDescriptor.fIndexArray[indx] = member->GetMaxIndex(indx);
+               globalIndex *= elementDescriptor.fIndexArray[indx];
+            }
          }
       }
       else Error("LearnTable","Wrong data type for <%s> structure",classPtr->GetName());

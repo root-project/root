@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TColumnView.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TColumnView.cxx,v 1.3 2005/04/25 17:23:33 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -22,12 +22,16 @@
 ClassImp(TColumnView)
 
 //______________________________________________________________________________
-TColumnView::TColumnView(const char *colName,TTable *table):TChair(table){
+TColumnView::TColumnView(const char *colName,TTable *table):TChair(table)
+{
+   //constructor
    SetName(colName);
 }
 //______________________________________________________________________________
 TColumnView::~TColumnView()
-{ }
+{ 
+   //destructor
+}
 //______________________________________________________________________________
 void TColumnView::Browse(TBrowser *)
 {

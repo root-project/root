@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.3 2003/12/30 13:16:51 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.4 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-// $Id: TFileSet.cxx,v 1.3 2003/12/30 13:16:51 brun Exp $
+// $Id: TFileSet.cxx,v 1.4 2006/05/20 14:06:09 brun Exp $
 
 #include "TFileSet.h"
 #include "TBrowser.h"
@@ -96,8 +96,8 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
             delete [] file;
             TFileSet *fs = new TFileSet(nextdir,name,kFALSE,maxDepth-1);
             if (fs->IsZombie())  {
-              // propagate "Zombie flag upwards
-              MakeZombie(); 
+               // propagate "Zombie flag upwards
+               MakeZombie(); 
             }
             Add(fs);
          }

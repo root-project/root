@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.11 2005/09/09 04:57:59 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.12 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 static const char *gCoPyRiGhT[] = {
      "Dataset C++ base class library:",
@@ -19,7 +19,7 @@ static const char *gCoPyRiGhT[] = {
 };
 
 static const char *gId = {
-   "$Id: TDataSet.cxx,v 1.11 2005/09/09 04:57:59 brun Exp $"
+   "$Id: TDataSet.cxx,v 1.12 2006/05/20 14:06:09 brun Exp $"
 };
 #include "Riostream.h"
 #include "TSystem.h"
@@ -591,8 +591,8 @@ TString TDataSet::Path() const
    TString str;
    TDataSet *parent = GetParent();
    if (parent) {
-       str = parent->Path();
-       str += "/";
+      str = parent->Path();
+      str += "/";
    }
    str +=  GetName();
    return str;
@@ -699,9 +699,9 @@ TDataSet::EDataSetPass TDataSet::Pass(EDataSetPass ( *callback)(TDataSet *,void*
          TIter next(fList);
          TDataSet *d=0;
          while ((d = (TDataSet *)next())) {
-           condition = d->Pass(callback, user, depth == 0 ? 0 : --depth);
-           if (condition == kStop) break;
-           if (condition == kUp  ) break;
+            condition = d->Pass(callback, user, depth == 0 ? 0 : --depth);
+            if (condition == kStop) break;
+            if (condition == kUp  ) break;
          }
       }
    }
@@ -730,7 +730,7 @@ Int_t TDataSet::Purge(Option_t *)
       if (son->HasData() || son->GetListSize()) continue;
       delete son;
    }
-  return 0;
+   return 0;
 }
 
 //______________________________________________________________________________

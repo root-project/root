@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.14 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.15 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -402,8 +402,10 @@ void TVolumeView::Add(TShape *shape, Bool_t IsMaster)
 }
 
 //_____________________________________________________________________________
-void TVolumeView::Browse(TBrowser *b){
-  TObjectSet::Browse(b);
+void TVolumeView::Browse(TBrowser *b)
+{
+   //to be documented
+   TObjectSet::Browse(b);
 //  TVolumePosition *pos = GetPosition();
 //  if (pos) pos->Browse(b);
 //    b->Add(pos);
@@ -449,17 +451,17 @@ Int_t TVolumeView::DistancetoPrimitive(Int_t px, Int_t py)
       thisNode = position->GetNode();
       position->UpdatePosition();
       if (thisNode) {
-          thisShape    = thisNode->GetShape();
-          if (!(thisNode->GetVisibility() & TVolume::kThisUnvisible) &&
-              thisShape && thisShape->GetVisibility()) {
-             dist = thisShape->DistancetoPrimitive(px,py);
-             if (dist < maxdist) {
-                gPad->SetSelected(this);
-                return 0;
-             }
-          }
-       }
-    }
+         thisShape    = thisNode->GetShape();
+         if (!(thisNode->GetVisibility() & TVolume::kThisUnvisible) &&
+            thisShape && thisShape->GetVisibility()) {
+            dist = thisShape->DistancetoPrimitive(px,py);
+            if (dist < maxdist) {
+               gPad->SetSelected(this);
+               return 0;
+            }
+         }
+      }
+   }
 
 //   if ( TestBit(kSonsInvisible) ) return dist;
 
@@ -493,34 +495,34 @@ void TVolumeView::Draw(Option_t *option)
 //*-*-*-*-*-*-*-*-*-*-*-*Draw Referenced node with current parameters*-*-*-*
 //*-*                   =============================================
 
-    TString opt = option;
-    opt.ToLower();
+   TString opt = option;
+   opt.ToLower();
 //*-*- Clear pad if option "same" not given
-    if (!gPad) {
-       if (!gROOT->GetMakeDefCanvas()) return;
-       (gROOT->GetMakeDefCanvas())();
-    }
-    if (!opt.Contains("same")) gPad->Clear();
+   if (!gPad) {
+      if (!gROOT->GetMakeDefCanvas()) return;
+      (gROOT->GetMakeDefCanvas())();
+   }
+   if (!opt.Contains("same")) gPad->Clear();
 
 //*-*- Draw Referenced node
-    gGeometry->SetGeomLevel();
-    gGeometry->UpdateTempMatrix();
+   gGeometry->SetGeomLevel();
+   gGeometry->UpdateTempMatrix();
 
    // Check geometry level
 
-    Int_t iopt = atoi(option);
-    TDataSet *parent = 0;
-    char buffer[10];
-    if (iopt < 0) {
-       sprintf(buffer,"%d",-iopt);
-       option = buffer;
-       // select parent to draw
-       parent = this;
-       do parent = parent->GetParent();
-       while (parent && ++iopt);
-    }
-    if (parent) parent->AppendPad(option);
-    else        AppendPad(option);
+   Int_t iopt = atoi(option);
+   TDataSet *parent = 0;
+   char buffer[10];
+   if (iopt < 0) {
+      sprintf(buffer,"%d",-iopt);
+      option = buffer;
+      // select parent to draw
+      parent = this;
+      do parent = parent->GetParent();
+      while (parent && ++iopt);
+   }
+   if (parent) parent->AppendPad(option);
+   else        AppendPad(option);
 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(4,03,05)
    // the new (4.03/05) way to active 3D viewer
@@ -618,13 +620,13 @@ Text_t *TVolumeView::GetObjectInfo(Int_t px, Int_t py) const
    ((TPad *)gPad)->AbsPixeltoXY(px,py,x[0],x[1]);
    TView *view =gPad->GetView();
    if (view) {
-       Double_t min[3], max[3];
-       view->GetRange(min,max);
-       for (int i =0; i<3;i++) min[i] = (max[i]+min[i])/2;
-       view->WCtoNDC(min,max);
-       min[0] = x[0]; min[1] = x[1];
-       min[2] = max[2];
-       view->NDCtoWC(min, x);
+      Double_t min[3], max[3];
+      view->GetRange(min,max);
+      for (int i =0; i<3;i++) min[i] = (max[i]+min[i])/2;
+      view->WCtoNDC(min,max);
+      min[0] = x[0]; min[1] = x[1];
+      min[2] = max[2];
+      view->NDCtoWC(min, x);
    }
    TShape *shape = GetShape();
    if (shape)
@@ -853,6 +855,7 @@ TString TVolumeView::PathP() const
 //_______________________________________________________________________
 void TVolumeView::SavePrimitive(ofstream &out, Option_t *)
 {
+   //to be documented
    const Char_t *sceleton[] = {
       "TVolumeView *CreateNodeView(TVolume *topNode) {"
      ,"  TString     thisNodePath   = "
@@ -903,17 +906,11 @@ void TVolumeView::SavePrimitive(ofstream &out, Option_t *)
             break;
          case  6:  out <<  matrixType << ";" ;                    // cout <<  matrixType << ";" ;
             break;
-         case  7:  out << thisMatrix[im++] << ", ";
-                   out << thisMatrix[im++] << ", ";
-                   out << thisMatrix[im++] << ", ";
+         case  7:  out << thisMatrix[im++] << ", "; out << thisMatrix[im++] << ", "; out << thisMatrix[im++] << ", ";
             break;
-         case  8:  out << thisMatrix[im++] << ", ";
-                   out << thisMatrix[im++] << ", ";
-                   out << thisMatrix[im++] << ", ";
+         case  8:  out << thisMatrix[im++] << ", "; out << thisMatrix[im++] << ", "; out << thisMatrix[im++] << ", ";
             break;
-         case  9:  out << thisMatrix[im++] << ", ";
-                   out << thisMatrix[im++] << ", ";
-                   out << thisMatrix[im++];
+         case  9:  out << thisMatrix[im++] << ", "; out << thisMatrix[im++] << ", "; out << thisMatrix[im++];
             break;
          default:
             break;

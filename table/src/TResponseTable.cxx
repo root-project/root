@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $Id: TResponseTable.cxx,v 1.2 2003/02/11 12:17:19 rdm Exp $
+// @(#)root/star:$Name:  $Id: TResponseTable.cxx,v 1.3 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/04/2002
 // Copyright(c) 2002 [BNL] Brookhaven National Laboratory, Valeri Fine (fine@bnl.gov)
 // All right reserved
@@ -38,11 +38,11 @@ void TResponseTable::AddVolumePath(const char *path)
    const char *next = &path[0];
    while( ( *next && *next != ' ') &&  counter < maxResponseCounter ) {  
       TString elName;
-       for (int j=0; j<4 && (next[j] != ' ');j++)  elName += next[j];
-       AddElement(elName,kInt);
-       next += 4; 
-       counter++;
-    }
+      for (int j=0; j<4 && (next[j] != ' ');j++)  elName += next[j];
+      AddElement(elName,kInt);
+      next += 4; 
+      counter++;
+   }
 }
 //______________________________________________________________________________
 void TResponseTable::AddResponse(const char *chit)

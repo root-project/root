@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TFileIter.cxx,v 1.4 2004/02/13 14:27:00 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TFileIter.cxx,v 1.5 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************
@@ -207,25 +207,25 @@ public:
 
       fBuffer = 0;  //Object buffer
       fBufferRef = 0;;     //Pointer to the TBuffer object
-    }
-    // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-    virtual ~TCopyKey();
-    // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-    virtual TObject   ReadObj() {
-       fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
-       if (!fBufferRef) {
-           Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
-          return 0;
-       }
-       if (fObjlen > fNbytes-fKeylen) {
-          fBuffer = new char[fNbytes];
-          ReadFile();                    //Read object structure from file
-          memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
-       } else {
-          fBuffer = fBufferRef->Buffer();
-          ReadFile();                    //Read object structure from file
-       }
-    }
+   }
+   // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+   virtual ~TCopyKey();
+   // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+   virtual TObject   ReadObj() {
+      fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
+      if (!fBufferRef) {
+          Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
+         return 0;
+      }
+      if (fObjlen > fNbytes-fKeylen) {
+         fBuffer = new char[fNbytes];
+         ReadFile();                    //Read object structure from file
+         memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
+      } else {
+         fBuffer = fBufferRef->Buffer();
+         ReadFile();                    //Read object structure from file
+      }
+   }
 };
 
 ==
@@ -447,6 +447,7 @@ TObject *TFileIter::NextEventGet(UInt_t eventNumber, UInt_t runNumber, const cha
 //__________________________________________________________________________
 TObject *TFileIter::ReadObj(const TKey *key)  const
 {
+   //to be documented
    TObject *obj = 0;
    if (key)  {
       if (fRootFile != gFile) {
@@ -456,8 +457,8 @@ TObject *TFileIter::ReadObj(const TKey *key)  const
       }
       obj = ((TKey *)key)->ReadObj();
       if (fRootFile != gFile) {
-          TFileIter &th = *((TFileIter *)this);
-          th.RestoreFileScope();
+         TFileIter &th = *((TFileIter *)this);
+         th.RestoreFileScope();
       }
    }
    return obj;
@@ -533,6 +534,6 @@ TString TFileIter::MapName(const char *name, const char *localSystemKey,const ch
                  && foreignName
                  && foreignName[0]
                  && newName.BeginsWith(localName) )
-       newName.Replace(0,strlen(localName),foreignName);
+      newName.Replace(0,strlen(localName),foreignName);
    return newName;
 }

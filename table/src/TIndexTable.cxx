@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TIndexTable.cxx,v 1.3 2004/02/13 16:32:23 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TIndexTable.cxx,v 1.4 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************
@@ -49,8 +49,8 @@
 //___________________________________________________________________
 
 // TableClassImpl(TIndexTable,int);
-  TTableDescriptor *TIndexTable::fgColDescriptors = TIndexTable::CreateDescriptor();
-  ClassImp(TIndexTable)
+   TTableDescriptor *TIndexTable::fgColDescriptors = TIndexTable::CreateDescriptor();
+   ClassImp(TIndexTable)
      
 #if 0
 void TIndexTable::Dictionary()
@@ -74,7 +74,7 @@ void TIndexTable::Dictionary()
    TableClassStreamerImp(TIndexTable)
 
 //___________________________________________________________________
-     TIndexTable::TIndexTable(const TTable *table):TTable("Index",-1), fRefTable(table)
+TIndexTable::TIndexTable(const TTable *table):TTable("Index",-1), fRefTable(table)
 {
    //to be documented
    if (!fgColDescriptors)    CreateDescriptor();

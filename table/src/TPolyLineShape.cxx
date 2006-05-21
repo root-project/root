@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.4 2005/09/08 05:33:41 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.5 2006/05/20 14:06:09 brun Exp $
 // Author: 
-// $Id: TPolyLineShape.cxx,v 1.4 2005/09/08 05:33:41 brun Exp $
+// $Id: TPolyLineShape.cxx,v 1.5 2006/05/20 14:06:09 brun Exp $
 // ***********************************************************************
 // *  C++ class library to define an abstract 3D shape os STAR "event" geometry
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -333,64 +333,64 @@ void TPolyLineShape::PaintNode(Float_t *start,Float_t *end,Option_t *option)
 
   // Calculate the rotation axis for Axis Oz
 
-    Double_t oz[3]={0,0,1};
-    Double_t rotate[3];
+   Double_t oz[3]={0,0,1};
+   Double_t rotate[3];
 
-    Double_t sina = TMath::Normalize(TMath::Cross(vector,oz,rotate));
-    Double_t cosa = Product(vector,oz);
-    Double_t mrot[3][3];
+   Double_t sina = TMath::Normalize(TMath::Cross(vector,oz,rotate));
+   Double_t cosa = Product(vector,oz);
+   Double_t mrot[3][3];
 
-    TShape *shape = fShape;
-    if (!shape) shape = fConnection;
+   TShape *shape = fShape;
+   if (!shape) shape = fConnection;
 
-    Gyrot(rotate,cosa,sina,mrot);
+   Gyrot(rotate,cosa,sina,mrot);
 
-    Float_t width = GetWidthFactor()*GetLineWidth();
+   Float_t width = GetWidthFactor()*GetLineWidth();
 
-    mrot[0][0] *= width;
-    mrot[0][1] *= width;
-    mrot[0][2] *= width;
+   mrot[0][0] *= width;
+   mrot[0][1] *= width;
+   mrot[0][2] *= width;
 
-    mrot[1][0] *= width;
-    mrot[1][1] *= width;
-    mrot[1][2] *= width;
+   mrot[1][0] *= width;
+   mrot[1][1] *= width;
+   mrot[1][2] *= width;
 
-    mrot[2][0] *= length;
-    mrot[2][1] *= length;
-    mrot[2][2] *= length;
+   mrot[2][0] *= length;
+   mrot[2][1] *= length;
+   mrot[2][2] *= length;
 
-    Color_t color = GetLineColor();
+   Color_t color = GetLineColor();
 
-    TVolume node("SegmentNode","SegmentNode", shape);
-    node.SetLineColor(color);
-    if (!fShape) node.SetVisibility();
-    node.SetLineColor(color);
+   TVolume node("SegmentNode","SegmentNode", shape);
+   node.SetLineColor(color);
+   if (!fShape) node.SetVisibility();
+   node.SetLineColor(color);
 
-    TRotMatrix matrix ("rotate","rotate",&mrot[0][0]);
-    TVolumePosition position(&node,nodeposition[0],nodeposition[1]
-                                  ,nodeposition[2],&matrix);
+   TRotMatrix matrix ("rotate","rotate",&mrot[0][0]);
+   TVolumePosition position(&node,nodeposition[0],nodeposition[1]
+                                 ,nodeposition[2],&matrix);
 
-    if (!(fSmooth || fConnection))  {
-        node.PaintNodePosition(option, &position);
-        return;
-    }
+   if (!(fSmooth || fConnection))  {
+      node.PaintNodePosition(option, &position);
+      return;
+   }
 
-    // Add the connection
+   // Add the connection
 
-    memset(mrot,0,9*sizeof(Double_t));
+   memset(mrot,0,9*sizeof(Double_t));
 
-    length = width/length;
-    mrot[2][2] = length;
-    mrot[0][0] = 1;
-    mrot[1][1] = 1;
+   length = width/length;
+   mrot[2][2] = length;
+   mrot[0][0] = 1;
+   mrot[1][1] = 1;
 
-    TRotMatrix kneeMatrix("knee","knee",&mrot[0][0]);
-    TVolume knee("ConnectionNode","ConnectionNode", fConnection);
-    TVolumePosition kneePosition(&knee, 0, 0, 0.5, &kneeMatrix);
-    knee.SetLineColor(color);
-    node.Add(&knee,&kneePosition);
+   TRotMatrix kneeMatrix("knee","knee",&mrot[0][0]);
+   TVolume knee("ConnectionNode","ConnectionNode", fConnection);
+   TVolumePosition kneePosition(&knee, 0, 0, 0.5, &kneeMatrix);
+   knee.SetLineColor(color);
+   node.Add(&knee,&kneePosition);
 
-    node.PaintNodePosition(option, &position);
+   node.PaintNodePosition(option, &position);
 }
 
 //______________________________________________________________________________

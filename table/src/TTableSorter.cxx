@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.5 2005/09/09 12:32:59 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
-// $Id: TTableSorter.cxx,v 1.5 2005/09/09 12:32:59 brun Exp $
+// $Id: TTableSorter.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
 
 #include <stdlib.h>
 #include "TTableSorter.h"
@@ -431,6 +431,7 @@ void TTableSorter::SetSimpleArray(Int_t arraySize, Int_t firstRow,Int_t numberRo
 //_____________________________________________________________________________
 TTableSorter::~TTableSorter()
 {
+   //to be documented
    if (fSortIndex) delete [] fSortIndex; fSortIndex = 0; fNumberOfRows=0;
 }
 

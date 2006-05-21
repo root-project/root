@@ -1,12 +1,15 @@
-// @(#)root/star:$Name:  $:$Id: TCL.cxx,v 1.5 2003/09/30 09:52:49 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TCL.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 //
 // The set of methods to work with the plain matrix / vector
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f112/top.html
 //
-// $Id: TCL.cxx,v 1.5 2003/09/30 09:52:49 brun Exp $
+// $Id: TCL.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
 // $Log: TCL.cxx,v $
+// Revision 1.6  2006/05/20 14:06:09  brun
+// Fix a VERY long list of coding conventions violations
+//
 // Revision 1.5  2003/09/30 09:52:49  brun
 // Add references to the original CERNLIB packages
 //
@@ -337,7 +340,7 @@ float *TCL::tral(const float *a, const float *u, float *b, int m, int n)
  <!--*/
  // -->END_HTML
    TCL_TRAL(a, u, b, m,  n)
-    return b;
+   return b;
 } /* tral_ */
 
 //____________________________________________________________
@@ -353,7 +356,7 @@ double *TCL::tral(const double *a, const double *u, double *b, int m, int n)
  <!--*/
  // -->END_HTML
    TCL_TRAL(a, u, b, m,  n)
-    return b;
+   return b;
 } /* tral_ */
 
 #undef TCL_TRAL
@@ -393,7 +396,7 @@ float *TCL::tralt(const float *a, const float *u, float *b, int m, int n)
  <!--*/
  // -->END_HTML
    TCL_TRALT(a, u, b, m, n)
-    return b;
+   return b;
 } /* tralt_ */
 
 //____________________________________________________________
@@ -409,7 +412,7 @@ double *TCL::tralt(const double *a, const double *u, double *b, int m, int n)
  <!--*/
  // -->END_HTML
    TCL_TRALT(a, u, b, m, n)
-    return b;
+   return b;
 } /* tralt_ */
 
 #undef TCL_TRALT
@@ -456,7 +459,7 @@ float *TCL::tras(const float *a, const float *s, float *b, int m, int n)
  <!--*/
  // -->END_HTML
    TCL_TRAS(a, s, b, m, n)
-    return b;
+   return b;
 } /* tras_ */
 
 //____________________________________________________________
@@ -472,7 +475,7 @@ double *TCL::tras(const double *a, const double *s, double *b, int m, int n)
  <!--*/
  // -->END_HTML
    TCL_TRAS(a, s, b, m, n)
-    return b;
+   return b;
 } /* tras_ */
 
 #undef TCL_TRAS
@@ -526,7 +529,7 @@ float *TCL::trasat(const float *a, const float *s, float *r__, int m, int n)
  <!--*/
  // -->END_HTML
    TCL_TRASAT(a, s, r__, m, n)
-    return r__;
+   return r__;
 } /* trasat_ */
 
 //____________________________________________________________
@@ -542,7 +545,7 @@ double *TCL::trasat(const double *a, const double *s, double *r__, int m, int n)
  <!--*/
  // -->END_HTML
    TCL_TRASAT(a, s, r__, m, n)
-    return r__;
+   return r__;
 } /* trasat_ */
 
 //____________________________________________________________

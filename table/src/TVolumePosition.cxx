@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.5 2003/07/17 06:19:14 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TVolumePosition.cxx,v 1.5 2003/07/17 06:19:14 brun Exp $
+// $Id: TVolumePosition.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
 
 #include "Riostream.h"
 
@@ -137,6 +137,7 @@ TVolumePosition::TVolumePosition(const TVolumePosition* oldPosition, const TVolu
 TVolumePosition::TVolumePosition(const TVolumePosition&pos): TObject()
       , fMatrix(((TVolumePosition &)pos).GetMatrix()),fNode(pos.GetNode()),fId(pos.GetId())
 {
+   //to be documented
    for (int i=0;i<3;i++) fX[i] = pos.GetX(i);
    // Transferring the ownership. 
    // The last created object owns the matrix if any.
@@ -162,7 +163,7 @@ void TVolumePosition::Browse(TBrowser *b)
       b->Add(GetNode(),shape?shape->GetName():GetNode()->GetName());
    } else {
       Draw();
-     gPad->Update();
+      gPad->Update();
    }
 }
 
@@ -301,6 +302,7 @@ Double_t *TVolumePosition::Cormx2Local(const Double_t *localCorr, Double_t *mast
 //______________________________________________________________________________
 Float_t *TVolumePosition::Cormx2Local(const Float_t *localCorr, Float_t *masterCorr) const
 {
+   //to be documented
    Float_t *res = 0;
    TRotMatrix *rm = (TRotMatrix *) GetMatrix();
    Double_t *m = 0;
@@ -474,8 +476,8 @@ void TVolumePosition::SavePrimitive(ofstream &, Option_t *)
    : fNode(node),fX(x),fY(y),fZ(z),fMatrix(0)
 {
 /
-  out << "  return myPosition; "                << endl;
-  out << "} "                                   << endl;
+   out << "  return myPosition; "                << endl;
+   out << "} "                                   << endl;
 #endif
 
 }
@@ -498,6 +500,7 @@ void TVolumePosition::SetMatrix(TRotMatrix *matrix)
 //_______________________________________________________________________
 void TVolumePosition::UpdatePosition(Option_t *)
 {
+   //to be documented
    TPadView3D *view3D=(TPadView3D *)gPad->GetView3D();
 //*-*- Update translation vector and rotation matrix for new level
    if (gGeometry->GeomLevel() && fMatrix) {

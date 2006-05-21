@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.12 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.13 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -167,10 +167,10 @@ static   Float_t       fVmin[4]  = {0,0,0,0};             //Minima of varexp col
 static   Float_t       fVmax[4]  = {20,20,20,20};         //Maxima of varexp columns
 
 const char *TTable::fgTypeName[] = {
-                       "NAN", "float", "int", "long", "short", "double"
-                     , "unsigned int", "unsigned long","unsigned short"
-                     , "unsigned char", "char", "Ptr_t"
-                                   };
+   "NAN", "float", "int", "long", "short", "double",
+   "unsigned int", "unsigned long","unsigned short",
+   "unsigned char", "char", "Ptr_t"
+};
 
 //______________________________________________________________________________
 static void ArrayLayout(UInt_t *layout,const UInt_t *size, Int_t dim)
@@ -569,17 +569,17 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
       if (!oldh1) {
          fNbins[0] = 100;
          if (gPad && opt.Contains("same")) {
-             TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
-             if (oldhtemp) {
-                fNbins[0] = oldhtemp->GetXaxis()->GetNbins();
-                fVmin[0]  = oldhtemp->GetXaxis()->GetXmin();
-                fVmax[0]  = oldhtemp->GetXaxis()->GetXmax();
-             } else {
-                fVmin[0]  = gPad->GetUxmin();
-                fVmax[0]  = gPad->GetUxmax();
-             }
+            TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
+            if (oldhtemp) {
+               fNbins[0] = oldhtemp->GetXaxis()->GetNbins();
+               fVmin[0]  = oldhtemp->GetXaxis()->GetXmin();
+               fVmax[0]  = oldhtemp->GetXaxis()->GetXmax();
+            } else {
+               fVmin[0]  = gPad->GetUxmin();
+               fVmax[0]  = gPad->GetUxmax();
+            }
          } else {
-             action = -1;
+            action = -1;
          }
       }
       TH1F *h1;
@@ -597,8 +597,8 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
 
       EntryLoop(exprFileName,action, h1, nentries, firstentry, option);
 
-//      if (!fDraw && !opt.Contains("goff")) h1->Draw(option);
-        if (!opt.Contains("goff")) h1->Draw(option);
+//    if (!fDraw && !opt.Contains("goff")) h1->Draw(option);
+      if (!opt.Contains("goff")) h1->Draw(option);
 
 //*-*- 2-D distribution
    } else if (dimension == 2) {
@@ -609,24 +609,24 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
          fNbins[1] = 40;
          if (opt.Contains("prof")) fNbins[1] = 100;
          if (opt.Contains("same")) {
-             TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
-             if (oldhtemp) {
-                fNbins[1] = oldhtemp->GetXaxis()->GetNbins();
-                fVmin[1]  = oldhtemp->GetXaxis()->GetXmin();
-                fVmax[1]  = oldhtemp->GetXaxis()->GetXmax();
-                fNbins[0] = oldhtemp->GetYaxis()->GetNbins();
-                fVmin[0]  = oldhtemp->GetYaxis()->GetXmin();
-                fVmax[0]  = oldhtemp->GetYaxis()->GetXmax();
-             } else {
-                fNbins[1] = 40;
-                fVmin[1]  = gPad->GetUxmin();
-                fVmax[1]  = gPad->GetUxmax();
-                fNbins[0] = 40;
-                fVmin[0]  = gPad->GetUymin();
-                fVmax[0]  = gPad->GetUymax();
-             }
+            TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
+            if (oldhtemp) {
+               fNbins[1] = oldhtemp->GetXaxis()->GetNbins();
+               fVmin[1]  = oldhtemp->GetXaxis()->GetXmin();
+               fVmax[1]  = oldhtemp->GetXaxis()->GetXmax();
+               fNbins[0] = oldhtemp->GetYaxis()->GetNbins();
+               fVmin[0]  = oldhtemp->GetYaxis()->GetXmin();
+               fVmax[0]  = oldhtemp->GetYaxis()->GetXmax();
+            } else {
+               fNbins[1] = 40;
+               fVmin[1]  = gPad->GetUxmin();
+               fVmax[1]  = gPad->GetUxmax();
+               fNbins[0] = 40;
+               fVmin[0]  = gPad->GetUymin();
+               fVmax[0]  = gPad->GetUymax();
+            }
          } else {
-             action = -2;
+            action = -2;
          }
       }
       if (profile || opt.Contains("prof")) {
@@ -762,7 +762,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
       default:
          fprintf(stderr,"Error: loading file %s\n",exprFileName);
          G__unloadfile((Char_t *)exprFileName);
-        return kFALSE; // can not load file
+         return kFALSE; // can not load file
    }
 
    // Float_t  Selection(Float_t *results[], void *address[], int& i$, int n$)
@@ -847,7 +847,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
             if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
             FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0]);
             ((TH1 *)obj)->SetBins(fNbins[0],fVmin[0],fVmax[0]);
-          }
+         }
          case  1:
             TAKEACTION_BEGIN
             if (results[1]) ((TH1 *)obj)->Fill(Axis_t(results[0]),Stat_t(results[1]));
@@ -876,7 +876,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
                TAKEACTION_END
             } else if (obj->IsA() == TH2S::Class()) {
                TAKEACTION_BEGIN
-                if (results[2]) ((TH2S*)obj)->Fill(Axis_t(results[0]),Axis_t(results[1]),Stat_t(results[2]));
+               if (results[2]) ((TH2S*)obj)->Fill(Axis_t(results[0]),Axis_t(results[1]),Stat_t(results[2]));
                TAKEACTION_END
             } else if (obj->IsA() == TH2C::Class()) {
                TAKEACTION_BEGIN
@@ -1290,12 +1290,12 @@ void TTable::Browse(TBrowser *b){
          UInt_t k;
          for (k=0;k<nDim; k++) totalSize *= indx[k];
          for (k=0;k<totalSize;k++) {
-             char *buffer =  new char[strlen(colName)+13];
-             sprintf(buffer,"%s[%d]",colName,k);
-             view = new TColumnView(buffer,this);
-             view->SetBit(kCanDelete);
-             b->Add(view,view->GetName());
-             delete [] buffer;
+            char *buffer =  new char[strlen(colName)+13];
+            sprintf(buffer,"%s[%d]",colName,k);
+            view = new TColumnView(buffer,this);
+            view->SetBit(kCanDelete);
+            b->Add(view,view->GetName());
+            delete [] buffer;
          }
       }
    }
@@ -1337,6 +1337,7 @@ void TTable::Delete(Option_t *opt)
 //______________________________________________________________________________
 TClass  *TTable::GetRowClass() const
 {
+   //to be documented
    TClass *cl = 0;
    TTableDescriptor *dsc = GetRowDescriptors();
    if (dsc) cl = dsc->RowClass();
@@ -1612,11 +1613,11 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
    Int_t rowStep = 10; // The maximun values to print per line
    Int_t rowNumber = rownumber;
    if (row  > Int_t(GetSize()) || GetSize() == UInt_t(0))  {
-       PrintHeader();
-       cout  << " ======================================================================================" << endl
-             << "   There are " << GetSize() << " allocated rows for this table only"                     << endl
+      PrintHeader();
+      cout  << " ======================================================================================" << endl
+           << "   There are " << GetSize() << " allocated rows for this table only"                     << endl
              << " ======================================================================================" << endl;
-       return 0;
+      return 0;
    }
    if (rowNumber > Int_t(GetSize()-row)) rowNumber = GetSize()-row;
    if (!rowNumber) return 0;
@@ -1731,7 +1732,7 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
    }
    cout << "---------------------------------------------------------------------------------------" << endl;
    return 0;
- }
+}
 //______________________________________________________________________________
 void TTable::PrintContents(Option_t *) const
 {
@@ -2058,7 +2059,7 @@ void TTable::ResetMap(Bool_t wipe)
       TTableMap **mp = (TTableMap **)(*links);
       if (wipe) delete *mp;
       *mp = 0;
-  }
+   }
 } 
 //______________________________________________________________________________
 void TTable::Set(Int_t n, Char_t *array)
@@ -2082,11 +2083,11 @@ void TTable::StreamerTable(TBuffer &b,Version_t version)
 {
    // Stream an object of class TTable.
    if (b.IsReading()) {
-     TDataSet::Streamer(b);
-     b >> fN;
-     StreamerHeader(b,version);
-     //   Create a table to fit nok rows
-     Set(fMaxIndex);
+      TDataSet::Streamer(b);
+      b >> fN;
+      StreamerHeader(b,version);
+      //   Create a table to fit nok rows
+      Set(fMaxIndex);
    } else {
       TDataSet::Streamer(b);
       b << fN;
@@ -2222,8 +2223,8 @@ void TTable::Streamer(TBuffer &R__b)
             if (R__v>3) {
                R__b >> ioDescriptor;
             } else {  // backward compatibility
-              ioDescriptor =  new TTableDescriptor();
-              ioDescriptor->Streamer(R__b);
+               ioDescriptor =  new TTableDescriptor();
+               ioDescriptor->Streamer(R__b);
             }
             if (!currentDescriptor) {
                currentDescriptor = ioDescriptor;
@@ -2353,8 +2354,8 @@ void TTable::Update(TDataSet *set, UInt_t opt)
          table->SetBit(kIsNotOwn);
          // mark we took over of this STAF table
          ResetBit(kIsNotOwn);
-     } else
-        Error("Update",
+      } else
+         Error("Update",
              "This table is <%s> but the updating one has a wrong type <%s>",GetTitle(),set->GetTitle());
    }
    TDataSet::Update(set,opt);

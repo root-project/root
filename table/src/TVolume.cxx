@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.11 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.12 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
@@ -338,6 +338,7 @@ void TVolume::Browse(TBrowser *b)
 //______________________________________________________________________________
 Int_t TVolume::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   //to be documented
    return DistancetoNodePrimitive(px,py);
 }
 
@@ -440,20 +441,20 @@ void TVolume::Draw(Option_t *option)
 
     // Check geometry level
 
-    Int_t iopt = atoi(option);
-    TDataSet *parent = 0;
-    char buffer[10];
-    if (iopt < 0) {
-       // set the "positive option"
-       sprintf(buffer,"%d",-iopt);
-       option = buffer;
-       // select parent to draw
-       parent = this;
-       do parent = parent->GetParent();
-       while (parent && ++iopt);
-    }
-    if (parent) parent->AppendPad(option);
-    else        AppendPad(option);
+   Int_t iopt = atoi(option);
+   TDataSet *parent = 0;
+   char buffer[10];
+   if (iopt < 0) {
+      // set the "positive option"
+      sprintf(buffer,"%d",-iopt);
+      option = buffer;
+      // select parent to draw
+      parent = this;
+      do parent = parent->GetParent();
+      while (parent && ++iopt);
+   }
+   if (parent) parent->AppendPad(option);
+   else        AppendPad(option);
 #if ROOT_VERSION_CODE >= ROOT_VERSION(4,03,05)
    // the new (4.03/05) way to active 3D viewer
    // Create a 3-D view
@@ -549,18 +550,18 @@ void TVolume::ImportShapeAttributes()
 //*-*          ========================================
 
    if (fShape) {
-     SetLineColor(fShape->GetLineColor());
-     SetLineStyle(fShape->GetLineStyle());
-     SetLineWidth(fShape->GetLineWidth());
-     SetFillColor(fShape->GetFillColor());
-     SetFillStyle(fShape->GetFillStyle());
+      SetLineColor(fShape->GetLineColor());
+      SetLineStyle(fShape->GetLineStyle());
+      SetLineWidth(fShape->GetLineWidth());
+      SetFillColor(fShape->GetFillColor());
+      SetFillStyle(fShape->GetFillStyle());
    }
 
    if (!GetCollection()) return;
    TVolume *volume;
    TIter  next(GetCollection());
    while ( (volume = (TVolume *)next()) )
-     volume->ImportShapeAttributes();
+      volume->ImportShapeAttributes();
 }
 
 //______________________________________________________________________________
@@ -570,7 +571,7 @@ void TVolume::Paint(Option_t *opt)
    gGeometry->SetGeomLevel();
    gGeometry->UpdateTempMatrix();
    PaintNodePosition(opt);
-  return;
+   return;
 }
 
 //______________________________________________________________________________
