@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.157 2006/05/04 17:08:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.158 2006/05/22 11:13:33 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -918,7 +918,7 @@ void TFile::ResetErrno() const
 TFilePrefetch *TFile::GetFilePrefetch() const
 {
    //return a pointer to the current TFilePrefetch
-   
+
    return fFilePrefetch;
 }
 
@@ -1216,7 +1216,7 @@ void TFile::Prefetch(Long64_t pos, Int_t len)
    //create a new block of length len at position pos in a TPrefetchFile
    //creates the TPreferFile object if it does not exist yet
    //if pos=0 and len = 0 the TPrefetchFile is reset
-   
+
    if (!fFilePrefetch) {
       Error("Prefetch","You must create a TFilePrefetch object first");
       return;
@@ -1242,15 +1242,15 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
    // Returns kTRUE in case of failure.
 
    if (fFilePrefetch) {
-      if (fFilePrefetch->ReadBuffer(buf,fOffset,len))  return kFALSE;
+      if (!fFilePrefetch->ReadBuffer(buf,fOffset,len))
+         return kFALSE;
    }
-   
+
    if (IsOpen()) {
       ssize_t siz;
 
       Double_t start = 0;
       if (gPerfStats != 0) start = TTimeStamp();
-
 
       while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
          ResetErrno();
@@ -1277,11 +1277,12 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 //______________________________________________________________________________
 Bool_t TFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 {
-   // Read the nbuf blocks described in arrays pos and len
-   // pos[i] is the seek position of block i of length len[i]
+   // Read the nbuf blocks described in arrays pos and len,
+   // where pos[i] is the seek position of block i of length len[i].
    // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer
-   // This function is overloaded by TNetFile, TWebFile, etc
-   
+   // This function is overloaded by TNetFile, TWebFile, etc.
+   // Returns kTRUE in case of failure.
+
    Int_t k = 0;
    Bool_t result = kTRUE;
    TFilePrefetch *old = fFilePrefetch;
@@ -1295,7 +1296,6 @@ Bool_t TFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    fFilePrefetch = old;
    return result;
 }
-   
 
 //______________________________________________________________________________
 Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)

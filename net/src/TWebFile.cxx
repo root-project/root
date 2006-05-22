@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.11 2006/05/18 10:11:45 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.12 2006/05/22 11:13:33 brun Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -39,7 +39,7 @@ TWebFile::TWebFile(const char *url) : TFile(url, "WEB")
    // to see if the file is accessible. The preferred interface to this
    // constructor is via TFile::Open().
 
-   TWebFile::Init(kFALSE);
+   Init(kFALSE);
 }
 
 //______________________________________________________________________________
@@ -52,7 +52,7 @@ TWebFile::TWebFile(TUrl url) : TFile(url.GetUrl(), "WEB")
    // the kZombie bit will be set in the TWebFile object. Use IsZombie()
    // to see if the file is accessible.
 
-   TWebFile::Init(kFALSE);
+   Init(kFALSE);
 }
 
 //______________________________________________________________________________
@@ -119,8 +119,16 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
    // routine connects to the remote host, sends the request and returns
    // the buffer. Returns kTRUE in case of error.
 
+   Int_t st;
+   if ((st = ReadBufferViaCache(buf, len))) {
+      if (st == 2)
+         return kTRUE;
+      return kFALSE;
+   }
+
    if (fFilePrefetch) {
-      if (fFilePrefetch->ReadBuffer(buf,fOffset,len)) return kFALSE;
+      if (!fFilePrefetch->ReadBuffer(buf, fOffset, len))
+         return kFALSE;
    }
 
    TSocket s(fUrl.GetHost(), fUrl.GetPort());

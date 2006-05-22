@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFilePrefetch.cxx,v 1.157 2006/05/04 17:08:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFilePrefetch.cxx,v 1.1 2006/05/22 11:13:33 brun Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -17,7 +17,7 @@ ClassImp(TFilePrefetch)
 //______________________________________________________________________________
 TFilePrefetch::TFilePrefetch() : TObject()
 {
-   // default Constructor.
+   // Default Constructor.
 
    fBufferSize  = 0;
    fBufferLen   = 0;
@@ -42,7 +42,8 @@ TFilePrefetch::TFilePrefetch() : TObject()
 TFilePrefetch::TFilePrefetch(TFile *file, Int_t buffersize)
            : TObject()
 {
-   // creates a TFilePrefetch data structure
+   // Creates a TFilePrefetch data structure.
+
    if (buffersize <=10000) fBufferSize = 100000;
    fBufferSize  = buffersize;
    fBufferLen   = 0;
@@ -67,8 +68,8 @@ TFilePrefetch::TFilePrefetch(TFile *file, Int_t buffersize)
 //_____________________________________________________________________________
 TFilePrefetch::~TFilePrefetch()
 {
-   // destructor
-   
+   // Destructor.
+
    delete [] fSeek;
    delete [] fSeekIndex;
    delete [] fSeekSort;
@@ -77,14 +78,13 @@ TFilePrefetch::~TFilePrefetch()
    delete [] fSeekPos;
    delete [] fBuffer;
 }
-   
 
 //_____________________________________________________________________________
 void TFilePrefetch::Prefetch(Long64_t pos, Int_t len)
 {
-   // Add block of length len at position pos in the list of blocks to be prefetched
-   // if pos <= 0 the current blocks (if any) are reset
-   
+   // Add block of length len at position pos in the list of blocks to
+   // be prefetched. If pos <= 0 the current blocks (if any) are reset.
+
    fIsSorted = kFALSE;
    if (pos <= 0) {
       fNseek = 0;
@@ -99,12 +99,12 @@ void TFilePrefetch::Prefetch(Long64_t pos, Int_t len)
    fNseek++;
    fNtot += len;
 }
-   
 
 //_____________________________________________________________________________
 void TFilePrefetch::Print(Option_t *option) const
 {
-   // Print class internal structure
+   // Print class internal structure.
+
    TString opt = option;
    opt.ToLower();
    printf("Number of blocks: %d, total size : %d\n",fNseek,fNtot);
@@ -120,37 +120,36 @@ void TFilePrefetch::Print(Option_t *option) const
    for (Int_t j=0;j<fNb;j++) {
       printf("fPos[%d]=%lld, fLen=%d\n",j,fPos[j],fLen[j]);
    }
-      
 }
 
 //_____________________________________________________________________________
 Bool_t TFilePrefetch::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
-   // Read buffer at position pos
-   // if pos is in the list of prefetched blocks read from fBuffer,
-   // otherwise normal read from file
-   
+   // Read buffer at position pos.
+   // If pos is in the list of prefetched blocks read from fBuffer,
+   // otherwise normal read from file. Returns kTRUE in case of failure.
+
    if (fNseek > 0 && !fIsSorted) {
       Sort();
-      fFile->ReadBuffers(fBuffer,fPos,fLen,fNb);
-      fFile->Seek(pos);
+      if (fFile->ReadBuffers(fBuffer,fPos,fLen,fNb))
+         return kTRUE;
    }
    Int_t loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
    if (loc >= 0 && loc <fNseek && pos == fSeekSort[loc]) {
       memcpy(buf,&fBuffer[fSeekPos[loc]],len);
+      fFile->Seek(pos+len);
       //printf("TFilePrefetch::ReadBuffer, pos=%lld, len=%d, slen=%d, loc=%d\n",pos,len,fSeekSortLen[loc],loc);
-      return kTRUE;
-   } else {
       return kFALSE;
    }
+   return kTRUE;
 }
 
 //_____________________________________________________________________________
 void TFilePrefetch::Sort()
 {
-   // Sort buffers to be prefetched in increasing order of positions
-   // Merge consecutive blocks if necessary
-   
+   // Sort buffers to be prefetched in increasing order of positions.
+   // Merge consecutive blocks if necessary.
+
    if (!fNseek) return;
    TMath::Sort(fNseek,fSeek,fSeekIndex,kFALSE);
    Int_t i;
@@ -182,5 +181,3 @@ void TFilePrefetch::Sort()
    fNb = nb+1;
    fIsSorted = kTRUE;
 }
-
-
