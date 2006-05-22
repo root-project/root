@@ -56,7 +56,7 @@ function checkfile {
 	local ORDER="$1"" ""$RET"
 	[ $IMPORTCINT == 0 ] && ORDER="$RET"" ""$1"
 	[ $MISSINGR == 0 -a $MISSINGC == 0 ] \
-	  && diff -p -u -I "^//\$Id: " $ORDER > /tmp/cintdiff \
+	  && diff -p -u -I '^//[\$]Id: .*$' $ORDER > /tmp/cintdiff \
 	  && RET=
 }
 
@@ -132,7 +132,7 @@ if [ -f $ADDEDLIST ]; then
 		echo ""
 		echo "Files that exist in Cint but not in ROOT (add to ROOT CVS):"
 		cat $ADDEDLIST
-		for NEWFILE in `$ADDEDLIST`
+		for NEWFILE in `cat $ADDEDLIST`
 			do cp ~/$NEWFILE $NEWFILE
 		done
 	fi
