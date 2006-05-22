@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.10 2006/05/16 13:19:02 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.11 2006/05/18 10:11:45 brun Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TWebFile.h"
+#include "TFilePrefetch.h"
 #include "TROOT.h"
 #include "TSocket.h"
 #include "Bytes.h"
@@ -38,8 +39,6 @@ TWebFile::TWebFile(const char *url) : TFile(url, "WEB")
    // to see if the file is accessible. The preferred interface to this
    // constructor is via TFile::Open().
 
-   fOffset = 0;
-
    TWebFile::Init(kFALSE);
 }
 
@@ -52,8 +51,6 @@ TWebFile::TWebFile(TUrl url) : TFile(url.GetUrl(), "WEB")
    // If the file specified in the URL does not exist or is not accessible
    // the kZombie bit will be set in the TWebFile object. Use IsZombie()
    // to see if the file is accessible.
-
-   fOffset = 0;
 
    TWebFile::Init(kFALSE);
 }
@@ -121,6 +118,10 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
    // Read specified byte range from remote file via HTTP daemon. This
    // routine connects to the remote host, sends the request and returns
    // the buffer. Returns kTRUE in case of error.
+
+   if (fFilePrefetch) {
+      if (fFilePrefetch->ReadBuffer(buf,fOffset,len)) return kFALSE;
+   }
 
    TSocket s(fUrl.GetHost(), fUrl.GetPort());
    if (!s.IsValid())

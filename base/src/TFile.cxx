@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.156 2006/05/01 16:35:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.157 2006/05/04 17:08:54 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TDatime.h"
 #include "TError.h"
 #include "TFile.h"
+#include "TFilePrefetch.h"
 #include "TFree.h"
 #include "TInterpreter.h"
 #include "TKey.h"
@@ -78,6 +79,7 @@ TFile::TFile() : TDirectory(), fInfoCache(0)
    fNProcessIDs   = 0;
    fOffset        = 0;
    fArchive       = 0;
+   fFilePrefetch  = 0;
    fArchiveOffset = 0;
    fIsRootFile    = kTRUE;
    fIsArchive     = kFALSE;
@@ -262,6 +264,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fProcessIDs = 0;
    fNProcessIDs= 0;
    fOffset     = 0;
+   fFilePrefetch  = 0;
 
    fOption.ToUpper();
 
@@ -414,6 +417,7 @@ TFile::~TFile()
    SafeDelete(fArchive);
    SafeDelete(fInfoCache);
    SafeDelete(fAsyncHandle);
+   SafeDelete(fFilePrefetch);
 
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfFiles()->Remove(this);
@@ -911,6 +915,14 @@ void TFile::ResetErrno() const
 }
 
 //______________________________________________________________________________
+TFilePrefetch *TFile::GetFilePrefetch() const
+{
+   //return a pointer to the current TFilePrefetch
+   
+   return fFilePrefetch;
+}
+
+//______________________________________________________________________________
 Int_t TFile::GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen)
 {
 //*-*-*-*-*-*-*-*-*Read the logical record header starting at position first
@@ -1199,6 +1211,20 @@ void TFile::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TFile::Prefetch(Long64_t pos, Int_t len)
+{
+   //create a new block of length len at position pos in a TPrefetchFile
+   //creates the TPreferFile object if it does not exist yet
+   //if pos=0 and len = 0 the TPrefetchFile is reset
+   
+   if (!fFilePrefetch) {
+      Error("Prefetch","You must create a TFilePrefetch object first");
+      return;
+   }
+   fFilePrefetch->Prefetch(pos,len);
+}
+
+//______________________________________________________________________________
 void TFile::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Print all objects in the file*-*-*-*-*-*-*-*-*-*-*
@@ -1215,6 +1241,10 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
    // Read a buffer from the file. This is the basic low level read operation.
    // Returns kTRUE in case of failure.
 
+   if (fFilePrefetch) {
+      if (fFilePrefetch->ReadBuffer(buf,fOffset,len))  return kFALSE;
+   }
+   
    if (IsOpen()) {
       ssize_t siz;
 
@@ -1243,6 +1273,29 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
    }
    return kTRUE;
 }
+
+//______________________________________________________________________________
+Bool_t TFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
+{
+   // Read the nbuf blocks described in arrays pos and len
+   // pos[i] is the seek position of block i of length len[i]
+   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer
+   // This function is overloaded by TNetFile, TWebFile, etc
+   
+   Int_t k = 0;
+   Bool_t result = kTRUE;
+   TFilePrefetch *old = fFilePrefetch;
+   fFilePrefetch = 0;
+   for (Int_t i=0;i<nbuf;i++) {
+      Seek(pos[i]);
+      result = ReadBuffer(&buf[k],len[i]);
+      if (result) break;
+      k += len[i];
+   }
+   fFilePrefetch = old;
+   return result;
+}
+   
 
 //______________________________________________________________________________
 Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
@@ -1508,6 +1561,7 @@ void TFile::Seek(Long64_t offset, ERelativeTo pos)
             Error("Seek", "seeking from end in archive is not (yet) supported");
          break;
    }
+   fOffset = offset;
    if (Long64_t retpos = SysSeek(fD, offset, whence) < 0)
       SysError("Seek", "cannot seek to position %lld in file %s, retpos=%lld",
                offset, GetName(), retpos);
@@ -1535,6 +1589,13 @@ void TFile::SetCompressionLevel(Int_t level)
    if (level < 0) level = 0;
    if (level > 9) level = 9;
    fCompress = level;
+}
+
+//______________________________________________________________________________
+void TFile::SetFilePrefetch(TFilePrefetch *file)
+{
+   //set a TFilePrefetch
+   fFilePrefetch = file;
 }
 
 //______________________________________________________________________________

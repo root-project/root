@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.6 2003/12/30 13:16:51 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.7 2006/04/18 14:23:20 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -34,8 +34,6 @@
 class TWebFile : public TFile {
 
 private:
-   Long64_t fOffset;     // seek offset
-
    TWebFile() { }
    void Init(Bool_t);
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.46 2006/05/14 10:23:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.47 2006/05/15 11:01:13 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -35,7 +35,7 @@ class TFree;
 class TArrayC;
 class TArchiveFile;
 class TFileOpenHandle;
-
+class TFilePrefetch;
 
 class TFile : public TDirectory {
 
@@ -45,35 +45,36 @@ public:
                            kAOSInProgress = 1, kAOSSuccess = 2 };
 
 protected:
-   Double_t      fSumBuffer;      //Sum of buffer sizes of objects written so far
-   Double_t      fSum2Buffer;     //Sum of squares of buffer sizes of objects written so far
-   Long64_t      fBytesWrite;     //Number of bytes written to this file
-   Long64_t      fBytesRead;      //Number of bytes read from this file
-   Long64_t      fBEGIN;          //First used byte in file
-   Long64_t      fEND;            //Last used byte in file
-   Long64_t      fSeekFree;       //Location on disk of free segments structure
-   Long64_t      fSeekInfo;       //Location on disk of StreamerInfo record
-   Int_t         fD;              //File descriptor
-   Int_t         fVersion;        //File format version
-   Int_t         fCompress;       //Compression level from 0(not compressed) to 9 (max compression)
-   Int_t         fNbytesFree;     //Number of bytes for free segments structure
-   Int_t         fNbytesInfo;     //Number of bytes for StreamerInfo record
-   Int_t         fWritten;        //Number of objects written so far
-   Int_t         fNProcessIDs;    //Number of TProcessID written to this file
-   TString       fRealName;       //Effective real file name (not original url)
-   TString       fOption;         //File options
-   Char_t        fUnits;          //Number of bytes for file pointers
-   TList        *fFree;           //Free segments linked list table
-   TArrayC      *fClassIndex;     //!Index of TStreamerInfo classes written to this file
-   TCache       *fCache;          //!Page cache used to reduce number of small I/O's
-   TObjArray    *fProcessIDs;     //!Array of pointers to TProcessIDs
-   Long64_t      fOffset;         //!Seek offset used by remote file classes
-   TArchiveFile *fArchive;        //!Archive file from which we read this file
-   Long64_t      fArchiveOffset;  //!Offset at which file starts in archive
-   Bool_t        fIsArchive;      //!True if this is a pure archive file
-   Bool_t        fIsRootFile;     //!True is this is a ROOT file
-   Bool_t        fInitDone;       //!True if the file has been initialized
-   Bool_t        fMustFlush;      //!True if the file buffers must be flushed
+   Double_t       fSumBuffer;      //Sum of buffer sizes of objects written so far
+   Double_t       fSum2Buffer;     //Sum of squares of buffer sizes of objects written so far
+   Long64_t       fBytesWrite;     //Number of bytes written to this file
+   Long64_t       fBytesRead;      //Number of bytes read from this file
+   Long64_t       fBEGIN;          //First used byte in file
+   Long64_t       fEND;            //Last used byte in file
+   Long64_t       fSeekFree;       //Location on disk of free segments structure
+   Long64_t       fSeekInfo;       //Location on disk of StreamerInfo record
+   Int_t          fD;              //File descriptor
+   Int_t          fVersion;        //File format version
+   Int_t          fCompress;       //Compression level from 0(not compressed) to 9 (max compression)
+   Int_t          fNbytesFree;     //Number of bytes for free segments structure
+   Int_t          fNbytesInfo;     //Number of bytes for StreamerInfo record
+   Int_t          fWritten;        //Number of objects written so far
+   Int_t          fNProcessIDs;    //Number of TProcessID written to this file
+   TString        fRealName;       //Effective real file name (not original url)
+   TString        fOption;         //File options
+   Char_t         fUnits;          //Number of bytes for file pointers
+   TList         *fFree;           //Free segments linked list table
+   TArrayC       *fClassIndex;     //!Index of TStreamerInfo classes written to this file
+   TCache        *fCache;          //!Page cache used to reduce number of small I/O's
+   TObjArray     *fProcessIDs;     //!Array of pointers to TProcessIDs
+   Long64_t       fOffset;         //!Seek offset used by remote file classes
+   TArchiveFile  *fArchive;        //!Archive file from which we read this file
+   TFilePrefetch *fFilePrefetch;   //!Pointer to a fileprefetch object (if any)
+   Long64_t       fArchiveOffset;  //!Offset at which file starts in archive
+   Bool_t         fIsArchive;      //!True if this is a pure archive file
+   Bool_t         fIsRootFile;     //!True is this is a ROOT file
+   Bool_t         fInitDone;       //!True if the file has been initialized
+   Bool_t         fMustFlush;      //!True if the file buffers must be flushed
    TFileOpenHandle *fAsyncHandle; //!For proper automatic cleanup
    EAsyncOpenStatus fAsyncOpenStatus; //!Status of an asynchronous open request
    TUrl          fUrl;            //!URL of file
@@ -141,6 +142,7 @@ public:
    virtual void        ResetErrno() const;
    Int_t               GetFd() const { return fD; }
    virtual const TUrl *GetEndpointUrl() const { return &fUrl; }
+   TFilePrefetch      *GetFilePrefetch() const;
    TObjArray          *GetListOfProcessIDs() const {return fProcessIDs;}
    TList              *GetListOfFree() const { return fFree; }
    virtual Int_t       GetNfree() const { return fFree->GetSize(); }
@@ -167,8 +169,10 @@ public:
    virtual Bool_t      Matches(const char *name);
    virtual Bool_t      MustFlush() const {return fMustFlush;}
    virtual void        Paint(Option_t *option="");
+   virtual void        Prefetch(Long64_t pos, Int_t len);
    virtual void        Print(Option_t *option="") const;
    virtual Bool_t      ReadBuffer(char *buf, Int_t len);
+   virtual Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
    virtual void        ReadFree();
    virtual void        ReadStreamerInfo();
    virtual Int_t       Recover();
@@ -176,6 +180,7 @@ public:
    virtual void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
    virtual void        SetCompressionLevel(Int_t level=1);
    virtual void        SetEND(Long64_t last) { fEND = last; }
+   virtual void        SetFilePrefetch(TFilePrefetch *file);
    virtual void        SetOption(Option_t *option=">") { fOption = option; }
    virtual void        ShowStreamerInfo();
    virtual Int_t       Sizeof() const;
