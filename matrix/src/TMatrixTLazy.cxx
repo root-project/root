@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTLazy.cxx,v 1.2 2005/12/23 19:55:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTLazy.cxx,v 1.3 2006/04/19 08:22:24 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -38,70 +38,70 @@ template<class Element>
 THaarMatrixT<Element>::THaarMatrixT(Int_t order,Int_t no_cols)
     : TMatrixTLazy<Element>(1<<order, no_cols == 0 ? 1<<order : no_cols)
 {
-  R__ASSERT(order > 0 && no_cols >= 0);
+   R__ASSERT(order > 0 && no_cols >= 0);
 }
 
 //______________________________________________________________________________
 template<class Element>
 void MakeHaarMat(TMatrixT<Element> &m)
 {
-  // Create an orthonormal (2^n)*(no_cols) Haar (sub)matrix, whose columns
-  // are Haar functions. If no_cols is 0, create the complete matrix with
-  // 2^n columns. Example, the complete Haar matrix of the second order is:
-  // column 1: [ 1  1  1  1]/2
-  // column 2: [ 1  1 -1 -1]/2
-  // column 3: [ 1 -1  0  0]/sqrt(2)
-  // column 4: [ 0  0  1 -1]/sqrt(2)
-  // Matrix m is assumed to be zero originally.
+   // Create an orthonormal (2^n)*(no_cols) Haar (sub)matrix, whose columns
+   // are Haar functions. If no_cols is 0, create the complete matrix with
+   // 2^n columns. Example, the complete Haar matrix of the second order is:
+   // column 1: [ 1  1  1  1]/2
+   // column 2: [ 1  1 -1 -1]/2
+   // column 3: [ 1 -1  0  0]/sqrt(2)
+   // column 4: [ 0  0  1 -1]/sqrt(2)
+   // Matrix m is assumed to be zero originally.
 
-  R__ASSERT(m.IsValid());
-  const Int_t no_rows = m.GetNrows();
-  const Int_t no_cols = m.GetNcols();
-  R__ASSERT(no_rows >= no_cols && no_cols > 0);
+   R__ASSERT(m.IsValid());
+   const Int_t no_rows = m.GetNrows();
+   const Int_t no_cols = m.GetNcols();
+   R__ASSERT(no_rows >= no_cols && no_cols > 0);
 
-  // It is easier to calculate a Haar matrix when the elements are stored
-  // column-wise . Since we are row-wise, the transposed Haar is calculted
+   // It is easier to calculate a Haar matrix when the elements are stored
+   // column-wise . Since we are row-wise, the transposed Haar is calculted
 
-  TMatrixT<Element> mtr(no_cols,no_rows);
-        Element *cp    = mtr.GetMatrixArray();
-  const Element *m_end = mtr.GetMatrixArray()+no_rows*no_cols;
+   TMatrixT<Element> mtr(no_cols,no_rows);
+         Element *cp    = mtr.GetMatrixArray();
+   const Element *m_end = mtr.GetMatrixArray()+no_rows*no_cols;
 
-  Element norm_factor = 1/TMath::Sqrt((Element)no_rows);
+   Element norm_factor = 1/TMath::Sqrt((Element)no_rows);
 
-  // First row is always 1 (up to normalization)
-  Int_t j;
-  for (j = 0; j < no_rows; j++)
-    *cp++ = norm_factor;
+   // First row is always 1 (up to normalization)
+   Int_t j;
+   for (j = 0; j < no_rows; j++)
+      *cp++ = norm_factor;
 
-  // The other functions are kind of steps: stretch of 1 followed by the
-  // equally long stretch of -1. The functions can be grouped in families
-  // according to their order (step size), differing only in the location
-  // of the step
-  Int_t step_length = no_rows/2;
-  while (cp < m_end && step_length > 0) {
-    for (Int_t step_position = 0; cp < m_end && step_position < no_rows;
-           step_position += 2*step_length, cp += no_rows) {
-      Element *ccp = cp+step_position;
-      for (j = 0; j < step_length; j++)
-        *ccp++ = norm_factor;
-      for (j = 0; j < step_length; j++)
-        *ccp++ = -norm_factor;
-    }
-    step_length /= 2;
-    norm_factor *= TMath::Sqrt(2.0);
-  }
+   // The other functions are kind of steps: stretch of 1 followed by the
+   // equally long stretch of -1. The functions can be grouped in families
+   // according to their order (step size), differing only in the location
+   // of the step
+   Int_t step_length = no_rows/2;
+   while (cp < m_end && step_length > 0) {
+      for (Int_t step_position = 0; cp < m_end && step_position < no_rows;
+              step_position += 2*step_length, cp += no_rows) {
+        Element *ccp = cp+step_position;
+        for (j = 0; j < step_length; j++)
+           *ccp++ = norm_factor;
+        for (j = 0; j < step_length; j++)
+           *ccp++ = -norm_factor;
+      }
+      step_length /= 2;
+      norm_factor *= TMath::Sqrt(2.0);
+   }
 
-  R__ASSERT(step_length != 0       || cp == m_end);
-  R__ASSERT(no_rows     != no_cols || step_length == 0);
+   R__ASSERT(step_length != 0       || cp == m_end);
+   R__ASSERT(no_rows     != no_cols || step_length == 0);
 
-  m.Transpose(mtr);
+   m.Transpose(mtr);
 }
 
 //______________________________________________________________________________
 template<class Element>
 void THaarMatrixT<Element>::FillIn(TMatrixT<Element> &m) const
 {
-  MakeHaarMat(m);
+   MakeHaarMat(m);
 }
 
 //______________________________________________________________________________
@@ -109,7 +109,7 @@ template<class Element>
 THilbertMatrixT<Element>::THilbertMatrixT(Int_t no_rows,Int_t no_cols)
     : TMatrixTLazy<Element>(no_rows,no_cols)
 {
-  R__ASSERT(no_rows > 0 && no_cols > 0);
+   R__ASSERT(no_rows > 0 && no_cols > 0);
 }
 
 //______________________________________________________________________________
@@ -117,32 +117,32 @@ template<class Element>
 THilbertMatrixT<Element>::THilbertMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
     : TMatrixTLazy<Element>(row_lwb,row_upb,col_lwb,col_upb)
 {
-  R__ASSERT(row_upb-row_lwb+1 > 0 && col_upb-col_lwb+1 > 0);
+   R__ASSERT(row_upb-row_lwb+1 > 0 && col_upb-col_lwb+1 > 0);
 }
 
 //______________________________________________________________________________
 template<class Element>
 void MakeHilbertMat(TMatrixT<Element> &m)
 {
-  // Make a Hilbert matrix. Hilb[i,j] = 1/(i+j+1),
-  // i,j=0...max-1 (matrix need not be a square one).
+   // Make a Hilbert matrix. Hilb[i,j] = 1/(i+j+1),
+   // i,j=0...max-1 (matrix need not be a square one).
 
-  R__ASSERT(m.IsValid());
-  const Int_t no_rows = m.GetNrows();
-  const Int_t no_cols = m.GetNcols();
-  R__ASSERT(no_rows > 0 && no_cols > 0);
+   R__ASSERT(m.IsValid());
+   const Int_t no_rows = m.GetNrows();
+   const Int_t no_cols = m.GetNcols();
+   R__ASSERT(no_rows > 0 && no_cols > 0);
 
-  Element *cp = m.GetMatrixArray();
-  for (Int_t i = 0; i < no_rows; i++)
-    for (Int_t j = 0; j < no_cols; j++)
-      *cp++ = 1.0/(i+j+1.0);
+   Element *cp = m.GetMatrixArray();
+   for (Int_t i = 0; i < no_rows; i++)
+      for (Int_t j = 0; j < no_cols; j++)
+         *cp++ = 1.0/(i+j+1.0);
 }
 
 //______________________________________________________________________________
 template<class Element>
 void THilbertMatrixT<Element>::FillIn(TMatrixT<Element> &m) const
 {
-  MakeHilbertMat(m);
+   MakeHilbertMat(m);
 }
 
 //______________________________________________________________________________
@@ -150,7 +150,7 @@ template<class Element>
 THilbertMatrixTSym<Element>::THilbertMatrixTSym(Int_t no_rows)
     : TMatrixTSymLazy<Element>(no_rows)
 {
-  R__ASSERT(no_rows > 0);
+   R__ASSERT(no_rows > 0);
 }
 
 //______________________________________________________________________________
@@ -158,31 +158,31 @@ template<class Element>
 THilbertMatrixTSym<Element>::THilbertMatrixTSym(Int_t row_lwb,Int_t row_upb)
     : TMatrixTSymLazy<Element>(row_lwb,row_upb)
 {
-  R__ASSERT(row_upb-row_lwb+1 > 0);
+   R__ASSERT(row_upb-row_lwb+1 > 0);
 }
 
 //______________________________________________________________________________
 template<class Element>
 void MakeHilbertMat(TMatrixTSym<Element> &m)
 {
-  // Make a Hilbert matrix. Hilb[i,j] = 1/(i+j+1),
-  // i,j=0...max-1 (matrix must be square).
+   // Make a Hilbert matrix. Hilb[i,j] = 1/(i+j+1),
+   // i,j=0...max-1 (matrix must be square).
 
-  R__ASSERT(m.IsValid());
-  const Int_t no_rows = m.GetNrows();
-  R__ASSERT(no_rows > 0);
+   R__ASSERT(m.IsValid());
+   const Int_t no_rows = m.GetNrows();
+   R__ASSERT(no_rows > 0);
 
-  Element *cp = m.GetMatrixArray();
-  for (Int_t i = 0; i < no_rows; i++)
-    for (Int_t j = 0; j < no_rows; j++)
-      *cp++ = 1.0/(i+j+1.0);
+   Element *cp = m.GetMatrixArray();
+   for (Int_t i = 0; i < no_rows; i++)
+      for (Int_t j = 0; j < no_rows; j++)
+         *cp++ = 1.0/(i+j+1.0);
 }
 
 //______________________________________________________________________________
 template<class Element>
 void THilbertMatrixTSym<Element>::FillIn(TMatrixTSym<Element> &m) const
 {
-  MakeHilbertMat(m);
+   MakeHilbertMat(m);
 }
 
 template class TMatrixTLazy      <Float_t>;
