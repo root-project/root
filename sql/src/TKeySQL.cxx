@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.7 2006/02/01 18:57:41 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.8 2006/05/11 10:29:45 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -149,13 +149,15 @@ void TKeySQL::Delete(Option_t * /*option*/)
 Long64_t TKeySQL::GetDBDirId() const
 {
    // return sql id of parent directory
+   
    return GetMotherDir() ? GetMotherDir()->GetSeekDir() : 0;
 }
 
 //______________________________________________________________________________
 void TKeySQL::StoreKeyObject(const void* obj, const TClass* cl)
 {
-   //please Sergey: document this function
+   // Stores object, associated with key, into data tables
+   
    TSQLFile* f = (TSQLFile*) GetFile(); 
     
    fCycle = GetMotherDir()->AppendKey(this);
@@ -170,7 +172,7 @@ void TKeySQL::StoreKeyObject(const void* obj, const TClass* cl)
       fDatime.Set();
       if (!f->WriteKeyData(this)) {
          // cannot add entry to keys table                          
-         Error("StoreObject","Cannot write data to key tables");
+         Error("StoreKeyObject","Cannot write data to key tables");
          // delete everything relevant for that key
          f->DeleteKeyFromDB(GetDBKeyId());
          fObjId = -1;
@@ -233,7 +235,7 @@ void* TKeySQL::ReadObjectAny(const TClass* expectedClass)
 //______________________________________________________________________________
 void* TKeySQL::ReadKeyObject(void* obj, const TClass* expectedClass)
 {
-   //please Sergey: document this function
+   // Read object, associated with key, from database
 
    TSQLFile* f = (TSQLFile*) GetFile(); 
 

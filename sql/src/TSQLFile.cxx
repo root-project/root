@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.8 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.9 2006/05/11 10:29:45 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -180,6 +180,7 @@
 #include "TClass.h"
 
 #include "TSQLServer.h"
+#include "TSQLStatement.h"
 #include "TSQLResult.h"
 #include "TSQLRow.h"
 #include "TBufferSQL2.h"
@@ -504,6 +505,7 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
    gROOT->cd();
 
    fSQL = TSQLServer::Connect(dbname, user, pass);
+   
    if (fSQL==0) {
       Error("TSQLFile", "Cannot connect to DB %s", dbname);
       goto zombie;
@@ -608,6 +610,16 @@ Bool_t TSQLFile::IsOracle() const
 
    if (fSQL==0) return kFALSE;
    return strcmp(fSQL->ClassName(),"TOracleServer")==0;
+}
+
+//______________________________________________________________________________
+Bool_t TSQLFile::IsODBC() const
+{
+   // checks, if ODBC driver used for database connection
+
+   if (fSQL==0) return kFALSE;
+   return strcmp(fSQL->ClassName(),"TODBCServer")==0;
+   
 }
 
 //______________________________________________________________________________
@@ -912,10 +924,8 @@ void TSQLFile::WriteHeader()
 void TSQLFile::WriteStreamerInfo()
 {
    // Store all TStreamerInfo, used in file, in sql database
-   // For the moment function is disabled while no proper reader is
-   // existing
 
-   return;
+   // return;
 
    // do not write anything when no basic tables was created
    if (!IsTablesExists()) return;
@@ -1001,11 +1011,8 @@ TList* TSQLFile::GetStreamerInfoList()
    // Read back streamer infos from database
    // List of streamer infos is always stored with key:id 0,
    // which is not shown in normal keys list
-   // Method is not active while TStreamerElement and TStreamerBase has custom
-   // streamers, which can not be handled by TBufferSQL2.
-   // Hopefully, problem will be solved soon
 
-   return new TList;
+//   return new TList;
    
    if (gDebug>1)
       Info("GetStreamerInfoList","Start reading of streamer infos");
@@ -1057,10 +1064,12 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory* dir, Bool_t doupdate, Long64_
 
    if (res==0) return -1;
    
-   Int_t nkeys = res->GetRowCount();
+   Int_t nkeys = 0;
+   
+   TSQLRow* row = 0;
 
-   for(Int_t nrow=0;nrow<nkeys;nrow++) {
-      TSQLRow* row = res->Next();
+   while ((row = res->Next()) != 0) {
+      nkeys++; 
    
       Long64_t keyid = sqlio::atol64((*row)[0]);
       //      Int_t dirid = atoi((*row)[1]);
@@ -1072,18 +1081,18 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory* dir, Bool_t doupdate, Long64_
       const char* classname = (*row)[7];
       
       if (gDebug>4) 
-         cout << "  Reading keyid = " << keyid << " name = " << keyname << endl;
+        cout << "  Reading keyid = " << keyid << " name = " << keyname << endl;
 
       if ((keyid>=sqlio::Ids_FirstKey) || (keyid==specialkeyid))
          if (doupdate) {
-            TKeySQL* key = FindSQLKey(dir, keyid);
+           TKeySQL* key = FindSQLKey(dir, keyid);
            
-            if (key==0) {
-               Error("StreamKeysForDirectory","Key with id %d not exist in list", keyid);
-               nkeys = -1; // this will finish execution
-            } else 
-               if (key->IsKeyModified(keyname, keytitle, keydatime, cycle, classname))
-               UpdateKeyData(key);
+           if (key==0) {
+              Error("StreamKeysForDirectory","Key with id %d not exist in list", keyid);
+              nkeys = -1; // this will finish execution
+           } else 
+           if (key->IsKeyModified(keyname, keytitle, keydatime, cycle, classname))
+              UpdateKeyData(key);
              
          } else {
             TKeySQL* key = new TKeySQL(dir, keyid, objid, 
@@ -1187,9 +1196,9 @@ Bool_t TSQLFile::ReadConfigurations()
      if ((field.CompareTo(name, TString::kIgnoreCase)==0))  \
         target = value; else 
    
+   TSQLRow* row = 0;
 
-   for(Int_t nrow=0;nrow<res->GetRowCount();nrow++) {
-      TSQLRow* row = res->Next();
+   while ((row = res->Next()) != 0) {
 
       TString field = row->GetField(0);
       TString value = row->GetField(1);
@@ -1300,7 +1309,11 @@ void TSQLFile::CreateBasicTables()
 //______________________________________________________________________________
 void TSQLFile::IncrementModifyCounter()
 {
-   //please Sergey: document this function
+   // Update value of modify counter in config table
+   // Modify counter used to indicate that something was changed in database.
+   // It will be used when multiple instances of TSQLFile for the same data base
+   // will be connected.
+   
    if (!IsWritable()) {
       Error("IncrementModifyCounter","Cannot update tables without write accsess");
       return;
@@ -1526,8 +1539,8 @@ TSQLResult* TSQLFile::SQLQuery(const char* cmd, Int_t flag, Bool_t* ok)
       delete res;
       return 0;
    }
-   if ((flag==2) && IsOracle())
-      res = new TSQLResultCopy(res);
+//   if ((flag==2) && IsOracle())
+//      res = new TSQLResultCopy(res);
    return res;
 }
 
@@ -1568,11 +1581,9 @@ TObjArray* TSQLFile::SQLTablesList(const char* searchtable)
       TString sqlcmd;
       TString user = fUserName;
       user.ToUpper();
-      sqlcmd.Form("SELECT object_name FROM ALL_OBJECTS WHERE object_type='TABLE' and owner='%s'",user.Data());
-      if (searchtable!=0) {
-         TString table = searchtable;
-         sqlcmd += Form(" and object_name='%s'",table.Data());
-      }
+      sqlcmd.Form("SELECT table_name FROM all_tables WHERE owner='%s'",user.Data());
+      if (searchtable!=0) 
+         sqlcmd += ::Form(" and table_name LIKE '%s'",searchtable);
 
       TSQLResult* tables = SQLQuery(sqlcmd.Data(), 1);
       if (tables==0) return 0;
@@ -1588,6 +1599,20 @@ TObjArray* TSQLFile::SQLTablesList(const char* searchtable)
          row = tables->Next();
       }
       delete tables;
+   } else 
+   if (IsODBC()) {
+      TSQLResult* tables = fSQL->GetTables("",searchtable);
+      if (tables==0) return 0;
+
+      TSQLRow* row = tables->Next();
+      while (row!=0) {
+         if (res==0) res = new TObjArray;
+         res->Add(new TObjString(row->GetField(2)));
+         delete row;
+         row = tables->Next();
+      }
+      delete tables;
+      
    } else {
       TSQLResult* tables = fSQL->GetTables(GetDataBaseName(), searchtable);
       if (tables==0) return 0;
@@ -1638,6 +1663,20 @@ TObjArray* TSQLFile::SQLTableColumns(const char* tablename)
          TNamed* col = new TNamed(cols->GetFieldName(n), "TYPE?");
          if (res==0) res = new TObjArray;
          res->Add(col);
+      }
+      delete cols;
+   } else 
+   if (IsODBC()) {
+      TSQLResult* cols = fSQL->GetColumns("", tablename);
+      if (cols==0) return 0;
+
+      TSQLRow* row = cols->Next();
+      while (row!=0) {
+         TNamed* col = new TNamed(row->GetField(3), row->GetField(5));
+         if (res==0) res = new TObjArray;
+         res->Add(col);
+         delete row;
+         row = cols->Next();
       }
       delete cols;
    } else {
@@ -1875,7 +1914,8 @@ Bool_t TSQLFile::WriteKeyData(TKeySQL* key)
 //______________________________________________________________________________
 Bool_t TSQLFile::UpdateKeyData(TKeySQL* key)
 {
-   //please Sergey: document this function
+   // updates (overwrites) key data in KeysTable
+   
    if ((fSQL==0) || (key==0)) return kFALSE;
 
    TString sqlcmd;
@@ -1926,7 +1966,7 @@ TSQLClassInfo* TSQLFile::FindSQLClassInfo(const char* clname, Int_t version)
 
    while ((info = (TSQLClassInfo*) iter()) !=0 ) {
       if (strcmp(info->GetName(), clname)==0)
-         if (info->GetClassVarsion()==version) return info;
+         if (info->GetClassVersion()==version) return info;
    }
    return 0;
 }
@@ -2029,7 +2069,7 @@ Bool_t TSQLFile::SyncSQLClassInfo(TSQLClassInfo* sqlinfo, TObjArray* columns, Bo
       sqlinfo->SetColumns(newcolumns);
       
       if (GetUseIndexes()>kIndexesBasic) {
-         sqlcmd.Form("CREATE UNIQUE INDEX %s%s_Index%s ON %s%s%s (%s%s%s)",
+         sqlcmd.Form("CREATE UNIQUE INDEX %s%s_I1%s ON %s%s%s (%s%s%s)",
                      quote, sqlinfo->GetClassTableName(), quote,
                      quote, sqlinfo->GetClassTableName(), quote,
                      quote, SQLObjectIdColumn(), quote);
@@ -2037,6 +2077,9 @@ Bool_t TSQLFile::SyncSQLClassInfo(TSQLClassInfo* sqlinfo, TObjArray* columns, Bo
       }
    }
 
+   SyncSQLClassInfoRawTables(sqlinfo, hasrawdata);
+
+/*
    if (hasrawdata && !sqlinfo->IsRawTableExist()) {
       TString sqlcmd;
 
@@ -2058,6 +2101,51 @@ Bool_t TSQLFile::SyncSQLClassInfo(TSQLClassInfo* sqlinfo, TObjArray* columns, Bo
       if (GetUseIndexes()>kIndexesClass) {
          sqlcmd.Form("CREATE UNIQUE INDEX %s%s_Index%s ON %s%s%s (%s%s%s, %s%s%s)",
                      quote, sqlinfo->GetRawTableName(), quote,
+                     quote, sqlinfo->GetRawTableName(), quote,
+                     quote, SQLObjectIdColumn(), quote,
+                     quote, SQLRawIdColumn(), quote);
+         SQLQuery(sqlcmd.Data());    
+      }
+
+   }
+*/
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TSQLFile::SyncSQLClassInfoRawTables(TSQLClassInfo* sqlinfo, Bool_t hasrawdata)
+{
+   // creates table for class raw data, if it is not exists
+    
+   if (sqlinfo==0) return kFALSE;
+
+   const char* quote = SQLIdentifierQuote();
+
+   if (hasrawdata && !sqlinfo->IsRawTableExist()) {
+       if (gDebug>2)
+         Info("SyncSQLClassInfoRawTables", sqlinfo->GetName());
+
+      TString sqlcmd;
+
+      sqlcmd.Form("CREATE TABLE %s%s%s (%s%s%s %s, %s%s%s %s, %s %s, %s %s)",
+                  quote, sqlinfo->GetRawTableName(), quote,
+                  quote, SQLObjectIdColumn(), quote, SQLIntType(),
+                  quote, SQLRawIdColumn(), quote, SQLIntType(),
+                  sqlio::BT_Field, SQLSmallTextType(),
+                  sqlio::BT_Value, SQLSmallTextType());
+                  
+      if ((fTablesType.Length()>0) && IsMySQL()) {
+         sqlcmd +=" TYPE=";
+         sqlcmd += fTablesType;
+      }
+
+      SQLQuery(sqlcmd.Data());
+      sqlinfo->SetRawExist(kTRUE);
+      
+      if (GetUseIndexes()>kIndexesClass) {
+         sqlcmd.Form("CREATE UNIQUE INDEX %s%s_I2%s ON %s%s%s (%s%s%s, %s%s%s)",
+                     quote, sqlinfo->GetClassTableName(), quote,
                      quote, sqlinfo->GetRawTableName(), quote,
                      quote, SQLObjectIdColumn(), quote,
                      quote, SQLRawIdColumn(), quote);
@@ -2259,10 +2347,37 @@ TObjArray* TSQLFile::SQLObjectsInfo(Long64_t keyid)
                quote, sqlio::ObjectsTable, quote,
                quote, SQLKeyIdColumn(), quote, keyid,
                quote, SQLObjectIdColumn(), quote);
+
+   TObjArray* arr = 0;
+   
+   if (fLogFile!=0)
+      *fLogFile << sqlcmd << endl;
+   if (gDebug>2) Info("SQLObjectsInfo",sqlcmd);
+   fQuerisCounter++;
+
+   TSQLStatement* stmt = fSQL->Statement(sqlcmd.Data(), 1000);
+   
+   if (stmt!=0) {
+      stmt->Process();
+      stmt->StoreResult();
+      
+      while (stmt->NextResultRow()) {
+         Long64_t objid = stmt->GetLong64(0); 
+         const char* clname = stmt->GetString(1);
+         Int_t version = stmt->GetInt(2); 
+         
+         TSQLObjectInfo* info = new TSQLObjectInfo(objid, clname, version);
+         if (arr==0) arr = new TObjArray();
+         arr->Add(info);
+      }
+   
+      delete stmt;
+      return arr;
+   }
+
    TSQLResult* res = SQLQuery(sqlcmd.Data(), 1);
    if (res==0) return 0;
    
-   TObjArray* arr = 0;
    TSQLRow* row = 0;
    while ((row = res->Next()) != 0) {
       Long64_t objid = atoi(row->GetField(0)); 
@@ -2296,7 +2411,8 @@ TSQLResult* TSQLFile::GetNormalClassData(Long64_t objid, TSQLClassInfo* sqlinfo)
 //______________________________________________________________________________
 TSQLResult* TSQLFile::GetNormalClassDataAll(Long64_t minobjid, Long64_t maxobjid, TSQLClassInfo* sqlinfo)
 {
-   //please Sergey: document this function
+   // return data for several objects from the range from normal class table
+   
    if (!sqlinfo->IsClassTableExist()) return 0;
    TString sqlcmd;
    const char* quote = SQLIdentifierQuote();
@@ -2312,41 +2428,46 @@ TSQLResult* TSQLFile::GetBlobClassData(Long64_t objid, TSQLClassInfo* sqlinfo)
 {
 //  Method return request results for specified objid from _streamer_ classtable 
 
-   if (sqlinfo->IsRawTableExist()) {
-      TString sqlcmd;
-      const char* quote = SQLIdentifierQuote();
-      sqlcmd.Form("SELECT %s, %s FROM %s%s%s WHERE %s%s%s=%lld ORDER BY %s%s%s",
-                  sqlio::BT_Field, sqlio::BT_Value,
-                  quote, sqlinfo->GetRawTableName(), quote,
-                  quote, SQLObjectIdColumn(), quote, objid,
-                  quote, SQLRawIdColumn(), quote);
-      return SQLQuery(sqlcmd.Data(), 2);
-   }
-   
-   return 0;
+   if (!sqlinfo->IsRawTableExist()) return 0;
+   TString sqlcmd;
+   const char* quote = SQLIdentifierQuote();
+   sqlcmd.Form("SELECT %s, %s FROM %s%s%s WHERE %s%s%s=%lld ORDER BY %s%s%s",
+               sqlio::BT_Field, sqlio::BT_Value,
+               quote, sqlinfo->GetRawTableName(), quote,
+               quote, SQLObjectIdColumn(), quote, objid,
+               quote, SQLRawIdColumn(), quote);
+   return SQLQuery(sqlcmd.Data(), 2);
 }
 
 //______________________________________________________________________________
-TSQLObjectData* TSQLFile::GetObjectClassData(Long64_t objid, TSQLClassInfo* sqlinfo)
+TSQLStatement* TSQLFile::GetBlobClassDataStmt(Long64_t objid, TSQLClassInfo* sqlinfo)
 {
-   // Get data for specified object from particular class table
-   // Returns TSQLObjectData object, which contains one row from
-   // normal class table and data from _streamer_ table.
-   // TSQLObjectData object used later in TBufferSQL2 to unstream object
+//  Method return request results for specified objid from _streamer_ classtable 
+//  Data returned in form of statement, where direct access to values are possible
 
-   if ((fSQL==0) || (objid<0) || (sqlinfo==0)) return 0;
-
-   if (gDebug>1)
-      Info("GetObjectClassData","Request for %s id = %lld", sqlinfo->GetName(), objid);
-
-   TSQLResult *classdata = GetNormalClassData(objid, sqlinfo);
+   if (!sqlinfo->IsRawTableExist()) return 0;
    
-   TSQLResult *blobdata = GetBlobClassData(objid, sqlinfo);
-
-   if (gDebug>3)
-      Info("GetObjectClassData","normal = %x blobdata = %x", classdata, blobdata);
-
-   return new TSQLObjectData(sqlinfo, objid, classdata, 0, blobdata);
+   TString sqlcmd;
+   const char* quote = SQLIdentifierQuote();
+   sqlcmd.Form("SELECT %s, %s FROM %s%s%s WHERE %s%s%s=%lld ORDER BY %s%s%s",
+               sqlio::BT_Field, sqlio::BT_Value,
+               quote, sqlinfo->GetRawTableName(), quote,
+               quote, SQLObjectIdColumn(), quote, objid,
+               quote, SQLRawIdColumn(), quote);
+               
+   if (fLogFile!=0)
+      *fLogFile << sqlcmd << endl;
+   if (gDebug>2) Info("BuildStatement",sqlcmd);
+   fQuerisCounter++;
+               
+   TSQLStatement* stmt = fSQL->Statement(sqlcmd.Data(), 1000);
+   if (stmt==0) return 0;
+   
+   stmt->Process();
+   
+   stmt->StoreResult();
+   
+   return stmt;
 }
 
 //______________________________________________________________________________
@@ -2382,11 +2503,11 @@ Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void* obj, const TC
          }
           
          if (!SQLApplyCommands(&cmds)) {
-            Error("StoreObject","Cannot correctly store object data in database");
-            objid = -1;
-            if (needcommit) SQLRollback();
+           Error("StoreObject","Cannot correctly store object data in database");
+           objid = -1;
+           if (needcommit) SQLRollback();
          } else {
-            if (needcommit) SQLCommit();
+           if (needcommit) SQLCommit();
          }
       }
       cmds.Delete();

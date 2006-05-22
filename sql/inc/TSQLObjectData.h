@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.h,v 1.6 2006/05/11 10:29:45 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.h,v 1.7 2006/05/12 08:17:02 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -33,6 +33,7 @@ class TList;
 class TSQLClassInfo;
 class TSQLResult;
 class TSQLRow;
+class TSQLStatement;
 
 
 class TSQLObjectInfo : public TObject {
@@ -68,7 +69,8 @@ public:
                   Long64_t       objid,
                   TSQLResult*    classdata,
                   TSQLRow*       classrow,
-                  TSQLResult*    blobdata);
+                  TSQLResult*    blobdata,
+                  TSQLStatement* blobstmt);
    
    virtual ~TSQLObjectData();
    
@@ -84,33 +86,35 @@ public:
    
    const char*       GetValue() const { return fLocatedValue; }
    const char*       GetColumnName() const { return fLocatedField; }
-   const char*       GetBlobName1() const { return fBlobName1.Data(); }
-   const char*       GetBlobName2() const { return fBlobName2.Data(); }
+   const char*       GetBlobPrefixName() const { return fBlobPrefixName; }
+   const char*       GetBlobTypeName() const { return fBlobTypeName; }
    
    Bool_t            VerifyDataType(const char* tname, Bool_t errormsg = kTRUE);
    Bool_t            PrepareForRawData();
    
 protected: 
    Bool_t            ExtractBlobValues();
+   Bool_t            ShiftBlobRow();
    
    Int_t             GetNumClassFields();
    const char*       GetClassFieldName(Int_t n);
    
-   TSQLClassInfo*    fInfo;          //!
-   Long64_t          fObjId;         //!
-   Bool_t            fOwner;         //!
-   TSQLResult*       fClassData;     //!
-   TSQLResult*       fBlobData;      //!
-   Int_t             fLocatedColumn; //!
-   Int_t             fLocatedBlob;   //!
-   TSQLRow*          fClassRow;      //!
-   TSQLRow*          fBlobRow;       //!
-   const char*       fLocatedField;  //!
-   const char*       fLocatedValue;  //!
-   Bool_t            fCurrentBlob;   //!
-   TString           fBlobName1;     //!
-   TString           fBlobName2;     //!
-   TObjArray*        fUnpack;        //! 
+   TSQLClassInfo*    fInfo;           //!
+   Long64_t          fObjId;          //!
+   Bool_t            fOwner;          //!
+   TSQLResult*       fClassData;      //!
+   TSQLResult*       fBlobData;       //!
+   TSQLStatement*    fBlobStmt;      //!
+   Int_t             fLocatedColumn;  //!
+   Int_t             fLocatedBlob;    //!
+   TSQLRow*          fClassRow;       //!
+   TSQLRow*          fBlobRow;        //!
+   const char*       fLocatedField;   //!
+   const char*       fLocatedValue;   //!
+   Bool_t            fCurrentBlob;    //!
+   const char*       fBlobPrefixName; //! name prefix in current blob row
+   const char*       fBlobTypeName;   //! name type (without prefix) in current blob row
+   TObjArray*        fUnpack;         //! 
    
    ClassDef(TSQLObjectData, 1) // Keeps the data requested from the SQL server for an object.
       
@@ -136,7 +140,7 @@ protected:
    Bool_t            fIsMoreRows;    //!  indicates if class data has not yet read rows
    TList*            fRowsPool;      //!  pool of extrcted, but didnot used rows
 
-ClassDef(TSQLObjectDataPool,1) //XML object keeper class     
+   ClassDef(TSQLObjectDataPool,1) // XML object keeper class     
     
 };
 

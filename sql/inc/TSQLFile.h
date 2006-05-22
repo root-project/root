@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.h,v 1.6 2005/12/07 14:59:57 rdm Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.h,v 1.7 2006/02/01 18:57:41 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -29,12 +29,12 @@ class TStreamerElement;
 class TStreamerInfo;
 
 class TSQLServer;
+class TSQLStatement;
 class TSQLResult;
 class TSQLRow;
 class TKeySQL;
 class TBufferSQL2;
 class TSQLClassInfo;
-class TSQLObjectData;
 
 class TSQLFile : public TFile {
     
@@ -96,6 +96,7 @@ protected:
    TSQLClassInfo*    FindSQLClassInfo(const char* clname, Int_t version);
    TSQLClassInfo*    RequestSQLClassInfo(const char* clname, Int_t version, Bool_t force = kFALSE);
    TSQLClassInfo*    RequestSQLClassInfo(const TClass* cl, Bool_t force = kFALSE);
+   Bool_t            SyncSQLClassInfoRawTables(TSQLClassInfo* sqlinfo, Bool_t hasrawdata);
    Bool_t            SyncSQLClassInfo(TSQLClassInfo* sqlinfo, TObjArray* columns, Bool_t hasrawdata);
    Bool_t            ProduceClassSelectQuery(TStreamerInfo* info, TSQLClassInfo* sqlinfo, TString& columns, TString& tables, Int_t& tablecnt);
 
@@ -112,7 +113,7 @@ protected:
    TSQLResult*       GetNormalClassData(Long64_t objid, TSQLClassInfo* sqlinfo);
    TSQLResult*       GetNormalClassDataAll(Long64_t minobjid, Long64_t maxobjid, TSQLClassInfo* sqlinfo);
    TSQLResult*       GetBlobClassData(Long64_t objid, TSQLClassInfo* sqlinfo);
-   TSQLObjectData*   GetObjectClassData(Long64_t objid, TSQLClassInfo* sqlinfo);
+   TSQLStatement*    GetBlobClassDataStmt(Long64_t objid, TSQLClassInfo* sqlinfo);
    Long64_t          StoreObjectInTables(Long64_t keyid, const void* obj, const TClass* cl);
    Bool_t            WriteSpecialObject(Long64_t keyid, TObject* obj, const char* name, const char* title);
    TObject*          ReadSpecialObject(Long64_t keyid, TObject* obj = 0);
@@ -224,6 +225,7 @@ public:
    Bool_t            IsMySQL() const;
    virtual Bool_t    IsOpen() const;
    Bool_t            IsOracle() const;
+   Bool_t            IsODBC() const;
 
    virtual void      MakeFree(Long64_t, Long64_t) {}
    virtual void      MakeProject(const char *, const char* ="*", Option_t* ="new") {} // *MENU*

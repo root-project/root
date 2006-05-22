@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.10 2006/04/12 20:54:30 rdm Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.11 2006/05/11 10:29:45 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -238,45 +238,60 @@ Bool_t TBufferSQL2::SqlObjectInfo(Long64_t objid, TString& clname, Version_t& ve
 //______________________________________________________________________________
 TSQLObjectData* TBufferSQL2::SqlObjectData(Long64_t objid, TSQLClassInfo* sqlinfo)
 {
-   //please Sergey document this function
-   if (!sqlinfo->IsClassTableExist()) 
-      return fSQL->GetObjectClassData(objid, sqlinfo); 
+   // creates TSQLObjectData for specifed object id and specified class
+   // Object data for each class can be stored in two different tables.
+   // First table contains data in column-wise form for simple types like integer, 
+   // strings and so on when second table contains any other data which cannot
+   // be converted into column-wise representation. 
+   // TSQLObjectData will contain results of the requests to both such tables for 
+   // concrete object id.
    
-   TSQLObjectDataPool* pool = 0;
+   TSQLResult *classdata = 0;   
+   TSQLRow *classrow = 0;
    
-   if (fPoolsMap!=0)
-      pool = (TSQLObjectDataPool*) fPoolsMap->GetValue(sqlinfo);
+   if (sqlinfo->IsClassTableExist()) {
    
-   if ((pool==0) && (fLastObjId>=fFirstObjId)) {
-      if (gDebug>4) Info("SqlObjectData","Before request to %s",sqlinfo->GetClassTableName());
-      TSQLResult *alldata = fSQL->GetNormalClassDataAll(fFirstObjId, fLastObjId, sqlinfo);
-      if (gDebug>4) Info("SqlObjectData","After request res = %x",alldata);
-      if (alldata==0) {
-         Error("SqlObjectData","Cannot get data from table %s",sqlinfo->GetClassTableName());
+      TSQLObjectDataPool* pool = 0;
+   
+      if (fPoolsMap!=0)
+        pool = (TSQLObjectDataPool*) fPoolsMap->GetValue(sqlinfo);
+      
+      if ((pool==0) && (fLastObjId>=fFirstObjId)) {
+         if (gDebug>4) Info("SqlObjectData","Before request to %s",sqlinfo->GetClassTableName());
+         TSQLResult *alldata = fSQL->GetNormalClassDataAll(fFirstObjId, fLastObjId, sqlinfo);
+         if (gDebug>4) Info("SqlObjectData","After request res = %x",alldata);
+         if (alldata==0) {
+            Error("SqlObjectData","Cannot get data from table %s",sqlinfo->GetClassTableName());
+            return 0;
+         }
+   
+         if (fPoolsMap==0) fPoolsMap = new TMap();
+         pool = new TSQLObjectDataPool(sqlinfo, alldata);
+         fPoolsMap->Add(sqlinfo, pool);
+      }
+   
+      if (pool==0) return 0;
+   
+      if (pool->GetSqlInfo()!=sqlinfo) {
+         Error("SqlObjectData","Missmatch in pools map !!! CANNOT BE !!!");
          return 0;
       }
-
-      if (fPoolsMap==0) fPoolsMap = new TMap();
-      pool = new TSQLObjectDataPool(sqlinfo, alldata);
-      fPoolsMap->Add(sqlinfo, pool);
-   }
-
-   if (pool==0) return 0;
-
-   if (pool->GetSqlInfo()!=sqlinfo) {
-      Error("SqlObjectData","Missmatch in pools map !!! CANNOT BE !!!");
-      return 0;
-   }
-
-   TSQLResult *classdata = pool->GetClassData();
    
-   TSQLRow* row = pool->GetObjectRow(objid);
-   if (row==0) {
-      Error("SqlObjectData","Can not find row for objid = %lld in table %s", objid, sqlinfo->GetClassTableName());
-      return 0;
-   }
-   TSQLResult *blobdata = fSQL->GetBlobClassData(objid, sqlinfo);
-   return new TSQLObjectData(sqlinfo, objid, classdata, row, blobdata);
+      classdata = pool->GetClassData();
+      
+      classrow = pool->GetObjectRow(objid);
+      if (classrow==0) {
+         Error("SqlObjectData","Can not find row for objid = %lld in table %s", objid, sqlinfo->GetClassTableName());
+         return 0;
+      }
+   }   
+   
+   TSQLResult *blobdata = 0;
+   TSQLStatement* stmt = fSQL->GetBlobClassDataStmt(objid, sqlinfo);
+
+   if (stmt==0) blobdata = fSQL->GetBlobClassData(objid, sqlinfo);
+   
+   return new TSQLObjectData(sqlinfo, objid, classdata, classrow, blobdata, stmt);
 }
 
 //______________________________________________________________________________
@@ -349,9 +364,6 @@ void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *stream
 {
    // Read object from the buffer
 
-   if (gDebug>2)
-      cout << "TBufferSQL2::SqlReadObject " << fCurrentData->GetBlobName2() << endl;
-
    if (cl) *cl = 0;
 
    if (fErrorFlag>0) return obj;
@@ -367,6 +379,9 @@ void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *stream
    
    Long64_t objid = -1;
    sscanf(refid, FLong64, &objid);
+
+   if (gDebug>2) 
+      Info("SqlReadObject","Starting objid = %lld column=%s", objid, fCurrentData->GetColumnName());
 
    if (!fCurrentData->IsBlobData() ||
        fCurrentData->VerifyDataType(sqlio::ObjectPtr,kFALSE))
@@ -545,7 +560,7 @@ void TBufferSQL2::SetStreamerElementNumber(Int_t number)
       return;
    }
    TStreamerElement* elem = info->GetStreamerElementReal(number, 0);
-
+   
    Int_t comp_type = info->GetTypes()[number];
 
    Int_t elem_type = elem->GetType();
@@ -768,7 +783,10 @@ void TBufferSQL2::WorkWithClass(const char* classname, Version_t classversion)
 
    if (IsReading()) {
       Long64_t objid = 0;
-
+      
+//      if ((fCurrentData!=0) && fCurrentData->VerifyDataType(sqlio::ObjectInst, kFALSE))
+//        if (!fCurrentData->IsBlobData()) Info("WorkWithClass","Big problem %s", fCurrentData->GetValue());
+      
       if ((fCurrentData!=0) && fCurrentData->IsBlobData() &&
           fCurrentData->VerifyDataType(sqlio::ObjectInst, kFALSE)) {
          objid = atoi(fCurrentData->GetValue());
@@ -813,7 +831,7 @@ void TBufferSQL2::WorkWithElement(TStreamerElement* elem, Int_t number)
    // when several data memebers of the same basic type streamed with single ...FastArray call
 
    if (gDebug>2)
-      cout << " TBufferSQL2::WorkWithElement " << elem->GetName() << endl;
+      Info("WorkWithElement","elem = %s",elem->GetName());
 
    if (number>=0)
       PushStack()->SetStreamerElement(elem, number);
@@ -829,7 +847,7 @@ void TBufferSQL2::WorkWithElement(TStreamerElement* elem, Int_t number)
       }
 
       fCurrentData = Stack()->GetObjectData(kTRUE);
-
+      
       Int_t located = Stack()->LocateElementColumn(fSQL, this, fCurrentData);
 
       if (located==TSQLStructure::kColUnknown) {
@@ -905,7 +923,7 @@ Version_t TBufferSQL2::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass *)
       TString value = fCurrentData->GetValue();
       res = value.Atoi();
       if (gDebug>3)
-         cout << "TBufferSQL2::ReadVersion from blob " << fCurrentData->GetBlobName1() << " = " << res << endl;
+         cout << "TBufferSQL2::ReadVersion from blob " << fCurrentData->GetBlobPrefixName() << " = " << res << endl;
       fCurrentData->ShiftToNextValue();
    } else {
       Error("ReadVersion", "No correspondent tags to read version");
@@ -965,11 +983,11 @@ void TBufferSQL2::WriteObject(const void *actualObjStart, const TClass *actualCl
 #define SQLReadArrayCompress(vname, arrsize)                            \
    {                                                                    \
       while(indx<arrsize) {                                             \
-         const char* name = fCurrentData->GetBlobName1();               \
+         const char* name = fCurrentData->GetBlobPrefixName();          \
          Int_t first, last, res;                                        \
          if (strstr(name,sqlio::IndexSepar)==0) {                       \
-            res = sscanf(name,"[%d]", &first); last = first;            \
-         } else res = sscanf(name,"[%d..%d]", &first, &last);           \
+            res = sscanf(name,"[%d", &first); last = first;             \
+         } else res = sscanf(name,"[%d..%d", &first, &last);            \
          if (gDebug>5) cout << name << " first = " << first << " last = " << last << " res = " << res << endl; \
          if ((first!=indx) || (last<first) || (last>=arrsize)) {        \
             Error("SQLReadArrayCompress","Error reading array content %s", name); \
@@ -1420,7 +1438,7 @@ void TBufferSQL2::ReadFastArray(void  *start, const TClass *cl, Int_t n, TMember
    // object data is started and finished 
 
    if (gDebug>2)
-      cout << "TBufferSQL2::ReadFastArray(* " << endl; 
+      Info("ReadFastArray","(void *"); 
 
    if (streamer) {
       StreamObject(start, streamer, cl, 0); 
@@ -1447,7 +1465,7 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
    // object data is started and finished 
 
    if (gDebug>2)
-      cout << "TBufferSQL2::ReadFastArray(** " << endl; 
+      Info("ReadFastArray","(void **  pre = %d  n = %d", isPreAlloc, n); 
   
    if (streamer) {
       if (isPreAlloc) {
@@ -1475,6 +1493,9 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
          StreamObject(start[j], cl);
       }
    }
+
+   if (gDebug>2)
+      Info("ReadFastArray","(void ** Done" ); 
 
    //   TBuffer::ReadFastArray(startp, cl, n, isPreAlloc, s);
 }

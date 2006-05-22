@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLClassInfo.h,v 1.2 2005/11/22 20:42:36 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLClassInfo.h,v 1.3 2005/12/07 14:59:57 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -38,7 +38,7 @@ public:
    virtual ~TSQLClassInfo();
    
    virtual const char* GetName() const { return fClassName.Data(); }
-   Int_t GetClassVarsion() const { return fClassVersion; }
+   Int_t GetClassVersion() const { return fClassVersion; }
    
    const char* GetClassTableName() const { return fClassTable.Data(); }
    const char* GetRawTableName() const { return fRawTable.Data(); }
