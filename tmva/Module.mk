@@ -32,6 +32,9 @@ INCLUDEFILES += $(TMVADEP)
 
 ##### local rules #####
 include/TMVA/%.h:    $(TMVADIRI)/%.h
+		@(if [ ! -d "include/TMVA" ]; then     \
+		   mkdir -p include/TMVA;              \
+		fi)
 		cp $< $@
 
 $(TMVALIB):      $(TMVAO) $(TMVADO) $(ORDER_) $(MAINLIBS) $(TMVALIBDEP)
