@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCRow.h,v 1.2 2001/12/11 14:19:51 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCRow.h,v 1.1 2006/04/17 14:12:52 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -34,8 +34,11 @@ class TODBCRow : public TSQLRow {
 protected:
    SQLHSTMT   fHstmt;
    Int_t      fFieldCount;
-   char     **fBuffer;
-
+   char      **fBuffer;
+   ULong_t    *fLengths;  
+   
+   void        CopyFieldValue(Int_t field);
+   
 public:
    TODBCRow(SQLHSTMT stmt, Int_t fieldcount);
    virtual ~TODBCRow();
@@ -48,4 +51,3 @@ public:
 };
 
 #endif
-

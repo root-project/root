@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.1 2006/02/6 10:00:44 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.1 2006/04/12 20:53:45 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -59,13 +59,50 @@ void TMySQLStatement::Close(Option_t *)
    fStmt = 0;
 
    FreeBuffers();
-
 }
+
+
+// Reset error and check that statement exists
+#define CheckStmt(method, res)                          \
+   {                                                    \
+      ClearError();                                     \
+      if (fStmt==0) {                                   \
+         SetError(-1,"Statement handle is 0",method);   \
+         return res;                                    \
+      }                                                 \
+   }
+
+// check last mysql statement error code
+#define CheckErrNo(method, force, res)                  \
+   {                                                    \
+      unsigned int errno = mysql_stmt_errno(fStmt);     \
+      if ((errno!=0) || force) {                        \
+         const char* errmsg = mysql_stmt_error(fStmt);  \
+         if (errno==0) { errno = 11111; errmsg = "MySQL statement error"; } \
+         SetError(errno, errmsg, method);               \
+         return res;                                    \
+      }                                                 \
+   }
+
+
+// check last mysql statement error code
+#define CheckGetPar(method)                             \
+   {                                                    \
+      ClearError();                                     \
+      if (!IsResultSetMode()) {                         \
+         SetError(-1,"Cannot get statement parameters",method); \
+         return 0;                                      \
+      }                                                 \
+      if ((npar<0) || (npar>=fNumBuffers)) {            \
+         SetError(-1,Form("Invalid parameter number %d", npar),method); \
+         return 0;                                      \
+      }                                                 \
+   }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::Process()
 {
-   if (fStmt==0) return kFALSE;
+   CheckStmt("Process",kFALSE); 
 
    // if parameters was set, processing just means of closing parameters and variables
    if (IsSetParsMode()) {
@@ -78,10 +115,8 @@ Bool_t TMySQLStatement::Process()
    }
 
 
-   if (mysql_stmt_execute(fStmt)) {
-       Error("Process"," mysql_stmt_execute() failed %s", mysql_stmt_error(fStmt));
-       return kFALSE;
-   }
+   if (mysql_stmt_execute(fStmt)) 
+      CheckErrNo("Process",kTRUE, kFALSE);
 
    return kTRUE;
 }
@@ -89,13 +124,12 @@ Bool_t TMySQLStatement::Process()
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetNumAffectedRows()
 {
-   if (fStmt==0) return -1;
+   CheckStmt("Process", -1); 
+   
    my_ulonglong res = mysql_stmt_affected_rows(fStmt);
 
-   if (res == (my_ulonglong) -1) {
-      Error("GetNumAffectedRows", mysql_stmt_error(fStmt));
-      return -1;
-   }
+   if (res == (my_ulonglong) -1)
+      CheckErrNo("GetNumAffectedRows", kTRUE, -1);
 
    return (Int_t) res;
 }
@@ -103,20 +137,26 @@ Int_t TMySQLStatement::GetNumAffectedRows()
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetNumParameters()
 {
-   if (fStmt==0) return -1;
+   CheckStmt("GetNumParameters", -1); 
 
-   return mysql_stmt_param_count(fStmt);
+   Int_t res = mysql_stmt_param_count(fStmt);
+   
+   CheckErrNo("GetNumParameters", kFALSE, -1);
+   
+   return res;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::StoreResult()
 {
-   if ((fStmt==0) || (fWorkingMode!=0)) return kFALSE;
-
-   if (mysql_stmt_store_result(fStmt)) {
-      Error("StoreResult","mysql_stmt_store_result() failed %s", mysql_stmt_error(fStmt));
+   CheckStmt("StoreResult", kFALSE); 
+   if (fWorkingMode!=0) {
+      SetError(-1,"Cannot store result for that statement","StoreResult");
       return kFALSE;
    }
+
+   if (mysql_stmt_store_result(fStmt)) 
+      CheckErrNo("StoreResult",kTRUE, kFALSE);
 
    // allocate memeory for data reading from query
    MYSQL_RES* meta = mysql_stmt_result_metadata(fStmt);
@@ -141,10 +181,8 @@ Bool_t TMySQLStatement::StoreResult()
    if (fBind==0) return kFALSE;
 
    /* Bind the buffers */
-   if (mysql_stmt_bind_result(fStmt, fBind)) {
-      Error("StoreResult"," mysql_stmt_bind_result() failed %s", mysql_stmt_error(fStmt));
-      return kFALSE;
-   }
+   if (mysql_stmt_bind_result(fStmt, fBind)) 
+      CheckErrNo("StoreResult",kTRUE, kFALSE);
 
    fWorkingMode = 2;
 
@@ -184,24 +222,25 @@ Bool_t TMySQLStatement::NextResultRow()
 //______________________________________________________________________________
 Bool_t TMySQLStatement::NextIteration()
 {
-   if (!IsSetParsMode() || (fBind==0)) return kFALSE;
+   ClearError(); 
+    
+   if (!IsSetParsMode() || (fBind==0)) {
+      SetError(-1,"Cannot call for that statement","NextIteration");
+      return kFALSE;
+   }
 
    fIterationCount++;
 
    if (fIterationCount==0) return kTRUE;
 
    if (fNeedParBind) {
-      if (mysql_stmt_bind_param(fStmt, fBind)) {
-         Error("NextIteration","Cannot bind parameter structures to the statement");
-         return kFALSE;
-      }
-      fNeedParBind = kFALSE;
+      fNeedParBind = kFALSE; 
+      if (mysql_stmt_bind_param(fStmt, fBind)) 
+         CheckErrNo("NextIteration",kTRUE, kFALSE);
    }
 
-   if (mysql_stmt_execute(fStmt)) {
-      Error("NextIteration", mysql_stmt_error(fStmt));
-      return kFALSE;
-   }
+   if (mysql_stmt_execute(fStmt))
+      CheckErrNo("NextIteration", kTRUE, kFALSE);
 
    return kTRUE;
 }
@@ -344,7 +383,7 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetInt(Int_t npar)
 {
-   if (!IsResultSetMode() || (npar<0) || (npar>=fNumBuffers)) return 0;
+   CheckGetPar("GetInt");
 
    if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONG) && fBuffer[npar].sign)
      return (Int_t) *((long*) fBuffer[npar].buffer);
@@ -355,7 +394,7 @@ Int_t TMySQLStatement::GetInt(Int_t npar)
 //______________________________________________________________________________
 UInt_t TMySQLStatement::GetUInt(Int_t npar)
 {
-   if (!IsResultSetMode() || (npar<0) || (npar>=fNumBuffers)) return 0;
+   CheckGetPar("GetUInt");
 
    if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONG) && !fBuffer[npar].sign)
      return (UInt_t) *((unsigned long*) fBuffer[npar].buffer);
@@ -366,7 +405,7 @@ UInt_t TMySQLStatement::GetUInt(Int_t npar)
 //______________________________________________________________________________
 Long_t TMySQLStatement::GetLong(Int_t npar)
 {
-   if (!IsResultSetMode() || (npar<0) || (npar>=fNumBuffers)) return 0;
+   CheckGetPar("GetLong");
 
    if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONG) && fBuffer[npar].sign)
      return (Long_t) *((long*) fBuffer[npar].buffer);
@@ -377,7 +416,7 @@ Long_t TMySQLStatement::GetLong(Int_t npar)
 //______________________________________________________________________________
 Long64_t TMySQLStatement::GetLong64(Int_t npar)
 {
-   if (!IsResultSetMode() || (npar<0) || (npar>=fNumBuffers)) return 0;
+   CheckGetPar("GetLong64");
 
    if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONGLONG) && fBuffer[npar].sign)
      return (Long64_t) *((long long*) fBuffer[npar].buffer);
@@ -388,7 +427,7 @@ Long64_t TMySQLStatement::GetLong64(Int_t npar)
 //______________________________________________________________________________
 ULong64_t TMySQLStatement::GetULong64(Int_t npar)
 {
-   if (!IsResultSetMode() || (npar<0) || (npar>=fNumBuffers)) return 0;
+   CheckGetPar("GetULong64");
 
    if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONGLONG) && !fBuffer[npar].sign)
      return (ULong64_t) *((unsigned long long*) fBuffer[npar].buffer);
@@ -399,7 +438,7 @@ ULong64_t TMySQLStatement::GetULong64(Int_t npar)
 //______________________________________________________________________________
 Double_t TMySQLStatement::GetDouble(Int_t npar)
 {
-   if (!IsResultSetMode() || (npar<0) || (npar>=fNumBuffers)) return 0.;
+   CheckGetPar("GetDouble");
 
    if (fBuffer[npar].sqltype==MYSQL_TYPE_DOUBLE)
      return (Double_t) *((double*) fBuffer[npar].buffer);
@@ -410,7 +449,7 @@ Double_t TMySQLStatement::GetDouble(Int_t npar)
 //______________________________________________________________________________
 const char *TMySQLStatement::GetString(Int_t npar)
 {
-   if (!IsResultSetMode() || (npar<0) || (npar>=fNumBuffers)) return 0;
+   CheckGetPar("GetString");
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
       (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING))
@@ -441,7 +480,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
       case MYSQL_TYPE_DOUBLE:   allocsize = sizeof(double); break;
       case MYSQL_TYPE_STRING:   allocsize = sqlsize > 256 ? sqlsize : 256; break;
       case MYSQL_TYPE_VAR_STRING: allocsize = sqlsize > 256 ? sqlsize : 256; break;
-      default: printf("???? \n"); return kFALSE;
+      default: SetError(-1,"Nonsupported SQL type","SetSQLParamType"); return kFALSE;
    }
 
    fBuffer[npar].buffer = malloc(allocsize);
@@ -462,10 +501,23 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
 //______________________________________________________________________________
 void *TMySQLStatement::BeforeSet(Int_t npar, Int_t sqltype, Bool_t sig, Int_t size)
 {
-   if (!IsSetParsMode() || (npar<0) || (npar>=fNumBuffers)) return 0;
+   ClearError(); 
+    
+   if (!IsSetParsMode()) {
+      SetError(-1,"Cannot set parameter for statement","Set***");
+      return 0;   
+   }
+   
+   if ((npar<0) || (npar>=fNumBuffers)) {
+      SetError(-1,Form("Invalid parameter number %d",npar), "Set***");
+      return 0;
+   }
 
    if ((fIterationCount==0) && (fBuffer[npar].sqltype==0))
-      if (!SetSQLParamType(npar, sqltype, sig, size)) return 0;
+      if (!SetSQLParamType(npar, sqltype, sig, size)) {
+          Error("Here","Problem");
+          return 0;
+      }
 
    if ((fBuffer[npar].sqltype!=sqltype) ||
       (fBuffer[npar].sign != sig)) return 0;

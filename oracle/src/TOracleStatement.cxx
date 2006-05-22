@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.cxx,v 1.1 2006/02/6 10:00:44 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.cxx,v 1.1 2006/04/12 20:53:45 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 
@@ -80,12 +80,52 @@ void TOracleStatement::Close(Option_t *)
    fIterCounter = 0;
 }
 
+// Check that statement is ready for use
+#define CheckStatement(method, res)                     \
+   {                                                    \
+      ClearError();                                     \
+      if (fStmt==0) {                                   \
+         SetError(-1,"Statement is not correctly initialized",method); \
+         return res;                                    \
+      }                                                 \
+   }
+
+// Check that parameter can be set for statement
+#define CheckSetPar(method)                             \
+   {                                                    \
+      CheckStatement(method, kFALSE);                   \
+      if (!IsParSettMode()) {                           \
+         SetError(-1,"Parameters cannot be set for this statement", method); \
+         return kFALSE;                                 \
+      }                                                 \
+      if (npar<0) {                                     \
+         TString errmsg("Invalid parameter number ");   \
+         errmsg+= npar;                                 \
+         SetError(-1,errmsg.Data(),method);             \
+         return kFALSE;                                 \
+      }                                                 \
+   }
+
+#define CheckGetPar(method)                             \
+   {                                                    \
+      ClearError();                                     \
+      if (!IsResultSet()) {                             \
+         SetError(-1,"There is no result set for statement", method); \
+         return 0;                                      \
+      }                                                 \
+      if ((npar<0) || (npar>=fBufferSize)) {                                     \
+         TString errmsg("Invalid parameter number ");   \
+         errmsg+= npar;                                 \
+         SetError(-1,errmsg.Data(),method);             \
+         return 0;                                      \
+      }                                                 \
+   }
+
 //______________________________________________________________________________
 void TOracleStatement::SetBufferSize(Int_t size)
 {
     // Set buffer size, which is used to keep string values of
     // currently fetched column.
-
 
     CloseBuffer();
     if (size<=0) return;
@@ -118,8 +158,8 @@ void TOracleStatement::CloseBuffer()
 Bool_t TOracleStatement::Process()
 {
    // Process SQL statement
-
-   if (fStmt==0) return kFALSE;
+   
+   CheckStatement("Process", kFALSE);
 
    try {
 
@@ -132,7 +172,7 @@ Bool_t TOracleStatement::Process()
 
       return kTRUE;
    } catch (SQLException &oraex)  {
-      Error("Process", "\nsql:%s\nerr:%s", fStmt->getSQL().c_str(), (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "Process");
    }
 
    return kFALSE;
@@ -141,12 +181,12 @@ Bool_t TOracleStatement::Process()
 //______________________________________________________________________________
 Int_t TOracleStatement::GetNumAffectedRows()
 {
-   if (fStmt==0) return -1;
+   CheckStatement("GetNumAffectedRows", -1);
 
    try {
       return fStmt->getUpdateCount();
    } catch (SQLException &oraex)  {
-      Error("GetNumAffectedRows", oraex.getMessage().c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetNumAffectedRows");
    }
    return -1;
 }
@@ -155,7 +195,7 @@ Int_t TOracleStatement::GetNumAffectedRows()
 //______________________________________________________________________________
 Int_t TOracleStatement::GetNumParameters()
 {
-   if (fStmt==0) return -1;
+   CheckStatement("GetNumParameters", -1);
 
    Info("GetParametersNumber","Not implemented");
 
@@ -165,14 +205,14 @@ Int_t TOracleStatement::GetNumParameters()
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetInt(Int_t npar, Int_t value)
 {
-   if (!IsParSettMode()) return kFALSE;
+   CheckSetPar("SetInt");
 
    try {
       fStmt->setInt(npar+1, value);
 
       return kTRUE;
    } catch (SQLException &oraex)  {
-       Error("setInt", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetInt");
    }
 
    return kFALSE;
@@ -181,13 +221,13 @@ Bool_t TOracleStatement::SetInt(Int_t npar, Int_t value)
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetUInt(Int_t npar, UInt_t value)
 {
-   if (!IsParSettMode()) return kFALSE;
+   CheckSetPar("SetUInt");
 
    try {
       fStmt->setUInt(npar+1, value);
       return kTRUE;
    } catch (SQLException &oraex)  {
-       Error("setUInt", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetUInt");
    }
 
    return kFALSE;
@@ -196,12 +236,13 @@ Bool_t TOracleStatement::SetUInt(Int_t npar, UInt_t value)
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetLong(Int_t npar, Long_t value)
 {
-   if (!IsParSettMode()) return kFALSE;
+   CheckSetPar("SetLong");
+
    try {
       fStmt->setNumber(npar+1, Number(value));
       return kTRUE;
    } catch (SQLException &oraex)  {
-       Error("setLong", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetLong");
    }
    return kFALSE;
 }
@@ -209,12 +250,13 @@ Bool_t TOracleStatement::SetLong(Int_t npar, Long_t value)
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetLong64(Int_t npar, Long64_t value)
 {
-   if (!IsParSettMode()) return kFALSE;
+   CheckSetPar("SetLong64");
+   
    try {
       fStmt->setNumber(npar+1, Number((long double)value));
       return kTRUE;
    } catch (SQLException &oraex)  {
-       Error("setLong64", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetLong64");
    }
    return kFALSE;
 }
@@ -222,12 +264,13 @@ Bool_t TOracleStatement::SetLong64(Int_t npar, Long64_t value)
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetULong64(Int_t npar, ULong64_t value)
 {
-   if (!IsParSettMode()) return kFALSE;
+   CheckSetPar("SetULong64");
+
    try {
       fStmt->setNumber(npar+1, Number((long double)value));
       return kTRUE;
    } catch (SQLException &oraex)  {
-       Error("setULong64", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetULong64");
    }
    return kFALSE;
 }
@@ -235,12 +278,13 @@ Bool_t TOracleStatement::SetULong64(Int_t npar, ULong64_t value)
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetDouble(Int_t npar, Double_t value)
 {
-   if (!IsParSettMode()) return kFALSE;
+   CheckSetPar("SetDouble");
+   
    try {
       fStmt->setDouble(npar+1, value);
       return kTRUE;
    } catch (SQLException &oraex)  {
-       Error("setDouble", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetDouble");
    }
    return kFALSE;
 }
@@ -248,7 +292,7 @@ Bool_t TOracleStatement::SetDouble(Int_t npar, Double_t value)
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
-   if (!IsParSettMode()) return kFALSE;
+   CheckSetPar("SetString");
 
    try {
 
@@ -261,7 +305,7 @@ Bool_t TOracleStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
       fStmt->setString(npar+1, value);
       return kTRUE;
    } catch (SQLException &oraex)  {
-       Error("setLong64", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetString");
    }
    return kFALSE;
 }
@@ -269,7 +313,7 @@ Bool_t TOracleStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 //______________________________________________________________________________
 Bool_t TOracleStatement::NextIteration()
 {
-   if (fStmt==0) return kFALSE;
+   CheckStatement("NextIteration", kFALSE);
 
    try {
       fWorkingMode=1;
@@ -286,7 +330,7 @@ Bool_t TOracleStatement::NextIteration()
 
       return kTRUE;
    } catch (SQLException &oraex)  {
-      Error("NextIteration", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "NextIteration");
    }
    return kFALSE;
 }
@@ -295,7 +339,7 @@ Bool_t TOracleStatement::NextIteration()
 Bool_t TOracleStatement::StoreResult()
 {
 
-   if (fStmt==0) return kFALSE;
+   CheckStatement("StoreResult", kFALSE);
 
    try {
       if (fStmt->status() == Statement::RESULT_SET_AVAILABLE) {
@@ -308,7 +352,7 @@ Bool_t TOracleStatement::StoreResult()
          return IsResultSet();
       }
    } catch (SQLException &oraex) {
-      Error("StoreResult()", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "StoreResult");
    }
    return kFALSE;
 }
@@ -320,27 +364,35 @@ Int_t TOracleStatement::GetNumFields()
 }
 
 //______________________________________________________________________________
-const char* TOracleStatement::GetFieldName(Int_t nfield)
+const char* TOracleStatement::GetFieldName(Int_t npar)
 {
-   if (!IsResultSet() || (nfield<0) || (nfield>=fBufferSize)) return 0;
+   CheckGetPar("GetFieldName");
 
-   if (fBuffer[nfield].namebuf!=0) return fBuffer[nfield].namebuf;
+   if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
 
-   std::string buff = (*fFieldInfo)[nfield].getString(MetaData::ATTR_NAME);
+   if (fBuffer[npar].namebuf!=0) return fBuffer[npar].namebuf;
+
+   std::string buff = (*fFieldInfo)[npar].getString(MetaData::ATTR_NAME);
 
    if (buff.length()==0) return 0;
 
-   fBuffer[nfield].namebuf = new char[buff.length()+1];
+   fBuffer[npar].namebuf = new char[buff.length()+1];
 
-   strcpy(fBuffer[nfield].namebuf, buff.c_str());
+   strcpy(fBuffer[npar].namebuf, buff.c_str());
 
-   return fBuffer[nfield].namebuf;
+   return fBuffer[npar].namebuf;
 }
-
 
 //______________________________________________________________________________
 Bool_t TOracleStatement::NextResultRow()
 {
+   ClearError();
+   
+   if (fResult==0) {
+      SetError(-1,"There is no result set for statement", "NextResultRow");
+      return kFALSE;
+   }
+
    if (fResult==0) return kFALSE;
 
    try {
@@ -356,7 +408,7 @@ Bool_t TOracleStatement::NextResultRow()
       }
       return kTRUE;
    } catch (SQLException &oraex) {
-      Error("NextResultRow", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "NextResultRow");
    }
 
    return kFALSE;
@@ -365,7 +417,7 @@ Bool_t TOracleStatement::NextResultRow()
 //______________________________________________________________________________
 Int_t TOracleStatement::GetInt(Int_t npar)
 {
-   if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
+   CheckGetPar("GetInt");
 
    Int_t res = 0;
 
@@ -373,7 +425,7 @@ Int_t TOracleStatement::GetInt(Int_t npar)
       if (!fResult->isNull(npar+1))
         res = fResult->getInt(npar+1);
    } catch (SQLException &oraex) {
-      Error("getInt", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetInt");
    }
 
    return res;
@@ -382,7 +434,7 @@ Int_t TOracleStatement::GetInt(Int_t npar)
 //______________________________________________________________________________
 UInt_t TOracleStatement::GetUInt(Int_t npar)
 {
-   if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
+   CheckGetPar("GetUInt");
 
    UInt_t res = 0;
 
@@ -390,7 +442,7 @@ UInt_t TOracleStatement::GetUInt(Int_t npar)
       if (!fResult->isNull(npar+1))
         res = fResult->getUInt(npar+1);
    } catch (SQLException &oraex) {
-      Error("getUInt", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetUInt");
    }
 
    return res;
@@ -400,7 +452,7 @@ UInt_t TOracleStatement::GetUInt(Int_t npar)
 //______________________________________________________________________________
 Long_t TOracleStatement::GetLong(Int_t npar)
 {
-   if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
+   CheckGetPar("GetLong");
 
    Long_t res = 0;
 
@@ -408,7 +460,7 @@ Long_t TOracleStatement::GetLong(Int_t npar)
       if (!fResult->isNull(npar+1))
         res = (Long_t) fResult->getNumber(npar+1);
    } catch (SQLException &oraex) {
-      Error("getLong", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetLong");
    }
 
    return res;
@@ -417,7 +469,7 @@ Long_t TOracleStatement::GetLong(Int_t npar)
 //______________________________________________________________________________
 Long64_t TOracleStatement::GetLong64(Int_t npar)
 {
-   if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
+   CheckGetPar("GetLong64");
 
    Long64_t res = 0;
 
@@ -425,7 +477,7 @@ Long64_t TOracleStatement::GetLong64(Int_t npar)
       if (!fResult->isNull(npar+1))
         res = (Long64_t) (long double) fResult->getNumber(npar+1);
    } catch (SQLException &oraex) {
-      Error("getLong64", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetLong64");
    }
 
    return res;
@@ -434,7 +486,7 @@ Long64_t TOracleStatement::GetLong64(Int_t npar)
 //______________________________________________________________________________
 ULong64_t TOracleStatement::GetULong64(Int_t npar)
 {
-   if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
+   CheckGetPar("GetULong64");
 
    ULong64_t res = 0;
 
@@ -442,7 +494,7 @@ ULong64_t TOracleStatement::GetULong64(Int_t npar)
       if (!fResult->isNull(npar+1))
         res = (ULong64_t) (long double) fResult->getNumber(npar+1);
    } catch (SQLException &oraex) {
-      Error("getULong64", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetULong64");
    }
 
    return res;
@@ -451,7 +503,7 @@ ULong64_t TOracleStatement::GetULong64(Int_t npar)
 //______________________________________________________________________________
 Double_t TOracleStatement::GetDouble(Int_t npar)
 {
-   if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
+   CheckGetPar("GetDouble");
 
    Double_t res = 0;
 
@@ -459,7 +511,7 @@ Double_t TOracleStatement::GetDouble(Int_t npar)
       if (!fResult->isNull(npar+1))
         res = fResult->getDouble(npar+1);
    } catch (SQLException &oraex) {
-      Error("getDouble", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetDouble");
    }
 
    return res;
@@ -468,7 +520,7 @@ Double_t TOracleStatement::GetDouble(Int_t npar)
 //______________________________________________________________________________
 const char* TOracleStatement::GetString(Int_t npar)
 {
-   if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
+   CheckGetPar("GetString");
 
    if (fBuffer[npar].strbuf!=0) return fBuffer[npar].strbuf;
 
@@ -519,7 +571,7 @@ const char* TOracleStatement::GetString(Int_t npar)
       return fBuffer[npar].strbuf;
 
    } catch (SQLException &oraex) {
-      Error("getString", (oraex.getMessage()).c_str());
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetString");
    }
 
    return 0;

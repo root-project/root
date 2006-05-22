@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.8 2005/06/23 06:24:27 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.9 2005/07/12 15:57:08 rdm Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TSQLServer.h"
+#include "TSQLResult.h"
 #include "TROOT.h"
 #include "TPluginManager.h"
 #include "TVirtualMutex.h"
@@ -61,4 +62,76 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
    return serv;
 }
 
+//______________________________________________________________________________
+Int_t TSQLServer::GetErrorCode() const
+{
+   // returns error code of last operation
+   // if res==0, no error
+   // Each specific implementation of TSQLServer provides its own error coding
+   
+   return fErrorCode;
+}
 
+//______________________________________________________________________________
+const char* TSQLServer::GetErrorMsg() const
+{
+   //  returns error message of last operation
+   // if no errors, return 0
+   // Each specific implementation of TSQLServer provides its own error messages
+   
+   return GetErrorCode()==0 ? 0 : fErrorMsg.Data();
+}
+
+//______________________________________________________________________________
+void TSQLServer::ClearError()
+{
+   // reset error fields
+   
+   fErrorCode = 0;
+   fErrorMsg = "";
+}
+
+//______________________________________________________________________________
+void TSQLServer::SetError(Int_t code, const char* msg, const char* method)
+{
+   // set new values for error fields
+   // if method is specified, displays error message
+   
+   fErrorCode = code;
+   fErrorMsg = msg;
+   if ((method!=0) && fErrorOut)
+      Error(method,"Code: %d  Msg: %s", code, msg);
+}
+
+//______________________________________________________________________________
+Bool_t TSQLServer::StartTransaction()
+{
+   // submit "START TRANSACTION" query to database
+   // return kTRUE, if succesfull
+   
+   TSQLResult* res = Query("START TRANSACTION");
+   if (res!=0) delete res;
+   return !IsError();
+}
+
+//______________________________________________________________________________
+Bool_t TSQLServer::Commit()
+{
+   // submit "COMMIT" query to database
+   // return kTRUE, if succesfull
+
+   TSQLResult* res = Query("COMMIT");
+   if (res!=0) delete res;
+   return !IsError();
+}
+
+//______________________________________________________________________________
+Bool_t TSQLServer::Rollback()
+{
+   // submit "ROLLBACK" query to database
+   // return kTRUE, if succesfull
+
+   TSQLResult* res = Query("ROLLBACK");
+   if (res!=0) delete res;
+   return !IsError();
+}

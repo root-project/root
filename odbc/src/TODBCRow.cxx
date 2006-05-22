@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCRow.cxx,v 1.3 2006/04/24 14:22:51 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCRow.cxx,v 1.4 2006/05/16 09:37:57 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -24,11 +24,16 @@ TODBCRow::TODBCRow(SQLHSTMT stmt, Int_t fieldcount)
    fFieldCount = fieldcount;
 
    fBuffer = 0;
+   fLengths = 0;      
 
    if (fFieldCount>0) {
       fBuffer = new char*[fFieldCount];
-      for (Int_t n = 0; n < fFieldCount; n++)
+      fLengths = new ULong_t[fFieldCount];
+      for (Int_t n = 0; n < fFieldCount; n++) {
          fBuffer[n] = 0;
+         fLengths[n] = 0;
+         CopyFieldValue(n);
+      }
    }
 }
 
@@ -51,15 +56,65 @@ void TODBCRow::Close(Option_t *)
       delete[] fBuffer;
       fBuffer = 0;
    }
-
+   
+   if (fLengths!=0) {
+      delete[] fLengths;
+      fLengths = 0;
+   } 
 }
 
 //______________________________________________________________________________
-ULong_t TODBCRow::GetFieldLength(Int_t)
+void TODBCRow::CopyFieldValue(Int_t field)
+{
+   // Extracts field value from statement.
+   // First allocates 128 bytes for buffer.
+   // If there is not enouth space, bigger buffer is allocated and
+   // request is repeated 
+    
+   #define buffer_len 128
+
+   fBuffer[field] = new char[buffer_len];
+
+   SQLLEN ressize;
+
+   SQLRETURN retcode = SQLGetData(fHstmt, field+1, SQL_C_CHAR, fBuffer[field], buffer_len, &ressize);
+   
+   if (ressize==SQL_NULL_DATA) {
+      delete[] fBuffer[field];
+      fBuffer[field] = 0;
+      return;   
+   }
+   
+   fLengths[field] = ressize;
+   
+   if (retcode==SQL_SUCCESS_WITH_INFO) {
+      SQLINTEGER code;
+      SQLCHAR state[ 7 ];
+      SQLGetDiagRec(SQL_HANDLE_STMT, fHstmt, 1, state, &code, 0, 0, 0);
+      
+      if (strcmp((char*)state,"01004")==0) {
+//         Info("CopyFieldValue","Before %d %s", ressize, fBuffer[field]);
+         
+         char* newbuf = new char[ressize+10];
+         strncpy(newbuf, fBuffer[field], buffer_len-1);
+         delete fBuffer[field];
+         fBuffer[field] = newbuf;
+         newbuf+=(buffer_len-1); // first data will not be read again
+         retcode = SQLGetData(fHstmt, field+1, SQL_C_CHAR, newbuf, ressize+10-buffer_len, &ressize);
+         
+//         Info("CopyFieldValue","After %d %s", ressize, fBuffer[field]);
+      }
+   }
+}
+
+//______________________________________________________________________________
+ULong_t TODBCRow::GetFieldLength(Int_t field)
 {
    // Get length in bytes of specified field.
 
-   return 0;
+   if ((field<0) || (field>=fFieldCount)) return 0;
+   
+   return fLengths[field];
 }
 
 //______________________________________________________________________________
@@ -68,16 +123,6 @@ const char *TODBCRow::GetField(Int_t field)
    // Get specified field from row (0 <= field < GetFieldCount()).
 
    if ((field<0) || (field>=fFieldCount)) return 0;
-
-   if (fBuffer[field]!=0) return fBuffer[field];
-
-   #define buffer_len 2048
-
-   fBuffer[field] = new char[buffer_len];
-
-   SQLLEN ressize;
-
-   SQLGetData(fHstmt, field+1, SQL_C_CHAR, fBuffer[field], buffer_len, &ressize);
 
    return fBuffer[field];
 }

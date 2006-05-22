@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStatement.cxx,v 1.1 2006/02/6 10:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStatement.cxx,v 1.1 2006/04/12 20:53:45 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -126,7 +126,7 @@
 // to get column values. GetString() can be used as generic method, 
 // which should always return correct result, but also convertion between most 
 // basic data types are supported. For instance, if column contains integer
-// values, GetInt, GetLong64(), GetDouble() and GetString() methods can be used.
+// values, GetInt(), GetLong64(), GetDouble() and GetString() methods can be used.
 // If column has float point format, GetDouble() and GetString() methods can
 // be used without loss of precision while GetInt() or GetLong64() will return
 // integer part of the value.
@@ -163,3 +163,44 @@
 #include "TSQLStatement.h"
 
 ClassImp(TSQLStatement)
+
+//______________________________________________________________________________
+Int_t TSQLStatement::GetErrorCode() const
+{
+   // returns error code of last operation
+   // if res==0, no error
+   // Each specific implementation of TSQLStatement provides its own error coding
+   
+   return fErrorCode;
+}
+
+//______________________________________________________________________________
+const char* TSQLStatement::GetErrorMsg() const
+{
+   //  returns error message of last operation
+   // if no errors, return 0
+   // Each specific implementation of TSQLStatement provides its own error messages
+   
+   return GetErrorCode()==0 ? 0 : fErrorMsg.Data();
+}
+
+//______________________________________________________________________________
+void TSQLStatement::ClearError()
+{
+   // reset error fields
+   
+   fErrorCode = 0;
+   fErrorMsg = "";
+}
+
+//______________________________________________________________________________
+void TSQLStatement::SetError(Int_t code, const char* msg, const char* method)
+{
+   // set new values for error fields
+   // if method specified, displays error message
+   
+   fErrorCode = code;
+   fErrorMsg = msg;
+   if (method!=0)
+      Error(method,"Code: %d  Msg: %s", code, msg);
+}

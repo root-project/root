@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.4 2006/05/16 09:37:57 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.5 2006/05/18 06:57:22 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 
 //________________________________________________________________________
 //
-//  SQL statement class for Oracle
+//  SQL statement class for ODBC
 //
 //  See TSQLStatement class documentation for more details
 //
@@ -34,6 +34,7 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize) :
    TSQLStatement()
 {
    //constructor
+   
    fHstmt = stmt;
    fBufferPreferredSize = rowarrsize;
 
@@ -52,8 +53,6 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize) :
    SQLRETURN retcode = SQLNumParams(fHstmt, &paramsCount);
    if (ExtractErrors(retcode,"Constructor"))
       paramsCount = 0;
-
-   cout << "Num parameters = " << paramsCount << endl;
 
    if (paramsCount>0) {
 
@@ -106,13 +105,17 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize) :
 TODBCStatement::~TODBCStatement()
 {
    //destructor
+   
    Close();
 }
 
 //______________________________________________________________________________
 void TODBCStatement::Close(Option_t *)
 {
-   //close
+   // Close statement
+
+   FreeBuffers();
+
    SQLFreeHandle(SQL_HANDLE_STMT, fHstmt);
 
    fHstmt=0;
@@ -121,7 +124,10 @@ void TODBCStatement::Close(Option_t *)
 //______________________________________________________________________________
 Bool_t TODBCStatement::Process()
 {
-   //process
+   // process statement
+   
+   ClearError();
+
    SQLRETURN retcode = SQL_SUCCESS;
 
    if (IsParSettMode()) {
@@ -155,6 +161,9 @@ Bool_t TODBCStatement::Process()
 Int_t TODBCStatement::GetNumAffectedRows()
 {
    //get number of affected rows
+
+   ClearError();
+
    SQLLEN    rowCount;
    SQLRETURN retcode = SQL_SUCCESS;
 
@@ -168,9 +177,14 @@ Int_t TODBCStatement::GetNumAffectedRows()
 //______________________________________________________________________________
 Bool_t TODBCStatement::StoreResult()
 {
-   //store result
+   //store result.
+   // Results set, produced by processing of statement, can be stored, and accessed by
+   // TODBCStamenet methoods like NextResultRow(), GetInt(), GetLong() and so on.
+
+   ClearError();
+
    if (IsParSettMode()) {
-      Error("StoreResult()","Call Process() method before");
+      SetError(-1,"Call Process() method before","StoreResult");
       return kFALSE;
    }
 
@@ -179,7 +193,7 @@ Bool_t TODBCStatement::StoreResult()
    SQLSMALLINT columnCount = 0;
 
    SQLRETURN retcode = SQLNumResultCols(fHstmt, &columnCount);
-   if (ExtractErrors(retcode, "StoreResult()")) return kFALSE;
+   if (ExtractErrors(retcode, "StoreResult")) return kFALSE;
 
 //   cout << "Num results columns = " << columnCount << endl;
 
@@ -187,7 +201,7 @@ Bool_t TODBCStatement::StoreResult()
 
    SetNumBuffers(columnCount, fBufferPreferredSize);
 
-   SQLUINTEGER arrsize = fBufferLength;
+   SQLULEN arrsize = fBufferLength;
 
    SQLSetStmtAttr(fHstmt, SQL_ATTR_ROW_BIND_TYPE, SQL_BIND_BY_COLUMN, 0);
    SQLSetStmtAttr(fHstmt, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER) arrsize, 0);
@@ -225,6 +239,7 @@ Bool_t TODBCStatement::StoreResult()
 Int_t TODBCStatement::GetNumFields()
 {
    //return number of fields
+
    return IsResultSet() ? fNumBuffers : -1;
 }
 
@@ -232,6 +247,9 @@ Int_t TODBCStatement::GetNumFields()
 const char* TODBCStatement::GetFieldName(Int_t nfield)
 {
    //return field name
+
+   ClearError();
+
    if (!IsResultSet() || (nfield<0) || (nfield>=fNumBuffers)) return 0;
 
    return fBuffer[nfield].fBnamebuffer;
@@ -242,6 +260,9 @@ const char* TODBCStatement::GetFieldName(Int_t nfield)
 Bool_t TODBCStatement::NextResultRow()
 {
    //next result row
+
+   ClearError();
+
    if (!IsResultSet()) return kFALSE;
 
    if ((fNumRowsFetched==0) ||
@@ -268,7 +289,8 @@ Bool_t TODBCStatement::NextResultRow()
 //______________________________________________________________________________
 Bool_t TODBCStatement::ExtractErrors(SQLRETURN retcode, const char* method)
 {
-   //extract errors
+   // Extract errors, produced by last ODBC function call
+   
    if ((retcode== SQL_SUCCESS) || (retcode == SQL_SUCCESS_WITH_INFO)) return kFALSE;
 
    SQLINTEGER i = 0;
@@ -280,8 +302,8 @@ Bool_t TODBCStatement::ExtractErrors(SQLRETURN retcode, const char* method)
    do {
       ret = SQLGetDiagRec(SQL_HANDLE_STMT, fHstmt, ++i, state, &native, text,
                           sizeof(text), &len );
-      if (ret == SQL_SUCCESS)
-         Error(method, "%s:%ld:%ld:%s\n", state, i, native, text);
+      if (ret == SQL_SUCCESS) SetError(native, (const char*) text, method);
+//         Error(method, "%s:%ld:%ld:%s\n", state, i, native, text);
    }
    while( ret == SQL_SUCCESS );
    return kTRUE;
@@ -291,6 +313,9 @@ Bool_t TODBCStatement::ExtractErrors(SQLRETURN retcode, const char* method)
 Bool_t TODBCStatement::NextIteration()
 {
    //run next iteration
+
+   ClearError();
+
    if (!IsParSettMode() || (fBuffer==0) || (fBufferLength<=0)) return kFALSE;
 
    if (fBufferCounter>=fBufferLength-1) {
@@ -310,6 +335,7 @@ Bool_t TODBCStatement::NextIteration()
 Int_t TODBCStatement::GetNumParameters()
 {
    //return number of parameters
+
    return IsParSettMode() ? fNumBuffers : 0;
 }
 
@@ -317,6 +343,7 @@ Int_t TODBCStatement::GetNumParameters()
 void TODBCStatement::SetNumBuffers(Int_t isize, Int_t ilen)
 {
    //set number of buffers
+
    FreeBuffers();
 
    fNumBuffers = isize;
@@ -336,14 +363,13 @@ void TODBCStatement::SetNumBuffers(Int_t isize, Int_t ilen)
    }
 
    fStatusBuffer = new SQLUSMALLINT[fBufferLength];
-
 }
-
 
 //______________________________________________________________________________
 void TODBCStatement::FreeBuffers()
 {
-   //free buffers
+   // Free allocated buffers
+   
    if (fBuffer==0) return;
    for (Int_t n=0;n<fNumBuffers;n++) {
       if (fBuffer[n].fBbuffer!=0)
@@ -364,11 +390,17 @@ void TODBCStatement::FreeBuffers()
 //______________________________________________________________________________
 Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER size)
 {
-   //bind column
-   if ((ncol<0) || (ncol>=fNumBuffers)) return kFALSE;
+   // Bind result column to buffer. Allocate buffer of appropriate type
+
+   ClearError();
+   
+   if ((ncol<0) || (ncol>=fNumBuffers)) {
+      SetError(-1,"Internal error. Column number invalid","BindColumn");
+      return kFALSE;
+   }
 
    if (fBuffer[ncol].fBsqltype!=0) {
-      Error("BindColumn","Column %d already binded", ncol);
+      SetError(-1,"Internal error. Bind for column already done","BindColumn");
       return kFALSE;
    }
 
@@ -388,10 +420,9 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
       case SQL_TINYINT:   sqlctype = SQL_C_STINYINT; break;
       case SQL_BIGINT:    sqlctype = SQL_C_SBIGINT; break;
       default: {
-         Error("BindColumn","SQL type %d not supported",sqltype);
+         SetError(-1, Form("SQL type %d not supported",sqltype), "BindColumn");
          return kFALSE;
       }
-
    }
 
    int elemsize = 0;
@@ -410,7 +441,7 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
       case SQL_C_CHAR:     elemsize = size; break;
 
       default: {
-         Error("BindColumn","SQL C Type %d is not supported",sqlctype);
+         SetError(-1, Form("SQL C Type %d is not supported",sqlctype), "BindColumn");
          return kFALSE;
       }
    }
@@ -433,11 +464,14 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
 //______________________________________________________________________________
 Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
 {
-   //bind parameter
+   // Bind query parameter with buffer. Creates buffer of appropriate type
+
+   ClearError();
+   
    if ((npar<0) || (npar>=fNumBuffers)) return kFALSE;
 
    if (fBuffer[npar].fBroottype!=0) {
-      Error("SetParameterType","ParameterType for par %d already specified", npar);
+      SetError(-1,Form("ParameterType for par %d already specified", npar),"BindParam");
       return kFALSE;
    }
 
@@ -461,7 +495,7 @@ Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
       case kDouble32_t: sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE;   elemsize = sizeof(double); break;
       case kCharStar:   sqltype = SQL_CHAR;    sqlctype = SQL_C_CHAR;     elemsize = size; break;
       default: {
-         Error("SetParameterValue","Root type %d is not supported", roottype);
+         SetError(-1, Form("Root type %d is not supported", roottype), "BindParam");
          return kFALSE;
       }
    }
@@ -473,7 +507,7 @@ Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
                        sqlctype, sqltype, 0, 0,
                        buffer, elemsize, lenarray);
 
-   if (ExtractErrors(retcode,"SetParameterType")) {
+   if (ExtractErrors(retcode, "BindParam")) {
       free(buffer);
       delete[] lenarray;
       return kFALSE;
@@ -492,8 +526,14 @@ Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
 //______________________________________________________________________________
 void* TODBCStatement::GetParAddr(Int_t npar, Int_t roottype, Int_t length)
 {
-   //get parameter address
-   if ((fBuffer==0) || (npar<0) || (npar>=fNumBuffers) || (fBufferCounter<0)) return 0;
+   // Get parameter address
+
+   ClearError();
+
+   if ((fBuffer==0) || (npar<0) || (npar>=fNumBuffers) || (fBufferCounter<0)) {
+       SetError(-1, "Invalid parameter number","GetParAddr");
+       return 0;
+   }
 
    if (fBuffer[npar].fBbuffer==0) {
       if (IsParSettMode() && (roottype!=0) && (fBufferCounter==0))
@@ -507,7 +547,6 @@ void* TODBCStatement::GetParAddr(Int_t npar, Int_t roottype, Int_t length)
 
    return (char*)fBuffer[npar].fBbuffer + fBufferCounter*fBuffer[npar].fBelementsize;
 }
-
 
 //______________________________________________________________________________
 long double TODBCStatement::ConvertToNumeric(Int_t npar)
@@ -658,7 +697,7 @@ const char* TODBCStatement::GetString(Int_t npar)
       }
 
       if (len > fBuffer[npar].fBelementsize) {
-         Error("getString","Problems with string size %d", len);
+         SetError(-1, Form("Problems with string size %d", len), "GetString");
          return 0;
       }
 

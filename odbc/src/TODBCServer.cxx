@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.4 2006/05/16 10:59:35 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.5 2006/05/18 06:57:22 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -85,18 +85,16 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
    fPort = 1; // indicate that we are connected
 
    if ((strncmp(db, "odbc", 4)!=0) || (strlen(db)<8)) {
-      Error("TODBCServer", "db argument should be started from odbc...");
+      SetError(-1, "db argument should be started from odbc...","TODBCServer");
       goto zombie;
    }
 
    if (strncmp(db, "odbc://", 7)==0) {
       TUrl url(db);
       if (!url.IsValid()) {
-         Error("TODBCServer", "not valid URL: %s", db);
+         SetError(-1, Form("not valid URL: %s", db), "TODBCServer");
          goto zombie;
       }
-      cout << "URL is VALID !!!!" << endl;
-
       const char* driver = "MyODBC";
       const char* dbase = url.GetFile();
       if (dbase!=0)
@@ -131,7 +129,7 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
       connstr = db+8;
       simpleconnect = kTRUE;
    } else {
-      Error("TODBCServer", "db argument is invalid");
+      SetError(-1, "db argument is invalid", "TODBCServer");
       goto zombie;
    }
 
@@ -154,7 +152,7 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
 
    SQLSMALLINT reslen;
 
-   cout << "Conn: " << connstr << "  simple = " << simpleconnect << endl;
+//   cout << "Conn: " << connstr << "  simple = " << simpleconnect << endl;
 
    hwnd = 0;
 
@@ -165,7 +163,7 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
    else
       retcode = SQLDriverConnect(fHdbc, hwnd,
                                  (SQLCHAR*) connstr.Data(), SQL_NTS,
-                                 (SQLCHAR*) sbuf, 2048, &reslen, SQL_DRIVER_COMPLETE);
+                                 (SQLCHAR*) sbuf, 2048, &reslen, SQL_DRIVER_NOPROMPT);
 
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
 
@@ -182,7 +180,6 @@ zombie:
    MakeZombie();
 }
 
-
 //______________________________________________________________________________
 TODBCServer::~TODBCServer()
 {
@@ -195,7 +192,8 @@ TODBCServer::~TODBCServer()
 //______________________________________________________________________________
 Bool_t TODBCServer::ExtractErrors(SQLRETURN retcode, const char* method)
 {
-   //extract errors
+   // Extract errors, produced by last ODBC function call
+   
    if ((retcode==SQL_SUCCESS) || (retcode==SQL_SUCCESS_WITH_INFO)) return kFALSE;
 
    SQLINTEGER i = 0;
@@ -206,16 +204,28 @@ Bool_t TODBCServer::ExtractErrors(SQLRETURN retcode, const char* method)
 
    while (SQLGetDiagRec(SQL_HANDLE_ENV, fHenv, ++i, state, &native, text,
                           sizeof(text), &len ) == SQL_SUCCESS)
-      Error(method, "%s:%ld:%ld:%s\n", state, i, native, text);
+      //Error(method, "%s:%ld:%ld:%s\n", state, i, native, text);
+      SetError(native, (const char*) text, method);
 
    i = 0;
 
    while (SQLGetDiagRec(SQL_HANDLE_DBC, fHdbc, ++i, state, &native, text,
                           sizeof(text), &len ) == SQL_SUCCESS)
-      Error(method, "%s:%ld:%ld:%s\n", state, i, native, text);
+//      Error(method, "%s:%ld:%ld:%s\n", state, i, native, text);
+      SetError(native, (const char*) text, method);
 
    return kTRUE;
 }
+
+// Reset error and check that server connected
+#define CheckConnect(method, res)                       \
+   {                                                    \
+      ClearError();                                     \
+      if (!IsConnected()) {                             \
+         SetError(-1,"ODBC driver is not connected",method); \
+         return res;                                    \
+      }                                                 \
+   }
 
 //______________________________________________________________________________
 void TODBCServer::Close(Option_t *)
@@ -235,10 +245,7 @@ TSQLResult *TODBCServer::Query(const char *sql)
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
 
-   if (!IsConnected()) {
-      Error("Query","ODBC not connected");
-      return 0;
-   }
+   CheckConnect("Query", 0);
 
    SQLRETURN    retcode;
    SQLHSTMT     hstmt;
@@ -261,10 +268,7 @@ Int_t TODBCServer::SelectDataBase(const char *)
    // Does not implemented for ODBC driver. User should specify database
    // name at time of connection
 
-   if (!IsConnected()) {
-      Error("SelectDataBase", "not connected");
-      return -1;
-   }
+   CheckConnect("SelectDataBase", -1);
 
    Info("SelectDataBase","Does not implemented for ODBC");
 
@@ -279,33 +283,36 @@ TSQLResult *TODBCServer::GetDataBases(const char *)
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
 
-   if (!IsConnected()) {
-      Error("GetDataBases", "not connected");
-      return 0;
-   }
+   CheckConnect("GetDataBases", 0);
 
    return 0;
 }
 
 //______________________________________________________________________________
-TSQLResult *TODBCServer::GetTables(const char *, const char *)
+TSQLResult *TODBCServer::GetTables(const char *, const char* wild)
 {
    // List all tables in the specified database. Wild is for wildcarding
    // "t%" list all tables starting with "t".
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
 
-   if (!IsConnected()) {
-      Error("GetTables", "not connected");
-      return 0;
-   }
+   CheckConnect("GetTables", 0);
 
    SQLRETURN    retcode;
    SQLHSTMT     hstmt;
 
    SQLAllocHandle(SQL_HANDLE_STMT, fHdbc, &hstmt);
+   
+   SQLCHAR* TableName = 0;
+   SQLSMALLINT TableNameLength = 0;
+   
+   if ((wild!=0) && (strlen(wild)!=0)) {
+       TableName = (SQLCHAR*) wild;
+       TableNameLength = strlen(wild);
+       SQLSetStmtAttr(hstmt, SQL_ATTR_METADATA_ID, (SQLPOINTER) SQL_TRUE, 0);
+   }
 
-   retcode = SQLTables(hstmt, NULL, 0, NULL, 0, NULL, 0, NULL, 0);
+   retcode = SQLTables(hstmt, NULL, 0, NULL, 0, TableName, TableNameLength, NULL, 0);
    if (ExtractErrors(retcode, "GetTables")) {
       SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
       return 0;
@@ -322,10 +329,7 @@ TSQLResult *TODBCServer::GetColumns(const char*, const char *table, const char*)
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
 
-   if (!IsConnected()) {
-      Error("GetColumns", "not connected");
-      return 0;
-   }
+   CheckConnect("GetColumns", 0);
 
    SQLRETURN    retcode;
    SQLHSTMT     hstmt;
@@ -342,15 +346,31 @@ TSQLResult *TODBCServer::GetColumns(const char*, const char *table, const char*)
 }
 
 //______________________________________________________________________________
+Int_t TODBCServer::GetMaxIdentifierLength()
+{
+   // returns maximum allowed length of identifier (table name, column name, index name)
+
+   CheckConnect("GetMaxIdentifierLength", 20);
+   
+   SQLUINTEGER info = 0;
+   SQLRETURN retcode;
+   
+   retcode = SQLGetInfo(fHdbc, SQL_MAX_IDENTIFIER_LEN, (SQLPOINTER)&info, sizeof(info), NULL);
+
+   if (ExtractErrors(retcode, "GetMaxIdentifierLength")) 
+      return 20;
+   
+   return info;
+}
+
+
+//______________________________________________________________________________
 Int_t TODBCServer::CreateDataBase(const char*)
 {
    // Create a database. Returns 0 if successful, non-zero otherwise.
 
-   if (!IsConnected()) {
-      Error("CreateDataBase", "not connected");
-      return -1;
-   }
-
+   CheckConnect("CreateDataBase", -1);
+   
    return -1;
 }
 
@@ -360,10 +380,7 @@ Int_t TODBCServer::DropDataBase(const char*)
    // Drop (i.e. delete) a database. Returns 0 if successful, non-zero
    // otherwise.
 
-   if (!IsConnected()) {
-      Error("DropDataBase", "not connected");
-      return -1;
-   }
+   CheckConnect("DropDataBase", -1);
 
    return -1;
 }
@@ -374,10 +391,7 @@ Int_t TODBCServer::Reload()
    // Reload permission tables. Returns 0 if successful, non-zero
    // otherwise. User must have reload permissions.
 
-   if (!IsConnected()) {
-      Error("Reload", "not connected");
-      return -1;
-   }
+   CheckConnect("Reload", -1);
 
    return -1;
 }
@@ -388,10 +402,7 @@ Int_t TODBCServer::Shutdown()
    // Shutdown the database server. Returns 0 if successful, non-zero
    // otherwise. User must have shutdown permissions.
 
-   if (!IsConnected()) {
-      Error("Shutdown", "not connected");
-      return -1;
-   }
+   CheckConnect("Shutdown", -1);
 
    return -1;
 }
@@ -401,26 +412,21 @@ const char *TODBCServer::ServerInfo()
 {
    // Return server info.
 
-   if (!IsConnected()) {
-      Error("ServerInfo", "not connected");
-      return 0;
-   }
+   CheckConnect("ServerInfo", 0);
 
    return fInfo;
 }
 
-
 //______________________________________________________________________________
 TSQLStatement *TODBCServer::Statement(const char *sql, Int_t bufsize)
 {
-   //return statement result of query
-   if (!IsConnected()) {
-      Error("Statement", "not connected");
-      return 0;
-   }
+   // Creates ODBC statement for provided query.
+   // See TSQLStatement class for more details.
+   
+   CheckConnect("Statement", 0);
 
    if (!sql || !*sql) {
-      Error("Statement", "no query string specified");
+      SetError(-1, "no query string specified", "Statement");
       return 0;
    }
 
@@ -446,3 +452,64 @@ TSQLStatement *TODBCServer::Statement(const char *sql, Int_t bufsize)
    return new TODBCStatement(hstmt, bufsize);
 }
 
+//______________________________________________________________________________
+Bool_t TODBCServer::StartTransaction()
+{
+   // Starts transaction. 
+   // Check for transaction support.
+   // Switch off autocommitment mode.
+
+   CheckConnect("StartTransaction", kFALSE);
+
+   SQLUINTEGER info = 0;
+   SQLRETURN retcode;
+   
+   retcode = SQLGetInfo(fHdbc, SQL_TXN_CAPABLE, (SQLPOINTER)&info, sizeof(info), NULL);
+   if (ExtractErrors(retcode, "StartTransaction")) return kFALSE;
+   
+   if (info==0) {
+      SetError(-1,"Transactions not supported","StartTransaction");
+      return kFALSE;
+   }
+   
+   if (!Commit()) return kFALSE;
+   
+   retcode = SQLSetConnectAttr(fHdbc, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER) SQL_AUTOCOMMIT_OFF, 0);
+   if (ExtractErrors(retcode, "StartTransaction")) return kFALSE;
+   
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TODBCServer::EndTransaction(Bool_t commit)
+{
+   // Complete current transaction (commit = kTRUE) or rollback 
+   // Switches on autocommit mode of ODBC driver
+   
+   const char* method = commit ? "Commit" : "Rollback";
+
+   CheckConnect(method, kFALSE);
+
+   SQLRETURN retcode = SQLEndTran(SQL_HANDLE_DBC, fHdbc, commit ? SQL_COMMIT : SQL_ROLLBACK);
+   if (ExtractErrors(retcode, method)) return kFALSE;
+
+   retcode = SQLSetConnectAttr(fHdbc, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER) SQL_AUTOCOMMIT_ON, 0);
+   
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TODBCServer::Commit()
+{
+   // Commit transaction
+   
+   return EndTransaction(kTRUE);
+}
+
+//______________________________________________________________________________
+Bool_t TODBCServer::Rollback()
+{
+   // Rollback transaction
+
+   return EndTransaction(kFALSE);
+}

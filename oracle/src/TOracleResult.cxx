@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleResult.cxx,v 1.5 2006/02/01 14:33:02 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleResult.cxx,v 1.6 2006/04/12 20:53:45 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 
 #include "TOracleResult.h"
 #include "TOracleRow.h"
-#include "Riostream.h"
 #include "TList.h"
 
 using namespace std;

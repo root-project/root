@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TOracleServer.h,v 1.1 2005/02/28 19:11:00 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TOracleServer.h,v 1.2 2006/04/12 20:53:45 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -42,15 +42,22 @@ public:
    void        Close(Option_t *opt="");
    TSQLResult *Query(const char *sql);
    TSQLStatement *Statement(const char *sql, Int_t niter = 100);
+   Bool_t      IsConnected() const { return (fConn!=0) && (fEnv!=0); }
+   Bool_t      IsSupportStatement() const { return kTRUE; }
    Int_t       SelectDataBase(const char *dbname);
    TSQLResult *GetDataBases(const char *wild = 0);
    TSQLResult *GetTables(const char *dbname, const char *wild = 0);
    TSQLResult *GetColumns(const char *dbname, const char *table, const char *wild = 0);
+   Int_t       GetMaxIdentifierLength() { return 30; }
    Int_t       CreateDataBase(const char *dbname);
    Int_t       DropDataBase(const char *dbname);
    Int_t       Reload();
    Int_t       Shutdown();
    const char *ServerInfo();
+
+   Bool_t      StartTransaction();
+   Bool_t      Commit();
+   Bool_t      Rollback();
 
    ClassDef(TOracleServer,0)  // Connection to Oracle server
 };

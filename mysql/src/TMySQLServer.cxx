@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.8 2006/04/12 20:53:45 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.9 2006/05/16 10:59:35 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -30,14 +30,15 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    TUrl url(db);
 
    if (!url.IsValid()) {
-      Error("TMySQLServer", "malformed db argument %s", db);
+      TString errmsg("malformed db argument ");
+      errmsg+=db;
+      SetError(-1, errmsg.Data(), "TMySQLServer");
       MakeZombie();
       return;
    }
 
    if (strncmp(url.GetProtocol(), "mysql", 5)) {
-      Error("TMySQLServer", "protocol in db argument should be mysql it is %s",
-            url.GetProtocol());
+      SetError(-1, "protocol in db argument should be mysql://", "TMySQLServer");
       MakeZombie();
       return;
    }
@@ -56,8 +57,7 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
       fDB   = dbase;
       fPort = url.GetPort();
    } else {
-      Error("TMySQLServer", "connection to database %s on %s failed (error: %s)",
-            dbase, url.GetHost(), mysql_error(fMySQL));
+      SetError(mysql_errno(fMySQL), mysql_error(fMySQL), "TMySQLServer");
       MakeZombie();
    }
 }
@@ -72,15 +72,42 @@ TMySQLServer::~TMySQLServer()
    delete fMySQL;
 }
 
+// Reset error and check that server connected
+#define CheckConnect(method, res)                       \
+   {                                                    \
+      ClearError();                                     \
+      if (!IsConnected()) {                             \
+         SetError(-1,"MySQL server is not connected",method); \
+         return res;                                    \
+      }                                                 \
+   }
+
+
+// check last mysql error code
+#define CheckErrNo(method, force, res)                  \
+   {                                                    \
+      unsigned int errno = mysql_errno(fMySQL);         \
+      if ((errno!=0) || force) {                        \
+         const char* errmsg = mysql_error(fMySQL);      \
+         if (errno==0) { errno = 11111; errmsg = "MySQL error"; } \
+         SetError(errno, errmsg, method);               \
+         return res;                                    \
+      }                                                 \
+   }
+
+
 //______________________________________________________________________________
 void TMySQLServer::Close(Option_t *)
 {
    // Close connection to MySQL DB server.
 
+   ClearError();
+
    if (!fMySQL)
       return;
 
    mysql_close(fMySQL);
+//   CheckErrNo("Close", kFALSE, );
    fPort = -1;
 }
 
@@ -91,17 +118,14 @@ TSQLResult *TMySQLServer::Query(const char *sql)
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
 
-   if (!IsConnected()) {
-      Error("Query", "not connected");
-      return 0;
-   }
+   CheckConnect("Query", 0);
 
-   if (mysql_query(fMySQL, sql) < 0) {
-      Error("Query", mysql_error(fMySQL));
-      return 0;
-   }
+   if (mysql_query(fMySQL, sql) != 0) 
+      CheckErrNo("Query",kTRUE,0);
 
    MYSQL_RES *res = mysql_store_result(fMySQL);
+   CheckErrNo("Query", kFALSE, 0);
+   
    return new TMySQLResult(res);
 }
 
@@ -110,16 +134,12 @@ Int_t TMySQLServer::SelectDataBase(const char *dbname)
 {
    // Select a database. Returns 0 if successful, non-zero otherwise.
 
-   if (!IsConnected()) {
-      Error("SelectDataBase", "not connected");
-      return -1;
-   }
+   CheckConnect("SelectDataBase", -1);
 
-   Int_t res;
-   if ((res = mysql_select_db(fMySQL, dbname)) == 0) {
-      fDB = dbname;
-      return 0;
-   }
+   Int_t res = mysql_select_db(fMySQL, dbname);
+   if (res==0) fDB = dbname;
+          else CheckErrNo("SelectDataBase", kTRUE, res);  
+          
    return res;
 }
 
@@ -131,12 +151,12 @@ TSQLResult *TMySQLServer::GetDataBases(const char *wild)
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
 
-   if (!IsConnected()) {
-      Error("GetDataBases", "not connected");
-      return 0;
-   }
+   CheckConnect("GetDataBases", 0);
 
    MYSQL_RES *res = mysql_list_dbs(fMySQL, wild);
+   
+   CheckErrNo("GetDataBases", kFALSE, 0);  
+   
    return new TMySQLResult(res);
 }
 
@@ -148,17 +168,14 @@ TSQLResult *TMySQLServer::GetTables(const char *dbname, const char *wild)
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
 
-   if (!IsConnected()) {
-      Error("GetTables", "not connected");
-      return 0;
-   }
+   CheckConnect("GetTables", 0);
 
-   if (SelectDataBase(dbname) != 0) {
-      Error("GetTables", "no such database %s", dbname);
-      return 0;
-   }
+   if (SelectDataBase(dbname) != 0) return 0;
 
    MYSQL_RES *res = mysql_list_tables(fMySQL, wild);
+   
+   CheckErrNo("GetTables", kFALSE, 0);  
+   
    return new TMySQLResult(res);
 }
 
@@ -171,23 +188,17 @@ TSQLResult *TMySQLServer::GetColumns(const char *dbname, const char *table,
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
 
-   if (!IsConnected()) {
-      Error("GetColumns", "not connected");
-      return 0;
-   }
+   CheckConnect("GetColumns", 0);
 
-   if (SelectDataBase(dbname) != 0) {
-      Error("GetColumns", "no such database %s", dbname);
-      return 0;
-   }
+   if (SelectDataBase(dbname) != 0) return 0;
 
-   char *sql;
+   TString sql;
    if (wild)
-      sql = Form("SHOW COLUMNS FROM %s LIKE '%s'", table, wild);
+      sql.Form("SHOW COLUMNS FROM %s LIKE '%s'", table, wild);
    else
-      sql = Form("SHOW COLUMNS FROM %s", table);
+      sql.Form("SHOW COLUMNS FROM %s", table);
 
-   return Query(sql);
+   return Query(sql.Data());
 }
 
 //______________________________________________________________________________
@@ -195,11 +206,13 @@ Int_t TMySQLServer::CreateDataBase(const char *dbname)
 {
    // Create a database. Returns 0 if successful, non-zero otherwise.
 
-   if (!IsConnected()) {
-      Error("CreateDataBase", "not connected");
-      return -1;
-   }
-   return mysql_query(fMySQL, Form("CREATE DATABASE %s",dbname));
+   CheckConnect("CreateDataBase", -1);
+   
+   Int_t res = mysql_query(fMySQL, Form("CREATE DATABASE %s",dbname));
+
+   CheckErrNo("CreateDataBase", kFALSE, res);
+
+   return res;
 }
 
 //______________________________________________________________________________
@@ -208,11 +221,13 @@ Int_t TMySQLServer::DropDataBase(const char *dbname)
    // Drop (i.e. delete) a database. Returns 0 if successful, non-zero
    // otherwise.
 
-   if (!IsConnected()) {
-      Error("DropDataBase", "not connected");
-      return -1;
-   }
-   return mysql_query(fMySQL, Form("DROP DATABASE %s",dbname));
+   CheckConnect("DropDataBase", -1);
+
+   Int_t res = mysql_query(fMySQL, Form("DROP DATABASE %s",dbname));
+
+   CheckErrNo("DropDataBase", kFALSE, res);
+
+   return res;
 }
 
 //______________________________________________________________________________
@@ -221,11 +236,13 @@ Int_t TMySQLServer::Reload()
    // Reload permission tables. Returns 0 if successful, non-zero
    // otherwise. User must have reload permissions.
 
-   if (!IsConnected()) {
-      Error("Reload", "not connected");
-      return -1;
-   }
-   return mysql_reload(fMySQL);
+   CheckConnect("Reload", -1);
+
+   Int_t res = mysql_reload(fMySQL);
+
+   CheckErrNo("Reload", kFALSE, res);
+
+   return res;
 }
 
 //______________________________________________________________________________
@@ -234,16 +251,20 @@ Int_t TMySQLServer::Shutdown()
    // Shutdown the database server. Returns 0 if successful, non-zero
    // otherwise. User must have shutdown permissions.
 
-   if (!IsConnected()) {
-      Error("Shutdown", "not connected");
-      return -1;
-   }
+   CheckConnect("Shutdown", -1);
+   
+   Int_t res;
+   
 #if MYSQL_VERSION_ID >= 50001 || \
     (MYSQL_VERSION_ID < 50000 && MYSQL_VERSION_ID >= 40103)
-   return mysql_shutdown(fMySQL, SHUTDOWN_DEFAULT);
+   res = mysql_shutdown(fMySQL, SHUTDOWN_DEFAULT);
 #else
-   return mysql_shutdown(fMySQL);
+   res = mysql_shutdown(fMySQL);
 #endif
+
+   CheckErrNo("Shutdown", kFALSE, res);
+
+   return res;
 }
 
 //______________________________________________________________________________
@@ -251,38 +272,75 @@ const char *TMySQLServer::ServerInfo()
 {
    // Return server info.
 
-   if (!IsConnected()) {
-      Error("ServerInfo", "not connected");
-      return 0;
-   }
-   return mysql_get_server_info(fMySQL);
+   CheckConnect("ServerInfo", 0);
+   
+   const char* res = mysql_get_server_info(fMySQL);
+
+   CheckErrNo("ServerInfo", kFALSE, res);
+   
+   return res;
 }
 
 
 //______________________________________________________________________________
-TSQLStatement *TMySQLServer::Statement(const char *sql, Int_t)
+TSQLStatement* TMySQLServer::Statement(const char *sql, Int_t)
 {
-   if (!IsConnected()) {
-      Error("Statement", "not connected");
-      return 0;
-   }
+   // Produce TMySQLStatement 
+    
+   CheckConnect("Statement", 0);
+
    if (!sql || !*sql) {
-      Error("Statement", "no query string specified");
+      SetError(-1, "no query string specified","Statement");
       return 0;
    }
 
    MYSQL_STMT *stmt = mysql_stmt_init(fMySQL);
-   if (!stmt) {
-      Error("Statement", " mysql_stmt_init(), out of memory");
-      return 0;
-    }
+   if (!stmt) 
+      CheckErrNo("Statement", kTRUE, 0); 
     
    if (mysql_stmt_prepare(stmt, sql, strlen(sql))) {
-      Error("Statement", " mysql_stmt_prepare() failed");
       mysql_stmt_close(stmt);
-      return 0;
+      CheckErrNo("Statement", kTRUE, 0); 
    }
 
    return new TMySQLStatement(stmt);
 }
 
+//______________________________________________________________________________
+Bool_t TMySQLServer::StartTransaction()
+{
+   // Start transaction 
+    
+   CheckConnect("StartTransaction", kFALSE);
+   
+   return TSQLServer::StartTransaction();
+   
+//   return Commit();
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLServer::Commit()
+{
+   // Commit changes
+
+   CheckConnect("Commit", kFALSE);
+   
+   if (mysql_commit(fMySQL))
+      CheckErrNo("Commit", kTRUE, kFALSE); 
+     
+   return kTRUE;
+   
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLServer::Rollback()
+{
+   // Rollback changes
+
+   CheckConnect("Rollback", kFALSE);
+   
+   if (mysql_rollback(fMySQL))
+      CheckErrNo("Rollback", kTRUE, kFALSE); 
+      
+   return kTRUE;
+}

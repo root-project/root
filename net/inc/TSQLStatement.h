@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStatement.h,v 1.1 2006/02/6 10:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStatement.h,v 1.1 2006/04/12 20:53:45 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -15,11 +15,20 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
 
 class TSQLStatement : public TObject {
 
 protected:
-   TSQLStatement() : TObject() {}
+   TSQLStatement() : TObject() { ClearError(); }
+
+   Int_t     fErrorCode;  // error code of last operation
+   TString   fErrorMsg;   // error message of last operation
+
+   void                ClearError();
+   void                SetError(Int_t code, const char* msg, const char* method = 0);
 
 public:
    virtual ~TSQLStatement() {}
@@ -52,6 +61,10 @@ public:
    virtual ULong64_t   GetULong64(Int_t) { return 0; }
    virtual Double_t    GetDouble(Int_t) { return 0.; }
    virtual const char *GetString(Int_t) { return 0; }
+
+   virtual Bool_t      IsError() const { return GetErrorCode()!=0; }
+   virtual Int_t       GetErrorCode() const;
+   virtual const char* GetErrorMsg() const;
 
    ClassDef(TSQLStatement, 0);
 };

@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.h,v 1.1 2006/02/6 10:00:44 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.h,v 1.1 2006/04/12 20:53:45 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -50,7 +50,7 @@ protected:
 
    void        SetBufferSize(Int_t size);
    void        CloseBuffer();
-
+   
 public:
    TOracleStatement(Connection* conn, Statement* stmt, Int_t niter);
    virtual ~TOracleStatement();
