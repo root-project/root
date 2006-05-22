@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.6 2006/05/22 10:33:48 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.1 2006/05/22 17:36:01 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -44,14 +44,14 @@ certainly among the most elegant multivariate analyser approaches.
 We define the likelihood ratio, <i>R<sub>L</sub></i>, for event 
 <i>i</i>, by:<br>
 <center>
-<img vspace=6 src="img/tmva_likratio.gif" align="bottom" > 
+<img vspace=6 src="gif/tmva_likratio.gif" align="bottom" > 
 </center>
 Here the signal and background likelihoods, <i>L<sub>S</sub></i>, 
 <i>L<sub>B</sub></i>, are products of the corresponding probability 
 densities, <i>p<sub>S</sub></i>, <i>p<sub>B</sub></i>, of the 
 <i>N</i><sub>var</sub> discriminating variables used in the MVA: <br>
 <center>
-<img vspace=6 src="img/tmva_lik.gif" align="bottom" > 
+<img vspace=6 src="gif/tmva_lik.gif" align="bottom" > 
 </center>
 and accordingly for L<sub>B</sub>.
 In practise, TMVA uses polynomial splines to estimate the probability 
@@ -62,7 +62,7 @@ training variables.<br>
 Note that in TMVA the output of the likelihood ratio is transformed
 by<br> 
 <center>
-<img vspace=6 src="img/tmva_likratio_trans.gif" align="bottom"/> 
+<img vspace=6 src="gif/tmva_likratio_trans.gif" align="bottom"/> 
 </center>
 to avoid the occurrence of heavy peaks at <i>R<sub>L</sub></i>=0,1.   
 
@@ -84,7 +84,7 @@ yields <i>C</i>: <i>C</i>=<i>C&prime;C&prime;</i>. We compute the
 square-root matrix (SQM) by means of diagonalising (<i>D</i>) the 
 covariance matrix: <br>
 <center>
-<img vspace=6 src="img/tmva_sqm.gif" align="bottom" > 
+<img vspace=6 src="gif/tmva_sqm.gif" align="bottom" > 
 </center>
 and the linear transformation of the linearly correlated into the 
 uncorrelated variables space is then given by multiplying the measured

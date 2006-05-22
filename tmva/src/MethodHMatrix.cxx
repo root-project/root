@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodHMatrix.cxx,v 1.5 2006/05/22 08:04:39 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodHMatrix.cxx,v 1.1 2006/05/22 17:36:01 brun Exp $    
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -53,7 +53,7 @@ Two &chi;<sup>2</sup> estimators are computed for an event, each one
 for signal and background, using the estimates for the means and 
 covariance matrices obtained from the training sample:<br>
 <center>
-<img vspace=6 src="img/tmva_chi2.gif" align="bottom" > 
+<img vspace=6 src="gif/tmva_chi2.gif" align="bottom" > 
 </center>
 TMVA then uses as normalised analyser for event (<i>i</i>) the ratio:
 (<i>&chi;<sub>S</sub>(i)<sup>2</sup> &minus; &chi;<sub>B</sub><sup>2</sup>(i)</i>)

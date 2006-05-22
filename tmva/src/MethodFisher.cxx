@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodFisher.cxx,v 1.7 2006/05/22 10:33:48 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodFisher.cxx,v 1.1 2006/05/22 17:36:01 brun Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -65,19 +65,19 @@ the dispersion of events relative to the means of their own class (within-class
 matrix), and relative to the overall sample means (between-class matrix).
 The Fisher coefficients, <i>F<sub>i</sub></i>, are then given by <br>
 <center>
-<img vspace=6 src="img/tmva_fisherC.gif" align="bottom" > 
+<img vspace=6 src="gif/tmva_fisherC.gif" align="bottom" > 
 </center>
 where in TMVA is set <i>N<sub>S</sub>=N<sub>B</sub></i>, so that the factor 
 in front of the sum simplifies to &frac12;.
 The Fisher discriminant then reads<br>
 <center>
-<img vspace=6 src="img/tmva_fisherD.gif" align="bottom" > 
+<img vspace=6 src="gif/tmva_fisherD.gif" align="bottom" > 
 </center>
 The offset <i>F</i><sub>0</sub> centers the sample mean of <i>x</i><sub>Fi</sub>
 at zero. Instead of using the within-class matrix, the Mahalanobis variant
 determines the Fisher coefficients as follows:<br>
 <center>
-<img vspace=6 src="img/tmva_mahaC.gif" align="bottom" > 
+<img vspace=6 src="gif/tmva_mahaC.gif" align="bottom" > 
 </center>
 with resulting <i>x</i><sub>Ma</sub> that are very similar to the
 <i>x</i><sub>Fi</sub>. <br></p>
@@ -94,7 +94,7 @@ with resulting <i>x</i><sub>Ma</sub> that are very similar to the
   measure of the discriminating power of a variable. The discrimination power 
   of set of input variables can therefore be measured by the scalar
   <center>
-  <img vspace=6 src="img/tmva_discpower.gif" align="bottom" > 
+  <img vspace=6 src="gif/tmva_discpower.gif" align="bottom" > 
   </center>
   </li>
 </ul>      
