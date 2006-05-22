@@ -25,6 +25,63 @@
  *                                                                                *
  **********************************************************************************/
 
+//_______________________________________________________________________
+//
+//  The Reader class serves to use the MVAs in a specific analysis context.
+//  Within an event loop, a vector is filled that corresponds to the variables
+//  that were used to train the MVA(s) during the training stage. This vector
+//  is transfered to the Reader, who takes care of interpreting the weight 
+//  file of the MVA of choice, and to return the MVA's output. This is then 
+//  used by the user for further analysis.
+//
+//  ---------------------------------------------------------------------
+//  Usage:
+//           
+//    // ------ before starting the event loop
+//
+//    // fill vector with variable names according to the definition and order 
+//    // used in the training stage
+//    vector<string> inputVars;
+//    inputVars.push_back( "var1" );
+//    inputVars.push_back( "var2" );
+//    inputVars.push_back( "var3" );
+//    inputVars.push_back( "var4" );
+//
+//    // create the Reader object
+//    Reader *reader = new TMVA_Reader( inputVars );    
+//      
+//    // book the MVA of your choice (prior training of these methods, ie, 
+//    // existence of weight files is required)
+//    reader->BookMVA( TMVA_Types::Fisher,   "weights/Fisher.weights" );
+//    reader->BookMVA( TMVA_Types::CFMlpANN, "weights/CFMlpANN.weights" );
+//    // ... etc
+//    
+//    // ------- start the event loop
+//
+//    for (Long64_t ievt=0; ievt<myTree->GetEntries();ievt++) {
+//
+//      // fill vector with values of variables
+//      vector<double> varValues;	 
+//      varValues.push_back( var1 ); 
+//      varValues.push_back( var2 ); 
+//      varValues.push_back( var3 ); 
+//      varValues.push_back( var4 ); 
+//            
+//      // retrieve the corresponding MVA output
+//      double mvaFi  = reader->EvaluateMVA( varValues, TMVA_Types::Fisher );
+//      double mvaNN  = reader->EvaluateMVA( varValues, TMVA_Types::CFMlpANN );
+//
+//      // do something with these ...., e.g., fill them into your ntuple
+//
+//    } // end of event loop
+//
+//    delete reader;
+//  ---------------------------------------------------------------------
+//
+//  The example application of the Reader: "TMVApplication.cxx" can be found 
+//  in the ROOT tutorial directory.
+//_______________________________________________________________________
+
 #include "TTree.h"
 #include "TLeaf.h"
 #include "TString.h"

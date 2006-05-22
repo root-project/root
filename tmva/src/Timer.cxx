@@ -28,13 +28,13 @@
 //                                                                      
 // Timing information for training and evaluation of MVA methods  
 // 
-// usage:
+// Usage:
 //
 //    TMVA::Timer timer( Nloops, "MyClassName" ); 
 //    for (Int_t i=0; i<Nloops; i++) {
 //      ... // some code
 //
-///     // now, print progress bar:
+//      // now, print progress bar:
 //      timer.DrawProgressBar( i );
 //
 //      // **OR** text output of left time (never both !)
@@ -44,7 +44,7 @@
 //    cout << "MyClassName" << ": elapsed time: " << timer.GetElapsedTime() 
 //         << endl;    
 //
-// remark: in batch mode, the progress bar is quite ugly; you may 
+// Remark: in batch mode, the progress bar is quite ugly; you may 
 //         want to use the text output then
 //_______________________________________________________________________
 
