@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.5 2006/05/18 06:57:22 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.6 2006/05/22 08:55:30 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -531,8 +531,8 @@ void* TODBCStatement::GetParAddr(Int_t npar, Int_t roottype, Int_t length)
    ClearError();
 
    if ((fBuffer==0) || (npar<0) || (npar>=fNumBuffers) || (fBufferCounter<0)) {
-       SetError(-1, "Invalid parameter number","GetParAddr");
-       return 0;
+      SetError(-1, "Invalid parameter number","GetParAddr");
+      return 0;
    }
 
    if (fBuffer[npar].fBbuffer==0) {

@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.5 2006/05/18 06:57:22 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.6 2006/05/22 08:55:30 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -303,16 +303,16 @@ TSQLResult *TODBCServer::GetTables(const char *, const char* wild)
 
    SQLAllocHandle(SQL_HANDLE_STMT, fHdbc, &hstmt);
    
-   SQLCHAR* TableName = 0;
-   SQLSMALLINT TableNameLength = 0;
+   SQLCHAR* tableName = 0;
+   SQLSMALLINT tableNameLength = 0;
    
    if ((wild!=0) && (strlen(wild)!=0)) {
-       TableName = (SQLCHAR*) wild;
-       TableNameLength = strlen(wild);
-       SQLSetStmtAttr(hstmt, SQL_ATTR_METADATA_ID, (SQLPOINTER) SQL_TRUE, 0);
+      tableName = (SQLCHAR*) wild;
+      tableNameLength = strlen(wild);
+      SQLSetStmtAttr(hstmt, SQL_ATTR_METADATA_ID, (SQLPOINTER) SQL_TRUE, 0);
    }
 
-   retcode = SQLTables(hstmt, NULL, 0, NULL, 0, TableName, TableNameLength, NULL, 0);
+   retcode = SQLTables(hstmt, NULL, 0, NULL, 0, tableName, tableNameLength, NULL, 0);
    if (ExtractErrors(retcode, "GetTables")) {
       SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
       return 0;
