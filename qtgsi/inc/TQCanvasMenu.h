@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQCanvasMenu.h,v 1.1 2006/04/11 16:33:46 rdm Exp $
+// @(#)root/qtgsi:$Name:  $:$Id: TQCanvasMenu.h,v 1.2 2006/04/12 10:07:21 brun Exp $
 // Author: Denis Bertini, M. AL-Turany  01/11/2000
 
 /*************************************************************************
@@ -47,6 +47,10 @@ class TQCanvasMenu : public QObject {
 #ifndef __CINT__
    Q_OBJECT
 #endif
+private:
+   TQCanvasMenu(const TQCanvasMenu &c);
+   TQCanvasMenu& operator=(const TQCanvasMenu&) {return *this;} 
+      
 public:
    TQCanvasMenu(QWidget* parent = 0, TCanvas *canvas = 0);
    TQCanvasMenu(QWidget* parent, QWidget *tabWin, TCanvas *canvas) ;
