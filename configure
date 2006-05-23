@@ -91,6 +91,7 @@ enable_cintex=no
 enable_mathcore=no
 enable_mathmore=no
 enable_pythia=no
+enable_pythia6=no
 enable_qt=no
 enable_qtgsi=no
 enable_reflex=no
@@ -1065,6 +1066,7 @@ if test $# -gt 0 ; then
       --with-pgsql-libdir=*)   pgsqllibdir=$optarg   ; enable_pgsql="yes"   ;;
       --with-pythia-libdir=*)  pythialibdir=$optarg  ; enable_pythia="yes"  ;;
       --with-pythia6-libdir=*) pythia6libdir=$optarg ; enable_pythia6="yes" ;;
+      --with-pythia6-uscore=*) pythia6uscore=$optarg ; enable_pythia6="yes" ;;
       --with-python-incdir=*)  pythonincdir=$optarg  ; enable_python="yes"  ;;
       --with-python-libdir=*)  pythonlibdir=$optarg  ; enable_python="yes"  ;;
       --with-qt-incdir=*)      qtincdir=$optarg      ; enable_qt="yes"; enable_qtgsi="yes" ;;
@@ -1979,41 +1981,51 @@ fi
 #
 # Check for libPythia6
 #
-if test ! "x$enable_pythia6" = "xno" ; then
-    check_library "libPythia6" "$enable_shared" "$pythia6libdir" \
-	$PYTHIA6 $PYTHIA6/lib /cern/pro/lib /opt/pythia /opt/pythia6 \
-        /usr/lib/pythia /usr/local/lib/pythia /usr/lib/pythia6 \
-	/usr/local/lib/pythia6 /usr/lib /usr/local/lib
-    pythia6lib=$found_lib
-    pythia6libdir=$found_dir
 
-    if test "x$pythia6lib" = "x" ; then
-        enable_pythia6=no
+if test ! "x$enable_pythia6" = "xno" ; then
+    if test ! "x$pythia6uscore" = "xDOUBLE" || \
+	"x$pythia6uscore" = "xSINGLE" || \
+	"x$pythia6uscore" = "xNO" ; then
+	pythia6cppflags=-DPYTHIA6_${pythia6uscore}_UNDERSCORE
+	pythia6lib=
+	pythia6dir=
+	result "Custom pythia6 library with $pythia6uscore underscore"
     else
-	check_symbol pythia6_common_block_address__ \
-	    "$found_lib" "$found_dir"
-	if test $found_symbol -eq 1 ; then
-	    pythia6cppflags=-DPYTHIA6_DOUBLE_UNDERSCORE
+	check_library "libPythia6" "$enable_shared" "$pythia6libdir" \
+	    $PYTHIA6 $PYTHIA6/lib /cern/pro/lib /opt/pythia /opt/pythia6 \
+	    /usr/lib/pythia /usr/local/lib/pythia /usr/lib/pythia6 \
+	    /usr/local/lib/pythia6 /usr/lib /usr/local/lib
+	pythia6lib=$found_lib
+	pythia6libdir=$found_dir
+	
+	if test "x$pythia6lib" = "x" ; then
+	    enable_pythia6=no
 	else
-	    check_symbol pythia6_common_block_address_ \
+	    check_symbol pythia6_common_block_address__ \
 		"$found_lib" "$found_dir"
-	    if test $found_symbol -eq 1  ; then
-		pythia6cppflags=-DPYTHIA6_SINGLE_UNDERSCORE
+	    if test $found_symbol -eq 1 ; then
+		pythia6cppflags=-DPYTHIA6_DOUBLE_UNDERSCORE
 	    else
-		check_symbol pythia6_common_address \
+		check_symbol pythia6_common_block_address_ \
 		    "$found_lib" "$found_dir"
 		if test $found_symbol -eq 1  ; then
-		    pythia6cppflags=-DPYTHIA6_NO_UNDERSCORE
+		    pythia6cppflags=-DPYTHIA6_SINGLE_UNDERSCORE
 		else
-		    result " didn't find pythia6_common_block_address[_]* in $found_lib"
-		    enable_pythia6=no
+		    check_symbol pythia6_common_address \
+			"$found_lib" "$found_dir"
+		    if test $found_symbol -eq 1  ; then
+			pythia6cppflags=-DPYTHIA6_NO_UNDERSCORE
+		    else
+			result " didn't find pythia6_common_block_address[_]* in $found_lib"
+			enable_pythia6=no
+		    fi
 		fi
 	    fi
-	fi
-	if test "x$platform" = "xmacosx" ; then
-	    check_symbol intel_cpu_indicator "$found_lib" "$found_dir"
-	    if test $found_symbol -eq 1 ; then
-	        pythia6lib="$pythia6lib -L`which ifort | sed -e 's|bin/ifort|lib|'` -lifcore -lirc -limf -lifport"
+	    if test "x$platform" = "xmacosx" ; then
+		check_symbol intel_cpu_indicator "$found_lib" "$found_dir"
+		if test $found_symbol -eq 1 ; then
+		    pythia6lib="$pythia6lib -L`which ifort | sed -e 's|bin/ifort|lib|'` -lifcore -lirc -limf -lifport"
+		fi
             fi
 	fi
     fi
