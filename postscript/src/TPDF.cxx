@@ -49,12 +49,12 @@ const Int_t kObjInfo             =  2; // Info object
 const Int_t kObjOutlines         =  3; // Outlines object
 const Int_t kObjPages            =  4; // Pages object (pages index)
 const Int_t kObjPageResources    =  5; // Pages Resources object
-const Int_t kObjFont             =  6; // Font object
-const Int_t kObjColorSpace       =  7; // ColorSpace object
-const Int_t kObjPatternResourses =  8; // Pattern Resources object
-const Int_t kObjPatternList      =  9; // Pattern list object
-const Int_t kObjPattern          = 10; // Pattern object
-const Int_t kObjFirstPage        = 35; // First page object
+const Int_t kObjFont             =  6; // First Font object (14 in total)
+const Int_t kObjColorSpace       = 20; // ColorSpace object
+const Int_t kObjPatternResourses = 21; // Pattern Resources object
+const Int_t kObjPatternList      = 22; // Pattern list object
+const Int_t kObjPattern          = 23; // Pattern object
+const Int_t kObjFirstPage        = 48; // First page object
 
 ClassImp(TPDF)
 
@@ -872,21 +872,20 @@ void TPDF::FontEncode()
    "/Courier-Bold"         , "/Courier-BoldOblique", "/Symbol"          ,
    "/Times-Roman"          , "/ZapfDingbats"};
 
-   NewObject(kObjFont);
-   PrintStr("<<@");
    for (Int_t i=0; i<14; i++) {
-      PrintStr("/F");
+      NewObject(kObjFont+i);
+      PrintStr("<<@");
+      PrintStr("/Type /Font@");
+      PrintStr("/Subtype /Type1@");
+      PrintStr("/Name /F");
       WriteInteger(i+1,0);
-      PrintStr(" <<");
-      PrintStr("/Type/Font");
-      PrintStr("/Subtype/Type1");
-      PrintStr("/BaseFont");
-      PrintStr(sdtfonts[i]);
-      PrintStr(">>");
       PrintStr("@");
+      PrintStr("/BaseFont ");
+      PrintStr(sdtfonts[i]);
+      PrintStr("@");
+      PrintStr(">>");
+      PrintStr("endobj@");
    }
-   PrintStr(">>");
-   PrintStr("endobj@");
 }
 
 
@@ -1091,6 +1090,8 @@ void TPDF::Open(const char *fname, Int_t wtype)
 {
    // Open a PDF file
 
+   Int_t i;
+
    if (fStream) {
       Warning("Open", "PDF file already open");
       return;
@@ -1131,7 +1132,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
 
    gVirtualPS = this;
 
-   for (Int_t i=0;i<fSizBuffer;i++) fBuffer[i] = ' ';
+   for (i=0; i<fSizBuffer; i++) fBuffer[i] = ' ';
 
    // The page orientation is last digit of PDF workstation type
    //  orientation = 1 for portrait
@@ -1211,10 +1212,17 @@ void TPDF::Open(const char *fname, Int_t wtype)
    NewObject(kObjPageResources);
    PrintStr("<<@");
    PrintStr("/ProcSet [/PDF /Text]@");
-   PrintStr("/Font");
-   WriteInteger(kObjFont);
-   PrintStr(" 0 R");
-   PrintStr("@");
+
+   PrintStr("/Font@");
+   PrintStr("<<@");
+   for (i=0; i<14; i++) {
+      PrintStr(" /F");
+      WriteInteger(i+1,0);
+      WriteInteger(kObjFont+i);
+      PrintStr(" 0 R");
+   }
+   PrintStr(">>@");
+
    PrintStr("/ColorSpace << /Cs8");
    WriteInteger(kObjColorSpace);
    PrintStr(" 0 R >>");
