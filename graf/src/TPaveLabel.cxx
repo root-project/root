@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.16 2003/12/13 22:56:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.17 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -88,8 +88,8 @@ void TPaveLabel::Draw(Option_t *option)
    // Draw this pavelabel with its current attributes.
 
    Option_t *opt;
-   if (strlen(option)) opt = option;
-   else                opt = GetOption();
+   if (option && strlen(option)) opt = option;
+   else                          opt = GetOption();
 
    AppendPad(opt);
 }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.19 2006/01/23 21:15:57 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.20 2006/04/12 13:45:28 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -219,8 +219,8 @@ void TPave::Draw(Option_t *option)
    // Draw this pave with its current attributes.
 
    Option_t *opt;
-   if (strlen(option)) opt = option;
-   else                opt = GetOption();
+   if (option && strlen(option)) opt = option;
+   else                          opt = GetOption();
 
    AppendPad(opt);
 }
