@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxyDirector.h,v 1.5 2004/07/29 18:09:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxyDirector.h,v 1.6 2004/10/29 16:07:32 rdm Exp $
 // Author: Philippe Canal 13/05/2003
 
 /*************************************************************************
@@ -39,6 +39,8 @@ namespace ROOT {
 
       TBranchProxyDirector(TTree* tree, Long64_t i);
       TBranchProxyDirector(TTree* tree, Int_t i);     // cint has (had?) a problem casting int to long long
+      TBranchProxyDirector(const TBranchProxyDirector &) {;}
+      TBranchProxyDirector& operator=(const TBranchProxyDirector&) {return *this;}
 
       void     Attach(TBranchProxy* p);
       void     Attach(TFriendProxy* f);

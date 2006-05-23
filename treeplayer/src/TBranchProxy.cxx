@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.5 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.6 2006/04/19 08:22:26 rdm Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -79,7 +79,7 @@ ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *paren
 ROOT::TBranchProxy::~TBranchProxy()
 {
    // Typical Destructor
-};
+}
 
 void ROOT::TBranchProxy::Reset()
 {
