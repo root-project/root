@@ -41,9 +41,9 @@
 ClassImp(TMVA::MethodRuleFit)
  
 //_______________________________________________________________________
-   TMVA::MethodRuleFit::MethodRuleFit( TString jobName, vector<TString>* theVariables,  
-                                       TTree* theTree, TString theOption, TDirectory* theTargetDir )
-      : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
+TMVA::MethodRuleFit::MethodRuleFit( TString jobName, vector<TString>* theVariables,  
+                                    TTree* theTree, TString theOption, TDirectory* theTargetDir )
+   : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
    // standard constructor
    InitRuleFit();

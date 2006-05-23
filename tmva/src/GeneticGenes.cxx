@@ -34,27 +34,27 @@
 //_______________________________________________________________________
 
 ClassImp(TMVA::GeneticGenes)
-
+   
 //_______________________________________________________________________
 TMVA::GeneticGenes::GeneticGenes( std::vector<Double_t> & f  ) 
 {
-  // Constructor:
-  // set the factors of this individual
-  fFactors = f;
+   // Constructor:
+   // set the factors of this individual
+   fFactors = f;
 }
 
 //_______________________________________________________________________
 void TMVA::GeneticGenes::Clear() 
 {
-  // clear the factors (coefficients) of this individual
-  // clear the fitness-results obtained by this individual
-  fFactors.clear();
-  fResults.clear();
+   // clear the factors (coefficients) of this individual
+   // clear the fitness-results obtained by this individual
+   fFactors.clear();
+   fResults.clear();
 }
   
 //_______________________________________________________________________
 void TMVA::GeneticGenes::ClearResults() 
 {
-  // clear the fitness-results obtained by this individual
-  fResults.clear();
+   // clear the fitness-results obtained by this individual
+   fResults.clear();
 }

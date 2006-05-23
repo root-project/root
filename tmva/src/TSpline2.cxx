@@ -35,8 +35,8 @@
 ClassImp(TMVA::TSpline2)
 
 //_______________________________________________________________________
-   TMVA::TSpline2::TSpline2( TString title, TGraph* theGraph )
-      : fGraph( theGraph )
+TMVA::TSpline2::TSpline2( TString title, TGraph* theGraph )
+   : fGraph( theGraph )
 {
    // constructor from TGraph
    // TSpline is a TNamed object

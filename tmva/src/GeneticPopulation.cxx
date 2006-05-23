@@ -43,7 +43,7 @@ ClassImp(TMVA::GeneticPopulation)
 //_______________________________________________________________________
 
 //_______________________________________________________________________
-   TMVA::GeneticPopulation::GeneticPopulation()
+TMVA::GeneticPopulation::GeneticPopulation()
 {
    // Constructor
    // create a randomGenerator for this population and set a seed

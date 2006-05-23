@@ -76,7 +76,7 @@ using std::vector;
 ClassImp(TMVA::DecisionTree)
 
 //_______________________________________________________________________
-   TMVA::DecisionTree::DecisionTree( void ):
+TMVA::DecisionTree::DecisionTree( void ):
       fNvars      (0),
       fNCuts      (-1),
       fSepType    (new TMVA::GiniIndex()),
@@ -344,20 +344,20 @@ Double_t TMVA::DecisionTree::CheckEvent(TMVA::Event* e)
 //_______________________________________________________________________
 Double_t  TMVA::DecisionTree::SamplePurity(vector<TMVA::Event*> eventSample)
 {
-  //calculates the purity S/(S+B) of a given event sample
-
-  Double_t sumsig=0, sumbkg=0, sumtot=0;
-  for (UInt_t ievt=0; ievt<eventSample.size(); ievt++) {
-    if (eventSample[ievt]->GetType()==0) sumbkg+=eventSample[ievt]->GetWeight();
-    if (eventSample[ievt]->GetType()==1) sumsig+=eventSample[ievt]->GetWeight();
-    sumtot+=eventSample[ievt]->GetWeight();
-  }
-  //sanity check
-  if (sumtot!= (sumsig+sumbkg)){
-    cout << "--- TMVA::DecisionTree::Purity Error! sumtot != sumsig+sumbkg"
-         << sumtot << " " << sumsig << " " << sumbkg << endl;
-    exit(1);
-  }
-  if (sumtot>0) return sumsig/(sumsig + sumbkg);
-  else return -1;
+   //calculates the purity S/(S+B) of a given event sample
+   
+   Double_t sumsig=0, sumbkg=0, sumtot=0;
+   for (UInt_t ievt=0; ievt<eventSample.size(); ievt++) {
+      if (eventSample[ievt]->GetType()==0) sumbkg+=eventSample[ievt]->GetWeight();
+      if (eventSample[ievt]->GetType()==1) sumsig+=eventSample[ievt]->GetWeight();
+      sumtot+=eventSample[ievt]->GetWeight();
+   }
+   //sanity check
+   if (sumtot!= (sumsig+sumbkg)){
+      cout << "--- TMVA::DecisionTree::Purity Error! sumtot != sumsig+sumbkg"
+           << sumtot << " " << sumsig << " " << sumbkg << endl;
+      exit(1);
+   }
+   if (sumtot>0) return sumsig/(sumsig + sumbkg);
+   else return -1;
 }

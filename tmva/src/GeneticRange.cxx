@@ -38,7 +38,7 @@
 ClassImp(TMVA::GeneticRange)
 
 //_______________________________________________________________________
-   TMVA::GeneticRange::GeneticRange( TRandom *rnd, Double_t f, Double_t t )
+TMVA::GeneticRange::GeneticRange( TRandom *rnd, Double_t f, Double_t t )
 {
    // defines the "f" (from) and "t" (to) of the coefficient
    // and takes a randomgenerator

@@ -38,8 +38,8 @@
 ClassImp(TMVA::GeneticCuts)
 
 //_______________________________________________________________________
-   TMVA::GeneticCuts::GeneticCuts( Int_t size, std::vector<LowHigh_t*> ranges ) 
-      : TMVA::GeneticBase( size, ranges ) 
+TMVA::GeneticCuts::GeneticCuts( Int_t size, std::vector<LowHigh_t*> ranges ) 
+   : TMVA::GeneticBase( size, ranges ) 
 {
    // constructor
 }
@@ -47,7 +47,7 @@ ClassImp(TMVA::GeneticCuts)
 //_______________________________________________________________________
 Double_t TMVA::GeneticCuts::FitnessFunction( const std::vector<Double_t> & parameters )
 {
-  // fitness function interface for Genetics Algorithm application of cut 
-  // optimisation method
-  return TMVA::MethodCuts::ThisCuts()->ComputeEstimator( parameters ); 
+   // fitness function interface for Genetics Algorithm application of cut 
+   // optimisation method
+   return TMVA::MethodCuts::ThisCuts()->ComputeEstimator( parameters ); 
 }

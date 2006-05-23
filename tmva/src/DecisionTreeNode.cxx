@@ -45,10 +45,10 @@
 using std::string;
 
 ClassImp(TMVA::DecisionTreeNode)
-
+   
 //_______________________________________________________________________
-   TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Event* e)
-      : TMVA::Node(e) 
+TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Event* e)
+   : TMVA::Node(e) 
 {
    // constructor of an essentially "empty" node floating in space
    fCutValue=0;
@@ -142,25 +142,25 @@ TMVA::NodeID TMVA::DecisionTreeNode::ReadRec(ifstream& is, TMVA::NodeID nodeID, 
    this->SetNEvents(dtmp6);
    this->SetNodeType(itmp2);
 
-  is >> itmp >> pos ;
-  nextNodeID.SetDepth(itmp);
-  nextNodeID.SetPos(pos);
- 
-  if (nextNodeID.GetDepth() == nodeID.GetDepth()+1){
-    if (nextNodeID.GetPos()=="l") {
-      this->SetLeft(new TMVA::DecisionTreeNode());
-      this->GetLeft()->SetParent(this);
-      nextNodeID = this->GetLeft()->ReadRec(is,nextNodeID,this);
-    }
-  }
-  if (nextNodeID.GetDepth() == nodeID.GetDepth()+1){
-    if (nextNodeID.GetPos()=="r") {
-      this->SetRight(new TMVA::DecisionTreeNode());
-      this->GetRight()->SetParent(this);
-      nextNodeID = this->GetRight()->ReadRec(is,nextNodeID,this);
-    }
-  }
-  return nextNodeID;
+   is >> itmp >> pos ;
+   nextNodeID.SetDepth(itmp);
+   nextNodeID.SetPos(pos);
+   
+   if (nextNodeID.GetDepth() == nodeID.GetDepth()+1){
+      if (nextNodeID.GetPos()=="l") {
+         this->SetLeft(new TMVA::DecisionTreeNode());
+         this->GetLeft()->SetParent(this);
+         nextNodeID = this->GetLeft()->ReadRec(is,nextNodeID,this);
+      }
+   }
+   if (nextNodeID.GetDepth() == nodeID.GetDepth()+1){
+      if (nextNodeID.GetPos()=="r") {
+         this->SetRight(new TMVA::DecisionTreeNode());
+         this->GetRight()->SetParent(this);
+         nextNodeID = this->GetRight()->ReadRec(is,nextNodeID,this);
+      }
+   }
+   return nextNodeID;
 }
 
 

@@ -66,7 +66,7 @@
 
 ClassImp(TMVA::MethodCFMlpANN_Utils)
   
-Int_t TMVA::MethodCFMlpANN_Utils::fg_100         = 100;
+   Int_t TMVA::MethodCFMlpANN_Utils::fg_100         = 100;
 Int_t TMVA::MethodCFMlpANN_Utils::fg_0           = 0;
 Int_t TMVA::MethodCFMlpANN_Utils::fg_max_nVar_   = max_nVar_;
 Int_t TMVA::MethodCFMlpANN_Utils::fg_max_nNodes_ = max_nNodes_;
@@ -296,7 +296,7 @@ void TMVA::MethodCFMlpANN_Utils::En_avant(Int_t *ievent)
    Double_t f;
    Int_t i__, j;
    Int_t layer;
-
+   
    i__1 = neur_1.neuron[0];
    for (i__ = 1; i__ <= i__1; ++i__) {
       y_ref(1, i__) = xeev_ref(*ievent, i__);
@@ -641,60 +641,60 @@ void TMVA::MethodCFMlpANN_Utils::TestNN()
    }
    if (fParam_1.lclass < neur_1.neuron[fParam_1.layerm - 1]) {
       ktest = 1;
-    printf("Error: wrong number of classes at ouput layer: %i != %i ==> abort\n",
-           neur_1.neuron[fParam_1.layerm - 1], fParam_1.lclass);
-    Arret("problem needs to reported ");
-  }
-  if (fParam_1.nvar > max_nVar_) {
-    ktest = 1;
-    printf("Error: number of variables exceeds maximum: %i, %i ==> abort", 
-           fParam_1.nvar, fg_max_nVar_ );
-    Arret("modification of mlpl3_param_lim.inc is needed");
-  }
-  i__1 = fParam_1.layerm;
-  for (i__ = 1; i__ <= i__1; ++i__) {
-    if (neur_1.neuron[i__ - 1] > max_nNodes_) {
+      printf("Error: wrong number of classes at ouput layer: %i != %i ==> abort\n",
+             neur_1.neuron[fParam_1.layerm - 1], fParam_1.lclass);
+      Arret("problem needs to reported ");
+   }
+   if (fParam_1.nvar > max_nVar_) {
       ktest = 1;
-      printf("Error: number of neurons at layer exceeds maximum: %i, %i ==> abort", 
-             i__, fg_max_nNodes_ );
-    }
-  }
-  if (ktest == 1) {
-    printf( " .... strange to be here (2) ... \n");
-    exit(1);
-  }
+      printf("Error: number of variables exceeds maximum: %i, %i ==> abort", 
+             fParam_1.nvar, fg_max_nVar_ );
+      Arret("modification of mlpl3_param_lim.inc is needed");
+   }
+   i__1 = fParam_1.layerm;
+   for (i__ = 1; i__ <= i__1; ++i__) {
+      if (neur_1.neuron[i__ - 1] > max_nNodes_) {
+         ktest = 1;
+         printf("Error: number of neurons at layer exceeds maximum: %i, %i ==> abort", 
+                i__, fg_max_nNodes_ );
+      }
+   }
+   if (ktest == 1) {
+      printf( " .... strange to be here (2) ... \n");
+      exit(1);
+   }
 }
 
 #define y_ref(a_1,a_2) neur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
 
 void TMVA::MethodCFMlpANN_Utils::Cout(Int_t * /*i1*/, Double_t *xxx)
 {
-  // [smart comments to be added]
-  Int_t i__1, i__2;
-  Double_t d__1;
-
-  Double_t c__;
-  Int_t i__, j;
-
-  c__ = 0.;
-  i__1 = fParam_1.nevl;
-  for (i__ = 1; i__ <= i__1; ++i__) {
-    En_avant(&i__);
-    i__2 = neur_1.neuron[fParam_1.layerm - 1];
-    for (j = 1; j <= i__2; ++j) {
-      if (fVarn_1.nclass[i__ - 1] == j) {
-        neur_1.o[j - 1] = 1.;
-      } else {
-        neur_1.o[j - 1] = -1.;
+   // [smart comments to be added]
+   Int_t i__1, i__2;
+   Double_t d__1;
+   
+   Double_t c__;
+   Int_t i__, j;
+   
+   c__ = 0.;
+   i__1 = fParam_1.nevl;
+   for (i__ = 1; i__ <= i__1; ++i__) {
+      En_avant(&i__);
+      i__2 = neur_1.neuron[fParam_1.layerm - 1];
+      for (j = 1; j <= i__2; ++j) {
+         if (fVarn_1.nclass[i__ - 1] == j) {
+            neur_1.o[j - 1] = 1.;
+         } else {
+            neur_1.o[j - 1] = -1.;
+         }
+         // Computing 2nd power 
+         d__1 = y_ref(fParam_1.layerm, j) - neur_1.o[j - 1];
+         c__ += fDel_1.coef[j - 1] * (d__1 * d__1);
       }
-      // Computing 2nd power 
-      d__1 = y_ref(fParam_1.layerm, j) - neur_1.o[j - 1];
-      c__ += fDel_1.coef[j - 1] * (d__1 * d__1);
-    }
-  }
-  c__ /= (Double_t) (fParam_1.nevl * fParam_1.lclass) * 2.;
-  *xxx = c__;
-  fCost_1.ancout = c__;
+   }
+   c__ /= (Double_t) (fParam_1.nevl * fParam_1.lclass) * 2.;
+   *xxx = c__;
+   fCost_1.ancout = c__;
 }
 
 #undef y_ref
@@ -1007,7 +1007,7 @@ void TMVA::MethodCFMlpANN_Utils::CollectVar(Int_t *nvar, Int_t *class__, Double_
 {
    // [smart comments to be added]
    Int_t i__1;
-
+   
    Int_t i__;
    Float_t x[201];
 

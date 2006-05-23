@@ -109,21 +109,21 @@ using namespace std;
 ClassImp(TMVA::Factory)
 
 //_______________________________________________________________________
-   TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption )
-      : fSignalFile      ( 0 ), 
-        fBackgFile       ( 0 ), 
-        fTrainingTree    ( 0 ),
-        fTestTree        ( 0 ),
-        fMultiCutTestTree( 0 ),
-        fSignalTree      ( 0 ),
-        fBackgTree       ( 0 ),
-        fSignalEvents    ( 1 ), 
-        fBackgroundEvents( 1 ), 
-        fTargetFile      ( theTargetFile ),
-        fOptions         ( theOption ),
-        fVerbose         ( kTRUE ),
-        fMultipleMVAs    ( kFALSE ),
-        fMultipleStoredOptions( kFALSE )
+TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption )
+   : fSignalFile      ( 0 ), 
+     fBackgFile       ( 0 ), 
+     fTrainingTree    ( 0 ),
+     fTestTree        ( 0 ),
+     fMultiCutTestTree( 0 ),
+     fSignalTree      ( 0 ),
+     fBackgTree       ( 0 ),
+     fSignalEvents    ( 1 ), 
+     fBackgroundEvents( 1 ), 
+     fTargetFile      ( theTargetFile ),
+     fOptions         ( theOption ),
+     fVerbose         ( kTRUE ),
+     fMultipleMVAs    ( kFALSE ),
+     fMultipleStoredOptions( kFALSE )
 {  
    // standard constructor
    //   jobname       : this name will appear in all weight file names produced by the MVAs

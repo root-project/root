@@ -48,7 +48,7 @@
 ClassImp(TMVA::Node)
 
 //_______________________________________________________________________
-   TMVA::Node::~Node( void )
+TMVA::Node::~Node( void )
 {
    // node destructor
    if (this->GetEventOwnership()) delete fEvent;

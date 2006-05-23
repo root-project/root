@@ -44,7 +44,7 @@ using std::vector;
 ClassImp(TMVA::MethodANNBase)
 
 //_______________________________________________________________________
-   TMVA::MethodANNBase::MethodANNBase( void )
+TMVA::MethodANNBase::MethodANNBase( void )
 {}
 
 //_______________________________________________________________________

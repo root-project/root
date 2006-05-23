@@ -31,15 +31,15 @@
 ClassImp(TMVA::RootFinder)
 
 //_______________________________________________________________________
-   TMVA::RootFinder::RootFinder( Double_t (*rootVal)( Double_t ),
-                                 Double_t rootMin, 
-                                 Double_t rootMax,
-                                 Int_t maxIterations, 
-                                 Double_t absTolerance )
-      : fRootMin( rootMin ),
-        fRootMax( rootMax ),
-        fMaxIter( maxIterations ),
-        fAbsTol ( absTolerance  )
+TMVA::RootFinder::RootFinder( Double_t (*rootVal)( Double_t ),
+                              Double_t rootMin, 
+                              Double_t rootMax,
+                              Int_t maxIterations, 
+                              Double_t absTolerance )
+   : fRootMin( rootMin ),
+     fRootMax( rootMax ),
+     fMaxIter( maxIterations ),
+     fAbsTol ( absTolerance  )
 {
    // constructor
    fGetRootVal = rootVal;

@@ -45,7 +45,7 @@
 ClassImp(TMVA::Event)
 
 //_______________________________________________________________________
-   TMVA::Event::Event(TTree* tree, Int_t ievt, std::vector<TString>* fInputVars)
+TMVA::Event::Event(TTree* tree, Int_t ievt, std::vector<TString>* fInputVars)
 {
    //event constructor reading variables from a ROOT tree
    for (UInt_t ivar=0; ivar<fInputVars->size(); ivar++) 
@@ -100,15 +100,15 @@ TMVA::Event* TMVA::Event::Read(ifstream& is)
 ostream& TMVA::operator<<(ostream& os, const TMVA::Event& event){ 
    //Outputs the data of an event
    
-  event.Print(os);
-  return os;
+   event.Print(os);
+   return os;
 }
 
 //_______________________________________________________________________
 ostream& TMVA::operator<<(ostream& os, const TMVA::Event* event){
-  //Outputs the data of an event
+   //Outputs the data of an event
    
-  if (event!=NULL)event->Print(os);
-  else os << "There is no TMVA::Event to print. Pointer == NULL";
-  return os;
+   if (event!=NULL)event->Print(os);
+   else os << "There is no TMVA::Event to print. Pointer == NULL";
+   return os;
 }

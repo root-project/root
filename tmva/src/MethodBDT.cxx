@@ -105,9 +105,9 @@ using std::vector;
 ClassImp(TMVA::MethodBDT)
  
 //_______________________________________________________________________
-   TMVA::MethodBDT::MethodBDT( TString jobName, vector<TString>* theVariables,  
-                               TTree* theTree, TString theOption, TDirectory* theTargetDir )
-      : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
+TMVA::MethodBDT::MethodBDT( TString jobName, vector<TString>* theVariables,  
+                            TTree* theTree, TString theOption, TDirectory* theTargetDir )
+   : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
    // the standard constructor for the "boosted decision trees" 
    //

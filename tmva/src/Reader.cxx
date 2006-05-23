@@ -104,9 +104,9 @@
 ClassImp(TMVA::Reader)
 
 //_______________________________________________________________________
-   TMVA::Reader::Reader( vector<TString>& inputVars, Bool_t verbose )
-      : fInputVars( &inputVars ),
-        fVerbose  ( verbose )
+TMVA::Reader::Reader( vector<TString>& inputVars, Bool_t verbose )
+   : fInputVars( &inputVars ),
+     fVerbose  ( verbose )
 {
    // constructor
    // arguments: names of input variables (vector)

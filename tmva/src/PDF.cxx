@@ -43,13 +43,13 @@ using namespace std;
 ClassImp(TMVA::PDF)
 
 //_______________________________________________________________________
-   TMVA::PDF::PDF( const TH1 *hist, TMVA::PDF::SmoothMethod method, Int_t nsmooth )
-      : fNsmooth ( nsmooth ),
-        fSpline  ( 0 ),
-        fPDFHist ( 0 ),
-        fHist    ( 0 ),
-        fGraph   ( 0 ),
-        fIntegral( 1.0)
+TMVA::PDF::PDF( const TH1 *hist, TMVA::PDF::SmoothMethod method, Int_t nsmooth )
+   : fNsmooth ( nsmooth ),
+     fSpline  ( 0 ),
+     fPDFHist ( 0 ),
+     fHist    ( 0 ),
+     fGraph   ( 0 ),
+     fIntegral( 1.0)
 {  
    // constructor: 
    // - default Spline method is: Spline2 (quadratic)

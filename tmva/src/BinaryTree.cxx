@@ -41,7 +41,7 @@
 ClassImp(TMVA::BinaryTree)
 
 //_______________________________________________________________________
-   TMVA::BinaryTree::BinaryTree( void )
+TMVA::BinaryTree::BinaryTree( void )
       :     fNNodes  ( 0 ), 
             fSumOfWeights( 0 ),
             fRoot ( NULL ), 
@@ -196,19 +196,19 @@ void TMVA::BinaryTree::Print(ostream & os) const
 ostream& TMVA::operator<< (ostream& os, const TMVA::BinaryTree& tree)
 { 
    // print the whole tree recursively in such a way that it starts with bottom/left most entry
-// and then it moves up the tree always printing the left most part. Like this, 
-// in a binary search tree, the output is ordered with the first number beeing the smallest.
-
-  TMVA::Node* current = tree.GetRoot(); // Start with the parent node.
-  if (current != NULL){             // If there are any nodes in the list...
-    while (current->GetLeft() != NULL) // Move to the left-most node,
-      current = current->GetLeft();    // so output will be ordered.
-    while (current != NULL){        // While there are still more nodes in the list...
-      os << *current;               // Output the current node.
-      if (current->GetRight() != NULL) // If there is a right node...
-        tree.PrintOrdered(os, current->GetRight()); // Print it out.
-      current = current->GetParent();               // Move up one node.
-    }
-  }
-  return os; // Return the output stream.
+   // and then it moves up the tree always printing the left most part. Like this, 
+   // in a binary search tree, the output is ordered with the first number beeing the smallest.
+   
+   TMVA::Node* current = tree.GetRoot(); // Start with the parent node.
+   if (current != NULL){             // If there are any nodes in the list...
+      while (current->GetLeft() != NULL) // Move to the left-most node,
+         current = current->GetLeft();    // so output will be ordered.
+      while (current != NULL){        // While there are still more nodes in the list...
+         os << *current;               // Output the current node.
+         if (current->GetRight() != NULL) // If there is a right node...
+            tree.PrintOrdered(os, current->GetRight()); // Print it out.
+         current = current->GetParent();               // Move up one node.
+      }
+   }
+   return os; // Return the output stream.
 }

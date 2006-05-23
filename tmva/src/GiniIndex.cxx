@@ -51,7 +51,7 @@
 ClassImp(TMVA::GiniIndex)
 
 //_______________________________________________________________________
-   Double_t  TMVA::GiniIndex::GetSeparationIndex( const Double_t &s, const Double_t &b )
+Double_t TMVA::GiniIndex::GetSeparationIndex( const Double_t &s, const Double_t &b )
 {
    //     Gini(Sample M) = 1 - (c(1)/N)^2 - (c(2)/N)^2 .... - (c(k)/N)^2    
    //     Where: M is a smaple of whatever N elements (events)             

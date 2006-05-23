@@ -64,10 +64,10 @@ ClassImp(TMVA::MethodHMatrix)
  
 
 //_______________________________________________________________________
-   TMVA::MethodHMatrix::MethodHMatrix( TString jobName, vector<TString>* theVariables,  
-                                       TTree* theTree, TString theOption, 
-                                       TDirectory* theTargetDir )
-      : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
+TMVA::MethodHMatrix::MethodHMatrix( TString jobName, vector<TString>* theVariables,  
+                                    TTree* theTree, TString theOption, 
+                                    TDirectory* theTargetDir )
+   : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
    // standard constructor for the H-Matrix method
    //

@@ -65,10 +65,10 @@ const Int_t   TMVA::Timer::fgNbins     = 24;
 ClassImp(TMVA::Timer)
 
 //_______________________________________________________________________
-   TMVA::Timer::Timer( Bool_t colourfulOutput )
-      : fNcounts        ( 0 ),
-        fPrefix         ( TMVA::Timer::fgClassName ),
-        fColourfulOutput( colourfulOutput )
+TMVA::Timer::Timer( Bool_t colourfulOutput )
+   : fNcounts        ( 0 ),
+     fPrefix         ( TMVA::Timer::fgClassName ),
+     fColourfulOutput( colourfulOutput )
 {
    // constructor
    Reset();

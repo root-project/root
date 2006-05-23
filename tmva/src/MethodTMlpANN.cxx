@@ -69,9 +69,9 @@ ClassImp(TMVA::MethodTMlpANN)
 
 
 //_______________________________________________________________________
-   TMVA::MethodTMlpANN::MethodTMlpANN( TString jobName, std::vector<TString>* theVariables,  
-                                       TTree* theTree, TString theOption, TDirectory* theTargetDir)
-      : TMVA::MethodBase(jobName, theVariables, theTree, theOption, theTargetDir  )
+TMVA::MethodTMlpANN::MethodTMlpANN( TString jobName, std::vector<TString>* theVariables,  
+                                    TTree* theTree, TString theOption, TDirectory* theTargetDir)
+   : TMVA::MethodBase(jobName, theVariables, theTree, theOption, theTargetDir  )
 {
    // standard constructor 
    // option string is interpreted in base class: MethodANNBase

@@ -88,9 +88,9 @@ using std::vector;
 ClassImp(TMVA::MethodPDERS)
 
 //_______________________________________________________________________
-   TMVA::MethodPDERS::MethodPDERS( TString jobName, vector<TString>* theVariables,
-                                   TTree* theTree, TString theOption, TDirectory* theTargetDir )
-      : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
+TMVA::MethodPDERS::MethodPDERS( TString jobName, vector<TString>* theVariables,
+                                TTree* theTree, TString theOption, TDirectory* theTargetDir )
+   : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
    // standard constructor for the PDERS method
    // format and syntax of option string: "VolumeRangeMode:options"

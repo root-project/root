@@ -41,7 +41,7 @@ using namespace std;
 ClassImp(TMVA::GeneticBase)
    
 //_______________________________________________________________________
-   TMVA::GeneticBase::GeneticBase( Int_t populationSize, vector<LowHigh_t*> ranges ) 
+TMVA::GeneticBase::GeneticBase( Int_t populationSize, vector<LowHigh_t*> ranges ) 
 {
    // Constructor
    // Parameters: 
@@ -253,22 +253,22 @@ Bool_t TMVA::GeneticBase::HasConverged( Int_t steps, Double_t improvement )
    // gives back true if the last "steps" steps have lead to an improvement of the
    // "fitness" of the "individuals" of at least "improvement"
    // 
-  // this gives a simple measure of if the fitness of the individuals is
-  // converging and no major improvement is to be expected soon. 
-  //
-  if( fConvCounter < 0 ) {
-    fConvValue = fPopulation.GetFitness( 0 );
-  }
-  if( TMath::Abs(fPopulation.GetFitness( 0 )-fConvValue) <= improvement || steps<0){
-    fConvCounter ++;
-  } 
-  else {
-    fConvCounter = 0;
-    fConvValue = fPopulation.GetFitness( 0 );
-  }
-  if (TMVA::GeneticBase__DEBUG__) cout << "."; cout.flush();
-  if( fConvCounter < steps ) return kFALSE;
-  return kTRUE;
+   // this gives a simple measure of if the fitness of the individuals is
+   // converging and no major improvement is to be expected soon. 
+   //
+   if( fConvCounter < 0 ) {
+      fConvValue = fPopulation.GetFitness( 0 );
+   }
+   if( TMath::Abs(fPopulation.GetFitness( 0 )-fConvValue) <= improvement || steps<0){
+      fConvCounter ++;
+   } 
+   else {
+      fConvCounter = 0;
+      fConvValue = fPopulation.GetFitness( 0 );
+   }
+   if (TMVA::GeneticBase__DEBUG__) cout << "."; cout.flush();
+   if( fConvCounter < steps ) return kFALSE;
+   return kTRUE;
 }
 
 

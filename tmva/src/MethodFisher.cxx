@@ -112,9 +112,9 @@
 ClassImp(TMVA::MethodFisher)
 
 //_______________________________________________________________________
-   TMVA::MethodFisher::MethodFisher( TString jobName, vector<TString>* theVariables,  
-                                     TTree* theTree, TString theOption, TDirectory* theTargetDir )
-      : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
+TMVA::MethodFisher::MethodFisher( TString jobName, vector<TString>* theVariables,  
+                                  TTree* theTree, TString theOption, TDirectory* theTargetDir )
+   : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
    // standard constructor for the "boosted decision trees" 
    //

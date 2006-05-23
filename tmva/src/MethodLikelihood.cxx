@@ -125,10 +125,10 @@ namespace TMVA {
 ClassImp(TMVA::MethodLikelihood)
  
 //_______________________________________________________________________
-   TMVA::MethodLikelihood::MethodLikelihood( TString jobName, vector<TString>* theVariables,  
-                                             TTree* theTree, TString theOption, 
-                                             TDirectory* theTargetDir )
-      : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
+TMVA::MethodLikelihood::MethodLikelihood( TString jobName, vector<TString>* theVariables,  
+                                          TTree* theTree, TString theOption, 
+                                          TDirectory* theTargetDir )
+   : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
    // standard constructor
    //

@@ -39,10 +39,10 @@
 ClassImp(TMVA::MethodVariable)
  
 //_______________________________________________________________________
-   TMVA::MethodVariable::MethodVariable( TString jobName, vector<TString>* theVariables,  
-                                         TTree* theTree, TString theOption, 
-                                         TDirectory* theTargetDir )
-      : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
+TMVA::MethodVariable::MethodVariable( TString jobName, vector<TString>* theVariables,  
+                                      TTree* theTree, TString theOption, 
+                                      TDirectory* theTargetDir )
+   : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
    // standard constructor
    // option string contains variable name - but not only ! 
