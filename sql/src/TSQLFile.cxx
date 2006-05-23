@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.9 2006/05/11 10:29:45 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.10 2006/05/22 08:55:58 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -1085,14 +1085,14 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory* dir, Bool_t doupdate, Long64_
 
       if ((keyid>=sqlio::Ids_FirstKey) || (keyid==specialkeyid))
          if (doupdate) {
-           TKeySQL* key = FindSQLKey(dir, keyid);
+            TKeySQL* key = FindSQLKey(dir, keyid);
            
-           if (key==0) {
-              Error("StreamKeysForDirectory","Key with id %d not exist in list", keyid);
-              nkeys = -1; // this will finish execution
-           } else 
-           if (key->IsKeyModified(keyname, keytitle, keydatime, cycle, classname))
-              UpdateKeyData(key);
+            if (key==0) {
+               Error("StreamKeysForDirectory","Key with id %d not exist in list", keyid);
+               nkeys = -1; // this will finish execution
+            } else 
+            if (key->IsKeyModified(keyname, keytitle, keydatime, cycle, classname))
+               UpdateKeyData(key);
              
          } else {
             TKeySQL* key = new TKeySQL(dir, keyid, objid, 
@@ -2503,11 +2503,11 @@ Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void* obj, const TC
          }
           
          if (!SQLApplyCommands(&cmds)) {
-           Error("StoreObject","Cannot correctly store object data in database");
-           objid = -1;
-           if (needcommit) SQLRollback();
+            Error("StoreObject","Cannot correctly store object data in database");
+            objid = -1;
+            if (needcommit) SQLRollback();
          } else {
-           if (needcommit) SQLCommit();
+            if (needcommit) SQLCommit();
          }
       }
       cmds.Delete();
