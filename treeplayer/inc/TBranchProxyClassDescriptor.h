@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.5 2004/07/27 12:21:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.6 2005/11/11 23:21:43 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -56,6 +56,8 @@ namespace ROOT {
       TBranchProxyClassDescriptor(const char *type, TStreamerInfo *info, const char *branchname,
                                   const char *branchPrefix, UInt_t isclones,
                                   UInt_t splitlevel);
+      TBranchProxyClassDescriptor(const TBranchProxyClassDescriptor &b) :TNamed(b){;}
+      TBranchProxyClassDescriptor& operator=(const TBranchProxyClassDescriptor&) {return *this;}
 
       const char* GetBranchName() const;
       const char* GetSubBranchPrefix() const;

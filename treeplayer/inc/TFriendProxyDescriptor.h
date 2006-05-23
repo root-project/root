@@ -1,4 +1,4 @@
-// @(#)rooeeplayer:$Name:  $:$Id: TFriendProxyDescriptor.h,v 1.2 2005/02/07 18:02:37 rdm Exp $
+// @(#)rooeeplayer:$Name:  $:$Id: TFriendProxyDescriptor.h,v 1.3 2005/11/11 23:21:43 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -27,6 +27,8 @@ namespace ROOT {
 
    public:
       TFriendProxyDescriptor(const char *treename, const char *aliasname, Int_t index);
+      TFriendProxyDescriptor(const TFriendProxyDescriptor &b) :TNamed(b){;}
+      TFriendProxyDescriptor& operator=(const TFriendProxyDescriptor&) {return *this;}
 
       Int_t  GetIndex() const { return fIndex; }
       TList *GetListOfTopProxies() { return &fListOfTopProxies; }
