@@ -94,22 +94,44 @@ pr(ip, file, base)
 	static int	current_len;
 	register int	len, i;
 	char	buf[ BUFSIZ ];
+        char    *ipifile;
 
 	printed = TRUE;
 	len = strlen(ip->i_file)+1;
+        ipifile = 0;
+        if (len>2 && ip->i_file[1]==':') {
+           // windows path
+           if (getenv("OSTYPE") && !strcmp(getenv("OSTYPE"),"msys")) {
+              ipifile = malloc(len);
+              strcpy(ipifile, ip->i_file);
+              ipifile[1] = ipifile[0];
+              ipifile[0] = '/';
+           } else {
+              // generic cygwin
+              ipifile = malloc(len+11);
+              strcpy(ipifile, "/cygdrive/");
+              ipifile[10] = ip->i_file[0];
+              strcpy(ipifile+11, ip->i_file+2);
+              len += 9;
+           }
+        } else ipifile = ip->i_file;
+        
 	if (current_len + len > width || file != lastfile) {
 		lastfile = file;
                 if (rootBuild)
                    ROOT_newFile();
 		sprintf(buf, "\n%s%s%s: %s", objprefix, base, objsuffix,
-			ip->i_file);
+			ipifile);
 		len = current_len = strlen(buf);
 	}
 	else {
 		buf[0] = ' ';
-		strcpy(buf+1, ip->i_file);
+		strcpy(buf+1, ipifile);
 		current_len += len;
 	}
+        if (len>2 && ip->i_file[1]==':')
+           free(ipifile);
+
         if (rootBuild)
            ROOT_adddep(buf, len);
         else
