@@ -46,9 +46,6 @@ $(TMVADS):       $(TMVAH) $(TMVAL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TMVAH) $(TMVAL)
 
-$(TMVADO):       $(TMVADS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-tmva:        $(TMVALIB)
 
 map-tmva:        $(RLIBMAP)
