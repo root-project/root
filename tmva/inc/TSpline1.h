@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TSpline1.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TSpline1.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TSpline1.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $        
+ * $Id: TSpline1.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $        
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_TSpline1
@@ -44,25 +44,25 @@
 
 namespace TMVA {
 
-  class TSpline1 : public TSpline {
+   class TSpline1 : public TSpline {
 
-  public:
+   public:
   
-    TSpline1( TString title, TGraph* theGraph );
-    virtual ~TSpline1( void );
+      TSpline1( TString title, TGraph* theGraph );
+      virtual ~TSpline1( void );
 
-    virtual  Double_t Eval( Double_t x ) const;
+      virtual  Double_t Eval( Double_t x ) const;
 
-    // dummy implementations
-    virtual void BuildCoeff( void );
-    virtual void GetKnot( Int_t i, Double_t& x, Double_t& y ) const;
+      // dummy implementations
+      virtual void BuildCoeff( void );
+      virtual void GetKnot( Int_t i, Double_t& x, Double_t& y ) const;
 
-  private:
+   private:
 
-    TGraph *fGraph;  // graph that is splined
+      TGraph *fGraph;  // graph that is splined
 
-    ClassDef(TSpline1,0) //Linear interpolation class
-  };
+      ClassDef(TSpline1,0) //Linear interpolation class
+         };
 
 } // namespace TMVA
 

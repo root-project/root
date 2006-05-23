@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodRuleFit.h,v 1.3 2006/05/20 12:31:44 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodRuleFit.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $    
 // Author: Andreas Hoecker, Fredrik Tegenfeldt, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodRuleFit.h,v 1.3 2006/05/20 12:31:44 andreas.hoecker Exp $    
+ * $Id: MethodRuleFit.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodRuleFit
@@ -52,45 +52,45 @@
 
 namespace TMVA {
 
-  class MethodRuleFit : public MethodBase {
+   class MethodRuleFit : public MethodBase {
 
-  public:
+   public:
 
-    MethodRuleFit( TString jobName, 
-		   vector<TString>* theVariables, 
-		   TTree* theTree = 0, 
-		   TString theOption = "",
-		   TDirectory* theTargetDir = 0 );
+      MethodRuleFit( TString jobName, 
+                     vector<TString>* theVariables, 
+                     TTree* theTree = 0, 
+                     TString theOption = "",
+                     TDirectory* theTargetDir = 0 );
 
-    MethodRuleFit( vector<TString> *theVariables, 
-		   TString theWeightFile,  
-		   TDirectory* theTargetDir = NULL );
+      MethodRuleFit( vector<TString> *theVariables, 
+                     TString theWeightFile,  
+                     TDirectory* theTargetDir = NULL );
 
-    virtual ~MethodRuleFit( void );
+      virtual ~MethodRuleFit( void );
     
-    // training method
-    virtual void Train( void );
+      // training method
+      virtual void Train( void );
 
-    // write weights to file
-    virtual void WriteWeightsToFile( void );
+      // write weights to file
+      virtual void WriteWeightsToFile( void );
   
-    // read weights from file
-    virtual void ReadWeightsFromFile( void );
+      // read weights from file
+      virtual void ReadWeightsFromFile( void );
 
-    // calculate the MVA value
-    virtual Double_t GetMvaValue(Event *e);
+      // calculate the MVA value
+      virtual Double_t GetMvaValue(Event *e);
 
-    // write method specific histos to target file
-    virtual void WriteHistosToFile( void ) ;
+      // write method specific histos to target file
+      virtual void WriteHistosToFile( void ) ;
 
-    void InitRuleFit( void );
+      void InitRuleFit( void );
 
-  protected:
+   protected:
 
-  private:
+   private:
 
-    ClassDef(MethodRuleFit,0)  // Friedman's RuleFit method 
-  };
+      ClassDef(MethodRuleFit,0)  // Friedman's RuleFit method 
+         };
 
 } // namespace TMVA
 

@@ -44,22 +44,22 @@
 ClassImp(TMVA::SeparationBase)
 
 //_______________________________________________________________________
-Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t &nSelS, const Double_t& nSelB, 
-						 const Double_t& nTotS, const Double_t& nTotB)
+   Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t &nSelS, const Double_t& nSelB, 
+                                                    const Double_t& nTotS, const Double_t& nTotB)
 {
-  // Separation Gain:                                                     
-  // the measure of how the quality of separation of the sample increases 
-  // by splitting the sample e.g. into a "left-node" and a "right-node"   
-  // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) 
-  // this is then the quality crition which is optimized for when trying  
-  // to increase the information in the system (making the best selection             
+   // Separation Gain:                                                     
+   // the measure of how the quality of separation of the sample increases 
+   // by splitting the sample e.g. into a "left-node" and a "right-node"   
+   // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) 
+   // this is then the quality crition which is optimized for when trying  
+   // to increase the information in the system (making the best selection             
 
-  Double_t parentIndex = (nTotS+nTotB) *this->GetSeparationIndex(nTotS,nTotB);
-  Double_t leftIndex   = ( ((nTotS - nSelS) + (nTotB - nSelB))
-			   * this->GetSeparationIndex(nTotS-nSelS,nTotB-nSelB) );
-  Double_t rightIndex  = (nSelS+nSelB) * this->GetSeparationIndex(nSelS,nSelB);
+   Double_t parentIndex = (nTotS+nTotB) *this->GetSeparationIndex(nTotS,nTotB);
+   Double_t leftIndex   = ( ((nTotS - nSelS) + (nTotB - nSelB))
+                            * this->GetSeparationIndex(nTotS-nSelS,nTotB-nSelB) );
+   Double_t rightIndex  = (nSelS+nSelB) * this->GetSeparationIndex(nSelS,nSelB);
     
-  return (parentIndex - leftIndex - rightIndex)/(parentIndex);   
+   return (parentIndex - leftIndex - rightIndex)/(parentIndex);   
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodHMatrix.h,v 1.3 2006/05/22 08:04:39 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodHMatrix.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $    
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -57,57 +57,57 @@
 
 namespace TMVA {
 
-  class MethodHMatrix : public MethodBase {
+   class MethodHMatrix : public MethodBase {
 
-  public:
+   public:
 
-    MethodHMatrix( TString jobName, 
-		   vector<TString>* theVariables, 
-		   TTree* theTree = 0, 
-		   TString theOption = "",
-		   TDirectory* theTargetDir = 0 );
+      MethodHMatrix( TString jobName, 
+                     vector<TString>* theVariables, 
+                     TTree* theTree = 0, 
+                     TString theOption = "",
+                     TDirectory* theTargetDir = 0 );
 
-    MethodHMatrix( vector<TString> *theVariables, 
-		   TString theWeightFile,  
-		   TDirectory* theTargetDir = NULL );
+      MethodHMatrix( vector<TString> *theVariables, 
+                     TString theWeightFile,  
+                     TDirectory* theTargetDir = NULL );
 
-    virtual ~MethodHMatrix( void );
+      virtual ~MethodHMatrix( void );
     
-    // training method
-    virtual void Train( void );
+      // training method
+      virtual void Train( void );
 
-    // write weights to file
-    virtual void WriteWeightsToFile( void );
+      // write weights to file
+      virtual void WriteWeightsToFile( void );
   
-    // read weights from file
-    virtual void ReadWeightsFromFile( void );
+      // read weights from file
+      virtual void ReadWeightsFromFile( void );
 
-    // calculate the MVA value
-    virtual Double_t GetMvaValue( Event *e );
+      // calculate the MVA value
+      virtual Double_t GetMvaValue( Event *e );
 
-    // write method specific histos to target file
-    virtual void WriteHistosToFile( void );
+      // write method specific histos to target file
+      virtual void WriteHistosToFile( void );
 
-  protected:
+   protected:
 
-  private:
+   private:
 
-    // returns chi2 estimator for given type (signal or background)
-    Double_t GetChi2( Event *e, Type ) const;
+      // returns chi2 estimator for given type (signal or background)
+      Double_t GetChi2( Event *e, Type ) const;
 
-    // arrays of input evt vs. variable 
-    TMatrixD* fInvHMatrixS; // inverse H-matrix (signal)
-    TMatrixD* fInvHMatrixB; // inverse H-matrix (background)
-    TVectorD* fVecMeanS;    // vector of mean values (signal)
-    TVectorD* fVecMeanB;    // vector of mean values (background)
+      // arrays of input evt vs. variable 
+      TMatrixD* fInvHMatrixS; // inverse H-matrix (signal)
+      TMatrixD* fInvHMatrixB; // inverse H-matrix (background)
+      TVectorD* fVecMeanS;    // vector of mean values (signal)
+      TVectorD* fVecMeanB;    // vector of mean values (background)
 
-    Bool_t    fNormaliseInputVars; // normalise input variables
+      Bool_t    fNormaliseInputVars; // normalise input variables
 
-    // default initialisation method called by all constructors
-    void InitHMatrix( void ); 
+      // default initialisation method called by all constructors
+      void InitHMatrix( void ); 
 
-    ClassDef(MethodHMatrix,0) // H-Matrix method, a simple comparison of chi-squared estimators for signal and background
-  }; 
+      ClassDef(MethodHMatrix,0) // H-Matrix method, a simple comparison of chi-squared estimators for signal and background
+         }; 
 
 } // namespace TMVA
 

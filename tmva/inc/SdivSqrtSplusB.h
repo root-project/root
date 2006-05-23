@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SdivSqrtSplusB.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: SdivSqrtSplusB.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: SdivSqrtSplusB.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $       
+ * $Id: SdivSqrtSplusB.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $       
  **********************************************************************************/
 #ifndef ROOT_TMVA_SdivSqrtSplusB
 #define ROOT_TMVA_SdivSqrtSplusB
@@ -46,23 +46,23 @@
 
 namespace TMVA {
 
-  class SdivSqrtSplusB : public SeparationBase {
+   class SdivSqrtSplusB : public SeparationBase {
 
-  public:
+   public:
 
-    //constructor for the "statistical significance" index
-    SdivSqrtSplusB() { fName = "StatSig"; }
-    //destructor
-    virtual ~SdivSqrtSplusB() {}
+      //constructor for the "statistical significance" index
+      SdivSqrtSplusB() { fName = "StatSig"; }
+      //destructor
+      virtual ~SdivSqrtSplusB() {}
 
-  protected:
+   protected:
 
-    // return the Index (S/sqrt(S+B))
-    virtual Double_t  GetSeparationIndex( const Double_t &s, const Double_t &b );
+      // return the Index (S/sqrt(S+B))
+      virtual Double_t  GetSeparationIndex( const Double_t &s, const Double_t &b );
  
-    ClassDef(SdivSqrtSplusB,0) // Implementation of the SdivSqrtSplusB as separation criterion
+      ClassDef(SdivSqrtSplusB,0) // Implementation of the SdivSqrtSplusB as separation criterion
   
-  };
+         };
 
 } // namespace TMVA
 

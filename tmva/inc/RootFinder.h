@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RootFinder.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: RootFinder.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -27,7 +27,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: RootFinder.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $    
+ * $Id: RootFinder.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_RootFinder
@@ -46,31 +46,31 @@
 
 namespace TMVA {
 
-  class RootFinder : public TObject {
+   class RootFinder : public TObject {
 
-  public:
+   public:
 
-    RootFinder( Double_t (*rootVal)( Double_t ),
-		Double_t rootMin, Double_t rootMax,
-		Int_t    maxIterations = 100, 
-		Double_t absTolerance  = 0.0 );
-    virtual ~RootFinder( void );
+      RootFinder( Double_t (*rootVal)( Double_t ),
+                  Double_t rootMin, Double_t rootMax,
+                  Int_t    maxIterations = 100, 
+                  Double_t absTolerance  = 0.0 );
+      virtual ~RootFinder( void );
 
-    // returns the root of the function
-    Double_t Root( Double_t refValue );
+      // returns the root of the function
+      Double_t Root( Double_t refValue );
 
-  private:
+   private:
 
-    Double_t fRootMin;  // minimum root value
-    Double_t fRootMax;  // maximum root value
-    Int_t    fMaxIter;  // maximum number of iterations
-    Double_t fAbsTol;   // absolute tolerance deviation
+      Double_t fRootMin;  // minimum root value
+      Double_t fRootMax;  // maximum root value
+      Int_t    fMaxIter;  // maximum number of iterations
+      Double_t fAbsTol;   // absolute tolerance deviation
 
-    // function pointer
-    Double_t (*fGetRootVal)( Double_t );
+      // function pointer
+      Double_t (*fGetRootVal)( Double_t );
 
-    ClassDef(RootFinder,0) // Root finding using Brents algorithm
-  };
+      ClassDef(RootFinder,0) // Root finding using Brents algorithm
+         };
 
 } // namespace TMVA
 

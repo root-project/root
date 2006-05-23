@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SeparationBase.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $
+// @(#)root/tmva $Id: SeparationBase.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -43,7 +43,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: SeparationBase.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $   
+ * $Id: SeparationBase.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $   
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_SeparationBase
@@ -78,32 +78,32 @@
 
 namespace TMVA {
 
-  class SeparationBase {
+   class SeparationBase {
 
-  public:
+   public:
 
-    //default constructor
-    SeparationBase(){}
-    // destructor
-    virtual ~SeparationBase(){}
+      //default constructor
+      SeparationBase(){}
+      // destructor
+      virtual ~SeparationBase(){}
 
-    // Return the gain in separation of the original sample is splitted in two sub-samples
-    // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) 
-    Double_t GetSeparationGain( const Double_t& nSelS, const Double_t& nSelB, 
-				const Double_t& nTotS, const Double_t& nTotB );
+      // Return the gain in separation of the original sample is splitted in two sub-samples
+      // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) 
+      Double_t GetSeparationGain( const Double_t& nSelS, const Double_t& nSelB, 
+                                  const Double_t& nTotS, const Double_t& nTotB );
 
-    // Return the separation index (a measure for "purity" of the sample")
-    virtual Double_t GetSeparationIndex( const Double_t &s, const Double_t &b ) = 0;
+      // Return the separation index (a measure for "purity" of the sample")
+      virtual Double_t GetSeparationIndex( const Double_t &s, const Double_t &b ) = 0;
 
-    // Return the name of the concrete Index implementation
-    TString GetName(){return fName;}
+      // Return the name of the concrete Index implementation
+      TString GetName(){return fName;}
 
-  protected:
+   protected:
 
-    TString fName;  // name of the concrete Separation Index impementation
+      TString fName;  // name of the concrete Separation Index impementation
  
-    ClassDef(SeparationBase,0) // Interface to different separation critiera used in training algorithms
-  };
+      ClassDef(SeparationBase,0) // Interface to different separation critiera used in training algorithms
+         };
 
 
 } // namespace TMVA

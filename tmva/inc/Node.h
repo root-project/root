@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Node.h,v 1.5 2006/05/22 08:04:39 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: Node.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Node.h,v 1.5 2006/05/22 08:04:39 andreas.hoecker Exp $    
+ * $Id: Node.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Node
@@ -52,92 +52,92 @@
 
 namespace TMVA {
   
-  class NodeID;
-  class Event;
+   class NodeID;
+   class Event;
 
-  // a class used to identify a Node; (needed for recursive reading from text file)
-  // (currently it is NOT UNIQUE... but could eventually made it
-  // a node in the tree structure
-  class Node {
+   // a class used to identify a Node; (needed for recursive reading from text file)
+   // (currently it is NOT UNIQUE... but could eventually made it
+   // a node in the tree structure
+   class Node {
     
-    // output operator for a node
-    friend ostream& operator << (ostream& os, const Node& node);
-    // output operator with a pointer to the node (which still prints the node itself)
-    friend ostream& operator << (ostream& os, const Node* node);
+      // output operator for a node
+      friend ostream& operator << (ostream& os, const Node& node);
+      // output operator with a pointer to the node (which still prints the node itself)
+      friend ostream& operator << (ostream& os, const Node* node);
     
-  public:
+   public:
 
-    // constructor of a node for the search tree
-    Node( Event* e =NULL, Bool_t o=kFALSE ) : fEvent( e ), fLeft( NULL ), 
-      fRight( NULL ), fParent ( NULL ), fSelector( -1 ), fEventOwnership ( o ) {}
+      // constructor of a node for the search tree
+      Node( Event* e =NULL, Bool_t o=kFALSE ) : fEvent( e ), fLeft( NULL ), 
+                                                fRight( NULL ), fParent ( NULL ), fSelector( -1 ), fEventOwnership ( o ) {}
     
-    // constructor of a daughter node as a daughter of 'p'
-    Node( Node* p ) : fEvent( NULL ), fLeft( NULL ), 
-      fRight( NULL ), fParent ( p ), fSelector( -1 ), fEventOwnership (kFALSE) {}
+      // constructor of a daughter node as a daughter of 'p'
+      Node( Node* p ) : fEvent( NULL ), fLeft( NULL ), 
+                        fRight( NULL ), fParent ( p ), fSelector( -1 ), fEventOwnership (kFALSE) {}
     
-    // destructor
-    virtual ~Node ();
+      // destructor
+      virtual ~Node ();
       
-    // test event if it decends the tree at this node to the right  
-    virtual Bool_t GoesRight( const Event* ) const;
-    // test event if it decends the tree at this node to the left 
-    virtual Bool_t GoesLeft ( const Event* ) const;
-    // test event if it is equal to the event that "makes the node" (just for the "search tree"  
-    virtual Bool_t EqualsMe ( const Event* ) const;
+      // test event if it decends the tree at this node to the right  
+      virtual Bool_t GoesRight( const Event* ) const;
+      // test event if it decends the tree at this node to the left 
+      virtual Bool_t GoesLeft ( const Event* ) const;
+      // test event if it is equal to the event that "makes the node" (just for the "search tree"  
+      virtual Bool_t EqualsMe ( const Event* ) const;
     
-    // return pointer to the left daughter node
-    inline Node* GetLeft  () const { return fLeft;   }
-    // return pointer to the right daughter node
-    inline Node* GetRight () const { return fRight;  }
-    // return pointer to the parent node
-    inline Node* GetParent() const { return fParent; }
+      // return pointer to the left daughter node
+      inline Node* GetLeft  () const { return fLeft;   }
+      // return pointer to the right daughter node
+      inline Node* GetRight () const { return fRight;  }
+      // return pointer to the parent node
+      inline Node* GetParent() const { return fParent; }
     
-    // set pointer to the left daughter node
-    inline void SetLeft  (Node* l) { fLeft   = l;} 
-    // set pointer to the right daughter node
-    inline void SetRight (Node* r) { fRight  = r;} 
-  // set pointer to the parent node
-    inline void SetParent(Node* p) { fParent = p;} 
+      // set pointer to the left daughter node
+      inline void SetLeft  (Node* l) { fLeft   = l;} 
+      // set pointer to the right daughter node
+      inline void SetRight (Node* r) { fRight  = r;} 
+      // set pointer to the parent node
+      inline void SetParent(Node* p) { fParent = p;} 
     
-    // set index of variable used for discrimination at this node
-    inline void SetSelector( const Short_t i) { fSelector = i; }
-    // set index of variable used for discrimination at this node
-    inline void SetSelector( const Int_t i  ) { fSelector = Short_t(i); }
-    // return index of variable used for discrimination at this node 
-    inline Short_t GetSelector() const { return fSelector; }
-    // set the EVENT that forms this node (in search tree)
-    inline void SetData( Event* e ) { fEvent = e; }
-    // return the EVENT that forms this node (in search tree)
-    inline Event* GetData() const { return fEvent; }
+      // set index of variable used for discrimination at this node
+      inline void SetSelector( const Short_t i) { fSelector = i; }
+      // set index of variable used for discrimination at this node
+      inline void SetSelector( const Int_t i  ) { fSelector = Short_t(i); }
+      // return index of variable used for discrimination at this node 
+      inline Short_t GetSelector() const { return fSelector; }
+      // set the EVENT that forms this node (in search tree)
+      inline void SetData( Event* e ) { fEvent = e; }
+      // return the EVENT that forms this node (in search tree)
+      inline Event* GetData() const { return fEvent; }
     
-    //recursively go through the part of the tree below this node and count all daughters
-    Int_t  CountMeAndAllDaughters() const;
-    // printout of the node
-    void   Print( ostream& os ) const;
+      //recursively go through the part of the tree below this node and count all daughters
+      Int_t  CountMeAndAllDaughters() const;
+      // printout of the node
+      void   Print( ostream& os ) const;
     
-    // recursive printout of the node and it daughters 
-    virtual void PrintRec( ostream& os, const Int_t depth=0, const std::string pos="root" ) const;
-    // recursive reading of the node (essectially the whole tree) from a text file 
-    virtual NodeID ReadRec( ifstream& is, NodeID nodeID, Node* parent=NULL );
+      // recursive printout of the node and it daughters 
+      virtual void PrintRec( ostream& os, const Int_t depth=0, const std::string pos="root" ) const;
+      // recursive reading of the node (essectially the whole tree) from a text file 
+      virtual NodeID ReadRec( ifstream& is, NodeID nodeID, Node* parent=NULL );
     
-    // return true/false if the EVENT* that forms the node is owned by the node or not 
-    Bool_t      GetEventOwnership( void           ) { return fEventOwnership; }
-    // set if the EVENT* that forms the node is owned by the node or not 
-    void        SetEventOwnership( const Bool_t b ) { fEventOwnership = b; }
+      // return true/false if the EVENT* that forms the node is owned by the node or not 
+      Bool_t      GetEventOwnership( void           ) { return fEventOwnership; }
+      // set if the EVENT* that forms the node is owned by the node or not 
+      void        SetEventOwnership( const Bool_t b ) { fEventOwnership = b; }
     
-  private: 
+   private: 
 
-    Event* fEvent;   // event that forms the node (search tree)
+      Event* fEvent;   // event that forms the node (search tree)
     
-    Node*  fLeft;    // pointers to the two "daughter" nodes
-    Node*  fRight;   // pointers to the two "daughter" nodes
-    Node*  fParent;  // the previous (parent) node
+      Node*  fLeft;    // pointers to the two "daughter" nodes
+      Node*  fRight;   // pointers to the two "daughter" nodes
+      Node*  fParent;  // the previous (parent) node
     
-    Short_t     fSelector;// index of variable used in node selection (decision tree) 
-    Bool_t      fEventOwnership; //flag if Event* is owned by the node or not
+      Short_t     fSelector;// index of variable used in node selection (decision tree) 
+      Bool_t      fEventOwnership; //flag if Event* is owned by the node or not
     
-    ClassDef(Node,0); //Node for the BinarySearch or Decision Trees
-  };
+      ClassDef(Node,0); //Node for the BinarySearch or Decision Trees
+   };
   
 } // namespace TMVA
 

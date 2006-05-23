@@ -104,145 +104,145 @@
 ClassImp(TMVA::Reader)
 
 //_______________________________________________________________________
-TMVA::Reader::Reader( vector<TString>& inputVars, Bool_t verbose )
-  : fInputVars( &inputVars ),
-    fVerbose  ( verbose )
+   TMVA::Reader::Reader( vector<TString>& inputVars, Bool_t verbose )
+      : fInputVars( &inputVars ),
+        fVerbose  ( verbose )
 {
-  // constructor
-  // arguments: names of input variables (vector)
-  //            verbose flag
-  Init();
+   // constructor
+   // arguments: names of input variables (vector)
+   //            verbose flag
+   Init();
 }
 
 //_______________________________________________________________________
 TMVA::Reader::Reader( vector<string>& inputVars, Bool_t verbose )
-  : fVerbose  ( verbose )
+   : fVerbose  ( verbose )
 {
-  // constructor
-  // arguments: names of input variables (vector)
-  //            verbose flag
-  fInputVars = new vector<TString>;
-  for (vector<string>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) 
-    fInputVars->push_back( ivar->c_str() );
+   // constructor
+   // arguments: names of input variables (vector)
+   //            verbose flag
+   fInputVars = new vector<TString>;
+   for (vector<string>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) 
+      fInputVars->push_back( ivar->c_str() );
   
-  Init();
+   Init();
 }
 
 //_______________________________________________________________________
 TMVA::Reader::Reader( const string varNames, Bool_t verbose )
-  : fInputVars( 0 ),
-    fVerbose  ( verbose )
+   : fInputVars( 0 ),
+     fVerbose  ( verbose )
 {
-  // constructor
-  // arguments: names of input variables given in form: "name1:name2:name3"
-  //            verbose flag
-  this->DecodeVarNames(varNames);
-  Init();
+   // constructor
+   // arguments: names of input variables given in form: "name1:name2:name3"
+   //            verbose flag
+   this->DecodeVarNames(varNames);
+   Init();
 }
 
 //_______________________________________________________________________
 TMVA::Reader::Reader( const TString varNames, Bool_t verbose )
-  : fInputVars( 0 ),
-    fVerbose  ( verbose )
+   : fInputVars( 0 ),
+     fVerbose  ( verbose )
 {
-  // constructor
-  // arguments: names of input variables given in form: "name1:name2:name3"
-  //            verbose flag
-  this->DecodeVarNames(varNames);
-  Init();
+   // constructor
+   // arguments: names of input variables given in form: "name1:name2:name3"
+   //            verbose flag
+   this->DecodeVarNames(varNames);
+   Init();
 }
 
 //_______________________________________________________________________
 TMVA::Reader::~Reader( void )
 {
-  // destructor
+   // destructor
 }  
 
 //_______________________________________________________________________
 void TMVA::Reader::Init( void )
 {
-  // default initialisation (no member variables)
+   // default initialisation (no member variables)
 }
 
 //_______________________________________________________________________
 Bool_t TMVA::Reader::BookMVA( TMVA::Types::MVA mva, TString weightfile )
 {
-  // books MVA method from weightfile
-  switch (mva) {
+   // books MVA method from weightfile
+   switch (mva) {
 
-  case (TMVA::Types::Cuts):
-    fMethods.push_back( new TMVA::MethodCuts( fInputVars, weightfile ) );    
-    break;
+   case (TMVA::Types::Cuts):
+      fMethods.push_back( new TMVA::MethodCuts( fInputVars, weightfile ) );    
+      break;
 
-  case (TMVA::Types::Likelihood):
-    fMethods.push_back( new TMVA::MethodLikelihood( fInputVars, weightfile ) );
-    break; 
+   case (TMVA::Types::Likelihood):
+      fMethods.push_back( new TMVA::MethodLikelihood( fInputVars, weightfile ) );
+      break; 
 
-  case (TMVA::Types::PDERS):
-    fMethods.push_back( new TMVA::MethodPDERS( fInputVars, weightfile ) );
-    break; 
+   case (TMVA::Types::PDERS):
+      fMethods.push_back( new TMVA::MethodPDERS( fInputVars, weightfile ) );
+      break; 
 
-  case (TMVA::Types::HMatrix):
-    fMethods.push_back( new TMVA::MethodHMatrix( fInputVars, weightfile ) );
-    break; 
+   case (TMVA::Types::HMatrix):
+      fMethods.push_back( new TMVA::MethodHMatrix( fInputVars, weightfile ) );
+      break; 
 
-  case (TMVA::Types::Fisher):
-    fMethods.push_back( new TMVA::MethodFisher( fInputVars, weightfile ) );
-    break; 
+   case (TMVA::Types::Fisher):
+      fMethods.push_back( new TMVA::MethodFisher( fInputVars, weightfile ) );
+      break; 
 
-  case (TMVA::Types::CFMlpANN):
-    fMethods.push_back( new TMVA::MethodCFMlpANN( fInputVars, weightfile ) );
-    break; 
+   case (TMVA::Types::CFMlpANN):
+      fMethods.push_back( new TMVA::MethodCFMlpANN( fInputVars, weightfile ) );
+      break; 
 
-  case (TMVA::Types::TMlpANN):
-    fMethods.push_back( new TMVA::MethodTMlpANN( fInputVars, weightfile ) );
-    break; 
+   case (TMVA::Types::TMlpANN):
+      fMethods.push_back( new TMVA::MethodTMlpANN( fInputVars, weightfile ) );
+      break; 
 
-  case (TMVA::Types::BDT):
-    fMethods.push_back( new TMVA::MethodBDT( fInputVars, weightfile ) );
-    break; 
+   case (TMVA::Types::BDT):
+      fMethods.push_back( new TMVA::MethodBDT( fInputVars, weightfile ) );
+      break; 
 
-  default: 
-    cerr << "--- " << GetName() << ": MVA: " << mva << " not yet implemented ==> abort"
-         << endl;
-    return kFALSE;
-  }  
+   default: 
+      cerr << "--- " << GetName() << ": MVA: " << mva << " not yet implemented ==> abort"
+           << endl;
+      return kFALSE;
+   }  
 
-  cout << "--- " << GetName() << ": booked method: " << fMethods.back()->GetMethodName() 
-       << endl;
+   cout << "--- " << GetName() << ": booked method: " << fMethods.back()->GetMethodName() 
+        << endl;
 
-  // read weight file
-  fMethods.back()->ReadWeightsFromFile();
+   // read weight file
+   fMethods.back()->ReadWeightsFromFile();
 
-  return kTRUE;
+   return kTRUE;
 }
 
 //_______________________________________________________________________
 Double_t TMVA::Reader::EvaluateMVA( vector<Double_t>& inVar, TMVA::Types::MVA mva, Double_t aux )
 {
-  // evaluates MVA for given set of input variables
-  // the aux value is only needed for MethodCuts: it sets the required signal efficiency 
+   // evaluates MVA for given set of input variables
+   // the aux value is only needed for MethodCuts: it sets the required signal efficiency 
 
-  // need event
-  TMVA::Event e( inVar );
+   // need event
+   TMVA::Event e( inVar );
 
-  // iterate over methods and call evaluator
-  vector<TMVA::MethodBase*>::iterator itrMethod    = fMethods.begin();
-  vector<TMVA::MethodBase*>::iterator itrMethodEnd = fMethods.end();
-  for(; itrMethod != itrMethodEnd; itrMethod++) {
-    if ((*itrMethod)->GetMethod() == mva) {
-      if (mva == TMVA::Types::Cuts) 
-        ((TMVA::MethodCuts*)(*itrMethod))->SetTestSignalEfficiency( aux );
-      return (*itrMethod)->GetMvaValue( &e );    
-    }
-  }
+   // iterate over methods and call evaluator
+   vector<TMVA::MethodBase*>::iterator itrMethod    = fMethods.begin();
+   vector<TMVA::MethodBase*>::iterator itrMethodEnd = fMethods.end();
+   for(; itrMethod != itrMethodEnd; itrMethod++) {
+      if ((*itrMethod)->GetMethod() == mva) {
+         if (mva == TMVA::Types::Cuts) 
+            ((TMVA::MethodCuts*)(*itrMethod))->SetTestSignalEfficiency( aux );
+         return (*itrMethod)->GetMvaValue( &e );    
+      }
+   }
 
-  // method not found !
-  cerr << "--- Fatal error in " << GetName() << ": method: " << mva << " not found"
-       << " ==> abort" << endl;
-  exit(1);
+   // method not found !
+   cerr << "--- Fatal error in " << GetName() << ": method: " << mva << " not found"
+        << " ==> abort" << endl;
+   exit(1);
 
-  return -1.0;
+   return -1.0;
 }  
 
 // ---------------------------------------------------------------------------------------
@@ -252,35 +252,35 @@ Double_t TMVA::Reader::EvaluateMVA( vector<Double_t>& inVar, TMVA::Types::MVA mv
 //_______________________________________________________________________
 void TMVA::Reader::DecodeVarNames( const string varNames ) 
 {
-  // decodes "name1:name2:..." form
-  fInputVars = new vector<TString>;
+   // decodes "name1:name2:..." form
+   fInputVars = new vector<TString>;
 
-  size_t ipos = 0, f = 0;
-  while (f != varNames.length()) {
-    f = varNames.find( ':', ipos );
-    if (f > varNames.length()) f = varNames.length();
-    string subs = varNames.substr( ipos, f-ipos ); ipos = f+1;    
-    fInputVars->push_back( subs.c_str() );
-  }  
+   size_t ipos = 0, f = 0;
+   while (f != varNames.length()) {
+      f = varNames.find( ':', ipos );
+      if (f > varNames.length()) f = varNames.length();
+      string subs = varNames.substr( ipos, f-ipos ); ipos = f+1;    
+      fInputVars->push_back( subs.c_str() );
+   }  
 }
 
 //_______________________________________________________________________
 void TMVA::Reader::DecodeVarNames( const TString varNames )
 {
-  // decodes "name1:name2:..." form
-  fInputVars = new vector<TString>;
+   // decodes "name1:name2:..." form
+   fInputVars = new vector<TString>;
 
-  TString format;  
-  Int_t   n = varNames.Length();
-  TString format_obj;
+   TString format;  
+   Int_t   n = varNames.Length();
+   TString format_obj;
 
-  for (int i=0; i< n+1 ; i++) {
-    format.Append(varNames(i));
-    if ( (varNames(i)==':') || (i==n)) {
-      format.Chop();
-      format_obj = TString(format.Data()).ReplaceAll("@","");
-      fInputVars->push_back( format_obj );
-      format.Resize(0); 
-    }
-  }
+   for (int i=0; i< n+1 ; i++) {
+      format.Append(varNames(i));
+      if ( (varNames(i)==':') || (i==n)) {
+         format.Chop();
+         format_obj = TString(format.Data()).ReplaceAll("@","");
+         fInputVars->push_back( format_obj );
+         format.Resize(0); 
+      }
+   }
 } 

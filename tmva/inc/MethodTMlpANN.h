@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodTMlpANN.h,v 1.5 2006/05/22 08:04:39 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: MethodTMlpANN.h,v 1.7 2006/05/23 09:53:10 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -29,7 +29,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodTMlpANN.h,v 1.5 2006/05/22 08:04:39 andreas.hoecker Exp $ 
+ * $Id: MethodTMlpANN.h,v 1.7 2006/05/23 09:53:10 stelzer Exp $ 
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodTMlpANN
@@ -53,61 +53,61 @@
 
 namespace TMVA {
 
-  class MethodTMlpANN : public MethodBase, MethodANNBase {
+   class MethodTMlpANN : public MethodBase, MethodANNBase {
   
-  public:
+   public:
   
-    MethodTMlpANN( TString jobName, 
-		   vector<TString>* theVariables,  
-		   TTree* theTree = 0, 
-		   TString theOption = "3000:N-1:N-2", 
-		   TDirectory* theTargetDir = 0 );
+      MethodTMlpANN( TString jobName, 
+                     vector<TString>* theVariables,  
+                     TTree* theTree = 0, 
+                     TString theOption = "3000:N-1:N-2", 
+                     TDirectory* theTargetDir = 0 );
 
-    MethodTMlpANN( vector<TString> *theVariables, 
-		   TString theWeightFile,  
-		   TDirectory* theTargetDir = NULL );
+      MethodTMlpANN( vector<TString> *theVariables, 
+                     TString theWeightFile,  
+                     TDirectory* theTargetDir = NULL );
 
-    virtual ~MethodTMlpANN( void );
+      virtual ~MethodTMlpANN( void );
     
-    // training method
-    virtual void Train( void );
+      // training method
+      virtual void Train( void );
 
-    // write weights to file
-    virtual void WriteWeightsToFile( void );
+      // write weights to file
+      virtual void WriteWeightsToFile( void );
   
-    // read weights from file
-    virtual void ReadWeightsFromFile( void );
+      // read weights from file
+      virtual void ReadWeightsFromFile( void );
 
-    // evaluate method
-    virtual void PrepareEvaluationTree( TTree* testTree );
+      // evaluate method
+      virtual void PrepareEvaluationTree( TTree* testTree );
 
-    // calculate the MVA value ...
-    // - here it is just a dummy, as it is done in the overwritten
-    // - PrepareEvaluationtree... ugly but necessary due to the strucure 
-    //   of TMultiLayerPercepton in ROOT grr... :-(
-    virtual Double_t GetMvaValue( Event * /*e*/ ) { return 0; }
+      // calculate the MVA value ...
+      // - here it is just a dummy, as it is done in the overwritten
+      // - PrepareEvaluationtree... ugly but necessary due to the strucure 
+      //   of TMultiLayerPercepton in ROOT grr... :-(
+      virtual Double_t GetMvaValue( Event * /*e*/ ) { return 0; }
 
-    // write method specific histos to target file
-    virtual void WriteHistosToFile( void );
+      // write method specific histos to target file
+      virtual void WriteHistosToFile( void );
 
-    void SetTestTree( TTree* testTree );
+      void SetTestTree( TTree* testTree );
 
-    void SetHiddenLayer(TString hiddenlayer = "" ) { fHiddenLayer=hiddenlayer; }
+      void SetHiddenLayer(TString hiddenlayer = "" ) { fHiddenLayer=hiddenlayer; }
 
-  protected:
+   protected:
 
-  private:
+   private:
 
-    void CreateMLPOptions( void );
+      void CreateMLPOptions( void );
 
-    TString fHiddenLayer; // string containig the hidden layer structure
-    Int_t   fNcycles;     // number of training cylcles
-    TTree*  fTestTree;    // TestTree
+      TString fHiddenLayer; // string containig the hidden layer structure
+      Int_t   fNcycles;     // number of training cylcles
+      TTree*  fTestTree;    // TestTree
   
-    void InitTMlpANN( void );
+      void InitTMlpANN( void );
 
-    ClassDef(MethodTMlpANN,0) // Implementation of interface for TMultiLayerPerceptron
-  };
+      ClassDef(MethodTMlpANN,0) // Implementation of interface for TMultiLayerPerceptron
+         };
 
 } // namespace TMVA
 

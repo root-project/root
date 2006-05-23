@@ -3,124 +3,149 @@
  * Package   : TMVA                                                               *
  * Root Macro: TMVAnalysis                                                        *
  *                                                                                *
- * This exectutable provides an example on training and testing of several 	  *
- * Multivariate Analyser (MVA) methods						  *
- * 										  *
- * As input file we use a standard Root example of a Higgs analysis, which 	  *
- * is part of the Root tutorial (and hence present in any Root release)		  *
- *										  *
- * The methods to be used can be switched on and off by means of the boolians	  *
- * below									  *
- *										  *
- * The output file "TMVA.root" can be analysed with the use of dedicated	  *
- * macros (simply say: root -l <macro.C>) :					  *
- *										  *
+ * This exectutable provides an example on training and testing of several           *
+ * Multivariate Analyser (MVA) methods                                                  *
+ *                                                                                   *
+ * As input file we use a standard Root example of a Higgs analysis, which           *
+ * is part of the Root tutorial (and hence present in any Root release)                  *
+ *                                                                                  *
+ * The methods to be used can be switched on and off by means of the boolians          *
+ * below                                                                          *
+ *                                                                                  *
+ * The output file "TMVA.root" can be analysed with the use of dedicated          *
+ * macros (simply say: root -l <macro.C>) :                                          *
+ *                                                                                  *
  *   - variables.C     ==> show us the MVA input variables for signal and backgr  *
- *   - correlations.C  ==> show us the correlations between the MVA input vars	  *
- *   - mvas.C          ==> show the trained MVAs for the test events		  *
+ *   - correlations.C  ==> show us the correlations between the MVA input vars          *
+ *   - mvas.C          ==> show the trained MVAs for the test events                  *
  *   - efficiencies.C  ==> show us the background rejections versus signal effs   *
- *                         for all MVAs used					  *
- *										  *
- * TMVA allows to train and test multiple MVAs for different phase space 	  *
- * regions. This is however not realised in this simple example. For more	  *
- * information on this please have a look into the development executable 	  *
- * devTMVA.cpp									  *
+ *                         for all MVAs used                                          *
+ *                                                                                  *
+ * TMVA allows to train and test multiple MVAs for different phase space           *
+ * regions. This is however not realised in this simple example. For more          *
+ * information on this please have a look into the development executable           *
+ * devTMVA.cpp                                                                          *
  *                                                                                *
  **********************************************************************************/
 {  
   // initialisation
   gROOT->Reset();
-  gSystem->Load("libMLP");
-  gSystem->Load("libTMVA");
+  gSystem->Load("libMLP");   // ROOT's Multilayer Perceptron library is needed
+  gSystem->Load("libTMVA");  // and of course the TMVA library
+  gROOT->ProcessLine(".L loader.C+");
 
   // ---------------------------------------------------------------
   // choose MVA methods to be trained + tested
-  Bool_t Use_MethodCuts           = 0; //0
-  Bool_t Use_MethodLikelihood     = 1;
-  Bool_t Use_MethodLikelihoodD    = 1;
-  Bool_t Use_MethodFisher         = 1;
-  Bool_t Use_MethodCFMlpANN       = 0;  //0
-  Bool_t Use_MethodTMlpANN        = 0;  //0
-  Bool_t Use_MethodHMatrix        = 1;
-  Bool_t Use_MethodPDERS          = 0; //0
-  Bool_t Use_MethodBDT_GiniIndex  = 0; // default BDT method
-  Bool_t Use_MethodBDT_CrossEntro = 0; //0
-  Bool_t Use_MethodBDT_SdivStSpB  = 0; //0
-  Bool_t Use_MethodBDT_MisClass   = 0; //0
+  Bool_t Use_Cuts            = 1;
+  Bool_t Use_Likelihood      = 1;
+  Bool_t Use_LikelihoodD     = 1;
+  Bool_t Use_PDERS           = 1;
+  Bool_t Use_HMatrix         = 1;
+  Bool_t Use_Fisher          = 1;
+  Bool_t Use_CFMlpANN        = 1;
+  Bool_t Use_TMlpANN         = 1;
+  Bool_t Use_BDT_GiniIndex   = 1; // default BDT method
+  Bool_t Use_BDT_CrossEntro  = 0;
+  Bool_t Use_BDT_SdivStSpB   = 0;
+  Bool_t Use_BDT_MisClass    = 0;
+  Bool_t Use_BDT_Bagging_Gini= 0;
   // ---------------------------------------------------------------
   Bool_t EvaluateVariables        = 0; // perform evaluation for each input variable
   // ---------------------------------------------------------------
   
-  cout << "==> start TMVAnalysis" << endl;
+  cout << "==> Start Test TMVAnalysis" << endl;
+  cout << "(Some methods take a bit longer, please be patient)" << endl;
 
-  // the root output file
-  TFile* target = TFile::Open( "TMVA.root", "RECREATE" );
+  // Create a new root output file.
+  TFile* outputFile = TFile::Open( "TMVA.root", "RECREATE" );
 
-  //
-  // create the vactory object and claim which variance tool you 
-  // would like to use:
-  //
-  TMVA_Factory *factory = new TMVA_Factory( "MVAnalysis", target ) ;
+  // Create the factory object. Later you can choose the methods whose performance 
+  // you'd like to investigate. The factory will then run the performance analysis
+  // for you.
+  TMVA::Factory *factory = new TMVA::Factory( "MVAnalysis", outputFile, "" ) ;
 
-  // this is the variable vector, defining what's used in the TMVA
+  // Define the signal and background event samples.
+  TFile *input      = new TFile("../examples/data/toy_sigbkg.root");
+  TTree *signal     = (TTree*)input->Get("TreeS");
+  TTree *background = (TTree*)input->Get("TreeB");
+  if( ! factory->SetInputTrees( signal, background )) return; 
+
+//   TString datFileS = "data/toy_sig_lincorr.dat";
+//   TString datFileB = "data/toy_bkg_lincorr.dat";
+//   if (!factory->SetInputTrees( datFileS, datFileB )) exit(1);
+
+
+  // Define the input variables. These are used in the TMVA.
   vector<TString>* inputVars = new vector<TString>;
-  
-  cout << "==> perform 'Higgs' analysis" << endl;
-
-  TFile *input      = new TFile("$ROOTSYS/tutorials/mlpHiggs.root");
-  TTree *signal     = (TTree*)input->Get("sig_filtered");
-  TTree *background = (TTree*)input->Get("bg_filtered");
-  
-  factory->SetInputTrees( signal, background );
-      
-  //
-  // Definition of input variables 
-  inputVars->push_back("msumf");
-  inputVars->push_back("ptsumf");
-  inputVars->push_back("acolin");
+  inputVars->push_back("var1");
+  inputVars->push_back("var2");
+  inputVars->push_back("var3");
+  inputVars->push_back("var4");
   factory->SetInputVariables( inputVars );    
   
-  factory->PrepareTrainingAndTestTree( "msumf > 0", -1 );    
 
-  // ---- book MVA methods
-  //
-  // MethodCut options
-  // format of option string: Method:nbin_effBvsSHist:nRandCuts:Option_var1:...:Option_varn
-  // "Method" can be:
-  //     - "MC"    : Monte Carlo optimization (recommended)
-  //     - "FitSel": Minuit Fit: "Fit_Migrad" or "Fit_Simplex"
-  //     - "FitPDF": PDF-based: only useful for uncorrelated input variables
-  // "option_vari" can be 
+  // Apply additional cuts on the signal and background sample. 
+  // Assumptions on size of training and testing sample:
+  //    a) equal number of signal and background events is used for training
+  //    b) any numbers of signal and background events are used for testing
+  //    c) an explicit syntax can violate a)
+  // more Documentation with the Factory class
+  TCut mycut = "";
+  factory->PrepareTrainingAndTestTree( mycut, 2000, 4000 );  
+  
+
+  // Book the MVA methods you like to investigate.
+
+  // MethodCuts:
+  // format of option string: "OptMethod:EffMethod:Option_var1:...:Option_varn"
+  // "OptMethod" can be:
+  //     - "GA"    : Genetic Algorithm (recommended)
+  //     - "MC"    : Monte-Carlo optimization 
+  // "EffMethod" can be:
+  //     - "EffSel": compute efficiency by event counting
+  //     - "EffPDF": compute efficiency from PDFs
+  // === For "GA" method ======
+  // "Option_var1++" are (see GA for explanation of parameters):
+  //     - fGa_nsteps        
+  //     - fGa_preCalc        
+  //     - fGa_SC_steps        
+  //     - fGa_SC_offsteps 
+  //     - fGa_SC_factor   
+  // === For "MC" method ======
+  // "Option_var1" is number of random samples
+  // "Option_var2++" can be 
   //     - "FMax"  : ForceMax   (the max cut is fixed to maximum of variable i)
   //     - "FMin"  : ForceMin   (the min cut is fixed to minimum of variable i)
   //     - "FSmart": ForceSmart (the min or max cut is fixed to min/max, based on mean value)
   //     - Adding "All" to "option_vari", eg, "AllFSmart" will use this option for all variables
   //     - if "option_vari" is empty (== ""), no assumptions on cut min/max are made
-  if (Use_MethodCuts) 
-    factory->BookMethod( "MethodCuts",  "V:MC:30000:AllFSmart" );
+  // ---------------------------------------------------------------------------------- 
+  if (Use_Cuts) 
+    factory->BookMethod( "MethodCuts",  "V:GA:EffSel:30:3:10:5:0.95" );
+  // factory->BookMethod( "MethodCuts",  "V:MC:EffSel:10000:AllFSmart" );
   
   // MethodLikelihood options:
   // histogram_interpolation_method:nsmooth:nsmooth:n_aveEvents_per_bin:Decorrelation
-  if (Use_MethodLikelihood)
-    factory->BookMethod( "MethodLikelihood", "Spline2:3"           ); 
-  if (Use_MethodLikelihoodD)
-    factory->BookMethod( "MethodLikelihood", "Spline2:10:25:D", "D" ); 
+  if (Use_Likelihood)
+    factory->BookMethod( TMVA::Types::Likelihood, "Spline2:3"           ); 
+  if (Use_LikelihoodD)
+    factory->BookMethod( TMVA::Types::Likelihood, "Spline2:10:25:D"); 
  
   // MethodFisher:
-  if (Use_MethodFisher)
-    factory->BookMethod( "MethodFisher",     "Fisher" ); // Fisher method ("Fi" or "Ma")
+  if (Use_Fisher)
+    factory->BookMethod( TMVA::Types::Fisher, "Fisher" ); // Fisher method ("Fi" or "Ma")
   
   // Method CF(Clermont-Ferrand)ANN:
-  if (Use_MethodCFMlpANN)
-    factory->BookMethod( "MethodCFMlpANN", "10000:N:N"  ); // n_cycles:#nodes:#nodes:...  
+  if (Use_CFMlpANN)
+    factory->BookMethod( TMVA::Types::CFMlpANN, "5000:N:N"  ); // n_cycles:#nodes:#nodes:...  
   
   // Method CF(Root)ANN:
-  if (Use_MethodTMlpANN)
-    factory->BookMethod( "MethodTMlpANN",    "2000:N+1:N"  ); // n_cycles:#nodes:#nodes:...
+  if (Use_TMlpANN)
+    factory->BookMethod( TMVA::Types::TMlpANN, "200:N+1:N"  ); // n_cycles:#nodes:#nodes:...
   
   // MethodHMatrix:
-  if (Use_MethodHMatrix)
-    factory->BookMethod( "MethodHMatrix" ); // H-Matrix (chi2-squared) method
+  if (Use_HMatrix)
+    factory->BookMethod( TMVA::Types::HMatrix ); // H-Matrix (chi2-squared) method
   
   // PDE - RS method
   // format and syntax of option string: "VolumeRangeMode:options"
@@ -128,63 +153,85 @@
   //  VolumeRangeMode - all methods defined in private enum "VolumeRangeMode" 
   //  options         - deltaFrac in case of VolumeRangeMode=MinMax/RMS
   //                  - nEventsMin/Max, maxVIterations, scale for VolumeRangeMode=Adaptive
-  if (Use_MethodPDERS)
-    factory->BookMethod( "MethodPDERS", "Adaptive:50:100:50:0.99" ); 
+  if (Use_PDERS)
+    factory->BookMethod( TMVA::Types::PDERS, "Adaptive:50:100:50:0.99" ); 
   
   // MethodBDT (Boosted Decision Trees) options:
-  // format and syntax of option string: "nTrees:SeparationType:BoostType:
-  //                                      nEventsMin:minNodePurity:maxNodePurity:
-  //                                      nCuts:IntervalCut?"
-  // known SeparationTypes are
-  //    MisClassificationError,
-  //    GiniIndex, 
-  //    CrossEntropy;
-  // known BoostTypes are
-  //    AdaBoost
-  //    EpsilonBoost
-  // nEventsMin: the minimum Number of events in a node (leaf criteria)
-  // SeparationGain:  the minimum gain in separation required in order to
-  //                  continue splitting. !! 
-  //   !!! Needs to be set to zero, as it doesn't work... it's strange though!!!
+  // format and syntax of option string: "nTrees:BoostType:SeparationType:
+  //                                      nEventsMin:dummy:
+  //                                      nCuts:SignalFraction"
+  // nTrees:          number of trees in the forest to be created
+  // BoostType:       the boosting type for the trees in the forest (AdaBoost e.t.c..)
+  // SeparationType   the separation criterion applied in the node splitting
+  // nEventsMin:      the minimum number of events in a node (leaf criteria, stop splitting)
+  // dummy:           dummy option to keep backward compatible
+  //                  continue splitting. !!
+  //                  !!! Needs to be set to zero, as it doesn't work properly otherwise
+  //                     ... it's strange though and not yet understood !!!
   // nCuts:  the number of steps in the optimisation of the cut for a node
+  // SignalFraction:  scale parameter of the number of Bkg events  
+  //                  applied to the training sample to simulate different initial purity
+  //                  of your data sample. 
+  //
   // known SeparationTypes are:
   //    - MisClassificationError
   //    - GiniIndex
   //    - CrossEntropy
   // known BoostTypes are:
   //    - AdaBoost
-  //    - EpsilonBoost
-  if (Use_MethodBDT_GiniIndex)
-    factory->BookMethod( "MethodBDT", "200:AdaBoost:GiniIndex:10:0.:20" );
-  if (Use_MethodBDT_CrossEntro)
-    factory->BookMethod( "MethodBDT", "200:AdaBoost:CrossEntropy:10:0.:20" );
-  if (Use_MethodBDT_SdivStSpB)
-    factory->BookMethod( "MethodBDT", "200:AdaBoost:SdivSqrtSplusB:10:0.:20" );
-  if (Use_MethodBDT_MisClass)
-    factory->BookMethod( "MethodBDT", "200:AdaBoost:MisClassificationError:10:0.:20" );
+  //    - Bagging
 
-  // ---- train, test and evaluate the MVAs 
+  if (Use_BDT_GiniIndex)
+    factory->BookMethod( TMVA::Types::BDT, "200:AdaBoost:GiniIndex:10:0.:20" );
+  if (Use_BDT_CrossEntro)
+    factory->BookMethod( TMVA::Types::BDT, "200:AdaBoost:CrossEntropy:10:0.:20" );
+  if (Use_BDT_SdivStSpB)
+    factory->BookMethod( TMVA::Types::BDT, "200:AdaBoost:SdivSqrtSplusB:10:0.:20" );
+  if (Use_BDT_MisClass)
+    factory->BookMethod( TMVA::Types::BDT, "200:AdaBoost:MisClassificationError:10:0.:20" );
+  if (Use_BDT_Bagging_Gini)
+    factory->BookMethod( TMVA::Types::BDT, "200:Bagging:GiniIndex:10:0.:20","bagging" );
+  
 
-  // train MVAs
+  // Now you can tell the factory to train, test, and evaluate the MVAs. 
+
+  // Train MVAs.
   factory->TrainAllMethods();
 
-  // test MVAs
+
+  // Test MVAs.
   factory->TestAllMethods();
 
-  // evaluate variables
+
+  // Evaluate variables.
   if (EvaluateVariables) factory->EvaluateAllVariables();
 
-  // evaluate MVAs
-  factory->EvaluateAllMethods();    
-  
-  // ---- terminate macro
 
-  target->Close();
+  // Evaluate MVAs
+  factory->EvaluateAllMethods();    
+
+  
+  // Save the output.
+  outputFile->Close();
+
+
+  cout << "==> wrote root file TMVA.root" << endl;
+  cout << "==> TMVAnalysis is done!" << endl;      
+
 
   // clean up
   delete factory;
   delete inputVars;
-  
-  cout << "==> wrote root file TMVA.root" << endl;
-  cout << "==> TMVAnalysis is done!" << endl;      
+
+  gROOT->Reset();
+  gStyle->SetScreenFactor(1); //if you have a large screen, select 1,2 or 1.4
+  bar = new TControlBar("vertical", "Checks",0,0);
+  bar->AddButton("Input Variables",                             ".x variables.C",    "Plots all input variables (macro variables.C)");
+  bar->AddButton("Variable Correlations",                       ".x correlations.C", "Plots correlations between all input variables (macro variables.C)");
+  bar->AddButton("Output MVA Variables",                        ".x mvas.C",         "Plots the output variable of each method (macro mvas.C)");
+  bar->AddButton("Background Rejection vs Signal Efficiencies", ".x efficiencies.C", "Plots background rejection vs signal efficiencies (macro efficiencies.C)");
+  bar->AddButton("Quit",   ".q", "Quit");
+  bar->Show();
+  gROOT->SaveContext();
+
 } 

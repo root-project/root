@@ -65,138 +65,138 @@ const Int_t   TMVA::Timer::fgNbins     = 24;
 ClassImp(TMVA::Timer)
 
 //_______________________________________________________________________
-TMVA::Timer::Timer( Bool_t colourfulOutput )
-  : fNcounts        ( 0 ),
-    fPrefix         ( TMVA::Timer::fgClassName ),
-    fColourfulOutput( colourfulOutput )
+   TMVA::Timer::Timer( Bool_t colourfulOutput )
+      : fNcounts        ( 0 ),
+        fPrefix         ( TMVA::Timer::fgClassName ),
+        fColourfulOutput( colourfulOutput )
 {
-  // constructor
-  Reset();
+   // constructor
+   Reset();
 }
 
 //_______________________________________________________________________
 TMVA::Timer::Timer( Int_t ncounts, TString prefix, Bool_t colourfulOutput  )
-  : fNcounts        ( ncounts ),
-    fColourfulOutput( colourfulOutput )
+   : fNcounts        ( ncounts ),
+     fColourfulOutput( colourfulOutput )
 {
-  // standard constructor: ncounts gives the total number of counts that 
-  // the loop will iterate through. At each call of the timer, the current
-  // number of counts is provided by the user, so that the timer can obtain
-  // the due time from linearly interpolating the spent time.
-  if (prefix == "") fPrefix = TMVA::Timer::fgClassName;
-  else              fPrefix = prefix;
+   // standard constructor: ncounts gives the total number of counts that 
+   // the loop will iterate through. At each call of the timer, the current
+   // number of counts is provided by the user, so that the timer can obtain
+   // the due time from linearly interpolating the spent time.
+   if (prefix == "") fPrefix = TMVA::Timer::fgClassName;
+   else              fPrefix = prefix;
 
-  Reset();
+   Reset();
 }
 
 //_______________________________________________________________________
 TMVA::Timer::~Timer( void )
 {
-  // destructor
+   // destructor
 }
 
 void TMVA::Timer::Init( Int_t ncounts )
 {
-  // timer initialisation
-  fNcounts = ncounts;  
-  Reset();
+   // timer initialisation
+   fNcounts = ncounts;  
+   Reset();
 }
 
 //_______________________________________________________________________
 void TMVA::Timer::Reset( void )
 {
-  // resets timer
-  TStopwatch::Start( kTRUE );
+   // resets timer
+   TStopwatch::Start( kTRUE );
 }
 
 //_______________________________________________________________________
 Double_t TMVA::Timer::ElapsedSeconds( void ) 
 {
-  // computes elapsed tim in seconds
-  Double_t rt = TStopwatch::RealTime(); TStopwatch::Start( kFALSE );
-  return rt;
+   // computes elapsed tim in seconds
+   Double_t rt = TStopwatch::RealTime(); TStopwatch::Start( kFALSE );
+   return rt;
 }
 //_______________________________________________________________________
 
 TString TMVA::Timer::GetElapsedTime( Bool_t Scientific ) 
 {
-  // returns pretty string with elaplsed time
-  return SecToText( ElapsedSeconds(), Scientific );
+   // returns pretty string with elaplsed time
+   return SecToText( ElapsedSeconds(), Scientific );
 }
 
 //_______________________________________________________________________
 TString TMVA::Timer::GetLeftTime( Int_t icounts ) 
 {
-  // returns pretty string with time left
-  Double_t leftTime = ( icounts <= 0 ? -1 :
-                        icounts > fNcounts ? -1 :
-                        Double_t(fNcounts - icounts)/Double_t(icounts)*ElapsedSeconds() );
+   // returns pretty string with time left
+   Double_t leftTime = ( icounts <= 0 ? -1 :
+                         icounts > fNcounts ? -1 :
+                         Double_t(fNcounts - icounts)/Double_t(icounts)*ElapsedSeconds() );
 
-  return SecToText( leftTime, kFALSE );
+   return SecToText( leftTime, kFALSE );
 }
 
 //_______________________________________________________________________
 void TMVA::Timer::DrawProgressBar( Int_t icounts ) 
 {
-  // draws progress bar in color or B&W
-  // caution: 
+   // draws progress bar in color or B&W
+   // caution: 
 
-  // sanity check:
-  if (icounts > fNcounts-1) icounts = fNcounts-1;
-  if (icounts < 0          ) icounts = 0;
-  Int_t ic = Int_t(Float_t(icounts)/Float_t(fNcounts)*fgNbins);
+   // sanity check:
+   if (icounts > fNcounts-1) icounts = fNcounts-1;
+   if (icounts < 0          ) icounts = 0;
+   Int_t ic = Int_t(Float_t(icounts)/Float_t(fNcounts)*fgNbins);
 
-  clog << "--- " << fPrefix << ": ";
-  if (fColourfulOutput) clog << BC__b1 << BC__f1 << "[" << EC__;
-  else                  clog << "[";
-  for (Int_t i=0; i<ic; i++) {
-    if (fColourfulOutput) clog << BC__b1 << BC__f1 << ">" << EC__; 
-    else                  clog << ">";
-  }
-  for (Int_t i=ic+1; i<fgNbins; i++) {
-    if (fColourfulOutput) clog << BC__b1 << BC__f1 << "." << EC__; 
-    else                  clog << ".";
-  }
-  if (fColourfulOutput) clog << BC__b1 << BC__f1 << "]" << EC__;
-  else                  clog << "]" ;
+   clog << "--- " << fPrefix << ": ";
+   if (fColourfulOutput) clog << BC__b1 << BC__f1 << "[" << EC__;
+   else                  clog << "[";
+   for (Int_t i=0; i<ic; i++) {
+      if (fColourfulOutput) clog << BC__b1 << BC__f1 << ">" << EC__; 
+      else                  clog << ">";
+   }
+   for (Int_t i=ic+1; i<fgNbins; i++) {
+      if (fColourfulOutput) clog << BC__b1 << BC__f1 << "." << EC__; 
+      else                  clog << ".";
+   }
+   if (fColourfulOutput) clog << BC__b1 << BC__f1 << "]" << EC__;
+   else                  clog << "]" ;
 
-  // timing information
-  if (fColourfulOutput) {
-    clog << EC__ << " " ;
-    clog << "(" << BC_red << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" << EC__
-          << ", " 
-          << "time left: "
-          << this->GetLeftTime( icounts ) << EC__ << ") ";
-  }
-  else {
-    clog << "] " ;
-    clog << "(" << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" 
-          << ", " << "time left: " << this->GetLeftTime( icounts ) << ") ";
-  }
-  clog << "\r" << flush; 
+   // timing information
+   if (fColourfulOutput) {
+      clog << EC__ << " " ;
+      clog << "(" << BC_red << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" << EC__
+           << ", " 
+           << "time left: "
+           << this->GetLeftTime( icounts ) << EC__ << ") ";
+   }
+   else {
+      clog << "] " ;
+      clog << "(" << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" 
+           << ", " << "time left: " << this->GetLeftTime( icounts ) << ") ";
+   }
+   clog << "\r" << flush; 
 }
 
 //_______________________________________________________________________
 TString TMVA::Timer::SecToText( Double_t seconds, Bool_t Scientific ) 
 {
-  // pretty string output
-  TString out = "";
-  if      (Scientific    ) out = Form( "%.3g sec", seconds );
-  else if (seconds <  0  ) out = "unknown";
-  else if (seconds <= 300) out = Form( "%i sec", Int_t(seconds) );
-  else {
-    if (seconds > 3600) {
-      Int_t h = Int_t(seconds/3600);
-      if (h <= 1) out = Form( "%i hr : ", h );
-      else        out = Form( "%i hrs : ", h );
+   // pretty string output
+   TString out = "";
+   if      (Scientific    ) out = Form( "%.3g sec", seconds );
+   else if (seconds <  0  ) out = "unknown";
+   else if (seconds <= 300) out = Form( "%i sec", Int_t(seconds) );
+   else {
+      if (seconds > 3600) {
+         Int_t h = Int_t(seconds/3600);
+         if (h <= 1) out = Form( "%i hr : ", h );
+         else        out = Form( "%i hrs : ", h );
       
-      seconds = Int_t(seconds)%3600;
-    }
-    Int_t m = Int_t(seconds/60);
-    if (m <= 1) out += Form( "%i min", m );
-    else        out += Form( "%i mins", m );
-  }
+         seconds = Int_t(seconds)%3600;
+      }
+      Int_t m = Int_t(seconds/60);
+      if (m <= 1) out += Form( "%i min", m );
+      else        out += Form( "%i mins", m );
+   }
 
-  return (fColourfulOutput) ? BC_red + out + EC__ : out;
+   return (fColourfulOutput) ? BC_red + out + EC__ : out;
 }
 

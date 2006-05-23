@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Reader.h,v 1.3 2006/05/22 08:04:39 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: Reader.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -27,7 +27,7 @@
  * (http://tmva.sourceforge.net/license.txt)                                      *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Reader.h,v 1.3 2006/05/22 08:04:39 andreas.hoecker Exp $        
+ * $Id: Reader.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $        
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Reader
@@ -66,46 +66,46 @@ using namespace std;
 
 namespace TMVA {
 
-  class Reader : public TObject {
+   class Reader : public TObject {
 
-  public:
+   public:
       
-    // STL types
-    Reader ( vector<string>&  varNames, Bool_t verbose = 0 );
-    Reader ( const string     varNames, Bool_t verbose = 0 );  // format: "var1:var2:..."
+      // STL types
+      Reader ( vector<string>&  varNames, Bool_t verbose = 0 );
+      Reader ( const string     varNames, Bool_t verbose = 0 );  // format: "var1:var2:..."
 
-    // Root types
-    Reader ( vector<TString>& varNames, Bool_t verbose = 0 );
-    Reader ( const TString    varNames, Bool_t verbose = 0 );  // format: "var1:var2:..."
+      // Root types
+      Reader ( vector<TString>& varNames, Bool_t verbose = 0 );
+      Reader ( const TString    varNames, Bool_t verbose = 0 );  // format: "var1:var2:..."
 
-    virtual ~Reader( void );
+      virtual ~Reader( void );
   
-    Bool_t   BookMVA    ( Types::MVA method, TString filename );
-    Double_t EvaluateMVA( vector<Double_t>&, Types::MVA method, Double_t aux = 0 );    
+      Bool_t   BookMVA    ( Types::MVA method, TString filename );
+      Double_t EvaluateMVA( vector<Double_t>&, Types::MVA method, Double_t aux = 0 );    
 
-    // accessors 
-    Bool_t   Verbose( void ) const  { return fVerbose; }
-    void     SetVerbose( Bool_t v ) { fVerbose = v; }
+      // accessors 
+      Bool_t   Verbose( void ) const  { return fVerbose; }
+      void     SetVerbose( Bool_t v ) { fVerbose = v; }
   
-  private:
+   private:
   
-    // Init Reader class
-    void Init( void );
+      // Init Reader class
+      void Init( void );
 
-    // vector of input variables
-    vector<TString>* fInputVars;
+      // vector of input variables
+      vector<TString>* fInputVars;
 
-    // vector of methods
-    vector<MethodBase*> fMethods;
+      // vector of methods
+      vector<MethodBase*> fMethods;
 
-    // Decode Constructor string (or TString) and fill variable name vector
-    void DecodeVarNames( const string varNames );
-    void DecodeVarNames( const TString varNames );
+      // Decode Constructor string (or TString) and fill variable name vector
+      void DecodeVarNames( const string varNames );
+      void DecodeVarNames( const TString varNames );
 
-    Bool_t fVerbose;
+      Bool_t fVerbose;
 
-    ClassDef(Reader,0) //Interpret the trained MVAs in an analysis context
-  };
+      ClassDef(Reader,0) // Interpret the trained MVAs in an analysis context
+         };
 
 }
 

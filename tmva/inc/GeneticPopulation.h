@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticPopulation.h,v 1.4 2006/05/19 23:02:50 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: GeneticPopulation.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -50,72 +50,72 @@ class TH1F;
 
 namespace TMVA {
 
-  class GeneticPopulation {
+   class GeneticPopulation {
 
-  public:
+   public:
 
-    GeneticPopulation();
-    virtual ~GeneticPopulation();
+      GeneticPopulation();
+      virtual ~GeneticPopulation();
 
-    typedef std::pair<const Double_t, GeneticGenes > entry;
+      typedef std::pair<const Double_t, GeneticGenes > entry;
 
-    void CreatePopulation( Int_t size );
-    void AddPopulation( GeneticPopulation *genePool );
-    void TrimPopulation();
-    void GiveHint( std::vector< Double_t > hint, Double_t fitness = 0 );
-    void MakeChildren();
-    GeneticGenes MakeSex( GeneticGenes male, GeneticGenes female );
+      void CreatePopulation( Int_t size );
+      void AddPopulation( GeneticPopulation *genePool );
+      void TrimPopulation();
+      void GiveHint( std::vector< Double_t > hint, Double_t fitness = 0 );
+      void MakeChildren();
+      GeneticGenes MakeSex( GeneticGenes male, GeneticGenes female );
 
-    void MakeMutants( Double_t probability = 30, Bool_t near = kFALSE, 
-		      Double_t spread = 0.1, Bool_t mirror = kFALSE  );
-    void Mutate( Double_t probability = 20, Int_t startIndex = 0, Bool_t near = kFALSE, 
-		 Double_t spread = 0.1, Bool_t mirror = kFALSE  );
+      void MakeMutants( Double_t probability = 30, Bool_t near = kFALSE, 
+                        Double_t spread = 0.1, Bool_t mirror = kFALSE  );
+      void Mutate( Double_t probability = 20, Int_t startIndex = 0, Bool_t near = kFALSE, 
+                   Double_t spread = 0.1, Bool_t mirror = kFALSE  );
 
-    void AddFactor( Double_t from, Double_t to );
+      void AddFactor( Double_t from, Double_t to );
 
-    GeneticGenes* GetGenes();
-    GeneticGenes* GetGenes( Int_t index );
+      GeneticGenes* GetGenes();
+      GeneticGenes* GetGenes( Int_t index );
 
-    void     ClearResults( );
-    void     Reset();
-    Bool_t   SetFitness( GeneticGenes *g, Double_t fitness, Bool_t add = kTRUE );
-    Double_t GetFitness( Int_t index );
-    Double_t GetFitness( );
+      void     ClearResults( );
+      void     Reset();
+      Bool_t   SetFitness( GeneticGenes *g, Double_t fitness, Bool_t add = kTRUE );
+      Double_t GetFitness( Int_t index );
+      Double_t GetFitness( );
 
-    void Print( Int_t untilIndex = -1 );
-    void Print( ostream & out, Int_t utilIndex = -1 );
+      void Print( Int_t untilIndex = -1 );
+      void Print( ostream & out, Int_t utilIndex = -1 );
 
-    TH1F* VariableDistribution( Int_t varNumber, Int_t bins, Int_t min, Int_t max  );
-    std::vector< Double_t > VariableDistribution( Int_t varNumber );
+      TH1F* VariableDistribution( Int_t varNumber, Int_t bins, Int_t min, Int_t max  );
+      std::vector< Double_t > VariableDistribution( Int_t varNumber );
 
-    Double_t GetCounterFitness() const { return fCounterFitness; }
-    Int_t    GetPopulationSize() const { return fPopulationSize; }
+      Double_t GetCounterFitness() const { return fCounterFitness; }
+      Int_t    GetPopulationSize() const { return fPopulationSize; }
 
-    std::multimap<Double_t, GeneticGenes  >* GetGenePool()    const { return fGenePool; }
-    std::multimap<Double_t, GeneticGenes  >* GetNewGenePool() const { return fNewGenePool; }
-    std::vector< TMVA::GeneticRange* >&      GetRanges()      { return fRanges; }
+      std::multimap<Double_t, GeneticGenes  >* GetGenePool()    const { return fGenePool; }
+      std::multimap<Double_t, GeneticGenes  >* GetNewGenePool() const { return fNewGenePool; }
+      std::vector< TMVA::GeneticRange* >&      GetRanges()      { return fRanges; }
   
-  private:
+   private:
 
-    // internal use
-    Double_t fCounterFitness;
-    // the size of the population
-    Int_t    fPopulationSize;
+      // internal use
+      Double_t fCounterFitness;
+      // the size of the population
+      Int_t    fPopulationSize;
 
-    // the "genePool" where the individuals of the current generation are stored
-    std::multimap<Double_t, GeneticGenes  >* fGenePool;
-    // the genePool where the offspring individuals are stored
-    std::multimap<Double_t, GeneticGenes  >* fNewGenePool;
-    // contains the ranges inbetween the values of the coefficients have to be
-    std::vector< GeneticRange* > fRanges;
-    // an internal counter
-    std::multimap<Double_t, GeneticGenes >::iterator fCounter;
+      // the "genePool" where the individuals of the current generation are stored
+      std::multimap<Double_t, GeneticGenes  >* fGenePool;
+      // the genePool where the offspring individuals are stored
+      std::multimap<Double_t, GeneticGenes  >* fNewGenePool;
+      // contains the ranges inbetween the values of the coefficients have to be
+      std::vector< GeneticRange* > fRanges;
+      // an internal counter
+      std::multimap<Double_t, GeneticGenes >::iterator fCounter;
 
-    // random Generator for this population
-    TRandom *fRandomGenerator;  
+      // random Generator for this population
+      TRandom *fRandomGenerator;  
 
-    ClassDef(GeneticPopulation,0) //Population definition for genetic algorithm
-  };
+      ClassDef(GeneticPopulation,0) //Population definition for genetic algorithm
+         };
 
 } // namespace TMVA
 

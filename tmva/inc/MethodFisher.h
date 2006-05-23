@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodFisher.h,v 1.3 2006/05/22 08:04:39 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodFisher.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -30,7 +30,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodFisher.h,v 1.3 2006/05/22 08:04:39 andreas.hoecker Exp $          
+ * $Id: MethodFisher.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $          
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodFisher
@@ -58,99 +58,99 @@ class TH1D;
 
 namespace TMVA {
 
-  class MethodFisher : public MethodBase {
+   class MethodFisher : public MethodBase {
 
-  public:
+   public:
 
-    MethodFisher( TString jobName, 
-		  vector<TString>* theVariables, 
-		  TTree* theTree = 0, 
-		  TString theOption = "Fisher",
-		  TDirectory* theTargetDir = 0 );
+      MethodFisher( TString jobName, 
+                    vector<TString>* theVariables, 
+                    TTree* theTree = 0, 
+                    TString theOption = "Fisher",
+                    TDirectory* theTargetDir = 0 );
 
-    MethodFisher( vector<TString> *theVariables, 
-		  TString theWeightFile,  
-		  TDirectory* theTargetDir = NULL );
+      MethodFisher( vector<TString> *theVariables, 
+                    TString theWeightFile,  
+                    TDirectory* theTargetDir = NULL );
 
-    virtual ~MethodFisher( void );
+      virtual ~MethodFisher( void );
     
-    // training method
-    virtual void Train( void );
+      // training method
+      virtual void Train( void );
 
-    // write weights to file
-    virtual void WriteWeightsToFile( void );
+      // write weights to file
+      virtual void WriteWeightsToFile( void );
   
-    // read weights from file
-    virtual void ReadWeightsFromFile( void );
+      // read weights from file
+      virtual void ReadWeightsFromFile( void );
 
-    // calculate the MVA value
-    virtual Double_t GetMvaValue( Event *e );
+      // calculate the MVA value
+      virtual Double_t GetMvaValue( Event *e );
 
-    // write method specific histos to target file
-    virtual void WriteHistosToFile( void ) ;
+      // write method specific histos to target file
+      virtual void WriteHistosToFile( void ) ;
 
-    enum FisherMethod { kFisher, kMahalanobis };
-    virtual FisherMethod GetMethod( void ) { return fFisherMethod; }
+      enum FisherMethod { kFisher, kMahalanobis };
+      virtual FisherMethod GetMethod( void ) { return fFisherMethod; }
 
-  protected:
+   protected:
 
-  private:
+   private:
   
-    Int_t fNevt; // total number of events 
-    Int_t fNsig; // number of signal events 
-    Int_t fNbgd; // number of background events
+      Int_t fNevt; // total number of events 
+      Int_t fNsig; // number of signal events 
+      Int_t fNbgd; // number of background events
 
-    // event matrices: (first index: variable, second index: event)
-    TMatrixF *fSig; // variables for signal 
-    TMatrixF *fBgd; // variables for background
+      // event matrices: (first index: variable, second index: event)
+      TMatrixF *fSig; // variables for signal 
+      TMatrixF *fBgd; // variables for background
 
-    // Initialization and allocation
-    void Init( void );
+      // Initialization and allocation
+      void Init( void );
 
-    // get mean value of variables
-    void GetMean( void );
+      // get mean value of variables
+      void GetMean( void );
 
-    // get matrix of covariance within class
-    void GetCov_WithinClass( void );
+      // get matrix of covariance within class
+      void GetCov_WithinClass( void );
 
-    // get matrix of covariance between class
-    void GetCov_BetweenClass( void );
+      // get matrix of covariance between class
+      void GetCov_BetweenClass( void );
 
-    // and the full covariance matrix
-    void GetCov_Full( void );
+      // and the full covariance matrix
+      void GetCov_Full( void );
 
-    // get discriminating power
-    void GetDiscrimPower( void );
+      // get discriminating power
+      void GetDiscrimPower( void );
 
-    // nice output
-    void PrintCoefficients( void );
+      // nice output
+      void PrintCoefficients( void );
 
-    // get Fisher coefficients
-    void GetFisherCoeff( void );
+      // get Fisher coefficients
+      void GetFisherCoeff( void );
 
-    // matrix of variables means: S, B, S+B vs. variables
-    TMatrixD *fMeanMatx;
+      // matrix of variables means: S, B, S+B vs. variables
+      TMatrixD *fMeanMatx;
 
-    // covariance matrices
-    TMatrixD *fBetw;  // between-class matrix
-    TMatrixD *fWith;  // within-class matrix
-    TMatrixD *fCov;   // full covariance matrix
+      // covariance matrices
+      TMatrixD *fBetw;  // between-class matrix
+      TMatrixD *fWith;  // within-class matrix
+      TMatrixD *fCov;   // full covariance matrix
 
-    // discriminating power
-    vector<Double_t> *fDiscrimPow;
+      // discriminating power
+      vector<Double_t> *fDiscrimPow;
 
-    // Fisher coefficients
-    vector<Double_t> *fFisherCoeff;
-    Double_t fF0;
+      // Fisher coefficients
+      vector<Double_t> *fFisherCoeff;
+      Double_t fF0;
 
-    // method to be used (Fisher or Mahalanobis)
-    FisherMethod fFisherMethod;
+      // method to be used (Fisher or Mahalanobis)
+      FisherMethod fFisherMethod;
 
-    // default initialisation called by all constructors
-    void InitFisher( void );
+      // default initialisation called by all constructors
+      void InitFisher( void );
 
-    ClassDef(MethodFisher,0) //Analysis of Fisher discriminant (Fisher or Mahalanobis approach) 
-  };
+      ClassDef(MethodFisher,0) //Analysis of Fisher discriminant (Fisher or Mahalanobis approach) 
+         };
 
 } // namespace TMVA
 

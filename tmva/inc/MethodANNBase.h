@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodANNBase.h,v 1.3 2006/05/22 08:04:39 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodANNBase.h,v 1.4 2006/05/23 09:53:10 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -44,22 +44,22 @@
 
 namespace TMVA {
 
-  class MethodANNBase {
+   class MethodANNBase {
 
-  public:
+   public:
 
-    MethodANNBase( void );
-    virtual ~MethodANNBase() {}
+      MethodANNBase( void );
+      virtual ~MethodANNBase() {}
 
-  protected:
+   protected:
 
-    // option string parser
-    // first input in vector is number of cycles; additional inputs give
-    // number of nodes for each layer (as many layers as inputs in vector)
-    std::vector<Int_t>* ParseOptionString( TString, Int_t, std::vector<Int_t>* );
+      // option string parser
+      // first input in vector is number of cycles; additional inputs give
+      // number of nodes for each layer (as many layers as inputs in vector)
+      std::vector<Int_t>* ParseOptionString( TString, Int_t, std::vector<Int_t>* );
  
-    ClassDef(MethodANNBase,0) //Base class for all MVA methods using artificial neural networks
-  };
+      ClassDef(MethodANNBase,0) //Base class for all MVA methods using artificial neural networks
+         };
 
 } // namespace TMVA
 

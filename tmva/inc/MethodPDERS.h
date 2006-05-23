@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodPDERS.h,v 1.3 2006/05/22 08:04:39 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodPDERS.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -34,7 +34,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodPDERS.h,v 1.3 2006/05/22 08:04:39 andreas.hoecker Exp $
+ * $Id: MethodPDERS.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodPDERS
@@ -61,96 +61,96 @@
 
 namespace TMVA {
 
-  class Volume;
-  class Event;
+   class Volume;
+   class Event;
 
-  class MethodPDERS : public MethodBase {
+   class MethodPDERS : public MethodBase {
 
-  public:
+   public:
 
-    MethodPDERS( TString jobName,
-		 vector<TString>* theVariables,
-		 TTree* theTree = 0,
-		 TString theOption = "Adaptive:100:200:50:0.99",
-		 TDirectory* theTargetDir = 0 );
+      MethodPDERS( TString jobName,
+                   vector<TString>* theVariables,
+                   TTree* theTree = 0,
+                   TString theOption = "Adaptive:100:200:50:0.99",
+                   TDirectory* theTargetDir = 0 );
 
-    MethodPDERS( vector<TString> *theVariables,
-		 TString theWeightFile,
-		 TDirectory* theTargetDir = NULL );
+      MethodPDERS( vector<TString> *theVariables,
+                   TString theWeightFile,
+                   TDirectory* theTargetDir = NULL );
 
-    virtual ~MethodPDERS( void );
+      virtual ~MethodPDERS( void );
 
-    // training method
-    virtual void Train( void );
+      // training method
+      virtual void Train( void );
 
-    // write weights to file
-    virtual void WriteWeightsToFile( void );
+      // write weights to file
+      virtual void WriteWeightsToFile( void );
 
-    // read weights from file
-    virtual void ReadWeightsFromFile( void  );
+      // read weights from file
+      virtual void ReadWeightsFromFile( void  );
 
-    // calculate the MVA value
-    virtual Double_t GetMvaValue( Event *e );
+      // calculate the MVA value
+      virtual Double_t GetMvaValue( Event *e );
 
-    // write method specific histos to target file
-    virtual void WriteHistosToFile( void );
+      // write method specific histos to target file
+      virtual void WriteHistosToFile( void );
 
-  public:
+   public:
 
-    // for root finder
-    static Double_t IGetVolumeContentForRoot( Double_t );
-    Double_t         GetVolumeContentForRoot( Double_t );
+      // for root finder
+      static Double_t IGetVolumeContentForRoot( Double_t );
+      Double_t         GetVolumeContentForRoot( Double_t );
 
-    // static pointer to this object
-    static MethodPDERS* ThisPDERS( void ) { return fgThisPDERS; }
+      // static pointer to this object
+      static MethodPDERS* ThisPDERS( void ) { return fgThisPDERS; }
 
-  protected:
+   protected:
 
-    Volume* fHelpVolume;
-    Int_t        fFcnCall;
+      Volume* fHelpVolume;
+      Int_t        fFcnCall;
 
-    // accessors
-    BinarySearchTree* GetBinaryTreeSig( void ) const { return fBinaryTreeS; }
-    BinarySearchTree* GetBinaryTreeBkg( void ) const { return fBinaryTreeB; }
+      // accessors
+      BinarySearchTree* GetBinaryTreeSig( void ) const { return fBinaryTreeS; }
+      BinarySearchTree* GetBinaryTreeBkg( void ) const { return fBinaryTreeB; }
 
-    Double_t KernelEstimate( Event&, std::vector<Event*>&, Volume& );
+      Double_t KernelEstimate( Event&, std::vector<Event*>&, Volume& );
 
-  private:
+   private:
 
-    enum VolumeRangeMode { kMinMax = 0, kRMS, kAdaptive } fVRangeMode;
+      enum VolumeRangeMode { kMinMax = 0, kRMS, kAdaptive } fVRangeMode;
 
-    BinarySearchTree*       fBinaryTreeS;
-    BinarySearchTree*       fBinaryTreeB;
+      BinarySearchTree*       fBinaryTreeS;
+      BinarySearchTree*       fBinaryTreeB;
 
-    vector<Float_t>*   fDelta;
-    vector<Float_t>*   fShift;
+      vector<Float_t>*   fDelta;
+      vector<Float_t>*   fShift;
 
-    Float_t            fScaleS;
-    Float_t            fScaleB;
-    Float_t            fDeltaFrac;
+      Float_t            fScaleS;
+      Float_t            fScaleB;
+      Float_t            fDeltaFrac;
 
-    // input for adaptive volume adjustment
-    Float_t            fNEventsMin;
-    Float_t            fNEventsMax;
-    Float_t            fMaxVIterations;
-    Float_t            fInitialScale;
+      // input for adaptive volume adjustment
+      Float_t            fNEventsMin;
+      Float_t            fNEventsMax;
+      Float_t            fMaxVIterations;
+      Float_t            fInitialScale;
 
-    TFile*             fFin;
+      TFile*             fFin;
 
-    Bool_t             fInitializedVolumeEle;
+      Bool_t             fInitializedVolumeEle;
 
-    void    SetVolumeElement ( void );
-    Float_t RScalc           ( Event *e );
-    Float_t GetError         ( Float_t countS, Float_t countB,
-			       Float_t sumW2S, Float_t sumW2B ) const;
+      void    SetVolumeElement ( void );
+      Float_t RScalc           ( Event *e );
+      Float_t GetError         ( Float_t countS, Float_t countB,
+                                 Float_t sumW2S, Float_t sumW2B ) const;
 
-    // this carrier
-    static MethodPDERS* fgThisPDERS;
+      // this carrier
+      static MethodPDERS* fgThisPDERS;
 
-    void InitPDERS( void );
+      void InitPDERS( void );
 
-    ClassDef(MethodPDERS,0) //Multidimensional Likelihood using the "Probability density estimator range search" (PDERS) method
-  };
+      ClassDef(MethodPDERS,0) //Multidimensional Likelihood using the "Probability density estimator range search" (PDERS) method
+         };
 
 } // namespace TMVA
 

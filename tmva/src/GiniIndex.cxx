@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GiniIndex.cxx,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: GiniIndex.cxx,v 1.5 2006/05/23 09:53:10 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -51,19 +51,19 @@
 ClassImp(TMVA::GiniIndex)
 
 //_______________________________________________________________________
-Double_t  TMVA::GiniIndex::GetSeparationIndex( const Double_t &s, const Double_t &b )
+   Double_t  TMVA::GiniIndex::GetSeparationIndex( const Double_t &s, const Double_t &b )
 {
-  //     Gini(Sample M) = 1 - (c(1)/N)^2 - (c(2)/N)^2 .... - (c(k)/N)^2    
-  //     Where: M is a smaple of whatever N elements (events)             
-  //            that belong to K different classes                        
-  //            c(k) is the number of elements that belong to class k     
-  //     for just Signal and Background classes this boils down to:       
-  //     Gini(Sample) = 2s*b/(s+b)^2    ( = 2 * purity * (1-purity) )                                     
+   //     Gini(Sample M) = 1 - (c(1)/N)^2 - (c(2)/N)^2 .... - (c(k)/N)^2    
+   //     Where: M is a smaple of whatever N elements (events)             
+   //            that belong to K different classes                        
+   //            c(k) is the number of elements that belong to class k     
+   //     for just Signal and Background classes this boils down to:       
+   //     Gini(Sample) = 2s*b/(s+b)^2    ( = 2 * purity * (1-purity) )                                     
 
-  if (s+b <= 0) return 0.;
-  if (s<=0 || b <=0) return 0.;
-  //  else return 2 * s*b/(s+b)/(s+b);  
-  else return s*b/(s+b)/(s+b);      //actually the "2" should not influence the result
+   if (s+b <= 0) return 0.;
+   if (s<=0 || b <=0) return 0.;
+   //  else return 2 * s*b/(s+b)/(s+b);  
+   else return s*b/(s+b)/(s+b);      //actually the "2" should not influence the result
 }
 
 

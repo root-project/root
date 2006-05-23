@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Volume.cxx,v 1.5 2006/05/22 08:04:39 andreas.hoecker Exp $
+// @(#)root/tmva $Id: Volume.cxx,v 1.6 2006/05/23 09:53:11 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Volume.cxx,v 1.5 2006/05/22 08:04:39 andreas.hoecker Exp $        
+ * $Id: Volume.cxx,v 1.6 2006/05/23 09:53:11 stelzer Exp $        
  **********************************************************************************/
 
 #include "TMVA/Volume.h"
@@ -45,117 +45,117 @@
 //_______________________________________________________________________
 
 TMVA::Volume::Volume( std::vector<Double_t>* l, std::vector<Double_t>* u ) 
-  : fLower( l ), 
-    fUpper( u ),
-    fOwnerShip (kFALSE)
+   : fLower( l ), 
+     fUpper( u ),
+     fOwnerShip (kFALSE)
 {
-  // constructor specifying the volume by std::vectors of doubles
+   // constructor specifying the volume by std::vectors of doubles
 }
 
 TMVA::Volume::Volume( std::vector<Float_t>* l, std::vector<Float_t>* u ) 
 {
-  // constructor specifying the volume by std::vectors of floats
-  fLower = new std::vector<Double_t>( l->size() );
-  fUpper = new std::vector<Double_t>( u->size() );
-  fOwnerShip = kTRUE;
+   // constructor specifying the volume by std::vectors of floats
+   fLower = new std::vector<Double_t>( l->size() );
+   fUpper = new std::vector<Double_t>( u->size() );
+   fOwnerShip = kTRUE;
   
-  for (UInt_t ivar=0; ivar<l->size(); ivar++) {
-    (*fLower)[ivar] = Double_t((*l)[ivar]);
-    (*fUpper)[ivar] = Double_t((*u)[ivar]);
-  }  
+   for (UInt_t ivar=0; ivar<l->size(); ivar++) {
+      (*fLower)[ivar] = Double_t((*l)[ivar]);
+      (*fUpper)[ivar] = Double_t((*u)[ivar]);
+   }  
 }
 
 TMVA::Volume::Volume( Double_t* l, Double_t* u, Int_t nvar ) 
 {
-  // constructor specifiying the volume by c-style arrays of doubles
-  fLower = new std::vector<Double_t>( nvar );
-  fUpper = new std::vector<Double_t>( nvar );
-  fOwnerShip = kTRUE;
+   // constructor specifiying the volume by c-style arrays of doubles
+   fLower = new std::vector<Double_t>( nvar );
+   fUpper = new std::vector<Double_t>( nvar );
+   fOwnerShip = kTRUE;
 
-  for (int ivar=0; ivar<nvar; ivar++) {
-    (*fLower)[ivar] = l[ivar];
-    (*fUpper)[ivar] = u[ivar];
-  }  
+   for (int ivar=0; ivar<nvar; ivar++) {
+      (*fLower)[ivar] = l[ivar];
+      (*fUpper)[ivar] = u[ivar];
+   }  
 }
 
 TMVA::Volume::Volume( Float_t* l, Float_t* u, Int_t nvar ) 
 {
-  // constructor specifiying the volume by c-style arrays of floats
-  fLower = new std::vector<Double_t>( nvar );
-  fUpper = new std::vector<Double_t>( nvar );
-  fOwnerShip = kTRUE;
+   // constructor specifiying the volume by c-style arrays of floats
+   fLower = new std::vector<Double_t>( nvar );
+   fUpper = new std::vector<Double_t>( nvar );
+   fOwnerShip = kTRUE;
 
-  for (int ivar=0; ivar<nvar; ivar++) {
-    (*fLower)[ivar] = Double_t(l[ivar]);
-    (*fUpper)[ivar] = Double_t(u[ivar]);
-  }  
+   for (int ivar=0; ivar<nvar; ivar++) {
+      (*fLower)[ivar] = Double_t(l[ivar]);
+      (*fUpper)[ivar] = Double_t(u[ivar]);
+   }  
 }
 
 TMVA::Volume::Volume( Double_t l, Double_t u ) 
 {
-  // simple constructors for 1 dimensional values (double)
-  fLower = new std::vector<Double_t>(1);
-  fUpper = new std::vector<Double_t>(1);
-  fOwnerShip = kTRUE;
-  (*fLower)[0] = l;
-  (*fUpper)[0] = u;
+   // simple constructors for 1 dimensional values (double)
+   fLower = new std::vector<Double_t>(1);
+   fUpper = new std::vector<Double_t>(1);
+   fOwnerShip = kTRUE;
+   (*fLower)[0] = l;
+   (*fUpper)[0] = u;
 }
 
 TMVA::Volume::Volume( Float_t l, Float_t u ) 
 {
-  // simple constructors for 1 dimensional values (float)
-  fLower = new std::vector<Double_t>(1);
-  fUpper = new std::vector<Double_t>(1);
-  fOwnerShip = kTRUE;
-  (*fLower)[0] = Double_t(l);
-  (*fUpper)[0] = Double_t(u);
+   // simple constructors for 1 dimensional values (float)
+   fLower = new std::vector<Double_t>(1);
+   fUpper = new std::vector<Double_t>(1);
+   fOwnerShip = kTRUE;
+   (*fLower)[0] = Double_t(l);
+   (*fUpper)[0] = Double_t(u);
 }
 
 TMVA::Volume::Volume( TMVA::Volume& V ) 
 { 
-  // copy constructor
-  fLower = new std::vector<Double_t>( *V.fLower );
-  fUpper = new std::vector<Double_t>( *V.fUpper );  
-  fOwnerShip = kTRUE;
+   // copy constructor
+   fLower = new std::vector<Double_t>( *V.fLower );
+   fUpper = new std::vector<Double_t>( *V.fUpper );  
+   fOwnerShip = kTRUE;
 }
 
 TMVA::Volume::~Volume( void )
 {
-  // destructor
-  // delete volume boundaries only if owend by the volume
-  if (fOwnerShip) this->Delete();
+   // destructor
+   // delete volume boundaries only if owend by the volume
+   if (fOwnerShip) this->Delete();
 } 
 
 void TMVA::Volume::Delete( void )
 {
-  // delete array of volume bondaries
-  if (NULL != fLower) { delete fLower; fLower = NULL; }
-  if (NULL != fUpper) { delete fUpper; fUpper = NULL; }
+   // delete array of volume bondaries
+   if (NULL != fLower) { delete fLower; fLower = NULL; }
+   if (NULL != fUpper) { delete fUpper; fUpper = NULL; }
 }
 
 void TMVA::Volume::Scale( Double_t f )
 {
-  // "scale" the volume by multiplying each upper and lower boundary by "f" 
-  TMVA::Tools::Scale(*fLower,f);
-  TMVA::Tools::Scale(*fUpper,f);
+   // "scale" the volume by multiplying each upper and lower boundary by "f" 
+   TMVA::Tools::Scale(*fLower,f);
+   TMVA::Tools::Scale(*fUpper,f);
 }
 
 void TMVA::Volume::ScaleInterval( Double_t f ) 
 { 
-  // "scale" the volume by symmetrically blowing up the interval in each dimension
-  for (UInt_t ivar=0; ivar<fLower->size(); ivar++) {
-    Double_t lo = 0.5*((*fLower)[ivar]*(1.0 + f) + (*fUpper)[ivar]*(1.0 - f));
-    Double_t up = 0.5*((*fLower)[ivar]*(1.0 - f) + (*fUpper)[ivar]*(1.0 + f));
-    (*fLower)[ivar] = lo;
-    (*fUpper)[ivar] = up;
-  }
+   // "scale" the volume by symmetrically blowing up the interval in each dimension
+   for (UInt_t ivar=0; ivar<fLower->size(); ivar++) {
+      Double_t lo = 0.5*((*fLower)[ivar]*(1.0 + f) + (*fUpper)[ivar]*(1.0 - f));
+      Double_t up = 0.5*((*fLower)[ivar]*(1.0 - f) + (*fUpper)[ivar]*(1.0 + f));
+      (*fLower)[ivar] = lo;
+      (*fUpper)[ivar] = up;
+   }
 }
 
 void TMVA::Volume::Print( void ) const 
 {
-  // printout of the volume boundaries
-  for (UInt_t ivar=0; ivar<fLower->size(); ivar++) 
-    cout << "... TMVA::Volume: var: " << ivar << "\t(fLower, fUpper) = (" 
-         << (*fLower)[ivar] << "\t " << (*fUpper)[ivar] <<")"<< endl;
+   // printout of the volume boundaries
+   for (UInt_t ivar=0; ivar<fLower->size(); ivar++) 
+      cout << "... TMVA::Volume: var: " << ivar << "\t(fLower, fUpper) = (" 
+           << (*fLower)[ivar] << "\t " << (*fUpper)[ivar] <<")"<< endl;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticCuts.h,v 1.5 2006/05/22 01:34:14 stelzer Exp $ 
+// @(#)root/tmva $Id: GeneticCuts.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -44,19 +44,19 @@
 
 namespace TMVA {
 
-  class GeneticCuts : public GeneticBase {
+   class GeneticCuts : public GeneticBase {
 
-  public:
+   public:
 
-    GeneticCuts( Int_t size, std::vector<LowHigh*> ranges );
-    virtual ~GeneticCuts() {}
+      GeneticCuts( Int_t size, std::vector<LowHigh_t*> ranges );
+      virtual ~GeneticCuts() {}
 
-    Double_t FitnessFunction( const std::vector<Double_t> & parameters );                
+      Double_t FitnessFunction( const std::vector<Double_t> & parameters );                
 
-    Double_t NewFitness( Double_t oldF, Double_t newF ) { return oldF + newF; }
+      Double_t NewFitness( Double_t oldF, Double_t newF ) { return oldF + newF; }
 
-    ClassDef(GeneticCuts,0) // Cut optimisation interface class for genetic algorithm
-  };
+      ClassDef(GeneticCuts,0) // Cut optimisation interface class for genetic algorithm
+         };
 
 } // namespace TMVA
 

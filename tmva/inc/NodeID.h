@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: NodeID.h,v 1.3 2006/05/22 08:04:39 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: NodeID.h,v 1.4 2006/05/23 09:53:10 stelzer Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -47,36 +47,36 @@
 
 namespace TMVA {
 
-  // a class used to identify a Node; (needed for recursive reading from text file)
-  // (currently it is NOT UNIQUE... but could eventually made it
+   // a class used to identify a Node; (needed for recursive reading from text file)
+   // (currently it is NOT UNIQUE... but could eventually made it
 
-  class NodeID {
+   class NodeID {
     
-  public:
+   public:
     
-    // Node constructor
-    NodeID( Int_t d=0, std::string p="Root" ) : fDepth( d ), fPos( p ) {}
-    // Node destructor
-    ~NodeID() {}
+      // Node constructor
+      NodeID( Int_t d=0, std::string p="Root" ) : fDepth( d ), fPos( p ) {}
+      // Node destructor
+      ~NodeID() {}
       
-    // Set depth, layer of the where the node is within the tree, seen from the top (root)
-    void SetDepth(const Int_t d){fDepth=d;}
+      // Set depth, layer of the where the node is within the tree, seen from the top (root)
+      void SetDepth(const Int_t d){fDepth=d;}
 
-    //Return depth, layer of the where the node is within the tree, seen from the top (root)
-    Int_t GetDepth() const {return fDepth;}
+      //Return depth, layer of the where the node is within the tree, seen from the top (root)
+      Int_t GetDepth() const {return fDepth;}
 
-    //set node position, i.e, the node is a left (l) or right (r) daugther
-    void SetPos(const std::string s) {fPos=s;}
+      //set node position, i.e, the node is a left (l) or right (r) daugther
+      void SetPos(const std::string s) {fPos=s;}
 
-    //Return the node position, i.e, the node is a left (l) or right (r) daugther
-    std::string GetPos() const {return fPos;}
+      //Return the node position, i.e, the node is a left (l) or right (r) daugther
+      std::string GetPos() const {return fPos;}
 
-  private:
+   private:
 
-    Int_t        fDepth; // depth of the node within the tree (seen from root node)
-    std::string  fPos;   // position, i.e. it is a left (l) or right (r) daughter 
+      Int_t        fDepth; // depth of the node within the tree (seen from root node)
+      std::string  fPos;   // position, i.e. it is a left (l) or right (r) daughter 
 
-  };
+   };
 
 }
 

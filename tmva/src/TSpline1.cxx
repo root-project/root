@@ -35,54 +35,54 @@
 ClassImp(TMVA::TSpline1)
 
 //_______________________________________________________________________
-TMVA::TSpline1::TSpline1( TString title, TGraph* theGraph )
-  : fGraph( theGraph )
+   TMVA::TSpline1::TSpline1( TString title, TGraph* theGraph )
+      : fGraph( theGraph )
 {
-  // constructor from TGraph
-  // TSpline is a TNamed object
-  SetNameTitle( title, title );  
+   // constructor from TGraph
+   // TSpline is a TNamed object
+   SetNameTitle( title, title );  
 }
 
 //_______________________________________________________________________
 TMVA::TSpline1::~TSpline1( void )
 {
-  // destructor
-  if (NULL != fGraph) delete fGraph;
+   // destructor
+   if (NULL != fGraph) delete fGraph;
 }
 
 //_______________________________________________________________________
 Double_t TMVA::TSpline1::Eval( Double_t x ) const
 {  
-  // returns linearly interpolated TGraph entry around x
-  Int_t ibin = TMath::BinarySearch( fGraph->GetN(),
-                                    fGraph->GetX(),
-                                    x );
-  Int_t nbin = fGraph->GetN();
+   // returns linearly interpolated TGraph entry around x
+   Int_t ibin = TMath::BinarySearch( fGraph->GetN(),
+                                     fGraph->GetX(),
+                                     x );
+   Int_t nbin = fGraph->GetN();
 
-  // sanity checks
-  if (ibin < 0    ) ibin = 0;
-  if (ibin >= nbin) ibin = nbin - 1;
+   // sanity checks
+   if (ibin < 0    ) ibin = 0;
+   if (ibin >= nbin) ibin = nbin - 1;
 
-  Int_t nextbin = ibin;
-  if ((x > fGraph->GetX()[ibin] && ibin != nbin-1) || ibin == 0) 
-    nextbin++;
-  else
-    nextbin--;  
+   Int_t nextbin = ibin;
+   if ((x > fGraph->GetX()[ibin] && ibin != nbin-1) || ibin == 0) 
+      nextbin++;
+   else
+      nextbin--;  
 
-  Double_t dx = fGraph->GetX()[ibin] - fGraph->GetX()[nextbin];
-  Double_t dy = fGraph->GetY()[ibin] - fGraph->GetY()[nextbin];
-  return fGraph->GetY()[ibin] + (x - fGraph->GetX()[ibin]) * dy/dx;
+   Double_t dx = fGraph->GetX()[ibin] - fGraph->GetX()[nextbin];
+   Double_t dy = fGraph->GetY()[ibin] - fGraph->GetY()[nextbin];
+   return fGraph->GetY()[ibin] + (x - fGraph->GetX()[ibin]) * dy/dx;
 }
 
 //_______________________________________________________________________
 void TMVA::TSpline1::BuildCoeff( void )
 {
-  // no coefficients to precompute
+   // no coefficients to precompute
 }
 
 //_______________________________________________________________________
 void TMVA::TSpline1::GetKnot( Int_t /* i*/, Double_t&  /*x*/, Double_t& /*y*/ ) const
 {
-  // no knots
+   // no knots
 }
 

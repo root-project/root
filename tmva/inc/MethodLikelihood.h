@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodLikelihood.h,v 1.3 2006/05/22 08:04:39 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: MethodLikelihood.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -61,83 +61,83 @@ class TH1D;
 
 namespace TMVA {
 
-  class MethodLikelihood : public MethodBase {
+   class MethodLikelihood : public MethodBase {
 
-  public:
+   public:
 
-    MethodLikelihood( TString jobName, 
-		      vector<TString>* theVariables, 
-		      TTree* theTree = 0,
-		      TString theOption = "",
-		      TDirectory* theTargetDir = 0 );
+      MethodLikelihood( TString jobName, 
+                        vector<TString>* theVariables, 
+                        TTree* theTree = 0,
+                        TString theOption = "",
+                        TDirectory* theTargetDir = 0 );
   
-    MethodLikelihood( vector<TString> *theVariables, 
-		      TString theWeightFile,  
-		      TDirectory* theTargetDir = NULL );
+      MethodLikelihood( vector<TString> *theVariables, 
+                        TString theWeightFile,  
+                        TDirectory* theTargetDir = NULL );
 
-    virtual ~MethodLikelihood( void );
+      virtual ~MethodLikelihood( void );
     
-    // training method
-    virtual void Train( void );
+      // training method
+      virtual void Train( void );
 
-    // write weights to file
-    virtual void WriteWeightsToFile( void );
+      // write weights to file
+      virtual void WriteWeightsToFile( void );
   
-    // read weights from file
-    virtual void ReadWeightsFromFile( void );
+      // read weights from file
+      virtual void ReadWeightsFromFile( void );
 
-    // calculate the MVA value
-    virtual Double_t GetMvaValue( Event *e );
+      // calculate the MVA value
+      virtual Double_t GetMvaValue( Event *e );
 
-    // write method specific histos to target file
-    virtual void WriteHistosToFile( void ) ;
+      // write method specific histos to target file
+      virtual void WriteHistosToFile( void ) ;
 
-    // additional accessor
-    Bool_t DecorrVarSpace( void ) { return fDecorrVarSpace; }
+      // additional accessor
+      Bool_t DecorrVarSpace( void ) { return fDecorrVarSpace; }
 
-  protected:
+   protected:
 
-  private:
+   private:
 
-    // weight file
-    TFile* fFin;
+      // weight file
+      TFile* fFin;
 
-    // type of Splines used to smooth PDFs
-    PDF::SmoothMethod fSmoothMethod;
+      // type of Splines used to smooth PDFs
+      PDF::SmoothMethod fSmoothMethod;
 
-    Int_t            fNevt;    // total number of events in sample
-    Int_t            fNsig;    // number of signal events in sample
-    Int_t            fNbgd;    // number of background events in sample
+      Int_t            fNevt;    // total number of events in sample
+      Int_t            fNsig;    // number of signal events in sample
+      Int_t            fNbgd;    // number of background events in sample
 
-    Int_t            fNsmooth; // naumber of smooth passes
-    Double_t         fEpsilon; // minimum number of likelihood (to avoid zero)
-    TMatrixD*        fSqS;     // square-root matrix for signal
-    TMatrixD*        fSqB;     // square-root matrix for background
+      Int_t            fNsmooth; // naumber of smooth passes
+      Double_t         fEpsilon; // minimum number of likelihood (to avoid zero)
+      TMatrixD*        fSqS;     // square-root matrix for signal
+      TMatrixD*        fSqB;     // square-root matrix for background
 
-    vector<TH1*>*    fHistSig; // signal PDFs (histograms)
-    vector<TH1*>*    fHistBgd; // background PDFs (histograms)
-    vector<TH1*>*    fHistSig_smooth; // signal PDFs (smoothed histograms)
-    vector<TH1*>*    fHistBgd_smooth; // background PDFs (smoothed histograms)
+      vector<TH1*>*    fHistSig; // signal PDFs (histograms)
+      vector<TH1*>*    fHistBgd; // background PDFs (histograms)
+      vector<TH1*>*    fHistSig_smooth; // signal PDFs (smoothed histograms)
+      vector<TH1*>*    fHistBgd_smooth; // background PDFs (smoothed histograms)
   
-    TList* fSigPDFHist;        // list of PDF histograms (signal)
-    TList* fBgdPDFHist;        // list of PDF histograms (background)
+      TList* fSigPDFHist;        // list of PDF histograms (signal)
+      TList* fBgdPDFHist;        // list of PDF histograms (background)
 
-    vector<PDF*>*  fPDFSig; // list of PDFs (signal)    
-    vector<PDF*>*  fPDFBgd; // list of PDFs (background)
+      vector<PDF*>*  fPDFSig; // list of PDFs (signal)    
+      vector<PDF*>*  fPDFBgd; // list of PDFs (background)
 
-    Int_t     fNbins;            // number of bins in reference histograms
-    Int_t     fAverageEvtPerBin; // average events per bin; used to calculate fNbins
+      Int_t     fNbins;            // number of bins in reference histograms
+      Int_t     fAverageEvtPerBin; // average events per bin; used to calculate fNbins
 
-    Bool_t    fDecorrVarSpace;   // flag for decorrelation method
+      Bool_t    fDecorrVarSpace;   // flag for decorrelation method
 
-    // computes square-root-matrices
-    void GetSQRMats( void );     
+      // computes square-root-matrices
+      void GetSQRMats( void );     
 
-    // default initialisation called by all constructors
-    void InitLik( void );
+      // default initialisation called by all constructors
+      void InitLik( void );
    
-    ClassDef(MethodLikelihood,0) //Likelihood analysis ("non-parametric approach") 
-  };
+      ClassDef(MethodLikelihood,0) //Likelihood analysis ("non-parametric approach") 
+         };
 
 } // namespace TMVA
 

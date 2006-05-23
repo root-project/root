@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MisClassificationError.cxx,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MisClassificationError.cxx,v 1.5 2006/05/23 09:53:10 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -40,14 +40,14 @@
 ClassImp(TMVA::MisClassificationError)
 
 //_______________________________________________________________________
-Double_t  TMVA::MisClassificationError::GetSeparationIndex( const Double_t &s, const Double_t &b )
+   Double_t  TMVA::MisClassificationError::GetSeparationIndex( const Double_t &s, const Double_t &b )
 {
-  // Misclassifiacton error   criterion: 1-max(p, 1-p)  (p: purity= s/(s+b))
-  if ( s+b <= 0) return 0;
-  Double_t p = s/(s+b);
-  if (p < 1-p) return 1-p;
-  else         return p;
-  //return std::max(p, 1-p); 
+   // Misclassifiacton error   criterion: 1-max(p, 1-p)  (p: purity= s/(s+b))
+   if ( s+b <= 0) return 0;
+   Double_t p = s/(s+b);
+   if (p < 1-p) return 1-p;
+   else         return p;
+   //return std::max(p, 1-p); 
 }
 
 

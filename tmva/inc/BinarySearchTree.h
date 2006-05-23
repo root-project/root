@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinarySearchTree.h,v 1.4 2006/05/22 08:04:38 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: BinarySearchTree.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -61,45 +61,45 @@ using std::vector;
 
 namespace TMVA {
 
-  class Event;
+   class Event;
 
-  class BinarySearchTree : public BinaryTree {
+   class BinarySearchTree : public BinaryTree {
       
-  public:
+   public:
   
-    // constructor
-    BinarySearchTree( void );
-    // destructor
-    virtual ~BinarySearchTree( void );
+      // constructor
+      BinarySearchTree( void );
+      // destructor
+      virtual ~BinarySearchTree( void );
   
-    // counts events (weights) within a given volume 
-    Double_t SearchVolume( Volume*, std::vector<TMVA::Event*>* events = 0 );
+      // counts events (weights) within a given volume 
+      Double_t SearchVolume( Volume*, std::vector<TMVA::Event*>* events = 0 );
   
-    // create the search tree from the events in a TTree
-    // using the variables specified in "theVars"
-    Int_t Fill( TTree* theTree, vector<TString>* theVars, Int_t theType = -1 );
-    // create the search tree from the event collection 
-    // using ONLY the variables specified in "theVars"
-    Int_t Fill( vector<TMVA::Event*>, vector<Int_t> theVars, Int_t theType = -1 );
-    // create the search tree from the events in a TTree
-    // using ALL the variables specified included in the Event
-    Int_t Fill( vector<TMVA::Event*> theTree, Int_t theType = -1 );
+      // create the search tree from the events in a TTree
+      // using the variables specified in "theVars"
+      Int_t Fill( TTree* theTree, vector<TString>* theVars, Int_t theType = -1 );
+      // create the search tree from the event collection 
+      // using ONLY the variables specified in "theVars"
+      Int_t Fill( vector<TMVA::Event*>, vector<Int_t> theVars, Int_t theType = -1 );
+      // create the search tree from the events in a TTree
+      // using ALL the variables specified included in the Event
+      Int_t Fill( vector<TMVA::Event*> theTree, Int_t theType = -1 );
   
-  private:
+   private:
 
-    //check of Event variables lie with the volumde
-    Bool_t   InVolume    ( TMVA::Event*, Volume* ) const;
-    //
-    void     DestroyNode ( Node* );
-    // recursive search through daughter nodes in weight counting
-    Double_t SearchVolume( Node*, Volume*, Int_t, 
- 			   std::vector<Event*>* events );
-    Int_t    fPeriode;   // the number of variables defining the periode of ordering
+      //check of Event variables lie with the volumde
+      Bool_t   InVolume    ( TMVA::Event*, Volume* ) const;
+      //
+      void     DestroyNode ( Node* );
+      // recursive search through daughter nodes in weight counting
+      Double_t SearchVolume( Node*, Volume*, Int_t, 
+                             std::vector<Event*>* events );
+      Int_t    fPeriode;   // the number of variables defining the periode of ordering
   
-    ClassDef(BinarySearchTree,0) // Binary search tree including volume search method  
-  };
+      ClassDef(BinarySearchTree,0) // Binary search tree including volume search method  
+         };
 
-  // -----------------------------------------------------------------------------
+   // -----------------------------------------------------------------------------
 
 } // namespace TMVA
 

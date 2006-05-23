@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN.h,v 1.6 2006/05/22 08:04:39 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodCFMlpANN.h,v 1.8 2006/05/23 09:53:10 stelzer Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -70,7 +70,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodCFMlpANN.h,v 1.6 2006/05/22 08:04:39 andreas.hoecker Exp $    
+ * $Id: MethodCFMlpANN.h,v 1.8 2006/05/23 09:53:10 stelzer Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodCFMlpANN
@@ -99,89 +99,89 @@
 
 namespace TMVA {
 
-  class MethodCFMlpANN : public MethodBase, MethodANNBase, MethodCFMlpANN_Utils {
+   class MethodCFMlpANN : public MethodBase, MethodANNBase, MethodCFMlpANN_Utils {
 
-  public:
+   public:
 
-    MethodCFMlpANN( TString jobName,
-		    vector<TString>* theVariables, 
-		    TTree* theTree = 0, 
-		    TString theOption = "3000:N-1:N-2",
-		    TDirectory* theTargetDir = 0 );
+      MethodCFMlpANN( TString jobName,
+                      vector<TString>* theVariables, 
+                      TTree* theTree = 0, 
+                      TString theOption = "3000:N-1:N-2",
+                      TDirectory* theTargetDir = 0 );
 
-    MethodCFMlpANN( vector<TString> *theVariables, 
-		    TString theWeightFile,  
-		    TDirectory* theTargetDir = NULL );
+      MethodCFMlpANN( vector<TString> *theVariables, 
+                      TString theWeightFile,  
+                      TDirectory* theTargetDir = NULL );
 
-    virtual ~MethodCFMlpANN( void );
+      virtual ~MethodCFMlpANN( void );
     
-    // training method
-    virtual void Train( void );
+      // training method
+      virtual void Train( void );
 
-    // write weights to file
-    virtual void WriteWeightsToFile( void );
+      // write weights to file
+      virtual void WriteWeightsToFile( void );
   
-    // read weights from file
-    virtual void ReadWeightsFromFile( void );
+      // read weights from file
+      virtual void ReadWeightsFromFile( void );
 
-    // calculate the MVA value
-    virtual Double_t GetMvaValue( Event *e );
+      // calculate the MVA value
+      virtual Double_t GetMvaValue( Event *e );
 
-    // write method specific histos to target file
-    virtual void WriteHistosToFile( void ) ;
+      // write method specific histos to target file
+      virtual void WriteHistosToFile( void ) ;
 
-    // data accessors for external functions
-    Double_t GetData ( Int_t isel, Int_t ivar ) const { return (*fData)(isel, ivar); }
-    Int_t    GetClass( Int_t ivar             ) const { return (*fClass)[ivar];      }
+      // data accessors for external functions
+      Double_t GetData ( Int_t isel, Int_t ivar ) const { return (*fData)(isel, ivar); }
+      Int_t    GetClass( Int_t ivar             ) const { return (*fClass)[ivar];      }
 
-    // static pointer to this object (required for external functions
-    static MethodCFMlpANN* This( void ) { return fgThis; }  
+      // static pointer to this object (required for external functions
+      static MethodCFMlpANN* This( void ) { return fgThis; }  
 
-  protected:
+   protected:
 
-    Int_t DataInterface( Double_t*, Double_t*, Int_t*, Int_t*, Int_t*, Int_t*,
-			 Double_t*, Int_t*, Int_t* );
+      Int_t DataInterface( Double_t*, Double_t*, Int_t*, Int_t*, Int_t*, Int_t*,
+                           Double_t*, Int_t*, Int_t* );
   
-    void WriteNNWeightsToFile( Int_t, Int_t, Double_t*, Double_t*, 
-			       Int_t, Int_t*, Double_t*, Double_t*, Double_t* );
+      void WriteNNWeightsToFile( Int_t, Int_t, Double_t*, Double_t*, 
+                                 Int_t, Int_t*, Double_t*, Double_t*, Double_t* );
 
-  private:
+   private:
 
-    // this carrier
-    static MethodCFMlpANN* fgThis;
+      // this carrier
+      static MethodCFMlpANN* fgThis;
 
-    // LUTs
-    TMatrix       *fData ;   // the (data,var) string
-    vector<Int_t> *fClass;   // the event class (1=signal, 2=background)
+      // LUTs
+      TMatrix       *fData ;   // the (data,var) string
+      vector<Int_t> *fClass;   // the event class (1=signal, 2=background)
 
-    Int_t         fNevt;     // number of training events
-    Int_t         fNsig;     // number of signal events
-    Int_t         fNbgd;     // number of background
+      Int_t         fNevt;     // number of training events
+      Int_t         fNsig;     // number of signal events
+      Int_t         fNbgd;     // number of background
 
-    Int_t         fNlayers;  // number of layers (including input and output layers)
-    Int_t         fNcycles;  // number of training cycles
-    Int_t*        fNodes;    // number of nodes per layer
+      Int_t         fNlayers;  // number of layers (including input and output layers)
+      Int_t         fNcycles;  // number of training cycles
+      Int_t*        fNodes;    // number of nodes per layer
 
-    // additional member variables for the independent NN::Evaluation phase
-    Double_t*     fXmaxNN;   // maximum values of input variables
-    Double_t*     fXminNN;   // minimum values of input variables
-    Int_t         fLayermNN; // number of layers (including input and output layers)
-    Int_t*        fNeuronNN; // nodes per layer
-    Double_t***   fWNN;      // weights
-    Double_t**    fWwNN;     // weights
-    Double_t**    fYNN;      // weights
-    Double_t*     fTempNN;   // temperature (used in activation function)
+      // additional member variables for the independent NN::Evaluation phase
+      Double_t*     fXmaxNN;   // maximum values of input variables
+      Double_t*     fXminNN;   // minimum values of input variables
+      Int_t         fLayermNN; // number of layers (including input and output layers)
+      Int_t*        fNeuronNN; // nodes per layer
+      Double_t***   fWNN;      // weights
+      Double_t**    fWwNN;     // weights
+      Double_t**    fYNN;      // weights
+      Double_t*     fTempNN;   // temperature (used in activation function)
 
-    // auxiliary member functions
-    Double_t EvalANN( vector<Double_t>*, Bool_t& isOK );
-    void     NN_ava ( Double_t* );
-    Double_t NN_fonc( Int_t, Double_t ) const;
+      // auxiliary member functions
+      Double_t EvalANN( vector<Double_t>*, Bool_t& isOK );
+      void     NN_ava ( Double_t* );
+      Double_t NN_fonc( Int_t, Double_t ) const;
 
-    // default initialisation 
-    void InitCFMlpANN( void );
+      // default initialisation 
+      void InitCFMlpANN( void );
 
-    ClassDef(MethodCFMlpANN,0)  // Interface for Clermond-Ferrand artificial neural network
-  };
+      ClassDef(MethodCFMlpANN,0)  // Interface for Clermond-Ferrand artificial neural network
+         };
 
 } // namespace TMVA
 

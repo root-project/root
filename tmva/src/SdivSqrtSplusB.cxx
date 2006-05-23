@@ -30,10 +30,10 @@
 ClassImp(TMVA::SdivSqrtSplusB)
 
 //_______________________________________________________________________
-Double_t  TMVA::SdivSqrtSplusB::GetSeparationIndex( const Double_t &s, const Double_t &b )
+   Double_t  TMVA::SdivSqrtSplusB::GetSeparationIndex( const Double_t &s, const Double_t &b )
 {
-  // Index = S/sqrt(S+B)  (statistical significance)                 
-  if (s+b > 0) return s / sqrt(s+b);
-  else return 0;
+   // Index = S/sqrt(S+B)  (statistical significance)                 
+   if (s+b > 0) return s / sqrt(s+b);
+   else return 0;
 }
 

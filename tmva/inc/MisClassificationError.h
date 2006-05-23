@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MisClassificationError.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MisClassificationError.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -28,7 +28,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MisClassificationError.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $  
+ * $Id: MisClassificationError.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $  
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MisClassificationError
@@ -49,23 +49,23 @@
 
 namespace TMVA {
 
-  class MisClassificationError : public SeparationBase {
+   class MisClassificationError : public SeparationBase {
 
-  public:
+   public:
 
-    // consturctor for the Misclassification error
-    MisClassificationError() { fName = "MisCl"; }
-    // destructor
-    virtual ~MisClassificationError() {}
+      // consturctor for the Misclassification error
+      MisClassificationError() { fName = "MisCl"; }
+      // destructor
+      virtual ~MisClassificationError() {}
 
-  protected:
+   protected:
 
-    // Return the separation index: 1-max(p,1-p)
-    virtual Double_t  GetSeparationIndex( const Double_t &s, const Double_t &b );
+      // Return the separation index: 1-max(p,1-p)
+      virtual Double_t  GetSeparationIndex( const Double_t &s, const Double_t &b );
  
-    ClassDef(MisClassificationError,0) // Implementation of the MisClassificationError as separation criterion
+      ClassDef(MisClassificationError,0) // Implementation of the MisClassificationError as separation criterion
   
-  };
+         };
  
 } // namespace TMVA
 

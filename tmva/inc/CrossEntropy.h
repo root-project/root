@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: CrossEntropy.h,v 1.4 2006/05/22 08:04:38 andreas.hoecker Exp $       
+// @(#)root/tmva $Id: CrossEntropy.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $       
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -44,20 +44,20 @@
 
 namespace TMVA {
 
-class CrossEntropy : public SeparationBase {
+   class CrossEntropy : public SeparationBase {
 
-  public:
+   public:
     
-    CrossEntropy() { fName = "CE"; }
-    virtual ~CrossEntropy(){}
+      CrossEntropy() { fName = "CE"; }
+      virtual ~CrossEntropy(){}
     
-  protected:
+   protected:
     
-    virtual Double_t GetSeparationIndex( const Double_t &s, const Double_t &b );
+      virtual Double_t GetSeparationIndex( const Double_t &s, const Double_t &b );
     
-    ClassDef(CrossEntropy,0) // Implementation of the CrossEntropy as separation criterion
+      ClassDef(CrossEntropy,0) // Implementation of the CrossEntropy as separation criterion
     
-  };
+         };
 
 } // namespace TMVA
 

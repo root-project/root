@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TSpline2.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TSpline2.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TSpline2.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $        
+ * $Id: TSpline2.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $        
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_TSpline2
@@ -44,29 +44,29 @@
 
 namespace TMVA {
 
-  class TSpline2 : public TSpline {
+   class TSpline2 : public TSpline {
 
-  public:
+   public:
   
-    TSpline2( TString title, TGraph* theGraph );
-    virtual ~TSpline2( void );
+      TSpline2( TString title, TGraph* theGraph );
+      virtual ~TSpline2( void );
 
-    virtual  Double_t Eval( Double_t x ) const;
+      virtual  Double_t Eval( Double_t x ) const;
 
-    // dummy implementations
-    virtual void BuildCoeff( void );
-    virtual void GetKnot( Int_t i, Double_t& x, Double_t& y ) const;
+      // dummy implementations
+      virtual void BuildCoeff( void );
+      virtual void GetKnot( Int_t i, Double_t& x, Double_t& y ) const;
 
-  private:
+   private:
 
-    TGraph *fGraph;   // graph that is splined
-    Double_t Quadrax(const Float_t dm, const Float_t dm1,
-                     const Float_t dm2,const  Float_t dm3,
-                     const Float_t cos1, const Float_t cos2, 
-                     const Float_t cos3 ) const;
+      TGraph *fGraph;   // graph that is splined
+      Double_t Quadrax(const Float_t dm, const Float_t dm1,
+                       const Float_t dm2,const  Float_t dm3,
+                       const Float_t cos1, const Float_t cos2, 
+                       const Float_t cos3 ) const;
   
-    ClassDef(TSpline2,0) //Quadratic interpolation class (using quadrax)
-  };
+      ClassDef(TSpline2,0) //Quadratic interpolation class (using quadrax)
+         };
 
 
 } // namespace TMVA

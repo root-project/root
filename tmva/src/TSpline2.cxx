@@ -35,107 +35,107 @@
 ClassImp(TMVA::TSpline2)
 
 //_______________________________________________________________________
-TMVA::TSpline2::TSpline2( TString title, TGraph* theGraph )
-  : fGraph( theGraph )
+   TMVA::TSpline2::TSpline2( TString title, TGraph* theGraph )
+      : fGraph( theGraph )
 {
-  // constructor from TGraph
-  // TSpline is a TNamed object
-  SetNameTitle( title, title );  
+   // constructor from TGraph
+   // TSpline is a TNamed object
+   SetNameTitle( title, title );  
 }
 
 //_______________________________________________________________________
 TMVA::TSpline2::~TSpline2( void )
 {
-  // destructor
-  if (NULL != fGraph) delete fGraph;
+   // destructor
+   if (NULL != fGraph) delete fGraph;
 }
 
 //_______________________________________________________________________
 Double_t TMVA::TSpline2::Eval( const Double_t x ) const
 {  
-  // returns quadratically interpolated TGraph entry around x
-  Double_t retval=0;
+   // returns quadratically interpolated TGraph entry around x
+   Double_t retval=0;
   
-  Int_t ibin = TMath::BinarySearch( fGraph->GetN(),
-                                    fGraph->GetX(),
-                                    x );
+   Int_t ibin = TMath::BinarySearch( fGraph->GetN(),
+                                     fGraph->GetX(),
+                                     x );
 
-  // sanity checks
-  if (ibin < 0               ) ibin = 0;
-  if (ibin >= fGraph->GetN()) ibin =  fGraph->GetN() - 1;
+   // sanity checks
+   if (ibin < 0               ) ibin = 0;
+   if (ibin >= fGraph->GetN()) ibin =  fGraph->GetN() - 1;
   
-  Float_t dx = 0; // should be zero
+   Float_t dx = 0; // should be zero
   
-  if (ibin == 0 ) {
+   if (ibin == 0 ) {
     
-    retval = Quadrax(  x,
-                       fGraph->GetX()[ibin]   + dx,
-                       fGraph->GetX()[ibin+1] + dx,
-                       fGraph->GetX()[ibin+2] + dx,
-                       fGraph->GetY()[ibin],
-                       fGraph->GetY()[ibin+1],
-                       fGraph->GetY()[ibin+2]);
+      retval = Quadrax(  x,
+                         fGraph->GetX()[ibin]   + dx,
+                         fGraph->GetX()[ibin+1] + dx,
+                         fGraph->GetX()[ibin+2] + dx,
+                         fGraph->GetY()[ibin],
+                         fGraph->GetY()[ibin+1],
+                         fGraph->GetY()[ibin+2]);
     
-  }
-  else if (ibin >= (fGraph->GetN()-1)) {
+   }
+   else if (ibin >= (fGraph->GetN()-1)) {
     
-    retval = Quadrax( x, 
-                      fGraph->GetX()[ibin-2] + dx,
-		      fGraph->GetX()[ibin-1] + dx,
-		      fGraph->GetX()[ibin]   + dx,
-		      fGraph->GetY()[ibin-2],
-		      fGraph->GetY()[ibin-1],
-                      fGraph->GetY()[ibin]);
-  }
-  else {  
-    
-    retval = ( Quadrax( x, 
+      retval = Quadrax( x, 
+                        fGraph->GetX()[ibin-2] + dx,
                         fGraph->GetX()[ibin-1] + dx,
                         fGraph->GetX()[ibin]   + dx,
-                        fGraph->GetX()[ibin+1] + dx,
+                        fGraph->GetY()[ibin-2],
                         fGraph->GetY()[ibin-1],
-                        fGraph->GetY()[ibin],
-                        fGraph->GetY()[ibin+1])
-               + 
-               Quadrax( x, fGraph->GetX()[ibin] + dx,
-                        fGraph->GetX()[ibin+1]  + dx,
-                        fGraph->GetX()[ibin+2]  + dx,
-                        fGraph->GetY()[ibin],
-                        fGraph->GetY()[ibin+1],
-                        fGraph->GetY()[ibin+2]) )*0.5;
-  }
+                        fGraph->GetY()[ibin]);
+   }
+   else {  
+    
+      retval = ( Quadrax( x, 
+                          fGraph->GetX()[ibin-1] + dx,
+                          fGraph->GetX()[ibin]   + dx,
+                          fGraph->GetX()[ibin+1] + dx,
+                          fGraph->GetY()[ibin-1],
+                          fGraph->GetY()[ibin],
+                          fGraph->GetY()[ibin+1])
+                 + 
+                 Quadrax( x, fGraph->GetX()[ibin] + dx,
+                          fGraph->GetX()[ibin+1]  + dx,
+                          fGraph->GetX()[ibin+2]  + dx,
+                          fGraph->GetY()[ibin],
+                          fGraph->GetY()[ibin+1],
+                          fGraph->GetY()[ibin+2]) )*0.5;
+   }
 
-  return retval;
+   return retval;
 }
 
 //_______________________________________________________________________
 void TMVA::TSpline2::BuildCoeff( void )
 {
-  // no coefficients to precompute
+   // no coefficients to precompute
 }
 
 //_______________________________________________________________________
 void TMVA::TSpline2::GetKnot( Int_t  /*i*/, Double_t& /*x*/, Double_t& /*y*/ ) const
 {
-  // no knots
+   // no knots
 }
 
 //_______________________________________________________________________
 Double_t TMVA::TSpline2::Quadrax(const Float_t dm,const Float_t dm1,const Float_t dm2,const Float_t dm3,
-				 const Float_t cos1, const Float_t cos2, const Float_t cos3 ) const
+                                 const Float_t cos1, const Float_t cos2, const Float_t cos3 ) const
 {  
-  // quadratic interpolation
-  // Revised and checked by Francois Nov, 16th, 2000
-  // Note the beautiful non-spontaneous symmetry breaking ...
-  // It was checked that the old routine gave exactly the same answers.
-  //   
-  Float_t a = cos1*(dm2-dm3) + cos2*(dm3-dm1) + cos3*(dm1-dm2);
-  Float_t b = cos1*(dm2*dm2-dm3*dm3) + cos2*(dm3*dm3-dm1*dm1) + cos3*(dm1*dm1-dm2*dm2);
-  Float_t c = cos1*(dm2-dm3)*dm2*dm3 + cos2*(dm3-dm1)*dm3*dm1 + cos3*(dm1-dm2)*dm1*dm2;
+   // quadratic interpolation
+   // Revised and checked by Francois Nov, 16th, 2000
+   // Note the beautiful non-spontaneous symmetry breaking ...
+   // It was checked that the old routine gave exactly the same answers.
+   //   
+   Float_t a = cos1*(dm2-dm3) + cos2*(dm3-dm1) + cos3*(dm1-dm2);
+   Float_t b = cos1*(dm2*dm2-dm3*dm3) + cos2*(dm3*dm3-dm1*dm1) + cos3*(dm1*dm1-dm2*dm2);
+   Float_t c = cos1*(dm2-dm3)*dm2*dm3 + cos2*(dm3-dm1)*dm3*dm1 + cos3*(dm1-dm2)*dm1*dm2;
 
-  Float_t denom = (dm2-dm3)*(dm3-dm1)*(dm1-dm2);
+   Float_t denom = (dm2-dm3)*(dm3-dm1)*(dm1-dm2);
   
-  return (denom != 0.0) ? (-a*dm*dm+b*dm-c)/denom : 0.0;
+   return (denom != 0.0) ? (-a*dm*dm+b*dm-c)/denom : 0.0;
 }
 
 

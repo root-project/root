@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticCuts.cxx,v 1.5 2006/05/22 01:34:14 stelzer Exp $ 
+// @(#)root/tmva $Id: GeneticCuts.cxx,v 1.6 2006/05/23 09:53:10 stelzer Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -38,26 +38,11 @@
 ClassImp(TMVA::GeneticCuts)
 
 //_______________________________________________________________________
-TMVA::GeneticCuts::GeneticCuts( Int_t size, std::vector<LowHigh*> ranges ) 
-  : TMVA::GeneticBase( size, ranges ) 
+   TMVA::GeneticCuts::GeneticCuts( Int_t size, std::vector<LowHigh_t*> ranges ) 
+      : TMVA::GeneticBase( size, ranges ) 
 {
-  // constructor
+   // constructor
 }
-
-// //_______________________________________________________________________
-// Double_t TMVA::GeneticCuts::FitnessFunction( const std::vector<Double_t> parameters )
-// {
-//   Int_t n = parameters.size();
-//   const Int_t kNMAX=1000;
-//   if (n >= kNMAX) {
-//      printf("n>1000 in TMVA::GeneticCuts::fitnessFunction, aborting\n");
-//      return 0;
-//   }
-//   Double_t p[kNMAX];
-//   for (Int_t i=0; i<n; i++) p[i] = parameters[i];
-  
-//   return TMVA::MethodCuts::ThisCuts()->ComputeEstimator( p, n ); 
-// }
 
 //_______________________________________________________________________
 Double_t TMVA::GeneticCuts::FitnessFunction( const std::vector<Double_t> & parameters )

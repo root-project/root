@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticGenes.h,v 1.4 2006/05/22 01:34:14 stelzer Exp $    
+// @(#)root/tmva $Id: GeneticGenes.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -40,27 +40,27 @@
 
 namespace TMVA {
 
-  class GeneticGenes {
+   class GeneticGenes {
 
-  public:
+   public:
   
-    GeneticGenes() {}  
-    GeneticGenes( std::vector<Double_t> & f );
-    virtual ~GeneticGenes() {}  
+      GeneticGenes() {}  
+      GeneticGenes( std::vector<Double_t> & f );
+      virtual ~GeneticGenes() {}  
   
-    void Clear();  
-    void ClearResults();
+      void Clear();  
+      void ClearResults();
 
-    std::vector<Double_t>& GetFactors() { return fFactors; }
-    std::vector<Double_t>& GetResults() { return fResults; }  
+      std::vector<Double_t>& GetFactors() { return fFactors; }
+      std::vector<Double_t>& GetResults() { return fResults; }  
 
-  private:
+   private:
 
-    std::vector<Double_t> fFactors; // stores the factors (coefficients) of one individual
-    std::vector<Double_t> fResults; // stores the fitness-results of this individual
+      std::vector<Double_t> fFactors; // stores the factors (coefficients) of one individual
+      std::vector<Double_t> fResults; // stores the fitness-results of this individual
   
-    ClassDef(GeneticGenes,0) // Genes definition for genetic algorithm
-  };
+      ClassDef(GeneticGenes,0) // Genes definition for genetic algorithm
+         };
 
 } // namespace TMVA
 

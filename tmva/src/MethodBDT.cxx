@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBDT.cxx,v 1.10 2006/05/22 09:06:25 helgevoss Exp $ 
+// @(#)root/tmva $Id: MethodBDT.cxx,v 1.12 2006/05/23 09:53:10 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -105,145 +105,145 @@ using std::vector;
 ClassImp(TMVA::MethodBDT)
  
 //_______________________________________________________________________
-TMVA::MethodBDT::MethodBDT( TString jobName, vector<TString>* theVariables,  
-                                TTree* theTree, TString theOption, TDirectory* theTargetDir )
-  : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
+   TMVA::MethodBDT::MethodBDT( TString jobName, vector<TString>* theVariables,  
+                               TTree* theTree, TString theOption, TDirectory* theTargetDir )
+      : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
-  // the standard constructor for the "boosted decision trees" 
-  //
-  // MethodBDT (Boosted Decision Trees) options:
-  // format and syntax of option string: "nTrees:BoostType:SeparationType:
-  //                                      nEventsMin:dummy:
-  //                                      nCuts:SignalFraction"
-  // nTrees:          number of trees in the forest to be created
-  // BoostType:       the boosting type for the trees in the forest (AdaBoost e.t.c..)
-  // SeparationType   the separation criterion applied in the node splitting
-  // nEventsMin:      the minimum number of events in a node (leaf criteria, stop splitting)
-  // dummy:           a dummy variable, just to keep backward compatible
-  // nCuts:  the number of steps in the optimisation of the cut for a node
-  // SignalFraction:  scale parameter of the number of Bkg events  
-  //                  applied to the training sample to simulate different initial purity
-  //                  of your data sample. 
-  //
-  // known SeparationTypes are:
-  //    - MisClassificationError
-  //    - GiniIndex
-  //    - CrossEntropy
-  // known BoostTypes are:
-  //    - AdaBoost
-  //    - Bagging
-  InitBDT();
+   // the standard constructor for the "boosted decision trees" 
+   //
+   // MethodBDT (Boosted Decision Trees) options:
+   // format and syntax of option string: "nTrees:BoostType:SeparationType:
+   //                                      nEventsMin:dummy:
+   //                                      nCuts:SignalFraction"
+   // nTrees:          number of trees in the forest to be created
+   // BoostType:       the boosting type for the trees in the forest (AdaBoost e.t.c..)
+   // SeparationType   the separation criterion applied in the node splitting
+   // nEventsMin:      the minimum number of events in a node (leaf criteria, stop splitting)
+   // dummy:           a dummy variable, just to keep backward compatible
+   // nCuts:  the number of steps in the optimisation of the cut for a node
+   // SignalFraction:  scale parameter of the number of Bkg events  
+   //                  applied to the training sample to simulate different initial purity
+   //                  of your data sample. 
+   //
+   // known SeparationTypes are:
+   //    - MisClassificationError
+   //    - GiniIndex
+   //    - CrossEntropy
+   // known BoostTypes are:
+   //    - AdaBoost
+   //    - Bagging
+   InitBDT();
   
-  if (fOptions.Sizeof()<0) {
-    cout << "--- " << GetName() << ": using default options= "<< fOptions <<endl;
-  }
-  cout << "--- "<<GetName() << " options:" << fOptions <<endl;
-  fOptions.ToLower();
-  TList*  list  = TMVA::Tools::ParseFormatLine( fOptions );
-  if (list->GetSize() > 0){
-    fNTrees = atoi( ((TObjString*)list->At(0))->GetString() ) ;
-  }
-  if (list->GetSize() > 1)fBoostType=((TObjString*)list->At(1))->GetString();
-  if (list->GetSize() > 2){
-    TString sepType=((TObjString*)list->At(2))->GetString();
-    if (sepType.Contains("misclassificationerror")) {
-      fSepType = new TMVA::MisClassificationError();
-    }
-    else if (sepType.Contains("giniindex")) {
+   if (fOptions.Sizeof()<0) {
+      cout << "--- " << GetName() << ": using default options= "<< fOptions <<endl;
+   }
+   cout << "--- "<<GetName() << " options:" << fOptions <<endl;
+   fOptions.ToLower();
+   TList*  list  = TMVA::Tools::ParseFormatLine( fOptions );
+   if (list->GetSize() > 0){
+      fNTrees = atoi( ((TObjString*)list->At(0))->GetString() ) ;
+   }
+   if (list->GetSize() > 1)fBoostType=((TObjString*)list->At(1))->GetString();
+   if (list->GetSize() > 2){
+      TString sepType=((TObjString*)list->At(2))->GetString();
+      if (sepType.Contains("misclassificationerror")) {
+         fSepType = new TMVA::MisClassificationError();
+      }
+      else if (sepType.Contains("giniindex")) {
+         fSepType = new TMVA::GiniIndex();
+      }
+      else if (sepType.Contains("crossentropy")) {
+         fSepType = new TMVA::CrossEntropy();
+      }
+      else if (sepType.Contains("sdivsqrtsplusb")) {
+         fSepType = new TMVA::SdivSqrtSplusB();
+      }
+      else{
+         cout <<"--- TMVA::DecisionTree::TrainNode Error!! separation Routine not found\n" << endl;
+         cout << sepType <<endl;
+         exit(1);
+      }
+
+   }
+   else{
+      cout <<"---" <<GetName() <<": using default GiniIndex as separation criterion"<<endl;
       fSepType = new TMVA::GiniIndex();
-    }
-    else if (sepType.Contains("crossentropy")) {
-      fSepType = new TMVA::CrossEntropy();
-    }
-    else if (sepType.Contains("sdivsqrtsplusb")) {
-      fSepType = new TMVA::SdivSqrtSplusB();
-    }
-    else{
-      cout <<"--- TMVA::DecisionTree::TrainNode Error!! separation Routine not found\n" << endl;
-      cout << sepType <<endl;
-      exit(1);
-    }
+   }
+   fMethodName = "BDT"+fSepType->GetName();
+   fTestvar    = fTestvarPrefix+GetMethodName();
 
-  }
-  else{
-    cout <<"---" <<GetName() <<": using default GiniIndex as separation criterion"<<endl;
-    fSepType = new TMVA::GiniIndex();
-  }
-  fMethodName = "BDT"+fSepType->GetName();
-  fTestvar    = fTestvarPrefix+GetMethodName();
+   if (list->GetSize() > 4){
+      fNodeMinEvents = atoi( ((TObjString*)list->At(3))->GetString() ) ;
+      fDummyOpt      = Double_t(atof( ((TObjString*)list->At(4))->GetString() )) ;
+   }
+   if (list->GetSize() > 5){
+      fNCuts = atoi( ((TObjString*)list->At(5))->GetString() ) ;
+   }
+   if (list->GetSize() > 6){
+      fSignalFraction = atof( ((TObjString*)list->At(6))->GetString() ) ;
+   }
 
-  if (list->GetSize() > 4){
-    fNodeMinEvents = atoi( ((TObjString*)list->At(3))->GetString() ) ;
-    fDummyOpt      = Double_t(atof( ((TObjString*)list->At(4))->GetString() )) ;
-  }
-  if (list->GetSize() > 5){
-    fNCuts = atoi( ((TObjString*)list->At(5))->GetString() ) ;
-  }
-  if (list->GetSize() > 6){
-    fSignalFraction = atof( ((TObjString*)list->At(6))->GetString() ) ;
-  }
+   cout << "--- " << GetName() << ": Called with "<<fNTrees <<" trees in the forest"<<endl; 
 
-  cout << "--- " << GetName() << ": Called with "<<fNTrees <<" trees in the forest"<<endl; 
+   cout << "--- " << GetName() << ": Booked with options: "<<endl;
+   cout << "--- " << GetName() << ": separation criteria in Node training: "
+        << fSepType->GetName()<<endl;
+   cout << "--- " << GetName() << ": BoostType: "
+        << fBoostType << "   nTress "<< fNTrees<<endl;
+   cout << "--- " << GetName() << ": NodeMinEvents:   " << fNodeMinEvents  << endl
+        << "--- " << GetName() << ": dummy:  " << fDummyOpt << endl
+        << "--- " << GetName() << ": NCuts:           " << fNCuts          << endl
+        << "--- " << GetName() << ": SignalFraction:  " << fSignalFraction << endl;
 
-  cout << "--- " << GetName() << ": Booked with options: "<<endl;
-  cout << "--- " << GetName() << ": separation criteria in Node training: "
-       << fSepType->GetName()<<endl;
-  cout << "--- " << GetName() << ": BoostType: "
-       << fBoostType << "   nTress "<< fNTrees<<endl;
-  cout << "--- " << GetName() << ": NodeMinEvents:   " << fNodeMinEvents  << endl
-       << "--- " << GetName() << ": dummy:  " << fDummyOpt << endl
-       << "--- " << GetName() << ": NCuts:           " << fNCuts          << endl
-       << "--- " << GetName() << ": SignalFraction:  " << fSignalFraction << endl;
+   if (0 != fTrainingTree) {
+      if (Verbose())
+         cout << "--- " << GetName() << " called " << endl;
+      // fill the STL Vector with the event sample 
+      this->InitEventSample();
+   }
+   else{
+      cout << "--- " << GetName() << ": Warning: no training Tree given " <<endl;
+      cout << "--- " << GetName() << "  you'll not allowed to cal Train e.t.c..."<<endl;
+   }
 
-  if (0 != fTrainingTree) {
-    if (Verbose())
-      cout << "--- " << GetName() << " called " << endl;
-    // fill the STL Vector with the event sample 
-    this->InitEventSample();
-  }
-  else{
-    cout << "--- " << GetName() << ": Warning: no training Tree given " <<endl;
-    cout << "--- " << GetName() << "  you'll not allowed to cal Train e.t.c..."<<endl;
-  }
+   //book monitoring histograms (currently for AdaBost, only)
+   fBoostWeightHist = new TH1F("fBoostWeight","Ada Boost weights",100,1,100);
+   fErrFractHist = new TH2F("fErrFractHist","error fraction vs tree number",
+                            fNTrees,0,fNTrees,50,0,0.5);
+   fMonitorNtuple= new TTree("fMonitorNtuple","BDT variables");
+   fMonitorNtuple->Branch("iTree",&fITree,"iTree/I");
+   fMonitorNtuple->Branch("boostWeight",&fBoostWeight,"boostWeight/D");
+   fMonitorNtuple->Branch("errorFraction",&fErrorFraction,"errorFraction/D");
+   fMonitorNtuple->Branch("nNodes",&fNnodes,"nNodes/I");
 
-  //book monitoring histograms (currently for AdaBost, only)
-  fBoostWeightHist = new TH1F("fBoostWeight","Ada Boost weights",100,1,100);
-  fErrFractHist = new TH2F("fErrFractHist","error fraction vs tree number",
-			   fNTrees,0,fNTrees,50,0,0.5);
-  fMonitorNtuple= new TTree("fMonitorNtuple","BDT variables");
-  fMonitorNtuple->Branch("iTree",&fITree,"iTree/I");
-  fMonitorNtuple->Branch("boostWeight",&fBoostWeight,"boostWeight/D");
-  fMonitorNtuple->Branch("errorFraction",&fErrorFraction,"errorFraction/D");
-  fMonitorNtuple->Branch("nNodes",&fNnodes,"nNodes/I");
-
-  delete list;
+   delete list;
 }
 
 //_______________________________________________________________________
 TMVA::MethodBDT::MethodBDT( vector<TString> *theVariables, 
-                                TString theWeightFile,  
-                                TDirectory* theTargetDir )
-  : TMVA::MethodBase( theVariables, theWeightFile, theTargetDir ) 
+                            TString theWeightFile,  
+                            TDirectory* theTargetDir )
+   : TMVA::MethodBase( theVariables, theWeightFile, theTargetDir ) 
 {
-// constructor for calculating BDT-MVA using previously generatad decision trees
-// the result of the previous training (the decision trees) are read in via the
-// weightfile. Make sure the "theVariables" correspond to the ones used in 
-// creating the "weight"-file
-  InitBDT();
+   // constructor for calculating BDT-MVA using previously generatad decision trees
+   // the result of the previous training (the decision trees) are read in via the
+   // weightfile. Make sure the "theVariables" correspond to the ones used in 
+   // creating the "weight"-file
+   InitBDT();
 }
 
 //_______________________________________________________________________
 void TMVA::MethodBDT::InitBDT( void )
 {
-  // common initialisation with defaults for the BDT-Method
-  fMethodName = "BDT";
-  fMethod     = TMVA::Types::BDT;
-  fNTrees     = 100;
-  fBoostType  = "AdaBoost";
-  fNodeMinEvents  = 10;
-  fDummyOpt = 0.;
-  fNCuts          = 20;
-  fSignalFraction =-1.;     // -1 means scaling the signal fraction in the is switched off, any
+   // common initialisation with defaults for the BDT-Method
+   fMethodName = "BDT";
+   fMethod     = TMVA::Types::BDT;
+   fNTrees     = 100;
+   fBoostType  = "AdaBoost";
+   fNodeMinEvents  = 10;
+   fDummyOpt = 0.;
+   fNCuts          = 20;
+   fSignalFraction =-1.;     // -1 means scaling the signal fraction in the is switched off, any
                              // value > 0 would scale the number of background events in the 
                              // training tree by the corresponding number
 
@@ -252,153 +252,153 @@ void TMVA::MethodBDT::InitBDT( void )
 //_______________________________________________________________________
 TMVA::MethodBDT::~MethodBDT( void )
 {
-  for (UInt_t i=0; i<fEventSample.size(); i++) delete fEventSample[i];
-  for (UInt_t i=0; i<fForest.size(); i++) delete fForest[i];
+   for (UInt_t i=0; i<fEventSample.size(); i++) delete fEventSample[i];
+   for (UInt_t i=0; i<fForest.size(); i++) delete fForest[i];
 }
 
 
 //_______________________________________________________________________
 void TMVA::MethodBDT::InitEventSample( void )
 {
-  // write all Events from the Tree into a vector of TMVA::Events, that are 
-  // more easily manipulated.  
-  // This method should never be called without existing trainingTree, as it
-  // the vector of events from the ROOT training tree
-  if (0 == fTrainingTree) {
-    cout << "--- " << GetName() << ": Error in ::Init(): fTrainingTree is zero pointer"
-         << " --> exit(1)" << endl;
-    exit(1);
-  }
-  Int_t nevents = fTrainingTree->GetEntries();
-  for (int ievt=0; ievt<nevents; ievt++){
-    fEventSample.push_back(new TMVA::Event(fTrainingTree, ievt, fInputVars));
-    if (fSignalFraction > 0){
-      if (fEventSample.back()->GetType2() < 0) fEventSample.back()->SetWeight(fSignalFraction*fEventSample.back()->GetWeight());
-    }
-  }
+   // write all Events from the Tree into a vector of TMVA::Events, that are 
+   // more easily manipulated.  
+   // This method should never be called without existing trainingTree, as it
+   // the vector of events from the ROOT training tree
+   if (0 == fTrainingTree) {
+      cout << "--- " << GetName() << ": Error in ::Init(): fTrainingTree is zero pointer"
+           << " --> exit(1)" << endl;
+      exit(1);
+   }
+   Int_t nevents = fTrainingTree->GetEntries();
+   for (int ievt=0; ievt<nevents; ievt++){
+      fEventSample.push_back(new TMVA::Event(fTrainingTree, ievt, fInputVars));
+      if (fSignalFraction > 0){
+         if (fEventSample.back()->GetType2() < 0) fEventSample.back()->SetWeight(fSignalFraction*fEventSample.back()->GetWeight());
+      }
+   }
 }
 
 //_______________________________________________________________________
 void TMVA::MethodBDT::Train( void )
 {  
-  // default sanity checks
-  if (!CheckSanity()) { 
-    cout << "--- " << GetName() << ": Error: sanity check failed" << endl;
-    exit(1);
-  }
+   // default sanity checks
+   if (!CheckSanity()) { 
+      cout << "--- " << GetName() << ": Error: sanity check failed" << endl;
+      exit(1);
+   }
 
-  cout << "--- " << GetName() << ": I will train "<< fNTrees << " Decision Trees"  
-       << " ... patience please" << endl;
-  TMVA::Timer timer( fNTrees, GetName() ); 
-  for (int itree=0; itree<fNTrees; itree++){
-    timer.DrawProgressBar( itree );
+   cout << "--- " << GetName() << ": I will train "<< fNTrees << " Decision Trees"  
+        << " ... patience please" << endl;
+   TMVA::Timer timer( fNTrees, GetName() ); 
+   for (int itree=0; itree<fNTrees; itree++){
+      timer.DrawProgressBar( itree );
 
-    fForest.push_back(new TMVA::DecisionTree(fSepType,
-      fNodeMinEvents,fNCuts));
-    fNnodes = fForest.back()->BuildTree(fEventSample);
-    fBoostWeights.push_back( this->Boost(fEventSample, fForest.back(), itree) );
-    fITree = itree;
+      fForest.push_back(new TMVA::DecisionTree(fSepType,
+                                               fNodeMinEvents,fNCuts));
+      fNnodes = fForest.back()->BuildTree(fEventSample);
+      fBoostWeights.push_back( this->Boost(fEventSample, fForest.back(), itree) );
+      fITree = itree;
 
-    fMonitorNtuple->Fill();
-  }
+      fMonitorNtuple->Fill();
+   }
 
-  // get elapsed time
-  cout << "--- " << GetName() << ": elapsed time: " << timer.GetElapsedTime() 
-       << endl;    
+   // get elapsed time
+   cout << "--- " << GetName() << ": elapsed time: " << timer.GetElapsedTime() 
+        << endl;    
 
-  // write Weights to file
-  WriteWeightsToFile();
+   // write Weights to file
+   WriteWeightsToFile();
 
-  // write monitoring histograms to file
-  WriteHistosToFile();
+   // write monitoring histograms to file
+   WriteHistosToFile();
 }
 
 //_______________________________________________________________________
 Double_t TMVA::MethodBDT::Boost( vector<TMVA::Event*> eventSample, TMVA::DecisionTree *dt, Int_t iTree )
 {
-  // apply the boosting alogrithim (the algorithm is selecte via the the "option" given
-  // in the constructor. The return value is the boosting weight 
+   // apply the boosting alogrithim (the algorithm is selecte via the the "option" given
+   // in the constructor. The return value is the boosting weight 
 
-  if (fOptions.Contains("adaboost")) return this->AdaBoost(eventSample, dt);
-  //  else if (fOptions.Contains("epsilonboost")) return this->EpsilonBoost(eventSample, dt);
-  else if (fOptions.Contains("bagging")) return this->Bagging(eventSample, iTree);
-  else {
-    cout << "--- " << this->GetName() << "::Boost: ERROR Unknow boost option called\n";
-    cout << fOptions << endl;
-   exit(1);
-  }
+   if (fOptions.Contains("adaboost")) return this->AdaBoost(eventSample, dt);
+   //  else if (fOptions.Contains("epsilonboost")) return this->EpsilonBoost(eventSample, dt);
+   else if (fOptions.Contains("bagging")) return this->Bagging(eventSample, iTree);
+   else {
+      cout << "--- " << this->GetName() << "::Boost: ERROR Unknow boost option called\n";
+      cout << fOptions << endl;
+      exit(1);
+   }
 }
 
 //_______________________________________________________________________
 Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, TMVA::DecisionTree *dt )
 {
-  // the AdaBoost implementation.
-  // a new training sample is generated by weighting 
-  // events that are misclassified by the decision tree. The weight
-  // applied is w = (1-err)/err or more general:
-  //            w = ((1-err)/err)^beta
-  // where err is the fracthin of misclassified events in the tree ( <0.5 assuming
-  // demanding the that previous selection was better than random guessing)
-  // and "beta" beeing a free parameter (standard: beta = 1) that modifies the
-  // boosting.
+   // the AdaBoost implementation.
+   // a new training sample is generated by weighting 
+   // events that are misclassified by the decision tree. The weight
+   // applied is w = (1-err)/err or more general:
+   //            w = ((1-err)/err)^beta
+   // where err is the fracthin of misclassified events in the tree ( <0.5 assuming
+   // demanding the that previous selection was better than random guessing)
+   // and "beta" beeing a free parameter (standard: beta = 1) that modifies the
+   // boosting.
 
-  fAdaBoostBeta=1.;   // that's apparently the standard value :)
+   fAdaBoostBeta=1.;   // that's apparently the standard value :)
 
-  Double_t err=0, sumw=0, sumwfalse=0, count=0;
-  vector<Bool_t> correctSelected;
-  correctSelected.reserve(eventSample.size());
-  for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-    Int_t evType= ( 0.5 > dt->CheckEvent(*e) ) ? -1 : 1;
-    sumw+=(*e)->GetWeight();
+   Double_t err=0, sumw=0, sumwfalse=0, count=0;
+   vector<Bool_t> correctSelected;
+   correctSelected.reserve(eventSample.size());
+   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+      Int_t evType= ( 0.5 > dt->CheckEvent(*e) ) ? -1 : 1;
+      sumw+=(*e)->GetWeight();
 
-    // I knew I'd get it worng.. 
-    // event Type = 0 bkg, 1 sig
-    // nodeType:  =-1 bkg  1 sig  
-    // if (evType != (*e)->GetType()) { 
-    if (evType != (*e)->GetType2()) { 
-      sumwfalse+= (*e)->GetWeight();
-      count+=1;
-      correctSelected.push_back(kFALSE);
-    }
-    else{
-       correctSelected.push_back(kTRUE);
-    }    
-  }
-  err=sumwfalse/sumw;
+      // I knew I'd get it worng.. 
+      // event Type = 0 bkg, 1 sig
+      // nodeType:  =-1 bkg  1 sig  
+      // if (evType != (*e)->GetType()) { 
+      if (evType != (*e)->GetType2()) { 
+         sumwfalse+= (*e)->GetWeight();
+         count+=1;
+         correctSelected.push_back(kFALSE);
+      }
+      else{
+         correctSelected.push_back(kTRUE);
+      }    
+   }
+   err=sumwfalse/sumw;
 
-  Double_t newSumw=0;
-  Int_t i=0;
-  Double_t boostWeight;
-  if (err>0){
-    if (fAdaBoostBeta == 1){
-      boostWeight = (1-err)/err ;
-    }else{
-      boostWeight =  pow((1-err)/err,fAdaBoostBeta) ;
-    }
-  }else{
-    boostWeight = 1000; // 
-  }
+   Double_t newSumw=0;
+   Int_t i=0;
+   Double_t boostWeight;
+   if (err>0){
+      if (fAdaBoostBeta == 1){
+         boostWeight = (1-err)/err ;
+      }else{
+         boostWeight =  pow((1-err)/err,fAdaBoostBeta) ;
+      }
+   }else{
+      boostWeight = 1000; // 
+   }
 
-  for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++){
-    if (!correctSelected[i]){
-      (*e)->SetWeight( (*e)->GetWeight() * boostWeight);
-    }
-    newSumw+=(*e)->GetWeight();    
-    i++;
-  }
-  //re-normalise the Weights
-  for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++){
-    (*e)->SetWeight( (*e)->GetWeight() * sumw / newSumw );
-  }
+   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++){
+      if (!correctSelected[i]){
+         (*e)->SetWeight( (*e)->GetWeight() * boostWeight);
+      }
+      newSumw+=(*e)->GetWeight();    
+      i++;
+   }
+   //re-normalise the Weights
+   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++){
+      (*e)->SetWeight( (*e)->GetWeight() * sumw / newSumw );
+   }
 
-  fBoostWeightHist->Fill(boostWeight);
-  fErrFractHist->Fill(fForest.size(),err);
+   fBoostWeightHist->Fill(boostWeight);
+   fErrFractHist->Fill(fForest.size(),err);
 
-  fBoostWeight = boostWeight;
-  fErrorFraction = err;
+   fBoostWeight = boostWeight;
+   fErrorFraction = err;
   
 
-  return log(boostWeight);
+   return log(boostWeight);
 }
 
 //_______________________________________________________________________
@@ -411,153 +411,153 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, TMVA::Deci
 //_______________________________________________________________________
 Double_t TMVA::MethodBDT::Bagging( vector<TMVA::Event*> eventSample, Int_t iTree )
 {
-  // call it Bootstrapping, re-sampling or whatever you like, in the end it is nothing
-  // else but applying "random Weights" to each event.
-  Double_t newSumw=0;
-  Double_t newWeight;
-  TRandom *trandom   = new TRandom(iTree);
-  for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++){
-    newWeight = trandom->Rndm();
-    (*e)->SetWeight(newWeight);
-    newSumw+=(*e)->GetWeight();    
-  }
-  for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++){
-    (*e)->SetWeight( (*e)->GetWeight() * eventSample.size() / newSumw );
-  }
-  return 1.;  //here as there are random weights for each event, just return a constant==1;
+   // call it Bootstrapping, re-sampling or whatever you like, in the end it is nothing
+   // else but applying "random Weights" to each event.
+   Double_t newSumw=0;
+   Double_t newWeight;
+   TRandom *trandom   = new TRandom(iTree);
+   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++){
+      newWeight = trandom->Rndm();
+      (*e)->SetWeight(newWeight);
+      newSumw+=(*e)->GetWeight();    
+   }
+   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++){
+      (*e)->SetWeight( (*e)->GetWeight() * eventSample.size() / newSumw );
+   }
+   return 1.;  //here as there are random weights for each event, just return a constant==1;
 }
 
 //_______________________________________________________________________
 void  TMVA::MethodBDT::WriteWeightsToFile( void )
 {  
-  // write the whole Forest (sample of Decition trees) to a file for later use.
-  TString fname = GetWeightFileName();
-  cout << "--- " << GetName() << ": creating Weight file: " << fname << endl;
-  ofstream fout( fname );
-  if (!fout.good( )) { // file not found --> Error
-    cout << "--- " << GetName() << ": Error in ::WriteWeightsToFile: "
-         << "unable to open output  Weight file: " << fname << endl;
-    exit(1);
-  }
+   // write the whole Forest (sample of Decition trees) to a file for later use.
+   TString fname = GetWeightFileName();
+   cout << "--- " << GetName() << ": creating Weight file: " << fname << endl;
+   ofstream fout( fname );
+   if (!fout.good( )) { // file not found --> Error
+      cout << "--- " << GetName() << ": Error in ::WriteWeightsToFile: "
+           << "unable to open output  Weight file: " << fname << endl;
+      exit(1);
+   }
 
-  // write variable names and min/max 
-  // NOTE: the latter values are mandatory for the normalisation 
-  // in the reader application !!!
-  fout << this->GetMethodName() <<endl;
-  fout << "NVars= " << fNvar <<endl; 
-  for (Int_t ivar=0; ivar<fNvar; ivar++) {
-    TString var = (*fInputVars)[ivar];
-    fout << var << "  " << GetXminNorm( var ) << "  " << GetXmaxNorm( var ) << endl;
-  }
+   // write variable names and min/max 
+   // NOTE: the latter values are mandatory for the normalisation 
+   // in the reader application !!!
+   fout << this->GetMethodName() <<endl;
+   fout << "NVars= " << fNvar <<endl; 
+   for (Int_t ivar=0; ivar<fNvar; ivar++) {
+      TString var = (*fInputVars)[ivar];
+      fout << var << "  " << GetXminNorm( var ) << "  " << GetXmaxNorm( var ) << endl;
+   }
 
-  // and save the Weights
-  fout << "NTrees= " << fForest.size() <<endl; 
-  for (UInt_t i=0; i< fForest.size(); i++){
-    fout << "-999 *******Tree " << i << "  boostWeight " << fBoostWeights[i] << endl;
-    (fForest[i])->Print(fout);
-  }
+   // and save the Weights
+   fout << "NTrees= " << fForest.size() <<endl; 
+   for (UInt_t i=0; i< fForest.size(); i++){
+      fout << "-999 *******Tree " << i << "  boostWeight " << fBoostWeights[i] << endl;
+      (fForest[i])->Print(fout);
+   }
 
-  fout.close();    
+   fout.close();    
 }
   
 //_______________________________________________________________________
 void  TMVA::MethodBDT::ReadWeightsFromFile( void )
 {
    // read back the Decicion Trees  from the file
-  TString fname = GetWeightFileName();
-  cout << "--- " << GetName() << ": reading Weight file: " << fname << endl;
-  ifstream fin( fname );
+   TString fname = GetWeightFileName();
+   cout << "--- " << GetName() << ": reading Weight file: " << fname << endl;
+   ifstream fin( fname );
 
-  if (!fin.good( )) { // file not found --> Error
-    cout << "--- " << GetName() << ": Error in ::ReadWeightsFromFile: "
-         << "unable to open input file: " << fname << endl;
-    exit(1);
-  }
-
-  // read variable names and min/max
-  // NOTE: the latter values are mandatory for the normalisation 
-  // in the reader application !!!
-  TString var, dummy;
-  Double_t xmin, xmax;
-  fin >> dummy;
-  this->SetMethodName(dummy);
-  fin >> dummy >> fNvar;
-  for (Int_t ivar=0; ivar<fNvar; ivar++) {
-    fin >> var >> xmin >> xmax;
-    (*fInputVars)[ivar] = var;
-    // set min/max
-    this->SetXminNorm( ivar, xmin );
-    this->SetXmaxNorm( ivar, xmax );
-  } 
-
-  // and read the Weights (BDT coefficients)  
-  fin >> dummy >> fNTrees;
-  cout << "--- " << GetName() << ": Read "<<fNTrees<<" Decision trees\n";
-  
-  for (UInt_t i=0;i<fForest.size();i++) delete fForest[i];
-  fForest.clear();
-  fBoostWeights.clear();
-  Int_t iTree;
-  Double_t boostWeight;
-  fin >> var >> var;
-  for (int i=0;i<fNTrees;i++){
-    fin >> iTree >> dummy >> boostWeight;
-    if (iTree != i) {
-      cout << "--- "  << ": Error while reading Weight file \n ";
-      cout << "--- "  << ": mismatch Itree="<<iTree<<" i="<<i<<endl;
+   if (!fin.good( )) { // file not found --> Error
+      cout << "--- " << GetName() << ": Error in ::ReadWeightsFromFile: "
+           << "unable to open input file: " << fname << endl;
       exit(1);
-    }
-    TMVA::DecisionTreeNode *n = new TMVA::DecisionTreeNode();
-    TMVA::NodeID id;
-    n->ReadRec(fin,id);
-    fForest.push_back(new TMVA::DecisionTree());
-    fForest.back()->SetRoot(n);
-    fBoostWeights.push_back(boostWeight);
-  }  
-  fin.close();      
+   }
+
+   // read variable names and min/max
+   // NOTE: the latter values are mandatory for the normalisation 
+   // in the reader application !!!
+   TString var, dummy;
+   Double_t xmin, xmax;
+   fin >> dummy;
+   this->SetMethodName(dummy);
+   fin >> dummy >> fNvar;
+   for (Int_t ivar=0; ivar<fNvar; ivar++) {
+      fin >> var >> xmin >> xmax;
+      (*fInputVars)[ivar] = var;
+      // set min/max
+      this->SetXminNorm( ivar, xmin );
+      this->SetXmaxNorm( ivar, xmax );
+   } 
+
+   // and read the Weights (BDT coefficients)  
+   fin >> dummy >> fNTrees;
+   cout << "--- " << GetName() << ": Read "<<fNTrees<<" Decision trees\n";
+  
+   for (UInt_t i=0;i<fForest.size();i++) delete fForest[i];
+   fForest.clear();
+   fBoostWeights.clear();
+   Int_t iTree;
+   Double_t boostWeight;
+   fin >> var >> var;
+   for (int i=0;i<fNTrees;i++){
+      fin >> iTree >> dummy >> boostWeight;
+      if (iTree != i) {
+         cout << "--- "  << ": Error while reading Weight file \n ";
+         cout << "--- "  << ": mismatch Itree="<<iTree<<" i="<<i<<endl;
+         exit(1);
+      }
+      TMVA::DecisionTreeNode *n = new TMVA::DecisionTreeNode();
+      TMVA::NodeID id;
+      n->ReadRec(fin,id);
+      fForest.push_back(new TMVA::DecisionTree());
+      fForest.back()->SetRoot(n);
+      fBoostWeights.push_back(boostWeight);
+   }  
+   fin.close();      
 } 
 
 //_______________________________________________________________________
 Double_t TMVA::MethodBDT::GetMvaValue(TMVA::Event *e)
 {
-  //return the MVA value (range [-1;1]) that classifies the
-  //event.according to the majority vote from the total number of
-  //decision trees
-  //In the literature I found that people actually use the 
-  //weighted majority vote (using the boost weights) .. However I
-  //did not see any improvement in doing so :(  
-  // --> this is currently switched off
+   //return the MVA value (range [-1;1]) that classifies the
+   //event.according to the majority vote from the total number of
+   //decision trees
+   //In the literature I found that people actually use the 
+   //weighted majority vote (using the boost weights) .. However I
+   //did not see any improvement in doing so :(  
+   // --> this is currently switched off
 
-  const bool UseWeightedMajorityVote = kFALSE;
+   const bool useWeightedMajorityVote = kFALSE;
 
-  Double_t myMVA = 0;
-  Double_t norm  = 0;
-  for (UInt_t itree=0; itree<fForest.size(); itree++){
-    //
-    if (UseWeightedMajorityVote){ 
-      myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(e);
-      norm += fBoostWeights[itree];
-    }
-    else { 
-      myMVA +=  fForest[itree]->CheckEvent(e);
-      norm += 1.;
-    }
-  }
-  return myMVA /= Double_t(norm);
+   Double_t myMVA = 0;
+   Double_t norm  = 0;
+   for (UInt_t itree=0; itree<fForest.size(); itree++){
+      //
+      if (useWeightedMajorityVote){ 
+         myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(e);
+         norm += fBoostWeights[itree];
+      }
+      else { 
+         myMVA +=  fForest[itree]->CheckEvent(e);
+         norm += 1.;
+      }
+   }
+   return myMVA /= Double_t(norm);
 }
 
 //_______________________________________________________________________
 void  TMVA::MethodBDT::WriteHistosToFile( void )
 {
-  //here we could write some histograms created during the processing
-  //to the output file.
-  cout << "--- " << GetName() << ": write " << GetName() 
-       <<" special histos to file: " << fBaseDir->GetPath() << endl;
-  gDirectory->GetListOfKeys()->Print();
-  fLocalTDir = fBaseDir->mkdir(GetName()+GetMethodName());
-  fLocalTDir->cd();
+   //here we could write some histograms created during the processing
+   //to the output file.
+   cout << "--- " << GetName() << ": write " << GetName() 
+        <<" special histos to file: " << fBaseDir->GetPath() << endl;
+   gDirectory->GetListOfKeys()->Print();
+   fLocalTDir = fBaseDir->mkdir(GetName()+GetMethodName());
+   fLocalTDir->cd();
 
-  fBoostWeightHist->Write();
-  fErrFractHist->Write();
-  fMonitorNtuple->Write();
+   fBoostWeightHist->Write();
+   fErrFractHist->Write();
+   fMonitorNtuple->Write();
 }

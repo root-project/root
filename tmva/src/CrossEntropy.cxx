@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: CrossEntropy.cxx,v 1.4 2006/05/22 08:04:38 andreas.hoecker Exp $       
+// @(#)root/tmva $Id: CrossEntropy.cxx,v 1.5 2006/05/23 09:53:10 stelzer Exp $       
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -49,5 +49,3 @@ Double_t  TMVA::CrossEntropy::GetSeparationIndex( const Double_t &s, const Doubl
   if (p<=0 || p >=1) return 0;
   return - ( p * log (p) + (1-p)*log(1-p) );
 }
-
-

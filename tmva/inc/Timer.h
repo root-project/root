@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Timer.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: Timer.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Timer.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $    
+ * $Id: Timer.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Timer
@@ -55,37 +55,37 @@ typedef long clock_t; // relative time in a specified resolution
 
 namespace TMVA {
 
-  class Timer : public TStopwatch {
+   class Timer : public TStopwatch {
   
-  public:
+   public:
   
-    Timer( Bool_t colourfulOutput = kTRUE );
-    Timer( Int_t ncounts, TString prefix = "", Bool_t colourfulOutput = kTRUE );
-    virtual ~Timer( void );
+      Timer( Bool_t colourfulOutput = kTRUE );
+      Timer( Int_t ncounts, TString prefix = "", Bool_t colourfulOutput = kTRUE );
+      virtual ~Timer( void );
   
-    void Init ( Int_t ncounts );
-    void Reset( void );
+      void Init ( Int_t ncounts );
+      void Reset( void );
 
-    // when the "Scientific" flag set, time is returned with subdecimals
-    // for algorithm timing measurement
-    TString GetElapsedTime  ( Bool_t Scientific = kTRUE  );
-    TString GetLeftTime     ( Int_t icounts              );
-    void    DrawProgressBar ( Int_t icounts              );
+      // when the "Scientific" flag set, time is returned with subdecimals
+      // for algorithm timing measurement
+      TString GetElapsedTime  ( Bool_t Scientific = kTRUE  );
+      TString GetLeftTime     ( Int_t icounts              );
+      void    DrawProgressBar ( Int_t icounts              );
                           
-  private:
+   private:
 
-    Double_t  ElapsedSeconds( void             );
-    TString   SecToText     ( Double_t, Bool_t );
+      Double_t  ElapsedSeconds( void             );
+      TString   SecToText     ( Double_t, Bool_t );
 
-    Int_t     fNcounts;               // reference number of "counts" 
-    TString   fPrefix;                // prefix for outputs
-    Bool_t    fColourfulOutput;       // flag for use of colors
+      Int_t     fNcounts;               // reference number of "counts" 
+      TString   fPrefix;                // prefix for outputs
+      Bool_t    fColourfulOutput;       // flag for use of colors
 
-    static const TString fgClassName; // used for output
-    static const Int_t   fgNbins;     // number of bins in progress bar
+      static const TString fgClassName; // used for output
+      static const Int_t   fgNbins;     // number of bins in progress bar
 
-    ClassDef(Timer,0) // Timing information for training and evaluation of MVA methods
-  };
+      ClassDef(Timer,0) // Timing information for training and evaluation of MVA methods
+         };
 
 } // namespace
 

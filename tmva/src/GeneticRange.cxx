@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticRange.cxx,v 1.5 2006/05/21 22:46:37 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: GeneticRange.cxx,v 1.6 2006/05/23 09:53:10 stelzer Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -23,7 +23,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: GeneticRange.cxx,v 1.5 2006/05/21 22:46:37 andreas.hoecker Exp $
+ * $Id: GeneticRange.cxx,v 1.6 2006/05/23 09:53:10 stelzer Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -38,64 +38,64 @@
 ClassImp(TMVA::GeneticRange)
 
 //_______________________________________________________________________
-TMVA::GeneticRange::GeneticRange( TRandom *rnd, Double_t f, Double_t t )
+   TMVA::GeneticRange::GeneticRange( TRandom *rnd, Double_t f, Double_t t )
 {
-  // defines the "f" (from) and "t" (to) of the coefficient
-  // and takes a randomgenerator
-  //
-  fFrom = f;
-  fTo   = t;
-  fTotalLength = t-f;
+   // defines the "f" (from) and "t" (to) of the coefficient
+   // and takes a randomgenerator
+   //
+   fFrom = f;
+   fTo   = t;
+   fTotalLength = t-f;
 
-  fRandomGenerator = rnd;
+   fRandomGenerator = rnd;
 }
 
 //_______________________________________________________________________
 Double_t TMVA::GeneticRange::Random( Bool_t near, Double_t value, Double_t spread, Bool_t mirror )
 {
-  // creates a new random value for the coefficient
-  // Parameters:
-  //        bool near : takes a random value near the current value
-  //        double value : this is the current value
-  //        double spread : the sigma of the gaussian which is taken to calculate the new value
-  //        bool mirror : if the new value would be outside of the range, mirror = false
-  //               maps the value between the constraints by periodic boundary conditions.
-  //               With mirror = true, the value gets "reflected" on the boundaries.
-  //
-  if( near ){
-    Double_t ret;
-    ret = fRandomGenerator->Gaus( value, fTotalLength*spread );
-    if( mirror ) return ReMapMirror( ret );
-    else return ReMap( ret );
-  }
-  return fRandomGenerator->Uniform(fFrom, fTo);
+   // creates a new random value for the coefficient
+   // Parameters:
+   //        bool near : takes a random value near the current value
+   //        double value : this is the current value
+   //        double spread : the sigma of the gaussian which is taken to calculate the new value
+   //        bool mirror : if the new value would be outside of the range, mirror = false
+   //               maps the value between the constraints by periodic boundary conditions.
+   //               With mirror = true, the value gets "reflected" on the boundaries.
+   //
+   if( near ){
+      Double_t ret;
+      ret = fRandomGenerator->Gaus( value, fTotalLength*spread );
+      if( mirror ) return ReMapMirror( ret );
+      else return ReMap( ret );
+   }
+   return fRandomGenerator->Uniform(fFrom, fTo);
 }
 
 //_______________________________________________________________________
 Double_t TMVA::GeneticRange::ReMap( Double_t val )
 {
-  // remapping the value to the allowed space
-  //
-  if( fFrom >= fTo ) return val;
-  if( val <= fFrom ) return ReMap( (val-fFrom) + fTo );
-  if( val > fTo )    return ReMap( (val-fTo) + fFrom );
-  return val;
+   // remapping the value to the allowed space
+   //
+   if( fFrom >= fTo ) return val;
+   if( val <= fFrom ) return ReMap( (val-fFrom) + fTo );
+   if( val > fTo )    return ReMap( (val-fTo) + fFrom );
+   return val;
 }
 
 //_______________________________________________________________________
 Double_t TMVA::GeneticRange::ReMapMirror( Double_t val )
 {
-  // remapping the value to the allowed space by reflecting on the 
-  // boundaries
-  if( fFrom >= fTo ) return val;
-  if( val <= fFrom ) return ReMap( fFrom - (val-fFrom) );
-  if( val > fTo )    return ReMap( fTo - (val-fTo)  );
-  return val;
+   // remapping the value to the allowed space by reflecting on the 
+   // boundaries
+   if( fFrom >= fTo ) return val;
+   if( val <= fFrom ) return ReMap( fFrom - (val-fFrom) );
+   if( val > fTo )    return ReMap( fTo - (val-fTo)  );
+   return val;
 }
 
 //_______________________________________________________________________
 TMVA::GeneticRange::~GeneticRange()
 {
-  // destructor
+   // destructor
 }
 
