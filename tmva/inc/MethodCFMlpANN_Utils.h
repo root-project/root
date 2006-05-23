@@ -120,30 +120,6 @@ namespace TMVA {
       struct {
          void create( Int_t nevt, Int_t nvar ) {
             fNevt = nevt+1; fNvar = nvar+1; // fortran array style 1...N
-            xeev = new Double_t*[fNevt];
-            for (Int_t i=0; i<fNevt; i++) xeev[i] = new Double_t[fNvar];
-         }
-         Double_t operator=( Double_t val ) { return val; }
-         Double_t &operator()( Int_t ievt, Int_t ivar ) const { 
-            if (0 != xeev && ievt < fNevt && ivar < fNvar) return xeev[ievt][ivar];
-            else {
-               printf( "*** ERROR in varn2_(): xeev is zero pointer ==> abort ***\n") ;
-               exit(1);
-            }
-         }
-         void Delete( void ) {
-            if (0 != xeev) for (Int_t i=0; i<fNevt; i++) if (0 != xeev[i]) delete [] xeev[i];
-         }
-  
-         Double_t** xeev;
-         Int_t fNevt;
-         Int_t fNvar;
-      } fVarn2_1;
-
-      // dynamic data table
-      struct {
-         void create( Int_t nevt, Int_t nvar ) {
-            fNevt = nevt+1; fNvar = nvar+1; // fortran array style 1...N
             xx = new Double_t*[fNevt];
             for (Int_t i=0; i<fNevt; i++) xx[i] = new Double_t[fNvar];
          }
@@ -162,7 +138,7 @@ namespace TMVA {
          Double_t** xx;
          Int_t fNevt;
          Int_t fNvar;
-      } fVarn3_1;
+      } fVarn2_1, fVarn3_1;
 
       // ANN weights
       struct {
