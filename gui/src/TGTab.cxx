@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.30 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGTab.cxx,v 1.31 2006/04/18 12:33:13 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -73,6 +73,31 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
    Resize(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);
    fEnabled = kTRUE;
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier, kButtonPressMask, kNone, kNone);
+}
+
+//______________________________________________________________________________
+TGTabElement::TGTabElement(const TGTabElement& te) :
+  TGFrame(te),
+  fText(te.fText),
+  fNormGC(te.fNormGC),
+  fFontStruct(te.fFontStruct),
+  fTWidth(te.fTWidth),
+  fTHeight(te.fTHeight),
+  fEnabled(te.fEnabled)
+{ }
+
+//______________________________________________________________________________
+TGTabElement& TGTabElement::operator=(const TGTabElement& te)
+{ 
+  if(this!=&te) {
+    TGFrame::operator=(te);
+    fText=te.fText;
+    fNormGC=te.fNormGC;
+    fFontStruct=te.fFontStruct;
+    fTWidth=te.fTWidth;
+    fTHeight=te.fTHeight;
+    fEnabled=te.fEnabled;
+  } return *this;
 }
 
 //______________________________________________________________________________
@@ -169,6 +194,23 @@ TGTabLayout::TGTabLayout(TGTab *main)
 
    fMain = main;
    fList = fMain->GetList();
+}
+
+//______________________________________________________________________________
+TGTabLayout::TGTabLayout(const TGTabLayout& tl) :
+  TGLayoutManager(tl),
+  fMain(tl.fMain),
+  fList(tl.fList)
+{ }
+
+//______________________________________________________________________________
+TGTabLayout& TGTabLayout::operator=(const TGTabLayout& tl)
+{
+  if(this!=&tl) {
+    TGLayoutManager::operator=(tl);
+    fMain=tl.fMain;
+    fList=tl.fList;
+  } return *this;
 }
 
 //______________________________________________________________________________
@@ -275,6 +317,33 @@ TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
       AddTab("Tab2");
       MapSubwindows();
    }
+}
+
+//______________________________________________________________________________
+TGTab::TGTab(const TGTab& gt) :
+  TGCompositeFrame(gt),
+  TGWidget(gt),
+  fCurrent(gt.fCurrent),
+  fTabh(gt.fTabh),
+  fContainer(gt.fContainer),
+  fRemoved(gt.fRemoved),
+  fFontStruct(gt.fFontStruct),
+  fNormGC(gt.fNormGC)
+{ }
+
+//______________________________________________________________________________
+TGTab& TGTab::operator=(const TGTab& gt) 
+{
+  if(this!=&gt) {
+    TGCompositeFrame::operator=(gt);
+    TGWidget::operator=(gt);
+    fCurrent=gt.fCurrent;
+    fTabh=gt.fTabh;
+    fContainer=gt.fContainer;
+    fRemoved=gt.fRemoved;
+    fFontStruct=gt.fFontStruct;
+    fNormGC=gt.fNormGC;
+  } return *this; 
 }
 
 //______________________________________________________________________________

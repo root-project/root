@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.23 2005/09/02 13:54:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.24 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -49,6 +49,10 @@ protected:
    Int_t                fIdBranch[30]; // ID branch
    Double_t            *fPoint;     // last point in master frame
    Bool_t               fOverlapping; // overlap flag
+
+   TGeoCacheState(const TGeoCacheState&); 
+   TGeoCacheState& operator=(const TGeoCacheState&);
+
 public:
    Int_t               *fBranch;    // last branch stored
    Int_t               *fMatrices;  // global matrices for last branch
@@ -72,6 +76,10 @@ public:
 
 class TGeoCacheStateDummy : public TGeoCacheState
 {
+protected:
+   TGeoCacheStateDummy(const TGeoCacheStateDummy&); 
+   TGeoCacheStateDummy& operator=(const TGeoCacheStateDummy&); 
+
 public:
    TGeoNode           **fNodeBranch;    // last node branch stored
    TGeoHMatrix        **fMatrixBranch;  // global matrices for last branch
@@ -130,6 +138,9 @@ private:
 protected:
    TGeoMatrixCache      *fMatrixPool;       // pool of compressed global matrices
    Int_t                 fIdBranch[30];     // current branch of indices
+
+   TGeoNodeCache(const TGeoNodeCache&); // Not implemented
+   TGeoNodeCache& operator=(const TGeoNodeCache&); // Not implemented
 
 public:
    TGeoNodeCache();
@@ -215,6 +226,11 @@ private:
    TGeoHMatrix        **fMatrixBranch;  // current branch of global matrices
    TGeoHMatrix        **fMPB;           // pre-built matrices
    TGeoNode           **fNodeBranch;    // current branch of nodes
+
+protected:
+   TGeoCacheDummy(const TGeoCacheDummy&); // Not implemented
+   TGeoCacheDummy& operator=(const TGeoCacheDummy&); // Not implemented
+
 public:
    TGeoCacheDummy();
    TGeoCacheDummy(TGeoNode *top, Bool_t nodeid=kFALSE, Int_t capacity=30);
@@ -285,9 +301,14 @@ private:
    Double_t             *fCache[7];    // pointers to all caches
    TBits                *fBitsArray[7];// flags for matrix usage
    TGeoMatHandler      **fHandlers;    // handlers for cached matrices
+
 protected:
    Int_t                 fGeoMinCacheSize; // minimum starting cache size
    void                  IncreaseCache();
+
+   TGeoMatrixCache(const TGeoMatrixCache&);
+   TGeoMatrixCache& operator=(const TGeoMatrixCache&);
+
 public:
    TGeoMatrixCache();
    TGeoMatrixCache(Int_t size);
@@ -327,6 +348,11 @@ private:
    Int_t                 fCount;        // usage counter
    Int_t                *fDaughters;    // [fNdaughters] list of daughters offsets
    TGeoNode             *fNode;         // pointer to corresponding node from the logical tree
+
+protected:
+   TGeoNodePos(const TGeoNodePos&); 
+   TGeoNodePos& operator=(const TGeoNodePos&);
+
 public:
    TGeoNodePos();
    TGeoNodePos(Int_t ndaughters);
@@ -388,6 +414,11 @@ protected:
    TBits               *fBitsArray;   // occupancy flags
 private:
    Int_t               *fArray;       // array of nodes
+
+protected:
+   TGeoNodeArray(const TGeoNodeArray&); 
+   TGeoNodeArray& operator=(const TGeoNodeArray&); 
+
 public:
    TGeoNodeArray();
    TGeoNodeArray(Int_t ndaughters, Int_t size=0);
@@ -432,6 +463,11 @@ private:
    Int_t                fIndex;      // index of current node
    TObjArray           *fObjArray;   //[fSize] array of TGeoNodePos objects
    TGeoNodePos         *fCurrent;    // current node
+
+protected:
+   TGeoNodeObjArray(const TGeoNodeObjArray&); // Not implemented
+   TGeoNodeObjArray& operator=(const TGeoNodeObjArray&); // Not implemented
+
 public:
    TGeoNodeObjArray();
    TGeoNodeObjArray(Int_t size);
@@ -471,6 +507,12 @@ class TGeoMatHandler
 {
 protected:
    Double_t            *fLocation;  // adress of current matrix
+
+   TGeoMatHandler(const TGeoMatHandler& gmh) :
+     fLocation(gmh.fLocation) { }
+   TGeoMatHandler& operator=(const TGeoMatHandler& gmh)
+     {if(this!=&gmh) fLocation=gmh.fLocation; return *this;}
+
 public:
    TGeoMatHandler();
    virtual ~TGeoMatHandler() {}

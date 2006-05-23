@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.22 2006/02/23 13:23:07 brun Exp $
+// @(#)root/geom:$Name: v5-11-02 $:$Id: TGeoNode.h,v 1.23 2006/04/03 16:19:31 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -58,6 +58,10 @@ protected:
    Int_t             fNumber;         // copy number
    Int_t             fNovlp;          // number of overlaps
    Int_t            *fOverlaps;       //[fNovlp] list of indices for overlapping brothers
+
+   TGeoNode(const TGeoNode&);
+   TGeoNode& operator=(const TGeoNode&);
+
 public:
    enum {
       kGeoNodeMatrix = BIT(10),
@@ -147,6 +151,13 @@ class TGeoNodeMatrix : public TGeoNode
 private:
    TGeoMatrix       *fMatrix;         // transf. matrix of fNode in fMother system
 
+protected:
+   TGeoNodeMatrix(const TGeoNodeMatrix& gnm) 
+     : TGeoNode(gnm), fMatrix(gnm.fMatrix) { }
+   TGeoNodeMatrix& operator=(const TGeoNodeMatrix& gnm)
+     {if(this!=&gnm) {TGeoNode::operator=(gnm); fMatrix=gnm.fMatrix;}
+     return *this;}
+
 public:
    // constructors
    TGeoNodeMatrix();
@@ -175,6 +186,11 @@ private:
    Double_t          fOffset; // X offset for this node with respect to its mother
    Int_t             fIndex;  // index of this node in the division
    TGeoPatternFinder *fFinder; // finder for this node
+
+protected:
+   TGeoNodeOffset(const TGeoNodeOffset&); 
+   TGeoNodeOffset& operator=(const TGeoNodeOffset&);
+
 public:
    // constructors
    TGeoNodeOffset();

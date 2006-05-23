@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.41 2006/05/17 08:09:42 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.42 2006/05/18 16:32:01 antcheva Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -342,6 +342,63 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    AddInput(kKeyPressMask | kPointerMotionMask);
    SetWindowName();
    fEditDisabled = kEditDisableLayout | kEditDisableGrab;
+}
+
+//______________________________________________________________________________
+TGContainer::TGContainer(const TGContainer& gc) :
+  TGCompositeFrame(gc),
+  fViewPort(gc.fViewPort),
+  fCanvas(gc.fCanvas),
+  fMsgWindow(gc.fMsgWindow),
+  fLastActiveEl(gc.fLastActiveEl),
+  fXp(gc.fXp),
+  fYp(gc.fYp),
+  fX0(gc.fX0),
+  fY0(gc.fY0),
+  fXf(gc.fXf),
+  fYf(gc.fYf),
+  fDragging(gc.fDragging),
+  fTotal(gc.fTotal),
+  fSelected(gc.fSelected),
+  fScrollTimer(gc.fScrollTimer),
+  fOnMouseOver(gc.fOnMouseOver),
+  fLastDir(gc.fLastDir),
+  fLastCase(gc.fLastCase),
+  fLastName(gc.fLastName),
+  fKeyTimer(gc.fKeyTimer),
+  fKeyInput(gc.fKeyInput),
+  fKeyTimerActive(gc.fKeyTimerActive),
+  fScrolling(gc.fScrolling)
+{ }
+
+//______________________________________________________________________________
+TGContainer& TGContainer::operator=(const TGContainer& gc) 
+{
+  if(this!=&gc) {
+    TGCompositeFrame::operator=(gc);
+    fViewPort=gc.fViewPort;
+    fCanvas=gc.fCanvas;
+    fMsgWindow=gc.fMsgWindow;
+    fLastActiveEl=gc.fLastActiveEl;
+    fXp=gc.fXp;
+    fYp=gc.fYp;
+    fX0=gc.fX0;
+    fY0=gc.fY0;
+    fXf=gc.fXf;
+    fYf=gc.fYf;
+    fDragging=gc.fDragging;
+    fTotal=gc.fTotal;
+    fSelected=gc.fSelected;
+    fScrollTimer=gc.fScrollTimer;
+    fOnMouseOver=gc.fOnMouseOver;
+    fLastDir=gc.fLastDir;
+    fLastCase=gc.fLastCase;
+    fLastName=gc.fLastName;
+    fKeyTimer=gc.fKeyTimer;
+    fKeyInput=gc.fKeyInput;
+    fKeyTimerActive=gc.fKeyTimerActive;
+    fScrolling=gc.fScrolling;
+  } return *this;
 }
 
 //______________________________________________________________________________
@@ -1872,6 +1929,27 @@ TGCanvas::TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
       Resize(20, 20);
       MapSubwindows();
    }
+}
+
+//______________________________________________________________________________
+TGCanvas::TGCanvas(const TGCanvas& gc) :
+  TGFrame(gc),
+  fVport(gc.fVport),
+  fHScrollbar(gc.fHScrollbar),
+  fVScrollbar(gc.fVScrollbar),
+  fScrolling(gc.fScrolling)
+{ }
+
+//______________________________________________________________________________
+TGCanvas& TGCanvas::operator=(const TGCanvas& gc)
+{
+  if(this!=&gc) {
+    TGFrame::operator=(gc);
+    fVport=gc.fVport;
+    fHScrollbar=gc.fHScrollbar;
+    fVScrollbar=gc.fVScrollbar;
+    fScrolling=gc.fScrolling;
+  } return *this;
 }
 
 //______________________________________________________________________________

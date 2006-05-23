@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenuImp.h,v 1.2 2002/04/04 17:32:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenuImp.h,v 1.3 2006/05/13 11:00:50 brun Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -34,12 +34,14 @@ class TFunction;
 
 class TContextMenuImp {
 
-private:
-   TContextMenuImp(const TContextMenuImp&);
-   TContextMenuImp& operator=(const TContextMenuImp&);
-
 protected:
    TContextMenu *fContextMenu; //TContextMenu associated with this implementation
+
+   TContextMenuImp(const TContextMenuImp& cmi)
+     : fContextMenu(cmi.fContextMenu) { }
+   TContextMenuImp& operator=(const TContextMenuImp& cmi)
+     {if(this!=&cmi) fContextMenu=cmi.fContextMenu;
+     return *this;}
 
 public:
    TContextMenuImp(TContextMenu *c=0) : fContextMenu(c) { }

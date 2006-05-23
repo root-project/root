@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.7 2001/08/29 10:35:38 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.8 2005/11/24 17:28:06 couet Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -54,6 +54,9 @@ protected:
    TList          *fNodes;      //List of son nodes (if any)
    TString         fOption;     //List of options if any
    Int_t           fVisibility; //Visibility flag
+
+   TNode(const TNode&);
+   TNode& operator=(const TNode&);
 
 public:
    TNode();

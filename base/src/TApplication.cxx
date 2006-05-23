@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.72 2006/02/28 16:48:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.73 2006/03/06 14:30:00 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -216,6 +216,45 @@ TApplication::TApplication(const char *appClassName,
    gInterpreter->EnableAutoLoading();
 
    gROOT->SetLineHasBeenProcessed(); // to allow user to interact with TCanvas's under WIN32
+}
+
+//______________________________________________________________________________
+TApplication::TApplication(const TApplication& ap) :
+  TObject(ap),
+  TQObject(ap),
+  fArgc(ap.fArgc),
+  fArgv(ap.fArgv),
+  fAppImp(ap.fAppImp),
+  fIsRunning(ap.fIsRunning),
+  fReturnFromRun(ap.fReturnFromRun),
+  fNoLog(ap.fNoLog),
+  fNoLogo(ap.fNoLogo),
+  fQuit(ap.fQuit),
+  fFiles(ap.fFiles),
+  fIdleCommand(ap.fIdleCommand),
+  fIdleTimer(ap.fIdleTimer),
+  fSigHandler(ap.fSigHandler)
+{ }
+
+//______________________________________________________________________________
+TApplication& TApplication::operator=(const TApplication& ap) 
+{
+  if(this!=&ap) {
+    TObject::operator=(ap);
+    TQObject::operator=(ap);
+    fArgc=ap.fArgc;
+    fArgv=ap.fArgv;
+    fAppImp=ap.fAppImp;
+    fIsRunning=ap.fIsRunning;
+    fReturnFromRun=ap.fReturnFromRun;
+    fNoLog=ap.fNoLog;
+    fNoLogo=ap.fNoLogo;
+    fQuit=ap.fQuit;
+    fFiles=ap.fFiles;
+    fIdleCommand=ap.fIdleCommand;
+    fIdleTimer=ap.fIdleTimer;
+    fSigHandler=ap.fSigHandler;
+  } return *this;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSliderBox.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TSliderBox.h,v 1.2 2000/06/13 12:14:34 brun Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -32,6 +32,12 @@ class TSliderBox : public TWbox {
 
 protected:
    TSlider   *fSlider;     //Pointer to slider
+   
+   TSliderBox(const TSliderBox& sb)
+     : TWbox(sb), fSlider(sb.fSlider) { }
+   TSliderBox& operator=(const TSliderBox& sb)
+     {if(this!=&sb) {TWbox::operator=(sb); fSlider=sb.fSlider;}
+     return *this; }
 
 public:
    TSliderBox();

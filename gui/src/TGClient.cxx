@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.48 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGClient.cxx,v 1.49 2006/04/14 17:54:11 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -170,6 +170,69 @@ TGClient::TGClient(const char *dpyName)
    fSelBackColor = fResourcePool->GetSelectedBgndColor();
 
    gClient = this;
+}
+
+//______________________________________________________________________________
+TGClient::TGClient(const TGClient& gc) :
+  TObject(gc),
+  fBackColor(gc.fBackColor),
+  fForeColor(gc.fForeColor),
+  fHilite(gc.fHilite),
+  fShadow(gc.fShadow),
+  fSelBackColor(gc.fSelBackColor),
+  fSelForeColor(gc.fSelForeColor),
+  fWhite(gc.fWhite),
+  fBlack(gc.fBlack),
+  fDefaultRoot(gc.fDefaultRoot),
+  fRoot(gc.fRoot),
+  fXfd(gc.fXfd),
+  fResourcePool(gc.fResourcePool),
+  fGCPool(gc.fGCPool),
+  fFontPool(gc.fFontPool),
+  fPicturePool(gc.fPicturePool),
+  fMimeTypeList(gc.fMimeTypeList),
+  fDefaultColormap(gc.fDefaultColormap),
+  fGlobalNeedRedraw(gc.fGlobalNeedRedraw),
+  fForceRedraw(gc.fForceRedraw),
+  fWlist(gc.fWlist),
+  fPlist(gc.fPlist),
+  fUWHandlers(gc.fUWHandlers),
+  fIdleHandlers(gc.fIdleHandlers),
+  fWaitForEvent(gc.fWaitForEvent),
+  fWaitForWindow(gc.fWaitForWindow)
+{ }
+
+//______________________________________________________________________________
+TGClient& TGClient::operator=(const TGClient& gc) 
+{
+  if(this!=&gc) {
+    TObject::operator=(gc);
+    fBackColor=gc.fBackColor;
+    fForeColor=gc.fForeColor;
+    fHilite=gc.fHilite;
+    fShadow=gc.fShadow;
+    fSelBackColor=gc.fSelBackColor;
+    fSelForeColor=gc.fSelForeColor;
+    fWhite=gc.fWhite;
+    fBlack=gc.fBlack;
+    fDefaultRoot=gc.fDefaultRoot;
+    fRoot=gc.fRoot;
+    fXfd=gc.fXfd;
+    fResourcePool=gc.fResourcePool;
+    fGCPool=gc.fGCPool;
+    fFontPool=gc.fFontPool;
+    fPicturePool=gc.fPicturePool;
+    fMimeTypeList=gc.fMimeTypeList;
+    fDefaultColormap=gc.fDefaultColormap;
+    fGlobalNeedRedraw=gc.fGlobalNeedRedraw;
+    fForceRedraw=gc.fForceRedraw;
+    fWlist=gc.fWlist;
+    fPlist=gc.fPlist;
+    fUWHandlers=gc.fUWHandlers;
+    fIdleHandlers=gc.fIdleHandlers;
+    fWaitForEvent=gc.fWaitForEvent;
+    fWaitForWindow=gc.fWaitForWindow;
+  } return *this;
 }
 
 //______________________________________________________________________________

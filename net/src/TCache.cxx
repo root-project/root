@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.6 2003/12/30 13:16:51 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.7 2004/01/19 18:31:13 rdm Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -72,6 +72,41 @@ TCache::TCache(Int_t maxCacheSize, TFile *file, Int_t pageSize)
    fFree  = new TList;
    fCache->SetOwner();
    fFree->SetOwner();
+}
+
+//______________________________________________________________________________
+TCache::TCache(const TCache& tc) :
+  TObject(tc),
+  fCache(tc.fCache),
+  fNew(tc.fNew),
+  fFree(tc.fFree),
+  fFile(tc.fFile),
+  fEOF(tc.fEOF),
+  fHighWater(tc.fHighWater),
+  fLowWater(tc.fLowWater),
+  fPageSize(tc.fPageSize),
+  fLowLevel(tc.fLowLevel),
+  fDiv(tc.fDiv),
+  fRecursive(tc.fRecursive)
+{ }
+
+//______________________________________________________________________________
+TCache& TCache::operator=(const TCache& tc) 
+{
+  if(this!=&tc) {
+    TObject::operator=(tc);
+    fCache=tc.fCache;
+    fNew=tc.fNew;
+    fFree=tc.fFree;
+    fFile=tc.fFile;
+    fEOF=tc.fEOF;
+    fHighWater=tc.fHighWater;
+    fLowWater=tc.fLowWater;
+    fPageSize=tc.fPageSize;
+    fLowLevel=tc.fLowLevel;
+    fDiv=tc.fDiv;
+    fRecursive=tc.fRecursive;
+  } return *this;
 }
 
 //______________________________________________________________________________
@@ -407,3 +442,23 @@ void TCache::SetLowLevel(Int_t percentOfHigh)
    fLowLevel = percentOfHigh;
    fLowWater = fHighWater * fLowLevel / 100;
 }
+
+//______________________________________________________________________________
+TCache::TPage::TPage(const TCache::TPage& tp) :
+  TObject(tp),
+  fOffset(tp.fOffset),
+  fData(tp.fData),
+  fSize(tp.fSize)
+{ }
+
+//______________________________________________________________________________
+TCache::TPage& TCache::TPage::operator=(const TCache::TPage& tp) 
+{
+  if(this!=&tp) {
+    TObject::operator=(tp);
+    fOffset=tp.fOffset;
+    fData=tp.fData;
+    fSize=tp.fSize;
+  } return *this;
+}
+

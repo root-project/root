@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.36 2006/05/15 06:31:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.37 2006/05/18 07:34:25 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -60,6 +60,84 @@ TView::TView()
    for (Int_t i=0;i<3;i++) {
       fX1[i] = fX2[i] = fY1[i] = fY2[i] = fZ1[i] = fZ2[i] = 0;
    }
+}
+
+//____________________________________________________________________________
+TView::TView(const TView& tv) :
+  TObject(tv),
+  TAttLine(tv),
+  fLatitude(tv.fLatitude),
+  fLongitude(tv.fLongitude),
+  fPsi(tv.fPsi),
+  fDview(tv.fDview),
+  fDproj(tv.fDproj),
+  fUpix(tv.fUpix),
+  fVpix(tv.fVpix),
+  fSystem(tv.fSystem),
+  fOutline(tv.fOutline),
+  fDefaultOutline(tv.fDefaultOutline),
+  fAutoRange(tv.fAutoRange),
+  fChanged(tv.fChanged)
+{
+  for(Int_t i=0; i<16; i++) {
+    fTN[i]=tv.fTN[i];
+    fTB[i]=tv.fTB[i];
+    fTnorm[i]=tv.fTnorm[i];
+    fTback[i]=tv.fTback[i];
+  }
+  for(Int_t i=0; i<3; i++) {
+    fRmax[i]=tv.fRmax[i];
+    fRmin[i]=tv.fRmin[i];
+    fUVcoord[4]=tv.fUVcoord[4];
+    fX1[i]=tv.fX1[i];
+    fX2[i]=tv.fX2[i];
+    fY1[i]=tv.fY1[i];
+    fY2[i]=tv.fY2[i];
+    fZ1[i]=tv.fZ1[i];
+    fZ2[i]=tv.fZ2[i];
+  }
+  for(Int_t i=0; i<4; i++) 
+    fUVcoord[i]=tv.fUVcoord[i];
+}
+
+//____________________________________________________________________________
+TView& TView::operator=(const TView& tv)
+{
+  if(this!=&tv) {
+    TObject::operator=(tv);
+    TAttLine::operator=(tv);
+    fLatitude=tv.fLatitude;
+    fLongitude=tv.fLongitude;
+    fPsi=tv.fPsi;
+    fDview=tv.fDview;
+    fDproj=tv.fDproj;
+    fUpix=tv.fUpix;
+    fVpix=tv.fVpix;
+    fSystem=tv.fSystem;
+    fOutline=tv.fOutline;
+    fDefaultOutline=tv.fDefaultOutline;
+    fAutoRange=tv.fAutoRange;
+    fChanged=tv.fChanged;
+    for(Int_t i=0; i<16; i++) {
+      fTN[i]=tv.fTN[i];
+      fTB[i]=tv.fTB[i];
+      fTnorm[i]=tv.fTnorm[i];
+      fTback[i]=tv.fTback[i];
+    }
+    for(Int_t i=0; i<3; i++) {
+      fRmax[i]=tv.fRmax[i];
+      fRmin[i]=tv.fRmin[i];
+      fUVcoord[4]=tv.fUVcoord[4];
+      fX1[i]=tv.fX1[i];
+      fX2[i]=tv.fX2[i];
+      fY1[i]=tv.fY1[i];
+      fY2[i]=tv.fY2[i];
+      fZ1[i]=tv.fZ1[i];
+      fZ2[i]=tv.fZ2[i];
+    }
+    for(Int_t i=0; i<4; i++) 
+      fUVcoord[i]=tv.fUVcoord[i];
+  } return *this;
 }
 
 //____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.h,v 1.8 2003/05/15 19:18:31 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.h,v 1.9 2006/05/13 21:49:17 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -35,6 +35,7 @@ class TMinuit : public TNamed {
 
 private:
    TMinuit(const TMinuit &m);
+   TMinuit& operator=(const TMinuit &m); // Not implemented
 
 // should become private....
 public:

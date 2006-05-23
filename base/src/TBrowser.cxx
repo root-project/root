@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.16 2005/12/13 16:03:42 brun Exp $
+// @(#)root/base:$Name: v5-11-02 $:$Id: TBrowser.cxx,v 1.17 2006/03/20 21:43:41 pcanal Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -209,6 +209,29 @@ TBrowser::TBrowser(const char *name,void *obj,  TClass *cl,
 
    fImp = gGuiFactory->CreateBrowserImp(this, title, x, y, width, height);
    Create(new TBrowserObject(obj,cl,objname));
+}
+
+//______________________________________________________________________________
+TBrowser::TBrowser(const TBrowser& br) :
+  TNamed(br),
+  fLastSelectedObject(br.fLastSelectedObject),
+  fImp(br.fImp),
+  fTimer(br.fTimer),
+  fContextMenu(br.fContextMenu),
+  fNeedRefresh(br.fNeedRefresh)
+{ }
+
+//______________________________________________________________________________
+TBrowser& TBrowser::operator=(const TBrowser& br)
+{
+  if(this!=&br) {
+    TNamed::operator=(br);
+    fLastSelectedObject=br.fLastSelectedObject;
+    fImp=br.fImp;
+    fTimer=br.fTimer;
+    fContextMenu=br.fContextMenu;
+    fNeedRefresh=br.fNeedRefresh;
+  } return *this;
 }
 
 //______________________________________________________________________________

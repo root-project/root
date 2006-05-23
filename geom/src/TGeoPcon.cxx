@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.52 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.53 2006/02/28 10:57:12 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -124,6 +124,31 @@ TGeoPcon::TGeoPcon(Double_t *param)
    SetShapeBit(TGeoShape::kGeoPcon);
    SetDimensions(param);
    ComputeBBox();
+}
+
+//_____________________________________________________________________________
+TGeoPcon::TGeoPcon(const TGeoPcon& pc) : 
+  TGeoBBox(pc),
+  fNz(pc.fNz),
+  fPhi1(pc.fPhi1),
+  fDphi(pc.fDphi),
+  fRmin(pc.fRmin),
+  fRmax(pc.fRmax),
+  fZ(pc.fZ)
+{ }
+
+//_____________________________________________________________________________
+TGeoPcon& TGeoPcon::operator=(const TGeoPcon& pc) 
+{
+  if(this!=&pc) {
+    TGeoBBox::operator=(pc);
+    fNz=pc.fNz;
+    fPhi1=pc.fPhi1;
+    fDphi=pc.fDphi;
+    fRmin=pc.fRmin;
+    fRmax=pc.fRmax;
+    fZ=pc.fZ;
+  } return *this;
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttBBox.h,v 1.4 2006/05/12 12:25:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttBBox.h,v 1.5 2006/05/13 11:00:50 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -18,9 +18,6 @@
 
 class TAttBBox
 {
-private:
-   TAttBBox(const TAttBBox&);
-
 protected:
    Float_t*  fBBox;   //! Dynamic Float_t[6] X(min,max), Y(min,max), Z(min,max)
 
@@ -31,12 +28,15 @@ protected:
    void BBoxCheckPoint(Float_t x, Float_t y, Float_t z);
    void BBoxCheckPoint(const Float_t* p);
 
+   TAttBBox(const TAttBBox& tab)
+     : fBBox(tab.fBBox) { }
+
 public:
    TAttBBox(): fBBox(0) { }
    virtual ~TAttBBox() { BBoxClear(); }
 
    TAttBBox& operator=(const TAttBBox& tab) 
-     {BBoxInit(); if(tab.fBBox) for(Int_t i=0; i<6; i++) fBBox[i]=tab.fBBox[i];
+     {if(this!=&tab) {BBoxInit(); if(tab.fBBox) for(Int_t i=0; i<6; i++) fBBox[i]=tab.fBBox[i];}
      return *this;}
 
    Bool_t   GetBBoxOK() const { return fBBox != 0; }

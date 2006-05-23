@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.8 2004/05/10 07:33:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.9 2006/05/17 09:37:20 couet Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -32,6 +32,8 @@
 class TBrowser;
 
 class THStack : public TNamed {
+private:
+   THStack& operator=(const THStack&); // Not implemented
 
 protected:
    TList      *fHists;      //Pointer to array of TH1

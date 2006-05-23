@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.63 2006/02/09 20:42:41 pcanal Exp $
+// @(#)root/meta:$Name: v5-11-02 $:$Id: TStreamerInfo.h,v 1.64 2006/03/20 21:35:47 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -42,12 +42,14 @@ class TVirtualCollectionProxy;
 
 class TStreamerInfo : public TNamed {
 
-private:
 #ifdef R__BROKEN_FUNCTION_TEMPLATES
 public:
 #endif
    class TCompInfo {
    // Class used to cache information (see fComp)
+   private:
+      TCompInfo(const TCompInfo&); // Not implemented
+      TCompInfo& operator=(const TCompInfo&); // Not implemented
    public:
       TClass          *fClass;
       TString          fClassName;
@@ -84,6 +86,11 @@ private:
    void              BuildUserInfo(const char *info);
    static Double_t   GetValueAux(Int_t type, void *ladd, int k, Int_t len);
    static void       PrintValueAux(char *ladd, Int_t atype, TStreamerElement * aElement, Int_t aleng, Int_t *count);
+
+protected:
+   TStreamerInfo(const TStreamerInfo&);
+   TStreamerInfo& operator=(const TStreamerInfo&); 
+
 public:
 
    //status bits

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.6 2005/12/22 19:03:11 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.7 2006/05/13 11:00:50 brun Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -37,7 +37,6 @@ class TExMap : public TObject {
 friend class TExMapIter;
 
 private:
-   TExMap& operator=(const TExMap&);
 
    struct Assoc_t {
    private:
@@ -63,6 +62,7 @@ private:
 public:
    TExMap(Int_t mapSize = 100);
    TExMap(const TExMap &map);
+   TExMap& operator=(const TExMap&);
    ~TExMap();
 
    void      Add(ULong_t hash, Long_t key, Long_t value);

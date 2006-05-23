@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLQuadric.h,v 1.5 2006/05/15 07:43:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLQuadric.h,v 1.6 2006/05/15 11:01:13 rdm Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -31,8 +31,10 @@ class TGLQuadric
 private:
    GLUquadric * fQuad;
 
-   TGLQuadric(const TGLQuadric&);
-   TGLQuadric& operator=(const TGLQuadric&);
+protected:
+   TGLQuadric(const TGLQuadric& glq) : fQuad(glq.fQuad) { }
+   TGLQuadric& operator=(const TGLQuadric& glq) 
+     { if(this!=&glq) fQuad=glq.fQuad; return *this; }
 
 public:
    TGLQuadric();

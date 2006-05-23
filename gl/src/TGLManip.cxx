@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.cxx,v 1.9 2006/02/23 16:44:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLManip.cxx,v 1.10 2006/03/08 21:09:43 brun Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -64,6 +64,46 @@ TGLManip::TGLManip(TGLPhysicalShape * shape) :
    // TODO: The requirement to attach to viewer is needed for cross thread selection
    // callback under Windows - when the design of TGLKernel / TGLManager is finally
    // resolved this can probably be removed.
+}
+
+//______________________________________________________________________________
+TGLManip::TGLManip(const TGLManip& gm) :
+  TVirtualGLManip(gm),
+  fShape(gm.fShape),
+  fSelectedWidget(gm.fSelectedWidget),
+  fActive(gm.fActive),
+  fFirstMouse(gm.fFirstMouse),
+  fLastMouse(gm.fLastMouse)
+{
+  for(Int_t i=0; i<4; i++) {
+    fgRed[i]=gm.fgRed[i];
+    fgGreen[i]=gm.fgGreen[i];
+    fgBlue[i]=gm.fgBlue[i];
+    fgYellow[i]=gm.fgYellow[i];
+    fgWhite[i]=gm.fgWhite[i];
+    fgGrey[i]=gm.fgGrey[i];
+  }
+}
+
+//______________________________________________________________________________
+TGLManip& TGLManip::operator=(const TGLManip& gm)
+{
+  if(this!=&gm) {
+    TVirtualGLManip::operator=(gm);
+    fShape=gm.fShape;
+    fSelectedWidget=gm.fSelectedWidget;
+    fActive=gm.fActive;
+    fFirstMouse=gm.fFirstMouse;
+    fLastMouse=gm.fLastMouse;
+    for(Int_t i=0; i<4; i++) {
+      fgRed[i]=gm.fgRed[i];
+      fgGreen[i]=gm.fgGreen[i];
+      fgBlue[i]=gm.fgBlue[i];
+      fgYellow[i]=gm.fgYellow[i];
+      fgWhite[i]=gm.fgWhite[i];
+      fgGrey[i]=gm.fgGrey[i];
+    }
+  } return *this;
 }
 
 //______________________________________________________________________________

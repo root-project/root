@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.15 2005/12/12 15:28:32 brun Exp $
+// @(#)root/g3d:$Name: v5-11-02 $:$Id: TMarker3DBox.cxx,v 1.16 2006/03/20 21:43:41 pcanal Exp $
 // Author: Rene Brun , Olivier Couet 31/10/97
 
 
@@ -82,6 +82,42 @@ TMarker3DBox::TMarker3DBox( Float_t x, Float_t y, Float_t z,
    SetBit(kTemporary,kFALSE);
 }
 
+//______________________________________________________________________________
+TMarker3DBox::TMarker3DBox(const TMarker3DBox& m3d) :
+ TObject(m3d), 
+ TAttLine(m3d), 
+ TAttFill(m3d),
+ TAtt3D(m3d),
+ fX(m3d.fX),
+ fY(m3d.fY),
+ fZ(m3d.fZ),
+ fDx(m3d.fDx),
+ fDy(m3d.fDy),
+ fDz(m3d.fDz),
+ fTheta(m3d.fTheta),
+ fPhi(m3d.fPhi),
+ fRefObject(m3d.fRefObject)
+{ }
+
+//______________________________________________________________________________
+TMarker3DBox& TMarker3DBox::operator=(const TMarker3DBox& m3d)
+{
+  if(this!=&m3d) {
+    TObject::operator=(m3d); 
+    TAttLine::operator=(m3d);
+    TAttFill::operator=(m3d);
+    TAtt3D::operator=(m3d);
+    fX=m3d.fX;
+    fY=m3d.fY;
+    fZ=m3d.fZ;
+    fDx=m3d.fDx;
+    fDy=m3d.fDy;
+    fDz=m3d.fDz;
+    fTheta=m3d.fTheta;
+    fPhi=m3d.fPhi;
+    fRefObject=m3d.fRefObject;
+  } return *this;
+}
 
 //______________________________________________________________________________
 TMarker3DBox::~TMarker3DBox()

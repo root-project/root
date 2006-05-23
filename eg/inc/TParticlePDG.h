@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.7 2005/09/04 11:42:05 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.8 2006/05/15 07:27:03 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -53,6 +53,9 @@ protected:
 //------------------------------------------------------------------------------
 // functions
 //------------------------------------------------------------------------------
+  TParticlePDG(const TParticlePDG&); 
+  TParticlePDG& operator=(const TParticlePDG&);
+
 public:
    // ****** constructors  and destructor
    TParticlePDG();

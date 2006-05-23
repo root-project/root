@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.25 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.26 2006/05/18 16:32:01 antcheva Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -46,8 +46,17 @@ protected:
    static Int_t      fgCounter;       // counter of created windows in SavePrimitive
    UInt_t            fEditDisabled;   // flags used for "guibuilding"
 
-   TGWindow(Window_t id) : fNeedRedraw(kFALSE) { fClient = 0; fId = id; }
+   TGWindow(Window_t id): 
+     fParent(NULL), fNeedRedraw(kFALSE), fName(), fEditDisabled(0) { fClient = 0; fId = id; }
+   TGWindow(const TGWindow& tgw):
+     TGObject(tgw), fParent(tgw.fParent), fNeedRedraw(tgw.fNeedRedraw), 
+     fName(tgw.fName), fEditDisabled(tgw.fEditDisabled) { }
 
+   TGWindow& operator=(const TGWindow& tgw)
+     {if(this!=&tgw) { TGObject::operator=(tgw); fParent=tgw.fParent;
+     fNeedRedraw=tgw.fNeedRedraw; fName=tgw.fName; 
+     fEditDisabled=tgw.fEditDisabled;} return *this;}
+     
    virtual void DoRedraw() { }
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.39 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.40 2006/04/24 14:04:41 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -300,6 +300,69 @@ TGTextEntry::TGTextEntry(const TString &contents, const TGWindow *parent, Int_t 
    fText->AddText(0, contents.Data());
 
    Init();                             // default initialization
+}
+
+//______________________________________________________________________________
+TGTextEntry::TGTextEntry(const TGTextEntry& te) :
+  TGFrame(te),
+  TGWidget(te),
+  fText(te.fText),
+  fStartX(te.fStartX),
+  fEndX(te.fEndX),
+  fStartIX(te.fStartIX),
+  fEndIX(te.fEndIX),
+  fSelectionOn(te.fSelectionOn),
+  fOffset(te.fOffset),
+  fCursorX(te.fCursorX),
+  fCursorIX(te.fCursorIX),
+  fCursorOn(te.fCursorOn),
+  fFontStruct(te.fFontStruct),
+  fNormGC(te.fNormGC),
+  fSelGC(te.fSelGC),
+  fSelbackGC(te.fSelbackGC),
+  fClipboard(te.fClipboard),
+  fCurBlink(te.fCurBlink),
+  fTip(te.fTip),
+  fMaxLen(te.fMaxLen),
+  fEdited(te.fEdited),
+  fFrameDrawn(te.fFrameDrawn),
+  fEchoMode(te.fEchoMode),
+  fInsertMode(te.fInsertMode),
+  fAlignment(te.fAlignment),
+  fHasOwnFont(te.fHasOwnFont)
+{ }
+
+//______________________________________________________________________________
+TGTextEntry& TGTextEntry::operator=(const TGTextEntry& te)
+{
+  if(this!=&te) {
+    TGFrame::operator=(te);
+    TGWidget::operator=(te);
+    fText=te.fText;
+    fStartX=te.fStartX;
+    fEndX=te.fEndX;
+    fStartIX=te.fStartIX;
+    fEndIX=te.fEndIX;
+    fSelectionOn=te.fSelectionOn;
+    fOffset=te.fOffset;
+    fCursorX=te.fCursorX;
+    fCursorIX=te.fCursorIX;
+    fCursorOn=te.fCursorOn;
+    fFontStruct=te.fFontStruct;
+    fNormGC=te.fNormGC;
+    fSelGC=te.fSelGC;
+    fSelbackGC=te.fSelbackGC;
+    fClipboard=te.fClipboard;
+    fCurBlink=te.fCurBlink;
+    fTip=te.fTip;
+    fMaxLen=te.fMaxLen;
+    fEdited=te.fEdited;
+    fFrameDrawn=te.fFrameDrawn;
+    fEchoMode=te.fEchoMode;
+    fInsertMode=te.fInsertMode;
+    fAlignment=te.fAlignment;
+    fHasOwnFont=te.fHasOwnFont;
+  } return *this;
 }
 
 //______________________________________________________________________________

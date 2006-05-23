@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.21 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.22 2006/04/24 13:49:25 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -90,6 +90,37 @@ TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
    fTHeight = max_ascent + max_descent;
    Resize(fTWidth, fTHeight + 1);
    SetWindowName();
+}
+
+//______________________________________________________________________________
+TGLabel::TGLabel(const TGLabel& gl) :
+  TGFrame(gl),
+  fText(gl.fText),
+  fTWidth(gl.fTWidth),
+  fTHeight(gl.fTHeight),
+  fTMode(gl.fTMode),
+  fTextChanged(gl.fTextChanged),
+  fNormGC(gl.fNormGC),
+  fFontStruct(gl.fFontStruct),
+  fHasOwnFont(gl.fHasOwnFont),
+  fDisabled(gl.fDisabled)
+{ }
+
+//______________________________________________________________________________
+TGLabel& TGLabel::operator=(const TGLabel& gl)
+{
+  if(this!=&gl) {
+    TGFrame::operator=(gl);
+    fText=gl.fText;
+    fTWidth=gl.fTWidth;
+    fTHeight=gl.fTHeight;
+    fTMode=gl.fTMode;
+    fTextChanged=gl.fTextChanged;
+    fNormGC=gl.fNormGC;
+    fFontStruct=gl.fFontStruct;
+    fHasOwnFont=gl.fHasOwnFont;
+    fDisabled=gl.fDisabled;
+  } return *this;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.4 2002/08/05 21:12:12 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.5 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -39,6 +39,8 @@ protected:
    Int_t      fLongest;        //Length of the longest line
    Float_t    fMargin;         //Text margin
    TList      *fLines;         //List of labels
+
+   TPaveText& operator=(const TPaveText&);
 
 public:
    TPaveText();

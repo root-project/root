@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.20 2005/07/18 15:56:41 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.21 2005/11/16 20:10:45 pcanal Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -56,6 +56,29 @@ TDataType::TDataType(const char *typenam) : fInfo(0), fProperty(kIsFundamental)
    SetTitle("Builtin basic type");
 
    SetType(fName.Data());
+}
+
+//______________________________________________________________________________
+TDataType::TDataType(const TDataType& dt) :
+  TDictionary(dt),
+  fInfo(dt.fInfo),
+  fSize(dt.fSize),
+  fType(dt.fType),
+  fProperty(dt.fProperty),
+  fTrueName(dt.fTrueName)
+{ }
+
+//______________________________________________________________________________
+TDataType& TDataType::operator=(const TDataType& dt)
+{
+  if(this!=&dt) {
+    TDictionary::operator=(dt);
+    fInfo=dt.fInfo;
+    fSize=dt.fSize;
+    fType=dt.fType;
+    fProperty=dt.fProperty;
+    fTrueName=dt.fTrueName;
+  } return *this;
 }
 
 //______________________________________________________________________________

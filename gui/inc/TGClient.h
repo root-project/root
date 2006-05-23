@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v5-11-02 $:$Id: TGClient.h,v 1.23 2006/04/14 17:54:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.24 2006/05/14 10:23:26 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -49,10 +49,6 @@ class TGIdleHandler;
 
 class TGClient : public TObject {
 
-private:
-   TGClient(const TGClient&);
-   TGClient& operator=(const TGClient&);
-
 protected:
    Pixel_t         fBackColor;        // default background color
    Pixel_t         fForeColor;        // default foreground color
@@ -79,6 +75,9 @@ protected:
    TList          *fIdleHandlers;     // list of idle handlers
    EGEventType     fWaitForEvent;     // event to wait for
    Window_t        fWaitForWindow;    // window in which to wait for event
+
+   TGClient(const TGClient&);
+   TGClient& operator=(const TGClient&);
 
    Bool_t  ProcessOneEvent();
    Bool_t  ProcessIdleEvent();

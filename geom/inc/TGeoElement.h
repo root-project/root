@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.3 2005/04/20 15:22:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.4 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -72,6 +72,10 @@ private:
    TObjArray               *fList;       // list of elements
 
    void                     BuildDefaultElements();
+
+protected:
+   TGeoElementTable(const TGeoElementTable&); 
+   TGeoElementTable& operator=(const TGeoElementTable&); 
 
 public:
    // constructors

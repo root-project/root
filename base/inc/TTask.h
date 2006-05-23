@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.h,v 1.9 2004/07/13 16:16:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.h,v 1.10 2006/05/14 08:19:30 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -43,6 +43,8 @@ protected:
 
    static TTask *fgBeginTask;    //pointer to task initiator
    static TTask *fgBreakPoint;   //pointer to current break point
+
+   TTask& operator=(const TTask& tt);
 
 public:
    TTask();

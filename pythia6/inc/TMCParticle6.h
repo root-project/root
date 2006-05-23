@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TMCParticle6.h,v 1.1 2000/07/01 08:35:28 rdm Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TMCParticle6.h,v 1.2 2000/12/13 15:13:53 brun Exp $
 // Author: Piotr Golonka   17/09/97
 
 /*************************************************************************
@@ -47,7 +47,9 @@ private:
 
 
 public:
-            TMCParticle() { }
+   TMCParticle() : fKS(0), fKF(0), fParent(0), fFirstChild(0),
+     fLastChild(0), fPx(0), fPy(0), fPz(0), fEnergy(0), fMass(0),
+     fVx(0), fVy(0), fVz(0), fTime(0), fLifetime(0) {}
 
             TMCParticle(Int_t kS, Int_t kF, Int_t parent,
                         Int_t firstchild, Int_t lastchild,

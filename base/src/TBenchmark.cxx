@@ -41,6 +41,31 @@ TBenchmark::TBenchmark(): TNamed()
 }
 
 //______________________________________________________________________________
+TBenchmark::TBenchmark(const TBenchmark& bm) :
+  TNamed(bm),
+  fNbench(bm.fNbench),
+  fNmax(bm.fNmax),
+  fNames(bm.fNames),
+  fRealTime(bm.fRealTime),
+  fCpuTime(bm.fCpuTime),
+  fTimer(bm.fTimer)
+{ }
+
+//______________________________________________________________________________
+TBenchmark& TBenchmark::operator=(const TBenchmark& bm)
+{
+  if(this!=&bm) {
+    TNamed::operator=(bm);
+    fNbench=bm.fNbench;
+    fNmax=bm.fNmax;
+    fNames=bm.fNames;
+    fRealTime=bm.fRealTime;
+    fCpuTime=bm.fCpuTime;
+    fTimer=bm.fTimer;
+  } return *this;
+}
+
+//______________________________________________________________________________
 TBenchmark::~TBenchmark()
 {
 //*-*-*-*-*-*-*-*-*-*-*Benchmark default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*

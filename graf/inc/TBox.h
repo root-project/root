@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.6 2005/11/15 14:04:51 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.7 2006/05/12 12:25:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -34,8 +34,6 @@
 class TBox : public TObject, public TAttLine, public TAttFill {
 
 private:
-   TBox& operator=(const TBox&);
-
    TObject     *fTip;          //!tool tip associated with box
 
 protected:
@@ -44,6 +42,8 @@ protected:
    Double_t     fX2;           //X of 2nd point
    Double_t     fY2;           //Y of 2nd point
    Bool_t       fResizing;     //!True if box is being resized
+
+   TBox& operator=(const TBox&);
 
 public:
    //----- Private bits, clients can only test but not change them

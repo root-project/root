@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.11 2003/05/08 16:55:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.12 2005/09/05 07:24:47 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -47,10 +47,11 @@ class TLatexFormSize {
 private:
       Double_t fWidth, fOver, fUnder;
 public:
-      TLatexFormSize() { fWidth=0; fOver=0; fUnder=0; } // constructeur par defaut
-      TLatexFormSize(Double_t x, Double_t y1, Double_t y2) { fWidth=x; fOver=y1; fUnder=y2; } // constructeur
+      TLatexFormSize() : fWidth(0), fOver(0),fUnder(0) { } // constructeur par defaut
+      TLatexFormSize(Double_t x, Double_t y1, Double_t y2) : fWidth(x), fOver(y1), fUnder(y2) { } // constructeur
       virtual ~TLatexFormSize() {} //destructeur
-      TLatexFormSize(const TLatexFormSize& form) {fWidth=form.fWidth; fOver=form.fOver; fUnder=form.fUnder;}
+      TLatexFormSize(const TLatexFormSize& form) 
+	: fWidth(form.fWidth), fOver(form.fOver), fUnder(form.fUnder) { }
       
       // definition of operators + and +=
       TLatexFormSize operator+(TLatexFormSize f)
@@ -74,6 +75,7 @@ public:
 };
 
 class TLatex : public TText, public TAttLine {
+
 protected:
       Double_t      fFactorSize;      //!Relative size of subscripts and superscripts
       Double_t      fFactorPos;       //!Relative position of subscripts and superscripts
@@ -84,6 +86,8 @@ protected:
       Double_t      fOriginSize;      // Font size of the starting font
       Int_t         fTabMax;          //!Maximum allocation for array fTabSize;
       Int_t         fPos;             //!Current position in array fTabSize;
+
+      TLatex& operator=(const TLatex&); 
 
       //Text analysis and painting
       TLatexFormSize Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t,Int_t length);

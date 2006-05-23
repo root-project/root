@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v5-11-02 $:$Id: TGSplitter.h,v 1.12 2006/04/12 11:11:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.13 2006/05/15 07:43:34 brun Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -30,14 +30,18 @@
 
 class TGSplitter : public TGFrame {
 
-private:
-   TGSplitter(const TGSplitter&);
-   TGSplitter& operator=(const TGSplitter&);
-
 protected:
    Cursor_t    fSplitCursor;      // split cursor
    Bool_t      fDragging;         // true if in dragging mode
    const TGPicture *fSplitterPic; // picture to draw splitter
+
+   TGSplitter(const TGSplitter& sp) : TGFrame(sp),
+     fSplitCursor(sp.fSplitCursor), fDragging(sp.fDragging),
+     fSplitterPic(sp.fSplitterPic) { }
+   TGSplitter& operator=(const TGSplitter& sp) 
+     {if(this!=&sp) { TGFrame::operator=(sp);
+     fSplitCursor=sp.fSplitCursor; fDragging=sp.fDragging;
+     fSplitterPic=sp.fSplitterPic;} return *this; }
 
 public:
    TGSplitter(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 4,

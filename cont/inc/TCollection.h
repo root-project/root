@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name: v5-11-02 $:$Id: TCollection.h,v 1.21 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.22 2006/05/12 12:25:45 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -51,9 +51,6 @@ private:
    static Bool_t        fgEmptyingGarbage;    //used by garbage collector
    static Int_t         fgGarbageStack;       //used by garbage collector
 
-   TCollection(const TCollection &);    //private and not-implemented, collections
-   void operator=(const TCollection &); //are too sensitive to be automatically copied
-
 protected:
    enum { kIsOwner = BIT(14) };
 
@@ -61,6 +58,14 @@ protected:
    Int_t     fSize;               //number of elements in collection
 
    TCollection() : fName(), fSize(0) { }
+   TCollection(const TCollection & tc) 
+     : TObject(tc), fName(tc.fName), fSize(tc.fSize) { }
+   TCollection& operator=(const TCollection &tc) {
+     if(this!=&tc) {
+       TObject::operator=(tc);
+       fName=tc.fName;
+       fSize=tc.fSize;
+     } return *this;}
 
 public:
    enum { kInitCapacity = 16, kInitHashTableCapacity = 17 };

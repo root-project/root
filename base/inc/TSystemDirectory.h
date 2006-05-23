@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.7 2005/05/31 18:52:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.8 2005/06/02 16:28:27 brun Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -40,6 +40,9 @@ protected:
    Bool_t             IsItDirectory(const char *name) const;
    TSystemDirectory  *FindDirObj(const char *name);
    TSystemFile       *FindFileObj(const char *name, const char *dir);
+
+   TSystemDirectory(const TSystemDirectory&);
+   TSystemDirectory& operator=(const TSystemDirectory&);
 
 public:
    TSystemDirectory();

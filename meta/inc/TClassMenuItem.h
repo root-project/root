@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassMenuItem.h,v 1.1 2002/04/04 17:32:13 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassMenuItem.h,v 1.2 2006/05/12 12:25:45 brun Exp $
 // Author: Damir Buskulic   23/11/2001
 
 /*************************************************************************
@@ -41,9 +41,6 @@ public:
    enum { kIsExternal, kIsSelf };
 
 private:
-   TClassMenuItem(const TClassMenuItem&);
-   TClassMenuItem& operator=(const TClassMenuItem&);
-
    EClassMenuItemType  fType;          //type flag (EClassMenuItemType)
    Int_t               fSelfObjectPos; //rang in argument list corresponding to the object being clicked on
    Bool_t              fSelf;          //flag to indicate that object to be called is the selected one
@@ -54,6 +51,10 @@ private:
    TString             fArgs;          //arguments type list *** NOT CHECKED ***
    TList              *fSubMenu;       //list of submenu items
    TClass             *fParent;        //parent class
+
+protected:
+   TClassMenuItem(const TClassMenuItem&);
+   TClassMenuItem& operator=(const TClassMenuItem&);
 
 public:
    TClassMenuItem();

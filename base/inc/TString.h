@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.42 2005/12/02 16:17:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.43 2005/12/09 01:14:20 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -218,13 +218,13 @@ public:
 
    TString();                       // Null string
    TString(Ssiz_t ic);              // Suggested capacity
-   TString(const TString &s)        // Copy constructor
-      { fData = s.fData; Pref()->AddReference(); }
+   TString(const TString &s):       // Copy constructor
+     fData(s.fData) { Pref()->AddReference(); }
 
    TString(const char *s);              // Copy to embedded null
    TString(const char *s, Ssiz_t n);    // Copy past any embedded nulls
    TString(const std::string &s);
-   TString(char c) { InitChar(c); }
+   TString(char c): fData(NULL) { InitChar(c); }
    TString(char c, Ssiz_t s);
    TString(const TSubString &sub);
 

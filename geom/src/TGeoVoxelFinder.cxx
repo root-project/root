@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.35 2006/04/03 16:19:31 brun Exp $
+// @(#)root/geom:$Name: v5-11-02 $:$Id: TGeoVoxelFinder.cxx,v 1.36 2006/04/05 09:36:06 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -120,6 +120,103 @@ TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
    fBits1    = 0;
    SetNeedRebuild();
 }
+
+//-----------------------------------------------------------------------------
+TGeoVoxelFinder::TGeoVoxelFinder(const TGeoVoxelFinder& vf) :
+  TObject(vf),
+  fVolume(vf.fVolume),
+  fNcandidates(vf.fNcandidates),
+  fCurrentVoxel(vf.fCurrentVoxel),
+  fIbx(vf.fIbx),
+  fIby(vf.fIby),
+  fIbz(vf.fIbz),
+  fNboxes(vf.fNboxes),
+  fNox(vf.fNox),
+  fNoy(vf.fNoy),
+  fNoz(vf.fNoz),
+  fNex(vf.fNex),
+  fNey(vf.fNey),
+  fNez(vf.fNez),
+  fNx(vf.fNx),
+  fNy(vf.fNy),
+  fNz(vf.fNz),
+  fBoxes(vf.fBoxes),
+  fXb(vf.fXb),
+  fYb(vf.fYb),
+  fZb(vf.fZb),
+  fOBx(vf.fOBx),
+  fOBy(vf.fOBy),
+  fOBz(vf.fOBz),
+  fOEx(vf.fOEx),
+  fOEy(vf.fOEy),
+  fOEz(vf.fOEz),
+  fIndX(vf.fIndX),
+  fIndY(vf.fIndY),
+  fIndZ(vf.fIndZ),
+  fExtraX(vf.fExtraX),
+  fExtraY(vf.fExtraY),
+  fExtraZ(vf.fExtraZ),
+  fCheckList(vf.fCheckList),
+  fBits1(vf.fBits1)
+{
+  for(Int_t i=0; i<3; i++) {
+    fPriority[i]=vf.fPriority[i];
+    fSlices[i]=vf.fSlices[i];
+    fInc[i]=vf.fInc[i];
+    fInvdir[i]=vf.fInvdir[i];
+    fLimits[i]=vf.fLimits[i];
+  }
+}
+
+//-----------------------------------------------------------------------------
+TGeoVoxelFinder& TGeoVoxelFinder::operator=(const TGeoVoxelFinder& vf)
+{
+  if(this!=&vf) {
+    TObject::operator=(vf);
+    fVolume=vf.fVolume;
+    fNcandidates=vf.fNcandidates;
+    fCurrentVoxel=vf.fCurrentVoxel;
+    fIbx=vf.fIbx;
+    fIby=vf.fIby;
+    fIbz=vf.fIbz;
+    fNboxes=vf.fNboxes;
+    fNox=vf.fNox;
+    fNoy=vf.fNoy;
+    fNoz=vf.fNoz;
+    fNex=vf.fNex;
+    fNey=vf.fNey;
+    fNez=vf.fNez;
+    fNx=vf.fNx;
+    fNy=vf.fNy;
+    fNz=vf.fNz;
+    for(Int_t i=0; i<3; i++) {
+      fPriority[i]=vf.fPriority[i];
+      fSlices[i]=vf.fSlices[i];
+      fInc[i]=vf.fInc[i];
+      fInvdir[i]=vf.fInvdir[i];
+      fLimits[i]=vf.fLimits[i];
+    }
+    fBoxes=vf.fBoxes;
+    fXb=vf.fXb;
+    fYb=vf.fYb;
+    fZb=vf.fZb;
+    fOBx=vf.fOBx;
+    fOBy=vf.fOBy;
+    fOBz=vf.fOBz;
+    fOEx=vf.fOEx;
+    fOEy=vf.fOEy;
+    fOEz=vf.fOEz;
+    fIndX=vf.fIndX;
+    fIndY=vf.fIndY;
+    fIndZ=vf.fIndZ;
+    fExtraX=vf.fExtraX;
+    fExtraY=vf.fExtraY;
+    fExtraZ=vf.fExtraZ;
+    fCheckList=vf.fCheckList;
+    fBits1=vf.fBits1;
+  } return *this;
+}
+
 //-----------------------------------------------------------------------------
 TGeoVoxelFinder::~TGeoVoxelFinder()
 {

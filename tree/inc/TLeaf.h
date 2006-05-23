@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.10 2004/10/18 12:32:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.11 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -46,6 +46,9 @@ protected:
    Bool_t      fIsUnsigned;      //  (=kTRUE if unsigned, kFALSE otherwise)
    TLeaf      *fLeafCount;       //  Pointer to Leaf count if variable length
    TBranch    *fBranch;          //! Pointer to supporting branch
+
+   TLeaf(const TLeaf&);
+   TLeaf& operator=(const TLeaf&);
 
 public:
    enum { 

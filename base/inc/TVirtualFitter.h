@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.15 2005/11/29 19:02:58 brun Exp $
+// @(#)root/base:$Name: v5-11-02 $:$Id: TVirtualFitter.h,v 1.16 2006/03/20 08:22:40 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -32,7 +32,6 @@
 
 class TVirtualFitter : public TNamed {
 
-
 protected:
    Foption_t              fOption;     //struct with the fit options
    Int_t                  fXfirst;     //first bin on X axis
@@ -57,6 +56,8 @@ protected:
    static Double_t        fgPrecision; //maximum precision
    static TString         fgDefault;   //name of the default fitter ("Minuit","Fumili",etc)
    
+   TVirtualFitter(const TVirtualFitter& tvf);
+   TVirtualFitter& operator=(const TVirtualFitter&); // Not implemented
 
 public:
    TVirtualFitter();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.11 2006/05/15 07:43:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.12 2006/05/15 11:01:14 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -164,13 +164,15 @@ public:
 
 class TGVerticalLayout : public TGLayoutManager {
 
-private:
-   TGVerticalLayout(const TGVerticalLayout&);
-   TGVerticalLayout& operator=(const TGVerticalLayout&);
-
 protected:
    TGCompositeFrame  *fMain;     // container frame
    TList             *fList;     // list of frames to arrange
+
+   TGVerticalLayout(const TGVerticalLayout& gvl) :
+     TGLayoutManager(gvl), fMain(gvl.fMain), fList(gvl.fList) { }
+   TGVerticalLayout& operator=(const TGVerticalLayout& gvl)
+     {if(this!=&gvl) { TGLayoutManager::operator=(gvl);
+     fMain=gvl.fMain; fList=gvl.fList;} return *this;}
 
 public:
    TGVerticalLayout(TGCompositeFrame *main);

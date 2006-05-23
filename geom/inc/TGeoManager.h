@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.78 2006/04/25 09:38:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.79 2006/05/02 18:25:35 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -44,6 +44,10 @@ class TGeoManager : public TNamed
 {
 protected:
    static Bool_t         fgLock;            //! Lock preventing a second geometry to be loaded
+
+   TGeoManager(const TGeoManager&); 
+   TGeoManager& operator=(const TGeoManager&); 
+
 private :
    Double_t              fStep;             //! step to be done from current point and direction
    Double_t              fSafety;           //! safety radius from current point
@@ -137,6 +141,7 @@ private :
    THashList            *fHashGVolumes;     //! hash list of group volumes providing fast search
    THashList            *fHashPNE;          //-> hash list of phisical node entries
 //--- private methods
+
    void                   BuildCache(Bool_t dummy=kFALSE, Bool_t nodeid=kFALSE);
    void                   BuildIdArray();
    TGeoNode              *FindInCluster(Int_t *cluster, Int_t nc);

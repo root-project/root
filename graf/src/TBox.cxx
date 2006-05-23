@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.21 2006/04/27 09:26:38 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.22 2006/04/28 08:43:05 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -77,6 +77,22 @@ TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box)
    // Box copy constructor.
 
    ((TBox&)box).TBox::Copy(*this);
+}
+
+//______________________________________________________________________________
+TBox& TBox::operator=(const TBox& b) 
+{
+  if(this!=&b) {
+    TObject::operator=(b);
+    TAttLine::operator=(b);
+    TAttFill::operator=(b);
+    fTip=b.fTip;
+    fX1=b.fX1;
+    fY1=b.fY1;
+    fX2=b.fX2;
+    fY2=b.fY2;
+    fResizing=b.fResizing;
+  } return *this;
 }
 
 //______________________________________________________________________________

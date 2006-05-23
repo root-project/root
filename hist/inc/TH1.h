@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.74 2006/04/11 16:17:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.75 2006/05/16 16:50:02 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -109,6 +109,8 @@ private:
    Int_t   AxisChoice(Option_t *axis) const;
    void    Build();
    Int_t   FitOptionsMake(Option_t *option, Foption_t &Foption);
+
+   TH1& operator=(const TH1&); // Not implemented
 
 protected:
    TH1();

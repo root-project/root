@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGXYLayout.cxx,v 1.1 2002/08/08 16:54:11 rdm Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -147,6 +147,33 @@ TGXYLayout::TGXYLayout(TGCompositeFrame *main)
    height = main->GetHeight() * fTHeight;
 
    main->Resize(width, height);
+}
+
+//______________________________________________________________________________
+TGXYLayout::TGXYLayout(const TGXYLayout& xyl) :
+  TGLayoutManager(xyl),
+  fList(xyl.fList),
+  fMain(xyl.fMain),
+  fFirst(xyl.fFirst),
+  fFirstWidth(xyl.fFirstWidth),
+  fFirstHeight(xyl.fFirstHeight),
+  fTWidth(xyl.fTWidth),
+  fTHeight(xyl.fTHeight)
+{ }
+
+//______________________________________________________________________________
+TGXYLayout& TGXYLayout::operator=(const TGXYLayout& xyl) 
+{
+  if(this!=&xyl) {
+    TGLayoutManager::operator=(xyl);
+    fList=xyl.fList;
+    fMain=xyl.fMain;
+    fFirst=xyl.fFirst;
+    fFirstWidth=xyl.fFirstWidth;
+    fFirstHeight=xyl.fFirstHeight;
+    fTWidth=xyl.fTWidth;
+    fTHeight=xyl.fTHeight;
+  } return *this;
 }
 
 //______________________________________________________________________________

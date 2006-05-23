@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.6 2004/11/18 15:52:16 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.7 2005/03/03 22:06:49 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
@@ -51,6 +51,9 @@ protected:
    Int_t             fWid;              //widget id 
    Bool_t            fGlobal;           //true if editor is global
    
+   TGedEditor(const TGedEditor&); 
+   TGedEditor& operator=(const TGedEditor&); 
+
    virtual void GetEditors();
    virtual void GetClassEditor(TClass *cl);
    virtual void GetBaseClassEditor(TClass *cl);

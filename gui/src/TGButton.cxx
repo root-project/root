@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.64 2006/05/17 08:09:42 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.65 2006/05/18 16:32:01 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -111,6 +111,37 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
 
    AddInput(kEnterWindowMask | kLeaveWindowMask);
    SetWindowName();
+}
+
+//______________________________________________________________________________
+TGButton::TGButton(const TGButton& tgb) :
+  TGFrame(tgb),
+  TGWidget(tgb),
+  fTWidth(tgb.fTWidth),
+  fTHeight(tgb.fTHeight),
+  fState(tgb.fState),
+  fStayDown(tgb.fStayDown),
+  fNormGC(tgb.fNormGC),
+  fUserData(tgb.fUserData), 
+  fTip(tgb.fTip), 
+  fGroup(tgb.fGroup)
+{ }
+
+//______________________________________________________________________________
+TGButton& TGButton::operator=(const TGButton& tgb) 
+{
+  if(this!=&tgb) {
+    TGFrame::operator=(tgb);
+    TGWidget::operator=(tgb);
+    fTWidth=tgb.fTWidth;
+    fTHeight=tgb.fTHeight;
+    fState=tgb.fState;
+    fStayDown=tgb.fStayDown;
+    fNormGC=tgb.fNormGC;
+    fUserData=tgb.fUserData; 
+    fTip=tgb.fTip; 
+    fGroup=tgb.fGroup;
+  } return *this;
 }
 
 //______________________________________________________________________________
@@ -355,6 +386,29 @@ TGTextButton::TGTextButton(const TGWindow *p, const char *s, const char *cmd,
    fCommand = cmd;
 
    Init();
+}
+
+//______________________________________________________________________________
+TGTextButton::TGTextButton(const TGTextButton& tgt) :
+  TGButton(tgt),
+  fLabel(tgt.fLabel),
+  fTMode(tgt.fTMode),
+  fHKeycode(tgt.fHKeycode),
+  fFontStruct(tgt.fFontStruct),
+  fHasOwnFont(tgt.fHasOwnFont) 
+{ }
+
+//______________________________________________________________________________
+TGTextButton& TGTextButton::operator=(const TGTextButton& tgt) 
+{
+  if(this!=&tgt) {
+    TGButton::operator=(tgt);
+    fLabel=tgt.fLabel;
+    fTMode=tgt.fTMode;
+    fHKeycode=tgt.fHKeycode;
+    fFontStruct=tgt.fFontStruct;
+    fHasOwnFont=tgt.fHasOwnFont;
+  } return *this;
 }
 
 //______________________________________________________________________________

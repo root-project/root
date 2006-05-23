@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGXYLayout.h,v 1.1 2002/08/08 16:54:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGXYLayout.h,v 1.2 2003/03/17 16:38:02 rdm Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -143,6 +143,9 @@ protected:
 
    Int_t             fTWidth;         // text width of a default character "1234567890" / 10
    Int_t             fTHeight;        // text height
+
+   TGXYLayout(const TGXYLayout&); 
+   TGXYLayout& operator=(const TGXYLayout&); 
 
 public:
    TGXYLayout(TGCompositeFrame *main);

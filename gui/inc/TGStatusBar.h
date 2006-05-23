@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.12 2006/04/12 12:56:32 antcheva Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGStatusBar.h,v 1.13 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -44,6 +44,9 @@ protected:
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;
+
+   TGStatusBar(const TGStatusBar&);
+   TGStatusBar& operator=(const TGStatusBar&);
 
    virtual void DoRedraw();
 

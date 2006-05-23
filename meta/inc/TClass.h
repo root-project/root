@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.61 2006/05/02 19:35:48 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.62 2006/05/12 12:25:45 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -74,9 +74,6 @@ public:
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
 
 private:
-   //   TClass(const TClass&);
-   TClass& operator=(const TClass&);   
-
    TObjArray         *fStreamerInfo;    //Array of TStreamerInfo
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes
@@ -145,6 +142,10 @@ private:
    enum { kLoading = BIT(14) };
    // Internal streamer type.
    enum {kDefault=0, kEmulated=1, kTObject=2, kInstrumented=4, kForeign=8, kExternal=16};
+
+protected:
+   TClass(const TClass& tc);
+   TClass& operator=(const TClass&);   
 
 public:
    TClass();

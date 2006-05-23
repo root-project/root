@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.16 2005/11/16 20:02:34 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.17 2005/11/21 11:17:18 rdm Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -34,7 +34,6 @@ class TVirtualPad;
 
 class TView : public TObject, public TAttLine {
 
-
 protected:
    Double_t        fLatitude;         //View angle latitude
    Double_t        fLongitude;        //View angle longitude
@@ -61,6 +60,9 @@ protected:
    Bool_t          fDefaultOutline;   //Set to TRUE if outline is default cube
    Bool_t          fAutoRange;        //Set to TRUE if range computed automatically
    Bool_t          fChanged;          //! Set to TRUE after ExecuteRotateView
+
+   TView(const TView&); // Not implemented
+   TView& operator=(const TView&); // Not implemented
 
    void            ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep);
 

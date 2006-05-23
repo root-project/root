@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.27 2006/04/24 14:04:41 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.28 2006/05/15 07:43:34 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -44,10 +44,6 @@ class TColor;
 
 class TGTextEntry : public TGFrame, public TGWidget {
 
-private:
-   TGTextEntry(const TGTextEntry&);
-   TGTextEntry& operator=(const TGTextEntry&);
-
 public:
    enum   EEchoMode { kNormal, kNoEcho, kPassword };
    enum   EInsertMode { kInsert, kReplace };
@@ -77,6 +73,9 @@ protected:
    EInsertMode       fInsertMode;        // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="Insert",kReplace="Replace")}*
    ETextJustification fAlignment;        // *OPTION={GetMethod="GetAlignment";SetMethod="SetAlignment";Items=(kTextLeft="Left",kTextCenterX="Center",kTextRight="Right")}*
    Bool_t            fHasOwnFont;        // kTRUE - font defined locally,  kFALSE - globally
+
+   TGTextEntry(const TGTextEntry&);
+   TGTextEntry& operator=(const TGTextEntry&);
 
             void        CopyText() const;
    virtual  void        DoRedraw();

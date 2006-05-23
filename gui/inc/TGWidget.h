@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWidget.h,v 1.4 2001/09/18 10:57:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWidget.h,v 1.5 2002/09/13 01:37:45 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -66,12 +66,21 @@ protected:
    const TGWindow  *fMsgWindow;    // window which handles widget events
    TString          fCommand;      // command to be executed
 
+   TGWidget(const TGWidget& tgw):
+     fWidgetId(tgw.fWidgetId), fWidgetFlags(tgw.fWidgetFlags), 
+     fMsgWindow(tgw.fMsgWindow), fCommand(tgw.fCommand) { }
+   TGWidget& operator=(const TGWidget& tgw) {
+     if(this!=&tgw) {
+       fWidgetId=tgw.fWidgetId; fWidgetFlags=tgw.fWidgetFlags;
+       fMsgWindow=tgw.fMsgWindow; fCommand=tgw.fCommand; } return *this; }
    Int_t SetFlags(Int_t flags) { return fWidgetFlags |= flags; }
    Int_t ClearFlags(Int_t flags) { return fWidgetFlags &= ~flags; }
 
 public:
-   TGWidget() { fWidgetId = -1; fWidgetFlags = 0; fMsgWindow = 0;}
-   TGWidget(Int_t id) { fWidgetId = id; fWidgetFlags = 0; fMsgWindow = 0; }
+   TGWidget(): 
+     fWidgetId(-1), fWidgetFlags(0), fMsgWindow(0), fCommand() { }
+   TGWidget(Int_t id):
+     fWidgetId(id), fWidgetFlags(0), fMsgWindow(0), fCommand() { }
    virtual ~TGWidget() { }
 
    Int_t         WidgetId() const { return fWidgetId; }

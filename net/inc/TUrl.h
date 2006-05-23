@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.14 2006/05/01 16:34:00 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.15 2006/05/02 13:03:34 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -52,7 +52,9 @@ private:
    void FindFile(char *u);
 
 public:
-   TUrl() { fPort = -1; }
+   TUrl():
+     fUrl(), fProtocol(), fUser(), fPasswd(), fHost(), fFile(),
+     fAnchor(), fOptions(), fFileOA(), fHostFQ(), fPort(-1) { }
    TUrl(const char *url, Bool_t defaultIsFile = kFALSE);
    TUrl(const TUrl &url);
    TUrl &operator=(const TUrl &rhs);

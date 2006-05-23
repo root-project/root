@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.48 2006/04/07 15:45:53 rdm Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGListTree.cxx,v 1.49 2006/04/08 10:23:03 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -135,6 +135,63 @@ TGListTreeItem::TGListTreeItem(TGClient *client, const char *name,
 
    fHasColor = kFALSE;
    fColor = 0;
+}
+
+//______________________________________________________________________________
+TGListTreeItem::TGListTreeItem(const TGListTreeItem& lti) :
+  fClient(lti.fClient),
+  fParent(lti.fParent),
+  fFirstchild(lti.fFirstchild),
+  fPrevsibling(lti.fPrevsibling),
+  fNextsibling(lti.fNextsibling),
+  fOpen(lti.fOpen),
+  fActive(lti.fActive),
+  fCheckBox(lti.fCheckBox),
+  fChecked(lti.fChecked),
+  fText(lti.fText),
+  fTipText(lti.fTipText),
+  fY(lti.fY),
+  fXtext(lti.fXtext),
+  fYtext(lti.fYtext),
+  fHeight(lti.fHeight),
+  fPicWidth(lti.fPicWidth),
+  fOpenPic(lti.fOpenPic),
+  fClosedPic(lti.fClosedPic),
+  fCheckedPic(lti.fCheckedPic),
+  fUncheckedPic(lti.fUncheckedPic),
+  fUserData(lti.fUserData),
+  fHasColor(lti.fHasColor),
+  fColor(lti.fColor)
+{ }
+
+//______________________________________________________________________________
+TGListTreeItem& TGListTreeItem::operator=(const TGListTreeItem& lti)
+{
+  if(this!=&lti) {
+    fClient=lti.fClient;
+    fParent=lti.fParent;
+    fFirstchild=lti.fFirstchild;
+    fPrevsibling=lti.fPrevsibling;
+    fNextsibling=lti.fNextsibling;
+    fOpen=lti.fOpen;
+    fActive=lti.fActive;
+    fCheckBox=lti.fCheckBox;
+    fChecked=lti.fChecked;
+    fText=lti.fText;
+    fTipText=lti.fTipText;
+    fY=lti.fY;
+    fXtext=lti.fXtext;
+    fYtext=lti.fYtext;
+    fHeight=lti.fHeight;
+    fPicWidth=lti.fPicWidth;
+    fOpenPic=lti.fOpenPic;
+    fClosedPic=lti.fClosedPic;
+    fCheckedPic=lti.fCheckedPic;
+    fUncheckedPic=lti.fUncheckedPic;
+    fUserData=lti.fUserData;
+    fHasColor=lti.fHasColor;
+    fColor=lti.fColor;
+  } return *this;
 }
 
 //______________________________________________________________________________
@@ -295,6 +352,63 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    AddInput(kPointerMotionMask | kEnterWindowMask |
             kLeaveWindowMask | kKeyPressMask);
    SetWindowName();
+}
+
+//______________________________________________________________________________
+TGListTree::TGListTree(const TGListTree& lt) : 
+  TGContainer(lt),
+  fFirst(lt.fFirst),
+  fSelected(lt.fSelected),
+  fHspacing(lt.fHspacing),
+  fVspacing(lt.fVspacing),
+  fIndent(lt.fIndent),
+  fMargin(lt.fMargin),
+  fLastY(lt.fLastY),
+  fGrayPixel(lt.fGrayPixel),
+  fDrawGC(lt.fDrawGC),
+  fLineGC(lt.fLineGC),
+  fHighlightGC(lt.fHighlightGC),
+  fFont(lt.fFont),
+  fDefw(lt.fDefw),
+  fDefh(lt.fDefh),
+  fExposeTop(lt.fExposeTop),
+  fExposeBottom(lt.fExposeBottom),
+  fTip(lt.fTip),
+  fTipItem(lt.fTipItem),
+  fAutoTips(lt.fAutoTips),
+  fDisableOpen(lt.fDisableOpen),
+  fColorMode(lt.fColorMode),
+  fColorGC(lt.fColorGC)
+{ }
+
+//______________________________________________________________________________
+TGListTree& TGListTree::operator=(const TGListTree& lt) 
+{
+  if(this!=&lt) {
+    TGContainer::operator=(lt);
+    fFirst=lt.fFirst;
+    fSelected=lt.fSelected;
+    fHspacing=lt.fHspacing;
+    fVspacing=lt.fVspacing;
+    fIndent=lt.fIndent;
+    fMargin=lt.fMargin;
+    fLastY=lt.fLastY;
+    fGrayPixel=lt.fGrayPixel;
+    fDrawGC=lt.fDrawGC;
+    fLineGC=lt.fLineGC;
+    fHighlightGC=lt.fHighlightGC;
+    fFont=lt.fFont;
+    fDefw=lt.fDefw;
+    fDefh=lt.fDefh;
+    fExposeTop=lt.fExposeTop;
+    fExposeBottom=lt.fExposeBottom;
+    fTip=lt.fTip;
+    fTipItem=lt.fTipItem;
+    fAutoTips=lt.fAutoTips;
+    fDisableOpen=lt.fDisableOpen;
+    fColorMode=lt.fColorMode;
+    fColorGC=lt.fColorGC;
+  } return *this;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.125 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/tree:$Name: v5-11-02 $:$Id: TChain.cxx,v 1.126 2006/04/19 08:22:25 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -126,6 +126,43 @@ TChain::TChain(const char *name, const char *title)
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
+}
+
+//______________________________________________________________________________
+TChain::TChain(const TChain& tc) :
+  TTree(tc),
+  fTreeOffsetLen(tc.fTreeOffsetLen),
+  fNtrees(tc.fNtrees),
+  fTreeNumber(tc.fTreeNumber),
+  fTreeOffset(tc.fTreeOffset), 
+  fMaxCacheSize(tc.fMaxCacheSize),
+  fPageSize(tc.fPageSize),
+  fCanDeleteRefs(tc.fCanDeleteRefs),
+  fTree(tc.fTree),
+  fFile(tc.fFile),
+  fFiles(tc.fFiles),
+  fStatus(tc.fStatus),
+  fChainProof(tc.fChainProof)
+{ }
+
+//______________________________________________________________________________
+TChain& TChain::operator=(const TChain& tc)
+{
+  if(this!=&tc) {
+    TTree::operator=(tc);
+    fTreeOffsetLen=tc.fTreeOffsetLen;
+    fNtrees=tc.fNtrees;
+    fTreeNumber=tc.fTreeNumber;
+    fTreeOffset=tc.fTreeOffset; 
+    fMaxCacheSize=tc.fMaxCacheSize;
+    fPageSize=tc.fPageSize;
+    fCanDeleteRefs=tc.fCanDeleteRefs;
+    fTree=tc.fTree;
+    fFile=tc.fFile;
+    fFiles=tc.fFiles;
+    fStatus=tc.fStatus;
+    fChainProof=tc.fChainProof;
+  } return *this;
 }
 
 //______________________________________________________________________________

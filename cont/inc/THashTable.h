@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.9 2005/03/24 07:13:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.10 2005/03/26 06:47:32 brun Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -49,6 +49,11 @@ private:
    Int_t       GetHashValue(const TObject *obj) const;
    Int_t       GetHashValue(TString &s) const { return s.Hash() % fSize; }
    Int_t       GetHashValue(const char *str) const { return ::Hash(str) % fSize; }
+
+
+protected:
+   THashTable(const THashTable&); 
+   THashTable& operator=(const THashTable&);
 
 public:
    THashTable(Int_t capacity = TCollection::kInitHashTableCapacity, Int_t rehash = 0);
@@ -107,7 +112,7 @@ private:
    TListIter        *fListCursor;  //current position in collision list
    Bool_t            fDirection;   //iteration direction
 
-   THashTableIter() : fTable(0), fListCursor(0) { }
+   THashTableIter() : fTable(0), fCursor(0), fListCursor(NULL), fDirection(kIterForward) { }
    Int_t             NextSlot();
 
 public:

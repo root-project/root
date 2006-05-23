@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.h,v 1.7 2005/06/22 20:18:12 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TMutex.h,v 1.8 2005/06/23 00:29:38 rdm Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -43,6 +43,10 @@ private:
    TMutexImp  *fMutexImp;   // pointer to mutex implementation
    Long_t      fId;         // id of thread which locked mutex
    Int_t       fRef;        // reference count in case of recursive locking by same thread
+
+protected:
+   TMutex(const TMutex&);
+   TMutex& operator=(const TMutex&);
 
 public:
    TMutex(Bool_t recursive = kFALSE);

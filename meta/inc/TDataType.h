@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.12 2005/01/19 18:30:58 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.13 2006/05/13 11:00:50 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -45,9 +45,6 @@ class G__TypedefInfo;
 class TDataType : public TDictionary {
 
 private:
-   TDataType(const TDataType&);
-   TDataType& operator=(const TDataType&);
-
    G__TypedefInfo   *fInfo;     //pointer to CINT typedef info
    Int_t             fSize;     //size of type
    EDataType         fType;     //type id
@@ -56,6 +53,10 @@ private:
 
    void CheckInfo();
    void SetType(const char *name);
+
+protected:
+   TDataType(const TDataType&);
+   TDataType& operator=(const TDataType&);
 
 public:
    TDataType(G__TypedefInfo *info = 0);

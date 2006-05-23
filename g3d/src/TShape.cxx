@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.12 2006/02/23 15:29:27 couet Exp $
+// @(#)root/g3d:$Name: v5-11-02 $:$Id: TShape.cxx,v 1.13 2006/03/20 21:43:41 pcanal Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -77,6 +77,30 @@ TShape::TShape(const char *name,const char *title, const char *materialname)
 #endif
 }
 
+//______________________________________________________________________________
+TShape::TShape(const TShape& ts) : 
+  TNamed(ts), 
+  TAttLine(ts),
+  TAttFill(ts),
+  TAtt3D(ts),
+  fNumber(ts.fNumber),
+  fVisibility(ts.fVisibility),
+  fMaterial(ts.fMaterial) 
+{ }
+
+//______________________________________________________________________________
+TShape& TShape::operator=(const TShape& ts) 
+{ 
+  if (this!=&ts) {
+    TNamed::operator=(ts);
+    TAttLine::operator=(ts);
+    TAttFill::operator=(ts);
+    TAtt3D::operator=(ts);
+    fNumber=ts.fNumber;
+    fVisibility=ts.fVisibility;
+    fMaterial=ts.fMaterial;
+  } return *this;
+}
 
 //______________________________________________________________________________
 TShape::~TShape()

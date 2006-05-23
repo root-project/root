@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.21 2005/11/17 13:17:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.22 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -31,6 +31,12 @@ class TGeoCompositeShape : public TGeoBBox
 private :
 // data members
    TGeoBoolNode         *fNode;             // top boolean node
+
+protected:
+   TGeoCompositeShape(const TGeoCompositeShape& gcs)
+     : TGeoBBox(gcs), fNode(gcs.fNode) { }
+   TGeoCompositeShape& operator=(const TGeoCompositeShape& gcs)
+     {if(this!=&gcs) {TGeoBBox::operator=(gcs); fNode=gcs.fNode;} return *this;}
 
 public:
    // constructors

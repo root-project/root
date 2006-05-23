@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.67 2006/05/01 20:13:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.68 2006/05/04 17:05:29 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -101,6 +101,32 @@ TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
 
    fSocket = 0;
 }
+
+#if 0
+// NetFiles cannot be copied
+//______________________________________________________________________________
+TNetFile::TNetFile(const TNetFile& nf) :
+  TFile(nf),
+  fEndpointUrl(nf.fEndpointUrl),
+  fUser(nf.fUser),
+  fSocket(nf.fSocket),
+  fProtocol(nf.fProtocol),
+  fErrorCode(nf.fErrorCode)
+{ }
+
+//______________________________________________________________________________
+TNetFile& TNetFile::operator=(const TNetFile& nf) 
+{
+  if(this!=&nf) {
+    TFile::operator=(nf);
+    fEndpointUrl=nf.fEndpointUrl;
+    fUser=nf.fUser;
+    fSocket=nf.fSocket;
+    fProtocol=nf.fProtocol;
+    fErrorCode=nf.fErrorCode;
+  } return *this;
+}
+#endif
 
 //______________________________________________________________________________
 TNetFile::~TNetFile()
@@ -709,6 +735,33 @@ TNetSystem::TNetSystem(const char *url, Bool_t ftpowner)
 
    fFTPOwner = ftpowner;
    Create(url);
+}
+
+//______________________________________________________________________________
+TNetSystem::TNetSystem(const TNetSystem& ns) :
+  TSystem(ns),
+  fDir(ns.fDir),
+  fDirp(ns.fDirp),
+  fFTP(ns.fFTP),
+  fHost(ns.fHost),
+  fFTPOwner(ns.fFTPOwner),
+  fUser(ns.fUser),
+  fPort(ns.fPort)
+{ }
+
+//______________________________________________________________________________
+TNetSystem& TNetSystem::operator=(const TNetSystem& ns) 
+{
+  if(this!=&ns) {
+    TSystem::operator=(ns);
+    fDir=ns.fDir;
+    fDirp=ns.fDirp;
+    fFTP=ns.fFTP;
+    fHost=ns.fHost;
+    fFTPOwner=ns.fFTPOwner;
+    fUser=ns.fUser;
+    fPort=ns.fPort;
+  } return *this;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.34 2006/05/14 10:23:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.35 2006/05/15 11:01:13 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -67,7 +67,7 @@ protected:
 
 private:
    TDirectory(const TDirectory &directory);  //Directories cannot be copied
-   void operator=(const TDirectory &);
+   void operator=(const TDirectory &); //Directorise cannot be copied
 
 public:
    // TDirectory status bits

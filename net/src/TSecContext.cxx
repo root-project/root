@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.10 2005/09/02 19:34:49 brun Exp $
+// @(#)root/net:$Name: v5-11-02 $:$Id: TSecContext.cxx,v 1.11 2006/04/19 08:22:25 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -101,6 +101,39 @@ TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSecContexts()->Add(this);
    }
+}
+
+//______________________________________________________________________________
+TSecContext::TSecContext(const TSecContext& sc) :
+  TObject(sc),
+  fContext(sc.fContext),
+  fCleanup(sc.fCleanup),
+  fExpDate(sc.fExpDate),
+  fHost(sc.fHost),
+  fID(sc.fID),
+  fMethod(sc.fMethod),
+  fMethodName(sc.fMethodName),
+  fOffSet(sc.fOffSet),
+  fToken(sc.fToken),
+  fUser(sc.fUser)
+{ }
+
+//______________________________________________________________________________
+TSecContext& TSecContext::operator=(const TSecContext& sc) 
+{
+  if(this!=&sc) {
+    TObject::operator=(sc);
+    fContext=sc.fContext;
+    fCleanup=sc.fCleanup;
+    fExpDate=sc.fExpDate;
+    fHost=sc.fHost;
+    fID=sc.fID;
+    fMethod=sc.fMethod;
+    fMethodName=sc.fMethodName;
+    fOffSet=sc.fOffSet;
+    fToken=sc.fToken;
+    fUser=sc.fUser;
+  } return *this;
 }
 
 //______________________________________________________________________________

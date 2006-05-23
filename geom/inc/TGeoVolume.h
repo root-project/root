@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.47 2006/03/13 11:03:36 brun Exp $
+// @(#)root/geom:$Name: v5-11-02 $:$Id: TGeoVolume.h,v 1.48 2006/03/24 15:11:23 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -76,6 +76,9 @@ protected :
    TString            fOption;         //! option - if any
    Int_t              fNumber;         //  volume serial number in the list of volumes
    Int_t              fNtotal;         // total number of physical nodes
+
+   TGeoVolume(const TGeoVolume&); 
+   TGeoVolume& operator=(const TGeoVolume&);
 
 public:
    enum EGeoVolumeTypes {
@@ -242,6 +245,11 @@ private:
    Double_t         fStart;        // division start offset
    Double_t         fStep;         // division step
    Bool_t           fAttSet;       // flag attributes set
+
+protected:
+   TGeoVolumeMulti(const TGeoVolumeMulti&); 
+   TGeoVolumeMulti& operator=(const TGeoVolumeMulti&);
+
 public:
    TGeoVolumeMulti();
    TGeoVolumeMulti(const char* name, const TGeoMedium *med=0);

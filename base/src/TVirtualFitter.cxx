@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.13 2005/11/29 14:43:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.14 2005/11/29 19:02:58 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -35,6 +35,49 @@ TVirtualFitter::TVirtualFitter()
    fPointSize  = 0;
    fCacheSize  = 0;
    fCache      = 0;
+}
+
+//______________________________________________________________________________
+TVirtualFitter::TVirtualFitter(const TVirtualFitter& tvf) :
+  TNamed(tvf), 
+  fOption(tvf.fOption),
+  fXfirst(tvf.fXfirst),
+  fXlast(tvf.fXlast),
+  fYfirst(tvf.fYfirst),
+  fYlast(tvf.fYlast),
+  fZfirst(tvf.fZfirst),
+  fZlast(tvf.fZlast),
+  fNpoints(tvf.fNpoints),
+  fPointSize(tvf.fPointSize),
+  fCacheSize(tvf.fCacheSize),
+  fCache(tvf.fCache),
+  fObjectFit(tvf.fObjectFit),
+  fUserFunc(tvf.fUserFunc),
+  fMethodCall(tvf.fMethodCall),
+  fFCN(tvf.fFCN) 
+{ }
+
+//______________________________________________________________________________
+TVirtualFitter& TVirtualFitter::operator=(const TVirtualFitter& tvf)
+{
+  if(this!=&tvf) {
+    TNamed::operator=(tvf);
+    fOption=tvf.fOption;
+    fXfirst=tvf.fXfirst;
+    fXlast=tvf.fXlast;
+    fYfirst=tvf.fYfirst;
+    fYlast=tvf.fYlast;
+    fZfirst=tvf.fZfirst;
+    fZlast=tvf.fZlast;
+    fNpoints=tvf.fNpoints;
+    fPointSize=tvf.fPointSize;
+    fCacheSize=tvf.fCacheSize;
+    fCache=tvf.fCache;
+    fObjectFit=tvf.fObjectFit;
+    fUserFunc=tvf.fUserFunc;
+    fMethodCall=tvf.fMethodCall;
+    fFCN=tvf.fFCN;
+  } return *this;
 }
 
 //______________________________________________________________________________

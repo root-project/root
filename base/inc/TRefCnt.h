@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRefCnt.h,v 1.3 2006/05/14 10:23:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRefCnt.h,v 1.4 2006/05/15 11:01:13 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -35,8 +35,8 @@ public:
    enum EReferenceFlag { kStaticInit };
 
    TRefCnt(Int_t initRef = 0) : fRefs((UInt_t)initRef-1) { }
-   TRefCnt(EReferenceFlag) { }  // leave fRefs alone
-   ~TRefCnt() { }
+   TRefCnt(EReferenceFlag);
+   virtual ~TRefCnt() { }
    UInt_t   References() const      { return fRefs+1; }
    void     SetRefCount(UInt_t r)   { fRefs = r-1; }
    void     AddReference()          { fRefs++; }

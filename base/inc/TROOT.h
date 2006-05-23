@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.52 2006/04/06 13:47:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.53 2006/04/27 09:20:33 couet Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -67,6 +67,9 @@ private:
    static Int_t    fgDirLevel;            //Indentation level for ls()
    static Bool_t   fgRootInit;            //Singleton initialization flag
    static Bool_t   fgMemCheck;            //Turn on memory leak checker
+
+   TROOT(const TROOT&);             //Directories cannot be copied
+   TROOT& operator=(const TROOT&);  //Directories cannot be copied
 
 protected:
    typedef ROOT::TMapTypeToTClass IdMap_t;

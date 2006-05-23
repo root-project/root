@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.6 2006/02/08 05:05:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.7 2006/05/02 18:25:35 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -49,6 +49,9 @@ protected:
    TObjArray        *fMatrices;       // global transformation matrices
    TObjArray        *fNodes;          // branch of nodes
    TGeoHMatrix      *fMatrixOrig;     // original local matrix of the last node in the path
+
+   TGeoPhysicalNode(const TGeoPhysicalNode&); 
+   TGeoPhysicalNode& operator=(const TGeoPhysicalNode&);
 
    void              SetAligned(Bool_t flag=kTRUE) {TObject::SetBit(kGeoPNodeAligned,flag);}
 
@@ -106,6 +109,13 @@ class TGeoPNEntry : public TNamed
 {
 private:
    TGeoPhysicalNode *fNode;        // Physical node to which this applies
+
+protected:
+   TGeoPNEntry(const TGeoPNEntry& pne) 
+     : TNamed(pne), fNode(pne.fNode) { }
+   TGeoPNEntry& operator=(const TGeoPNEntry& pne)
+     {if(this!=&pne) {TNamed::operator=(pne); fNode=pne.fNode;}
+     return *this;}
 
 public:
    TGeoPNEntry();

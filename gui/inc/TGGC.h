@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.8 2006/05/15 07:43:33 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.9 2006/05/15 11:01:14 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -120,11 +120,15 @@ friend class TGGC;
 private:
    THashTable  *fList;   // hash table of graphics contexts in pool
 
-   TGGCPool(const TGGCPool&);
-   TGGCPool& operator=(const TGGCPool&);
    void   ForceFreeGC(const TGGC *gc);
    Int_t  MatchGC(const TGGC *gc, GCValues_t *values);
    void   UpdateGC(TGGC *gc, GCValues_t *values);
+
+protected:
+   TGGCPool(const TGGCPool& gp) : TGObject(gp), fList(gp.fList) { }
+   TGGCPool& operator=(const TGGCPool& gp)
+     {if(this!=&gp) {TGObject::operator=(gp); fList=gp.fList;}
+     return *this;}
 
 public:
    TGGCPool(TGClient *client);

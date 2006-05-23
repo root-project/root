@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.7 2005/06/10 17:49:47 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.8 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -47,7 +47,7 @@ private:
    static SrvClup_t fgSrvAuthClupHook;
    static UChar_t fgAcceptOpt;     // Default accept options
 
-   TServerSocket() { }
+   TServerSocket() : fSecContexts(NULL) { }
    TServerSocket(const TServerSocket &);
    void operator=(const TServerSocket &);
    Bool_t Authenticate(TSocket *);

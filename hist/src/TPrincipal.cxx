@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPrincipal.cxx,v 1.29 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TPrincipal.cxx,v 1.30 2006/05/17 09:37:20 couet Exp $
 // Author: Christian Holm Christensen    1/8/2000
 
 /*************************************************************************
@@ -667,9 +667,9 @@ in the transformed space.
 <!--*/
 // -->End_Html
 
-// $Id: TPrincipal.cxx,v 1.29 2006/02/03 21:55:39 pcanal Exp $
-// $Date: 2006/02/03 21:55:39 $
-// $Author: pcanal $
+// $Id: TPrincipal.cxx,v 1.30 2006/05/17 09:37:20 couet Exp $
+// $Date: 2006/05/17 09:37:20 $
+// $Author: couet $
 
 #include "TPrincipal.h"
 
@@ -755,6 +755,45 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
       if (!fUserData.IsValid())
          Error("TPrincipal","Couldn't create user data vector");
    }
+}
+
+//____________________________________________________________________
+TPrincipal::TPrincipal(const TPrincipal& pr) : 
+  TNamed(pr),
+  fNumberOfDataPoints(pr.fNumberOfDataPoints),
+  fNumberOfVariables(pr.fNumberOfVariables),
+  fMeanValues(pr.fMeanValues),
+  fSigmas(pr.fSigmas),
+  fCovarianceMatrix(pr.fCovarianceMatrix),
+  fEigenVectors(pr.fEigenVectors),
+  fEigenValues(pr.fEigenValues),
+  fOffDiagonal(pr.fOffDiagonal),
+  fUserData(pr.fUserData),
+  fTrace(pr.fTrace),
+  fHistograms(pr.fHistograms),
+  fIsNormalised(pr.fIsNormalised),
+  fStoreData(pr.fStoreData)
+{ }
+
+//____________________________________________________________________
+TPrincipal& TPrincipal::operator=(const TPrincipal& pr)
+{
+  if(this!=&pr) {
+    TNamed::operator=(pr);
+    fNumberOfDataPoints=pr.fNumberOfDataPoints;
+    fNumberOfVariables=pr.fNumberOfVariables;
+    fMeanValues=pr.fMeanValues;
+    fSigmas=pr.fSigmas;
+    fCovarianceMatrix=pr.fCovarianceMatrix;
+    fEigenVectors=pr.fEigenVectors;
+    fEigenValues=pr.fEigenValues;
+    fOffDiagonal=pr.fOffDiagonal;
+    fUserData=pr.fUserData;
+    fTrace=pr.fTrace;
+    fHistograms=pr.fHistograms;
+    fIsNormalised=pr.fIsNormalised;
+    fStoreData=pr.fStoreData;
+  } return *this;
 }
 
 //____________________________________________________________________

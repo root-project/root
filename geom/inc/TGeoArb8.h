@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.19 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.20 2006/02/03 09:08:32 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -53,6 +53,9 @@ protected:
    Double_t              fDz;          // half length in Z
    Double_t             *fTwist;       //! [4] tangents of twist angles 
    Double_t              fXY[8][2];    // list of vertices
+
+   TGeoArb8(const TGeoArb8&); 
+   TGeoArb8& operator=(const TGeoArb8&); 
 
 public:
    // constructors

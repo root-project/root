@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.5 2006/01/24 14:39:59 rdm Exp $
+// @(#)root/base:$Name: v5-11-02 $:$Id: TFileInfo.cxx,v 1.6 2006/03/21 14:53:11 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -52,6 +52,37 @@ TFileInfo::TFileInfo(const char *url , Long64_t size, const char *uuid,
       // TFile Info Constructor
       AddUrl(url);
    }
+}
+
+//______________________________________________________________________________
+TFileInfo::TFileInfo(const TFileInfo& fi) :
+  TNamed(fi),
+  fCurrentUrl(fi.fCurrentUrl),
+  fUrlList(fi.fUrlList),
+  fSize(fi.fSize),
+  fUUID(fi.fUUID),
+  fMD5(fi.fMD5),
+  fEntries(fi.fEntries),
+  fFirst(fi.fFirst),
+  fLast(fi.fLast),
+  fMetaDataObject(fi.fMetaDataObject)
+{ }
+
+//______________________________________________________________________________
+TFileInfo& TFileInfo::operator=(const TFileInfo& fi)
+{
+  if(this!=&fi) {
+    TNamed::operator=(fi);
+    fCurrentUrl=fi.fCurrentUrl;
+    fUrlList=fi.fUrlList;
+    fSize=fi.fSize;
+    fUUID=fi.fUUID;
+    fMD5=fi.fMD5;
+    fEntries=fi.fEntries;
+    fFirst=fi.fFirst;
+    fLast=fi.fLast;
+    fMetaDataObject=fi.fMetaDataObject;
+  } return *this;
 }
 
 //______________________________________________________________________________

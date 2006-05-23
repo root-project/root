@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.15 2006/04/24 13:53:49 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.16 2006/04/25 08:47:30 antcheva Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -69,6 +69,37 @@ TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
    fType     = type;
    fScale    = 10;
    fDragging = kFALSE;
+}
+
+//______________________________________________________________________________
+TGSlider::TGSlider(const TGSlider& sl) :
+   TGFrame(sl),
+   TGWidget(sl),
+   fPos(sl.fPos),
+   fRelPos(sl.fRelPos),
+   fVmin(sl.fVmin),
+   fVmax(sl.fVmax),
+   fType(sl.fType),
+   fScale(sl.fScale),
+   fDragging(sl.fDragging),
+   fSliderPic(sl.fSliderPic)
+{ }
+
+//______________________________________________________________________________
+TGSlider& TGSlider::operator=(const TGSlider& sl) 
+{
+  if(this!=&sl) {
+    TGFrame::operator=(sl);
+    TGWidget::operator=(sl);
+    fPos=sl.fPos;
+    fRelPos=sl.fRelPos;
+    fVmin=sl.fVmin;
+    fVmax=sl.fVmax;
+    fType=sl.fType;
+    fScale=sl.fScale;
+    fDragging=sl.fDragging;
+    fSliderPic=sl.fSliderPic;
+  } return *this;
 }
 
 //______________________________________________________________________________

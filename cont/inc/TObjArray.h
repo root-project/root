@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.13 2004/11/12 21:51:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.14 2005/06/13 16:48:01 pcanal Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -46,6 +46,13 @@ public:
    TObjArray(Int_t s = TCollection::kInitCapacity, Int_t lowerBound = 0);
    TObjArray(const TObjArray &a);
    virtual          ~TObjArray();
+   TObjArray& operator=(const TObjArray& toa) {
+     if(this!=&toa) {
+       TSeqCollection::operator=(toa);
+       fCont=toa.fCont;
+       fLowerBound=toa.fLowerBound;
+       fLast=toa.fLast; 
+     } return *this;}
    virtual void     Clear(Option_t *option="");
    virtual void     Compress();
    virtual void     Delete(Option_t *option="");
@@ -104,7 +111,7 @@ private:
    Int_t             fCursor;    //current position in array
    Bool_t            fDirection; //iteration direction
 
-   TObjArrayIter() : fArray(0) { }
+   TObjArrayIter() : fArray(0), fCursor(0), fDirection(kTRUE) { }
 
 public:
    TObjArrayIter(const TObjArray *arr, Bool_t dir = kIterForward);

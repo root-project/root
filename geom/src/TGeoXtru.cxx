@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.30 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/geom:$Name: v5-11-02 $:$Id: TGeoXtru.cxx,v 1.31 2006/04/03 16:19:32 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -139,6 +139,47 @@ TGeoXtru::TGeoXtru(Double_t *param)
    fSeg = 0;
    fIz = 0;
    SetDimensions(param);
+}
+
+//_____________________________________________________________________________
+TGeoXtru::TGeoXtru(const TGeoXtru& xt) :
+  TGeoBBox(xt),
+  fNvert(xt.fNvert),
+  fNz(xt.fNz),
+  fZcurrent(xt.fZcurrent),
+  fPoly(xt.fPoly),
+  fX(xt.fX),
+  fY(xt.fY),
+  fXc(xt.fXc),
+  fYc(xt.fYc),
+  fZ(xt.fZ),
+  fScale(xt.fScale),
+  fX0(xt.fX0),
+  fY0(xt.fY0),
+  fSeg(xt.fSeg),
+  fIz(xt.fIz)
+{ }
+
+//_____________________________________________________________________________
+TGeoXtru& TGeoXtru::operator=(const TGeoXtru& xt)
+{
+  if(this!=&xt) {
+    TGeoBBox::operator=(xt);
+    fNvert=xt.fNvert;
+    fNz=xt.fNz;
+    fZcurrent=xt.fZcurrent;
+    fPoly=xt.fPoly;
+    fX=xt.fX;
+    fY=xt.fY;
+    fXc=xt.fXc;
+    fYc=xt.fYc;
+    fZ=xt.fZ;
+    fScale=xt.fScale;
+    fX0=xt.fX0;
+    fY0=xt.fY0;
+    fSeg=xt.fSeg;
+    fIz=xt.fIz;
+  } return *this;
 }
 
 //_____________________________________________________________________________

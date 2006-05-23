@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.17 2005/11/16 20:04:47 pcanal Exp $
+// @(#)root/cont:$Name: v5-11-02 $:$Id: TMap.h,v 1.18 2006/03/28 16:11:27 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -44,6 +44,13 @@ friend class  TMapIter;
 private:
    THashTable   *fTable;     //Hash table used to store TPair's
 
+protected:
+   TMap(const TMap& map)
+     : TCollection(map), fTable(map.fTable) { }
+   TMap& operator=(const TMap& map)
+     {if(this!=&map) {TCollection::operator=(map); fTable=map.fTable;}
+     return *this;}
+
 public:
    TMap(Int_t capacity = TCollection::kInitHashTableCapacity, Int_t rehash = 0);
    virtual           ~TMap();
@@ -88,6 +95,8 @@ private:
    TObject  *fKey;
    TObject  *fValue;
 
+   TPair& operator=(const TPair&); // Not implemented
+
 public:
    TPair(TObject *key, TObject *value) : fKey(key), fValue(value) { }
    TPair(const TPair &a) : TObject(), fKey(a.fKey), fValue(a.fValue) { }
@@ -122,7 +131,7 @@ private:
    THashTableIter   *fCursor;      //current position in map
    Bool_t            fDirection;   //iteration direction
 
-   TMapIter() : fMap(0), fCursor(0) { }
+   TMapIter() : fMap(0), fCursor(0), fDirection(kIterForward) { }
 
 public:
    TMapIter(const TMap *map, Bool_t dir = kIterForward);

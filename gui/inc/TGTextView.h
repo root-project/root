@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.12 2004/09/01 12:56:14 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.13 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -52,6 +52,9 @@ protected:
    static TGGC         *fgDefaultGC;
    static TGGC         *fgDefaultSelectedGC;
    static const TGGC   *fgDefaultSelectedBackgroundGC;
+
+   TGTextView(const TGTextView&);
+   TGTextView& operator=(const TGTextView&);
 
    void Init(Pixel_t bg);
    virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);

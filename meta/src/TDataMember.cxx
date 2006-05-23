@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.27 2005/11/16 20:10:45 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.28 2005/12/01 11:32:38 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -431,6 +431,37 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
 }
 
 //______________________________________________________________________________
+TDataMember::TDataMember(const TDataMember& dm) :
+  TDictionary(dm),
+  fInfo(dm.fInfo),
+  fClass(dm.fClass),
+  fDataType(dm.fDataType),
+  fOffset(dm.fOffset),
+  fSTLCont(dm.fSTLCont),
+  fProperty(dm.fProperty),
+  fTypeName(dm.fTypeName),
+  fFullTypeName(dm.fFullTypeName),
+  fTrueTypeName(dm.fTrueTypeName)
+{ }
+
+//______________________________________________________________________________
+TDataMember& TDataMember::operator=(const TDataMember& dm) 
+{
+  if(this!=&dm) {
+    TDictionary::operator=(dm);
+    fInfo=dm.fInfo;
+    fClass=dm.fClass;
+    fDataType=dm.fDataType;
+    fOffset=dm.fOffset;
+    fSTLCont=dm.fSTLCont;
+    fProperty=dm.fProperty;
+    fTypeName=dm.fTypeName;
+    fFullTypeName=dm.fFullTypeName;
+  fTrueTypeName=dm.fTrueTypeName;
+  } return *this;
+}
+
+//______________________________________________________________________________
 TDataMember::~TDataMember()
 {
    // TDataMember dtor deletes adopted G__DataMemberInfo object.
@@ -741,6 +772,31 @@ TOptionListItem::TOptionListItem(TDataMember *d, Long_t val, Long_t valmask,
       strcpy(fOptLabel,label);
 
    } else fOptLabel = 0;
+}
+
+//______________________________________________________________________________
+TOptionListItem::TOptionListItem(const TOptionListItem& oli) :
+  TObject(oli),
+  fDataMember(oli.fDataMember),
+  fValue(oli.fValue),
+  fValueMaskBit(oli.fValueMaskBit),
+  fToggleMaskBit(oli.fToggleMaskBit),
+  fOptName(oli.fOptName),
+  fOptLabel(oli.fOptLabel)
+{ }
+
+//______________________________________________________________________________
+TOptionListItem& TOptionListItem::operator=(const TOptionListItem& oli)
+{
+  if(this!=&oli) {
+    TObject::operator=(oli);
+    fDataMember=oli.fDataMember;
+    fValue=oli.fValue;
+    fValueMaskBit=oli.fValueMaskBit;
+    fToggleMaskBit=oli.fToggleMaskBit;
+    fOptName=oli.fOptName;
+    fOptLabel=oli.fOptLabel;
+  } return *this;
 }
 
 //______________________________________________________________________________

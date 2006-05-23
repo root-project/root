@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TIsAProxy.h,v 1.3 2006/05/15 07:43:34 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TIsAProxy.h,v 1.4 2006/05/15 11:01:14 rdm Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -35,6 +35,7 @@ private:
    void              *fContext;      //Optional user contex
    Bool_t             fInit;         //Initialization flag
 
+protected:
    TIsAProxy(const TIsAProxy&);
    TIsAProxy& operator=(const TIsAProxy&);
 
@@ -59,8 +60,12 @@ template <class T> class TInstrumentedIsAProxy : public TVirtualIsAProxy {
 private:
    TClass *fClass;        //Actual TClass
 
-   TInstrumentedIsAProxy(const TInstrumentedIsAProxy&);
-   TInstrumentedIsAProxy& operator=(const TInstrumentedIsAProxy&);
+protected:
+   TInstrumentedIsAProxy(const TInstrumentedIsAProxy& iip) : 
+     TVirtualIsAProxy(iip), fClass(iip.fClass) { }
+   TInstrumentedIsAProxy& operator=(const TInstrumentedIsAProxy& iip)
+     {if(this!=&iip) {TVirtualIsAProxy::operator=(iip); fClass=iip.fClass;}
+     return *this;}
 
 public:
    // Standard initializing constructor

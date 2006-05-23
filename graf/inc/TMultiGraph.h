@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.h,v 1.6 2005/04/14 06:52:09 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.h,v 1.7 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -40,6 +40,9 @@ protected:
    TH1F       *fHistogram;  //Pointer to histogram used for drawing axis
    Double_t    fMaximum;    //Maximum value for plotting along y
    Double_t    fMinimum;    //Minimum value for plotting along y
+
+   TMultiGraph(const TMultiGraph&);
+   TMultiGraph& operator=(const TMultiGraph&);
   
 public:
    TMultiGraph();

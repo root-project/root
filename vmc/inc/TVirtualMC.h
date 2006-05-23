@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.16 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.17 2006/05/13 20:57:20 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -34,7 +34,8 @@ public:
               Bool_t isRootGeometrySupported = kFALSE);
    TVirtualMC();
    virtual ~TVirtualMC();
-   TVirtualMC(const TVirtualMC &mc) : TNamed(mc) {}
+   TVirtualMC(const TVirtualMC &mc) : TNamed(mc), fApplication(mc.fApplication),
+     fStack(mc.fStack), fDecayer(mc.fDecayer), fRandom(mc.fRandom) {}
 
    // static access method
    static TVirtualMC* GetMC() { return fgMC; }

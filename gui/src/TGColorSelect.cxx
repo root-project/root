@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.15 2006/04/24 14:07:47 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.16 2006/05/10 15:25:49 antcheva Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -89,6 +89,27 @@ TGColorFrame::TGColorFrame(const TGWindow *p, ULong_t color, Int_t /*n*/) :
 }
 
 //________________________________________________________________________________
+TGColorFrame::TGColorFrame(const TGColorFrame& cf) :
+  TGFrame(cf),
+  fMsgWindow(cf.fMsgWindow),
+  fPixel(cf.fPixel),
+  fActive(cf.fActive),
+  fGrayGC(cf.fGrayGC)
+{ }
+
+//________________________________________________________________________________
+TGColorFrame& TGColorFrame::operator=(const TGColorFrame& cf)
+{
+  if(this!=&cf) {
+    TGFrame::operator=(cf);
+    fMsgWindow=cf.fMsgWindow;
+    fPixel=cf.fPixel;
+    fActive=cf.fActive;
+    fGrayGC=cf.fGrayGC;
+  } return *this;
+}
+
+//________________________________________________________________________________
 Bool_t TGColorFrame::HandleButton(Event_t *event)
 {
    // Handle button events in TGColorFrame.
@@ -144,6 +165,26 @@ TG16ColorSelector::TG16ColorSelector(const TGWindow *p) :
    fActive = -1;
 
    SetEditDisabled(kEditDisable);
+}
+
+//________________________________________________________________________________
+TG16ColorSelector::TG16ColorSelector(const TG16ColorSelector& cs) :
+  TGCompositeFrame(cs),
+  fActive(cs.fActive),
+  fMsgWindow(cs.fMsgWindow)
+{
+  for(Int_t i=0; i<16; i++) fCe[i]=cs.fCe[i];
+}
+
+//________________________________________________________________________________
+TG16ColorSelector& TG16ColorSelector::operator=(const TG16ColorSelector& cs) 
+{
+  if(this!=&cs) {
+    TGCompositeFrame::operator=(cs);
+    fActive=cs.fActive;
+    fMsgWindow=cs.fMsgWindow;
+    for(Int_t i=0; i<16; i++) fCe[i]=cs.fCe[i];
+  } return *this;
 }
 
 //________________________________________________________________________________
@@ -239,6 +280,27 @@ TGColorPopup::TGColorPopup(const TGWindow *p, const TGWindow *m, ULong_t color) 
    Resize(cs->GetDefaultWidth() + 6, cs->GetDefaultHeight() +
           other->GetDefaultHeight());
    SetEditDisabled(kEditDisable);
+}
+
+//________________________________________________________________________________
+TGColorPopup::TGColorPopup(const TGColorPopup& cp) :
+  TGCompositeFrame(cp),
+  fActive(cp.fActive),
+  fLaunchDialog(cp.fLaunchDialog),
+  fMsgWindow(cp.fMsgWindow),
+  fCurrentColor(cp.fCurrentColor)
+{ }
+
+//________________________________________________________________________________
+TGColorPopup& TGColorPopup::operator=(const TGColorPopup& cp)
+{
+  if(this!=&cp) {
+    TGCompositeFrame::operator=(cp);
+    fActive=cp.fActive;
+    fLaunchDialog=cp.fLaunchDialog;
+    fMsgWindow=cp.fMsgWindow;
+    fCurrentColor=cp.fCurrentColor;
+  } return *this;
 }
 
 //________________________________________________________________________________
@@ -377,6 +439,27 @@ TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    SetColor(fColor);
 
    fEditDisabled = kEditDisable | kEditDisableBtnEnable;
+}
+
+//________________________________________________________________________________
+TGColorSelect::TGColorSelect(const TGColorSelect& cs) :
+  TGCheckButton(cs),
+  fColor(cs.fColor),
+  fDrawGC(cs.fDrawGC),
+  fColorPopup(cs.fColorPopup),
+  fPressPos(cs.fPressPos)
+{ }
+
+//________________________________________________________________________________
+TGColorSelect& TGColorSelect::operator=(const TGColorSelect& cs)
+{
+  if(this!=&cs) {
+    TGCheckButton::operator=(cs);
+    fColor=cs.fColor;
+    fDrawGC=cs.fDrawGC;
+    fColorPopup=cs.fColorPopup;
+    fPressPos=cs.fPressPos;
+  } return *this;
 }
 
 //________________________________________________________________________________

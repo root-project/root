@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.26 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.27 2006/01/30 09:01:11 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -99,6 +99,39 @@ TPluginHandler::TPluginHandler(const char *base, const char *regexp,
       fIsGlobal = kTRUE;
       fCtor = fCtor.Strip(TString::kLeading, ':');
    }
+}
+
+//______________________________________________________________________________
+TPluginHandler::TPluginHandler(const TPluginHandler& ph) :
+  TObject (ph),
+  fBase(ph.fBase),
+  fRegexp(ph.fRegexp),
+  fClass(ph.fClass),
+  fPlugin(ph.fPlugin),
+  fCtor(ph.fCtor),
+  fCallEnv(ph.fCallEnv),
+  fMethod(ph.fMethod),
+  fCanCall(ph.fCanCall),
+  fIsMacro(ph.fIsMacro),
+  fIsGlobal(ph.fIsGlobal)
+{ }
+
+//______________________________________________________________________________
+TPluginHandler& TPluginHandler::operator=(const TPluginHandler& ph)
+{
+  if(this!=&ph) {
+    TObject::operator=(ph);
+    fBase=ph.fBase;
+    fRegexp=ph.fRegexp;
+    fClass=ph.fClass;
+    fPlugin=ph.fPlugin;
+    fCtor=ph.fCtor;
+    fCallEnv=ph.fCallEnv;
+    fMethod=ph.fMethod;
+    fCanCall=ph.fCanCall;
+    fIsMacro=ph.fIsMacro;
+    fIsGlobal=ph.fIsGlobal;
+  } return *this;
 }
 
 //______________________________________________________________________________

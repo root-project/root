@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.8 2005/02/15 16:17:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.9 2006/05/17 06:22:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -43,7 +43,8 @@ public :
 
    enum {kWorkMax = 100}; // size of work array
 
-   TMatrixDEigen() {};
+   TMatrixDEigen() 
+     : fEigenVectors(), fEigenValuesRe(), fEigenValuesIm() {};
    TMatrixDEigen(const TMatrixD &a);
    TMatrixDEigen(const TMatrixDEigen &another);
    virtual ~TMatrixDEigen() {}

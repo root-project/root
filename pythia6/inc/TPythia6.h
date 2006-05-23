@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.9 2006/04/23 20:40:23 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.10 2006/04/25 15:56:06 rdm Exp $
 // Author: Rene Brun   19/10/99
 
 /*************************************************************************
@@ -121,6 +121,9 @@ protected:
       ~TPythia6Cleaner();
    };
    friend class TPythia6Cleaner;
+
+   TPythia6(const TPythia6&);            // Cannot be copied
+   TPythia6& operator=(const TPythia6&); // Cannot be copied
 
 public:
    // ****** constructors and destructor

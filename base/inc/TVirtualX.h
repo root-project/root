@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.37 2006/02/06 16:15:12 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.38 2006/05/15 13:31:01 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -76,7 +76,7 @@ protected:
    EDrawMode fDrawMode;           //Drawing mode
 
 public:
-   TVirtualX() { }
+   TVirtualX(): fDrawMode() { }
    TVirtualX(const char *name, const char *title);
    virtual ~TVirtualX() { }
 

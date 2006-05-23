@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.17 2005/11/01 21:16:13 pcanal Exp $
+// @(#)root/cont:$Name: v5-11-02 $:$Id: TList.cxx,v 1.18 2006/04/19 08:22:22 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -57,6 +57,27 @@
 namespace std {} using namespace std;
 
 ClassImp(TList)
+
+//______________________________________________________________________________
+TList::TList(const TList& ls) :
+  TSeqCollection(ls),
+  fFirst(ls.fFirst),
+  fLast(ls.fLast),
+  fCache(ls.fCache),
+  fAscending(ls.fAscending)
+{ }
+
+//______________________________________________________________________________
+TList& TList::operator=(const TList& ls)
+{
+  if(this!=&ls) {
+    TSeqCollection::operator=(ls);
+    fFirst=ls.fFirst;
+    fLast=ls.fLast;
+    fCache=ls.fCache;
+    fAscending=ls.fAscending;
+  } return *this;
+}
 
 //______________________________________________________________________________
 TList::~TList()

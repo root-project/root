@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.26 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.27 2006/05/14 10:23:26 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -45,10 +45,6 @@ friend class TGCanvas;
 friend class TGContainerKeyboardTimer;
 friend class TGContainerScrollTimer;
 
-private:
-   TGContainer(const TGContainer&);
-   TGContainer& operator=(const TGContainer&);
-
 protected:
    TGViewPort        *fViewPort;      // container viewport
    TGCanvas          *fCanvas;        // pointer to canvas
@@ -72,6 +68,9 @@ protected:
 
    static TGGC       *fgLineGC;
    static const TGGC &GetLineGC();
+
+   TGContainer(const TGContainer&);
+   TGContainer& operator=(const TGContainer&);
 
    virtual void DoRedraw();
    virtual void ClearViewPort();
@@ -157,13 +156,15 @@ public:
 
 class TGViewPort : public TGCompositeFrame {
 
-private:
-   TGViewPort(const TGViewPort&);
-   TGViewPort& operator=(const TGViewPort&);
-
 protected:
    Int_t       fX0, fY0;     // position of container frame in viewport
    TGFrame    *fContainer;   // container frame
+
+   TGViewPort(const TGViewPort& vp) :
+     TGCompositeFrame(vp), fX0(vp.fX0), fY0(vp.fY0), fContainer(vp.fContainer) { }
+   TGViewPort& operator=(const TGViewPort& vp)
+     {if(this!=&vp) { TGCompositeFrame::operator=(vp); 
+     fX0=vp.fX0; fY0=vp.fY0;} return *this;}
 
 public:
    TGViewPort(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
@@ -191,15 +192,14 @@ public:
 
 class TGCanvas : public TGFrame {
 
-private:
-   TGCanvas(const TGCanvas&);
-   TGCanvas& operator=(const TGCanvas&);
-
 protected:
    TGViewPort      *fVport;        // viewport through which we look at contents
    TGHScrollBar    *fHScrollbar;   // horizontal scrollbar
    TGVScrollBar    *fVScrollbar;   // vertical scrollbar
    Int_t            fScrolling;    // flag which scrolling modes are allowed
+
+   TGCanvas(const TGCanvas&);
+   TGCanvas& operator=(const TGCanvas&);
 
 public:
    enum { kCanvasNoScroll         = 0,

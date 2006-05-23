@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.9 2005/02/08 08:27:10 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.10 2005/03/24 07:13:35 brun Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -64,6 +64,27 @@ THashTable::THashTable(Int_t capacity, Int_t rehashlevel)
    fUsedSlots = 0;
    if (rehashlevel < 2) rehashlevel = 0;
    fRehashLevel = rehashlevel;
+}
+
+//______________________________________________________________________________
+THashTable::THashTable(const THashTable& ht) :
+  TCollection(ht),
+  fCont(ht.fCont),
+  fEntries(ht.fEntries),
+  fUsedSlots(ht.fUsedSlots),
+  fRehashLevel(ht.fRehashLevel)
+{ }
+
+//______________________________________________________________________________
+THashTable& THashTable::operator=(const THashTable& ht)
+{ 
+  if(this!=&ht) {
+    TCollection::operator=(ht);
+    fCont=ht.fCont;
+    fEntries=ht.fEntries;
+    fUsedSlots=ht.fUsedSlots;
+    fRehashLevel=ht.fRehashLevel;
+  } return *this;
 }
 
 //______________________________________________________________________________

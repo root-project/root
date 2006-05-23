@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.5 2005/04/20 15:22:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.6 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -68,6 +68,23 @@ TGeoElementTable::TGeoElementTable(Int_t /*nelements*/)
    fNelements = 0;
    fList = new TObjArray(128);
    BuildDefaultElements();
+}
+
+//______________________________________________________________________________
+TGeoElementTable::TGeoElementTable(const TGeoElementTable& get) :
+  TObject(get),
+  fNelements(get.fNelements),
+  fList(get.fList)
+{ }
+
+//______________________________________________________________________________
+TGeoElementTable& TGeoElementTable::operator=(const TGeoElementTable& get) 
+{
+  if(this!=&get) {
+    TObject::operator=(get);
+    fNelements=get.fNelements;
+    fList=get.fList;
+  } return *this;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.12 2005/11/17 13:17:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.13 2005/11/18 16:07:58 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -45,6 +45,9 @@ protected:
    Double_t             *fY0;    //[fNz] array of Y offsets (for each Z)
    Int_t                 fSeg;   // !current segment [0,fNvert-1]
    Int_t                 fIz;    // !current z plane [0,fNz-1]
+
+   TGeoXtru(const TGeoXtru&); 
+   TGeoXtru& operator=(const TGeoXtru&);
 
    // methods
    Double_t              DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax, Bool_t in) const;

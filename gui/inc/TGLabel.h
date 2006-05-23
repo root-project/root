@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.18 2006/04/24 13:49:25 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.19 2006/05/15 07:43:33 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -35,10 +35,6 @@ class TColor;
 
 class TGLabel : public TGFrame {
 
-private:
-   TGLabel(const TGLabel&);
-   TGLabel& operator=(const TGLabel&);
-
 protected:
    TGString      *fText;         // label text
    UInt_t         fTWidth;       // text width
@@ -49,6 +45,9 @@ protected:
    FontStruct_t   fFontStruct;   // font to draw label
    Bool_t         fHasOwnFont;   // kTRUE - font defined locally,  kFALSE - globally
    Bool_t         fDisabled;     // if kTRUE label looks disabled (shaded text)
+
+   TGLabel(const TGLabel&);
+   TGLabel& operator=(const TGLabel&);
 
    virtual void DoRedraw();
 

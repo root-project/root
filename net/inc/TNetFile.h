@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.22 2006/02/26 16:13:38 rdm Exp $
+// @(#)root/net:$Name: v5-11-02 $:$Id: TNetFile.h,v 1.23 2006/04/18 14:23:20 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -50,6 +50,9 @@ protected:
    Int_t     fProtocol;    //rootd protocol level
    Int_t     fErrorCode;   //error code returned by rootd (matching gRootdErrStr)
 
+   TNetFile(const TNetFile&);             // NetFile cannot be copied
+   TNetFile& operator=(const TNetFile&);  // NetFile cannot be copied
+
    TNetFile(const char *url, const char *ftitle, Int_t comp, Bool_t);
    virtual void ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
                               Int_t tcpwindowsize, Bool_t forceOpen,
@@ -67,7 +70,8 @@ protected:
 public:
    TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
             Int_t compress = 1, Int_t netopt = 0);
-   TNetFile() { fSocket = 0; }
+   TNetFile() 
+     : fEndpointUrl(), fUser(), fSocket(NULL), fProtocol(0), fErrorCode(0) { }
    virtual ~TNetFile();
 
    void    Close(Option_t *option="");  // *MENU*
@@ -100,8 +104,11 @@ private:
    void       *GetDirPtr() const { return fDirp; }
 
 protected:
-   void        Create(const char *url, TSocket *sock = 0);
+   void        Create(const char *url, TSocket *sock = 0); 
    void        InitRemoteEntity(const char *url);
+
+   TNetSystem(const TNetSystem&);
+   TNetSystem& operator=(const TNetSystem&); 
 
 public:
    TNetSystem(Bool_t ftpowner = kTRUE);
@@ -116,7 +123,7 @@ public:
    Int_t       GetPathInfo(const char *path, FileStat_t &buf);
    Bool_t      AccessPathName(const char *path, EAccessMode mode);
 
-   ClassDef(TNetSystem,0)  // Directory handler for NetFile
+   ClassDef(TNetSystem,0)  // Directory handler for NetSystem
 };
 
 #endif

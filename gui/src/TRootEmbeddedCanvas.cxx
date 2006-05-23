@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.19 2006/03/28 16:26:47 antcheva Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TRootEmbeddedCanvas.cxx,v 1.20 2006/03/29 08:09:43 antcheva Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -115,6 +115,29 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
       MapSubwindows();
       Resize();
    }
+}
+
+//______________________________________________________________________________
+TRootEmbeddedCanvas::TRootEmbeddedCanvas(const TRootEmbeddedCanvas& ec) :
+  TGCanvas(ec),
+  fCWinId(ec.fCWinId),
+  fCanvasContainer(ec.fCanvasContainer),
+  fCanvas(ec.fCanvas),
+  fAutoFit(ec.fAutoFit),
+  fButton(ec.fButton)
+{ }
+
+//______________________________________________________________________________
+TRootEmbeddedCanvas& TRootEmbeddedCanvas::operator=(const TRootEmbeddedCanvas& ec)
+{
+  if(this!=&ec) {
+    TGCanvas::operator=(ec),
+      fCWinId=ec.fCWinId;
+    fCanvasContainer=ec.fCanvasContainer;
+    fCanvas=ec.fCanvas;
+    fAutoFit=ec.fAutoFit;
+    fButton=ec.fButton;
+  } return *this;
 }
 
 //______________________________________________________________________________

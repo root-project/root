@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.13 2005/10/28 22:06:03 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.14 2005/11/16 20:10:45 pcanal Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -105,6 +105,55 @@ namespace ROOT {
       Init(pragmabits);
    }
 
+  /*  TGenericClassInfo::TGenericClassInfo(const TGenericClassInfo& gci) :
+    fAction(gci.fAction),
+    fClass(gci.fClass),
+    fClassName(gci.fClassName),
+    fDeclFileName(gci.fDeclFileName),
+    fDeclFileLine(gci.fDeclFileLine),
+    fDictionary(gci.fDictionary),
+    fInfo(gci.fInfo),
+    fImplFileName(gci.fImplFileName),
+    fImplFileLine(gci.fImplFileLine),
+    fIsA(gci.fIsA),
+    fShowMembers(gci.fShowMembers),
+    fVersion(gci.fVersion),
+    fNew(gci.fNew),
+    fNewArray(gci.fNewArray),
+    fDelete(gci.fDelete),
+    fDeleteArray(gci.fDeleteArray),
+    fDestructor(gci.fDestructor),
+    fStreamer(gci.fStreamer),
+    fCollectionProxy(gci.fCollectionProxy),
+    fSizeof(gci.fSizeof)
+   { }
+
+  TGenericClassInfo& TGenericClassInfo::operator=(const TGenericClassInfo& gci) 
+   {
+     if(this!=&gci) {
+       fAction=gci.fAction;
+       fClass=gci.fClass;
+       fClassName=gci.fClassName;
+       fDeclFileName=gci.fDeclFileName;
+       fDeclFileLine=gci.fDeclFileLine;
+       fDictionary=gci.fDictionary;
+       fInfo=gci.fInfo;
+       fImplFileName=gci.fImplFileName;
+       fImplFileLine=gci.fImplFileLine;
+       fIsA=gci.fIsA;
+       fShowMembers=gci.fShowMembers;
+       fVersion=gci.fVersion;
+       fNew=gci.fNew;
+       fNewArray=gci.fNewArray;
+       fDelete=gci.fDelete;
+       fDeleteArray=gci.fDeleteArray;
+       fDestructor=gci.fDestructor;
+       fStreamer=gci.fStreamer;
+       fCollectionProxy=gci.fCollectionProxy;
+       fSizeof=gci.fSizeof;
+     } return *this;
+   }
+  */
    void TGenericClassInfo::Init(Int_t pragmabits)
    {
       // Initilization routine.

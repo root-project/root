@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.h,v 1.20 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.h,v 1.21 2005/11/08 17:22:09 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -47,6 +47,9 @@ protected:
 
 public:
    TSelector();
+   TSelector(const TSelector&);
+   TSelector& operator=(const TSelector&);
+
    virtual            ~TSelector();
    virtual int         Version() const { return 0; }
    virtual void        Init(TTree *) { }

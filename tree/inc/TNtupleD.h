@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtupleD.h,v 1.3 2004/10/18 12:32:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtupleD.h,v 1.4 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -32,6 +32,12 @@ class TNtupleD : public TTree {
 protected:
    Int_t       fNvar;            //  Number of columns
    Double_t    *fArgs;           //! [fNvar] Array of variables
+
+   TNtupleD(const TNtupleD& ntd)
+     : TTree(ntd), fNvar(ntd.fNvar), fArgs(ntd.fArgs) { }
+   TNtupleD& operator=(const TNtupleD& ntd)
+     {if(this!=&ntd) {TTree::operator=(ntd); fNvar=ntd.fNvar; fArgs=ntd.fArgs;}
+     return *this;}
 
    virtual Int_t  Fill();
 

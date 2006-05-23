@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.41 2006/05/10 15:31:03 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.42 2006/05/14 07:53:19 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -276,6 +276,54 @@ void TThread::Constructor()
    SetComment();
 
    // thread is set up in initialisation routine or Run().
+}
+
+//______________________________________________________________________________
+TThread::TThread(const TThread& tr) :
+  TNamed(tr),
+  fNext(tr.fNext),
+  fPrev(tr.fPrev),
+  fHolder(tr.fHolder),
+  fPriority(tr.fPriority),
+  fState(tr.fState),
+  fStateComing(tr.fStateComing),
+  fId(tr.fId),
+  fHandle(tr.fHandle),
+  fDetached(tr.fDetached),
+  fNamed(tr.fNamed),
+  fFcnRetn(tr.fFcnRetn),
+  fFcnVoid(tr.fFcnVoid),
+  fThreadArg(tr.fThreadArg),
+  fClean(tr.fClean)
+{
+  for(Int_t i=0; i<20; i++)
+    fTsd[i]=tr.fTsd[i];
+  strncpy(fComment,tr.fComment,100);
+}
+
+//______________________________________________________________________________
+TThread& TThread::operator=(const TThread& tr)
+{
+  if(this!=&tr) {
+    TNamed::operator=(tr);
+    fNext=tr.fNext;
+    fPrev=tr.fPrev;
+    fHolder=tr.fHolder;
+    fPriority=tr.fPriority;
+    fState=tr.fState;
+    fStateComing=tr.fStateComing;
+    fId=tr.fId;
+    fHandle=tr.fHandle;
+    fDetached=tr.fDetached;
+    fNamed=tr.fNamed;
+    fFcnRetn=tr.fFcnRetn;
+    fFcnVoid=tr.fFcnVoid;
+    fThreadArg=tr.fThreadArg;
+    fClean=tr.fClean;
+    for(Int_t i=0; i<20; i++)
+      fTsd[i]=tr.fTsd[i];
+    strncpy(fComment,tr.fComment,100);
+  } return *this;
 }
 
 //______________________________________________________________________________

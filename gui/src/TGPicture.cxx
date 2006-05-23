@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.24 2005/06/26 23:37:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.25 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -45,6 +45,25 @@ ClassImp(TGPicture)
 ClassImp(TGSelectedPicture)
 ClassImp(TGPicturePool)
 
+
+//______________________________________________________________________________
+TGPicturePool::TGPicturePool(const TGPicturePool& pp) :
+  TObject(pp),
+  fClient(pp.fClient),
+  fPath(pp.fPath),
+  fPicList(pp.fPicList)
+{ }
+
+//______________________________________________________________________________
+TGPicturePool& TGPicturePool::operator=(const TGPicturePool& pp) 
+{
+  if(this!=&pp) {
+    TObject::operator=(pp);
+    fClient=pp.fClient;
+    fPath=pp.fPath;
+    fPicList=pp.fPicList;
+  } return *this;
+}
 
 //______________________________________________________________________________
 const TGPicture *TGPicturePool::GetPicture(const char *name)

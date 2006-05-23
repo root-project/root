@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.29 2006/03/08 21:09:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.30 2006/03/09 11:18:30 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -68,6 +68,12 @@ class TVirtualGL : public TNamed {
 
 protected:
    TVirtualGLImp *fImp;
+
+   TVirtualGL(const TVirtualGL& vgl) 
+     : TNamed(vgl), fImp(vgl.fImp) { }
+   TVirtualGL& operator=(const TVirtualGL& vgl) 
+     {if(this!=&vgl) {TNamed::operator=(vgl); fImp=vgl.fImp;} 
+     return *this;}
 
 public:
    TVirtualGL(TVirtualGLImp *imp = 0);

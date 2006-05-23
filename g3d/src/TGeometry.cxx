@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.8 2005/05/19 21:02:05 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.9 2005/11/24 17:28:07 couet Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -124,6 +124,61 @@ TGeometry::TGeometry(const char *name,const char *title ) : TNamed (name, title)
    fIsReflection[fGeomLevel] = kFALSE;
 }
 
+//______________________________________________________________________________
+TGeometry::TGeometry(const TGeometry& geo) :
+  TNamed(geo),
+  fMaterials(geo.fMaterials),
+  fMatrices(geo.fMatrices),
+  fShapes(geo.fShapes),
+  fNodes(geo.fNodes),
+  fMatrix(geo.fMatrix),
+  fCurrentNode(geo.fCurrentNode),
+  fMaterialPointer(geo.fMaterialPointer),
+  fMatrixPointer(geo.fMatrixPointer),
+  fShapePointer(geo.fShapePointer),
+  fBomb(geo.fBomb),
+  fGeomLevel(geo.fGeomLevel),
+  fX(geo.fX),
+  fY(geo.fY),
+  fZ(geo.fZ)
+{
+  for(Int_t i=0; i<kMAXLEVELS; i++) {
+    for(Int_t j=0; j<kVectorSize; j++) 
+      fTranslation[i][j]=geo.fTranslation[i][j];
+    for(Int_t j=0; j<kMatrixSize; j++) 
+      fRotMatrix[i][j]=geo.fRotMatrix[i][j];
+    fIsReflection[i]=geo.fIsReflection[i];
+  }
+}
+
+//______________________________________________________________________________
+TGeometry& TGeometry::operator=(const TGeometry& geo)
+{
+  if(this!=&geo) {
+    TNamed::operator=(geo);
+    fMaterials=geo.fMaterials;
+    fMatrices=geo.fMatrices;
+    fShapes=geo.fShapes;
+    fNodes=geo.fNodes;
+    fMatrix=geo.fMatrix;
+    fCurrentNode=geo.fCurrentNode;
+    fMaterialPointer=geo.fMaterialPointer;
+    fMatrixPointer=geo.fMatrixPointer;
+    fShapePointer=geo.fShapePointer;
+    fBomb=geo.fBomb;
+    fGeomLevel=geo.fGeomLevel;
+    fX=geo.fX;
+    fY=geo.fY;
+    fZ=geo.fZ;
+    for(Int_t i=0; i<kMAXLEVELS; i++) {
+      for(Int_t j=0; j<kVectorSize; j++) 
+	fTranslation[i][j]=geo.fTranslation[i][j];
+      for(Int_t j=0; j<kMatrixSize; j++) 
+	fRotMatrix[i][j]=geo.fRotMatrix[i][j];
+      fIsReflection[i]=geo.fIsReflection[i];
+    }
+  } return *this;
+}
 
 //______________________________________________________________________________
 TGeometry::~TGeometry()

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TRefCnt.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -25,4 +25,8 @@
 // in order to quiet down some fussy librarians
 int gDummy_ref_cpp;
 
-
+//_______________________________________________________________________
+TRefCnt::TRefCnt(EReferenceFlag)
+{
+  // Leave fRefs alone
+}

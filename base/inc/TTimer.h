@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.7 2004/05/10 08:15:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.8 2004/05/10 17:31:32 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -65,6 +65,9 @@ protected:
    UInt_t    fTimeID;      // the system ID of this timer (for WIN32)
    TObject  *fObject;      // object to be notified (if any)
    TString   fCommand;     // interpreter command to be executed
+
+   TTimer(const TTimer&); 
+   TTimer& operator=(const TTimer&);
 
 public:
    TTimer(Long_t milliSec = 0, Bool_t mode = kTRUE);

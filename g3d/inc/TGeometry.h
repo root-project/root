@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.h,v 1.5 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.h,v 1.6 2005/11/24 17:28:06 couet Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -60,6 +60,10 @@ private:
    Double_t         fTranslation[kMAXLEVELS][kVectorSize];//!
    Double_t         fRotMatrix[kMAXLEVELS][kMatrixSize];  //!
    Bool_t           fIsReflection[kMAXLEVELS];            //!
+
+protected:
+   TGeometry(const TGeometry&);
+   TGeometry& operator=(const TGeometry&);
 
 public:
    TGeometry();

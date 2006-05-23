@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.10 2006/05/15 07:43:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.11 2006/05/15 11:01:14 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -87,15 +87,17 @@ public:
 
 class TGSelectedPicture : public TGPicture {
 
-private:
-   TGSelectedPicture(const TGSelectedPicture&);
-   TGSelectedPicture& operator=(const TGSelectedPicture&);
-
 protected:
    const TGClient *fClient;    // client to which selected picture belongs
 
    static TGGC *fgSelectedGC;
    static TGGC &GetSelectedGC();
+
+   TGSelectedPicture(const TGSelectedPicture& gp):
+     TGPicture(gp), fClient(gp.fClient) { }
+   TGSelectedPicture& operator=(const TGSelectedPicture& gp)
+     {if(this!=&gp) { TGPicture::operator=(gp); fClient=gp.fClient;}
+     return *this;}
 
 public:
    TGSelectedPicture(const TGClient *client, const TGPicture *p);
@@ -107,14 +109,13 @@ public:
 
 class TGPicturePool : public TObject {
 
-private:
-   TGPicturePool(const TGPicturePool&);
-   TGPicturePool& operator=(const TGPicturePool&);
-
 protected:
    const TGClient    *fClient;    // client for which we keep icon pool
    TString            fPath;      // icon search path
    THashTable        *fPicList;   // hash table containing the icons
+
+   TGPicturePool(const TGPicturePool&);
+   TGPicturePool& operator=(const TGPicturePool&);
 
 public:
    TGPicturePool(const TGClient *client, const char *path):

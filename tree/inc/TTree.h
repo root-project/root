@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.85 2005/11/16 20:22:48 pcanal Exp $
+// @(#)root/tree:$Name: v5-11-02 $:$Id: TTree.h,v 1.86 2006/03/20 21:43:44 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -135,6 +135,9 @@ protected:
    static Int_t     fgBranchStyle;      //  Old/New branch style
    static Long64_t  fgMaxTreeSize;      //  Maximum size of a file containg a Tree
 
+   TTree(const TTree& tt);
+   TTree& operator=(const TTree& tt);
+
 protected:
    void             AddClone(TTree*);
    const   char    *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex) const;
@@ -151,6 +154,11 @@ protected:
       TTree  *fTree;      // Pointer to the locked tree
       UInt_t  fMethodBit; // BIT for the locked method
       Bool_t  fPrevious;  // Previous value of the BIT.
+
+   protected:
+      TFriendLock(const TFriendLock&);
+      TFriendLock& operator=(const TFriendLock&);
+
    public:
       TFriendLock(TTree *tree, UInt_t methodbit);
       ~TFriendLock();

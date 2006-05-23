@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.12 2006/05/15 07:43:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.13 2006/05/15 11:01:13 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -56,12 +56,12 @@ private:
    // Fields
    mutable UInt_t  fRef;         //! physical instance ref counting
 
-   TGLLogicalShape(const TGLLogicalShape&);
-   TGLLogicalShape& operator=(const TGLLogicalShape&);
-
 protected:
    mutable Bool_t  fRefStrong;   //! Strong ref (delete on 0 ref)
    TObject        *fExternalObj;
+
+   TGLLogicalShape(const TGLLogicalShape&);
+   TGLLogicalShape& operator=(const TGLLogicalShape&);
 
    // TODO: Common UInt_t flags section (in TGLDrawable?) to avoid multiple bools
 

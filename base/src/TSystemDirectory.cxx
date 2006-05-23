@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.8 2005/07/05 12:36:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.9 2005/11/16 20:04:11 pcanal Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -46,6 +46,23 @@ TSystemDirectory::TSystemDirectory(const char *dirname, const char *path) :
 
    fDirsInBrowser  = 0;
    fFilesInBrowser = 0;
+}
+
+//______________________________________________________________________________
+TSystemDirectory::TSystemDirectory(const TSystemDirectory& sd) :
+  TSystemFile(sd),
+  fDirsInBrowser(sd.fDirsInBrowser),
+  fFilesInBrowser(sd.fFilesInBrowser)
+{ }
+
+//______________________________________________________________________________
+TSystemDirectory& TSystemDirectory::operator=(const TSystemDirectory& sd)
+{
+  if(this!=&sd) {
+    TSystemFile::operator=(sd);
+    fDirsInBrowser=sd.fDirsInBrowser;
+    fFilesInBrowser=sd.fFilesInBrowser;
+  } return *this;
 }
 
 //______________________________________________________________________________

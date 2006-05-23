@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.6 2002/11/26 07:58:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.7 2005/06/10 22:28:51 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -40,7 +40,7 @@ protected:
    TString   fTitle;           //object title
 
 public:
-   TNamed() { }
+   TNamed(): fName(), fTitle() { }
    TNamed(const char *name, const char *title) : fName(name), fTitle(title) { }
    TNamed(const TString &name, const TString &title) : fName(name), fTitle(title) { }
    TNamed(const TNamed &named);

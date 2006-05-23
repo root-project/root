@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.26 2005/10/20 09:28:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.27 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -112,6 +112,35 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem,
       Warning("ctor", "Material %s defined with fractional Z=%f", GetName(), fZ);
    GetElement()->SetUsed();
    gGeoManager->AddMaterial(this);
+}
+//-----------------------------------------------------------------------------
+TGeoMaterial::TGeoMaterial(const TGeoMaterial& gm) :
+  TNamed(gm),
+  TAttFill(gm),
+  fIndex(gm.fIndex),
+  fA(gm.fA),
+  fZ(gm.fZ),
+  fDensity(gm.fDensity),
+  fRadLen(gm.fRadLen),
+  fIntLen(gm.fIntLen),
+  fShader(gm.fShader),
+  fCerenkov(gm.fCerenkov)
+{ }
+//-----------------------------------------------------------------------------
+TGeoMaterial& TGeoMaterial::operator=(const TGeoMaterial& gm) 
+{
+  if(this!=&gm) {
+    TNamed::operator=(gm);
+    TAttFill::operator=(gm);
+    fIndex=gm.fIndex;
+    fA=gm.fA;
+    fZ=gm.fZ;
+    fDensity=gm.fDensity;
+    fRadLen=gm.fRadLen;
+    fIntLen=gm.fIntLen;
+    fShader=gm.fShader;
+    fCerenkov=gm.fCerenkov;
+  } return *this;
 }
 //-----------------------------------------------------------------------------
 TGeoMaterial::~TGeoMaterial()
@@ -267,6 +296,25 @@ TGeoMixture::TGeoMixture(const char *name, Int_t nel, Double_t rho)
    }
    fDensity = rho; //TO BE CORRECTED
    if (fDensity < 0) fDensity = 0.001;
+}
+//-----------------------------------------------------------------------------
+TGeoMixture::TGeoMixture(const TGeoMixture& gm) :
+  TGeoMaterial(gm),
+  fNelements(gm.fNelements),
+  fZmixture(gm.fZmixture),
+  fAmixture(gm.fAmixture),
+  fWeights(gm.fWeights)
+{ }
+//-----------------------------------------------------------------------------
+TGeoMixture& TGeoMixture::operator=(const TGeoMixture& gm) 
+{
+  if(this!=&gm) {
+    TGeoMaterial::operator=(gm);
+    fNelements=gm.fNelements;
+    fZmixture=gm.fZmixture;
+    fAmixture=gm.fAmixture;
+    fWeights=gm.fWeights;
+  } return *this;
 }
 //-----------------------------------------------------------------------------
 TGeoMixture::~TGeoMixture()

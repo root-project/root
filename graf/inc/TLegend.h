@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.8 2005/11/18 16:55:06 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.9 2005/11/21 08:49:48 couet Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -33,6 +33,10 @@ class TList;
 class TLegendEntry;
 
 class TLegend : public TPave , public TAttText {
+
+protected:
+   TLegend& operator=(const TLegend&);
+
 public:
    TLegend();
    TLegend( Double_t x1, Double_t y1, Double_t x2, Double_t y2,

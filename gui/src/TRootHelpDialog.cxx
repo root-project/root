@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.cxx,v 1.6 2002/09/18 12:22:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.cxx,v 1.7 2004/09/13 09:10:56 rdm Exp $
 // Author: Fons Rademakers   24/02/98
 
 /*************************************************************************
@@ -49,6 +49,27 @@ TRootHelpDialog::TRootHelpDialog(const TGWindow *main,
 
    // position relative to the parent's window
    CenterOnParent();
+}
+
+//______________________________________________________________________________
+TRootHelpDialog::TRootHelpDialog(const TRootHelpDialog& rd) :
+  TGTransientFrame(rd),
+  fView(rd.fView),
+  fOK(rd.fOK),
+  fL1(rd.fL1),
+  fL2(rd.fL2)
+{ }
+
+//______________________________________________________________________________
+TRootHelpDialog& TRootHelpDialog::operator=(const TRootHelpDialog& rd)
+{
+  if(this!=&rd) {
+    TGTransientFrame::operator=(rd);
+    fView=rd.fView;
+    fOK=rd.fOK;
+    fL1=rd.fL1;
+    fL2=rd.fL2;
+  } return *this;
 }
 
 //______________________________________________________________________________

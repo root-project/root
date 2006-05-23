@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.8 2005/09/04 11:42:05 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.9 2006/05/15 07:27:03 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDecayChannel.h"
@@ -92,6 +92,58 @@ TParticlePDG::TParticlePDG(const char* Name, const char* Title, Double_t Mass,
    else      fAntiParticle = 0;
 }
 
+//______________________________________________________________________________
+TParticlePDG::TParticlePDG(const TParticlePDG& pdg) :
+  TNamed(pdg),
+  fPdgCode(pdg.fPdgCode),
+  fMass(pdg.fMass),
+  fCharge(pdg.fCharge),
+  fLifetime(pdg.fLifetime),
+  fWidth(pdg.fWidth),
+  fParity(pdg.fParity),
+  fSpin(pdg.fSpin),
+  fIsospin(pdg.fIsospin),
+  fI3(pdg.fI3),
+  fStrangeness(pdg.fStrangeness),
+  fCharm(pdg.fCharm),
+  fBeauty(pdg.fBeauty),
+  fTop(pdg.fTop),
+  fY(pdg.fY),
+  fX(pdg.fX),
+  fStable(pdg.fStable),
+  fDecayList(pdg.fDecayList),
+  fParticleClass(pdg.fParticleClass),
+  fTrackingCode(pdg.fTrackingCode),
+  fAntiParticle(pdg.fAntiParticle)
+{ }
+
+//______________________________________________________________________________
+TParticlePDG& TParticlePDG::operator=(const TParticlePDG& pdg)
+{
+  if(this!=&pdg) {
+    TNamed::operator=(pdg);
+    fPdgCode=pdg.fPdgCode;
+    fMass=pdg.fMass;
+    fCharge=pdg.fCharge;
+    fLifetime=pdg.fLifetime;
+    fWidth=pdg.fWidth;
+    fParity=pdg.fParity;
+    fSpin=pdg.fSpin;
+    fIsospin=pdg.fIsospin;
+    fI3=pdg.fI3;
+    fStrangeness=pdg.fStrangeness;
+    fCharm=pdg.fCharm;
+    fBeauty=pdg.fBeauty;
+    fTop=pdg.fTop;
+    fY=pdg.fY;
+    fX=pdg.fX;
+    fStable=pdg.fStable;
+    fDecayList=pdg.fDecayList;
+    fParticleClass=pdg.fParticleClass;
+    fTrackingCode=pdg.fTrackingCode;
+    fAntiParticle=pdg.fAntiParticle;
+  } return *this;
+}
 
 //______________________________________________________________________________
 TParticlePDG::~TParticlePDG() {

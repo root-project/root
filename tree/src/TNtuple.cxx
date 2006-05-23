@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.11 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name: v5-11-02 $:$Id: TNtuple.cxx,v 1.12 2006/03/20 21:43:44 pcanal Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -45,6 +45,22 @@ TNtuple::TNtuple(): TTree()
 
    fNvar = 0;
    fArgs = 0;
+}
+
+//______________________________________________________________________________
+TNtuple::TNtuple(const TNtuple& tnt) : 
+  TTree(tnt), fNvar(tnt.fNvar), fArgs(tnt.fArgs)
+{
+}
+
+//______________________________________________________________________________
+TNtuple& TNtuple::operator=(const TNtuple& tnt)
+{
+  if(this!=&tnt) {
+    TTree::operator=(tnt);
+    fNvar=tnt.fNvar;
+    fArgs=tnt.fArgs;
+  } return *this;
 }
 
 //______________________________________________________________________________

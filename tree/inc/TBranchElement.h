@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name: v5-11-02 $:$Id: TBranchElement.h,v 1.47 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.48 2006/05/12 12:24:27 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -35,10 +35,6 @@ class TVirtualCollectionProxy;
 
 class TBranchElement : public TBranch {
 
-private:
-   TBranchElement(const TBranchElement&);
-   TBranchElement& operator=(const TBranchElement&);
-
 protected:
    enum { kBranchFolder = BIT(14), kDeleteObject = BIT(16) };
    
@@ -68,6 +64,9 @@ protected:
    Bool_t                  *fBranchTypes;   //!Sub-Branch types (TBranchElement or not)
 
    friend class TTreeCloner;
+
+   TBranchElement(const TBranchElement&);
+   TBranchElement& operator=(const TBranchElement&);
 
 private:
    

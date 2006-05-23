@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.25 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.26 2006/04/24 13:59:21 antcheva Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -61,6 +61,27 @@ static TGFileInfo gInfo;
 
 
 ClassImp(TGFileDialog)
+
+//______________________________________________________________________________
+TGFileInfo::TGFileInfo(const TGFileInfo& fi) : 
+    fFilename(fi.fFilename),
+    fIniDir(fi.fIniDir),
+    fFileTypes(fi.fFileTypes),
+    fFileTypeIdx(fi.fFileTypeIdx),
+    fOverwrite(fi.fOverwrite)
+{ }
+
+//______________________________________________________________________________
+TGFileInfo& TGFileInfo::operator=(const TGFileInfo& fi) 
+{
+  if(this!=&fi) {
+    fFilename=fi.fFilename;
+    fIniDir=fi.fIniDir;
+    fFileTypes=fi.fFileTypes;
+    fFileTypeIdx=fi.fFileTypeIdx;
+    fOverwrite=fi.fOverwrite;
+  } return *this;
+}
 
 //______________________________________________________________________________
 TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
@@ -270,6 +291,55 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    MapWindow();
    fFc->DisplayDirectory();
    fClient->WaitFor(this);
+}
+
+//______________________________________________________________________________
+TGFileDialog::TGFileDialog(const TGFileDialog& fd) : 
+  TGTransientFrame(fd),
+  fTbfname(fd.fTbfname),
+  fName(fd.fName),
+  fTypes(fd.fTypes),
+  fTreeLB(fd.fTreeLB),
+  fCdup(fd.fCdup),
+  fNewf(fd.fNewf),
+  fList(fd.fList),
+  fDetails(fd.fDetails),
+  fOverWR(fd.fOverWR),
+  fPcdup(fd.fPcdup),
+  fPnewf(fd.fPnewf),
+  fPlist(fd.fPlist),
+  fPdetails(fd.fPdetails),
+  fOk(fd.fOk),
+  fCancel(fd.fCancel),
+  fFv(fd.fFv),
+  fFc(fd.fFc),
+  fFileInfo(fd.fFileInfo)
+{ }
+
+//______________________________________________________________________________
+TGFileDialog& TGFileDialog::operator=(const TGFileDialog& fd) 
+{
+  if(this!=&fd) {
+    TGTransientFrame::operator=(fd);
+    fTbfname=fd.fTbfname;
+    fName=fd.fName;
+    fTypes=fd.fTypes;
+    fTreeLB=fd.fTreeLB;
+    fCdup=fd.fCdup;
+    fNewf=fd.fNewf;
+    fList=fd.fList;
+    fDetails=fd.fDetails;
+    fOverWR=fd.fOverWR;
+    fPcdup=fd.fPcdup;
+    fPnewf=fd.fPnewf;
+    fPlist=fd.fPlist;
+    fPdetails=fd.fPdetails;
+    fOk=fd.fOk;
+    fCancel=fd.fCancel;
+    fFv=fd.fFv;
+    fFc=fd.fFc;
+    fFileInfo=fd.fFileInfo;
+  } return *this;
 }
 
 //______________________________________________________________________________

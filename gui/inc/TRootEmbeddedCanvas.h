@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.9 2004/09/21 11:18:19 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.10 2005/08/10 14:00:34 brun Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -41,6 +41,9 @@ protected:
    TCanvas                *fCanvas;           // pointer to TCanvas
    Bool_t                  fAutoFit;          // canvas container keeps same size as canvas
    Int_t                   fButton;           // currently pressed button
+
+   TRootEmbeddedCanvas(const TRootEmbeddedCanvas&);
+   TRootEmbeddedCanvas& operator=(const TRootEmbeddedCanvas&);
 
    virtual Bool_t HandleContainerButton(Event_t *ev);
    virtual Bool_t HandleContainerDoubleClick(Event_t *ev);

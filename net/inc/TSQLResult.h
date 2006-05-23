@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLResult.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name: v5-11-02 $:$Id: TSQLResult.h,v 1.2 2006/04/12 20:53:45 rdm Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -36,7 +36,7 @@ class TSQLResult : public TObject {
 protected:
    Int_t    fRowCount;   // number of rows in result
 
-   TSQLResult() { }
+   TSQLResult() : fRowCount(0) { }
 
 public:
    virtual ~TSQLResult() { }

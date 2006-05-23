@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.12 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.13 2005/11/24 08:38:55 couet Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -36,6 +36,8 @@ protected:
    TGraph   *fGraph;     // Graph for drawing the knots
    Int_t     fNpx;       // Number of points used for graphical representation
 
+   TSpline(const TSpline&);
+   TSpline& operator=(const TSpline&);
    virtual void BuildCoeff()=0;
 
 public:
@@ -162,6 +164,10 @@ private:
    void BuildCoeff();
    void SetCond(const char *opt);
 
+protected:
+   TSpline3(const TSpline3&);
+   TSpline3& operator=(const TSpline3&);
+
 public:
    TSpline3() : fPoly(0), fValBeg(0), fValEnd(0),
       fBegCond(-1), fEndCond(-1) {}
@@ -211,6 +217,9 @@ private:
    void SetBoundaries(Double_t b1, Double_t e1, Double_t b2, Double_t e2,
                       const char *cb1, const char *ce1, const char *cb2,
                       const char *ce2);
+protected:
+   TSpline5(const TSpline5&);
+   TSpline5& operator=(const TSpline5&);
 
 public:
    TSpline5() : fPoly(0) {}

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.25 2005/12/06 17:32:15 rdm Exp $
+// @(#)root/ged:$Name: v5-11-02 $:$Id: TGedEditor.cxx,v 1.26 2006/03/20 21:43:41 pcanal Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -91,6 +91,41 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
 
 }
 
+//______________________________________________________________________________
+TGedEditor::TGedEditor(const TGedEditor& ge) :
+  TVirtualPadEditor(ge),
+  TGMainFrame(ge),
+  fCan(ge.fCan),
+  fTab(ge.fTab),
+  fTabContainer(ge.fTabContainer),
+  fStyle(ge.fStyle),
+  fModel(ge.fModel),
+  fPad(ge.fPad),
+  fCanvas(ge.fCanvas),
+  fClass(ge.fClass),
+  fWid(ge.fWid),
+  fGlobal(ge.fGlobal)
+{ }
+   
+//______________________________________________________________________________
+TGedEditor& TGedEditor::operator=(const TGedEditor& ge)
+{
+  if(this!=&ge) {
+    TVirtualPadEditor::operator=(ge);
+    TGMainFrame::operator=(ge);
+    fCan=ge.fCan;
+    fTab=ge.fTab;
+    fTabContainer=ge.fTabContainer;
+    fStyle=ge.fStyle;
+    fModel=ge.fModel;
+    fPad=ge.fPad;
+    fCanvas=ge.fCanvas;
+    fClass=ge.fClass;
+    fWid=ge.fWid;
+    fGlobal=ge.fGlobal;
+  } return *this;
+}
+   
 //______________________________________________________________________________
 TGedEditor::~TGedEditor()
 {

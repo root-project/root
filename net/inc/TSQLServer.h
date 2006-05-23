@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.h,v 1.2 2006/04/12 20:53:45 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.h,v 1.3 2006/05/22 08:55:30 brun Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -52,8 +52,10 @@ protected:
    TString   fErrorMsg;   // error message of last operation
    Bool_t    fErrorOut;   // enable error output 
 
-   TSQLServer() { fPort = -1; fErrorOut = kTRUE; ClearError(); }
-   
+   TSQLServer() 
+     : fType(), fHost(), fDB(), fPort(-1), fErrorCode(0),
+     fErrorMsg(), fErrorOut(kTRUE) { ClearError(); }   
+
    void                ClearError();
    void                SetError(Int_t code, const char* msg, const char* method = 0);
 

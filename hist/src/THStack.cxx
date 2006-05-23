@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.42 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.43 2006/05/17 16:37:26 couet Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -273,22 +273,21 @@ THStack::~THStack()
 }
 
 //______________________________________________________________________________
-THStack::THStack(const THStack &hstack) : TNamed(hstack)
+THStack::THStack(const THStack &hstack) : 
+  TNamed(hstack),
+  fHists(NULL),
+  fStack(NULL),
+  fHistogram(NULL),
+  fMaximum(hstack.fMaximum),
+  fMinimum(hstack.fMinimum)
 {
+
 // THStack copy constructor
 
-   fHistogram = 0;
-   fMaximum = hstack.fMaximum;
-   fMinimum = hstack.fMinimum;
-   fStack = 0;
-   fHists = 0;
-   fName  = hstack.fName;
-   fTitle = hstack.fTitle;
-   if (hstack.GetHists() == 0) return;
-   TIter next(hstack.GetHists());
-   TH1 *h;
-   while ((h=(TH1*)next())) {
-      Add(h);
+   if (hstack.GetHists()) {
+     TIter next(hstack.GetHists());
+     TH1 *h;
+     while ((h=(TH1*)next())) Add(h);
    }
 }
 

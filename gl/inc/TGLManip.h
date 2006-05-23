@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.10 2006/03/08 21:09:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.11 2006/05/15 07:43:33 brun Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -48,10 +48,6 @@ class TGLViewer;
 //////////////////////////////////////////////////////////////////////////
 
 class TGLManip : public TVirtualGLManip {
-private:
-   TGLManip(const TGLManip&);
-   TGLManip& operator=(const TGLManip&);
-
 protected:
    TGLPhysicalShape * fShape;             //! manipulated shape
    UInt_t             fSelectedWidget;    //! active width (axis) component
@@ -67,6 +63,9 @@ protected:
    static Float_t     fgYellow[4];
    static Float_t     fgWhite[4];
    static Float_t     fgGrey[4];
+
+   TGLManip(const TGLManip&);
+   TGLManip& operator=(const TGLManip&);
 
    void CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera,
                       Double_t & base, TGLVector3 axis[3]) const;

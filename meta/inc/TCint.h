@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.25 2005/06/22 20:18:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.26 2006/05/12 12:25:45 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -52,9 +52,6 @@ R__EXTERN TVirtualMutex *gCINTMutex;
 class TCint : public TInterpreter {
 
 private:
-   TCint(const TCint&);
-   TCint& operator=(const TCint&);
-
    Int_t           fMore;           //1 if more input is required
    Int_t           fExitCode;       //value passed to exit() in interpreter
    char            fPrompt[64];     //proposed prompt string
@@ -69,6 +66,9 @@ private:
    virtual void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
 
 protected:
+   TCint(const TCint&);
+   TCint& operator=(const TCint&);
+
    virtual void ExecThreadCB(TWin32SendClass *command);
    virtual Int_t LoadLibraryMap();
 

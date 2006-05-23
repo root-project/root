@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.7 2005/09/04 15:12:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.8 2005/11/18 16:07:58 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -34,6 +34,8 @@ protected:
    TGeoMaterial            *fMaterial;   // pointer to material
  
 // methods
+   TGeoMedium(const TGeoMedium&);
+   TGeoMedium& operator=(const TGeoMedium&);
 
 public:
    // constructors

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.62 2006/05/17 08:09:42 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.63 2006/05/18 16:32:02 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -75,6 +75,43 @@ Bool_t TPopupDelayTimer::Notify()
    return kFALSE;
 }
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGMenuEntry member functions.                                        //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+TGMenuEntry::TGMenuEntry(const TGMenuEntry& me) :
+  TObject(me),
+  fEntryId(me.fEntryId),
+  fUserData(me.fUserData),
+  fType(me.fType),
+  fStatus(me.fStatus),
+  fEy(me.fEy),
+  fEh(me.fEh),
+  fLabel(me.fLabel),
+  fPic(me.fPic),
+  fPopup(me.fPopup)
+{ }
+
+//______________________________________________________________________________
+TGMenuEntry& TGMenuEntry::operator=(const TGMenuEntry& me) 
+{
+  if(this!=&me) {
+    TObject::operator=(me);
+    fEntryId=me.fEntryId;
+    fUserData=me.fUserData;
+    fType=me.fType;
+    fStatus=me.fStatus;
+    fEy=me.fEy;
+    fEh=me.fEh;
+    fLabel=me.fLabel;
+    fPic=me.fPic;
+    fPopup=me.fPopup;
+  } return *this;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -99,6 +136,31 @@ TGMenuBar::TGMenuBar(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
                        kNone, kNone);
 
    fKeyNavigate = kFALSE;
+}
+
+//______________________________________________________________________________
+TGMenuBar::TGMenuBar(const TGMenuBar& mb) :
+  TGHorizontalFrame(mb),
+  fCurrent(mb.fCurrent),
+  fTitles(mb.fTitles),
+  fDefaultCursor(mb.fDefaultCursor),
+  fStick(mb.fStick),
+  fTrash(mb.fTrash),
+  fKeyNavigate(mb.fKeyNavigate)
+{ }
+
+//______________________________________________________________________________
+TGMenuBar& TGMenuBar::operator=(const TGMenuBar& mb) 
+{
+  if(this!=&mb) {
+    TGHorizontalFrame::operator=(mb);
+    fCurrent=mb.fCurrent;
+    fTitles=mb.fTitles;
+    fDefaultCursor=mb.fDefaultCursor;
+    fStick=mb.fStick;
+    fTrash=mb.fTrash;
+    fKeyNavigate=mb.fKeyNavigate;
+  } return *this;
 }
 
 //______________________________________________________________________________
@@ -723,6 +785,55 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
 
    AddInput(kPointerMotionMask | kEnterWindowMask | kLeaveWindowMask);
+}
+
+//______________________________________________________________________________
+TGPopupMenu::TGPopupMenu(const TGPopupMenu& pu) :
+  TGFrame(pu),
+  fEntryList(pu.fEntryList),
+  fCurrent(pu.fCurrent),
+  fStick(pu.fStick),
+  fHasGrab(pu.fHasGrab),
+  fPoppedUp(pu.fPoppedUp),
+  fXl(pu.fXl),
+  fMenuWidth(pu.fMenuWidth),
+  fMenuHeight(pu.fMenuHeight),
+  fDelay(pu.fDelay),
+  fNormGC(pu.fNormGC),
+  fSelGC(pu.fSelGC),
+  fSelbackGC(pu.fSelbackGC),
+  fFontStruct(pu.fFontStruct),
+  fHifontStruct(pu.fHifontStruct),
+  fDefaultCursor(pu.fDefaultCursor),
+  fMsgWindow(pu.fMsgWindow),
+  fMenuBar(pu.fMenuBar),
+  fEntrySep(pu.fEntrySep)
+{ }
+
+//______________________________________________________________________________
+TGPopupMenu& TGPopupMenu::operator=(const TGPopupMenu& pu)
+{
+  if(this!=&pu) {
+    TGFrame::operator=(pu);
+    fEntryList=pu.fEntryList;
+    fCurrent=pu.fCurrent;
+    fStick=pu.fStick;
+    fHasGrab=pu.fHasGrab;
+    fPoppedUp=pu.fPoppedUp;
+    fXl=pu.fXl;
+    fMenuWidth=pu.fMenuWidth;
+    fMenuHeight=pu.fMenuHeight;
+    fDelay=pu.fDelay;
+    fNormGC=pu.fNormGC;
+    fSelGC=pu.fSelGC;
+    fSelbackGC=pu.fSelbackGC;
+    fFontStruct=pu.fFontStruct;
+    fHifontStruct=pu.fHifontStruct;
+    fDefaultCursor=pu.fDefaultCursor;
+    fMsgWindow=pu.fMsgWindow;
+    fMenuBar=pu.fMenuBar;
+    fEntrySep=pu.fEntrySep;
+  } return *this;
 }
 
 //______________________________________________________________________________
@@ -1703,6 +1814,36 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
 }
 
 //______________________________________________________________________________
+TGMenuTitle::TGMenuTitle(const TGMenuTitle& mt) :
+  TGFrame(mt),
+  fMenu(mt.fMenu),
+  fLabel(mt.fLabel),
+  fTitleId(mt.fTitleId),
+  fTitleData(mt.fTitleData),
+  fState(mt.fState),
+  fHkeycode(mt.fHkeycode),
+  fFontStruct(mt.fFontStruct),
+  fSelGC(mt.fSelGC)
+{ }
+
+//______________________________________________________________________________
+TGMenuTitle& TGMenuTitle::operator=(const TGMenuTitle& mt)
+{
+  if(this!=&mt) {
+    TGFrame::operator=(mt);
+    fMenu=mt.fMenu;
+    fLabel=mt.fLabel;
+    fTitleId=mt.fTitleId;
+    fTitleData=mt.fTitleData;
+    fState=mt.fState;
+    fHkeycode=mt.fHkeycode;
+    fFontStruct=mt.fFontStruct;
+    fSelGC=mt.fSelGC;
+  } return *this;
+}
+
+//______________________________________________________________________________
+
 void TGMenuTitle::SetState(Bool_t state)
 {
    // Set state of menu title.

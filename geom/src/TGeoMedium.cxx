@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.6 2005/10/03 06:54:51 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.7 2005/11/18 16:07:58 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -73,6 +73,26 @@ TGeoMedium::TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, I
    gGeoManager->GetListOfMedia()->Add(this);
 }
 
+//-----------------------------------------------------------------------------
+TGeoMedium::TGeoMedium(const TGeoMedium& gm) : 
+  TNamed(gm),
+  fId(gm.fId),
+  fMaterial(gm.fMaterial)
+{
+  for(Int_t i=0; i<20; i++) fParams[i]=gm.fParams[i];
+}
+ 
+//-----------------------------------------------------------------------------
+TGeoMedium& TGeoMedium::operator=(const TGeoMedium& gm) 
+{
+  if(this!=&gm) {
+    TNamed::operator=(gm);
+    fId=gm.fId;
+    for(Int_t i=0; i<20; i++) fParams[i]=gm.fParams[i];
+    fMaterial=gm.fMaterial;
+  } return *this;
+}
+ 
 //-----------------------------------------------------------------------------
 TGeoMedium::~TGeoMedium()
 {

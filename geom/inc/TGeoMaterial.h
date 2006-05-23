@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.18 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.19 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -60,6 +60,9 @@ protected:
    TObject                 *fCerenkov;   // pointer to class with Cerenkov properties
 
 // methods
+   TGeoMaterial(const TGeoMaterial&);
+   TGeoMaterial& operator=(const TGeoMaterial&);
+
 
 public:
    // constructors
@@ -117,7 +120,10 @@ protected :
    Double_t                *fZmixture;   // [fNelements] array of Z of the elements
    Double_t                *fAmixture;   // [fNelements] array of A of the elements
    Double_t                *fWeights;    // [fNelements] array of relative proportions by mass
+
 // methods
+   TGeoMixture(const TGeoMixture&); // Not implemented
+   TGeoMixture& operator=(const TGeoMixture&); // Not implemented
 
 public:
    // constructors

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.24 2006/05/15 11:01:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.25 2006/05/16 06:18:48 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -72,6 +72,7 @@ private:
    Bool_t           fHasColor;     // true if item has assigned color
    Color_t          fColor;        // item's color
 
+protected:
    TGListTreeItem(const TGListTreeItem&);
    TGListTreeItem& operator=(const TGListTreeItem&);
 
@@ -112,10 +113,6 @@ public:
 
 
 class TGListTree : public TGContainer {
-
-private:
-   TGListTree(const TGListTree&);
-   TGListTree& operator=(const TGListTree&);
 
 public:
    //---- color markup mode of tree items
@@ -163,6 +160,9 @@ protected:
    static const TGGC   &GetLineGC();
    static const TGGC   &GetHighlightGC();
    static const TGGC   &GetColorGC();
+
+   TGListTree(const TGListTree&);
+   TGListTree& operator=(const TGListTree&);
 
    virtual void DoRedraw();
    void  Draw(Int_t yevent, Int_t hevent);

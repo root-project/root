@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.13 2005/11/24 17:28:07 couet Exp $
+// @(#)root/g3d:$Name: v5-11-02 $:$Id: TTUBE.cxx,v 1.14 2006/03/20 21:43:41 pcanal Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -84,6 +84,32 @@ TTUBE::TTUBE(const char *name, const char *title, const char *material, Float_t 
    MakeTableOfCoSin();
 }
 
+//______________________________________________________________________________
+TTUBE::TTUBE(const TTUBE& tu) :
+  TShape(tu),
+  fRmin(tu.fRmin),
+  fRmax(tu.fRmax),
+  fDz(tu.fDz),
+  fNdiv(tu.fNdiv),
+  fAspectRatio(tu.fAspectRatio),
+  fSiTab(tu.fSiTab),
+  fCoTab(tu.fCoTab)
+{ }
+
+//______________________________________________________________________________
+TTUBE& TTUBE::operator=(const TTUBE& tu) 
+{
+  if(this!=&tu) {
+    TShape::operator=(tu);
+    fRmin=tu.fRmin;
+    fRmax=tu.fRmax;
+    fDz=tu.fDz;
+    fNdiv=tu.fNdiv;
+    fAspectRatio=tu.fAspectRatio;
+    fSiTab=tu.fSiTab;
+    fCoTab=tu.fCoTab;
+  } return *this;
+}
 
 //______________________________________________________________________________
 void TTUBE::MakeTableOfCoSin() const // Internal cache - const so other const fn can use

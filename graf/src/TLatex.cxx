@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.56 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/graf:$Name: v5-11-02 $:$Id: TLatex.cxx,v 1.57 2006/04/04 12:44:48 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -306,6 +306,23 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
    ((TLatex&)text).Copy(*this);
 }
 
+//______________________________________________________________________________
+TLatex& TLatex::operator=(const TLatex& lt) 
+{
+  if(this!=&lt) {
+    TText::operator=(lt);
+    TAttLine::operator=(lt);
+    fFactorSize=lt.fFactorSize;
+    fFactorPos=lt.fFactorPos;
+    fLimitFactorSize=lt.fLimitFactorSize;
+    fError=lt.fError;
+    fShow=lt.fShow;
+    fTabSize=lt.fTabSize;
+    fOriginSize=lt.fOriginSize;
+    fTabSize=lt.fTabSize;
+    fTabSize=lt.fTabSize;
+  } return *this;
+}
 
 //______________________________________________________________________________
 void TLatex::Copy(TObject &obj) const

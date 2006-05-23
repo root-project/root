@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.9 2006/04/24 14:07:47 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.10 2006/05/14 10:23:26 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -48,16 +48,15 @@
 
 class TGColorFrame : public TGFrame {
 
-private:
-   TGColorFrame(const TGColorFrame&);
-   TGColorFrame& operator=(const TGColorFrame&);
-
 protected:
    const TGWindow *fMsgWindow;   // window handling container messages
    Pixel_t         fPixel;       // color value of this cell
    Bool_t          fActive;      // kTRUE if this color cell is active
    GContext_t      fGrayGC;      // Shadow GC
    Pixel_t         fColor;       // returned color value
+
+   TGColorFrame(const TGColorFrame&);
+   TGColorFrame& operator=(const TGColorFrame&);
 
 public:
    TGColorFrame(const TGWindow *p = 0, Pixel_t c = 0, Int_t n = 1);
@@ -76,14 +75,13 @@ public:
 
 class TG16ColorSelector : public TGCompositeFrame {
 
-private:
-   TG16ColorSelector(const TG16ColorSelector&);   
-   TG16ColorSelector& operator=(const TG16ColorSelector&);   
-
 protected:
    Int_t            fActive;     // index of active color cell
    const TGWindow  *fMsgWindow;  // window handling container messages
    TGColorFrame    *fCe[16];     // matrix of color cells
+
+   TG16ColorSelector(const TG16ColorSelector&);   
+   TG16ColorSelector& operator=(const TG16ColorSelector&);   
 
 public:
    TG16ColorSelector(const TGWindow *p = 0);
@@ -101,15 +99,14 @@ public:
 
 class TGColorPopup : public TGCompositeFrame {
 
-private:
-   TGColorPopup(const TGColorPopup&);
-   TGColorPopup& operator=(const TGColorPopup&);
-
 protected:
    Int_t            fActive;        // active color index
    Int_t            fLaunchDialog;  // flag used for launching color dialog
    const TGWindow  *fMsgWindow;     // window handling container messages
    Pixel_t          fCurrentColor;  // currently selected color value
+
+   TGColorPopup(const TGColorPopup&);
+   TGColorPopup& operator=(const TGColorPopup&);
 
 public:
    TGColorPopup(const TGWindow *p = 0, const TGWindow *m = 0, Pixel_t color = 0);
@@ -128,15 +125,14 @@ public:
 
 class TGColorSelect : public TGCheckButton {
 
-private:
-   TGColorSelect(const TGColorSelect&);
-   TGColorSelect& operator=(const TGColorSelect&);
-
 protected:
    Pixel_t       fColor;         // color value of the button
    TGGC          fDrawGC;        // drawing GC
    TGColorPopup *fColorPopup;    // color popup associated
    TGPosition    fPressPos;      // psotion of frame on button press event
+
+   TGColorSelect(const TGColorSelect&);
+   TGColorSelect& operator=(const TGColorSelect&);
 
    virtual void DoRedraw();
 

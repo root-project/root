@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.4 2004/09/15 14:56:35 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.5 2005/11/11 15:38:30 brun Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -35,11 +35,15 @@ class TGTab;
 
 
 class TGedFrame : public TGCompositeFrame, public TGWidget {
+
 protected:
    TObject      *fModel;    //selected object, if exists
    TVirtualPad  *fPad;      //selected pad, if exists
    Bool_t        fInit;     //init flag for setting signals/slots
    TGTab        *fTab;      //pointer to the parent tab          
+
+   TGedFrame(const TGedFrame&); 
+   TGedFrame& operator=(const TGedFrame&); 
 
    virtual void MakeTitle(const char *title);
    
@@ -68,7 +72,16 @@ public:
 // in the list TClass::fClassEditors via the class TGedElement
 
 class TGedElement : public TObject {
+protected:
+   TGedElement(const TGedElement& ge)
+     : TObject(ge), fGedFrame(ge.fGedFrame), fCanvas(ge.fCanvas) { }
+   TGedElement& operator=(const TGedElement& ge)
+     {if(this!=&ge) {TObject::operator=(ge); fGedFrame=ge.fGedFrame;
+     fCanvas=ge.fCanvas;} return *this;}
+
 public:
+   TGedElement(): fGedFrame(NULL), fCanvas(NULL) { }
+
    TGedFrame  *fGedFrame;   //object editor
    TObject    *fCanvas;     //connected canvas (0 if disconnected)
    
@@ -80,6 +93,9 @@ class TGedNameFrame : public TGedFrame {
 protected:
    TGLabel          *fLabel;      //label of attribute frame
    TGCompositeFrame *f1, *f2;     //container frames
+
+   TGedNameFrame(const TGedNameFrame&); // Not implemented
+   TGedNameFrame& operator=(const TGedNameFrame&); // Not implemented
 
 public:
    TGedNameFrame(const TGWindow *p, Int_t id,

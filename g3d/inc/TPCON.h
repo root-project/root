@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.h,v 1.5 2005/03/09 18:19:25 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.h,v 1.6 2005/11/24 17:28:06 couet Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -46,6 +46,9 @@ protected:
    Float_t    *fRmax;        //[fNz] pointer to array of outside radiuses
    Float_t    *fDz;          //[fNz] pointer to array of half lengths in z
         
+   TPCON(const TPCON&); 
+   TPCON& operator=(const TPCON&);
+
    virtual void    MakeTableOfCoSin() const;  // Create the table of the fSiTab; fCoTab
    virtual void    FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const; // Fill the table of cosin
    virtual void    SetPoints(Double_t *points) const;

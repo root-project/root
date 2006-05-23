@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.21 2005/11/17 13:17:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.22 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -39,6 +39,9 @@ protected:
    Double_t             *fZ;     //[fNz] pointer to array of Z planes positions 
    
    // methods
+   TGeoPcon(const TGeoPcon&); 
+   TGeoPcon& operator=(const TGeoPcon&); 
+
 public:
    // constructors
    TGeoPcon();

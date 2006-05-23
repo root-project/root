@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.19 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -95,13 +95,17 @@ protected:
 
    static Int_t  fgClientProtocol; // client "protocol" version
 
-   TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0;
-               fCompress = 0; fSecContext = 0; fServType = kSOCKD;}
+   TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0),
+     fCompress(0), fLocalAddress(), fRemoteProtocol(),
+     fSecContext(0), fService(), fServType(kSOCKD),
+     fSocket(-1), fTcpWindowSize(0), fUrl() { }
+
+
    Bool_t       Authenticate(const char *user);
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
 
 private:
-   void          operator=(const TSocket &);  // not implemented
+   TSocket&      operator=(const TSocket &);  // not implemented
    Option_t     *GetOption() const { return TObject::GetOption(); }
 
 public:

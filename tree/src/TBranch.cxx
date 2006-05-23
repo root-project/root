@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.101 2006/04/17 21:21:59 pcanal Exp $
+// @(#)root/tree:$Name: v5-11-02 $:$Id: TBranch.cxx,v 1.102 2006/04/18 15:58:28 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -263,6 +263,77 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
 
    TBasket *basket = fTree->CreateBasket(this);
    fBaskets.AddAt(basket,0);
+}
+
+//______________________________________________________________________________
+TBranch::TBranch(const TBranch& tb):
+  TNamed(tb),
+  TAttFill(tb),
+  fCompress(tb.fCompress),
+  fBasketSize(tb.fBasketSize),
+  fEntryOffsetLen(tb.fEntryOffsetLen),
+  fWriteBasket(tb.fWriteBasket),
+  fEntryNumber(tb.fEntryNumber),
+  fOffset(tb.fOffset),
+  fMaxBaskets(tb.fMaxBaskets),
+  fSplitLevel(tb.fSplitLevel),
+  fNleaves(tb.fNleaves),
+  fReadBasket(tb.fReadBasket),
+  fReadEntry(tb.fReadEntry),
+  fEntries(tb.fEntries),
+  fTotBytes(tb.fTotBytes),
+  fZipBytes(tb.fZipBytes),
+  fBranches(tb.fBranches),
+  fLeaves(tb.fLeaves),
+  fBaskets(tb.fBaskets),
+  fNBasketRAM(tb.fNBasketRAM),
+  fBasketRAM(tb.fBasketRAM),
+  fBasketBytes(tb.fBasketBytes),
+  fBasketEntry(tb.fBasketEntry),
+  fBasketSeek(tb.fBasketSeek),
+  fTree(tb.fTree),
+  fAddress(tb.fAddress),
+  fDirectory(tb.fDirectory),
+  fFileName(tb.fFileName),
+  fEntryBuffer(tb.fEntryBuffer),
+  fBrowsables(tb.fBrowsables)
+{ }
+
+//______________________________________________________________________________
+TBranch& TBranch::operator=(const TBranch& tb)
+{
+  if(this!=&tb) {
+    TNamed::operator=(tb);
+    TAttFill::operator=(tb);
+    fCompress=tb.fCompress;
+    fBasketSize=tb.fBasketSize;
+    fEntryOffsetLen=tb.fEntryOffsetLen;
+    fWriteBasket=tb.fWriteBasket;
+    fEntryNumber=tb.fEntryNumber;
+    fOffset=tb.fOffset;
+    fMaxBaskets=tb.fMaxBaskets;
+    fSplitLevel=tb.fSplitLevel;
+    fNleaves=tb.fNleaves;
+    fReadBasket=tb.fReadBasket;
+    fReadEntry=tb.fReadEntry;
+    fEntries=tb.fEntries;
+    fTotBytes=tb.fTotBytes;
+    fZipBytes=tb.fZipBytes;
+    fBranches=tb.fBranches;
+    fLeaves=tb.fLeaves;
+    fBaskets=tb.fBaskets;
+    fNBasketRAM=tb.fNBasketRAM;
+    fBasketRAM=tb.fBasketRAM;
+    fBasketBytes=tb.fBasketBytes;
+    fBasketEntry=tb.fBasketEntry;
+    fBasketSeek=tb.fBasketSeek;
+    fTree=tb.fTree;
+    fAddress=tb.fAddress;
+    fDirectory=tb.fDirectory;
+    fFileName=tb.fFileName;
+    fEntryBuffer=tb.fEntryBuffer;
+    fBrowsables=tb.fBrowsables;
+  } return *this;
 }
 
 //______________________________________________________________________________

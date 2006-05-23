@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.h,v 1.5 2002/10/31 07:27:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.h,v 1.6 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -45,6 +45,8 @@ protected:
    Double_t    *fX;            //[fN] Array of X coordinates
    Double_t    *fY;            //[fN] Array of Y coordinates
    TString      fOption;       //options
+
+   TPolyLine& operator=(const TPolyLine&);
 
 public:
    TPolyLine();

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.14 2006/03/27 09:28:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.15 2006/05/02 18:25:35 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -57,6 +57,29 @@ TGeoPhysicalNode::TGeoPhysicalNode(const char *path)
    SetVisibleFull(kFALSE);
    SetIsVolAtt(kTRUE);
    SetAligned(kFALSE);
+}
+
+//_____________________________________________________________________________
+TGeoPhysicalNode::TGeoPhysicalNode(const TGeoPhysicalNode& gpn) :
+  TObject(gpn),
+  TAttLine(gpn),
+  fLevel(gpn.fLevel),
+  fMatrices(gpn.fMatrices),
+  fNodes(gpn.fNodes),
+  fMatrixOrig(gpn.fMatrixOrig)
+{ }
+
+//_____________________________________________________________________________
+TGeoPhysicalNode& TGeoPhysicalNode::operator=(const TGeoPhysicalNode& gpn)
+{
+  if(this!=&gpn) {
+    TObject::operator=(gpn);
+    TAttLine::operator=(gpn);
+    fLevel=gpn.fLevel;
+    fMatrices=gpn.fMatrices;
+    fNodes=gpn.fNodes;
+    fMatrixOrig=gpn.fMatrixOrig;
+  } return *this;
 }
 
 //_____________________________________________________________________________

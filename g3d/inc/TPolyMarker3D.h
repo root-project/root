@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.11 2005/03/18 22:41:26 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.12 2005/05/20 13:27:16 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -43,6 +43,8 @@ protected:
    UInt_t           fGLList;       //!The list number for OpenGL view
    Int_t            fLastPoint;    //The index of the last filled point
    TString          fName;         //name of polymarker
+
+   TPolyMarker3D& operator=(const TPolyMarker3D&);
    
 public:
    TPolyMarker3D();

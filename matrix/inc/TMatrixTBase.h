@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.9 2006/03/23 11:23:14 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.10 2006/05/17 06:22:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -123,8 +123,9 @@ protected:
 
 public:
 
-   TMatrixTBase() { fIsOwner = kTRUE; 
-                    fNelems = fNrowIndex = fNrows = fRowLwb = fNcols = fColLwb = 0; fTol = 0.; }
+   TMatrixTBase():
+     fNrows(0), fNcols(0), fRowLwb(0), fColLwb(0), fNelems(0), fNrowIndex(0),
+     fTol(0), fIsOwner(kTRUE) { }
 
    virtual ~TMatrixTBase() {}
 

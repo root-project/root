@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectTable.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjectTable.h,v 1.2 2000/12/13 15:56:17 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -45,6 +45,10 @@ private:
    void       Expand(Int_t newsize);
    Int_t      FindElement(TObject *obj);
    void       FixCollisions(Int_t index);
+
+protected:
+   TObjectTable(const TObjectTable&);
+   TObjectTable& operator=(const TObjectTable&);
 
 public:
    TObjectTable(Int_t tableSize = 100);

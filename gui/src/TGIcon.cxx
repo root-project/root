@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.13 2006/05/05 14:47:05 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.14 2006/05/15 09:41:12 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -66,13 +66,24 @@ TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
 }
 
 //______________________________________________________________________________
-TGIcon::TGIcon(const TGIcon &p)
-       :TGFrame(p)
+TGIcon::TGIcon(const TGIcon &p) :
+  TGFrame(p)
 {
    // Copy constructor
    fPic = 0;
    fImage = 0;
    fPath = "";
+}
+
+//______________________________________________________________________________
+TGIcon& TGIcon::operator=(const TGIcon &p)
+{
+  if(this!=&p) {
+    TGFrame::operator=(p);
+    fPic = p.fPic;
+    fImage = p.fImage;
+    fPath = p.fPath;
+  } return *this;
 }
 
 //______________________________________________________________________________

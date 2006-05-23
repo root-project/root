@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.12 2006/05/09 10:24:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.13 2006/05/13 11:00:50 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -35,9 +35,6 @@ class TMethodCall;
 class TDataMember : public TDictionary {
 
 private:
-   TDataMember(const TDataMember&);
-   TDataMember& operator=(const TDataMember&);
-
    enum { kObjIsPersistent = BIT(2) };
 
    G__DataMemberInfo  *fInfo;         //pointer to CINT data member info
@@ -58,6 +55,10 @@ private:
    TMethodCall        *fValueGetter;  //method that returns a value;
    TMethodCall        *fValueSetter;  //method which sets value;
    TList              *fOptions;      //list of possible values 0=no restrictions
+
+protected:
+   TDataMember(const TDataMember&);
+   TDataMember& operator=(const TDataMember&);
 
 public:
 
@@ -93,7 +94,7 @@ public:
 
 class TOptionListItem : public TObject {
 
-private:
+protected:
    TOptionListItem(const TOptionListItem&);
    TOptionListItem& operator=(const TOptionListItem&);
 

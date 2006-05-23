@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.11 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.12 2005/11/28 12:55:35 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -70,6 +70,9 @@ protected:
    Int_t            *fCheckList;      //! list of candidates
    UChar_t          *fBits1;          //! bits used for list intersection
 
+   TGeoVoxelFinder(const TGeoVoxelFinder&);
+   TGeoVoxelFinder& operator=(const TGeoVoxelFinder&);
+   
    virtual void        BuildVoxelLimits();
    Int_t              *GetExtraX(Int_t islice, Bool_t left, Int_t &nextra) const;
    Int_t              *GetExtraY(Int_t islice, Bool_t left, Int_t &nextra) const;
@@ -169,6 +172,10 @@ private:
    Int_t               fNvy;          // number of slices on Y
    Int_t               fNvz;          // number of slices on Z
    UChar_t            *fVox;          //[fNvoxels] voxels storage array
+
+   TGeoFullVoxels(const TGeoFullVoxels&); // Not implemented
+   TGeoFullVoxels& operator=(const TGeoFullVoxels&); // Not implemented
+
 public:
    TGeoFullVoxels();
    TGeoFullVoxels(TGeoVolume *vol);

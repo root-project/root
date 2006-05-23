@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.24 2005/11/15 15:13:59 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.25 2006/05/03 13:33:23 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -61,6 +61,7 @@ public:
    TGraphAsymmErrors(const TVectorF &vx, const TVectorF &vy, const TVectorF &vexl, const TVectorF &vexh, const TVectorF &veyl, const TVectorF &veyh);
    TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, const TVectorD &vexl, const TVectorD &vexh, const TVectorD &veyl, const TVectorD &veyh);
    TGraphAsymmErrors(const TGraphAsymmErrors &gr);
+   TGraphAsymmErrors& operator=(const TGraphAsymmErrors &gr);
    TGraphAsymmErrors(const TH1 *h);
    TGraphAsymmErrors(const TH1 *pass, const TH1 *total, Option_t *option="");
    virtual ~TGraphAsymmErrors();

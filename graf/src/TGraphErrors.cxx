@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.56 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.57 2006/05/03 13:33:23 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -188,6 +188,22 @@ TGraphErrors::TGraphErrors(const TGraphErrors &gr)
    Int_t n = sizeof(Double_t)*fNpoints;
    memcpy(fEX, gr.fEX, n);
    memcpy(fEY, gr.fEY, n);
+}
+
+//______________________________________________________________________________
+TGraphErrors& TGraphErrors::operator=(const TGraphErrors &gr)
+{
+   // TGraphErrors equal operator
+   
+  if(this!=&gr) {
+    TGraph::operator=(gr);
+    if (!CtorAllocate()) return *this;
+    
+    Int_t n = sizeof(Double_t)*fNpoints;
+    memcpy(fEX, gr.fEX, n);
+    memcpy(fEY, gr.fEY, n);
+  }
+  return *this;
 }
 
 

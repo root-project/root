@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.12 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name: v5-11-02 $:$Id: TSpline.cxx,v 1.13 2006/03/20 21:43:42 pcanal Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -32,6 +32,41 @@ ClassImp(TSpline3)
 ClassImp(TSpline5)
 ClassImp(TSpline)
 
+
+//____________________________________________________________________________
+TSpline::TSpline(const TSpline &sp) :
+  TNamed(sp),
+  TAttLine(sp),
+  TAttFill(sp),
+  TAttMarker(sp),
+  fDelta(sp.fDelta),
+  fXmin(sp.fXmin),
+  fXmax(sp.fXmax),
+  fNp(sp.fNp),
+  fKstep(sp.fKstep),
+  fHistogram(sp.fHistogram),
+  fGraph(sp.fGraph),
+  fNpx(sp.fNpx)
+{ }
+
+//____________________________________________________________________________
+TSpline& TSpline::operator=(const TSpline &sp)
+{
+  if(this!=&sp) {
+    TNamed::operator=(sp);
+    TAttLine::operator=(sp);
+    TAttFill::operator=(sp);
+    TAttMarker::operator=(sp);
+    fDelta=sp.fDelta;
+    fXmin=sp.fXmin;
+    fXmax=sp.fXmax;
+    fNp=sp.fNp;
+    fKstep=sp.fKstep;
+    fHistogram=sp.fHistogram;
+    fGraph=sp.fGraph;
+    fNpx=sp.fNpx;
+  } return *this;
+}
 
 //____________________________________________________________________________
 void TSpline::Draw(Option_t *option)
@@ -360,6 +395,28 @@ TSpline3::TSpline3(const char *title,
    BuildCoeff();
 }
 
+//____________________________________________________________________________
+TSpline3::TSpline3(const TSpline3& sp3) :
+  TSpline(sp3),
+  fPoly(sp3.fPoly),
+  fValBeg(sp3.fValBeg),
+  fValEnd(sp3.fValEnd),
+  fBegCond(sp3.fBegCond),
+  fEndCond(sp3.fEndCond)
+{ }
+
+//____________________________________________________________________________
+TSpline3& TSpline3::operator=(const TSpline3& sp3)
+{
+  if(this!=&sp3) {
+    TSpline::operator=(sp3);
+    fPoly=sp3.fPoly;
+    fValBeg=sp3.fValBeg;
+    fValEnd=sp3.fValEnd;
+    fBegCond=sp3.fBegCond;
+    fEndCond=sp3.fEndCond;
+  } return *this;
+}
 
 //____________________________________________________________________________
 void TSpline3::SetCond(const char *opt)
@@ -1123,6 +1180,20 @@ TSpline5::TSpline5(const char *title,
    BuildCoeff();
 }
 
+//____________________________________________________________________________
+TSpline5::TSpline5(const TSpline5& sp5) :
+  TSpline(sp5),
+  fPoly(sp5.fPoly)
+{ }
+
+//____________________________________________________________________________
+TSpline5& TSpline5::operator=(const TSpline5& sp5)
+{
+  if(this!=&sp5) {
+    TSpline::operator=(sp5);
+    fPoly=sp5.fPoly;
+  } return *this;
+}
 
 //____________________________________________________________________________
 void TSpline5::BoundaryConditions(const char *opt,Int_t &beg,Int_t &end,

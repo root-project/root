@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.5 2006/05/05 16:25:59 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.6 2006/05/15 07:43:34 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -66,10 +66,6 @@ class TGLabel;
 
 class TGMsgBox : public TGTransientFrame {
 
-private:
-   TGMsgBox(const TGMsgBox&);
-   TGMsgBox& operator=(const TGMsgBox&);
-
 protected:
    TGButton            *fYes, *fNo, *fOK, *fApply;   // buttons in dialog box
    TGButton            *fRetry, *fIgnore, *fCancel;  // buttons in dialog box
@@ -81,6 +77,9 @@ protected:
    TGLayoutHints       *fL1, *fL2, *fL3, *fL4, *fL5; // layout hints
    TList               *fMsgList;                    // text (list of TGLabels)
    Int_t               *fRetCode;                    // address to store return code
+
+   TGMsgBox(const TGMsgBox&);
+   TGMsgBox& operator=(const TGMsgBox&);
 
    void PMsgBox(const char *title, const char *msg, const TGPicture *icon,
                 Int_t buttons, Int_t *ret_code, Int_t text_align);

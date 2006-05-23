@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.55 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.56 2006/05/03 13:33:23 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -96,6 +96,24 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TGraphAsymmErrors &gr)
    memcpy(fEYlow, gr.fEYlow, n);
    memcpy(fEXhigh, gr.fEXhigh, n);
    memcpy(fEYhigh, gr.fEYhigh, n);
+}
+
+//______________________________________________________________________________
+TGraphAsymmErrors& TGraphAsymmErrors::operator=(const TGraphAsymmErrors &gr)
+{
+
+   // TGraphAsymmErrors equal operator 
+   
+  if(this!=&gr) {
+    TGraph::operator=(gr);
+    if (!CtorAllocate()) return *this;
+    Int_t n = fNpoints*sizeof(Double_t);
+    memcpy(fEXlow, gr.fEXlow, n);
+    memcpy(fEYlow, gr.fEYlow, n);
+    memcpy(fEXhigh, gr.fEXhigh, n);
+    memcpy(fEYhigh, gr.fEYhigh, n);
+  }
+  return *this;
 }
 
 //______________________________________________________________________________

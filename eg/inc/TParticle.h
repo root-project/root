@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.14 2006/03/06 21:50:09 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.15 2006/05/15 07:27:03 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 #endif
 
 class TParticle : public TObject, public TAttLine, public TAtt3D {
+
 
 protected:
 
@@ -90,6 +91,7 @@ public:
 
    virtual ~TParticle();
 
+   TParticle& operator=(const TParticle&);
 
 //   virtual TString* Name   () const { return fName.Data(); }
 //   virtual char*  GetName()   const { return fName.Data(); }

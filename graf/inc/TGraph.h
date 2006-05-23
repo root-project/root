@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.52 2006/04/06 13:45:26 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.53 2006/05/03 13:33:23 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -78,6 +78,7 @@ public:
    TGraph(Int_t n, const Float_t *x, const Float_t *y);
    TGraph(Int_t n, const Double_t *x, const Double_t *y);
    TGraph(const TGraph &gr);
+   TGraph& operator=(const TGraph&);
    TGraph(const TVectorF &vx, const TVectorF &vy);
    TGraph(const TVectorD &vx, const TVectorD &vy);
    TGraph(const TH1 *h);

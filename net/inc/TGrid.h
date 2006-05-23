@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.15 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.16 2006/02/03 14:50:25 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -53,7 +53,7 @@ protected:
    Int_t          fPort;    // port to which we are connected
 
 public:
-   TGrid() : fPort(-1) { }
+   TGrid() : fGridUrl(), fGrid(), fHost(), fUser(), fPw(), fOptions(), fPort(-1) { }
    virtual ~TGrid() { }
 
    const char    *GridUrl() const { return fGridUrl; }

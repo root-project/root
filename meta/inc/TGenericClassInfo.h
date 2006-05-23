@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.7 2005/05/27 03:00:05 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.8 2005/05/27 16:42:58 pcanal Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -101,9 +101,14 @@ namespace ROOT {
       Short_t              SetStreamer(ClassStreamerFunc_t);
       Short_t              SetVersion(Short_t version);
 
+      //   protected:
+   private:
+      TGenericClassInfo(const TGenericClassInfo&); // Not implemented
+      TGenericClassInfo& operator=(const TGenericClassInfo&); // Not implemented
+      
    private:
       TGenericClassInfo(); 
-      
+
    };
 
 }

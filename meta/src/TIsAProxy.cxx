@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TIsAProxy.cxx,v 1.2 2005/05/30 10:31:15 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TIsAProxy.cxx,v 1.3 2005/09/03 00:48:25 pcanal Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -53,6 +53,36 @@ TIsAProxy::TIsAProxy(const std::type_info& typ, void* ctxt)
          "Classmap size is badly adjusted: it needs %d instead of %d bytes.",
          sizeof(ClassMap_t), sizeof(fSubTypes));
    }
+}
+
+//______________________________________________________________________________
+TIsAProxy::TIsAProxy(const TIsAProxy& iap) :
+  TVirtualIsAProxy(iap),
+  fType(iap.fType),
+  fLastType(iap.fLastType),
+  fClass(iap.fClass),
+  fLastClass(iap.fLastClass),
+  fVirtual(iap.fVirtual),
+  fContext(iap.fContext),
+  fInit(iap.fInit)
+{
+  for(Int_t i=0; i<72; i++) fSubTypes[i]=iap.fSubTypes[i];
+}
+
+//______________________________________________________________________________
+TIsAProxy& TIsAProxy::operator=(const TIsAProxy& iap)
+{
+  if(this!=&iap) {
+    TVirtualIsAProxy::operator=(iap);
+    fType=iap.fType;
+    fLastType=iap.fLastType;
+    fClass=iap.fClass;
+    fLastClass=iap.fLastClass;
+    for(Int_t i=0; i<72; i++) fSubTypes[i]=iap.fSubTypes[i];
+    fVirtual=iap.fVirtual;
+    fContext=iap.fContext;
+    fInit=iap.fInit;
+  } return *this;
 }
 
 //______________________________________________________________________________

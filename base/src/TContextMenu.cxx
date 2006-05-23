@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.12 2005/11/24 23:30:05 rdm Exp $
+// @(#)root/base:$Name: v5-11-02 $:$Id: TContextMenu.cxx,v 1.13 2006/03/20 21:43:41 pcanal Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -62,6 +62,35 @@ TContextMenu::TContextMenu(const char *name, const char *title)
    fSelectedMenuItem = 0;
 
    fContextMenuImp = gGuiFactory->CreateContextMenuImp(this, name, title);
+}
+
+//______________________________________________________________________________
+TContextMenu::TContextMenu(const TContextMenu& cm) :
+  TNamed(cm),
+  fContextMenuImp(cm.fContextMenuImp),
+  fSelectedMethod(cm.fSelectedMethod),
+  fSelectedObject(cm.fSelectedObject),
+  fCalledObject(cm.fCalledObject),
+  fSelectedMenuItem(cm.fSelectedMenuItem),
+  fSelectedCanvas(cm.fSelectedCanvas),
+  fSelectedPad(cm.fSelectedPad),
+  fBrowser(cm.fBrowser)
+{ }
+
+//______________________________________________________________________________
+TContextMenu& TContextMenu::operator=(const TContextMenu& cm)
+{
+  if(this!=&cm) {
+    TNamed::operator=(cm);
+    fContextMenuImp=cm.fContextMenuImp;
+    fSelectedMethod=cm.fSelectedMethod;
+    fSelectedObject=cm.fSelectedObject;
+    fCalledObject=cm.fCalledObject;
+    fSelectedMenuItem=cm.fSelectedMenuItem;
+    fSelectedCanvas=cm.fSelectedCanvas;
+    fSelectedPad=cm.fSelectedPad;
+    fBrowser=cm.fBrowser;
+  } return *this;
 }
 
 //______________________________________________________________________________

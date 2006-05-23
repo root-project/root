@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.8 2005/01/03 10:49:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.9 2006/05/17 09:37:20 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -38,6 +38,8 @@ protected:
    Double_t   *fX;            //[fN] Array of X coordinates
    Double_t   *fY;            //[fN] Array of Y coordinates
    TString     fOption;       //options
+
+   TPolyMarker& operator=(const TPolyMarker&);
 
 public:
    TPolyMarker();

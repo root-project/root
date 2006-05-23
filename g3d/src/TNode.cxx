@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.28 2005/10/12 14:55:09 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.29 2005/11/24 17:28:07 couet Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -169,6 +169,42 @@ TNode::TNode(const char *name, const char *title, TShape *shape, Double_t x, Dou
 
 }
 
+//______________________________________________________________________________
+TNode::TNode(const TNode& no) :
+  TNamed(no),
+  TAttLine(no),
+  TAttFill(no),
+  TAtt3D(no),
+  fX(no.fX),
+  fY(no.fY),
+  fZ(no.fZ),
+  fMatrix(no.fMatrix),
+  fShape(no.fShape),
+  fParent(no.fParent),
+  fNodes(no.fNodes),
+  fOption(no.fOption),
+  fVisibility(no.fVisibility)
+{ }
+
+//______________________________________________________________________________
+TNode& TNode::operator=(const TNode& no)
+{
+  if(this!=&no) {
+    TNamed::operator=(no);
+    TAttLine::operator=(no);
+    TAttFill::operator=(no);
+    TAtt3D::operator=(no);
+    fX=no.fX;
+    fY=no.fY;
+    fZ=no.fZ;
+    fMatrix=no.fMatrix;
+    fShape=no.fShape;
+    fParent=no.fParent;
+    fNodes=no.fNodes;
+    fOption=no.fOption;
+    fVisibility=no.fVisibility;
+  } return *this;
+}
 
 //______________________________________________________________________________
 TNode::~TNode()

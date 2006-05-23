@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.11 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name: v5-11-02 $:$Id: TGeoPatternFinder.h,v 1.12 2006/04/03 16:19:31 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -30,7 +30,6 @@
  *   a division type
  *************************************************************************/
 
-
 class TGeoPatternFinder : public TObject
 {
 protected :
@@ -42,6 +41,9 @@ protected :
    Int_t               fDivIndex;       // index of first div. node
    TGeoMatrix         *fMatrix;         // generic matrix
    TGeoVolume         *fVolume;         // volume to which applies
+
+   TGeoPatternFinder(const TGeoPatternFinder&); 
+   TGeoPatternFinder& operator=(const TGeoPatternFinder&);
 
 public:
    // constructors
@@ -285,6 +287,14 @@ class TGeoPatternCylPhi : public TGeoPatternFinder
 private :
 // data members
    Double_t           *fSinCos;          //![2*fNdivisions] table of sines/cosines
+
+protected:
+   TGeoPatternCylPhi(const TGeoPatternCylPhi& pfc) 
+     : TGeoPatternFinder(pfc), fSinCos(pfc.fSinCos) { }
+   TGeoPatternCylPhi& operator=(const TGeoPatternCylPhi& pfc)
+     {if(this!=&pfc) {TGeoPatternFinder::operator=(pfc); fSinCos=pfc.fSinCos;}
+     return *this;}
+
 public:
    // constructors
    TGeoPatternCylPhi();
@@ -388,6 +398,10 @@ private :
    Int_t               fAxisOnRows;             // axis along each row
    Int_t              *fNdivisions;             // [fNrows] number of divisions for each row
    Double_t           *fStart;                  // [fNrows] starting points for each row
+
+protected:
+   TGeoPatternHoneycomb(const TGeoPatternHoneycomb&);
+   TGeoPatternHoneycomb& operator=(const TGeoPatternHoneycomb&);
 
 public:
    // constructors

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.26 2005/05/20 13:27:16 brun Exp $
+// @(#)root/g3d:$Name: v5-11-02 $:$Id: TPolyMarker3D.cxx,v 1.27 2006/03/20 21:43:41 pcanal Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -145,6 +145,22 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker,
       fLastPoint = fN-1;
    } else
       memset(fP,0,kDimension*fN*sizeof(Float_t));
+}
+
+//______________________________________________________________________________
+TPolyMarker3D& TPolyMarker3D::operator=(const TPolyMarker3D& tp3)
+{
+  if(this!=&tp3) {
+    TObject::operator=(tp3);
+    TAttMarker::operator=(tp3);
+    TAtt3D::operator=(tp3);
+    fN=tp3.fN;
+    fP=tp3.fP;
+    fOption=tp3.fOption;
+    fGLList=tp3.fGLList;
+    fLastPoint=tp3.fLastPoint;
+    fName=tp3.fName;
+  } return *this;
 }
 
 //______________________________________________________________________________

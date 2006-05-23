@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.15 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name: v5-11-02 $:$Id: TLeaf.cxx,v 1.16 2006/03/20 21:43:44 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -74,6 +74,35 @@ TLeaf::TLeaf(const char *name, const char *)
       SetName(newname);
    }
    fBranch     = gBranch;
+}
+
+//______________________________________________________________________________
+TLeaf::TLeaf(const TLeaf& lf) : 
+  TNamed(lf),
+  fNdata(lf.fNdata),
+  fLen(lf.fLen),
+  fLenType(lf.fLenType),
+  fOffset(lf.fOffset),
+  fIsRange(lf.fIsRange),
+  fIsUnsigned(lf.fIsUnsigned),
+  fLeafCount(lf.fLeafCount),
+  fBranch(lf.fBranch)
+{ }
+
+//______________________________________________________________________________
+TLeaf& TLeaf::operator=(const TLeaf& lf) 
+{
+  if(this!=&lf) {
+    TNamed::operator=(lf);
+    fNdata=lf.fNdata;
+    fLen=lf.fLen;
+    fLenType=lf.fLenType;
+    fOffset=lf.fOffset;
+    fIsRange=lf.fIsRange;
+    fIsUnsigned=lf.fIsUnsigned;
+    fLeafCount=lf.fLeafCount;
+    fBranch=lf.fBranch;
+  } return *this;
 }
 
 //______________________________________________________________________________

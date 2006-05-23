@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.22 2006/04/13 13:54:21 antcheva Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGNumberEntry.cxx,v 1.23 2006/04/13 15:32:35 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1955,6 +1955,41 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
    MapSubwindows();
    Resize(w, h);
    fEditDisabled = kEditDisableLayout | kEditDisableHeight;
+}
+
+//______________________________________________________________________________
+TGNumberEntry::TGNumberEntry(const TGNumberEntry& ne) : 
+  TGCompositeFrame(ne),
+  TGWidget(ne),
+  TGNumberFormat(ne),
+  fNumStyle(ne.fNumStyle),
+  fNumAttr(ne.fNumAttr),
+  fNumLimits(ne.fNumLimits),
+  fPicUp(ne.fPicUp),
+  fPicDown(ne.fPicDown),
+  fNumericEntry(ne.fNumericEntry),
+  fButtonUp(ne.fButtonUp),
+  fButtonDown(ne.fButtonDown),
+  fButtonToNum(ne.fButtonToNum)
+{ }
+
+//______________________________________________________________________________
+TGNumberEntry& TGNumberEntry::operator=(const TGNumberEntry& ne) 
+{ 
+  if(this!=&ne) {
+    TGCompositeFrame::operator=(ne);
+    TGWidget::operator=(ne);
+    TGNumberFormat::operator=(ne);
+    fNumStyle=ne.fNumStyle;
+    fNumAttr=ne.fNumAttr;
+    fNumLimits=ne.fNumLimits;
+    fPicUp=ne.fPicUp;
+    fPicDown=ne.fPicDown;
+    fNumericEntry=ne.fNumericEntry;
+    fButtonUp=ne.fButtonUp;
+    fButtonDown=ne.fButtonDown;
+    fButtonToNum=ne.fButtonToNum;
+  } return *this;
 }
 
 //______________________________________________________________________________

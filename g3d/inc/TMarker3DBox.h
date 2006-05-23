@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.h,v 1.7 2005/11/24 17:28:06 couet Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.h,v 1.8 2005/12/12 15:28:32 brun Exp $
 // Author: "Valery fine"   31/10/97
 
 /*************************************************************************
@@ -44,7 +44,6 @@ class TH1;
 
 class TMarker3DBox : public TObject, public TAttLine, public TAttFill,
                      public TAtt3D {
-
 protected:
    Float_t  fX;               // X coordinate of center of box
    Float_t  fY;               // Y coordinate of center of box
@@ -56,6 +55,9 @@ protected:
    Float_t  fTheta;           // Angle of box z axis with respect to main Z axis
    Float_t  fPhi;             // Angle of box x axis with respect to main Xaxis
    TObject *fRefObject;       // Pointer to an object
+
+   TMarker3DBox(const TMarker3DBox&); 
+   TMarker3DBox& operator=(const TMarker3DBox&);
 
    enum { kTemporary = BIT(23) }; // Use TObject::fBits to record if we are temporary
 

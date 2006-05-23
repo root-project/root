@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.12 2005/09/05 14:21:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.13 2006/05/12 12:25:45 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -41,9 +41,6 @@ class TBrowserTimer;
 class TBrowser : public TNamed {
 
 private:
-   TBrowser(const TBrowser&);
-   TBrowser& operator=(const TBrowser&);
-
    TObject       *fLastSelectedObject; //!The last TObject selected by user
 
 protected:
@@ -51,6 +48,9 @@ protected:
    TBrowserTimer *fTimer;              //!Browser's timer
    TContextMenu  *fContextMenu;        //!Context menu pointer
    Bool_t         fNeedRefresh;        //True if the browser needs refresh
+
+   TBrowser(const TBrowser&);
+   TBrowser& operator=(const TBrowser&);
 
 public:
    enum {

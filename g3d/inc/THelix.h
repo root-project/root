@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.h,v 1.6 2005/03/09 18:19:25 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.h,v 1.7 2005/11/24 17:28:06 couet Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -50,6 +50,8 @@ protected:
    Double_t     fAxis[3];  //Direction unit vector of the helix axis
    TRotMatrix  *fRotMat;   //Rotation matrix: axis // z  -->  axis // fAxis
    Double_t     fRange[2]; //Range of helix parameter t
+
+   THelix& operator=(const THelix&);
 
    void         SetRotMatrix();    //Set rotation matrix
    Double_t     FindClosestPhase(Double_t phi0,  Double_t cosine);

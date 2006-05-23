@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.72 2006/05/14 10:23:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.73 2006/05/15 11:01:14 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -130,9 +130,6 @@ enum EMWMHints {
 
 class TGFrame : public TGWindow, public TQObject {
 
-private:
-   TGFrame& operator=(const TGFrame&);
-
 protected:
    Int_t    fX;             // frame x position
    Int_t    fY;             // frame y position
@@ -193,12 +190,9 @@ public:
    TGFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
            UInt_t options = 0, Pixel_t back = GetDefaultFrameBackground());
    TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
+   TGFrame(const TGFrame& tgf);
 
-   TGFrame(const TGFrame& tgf): TGWindow(tgf), TQObject(tgf), fX(tgf.fX), fY(tgf.fY),
-      fWidth(tgf.fWidth), fHeight(tgf.fHeight), fMinWidth(tgf.fMinWidth),
-      fMinHeight(tgf.fMinHeight), fMaxWidth(tgf.fMaxWidth), fMaxHeight(tgf.fMaxHeight),
-      fBorderWidth(tgf.fBorderWidth), fOptions(tgf.fOptions), fBackground(tgf.fBackground),
-      fEventMask(tgf.fEventMask), fFE(tgf.fFE) { }
+   TGFrame& operator=(const TGFrame&);
 
    virtual ~TGFrame();
    virtual void DeleteWindow();
@@ -333,8 +327,6 @@ public:
 
 class TGCompositeFrame : public TGFrame {
 
-private:
-   TGCompositeFrame& operator=(const TGCompositeFrame&);
 
 protected:
    TGLayoutManager *fLayoutManager;   // layout manager
@@ -351,12 +343,11 @@ public:
                     UInt_t options = 0,
                     Pixel_t back = GetDefaultFrameBackground());
    TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
-   TGCompositeFrame(const TGCompositeFrame& tcf): TGFrame(tcf),
-      fLayoutManager(tcf.fLayoutManager), fList(tcf.fList),
-      fLayoutBroken(tcf.fLayoutBroken), fMustCleanup(tcf.fMustCleanup),
-      fMapSubwindows(tcf.fMapSubwindows) { }
+   TGCompositeFrame(const TGCompositeFrame&);
 
    virtual ~TGCompositeFrame();
+   TGCompositeFrame& operator=(const TGCompositeFrame&);
+
    virtual TList *GetList() const { return fList; }
 
    virtual UInt_t GetDefaultWidth() const
@@ -453,9 +444,6 @@ public:
 
 class TGMainFrame : public TGCompositeFrame {
 
-private:
-   TGMainFrame& operator=(const TGMainFrame&);
-
 protected:
    enum { kDontCallClose = BIT(14) };
 
@@ -491,6 +479,8 @@ protected:
    UInt_t        fWMHeightInc;  // WM height increments
    EInitialState fWMInitState;  // WM initial state
 
+   TGMainFrame& operator=(const TGMainFrame&);
+
    TString GetMWMvalueString() const;  //used in SaveSource()
    TString GetMWMfuncString() const;   //used in SaveSource()
    TString GetMWMinpString() const;    //used in SaveSource()
@@ -498,15 +488,7 @@ protected:
 public:
    TGMainFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kVerticalFrame);
-   TGMainFrame(const TGMainFrame& tmf): TGCompositeFrame(tmf),
-      fBindList(tmf.fBindList), fWindowName(tmf.fWindowName), fIconName(tmf.fIconName),
-      fIconPixmap(tmf.fIconPixmap), fClassName(tmf.fClassName),
-      fResourceName(tmf.fResourceName), fMWMValue(tmf.fMWMValue), fMWMFuncs(tmf.fMWMFuncs),
-      fMWMInput(tmf.fMWMInput), fWMX(tmf.fWMX), fWMY(tmf.fWMY), fWMWidth(tmf.fWMWidth),
-      fWMHeight(tmf.fWMHeight), fWMMinWidth(tmf.fWMMinWidth), fWMMinHeight(tmf.fWMMinHeight),
-      fWMMaxWidth(tmf.fWMMaxWidth), fWMMaxHeight(tmf.fWMMaxHeight),
-      fWMWidthInc(tmf.fWMWidthInc), fWMHeightInc(tmf.fWMHeightInc),
-      fWMInitState(tmf.fWMInitState) { }
+   TGMainFrame(const TGMainFrame&);
 
    virtual ~TGMainFrame();
 
@@ -564,11 +546,12 @@ public:
 
 class TGTransientFrame : public TGMainFrame {
 
-private:
-   TGTransientFrame& operator=(const TGTransientFrame&);
-
 protected:
    const TGWindow   *fMain;  // window over which to popup dialog
+
+   TGTransientFrame& operator=(const TGTransientFrame& ttf)
+     {if(this!=&ttf) {TGMainFrame::operator=(ttf); fMain=ttf.fMain;}
+     return *this;}
 
 public:
    TGTransientFrame(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,

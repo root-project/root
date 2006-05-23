@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.8 2005/11/25 09:56:35 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.9 2005/12/06 17:32:15 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -44,6 +44,29 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t id, Int_t width,
    fTab = (TGTab*)p->GetParent()->GetParent();
 
 //   gROOT->GetListOfCleanups()->Add(this);
+}
+
+//______________________________________________________________________________
+TGedFrame::TGedFrame(const TGedFrame& gf) :
+  TGCompositeFrame(gf),
+  TGWidget(gf),
+  fModel(gf.fModel),
+  fPad(gf.fPad),
+  fInit(gf.fInit),
+  fTab(gf.fTab)
+{ }
+
+//______________________________________________________________________________
+TGedFrame& TGedFrame::operator=(const TGedFrame& gf)
+{
+  if(this!=&gf) {
+    TGCompositeFrame::operator=(gf);
+    TGWidget::operator=(gf);
+    fModel=gf.fModel;
+    fPad=gf.fPad;
+    fInit=gf.fInit;
+    fTab=gf.fTab;
+  } return *this;
 }
 
 //______________________________________________________________________________
@@ -181,6 +204,25 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
    Pixel_t color;
    gClient->GetColorByName("#ff0000", color);
    fLabel->SetTextColor(color, kFALSE);
+}
+
+//______________________________________________________________________________
+TGedNameFrame::TGedNameFrame(const TGedNameFrame& nf) :
+  TGedFrame(nf),
+  fLabel(nf.fLabel),
+  f1(nf.f1),
+  f2(nf.f2)
+{ }
+
+//______________________________________________________________________________
+TGedNameFrame& TGedNameFrame::operator=(const TGedNameFrame& nf)
+{
+  if(this!=&nf) {
+    TGedFrame::operator=(nf);
+    fLabel=nf.fLabel;
+    f1=nf.f1;
+    f2=nf.f2;
+  } return *this;
 }
 
 //______________________________________________________________________________

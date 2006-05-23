@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.12 2005/11/24 17:28:07 couet Exp $
+// @(#)root/g3d:$Name: v5-11-02 $:$Id: TPCON.cxx,v 1.13 2006/03/20 21:43:41 pcanal Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -80,6 +80,36 @@ TPCON::TPCON(const char *name, const char *title, const char *material, Float_t 
    MakeTableOfCoSin();
 }
 
+//______________________________________________________________________________
+TPCON::TPCON(const TPCON& pc) :
+  TShape(pc),
+  fSiTab(pc.fSiTab),
+  fCoTab(pc.fCoTab),
+  fPhi1(pc.fPhi1),
+  fDphi1(pc.fDphi1),
+  fNdiv(pc.fNdiv),
+  fNz(pc.fNz),
+  fRmin(pc.fRmin),
+  fRmax(pc.fRmax),
+  fDz(pc.fDz)
+{ }
+
+//______________________________________________________________________________
+TPCON& TPCON::operator=(const TPCON& pc)
+{
+  if(this!=&pc) {
+    TShape::operator=(pc);
+    fSiTab=pc.fSiTab;
+    fCoTab=pc.fCoTab;
+    fPhi1=pc.fPhi1;
+    fDphi1=pc.fDphi1;
+    fNdiv=pc.fNdiv;
+    fNz=pc.fNz;
+    fRmin=pc.fRmin;
+    fRmax=pc.fRmax;
+    fDz=pc.fDz;
+  } return *this;
+}
 
 //______________________________________________________________________________
 void TPCON::MakeTableOfCoSin() const

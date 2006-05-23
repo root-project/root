@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.235 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.236 2006/05/09 10:24:26 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -104,6 +104,53 @@ TStreamerInfo::TStreamerInfo(TClass *cl, const char *info)
    fOldVersion = Class()->GetClassVersion();
 
    if (info) BuildUserInfo(info);
+}
+
+//______________________________________________________________________________
+TStreamerInfo::TStreamerInfo(const TStreamerInfo& si) :
+  TNamed(si),
+  fCheckSum(si.fCheckSum),
+  fClassVersion(si.fClassVersion),
+  fNumber(si.fNumber),
+  fNdata(si.fNdata),
+  fSize(si.fSize),
+  fType(si.fType),
+  fNewType(si.fNewType),
+  fOffset(si.fOffset),
+  fLength(si.fLength),
+  fElem(si.fElem),
+  fMethod(si.fMethod),
+  fComp(si.fComp),
+  fOptimized(si.fOptimized),
+  fClass(si.fClass),
+  fElements(si.fElements),
+  fOldVersion(si.fOldVersion),
+  fIsBuilt(si.fIsBuilt)
+{ }
+
+//______________________________________________________________________________
+TStreamerInfo& TStreamerInfo::operator=(const TStreamerInfo& si) 
+{
+  if(this!=&si) {
+    TNamed::operator=(si);
+    fCheckSum=si.fCheckSum;
+    fClassVersion=si.fClassVersion;
+    fNumber=si.fNumber;
+    fNdata=si.fNdata;
+    fSize=si.fSize;
+    fType=si.fType;
+    fNewType=si.fNewType;
+    fOffset=si.fOffset;
+    fLength=si.fLength;
+    fElem=si.fElem;
+    fMethod=si.fMethod;
+    fComp=si.fComp;
+    fOptimized=si.fOptimized;
+    fClass=si.fClass;
+    fElements=si.fElements;
+    fOldVersion=si.fOldVersion;
+    fIsBuilt=si.fIsBuilt;
+  } return *this;
 }
 
 //______________________________________________________________________________

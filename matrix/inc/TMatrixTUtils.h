@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.h,v 1.3 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.h,v 1.4 2006/05/17 06:22:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -68,7 +68,7 @@ protected:
    virtual void Operation(Element &element) const = 0;
 
 private:
-   void operator=(const TElementActionT<Element> &) { }
+   TElementActionT& operator=(const TElementActionT<Element> &) {return *this;}
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -100,7 +100,7 @@ protected:
    virtual void Operation(Element &element) const = 0;
 
 private:
-   void operator=(const TElementPosActionT<Element> &) { }
+   TElementPosActionT<Element>& operator=(const TElementPosActionT<Element> &) {return *this;}
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -123,6 +123,10 @@ public:
    TMatrixTRow_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
    TMatrixTRow_const(const TMatrixT   <Element> &matrix,Int_t row);
    TMatrixTRow_const(const TMatrixTSym<Element> &matrix,Int_t row);
+  TMatrixTRow_const(const TMatrixTRow_const<Element>& trc):
+    fMatrix(trc.fMatrix), fRowInd(trc.fRowInd), fInc(trc.fInc), fPtr(trc.fPtr) { }
+  TMatrixTRow_const<Element>& operator=(const TMatrixTRow_const<Element>& trc) {
+    fMatrix=trc.fMatrix; fRowInd=trc.fRowInd; fInc=trc.fInc; fPtr=trc.fPtr; return *this;}
    virtual ~TMatrixTRow_const() { }
 
    inline const TMatrixTBase<Element> *GetMatrix  () const { return fMatrix; }
@@ -164,7 +168,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTRow_const<Element> &r);
-   void operator=(const TMatrixTRow      <Element> &r) { operator=((TMatrixTRow_const<Element> &)r); }
+   TMatrixTRow<Element>& operator=(const TMatrixTRow      <Element> &r) { operator=((TMatrixTRow_const<Element> &)r); return *this;}
    void operator=(const TVectorT         <Element> &vec);
 
    void operator+=(const TMatrixTRow_const<Element> &r);
@@ -193,6 +197,10 @@ public:
    TMatrixTColumn_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
    TMatrixTColumn_const(const TMatrixT   <Element> &matrix,Int_t col);
    TMatrixTColumn_const(const TMatrixTSym<Element> &matrix,Int_t col);
+   TMatrixTColumn_const(const TMatrixTColumn_const<Element>& trc):
+     fMatrix(trc.fMatrix), fColInd(trc.fColInd), fInc(trc.fInc), fPtr(trc.fPtr) { }
+   TMatrixTColumn_const<Element>& operator=(const TMatrixTColumn_const<Element>& trc) {
+     fMatrix=trc.fMatrix; fColInd=trc.fColInd; fInc=trc.fInc; fPtr=trc.fPtr; return *this;}
    virtual ~TMatrixTColumn_const() { }
 
    inline const TMatrixTBase <Element> *GetMatrix  () const { return fMatrix; }
@@ -234,7 +242,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTColumn_const<Element> &c);
-   void operator=(const TMatrixTColumn      <Element> &c) { operator=((TMatrixTColumn_const<Element> &)c); }
+   TMatrixTColumn<Element>& operator=(const TMatrixTColumn      <Element> &c) { operator=((TMatrixTColumn_const<Element> &)c); return *this;}
    void operator=(const TVectorT            <Element> &vec);
 
    void operator+=(const TMatrixTColumn_const<Element> &c);
@@ -263,6 +271,10 @@ public:
    TMatrixTDiag_const() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
    TMatrixTDiag_const(const TMatrixT   <Element> &matrix);
    TMatrixTDiag_const(const TMatrixTSym<Element> &matrix);
+   TMatrixTDiag_const(const TMatrixTDiag_const<Element>& trc):
+    fMatrix(trc.fMatrix), fInc(trc.fInc), fNdiag(trc.fNdiag), fPtr(trc.fPtr) { }
+   TMatrixTDiag_const<Element>& operator=(const TMatrixTDiag_const<Element>& trc) {
+     fMatrix=trc.fMatrix; fInc=trc.fInc; fNdiag=trc.fNdiag; fPtr=trc.fPtr; return *this;}
    virtual ~TMatrixTDiag_const() { }
 
    inline const TMatrixTBase<Element> *GetMatrix() const { return fMatrix; }
@@ -300,7 +312,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTDiag_const<Element> &d);
-   void operator=(const TMatrixTDiag      <Element> &d) { operator=((TMatrixTDiag_const<Element> &)d); }
+   TMatrixTDiag<Element>& operator=(const TMatrixTDiag      <Element> &d) { operator=((TMatrixTDiag_const<Element> &)d); return *this;}
    void operator=(const TVectorT          <Element> &vec);
 
    void operator+=(const TMatrixTDiag_const<Element> &d);
@@ -328,6 +340,10 @@ public:
    TMatrixTFlat_const() { fMatrix = 0; fNelems = 0; fPtr = 0; }
    TMatrixTFlat_const(const TMatrixT   <Element> &matrix);
    TMatrixTFlat_const(const TMatrixTSym<Element> &matrix);
+   TMatrixTFlat_const(const TMatrixTFlat_const<Element>& trc):
+     fMatrix(trc.fMatrix), fNelems(trc.fNelems), fPtr(trc.fPtr) { }
+   TMatrixTFlat_const<Element>& operator=(const TMatrixTFlat_const<Element>& trc) {
+    fMatrix=trc.fMatrix; fNelems=trc.fNelems; fPtr=trc.fPtr; return *this;}
    virtual ~TMatrixTFlat_const() { }
 
    inline const TMatrixTBase<Element> *GetMatrix() const { return fMatrix; }
@@ -362,7 +378,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTFlat_const<Element> &f);
-   void operator=(const TMatrixTFlat      <Element> &f) { operator=((TMatrixTFlat_const<Element> &)f); }
+   TMatrixTFlat<Element>& operator=(const TMatrixTFlat      <Element> &f) { operator=((TMatrixTFlat_const<Element> &)f); return *this;}
    void operator=(const TVectorT          <Element> &vec);
 
    void operator+=(const TMatrixTFlat_const<Element> &f);
@@ -437,7 +453,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTSub_const<Element> &s);
-   void operator=(const TMatrixTSub      <Element> &s) { operator=((TMatrixTSub_const<Element> &)s); }
+   TMatrixTSub<Element>& operator=(const TMatrixTSub      <Element> &s) { operator=((TMatrixTSub_const<Element> &)s); return *this;}
    void operator=(const TMatrixTBase     <Element> &m);
 
    void operator+=(const TMatrixTSub_const<Element> &s);
@@ -469,6 +485,10 @@ protected:
 public:
    TMatrixTSparseRow_const() { fMatrix = 0; fRowInd = 0; fNindex = 0; fColPtr = 0; fDataPtr = 0; }
    TMatrixTSparseRow_const(const TMatrixTSparse<Element> &matrix,Int_t row);
+   TMatrixTSparseRow_const(const TMatrixTSparseRow_const<Element>& trc):
+     fMatrix(trc.fMatrix), fRowInd(trc.fRowInd), fNindex(trc.fNindex), fColPtr(trc.fColPtr), fDataPtr(trc.fDataPtr) { }
+   TMatrixTSparseRow_const<Element>& operator=(const TMatrixTSparseRow_const<Element>& trc) {
+     fMatrix=trc.fMatrix; fRowInd=trc.fRowInd; fNindex=trc.fNindex; fColPtr=trc.fColPtr; fDataPtr=trc.fDataPtr; return *this;}
    virtual ~TMatrixTSparseRow_const() { }
 
    inline const TMatrixTBase<Element> *GetMatrix  () const { return fMatrix; }
@@ -512,7 +532,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTSparseRow_const<Element> &r);
-   void operator=(const TMatrixTSparseRow      <Element> &r) { operator=((TMatrixTSparseRow_const<Element> &)r); }
+   TMatrixTSparseRow<Element>& operator=(const TMatrixTSparseRow      <Element> &r) { operator=((TMatrixTSparseRow_const<Element> &)r); return *this;}
    void operator=(const TVectorT               <Element> &vec);
 
    void operator+=(const TMatrixTSparseRow_const<Element> &r);
@@ -539,6 +559,10 @@ protected:
 public:
    TMatrixTSparseDiag_const() { fMatrix = 0; fNdiag = 0; fDataPtr = 0; }
    TMatrixTSparseDiag_const(const TMatrixTSparse<Element> &matrix);
+   TMatrixTSparseDiag_const(const TMatrixTSparseDiag_const<Element>& trc):
+     fMatrix(trc.fMatrix), fNdiag(trc.fNdiag), fDataPtr(trc.fDataPtr) { }
+   TMatrixTSparseDiag_const<Element>& operator=(const TMatrixTSparseDiag_const<Element>& trc) {
+     fMatrix=trc.fMatrix; fNdiag=trc.fNdiag; fDataPtr=trc.fDataPtr; return *this;}
    virtual ~TMatrixTSparseDiag_const() { }
 
    inline const TMatrixTBase<Element> *GetMatrix () const { return fMatrix; }
@@ -589,7 +613,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTSparseDiag_const<Element> &d);
-   void operator=(const TMatrixTSparseDiag      <Element> &d) { operator=((TMatrixTSparseDiag_const<Element> &)d); }
+   TMatrixTSparseDiag<Element>& operator=(const TMatrixTSparseDiag      <Element> &d) { operator=((TMatrixTSparseDiag_const<Element> &)d); return *this;}
    void operator=(const TVectorT                <Element> &vec);
 
    void operator+=(const TMatrixTSparseDiag_const<Element> &d);

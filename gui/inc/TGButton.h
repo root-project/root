@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.39 2006/05/14 10:23:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.40 2006/05/15 11:01:14 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -72,9 +72,6 @@ class TGButton : public TGFrame, public TGWidget {
 
 friend class TGButtonGroup;
 
-private:
-   TGButton& operator=(const TGButton&);
-
 protected:
    UInt_t         fTWidth;      // button width
    UInt_t         fTHeight;     // button height
@@ -84,6 +81,8 @@ protected:
    void          *fUserData;    // pointer to user data structure
    TGToolTip     *fTip;         // tool tip associated with button
    TGButtonGroup *fGroup;       // button group this button belongs to
+
+   TGButton& operator=(const TGButton&);
 
    virtual void   SetToggleButton(Bool_t) { }
    virtual void   EmitSignals(Bool_t wasUp);
@@ -99,9 +98,7 @@ public:
 
    TGButton(const TGWindow *p = 0, Int_t id = -1, GContext_t norm = GetDefaultGC()(),
             UInt_t option = kRaisedFrame | kDoubleBorder);
-   TGButton(const TGButton& tgb): TGFrame(tgb), TGWidget(tgb), fTWidth(tgb.fTWidth),
-      fTHeight(tgb.fTHeight), fState(tgb.fState), fStayDown(tgb.fStayDown),
-      fNormGC(tgb.fNormGC), fUserData(tgb.fUserData), fTip(tgb.fTip), fGroup(tgb.fGroup) { }
+   TGButton(const TGButton& tgb);
    virtual ~TGButton();
 
    virtual Bool_t       HandleButton(Event_t *event);
@@ -137,9 +134,6 @@ public:
 
 class TGTextButton : public TGButton {
 
-private:
-   TGTextButton& operator=(const TGTextButton&);
-
 protected:
    TGHotString   *fLabel;         // button text
    Int_t          fTMode;         // text drawing mode (ETextJustification)
@@ -148,6 +142,8 @@ protected:
    Bool_t         fHasOwnFont;    // kTRUE - font defined locally,  kFALSE - globally
 
    static const TGFont *fgDefaultFont;
+
+   TGTextButton& operator=(const TGTextButton&);
 
    void Init();
    virtual void DoRedraw();
@@ -167,9 +163,8 @@ public:
                 Int_t id = -1, GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 UInt_t option = kRaisedFrame | kDoubleBorder);
-   TGTextButton(const TGTextButton& tgt): TGButton(tgt), fLabel(tgt.fLabel),
-      fTMode(tgt.fTMode), fHKeycode(tgt.fHKeycode), fFontStruct(tgt.fFontStruct),
-      fHasOwnFont(tgt.fHasOwnFont) { }
+   TGTextButton(const TGTextButton& tgt);
+
    virtual ~TGTextButton();
 
    virtual TGDimension GetDefaultSize() const

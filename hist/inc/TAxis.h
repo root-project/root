@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.35 2006/05/16 16:50:02 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.36 2006/05/17 17:44:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -38,8 +38,6 @@
 class TAxis : public TNamed, public TAttAxis {
 
 private:
-   TAxis& operator=(const TAxis&);
-
    Int_t        fNbins;          //Number of bins
    Double_t     fXmin;           //low edge of first bin
    Double_t     fXmax;           //upper edge of last bin
@@ -51,6 +49,8 @@ private:
    TString      fTimeFormat;     //Date&time format, ex: 09/12/99 12:34:00
    TObject     *fParent;         //!Object owning this axis
    THashList   *fLabels;         //List of labels
+
+   TAxis& operator=(const TAxis&); // Not implemented
 
 public:
    // TAxis status bits

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.5 2005/06/22 20:18:12 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.6 2005/06/23 00:29:38 rdm Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -38,6 +38,25 @@ TMutex::TMutex(Bool_t recursive)
 
    if (!fMutexImp)
       Error("TMutex", "could not create TMutexImp");
+}
+
+//______________________________________________________________________________
+TMutex::TMutex(const TMutex& mu) :
+  TVirtualMutex(mu),
+  fMutexImp(mu.fMutexImp),
+  fId(mu.fId),
+  fRef(mu.fRef)
+{ }
+
+//______________________________________________________________________________
+TMutex& TMutex::operator=(const TMutex& mu)
+{
+  if(this!=&mu) {
+    TVirtualMutex::operator=(mu);
+    fMutexImp=mu.fMutexImp;
+    fId=mu.fId;
+    fRef=mu.fRef;
+  } return *this;
 }
 
 //______________________________________________________________________________

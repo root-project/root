@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.19 2005/11/15 15:13:59 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.20 2006/01/16 09:06:06 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -59,6 +59,9 @@ protected:
    TAxis     *fAxis;                //!pointer to original TAxis axis (if any)
 
    static Int_t fgMaxDigits;        //!Number of digits above which the 10>N notation is used
+
+   TGaxis(const TGaxis&); 
+   TGaxis& operator=(const TGaxis&);
 
 public:
 

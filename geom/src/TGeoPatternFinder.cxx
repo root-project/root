@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.13 2006/04/03 16:19:31 brun Exp $
+// @(#)root/geom:$Name: v5-11-02 $:$Id: TGeoPatternFinder.cxx,v 1.14 2006/04/25 09:38:27 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -57,6 +57,33 @@ TGeoPatternFinder::TGeoPatternFinder(TGeoVolume *vol, Int_t ndiv)
    fStep       = 0;
    fStart      = 0;
    fEnd        = 0;
+}
+//-----------------------------------------------------------------------------
+TGeoPatternFinder::TGeoPatternFinder(const TGeoPatternFinder& pf) :
+  TObject(pf),
+  fStep(pf.fStep),
+  fStart(pf.fStart),
+  fEnd(pf.fEnd),
+  fCurrent(pf.fCurrent),
+  fNdivisions(pf.fNdivisions),
+  fDivIndex(pf.fDivIndex),
+  fMatrix(pf.fMatrix),
+  fVolume(pf.fVolume)
+{ }
+//-----------------------------------------------------------------------------
+TGeoPatternFinder& TGeoPatternFinder::operator=(const TGeoPatternFinder& pf)
+{
+  if(this!=&pf) {
+    TObject::operator=(pf);
+    fStep=pf.fStep;
+    fStart=pf.fStart;
+    fEnd=pf.fEnd;
+    fCurrent=pf.fCurrent;
+    fNdivisions=pf.fNdivisions;
+    fDivIndex=pf.fDivIndex;
+    fMatrix=pf.fMatrix;
+    fVolume=pf.fVolume;
+  } return *this;
 }
 //-----------------------------------------------------------------------------
 TGeoPatternFinder::~TGeoPatternFinder()
@@ -982,6 +1009,25 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb(TGeoVolume *vol, Int_t nrows)
 // Default constructor
    fNrows = nrows;
 // compute everything else
+}
+//-----------------------------------------------------------------------------
+TGeoPatternHoneycomb::TGeoPatternHoneycomb(const TGeoPatternHoneycomb& pfh) :
+  TGeoPatternFinder(pfh),
+  fNrows(pfh.fNrows),
+  fAxisOnRows(pfh.fAxisOnRows),
+  fNdivisions(pfh.fNdivisions),
+  fStart(pfh.fStart)
+{ }
+//-----------------------------------------------------------------------------
+TGeoPatternHoneycomb& TGeoPatternHoneycomb::operator=(const TGeoPatternHoneycomb& pfh) 
+{
+  if(this!=&pfh) {
+    TGeoPatternFinder::operator=(pfh);
+    fNrows=pfh.fNrows;
+    fAxisOnRows=pfh.fAxisOnRows;
+    fNdivisions=pfh.fNdivisions;
+    fStart=pfh.fStart;
+  } return *this;
 }
 //-----------------------------------------------------------------------------
 TGeoPatternHoneycomb::~TGeoPatternHoneycomb()

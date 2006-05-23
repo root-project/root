@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.86 2006/05/06 13:46:41 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.87 2006/05/06 14:06:34 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -224,6 +224,57 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fTitle       = "";
    fTimeFormat  = "";
    fAxis        = 0;
+}
+
+//______________________________________________________________________________
+TGaxis::TGaxis(const TGaxis& ax) : 
+  TLine(ax),
+  TAttText(ax),
+  fWmin(ax.fWmin),
+  fWmax(ax.fWmax),
+  fGridLength(ax.fGridLength),
+  fTickSize(ax.fTickSize),
+  fLabelOffset(ax.fLabelOffset),
+  fLabelSize(ax.fLabelSize),
+  fTitleOffset(ax.fTitleOffset),
+  fTitleSize(ax.fTitleSize),
+  fNdiv(ax.fNdiv),
+  fLabelColor(ax.fLabelColor),
+  fLabelFont(ax.fLabelFont),
+  fChopt(ax.fChopt),
+  fName(ax.fName),
+  fTitle(ax.fTitle),
+  fTimeFormat(ax.fTimeFormat),
+  fFunctionName(ax.fFunctionName),
+  fFunction(ax.fFunction),
+  fAxis(ax.fAxis)
+{ }
+
+//______________________________________________________________________________
+TGaxis& TGaxis::operator=(const TGaxis& ax) 
+{
+  if(this!=&ax) {
+    TLine::operator=(ax);
+    TAttText::operator=(ax);
+    fWmin=ax.fWmin;
+    fWmax=ax.fWmax;
+    fGridLength=ax.fGridLength;
+    fTickSize=ax.fTickSize;
+    fLabelOffset=ax.fLabelOffset;
+    fLabelSize=ax.fLabelSize;
+    fTitleOffset=ax.fTitleOffset;
+    fTitleSize=ax.fTitleSize;
+    fNdiv=ax.fNdiv;
+    fLabelColor=ax.fLabelColor;
+    fLabelFont=ax.fLabelFont;
+    fChopt=ax.fChopt;
+    fName=ax.fName;
+    fTitle=ax.fTitle;
+    fTimeFormat=ax.fTimeFormat;
+    fFunctionName=ax.fFunctionName;
+    fFunction=ax.fFunction;
+    fAxis=ax.fAxis;
+  } return *this;
 }
 
 //______________________________________________________________________________

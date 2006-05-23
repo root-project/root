@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.13 2006/03/28 17:04:31 antcheva Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGToolBar.h,v 1.14 2006/04/06 11:15:38 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -47,6 +47,14 @@ protected:
    TList   *fPictures;      // list of pictures that should be freed
    TList   *fTrash;         // list of buttons and layout hints to be deleted
    TMap    *fMapOfButtons;  // map of button/id pairs in this group
+
+   TGToolBar(const TGToolBar& gtb) :
+     TGCompositeFrame(gtb), fPictures(gtb.fPictures),
+     fTrash(gtb.fTrash), fMapOfButtons(gtb.fMapOfButtons) { }
+   TGToolBar& operator=(const TGToolBar& gtb)
+     {if(this!=&gtb) {TGCompositeFrame::operator=(gtb); 
+     fPictures=gtb.fPictures; fTrash=gtb.fTrash;
+     fMapOfButtons=gtb.fMapOfButtons; } return *this;}
 
 public:
    TGToolBar(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,

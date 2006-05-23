@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.54 2006/03/28 16:35:00 brun Exp $
+// @(#)root/base:$Name: v5-11-02 $:$Id: TSystem.h,v 1.55 2006/03/29 09:21:01 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -154,7 +154,8 @@ struct UserGroup_t {
    TString  fPasswd;       // password
    TString  fRealName;     // user full name
    TString  fShell;        // user preferred shell
-   UserGroup_t() : fUid(0), fGid(0) { }
+   UserGroup_t() : fUid(0), fGid(0), fUser(), fGroup(), fPasswd(),
+       fRealName (), fShell() { }
 };
 
 typedef void* Func_t;
@@ -233,6 +234,9 @@ protected:
    TString          fLinkdefSuffix;    //Default suffix for linkdef files to be used by ACLiC
    TSeqCollection  *fCompiled;         //List of shared libs from compiled macros to be deleted
    TSeqCollection  *fHelpers;          //List of helper classes for alternative file/directory access
+
+   TSystem(const TSystem&);
+   TSystem& operator=(const TSystem&);
 
    TSystem               *FindHelper(const char *path, void *dirptr = 0);
    virtual Bool_t         ConsistentWith(const char *path, void *dirptr = 0);
@@ -430,5 +434,6 @@ public:
 
 R__EXTERN TSystem *gSystem;
 R__EXTERN TFileHandler *gXDisplay;  // Display server (X11) input event handler
+
 
 #endif

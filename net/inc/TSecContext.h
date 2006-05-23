@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.5 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.6 2006/05/16 06:28:23 brun Exp $
 // Author: G. Ganis   31/03/2003
 
 /*************************************************************************
@@ -57,6 +57,10 @@ private:
 
    virtual Bool_t  CleanupSecContext(Bool_t all);
    void         Cleanup();
+
+protected:
+   TSecContext(const TSecContext&);
+   TSecContext& operator=(const TSecContext&);
 
 public:
 

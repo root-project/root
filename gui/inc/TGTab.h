@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.17 2006/04/24 13:13:21 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.18 2006/05/15 07:43:34 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -42,13 +42,12 @@ class TGTab;
 
 class TGTabLayout : public TGLayoutManager {
 
-private:
-   TGTabLayout(const TGTabLayout&);
-   TGTabLayout& operator=(const TGTabLayout&);
-
 protected:
    TGTab    *fMain;      // container frame
    TList    *fList;      // list of frames to arrange
+
+   TGTabLayout(const TGTabLayout&);
+   TGTabLayout& operator=(const TGTabLayout&);
 
 public:
    TGTabLayout(TGTab *main);
@@ -64,10 +63,6 @@ public:
 
 class TGTab : public TGCompositeFrame, public TGWidget {
 
-private:
-   TGTab(const TGTab&);
-   TGTab& operator=(const TGTab&);
-
 protected:
    Int_t               fCurrent;        // index of current tab
    UInt_t              fTabh;           // tab height
@@ -75,6 +70,9 @@ protected:
    TList              *fRemoved;        // list of removed tabs
    FontStruct_t        fFontStruct;     // font
    GContext_t          fNormGC;         // drawing context
+
+   TGTab(const TGTab&);
+   TGTab& operator=(const TGTab&);
 
    void ChangeTab(Int_t tabIndex);
 
@@ -126,10 +124,6 @@ public:
 
 class TGTabElement : public TGFrame {
 
-private:
-   TGTabElement(const TGTabElement&);
-   TGTabElement& operator=(const TGTabElement&);
-
 protected:
    TGString        *fText;            // text on tab
    GContext_t       fNormGC;          // graphics context for drawing tab
@@ -137,6 +131,9 @@ protected:
    UInt_t           fTWidth;          // width of tab text
    UInt_t           fTHeight;         // height of tab text
    Bool_t           fEnabled;         // enabled or disabled
+
+   TGTabElement(const TGTabElement&);
+   TGTabElement& operator=(const TGTabElement&);
 
 public:
    TGTabElement(const TGWindow *p = 0, TGString *text = 0, UInt_t w = 1, UInt_t h = 1,

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.11 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.12 2006/02/20 11:02:19 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -46,6 +46,23 @@ TGLDrawable::TGLDrawable(ULong_t ID, Bool_t cached) :
    // Construct GL drawable object, with 'ID'. Bool 'DLCache'
    // indicates if draws should be captured to the display list cache
    // singleton (TGLDisplayListCache).
+}
+
+//______________________________________________________________________________
+TGLDrawable::TGLDrawable(const TGLDrawable& gld) : 
+  fID(gld.fID),
+  fCached(gld.fCached),
+  fBoundingBox(gld.fBoundingBox)
+{ }
+
+//______________________________________________________________________________
+const TGLDrawable& TGLDrawable::operator=(const TGLDrawable& gld) 
+{
+  if(this!=&gld) {
+    fID=gld.fID;
+    fCached=gld.fCached;
+    fBoundingBox=gld.fBoundingBox;
+  } return *this;
 }
 
 //______________________________________________________________________________

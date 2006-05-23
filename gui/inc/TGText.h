@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.7 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.8 2006/05/15 07:43:34 brun Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -36,15 +36,14 @@ class TGTextLine {
 
 friend class TGText;
 
-private:
-   TGTextLine(const TGTextLine&);
-   TGTextLine& operator=(const TGTextLine&);
-
 protected:
    char         *fString;   // line of text
    ULong_t       fLength;   // lenght of line
    TGTextLine   *fPrev;     // previous line
    TGTextLine   *fNext;     // next line
+
+   TGTextLine(const TGTextLine&);
+   TGTextLine& operator=(const TGTextLine&);
 
 public:
    TGTextLine();
@@ -70,10 +69,6 @@ public:
 
 class TGText {
 
-private:
-   TGText(const TGText&);
-   TGText& operator=(const TGText&);
-
 protected:
    TString      fFilename;       // name of opened file ("" if open buffer)
    Bool_t       fIsSaved;        // false if text needs to be saved
@@ -83,6 +78,9 @@ protected:
    Long_t       fRowCount;       // number of rows
    Long_t       fColCount;       // number of columns in current line
    Long_t       fLongestLine;    // length of longest line
+
+   TGText(const TGText&);
+   TGText& operator=(const TGText&);
 
    void     Init();
    Bool_t   SetCurrentRow(Long_t row);

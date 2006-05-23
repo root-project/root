@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.7 2006/05/15 07:43:33 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.8 2006/05/15 09:41:12 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -40,11 +40,9 @@ protected:
 
    virtual void DoRedraw();
 
-private:
-   TGIcon& operator=(const TGIcon&);
-
 protected:
    TGIcon(const TGIcon &p);
+   TGIcon& operator=(const TGIcon&);
 
 public:
    TGIcon(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,

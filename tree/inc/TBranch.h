@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name: v5-11-02 $:$Id: TBranch.h,v 1.30 2006/04/17 21:21:59 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.31 2006/05/12 12:24:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -58,10 +58,6 @@ class TClonesArray;
 
 class TBranch : public TNamed , public TAttFill {
 
-private:
-   TBranch(const TBranch&);   
-   TBranch& operator=(const TBranch&);
-
 protected:
    // TBranch status bits
    enum { kAutoDelete = BIT(15) };
@@ -97,6 +93,10 @@ protected:
    TList      *fBrowsables;      //! List of TVirtualBranchBrowsables used for Browse()
 
    Bool_t      fSkipZip;         //!After being read, the buffer will not be unziped.
+
+   TBranch(const TBranch&);   
+   TBranch& operator=(const TBranch&);
+
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
 
 public:

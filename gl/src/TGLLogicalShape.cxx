@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.10 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gl:$Name: v5-11-02 $:$Id: TGLLogicalShape.cxx,v 1.11 2006/04/19 10:58:47 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 //////////////////////////////////////////////////////////////////////////
@@ -60,6 +60,25 @@ TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
    // otherwise use the raw points to generate one
       fBoundingBox.SetAligned(buffer.NbPnts(), buffer.fPnts);
    }
+}
+
+//______________________________________________________________________________
+TGLLogicalShape::TGLLogicalShape(const TGLLogicalShape& gls) :
+  TGLDrawable(gls),
+  fRef(gls.fRef),
+  fRefStrong(gls.fRefStrong),
+  fExternalObj(gls.fExternalObj)
+{ }
+
+//______________________________________________________________________________
+TGLLogicalShape& TGLLogicalShape::operator=(const TGLLogicalShape& gls)
+{
+  if(this!=&gls) {
+    TGLDrawable::operator=(gls);
+    fRef=gls.fRef;
+    fRefStrong=gls.fRefStrong;
+    fExternalObj=gls.fExternalObj;
+  } return *this;
 }
 
 //______________________________________________________________________________

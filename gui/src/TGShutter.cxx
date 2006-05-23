@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.11 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGShutter.cxx,v 1.12 2006/03/28 17:08:39 antcheva Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -43,6 +43,34 @@ TGShutter::TGShutter(const TGWindow *p, UInt_t options) :
    fClosingHadScrollbar = kFALSE;
    fTimer               = 0;
    fTrash               = new TList;
+}
+
+
+//______________________________________________________________________________
+TGShutter::TGShutter(const TGShutter& sh) :
+  TGCompositeFrame(sh),
+  fTimer(sh.fTimer),
+  fSelectedItem(sh.fSelectedItem),
+  fClosingItem(sh.fClosingItem),
+  fTrash(sh.fTrash),
+  fHeightIncrement(sh.fHeightIncrement),
+  fClosingHeight(sh.fClosingHeight),
+  fClosingHadScrollbar(sh.fClosingHadScrollbar)
+{ }
+
+//______________________________________________________________________________
+TGShutter& TGShutter::operator=(const TGShutter& sh) 
+{
+  if(this!=&sh) {
+    TGCompositeFrame::operator=(sh);
+    fTimer=sh.fTimer;
+    fSelectedItem=sh.fSelectedItem;
+    fClosingItem=sh.fClosingItem;
+    fTrash=sh.fTrash;
+    fHeightIncrement=sh.fHeightIncrement;
+    fClosingHeight=sh.fClosingHeight;
+    fClosingHadScrollbar=sh.fClosingHadScrollbar;
+  } return *this;
 }
 
 //______________________________________________________________________________
@@ -229,6 +257,31 @@ TGShutterItem::TGShutterItem(const TGWindow *p, TGHotString *s, Int_t id,
    AddFrame(fCanvas, fL2 = new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
    fButton->Associate((TGFrame *) p);
+}
+
+//______________________________________________________________________________
+TGShutterItem::TGShutterItem(const TGShutterItem& si) :
+  TGVerticalFrame(si),
+  TGWidget(si),
+  fButton(si.fButton),
+  fCanvas(si.fCanvas),
+  fContainer(si.fContainer),
+  fL1(si.fL1),
+  fL2(si.fL2)
+{ }
+
+//______________________________________________________________________________
+TGShutterItem& TGShutterItem::operator=(const TGShutterItem& si) 
+{
+  if(this!=&si) {
+    TGVerticalFrame::operator=(si);
+    TGWidget::operator=(si);
+    fButton=si.fButton;
+    fCanvas=si.fCanvas;
+    fContainer=si.fContainer;
+    fL1=si.fL1;
+    fL2=si.fL2;
+  } return *this;
 }
 
 //______________________________________________________________________________

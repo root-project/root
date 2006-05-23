@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.13 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.14 2005/12/13 16:58:07 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -75,6 +75,9 @@ protected:
                                     // generates GraphicsExposure events
    Bool_t            fReadOnly;     //
 
+   TGView(const TGView&); 
+   TGView& operator=(const TGView&); 
+
 public:
    TGView(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
           UInt_t xMargin = 0, UInt_t yMargin = 0,
@@ -143,6 +146,14 @@ inline Long_t TGView::ReturnLineLength(Long_t) { return 0; }
 class TGViewFrame : public TGCompositeFrame {
 private:
    TGView   *fView;  // pointer back to the view
+
+protected:
+   TGViewFrame(const TGViewFrame& vf) :
+     TGCompositeFrame(vf), fView(vf.fView) {}
+   TGViewFrame& operator=(const TGViewFrame& vf) 
+     {if(this!=&vf) { TGCompositeFrame::operator=(vf);
+     fView=vf.fView;} return *this;}
+
 public:
    TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options = 0,
                Pixel_t back = GetWhitePixel());
@@ -173,8 +184,16 @@ public:
 class TViewTimer : public TTimer {
 private:
    TGView   *fView;
+
+protected:
+   TViewTimer(const TViewTimer& vt) :
+     TTimer(vt), fView(vt.fView) { }
+   TViewTimer& operator=(const TViewTimer& vt)
+     {if(this!=&vt) { TTimer::operator=(vt); fView=vt.fView; }
+     return *this; }
+
 public:
-   TViewTimer(TGView *t, Long_t ms) : TTimer(ms, kTRUE) { fView = t; }
+   TViewTimer(TGView *t, Long_t ms) : TTimer(ms, kTRUE), fView(t) { }
    Bool_t Notify();
 };
 

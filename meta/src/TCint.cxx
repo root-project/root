@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.119 2006/04/06 17:25:08 pcanal Exp $
+// @(#)root/meta:$Name: v5-11-02 $:$Id: TCint.cxx,v 1.120 2006/04/13 22:14:08 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -124,6 +124,35 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
 
    // Make sure that ALL macros are seen as C++.
    G__LockCpp();
+}
+
+//______________________________________________________________________________
+TCint::TCint(const TCint& ci) :
+  TInterpreter(ci),
+  fMore(ci.fMore),
+  fExitCode(ci.fExitCode),
+  fDictPos(ci.fDictPos),
+  fDictPosGlobals(ci.fDictPosGlobals),
+  fSharedLibs(ci.fSharedLibs),
+  fIncludePath(ci.fIncludePath),
+  fMapfile(ci.fMapfile)
+{ strncpy(fPrompt,ci.fPrompt,64); }
+
+
+//______________________________________________________________________________
+TCint& TCint::operator=(const TCint& ci) 
+{
+  if(this!=&ci) {
+    TInterpreter::operator=(ci);
+    fMore=ci.fMore;
+    fExitCode=ci.fExitCode;
+    strncpy(fPrompt,ci.fPrompt,64); 
+    fDictPos=ci.fDictPos;
+    fDictPosGlobals=ci.fDictPosGlobals;
+    fSharedLibs=ci.fSharedLibs;
+    fIncludePath=ci.fIncludePath;
+    fMapfile=ci.fMapfile;
+  } return *this;
 }
 
 //______________________________________________________________________________

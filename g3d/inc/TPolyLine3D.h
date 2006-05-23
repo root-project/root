@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.7 2004/08/03 16:01:17 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.8 2005/11/24 17:28:06 couet Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -55,6 +55,7 @@ public:
    TPolyLine3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *option="");
    TPolyLine3D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *option="");
    TPolyLine3D(const TPolyLine3D &polylin);
+   TPolyLine3D& operator=(const TPolyLine3D &polylin);
    virtual ~TPolyLine3D();
 
    virtual void      Copy(TObject &polyline) const;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.h,v 1.4 2004/04/20 09:27:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.h,v 1.5 2004/12/15 16:04:56 rdm Exp $
 // Author: Fons Rademakers   16/09/95
 
 /*************************************************************************
@@ -73,7 +73,7 @@ protected:
    int  fMask;        //Event interest mask, either bit 1 (read), 2 (write) or both can be set
    int  fReadyMask;   //Readiness mask, either bit 1 (read), 2 (write) or both can be set
 
-   TFileHandler() { fFileNum = -1; }
+   TFileHandler(): fFileNum(-1), fMask(0), fReadyMask(0) { }
 
 public:
    enum { kRead = 1, kWrite = 2 };
@@ -134,7 +134,7 @@ protected:
    Bool_t      fSync;     //Synchronous or a-synchronous signal
    Int_t       fDelay;    //Delay handling of signal (use fDelay in Notify())
 
-   TSignalHandler() { fSignal = (ESignals)-1; fDelay = 0; }
+   TSignalHandler(): fSignal((ESignals)-1), fSync(kTRUE), fDelay(0) { }
 
 public:
    TSignalHandler(ESignals sig, Bool_t sync = kTRUE);

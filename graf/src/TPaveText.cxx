@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.22 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name: v5-11-02 $:$Id: TPaveText.cxx,v 1.23 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -96,6 +96,18 @@ TPaveText::TPaveText(const TPaveText &pavetext) : TPave(), TAttText()
    Streamer(b);
 }
 
+//______________________________________________________________________________
+TPaveText& TPaveText::operator=(const TPaveText& pt)
+{
+  if(this!=&pt) {
+    TPave::operator=(pt);
+    TAttText::operator=(pt);
+    fLabel=pt.fLabel;
+    fLongest=pt.fLongest;
+    fMargin=pt.fMargin;
+    fLines=pt.fLines;
+  } return *this;
+}
 
 //______________________________________________________________________________
 TBox *TPaveText::AddBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)

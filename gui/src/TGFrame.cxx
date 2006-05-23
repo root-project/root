@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.129 2006/05/17 08:09:42 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.130 2006/05/18 16:32:01 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -216,6 +216,47 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fFE          = 0;
 
    SetWindowName();
+}
+
+//______________________________________________________________________________
+TGFrame::TGFrame(const TGFrame& tgf) :
+  TGWindow(tgf),
+  TQObject(tgf),
+  fX(tgf.fX),
+  fY(tgf.fY),
+  fWidth(tgf.fWidth),
+  fHeight(tgf.fHeight),
+  fMinWidth(tgf.fMinWidth),
+  fMinHeight(tgf.fMinHeight),
+  fMaxWidth(tgf.fMaxWidth),
+  fMaxHeight(tgf.fMaxHeight),
+  fBorderWidth(tgf.fBorderWidth),
+  fOptions(tgf.fOptions),
+  fBackground(tgf.fBackground),
+  fEventMask(tgf.fEventMask),
+  fFE(tgf.fFE) 
+{ }
+
+//______________________________________________________________________________
+TGFrame& TGFrame::operator=(const TGFrame& tgf)
+{
+  if(this!=&tgf) {
+    TGWindow::operator=(tgf);
+    TQObject::operator=(tgf);
+    fX=tgf.fX;
+    fY=tgf.fY;
+    fWidth=tgf.fWidth;
+    fHeight=tgf.fHeight;
+    fMinWidth=tgf.fMinWidth;
+    fMinHeight=tgf.fMinHeight;
+    fMaxWidth=tgf.fMaxWidth;
+    fMaxHeight=tgf.fMaxHeight;
+    fBorderWidth=tgf.fBorderWidth;
+    fOptions=tgf.fOptions;
+    fBackground=tgf.fBackground;
+    fEventMask=tgf.fEventMask;
+    fFE=tgf.fFE;
+  } return *this;
 }
 
 //______________________________________________________________________________
@@ -823,6 +864,29 @@ TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *par
 }
 
 //______________________________________________________________________________
+TGCompositeFrame::TGCompositeFrame(const TGCompositeFrame& tcf) :
+  TGFrame(tcf),
+  fLayoutManager(tcf.fLayoutManager),
+  fList(tcf.fList),
+  fLayoutBroken(tcf.fLayoutBroken),
+  fMustCleanup(tcf.fMustCleanup),
+  fMapSubwindows(tcf.fMapSubwindows) 
+{ }
+
+//______________________________________________________________________________
+TGCompositeFrame& TGCompositeFrame::operator=(const TGCompositeFrame& tcf) 
+{
+  if(this!=&tcf) {
+    TGFrame::operator=(tcf);
+    fLayoutManager=tcf.fLayoutManager;
+    fList=tcf.fList;
+    fLayoutBroken=tcf.fLayoutBroken; 
+    fMustCleanup=tcf.fMustCleanup;
+    fMapSubwindows=tcf.fMapSubwindows;
+  } return *this;
+}
+
+//______________________________________________________________________________
 TGCompositeFrame::~TGCompositeFrame()
 {
    // Delete a composite frame.
@@ -1401,6 +1465,59 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    }
    //AddInput(kButtonPressMask); // to allow Drag and Drop
    SetWindowName();
+}
+
+//______________________________________________________________________________
+TGMainFrame::TGMainFrame(const TGMainFrame& tmf) :
+  TGCompositeFrame(tmf),
+  fBindList(tmf.fBindList),
+  fWindowName(tmf.fWindowName),
+  fIconName(tmf.fIconName),
+  fIconPixmap(tmf.fIconPixmap),
+  fClassName(tmf.fClassName),
+  fResourceName(tmf.fResourceName),
+  fMWMValue(tmf.fMWMValue),
+  fMWMFuncs(tmf.fMWMFuncs),
+  fMWMInput(tmf.fMWMInput),
+  fWMX(tmf.fWMX),
+  fWMY(tmf.fWMY),
+  fWMWidth(tmf.fWMWidth),
+  fWMHeight(tmf.fWMHeight),
+  fWMMinWidth(tmf.fWMMinWidth),
+  fWMMinHeight(tmf.fWMMinHeight),
+  fWMMaxWidth(tmf.fWMMaxWidth),
+  fWMMaxHeight(tmf.fWMMaxHeight),
+  fWMWidthInc(tmf.fWMWidthInc),
+  fWMHeightInc(tmf.fWMHeightInc),
+  fWMInitState(tmf.fWMInitState) 
+{ }
+
+//______________________________________________________________________________
+TGMainFrame& TGMainFrame::operator=(const TGMainFrame& tmf) 
+{
+  if(this!=&tmf) {
+    TGCompositeFrame::operator=(tmf);
+    fBindList=tmf.fBindList;
+    fWindowName=tmf.fWindowName;
+    fIconName=tmf.fIconName;
+    fIconPixmap=tmf.fIconPixmap;
+    fClassName=tmf.fClassName;
+    fResourceName=tmf.fResourceName;
+    fMWMValue=tmf.fMWMValue;
+    fMWMFuncs=tmf.fMWMFuncs;
+    fMWMInput=tmf.fMWMInput;
+    fWMX=tmf.fWMX;
+    fWMY=tmf.fWMY;
+    fWMWidth=tmf.fWMWidth;
+    fWMHeight=tmf.fWMHeight;
+    fWMMinWidth=tmf.fWMMinWidth;
+    fWMMinHeight=tmf.fWMMinHeight;
+    fWMMaxWidth=tmf.fWMMaxWidth;
+    fWMMaxHeight=tmf.fWMMaxHeight;
+    fWMWidthInc=tmf.fWMWidthInc;
+    fWMHeightInc=tmf.fWMHeightInc;
+    fWMInitState=tmf.fWMInitState;
+  } return *this;
 }
 
 //______________________________________________________________________________

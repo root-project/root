@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v5-11-02 $:$Id: TGMenu.h,v 1.33 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.34 2006/05/15 07:43:34 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -80,10 +80,6 @@ class TGMenuEntry : public TObject {
 friend class TGPopupMenu;
 friend class TGMenuBar;
 
-private:
-   TGMenuEntry(const TGMenuEntry&); 
-   TGMenuEntry& operator=(const TGMenuEntry&); 
-
 protected:
    Int_t             fEntryId;   // the entry id (used for event processing)
    void             *fUserData;  // pointer to user data structure
@@ -94,6 +90,9 @@ protected:
    TGHotString      *fLabel;     // menu entry label
    const TGPicture  *fPic;       // menu entry icon
    TGPopupMenu      *fPopup;     // pointer to popup menu (in case of cascading menus)
+
+   TGMenuEntry(const TGMenuEntry&); 
+   TGMenuEntry& operator=(const TGMenuEntry&); 
 
 public:
    TGMenuEntry(): fEntryId(0), fUserData(NULL), fType(), fStatus(0), fEx(0), fEy(0),
@@ -131,10 +130,6 @@ class TGPopupMenu : public TGFrame {
 friend class TGMenuTitle;
 friend class TGMenuBar;
 
-private:
-   TGPopupMenu(const TGPopupMenu&);
-   TGPopupMenu& operator=(const TGPopupMenu&);
-
 protected:
    TList             *fEntryList;     // list of menu entries
    TGMenuEntry       *fCurrent;       // currently selected menu entry
@@ -160,6 +155,9 @@ protected:
    static const TGGC   *fgDefaultGC;
    static const TGGC   *fgDefaultSelectedGC;
    static const TGGC   *fgDefaultSelectedBackgroundGC;
+
+   TGPopupMenu(const TGPopupMenu&);
+   TGPopupMenu& operator=(const TGPopupMenu&);
 
    void DrawTrianglePattern(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
    void DrawCheckMark(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
@@ -249,10 +247,6 @@ public:
 
 class TGMenuTitle : public TGFrame {
 
-private:
-   TGMenuTitle(const TGMenuTitle&);
-   TGMenuTitle& operator=(const TGMenuTitle&);
-
 protected:
    TGPopupMenu    *fMenu;             // attached popup menu
    TGHotString    *fLabel;            // menu title
@@ -262,6 +256,9 @@ protected:
    Int_t           fHkeycode;         // hot key code
    FontStruct_t    fFontStruct;       // font
    GContext_t      fNormGC, fSelGC;   // normal and selection graphics contexts
+
+   TGMenuTitle(const TGMenuTitle&);
+   TGMenuTitle& operator=(const TGMenuTitle&);
 
    virtual void DoRedraw();
 
@@ -304,10 +301,6 @@ class TGMenuBar : public TGHorizontalFrame {
 
 friend class TGPopupMenu;
 
-private:
-   TGMenuBar(const TGMenuBar&);
-   TGMenuBar& operator=(const TGMenuBar&);
-
 protected:
    TGMenuTitle  *fCurrent;       // current menu title
    TList        *fTitles;        // list of menu titles
@@ -315,6 +308,9 @@ protected:
    Bool_t        fStick;         // stick mode (popup menu stays sticked on screen)
    TList        *fTrash;         // garbage
    Bool_t        fKeyNavigate;   // kTRUE if arrow key navigation is on
+
+   TGMenuBar(const TGMenuBar&);
+   TGMenuBar& operator=(const TGMenuBar&);
 
    virtual void AddFrameBefore(TGFrame *f, TGLayoutHints *l = 0,
                                TGPopupMenu *before = 0);

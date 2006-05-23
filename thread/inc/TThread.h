@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.10 2004/12/14 15:06:18 rdm Exp $
+// @(#)root/thread:$Name: v4-02-00 $:$Id: TThread.h,v 1.11 2004/12/14 17:39:36 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -116,6 +116,10 @@ private:
    static void   *Function(void *ptr);
    static Int_t   XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret);
    static void    AfterCancel(TThread *th);
+
+protected:
+   TThread(const TThread&);
+   TThread& operator=(const TThread&);
 
 public:
    TThread(VoidRtnFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);

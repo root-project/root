@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.7 2002/07/25 18:03:46 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.8 2006/05/11 10:35:08 brun Exp $
 // Author: Fons Rademakers   21/10/97
 
 /*************************************************************************
@@ -43,7 +43,8 @@ public:
    TArray(): fN(0) { }
    TArray(Int_t n): fN(n) { }
    TArray(const TArray &a): fN(a.fN) { }
-   TArray         &operator=(const TArray &rhs) { fN = rhs.fN; return *this; }
+   TArray         &operator=(const TArray &rhs) 
+     {if(this!=&rhs) fN = rhs.fN; return *this; }
    virtual        ~TArray() { fN = 0; }
 
    Int_t          GetSize() const { return fN; }

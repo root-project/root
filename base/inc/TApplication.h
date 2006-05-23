@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.17 2004/07/14 11:43:50 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.18 2006/05/11 10:35:08 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -45,9 +45,6 @@ class TSignalHandler;
 class TApplication : public TObject, public TQObject {
 
 private:
-   TApplication(const TApplication&);
-   TApplication& operator=(const TApplication&);
-
    Int_t              fArgc;           //Number of com   mand line arguments
    char             **fArgv;           //Command line arguments
    TApplicationImp   *fAppImp;         //!Window system specific application implementation
@@ -63,6 +60,9 @@ private:
 
 protected:
    TApplication();
+   TApplication(const TApplication&);
+   TApplication& operator=(const TApplication&);
+
    virtual void Help(const char *line);
    virtual void InitializeColors();
    virtual void LoadGraphicsLibs();

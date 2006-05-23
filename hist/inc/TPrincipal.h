@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPrincipal.h,v 1.11 2004/06/09 13:40:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPrincipal.h,v 1.12 2006/05/17 09:37:20 couet Exp $
 // Author: Christian Holm Christensen    1/8/2000
 
 /*************************************************************************
@@ -48,6 +48,9 @@ protected:
 
    Bool_t      fIsNormalised;         // Normalize matrix?
    Bool_t      fStoreData;            // Should we store input data?
+
+   TPrincipal(const TPrincipal&);
+   TPrincipal& operator=(const TPrincipal&);
 
    void        MakeNormalised();
    void        MakeRealCode(const char *filename, const char *prefix, Option_t *option="");

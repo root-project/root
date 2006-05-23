@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.6 2005/03/11 11:44:25 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.7 2005/11/24 17:28:06 couet Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -55,6 +55,9 @@ protected:
    Int_t           GetBasicColor() const;
 
    Int_t           ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py);
+
+   TShape(const TShape&);
+   TShape& operator=(const TShape&);
 
 public:
    TShape();

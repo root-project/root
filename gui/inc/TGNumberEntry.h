@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.11 2006/05/15 07:43:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.12 2006/05/15 11:01:14 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -170,14 +170,14 @@ private:
    const TGPicture  *fPicUp;      // Up arrow
    const TGPicture  *fPicDown;    // Down arrow
 
-   TGNumberEntry(const TGNumberEntry&);
-   TGNumberEntry& operator=(const TGNumberEntry&);
-
 protected:
    TGNumberEntryField *fNumericEntry;  // Number text entry field
    TGButton           *fButtonUp;      // Button for increasing value
    TGButton           *fButtonDown;    // Button for decreasing value
    Bool_t              fButtonToNum;   // Send button messages to parent rather than number entry field
+
+   TGNumberEntry(const TGNumberEntry&);
+   TGNumberEntry& operator=(const TGNumberEntry&);
 
 public:
    TGNumberEntry(const TGWindow *parent = 0, Double_t val = 0,
@@ -291,12 +291,14 @@ public:
 
 
 class TGNumberEntryLayout : public TGLayoutManager {
-private:
-   TGNumberEntryLayout(const TGNumberEntryLayout&);
-   TGNumberEntryLayout& operator=(const TGNumberEntryLayout&);
-
 protected:
    TGNumberEntry *fBox;        // pointer to numeric control box
+
+   TGNumberEntryLayout(const TGNumberEntryLayout& el) :
+     TGLayoutManager(el), fBox(el.fBox) { }
+   TGNumberEntryLayout& operator=(const TGNumberEntryLayout& el)
+     {if(this!=&el) { TGLayoutManager::operator=(el); fBox=el.fBox;}
+     return *this;}
 
 public:
    TGNumberEntryLayout(TGNumberEntry *box): fBox(box) { }

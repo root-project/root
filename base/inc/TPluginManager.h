@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.4 2002/07/18 14:12:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.5 2003/04/04 00:10:15 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -92,10 +92,14 @@ private:
    Bool_t       fIsMacro;   // plugin is a macro and not a library
    Bool_t       fIsGlobal;  // plugin ctor is a global function
 
-   TPluginHandler() { fCallEnv = 0; fCanCall = 0; }
+   TPluginHandler():
+     fBase(), fRegexp(), fClass(), fPlugin(), fCtor(), fCallEnv(NULL),
+     fMethod(NULL), fCanCall(0), fIsMacro(kTRUE), fIsGlobal(kTRUE) { }
    TPluginHandler(const char *base, const char *regexp,
                   const char *className, const char *pluginName,
                   const char *ctor);
+   TPluginHandler(const TPluginHandler&); 
+   TPluginHandler& operator=(const TPluginHandler&); 
 
    ~TPluginHandler();
 
@@ -122,8 +126,15 @@ class TPluginManager : public TObject {
 private:
    TList  *fHandlers;    // list of plugin handlers
 
+protected:
+   TPluginManager(const TPluginManager& pm)
+     : TObject(pm), fHandlers(pm.fHandlers) { }
+   TPluginManager& operator=(const TPluginManager& pm)
+     {if(this!=&pm) {TObject::operator=(pm); fHandlers=pm.fHandlers;}
+     return *this;}
+
 public:
-   TPluginManager() { fHandlers = 0; }
+   TPluginManager(): fHandlers(NULL) { }
    ~TPluginManager();
 
    void   LoadHandlersFromEnv(TEnv *env);

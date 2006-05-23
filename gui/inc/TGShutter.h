@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v5-11-02 $:$Id: TGShutter.h,v 1.8 2006/03/28 17:08:39 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.9 2006/05/15 07:43:34 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -46,15 +46,14 @@ class TGShutterItem : public TGVerticalFrame, public TGWidget {
 
 friend class TGShutter;
 
-private:
-   TGShutterItem(const TGShutterItem&);
-   TGShutterItem& operator=(const TGShutterItem&);
-
 protected:
    TGButton      *fButton;     // shutter item button
    TGCanvas      *fCanvas;     // canvas of shutter item
    TGFrame       *fContainer;  // container in canvas containing shutter items
    TGLayoutHints *fL1, *fL2;   // positioning hints
+
+   TGShutterItem(const TGShutterItem&);
+   TGShutterItem& operator=(const TGShutterItem&);
 
 public:
    TGShutterItem(const TGWindow *p = 0, TGHotString *s = 0, Int_t id = -1,
@@ -72,10 +71,6 @@ public:
 
 class TGShutter : public TGCompositeFrame {
 
-private:
-   TGShutter(const TGShutter&);
-   TGShutter& operator=(TGShutter&);
-
 protected:
    TTimer         *fTimer;                  // Timer for animation
    TGShutterItem  *fSelectedItem;           // Item currently open
@@ -84,6 +79,9 @@ protected:
    Int_t           fHeightIncrement;        // Height delta
    Int_t           fClosingHeight;          // Closing items current height
    Int_t           fClosingHadScrollbar;    // Closing item had a scroll bar
+
+   TGShutter(const TGShutter&);
+   TGShutter& operator=(const TGShutter&);
 
 public:
    TGShutter(const TGWindow *p = 0, UInt_t options = kSunkenFrame);

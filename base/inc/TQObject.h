@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.27 2006/03/20 21:42:28 pcanal Exp $
+// @(#)root/base:$Name: v5-11-02 $:$Id: TQObject.h,v 1.28 2006/03/21 05:20:33 pcanal Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -75,6 +75,16 @@ protected:
    static Int_t CheckConnectArgs(TQObject *sender,
                                  TClass *sender_class, const char *signal,
                                  TClass *receiver_class, const char *slot);
+
+   TQObject(const TQObject& tqo): 
+     fListOfSignals(tqo.fListOfSignals), 
+     fListOfConnections(tqo.fListOfConnections) {}     
+
+   TQObject& operator=(const TQObject& tqo) {
+     if(this!=&tqo) {
+       fListOfSignals=tqo.fListOfSignals; 
+       fListOfConnections=tqo.fListOfConnections;
+     } return *this;}
 
 public:
    TQObject();
@@ -172,6 +182,10 @@ R__EXTERN void *gTQSender;   // the latest sender object
 
 class TQObjSender : public TQObject {
 
+private:
+  TQObjSender(const TQObjSender&); // Not implemented
+  TQObjSender& operator=(const TQObjSender&); // Not implemented
+
 protected:
    void    *fSender;        //delegation object
    TString  fSenderClass;   //class name of delegation object
@@ -180,7 +194,7 @@ protected:
    virtual const char *GetSenderClassName() const { return fSenderClass; }
 
 public:
-   TQObjSender() : TQObject() { }
+   TQObjSender() : TQObject(), fSender(NULL), fSenderClass() { }
    virtual ~TQObjSender() { Disconnect(); }
 
    virtual void SetSender(void *sender) { fSender = sender; }

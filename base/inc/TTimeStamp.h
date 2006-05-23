@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.17 2005/11/16 20:02:34 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.18 2005/11/21 11:17:18 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -117,12 +117,12 @@ public:
    TTimeStamp();
 
    // construction from timespec struct
-   TTimeStamp(const timespec_t &ts)
-      { fSec = ts.tv_sec; fNanoSec = ts.tv_nsec; NormalizeNanoSec(); }
+   TTimeStamp(const timespec_t &ts) :
+      fSec(ts.tv_sec), fNanoSec(ts.tv_nsec) { NormalizeNanoSec(); }
 
    // construction from time_t and separate nsec
-   TTimeStamp(time_t t, Int_t nsec)
-      { fSec = t; fNanoSec = nsec; NormalizeNanoSec(); }
+   TTimeStamp(time_t t, Int_t nsec) :
+      fSec(t), fNanoSec(nsec) { NormalizeNanoSec(); }
 
    // construction from bits and pieces
    TTimeStamp(UInt_t year, UInt_t month,

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.6 2001/10/18 13:07:28 rdm Exp $
+// @(#)root/cont:$Name: v5-11-02 $:$Id: TObjectTable.cxx,v 1.7 2006/04/19 08:22:22 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -99,6 +99,25 @@ TObjectTable::TObjectTable(Int_t tableSize)
    fTable = new TObject* [fSize];
    memset(fTable, 0, fSize*sizeof(TObject*));
    fTally = 0;
+}
+
+//______________________________________________________________________________
+TObjectTable::TObjectTable(const TObjectTable& ot) :
+  TObject(ot),
+  fTable(ot.fTable),
+  fSize(ot.fSize),
+  fTally(ot.fTally)
+{ }
+
+//______________________________________________________________________________
+TObjectTable& TObjectTable::operator=(const TObjectTable& ot) 
+{
+  if(this!=&ot) {
+    TObject::operator=(ot);
+    fTable=ot.fTable;
+    fSize=ot.fSize;
+    fTally=ot.fTally;
+  } return *this;
 }
 
 //______________________________________________________________________________

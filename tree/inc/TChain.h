@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.49 2005/11/16 20:21:34 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.50 2006/05/12 12:24:27 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -37,10 +37,6 @@ class TVirtualProof;
 
 class TChain : public TTree {
 
-private:
-   TChain(const TChain&);
-   TChain& operator=(const TChain&);
-
 protected:
    Int_t       fTreeOffsetLen;     //  Current size of fTreeOffset array
    Int_t       fNtrees;            //  Number of Trees
@@ -55,7 +51,8 @@ protected:
    TList       *fStatus;           //->  List of active/inactive branches
    TChainProof *fChainProof;       //! wrapper class for a TDSet if this chain is to be
                                    //  procesed by PROOF
-
+   TChain(const TChain&);
+   TChain& operator=(const TChain&);
    void ReleaseChainProof();
    virtual TDSet    *MakeTDSetWithoutFriends() const;
 

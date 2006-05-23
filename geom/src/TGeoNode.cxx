@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.32 2006/02/23 13:23:08 brun Exp $
+// @(#)root/geom:$Name: v5-11-02 $:$Id: TGeoNode.cxx,v 1.33 2006/03/14 15:16:35 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -108,6 +108,31 @@ TGeoNode::TGeoNode(const TGeoVolume *vol)
    fNumber       = 0;
    fOverlaps     = 0;
    fNovlp        = 0;
+}
+
+//_____________________________________________________________________________
+TGeoNode::TGeoNode(const TGeoNode& gn) :
+  TNamed(gn),
+  TGeoAtt(gn),
+  fVolume(gn.fVolume),
+  fMother(gn.fMother),
+  fNumber(gn.fNumber),
+  fNovlp(gn.fNovlp),
+  fOverlaps(gn.fOverlaps)
+{ }
+
+//_____________________________________________________________________________
+TGeoNode& TGeoNode::operator=(const TGeoNode& gn) 
+{
+  if(this!=&gn) {
+    TNamed::operator=(gn);
+    TGeoAtt::operator=(gn);
+    fVolume=gn.fVolume;
+    fMother=gn.fMother;
+    fNumber=gn.fNumber;
+    fNovlp=gn.fNovlp;
+    fOverlaps=gn.fOverlaps;
+  } return *this;
 }
 
 //_____________________________________________________________________________
@@ -658,6 +683,25 @@ TGeoNodeOffset::TGeoNodeOffset(const TGeoVolume *vol, Int_t index, Double_t offs
    fOffset = offset;
    fIndex = index;
    fFinder = 0;
+}
+
+//_____________________________________________________________________________
+TGeoNodeOffset::TGeoNodeOffset(const TGeoNodeOffset& gno) :
+  TGeoNode(gno),
+  fOffset(gno.fOffset),
+  fIndex(gno.fIndex),
+  fFinder(gno.fFinder)
+{ }
+
+//_____________________________________________________________________________
+TGeoNodeOffset& TGeoNodeOffset::operator=(const TGeoNodeOffset& gno)
+{
+  if(this!=&gno) {
+    TGeoNode::operator=(gno);
+    fOffset=gno.fOffset;
+    fIndex=gno.fIndex;
+    fFinder=gno.fFinder;
+  } return *this;
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.h,v 1.3 2005/09/04 11:42:05 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.h,v 1.4 2006/05/15 07:27:03 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -23,6 +23,11 @@ public:
 //------------------------------------------------------------------------------
 protected:
   TObjArray*  fListOfParticles;		// list of (non-owned) particles
+
+  TParticleClassPDG(const TParticleClassPDG& pcp): TNamed(pcp), fListOfParticles(pcp.fListOfParticles) { }
+  TParticleClassPDG& operator=(const TParticleClassPDG& pcp) 
+    {if(this!=&pcp) {TNamed::operator=(pcp); fListOfParticles=pcp.fListOfParticles;}
+    return *this;}
 //------------------------------------------------------------------------------
 // functions
 //------------------------------------------------------------------------------

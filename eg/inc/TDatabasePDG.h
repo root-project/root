@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.10 2006/05/15 07:27:03 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.11 2006/05/16 06:18:27 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -23,15 +23,18 @@
 
 class TDatabasePDG: public TNamed {
 
-private:
-   TDatabasePDG(const TDatabasePDG&);
-   TDatabasePDG& operator=(const TDatabasePDG&);
-
 protected:
    static TDatabasePDG *fgInstance;        // protect against multiple instances
    THashList* fParticleList;               // list of PDG particles
    TObjArray* fListOfClasses;              // list of classes (leptons etc.)
 
+   TDatabasePDG(const TDatabasePDG& db) 
+     : TNamed(db), fParticleList(db.fParticleList),
+     fListOfClasses(db.fListOfClasses) { }
+
+   TDatabasePDG& operator=(const TDatabasePDG& db)
+     {if(this!=&db) {TNamed::operator=(db); fParticleList=db.fParticleList;
+     fListOfClasses=db.fListOfClasses;} return *this;}
   
 public:
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.18 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.19 2006/05/17 09:37:20 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -106,6 +106,19 @@ TPolyMarker::TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
    fLastPoint = fN-1;
 }
 
+//______________________________________________________________________________
+TPolyMarker& TPolyMarker::operator=(const TPolyMarker& pm)
+{
+  if(this!=&pm) {
+    TObject::operator=(pm);
+    TAttMarker::operator=(pm);
+    fN=pm.fN;
+    fLastPoint=pm.fLastPoint;
+    fX=pm.fX;
+    fY=pm.fY;
+    fOption=pm.fOption;
+  } return *this;
+}
 
 //______________________________________________________________________________
 TPolyMarker::~TPolyMarker()

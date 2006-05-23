@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.12 2005/11/24 17:28:07 couet Exp $
+// @(#)root/g3d:$Name: v5-11-02 $:$Id: THelix.cxx,v 1.13 2006/03/20 21:43:41 pcanal Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -195,6 +195,25 @@ THelix::THelix(const THelix &h) : TPolyLine3D()
 }
 #endif
 
+//______________________________________________________________________________
+THelix& THelix::operator=(const THelix& hx)
+{
+  if(this!=&hx) {
+    TPolyLine3D::operator=(hx);
+    fX0=hx.fX0;
+    fY0=hx.fY0;
+    fZ0=hx.fZ0;
+    fVt=hx.fVt;
+    fPhi0=hx.fPhi0;
+    fVz=hx.fVz;
+    fW=hx.fW;
+    for(Int_t i=0; i<3; i++) 
+      fAxis[i]=hx.fAxis[i];
+    fRotMat=hx.fRotMat;
+    for(Int_t i=0; i<2; i++) 
+      fRange[i]=hx.fRange[i];
+  } return *this;
+}
 
 //______________________________________________________________________________
 THelix::~THelix()

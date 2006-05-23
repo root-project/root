@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.h,v 1.5 2005/04/29 07:28:02 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.h,v 1.6 2005/11/24 17:28:06 couet Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -45,6 +45,9 @@ protected:
    // Internal cache
    mutable Double_t   *fSiTab;   //! Table of sin(fPhi1) .... sin(fPhil+fDphi1)
    mutable Double_t   *fCoTab;   //! Table of cos(fPhi1) .... cos(fPhil+fDphi1)
+
+   TTUBE(const TTUBE&);
+   TTUBE& operator=(const TTUBE&);
 
    virtual void    MakeTableOfCoSin() const;  // Create the table of the fSiTab; fCoTab
    virtual void    SetPoints(Double_t *points) const;

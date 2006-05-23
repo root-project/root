@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTime.h,v 1.3 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTime.h,v 1.4 2005/11/16 20:02:34 pcanal Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -32,12 +32,12 @@ private:
    Long_t   fMilliSec;
 
 public:
-   TTime() { fMilliSec = 0; }
-   TTime(Long_t msec) { fMilliSec = msec; }
-   TTime(const TTime &t) { fMilliSec = t.fMilliSec; }
+   TTime(): fMilliSec(0) { }
+   TTime(Long_t msec): fMilliSec(msec) { }
+   TTime(const TTime &t): fMilliSec(t.fMilliSec) { }
    virtual ~TTime() { }
 
-   TTime operator=(const TTime &t);
+   TTime& operator=(const TTime &t);
 
    TTime operator+=(const TTime &t);
    TTime operator-=(const TTime &t);
@@ -63,7 +63,7 @@ public:
    ClassDef(TTime,1)  //Basic time type with milli second precision
 };
 
-inline TTime TTime::operator= (const TTime &t)
+inline TTime& TTime::operator= (const TTime &t)
    { fMilliSec = t.fMilliSec; return *this; }
 inline TTime TTime::operator+=(const TTime &t)
    { fMilliSec += t.fMilliSec; return *this; }

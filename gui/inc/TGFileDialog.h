@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.6 2005/02/18 09:26:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.7 2006/05/14 10:23:26 brun Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -55,7 +55,7 @@ class TGFSComboBox;
 
 class TGFileInfo {
 
-private:
+protected:
    TGFileInfo(const TGFileInfo&);
    TGFileInfo& operator=(const TGFileInfo&);
 
@@ -72,10 +72,6 @@ public:
 
 
 class TGFileDialog : public TGTransientFrame {
-
-private:
-   TGFileDialog(const TGFileDialog&);
-   TGFileDialog& operator=(const TGFileDialog&);
 
 protected:
    TGTextBuffer      *fTbfname;  // text buffer of file name
@@ -96,6 +92,9 @@ protected:
    TGListView        *fFv;       // file list view
    TGFileContainer   *fFc;       // file list view container (containing the files)
    TGFileInfo        *fFileInfo; // file info passed to this dialog
+
+   TGFileDialog(const TGFileDialog&);
+   TGFileDialog& operator=(const TGFileDialog&);
 
 public:
    TGFileDialog(const TGWindow *p = 0, const TGWindow *main = 0,

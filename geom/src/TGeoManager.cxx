@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.149 2006/05/02 18:25:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.150 2006/05/09 10:24:26 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -660,6 +660,204 @@ void TGeoManager::Init()
    fElementTable = 0;
    fHashVolumes = 0;
    fHashGVolumes = 0;
+}
+
+//_____________________________________________________________________________
+TGeoManager::TGeoManager(const TGeoManager& gm) :
+  TNamed(gm),
+  fStep(gm.fStep),
+  fSafety(gm.fSafety),
+  fLastSafety(gm.fLastSafety),
+  fPhimin(gm.fPhimin),
+  fPhimax(gm.fPhimax),
+  fTmin(gm.fTmin),
+  fTmax(gm.fTmax),
+  fLevel(gm.fLevel),
+  fNNodes(gm.fNNodes),
+  fPath(gm.fPath),
+  fParticleName(gm.fParticleName),
+  fCldir(gm.fCldir),
+  fCldirChecked(gm.fCldirChecked),
+  fPoint(gm.fPoint),
+  fDirection(gm.fDirection),
+  fVisDensity(gm.fVisDensity),
+  fExplodedView(gm.fExplodedView),
+  fVisOption(gm.fVisOption),
+  fVisLevel(gm.fVisLevel),
+  fNsegments(gm.fNsegments),
+  fNtracks(gm.fNtracks),
+  fMaxVisNodes(gm.fMaxVisNodes),
+  fCurrentTrack(gm.fCurrentTrack),
+  fNpdg(gm.fNpdg),
+  fSearchOverlaps(gm.fSearchOverlaps),
+  fCurrentOverlapping(gm.fCurrentOverlapping),
+  fLoopVolumes(gm.fLoopVolumes),
+  fStartSafe(gm.fStartSafe),
+  fIsEntering(gm.fIsEntering),
+  fIsExiting(gm.fIsExiting),
+  fIsStepEntering(gm.fIsStepEntering),
+  fIsStepExiting(gm.fIsStepExiting),
+  fIsOutside(gm.fIsOutside),
+  fIsOnBoundary(gm.fIsOnBoundary),
+  fIsSameLocation(gm.fIsSameLocation),
+  fIsNullStep(gm.fIsNullStep),
+  fStreamVoxels(gm.fStreamVoxels),
+  fIsGeomReading(gm.fIsGeomReading),
+  fPhiCut(gm.fPhiCut),
+  fTimeCut(gm.fTimeCut),
+  fDrawExtra(gm.fDrawExtra),
+  fMatrixTransform(gm.fMatrixTransform),
+  fMatrixReflection(gm.fMatrixReflection),
+  fActivity(gm.fActivity),
+  fIsNodeSelectable(gm.fIsNodeSelectable),
+  fCache(gm.fCache),
+  fPainter(gm.fPainter),
+  fMatrices(gm.fMatrices),
+  fShapes(gm.fShapes),
+  fVolumes(gm.fVolumes),
+  fPhysicalNodes(gm.fPhysicalNodes),
+  fGShapes(gm.fGShapes),
+  fGVolumes(gm.fGVolumes),
+  fTracks(gm.fTracks),
+  fPdgNames(gm.fPdgNames),
+  fMaterials(gm.fMaterials),
+  fMedia(gm.fMedia),
+  fNodes(gm.fNodes),
+  fOverlaps(gm.fOverlaps),
+  fBits(gm.fBits),
+  fCurrentVolume(gm.fCurrentVolume),
+  fTopVolume(gm.fTopVolume),
+  fCurrentNode(gm.fCurrentNode),
+  fTopNode(gm.fTopNode),
+  fLastNode(gm.fLastNode),
+  fNextNode(gm.fNextNode),
+  fMasterVolume(gm.fMasterVolume),
+  fCurrentMatrix(gm.fCurrentMatrix),
+  fGLMatrix(gm.fGLMatrix),
+  fUniqueVolumes(gm.fUniqueVolumes),
+  fClippingShape(gm.fClippingShape),
+  fElementTable(gm.fElementTable),
+  fNodeIdArray(gm.fNodeIdArray),
+  fIntSize(gm.fIntSize),
+  fDblSize(gm.fDblSize),
+  fOverlapSize(gm.fOverlapSize),
+  fOverlapMark(gm.fOverlapMark),
+  fIntBuffer(gm.fIntBuffer),
+  fOverlapClusters(gm.fOverlapClusters),
+  fNLevel(gm.fNLevel),
+  fNmany(gm.fNmany),
+  fDblBuffer(gm.fDblBuffer),
+  fPaintVolume(gm.fPaintVolume),
+  fHashVolumes(gm.fHashVolumes),
+  fHashGVolumes(gm.fHashGVolumes),
+  fHashPNE(gm.fHashPNE)
+{
+  for(Int_t i=0; i<3; i++) {
+    fNormal[i]=gm.fNormal[i];
+    fLastPoint[i]=gm.fLastPoint[i];
+  }
+  for(Int_t i=0; i<256; i++) 
+    fPdgId[i]=gm.fPdgId[i];
+}
+
+//_____________________________________________________________________________
+TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
+{
+  if(this!=&gm) {
+    TNamed::operator=(gm);
+    fStep=gm.fStep;
+    fSafety=gm.fSafety;
+    fLastSafety=gm.fLastSafety;
+    fPhimin=gm.fPhimin;
+    fPhimax=gm.fPhimax;
+    fTmin=gm.fTmin;
+    fTmax=gm.fTmax;
+    fLevel=gm.fLevel;
+    fNNodes=gm.fNNodes;
+    fPath=gm.fPath;
+    fParticleName=gm.fParticleName;
+    for(Int_t i=0; i<3; i++) {
+      fNormal[i]=gm.fNormal[i];
+      fLastPoint[i]=gm.fLastPoint[i];
+    }
+    fCldir=gm.fCldir;
+    fCldirChecked=gm.fCldirChecked;
+    fPoint=gm.fPoint;
+    fDirection=gm.fDirection;
+    fVisDensity=gm.fVisDensity;
+    fExplodedView=gm.fExplodedView;
+    fVisOption=gm.fVisOption;
+    fVisLevel=gm.fVisLevel;
+    fNsegments=gm.fNsegments;
+    fNtracks=gm.fNtracks;
+    fMaxVisNodes=gm.fMaxVisNodes;
+    fCurrentTrack=gm.fCurrentTrack;
+    fNpdg=gm.fNpdg;
+    for(Int_t i=0; i<256; i++) 
+      fPdgId[i]=gm.fPdgId[i];
+    fSearchOverlaps=gm.fSearchOverlaps;
+    fCurrentOverlapping=gm.fCurrentOverlapping;
+    fLoopVolumes=gm.fLoopVolumes;
+    fStartSafe=gm.fStartSafe;
+    fIsEntering=gm.fIsEntering;
+    fIsExiting=gm.fIsExiting;
+    fIsStepEntering=gm.fIsStepEntering;
+    fIsStepExiting=gm.fIsStepExiting;
+    fIsOutside=gm.fIsOutside;
+    fIsOnBoundary=gm.fIsOnBoundary;
+    fIsSameLocation=gm.fIsSameLocation;
+    fIsNullStep=gm.fIsNullStep;
+    fStreamVoxels=gm.fStreamVoxels;
+    fIsGeomReading=gm.fIsGeomReading;
+    fPhiCut=gm.fPhiCut;
+    fTimeCut=gm.fTimeCut;
+    fDrawExtra=gm.fDrawExtra;
+    fMatrixTransform=gm.fMatrixTransform;
+    fMatrixReflection=gm.fMatrixReflection;
+    fActivity=gm.fActivity;
+    fIsNodeSelectable=gm.fIsNodeSelectable;
+    fCache=gm.fCache;
+    fPainter=gm.fPainter;
+    fMatrices=gm.fMatrices;
+    fShapes=gm.fShapes;
+    fVolumes=gm.fVolumes;
+    fPhysicalNodes=gm.fPhysicalNodes;
+    fGShapes=gm.fGShapes;
+    fGVolumes=gm.fGVolumes;
+    fTracks=gm.fTracks;
+    fPdgNames=gm.fPdgNames;
+    fMaterials=gm.fMaterials;
+    fMedia=gm.fMedia;
+    fNodes=gm.fNodes;
+    fOverlaps=gm.fOverlaps;
+    fBits=gm.fBits;
+    fCurrentVolume=gm.fCurrentVolume;
+    fTopVolume=gm.fTopVolume;
+    fCurrentNode=gm.fCurrentNode;
+    fTopNode=gm.fTopNode;
+    fLastNode=gm.fLastNode;
+    fNextNode=gm.fNextNode;
+    fMasterVolume=gm.fMasterVolume;
+    fCurrentMatrix=gm.fCurrentMatrix;
+    fGLMatrix=gm.fGLMatrix;
+    fUniqueVolumes=gm.fUniqueVolumes;
+    fClippingShape=gm.fClippingShape;
+    fElementTable=gm.fElementTable;
+    fNodeIdArray=gm.fNodeIdArray;
+    fIntSize=gm.fIntSize;
+    fDblSize=gm.fDblSize;
+    fOverlapSize=gm.fOverlapSize;
+    fOverlapMark=gm.fOverlapMark;
+    fIntBuffer=gm.fIntBuffer;
+    fOverlapClusters=gm.fOverlapClusters;
+    fNLevel=gm.fNLevel;
+    fNmany=gm.fNmany;
+    fDblBuffer=gm.fDblBuffer;
+    fPaintVolume=gm.fPaintVolume;
+    fHashVolumes=gm.fHashVolumes;
+    fHashGVolumes=gm.fHashGVolumes;
+    fHashPNE=gm.fHashPNE;
+  } return *this;
 }
 
 //_____________________________________________________________________________
