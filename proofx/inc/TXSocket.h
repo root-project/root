@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.2 2006/02/26 16:09:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.3 2006/04/19 10:57:44 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -128,6 +128,8 @@ public:
 
    TXSocket(const char *url,
             Char_t mode = 'M', Int_t psid = -1, Char_t ver = -1, const char *alias = 0);
+   TXSocket(const TXSocket &xs);
+   TXSocket& operator=(const TXSocket& xs);
    virtual ~TXSocket();
 
    virtual void        Close(Option_t *opt = "");

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.8 2006/04/18 10:34:35 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.9 2006/04/19 10:57:44 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -207,6 +207,19 @@ TXSocket::TXSocket(const char *url,
       // This is needed for the reader thread to signal an interrupt
       fPid = gSystem->GetPid();
    }
+}
+
+//______________________________________________________________________________
+TXSocket::TXSocket(const TXSocket &s) : TSocket(s),XrdClientAbsUnsolMsgHandler(s)
+{
+   // TXSocket copy ctor.
+}
+
+//______________________________________________________________________________
+TXSocket& TXSocket::operator=(const TXSocket&)
+{
+   // TXSocket assignment operator.
+   return *this;
 }
 
 //_____________________________________________________________________________

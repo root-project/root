@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.76 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.77 2006/05/15 09:45:03 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -1576,6 +1576,19 @@ Long64_t TProofPlayerSlave::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
 
 ClassImp(TProofPlayerSuperMaster)
 
+
+//______________________________________________________________________________
+TProofPlayerSuperMaster::TProofPlayerSuperMaster(const TProofPlayerSuperMaster &p) : TProofPlayerRemote(p)
+{
+   // TProofPlayerSuperMaster copy ctor.
+}
+
+//______________________________________________________________________________
+TProofPlayerSuperMaster& TProofPlayerSuperMaster::operator=(const TProofPlayerSuperMaster&)
+{
+   // TProofPlayerSuperMaster assignment operator.
+   return *this;
+}
 
 //______________________________________________________________________________
 Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file,
