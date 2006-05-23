@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.24 2006/04/23 20:40:23 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.25 2006/05/11 10:12:36 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -224,6 +224,33 @@ TPythia6::TPythia6() : TGenerator("TPythia6","TPythia6") {
    fPyints = (Pyints_t*) pythia6_common_address("PYINTS");
    fPybins = (Pybins_t*) pythia6_common_address("PYBINS");
 }
+
+//------------------------------------------------------------------------------
+TPythia6::TPythia6(const TPythia6& p6) :
+  TGenerator(p6),
+  fPyjets(p6.fPyjets),
+  fPydat1(p6.fPydat1),
+  fPydat2(p6.fPydat2),
+  fPydat3(p6.fPydat3),
+  fPydat4(p6.fPydat4),
+  fPydatr(p6.fPydatr),
+  fPysubs(p6.fPysubs),
+  fPypars(p6.fPypars),
+  fPyint1(p6.fPyint1),
+  fPyint2(p6.fPyint2),
+  fPyint3(p6.fPyint3),
+  fPyint4(p6.fPyint4),
+  fPyint5(p6.fPyint5),
+  fPyint6(p6.fPyint6),
+  fPyint7(p6.fPyint7),
+  fPyint8(p6.fPyint8),
+  fPyint9(p6.fPyint9),
+  fPyuppr(p6.fPyuppr),
+  fPymssm(p6.fPymssm),
+  fPyssmt(p6.fPyssmt),
+  fPyints(p6.fPyints),
+  fPybins(p6.fPybins)
+{ }
 
 //------------------------------------------------------------------------------
 TPythia6::~TPythia6()
