@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name: v5-11-02 $:$Id: TChain.cxx,v 1.126 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.127 2006/05/23 04:47:42 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1112,7 +1112,6 @@ void TChain::Lookup()
          fflush(stdout);
          TString urlstring = ((TUrl*)cachefile->GetEndpointUrl())->GetUrl();
          urlstring.ReplaceAll("&filetype=raw","");
-         urlstring.ReplaceAll("///","//");
          element->SetTitle( urlstring );
          delete cachefile;
       }
