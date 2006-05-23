@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.7 2005/11/24 17:28:06 couet Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.8 2006/05/23 04:47:36 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -56,12 +56,12 @@ protected:
 
    Int_t           ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py);
 
-   TShape(const TShape&);
-   TShape& operator=(const TShape&);
 
 public:
    TShape();
    TShape(const char *name, const char *title, const char *material);
+   TShape(const TShape&);
+   TShape& operator=(const TShape&);
    virtual         ~TShape();
 
    virtual const   TBuffer3D &GetBuffer3D(Int_t reqSections) const;
