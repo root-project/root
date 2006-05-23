@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TRWLock.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TRWLock.h,v 1.2 2004/12/10 12:13:33 rdm Exp $
 // Author: Fons Rademakers   04/01/2000
 
 /*************************************************************************
@@ -44,6 +44,8 @@ private:
 
 public:
    TRWLock();
+   TRWLock(const TRWLock &l) : TObject(l) {}
+   TRWLock& operator=(const TRWLock&) {return *this;}
    virtual ~TRWLock() { }
 
    Int_t  ReadLock();
