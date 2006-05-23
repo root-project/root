@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.26 2006/05/18 08:04:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.27 2006/05/18 09:37:04 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -15,11 +15,27 @@
 //
 // basic Random number generator class (periodicity = 10**9).
 // Note that this is a very simple generator (linear congruential) 
-// which is known to have defects 0(the lower random bits are correlated) 
+// which is known to have defects (the lower random bits are correlated) 
 // and therefore should NOT be used in any statistical study.
-// One should use instead TRandom1, TRandom2 or TRandom3 
+// One should use instead TRandom1, TRandom2 or TRandom3. 
+// TRandom3, is based on the "Mersenne Twister generator", and is the recommended one, 
+// since it has good random proprieties (period of about 10**6000 ) and it is fast. 
+// TRandom1, based on the RANLUX algorithm, has mathematically proven random proprieties 
+// and a period of about 10**171. It is however slower than the others. 
+// TRandom2, is based on the Tausworthe generator of L'Ecuyer, and it has the advantage 
+// of being fast and using only 3 words (of 32 bits) for the state. The period is 10**26.  
 //
-// The following basic Random generators are provided:
+// The following table shows some timings (in nanoseconds/call)
+// for the random numbers obtained using an Intel Pentium 3.0 GHz running Linux
+// and using the gcc 3.2.3 compiler
+//
+//    TRandom           34   ns/call     (BAD Generator) 
+//    TRandom1          242  ns/call
+//    TRandom2          37   ns/call
+//    TRandom3          45   ns/call
+//
+//
+// The following basic Random distributions are provided:
 // ===================================================
 //   -Exp(tau)
 //   -Integer(imax)
