@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.95 2006/04/23 21:48:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.96 2006/05/18 07:34:25 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -148,6 +148,19 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt) :
       fBuffer = new char[fBufSize+kExtraSpace];
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
+}
+
+//______________________________________________________________________________
+TBuffer::TBuffer(const TBuffer &b) : TObject(b)
+{
+   // TBuffer copy ctor.
+}
+
+//______________________________________________________________________________
+void TBuffer::operator=(const TBuffer&)
+{
+   // TBuffer assignment operator.
+   //return *this;
 }
 
 //______________________________________________________________________________
