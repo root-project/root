@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCDecayer.cxx,v 1.2 2003/09/23 14:03:15 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TVirtualMCDecayer.cxx,v 1.3 2006/04/23 20:40:23 brun Exp $
 // Author: andreas.morsch@cern.ch 13/04/2002
 
 // This is an abstract base class !

@@ -1,4 +1,4 @@
-/* @(#)root/eg:$Name:  $:$Id: LinkDef.h,v 1.4 2000/11/21 16:50:34 brun Exp $ */
+/* @(#)root/eg:$Name:  $:$Id: LinkDef.h,v 1.5 2001/03/05 09:09:42 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -22,5 +22,6 @@
 #pragma link C++ class TParticlePDG+;
 #pragma link C++ class TDecayChannel+;
 #pragma link C++ class TParticleClassPDG+;
+#pragma link C++ class TVirtualMCDecayer+;
 
 #endif

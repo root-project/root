@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: LinkDef.h,v 1.3 2005/05/17 12:44:52 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: LinkDef.h,v 1.4 2005/05/19 09:03:48 brun Exp $
 #ifdef __CINT__
 
 #pragma link off all globals;
@@ -18,7 +18,6 @@
 #pragma link C++ class  TVirtualMCGeometry+;
 #pragma link C++ class  TVirtualMCApplication+;
 #pragma link C++ class  TVirtualMCStack+;
-#pragma link C++ class  TVirtualMCDecayer+;
 #pragma link C++ class  TMCVerbose+;
 #pragma link C++ class  TGeoMCGeometry+;
 
