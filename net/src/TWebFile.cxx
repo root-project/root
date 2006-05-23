@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.12 2006/05/22 11:13:33 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.13 2006/05/22 12:41:23 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -135,17 +135,13 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
    if (!s.IsValid())
       return kTRUE;
 
-   char msg[256];
+   char *msg;
 
    // Give full URL so Apache's virtual hosts solution works.
    // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
-#ifdef WIN32
-   sprintf(msg, "GET %s://%s:%d/%s?%I64d:%d\r\n", fUrl.GetProtocol(),
-           fUrl.GetHost(), fUrl.GetPort(), fUrl.GetFile(), fOffset, len);
-#else
-   sprintf(msg, "GET %s://%s:%d/%s?%lld:%d\r\n", fUrl.GetProtocol(),
-           fUrl.GetHost(), fUrl.GetPort(), fUrl.GetFile(), fOffset, len);
-#endif
+   msg = Form("GET %s://%s:%d/%s?%lld:%d\r\n", fUrl.GetProtocol(),
+              fUrl.GetHost(), fUrl.GetPort(), fUrl.GetFile(), fOffset, len);
+
    s.SendRaw(msg, strlen(msg));
    s.RecvRaw(buf, len);
 
