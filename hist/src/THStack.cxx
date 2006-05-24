@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.43 2006/05/17 16:37:26 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.44 2006/05/23 04:47:40 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -281,13 +281,12 @@ THStack::THStack(const THStack &hstack) :
   fMaximum(hstack.fMaximum),
   fMinimum(hstack.fMinimum)
 {
-
-// THStack copy constructor
+   // THStack copy constructor
 
    if (hstack.GetHists()) {
-     TIter next(hstack.GetHists());
-     TH1 *h;
-     while ((h=(TH1*)next())) Add(h);
+      TIter next(hstack.GetHists());
+      TH1 *h;
+      while ((h=(TH1*)next())) Add(h);
    }
 }
 
