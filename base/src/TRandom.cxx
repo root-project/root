@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.27 2006/05/18 09:37:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.28 2006/05/23 10:12:17 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -512,52 +512,109 @@ Double_t TRandom::Landau(Double_t mpv, Double_t sigma)
 Int_t TRandom::Poisson(Double_t mean)
 {
 // Generates a random integer N according to a Poisson law.
-// Coded from Los Alamos report LA-5061-MS
 // Prob(N) = exp(-mean)*mean^N/Factorial(N)
+//
+// Use a different procedure according to the mean value. 
+// The algorithm is the same used by CLHEP
+// For lower value (mean < 25) use the rejection method based on 
+// the exponential 
+// For higher values use a rejection method comparing with a Lorentzian 
+// distribution, as suggested by several authors 
+// This routine since is returning 32 bits integer will not work for values larger than 2*10**9
+// One should then use the Trandom::PoissonD for such large values
 //
    Int_t n;
    if (mean <= 0) return 0;
-     // use a gaussian approximation for large values of mean
-   if (mean > 88) {
+   if (mean < 25) { 
+     Double_t expmean = TMath::Exp(-mean);
+     Double_t pir = 1;
+     n = -1;
+     while(1) {
+       n++;
+       pir *= Rndm();
+       if (pir <= expmean) break;
+     }
+     return n;
+   }
+   // for large value we use inversion method
+   else if (mean < 1E9) {
+    Double_t em, t, y;
+    Double_t sq, alxm, g;
+    Double_t pi = TMath::Pi();
+
+    sq = TMath::Sqrt(2.0*mean);
+    alxm = TMath::Log(mean);
+    g = mean*alxm - TMath::LnGamma(mean + 1.0);
+    
+    do {
+      do {
+	y = TMath::Tan(pi*Rndm());
+	em = sq*y + mean;
+      } while( em < 0.0 );
+
+      em = TMath::Floor(em);
+      t = 0.9*(1.0 + y*y)* TMath::Exp(em*alxm - TMath::LnGamma(em + 1.0) - g);
+    } while( Rndm() > t );
+
+    return static_cast<Int_t> (em);
+
+   }
+   else { 
+     // use Gaussian approximation vor very large values 
       n = Int_t(Gaus(0,1)*TMath::Sqrt(mean) + mean +0.5);
       return n;
    }
-   Double_t expmean = TMath::Exp(-mean);
-   Double_t pir = 1;
-   n = -1;
-   while(1) {
-      n++;
-      pir *= Rndm();
-      if (pir <= expmean) break;
-   }
-   return n;
 }
 
 //______________________________________________________________________________
 Double_t TRandom::PoissonD(Double_t mean)
 {
 // Generates a random number according to a Poisson law.
-// Coded from Los Alamos report LA-5061-MS
 // Prob(N) = exp(-mean)*mean^N/Factorial(N)
 //
 // This function is a variant of TRandom::Poisson returning a double
 // instead of an integer.
-   
+//
    Int_t n;
    if (mean <= 0) return 0;
-     // use a gaussian approximation for large values of mean
-   if (mean > 88) {
-      return Gaus(0,1)*TMath::Sqrt(mean) + mean;
+   if (mean < 25) { 
+     Double_t expmean = TMath::Exp(-mean);
+     Double_t pir = 1;
+     n = -1;
+     while(1) {
+       n++;
+       pir *= Rndm();
+       if (pir <= expmean) break;
+     }
+     return static_cast<Double_t>(n);
    }
-   Double_t expmean = TMath::Exp(-mean);
-   Double_t pir = 1;
-   n = -1;
-   while(1) {
-      n++;
-      pir *= Rndm();
-      if (pir <= expmean) break;
+   // for large value we use inversion method
+   else if (mean < 1E9) {
+    Double_t em, t, y;
+    Double_t sq, alxm, g;
+    Double_t pi = TMath::Pi();
+
+    sq = TMath::Sqrt(2.0*mean);
+    alxm = TMath::Log(mean);
+    g = mean*alxm - TMath::LnGamma(mean + 1.0);
+    
+    do {
+      do {
+	y = TMath::Tan(pi*Rndm());
+	em = sq*y + mean;
+      } while( em < 0.0 );
+
+      em = TMath::Floor(em);
+      t = 0.9*(1.0 + y*y)* TMath::Exp(em*alxm - TMath::LnGamma(em + 1.0) - g);
+    } while( Rndm() > t );
+
+    return em;
+
    }
-   return (Double_t)n;
+   else { 
+     // use Gaussian approximation vor very large values 
+      return Gaus(0,1)*TMath::Sqrt(mean) + mean +0.5;
+   }
 }
    
 //______________________________________________________________________________
