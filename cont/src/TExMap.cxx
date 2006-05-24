@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.10 2005/12/22 19:09:01 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.11 2006/05/23 04:47:36 brun Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -62,13 +62,15 @@ TExMap::TExMap(const TExMap &map) : TObject(map)
 //______________________________________________________________________________
 TExMap& TExMap::operator=(const TExMap &map)
 {
-  if(this!=&map) {
-    TObject::operator=(map);
-    fSize  = map.fSize;
-    fTally = map.fTally;
-    fTable = new Assoc_t [fSize];
-    memcpy(fTable, map.fTable, fSize*sizeof(Assoc_t));
-  } return *this;
+   //assignement operator
+   if(this!=&map) {
+      TObject::operator=(map);
+      fSize  = map.fSize;
+      fTally = map.fTally;
+      fTable = new Assoc_t [fSize];
+      memcpy(fTable, map.fTable, fSize*sizeof(Assoc_t));
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

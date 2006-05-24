@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.10 2005/03/24 07:13:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.11 2006/05/23 04:47:36 brun Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -73,18 +73,22 @@ THashTable::THashTable(const THashTable& ht) :
   fEntries(ht.fEntries),
   fUsedSlots(ht.fUsedSlots),
   fRehashLevel(ht.fRehashLevel)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 THashTable& THashTable::operator=(const THashTable& ht)
 { 
-  if(this!=&ht) {
-    TCollection::operator=(ht);
-    fCont=ht.fCont;
-    fEntries=ht.fEntries;
-    fUsedSlots=ht.fUsedSlots;
-    fRehashLevel=ht.fRehashLevel;
-  } return *this;
+   //assignement operator
+   if(this!=&ht) {
+      TCollection::operator=(ht);
+      fCont=ht.fCont;
+      fEntries=ht.fEntries;
+      fUsedSlots=ht.fUsedSlots;
+      fRehashLevel=ht.fRehashLevel;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
