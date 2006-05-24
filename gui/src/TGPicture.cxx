@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.25 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.26 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -52,17 +52,21 @@ TGPicturePool::TGPicturePool(const TGPicturePool& pp) :
   fClient(pp.fClient),
   fPath(pp.fPath),
   fPicList(pp.fPicList)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGPicturePool& TGPicturePool::operator=(const TGPicturePool& pp) 
 {
-  if(this!=&pp) {
-    TObject::operator=(pp);
-    fClient=pp.fClient;
-    fPath=pp.fPath;
-    fPicList=pp.fPicList;
-  } return *this;
+   //equal operator
+   if(this!=&pp) {
+      TObject::operator=(pp);
+      fClient=pp.fClient;
+      fPath=pp.fPath;
+      fPicList=pp.fPicList;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

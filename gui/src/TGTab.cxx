@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v5-11-02 $:$Id: TGTab.cxx,v 1.31 2006/04/18 12:33:13 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.32 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -84,20 +84,24 @@ TGTabElement::TGTabElement(const TGTabElement& te) :
   fTWidth(te.fTWidth),
   fTHeight(te.fTHeight),
   fEnabled(te.fEnabled)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGTabElement& TGTabElement::operator=(const TGTabElement& te)
 { 
-  if(this!=&te) {
-    TGFrame::operator=(te);
-    fText=te.fText;
-    fNormGC=te.fNormGC;
-    fFontStruct=te.fFontStruct;
-    fTWidth=te.fTWidth;
-    fTHeight=te.fTHeight;
-    fEnabled=te.fEnabled;
-  } return *this;
+   //equal operator
+   if(this!=&te) {
+      TGFrame::operator=(te);
+      fText=te.fText;
+      fNormGC=te.fNormGC;
+      fFontStruct=te.fFontStruct;
+      fTWidth=te.fTWidth;
+      fTHeight=te.fTHeight;
+      fEnabled=te.fEnabled;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -201,16 +205,20 @@ TGTabLayout::TGTabLayout(const TGTabLayout& tl) :
   TGLayoutManager(tl),
   fMain(tl.fMain),
   fList(tl.fList)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGTabLayout& TGTabLayout::operator=(const TGTabLayout& tl)
 {
-  if(this!=&tl) {
-    TGLayoutManager::operator=(tl);
-    fMain=tl.fMain;
-    fList=tl.fList;
-  } return *this;
+   //equal operator
+   if(this!=&tl) {
+      TGLayoutManager::operator=(tl);
+      fMain=tl.fMain;
+      fList=tl.fList;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -329,21 +337,25 @@ TGTab::TGTab(const TGTab& gt) :
   fRemoved(gt.fRemoved),
   fFontStruct(gt.fFontStruct),
   fNormGC(gt.fNormGC)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGTab& TGTab::operator=(const TGTab& gt) 
 {
-  if(this!=&gt) {
-    TGCompositeFrame::operator=(gt);
-    TGWidget::operator=(gt);
-    fCurrent=gt.fCurrent;
-    fTabh=gt.fTabh;
-    fContainer=gt.fContainer;
-    fRemoved=gt.fRemoved;
-    fFontStruct=gt.fFontStruct;
-    fNormGC=gt.fNormGC;
-  } return *this; 
+   //equal operator
+   if(this!=&gt) {
+      TGCompositeFrame::operator=(gt);
+      TGWidget::operator=(gt);
+      fCurrent=gt.fCurrent;
+      fTabh=gt.fTabh;
+      fContainer=gt.fContainer;
+      fRemoved=gt.fRemoved;
+      fFontStruct=gt.fFontStruct;
+      fNormGC=gt.fNormGC;
+   } 
+   return *this; 
 }
 
 //______________________________________________________________________________

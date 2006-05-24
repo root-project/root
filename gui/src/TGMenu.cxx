@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.63 2006/05/18 16:32:02 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.64 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -93,23 +93,27 @@ TGMenuEntry::TGMenuEntry(const TGMenuEntry& me) :
   fLabel(me.fLabel),
   fPic(me.fPic),
   fPopup(me.fPopup)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGMenuEntry& TGMenuEntry::operator=(const TGMenuEntry& me) 
 {
-  if(this!=&me) {
-    TObject::operator=(me);
-    fEntryId=me.fEntryId;
-    fUserData=me.fUserData;
-    fType=me.fType;
-    fStatus=me.fStatus;
-    fEy=me.fEy;
-    fEh=me.fEh;
-    fLabel=me.fLabel;
-    fPic=me.fPic;
-    fPopup=me.fPopup;
-  } return *this;
+   //equal operator
+   if(this!=&me) {
+      TObject::operator=(me);
+      fEntryId=me.fEntryId;
+      fUserData=me.fUserData;
+      fType=me.fType;
+      fStatus=me.fStatus;
+      fEy=me.fEy;
+      fEh=me.fEh;
+      fLabel=me.fLabel;
+      fPic=me.fPic;
+      fPopup=me.fPopup;
+   } 
+   return *this;
 }
 
 
@@ -147,20 +151,24 @@ TGMenuBar::TGMenuBar(const TGMenuBar& mb) :
   fStick(mb.fStick),
   fTrash(mb.fTrash),
   fKeyNavigate(mb.fKeyNavigate)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGMenuBar& TGMenuBar::operator=(const TGMenuBar& mb) 
 {
-  if(this!=&mb) {
-    TGHorizontalFrame::operator=(mb);
-    fCurrent=mb.fCurrent;
-    fTitles=mb.fTitles;
-    fDefaultCursor=mb.fDefaultCursor;
-    fStick=mb.fStick;
-    fTrash=mb.fTrash;
-    fKeyNavigate=mb.fKeyNavigate;
-  } return *this;
+   //equal operator
+   if(this!=&mb) {
+      TGHorizontalFrame::operator=(mb);
+      fCurrent=mb.fCurrent;
+      fTitles=mb.fTitles;
+      fDefaultCursor=mb.fDefaultCursor;
+      fStick=mb.fStick;
+      fTrash=mb.fTrash;
+      fKeyNavigate=mb.fKeyNavigate;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -808,32 +816,36 @@ TGPopupMenu::TGPopupMenu(const TGPopupMenu& pu) :
   fMsgWindow(pu.fMsgWindow),
   fMenuBar(pu.fMenuBar),
   fEntrySep(pu.fEntrySep)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGPopupMenu& TGPopupMenu::operator=(const TGPopupMenu& pu)
 {
-  if(this!=&pu) {
-    TGFrame::operator=(pu);
-    fEntryList=pu.fEntryList;
-    fCurrent=pu.fCurrent;
-    fStick=pu.fStick;
-    fHasGrab=pu.fHasGrab;
-    fPoppedUp=pu.fPoppedUp;
-    fXl=pu.fXl;
-    fMenuWidth=pu.fMenuWidth;
-    fMenuHeight=pu.fMenuHeight;
-    fDelay=pu.fDelay;
-    fNormGC=pu.fNormGC;
-    fSelGC=pu.fSelGC;
-    fSelbackGC=pu.fSelbackGC;
-    fFontStruct=pu.fFontStruct;
-    fHifontStruct=pu.fHifontStruct;
-    fDefaultCursor=pu.fDefaultCursor;
-    fMsgWindow=pu.fMsgWindow;
-    fMenuBar=pu.fMenuBar;
-    fEntrySep=pu.fEntrySep;
-  } return *this;
+   //equal operator
+   if(this!=&pu) {
+      TGFrame::operator=(pu);
+      fEntryList=pu.fEntryList;
+      fCurrent=pu.fCurrent;
+      fStick=pu.fStick;
+      fHasGrab=pu.fHasGrab;
+      fPoppedUp=pu.fPoppedUp;
+      fXl=pu.fXl;
+      fMenuWidth=pu.fMenuWidth;
+      fMenuHeight=pu.fMenuHeight;
+      fDelay=pu.fDelay;
+      fNormGC=pu.fNormGC;
+      fSelGC=pu.fSelGC;
+      fSelbackGC=pu.fSelbackGC;
+      fFontStruct=pu.fFontStruct;
+      fHifontStruct=pu.fHifontStruct;
+      fDefaultCursor=pu.fDefaultCursor;
+      fMsgWindow=pu.fMsgWindow;
+      fMenuBar=pu.fMenuBar;
+      fEntrySep=pu.fEntrySep;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -1824,22 +1836,26 @@ TGMenuTitle::TGMenuTitle(const TGMenuTitle& mt) :
   fHkeycode(mt.fHkeycode),
   fFontStruct(mt.fFontStruct),
   fSelGC(mt.fSelGC)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGMenuTitle& TGMenuTitle::operator=(const TGMenuTitle& mt)
 {
-  if(this!=&mt) {
-    TGFrame::operator=(mt);
-    fMenu=mt.fMenu;
-    fLabel=mt.fLabel;
-    fTitleId=mt.fTitleId;
-    fTitleData=mt.fTitleData;
-    fState=mt.fState;
-    fHkeycode=mt.fHkeycode;
-    fFontStruct=mt.fFontStruct;
-    fSelGC=mt.fSelGC;
-  } return *this;
+   //equal operator
+   if(this!=&mt) {
+      TGFrame::operator=(mt);
+      fMenu=mt.fMenu;
+      fLabel=mt.fLabel;
+      fTitleId=mt.fTitleId;
+      fTitleData=mt.fTitleData;
+      fState=mt.fState;
+      fHkeycode=mt.fHkeycode;
+      fFontStruct=mt.fFontStruct;
+      fSelGC=mt.fSelGC;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

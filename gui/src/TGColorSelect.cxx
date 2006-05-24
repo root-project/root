@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.16 2006/05/10 15:25:49 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.17 2006/05/23 04:47:38 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -95,18 +95,22 @@ TGColorFrame::TGColorFrame(const TGColorFrame& cf) :
   fPixel(cf.fPixel),
   fActive(cf.fActive),
   fGrayGC(cf.fGrayGC)
-{ }
+{ 
+   //copy constructor
+}
 
 //________________________________________________________________________________
 TGColorFrame& TGColorFrame::operator=(const TGColorFrame& cf)
 {
-  if(this!=&cf) {
-    TGFrame::operator=(cf);
-    fMsgWindow=cf.fMsgWindow;
-    fPixel=cf.fPixel;
-    fActive=cf.fActive;
-    fGrayGC=cf.fGrayGC;
-  } return *this;
+   //equal operator
+   if(this!=&cf) {
+      TGFrame::operator=(cf);
+      fMsgWindow=cf.fMsgWindow;
+      fPixel=cf.fPixel;
+      fActive=cf.fActive;
+      fGrayGC=cf.fGrayGC;
+   } 
+   return *this;
 }
 
 //________________________________________________________________________________
@@ -173,18 +177,21 @@ TG16ColorSelector::TG16ColorSelector(const TG16ColorSelector& cs) :
   fActive(cs.fActive),
   fMsgWindow(cs.fMsgWindow)
 {
-  for(Int_t i=0; i<16; i++) fCe[i]=cs.fCe[i];
+   //copy constructor
+   for(Int_t i=0; i<16; i++) fCe[i]=cs.fCe[i];
 }
 
 //________________________________________________________________________________
 TG16ColorSelector& TG16ColorSelector::operator=(const TG16ColorSelector& cs) 
 {
-  if(this!=&cs) {
-    TGCompositeFrame::operator=(cs);
-    fActive=cs.fActive;
-    fMsgWindow=cs.fMsgWindow;
-    for(Int_t i=0; i<16; i++) fCe[i]=cs.fCe[i];
-  } return *this;
+   //equal operator
+   if(this!=&cs) {
+      TGCompositeFrame::operator=(cs);
+      fActive=cs.fActive;
+      fMsgWindow=cs.fMsgWindow;
+      for(Int_t i=0; i<16; i++) fCe[i]=cs.fCe[i];
+   } 
+   return *this;
 }
 
 //________________________________________________________________________________
@@ -289,18 +296,22 @@ TGColorPopup::TGColorPopup(const TGColorPopup& cp) :
   fLaunchDialog(cp.fLaunchDialog),
   fMsgWindow(cp.fMsgWindow),
   fCurrentColor(cp.fCurrentColor)
-{ }
+{ 
+   //copy constructor
+}
 
 //________________________________________________________________________________
 TGColorPopup& TGColorPopup::operator=(const TGColorPopup& cp)
 {
-  if(this!=&cp) {
-    TGCompositeFrame::operator=(cp);
-    fActive=cp.fActive;
-    fLaunchDialog=cp.fLaunchDialog;
-    fMsgWindow=cp.fMsgWindow;
-    fCurrentColor=cp.fCurrentColor;
-  } return *this;
+   //equal operator
+   if(this!=&cp) {
+      TGCompositeFrame::operator=(cp);
+      fActive=cp.fActive;
+      fLaunchDialog=cp.fLaunchDialog;
+      fMsgWindow=cp.fMsgWindow;
+      fCurrentColor=cp.fCurrentColor;
+   } 
+   return *this;
 }
 
 //________________________________________________________________________________
@@ -448,18 +459,22 @@ TGColorSelect::TGColorSelect(const TGColorSelect& cs) :
   fDrawGC(cs.fDrawGC),
   fColorPopup(cs.fColorPopup),
   fPressPos(cs.fPressPos)
-{ }
+{ 
+   //copy constructor
+}
 
 //________________________________________________________________________________
 TGColorSelect& TGColorSelect::operator=(const TGColorSelect& cs)
 {
-  if(this!=&cs) {
-    TGCheckButton::operator=(cs);
-    fColor=cs.fColor;
-    fDrawGC=cs.fDrawGC;
-    fColorPopup=cs.fColorPopup;
-    fPressPos=cs.fPressPos;
-  } return *this;
+   //equal operator
+   if(this!=&cs) {
+      TGCheckButton::operator=(cs);
+      fColor=cs.fColor;
+      fDrawGC=cs.fDrawGC;
+      fColorPopup=cs.fColorPopup;
+      fPressPos=cs.fPressPos;
+   } 
+   return *this;
 }
 
 //________________________________________________________________________________

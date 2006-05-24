@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.22 2006/04/24 13:49:25 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.23 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -104,23 +104,27 @@ TGLabel::TGLabel(const TGLabel& gl) :
   fFontStruct(gl.fFontStruct),
   fHasOwnFont(gl.fHasOwnFont),
   fDisabled(gl.fDisabled)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGLabel& TGLabel::operator=(const TGLabel& gl)
 {
-  if(this!=&gl) {
-    TGFrame::operator=(gl);
-    fText=gl.fText;
-    fTWidth=gl.fTWidth;
-    fTHeight=gl.fTHeight;
-    fTMode=gl.fTMode;
-    fTextChanged=gl.fTextChanged;
-    fNormGC=gl.fNormGC;
-    fFontStruct=gl.fFontStruct;
-    fHasOwnFont=gl.fHasOwnFont;
-    fDisabled=gl.fDisabled;
-  } return *this;
+   //equal operator
+   if(this!=&gl) {
+      TGFrame::operator=(gl);
+      fText=gl.fText;
+      fTWidth=gl.fTWidth;
+      fTHeight=gl.fTHeight;
+      fTMode=gl.fTMode;
+      fTextChanged=gl.fTextChanged;
+      fNormGC=gl.fNormGC;
+      fFontStruct=gl.fFontStruct;
+      fHasOwnFont=gl.fHasOwnFont;
+      fDisabled=gl.fDisabled;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

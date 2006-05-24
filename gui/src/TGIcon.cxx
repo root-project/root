@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.14 2006/05/15 09:41:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.15 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -78,12 +78,14 @@ TGIcon::TGIcon(const TGIcon &p) :
 //______________________________________________________________________________
 TGIcon& TGIcon::operator=(const TGIcon &p)
 {
-  if(this!=&p) {
-    TGFrame::operator=(p);
-    fPic = p.fPic;
-    fImage = p.fImage;
-    fPath = p.fPath;
-  } return *this;
+   //equal operator
+   if(this!=&p) {
+      TGFrame::operator=(p);
+      fPic = p.fPic;
+      fImage = p.fImage;
+      fPath = p.fPath;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

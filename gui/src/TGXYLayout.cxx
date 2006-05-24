@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGXYLayout.cxx,v 1.1 2002/08/08 16:54:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGXYLayout.cxx,v 1.2 2006/05/23 04:47:38 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -159,21 +159,25 @@ TGXYLayout::TGXYLayout(const TGXYLayout& xyl) :
   fFirstHeight(xyl.fFirstHeight),
   fTWidth(xyl.fTWidth),
   fTHeight(xyl.fTHeight)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGXYLayout& TGXYLayout::operator=(const TGXYLayout& xyl) 
 {
-  if(this!=&xyl) {
-    TGLayoutManager::operator=(xyl);
-    fList=xyl.fList;
-    fMain=xyl.fMain;
-    fFirst=xyl.fFirst;
-    fFirstWidth=xyl.fFirstWidth;
-    fFirstHeight=xyl.fFirstHeight;
-    fTWidth=xyl.fTWidth;
-    fTHeight=xyl.fTHeight;
-  } return *this;
+   //equal operator
+   if(this!=&xyl) {
+      TGLayoutManager::operator=(xyl);
+      fList=xyl.fList;
+      fMain=xyl.fMain;
+      fFirst=xyl.fFirst;
+      fFirstWidth=xyl.fFirstWidth;
+      fFirstHeight=xyl.fFirstHeight;
+      fTWidth=xyl.fTWidth;
+      fTHeight=xyl.fTHeight;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

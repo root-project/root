@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.26 2006/04/24 13:59:21 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.27 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -69,18 +69,22 @@ TGFileInfo::TGFileInfo(const TGFileInfo& fi) :
     fFileTypes(fi.fFileTypes),
     fFileTypeIdx(fi.fFileTypeIdx),
     fOverwrite(fi.fOverwrite)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGFileInfo& TGFileInfo::operator=(const TGFileInfo& fi) 
 {
-  if(this!=&fi) {
-    fFilename=fi.fFilename;
-    fIniDir=fi.fIniDir;
-    fFileTypes=fi.fFileTypes;
-    fFileTypeIdx=fi.fFileTypeIdx;
-    fOverwrite=fi.fOverwrite;
-  } return *this;
+   //equal operator
+   if(this!=&fi) {
+      fFilename=fi.fFilename;
+      fIniDir=fi.fIniDir;
+      fFileTypes=fi.fFileTypes;
+      fFileTypeIdx=fi.fFileTypeIdx;
+      fOverwrite=fi.fOverwrite;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -314,32 +318,36 @@ TGFileDialog::TGFileDialog(const TGFileDialog& fd) :
   fFv(fd.fFv),
   fFc(fd.fFc),
   fFileInfo(fd.fFileInfo)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGFileDialog& TGFileDialog::operator=(const TGFileDialog& fd) 
 {
-  if(this!=&fd) {
-    TGTransientFrame::operator=(fd);
-    fTbfname=fd.fTbfname;
-    fName=fd.fName;
-    fTypes=fd.fTypes;
-    fTreeLB=fd.fTreeLB;
-    fCdup=fd.fCdup;
-    fNewf=fd.fNewf;
-    fList=fd.fList;
-    fDetails=fd.fDetails;
-    fOverWR=fd.fOverWR;
-    fPcdup=fd.fPcdup;
-    fPnewf=fd.fPnewf;
-    fPlist=fd.fPlist;
-    fPdetails=fd.fPdetails;
-    fOk=fd.fOk;
-    fCancel=fd.fCancel;
-    fFv=fd.fFv;
-    fFc=fd.fFc;
-    fFileInfo=fd.fFileInfo;
-  } return *this;
+   //equal operator
+   if(this!=&fd) {
+      TGTransientFrame::operator=(fd);
+      fTbfname=fd.fTbfname;
+      fName=fd.fName;
+      fTypes=fd.fTypes;
+      fTreeLB=fd.fTreeLB;
+      fCdup=fd.fCdup;
+      fNewf=fd.fNewf;
+      fList=fd.fList;
+      fDetails=fd.fDetails;
+      fOverWR=fd.fOverWR;
+      fPcdup=fd.fPcdup;
+      fPnewf=fd.fPnewf;
+      fPlist=fd.fPlist;
+      fPdetails=fd.fPdetails;
+      fOk=fd.fOk;
+      fCancel=fd.fCancel;
+      fFv=fd.fFv;
+      fFc=fd.fFc;
+      fFileInfo=fd.fFileInfo;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

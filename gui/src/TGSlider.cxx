@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.16 2006/04/25 08:47:30 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.17 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -83,23 +83,27 @@ TGSlider::TGSlider(const TGSlider& sl) :
    fScale(sl.fScale),
    fDragging(sl.fDragging),
    fSliderPic(sl.fSliderPic)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGSlider& TGSlider::operator=(const TGSlider& sl) 
 {
-  if(this!=&sl) {
-    TGFrame::operator=(sl);
-    TGWidget::operator=(sl);
-    fPos=sl.fPos;
-    fRelPos=sl.fRelPos;
-    fVmin=sl.fVmin;
-    fVmax=sl.fVmax;
-    fType=sl.fType;
-    fScale=sl.fScale;
-    fDragging=sl.fDragging;
-    fSliderPic=sl.fSliderPic;
-  } return *this;
+   //equal operator
+   if(this!=&sl) {
+      TGFrame::operator=(sl);
+      TGWidget::operator=(sl);
+      fPos=sl.fPos;
+      fRelPos=sl.fRelPos;
+      fVmin=sl.fVmin;
+      fVmax=sl.fVmax;
+      fType=sl.fType;
+      fScale=sl.fScale;
+      fDragging=sl.fDragging;
+      fSliderPic=sl.fSliderPic;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

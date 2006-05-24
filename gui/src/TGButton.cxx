@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.65 2006/05/18 16:32:01 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.66 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -125,23 +125,27 @@ TGButton::TGButton(const TGButton& tgb) :
   fUserData(tgb.fUserData), 
   fTip(tgb.fTip), 
   fGroup(tgb.fGroup)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGButton& TGButton::operator=(const TGButton& tgb) 
 {
-  if(this!=&tgb) {
-    TGFrame::operator=(tgb);
-    TGWidget::operator=(tgb);
-    fTWidth=tgb.fTWidth;
-    fTHeight=tgb.fTHeight;
-    fState=tgb.fState;
-    fStayDown=tgb.fStayDown;
-    fNormGC=tgb.fNormGC;
-    fUserData=tgb.fUserData; 
-    fTip=tgb.fTip; 
-    fGroup=tgb.fGroup;
-  } return *this;
+   //equal operator
+   if(this!=&tgb) {
+      TGFrame::operator=(tgb);
+      TGWidget::operator=(tgb);
+      fTWidth=tgb.fTWidth;
+      fTHeight=tgb.fTHeight;
+      fState=tgb.fState;
+      fStayDown=tgb.fStayDown;
+      fNormGC=tgb.fNormGC;
+      fUserData=tgb.fUserData; 
+      fTip=tgb.fTip; 
+      fGroup=tgb.fGroup;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -396,19 +400,23 @@ TGTextButton::TGTextButton(const TGTextButton& tgt) :
   fHKeycode(tgt.fHKeycode),
   fFontStruct(tgt.fFontStruct),
   fHasOwnFont(tgt.fHasOwnFont) 
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGTextButton& TGTextButton::operator=(const TGTextButton& tgt) 
 {
-  if(this!=&tgt) {
-    TGButton::operator=(tgt);
-    fLabel=tgt.fLabel;
-    fTMode=tgt.fTMode;
-    fHKeycode=tgt.fHKeycode;
-    fFontStruct=tgt.fFontStruct;
-    fHasOwnFont=tgt.fHasOwnFont;
-  } return *this;
+   //equal operator
+   if(this!=&tgt) {
+      TGButton::operator=(tgt);
+      fLabel=tgt.fLabel;
+      fTMode=tgt.fTMode;
+      fHKeycode=tgt.fHKeycode;
+      fFontStruct=tgt.fFontStruct;
+      fHasOwnFont=tgt.fHasOwnFont;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

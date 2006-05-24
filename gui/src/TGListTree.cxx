@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v5-11-02 $:$Id: TGListTree.cxx,v 1.49 2006/04/08 10:23:03 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.50 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -162,36 +162,40 @@ TGListTreeItem::TGListTreeItem(const TGListTreeItem& lti) :
   fUserData(lti.fUserData),
   fHasColor(lti.fHasColor),
   fColor(lti.fColor)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGListTreeItem& TGListTreeItem::operator=(const TGListTreeItem& lti)
 {
-  if(this!=&lti) {
-    fClient=lti.fClient;
-    fParent=lti.fParent;
-    fFirstchild=lti.fFirstchild;
-    fPrevsibling=lti.fPrevsibling;
-    fNextsibling=lti.fNextsibling;
-    fOpen=lti.fOpen;
-    fActive=lti.fActive;
-    fCheckBox=lti.fCheckBox;
-    fChecked=lti.fChecked;
-    fText=lti.fText;
-    fTipText=lti.fTipText;
-    fY=lti.fY;
-    fXtext=lti.fXtext;
-    fYtext=lti.fYtext;
-    fHeight=lti.fHeight;
-    fPicWidth=lti.fPicWidth;
-    fOpenPic=lti.fOpenPic;
-    fClosedPic=lti.fClosedPic;
-    fCheckedPic=lti.fCheckedPic;
-    fUncheckedPic=lti.fUncheckedPic;
-    fUserData=lti.fUserData;
-    fHasColor=lti.fHasColor;
-    fColor=lti.fColor;
-  } return *this;
+   //equal operator
+   if(this!=&lti) {
+      fClient=lti.fClient;
+      fParent=lti.fParent;
+      fFirstchild=lti.fFirstchild;
+      fPrevsibling=lti.fPrevsibling;
+      fNextsibling=lti.fNextsibling;
+      fOpen=lti.fOpen;
+      fActive=lti.fActive;
+      fCheckBox=lti.fCheckBox;
+      fChecked=lti.fChecked;
+      fText=lti.fText;
+      fTipText=lti.fTipText;
+      fY=lti.fY;
+      fXtext=lti.fXtext;
+      fYtext=lti.fYtext;
+      fHeight=lti.fHeight;
+      fPicWidth=lti.fPicWidth;
+      fOpenPic=lti.fOpenPic;
+      fClosedPic=lti.fClosedPic;
+      fCheckedPic=lti.fCheckedPic;
+      fUncheckedPic=lti.fUncheckedPic;
+      fUserData=lti.fUserData;
+      fHasColor=lti.fHasColor;
+      fColor=lti.fColor;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -379,36 +383,40 @@ TGListTree::TGListTree(const TGListTree& lt) :
   fDisableOpen(lt.fDisableOpen),
   fColorMode(lt.fColorMode),
   fColorGC(lt.fColorGC)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGListTree& TGListTree::operator=(const TGListTree& lt) 
 {
-  if(this!=&lt) {
-    TGContainer::operator=(lt);
-    fFirst=lt.fFirst;
-    fSelected=lt.fSelected;
-    fHspacing=lt.fHspacing;
-    fVspacing=lt.fVspacing;
-    fIndent=lt.fIndent;
-    fMargin=lt.fMargin;
-    fLastY=lt.fLastY;
-    fGrayPixel=lt.fGrayPixel;
-    fDrawGC=lt.fDrawGC;
-    fLineGC=lt.fLineGC;
-    fHighlightGC=lt.fHighlightGC;
-    fFont=lt.fFont;
-    fDefw=lt.fDefw;
-    fDefh=lt.fDefh;
-    fExposeTop=lt.fExposeTop;
-    fExposeBottom=lt.fExposeBottom;
-    fTip=lt.fTip;
-    fTipItem=lt.fTipItem;
-    fAutoTips=lt.fAutoTips;
-    fDisableOpen=lt.fDisableOpen;
-    fColorMode=lt.fColorMode;
-    fColorGC=lt.fColorGC;
-  } return *this;
+   //equal operator
+   if(this!=&lt) {
+      TGContainer::operator=(lt);
+      fFirst=lt.fFirst;
+      fSelected=lt.fSelected;
+      fHspacing=lt.fHspacing;
+      fVspacing=lt.fVspacing;
+      fIndent=lt.fIndent;
+      fMargin=lt.fMargin;
+      fLastY=lt.fLastY;
+      fGrayPixel=lt.fGrayPixel;
+      fDrawGC=lt.fDrawGC;
+      fLineGC=lt.fLineGC;
+      fHighlightGC=lt.fHighlightGC;
+      fFont=lt.fFont;
+      fDefw=lt.fDefw;
+      fDefh=lt.fDefh;
+      fExposeTop=lt.fExposeTop;
+      fExposeBottom=lt.fExposeBottom;
+      fTip=lt.fTip;
+      fTipItem=lt.fTipItem;
+      fAutoTips=lt.fAutoTips;
+      fDisableOpen=lt.fDisableOpen;
+      fColorMode=lt.fColorMode;
+      fColorGC=lt.fColorGC;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

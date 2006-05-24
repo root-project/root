@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.21 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.22 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -126,25 +126,29 @@ TGTextView::TGTextView(const TGTextView& tv) :
   fSelbackGC(tv.fSelbackGC),
   fMarkedFromX(tv.fMarkedFromX),
   fMarkedFromY(tv.fMarkedFromY)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGTextView& TGTextView::operator=(const TGTextView& tv)
 {
-  if(this!=&tv) {
-    TGView::operator=(tv);
-    fText=tv.fText;
-    fClipText=tv.fClipText;
-    fFont=tv.fFont;
-    fMaxAscent=tv.fMaxAscent;
-    fMaxDescent=tv.fMaxDescent;
-    fMaxWidth=tv.fMaxWidth;
-    fNormGC=tv.fNormGC;
-    fSelGC=tv.fSelGC;
-    fSelbackGC=tv.fSelbackGC;
-    fMarkedFromX=tv.fMarkedFromX;
-    fMarkedFromY=tv.fMarkedFromY;
-  } return *this;
+   //equal operator
+   if(this!=&tv) {
+      TGView::operator=(tv);
+      fText=tv.fText;
+      fClipText=tv.fClipText;
+      fFont=tv.fFont;
+      fMaxAscent=tv.fMaxAscent;
+      fMaxDescent=tv.fMaxDescent;
+      fMaxWidth=tv.fMaxWidth;
+      fNormGC=tv.fNormGC;
+      fSelGC=tv.fSelGC;
+      fSelbackGC=tv.fSelbackGC;
+      fMarkedFromX=tv.fMarkedFromX;
+      fMarkedFromY=tv.fMarkedFromY;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

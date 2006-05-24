@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.16 2006/05/18 16:32:02 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.17 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -129,20 +129,24 @@ TGStatusBar::TGStatusBar(const TGStatusBar& sb) :
   fYt(sb.fYt),
   fXt(sb.fXt),
   f3DCorner(sb.f3DCorner)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGStatusBar& TGStatusBar::operator=(const TGStatusBar& sb) 
 { 
-  if(this!=&sb) {
-    TGHorizontalFrame::operator=(sb);
-    fStatusPart=sb.fStatusPart;
-    fParts=sb.fParts;
-    fNpart=sb.fNpart;
-    fYt=sb.fYt;
-    fXt=sb.fXt;
-    f3DCorner=sb.f3DCorner;
-  } return *this;
+   //equal operator
+   if(this!=&sb) {
+      TGHorizontalFrame::operator=(sb);
+      fStatusPart=sb.fStatusPart;
+      fParts=sb.fParts;
+      fNpart=sb.fNpart;
+      fYt=sb.fYt;
+      fXt=sb.fXt;
+      f3DCorner=sb.f3DCorner;
+   } 
+   return *this;
 }
 
 

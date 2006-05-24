@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.16 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.17 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -83,17 +83,21 @@ TGTextLine::TGTextLine(const TGTextLine& tl) :
   fLength(tl.fLength),
   fPrev(tl.fPrev),
   fNext(tl.fNext)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGTextLine& TGTextLine::operator=(const TGTextLine& tl)
 {
-  if(this!=&tl) {
-    fString=tl.fString;
-    fLength=tl.fLength;
-    fPrev=tl.fPrev;
-    fNext=tl.fNext;
-  } return *this;
+   //equal operator
+   if(this!=&tl) {
+      fString=tl.fString;
+      fLength=tl.fLength;
+      fPrev=tl.fPrev;
+      fNext=tl.fNext;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -243,21 +247,25 @@ TGText::TGText(const TGText& gt) :
   fRowCount(gt.fRowCount),
   fColCount(gt.fColCount),
   fLongestLine(gt.fLongestLine)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGText& TGText::operator=(const TGText& gt)
 {
-  if(this!=&gt) {
-    fFilename=gt.fFilename;
-    fIsSaved=gt.fIsSaved;
-    fFirst=gt.fFirst;
-    fCurrent=gt.fCurrent;
-    fCurrentRow=gt.fCurrentRow;
-    fRowCount=gt.fRowCount;
-    fColCount=gt.fColCount;
-    fLongestLine=gt.fLongestLine;
-  } return *this;
+   //equal operator
+   if(this!=&gt) {
+      fFilename=gt.fFilename;
+      fIsSaved=gt.fIsSaved;
+      fFirst=gt.fFirst;
+      fCurrent=gt.fCurrent;
+      fCurrentRow=gt.fCurrentRow;
+      fRowCount=gt.fRowCount;
+      fColCount=gt.fColCount;
+      fLongestLine=gt.fLongestLine;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

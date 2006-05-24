@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.42 2006/05/18 16:32:01 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.43 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -369,36 +369,40 @@ TGContainer::TGContainer(const TGContainer& gc) :
   fKeyInput(gc.fKeyInput),
   fKeyTimerActive(gc.fKeyTimerActive),
   fScrolling(gc.fScrolling)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGContainer& TGContainer::operator=(const TGContainer& gc) 
 {
-  if(this!=&gc) {
-    TGCompositeFrame::operator=(gc);
-    fViewPort=gc.fViewPort;
-    fCanvas=gc.fCanvas;
-    fMsgWindow=gc.fMsgWindow;
-    fLastActiveEl=gc.fLastActiveEl;
-    fXp=gc.fXp;
-    fYp=gc.fYp;
-    fX0=gc.fX0;
-    fY0=gc.fY0;
-    fXf=gc.fXf;
-    fYf=gc.fYf;
-    fDragging=gc.fDragging;
-    fTotal=gc.fTotal;
-    fSelected=gc.fSelected;
-    fScrollTimer=gc.fScrollTimer;
-    fOnMouseOver=gc.fOnMouseOver;
-    fLastDir=gc.fLastDir;
-    fLastCase=gc.fLastCase;
-    fLastName=gc.fLastName;
-    fKeyTimer=gc.fKeyTimer;
-    fKeyInput=gc.fKeyInput;
-    fKeyTimerActive=gc.fKeyTimerActive;
-    fScrolling=gc.fScrolling;
-  } return *this;
+   //equal operator
+   if(this!=&gc) {
+      TGCompositeFrame::operator=(gc);
+      fViewPort=gc.fViewPort;
+      fCanvas=gc.fCanvas;
+      fMsgWindow=gc.fMsgWindow;
+      fLastActiveEl=gc.fLastActiveEl;
+      fXp=gc.fXp;
+      fYp=gc.fYp;
+      fX0=gc.fX0;
+      fY0=gc.fY0;
+      fXf=gc.fXf;
+      fYf=gc.fYf;
+      fDragging=gc.fDragging;
+      fTotal=gc.fTotal;
+      fSelected=gc.fSelected;
+      fScrollTimer=gc.fScrollTimer;
+      fOnMouseOver=gc.fOnMouseOver;
+      fLastDir=gc.fLastDir;
+      fLastCase=gc.fLastCase;
+      fLastName=gc.fLastName;
+      fKeyTimer=gc.fKeyTimer;
+      fKeyInput=gc.fKeyInput;
+      fKeyTimerActive=gc.fKeyTimerActive;
+      fScrolling=gc.fScrolling;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -1938,18 +1942,22 @@ TGCanvas::TGCanvas(const TGCanvas& gc) :
   fHScrollbar(gc.fHScrollbar),
   fVScrollbar(gc.fVScrollbar),
   fScrolling(gc.fScrolling)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGCanvas& TGCanvas::operator=(const TGCanvas& gc)
 {
-  if(this!=&gc) {
-    TGFrame::operator=(gc);
-    fVport=gc.fVport;
-    fHScrollbar=gc.fHScrollbar;
-    fVScrollbar=gc.fVScrollbar;
-    fScrolling=gc.fScrolling;
-  } return *this;
+   //equal operator
+   if(this!=&gc) {
+      TGFrame::operator=(gc);
+      fVport=gc.fVport;
+      fHScrollbar=gc.fHScrollbar;
+      fVScrollbar=gc.fVScrollbar;
+      fScrolling=gc.fScrolling;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

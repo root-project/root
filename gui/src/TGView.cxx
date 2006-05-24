@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.16 2005/12/13 16:58:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.17 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -158,33 +158,37 @@ TGView::TGView(const TGView& gv) :
   fScrollTimer(gv.fScrollTimer),
   fWhiteGC(gv.fWhiteGC),
   fReadOnly(gv.fReadOnly)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGView& TGView::operator=(const TGView& gv) 
 {
-  if(this!=&gv) {
-    TGCompositeFrame::operator=(gv);
-    TGWidget::operator=(gv);
-    fMarkedStart=gv.fMarkedStart;
-    fMarkedEnd=gv.fMarkedEnd;
-    fVisible=gv.fVisible;
-    fMousePos=gv.fMousePos;
-    fScrollVal=gv.fScrollVal;
-    fIsMarked=gv.fIsMarked;
-    fIsMarking=gv.fIsMarking;
-    fIsSaved=gv.fIsSaved;
-    fScrolling=gv.fScrolling;
-    fClipboard=gv.fClipboard;
-    fXMargin=gv.fXMargin;
-    fYMargin=gv.fYMargin;
-    fCanvas=gv.fCanvas;
-    fHsb=gv.fHsb;
-    fVsb=gv.fVsb;
-    fScrollTimer=gv.fScrollTimer;
-    fWhiteGC=gv.fWhiteGC;
-    fReadOnly=gv.fReadOnly;
-  } return *this;
+   //equal operator
+   if(this!=&gv) {
+      TGCompositeFrame::operator=(gv);
+      TGWidget::operator=(gv);
+      fMarkedStart=gv.fMarkedStart;
+      fMarkedEnd=gv.fMarkedEnd;
+      fVisible=gv.fVisible;
+      fMousePos=gv.fMousePos;
+      fScrollVal=gv.fScrollVal;
+      fIsMarked=gv.fIsMarked;
+      fIsMarking=gv.fIsMarking;
+      fIsSaved=gv.fIsSaved;
+      fScrolling=gv.fScrolling;
+      fClipboard=gv.fClipboard;
+      fXMargin=gv.fXMargin;
+      fYMargin=gv.fYMargin;
+      fCanvas=gv.fCanvas;
+      fHsb=gv.fHsb;
+      fVsb=gv.fVsb;
+      fScrollTimer=gv.fScrollTimer;
+      fWhiteGC=gv.fWhiteGC;
+      fReadOnly=gv.fReadOnly;
+   } 
+   return *this;
 
 }
 

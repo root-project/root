@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.11 2006/05/05 16:25:59 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.12 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -132,34 +132,38 @@ TGMsgBox::TGMsgBox(const TGMsgBox& mb) :
   fL5(mb.fL5),
   fMsgList(mb.fMsgList),
   fRetCode(mb.fRetCode)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGMsgBox& TGMsgBox::operator=(const TGMsgBox& mb)
 {
-  if(this!=&mb) {
-    TGTransientFrame::operator=(mb);
-    fYes=mb.fYes;
-    fNo=mb.fNo;
-    fOK=mb.fOK;
-    fApply=mb.fApply;
-    fRetry=mb.fRetry;
-    fIgnore=mb.fIgnore;
-    fCancel=mb.fCancel;
-    fClose=mb.fClose;
-    fDismiss=mb.fDismiss;
-    fIcon=mb.fIcon;
-    fButtonFrame=mb.fButtonFrame;
-    fIconFrame=mb.fIconFrame;
-    fLabelFrame=mb.fLabelFrame;
-    fL1=mb.fL1;
-    fL2=mb.fL2;
-    fL3=mb.fL3;
-    fL4=mb.fL4;
-    fL5=mb.fL5;
-    fMsgList=mb.fMsgList;
-    fRetCode=mb.fRetCode;
-  } return *this;
+   //equal operator
+   if(this!=&mb) {
+      TGTransientFrame::operator=(mb);
+      fYes=mb.fYes;
+      fNo=mb.fNo;
+      fOK=mb.fOK;
+      fApply=mb.fApply;
+      fRetry=mb.fRetry;
+      fIgnore=mb.fIgnore;
+      fCancel=mb.fCancel;
+      fClose=mb.fClose;
+      fDismiss=mb.fDismiss;
+      fIcon=mb.fIcon;
+      fButtonFrame=mb.fButtonFrame;
+      fIconFrame=mb.fIconFrame;
+      fLabelFrame=mb.fLabelFrame;
+      fL1=mb.fL1;
+      fL2=mb.fL2;
+      fL3=mb.fL3;
+      fL4=mb.fL4;
+      fL5=mb.fL5;
+      fMsgList=mb.fMsgList;
+      fRetCode=mb.fRetCode;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
