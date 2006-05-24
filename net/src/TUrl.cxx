@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.28 2006/05/11 16:14:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.29 2006/05/17 17:11:49 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -51,6 +51,28 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Port #1093 has been assigned by IANA (www.iana.org) to proofd.
    // Port #1094 has been assigned by IANA (www.iana.org) to rootd.
 
+   SetUrl(url, defaultIsFile);
+}
+
+//______________________________________________________________________________
+void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
+{
+   // Parse url character string and split in its different subcomponents.
+   // Use IsValid() to check if URL is legal.
+   //
+   // url: [proto://][user[:passwd]@]host[:port]/file.ext[?options][#anchor]
+   //
+   // Known protocols: http, root, proof, ftp, news and any special protocols
+   // defined in the rootrc Url.Special key.
+   // The default protocol is "http", unless defaultIsFile is true in which
+   // case the url is assumed to be of type "file".
+   // If a passwd contains a @ it must be escaped by a \\, e.g.
+   // "pip@" becomes "pip\\@".
+   //
+   // Default ports: http=80, root=1094, proof=1093, ftp=20, news=119.
+   // Port #1093 has been assigned by IANA (www.iana.org) to proofd.
+   // Port #1094 has been assigned by IANA (www.iana.org) to rootd.
+
    if (!url || !strlen(url)) {
       fPort = -1;
       return;
@@ -74,7 +96,7 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Find protocol
    char *s, sav;
 
-   char *u, *u0 = StrDup(url);
+   char *u, *u0 = Strip(url);
 tryfile:
    u = u0;
 

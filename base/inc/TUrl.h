@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.15 2006/05/02 13:03:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.16 2006/05/23 04:47:40 brun Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -52,9 +52,8 @@ private:
    void FindFile(char *u);
 
 public:
-   TUrl():
-     fUrl(), fProtocol(), fUser(), fPasswd(), fHost(), fFile(),
-     fAnchor(), fOptions(), fFileOA(), fHostFQ(), fPort(-1) { }
+   TUrl() : fUrl(), fProtocol(), fUser(), fPasswd(), fHost(), fFile(),
+            fAnchor(), fOptions(), fFileOA(), fHostFQ(), fPort(-1) { }
    TUrl(const char *url, Bool_t defaultIsFile = kFALSE);
    TUrl(const TUrl &url);
    TUrl &operator=(const TUrl &rhs);
@@ -81,6 +80,7 @@ public:
    void        SetAnchor(const char *anchor) { fAnchor = anchor; fUrl = ""; }
    void        SetOptions(const char *opt) { fOptions = opt; fUrl = ""; }
    void        SetPort(Int_t port) { fPort = port; fUrl = ""; }
+   void        SetUrl(const char *url, Bool_t defaultIsFile = kFALSE);
 
    Bool_t      IsSortable() const { return kTRUE; }
    Int_t       Compare(const TObject *obj) const;
