@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name: v5-11-02 $:$Id: TGLLogicalShape.cxx,v 1.11 2006/04/19 10:58:47 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.12 2006/05/23 04:47:37 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 //////////////////////////////////////////////////////////////////////////
@@ -68,17 +68,21 @@ TGLLogicalShape::TGLLogicalShape(const TGLLogicalShape& gls) :
   fRef(gls.fRef),
   fRefStrong(gls.fRefStrong),
   fExternalObj(gls.fExternalObj)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TGLLogicalShape& TGLLogicalShape::operator=(const TGLLogicalShape& gls)
 {
-  if(this!=&gls) {
-    TGLDrawable::operator=(gls);
-    fRef=gls.fRef;
-    fRefStrong=gls.fRefStrong;
-    fExternalObj=gls.fExternalObj;
-  } return *this;
+   //assignement operator
+   if(this!=&gls) {
+      TGLDrawable::operator=(gls);
+      fRef=gls.fRef;
+      fRefStrong=gls.fRefStrong;
+      fExternalObj=gls.fExternalObj;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.12 2006/02/20 11:02:19 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.13 2006/05/23 04:47:37 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -53,16 +53,20 @@ TGLDrawable::TGLDrawable(const TGLDrawable& gld) :
   fID(gld.fID),
   fCached(gld.fCached),
   fBoundingBox(gld.fBoundingBox)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 const TGLDrawable& TGLDrawable::operator=(const TGLDrawable& gld) 
 {
-  if(this!=&gld) {
-    fID=gld.fID;
-    fCached=gld.fCached;
-    fBoundingBox=gld.fBoundingBox;
-  } return *this;
+   //assignement operator
+   if(this!=&gld) {
+      fID=gld.fID;
+      fCached=gld.fCached;
+      fBoundingBox=gld.fBoundingBox;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

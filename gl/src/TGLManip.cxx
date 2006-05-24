@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.cxx,v 1.10 2006/03/08 21:09:43 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLManip.cxx,v 1.11 2006/05/23 04:47:37 brun Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -75,35 +75,38 @@ TGLManip::TGLManip(const TGLManip& gm) :
   fFirstMouse(gm.fFirstMouse),
   fLastMouse(gm.fLastMouse)
 {
-  for(Int_t i=0; i<4; i++) {
-    fgRed[i]=gm.fgRed[i];
-    fgGreen[i]=gm.fgGreen[i];
-    fgBlue[i]=gm.fgBlue[i];
-    fgYellow[i]=gm.fgYellow[i];
-    fgWhite[i]=gm.fgWhite[i];
-    fgGrey[i]=gm.fgGrey[i];
-  }
-}
-
-//______________________________________________________________________________
-TGLManip& TGLManip::operator=(const TGLManip& gm)
-{
-  if(this!=&gm) {
-    TVirtualGLManip::operator=(gm);
-    fShape=gm.fShape;
-    fSelectedWidget=gm.fSelectedWidget;
-    fActive=gm.fActive;
-    fFirstMouse=gm.fFirstMouse;
-    fLastMouse=gm.fLastMouse;
-    for(Int_t i=0; i<4; i++) {
+   //copy constructor
+   for(Int_t i=0; i<4; i++) {
       fgRed[i]=gm.fgRed[i];
       fgGreen[i]=gm.fgGreen[i];
       fgBlue[i]=gm.fgBlue[i];
       fgYellow[i]=gm.fgYellow[i];
       fgWhite[i]=gm.fgWhite[i];
       fgGrey[i]=gm.fgGrey[i];
-    }
-  } return *this;
+   }
+}
+
+//______________________________________________________________________________
+TGLManip& TGLManip::operator=(const TGLManip& gm)
+{
+   //assignement operator
+   if(this!=&gm) {
+      TVirtualGLManip::operator=(gm);
+      fShape=gm.fShape;
+      fSelectedWidget=gm.fSelectedWidget;
+      fActive=gm.fActive;
+      fFirstMouse=gm.fFirstMouse;
+      fLastMouse=gm.fLastMouse;
+      for(Int_t i=0; i<4; i++) {
+         fgRed[i]=gm.fgRed[i];
+         fgGreen[i]=gm.fgGreen[i];
+         fgBlue[i]=gm.fgBlue[i];
+         fgYellow[i]=gm.fgYellow[i];
+         fgWhite[i]=gm.fgWhite[i];
+         fgGrey[i]=gm.fgGrey[i];
+      }
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
