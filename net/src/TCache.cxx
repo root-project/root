@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.7 2004/01/19 18:31:13 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.8 2006/05/23 04:47:40 brun Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -88,25 +88,29 @@ TCache::TCache(const TCache& tc) :
   fLowLevel(tc.fLowLevel),
   fDiv(tc.fDiv),
   fRecursive(tc.fRecursive)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TCache& TCache::operator=(const TCache& tc) 
 {
-  if(this!=&tc) {
-    TObject::operator=(tc);
-    fCache=tc.fCache;
-    fNew=tc.fNew;
-    fFree=tc.fFree;
-    fFile=tc.fFile;
-    fEOF=tc.fEOF;
-    fHighWater=tc.fHighWater;
-    fLowWater=tc.fLowWater;
-    fPageSize=tc.fPageSize;
-    fLowLevel=tc.fLowLevel;
-    fDiv=tc.fDiv;
-    fRecursive=tc.fRecursive;
-  } return *this;
+   //assignement operator
+   if(this!=&tc) {
+      TObject::operator=(tc);
+      fCache=tc.fCache;
+      fNew=tc.fNew;
+      fFree=tc.fFree;
+      fFile=tc.fFile;
+      fEOF=tc.fEOF;
+      fHighWater=tc.fHighWater;
+      fLowWater=tc.fLowWater;
+      fPageSize=tc.fPageSize;
+      fLowLevel=tc.fLowLevel;
+      fDiv=tc.fDiv;
+      fRecursive=tc.fRecursive;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -449,16 +453,20 @@ TCache::TPage::TPage(const TCache::TPage& tp) :
   fOffset(tp.fOffset),
   fData(tp.fData),
   fSize(tp.fSize)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TCache::TPage& TCache::TPage::operator=(const TCache::TPage& tp) 
 {
-  if(this!=&tp) {
-    TObject::operator=(tp);
-    fOffset=tp.fOffset;
-    fData=tp.fData;
-    fSize=tp.fSize;
-  } return *this;
+   //assignement operator
+   if(this!=&tp) {
+      TObject::operator=(tp);
+      fOffset=tp.fOffset;
+      fData=tp.fData;
+      fSize=tp.fSize;
+   } 
+   return *this;
 }
 

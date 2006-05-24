@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStatement.h,v 1.1 2006/04/12 20:53:45 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStatement.h,v 1.2 2006/05/22 08:55:30 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -66,7 +66,7 @@ public:
    virtual Int_t       GetErrorCode() const;
    virtual const char* GetErrorMsg() const;
 
-   ClassDef(TSQLStatement, 0);
+   ClassDef(TSQLStatement, 0) //SQL statement
 };
 
 #endif

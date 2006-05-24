@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassMenuItem.cxx,v 1.1 2002/04/04 17:32:13 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassMenuItem.cxx,v 1.2 2006/05/23 04:47:40 brun Exp $
 // Author: Damir Buskulic   23/11/2001
 
 /*************************************************************************
@@ -92,24 +92,28 @@ TClassMenuItem::TClassMenuItem(const TClassMenuItem& cmi) :
   fArgs(cmi.fArgs),
   fSubMenu(cmi.fSubMenu),
   fParent(cmi.fParent)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TClassMenuItem& TClassMenuItem::operator=(const TClassMenuItem& cmi) 
 {
-  if(this!=&cmi) {
-    TObject::operator=(cmi);
-    fType=cmi.fType;
-    fSelfObjectPos=cmi.fSelfObjectPos;
-    fSelf=cmi.fSelf;
-    fToggle=cmi.fToggle;
-    fTitle=cmi.fTitle;
-    fCalledObject=cmi.fCalledObject;
-    fFunctionName=cmi.fFunctionName;
-    fArgs=cmi.fArgs;
-    fSubMenu=cmi.fSubMenu;
-    fParent=cmi.fParent;
-  } return *this;
+   //assignement operator
+   if(this!=&cmi) {
+      TObject::operator=(cmi);
+      fType=cmi.fType;
+      fSelfObjectPos=cmi.fSelfObjectPos;
+      fSelf=cmi.fSelf;
+      fToggle=cmi.fToggle;
+      fTitle=cmi.fTitle;
+      fCalledObject=cmi.fCalledObject;
+      fFunctionName=cmi.fFunctionName;
+      fArgs=cmi.fArgs;
+      fSubMenu=cmi.fSubMenu;
+      fParent=cmi.fParent;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

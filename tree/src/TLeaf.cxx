@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name: v5-11-02 $:$Id: TLeaf.cxx,v 1.16 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.17 2006/05/23 04:47:42 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -87,22 +87,26 @@ TLeaf::TLeaf(const TLeaf& lf) :
   fIsUnsigned(lf.fIsUnsigned),
   fLeafCount(lf.fLeafCount),
   fBranch(lf.fBranch)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TLeaf& TLeaf::operator=(const TLeaf& lf) 
 {
-  if(this!=&lf) {
-    TNamed::operator=(lf);
-    fNdata=lf.fNdata;
-    fLen=lf.fLen;
-    fLenType=lf.fLenType;
-    fOffset=lf.fOffset;
-    fIsRange=lf.fIsRange;
-    fIsUnsigned=lf.fIsUnsigned;
-    fLeafCount=lf.fLeafCount;
-    fBranch=lf.fBranch;
-  } return *this;
+   //assignement operator
+   if(this!=&lf) {
+      TNamed::operator=(lf);
+      fNdata=lf.fNdata;
+      fLen=lf.fLen;
+      fLenType=lf.fLenType;
+      fOffset=lf.fOffset;
+      fIsRange=lf.fIsRange;
+      fIsUnsigned=lf.fIsUnsigned;
+      fLeafCount=lf.fLeafCount;
+      fBranch=lf.fBranch;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

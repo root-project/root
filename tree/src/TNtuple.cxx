@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name: v5-11-02 $:$Id: TNtuple.cxx,v 1.12 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.13 2006/05/23 04:47:42 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -51,16 +51,20 @@ TNtuple::TNtuple(): TTree()
 TNtuple::TNtuple(const TNtuple& tnt) : 
   TTree(tnt), fNvar(tnt.fNvar), fArgs(tnt.fArgs)
 {
+   //copy constructor
 }
 
 //______________________________________________________________________________
 TNtuple& TNtuple::operator=(const TNtuple& tnt)
 {
-  if(this!=&tnt) {
-    TTree::operator=(tnt);
-    fNvar=tnt.fNvar;
-    fArgs=tnt.fArgs;
-  } return *this;
+   //assignement operator
+   
+   if(this!=&tnt) {
+      TTree::operator=(tnt);
+      fNvar=tnt.fNvar;
+      fArgs=tnt.fArgs;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

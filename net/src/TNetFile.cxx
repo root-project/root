@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.68 2006/05/04 17:05:29 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.69 2006/05/23 04:47:40 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -112,19 +112,23 @@ TNetFile::TNetFile(const TNetFile& nf) :
   fSocket(nf.fSocket),
   fProtocol(nf.fProtocol),
   fErrorCode(nf.fErrorCode)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TNetFile& TNetFile::operator=(const TNetFile& nf) 
 {
-  if(this!=&nf) {
-    TFile::operator=(nf);
-    fEndpointUrl=nf.fEndpointUrl;
-    fUser=nf.fUser;
-    fSocket=nf.fSocket;
-    fProtocol=nf.fProtocol;
-    fErrorCode=nf.fErrorCode;
-  } return *this;
+   //assignement operator
+   if(this!=&nf) {
+      TFile::operator=(nf);
+      fEndpointUrl=nf.fEndpointUrl;
+      fUser=nf.fUser;
+      fSocket=nf.fSocket;
+      fProtocol=nf.fProtocol;
+      fErrorCode=nf.fErrorCode;
+   } 
+   return *this;
 }
 #endif
 
@@ -747,21 +751,25 @@ TNetSystem::TNetSystem(const TNetSystem& ns) :
   fFTPOwner(ns.fFTPOwner),
   fUser(ns.fUser),
   fPort(ns.fPort)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TNetSystem& TNetSystem::operator=(const TNetSystem& ns) 
 {
-  if(this!=&ns) {
-    TSystem::operator=(ns);
-    fDir=ns.fDir;
-    fDirp=ns.fDirp;
-    fFTP=ns.fFTP;
-    fHost=ns.fHost;
-    fFTPOwner=ns.fFTPOwner;
-    fUser=ns.fUser;
-    fPort=ns.fPort;
-  } return *this;
+   //assignement operator
+   if(this!=&ns) {
+      TSystem::operator=(ns);
+      fDir=ns.fDir;
+      fDirp=ns.fDirp;
+      fFTP=ns.fFTP;
+      fHost=ns.fHost;
+      fFTPOwner=ns.fFTPOwner;
+      fUser=ns.fUser;
+      fPort=ns.fPort;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

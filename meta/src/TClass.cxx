@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.190 2006/05/16 20:27:52 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.191 2006/05/23 04:47:40 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -757,54 +757,58 @@ TClass::TClass(const TClass& cl) :
   fStreamerType(cl.fStreamerType),
   fCurrentInfo(cl.fCurrentInfo),
   fRefStart(cl.fRefStart) 
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TClass& TClass::operator=(const TClass& cl) 
 {
-  if(this!=&cl) {
-    TDictionary::operator=(cl);
-    fStreamerInfo=cl.fStreamerInfo;
-    fRealData=cl.fRealData;
-    fBase=cl.fBase;
-    fData=cl.fData;
-    fMethod=cl.fMethod;
-    fAllPubData=cl.fAllPubData;
-    fAllPubMethod=cl.fAllPubMethod;
-    fDeclFileName=cl.fDeclFileName;
-    fImplFileName=cl.fImplFileName;
-    fDeclFileLine=cl.fDeclFileLine;
-    fImplFileLine=cl.fImplFileLine;
-    fInstanceCount=cl.fInstanceCount;
-    fOnHeap=cl.fOnHeap;
-    fCheckSum=cl.fCheckSum;
-    fCollectionProxy=cl.fCollectionProxy;
-    fClassVersion=cl.fClassVersion;
-    fClassInfo=cl.fClassInfo;
-    fContextMenuTitle=cl.fContextMenuTitle;
-    fClassMenuList=cl.fClassMenuList;
-    fClassEditors=cl.fClassEditors;
-    fTypeInfo=cl.fTypeInfo;
-    fShowMembers=cl.fShowMembers;
-    fStreamer=cl.fStreamer;
-    fSharedLibs=cl.fSharedLibs;
-    fIsA=cl.fIsA; 
-    fGlobalIsA=cl.fGlobalIsA;
-    fIsAMethod=cl.fIsAMethod;
-    fNew=cl.fNew;
-    fNewArray=cl.fNewArray; 
-    fDelete=cl.fDelete;
-    fDeleteArray=cl.fDeleteArray;
-    fDestructor=cl.fDestructor;
-    fSizeof=cl.fSizeof;
-    fVersionUsed=cl.fVersionUsed;
-    fProperty=cl.fProperty; 
-    fInterStreamer=cl.fInterStreamer;
-    fOffsetStreamer=cl.fOffsetStreamer;
-    fStreamerType=cl.fStreamerType;
-    fCurrentInfo=cl.fCurrentInfo;
-    fRefStart=cl.fRefStart;
-  } return *this;
+   //assignement operator
+   if(this!=&cl) {
+      TDictionary::operator=(cl);
+      fStreamerInfo=cl.fStreamerInfo;
+      fRealData=cl.fRealData;
+      fBase=cl.fBase;
+      fData=cl.fData;
+      fMethod=cl.fMethod;
+      fAllPubData=cl.fAllPubData;
+      fAllPubMethod=cl.fAllPubMethod;
+      fDeclFileName=cl.fDeclFileName;
+      fImplFileName=cl.fImplFileName;
+      fDeclFileLine=cl.fDeclFileLine;
+      fImplFileLine=cl.fImplFileLine;
+      fInstanceCount=cl.fInstanceCount;
+      fOnHeap=cl.fOnHeap;
+      fCheckSum=cl.fCheckSum;
+      fCollectionProxy=cl.fCollectionProxy;
+      fClassVersion=cl.fClassVersion;
+      fClassInfo=cl.fClassInfo;
+      fContextMenuTitle=cl.fContextMenuTitle;
+      fClassMenuList=cl.fClassMenuList;
+      fClassEditors=cl.fClassEditors;
+      fTypeInfo=cl.fTypeInfo;
+      fShowMembers=cl.fShowMembers;
+      fStreamer=cl.fStreamer;
+      fSharedLibs=cl.fSharedLibs;
+      fIsA=cl.fIsA; 
+      fGlobalIsA=cl.fGlobalIsA;
+      fIsAMethod=cl.fIsAMethod;
+      fNew=cl.fNew;
+      fNewArray=cl.fNewArray; 
+      fDelete=cl.fDelete;
+      fDeleteArray=cl.fDeleteArray;
+      fDestructor=cl.fDestructor;
+      fSizeof=cl.fSizeof;
+      fVersionUsed=cl.fVersionUsed;
+      fProperty=cl.fProperty; 
+      fInterStreamer=cl.fInterStreamer;
+      fOffsetStreamer=cl.fOffsetStreamer;
+      fStreamerType=cl.fStreamerType;
+      fCurrentInfo=cl.fCurrentInfo;
+      fRefStart=cl.fRefStart;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

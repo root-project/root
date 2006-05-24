@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name: v5-11-02 $:$Id: TTree.cxx,v 1.281 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.282 2006/05/23 04:47:42 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -340,16 +340,20 @@ TTree::TFriendLock::TFriendLock(const TFriendLock& tfl) :
   fTree(tfl.fTree),
   fMethodBit(tfl.fMethodBit),
   fPrevious(tfl.fPrevious)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TTree::TFriendLock& TTree::TFriendLock::operator=(const TTree::TFriendLock& tfl)
 {
-  if(this!=&tfl) {
-    fTree=tfl.fTree;
-    fMethodBit=tfl.fMethodBit;
-    fPrevious=tfl.fPrevious;
-  } return *this;
+   //assignement operator
+   if(this!=&tfl) {
+      fTree=tfl.fTree;
+      fMethodBit=tfl.fMethodBit;
+      fPrevious=tfl.fPrevious;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -444,55 +448,59 @@ TTree::TTree(const TTree& tt): TNamed(tt), TAttLine(tt), TAttFill(tt), TAttMarke
      fClones(tt.fClones),
      fBranchRef(tt.fBranchRef),
      fFriendLockStatus(tt.fFriendLockStatus) 
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TTree& TTree::operator=(const TTree& tt) 
 {
-  if(this!=&tt) {
-    TNamed::operator=(tt);
-    TAttLine::operator=(tt);
-    TAttFill::operator=(tt);
-    TAttMarker::operator=(tt);
-    fEntries=tt.fEntries;
-    fTotBytes=tt.fTotBytes;
-    fZipBytes=tt.fZipBytes;
-    fSavedBytes=tt.fSavedBytes;
-    fWeight=tt.fWeight;
-    fTimerInterval=tt.fTimerInterval;
-    fScanField=tt.fScanField;
-    fUpdate=tt.fUpdate;
-    fMaxEntries=tt.fMaxEntries;
-    fMaxEntryLoop=tt.fMaxEntryLoop;
-    fMaxVirtualSize=tt.fMaxVirtualSize;
-    fAutoSave=tt.fAutoSave;
-    fEstimate=tt.fEstimate;
-    fChainOffset=tt.fChainOffset;
-    fReadEntry=tt.fReadEntry;
-    fTotalBuffers=tt.fTotalBuffers;
-    fPacketSize=tt.fPacketSize;
-    fNfill=tt.fNfill;
-    fDebug=tt.fDebug;
-    fDebugMin=tt.fDebugMin;
-    fDebugMax=tt.fDebugMax;
-    fMakeClass=tt.fMakeClass;
-    fFileNumber=tt.fFileNumber;
-    fNotify=tt.fNotify;
-    fDirectory=tt.fDirectory;
-    fBranches=tt.fBranches;
-    fLeaves=tt.fLeaves;
-    fAliases=tt.fAliases;
-    fEventList=tt.fEventList;
-    fIndexValues=tt.fIndexValues;
-    fIndex=tt.fIndex;
-    fTreeIndex=tt.fTreeIndex;
-    fFriends=tt.fFriends;
-    fUserInfo=tt.fUserInfo;
-    fPlayer=tt.fPlayer;
-    fClones=tt.fClones;
-    fBranchRef=tt.fBranchRef;
-    fFriendLockStatus=tt.fFriendLockStatus;
-  } return *this;
+   //assignement operator
+   if(this!=&tt) {
+      TNamed::operator=(tt);
+      TAttLine::operator=(tt);
+      TAttFill::operator=(tt);
+      TAttMarker::operator=(tt);
+      fEntries=tt.fEntries;
+      fTotBytes=tt.fTotBytes;
+      fZipBytes=tt.fZipBytes;
+      fSavedBytes=tt.fSavedBytes;
+      fWeight=tt.fWeight;
+      fTimerInterval=tt.fTimerInterval;
+      fScanField=tt.fScanField;
+      fUpdate=tt.fUpdate;
+      fMaxEntries=tt.fMaxEntries;
+      fMaxEntryLoop=tt.fMaxEntryLoop;
+      fMaxVirtualSize=tt.fMaxVirtualSize;
+      fAutoSave=tt.fAutoSave;
+      fEstimate=tt.fEstimate;
+      fChainOffset=tt.fChainOffset;
+      fReadEntry=tt.fReadEntry;
+      fTotalBuffers=tt.fTotalBuffers;
+      fPacketSize=tt.fPacketSize;
+      fNfill=tt.fNfill;
+      fDebug=tt.fDebug;
+      fDebugMin=tt.fDebugMin;
+      fDebugMax=tt.fDebugMax;
+      fMakeClass=tt.fMakeClass;
+      fFileNumber=tt.fFileNumber;
+      fNotify=tt.fNotify;
+      fDirectory=tt.fDirectory;
+      fBranches=tt.fBranches;
+      fLeaves=tt.fLeaves;
+      fAliases=tt.fAliases;
+      fEventList=tt.fEventList;
+      fIndexValues=tt.fIndexValues;
+      fIndex=tt.fIndex;
+      fTreeIndex=tt.fTreeIndex;
+      fFriends=tt.fFriends;
+      fUserInfo=tt.fUserInfo;
+      fPlayer=tt.fPlayer;
+      fClones=tt.fClones;
+      fBranchRef=tt.fBranchRef;
+      fFriendLockStatus=tt.fFriendLockStatus;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

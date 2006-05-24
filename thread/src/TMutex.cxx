@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.6 2005/06/23 00:29:38 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.7 2006/05/23 04:47:41 brun Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -46,17 +46,22 @@ TMutex::TMutex(const TMutex& mu) :
   fMutexImp(mu.fMutexImp),
   fId(mu.fId),
   fRef(mu.fRef)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TMutex& TMutex::operator=(const TMutex& mu)
 {
-  if(this!=&mu) {
-    TVirtualMutex::operator=(mu);
-    fMutexImp=mu.fMutexImp;
-    fId=mu.fId;
-    fRef=mu.fRef;
-  } return *this;
+   //assignement operator
+   
+   if(this!=&mu) {
+      TVirtualMutex::operator=(mu);
+      fMutexImp=mu.fMutexImp;
+      fId=mu.fId;
+      fRef=mu.fRef;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

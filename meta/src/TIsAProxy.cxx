@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TIsAProxy.cxx,v 1.3 2005/09/03 00:48:25 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TIsAProxy.cxx,v 1.4 2006/05/23 04:47:40 brun Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -66,23 +66,26 @@ TIsAProxy::TIsAProxy(const TIsAProxy& iap) :
   fContext(iap.fContext),
   fInit(iap.fInit)
 {
-  for(Int_t i=0; i<72; i++) fSubTypes[i]=iap.fSubTypes[i];
+   //copy constructor
+   for(Int_t i=0; i<72; i++) fSubTypes[i]=iap.fSubTypes[i];
 }
 
 //______________________________________________________________________________
 TIsAProxy& TIsAProxy::operator=(const TIsAProxy& iap)
 {
-  if(this!=&iap) {
-    TVirtualIsAProxy::operator=(iap);
-    fType=iap.fType;
-    fLastType=iap.fLastType;
-    fClass=iap.fClass;
-    fLastClass=iap.fLastClass;
-    for(Int_t i=0; i<72; i++) fSubTypes[i]=iap.fSubTypes[i];
-    fVirtual=iap.fVirtual;
-    fContext=iap.fContext;
-    fInit=iap.fInit;
-  } return *this;
+   //assignement operator
+   if(this!=&iap) {
+      TVirtualIsAProxy::operator=(iap);
+      fType=iap.fType;
+      fLastType=iap.fLastType;
+      fClass=iap.fClass;
+      fLastClass=iap.fLastClass;
+      for(Int_t i=0; i<72; i++) fSubTypes[i]=iap.fSubTypes[i];
+      fVirtual=iap.fVirtual;
+      fContext=iap.fContext;
+      fInit=iap.fInit;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

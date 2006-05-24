@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.42 2006/05/14 07:53:19 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.43 2006/05/23 04:47:41 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -296,34 +296,37 @@ TThread::TThread(const TThread& tr) :
   fThreadArg(tr.fThreadArg),
   fClean(tr.fClean)
 {
-  for(Int_t i=0; i<20; i++)
-    fTsd[i]=tr.fTsd[i];
-  strncpy(fComment,tr.fComment,100);
+   //copy constructor
+   for(Int_t i=0; i<20; i++)
+      fTsd[i]=tr.fTsd[i];
+   strncpy(fComment,tr.fComment,100);
 }
 
 //______________________________________________________________________________
 TThread& TThread::operator=(const TThread& tr)
 {
-  if(this!=&tr) {
-    TNamed::operator=(tr);
-    fNext=tr.fNext;
-    fPrev=tr.fPrev;
-    fHolder=tr.fHolder;
-    fPriority=tr.fPriority;
-    fState=tr.fState;
-    fStateComing=tr.fStateComing;
-    fId=tr.fId;
-    fHandle=tr.fHandle;
-    fDetached=tr.fDetached;
-    fNamed=tr.fNamed;
-    fFcnRetn=tr.fFcnRetn;
-    fFcnVoid=tr.fFcnVoid;
-    fThreadArg=tr.fThreadArg;
-    fClean=tr.fClean;
-    for(Int_t i=0; i<20; i++)
-      fTsd[i]=tr.fTsd[i];
-    strncpy(fComment,tr.fComment,100);
-  } return *this;
+   //assignement operator
+   if(this!=&tr) {
+      TNamed::operator=(tr);
+      fNext=tr.fNext;
+      fPrev=tr.fPrev;
+      fHolder=tr.fHolder;
+      fPriority=tr.fPriority;
+      fState=tr.fState;
+      fStateComing=tr.fStateComing;
+      fId=tr.fId;
+      fHandle=tr.fHandle;
+      fDetached=tr.fDetached;
+      fNamed=tr.fNamed;
+      fFcnRetn=tr.fFcnRetn;
+      fFcnVoid=tr.fFcnVoid;
+      fThreadArg=tr.fThreadArg;
+      fClean=tr.fClean;
+      for(Int_t i=0; i<20; i++)
+         fTsd[i]=tr.fTsd[i];
+      strncpy(fComment,tr.fComment,100);
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

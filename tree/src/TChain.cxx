@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.127 2006/05/23 04:47:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.128 2006/05/23 22:57:36 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -143,26 +143,30 @@ TChain::TChain(const TChain& tc) :
   fFiles(tc.fFiles),
   fStatus(tc.fStatus),
   fChainProof(tc.fChainProof)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TChain& TChain::operator=(const TChain& tc)
 {
-  if(this!=&tc) {
-    TTree::operator=(tc);
-    fTreeOffsetLen=tc.fTreeOffsetLen;
-    fNtrees=tc.fNtrees;
-    fTreeNumber=tc.fTreeNumber;
-    fTreeOffset=tc.fTreeOffset; 
-    fMaxCacheSize=tc.fMaxCacheSize;
-    fPageSize=tc.fPageSize;
-    fCanDeleteRefs=tc.fCanDeleteRefs;
-    fTree=tc.fTree;
-    fFile=tc.fFile;
-    fFiles=tc.fFiles;
-    fStatus=tc.fStatus;
-    fChainProof=tc.fChainProof;
-  } return *this;
+   //assignement operator
+   if(this!=&tc) {
+      TTree::operator=(tc);
+      fTreeOffsetLen=tc.fTreeOffsetLen;
+      fNtrees=tc.fNtrees;
+      fTreeNumber=tc.fTreeNumber;
+      fTreeOffset=tc.fTreeOffset; 
+      fMaxCacheSize=tc.fMaxCacheSize;
+      fPageSize=tc.fPageSize;
+      fCanDeleteRefs=tc.fCanDeleteRefs;
+      fTree=tc.fTree;
+      fFile=tc.fFile;
+      fFiles=tc.fFiles;
+      fStatus=tc.fStatus;
+      fChainProof=tc.fChainProof;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.28 2005/12/01 11:32:38 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.29 2006/05/23 04:47:40 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -442,23 +442,27 @@ TDataMember::TDataMember(const TDataMember& dm) :
   fTypeName(dm.fTypeName),
   fFullTypeName(dm.fFullTypeName),
   fTrueTypeName(dm.fTrueTypeName)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TDataMember& TDataMember::operator=(const TDataMember& dm) 
 {
-  if(this!=&dm) {
-    TDictionary::operator=(dm);
-    fInfo=dm.fInfo;
-    fClass=dm.fClass;
-    fDataType=dm.fDataType;
-    fOffset=dm.fOffset;
-    fSTLCont=dm.fSTLCont;
-    fProperty=dm.fProperty;
-    fTypeName=dm.fTypeName;
-    fFullTypeName=dm.fFullTypeName;
-  fTrueTypeName=dm.fTrueTypeName;
-  } return *this;
+   //assignement operator
+   if(this!=&dm) {
+      TDictionary::operator=(dm);
+      fInfo=dm.fInfo;
+      fClass=dm.fClass;
+      fDataType=dm.fDataType;
+      fOffset=dm.fOffset;
+      fSTLCont=dm.fSTLCont;
+      fProperty=dm.fProperty;
+      fTypeName=dm.fTypeName;
+      fFullTypeName=dm.fFullTypeName;
+      fTrueTypeName=dm.fTrueTypeName;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

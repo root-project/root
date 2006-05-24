@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.21 2005/11/16 20:10:45 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.22 2006/05/23 04:47:40 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -66,19 +66,23 @@ TDataType::TDataType(const TDataType& dt) :
   fType(dt.fType),
   fProperty(dt.fProperty),
   fTrueName(dt.fTrueName)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TDataType& TDataType::operator=(const TDataType& dt)
 {
-  if(this!=&dt) {
-    TDictionary::operator=(dt);
-    fInfo=dt.fInfo;
-    fSize=dt.fSize;
-    fType=dt.fType;
-    fProperty=dt.fProperty;
-    fTrueName=dt.fTrueName;
-  } return *this;
+   //assignement operator
+   if(this!=&dt) {
+      TDictionary::operator=(dt);
+      fInfo=dt.fInfo;
+      fSize=dt.fSize;
+      fType=dt.fType;
+      fProperty=dt.fProperty;
+      fTrueName=dt.fTrueName;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

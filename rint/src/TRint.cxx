@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.55 2006/05/17 13:21:18 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.56 2006/05/23 04:47:41 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -226,20 +226,23 @@ TRint::TRint(const TRint& ri) :
   fInterrupt(ri.fInterrupt),
   fInputHandler(ri.fInputHandler)
 {
-  strncpy(fPrompt,ri.fPrompt,64);
+   //copy constructor
+   strncpy(fPrompt,ri.fPrompt,64);
 }
 
 //______________________________________________________________________________
 TRint& TRint::operator=(const TRint& ri) 
 {
-  if(this!=&ri) {
-    TApplication::operator=(ri);
-    fNcmd=ri.fNcmd;
-    fDefaultPrompt=ri.fDefaultPrompt;
-    strncpy(fPrompt,ri.fPrompt,64);
-    fInterrupt=ri.fInterrupt;
-    fInputHandler=ri.fInputHandler;
-  } return *this;
+   //assignement operator
+   if(this!=&ri) {
+      TApplication::operator=(ri);
+      fNcmd=ri.fNcmd;
+      fDefaultPrompt=ri.fDefaultPrompt;
+      strncpy(fPrompt,ri.fPrompt,64);
+      fInterrupt=ri.fInterrupt;
+      fInputHandler=ri.fInputHandler;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name: v5-11-02 $:$Id: TSecContext.cxx,v 1.11 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.12 2006/05/23 04:47:40 brun Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -116,24 +116,28 @@ TSecContext::TSecContext(const TSecContext& sc) :
   fOffSet(sc.fOffSet),
   fToken(sc.fToken),
   fUser(sc.fUser)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TSecContext& TSecContext::operator=(const TSecContext& sc) 
 {
-  if(this!=&sc) {
-    TObject::operator=(sc);
-    fContext=sc.fContext;
-    fCleanup=sc.fCleanup;
-    fExpDate=sc.fExpDate;
-    fHost=sc.fHost;
-    fID=sc.fID;
-    fMethod=sc.fMethod;
-    fMethodName=sc.fMethodName;
-    fOffSet=sc.fOffSet;
-    fToken=sc.fToken;
-    fUser=sc.fUser;
-  } return *this;
+   //assignement operator
+   if(this!=&sc) {
+      TObject::operator=(sc);
+      fContext=sc.fContext;
+      fCleanup=sc.fCleanup;
+      fExpDate=sc.fExpDate;
+      fHost=sc.fHost;
+      fID=sc.fID;
+      fMethod=sc.fMethod;
+      fMethodName=sc.fMethodName;
+      fOffSet=sc.fOffSet;
+      fToken=sc.fToken;
+      fUser=sc.fUser;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
