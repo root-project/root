@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.14 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.15 2006/05/17 06:22:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -66,8 +66,8 @@ public :
    virtual void     Det        (Double_t &d1,Double_t &d2);
 
    static  Bool_t   InvertLU  (TMatrixD &a,Double_t tol,Double_t *det=0);
-           void     Invert    (TMatrixD &inv);
-           TMatrixD Invert    ();
+   void             Invert    (TMatrixD &inv);
+   TMatrixD         Invert    ();
 
    void Print(Option_t *opt ="") const; // *MENU*
 

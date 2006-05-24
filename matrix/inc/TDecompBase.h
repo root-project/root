@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.16 2006/01/26 15:16:11 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.17 2006/05/17 06:22:05 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -67,15 +67,15 @@ public :
    TDecompBase(const TDecompBase &another);
    virtual ~TDecompBase() {};
 
-           inline Double_t GetTol       () const { return fTol; }
-           inline Double_t GetDet1      () const { return fDet1; }
-           inline Double_t GetDet2      () const { return fDet2; }
-           inline Double_t GetCondition () const { return fCondition; }
-   virtual        Int_t    GetNrows     () const = 0;
-   virtual        Int_t    GetNcols     () const = 0;
-                  Int_t    GetRowLwb    () const { return fRowLwb; }
-                  Int_t    GetColLwb    () const { return fColLwb; }
-           inline Double_t SetTol       (Double_t tol);
+   inline  Double_t GetTol       () const { return fTol; }
+   inline  Double_t GetDet1      () const { return fDet1; }
+   inline  Double_t GetDet2      () const { return fDet2; }
+   inline  Double_t GetCondition () const { return fCondition; }
+   virtual Int_t    GetNrows     () const = 0;
+   virtual Int_t    GetNcols     () const = 0;
+   Int_t            GetRowLwb    () const { return fRowLwb; }
+   Int_t            GetColLwb    () const { return fColLwb; }
+   inline Double_t  SetTol       (Double_t tol);
 
    virtual Double_t Condition  ();
    virtual void     Det        (Double_t &d1,Double_t &d2);

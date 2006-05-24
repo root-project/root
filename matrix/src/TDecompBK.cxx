@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBK.cxx,v 1.4 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBK.cxx,v 1.5 2006/05/17 06:22:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Sep 2004
 
 /*************************************************************************
@@ -118,7 +118,7 @@ Bool_t TDecompBK::Decompose()
    Bool_t ok = kTRUE;
 
 // Initialize alpha for use in choosing pivot block size.
-    const Double_t alpha = (1.+TMath::Sqrt(17.))/8.;
+   const Double_t alpha = (1.+TMath::Sqrt(17.))/8.;
 
 // Factorize a as u*d*u' using the upper triangle of a .
 //  k is the main loop index, decreasing from n-1 to 0 in steps of 1 or 2
@@ -173,7 +173,7 @@ Bool_t TDecompBK::Decompose()
                rowmax = TMath::Max(rowmax,vcol[jmax]);
             }
 
-           if (absakk >= alpha*colmax*(colmax/rowmax)) {
+            if (absakk >= alpha*colmax*(colmax/rowmax)) {
                // No interchange, use 1-by-1 pivot block
                kp = k;
             } else if( TMath::Abs(diag(imax)) >= alpha*rowmax) {
@@ -181,8 +181,8 @@ Bool_t TDecompBK::Decompose()
                kp = imax;
             } else {
                // Interchange rows and columns k-1 and imax, use 2-by-2 pivot block
-                kp = imax;
-                kstep = 2;
+               kp = imax;
+               kstep = 2;
             }
          }
 
@@ -199,14 +199,14 @@ Bool_t TDecompBK::Decompose()
                c_kp += n;
             }
 
-                      c_kk = pU+(kp+1)*n+kk;
+            c_kk = pU+(kp+1)*n+kk;
             Double_t *r_kp = pU+kp*n+kp+1;
             for (Int_t icol = 0; icol < kk-kp-1; icol++) {
                const Double_t t = *c_kk;
                *c_kk = *r_kp;
                *r_kp = t;
-                c_kk += n;
-                r_kp += 1;
+               c_kk += n;
+               r_kp += 1;
             }
 
             Double_t t = diag(kk);
@@ -420,7 +420,7 @@ Bool_t TDecompBK::Solve(TVectorD &b)
             pb[kp] = tmp;
          }
          k++;
-       } else {
+      } else {
          // 2 x 2 diagonal block
          // multiply by inv(u'(k+1)), where u(k+1) is the transformation
          // stored in columns k and k+1 of a.
@@ -473,7 +473,7 @@ Bool_t TDecompBK::Solve(TMatrixDColumn &cb)
    TMatrixDDiag_const diag(fU);
    const Double_t *pU  = fU.GetMatrixArray();
          Double_t *pcb = cb.GetPtr();
-    const Int_t     inc = cb.GetInc();
+   const Int_t     inc = cb.GetInc();
 
 
   // solve a*x = b, where a = u*d*u'. First solve u*d*x = b, overwriting b with x.

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.26 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.27 2006/05/18 04:57:57 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -294,7 +294,7 @@ Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD 
    if (nCol_v > 1) {
       for (Int_t i = 1; i < nCol_v; i++)
          bmx = TMath::Max(TMath::Abs(sDiag(i))+TMath::Abs(oDiag(i)),bmx);
-    }
+   }
 
    const Double_t eps = std::numeric_limits<double>::epsilon();
 
@@ -628,7 +628,7 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
       tmp2.Use(lwb,upb,b.GetMatrixArray());
       tmp2 = fV*tmp;
    } else
-     b = fV*tmp;
+      b = fV*tmp;
 
    return kTRUE;
 }

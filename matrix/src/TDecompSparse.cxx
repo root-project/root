@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.12 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.13 2006/05/18 04:57:57 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -237,52 +237,52 @@ Bool_t TDecompSparse::Decompose()
                fIPessimism *= 1.1;
                break;
             }
-        case -4 :
-           {
-              if (fVerbose)
-                 Info("Decompose()","insufficient factorization space: %d",fFact.GetSize());
-              const Int_t nFact_old = fFact.GetSize();
-              const Int_t nFact = (this->IError() > fRPessimism*nFact_old) ? this->IError() :
+         case -4 :
+            {
+               if (fVerbose)
+                  Info("Decompose()","insufficient factorization space: %d",fFact.GetSize());
+               const Int_t nFact_old = fFact.GetSize();
+               const Int_t nFact = (this->IError() > fRPessimism*nFact_old) ? this->IError() :
                                                                              (Int_t) (fRPessimism*nFact_old);
-              fFact.Set(nFact); fFact.Reset(0.0);
-              CopyUpperTriang(fA,fFact.GetArray()+1);
-              if (fVerbose)
-                 Info("Decompose()","reseting to: %d",nFact);
-              fRPessimism *= 1.1;
-              break;
-          }
-        case -5 :
-           if (fVerbose) {
-              Info("Decompose()","matrix apparently numerically singular");
-              Info("Decompose()","detected at stage %d",this->IError());
-              Info("Decompose()","accept this factorization and hope for the best..");
-           }
-           done = 1;
-           break;
-        case -6 :
-           if (fVerbose) {
-              Info("Decompose()","change of sign of pivots detected at stage %d",this->IError());
-              Info("Decompose()","but who cares ");
-           }
-           done = 1;
-           break;
-        case -7 :
-           Error("Decompose()","value of fNsteps out of range: %d",fNsteps);
-           return kFALSE;
-        case 1 :
-           if (fVerbose) {
-              Info("Decompose()","detected %d entries out of range in row/column index",this->IError());
-              Info("Decompose()","they are ignored");
-           }
-           done = 1;
-           break;
-        case 3 :
-           if (fVerbose)
-              Info("Decompose()","rank deficient matrix detected; apparent rank = ",this->IError());
-           done = 1;
-           break;
-        default:
-           break;
+               fFact.Set(nFact); fFact.Reset(0.0);
+               CopyUpperTriang(fA,fFact.GetArray()+1);
+               if (fVerbose)
+                  Info("Decompose()","reseting to: %d",nFact);
+               fRPessimism *= 1.1;
+               break;
+            }
+         case -5 :
+            if (fVerbose) {
+               Info("Decompose()","matrix apparently numerically singular");
+               Info("Decompose()","detected at stage %d",this->IError());
+               Info("Decompose()","accept this factorization and hope for the best..");
+            }
+            done = 1;
+            break;
+         case -6 :
+            if (fVerbose) {
+               Info("Decompose()","change of sign of pivots detected at stage %d",this->IError());
+               Info("Decompose()","but who cares ");
+            }
+            done = 1;
+            break;
+         case -7 :
+            Error("Decompose()","value of fNsteps out of range: %d",fNsteps);
+            return kFALSE;
+         case 1 :
+            if (fVerbose) {
+               Info("Decompose()","detected %d entries out of range in row/column index",this->IError());
+               Info("Decompose()","they are ignored");
+            }
+            done = 1;
+            break;
+         case 3 :
+            if (fVerbose)
+               Info("Decompose()","rank deficient matrix detected; apparent rank = ",this->IError());
+            done = 1;
+            break;
+         default:
+            break;
       }
 
       tries++;
@@ -347,7 +347,7 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
       if (rnorm < fPrecision*(1.+bnorm)) {
          // residuals are small enough, use this solution
          done = 1;
-       } else if (this->GetThresholdPivoting() >= kThresholdPivotingMax
+      } else if (this->GetThresholdPivoting() >= kThresholdPivotingMax
                   || refactorizations > 10)  {
          // ThresholdPivoting parameter is already too high; give up and
          // use this solution, whatever it is (the algorithm may bomb in
@@ -456,7 +456,7 @@ void TDecompSparse::InitPivot(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI
          printf("matrix non-zeros:\n");
          for (i = 1; i < k+1; i++) {
             printf("%d %d ",irn[i],icn[i]);
-           if (i%5 == 0 || i == k) printf("\n");
+            if (i%5 == 0 || i == k) printf("\n");
          }
       }
 
@@ -506,11 +506,11 @@ void TDecompSparse::InitPivot(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI
       if (nz >= 1) iw[1] = irn[1]+1;
       InitPivot_sub6(n,nz,irn,icn,ikeep,ikeep+2*(n+1),ikeep+n+1,iw+l2-1,
                      nsteps,iw1,iw1+n+1,iw,info,ops);
-    } else {
-       info[1] = -1;
-       if (icntl[1] > 0)
-          ::Error("TDecompSparse::InitPivot","info[1]= %d; value of n out of range ... = %d",info[1],n);
-       return;
+   } else {
+      info[1] = -1;
+      if (icntl[1] > 0)
+         ::Error("TDecompSparse::InitPivot","info[1]= %d; value of n out of range ... = %d",info[1],n);
+      return;
    }
 
    if (icntl[3] <= 0 || icntl[2] <= 0) return;
@@ -744,7 +744,7 @@ void TDecompSparse::Solve(const Int_t n,TArrayD &Aa,TArrayI &Aiw,
                j2 = iapos+len-1;
                for (jj = j1; jj < j2+1; jj++) {
                   printf("%13.3e ",a[jj]);
-                 if (jj%5 == 0 || jj == j2) printf("\n");
+                  if (jj%5 == 0 || jj == j2) printf("\n");
                }
                len = len-1;
                iapos = j2+1;
@@ -921,7 +921,7 @@ void TDecompSparse::InitPivot_sub1(const Int_t n,const Int_t nz,Int_t *irn,Int_t
             iwfr = iwfr+1;
          }
          iw[l] = iwfr-l-1;
-       }
+      }
    }
 
 }
@@ -1120,9 +1120,9 @@ void TDecompSparse::InitPivot_sub2(const Int_t n,Int_t *ipe,Int_t *iw,const Int_
                      flag[ke] = -1;
                   }
                } else {
-                 iw[np] = ke;
-                 flag[ke] = -nflg;
-                 np = np+1;
+                  iw[np] = ke;
+                  flag[ke] = -nflg;
+                  np = np+1;
                }
             }
 
@@ -1199,7 +1199,7 @@ void TDecompSparse::InitPivot_sub2(const Int_t n,Int_t *ipe,Int_t *iw,const Int_
             } else if (doit == 2) {
                if (nvroot == 0) {
                   root = is;
-                 ipe[is] = 0;
+                  ipe[is] = 0;
                } else {
                   iw[k] = root;
                   ipe[is] = -root;
@@ -1232,16 +1232,16 @@ void TDecompSparse::InitPivot_sub2(const Int_t n,Int_t *ipe,Int_t *iw,const Int_
          ipe[me] = k1;
          iwfr = ip+1;
       } else
-        ipe[me] = 0;
+         ipe[me] = 0;
    }
 
    for (is = 1; is < n+1; is++) {
       if (nxt[is] != 0 || lst[is] != 0) {
          if (nvroot == 0) {
             root = is;
-           ipe[is] = 0;
+            ipe[is] = 0;
          } else {
-           ipe[is] = -root;
+            ipe[is] = -root;
          }
          nvroot = nvroot+nv[is];
          nv[is] = 0;
@@ -1374,11 +1374,11 @@ void TDecompSparse::InitPivot_sub3(const Int_t n,const Int_t nz,Int_t *irn,Int_t
          j = n+1-i;
          len = iq[j];
          if (len > 0)  {
-             for (jdummy = 1; jdummy < len+1; jdummy++) {
-                iw[l] = iw[k];
-                k = k-1;
-                l = l-1;
-             }
+            for (jdummy = 1; jdummy < len+1; jdummy++) {
+               iw[l] = iw[k];
+               k = k-1;
+               l = l-1;
+            }
          }
          ipe[j] = l;
          l = l-1;
@@ -1610,7 +1610,7 @@ void TDecompSparse::InitPivot_sub6(const Int_t n,const Int_t nz,Int_t *irn,Int_t
             if (iold == jold) continue;
             nz1 = nz1+1;
             irow = TMath::Min(perm[iold]+0,perm[jold]+0);
-           lstki[irow] = lstki[irow]+1;
+            lstki[irow] = lstki[irow]+1;
          }
       }
       nz2 = nz1;
@@ -2116,13 +2116,13 @@ void TDecompSparse::Factor_sub2(const Int_t n,const Int_t nz,Double_t *a,const I
                }
                ipmnp = ipiv-npiv-1;
                if (ipmnp != 0) {
-                   apos2 = apos2-kk;
-                   kk = kk+1;
-                   for (k = 1; k < ipmnp+1; k++) {
-                      apos2 = apos2-kk;
-                      kk = kk+1;
-                      rmax = TMath::Max(rmax,TMath::Abs(a[apos2]));
-                   }
+                  apos2 = apos2-kk;
+                  kk = kk+1;
+                  for (k = 1; k < ipmnp+1; k++) {
+                     apos2 = apos2-kk;
+                     kk = kk+1;
+                     rmax = TMath::Max(rmax,TMath::Abs(a[apos2]));
+                  }
                }
                if (thresh <= rmax) continue;
                pivsiz = 2;
@@ -2336,9 +2336,9 @@ void TDecompSparse::Factor_sub3(Double_t *a,Int_t *iw,Int_t &j1,Int_t &j2,const 
          ncmpbr = ncmpbr+1;
          if (j1 <= j2) {
             for (jjj = j1; jjj < j2+1; jjj++) {
-              jj = j2-jjj+j1;
-              a[ipos] = a[jj];
-              ipos = ipos-1;
+               jj = j2-jjj+j1;
+               a[ipos] = a[jj];
+               ipos = ipos-1;
             }
          }
       } else {
@@ -2390,7 +2390,7 @@ void TDecompSparse::Solve_sub1(const Int_t n,Double_t *a,Int_t *iw,Double_t *w,
          if (liell < icntl[ifrlvl+ilvl]) goto hack;
          ifr = 0;
          for (jj = j1; jj < j2+1; jj++) {
-             j = TMath::Abs(iw[jj]+0);
+            j = TMath::Abs(iw[jj]+0);
             ifr = ifr+1;
             w[ifr] = rhs[j];
          }
@@ -2539,7 +2539,7 @@ void TDecompSparse::Solve_sub2(const Int_t n,Double_t *a,Int_t *iw,Double_t *w,
                   }
                }
                w[ipiv] = w1;
-              jpos = jpos-1;
+               jpos = jpos-1;
             } else {
                jpiv = 2;
                apos2 = apos-(liell+1-ipiv);
@@ -2578,12 +2578,12 @@ hack:
             w1 = rhs[iirhs]*a[apos];
             j1 = jpos+1;
             if (j1 <= j2) {
-                k = apos+1;
-                for (j = j1; j < j2+1; j++) {
-                   irhs = TMath::Abs(iw[j]+0);
-                   w1 = w1+a[k]*rhs[irhs];
-                   k = k+1;
-                }
+               k = apos+1;
+               for (j = j1; j < j2+1; j++) {
+                  irhs = TMath::Abs(iw[j]+0);
+                  w1 = w1+a[k]*rhs[irhs];
+                  k = k+1;
+               }
             }
             rhs[iirhs] = w1;
             jpos = jpos-1;

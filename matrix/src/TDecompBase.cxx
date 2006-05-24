@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.20 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.21 2006/05/18 04:57:57 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -176,7 +176,7 @@ Int_t TDecompBase::Hager(Double_t &est,Int_t iter)
             const Double_t absz = TMath::Abs(z(i));
             if ( absz > maxz ) {
                maxz = absz;
-              imax = i;
+               imax = i;
             }
          }
          stop = (maxz <= b*z);
@@ -236,13 +236,13 @@ void TDecompBase::DiagProd(const TVectorD &diag,Double_t tol,Double_t &d1,Double
 //______________________________________________________________________________
 Double_t TDecompBase::Condition()
 {
-  if ( !TestBit(kCondition) ) {
-     fCondition = -1;
-     if (TestBit(kSingular))
-        return fCondition;
-     if ( !TestBit(kDecomposed) ) {
-        if (!Decompose())
-           return fCondition;
+   if ( !TestBit(kCondition) ) {
+      fCondition = -1;
+      if (TestBit(kSingular))
+         return fCondition;
+      if ( !TestBit(kDecomposed) ) {
+         if (!Decompose())
+            return fCondition;
       }
       Double_t invNorm;
       if (Hager(invNorm))

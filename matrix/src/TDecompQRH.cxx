@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.18 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.19 2006/05/18 04:57:57 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -162,10 +162,10 @@ Bool_t TDecompQRH::Decompose()
 //______________________________________________________________________________
 Bool_t TDecompQRH::QRH(TMatrixD &q,TVectorD &diagR,TVectorD &up,TVectorD &w,Double_t tol)
 {
-  const Int_t nRow = q.GetNrows();
-  const Int_t nCol = q.GetNcols();
+   const Int_t nRow = q.GetNrows();
+   const Int_t nCol = q.GetNcols();
 
-  const Int_t n = (nRow <= nCol) ? nRow-1 : nCol;
+   const Int_t n = (nRow <= nCol) ? nRow-1 : nCol;
 
    for (Int_t k = 0 ; k < n ; k++) {
       const TVectorD qc_k = TMatrixDColumn_const(q,k);

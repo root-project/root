@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.12 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.13 2006/05/19 04:44:59 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -111,58 +111,58 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
    for (m = low+1; m <= high-1; m++) {
       const Int_t off_m = m*n;
 
-     // Scale column.
+      // Scale column.
 
-     Double_t scale = 0.0;
-     for (i = m; i <= high; i++) {
-        const Int_t off_i = i*n;
-        scale = scale + TMath::Abs(pH[off_i+m-1]);
-     }
-     if (scale != 0.0) {
+      Double_t scale = 0.0;
+      for (i = m; i <= high; i++) {
+         const Int_t off_i = i*n;
+         scale = scale + TMath::Abs(pH[off_i+m-1]);
+      }
+      if (scale != 0.0) {
 
-        // Compute Householder transformation.
+         // Compute Householder transformation.
 
-        Double_t h = 0.0;
-        for (i = high; i >= m; i--) {
-           const Int_t off_i = i*n;
-           pO[i] = pH[off_i+m-1]/scale;
-           h += pO[i]*pO[i];
-        }
-        Double_t g = TMath::Sqrt(h);
-        if (pO[m] > 0)
-           g = -g;
-        h = h-pO[m]*g;
-        pO[m] = pO[m]-g;
+         Double_t h = 0.0;
+         for (i = high; i >= m; i--) {
+            const Int_t off_i = i*n;
+            pO[i] = pH[off_i+m-1]/scale;
+            h += pO[i]*pO[i];
+         }
+         Double_t g = TMath::Sqrt(h);
+         if (pO[m] > 0)
+            g = -g;
+         h = h-pO[m]*g;
+         pO[m] = pO[m]-g;
 
-        // Apply Householder similarity transformation
-        // H = (I-u*u'/h)*H*(I-u*u')/h)
+         // Apply Householder similarity transformation
+         // H = (I-u*u'/h)*H*(I-u*u')/h)
 
-        for (j = m; j < n; j++) {
-           Double_t f = 0.0;
-           for (i = high; i >= m; i--) {
-              const Int_t off_i = i*n;
-              f += pO[i]*pH[off_i+j];
-           }
-           f = f/h;
-           for (i = m; i <= high; i++) {
-              const Int_t off_i = i*n;
-              pH[off_i+j] -= f*pO[i];
-           }
-        }
+         for (j = m; j < n; j++) {
+            Double_t f = 0.0;
+            for (i = high; i >= m; i--) {
+               const Int_t off_i = i*n;
+               f += pO[i]*pH[off_i+j];
+            }
+            f = f/h;
+            for (i = m; i <= high; i++) {
+               const Int_t off_i = i*n;
+               pH[off_i+j] -= f*pO[i];
+            }
+         }
 
-        for (i = 0; i <= high; i++) {
-           const Int_t off_i = i*n;
-           Double_t f = 0.0;
-           for (j = high; j >= m; j--) {
-              const Int_t off_i = i*n;
-              f += pO[j]*pH[off_i+j];
-           }
-           f = f/h;
-           for (j = m; j <= high; j++)
-              pH[off_i+j] -= f*pO[j];
-        }
-        pO[m] = scale*pO[m];
-        pH[off_m+m-1] = scale*g;
+         for (i = 0; i <= high; i++) {
+            const Int_t off_i = i*n;
+            Double_t f = 0.0;
+            for (j = high; j >= m; j--) {
+               const Int_t off_i = i*n;
+               f += pO[j]*pH[off_i+j];
+            }
+            f = f/h;
+            for (j = m; j <= high; j++)
+               pH[off_i+j] -= f*pO[j];
+         }
+         pO[m] = scale*pO[m];
+         pH[off_m+m-1] = scale*g;
       }
    }
 
@@ -392,7 +392,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
                s = x-w/((y-x)/2.0+s);
                for (i = low; i <= n; i++) {
                   const Int_t off_i = i*nn;
-                 pH[off_i+i] -= s;
+                  pH[off_i+i] -= s;
                }
                exshift += s;
                x = y = w = 0.964;
@@ -601,9 +601,9 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
             Double_t ra = 0.0;
             Double_t sa = 0.0;
             for (j = l; j <= n; j++) {
-              const Int_t off_j = j*nn;
-              ra += pH[off_i+j]*pH[off_j+n-1];
-              sa += pH[off_i+j]*pH[off_j+n];
+               const Int_t off_j = j*nn;
+               ra += pH[off_i+j]*pH[off_j+n-1];
+               sa += pH[off_i+j]*pH[off_j+n];
             }
             w = pH[off_i+i]-p;
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixTCramerInv.cxx,v 1.2 2005/12/23 07:20:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixTCramerInv.cxx,v 1.3 2006/05/22 04:53:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Jan 2004
 
 /*************************************************************************
@@ -106,8 +106,8 @@ Bool_t TMatrixTCramerInv::Inv3x3(TMatrixT<Element> &m,Double_t *determ)
       tmp = pM[6];
       det = c12*c01-c11*c02;
    } else {
-     tmp = pM[3];
-     det = c02*c21-c01*c22;
+      tmp = pM[3];
+      det = c02*c21-c01*c22;
    }
 
    if ( det == 0 || tmp == 0) {
@@ -538,9 +538,9 @@ Bool_t TMatrixTCramerInv::Inv6x6(TMatrixT<Element> &m,Double_t *determ)
       return kFALSE;
    }
 
-  Element *pM = m.GetMatrixArray();
+   Element *pM = m.GetMatrixArray();
 
-  // Find all NECESSGARY 2x2 dets:  (45 of them)
+   // Find all NECESSGARY 2x2 dets:  (45 of them)
 
    const Double_t det2_34_01 = pM[GA30]*pM[GA41] - pM[GA31]*pM[GA40];
    const Double_t det2_34_02 = pM[GA30]*pM[GA42] - pM[GA32]*pM[GA40];
