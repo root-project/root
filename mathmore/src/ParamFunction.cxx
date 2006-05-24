@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -37,12 +37,13 @@ namespace Math {
 
 
 ParamFunction::ParamFunction(unsigned int npar, bool providesGrad, bool providesParamGrad) :  
-  fNpar(npar), 
-  fProvGrad(providesGrad), 
-  fProvParGrad(providesParamGrad)
+   fNpar(npar), 
+   fProvGrad(providesGrad), 
+   fProvParGrad(providesParamGrad)
 { 
-  fParams = std::vector<double>(npar);
-  fParGradient = std::vector<double>(npar);
+   //constructor
+   fParams = std::vector<double>(npar);
+   fParGradient = std::vector<double>(npar);
 }
       
 
