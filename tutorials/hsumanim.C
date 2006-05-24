@@ -61,9 +61,16 @@
   c1->Modified();
   c1->SaveAs("hsumanim_019.gif");
   
-  //make an animated gif file using gifsicle.
+  //make an animated gif file using "gifsicle" or "convert". Comment/uncomment
+  //the corresponding lines to test one or the other.
+  
   //for information about gifsicle, see http://www.lcdf.org/~eddietwo/gifsicle/
-  gSystem->Exec("gifsicle --delay=10 --loop=5 hsum*.gif > anim.gif");
+  //  gSystem->Exec("gifsicle --delay=10 --loop=5 hsum*.gif > anim.gif");
+
+  //for information about convert, see http://www.imagemagick.org/script/command-line-options.php
+  gSystem->Exec("convert hsum*.gif anim.gif");
+
+  //remove the gif files.
   gSystem->Exec("rm -f hsum*.gif");
   
   //You can view the animated file anim.gif with Netscape/IE
