@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.9 2006/05/15 07:27:03 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.10 2006/05/23 04:47:36 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDecayChannel.h"
@@ -115,34 +115,38 @@ TParticlePDG::TParticlePDG(const TParticlePDG& pdg) :
   fParticleClass(pdg.fParticleClass),
   fTrackingCode(pdg.fTrackingCode),
   fAntiParticle(pdg.fAntiParticle)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TParticlePDG& TParticlePDG::operator=(const TParticlePDG& pdg)
 {
-  if(this!=&pdg) {
-    TNamed::operator=(pdg);
-    fPdgCode=pdg.fPdgCode;
-    fMass=pdg.fMass;
-    fCharge=pdg.fCharge;
-    fLifetime=pdg.fLifetime;
-    fWidth=pdg.fWidth;
-    fParity=pdg.fParity;
-    fSpin=pdg.fSpin;
-    fIsospin=pdg.fIsospin;
-    fI3=pdg.fI3;
-    fStrangeness=pdg.fStrangeness;
-    fCharm=pdg.fCharm;
-    fBeauty=pdg.fBeauty;
-    fTop=pdg.fTop;
-    fY=pdg.fY;
-    fX=pdg.fX;
-    fStable=pdg.fStable;
-    fDecayList=pdg.fDecayList;
-    fParticleClass=pdg.fParticleClass;
-    fTrackingCode=pdg.fTrackingCode;
-    fAntiParticle=pdg.fAntiParticle;
-  } return *this;
+   //assignement operator
+   if(this!=&pdg) {
+      TNamed::operator=(pdg);
+      fPdgCode=pdg.fPdgCode;
+      fMass=pdg.fMass;
+      fCharge=pdg.fCharge;
+      fLifetime=pdg.fLifetime;
+      fWidth=pdg.fWidth;
+      fParity=pdg.fParity;
+      fSpin=pdg.fSpin;
+      fIsospin=pdg.fIsospin;
+      fI3=pdg.fI3;
+      fStrangeness=pdg.fStrangeness;
+      fCharm=pdg.fCharm;
+      fBeauty=pdg.fBeauty;
+      fTop=pdg.fTop;
+      fY=pdg.fY;
+      fX=pdg.fX;
+      fStable=pdg.fStable;
+      fDecayList=pdg.fDecayList;
+      fParticleClass=pdg.fParticleClass;
+      fTrackingCode=pdg.fTrackingCode;
+      fAntiParticle=pdg.fAntiParticle;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

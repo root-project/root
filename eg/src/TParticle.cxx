@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.14 2006/05/15 07:27:03 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.15 2006/05/23 04:47:36 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -70,54 +70,55 @@ TParticle::TParticle(const TParticle &p) :
   fE(p.fE), fVx(p.fVx), fVy(p.fVy), fVz(p.fVz), fVt(p.fVt), fPolarTheta(p.fPolarTheta),
   fPolarPhi(p.fPolarPhi), fParticlePDG(p.fParticlePDG)
 {
-    // copy constructor
+   // copy constructor
 
-  fMother[0]=p.fMother[0];
-  fMother[1]=p.fMother[1];
-  fDaughter[0]=p.fDaughter[0];
-  fDaughter[1]=p.fDaughter[1];
+   fMother[0]=p.fMother[0];
+   fMother[1]=p.fMother[1];
+   fDaughter[0]=p.fDaughter[0];
+   fDaughter[1]=p.fDaughter[1];
 }
 
 //______________________________________________________________________________
 TParticle& TParticle::operator=(const TParticle &p)
 {
-    // Equal operator
+   // Equal operator
 
-  if(this!=&p) {
-    TObject::operator=(p);
-    TAttLine::operator=(p);
-    TAtt3D::operator=(p);
-    fPdgCode=p.fPdgCode;
-    fStatusCode=p.fStatusCode;
-    fMother[0]=p.fMother[0];
-    fMother[1]=p.fMother[1];
-    fDaughter[0]=p.fDaughter[0];
-    fDaughter[1]=p.fDaughter[1];
-    fWeight=p.fWeight;
+   if(this!=&p) {
+      TObject::operator=(p);
+      TAttLine::operator=(p);
+      TAtt3D::operator=(p);
+      fPdgCode=p.fPdgCode;
+      fStatusCode=p.fStatusCode;
+      fMother[0]=p.fMother[0];
+      fMother[1]=p.fMother[1];
+      fDaughter[0]=p.fDaughter[0];
+      fDaughter[1]=p.fDaughter[1];
+      fWeight=p.fWeight;
     
-    fCalcMass=p.fCalcMass;
+      fCalcMass=p.fCalcMass;
     
-    fPx=p.fPx;
-    fPy=p.fPy;
-    fPz=p.fPz;
-    fE=p.fE;
+      fPx=p.fPx;
+      fPy=p.fPy;
+      fPz=p.fPz;
+      fE=p.fE;
     
-    fVx=p.fVx;
-    fVy=p.fVy;
-    fVz=p.fVz;
-    fVt=p.fVt;
+      fVx=p.fVx;
+      fVy=p.fVy;
+      fVz=p.fVz;
+      fVt=p.fVt;
     
-    fPolarTheta=p.fPolarTheta;
-    fPolarPhi=p.fPolarPhi;
+      fPolarTheta=p.fPolarTheta;
+      fPolarPhi=p.fPolarPhi;
     
-    fParticlePDG=p.fParticlePDG;
-  }
-  return   *this;
+      fParticlePDG=p.fParticlePDG;
+   }
+   return   *this;
 }
 
 //______________________________________________________________________________
 TParticle::~TParticle()
 {
+   //destructor
 }
 
 //______________________________________________________________________________
