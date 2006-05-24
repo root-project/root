@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.12 2005/09/05 07:24:47 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.13 2006/05/23 04:47:37 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -51,7 +51,7 @@ public:
       TLatexFormSize(Double_t x, Double_t y1, Double_t y2) : fWidth(x), fOver(y1), fUnder(y2) { } // constructeur
       virtual ~TLatexFormSize() {} //destructeur
       TLatexFormSize(const TLatexFormSize& form) 
-	: fWidth(form.fWidth), fOver(form.fOver), fUnder(form.fUnder) { }
+         : fWidth(form.fWidth), fOver(form.fOver), fUnder(form.fUnder) { }
       
       // definition of operators + and +=
       TLatexFormSize operator+(TLatexFormSize f)

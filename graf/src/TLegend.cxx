@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name: v5-11-02 $:$Id: TLegend.cxx,v 1.27 2006/04/01 06:35:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.28 2006/05/23 04:47:38 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -116,13 +116,15 @@ TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend)
 //____________________________________________________________________________
 TLegend& TLegend::operator=(const TLegend &lg) 
 {
-  if(this!=&lg) {
-    TPave::operator=(lg);
-    TAttText::operator=(lg);
-    fPrimitives=lg.fPrimitives;
-    fEntrySeparation=lg.fEntrySeparation;
-    fMargin=lg.fMargin;
-  } return *this;
+   //equal operator
+   if(this!=&lg) {
+      TPave::operator=(lg);
+      TAttText::operator=(lg);
+      fPrimitives=lg.fPrimitives;
+      fEntrySeparation=lg.fEntrySeparation;
+      fMargin=lg.fMargin;
+   } 
+   return *this;
 }
 
 //____________________________________________________________________________

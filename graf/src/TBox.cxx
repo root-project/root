@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.22 2006/04/28 08:43:05 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.23 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -82,17 +82,19 @@ TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box)
 //______________________________________________________________________________
 TBox& TBox::operator=(const TBox& b) 
 {
-  if(this!=&b) {
-    TObject::operator=(b);
-    TAttLine::operator=(b);
-    TAttFill::operator=(b);
-    fTip=b.fTip;
-    fX1=b.fX1;
-    fY1=b.fY1;
-    fX2=b.fX2;
-    fY2=b.fY2;
-    fResizing=b.fResizing;
-  } return *this;
+   //assignement operator
+   if(this!=&b) {
+      TObject::operator=(b);
+      TAttLine::operator=(b);
+      TAttFill::operator=(b);
+      fTip=b.fTip;
+      fX1=b.fX1;
+      fY1=b.fY1;
+      fX2=b.fX2;
+      fY2=b.fY2;
+      fResizing=b.fResizing;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

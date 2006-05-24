@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name: v5-11-02 $:$Id: TPolyLine.cxx,v 1.25 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.26 2006/05/23 04:47:38 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -116,16 +116,18 @@ TPolyLine::TPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 //______________________________________________________________________________
 TPolyLine& TPolyLine::operator=(const TPolyLine& pl)
 {
-  if(this!=&pl) {
-    TObject::operator=(pl);
-    TAttLine::operator=(pl);
-    TAttFill::operator=(pl);
-    fN=pl.fN;
-    fLastPoint=pl.fLastPoint;
-    fX=pl.fX;
-    fY=pl.fY;
-    fOption=pl.fOption;
-  } return *this;
+   //equal operator
+   if(this!=&pl) {
+      TObject::operator=(pl);
+      TAttLine::operator=(pl);
+      TAttFill::operator=(pl);
+      fN=pl.fN;
+      fLastPoint=pl.fLastPoint;
+      fX=pl.fX;
+      fY=pl.fY;
+      fOption=pl.fOption;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

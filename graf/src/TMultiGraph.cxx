@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name: v5-11-02 $:$Id: TMultiGraph.cxx,v 1.29 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.30 2006/05/23 04:47:38 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -80,19 +80,23 @@ TMultiGraph::TMultiGraph(const TMultiGraph& mg) :
   fHistogram(mg.fHistogram),
   fMaximum(mg.fMaximum),
   fMinimum(mg.fMinimum)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TMultiGraph& TMultiGraph::operator=(const TMultiGraph& mg)
 {
-  if(this!=&mg) {
-    TNamed::operator=(mg);
-    fGraphs=mg.fGraphs;
-    fFunctions=mg.fFunctions;
-    fHistogram=mg.fHistogram;
-    fMaximum=mg.fMaximum;
-    fMinimum=mg.fMinimum;
-  } return *this;
+   //equal operator
+   if(this!=&mg) {
+      TNamed::operator=(mg);
+      fGraphs=mg.fGraphs;
+      fFunctions=mg.fFunctions;
+      fHistogram=mg.fHistogram;
+      fMaximum=mg.fMaximum;
+      fMinimum=mg.fMinimum;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

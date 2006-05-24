@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.188 2006/05/15 13:11:35 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.189 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -186,32 +186,32 @@ TGraph& TGraph::operator=(const TGraph &gr)
 {
    // Equal operator for this graph
 
-  if(this!=&gr) {
-    TNamed::operator=(gr);
-    TAttLine::operator=(gr);
-    TAttFill::operator=(gr);
-    TAttMarker::operator=(gr);
+   if(this!=&gr) {
+      TNamed::operator=(gr);
+      TAttLine::operator=(gr);
+      TAttFill::operator=(gr);
+      TAttMarker::operator=(gr);
     
-    fNpoints = gr.fNpoints;
-    fMaxSize = gr.fMaxSize;
-    if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
-    else fFunctions = new TList;
-    fHistogram = new TH1F(*fHistogram);
-    fMinimum = gr.fMinimum;
-    fMaximum = gr.fMaximum;
-    if (!fMaxSize) {
-      fX = fY = 0;
-      return *this;
-    } else {
-      fX = new Double_t[fMaxSize];
-      fY = new Double_t[fMaxSize];
-    }
+      fNpoints = gr.fNpoints;
+      fMaxSize = gr.fMaxSize;
+      if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
+      else fFunctions = new TList;
+      fHistogram = new TH1F(*fHistogram);
+      fMinimum = gr.fMinimum;
+      fMaximum = gr.fMaximum;
+      if (!fMaxSize) {
+         fX = fY = 0;
+         return *this;
+      } else {
+         fX = new Double_t[fMaxSize];
+         fY = new Double_t[fMaxSize];
+      }
     
-    Int_t n = gr.GetN()*sizeof(Double_t);
-    memcpy(fX, gr.fX, n);
-    memcpy(fY, gr.fY, n);
-  }
-  return *this;
+      Int_t n = gr.GetN()*sizeof(Double_t);
+      memcpy(fX, gr.fX, n);
+      memcpy(fY, gr.fY, n);
+   }
+   return *this;
 }
 
 

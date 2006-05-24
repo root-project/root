@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name: v5-11-02 $:$Id: TLatex.cxx,v 1.57 2006/04/04 12:44:48 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.58 2006/05/23 04:47:38 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -309,19 +309,21 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 //______________________________________________________________________________
 TLatex& TLatex::operator=(const TLatex& lt) 
 {
-  if(this!=&lt) {
-    TText::operator=(lt);
-    TAttLine::operator=(lt);
-    fFactorSize=lt.fFactorSize;
-    fFactorPos=lt.fFactorPos;
-    fLimitFactorSize=lt.fLimitFactorSize;
-    fError=lt.fError;
-    fShow=lt.fShow;
-    fTabSize=lt.fTabSize;
-    fOriginSize=lt.fOriginSize;
-    fTabSize=lt.fTabSize;
-    fTabSize=lt.fTabSize;
-  } return *this;
+   //equal operator
+   if(this!=&lt) {
+      TText::operator=(lt);
+      TAttLine::operator=(lt);
+      fFactorSize=lt.fFactorSize;
+      fFactorPos=lt.fFactorPos;
+      fLimitFactorSize=lt.fLimitFactorSize;
+      fError=lt.fError;
+      fShow=lt.fShow;
+      fTabSize=lt.fTabSize;
+      fOriginSize=lt.fOriginSize;
+      fTabSize=lt.fTabSize;
+      fTabSize=lt.fTabSize;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
