@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name: v5-11-02 $:$Id: TShape.cxx,v 1.13 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.14 2006/05/23 04:47:36 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -86,20 +86,24 @@ TShape::TShape(const TShape& ts) :
   fNumber(ts.fNumber),
   fVisibility(ts.fVisibility),
   fMaterial(ts.fMaterial) 
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TShape& TShape::operator=(const TShape& ts) 
 { 
-  if (this!=&ts) {
-    TNamed::operator=(ts);
-    TAttLine::operator=(ts);
-    TAttFill::operator=(ts);
-    TAtt3D::operator=(ts);
-    fNumber=ts.fNumber;
-    fVisibility=ts.fVisibility;
-    fMaterial=ts.fMaterial;
-  } return *this;
+   //assignement operator
+   if (this!=&ts) {
+      TNamed::operator=(ts);
+      TAttLine::operator=(ts);
+      TAttFill::operator=(ts);
+      TAtt3D::operator=(ts);
+      fNumber=ts.fNumber;
+      fVisibility=ts.fVisibility;
+      fMaterial=ts.fMaterial;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

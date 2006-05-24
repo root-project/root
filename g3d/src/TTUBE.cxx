@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name: v5-11-02 $:$Id: TTUBE.cxx,v 1.14 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.15 2006/05/23 04:47:36 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -94,21 +94,25 @@ TTUBE::TTUBE(const TTUBE& tu) :
   fAspectRatio(tu.fAspectRatio),
   fSiTab(tu.fSiTab),
   fCoTab(tu.fCoTab)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TTUBE& TTUBE::operator=(const TTUBE& tu) 
 {
-  if(this!=&tu) {
-    TShape::operator=(tu);
-    fRmin=tu.fRmin;
-    fRmax=tu.fRmax;
-    fDz=tu.fDz;
-    fNdiv=tu.fNdiv;
-    fAspectRatio=tu.fAspectRatio;
-    fSiTab=tu.fSiTab;
-    fCoTab=tu.fCoTab;
-  } return *this;
+   //assignement operator
+   if(this!=&tu) {
+      TShape::operator=(tu);
+      fRmin=tu.fRmin;
+      fRmax=tu.fRmax;
+      fDz=tu.fDz;
+      fNdiv=tu.fNdiv;
+      fAspectRatio=tu.fAspectRatio;
+      fSiTab=tu.fSiTab;
+      fCoTab=tu.fCoTab;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

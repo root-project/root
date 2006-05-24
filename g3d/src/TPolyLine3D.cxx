@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.25 2005/11/24 17:28:07 couet Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.26 2006/05/23 04:47:36 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -238,16 +238,18 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_
 //______________________________________________________________________________
 TPolyLine3D& TPolyLine3D::operator=(const TPolyLine3D& pl)
 {
-  if(this!=&pl) {
-    TObject::operator=(pl);
-    TAttLine::operator=(pl);
-    TAtt3D::operator=(pl);
-    fN=pl.fN;
-    fP=pl.fP;
-    fOption=pl.fOption;
-    fGLList=pl.fGLList;
-    fLastPoint=pl.fLastPoint;
-  } return *this;
+   //assignement operator
+   if(this!=&pl) {
+      TObject::operator=(pl);
+      TAttLine::operator=(pl);
+      TAtt3D::operator=(pl);
+      fN=pl.fN;
+      fP=pl.fP;
+      fOption=pl.fOption;
+      fGLList=pl.fGLList;
+      fLastPoint=pl.fLastPoint;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

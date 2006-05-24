@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.29 2005/11/24 17:28:07 couet Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.30 2006/05/23 04:47:36 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -184,26 +184,30 @@ TNode::TNode(const TNode& no) :
   fNodes(no.fNodes),
   fOption(no.fOption),
   fVisibility(no.fVisibility)
-{ }
+{ 
+//copy constructor
+}
 
 //______________________________________________________________________________
 TNode& TNode::operator=(const TNode& no)
 {
-  if(this!=&no) {
-    TNamed::operator=(no);
-    TAttLine::operator=(no);
-    TAttFill::operator=(no);
-    TAtt3D::operator=(no);
-    fX=no.fX;
-    fY=no.fY;
-    fZ=no.fZ;
-    fMatrix=no.fMatrix;
-    fShape=no.fShape;
-    fParent=no.fParent;
-    fNodes=no.fNodes;
-    fOption=no.fOption;
-    fVisibility=no.fVisibility;
-  } return *this;
+   //assignement operator
+   if(this!=&no) {
+      TNamed::operator=(no);
+      TAttLine::operator=(no);
+      TAttFill::operator=(no);
+      TAtt3D::operator=(no);
+      fX=no.fX;
+      fY=no.fY;
+      fZ=no.fZ;
+      fMatrix=no.fMatrix;
+      fShape=no.fShape;
+      fParent=no.fParent;
+      fNodes=no.fNodes;
+      fOption=no.fOption;
+      fVisibility=no.fVisibility;
+   }
+   return *this;
 }
 
 //______________________________________________________________________________

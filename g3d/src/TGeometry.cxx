@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.9 2005/11/24 17:28:07 couet Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.10 2006/05/23 04:47:36 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -154,30 +154,32 @@ TGeometry::TGeometry(const TGeometry& geo) :
 //______________________________________________________________________________
 TGeometry& TGeometry::operator=(const TGeometry& geo)
 {
-  if(this!=&geo) {
-    TNamed::operator=(geo);
-    fMaterials=geo.fMaterials;
-    fMatrices=geo.fMatrices;
-    fShapes=geo.fShapes;
-    fNodes=geo.fNodes;
-    fMatrix=geo.fMatrix;
-    fCurrentNode=geo.fCurrentNode;
-    fMaterialPointer=geo.fMaterialPointer;
-    fMatrixPointer=geo.fMatrixPointer;
-    fShapePointer=geo.fShapePointer;
-    fBomb=geo.fBomb;
-    fGeomLevel=geo.fGeomLevel;
-    fX=geo.fX;
-    fY=geo.fY;
-    fZ=geo.fZ;
-    for(Int_t i=0; i<kMAXLEVELS; i++) {
-      for(Int_t j=0; j<kVectorSize; j++) 
-	fTranslation[i][j]=geo.fTranslation[i][j];
-      for(Int_t j=0; j<kMatrixSize; j++) 
-	fRotMatrix[i][j]=geo.fRotMatrix[i][j];
-      fIsReflection[i]=geo.fIsReflection[i];
-    }
-  } return *this;
+   //assignement operator
+   if(this!=&geo) {
+      TNamed::operator=(geo);
+      fMaterials=geo.fMaterials;
+      fMatrices=geo.fMatrices;
+      fShapes=geo.fShapes;
+      fNodes=geo.fNodes;
+      fMatrix=geo.fMatrix;
+      fCurrentNode=geo.fCurrentNode;
+      fMaterialPointer=geo.fMaterialPointer;
+      fMatrixPointer=geo.fMatrixPointer;
+      fShapePointer=geo.fShapePointer;
+      fBomb=geo.fBomb;
+      fGeomLevel=geo.fGeomLevel;
+      fX=geo.fX;
+      fY=geo.fY;
+      fZ=geo.fZ;
+      for(Int_t i=0; i<kMAXLEVELS; i++) {
+         for(Int_t j=0; j<kVectorSize; j++) 
+            fTranslation[i][j]=geo.fTranslation[i][j];
+         for(Int_t j=0; j<kMatrixSize; j++) 
+            fRotMatrix[i][j]=geo.fRotMatrix[i][j];
+         fIsReflection[i]=geo.fIsReflection[i];
+      }
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

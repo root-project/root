@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name: v5-11-02 $:$Id: THelix.cxx,v 1.13 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.14 2006/05/23 04:47:36 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -198,21 +198,23 @@ THelix::THelix(const THelix &h) : TPolyLine3D()
 //______________________________________________________________________________
 THelix& THelix::operator=(const THelix& hx)
 {
-  if(this!=&hx) {
-    TPolyLine3D::operator=(hx);
-    fX0=hx.fX0;
-    fY0=hx.fY0;
-    fZ0=hx.fZ0;
-    fVt=hx.fVt;
-    fPhi0=hx.fPhi0;
-    fVz=hx.fVz;
-    fW=hx.fW;
-    for(Int_t i=0; i<3; i++) 
-      fAxis[i]=hx.fAxis[i];
-    fRotMat=hx.fRotMat;
-    for(Int_t i=0; i<2; i++) 
-      fRange[i]=hx.fRange[i];
-  } return *this;
+   //assignement operator
+   if(this!=&hx) {
+      TPolyLine3D::operator=(hx);
+      fX0=hx.fX0;
+      fY0=hx.fY0;
+      fZ0=hx.fZ0;
+      fVt=hx.fVt;
+      fPhi0=hx.fPhi0;
+      fVz=hx.fVz;
+      fW=hx.fW;
+      for(Int_t i=0; i<3; i++) 
+         fAxis[i]=hx.fAxis[i];
+      fRotMat=hx.fRotMat;
+      for(Int_t i=0; i<2; i++) 
+         fRange[i]=hx.fRange[i];
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

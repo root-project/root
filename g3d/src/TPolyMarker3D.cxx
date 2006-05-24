@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name: v5-11-02 $:$Id: TPolyMarker3D.cxx,v 1.27 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.28 2006/05/23 04:47:36 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -150,17 +150,19 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker,
 //______________________________________________________________________________
 TPolyMarker3D& TPolyMarker3D::operator=(const TPolyMarker3D& tp3)
 {
-  if(this!=&tp3) {
-    TObject::operator=(tp3);
-    TAttMarker::operator=(tp3);
-    TAtt3D::operator=(tp3);
-    fN=tp3.fN;
-    fP=tp3.fP;
-    fOption=tp3.fOption;
-    fGLList=tp3.fGLList;
-    fLastPoint=tp3.fLastPoint;
-    fName=tp3.fName;
-  } return *this;
+   //assignement operator
+   if(this!=&tp3) {
+      TObject::operator=(tp3);
+      TAttMarker::operator=(tp3);
+      TAtt3D::operator=(tp3);
+      fN=tp3.fN;
+      fP=tp3.fP;
+      fOption=tp3.fOption;
+      fGLList=tp3.fGLList;
+      fLastPoint=tp3.fLastPoint;
+      fName=tp3.fName;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
