@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name: v5-11-02 $:$Id: TGeoXtru.cxx,v 1.31 2006/04/03 16:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.32 2006/05/23 04:47:37 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -158,28 +158,32 @@ TGeoXtru::TGeoXtru(const TGeoXtru& xt) :
   fY0(xt.fY0),
   fSeg(xt.fSeg),
   fIz(xt.fIz)
-{ }
+{ 
+   //copy constructor
+}
 
 //_____________________________________________________________________________
 TGeoXtru& TGeoXtru::operator=(const TGeoXtru& xt)
 {
-  if(this!=&xt) {
-    TGeoBBox::operator=(xt);
-    fNvert=xt.fNvert;
-    fNz=xt.fNz;
-    fZcurrent=xt.fZcurrent;
-    fPoly=xt.fPoly;
-    fX=xt.fX;
-    fY=xt.fY;
-    fXc=xt.fXc;
-    fYc=xt.fYc;
-    fZ=xt.fZ;
-    fScale=xt.fScale;
-    fX0=xt.fX0;
-    fY0=xt.fY0;
-    fSeg=xt.fSeg;
-    fIz=xt.fIz;
-  } return *this;
+   //equal operator
+   if(this!=&xt) {
+      TGeoBBox::operator=(xt);
+      fNvert=xt.fNvert;
+      fNz=xt.fNz;
+      fZcurrent=xt.fZcurrent;
+      fPoly=xt.fPoly;
+      fX=xt.fX;
+      fY=xt.fY;
+      fXc=xt.fXc;
+      fYc=xt.fYc;
+      fZ=xt.fZ;
+      fScale=xt.fScale;
+      fX0=xt.fX0;
+      fY0=xt.fY0;
+      fSeg=xt.fSeg;
+      fIz=xt.fIz;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.27 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.28 2006/05/23 04:47:37 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -125,22 +125,26 @@ TGeoMaterial::TGeoMaterial(const TGeoMaterial& gm) :
   fIntLen(gm.fIntLen),
   fShader(gm.fShader),
   fCerenkov(gm.fCerenkov)
-{ }
+{ 
+   //copy constructor
+}
 //-----------------------------------------------------------------------------
 TGeoMaterial& TGeoMaterial::operator=(const TGeoMaterial& gm) 
 {
-  if(this!=&gm) {
-    TNamed::operator=(gm);
-    TAttFill::operator=(gm);
-    fIndex=gm.fIndex;
-    fA=gm.fA;
-    fZ=gm.fZ;
-    fDensity=gm.fDensity;
-    fRadLen=gm.fRadLen;
-    fIntLen=gm.fIntLen;
-    fShader=gm.fShader;
-    fCerenkov=gm.fCerenkov;
-  } return *this;
+   //equal operator
+   if(this!=&gm) {
+      TNamed::operator=(gm);
+      TAttFill::operator=(gm);
+      fIndex=gm.fIndex;
+      fA=gm.fA;
+      fZ=gm.fZ;
+      fDensity=gm.fDensity;
+      fRadLen=gm.fRadLen;
+      fIntLen=gm.fIntLen;
+      fShader=gm.fShader;
+      fCerenkov=gm.fCerenkov;
+   } 
+   return *this;
 }
 //-----------------------------------------------------------------------------
 TGeoMaterial::~TGeoMaterial()

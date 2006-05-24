@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.7 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.8 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -79,18 +79,21 @@ TGeoMedium::TGeoMedium(const TGeoMedium& gm) :
   fId(gm.fId),
   fMaterial(gm.fMaterial)
 {
-  for(Int_t i=0; i<20; i++) fParams[i]=gm.fParams[i];
+   //copy constructor
+   for(Int_t i=0; i<20; i++) fParams[i]=gm.fParams[i];
 }
  
 //-----------------------------------------------------------------------------
 TGeoMedium& TGeoMedium::operator=(const TGeoMedium& gm) 
 {
-  if(this!=&gm) {
-    TNamed::operator=(gm);
-    fId=gm.fId;
-    for(Int_t i=0; i<20; i++) fParams[i]=gm.fParams[i];
-    fMaterial=gm.fMaterial;
-  } return *this;
+   //equal operator
+   if(this!=&gm) {
+      TNamed::operator=(gm);
+      fId=gm.fId;
+      for(Int_t i=0; i<20; i++) fParams[i]=gm.fParams[i];
+      fMaterial=gm.fMaterial;
+   } 
+   return *this;
 }
  
 //-----------------------------------------------------------------------------

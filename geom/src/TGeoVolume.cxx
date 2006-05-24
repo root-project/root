@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name: v5-11-02 $:$Id: TGeoVolume.cxx,v 1.81 2006/04/10 08:38:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.82 2006/05/23 04:47:37 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -412,27 +412,32 @@ TGeoVolume::TGeoVolume(const TGeoVolume& gv) :
   fOption(gv.fOption),
   fNumber(gv.fNumber),
   fNtotal(gv.fNtotal)
-{ }
+{ 
+   //copy constructor
+}
 
 //_____________________________________________________________________________
-TGeoVolume& TGeoVolume::operator=(const TGeoVolume& gv) {
-  if(this!=&gv) {
-    TNamed::operator=(gv);
-    TGeoAtt::operator=(gv);
-    TAttLine::operator=(gv);
-    TAttFill::operator=(gv);
-    TAtt3D::operator=(gv);
-    fNodes=gv.fNodes;
-    fShape=gv.fShape;
-    fMedium=gv.fMedium;
-    fFinder=gv.fFinder;
-    fVoxels=gv.fVoxels;
-    fGeoManager=gv.fGeoManager;
-    fField=gv.fField;
-    fOption=gv.fOption;
-    fNumber=gv.fNumber;
-    fNtotal=gv.fNtotal;
-  } return *this;
+TGeoVolume& TGeoVolume::operator=(const TGeoVolume& gv) 
+{
+   //equal operator
+   if(this!=&gv) {
+      TNamed::operator=(gv);
+      TGeoAtt::operator=(gv);
+      TAttLine::operator=(gv);
+      TAttFill::operator=(gv);
+      TAtt3D::operator=(gv);
+      fNodes=gv.fNodes;
+      fShape=gv.fShape;
+      fMedium=gv.fMedium;
+      fFinder=gv.fFinder;
+      fVoxels=gv.fVoxels;
+      fGeoManager=gv.fGeoManager;
+      fField=gv.fField;
+      fOption=gv.fOption;
+      fNumber=gv.fNumber;
+      fNtotal=gv.fNtotal;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________
@@ -1877,22 +1882,26 @@ TGeoVolumeMulti::TGeoVolumeMulti(const TGeoVolumeMulti& vm) :
   fStart(vm.fStart),
   fStep(vm.fStep),
   fAttSet(vm.fAttSet)
-{ }
+{ 
+   //copy constructor
+}
 
 //_____________________________________________________________________________
 TGeoVolumeMulti& TGeoVolumeMulti::operator=(const TGeoVolumeMulti& vm) 
 {
-  if(this!=&vm) {
-    TGeoVolume::operator=(vm);
-    fVolumes=vm.fVolumes;
-    fDivision=vm.fDivision;
-    fNumed=vm.fNumed;
-    fNdiv=vm.fNdiv;
-    fAxis=vm.fAxis;
-    fStart=vm.fStart;
-    fStep=vm.fStep;
-    fAttSet=vm.fAttSet;
-  } return *this;
+   //equal operator
+   if(this!=&vm) {
+      TGeoVolume::operator=(vm);
+      fVolumes=vm.fVolumes;
+      fDivision=vm.fDivision;
+      fNumed=vm.fNumed;
+      fNdiv=vm.fNdiv;
+      fAxis=vm.fAxis;
+      fStart=vm.fStart;
+      fStep=vm.fStep;
+      fAttSet=vm.fAttSet;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________

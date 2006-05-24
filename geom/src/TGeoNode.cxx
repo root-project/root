@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name: v5-11-02 $:$Id: TGeoNode.cxx,v 1.33 2006/03/14 15:16:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.34 2006/05/23 04:47:37 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -119,20 +119,24 @@ TGeoNode::TGeoNode(const TGeoNode& gn) :
   fNumber(gn.fNumber),
   fNovlp(gn.fNovlp),
   fOverlaps(gn.fOverlaps)
-{ }
+{ 
+   //copy constructor
+}
 
 //_____________________________________________________________________________
 TGeoNode& TGeoNode::operator=(const TGeoNode& gn) 
 {
-  if(this!=&gn) {
-    TNamed::operator=(gn);
-    TGeoAtt::operator=(gn);
-    fVolume=gn.fVolume;
-    fMother=gn.fMother;
-    fNumber=gn.fNumber;
-    fNovlp=gn.fNovlp;
-    fOverlaps=gn.fOverlaps;
-  } return *this;
+   //equal operator
+   if(this!=&gn) {
+      TNamed::operator=(gn);
+      TGeoAtt::operator=(gn);
+      fVolume=gn.fVolume;
+      fMother=gn.fMother;
+      fNumber=gn.fNumber;
+      fNovlp=gn.fNovlp;
+      fOverlaps=gn.fOverlaps;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________
@@ -691,17 +695,21 @@ TGeoNodeOffset::TGeoNodeOffset(const TGeoNodeOffset& gno) :
   fOffset(gno.fOffset),
   fIndex(gno.fIndex),
   fFinder(gno.fFinder)
-{ }
+{ 
+   //copy constructor
+}
 
 //_____________________________________________________________________________
 TGeoNodeOffset& TGeoNodeOffset::operator=(const TGeoNodeOffset& gno)
 {
-  if(this!=&gno) {
-    TGeoNode::operator=(gno);
-    fOffset=gno.fOffset;
-    fIndex=gno.fIndex;
-    fFinder=gno.fFinder;
-  } return *this;
+   //equal operator
+   if(this!=&gno) {
+      TGeoNode::operator=(gno);
+      fOffset=gno.fOffset;
+      fIndex=gno.fIndex;
+      fFinder=gno.fFinder;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________

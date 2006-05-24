@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.53 2006/02/28 10:57:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.54 2006/05/23 04:47:37 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -135,20 +135,24 @@ TGeoPcon::TGeoPcon(const TGeoPcon& pc) :
   fRmin(pc.fRmin),
   fRmax(pc.fRmax),
   fZ(pc.fZ)
-{ }
+{ 
+   //copy constructor
+}
 
 //_____________________________________________________________________________
 TGeoPcon& TGeoPcon::operator=(const TGeoPcon& pc) 
 {
-  if(this!=&pc) {
-    TGeoBBox::operator=(pc);
-    fNz=pc.fNz;
-    fPhi1=pc.fPhi1;
-    fDphi=pc.fDphi;
-    fRmin=pc.fRmin;
-    fRmax=pc.fRmax;
-    fZ=pc.fZ;
-  } return *this;
+   //equal operator
+   if(this!=&pc) {
+      TGeoBBox::operator=(pc);
+      fNz=pc.fNz;
+      fPhi1=pc.fPhi1;
+      fDphi=pc.fDphi;
+      fRmin=pc.fRmin;
+      fRmax=pc.fRmax;
+      fZ=pc.fZ;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________

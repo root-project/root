@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name: v5-11-02 $:$Id: TGeoCache.cxx,v 1.41 2006/03/24 15:11:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.42 2006/05/23 04:47:37 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -190,43 +190,46 @@ TGeoNodeCache::TGeoNodeCache(const TGeoNodeCache& gnc) :
   fCache(gnc.fCache),
   fMatrixPool(gnc.fMatrixPool)
 {
-  for(Int_t i=0; i<30; i++) fIdBranch[i]=gnc.fIdBranch[i];
+   //copy constructor
+   for(Int_t i=0; i<30; i++) fIdBranch[i]=gnc.fIdBranch[i];
 }
 
 //_____________________________________________________________________________
 TGeoNodeCache& TGeoNodeCache::operator=(const TGeoNodeCache& gnc) 
 {
-  if(this!=&gnc) {
-    fGeoCacheUsageRatio=gnc.fGeoCacheUsageRatio;
-    fGeoCacheMaxDaughters=gnc.fGeoCacheMaxDaughters;
-    fGeoCacheMaxSize=gnc.fGeoCacheMaxSize;
-    fGeoCacheDefaultLevel=gnc.fGeoCacheDefaultLevel;
-    fGeoCacheMaxLevels=gnc.fGeoCacheMaxLevels;
-    fGeoCacheObjArrayInd=gnc.fGeoCacheObjArrayInd;
-    fGeoCacheStackSize=gnc.fGeoCacheStackSize;
-    fLevel=gnc.fLevel;
-    fCurrentID=gnc.fCurrentID;
-    fPath=gnc.fPath;
-    fStack=gnc.fStack;
-    fNodeIdArray=gnc.fNodeIdArray;
-    fIndex=gnc.fIndex;
-    fSize=gnc.fSize;
-    fNused=gnc.fNused;
-    fDefaultLevel=gnc.fDefaultLevel;
-    fTopNode=gnc.fTopNode;
-    fCount=gnc.fCount;
-    fCountLimit=gnc.fCountLimit;
-    fCurrentNode=gnc.fCurrentNode;
-    fCurrentCache=gnc.fCurrentCache;
-    fCurrentIndex=gnc.fCurrentIndex;
-    fBranch=gnc.fBranch;
-    fMatrices=gnc.fMatrices;
-    fStackLevel=gnc.fStackLevel;
-    fGlobalMatrix=gnc.fGlobalMatrix;
-    fCache=gnc.fCache;
-    fMatrixPool=gnc.fMatrixPool;
-    for(Int_t i=0; i<30; i++) fIdBranch[i]=gnc.fIdBranch[i];
-  } return *this;
+   //equal operator
+   if(this!=&gnc) {
+      fGeoCacheUsageRatio=gnc.fGeoCacheUsageRatio;
+      fGeoCacheMaxDaughters=gnc.fGeoCacheMaxDaughters;
+      fGeoCacheMaxSize=gnc.fGeoCacheMaxSize;
+      fGeoCacheDefaultLevel=gnc.fGeoCacheDefaultLevel;
+      fGeoCacheMaxLevels=gnc.fGeoCacheMaxLevels;
+      fGeoCacheObjArrayInd=gnc.fGeoCacheObjArrayInd;
+      fGeoCacheStackSize=gnc.fGeoCacheStackSize;
+      fLevel=gnc.fLevel;
+      fCurrentID=gnc.fCurrentID;
+      fPath=gnc.fPath;
+      fStack=gnc.fStack;
+      fNodeIdArray=gnc.fNodeIdArray;
+      fIndex=gnc.fIndex;
+      fSize=gnc.fSize;
+      fNused=gnc.fNused;
+      fDefaultLevel=gnc.fDefaultLevel;
+      fTopNode=gnc.fTopNode;
+      fCount=gnc.fCount;
+      fCountLimit=gnc.fCountLimit;
+      fCurrentNode=gnc.fCurrentNode;
+      fCurrentCache=gnc.fCurrentCache;
+      fCurrentIndex=gnc.fCurrentIndex;
+      fBranch=gnc.fBranch;
+      fMatrices=gnc.fMatrices;
+      fStackLevel=gnc.fStackLevel;
+      fGlobalMatrix=gnc.fGlobalMatrix;
+      fCache=gnc.fCache;
+      fMatrixPool=gnc.fMatrixPool;
+      for(Int_t i=0; i<30; i++) fIdBranch[i]=gnc.fIdBranch[i];
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________
@@ -673,20 +676,24 @@ TGeoCacheDummy::TGeoCacheDummy(const TGeoCacheDummy& gcd) :
   fMatrixBranch(gcd.fMatrixBranch),
   fMPB(gcd.fMPB),
   fNodeBranch(gcd.fNodeBranch)
-{ }
+{ 
+   //copy constructor
+}
 
 //_____________________________________________________________________________
 TGeoCacheDummy& TGeoCacheDummy::operator=(const TGeoCacheDummy& gcd) 
 {
-  if(this!=&gcd) {
-    TGeoNodeCache::operator=(gcd);
-    fTop=gcd.fTop;
-    fNode=gcd.fNode;
-    fMatrix=gcd.fMatrix;
-    fMatrixBranch=gcd.fMatrixBranch;
-    fMPB=gcd.fMPB;
-    fNodeBranch=gcd.fNodeBranch;
-  } return *this;
+   //equal operator
+   if(this!=&gcd) {
+      TGeoNodeCache::operator=(gcd);
+      fTop=gcd.fTop;
+      fNode=gcd.fNode;
+      fMatrix=gcd.fMatrix;
+      fMatrixBranch=gcd.fMatrixBranch;
+      fMPB=gcd.fMPB;
+      fNodeBranch=gcd.fNodeBranch;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________
@@ -1141,17 +1148,21 @@ TGeoNodeObjArray::TGeoNodeObjArray(const TGeoNodeObjArray& noa) :
   fIndex(noa.fIndex),
   fObjArray(noa.fObjArray),
   fCurrent(noa.fCurrent)
-{ }
+{ 
+   //copy constructor
+}
 
 //_____________________________________________________________________________
 TGeoNodeObjArray& TGeoNodeObjArray::operator=(const TGeoNodeObjArray& noa) 
 {
-  if(this!=&noa) {
-    TGeoNodeArray::operator=(noa);
-    fIndex=noa.fIndex;
-    fObjArray=noa.fObjArray;
-    fCurrent=noa.fCurrent;
-  } return *this;
+   //equal operator
+   if(this!=&noa) {
+      TGeoNodeArray::operator=(noa);
+      fIndex=noa.fIndex;
+      fObjArray=noa.fObjArray;
+      fCurrent=noa.fCurrent;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________
@@ -1301,19 +1312,23 @@ TGeoNodePos::TGeoNodePos(const TGeoNodePos& gnp) :
   fCount(gnp.fCount),
   fDaughters(gnp.fDaughters),
   fNode(gnp.fNode)
-{ }
+{ 
+   //copy constructor
+}
 
 //_____________________________________________________________________________
 TGeoNodePos& TGeoNodePos::operator=(const TGeoNodePos& gnp) 
 {
-  if(this!=&gnp) {
-    TObject::operator=(gnp);
-    fNdaughters=gnp.fNdaughters;
-    fMatrix=gnp.fMatrix;
-    fCount=gnp.fCount;
-    fDaughters=gnp.fDaughters;
-    fNode=gnp.fNode;
-  } return *this;
+   //equal operator
+   if(this!=&gnp) {
+      TObject::operator=(gnp);
+      fNdaughters=gnp.fNdaughters;
+      fMatrix=gnp.fMatrix;
+      fCount=gnp.fCount;
+      fDaughters=gnp.fDaughters;
+      fNode=gnp.fNode;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________
@@ -1477,31 +1492,34 @@ TGeoMatrixCache::TGeoMatrixCache(const TGeoMatrixCache& gmc) :
   fHandlers(gmc.fHandlers),
   fGeoMinCacheSize(gmc.fGeoMinCacheSize)
 {
-  for(Int_t i=0; i<7; i++) {
-    fSize[i]=gmc.fSize[i];
-    fFree[i]=gmc.fFree[i];
-    fCache[i]=gmc.fCache[i];
-    fBitsArray[i]=gmc.fBitsArray[i];
-  }
+   //copy constructor
+   for(Int_t i=0; i<7; i++) {
+      fSize[i]=gmc.fSize[i];
+      fFree[i]=gmc.fFree[i];
+      fCache[i]=gmc.fCache[i];
+      fBitsArray[i]=gmc.fBitsArray[i];
+   }
 }
 
 //_____________________________________________________________________________
 TGeoMatrixCache& TGeoMatrixCache::operator=(const TGeoMatrixCache& gmc) 
 {
-  if(this!=&gmc) {
-    fMatrix=gmc.fMatrix;
-    fHandler=gmc.fHandler;
-    fCacheId=gmc.fCacheId;
-    fLength=gmc.fLength;
-    for(Int_t i=0; i<7; i++) {
-      fSize[i]=gmc.fSize[i];
-      fFree[i]=gmc.fFree[i];
-      fCache[i]=gmc.fCache[i];
-      fBitsArray[i]=gmc.fBitsArray[i];
-    }
-    fHandlers=gmc.fHandlers;
-    fGeoMinCacheSize=gmc.fGeoMinCacheSize;
-  } return *this;
+   //equal operator
+   if(this!=&gmc) {
+      fMatrix=gmc.fMatrix;
+      fHandler=gmc.fHandler;
+      fCacheId=gmc.fCacheId;
+      fLength=gmc.fLength;
+      for(Int_t i=0; i<7; i++) {
+         fSize[i]=gmc.fSize[i];
+         fFree[i]=gmc.fFree[i];
+         fCache[i]=gmc.fCache[i];
+         fBitsArray[i]=gmc.fBitsArray[i];
+      }
+      fHandlers=gmc.fHandlers;
+      fGeoMinCacheSize=gmc.fGeoMinCacheSize;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________
@@ -1697,22 +1715,25 @@ TGeoCacheState::TGeoCacheState(const TGeoCacheState& gcs) :
   fPoint(gcs.fPoint),
   fOverlapping(gcs.fOverlapping)
 {
-  for(Int_t i=0; i<30; i++) fIdBranch[i]=gcs.fIdBranch[i];
+   //copy constructor
+   for(Int_t i=0; i<30; i++) fIdBranch[i]=gcs.fIdBranch[i];
 }
 
 //_____________________________________________________________________________
 TGeoCacheState& TGeoCacheState::operator=(const TGeoCacheState& gcs) 
 {
-  if(this!=&gcs) {
-    TObject::operator=(gcs);
-    fCapacity=gcs.fCapacity;
-    fLevel=gcs.fLevel;
-    fNmany=gcs.fNmany;
-    fStart=gcs.fStart;
-    for(Int_t i=0; i<30; i++) fIdBranch[i]=gcs.fIdBranch[i];
-    fPoint=gcs.fPoint;
-    fOverlapping=gcs.fOverlapping;
-  } return *this;
+   //equal operator
+   if(this!=&gcs) {
+      TObject::operator=(gcs);
+      fCapacity=gcs.fCapacity;
+      fLevel=gcs.fLevel;
+      fNmany=gcs.fNmany;
+      fStart=gcs.fStart;
+      for(Int_t i=0; i<30; i++) fIdBranch[i]=gcs.fIdBranch[i];
+      fPoint=gcs.fPoint;
+      fOverlapping=gcs.fOverlapping;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________
@@ -1805,17 +1826,21 @@ TGeoCacheStateDummy::TGeoCacheStateDummy(const TGeoCacheStateDummy& csd) :
   fNodeBranch(csd.fNodeBranch),
   fMatrixBranch(csd.fMatrixBranch),
   fMatPtr(csd.fMatPtr)
-{ }
+{ 
+   //copy constructor
+}
 
 //_____________________________________________________________________________
 TGeoCacheStateDummy& TGeoCacheStateDummy::operator=(const TGeoCacheStateDummy& csd) 
 {
-  if(this!=&csd) {
-    TGeoCacheState::operator=(csd);
-    fNodeBranch=csd.fNodeBranch;
-    fMatrixBranch=csd.fMatrixBranch;
-    fMatPtr=csd.fMatPtr;
-  } return *this;
+   //equal operator
+   if(this!=&csd) {
+      TGeoCacheState::operator=(csd);
+      fNodeBranch=csd.fNodeBranch;
+      fMatrixBranch=csd.fMatrixBranch;
+      fMatPtr=csd.fMatPtr;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________

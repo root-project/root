@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.48 2006/02/03 09:08:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.49 2006/05/23 04:47:37 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -166,24 +166,27 @@ TGeoArb8::TGeoArb8(const TGeoArb8& ga8) :
   fDz(ga8.fDz),
   fTwist(ga8.fTwist)
 {
-  for(Int_t i=0; i<8; i++) {
-    fXY[i][0]=ga8.fXY[i][0];
-    fXY[i][1]=ga8.fXY[i][1];
-  }
+   //copy constructor
+   for(Int_t i=0; i<8; i++) {
+      fXY[i][0]=ga8.fXY[i][0];
+      fXY[i][1]=ga8.fXY[i][1];
+   }
 }
 
 //_____________________________________________________________________________
 TGeoArb8& TGeoArb8::operator=(const TGeoArb8& ga8) 
 {
-  if(this!=&ga8) {
-    TGeoBBox::operator=(ga8);
-    fDz=ga8.fDz;
-    fTwist=ga8.fTwist;
-    for(Int_t i=0; i<8; i++) {
-      fXY[i][0]=ga8.fXY[i][0];
-      fXY[i][1]=ga8.fXY[i][1];
-    }
-  } return *this;
+   //equal operator
+   if(this!=&ga8) {
+      TGeoBBox::operator=(ga8);
+      fDz=ga8.fDz;
+      fTwist=ga8.fTwist;
+      for(Int_t i=0; i<8; i++) {
+         fXY[i][0]=ga8.fXY[i][0];
+         fXY[i][1]=ga8.fXY[i][1];
+      }
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________

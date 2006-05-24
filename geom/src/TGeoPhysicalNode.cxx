@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.15 2006/05/02 18:25:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.16 2006/05/23 04:47:37 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -67,19 +67,23 @@ TGeoPhysicalNode::TGeoPhysicalNode(const TGeoPhysicalNode& gpn) :
   fMatrices(gpn.fMatrices),
   fNodes(gpn.fNodes),
   fMatrixOrig(gpn.fMatrixOrig)
-{ }
+{ 
+   //copy constructor
+}
 
 //_____________________________________________________________________________
 TGeoPhysicalNode& TGeoPhysicalNode::operator=(const TGeoPhysicalNode& gpn)
 {
-  if(this!=&gpn) {
-    TObject::operator=(gpn);
-    TAttLine::operator=(gpn);
-    fLevel=gpn.fLevel;
-    fMatrices=gpn.fMatrices;
-    fNodes=gpn.fNodes;
-    fMatrixOrig=gpn.fMatrixOrig;
-  } return *this;
+   //equal operator
+   if(this!=&gpn) {
+      TObject::operator=(gpn);
+      TAttLine::operator=(gpn);
+      fLevel=gpn.fLevel;
+      fMatrices=gpn.fMatrices;
+      fNodes=gpn.fNodes;
+      fMatrixOrig=gpn.fMatrixOrig;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________
