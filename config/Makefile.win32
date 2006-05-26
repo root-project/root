@@ -11,9 +11,11 @@ DEBUGFLAGS    = -Z7
 ifeq ($(VC_MAJOR),)
    # Visual Studio 2005 set VS_UNICODE_OUTPUT to redirect the output
    # of cl directly to its log mechanism.
-   VC_MAJOR     := $(shell unset VS_UNICODE_OUTPUT ; cl.exe 2>&1 | awk '{ if (NR==1) print $$8 }' | \
+   VC_MAJOR     := $(shell unset VS_UNICODE_OUTPUT ; cl.exe 2>&1 | \
+                   awk '{ if (NR==1) print $$8 }' | \
                    cut -d'.' -f1)
-   VC_MINOR     := $(shell unset VS_UNICODE_OUTPUT ; cl.exe 2>&1 | awk '{ if (NR==1) print $$8 }' | \
+   VC_MINOR     := $(shell unset VS_UNICODE_OUTPUT ; cl.exe 2>&1 | \
+                   awk '{ if (NR==1) print $$8 }' | \
                    cut -d'.' -f2)
 endif
 
@@ -33,7 +35,8 @@ endif
 ifeq ($(VC_MAJOR),14)
   BLDCXXFLAGS+= -EHa
   BLDCFLAGS  += -EHa
-  DEBUGFLAGS  = -Zi -Fdbin/root.pdb
+  #DEBUGFLAGS  = -Zi -Fdbin/root.pdb
+  DEBUGFLAGS  = -Zi
 
   ifeq (yes,$(WINRTDEBUG))
     BLDCXXFLAGS += -RTC1
