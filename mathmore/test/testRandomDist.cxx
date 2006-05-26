@@ -1,0 +1,589 @@
+#include "Math/Random.h"
+#include "Math/GSLRndmEngines.h"
+#include "TStopwatch.h"
+#include "TRandom3.h"
+#include "TCanvas.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TH3D.h"
+#include <iostream>
+#include <cmath>
+#include <typeinfo>
+
+#ifdef HAVE_CLHEP
+#include "CLHEP/Random/RandFlat.h"
+#include "CLHEP/Random/RandPoisson.h"
+#endif
+
+
+#ifndef PI
+#define PI       3.14159265358979323846264338328      /* pi */
+#endif
+
+
+
+#ifndef NEVT
+#define NEVT 1000000
+#endif
+
+//#define TEST_TIME
+
+using namespace ROOT::Math;
+
+static bool fillHist = false;
+
+void testDiff(TH1D & h1, TH1D & h2, const std::string & name="") { 
+  
+  double chi2; 
+  int ndf; 
+  if (h1.GetEntries() == 0 && h2.GetEntries() == 0) return; 
+  double prob = h1.Chi2TestX(&h2,chi2,ndf,""); 
+  std::cout << " Test " << name << " chi2 = " << chi2 << " ndf " << ndf << " prob = " << prob << std::endl; 
+
+  std::string cname="c1_" + name; 
+  std::string ctitle="Test of " + name; 
+  TCanvas *c1 = new TCanvas(cname.c_str(), ctitle.c_str(),200,10,800,600);
+  h1.DrawCopy();
+  h2.DrawCopy("Esame");
+  c1->Update();
+
+
+}
+
+template <class R> 
+std::string findName( const R & r) { 
+
+  std::string type = typeid(r).name(); 
+  if (type.find("GSL") != std::string::npos ) 
+    return "ROOT::Math::Random";
+  else if (type.find("TRandom") != std::string::npos )
+    return "TRandom           "; 
+  
+  return   "?????????         ";
+}
+
+
+template <class R> 
+void testPoisson( R & r,double mu,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  // estimate PI
+  w.Start();
+  r.SetSeed(0);
+  for (int i = 0; i < n; ++i) { 
+    int n = r.Poisson(mu );
+    if (fillHist)
+      h.Fill( double(n) );
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+  std::cout << "Poisson - mu = " << mu << "\t\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testPoisson(r,mu,h);
+}
+
+
+
+// Knuth Algorith for Poisson (used also in GSL) 
+template <class R> 
+unsigned int genPoisson( R & r, double mu) {
+
+  // algorithm described by Knuth Vol 2. 2nd edition pag. 132
+  // for generating poisson deviates when mu is large
+
+  unsigned int k = 0; 
+
+  while (mu > 20) { 
+
+    const double alpha = 0.875;  // 7/8
+    unsigned int m = static_cast<unsigned int> ((alpha*mu) ); 
+
+    // generate xg according to a Gamma distribution of m
+    double sqm = std::sqrt( 2.*m -1.);
+    double pi = TMath::Pi();
+    double x,y,v;
+    do { 
+      do { 
+	y = std::tan( pi * r.Rndm() );
+	x = sqm * y + m - 1.;
+      }
+      while (x <= 0); 
+      v = r.Rndm(); 
+    }
+    while ( v > (1 + y * y) * std::exp ( (m - 1) * std::log (x / (m - 1)) - sqm * y));
+
+    // x is now distributed according to a gamma of m 
+      
+    if ( x >= mu ) 
+      return k + r.Binomial( m-1, mu/x); 
+
+    else { 
+    // continue the loop decresing mu
+      mu -= x; 
+      k += m; 
+    }
+  }
+  // for lower values of mu use rejection method from exponential
+  double expmu = TMath::Exp(-mu);
+  double pir = 1.0; 
+  do { 
+    pir *= r.Rndm();
+    k++;
+  }
+  while (pir > expmu); 
+  return k -1; 
+   
+} 
+
+
+
+// Numerical Receip algorithm  for Poisson (used also in CLHEP) 
+template <class R> 
+unsigned int genPoisson2( R & r, double mu) {
+
+  //double om = getOldMean();
+
+
+
+
+  if( mu < 12.0 ) {
+
+    double expmu = TMath::Exp(-mu);
+    double pir = 1.0; 
+    unsigned int k = 0; 
+    do { 
+      pir *= r.Rndm();
+      k++;
+    }
+    while (pir > expmu); 
+    return k-1; 
+  }
+  // for large mu values (should care for values larger than 2E9) 
+  else {
+    
+    double em, t, y;
+    double sq, alxm, g;
+    double pi = TMath::Pi();
+
+    sq = std::sqrt(2.0*mu);
+    alxm = std::log(mu);
+    g = mu*alxm - TMath::LnGamma(mu + 1.0);
+    
+    do {
+      do {
+	y = std::tan(pi*r.Rndm());
+	em = sq*y + mu;
+      } while( em < 0.0 );
+
+      em = std::floor(em);
+      t = 0.9*(1.0 + y*y)* std::exp(em*alxm - TMath::LnGamma(em + 1.0) - g);
+    } while( r.Rndm() > t );
+
+    return static_cast<unsigned int> (em);
+
+  }
+
+}
+
+
+template <class R> 
+void testPoisson2( R & r,double mu,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  // estimate PI
+  w.Start();
+  r.SetSeed(0);
+  for (int i = 0; i < n; ++i) {
+    //    int n = genPoisson2(r,mu);
+    int n = r.PoissonD(mu);
+    if (fillHist)
+      h.Fill( double(n) );
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+  std::cout << "Poisson \t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testPoisson2(r,mu,h);
+}
+
+#ifdef HAVE_CLHEP
+void testPoissonCLHEP( double mu,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  // estimate PI
+  w.Start();
+  //  r.SetSeed(0);
+  for (int i = 0; i < n; ++i) {
+    //int n = RandPoisson::shoot(mu + RandFlat::shoot());
+    int n = RandPoisson::shoot(mu);
+    if (fillHist)
+      h.Fill( double(n) );
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+  std::cout << "Poisson - mu " << mu << " \t CLHEP \tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testPoissonCLHEP(mu,h);
+}
+#endif
+
+
+
+
+
+template <class R> 
+void testGaus( R & r,double mu,double sigma,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  // estimate PI
+  w.Start();
+  r.SetSeed(0);
+  for (int i = 0; i < n; ++i) { 
+    double x = r.Gaus(mu,sigma );
+    if (fillHist)
+      h.Fill( x );
+
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+  std::cout << "Gaussian - mu,sigma = " << mu << " , " << sigma << "\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testGaus(r,mu,sigma,h);
+}
+
+
+
+template <class R> 
+void testLandau( R & r,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  // estimate PI
+  w.Start();
+  r.SetSeed(0);
+  for (int i = 0; i < n; ++i) { 
+    double x = r.Landau();
+    if (fillHist)
+      h.Fill( x );
+
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+  std::cout << "Landau " << "\t\t\t\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testLandau(r,h);
+}
+
+
+
+
+template <class R> 
+void testBreitWigner( R & r,double mu,double gamma,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  // estimate PI
+  w.Start();
+  r.SetSeed(0);
+  for (int i = 0; i < n; ++i) { 
+    double x = r.BreitWigner(mu,gamma );
+    if (fillHist)
+      h.Fill( x );
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+  std::cout << "Breit-Wigner - m,g = " << mu << " , " << gamma << "\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testBreitWigner(r,mu,gamma,h);
+}
+
+
+
+template <class R> 
+void testBinomial( R & r,int ntot,double p,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  // estimate PI
+  w.Start();
+  r.SetSeed(0);
+  for (int i = 0; i < n; ++i) { 
+    double x = double( r.Binomial(ntot,p ) );
+    if (fillHist)
+      h.Fill( x );
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+  std::cout << "Binomial - ntot,p = " << ntot << " , " << p << "\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testBinomial(r,ntot,p,h);
+}
+
+
+template <class R> 
+void testExp( R & r,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  // estimate PI
+  w.Start();
+  r.SetSeed(0);
+  for (int i = 0; i < n; ++i) { 
+    double x = r.Exp(1.);
+    if (fillHist)
+      h.Fill( x );
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+  std::cout << "Exponential " << "\t\t\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testExp(r,h);
+}
+
+
+template <class R> 
+void testCircle( R & r,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  // estimate PI
+  w.Start();
+  r.SetSeed(0);
+  double x,y; 
+  for (int i = 0; i < n; ++i) { 
+    r.Circle(x,y,1.0);
+    if (fillHist)
+      h.Fill( std::atan2(x,y) );
+
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+
+  std::cout << "Circle " << "\t\t\t\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testCircle(r,h);
+
+}
+
+
+template <class R> 
+void testSphere( R & r,TH1D & h1, TH1D & h2 ) { 
+
+
+#ifdef PLOT_SPHERE
+  TH2D hxy("hxy","xy",100,-1.1,1.1,100,-1.1,1.1);
+  TH3D h3d("h3d","sphere",100,-1.1,1.1,100,-1.1,1.1,100,-1.1,1.1);
+  TH1D hz("hz","z",100,-1.1,1.1);
+#endif
+
+  TStopwatch w; 
+  
+
+  int n = NEVT;
+  // estimate PI
+  w.Start();
+  r.SetSeed(0);
+  double x,y,z; 
+  for (int i = 0; i < n; ++i) { 
+    r.Sphere(x,y,z,1.0);
+    if (fillHist) { 
+
+      h1.Fill( std::atan2(x,y) );
+      h2.Fill( std::atan2( std::sqrt(x*x+y*y), z ) );
+
+#ifdef PLOT_SPHERE
+      hxy.Fill(x,y);
+      hz.Fill(z);
+      h3d.Fill(x,y,z);
+#endif
+
+    }
+
+  }
+
+  w.Stop();
+
+#ifdef PLOT_SPHERE
+  if (fillHist) { 
+    TCanvas *c1 = new TCanvas("c1_xyz","sphere",220,20,800,900);
+    c1->Divide(2,2);
+    c1->cd(1);
+    hxy.DrawCopy();
+    c1->cd(2);
+    hz.DrawCopy();
+    c1->cd(3);
+    h3d.DrawCopy();
+    c1->Update();
+  }
+#endif  
+
+  if (fillHist) { fillHist=false; return; }  
+
+  std::cout << "Sphere " << "\t\t\t\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+
+  // fill histogram the second pass
+  fillHist = true; 
+  testSphere(r,h1,h2);
+
+}
+
+
+
+
+int testRandomDist() {
+
+  std::cout << "***************************************************\n"; 
+  std::cout << " TEST RANDOM DISTRIBUTIONS   NEVT = " << NEVT << std::endl;
+  std::cout << "***************************************************\n\n"; 
+
+
+
+  Random<GSLRngMT>         r;
+  TRandom3                 tr;
+
+
+  // Poisson 
+
+  double mu = 25; 
+  double xmin = std::floor(std::max(0.0,mu-5*std::sqrt(mu) ) );
+  double xmax = std::floor( mu+5*std::sqrt(mu) );
+  int nch = std::min( int(xmax-xmin),1000);
+  TH1D hp1("hp1","Poisson ROOT",nch,xmin,xmax);
+  TH1D hp2("hp2","Poisson GSL",nch,xmin,xmax);
+
+  testPoisson(r,mu,hp1);
+  testPoisson(tr,mu,hp2);
+  //testPoisson2(tr,mu,h2);
+#ifdef HAVE_CLHEP
+  //testPoissonCLHEP(mu,h2);
+#endif
+  // test differences 
+  testDiff(hp1,hp2,"Poisson");
+
+  // Gaussian
+
+  TH1D hg1("hg1","Gaussian ROOT",nch,xmin,xmax);
+  TH1D hg2("hg2","Gaussian GSL",nch,xmin,xmax);
+
+
+  testGaus(r,mu,sqrt(mu),hg1);
+  testGaus(tr,mu,sqrt(mu),hg2);
+
+  testDiff(hg1,hg2,"Gaussian");
+
+  // Landau
+
+  TH1D hl1("hl1","Landau ROOT",300,0,50);
+  TH1D hl2("hl2","Landau  GSL",300,0,50);
+
+  testLandau(r,hl1);
+  testLandau(tr,hl2);
+  testDiff(hl1,hl2,"Landau");
+
+  // Breit Wigner
+
+  TH1D hbw1("hbw1","BreitWigner ROOT",nch,xmin,xmax);
+  TH1D hbw2("hbw2","BreitWigner GSL",nch,xmin,xmax);
+
+
+  testBreitWigner(r,mu,sqrt(mu),hbw1);
+  testBreitWigner(tr,mu,sqrt(mu),hbw2);
+  testDiff(hbw1,hbw2,"Breit-Wigner");
+
+  // binomial
+
+  int ntot = 10;
+  double p =0.5;
+  xmin = 0;
+  xmax = ntot+1;
+  nch = std::min(1000,ntot+1);
+  TH1D hb1("hb1","Binomial ROOT",nch,xmin,xmax);
+  TH1D hb2("hb2","Binomial GSL",nch,xmin,xmax);
+
+
+  testBinomial(r,ntot,p,hb1);
+  testBinomial(tr,ntot,p,hb2);
+  testDiff(hb1,hb2,"Binomial");
+
+
+  // exponential
+
+  TH1D he1("he1","Exp  ROOT",300,0,20);
+  TH1D he2("he2","Exp  GSL",300,0,20);
+
+  testExp(r,he1);
+  testExp(tr,he2);
+  testDiff(he1,he2,"Exponential");
+
+  // circle
+  TH1D hc1("hc1","Circle  ROOT",300,-PI,PI);
+  TH1D hc2("hc2","Circle  GSL",300,-PI,PI);
+
+  testCircle(r,hc1);
+  testCircle(tr,hc2);
+  testDiff(hc1,hc2,"Circle");
+
+
+  // sphere
+
+  TH1D hs1("hs1","Sphere-Phi ROOT",300,-PI,PI);
+  TH1D hs2("hs2","Sphere-Phi  GSL ",300,-PI,PI);
+  TH1D hs3("hs3","Sphere-Theta ROOT",300,0,PI);
+  TH1D hs4("hs4","Sphere-Theta  GSL ",300,0,PI);
+
+  testSphere(r,hs1,hs3);
+  testSphere(tr,hs2,hs4);
+  testDiff(hs1,hs2,"Sphere-phi");
+  testDiff(hs3,hs4,"Sphere-theta");
+
+
+
+  return 0;
+
+}
+
+int main() { 
+  return testRandomDist();
+}

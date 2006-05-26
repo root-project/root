@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Polynomial.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Polynomial.cxx,v 1.3 2005/09/19 13:06:53 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -35,8 +35,13 @@
 #include "gsl/gsl_math.h"
 #include "gsl/gsl_errno.h"
 #include "gsl/gsl_poly.h"
+#include "gsl/gsl_poly.h"
+#include "complex_quartic.h"
 
-
+#define DEBUG
+#ifdef DEBUG
+#include <iostream>
+#endif
 
 namespace ROOT {
 namespace Math {
@@ -49,6 +54,55 @@ Polynomial::Polynomial(unsigned int n) :
   fDerived_params(std::vector<double>(n) )
 {
 }
+
+  //order 1
+Polynomial::Polynomial(double a, double b) : 
+  ParamFunction( 2, true, true), 
+  fOrder(1), 
+  fDerived_params(std::vector<double>(1) )
+{
+  fParams[0] = b; 
+  fParams[1] = a; 
+}
+
+// order 2
+Polynomial::Polynomial(double a, double b, double c) : 
+  ParamFunction( 3, true, true), 
+  fOrder(2), 
+  fDerived_params(std::vector<double>(2) )
+{
+  fParams[0] = c; 
+  fParams[1] = b; 
+  fParams[2] = a; 
+}
+
+// order 3 (cubic)
+Polynomial::Polynomial(double a, double b, double c, double d) : 
+  // number of par is order + 1
+  ParamFunction( 4, true, true), 
+  fOrder(3), 
+  fDerived_params(std::vector<double>(3) )
+{
+  fParams[0] = d; 
+  fParams[1] = c; 
+  fParams[2] = b; 
+  fParams[3] = a; 
+}
+
+// order 3 (quartic)
+Polynomial::Polynomial(double a, double b, double c, double d, double e) : 
+  // number of par is order + 1
+  ParamFunction( 5, true, true), 
+  fOrder(4), 
+  fDerived_params(std::vector<double>(4) )
+{
+  fParams[0] = e; 
+  fParams[1] = d; 
+  fParams[2] = c; 
+  fParams[3] = b; 
+  fParams[4] = a; 
+}
+
 
 
 Polynomial::~Polynomial() 
@@ -118,6 +172,7 @@ const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
       n--;
     } 
 
+    fRoots.clear();  
     fRoots.reserve(n);  
 
 
@@ -132,8 +187,13 @@ const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
     // quadratic equations
     else if (n == 2 ) { 
       gsl_complex z1, z2;
-      int status = gsl_poly_complex_solve_quadratic(Parameters()[2], Parameters()[1], Parameters()[0], &z1, &z2); 
-      if (status != GSL_SUCCESS) return fRoots; 
+      int nr = gsl_poly_complex_solve_quadratic(Parameters()[2], Parameters()[1], Parameters()[0], &z1, &z2); 
+      if ( nr != 2) { 
+#ifdef DEBUG
+	std::cout << "Polynomial quadratic ::-  FAILED to find roots" << std::endl; 
+#endif
+	return fRoots;
+      } 
       fRoots.push_back(std::complex<double>(z1.dat[0],z1.dat[1]) ); 
       fRoots.push_back(std::complex<double>(z2.dat[0],z2.dat[1]) );       
     }
@@ -145,25 +205,43 @@ const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
       double a = Parameters()[2]/w;
       double b = Parameters()[1]/w;
       double c = Parameters()[0]/w;
-      int status = gsl_poly_complex_solve_cubic(a, b, c, &z1, &z2, &z3); 
-      if (status != GSL_SUCCESS) return fRoots; 
+      int nr = gsl_poly_complex_solve_cubic(a, b, c, &z1, &z2, &z3); 
+      if (nr != 3) { 
+#ifdef DEBUG
+	std::cout << "Polynomial  cubic::-  FAILED to find roots" << std::endl; 
+#endif
+	return fRoots; 
+
+      }
       fRoots.push_back(std::complex<double> (z1.dat[0],z1.dat[1]) ); 
       fRoots.push_back(std::complex<double> (z2.dat[0],z2.dat[1]) ); 
       fRoots.push_back(std::complex<double> (z3.dat[0],z3.dat[1]) );       
     }
-    // cubic equations
-    //else if (n == 4 ) { 
-      // quartic eq. (t.b.d.) 
-    //}
-    // for higher order polynomial use numerical fRoots
+    // quartic equations
+    else if (n == 4 ) { 
+      // quartic eq.  
+      gsl_complex  z1, z2, z3, z4;   
+      // renormalize params in this case
+      double w = Parameters()[4]; 
+      double a = Parameters()[3]/w;
+      double b = Parameters()[2]/w;
+      double c = Parameters()[1]/w;
+      double d = Parameters()[0]/w;
+      int nr = gsl_poly_complex_solve_quartic(a, b, c, d, &z1, &z2, &z3, & z4); 
+      if (nr != 4) { 
+#ifdef DEBUG
+	std::cout << "Polynomial quartic ::-  FAILED to find roots" << std::endl; 
+#endif
+	return fRoots;
+      } 
+      fRoots.push_back(std::complex<double> (z1.dat[0],z1.dat[1]) ); 
+      fRoots.push_back(std::complex<double> (z2.dat[0],z2.dat[1]) ); 
+      fRoots.push_back(std::complex<double> (z3.dat[0],z3.dat[1]) );       
+      fRoots.push_back(std::complex<double> (z4.dat[0],z4.dat[1]) );       
+    }
     else { 
-      gsl_poly_complex_workspace * w = gsl_poly_complex_workspace_alloc( n + 1); 
-      std::vector<double> z(2*n);
-      int status = gsl_poly_complex_solve (&Parameters().front(), n+1, w, &z.front() );  
-      gsl_poly_complex_workspace_free(w);
-      if (status != GSL_SUCCESS) return fRoots; 
-      for (unsigned int i = 0; i < n; ++i) 
-	fRoots.push_back(std::complex<double> (z[2*i],z[2*i+1] ) ); 
+    // for higher order polynomial use numerical fRoots
+      FindNumRoots();
     }      
 
     return fRoots; 
@@ -171,6 +249,42 @@ const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
   }
 
 
+std::vector< double >  Polynomial::FindRealRoots(){
+  FindRoots(); 
+  std::vector<double> roots; 
+  roots.reserve(fOrder); 
+  for (unsigned int i = 0; i < fOrder; ++i) { 
+    if (fRoots[i].imag() == 0) 
+      roots.push_back( fRoots[i].real() ); 
+  }
+  return roots; 
+}
+const std::vector< std::complex <double> > &  Polynomial::FindNumRoots(){
+
+
+    // check if order is correct
+    unsigned int n = fOrder;
+    while ( Parameters()[n] == 0 ) { 
+      n--;
+    } 
+    fRoots.clear();
+    fRoots.reserve(n);  
+
+
+    if (n == 0) {   
+      return fRoots;
+    } 
+
+    gsl_poly_complex_workspace * w = gsl_poly_complex_workspace_alloc( n + 1); 
+    std::vector<double> z(2*n);
+    int status = gsl_poly_complex_solve (&Parameters().front(), n+1, w, &z.front() );  
+    gsl_poly_complex_workspace_free(w);
+    if (status != GSL_SUCCESS) return fRoots; 
+    for (unsigned int i = 0; i < n; ++i) 
+      fRoots.push_back(std::complex<double> (z[2*i],z[2*i+1] ) );      
+
+    return fRoots; 
+}
 
 
 } // namespace Math

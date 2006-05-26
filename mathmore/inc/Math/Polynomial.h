@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Polynomial.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Polynomial.h,v 1.2 2005/09/19 13:06:53 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -62,6 +62,27 @@ namespace Math {
 
     Polynomial(unsigned int n); 
 
+    /**
+       Construct a Polynomial of degree  1 : a*x + b
+     */ 
+    Polynomial(double a, double b);
+
+    /**
+       Construct a Polynomial of degree  2 : a*x**2 + b*x + c
+     */ 
+    Polynomial(double a, double b, double c);
+
+    /**
+       Construct a Polynomial of degree  3 : a*x**3 + b*x**2 + c*x + d
+     */ 
+    Polynomial(double a, double b, double c, double d);
+
+    /**
+       Construct a Polynomial of degree  4 : a*x**4 + b*x**3 + c*x**2 + dx  + e
+     */ 
+    Polynomial(double a, double b, double c, double d, double e);
+
+
     ~Polynomial(); 
 
     /**
@@ -86,12 +107,34 @@ namespace Math {
 
     /**
        Find the polynomial roots. 
-       For n < 3, the roots are found analytically while for larger order an iterative numerical method is used
+       For n <= 4, the roots are found analytically while for larger order an iterative numerical method is used
        The numerical method used is from GSL (see <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_6.html#SEC53" )
     */
     const std::vector<std::complex <double> > & FindRoots(); 
 
+
+    /**
+       Find the only the real polynomial roots. 
+       For n <= 4, the roots are found analytically while for larger order an iterative numerical method is used
+       The numerical method used is from GSL (see <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_6.html#SEC53" )
+    */
+    std::vector<double > FindRealRoots(); 
+
+
+    /**
+       Find the polynomial roots using always an iterative numerical methods 
+       The numerical method used is from GSL (see <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_6.html#SEC53" )
+    */
+    const std::vector<std::complex <double> > & FindNumRoots(); 
+
+    /**
+       Order of Polynomial
+     */
+    unsigned int Order() const { return fOrder; } 
+
+
     IGenFunction * Clone() const; 
+
  
 
   protected: 

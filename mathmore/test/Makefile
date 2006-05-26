@@ -11,11 +11,18 @@ include $(ROOTSYS)/config/Makefile.config
 include $(ROOTSYS)/test/Makefile.arch
 
 #------------------------------------------------------------------------------
+CXXFLAGS += -g
+
 
 ifeq ($(PLATFORM),win32)
 EXTRALIBS        = $(ROOTSYS)/lib/libMathMore.lib $(ROOTSYS)/lib/libMathCore.lib $(GSLLIBS)
 else
 EXTRALIBS        = -lMathMore -lMathCore $(GSLLIBS)
+endif
+
+ifneq ($(CLHEPBASE),)
+CXXFLAGS+=  -I$(CLHEPBASE)/include -DHAVE_CLHEP
+EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
 endif
 
 CHEBYSHEVOBJ      = testChebyshev.$(ObjSuf)
@@ -38,13 +45,21 @@ INTERPOLATIONOBJ      = testInterpolation.$(ObjSuf)
 INTERPOLATIONSRC      = testInterpolation.$(SrcSuf)
 INTERPOLATION         = testInterpolation$(ExeSuf)
 
+RANDOMOBJ      = testRandom.$(ObjSuf)
+RANDOMSRC      = testRandom.$(SrcSuf)
+RANDOM         = testRandom$(ExeSuf)
+
+RANDOMDISTOBJ      = testRandomDist.$(ObjSuf)
+RANDOMDISTSRC      = testRandomDist.$(SrcSuf)
+RANDOMDIST         = testRandomDist$(ExeSuf)
+
 
 
 OBJS          = $(CHEBYSHEVOBJ) $(DERIVATIONOBJ) $(INTEGRATIONOBJ) $(ROOTFINDEROBJ) \
-                  $(INTERPOLATIONOBJ)
+                  $(INTERPOLATIONOBJ) $(RANDOMOBJ) $(RANDOMDISTOBJ)
 
 PROGRAMS      = $(CHEBYSHEV)  $(DERIVATION) $(INTEGRATION) $(ROOTFINDER) \
-                  $(INTERPOLATION)
+                  $(INTERPOLATION) $(RANDOM) $(RANDOMDIST)
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -69,6 +84,14 @@ $(ROOTFINDER):  $(ROOTFINDEROBJ)
 		@echo "$@ done"
 
 $(INTERPOLATION):  $(INTERPOLATIONOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(RANDOM):  	$(RANDOMOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(RANDOMDIST):  $(RANDOMDISTOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 

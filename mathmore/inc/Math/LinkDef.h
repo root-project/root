@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.2 2005/09/19 17:36:32 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.3 2005/09/19 18:14:01 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -40,6 +40,18 @@
 
 
 #pragma link C++ class ROOT::Math::Interpolator+;
+
+
+#pragma link C++ class ROOT::Math::GSLRandomEngine+;
+
+#pragma link C++ class ROOT::Math::GSLRngMT+;
+#pragma link C++ class ROOT::Math::GSLRngTaus+;
+#pragma link C++ class ROOT::Math::GSLRngRanLux+;
+#pragma link C++ class ROOT::Math::GSLRngGFSR4+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngMT>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngTaus>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngRanLux>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngGFSR4>+;
 
 
 

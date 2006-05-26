@@ -29,6 +29,7 @@ endif
 else
 GSLLIBA      := $(GSLDIRS)/.libs/libgsl.a
 #GSLLIB       := $(LPATH)/libgsl.a
+GSLOPT       := $(OPT)
 endif
 GSLDEP       := $(GSLLIBA)
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
@@ -68,7 +69,9 @@ MATHMOREDH1  := $(MODDIRI)/Math/ProbFuncMathMore.h \
 		$(MODDIRI)/Math/GSLRootFinderDeriv.h \
 		$(MODDIRI)/Math/RootFinderAlgorithms.h \
 		$(MODDIRI)/Math/Integrator.h \
-		$(MODDIRI)/Math/Chebyshev.h
+		$(MODDIRI)/Math/Chebyshev.h  \
+		$(MODDIRI)/Math/Random.h \
+		$(MODDIRI)/Math/GSLRndmEngines.h
 
 MATHMOREH    := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
 MATHMORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
@@ -124,7 +127,6 @@ else
 		fi; \
 		cd $(GSLVERS); \
 		ACC=$(CC); \
-		ACOPT=$(OPT); \
 		if [ "$(CC)" = "icc" ]; then \
 			ACC="icc"; \
 		fi; \
@@ -142,7 +144,7 @@ else
 			ACFLAGS="-m64"; \
 		fi; \
 		GNUMAKE=$(MAKE) ./configure CC="$$ACC" \
-		CFLAGS="$$ACFLAGS $$ACOPT" $(GSLDBG); \
+		CFLAGS="$$ACFLAGS $(GSLOPT)" $(GSLDBG); \
 		if [ "$(MACOSX_CPU)" = "i386" ]; then \
 			sed '/DARWIN_IEEE_INTERFACE/d' config.status > _c.s; \
 			rm -f config.status config.h; \
