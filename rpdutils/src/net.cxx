@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.13 2005/09/02 19:55:59 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.14 2006/05/10 07:47:08 brun Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -31,13 +31,13 @@
 #include <netdb.h>
 #include <errno.h>
 
-#if (defined(R__AIX) && !defined(_AIX43)) || (defined(R__FBSD) && \
-    !defined(R__ALPHA)) || defined(R__OBSD) || \
+#if (defined(R__AIX) && !defined(_AIX43)) || \
+    (defined(R__FBSD) && !defined(R__ALPHA)) || \
     (defined(R__SUNGCC3) && !defined(__arch64__))
 #   define USE_SIZE_T
 #elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
      (defined(R__SUNGCC3) && defined(__arch64__)) || \
-     defined(MAC_OS_X_VERSION_10_4) || \
+     defined(R__OBSD) || defined(MAC_OS_X_VERSION_10_4) || \
      (defined(R__AIX) && defined(_AIX43))
 #   define USE_SOCKLEN_T
 #endif
