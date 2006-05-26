@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.41 2006/05/17 09:37:21 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.42 2006/05/17 16:37:26 couet Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -138,7 +138,7 @@ const char *TSpectrum::Background(const TH1 * h, int numberIterations,
 //   Function parameters:                                                  //
 //   spectrum:  pointer to the vector of source spectrum                   //
 //   size:      length of spectrum and working space vectors               //
-//   numberIterations, for details we refer to manual                  //
+//   numberIterations, for details we refer to manual                      //
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
    Error("Background","function not yet implemented: h=%s, iter=%d, option=%sn"
@@ -272,7 +272,7 @@ const char *TSpectrum::Background(float *spectrum, int ssize,
 //        ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - GENERAL FUNCTION 
 //                                                                          
 //        This function calculates background spectrum from source spectrum.
-//        The result is placed in the vector pointed by spectrum pointer.   
+//        The result is placed in the vector pointed by spe1945ctrum pointer.   
 //                                                                         
 //        Function parameters:                                             
 //        spectrum-pointer to the vector of source spectrum                

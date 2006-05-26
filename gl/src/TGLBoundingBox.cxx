@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.17 2005/12/01 11:04:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.18 2006/01/18 16:57:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -309,6 +309,7 @@ void TGLBoundingBox::Transform(const TGLMatrix & matrix)
 //______________________________________________________________________________
 const std::vector<UInt_t> & TGLBoundingBox::FaceVertices(EFace face) const
 {
+   //return a vector of face vertices
    //    y
    //    |
    //    |

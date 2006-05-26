@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.5 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.6 2006/03/28 16:19:37 antcheva Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -100,19 +100,19 @@ TGuiBldAction::TGuiBldAction(const char *name, const char *title,
                Int_t type,  TGLayoutHints *hints) :
    TNamed(name, title), fType(type), fHints(hints)
 {
-   // ctor
+   // cconstructor
 }
 
 //______________________________________________________________________________
 TGuiBldAction::~TGuiBldAction()
 {
-   // dtor
+   // destructor
 }
 
 //______________________________________________________________________________
 TGuiBuilder::TGuiBuilder()
 {
-   // ctor
+   // constructor
 
    // load plugin
    if (!gGuiBuilder) {
@@ -131,7 +131,7 @@ TGuiBuilder::TGuiBuilder()
 //______________________________________________________________________________
 TGuiBuilder::~TGuiBuilder()
 {
-   // dtor
+   // destructor
 }
 
 //______________________________________________________________________________

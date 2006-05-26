@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.69 2006/05/23 04:47:40 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.70 2006/05/24 15:10:46 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -859,7 +859,7 @@ void TNetSystem::Create(const char *url, TSocket *sock)
 //______________________________________________________________________________
 TNetSystem::~TNetSystem()
 {
-   // Dtor
+   // Destructor
 
    // Close FTP connection
    if (fFTPOwner) {

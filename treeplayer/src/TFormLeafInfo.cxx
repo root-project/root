@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.28 2006/02/22 06:59:15 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.29 2006/04/19 08:22:26 rdm Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -474,8 +474,6 @@ Bool_t TFormLeafInfo::Update()
 
 //______________________________________________________________________________
 Int_t TFormLeafInfo::GetCounterValue(TLeaf* leaf) {
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*
 //  Return the size of the underlying array for the current entry in the TTree.
 
    if (!fCounter) {

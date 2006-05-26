@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.14 2006/05/23 04:47:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.15 2006/05/24 16:44:33 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -637,7 +637,7 @@ Int_t TSpline3::FindX(Double_t x) const
 //____________________________________________________________________________
 Double_t TSpline3::Eval(Double_t x) const
 {
-   // Eval
+   // Eval this spline at x
 
    Int_t klow=FindX(x);
    return fPoly[klow].Eval(x);
@@ -1330,7 +1330,7 @@ Int_t TSpline5::FindX(Double_t x) const
 //___________________________________________________________________________
 Double_t TSpline5::Eval(Double_t x) const
 {
-   // Eval
+   // Eval this spline at x
 
    Int_t klow=FindX(x);
    return fPoly[klow].Eval(x);

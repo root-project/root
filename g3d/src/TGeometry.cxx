@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.10 2006/05/23 04:47:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.11 2006/05/24 15:31:40 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -142,13 +142,14 @@ TGeometry::TGeometry(const TGeometry& geo) :
   fY(geo.fY),
   fZ(geo.fZ)
 {
-  for(Int_t i=0; i<kMAXLEVELS; i++) {
-    for(Int_t j=0; j<kVectorSize; j++) 
-      fTranslation[i][j]=geo.fTranslation[i][j];
-    for(Int_t j=0; j<kMatrixSize; j++) 
-      fRotMatrix[i][j]=geo.fRotMatrix[i][j];
-    fIsReflection[i]=geo.fIsReflection[i];
-  }
+   //copy constructor
+   for(Int_t i=0; i<kMAXLEVELS; i++) {
+      for(Int_t j=0; j<kVectorSize; j++) 
+         fTranslation[i][j]=geo.fTranslation[i][j];
+      for(Int_t j=0; j<kMatrixSize; j++) 
+         fRotMatrix[i][j]=geo.fRotMatrix[i][j];
+      fIsReflection[i]=geo.fIsReflection[i];
+   }
 }
 
 //______________________________________________________________________________

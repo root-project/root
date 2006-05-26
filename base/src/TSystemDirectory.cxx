@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.9 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.10 2006/05/23 04:47:35 brun Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -53,16 +53,20 @@ TSystemDirectory::TSystemDirectory(const TSystemDirectory& sd) :
   TSystemFile(sd),
   fDirsInBrowser(sd.fDirsInBrowser),
   fFilesInBrowser(sd.fFilesInBrowser)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TSystemDirectory& TSystemDirectory::operator=(const TSystemDirectory& sd)
 {
-  if(this!=&sd) {
-    TSystemFile::operator=(sd);
-    fDirsInBrowser=sd.fDirsInBrowser;
-    fFilesInBrowser=sd.fFilesInBrowser;
-  } return *this;
+   //equal operator
+   if(this!=&sd) {
+      TSystemFile::operator=(sd);
+      fDirsInBrowser=sd.fDirsInBrowser;
+      fFilesInBrowser=sd.fFilesInBrowser;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

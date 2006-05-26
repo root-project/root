@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.cxx,v 1.7 2004/09/13 09:10:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.cxx,v 1.8 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   24/02/98
 
 /*************************************************************************
@@ -58,18 +58,22 @@ TRootHelpDialog::TRootHelpDialog(const TRootHelpDialog& rd) :
   fOK(rd.fOK),
   fL1(rd.fL1),
   fL2(rd.fL2)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TRootHelpDialog& TRootHelpDialog::operator=(const TRootHelpDialog& rd)
 {
-  if(this!=&rd) {
-    TGTransientFrame::operator=(rd);
-    fView=rd.fView;
-    fOK=rd.fOK;
-    fL1=rd.fL1;
-    fL2=rd.fL2;
-  } return *this;
+   //equal operator
+   if(this!=&rd) {
+      TGTransientFrame::operator=(rd);
+      fView=rd.fView;
+      fOK=rd.fOK;
+      fL1=rd.fL1;
+      fL2=rd.fL2;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

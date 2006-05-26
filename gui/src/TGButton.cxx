@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.66 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.67 2006/05/24 18:20:11 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -753,7 +753,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
 //______________________________________________________________________________
 TGPictureButton::~TGPictureButton()
 {
-   // dtor
+   // destructor
 
    if (fOwnDisabledPic) fClient->FreePicture(fPicD);
 }

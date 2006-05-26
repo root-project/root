@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.65 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.66 2005/11/18 16:07:59 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -2125,7 +2125,7 @@ TGeoCtub::TGeoCtub(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Dou
                    Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
          :TGeoTubeSeg(rmin, rmax, dz, phi1, phi2)
 {
-// ctor
+// constructor
    fNlow[0] = lx;
    fNlow[1] = ly;
    fNlow[2] = lz;
@@ -2141,7 +2141,7 @@ TGeoCtub::TGeoCtub(const char *name, Double_t rmin, Double_t rmax, Double_t dz, 
                    Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
          :TGeoTubeSeg(name, rmin, rmax, dz, phi1, phi2)
 {
-// ctor
+// constructor
    fNlow[0] = lx;
    fNlow[1] = ly;
    fNlow[2] = lz;
@@ -2165,7 +2165,7 @@ TGeoCtub::TGeoCtub(Double_t *params)
 //_____________________________________________________________________________
 TGeoCtub::~TGeoCtub()
 {
-// dtor
+// destructor
 }
 
 //_____________________________________________________________________________

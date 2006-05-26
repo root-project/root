@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.29 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.30 2006/05/24 15:09:22 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -787,20 +787,24 @@ TOptionListItem::TOptionListItem(const TOptionListItem& oli) :
   fToggleMaskBit(oli.fToggleMaskBit),
   fOptName(oli.fOptName),
   fOptLabel(oli.fOptLabel)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TOptionListItem& TOptionListItem::operator=(const TOptionListItem& oli)
 {
-  if(this!=&oli) {
-    TObject::operator=(oli);
-    fDataMember=oli.fDataMember;
-    fValue=oli.fValue;
-    fValueMaskBit=oli.fValueMaskBit;
-    fToggleMaskBit=oli.fToggleMaskBit;
-    fOptName=oli.fOptName;
-    fOptLabel=oli.fOptLabel;
-  } return *this;
+   //equal operator
+   if(this!=&oli) {
+      TObject::operator=(oli);
+      fDataMember=oli.fDataMember;
+      fValue=oli.fValue;
+      fValueMaskBit=oli.fValueMaskBit;
+      fToggleMaskBit=oli.fToggleMaskBit;
+      fOptName=oli.fOptName;
+      fOptLabel=oli.fOptLabel;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

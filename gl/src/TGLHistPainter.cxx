@@ -103,7 +103,7 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 //______________________________________________________________________________
 void TGLHistPainter::DrawPanel()
 {
-   //FIX
+   //Interface to DrawPanel
    if (fLastOption == kUnsupported && fDefaultPainter)
       fDefaultPainter->DrawPanel();
 }
@@ -189,7 +189,7 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 void TGLHistPainter::FitPanel()
 {
-   //FIX
+   //to be FIXed
    if (fLastOption == kUnsupported && fDefaultPainter)
       fDefaultPainter->FitPanel();
 }
@@ -197,28 +197,28 @@ void TGLHistPainter::FitPanel()
 //______________________________________________________________________________
 TList *TGLHistPainter::GetContourList(Double_t contour)const
 {
-   //FIX
+   //to be FIXed
    return fDefaultPainter->GetContourList(contour);
 }
 
 //______________________________________________________________________________
 char *TGLHistPainter::GetObjectInfo(Int_t px, Int_t py)const
 {
-   //FIX
+   //to be FIXed
    return fDefaultPainter->GetObjectInfo(px, py);
 }
 
 //______________________________________________________________________________
 TList *TGLHistPainter::GetStack()const
 {
-   //FIX
+   //to be FIXed
    return fDefaultPainter->GetStack();
 }
 
 //______________________________________________________________________________
 Bool_t TGLHistPainter::IsInside(Int_t x, Int_t y)
 {
-   //FIX
+   //to be FIXed
    if (fLastOption == kUnsupported && fDefaultPainter)
       return fDefaultPainter->IsInside(x, y);
    
@@ -228,7 +228,7 @@ Bool_t TGLHistPainter::IsInside(Int_t x, Int_t y)
 //______________________________________________________________________________
 Bool_t TGLHistPainter::IsInside(Double_t x, Double_t y)
 {
-   //FIX
+   //to be FIXed
    if (fLastOption == kUnsupported && fDefaultPainter)
       return fDefaultPainter->IsInside(x, y);
 
@@ -238,7 +238,7 @@ Bool_t TGLHistPainter::IsInside(Double_t x, Double_t y)
 //______________________________________________________________________________
 void TGLHistPainter::PaintStat(Int_t dostat, TF1 *fit)
 {
-   //FIX
+   //to be FIXed
    if (fDefaultPainter) 
       fDefaultPainter->PaintStat(dostat, fit);
 }
@@ -246,7 +246,7 @@ void TGLHistPainter::PaintStat(Int_t dostat, TF1 *fit)
 //______________________________________________________________________________
 void TGLHistPainter::ProcessMessage(const char *mess, const TObject *obj)
 {
-   //FIX
+   //to be FIXed
    static const TString tf3String("SetF3");
 
    if (tf3String == mess) {
@@ -259,7 +259,7 @@ void TGLHistPainter::ProcessMessage(const char *mess, const TObject *obj)
 //______________________________________________________________________________
 void TGLHistPainter::SetHistogram(TH1 *hist)
 {
-   //FIX
+   //to be FIXed
    fHist = hist;
 
    if(fDefaultPainter)
@@ -269,7 +269,7 @@ void TGLHistPainter::SetHistogram(TH1 *hist)
 //______________________________________________________________________________
 void TGLHistPainter::SetStack(TList *stack)
 {
-   //FIX
+   //to be FIXed
    if (fLastOption == kUnsupported && fDefaultPainter)
       fDefaultPainter->SetStack(stack);
 }
@@ -277,7 +277,7 @@ void TGLHistPainter::SetStack(TList *stack)
 //______________________________________________________________________________
 Int_t TGLHistPainter::MakeCuts(char *cutsOpt)
 {
-   //FIX
+   //to be FIXed
    return fDefaultPainter ? fDefaultPainter->MakeCuts(cutsOpt) : 0;
 }
 
@@ -1945,7 +1945,7 @@ namespace {
 
 void TGLHistPainter::Pan(Int_t x, Int_t y)
 {
-   // Pan
+   // Panning
 
    Double_t mvMatrix[16] = {0.};
    glGetDoublev(GL_MODELVIEW_MATRIX, mvMatrix);

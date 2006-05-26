@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name: v5-11-02 $:$Id: TList.cxx,v 1.18 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.19 2006/05/23 04:47:36 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -65,18 +65,22 @@ TList::TList(const TList& ls) :
   fLast(ls.fLast),
   fCache(ls.fCache),
   fAscending(ls.fAscending)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TList& TList::operator=(const TList& ls)
 {
-  if(this!=&ls) {
-    TSeqCollection::operator=(ls);
-    fFirst=ls.fFirst;
-    fLast=ls.fLast;
-    fCache=ls.fCache;
-    fAscending=ls.fAscending;
-  } return *this;
+   //equal operator
+   if(this!=&ls) {
+      TSeqCollection::operator=(ls);
+      fFirst=ls.fFirst;
+      fLast=ls.fLast;
+      fCache=ls.fCache;
+      fAscending=ls.fAscending;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TG3DLine.cxx,v 1.3 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TG3DLine.cxx,v 1.4 2006/04/24 13:50:29 antcheva Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -32,7 +32,7 @@ TGHorizontal3DLine::TGHorizontal3DLine(const TGWindow *p, UInt_t w, UInt_t h,
                                        UInt_t options, Pixel_t back) : 
                     TGFrame(p, w, h, options, back)
 {
-   // ctor
+   // constructor
 
    SetWindowName();
    fEditDisabled = kEditDisableHeight;
@@ -47,7 +47,7 @@ TGVertical3DLine::TGVertical3DLine(const TGWindow *p, UInt_t w, UInt_t h,
                                    UInt_t options, Pixel_t back) : 
                   TGFrame(p, w, h, options, back)
 {
-   // ctor
+   // constructor
 
    SetWindowName();
    fEditDisabled = kEditDisableWidth;

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.10 2006/05/15 07:27:03 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.11 2006/05/16 06:18:27 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -150,12 +150,10 @@ ClassImp(TGenerator)
 //______________________________________________________________________________
 TGenerator::TGenerator(const char *name,const char *title): TNamed(name,title)
 {
-//
 //  Event generator default constructor
 //
 
-
-  //  Initialize particles table
+   //  Initialize particles table
    TDatabasePDG::Instance();
    //TDatabasePDG *pdg = TDatabasePDG::Instance();
    //if (!pdg->ParticleList()) pdg->Init();
@@ -168,7 +166,6 @@ TGenerator::TGenerator(const char *name,const char *title): TNamed(name,title)
 //______________________________________________________________________________
 TGenerator::~TGenerator()
 {
-//
 //  Event generator default destructor
 //
 

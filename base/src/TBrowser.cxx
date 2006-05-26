@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v5-11-02 $:$Id: TBrowser.cxx,v 1.17 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.18 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -219,19 +219,23 @@ TBrowser::TBrowser(const TBrowser& br) :
   fTimer(br.fTimer),
   fContextMenu(br.fContextMenu),
   fNeedRefresh(br.fNeedRefresh)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TBrowser& TBrowser::operator=(const TBrowser& br)
 {
-  if(this!=&br) {
-    TNamed::operator=(br);
-    fLastSelectedObject=br.fLastSelectedObject;
-    fImp=br.fImp;
-    fTimer=br.fTimer;
-    fContextMenu=br.fContextMenu;
-    fNeedRefresh=br.fNeedRefresh;
-  } return *this;
+   //equal operator
+   if(this!=&br) {
+      TNamed::operator=(br);
+      fLastSelectedObject=br.fLastSelectedObject;
+      fImp=br.fImp;
+      fTimer=br.fTimer;
+      fContextMenu=br.fContextMenu;
+      fNeedRefresh=br.fNeedRefresh;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

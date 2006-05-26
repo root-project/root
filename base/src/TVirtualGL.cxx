@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.cxx,v 1.6 2005/11/17 14:43:17 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.cxx,v 1.7 2006/03/08 21:09:42 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@ TVirtualGL * (*gPtr2VirtualGL)() = 0;
 //____________________________________________________________________________
 TVirtualGL::TVirtualGL(TVirtualGLImp *imp) : TNamed("gVirtualGL", "")
 {
-   // ctor
+   // constructor
 
    fImp = imp;
 }
@@ -33,7 +33,7 @@ TVirtualGL::TVirtualGL(TVirtualGLImp *imp) : TNamed("gVirtualGL", "")
 //____________________________________________________________________________
 TVirtualGL::TVirtualGL(const char *name) : TNamed("gVirtualGL", name)
 {
-   // ctor.
+   // constructor.
 
    TString cmd = "new ";
    cmd += name;
@@ -43,7 +43,7 @@ TVirtualGL::TVirtualGL(const char *name) : TNamed("gVirtualGL", name)
 //____________________________________________________________________________
 TVirtualGL *& TVirtualGL::Instance()
 {
-   //
+   // return an instance
 
    static TVirtualGL * instance = 0;
 

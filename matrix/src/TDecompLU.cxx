@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.24 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.25 2006/05/24 20:07:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -482,7 +482,7 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
             r -= pLU[off_j+i]*cb(j+lwb);
          }
       } else if (r != 0.0)
-        nonzero = i;
+         nonzero = i;
       const Int_t iperm = fIndex[i];
       cb(i+lwb)     = cb(iperm+lwb);
       cb(iperm+lwb) = r;

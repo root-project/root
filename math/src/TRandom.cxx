@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.28 2006/05/23 10:12:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.29 2006/05/24 15:34:51 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -526,41 +526,41 @@ Int_t TRandom::Poisson(Double_t mean)
    Int_t n;
    if (mean <= 0) return 0;
    if (mean < 25) { 
-     Double_t expmean = TMath::Exp(-mean);
-     Double_t pir = 1;
-     n = -1;
-     while(1) {
-       n++;
-       pir *= Rndm();
-       if (pir <= expmean) break;
-     }
-     return n;
+      Double_t expmean = TMath::Exp(-mean);
+      Double_t pir = 1;
+      n = -1;
+      while(1) {
+         n++;
+         pir *= Rndm();
+         if (pir <= expmean) break;
+      }
+      return n;
    }
    // for large value we use inversion method
    else if (mean < 1E9) {
-    Double_t em, t, y;
-    Double_t sq, alxm, g;
-    Double_t pi = TMath::Pi();
+      Double_t em, t, y;
+      Double_t sq, alxm, g;
+      Double_t pi = TMath::Pi();
 
-    sq = TMath::Sqrt(2.0*mean);
-    alxm = TMath::Log(mean);
-    g = mean*alxm - TMath::LnGamma(mean + 1.0);
+      sq = TMath::Sqrt(2.0*mean);
+      alxm = TMath::Log(mean);
+      g = mean*alxm - TMath::LnGamma(mean + 1.0);
     
-    do {
       do {
-	y = TMath::Tan(pi*Rndm());
-	em = sq*y + mean;
-      } while( em < 0.0 );
+         do {
+	    y = TMath::Tan(pi*Rndm());
+	    em = sq*y + mean;
+         } while( em < 0.0 );
 
-      em = TMath::Floor(em);
-      t = 0.9*(1.0 + y*y)* TMath::Exp(em*alxm - TMath::LnGamma(em + 1.0) - g);
-    } while( Rndm() > t );
+         em = TMath::Floor(em);
+         t = 0.9*(1.0 + y*y)* TMath::Exp(em*alxm - TMath::LnGamma(em + 1.0) - g);
+      } while( Rndm() > t );
 
-    return static_cast<Int_t> (em);
+      return static_cast<Int_t> (em);
 
    }
    else { 
-     // use Gaussian approximation vor very large values 
+      // use Gaussian approximation vor very large values 
       n = Int_t(Gaus(0,1)*TMath::Sqrt(mean) + mean +0.5);
       return n;
    }
@@ -578,41 +578,40 @@ Double_t TRandom::PoissonD(Double_t mean)
    Int_t n;
    if (mean <= 0) return 0;
    if (mean < 25) { 
-     Double_t expmean = TMath::Exp(-mean);
-     Double_t pir = 1;
-     n = -1;
-     while(1) {
-       n++;
-       pir *= Rndm();
-       if (pir <= expmean) break;
-     }
-     return static_cast<Double_t>(n);
+      Double_t expmean = TMath::Exp(-mean);
+      Double_t pir = 1;
+      n = -1;
+      while(1) {
+         n++;
+         pir *= Rndm();
+         if (pir <= expmean) break;
+      }
+      return static_cast<Double_t>(n);
    }
    // for large value we use inversion method
    else if (mean < 1E9) {
-    Double_t em, t, y;
-    Double_t sq, alxm, g;
-    Double_t pi = TMath::Pi();
+      Double_t em, t, y;
+      Double_t sq, alxm, g;
+      Double_t pi = TMath::Pi();
 
-    sq = TMath::Sqrt(2.0*mean);
-    alxm = TMath::Log(mean);
-    g = mean*alxm - TMath::LnGamma(mean + 1.0);
+      sq = TMath::Sqrt(2.0*mean);
+      alxm = TMath::Log(mean);
+      g = mean*alxm - TMath::LnGamma(mean + 1.0);
     
-    do {
       do {
-	y = TMath::Tan(pi*Rndm());
-	em = sq*y + mean;
-      } while( em < 0.0 );
+         do {
+	    y = TMath::Tan(pi*Rndm());
+	    em = sq*y + mean;
+         } while( em < 0.0 );
 
-      em = TMath::Floor(em);
-      t = 0.9*(1.0 + y*y)* TMath::Exp(em*alxm - TMath::LnGamma(em + 1.0) - g);
-    } while( Rndm() > t );
+         em = TMath::Floor(em);
+         t = 0.9*(1.0 + y*y)* TMath::Exp(em*alxm - TMath::LnGamma(em + 1.0) - g);
+      } while( Rndm() > t );
 
-    return em;
+      return em;
 
-   }
-   else { 
-     // use Gaussian approximation vor very large values 
+   } else { 
+      // use Gaussian approximation vor very large values 
       return Gaus(0,1)*TMath::Sqrt(mean) + mean +0.5;
    }
 }

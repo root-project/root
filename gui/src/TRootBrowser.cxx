@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.95 2006/04/14 17:54:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.96 2006/05/04 17:08:54 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -298,7 +298,7 @@ public:
 //______________________________________________________________________________
 TRootIconList::TRootIconList(TRootIconBox* box)
 {
-   // ctor
+   // constructor
 
    fPic = gClient->GetPicture("listview.xpm");
    fIconBox = box;
@@ -308,7 +308,7 @@ TRootIconList::TRootIconList(TRootIconBox* box)
 //______________________________________________________________________________
 TRootIconList::~TRootIconList()
 {
-   // dtor
+   // destructor
 
    gClient->FreePicture(fPic);
 }
@@ -408,7 +408,7 @@ TRootIconBox::TRootIconBox(TGListView *lv, UInt_t options, ULong_t back) :
 //______________________________________________________________________________
 TRootIconBox::~TRootIconBox()
 {
-   // dtor
+   // destructor
 
    RemoveAll();
    RemoveGarbage();

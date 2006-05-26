@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.50 2005/11/09 16:56:27 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.51 2005/11/11 16:10:02 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1181,7 +1181,7 @@ void TTreeViewer::ActivateButtons(Bool_t first, Bool_t previous,
 //______________________________________________________________________________
 const char* TTreeViewer::Cut()
 {
-   // Cut
+   // Apply Cut
 
    return fLVContainer->Cut();
 }

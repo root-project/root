@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.28 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.29 2006/05/24 17:11:54 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -308,17 +308,21 @@ TGeoMixture::TGeoMixture(const TGeoMixture& gm) :
   fZmixture(gm.fZmixture),
   fAmixture(gm.fAmixture),
   fWeights(gm.fWeights)
-{ }
+{ 
+   //copy constructor
+}
 //-----------------------------------------------------------------------------
 TGeoMixture& TGeoMixture::operator=(const TGeoMixture& gm) 
 {
-  if(this!=&gm) {
-    TGeoMaterial::operator=(gm);
-    fNelements=gm.fNelements;
-    fZmixture=gm.fZmixture;
-    fAmixture=gm.fAmixture;
-    fWeights=gm.fWeights;
-  } return *this;
+   //equal operator
+   if(this!=&gm) {
+      TGeoMaterial::operator=(gm);
+      fNelements=gm.fNelements;
+      fZmixture=gm.fZmixture;
+      fAmixture=gm.fAmixture;
+      fWeights=gm.fWeights;
+   } 
+   return *this;
 }
 //-----------------------------------------------------------------------------
 TGeoMixture::~TGeoMixture()

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.7 2006/05/15 07:27:03 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.8 2006/05/23 04:47:36 brun Exp $
 // -*- mode: C++ -*-
 // Author: Ola Nordmann   21/09/95
 
@@ -148,15 +148,19 @@ class TParticle;
 class TGenerator : public TNamed {
 
 protected:
-        Float_t       fPtCut;        //!Pt cut. Do not show primaries below
-        Bool_t        fShowNeutrons; //!display neutrons if true
-        TObjArray    *fParticles;    //->static container of the primary particles
-	TGenerator(const TGenerator& tg) :
-	  TNamed(tg), fPtCut(tg.fPtCut), fShowNeutrons(tg.fShowNeutrons),
-	  fParticles(tg.fParticles) { }
-	TGenerator& operator=(const TGenerator& tg)
-	  {if(this!=&tg) {TNamed::operator=(tg); fPtCut=tg.fPtCut; fShowNeutrons=tg.fShowNeutrons;
-	  fParticles=tg.fParticles;} return *this;}
+   Float_t       fPtCut;        //!Pt cut. Do not show primaries below
+   Bool_t        fShowNeutrons; //!display neutrons if true
+   TObjArray    *fParticles;    //->static container of the primary particles
+   
+   TGenerator(const TGenerator& tg) :
+   TNamed(tg), fPtCut(tg.fPtCut), fShowNeutrons(tg.fShowNeutrons),fParticles(tg.fParticles) { }
+   TGenerator& operator=(const TGenerator& tg) {
+      if(this!=&tg) {
+         TNamed::operator=(tg); fPtCut=tg.fPtCut; fShowNeutrons=tg.fShowNeutrons;
+	 fParticles=tg.fParticles;
+      } 
+      return *this;
+   }
 
 public:
 

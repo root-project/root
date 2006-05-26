@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.11 2004/05/26 10:38:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.12 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -130,22 +130,26 @@ TTimer::TTimer(const TTimer &ti) :
   fTimeID(ti.fTimeID),
   fObject(ti.fObject),
   fCommand(ti.fCommand)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TTimer& TTimer::operator=(const TTimer &ti) 
 {
-  if(this!=&ti) {
-    TSysEvtHandler::operator=(ti);
-    fTime=ti.fTime;
-    fAbsTime=ti.fAbsTime;
-    fTimeout=ti.fTimeout;
-    fSync=ti.fSync;
-    fIntSyscalls=ti.fIntSyscalls;
-    fTimeID=ti.fTimeID;
-    fObject=ti.fObject;
-    fCommand=ti.fCommand;
-  } return *this;
+   //equal operator
+   if(this!=&ti) {
+      TSysEvtHandler::operator=(ti);
+      fTime=ti.fTime;
+      fAbsTime=ti.fAbsTime;
+      fTimeout=ti.fTimeout;
+      fSync=ti.fSync;
+      fIntSyscalls=ti.fIntSyscalls;
+      fTimeID=ti.fTimeID;
+      fObject=ti.fObject;
+      fCommand=ti.fCommand;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

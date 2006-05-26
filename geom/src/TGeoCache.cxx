@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.42 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.43 2006/05/24 17:11:54 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -235,7 +235,7 @@ TGeoNodeCache& TGeoNodeCache::operator=(const TGeoNodeCache& gnc)
 //_____________________________________________________________________________
 TGeoNodeCache::~TGeoNodeCache()
 {
-// dtor
+// destructor
    if (fCache) {
       DeleteCaches();
       delete [] fBranch;
@@ -936,23 +936,27 @@ TGeoNodeArray::TGeoNodeArray(const TGeoNodeArray& gna) :
   fNused(gna.fNused),
   fBitsArray(gna.fBitsArray),
   fArray(gna.fArray)
-{ }
+{ 
+   //copy constructor
+}
 
 //_____________________________________________________________________________
 TGeoNodeArray& TGeoNodeArray::operator=(const TGeoNodeArray& gna) 
 {
-  if(this!=&gna) {
-    TObject::operator=(gna);
-    fNodeSize=gna.fNodeSize;
-    fNdaughters=gna.fNdaughters;
-    fOffset=gna.fOffset;
-    fSize=gna.fSize;
-    fFirstFree=gna.fFirstFree;
-    fCurrent=gna.fCurrent;
-    fNused=gna.fNused;
-    fBitsArray=gna.fBitsArray;
-    fArray=gna.fArray;
-  } return *this;
+   //equal operator
+   if(this!=&gna) {
+      TObject::operator=(gna);
+      fNodeSize=gna.fNodeSize;
+      fNdaughters=gna.fNdaughters;
+      fOffset=gna.fOffset;
+      fSize=gna.fSize;
+      fFirstFree=gna.fFirstFree;
+      fCurrent=gna.fCurrent;
+      fNused=gna.fNused;
+      fBitsArray=gna.fBitsArray;
+      fArray=gna.fArray;
+   } 
+   return *this;
 }
 
 //_____________________________________________________________________________

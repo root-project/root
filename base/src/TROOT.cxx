@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.180 2006/05/18 07:34:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.181 2006/05/23 04:47:35 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -552,67 +552,71 @@ TROOT::TROOT(const TROOT& r) :
   fPluginManager(r.fPluginManager),
   fCutClassName(r.fCutClassName),
   fDefCanvasName(r.fDefCanvasName)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TROOT& TROOT::operator=(const TROOT& r)
 {
-  if(this!=&r) {
-    TDirectory::operator=(r);
-    fLineIsProcessing=r.fLineIsProcessing;
-    fConfigOptions=r.fConfigOptions;
-    fVersion=r.fVersion;
-    fVersionInt=r.fVersionInt;
-    fVersionDate=r.fVersionDate;
-    fVersionTime=r.fVersionTime;
-    fBuiltDate=r.fBuiltDate;
-    fBuiltTime=r.fBuiltTime;
-    fTimer=r.fTimer;
-    fApplication=r.fApplication;
-    fInterpreter=r.fInterpreter;
-    fBatch=r.fBatch;
-    fEditHistograms=r.fEditHistograms;
-    fFromPopUp=r.fFromPopUp;
-    fMustClean=r.fMustClean;
-    fReadingObject=r.fReadingObject;
-    fForceStyle=r.fForceStyle;
-    fInterrupt=r.fInterrupt;
-    fEscape=r.fEscape;
-    fExecutingMacro=r.fExecutingMacro;
-    fEditorMode=r.fEditorMode;
-    fPrimitive=r.fPrimitive;
-    fSelectPad=r.fSelectPad;
-    fClasses=r.fClasses;
-    fIdMap=r.fIdMap;
-    fTypes=r.fTypes;
-    fGlobals=r.fGlobals;
-    fGlobalFunctions=r.fGlobalFunctions;
-    fFiles=r.fFiles;
-    fMappedFiles=r.fMappedFiles;
-    fSockets=r.fSockets;
-    fCanvases=r.fCanvases;
-    fStyles=r.fStyles;
-    fFunctions=r.fFunctions;
-    fTasks=r.fTasks;
-    fColors=r.fColors;
-    fGeometries=r.fGeometries;
-    fBrowsers=r.fBrowsers;
-    fSpecials=r.fSpecials;
-    fCleanups=r.fCleanups;
-    fMessageHandlers=r.fMessageHandlers;
-    fStreamerInfo=r.fStreamerInfo;
-    fClassGenerators=r.fClassGenerators;
-    fSecContexts=r.fSecContexts;
-    fProofs=r.fProofs;
-    fClipboard=r.fClipboard;
-    fDataSets=r.fDataSets;
-    fUUIDs=r.fUUIDs;
-    fRootFolder=r.fRootFolder;
-    fBrowsables=r.fBrowsables;
-    fPluginManager=r.fPluginManager;
-    fCutClassName=r.fCutClassName;
-    fDefCanvasName=r.fDefCanvasName;
-  } return *this;
+   //equal operator
+   if(this!=&r) {
+      TDirectory::operator=(r);
+      fLineIsProcessing=r.fLineIsProcessing;
+      fConfigOptions=r.fConfigOptions;
+      fVersion=r.fVersion;
+      fVersionInt=r.fVersionInt;
+      fVersionDate=r.fVersionDate;
+      fVersionTime=r.fVersionTime;
+      fBuiltDate=r.fBuiltDate;
+      fBuiltTime=r.fBuiltTime;
+      fTimer=r.fTimer;
+      fApplication=r.fApplication;
+      fInterpreter=r.fInterpreter;
+      fBatch=r.fBatch;
+      fEditHistograms=r.fEditHistograms;
+      fFromPopUp=r.fFromPopUp;
+      fMustClean=r.fMustClean;
+      fReadingObject=r.fReadingObject;
+      fForceStyle=r.fForceStyle;
+      fInterrupt=r.fInterrupt;
+      fEscape=r.fEscape;
+      fExecutingMacro=r.fExecutingMacro;
+      fEditorMode=r.fEditorMode;
+      fPrimitive=r.fPrimitive;
+      fSelectPad=r.fSelectPad;
+      fClasses=r.fClasses;
+      fIdMap=r.fIdMap;
+      fTypes=r.fTypes;
+      fGlobals=r.fGlobals;
+      fGlobalFunctions=r.fGlobalFunctions;
+      fFiles=r.fFiles;
+      fMappedFiles=r.fMappedFiles;
+      fSockets=r.fSockets;
+      fCanvases=r.fCanvases;
+      fStyles=r.fStyles;
+      fFunctions=r.fFunctions;
+      fTasks=r.fTasks;
+      fColors=r.fColors;
+      fGeometries=r.fGeometries;
+      fBrowsers=r.fBrowsers;
+      fSpecials=r.fSpecials;
+      fCleanups=r.fCleanups;
+      fMessageHandlers=r.fMessageHandlers;
+      fStreamerInfo=r.fStreamerInfo;
+      fClassGenerators=r.fClassGenerators;
+      fSecContexts=r.fSecContexts;
+      fProofs=r.fProofs;
+      fClipboard=r.fClipboard;
+      fDataSets=r.fDataSets;
+      fUUIDs=r.fUUIDs;
+      fRootFolder=r.fRootFolder;
+      fBrowsables=r.fBrowsables;
+      fPluginManager=r.fPluginManager;
+      fCutClassName=r.fCutClassName;
+      fDefCanvasName=r.fDefCanvasName;
+   } 
+   return *this;
 }
 #endif
 //______________________________________________________________________________

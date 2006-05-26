@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.24 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.25 2006/05/17 09:37:20 couet Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -1896,7 +1896,7 @@ TMultiDimFit::TMultiDimFit(Int_t dimension,
 //____________________________________________________________________
 TMultiDimFit::~TMultiDimFit()
 {
-   // DTOR
+   // Destructor
    delete [] fPowers;
    delete [] fMaxPowers;
    delete [] fMaxPowersFinal;

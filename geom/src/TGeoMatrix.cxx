@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.54 2006/04/25 09:38:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.55 2006/04/27 07:46:30 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1683,7 +1683,7 @@ TGeoGenTrans::TGeoGenTrans()
 TGeoGenTrans::TGeoGenTrans(const char *name)
              :TGeoCombiTrans(name)
 {
-// ctor
+// constructor
    SetBit(kGeoGenTrans);
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
    for (Int_t j=0; j<3; j++) fScale[j] = 1.0;
@@ -1695,7 +1695,7 @@ TGeoGenTrans::TGeoGenTrans(Double_t dx, Double_t dy, Double_t dz,
                            Double_t sx, Double_t sy, Double_t sz, TGeoRotation *rot)
              :TGeoCombiTrans("")
 {
-// ctor
+// constructor
    SetBit(kGeoGenTrans);
    SetTranslation(dx, dy, dz);
    SetScale(sx, sy, sz);
@@ -1707,7 +1707,7 @@ TGeoGenTrans::TGeoGenTrans(const char *name, Double_t dx, Double_t dy, Double_t 
                            Double_t sx, Double_t sy, Double_t sz, TGeoRotation *rot)
              :TGeoCombiTrans(name)
 {
-// ctor
+// constructor
    SetBit(kGeoGenTrans);
    SetTranslation(dx, dy, dz);
    SetScale(sx, sy, sz);
@@ -1778,7 +1778,7 @@ TGeoIdentity::TGeoIdentity()
 TGeoIdentity::TGeoIdentity(const char *name)
              :TGeoMatrix(name)
 {
-// ctor
+// constructor
    if (!gGeoIdentity) gGeoIdentity = this;
    RegisterYourself();
 }
@@ -1814,7 +1814,7 @@ TGeoHMatrix::TGeoHMatrix()
 TGeoHMatrix::TGeoHMatrix(const char* name)
             :TGeoMatrix(name)
 {
-// ctor
+// constructor
    memset(&fTranslation[0], 0, kN3);
    memcpy(fRotationMatrix,kIdentityMatrix,kN9);
    memcpy(fScale,kUnitScale,kN3);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v5-11-02 $:$Id: TSystem.cxx,v 1.139 2006/03/29 10:29:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.140 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -103,56 +103,61 @@ TSystem::TSystem(const TSystem& ts): TNamed(ts),
      fFlagsOpt(ts.fFlagsOpt), fListPaths(ts.fListPaths), fIncludePath(ts.fIncludePath), fLinkedLibs(ts.fLinkedLibs),
      fSoExt(ts.fSoExt), fObjExt(ts.fObjExt), fAclicMode(ts.fAclicMode), fMakeSharedLib(ts.fMakeSharedLib),
      fMakeExe(ts.fMakeExe), fLinkdefSuffix(ts.fLinkdefSuffix), fCompiled(ts.fCompiled), fHelpers(ts.fHelpers) 
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
-TSystem& TSystem::operator=(const TSystem& ts) {
-  if(this!=&ts) {
-    TNamed::operator=(ts);
-    fReadmask=ts.fReadmask;
-    fWritemask=ts.fWritemask;
-    fReadready=ts.fReadready;
-    fWriteready=ts.fWriteready;
-    fSignals=ts.fSignals;
-    fNfd=ts.fNfd;
-    fMaxrfd=ts.fMaxrfd;
-    fMaxwfd=ts.fMaxwfd;
-    fSigcnt=ts.fSigcnt;
-    fWdpath=ts.fWdpath;
-    fHostname=ts.fHostname;
-    fInsideNotify=ts.fInsideNotify;
-    fBeepFreq=ts.fBeepFreq;
-    fBeepDuration=ts.fBeepDuration;
+TSystem& TSystem::operator=(const TSystem& ts) 
+{
+   //equal operator
+   if(this!=&ts) {
+      TNamed::operator=(ts);
+      fReadmask=ts.fReadmask;
+      fWritemask=ts.fWritemask;
+      fReadready=ts.fReadready;
+      fWriteready=ts.fWriteready;
+      fSignals=ts.fSignals;
+      fNfd=ts.fNfd;
+      fMaxrfd=ts.fMaxrfd;
+      fMaxwfd=ts.fMaxwfd;
+      fSigcnt=ts.fSigcnt;
+      fWdpath=ts.fWdpath;
+      fHostname=ts.fHostname;
+      fInsideNotify=ts.fInsideNotify;
+      fBeepFreq=ts.fBeepFreq;
+      fBeepDuration=ts.fBeepDuration;
     
-    fInControl=ts.fInControl;
-    fDone=ts.fDone;
-    fLevel=ts.fLevel;
-    fLastErrorString=ts.fLastErrorString;
+      fInControl=ts.fInControl;
+      fDone=ts.fDone;
+      fLevel=ts.fLevel;
+      fLastErrorString=ts.fLastErrorString;
     
-    fTimers=ts.fTimers;
-    fSignalHandler=ts.fSignalHandler;
-    fFileHandler=ts.fFileHandler;
-    fOnExitList=ts.fOnExitList;
+      fTimers=ts.fTimers;
+      fSignalHandler=ts.fSignalHandler;
+      fFileHandler=ts.fFileHandler;
+      fOnExitList=ts.fOnExitList;
     
-    fListLibs=ts.fListLibs;
+      fListLibs=ts.fListLibs;
     
-    fBuildArch=ts.fBuildArch;
-    fBuildNode=ts.fBuildNode;
-    fBuildDir=ts.fBuildDir;
-    fFlagsDebug=ts.fFlagsDebug;
-    fFlagsOpt=ts.fFlagsOpt;
-    fListPaths=ts.fListPaths;
-    fIncludePath=ts.fIncludePath;
-    fLinkedLibs=ts.fLinkedLibs;
-    fSoExt=ts.fSoExt;
-    fObjExt=ts.fObjExt;
-    fAclicMode=ts.fAclicMode;
-    fMakeSharedLib=ts.fMakeSharedLib;
-    fMakeExe=ts.fMakeExe;
-    fLinkdefSuffix=ts.fLinkdefSuffix;
-    fCompiled=ts.fCompiled;
-    fHelpers=ts.fHelpers;
-  } return *this;
+      fBuildArch=ts.fBuildArch;
+      fBuildNode=ts.fBuildNode;
+      fBuildDir=ts.fBuildDir;
+      fFlagsDebug=ts.fFlagsDebug;
+      fFlagsOpt=ts.fFlagsOpt;
+      fListPaths=ts.fListPaths;
+      fIncludePath=ts.fIncludePath;
+      fLinkedLibs=ts.fLinkedLibs;
+      fSoExt=ts.fSoExt;
+      fObjExt=ts.fObjExt;
+      fAclicMode=ts.fAclicMode;
+      fMakeSharedLib=ts.fMakeSharedLib;
+      fMakeExe=ts.fMakeExe;
+      fLinkdefSuffix=ts.fLinkdefSuffix;
+      fCompiled=ts.fCompiled;
+      fHelpers=ts.fHelpers;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

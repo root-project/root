@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.10 2006/03/30 09:58:48 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.11 2006/04/07 10:05:09 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -252,7 +252,7 @@ TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGCompositeFrame(p, 1, 1)
 //______________________________________________________________________________
 TGuiBldEditor::~TGuiBldEditor()
 {
-   // dtor
+   // destructor
 
 }
 

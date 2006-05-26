@@ -49,20 +49,24 @@ TBenchmark::TBenchmark(const TBenchmark& bm) :
   fRealTime(bm.fRealTime),
   fCpuTime(bm.fCpuTime),
   fTimer(bm.fTimer)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TBenchmark& TBenchmark::operator=(const TBenchmark& bm)
 {
-  if(this!=&bm) {
-    TNamed::operator=(bm);
-    fNbench=bm.fNbench;
-    fNmax=bm.fNmax;
-    fNames=bm.fNames;
-    fRealTime=bm.fRealTime;
-    fCpuTime=bm.fCpuTime;
-    fTimer=bm.fTimer;
-  } return *this;
+   //equal operator
+   if(this!=&bm) {
+      TNamed::operator=(bm);
+      fNbench=bm.fNbench;
+      fNmax=bm.fNmax;
+      fNames=bm.fNames;
+      fRealTime=bm.fRealTime;
+      fCpuTime=bm.fCpuTime;
+      fTimer=bm.fTimer;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

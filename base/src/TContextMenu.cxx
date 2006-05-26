@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v5-11-02 $:$Id: TContextMenu.cxx,v 1.13 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.14 2006/05/23 04:47:35 brun Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -75,22 +75,26 @@ TContextMenu::TContextMenu(const TContextMenu& cm) :
   fSelectedCanvas(cm.fSelectedCanvas),
   fSelectedPad(cm.fSelectedPad),
   fBrowser(cm.fBrowser)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TContextMenu& TContextMenu::operator=(const TContextMenu& cm)
 {
-  if(this!=&cm) {
-    TNamed::operator=(cm);
-    fContextMenuImp=cm.fContextMenuImp;
-    fSelectedMethod=cm.fSelectedMethod;
-    fSelectedObject=cm.fSelectedObject;
-    fCalledObject=cm.fCalledObject;
-    fSelectedMenuItem=cm.fSelectedMenuItem;
-    fSelectedCanvas=cm.fSelectedCanvas;
-    fSelectedPad=cm.fSelectedPad;
-    fBrowser=cm.fBrowser;
-  } return *this;
+   //equal operator
+   if(this!=&cm) {
+      TNamed::operator=(cm);
+      fContextMenuImp=cm.fContextMenuImp;
+      fSelectedMethod=cm.fSelectedMethod;
+      fSelectedObject=cm.fSelectedObject;
+      fCalledObject=cm.fCalledObject;
+      fSelectedMenuItem=cm.fSelectedMenuItem;
+      fSelectedCanvas=cm.fSelectedCanvas;
+      fSelectedPad=cm.fSelectedPad;
+      fBrowser=cm.fBrowser;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

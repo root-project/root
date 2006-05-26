@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.73 2006/03/06 14:30:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.74 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -234,27 +234,31 @@ TApplication::TApplication(const TApplication& ap) :
   fIdleCommand(ap.fIdleCommand),
   fIdleTimer(ap.fIdleTimer),
   fSigHandler(ap.fSigHandler)
-{ }
+{ 
+   //copy constructor
+}
 
 //______________________________________________________________________________
 TApplication& TApplication::operator=(const TApplication& ap) 
 {
-  if(this!=&ap) {
-    TObject::operator=(ap);
-    TQObject::operator=(ap);
-    fArgc=ap.fArgc;
-    fArgv=ap.fArgv;
-    fAppImp=ap.fAppImp;
-    fIsRunning=ap.fIsRunning;
-    fReturnFromRun=ap.fReturnFromRun;
-    fNoLog=ap.fNoLog;
-    fNoLogo=ap.fNoLogo;
-    fQuit=ap.fQuit;
-    fFiles=ap.fFiles;
-    fIdleCommand=ap.fIdleCommand;
-    fIdleTimer=ap.fIdleTimer;
-    fSigHandler=ap.fSigHandler;
-  } return *this;
+   //equal operator
+   if(this!=&ap) {
+      TObject::operator=(ap);
+      TQObject::operator=(ap);
+      fArgc=ap.fArgc;
+      fArgv=ap.fArgv;
+      fAppImp=ap.fAppImp;
+      fIsRunning=ap.fIsRunning;
+      fReturnFromRun=ap.fReturnFromRun;
+      fNoLog=ap.fNoLog;
+      fNoLogo=ap.fNoLogo;
+      fQuit=ap.fQuit;
+      fFiles=ap.fFiles;
+      fIdleCommand=ap.fIdleCommand;
+      fIdleTimer=ap.fIdleTimer;
+      fSigHandler=ap.fSigHandler;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

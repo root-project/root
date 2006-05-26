@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.12 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.13 2006/05/23 04:47:35 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -117,15 +117,17 @@ TTask::TTask(const char* name, const char *title)
 //______________________________________________________________________________
 TTask& TTask::operator=(const TTask& tt) 
 {
-  if(this!=&tt) {
-    TNamed::operator=(tt);
-    fTasks=tt.fTasks;
-    fOption=tt.fOption;
-    fBreakin=tt.fBreakin;
-    fBreakout=tt.fBreakout;
-    fHasExecuted=tt.fHasExecuted;
-    fActive=tt.fActive;
-  } return *this;
+   //equal operator
+   if(this!=&tt) {
+      TNamed::operator=(tt);
+      fTasks=tt.fTasks;
+      fOption=tt.fOption;
+      fBreakin=tt.fBreakin;
+      fBreakout=tt.fBreakout;
+      fHasExecuted=tt.fHasExecuted;
+      fActive=tt.fActive;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

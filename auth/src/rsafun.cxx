@@ -65,7 +65,7 @@ TRSA_fun::TRSA_fun(RSA_genprim_t genprim, RSA_genrsa_t genrsa, RSA_encode_t enco
                    RSA_num_sget_t num_sget, RSA_num_fget_t num_fget,
                    RSA_assign_t assign, RSA_cmp_t cmp)
 {
-   // ctor
+   // constructor
 
    fg_rsa_genprim = genprim;
    fg_rsa_genrsa  = genrsa;

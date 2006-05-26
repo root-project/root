@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.12 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.13 2006/04/24 13:52:12 antcheva Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -337,7 +337,7 @@ TGVProgressBar::TGVProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
                               FontStruct_t font,UInt_t options) :
       TGProgressBar(p, w, h, back, barcolor, norm, font, options) 
 {
-   // ctor
+   // cconstructor
 
    fBarWidth = w;
    fEditDisabled = kEditDisableWidth;

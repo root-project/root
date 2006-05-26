@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGString.cxx,v 1.4 2004/07/23 16:51:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGString.cxx,v 1.5 2004/07/25 07:21:45 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -41,7 +41,7 @@ ClassImp(TGHotString)
 //______________________________________________________________________________
 TGString::TGString(const TGString *s) : TString(s->Data())
 { 
-   // ctor
+   // cconstructor
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.37 2006/05/18 07:34:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.38 2006/05/23 04:47:35 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -79,52 +79,14 @@ TView::TView(const TView& tv) :
   fAutoRange(tv.fAutoRange),
   fChanged(tv.fChanged)
 {
-  for(Int_t i=0; i<16; i++) {
-    fTN[i]=tv.fTN[i];
-    fTB[i]=tv.fTB[i];
-    fTnorm[i]=tv.fTnorm[i];
-    fTback[i]=tv.fTback[i];
-  }
-  for(Int_t i=0; i<3; i++) {
-    fRmax[i]=tv.fRmax[i];
-    fRmin[i]=tv.fRmin[i];
-    fUVcoord[4]=tv.fUVcoord[4];
-    fX1[i]=tv.fX1[i];
-    fX2[i]=tv.fX2[i];
-    fY1[i]=tv.fY1[i];
-    fY2[i]=tv.fY2[i];
-    fZ1[i]=tv.fZ1[i];
-    fZ2[i]=tv.fZ2[i];
-  }
-  for(Int_t i=0; i<4; i++) 
-    fUVcoord[i]=tv.fUVcoord[i];
-}
-
-//____________________________________________________________________________
-TView& TView::operator=(const TView& tv)
-{
-  if(this!=&tv) {
-    TObject::operator=(tv);
-    TAttLine::operator=(tv);
-    fLatitude=tv.fLatitude;
-    fLongitude=tv.fLongitude;
-    fPsi=tv.fPsi;
-    fDview=tv.fDview;
-    fDproj=tv.fDproj;
-    fUpix=tv.fUpix;
-    fVpix=tv.fVpix;
-    fSystem=tv.fSystem;
-    fOutline=tv.fOutline;
-    fDefaultOutline=tv.fDefaultOutline;
-    fAutoRange=tv.fAutoRange;
-    fChanged=tv.fChanged;
-    for(Int_t i=0; i<16; i++) {
+   //copy constructor
+   for(Int_t i=0; i<16; i++) {
       fTN[i]=tv.fTN[i];
       fTB[i]=tv.fTB[i];
       fTnorm[i]=tv.fTnorm[i];
       fTback[i]=tv.fTback[i];
-    }
-    for(Int_t i=0; i<3; i++) {
+   }
+   for(Int_t i=0; i<3; i++) {
       fRmax[i]=tv.fRmax[i];
       fRmin[i]=tv.fRmin[i];
       fUVcoord[4]=tv.fUVcoord[4];
@@ -134,10 +96,51 @@ TView& TView::operator=(const TView& tv)
       fY2[i]=tv.fY2[i];
       fZ1[i]=tv.fZ1[i];
       fZ2[i]=tv.fZ2[i];
-    }
-    for(Int_t i=0; i<4; i++) 
+   }
+   for(Int_t i=0; i<4; i++) 
       fUVcoord[i]=tv.fUVcoord[i];
-  } return *this;
+}
+
+//____________________________________________________________________________
+TView& TView::operator=(const TView& tv)
+{
+   //equal operator
+   if(this!=&tv) {
+      TObject::operator=(tv);
+      TAttLine::operator=(tv);
+      fLatitude=tv.fLatitude;
+      fLongitude=tv.fLongitude;
+      fPsi=tv.fPsi;
+      fDview=tv.fDview;
+      fDproj=tv.fDproj;
+      fUpix=tv.fUpix;
+      fVpix=tv.fVpix;
+      fSystem=tv.fSystem;
+      fOutline=tv.fOutline;
+      fDefaultOutline=tv.fDefaultOutline;
+      fAutoRange=tv.fAutoRange;
+      fChanged=tv.fChanged;
+      for(Int_t i=0; i<16; i++) {
+         fTN[i]=tv.fTN[i];
+         fTB[i]=tv.fTB[i];
+         fTnorm[i]=tv.fTnorm[i];
+         fTback[i]=tv.fTback[i];
+      }
+      for(Int_t i=0; i<3; i++) {
+         fRmax[i]=tv.fRmax[i];
+         fRmin[i]=tv.fRmin[i];
+         fUVcoord[4]=tv.fUVcoord[4];
+         fX1[i]=tv.fX1[i];
+         fX2[i]=tv.fX2[i];
+         fY1[i]=tv.fY1[i];
+         fY2[i]=tv.fY2[i];
+         fZ1[i]=tv.fZ1[i];
+         fZ2[i]=tv.fZ2[i];
+      }
+      for(Int_t i=0; i<4; i++) 
+         fUVcoord[i]=tv.fUVcoord[i];
+   } 
+   return *this;
 }
 
 //____________________________________________________________________________
@@ -1850,10 +1853,10 @@ void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_
 //_______________________________________________________________________________________
 void TView::MoveViewCommand(Char_t option, Int_t count)
 {
-   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //
    //*-*          'a' //*-*  increase  scale factor (clip cube borders)
    //*-*          's' //*-*  decrease  scale factor (clip cube borders)
-   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //
    if (count <= 0) count = 1;
    switch (option) {
       case '+':

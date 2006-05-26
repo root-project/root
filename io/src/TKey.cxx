@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v5-11-02 $:$Id: TKey.cxx,v 1.56 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.57 2006/05/23 04:47:35 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -97,34 +97,32 @@ TKey::TKey(const TKey& tk) :
   fSeekPdir(tk.fSeekPdir), fClassName(tk.fClassName), fLeft(tk.fLeft), fBuffer(tk.fBuffer), 
   fBufferRef(tk.fBufferRef), fPidOffset(tk.fPidOffset), fMotherDir(tk.fMotherDir)
 {
-
-  // Standard constructor
+  // copy constructor
 }
 
 //______________________________________________________________________________
 TKey& TKey::operator=(const TKey& tk) 
 { 
-
-  // equal operator
+   // equal operator
   
-  if(this!=&tk) {
-    TNamed::operator=(tk);
-    fVersion=tk.fVersion;
-    fNbytes=tk.fNbytes;
-    fObjlen=tk.fObjlen;
-    fDatime=tk.fDatime;
-    fKeylen=tk.fKeylen;
-    fCycle=tk.fCycle;
-    fSeekKey=tk.fSeekKey;
-    fSeekPdir=tk.fSeekPdir;
-    fClassName=tk.fClassName;
-    fLeft=tk.fLeft;
-    fBuffer=tk.fBuffer;
-    fBufferRef=tk.fBufferRef;
-    fPidOffset=tk.fPidOffset;
-    fMotherDir=tk.fMotherDir;
-  }
-  return *this;
+   if(this!=&tk) {
+      TNamed::operator=(tk);
+      fVersion=tk.fVersion;
+      fNbytes=tk.fNbytes;
+      fObjlen=tk.fObjlen;
+      fDatime=tk.fDatime;
+      fKeylen=tk.fKeylen;
+      fCycle=tk.fCycle;
+      fSeekKey=tk.fSeekKey;
+      fSeekPdir=tk.fSeekPdir;
+      fClassName=tk.fClassName;
+      fLeft=tk.fLeft;
+      fBuffer=tk.fBuffer;
+      fBufferRef=tk.fBufferRef;
+      fPidOffset=tk.fPidOffset;
+      fMotherDir=tk.fMotherDir;
+   }
+   return *this;
 }
   
 //______________________________________________________________________________

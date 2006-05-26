@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBDT.cxx,v 1.12 2006/05/23 09:53:10 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodBDT.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -252,6 +252,7 @@ void TMVA::MethodBDT::InitBDT( void )
 //_______________________________________________________________________
 TMVA::MethodBDT::~MethodBDT( void )
 {
+   //destructor
    for (UInt_t i=0; i<fEventSample.size(); i++) delete fEventSample[i];
    for (UInt_t i=0; i<fForest.size(); i++) delete fForest[i];
 }
