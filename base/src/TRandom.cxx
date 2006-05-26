@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.29 2006/05/24 15:34:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.30 2006/05/26 09:01:58 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -744,24 +744,20 @@ void TRandom::Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t r)
    // of a sphere of given radius. 
    //   Input : r = sphere radius
    //   Output: x,y,z a random 3-d vector of length r
-   // Method:  (based on CERNLIB RN3DIM)
-   // A random vector in the unit cube is generated  and is rejected if it lies outside the unit sphere. 
-   // This rejection technique uses on average about 6 random numbers per vector, where only two are
-   // needed in principle. However, it is faster than the classical two-number technique which requires 
-   // a square root, a sine, and a cosine. 
+   // Method:  (based on algorithm suggested by Knuth and attributed to Robert E Knop)
+   //          which uses less random numbers than the CERNLIB RN23DIM algorithm  
 
-   Double_t a=0,b=0,c=0,r2=1;
+   Double_t a=0,b=0,r2=1;
    while (r2 > 0.25) {
       a  = Rndm() - 0.5;
       b  = Rndm() - 0.5;
-      c  = Rndm() - 0.5;
-      r2 =  a*a+b*b+c*c;
+      r2 =  a*a + b*b;
    } 
+   z = r* ( -1. + 8.0 * r2 );  
 
-   Double_t rinv = r/TMath::Sqrt(r2);
-   x = a*rinv;
-   y = b*rinv;
-   z = c*rinv;
+   Double_t scale = 8.0 * r * TMath::Sqrt(0.25 - r2);
+   x = a*scale;
+   y = b*scale;
 }
 
 //______________________________________________________________________________
