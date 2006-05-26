@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.cxx,v 1.6 2005/10/03 08:41:23 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.cxx,v 1.7 2006/05/15 09:45:03 brun Exp $
 // Author: Maarten Ballintijn   27/10/2003
 
 #include <stdlib.h>
@@ -110,7 +110,7 @@ TKSocket *TKSocket::Connect(const char *server, Int_t port)
                       AP_OPTS_MUTUAL_REQUIRED,
                       &cksum_data,
                       0,           /* no creds, use ccache instead */
-                      fgCCDef, &err_ret, &rep_ret, NULL);
+                      fgCCDef, &err_ret, &rep_ret, 0);
 
    delete [] cksum_data.data;
 

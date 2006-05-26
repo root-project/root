@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.158 2006/05/22 11:13:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.159 2006/05/22 12:41:23 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1275,11 +1275,11 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-Bool_t TFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
+Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    // Read the nbuf blocks described in arrays pos and len,
    // where pos[i] is the seek position of block i of length len[i].
-   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer
+   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
    // This function is overloaded by TNetFile, TWebFile, etc.
    // Returns kTRUE in case of failure.
 

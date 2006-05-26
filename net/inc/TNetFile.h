@@ -1,4 +1,4 @@
-// @(#)root/net:$Name: v5-11-02 $:$Id: TNetFile.h,v 1.23 2006/04/18 14:23:20 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.24 2006/05/23 04:47:40 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -70,8 +70,7 @@ protected:
 public:
    TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
             Int_t compress = 1, Int_t netopt = 0);
-   TNetFile() 
-     : fEndpointUrl(), fUser(), fSocket(NULL), fProtocol(0), fErrorCode(0) { }
+   TNetFile() : fEndpointUrl(), fSocket(0), fProtocol(0), fErrorCode(0) { }
    virtual ~TNetFile();
 
    void    Close(Option_t *option="");  // *MENU*
@@ -104,11 +103,11 @@ private:
    void       *GetDirPtr() const { return fDirp; }
 
 protected:
-   void        Create(const char *url, TSocket *sock = 0); 
+   void        Create(const char *url, TSocket *sock = 0);
    void        InitRemoteEntity(const char *url);
 
    TNetSystem(const TNetSystem&);
-   TNetSystem& operator=(const TNetSystem&); 
+   TNetSystem& operator=(const TNetSystem&);
 
 public:
    TNetSystem(Bool_t ftpowner = kTRUE);

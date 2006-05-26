@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.11 2005/09/21 10:51:24 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.12 2005/09/21 17:23:36 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -251,7 +251,7 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
          strcpy(key_def, getenv("X509_USER_KEY"));
       } else
          strcpy(key_def, hostkey_default[id]);
-      
+
       // Expand for test if needed
       cert_tmp = GlbsToolExpand(cert_def);
       key_tmp  = GlbsToolExpand(key_def);
@@ -825,10 +825,10 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
          ErrorInfo("GlbsToolCheckProxy: unable to set X509_USER_PROXY ");
 
 #ifdef R__GLBS22
-      globus_gsi_cred_handle_t proxy_cred = NULL;
+      globus_gsi_cred_handle_t proxy_cred = 0;
 
       // Init proxy cred handle
-      if (globus_gsi_cred_handle_init(&proxy_cred, NULL)
+      if (globus_gsi_cred_handle_init(&proxy_cred, 0)
           != GLOBUS_SUCCESS) {
           ErrorInfo("GlbsToolCheckProxy: %s",
                     "couldn't initialize proxy credential handle");
@@ -870,7 +870,7 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
            return 1;
         }
         fclose(fcert);
-        *SubjName = X509_NAME_oneline(X509_get_issuer_name(xcert), NULL, 0);
+        *SubjName = X509_NAME_oneline(X509_get_issuer_name(xcert), 0, 0);
         if (gDebug > 3)
            ErrorInfo("GlbsToolCheckProxy: %s %s",
                    "Proxy Issuer:", *SubjName);
@@ -884,25 +884,25 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
 #else
       // Old version: completly different ...
       char *                proxy_type;
-      proxy_cred_desc *     pcd = NULL;
+      proxy_cred_desc *     pcd = 0;
       time_t                time_after;
       time_t                time_now;
       time_t                time_diff;
-      ASN1_UTCTIME *        asn1_time = NULL;
+      ASN1_UTCTIME *        asn1_time = 0;
 
       // Init credential descriptor
       pcd = proxy_cred_desc_new();
 
       // Load user proxy certificate
       pcd->type=CRED_TYPE_PROXY;
-      if (proxy_load_user_cert(pcd, proxy_file, NULL, NULL)) {
+      if (proxy_load_user_cert(pcd, proxy_file, 0, 0)) {
          ErrorInfo("GlbsToolCheckProxy: ERROR: %s (%s)",
                      "cannot load proxy certificate",proxy_file);
          return 1;
       }
 
       // Load user public key
-      if ((pcd->upkey = X509_get_pubkey(pcd->ucert)) == NULL) {
+      if ((pcd->upkey = X509_get_pubkey(pcd->ucert)) == 0) {
          ErrorInfo("GlbsToolCheckProxy: ERROR: %s",
                      "cannot get public key");
          return 1;
@@ -923,7 +923,7 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
                        time_diff);
 
         // Get issuer to be sent back to the client
-        *SubjName = X509_NAME_oneline(X509_get_issuer_name(pcd->ucert), NULL, 0);
+        *SubjName = X509_NAME_oneline(X509_get_issuer_name(pcd->ucert), 0, 0);
         if (gDebug > 3)
            ErrorInfo("GlbsToolCheckProxy: %s %s",
                    "Proxy Issuer:", *SubjName);

@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.35 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.36 2006/05/11 09:42:41 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -269,15 +269,15 @@ TMultiLayerPerceptron::TMultiLayerPerceptron()
    fFirstLayer.SetOwner(false);
    fLastLayer.SetOwner(false);
    fSynapses.SetOwner(true);
-   fData = NULL;
+   fData = 0;
    fCurrentTree = -1;
    fCurrentTreeWeight = 1;
-   fTraining = NULL;
+   fTraining = 0;
    fTrainingOwner = false;
-   fTest = NULL;
+   fTest = 0;
    fTestOwner = false;
-   fEventWeight = NULL;
-   fManager = NULL;
+   fEventWeight = 0;
+   fManager = 0;
    fLearningMethod = TMultiLayerPerceptron::kBFGS;
    fEta = .1;
    fEtaDecay = 1;
@@ -739,10 +739,10 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    }
    if (opt.Contains("current"))
       newCanvas = false;
-   TVirtualPad *canvas = NULL;
-   TMultiGraph *residual_plot = NULL;
-   TGraph *train_residual_plot = NULL;
-   TGraph *test_residual_plot = NULL;
+   TVirtualPad *canvas = 0;
+   TMultiGraph *residual_plot = 0;
+   TGraph *train_residual_plot = 0;
+   TGraph *test_residual_plot = 0;
    if ((!fData) || (!fTraining) || (!fTest)) {
       Error("Train","Training/Test samples still not defined. Cannot train the neural network");
       return;
@@ -818,8 +818,8 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
                   onorm += dir[i] * dir[i];
                Double_t prod = 0;
                Int_t idx = 0;
-               TNeuron *neuron = NULL;
-               TSynapse *synapse = NULL;
+               TNeuron *neuron = 0;
+               TSynapse *synapse = 0;
                Int_t nentries = fNetwork.GetEntriesFast();
                for (i=0;i<nentries;i++) {
                   neuron = (TNeuron *) fNetwork.UncheckedAt(i);
@@ -848,8 +848,8 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
                Double_t onorm = 0;
                for (i = 0; i < els; i++)
                   onorm += dir[i] * dir[i];
-               TNeuron *neuron = NULL;
-               TSynapse *synapse = NULL;
+               TNeuron *neuron = 0;
+               TSynapse *synapse = 0;
                Int_t nentries = fNetwork.GetEntriesFast();
                for (i=0;i<nentries;i++) {
                   neuron = (TNeuron *) fNetwork.UncheckedAt(i);
@@ -1186,7 +1186,7 @@ void TMultiLayerPerceptron::AttachData()
    // performance for classification jobs.
    // Normalisation can be requested by putting '@' in front of the formula.
    Int_t j = 0;
-   TNeuron *neuron = NULL;
+   TNeuron *neuron = 0;
    Bool_t normalize = false;
    fManager = new TTreeFormulaManager;
    //first layer
@@ -1312,7 +1312,7 @@ void TMultiLayerPerceptron::BuildFirstLayer(TString & input)
 
    const TObjArray *inpL = input.Tokenize(", ");
    const Int_t nneurons =inpL->GetLast()+1;
-   TNeuron *neuron = NULL;
+   TNeuron *neuron = 0;
    Int_t i = 0;
    TString name;
    for (i = 0; i<nneurons; i++) {
@@ -1333,8 +1333,8 @@ void TMultiLayerPerceptron::BuildHiddenLayers(TString & hidden)
    Int_t prevStart = 0;
    Int_t prevStop = fNetwork.GetEntriesFast();
    Int_t layer = 1;
-   TNeuron *neuron = NULL;
-   TSynapse *synapse = NULL;
+   TNeuron *neuron = 0;
+   TSynapse *synapse = 0;
    TString name;
    Int_t i,j;
    while (end != -1) {
@@ -1442,7 +1442,7 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option) const
    if (!opt.Contains("nocanv"))
       new TCanvas("NNresult", "Neural Net output");
    const Double_t *norm = out->GetNormalisation();
-   TEventList *events = NULL;
+   TEventList *events = 0;
    TString setname;
    Int_t i;
    if (opt.Contains("train")) {
@@ -1512,7 +1512,7 @@ void TMultiLayerPerceptron::DumpWeights(Option_t * filename) const
       output = &cout;
    else
       output = new ofstream(filen.Data());
-   TNeuron *neuron = NULL;
+   TNeuron *neuron = 0;
    *output << "#input normalization" << endl;
    Int_t nentries = fFirstLayer.GetEntriesFast();
    Int_t j=0;
@@ -1534,7 +1534,7 @@ void TMultiLayerPerceptron::DumpWeights(Option_t * filename) const
       *output << neuron->GetWeight() << endl;
    delete it;
    it = (TObjArrayIter *) fSynapses.MakeIterator();
-   TSynapse *synapse = NULL;
+   TSynapse *synapse = 0;
    *output << "#synapses weights" << endl;
    while ((synapse = (TSynapse *) it->Next()))
       *output << synapse->GetWeight() << endl;
@@ -1560,7 +1560,7 @@ void TMultiLayerPerceptron::LoadWeights(Option_t * filename)
    input.getline(buff, 100);
    TObjArrayIter *it = (TObjArrayIter *) fFirstLayer.MakeIterator();
    Float_t n1,n2;
-   TNeuron *neuron = NULL;
+   TNeuron *neuron = 0;
    while ((neuron = (TNeuron *) it->Next())) {
       input >> n1 >> n2;
       neuron->SetNormalisation(n2,n1);
@@ -1586,7 +1586,7 @@ void TMultiLayerPerceptron::LoadWeights(Option_t * filename)
    // synapse weights
    input.getline(buff, 100);
    it = (TObjArrayIter *) fSynapses.MakeIterator();
-   TSynapse *synapse = NULL;
+   TSynapse *synapse = 0;
    while ((synapse = (TSynapse *) it->Next())) {
       input >> w;
       synapse->SetWeight(w);
@@ -1696,7 +1696,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
                        << "() {" << endl;
             sourcefile << "   double input = " << neuron->GetWeight()
                        << ";" << endl;
-            TSynapse *syn = NULL;
+            TSynapse *syn = 0;
             Int_t n = 0;
             while ((syn = neuron->GetPre(n++))) {
                sourcefile << "   input += synapse" << syn << "();" << endl;
@@ -1750,7 +1750,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
          }
       }
       delete it;
-      TSynapse *synapse = NULL;
+      TSynapse *synapse = 0;
       it = (TObjArrayIter *) fSynapses.MakeIterator();
       while ((synapse = (TSynapse *) it->Next())) {
          headerfile << "   double synapse" << synapse << "();" << endl;
@@ -1887,7 +1887,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
 
       // Synapses
       sourcefile << "C --- Synapses" << endl;
-      TSynapse *synapse = NULL;
+      TSynapse *synapse = 0;
       it = (TObjArrayIter *) fSynapses.MakeIterator();
       while ((synapse = (TSynapse *) it->Next())) {
          sourcefile << "      double precision function " << "synapse"
@@ -1984,7 +1984,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
          }
       }
       delete it;
-      TSynapse *synapse = NULL;
+      TSynapse *synapse = 0;
       it = (TObjArrayIter *) fSynapses.MakeIterator();
       while ((synapse = (TSynapse *) it->Next())) {
          pythonfile << "\tdef synapse" << synapse << "(self):" << endl;
@@ -2075,7 +2075,7 @@ void TMultiLayerPerceptron::MLP_Batch(Double_t * buffer)
    fEta *= fEtaDecay;
    Int_t cnt = 0;
    TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
-   TNeuron *neuron = NULL;
+   TNeuron *neuron = 0;
    // Step for all neurons
    while ((neuron = (TNeuron *) it->Next())) {
       buffer[cnt] = (-fEta) * (neuron->GetDEDw() + fDelta)
@@ -2084,7 +2084,7 @@ void TMultiLayerPerceptron::MLP_Batch(Double_t * buffer)
    }
    delete it;
    it = (TObjArrayIter *) fSynapses.MakeIterator();
-   TSynapse *synapse = NULL;
+   TSynapse *synapse = 0;
    // Step for all synapses
    while ((synapse = (TSynapse *) it->Next())) {
       buffer[cnt] = (-fEta) * (synapse->GetDEDw() + fDelta)
@@ -2101,8 +2101,8 @@ void TMultiLayerPerceptron::MLP_Line(Double_t * origin, Double_t * dir, Double_t
    // Weights are set to [origin + (dist * dir)].
 
    Int_t idx = 0;
-   TNeuron *neuron = NULL;
-   TSynapse *synapse = NULL;
+   TNeuron *neuron = 0;
+   TSynapse *synapse = 0;
    TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
    while ((neuron = (TNeuron *) it->Next())) {
       neuron->SetWeight(origin[idx] + (dir[idx] * dist));
@@ -2122,8 +2122,8 @@ void TMultiLayerPerceptron::SteepestDir(Double_t * dir)
 {
    // Sets the search direction to steepest descent.
    Int_t idx = 0;
-   TNeuron *neuron = NULL;
-   TSynapse *synapse = NULL;
+   TNeuron *neuron = 0;
+   TSynapse *synapse = 0;
    TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
    while ((neuron = (TNeuron *) it->Next()))
       dir[idx++] = -neuron->GetDEDw();
@@ -2144,8 +2144,8 @@ bool TMultiLayerPerceptron::LineSearch(Double_t * direction, Double_t * buffer)
 
    Int_t idx = 0;
    Int_t j,nentries;
-   TNeuron *neuron = NULL;
-   TSynapse *synapse = NULL;
+   TNeuron *neuron = 0;
+   TSynapse *synapse = 0;
    // store weights before line search
    Double_t *origin = new Double_t[fNetwork.GetEntriesFast() +
                                    fSynapses.GetEntriesFast()];
@@ -2247,8 +2247,8 @@ void TMultiLayerPerceptron::ConjugateGradientsDir(Double_t * dir, Double_t beta)
 
    Int_t idx = 0;
    Int_t j,nentries;
-   TNeuron *neuron = NULL;
-   TSynapse *synapse = NULL;
+   TNeuron *neuron = 0;
+   TSynapse *synapse = 0;
    nentries = fNetwork.GetEntriesFast();
    for (j=0;j<nentries;j++) {
       neuron = (TNeuron *) fNetwork.UncheckedAt(j);
@@ -2301,8 +2301,8 @@ void TMultiLayerPerceptron::SetGammaDelta(TMatrixD & gamma, TMatrixD & delta,
    Int_t els = fNetwork.GetEntriesFast() + fSynapses.GetEntriesFast();
    Int_t idx = 0;
    Int_t j,nentries;
-   TNeuron *neuron = NULL;
-   TSynapse *synapse = NULL;
+   TNeuron *neuron = 0;
+   TSynapse *synapse = 0;
    nentries = fNetwork.GetEntriesFast();
    for (j=0;j<nentries;j++) {
       neuron = (TNeuron *) fNetwork.UncheckedAt(j);
@@ -2339,8 +2339,8 @@ Double_t TMultiLayerPerceptron::DerivDir(Double_t * dir)
    Int_t idx = 0;
    Int_t j,nentries;
    Double_t output = 0;
-   TNeuron *neuron = NULL;
-   TSynapse *synapse = NULL;
+   TNeuron *neuron = 0;
+   TSynapse *synapse = 0;
    nentries = fNetwork.GetEntriesFast();
    for (j=0;j<nentries;j++) {
       neuron = (TNeuron *) fNetwork.UncheckedAt(j);
@@ -2364,8 +2364,8 @@ void TMultiLayerPerceptron::BFGSDir(TMatrixD & bfgsh, Double_t * dir)
    TMatrixD dedw(els, 1);
    Int_t idx = 0;
    Int_t j,nentries;
-   TNeuron *neuron = NULL;
-   TSynapse *synapse = NULL;
+   TNeuron *neuron = 0;
+   TSynapse *synapse = 0;
    nentries = fNetwork.GetEntriesFast();
    for (j=0;j<nentries;j++) {
       neuron = (TNeuron *) fNetwork.UncheckedAt(j);
@@ -2441,7 +2441,7 @@ void TMultiLayerPerceptron::Draw(Option_t * /*option*/)
       Float_t yStep_this = 1./(nNeurons_this+1.);
       Float_t yStep_next = 1./(nNeurons_next+1.);
       TObjArrayIter* it = (TObjArrayIter *) fSynapses.MakeIterator();
-      TSynapse *theSynapse = NULL;
+      TSynapse *theSynapse = 0;
       Float_t maxWeight = 0;
       while ((theSynapse = (TSynapse *) it->Next()))
          maxWeight = maxWeight < theSynapse->GetWeight() ? theSynapse->GetWeight() : maxWeight;

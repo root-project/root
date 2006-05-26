@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.59 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.60 2006/05/13 19:34:41 brun Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -167,19 +167,19 @@ const char *xpm_toolbar[] = {
 };
 
 ToolBarData_t tb_data[] = {
-  { "", "Open Config File",     kFALSE, kFileLoadConfig,    NULL },
-  { "", "Save Config File",     kFALSE, kFileSaveConfig,    NULL },
-  { "", 0,                      0,      -1,                 NULL },
-  { "", "Connect",              kFALSE, kSessionConnect,    NULL },
-  { "", "Disconnect",           kFALSE, kSessionDisconnect, NULL },
-  { "", 0,                      0,      -1,                 NULL },
-  { "", "New Query",            kFALSE, kQueryNew,          NULL },
-  { "", "Submit Query",         kFALSE, kQuerySubmit,       NULL },
-  { "", 0,                      0,      -1,                 NULL },
-  { "", "About Root",           kFALSE, kHelpAbout,         NULL },
-  { "", 0,                      0,      -1,                 NULL },
-  { "", "Exit Root",            kFALSE, kFileQuit,          NULL },
-  { 0,  0,                      0,      0,                  NULL }
+  { "", "Open Config File",     kFALSE, kFileLoadConfig,    0 },
+  { "", "Save Config File",     kFALSE, kFileSaveConfig,    0 },
+  { "", 0,                      0,      -1,                 0 },
+  { "", "Connect",              kFALSE, kSessionConnect,    0 },
+  { "", "Disconnect",           kFALSE, kSessionDisconnect, 0 },
+  { "", 0,                      0,      -1,                 0 },
+  { "", "New Query",            kFALSE, kQueryNew,          0 },
+  { "", "Submit Query",         kFALSE, kQuerySubmit,       0 },
+  { "", 0,                      0,      -1,                 0 },
+  { "", "About Root",           kFALSE, kHelpAbout,         0 },
+  { "", 0,                      0,      -1,                 0 },
+  { "", "Exit Root",            kFALSE, kFileQuit,          0 },
+  { 0,  0,                      0,      0,                  0 }
 };
 
 

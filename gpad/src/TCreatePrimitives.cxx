@@ -174,7 +174,7 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
          gPad->GetCanvas()->Selected((TPad*)gPad, line, event);
       }
       if (mode == kArrow) {
-         arrow = new TArrow(x0,y0,x1,y1 
+         arrow = new TArrow(x0,y0,x1,y1
                             , TArrow::GetDefaultArrowSize()
                             , TArrow::GetDefaultOption());
          arrow->Draw();
@@ -384,7 +384,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
    static Int_t npoints = 0;
    static Int_t linedrawn = 0;
    Int_t dp;
-   static TGraph *gr = NULL;
+   static TGraph *gr = 0;
 
    switch (event) {
 
@@ -412,7 +412,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
          }
          npoints = 0;
          linedrawn = 0;
-         gr = NULL;
+         gr = 0;
          gROOT->SetEditorMode();
          break;
       }

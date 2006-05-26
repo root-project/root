@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.5 2005/11/03 17:08:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.6 2006/05/17 16:37:25 couet Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -6,7 +6,7 @@
 // TConfidenceLevel
 //
 // Class to compute 95% CL limits
-// 
+//
 ///////////////////////////////////////////////////////////////////////////
 
 /*************************************************************************
@@ -43,14 +43,14 @@ TConfidenceLevel::TConfidenceLevel()
    fBtot = 0;
    fDtot = 0;
    fTSD  = 0;
-   fTSB  = NULL;
-   fTSS  = NULL;
-   fLRS  = NULL;
-   fLRB  = NULL;
+   fTSB  = 0;
+   fTSS  = 0;
+   fLRS  = 0;
+   fLRB  = 0;
    fNMC  = 0;
    fNNMC = 0;
-   fISS  = NULL;
-   fISB  = NULL;
+   fISS  = 0;
+   fISB  = 0;
    fMCL3S = fgMCL3S1S;
    fMCL5S = fgMCL5S1S;
 }
@@ -67,10 +67,10 @@ TConfidenceLevel::TConfidenceLevel(Int_t mc, bool onesided)
    fBtot = 0;
    fDtot = 0;
    fTSD  = 0;
-   fTSB  = NULL;
-   fTSS  = NULL;
-   fLRS  = NULL;
-   fLRB  = NULL;
+   fTSB  = 0;
+   fTSS  = 0;
+   fLRS  = 0;
+   fLRB  = 0;
    fNMC  = mc;
    fNNMC = mc;
    fISS  = new Int_t[mc];
@@ -261,7 +261,7 @@ Double_t TConfidenceLevel::GetExpectedCLsb_b(Int_t sigma) const
 //______________________________________________________________________________
 Double_t TConfidenceLevel::GetExpectedCLb_sb(Int_t sigma) const
 {
-   // Get the expected Confidence Level for the background only 
+   // Get the expected Confidence Level for the background only
    // if there is signal and background.
 
    Double_t result = 0;
@@ -421,7 +421,7 @@ Double_t TConfidenceLevel::Get5sProbability() const
 void  TConfidenceLevel::Draw(const Option_t*)
 {
    // Display sort of a "canonical" -2lnQ plot.
-   // This results in a plot with 2 elements: 
+   // This results in a plot with 2 elements:
    // - The histogram of -2lnQ for background hypothesis (full)
    // - The histogram of -2lnQ for signal and background hypothesis (dashed)
    // The 2 histograms are respectively named b_hist and sb_hist.

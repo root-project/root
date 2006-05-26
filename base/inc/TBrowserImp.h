@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowserImp.h,v 1.6 2006/05/12 12:25:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowserImp.h,v 1.7 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************
@@ -64,8 +64,8 @@ public:
 };
 
 inline TBrowserImp::TBrowserImp(TBrowser *, const char *, UInt_t, UInt_t)
-  : fBrowser(NULL), fShowCycles(kFALSE) { }
+   : fBrowser(0), fShowCycles(kFALSE) { }
 inline TBrowserImp::TBrowserImp(TBrowser *, const char *, Int_t, Int_t, UInt_t, UInt_t)
-  : fBrowser(NULL), fShowCycles(kFALSE) { }
+   : fBrowser(0), fShowCycles(kFALSE) { }
 
 #endif

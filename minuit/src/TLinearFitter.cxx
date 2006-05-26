@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.25 2006/05/23 04:47:40 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.26 2006/05/24 15:10:46 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -161,20 +161,20 @@ ClassImp(TLinearFitter)
 //   Even a single gross outlier can greatly influence the results of least-
 //   squares fitting procedure, and in this case use of robust(resistant) methods
 //   is recommended.
-//   
+//
 //   The method implemented here is based on the article and algorithm:
-//   "Computing LTS Regression for Large Data Sets" by 
+//   "Computing LTS Regression for Large Data Sets" by
 //   P.J.Rousseeuw and Katrien Van Driessen
 //   The idea of the method is to find the fitting coefficients for a subset
 //   of h observations (out of n) with the smallest sum of squared residuals.
-//   The size of the subset h should lie between (npoints + nparameters +1)/2 
+//   The size of the subset h should lie between (npoints + nparameters +1)/2
 //   and n, and represents the minimal number of good points in the dataset.
 //   The default value is set to (npoints + nparameters +1)/2, but of course
 //   if you are sure that the data contains less outliers it's better to change
 //   h according to your data.
-//   
+//
 //   To perform a robust fit, call EvalRobust() function instead of Eval() after
-//   adding the points and setting the fitting function. 
+//   adding the points and setting the fitting function.
 //   Note, that standard errors on parameters are not computed!
 //
 //////////////////////////////////////////////////////////////////////////
@@ -229,7 +229,7 @@ TLinearFitter::TLinearFitter(Int_t ndim, const char *formula, Option_t *opt)
    //Second parameter is the fitting formula: see class description for formula syntax
    //Options:
    //The option is to store or not to store the data
-   //If you don't want to store the data, choose "" for the option, or run 
+   //If you don't want to store the data, choose "" for the option, or run
    //StoreData(kFalse) member function after the constructor
 
    fNdim=ndim;
@@ -286,7 +286,7 @@ TLinearFitter::TLinearFitter(const TLinearFitter& tlf):
   fH(tlf.fH),
   fRobust(tlf.fRobust),
   fFitsample(tlf.fFitsample)
-{ 
+{
    //copy constructor
 }
 
@@ -329,7 +329,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fH=tlf.fH;
       fRobust=tlf.fRobust;
       fFitsample=tlf.fFitsample;
-   } 
+   }
    return *this;
 }
 
@@ -338,7 +338,7 @@ TLinearFitter::TLinearFitter(TFormula *function, Option_t *opt)
 {
    //This constructor uses a linear function. How to create it?
    //TFormula now accepts formulas of the following kind:
-   //TFormula("f", "x++y++z++x*x") or 
+   //TFormula("f", "x++y++z++x*x") or
    //TFormula("f", "x[0]++x[1]++x[2]*x[2]");
    //Other than the look, it's in no
    //way different from the regular formula, it can be evaluated,
@@ -380,7 +380,7 @@ TLinearFitter::~TLinearFitter()
 
    if (fFormula)
       delete [] fFormula;
-  
+
    fFormula = 0;
    if (fFixedParams) delete [] fFixedParams;
    fFixedParams = 0;
@@ -518,14 +518,14 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
       fDesignTemp2+=fDesignTemp3;
       fDesignTemp3.Zero();
       fAtbTemp2+=fAtbTemp3;
-      fAtbTemp3.Zero();   
+      fAtbTemp3.Zero();
       if (fNpoints % 10000 == 0 && fNpoints>10000){
          fDesignTemp+=fDesignTemp2;
          fDesignTemp2.Zero();
          fAtbTemp+=fAtbTemp2;
          fAtbTemp2.Zero();
          fY2+=fY2Temp;
-         fY2Temp=0;         
+         fY2Temp=0;
          if (fNpoints % 1000000 == 0 && fNpoints>1000000){
             fDesign+=fDesignTemp;
             fDesignTemp.Zero();
@@ -885,7 +885,7 @@ void TLinearFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *
 //Parameters:
 //n - number of points
 //ndim - dimensions of points
-//x - points, at which to compute the intervals, for ndim > 1 
+//x - points, at which to compute the intervals, for ndim > 1
 //    should be in order: (x0,y0, x1, y1, ... xn, yn)
 //ci - computed intervals are returned in this array
 //cl - confidence level, default=0.95
@@ -895,7 +895,7 @@ void TLinearFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *
       Double_t *sum_vector = new Double_t[fNfunctions];
       Double_t c=0;
       Int_t df = fNpoints-fNfunctions+fNfixed;
-      Double_t t = TMath::StudentQuantile(cl, df);   
+      Double_t t = TMath::StudentQuantile(cl, df);
       Double_t chidf = TMath::Sqrt(fChisquare/df);
 
       for (Int_t ipoint=0; ipoint<n; ipoint++){
@@ -992,7 +992,7 @@ void TLinearFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
       Double_t *sum_vector = new Double_t[fNfunctions];
       Double_t *x = gr2->GetX();
       Double_t *y = gr2->GetY();
-      Double_t t = TMath::StudentQuantile(cl, ((TF1*)(fInputFunction))->GetNDF());   
+      Double_t t = TMath::StudentQuantile(cl, ((TF1*)(fInputFunction))->GetNDF());
       Double_t chidf = TMath::Sqrt(fChisquare/((TF1*)(fInputFunction))->GetNDF());
       Double_t c = 0;
       for (Int_t ipoint=0; ipoint<np; ipoint++){
@@ -1042,16 +1042,16 @@ void TLinearFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
       Double_t *sum_vector = new Double_t[fNfunctions];
       Double_t x[3];
       Int_t hxfirst = hfit->GetXaxis()->GetFirst();
-      Int_t hxlast  = hfit->GetXaxis()->GetLast(); 
+      Int_t hxlast  = hfit->GetXaxis()->GetLast();
       Int_t hyfirst = hfit->GetYaxis()->GetFirst();
-      Int_t hylast  = hfit->GetYaxis()->GetLast(); 
+      Int_t hylast  = hfit->GetYaxis()->GetLast();
       Int_t hzfirst = hfit->GetZaxis()->GetFirst();
-      Int_t hzlast  = hfit->GetZaxis()->GetLast(); 
+      Int_t hzlast  = hfit->GetZaxis()->GetLast();
 
       TAxis *xaxis  = hfit->GetXaxis();
       TAxis *yaxis  = hfit->GetYaxis();
       TAxis *zaxis  = hfit->GetZaxis();
-      Double_t t = TMath::StudentQuantile(cl, ((TF1*)(fInputFunction))->GetNDF());   
+      Double_t t = TMath::StudentQuantile(cl, ((TF1*)(fInputFunction))->GetNDF());
       Double_t chidf = TMath::Sqrt(fChisquare/((TF1*)(fInputFunction))->GetNDF());
       Double_t c=0;
       for (Int_t binz=hzfirst; binz<=hzlast; binz++){
@@ -1077,11 +1077,11 @@ void TLinearFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
       }
       delete [] grad;
       delete [] sum_vector;
-   }    
+   }
    else {
       Error("GetConfidenceIntervals", "This object type is not supported");
       return;
-   }           
+   }
 }
 
 //______________________________________________________________________________
@@ -1140,7 +1140,7 @@ Int_t TLinearFitter::GetParameter(Int_t ipar,char* name,Double_t& value,Double_t
    value = fParams(ipar);
    if (fInputFunction)
       strcpy(name, fInputFunction->GetParName(ipar));
-   else 
+   else
       name = "";
    return 1;
 }
@@ -1254,7 +1254,7 @@ void TLinearFitter::SetFormula(const char *formula)
    //in case of a hyperplane:
    char *fstring;
    fstring = (char *)strstr(fFormula, "hyp");
-   if (fstring!=NULL){
+   if (fstring!=0){
       isHyper = kTRUE;
       fstring+=3;
       sscanf(fstring, "%d", &size);
@@ -1301,7 +1301,7 @@ void TLinearFitter::SetFormula(const char *formula)
          special=f->GetNumber();
          fFunctions.Add(f);
       }
-      
+
       if ((fNfunctions==1)&&(special>299)&&(special<310)){
          //if fitting a polynomial
          size=special-299;
@@ -1406,9 +1406,9 @@ Bool_t TLinearFitter::UpdateMatrix()
          AddToDesign(TMatrixDRow(fX, i).GetPtr(), fY(i), fE(i));
       }
       return 1;
-   } else 
+   } else
       return 0;
-     
+
 }
 
 //______________________________________________________________________________
@@ -1442,12 +1442,12 @@ void TLinearFitter::PrintResults(Int_t level, Double_t /*amin*/) const
 
    if (level==3){
       if (!fRobust){
-         printf("Fitting results:\nParameters:\nNO.\t\tVALUE\t\tERROR\n");     
+         printf("Fitting results:\nParameters:\nNO.\t\tVALUE\t\tERROR\n");
          for (Int_t i=0; i<fNfunctions; i++){
             printf("%d\t%f\t%f\n", i, fParams(i), TMath::Sqrt(fParCovar(i, i)));
          }
       } else {
-         printf("Fitting results:\nParameters:\nNO.\t\tVALUE\n");     
+         printf("Fitting results:\nParameters:\nNO.\t\tVALUE\n");
          for (Int_t i=0; i<fNfunctions; i++){
             printf("%d\t%f\n", i, fParams(i));
          }
@@ -1492,7 +1492,7 @@ void TLinearFitter::GraphLinearFitter(Double_t h)
       EvalRobust(h);
       return;
    }
-   
+
    Eval();
 
    //calculate the precise chisquare
@@ -1614,7 +1614,7 @@ void TLinearFitter::MultiGraphLinearFitter(Double_t h)
    if (fitOption.Robust){
       fRobust=kTRUE;
       StoreData(kTRUE);
-   }  
+   }
    SetFormula(f1);
 
    TGraph *gr;
@@ -1709,7 +1709,7 @@ void TLinearFitter::HistLinearFitter()
             } else {
                eu  = hfit->GetBinError(bin);
                if (eu <= 0) continue;
-            }         
+            }
             AddPoint(x, cu, eu);
 
          }
@@ -1753,10 +1753,10 @@ void TLinearFitter::HistLinearFitter()
 void TLinearFitter::EvalRobust(Double_t h)
 {
    //Finds the parameters of the fitted function in case data contains
-   //outliers. 
+   //outliers.
    //Parameter h stands for the minimal fraction of good points in the
-   //dataset (h < 1, i.e. for 70% of good points take h=0.7). 
-   //The default value of h*Npoints is  (Npoints + Nparameters+1)/2 
+   //dataset (h < 1, i.e. for 70% of good points take h=0.7).
+   //The default value of h*Npoints is  (Npoints + Nparameters+1)/2
    //If the user provides a value of h smaller than above, default is taken
    //See class description for the algorithm details
 
@@ -1799,7 +1799,7 @@ void TLinearFitter::EvalRobust(Double_t h)
          maxind = TMath::LocMax(nbest, bestchi2);
          if (chi2 < bestchi2[maxind]) {
             bestchi2[maxind] = chi2;
-            for (i=0; i<fNfunctions; i++) 
+            for (i=0; i<fNfunctions; i++)
                cstock(i, maxind) = fParams(i);
          }
       }
@@ -1845,10 +1845,10 @@ void TLinearFitter::EvalRobust(Double_t h)
       delete [] bestindex;
       delete [] residuals;
       return;
-   } 
+   }
    //if n is large, the dataset should be partitioned
    Int_t indsubdat[5];
-   for (i=0; i<5; i++) 
+   for (i=0; i<5; i++)
       indsubdat[i] = 0;
 
    Int_t nsub = Partition(nmini, indsubdat);
@@ -1898,7 +1898,7 @@ void TLinearFitter::EvalRobust(Double_t h)
       maxind = TMath::LocMax(nbest, bestchi2);
       if (chi2 < bestchi2[maxind]){
          beststock[maxind] = k;
-         bestchi2[maxind] = chi2; 
+         bestchi2[maxind] = chi2;
       }
    }
 
@@ -1910,7 +1910,7 @@ void TLinearFitter::EvalRobust(Double_t h)
       chi2 = CStep(2, fH, residuals, index, index, -1, -1);
       bestchi2[k] = chi2;
    }
-   
+
    maxind = TMath::LocMin(nbest, bestchi2);
    for (i=0; i<fNfunctions; i++)
       fParams(i)=cstockbig(i, beststock[maxind]);
@@ -1931,7 +1931,7 @@ void TLinearFitter::EvalRobust(Double_t h)
       ((TF1*)fInputFunction)->SetChisquare(bestchi2[maxind]);
       ((TF1*)fInputFunction)->SetNumberFitPoints(fH);
       ((TF1*)fInputFunction)->SetNDF(fH-fNfunctions);
-   }      
+   }
 
    delete [] subdat;
    delete [] beststock;
@@ -1973,7 +1973,7 @@ void TLinearFitter::CreateSubset(Int_t ntotal, Int_t h, Int_t *index)
          nindex++;
       }
    }
-   
+
    //compute the coefficients of a hyperplane through the p-subset
    fDesign.Zero();
    fAtb.Zero();
@@ -1984,7 +1984,7 @@ void TLinearFitter::CreateSubset(Int_t ntotal, Int_t h, Int_t *index)
 
    ok = Linf();
 
-   //if the chosen points don't define a hyperplane, add more 
+   //if the chosen points don't define a hyperplane, add more
    while (!ok && (nindex < h)) {
       repeat=kFALSE;
       do{
@@ -2081,7 +2081,7 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
                   }
                }
             }
-         }   
+         }
          residuals[i] = (fY(i) - func)*(fY(i) - func)/(fE(i)*fE(i));
       }
    }
@@ -2092,7 +2092,7 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
    fAtb.Zero();
    for (i=0; i<h; i++)
       AddToDesign(TMatrixDRow(fX, index[i]).GetPtr(), fY(index[i]), fE(index[i]));
-   
+
    Linf();
 
    //don't calculate the chisquare at the 1st cstep
@@ -2162,13 +2162,13 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
                   }
                }
             }
-         }   
-         
+         }
+
          sum+=(fY(index[i])-func)*(fY(index[i])-func)/(fE(index[i])*fE(index[i]));
       }
    }
 
-   return sum; 
+   return sum;
 }
 
 //____________________________________________________________________________
@@ -2264,7 +2264,7 @@ void TLinearFitter::RDraw(Int_t *subdat, Int_t *indsubdat)
 {
    //Draws ngroup nonoverlapping subdatasets out of a dataset of size n
    //such that the selected case numbers are uniformly distributed from 1 to n
-   
+
    Int_t jndex = 0;
    Int_t nrand;
    Int_t i, k, m, j;

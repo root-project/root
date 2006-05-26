@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.18 2006/05/11 09:42:42 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.19 2006/05/12 08:19:02 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 // sigmoid (1/(1+exp(-x)), tanh or gaussian.
 // An external function can also be used, together with its derivative.
 // In a Multi Layer Perceptron, the input layer is made of
-// inactive neurons (returning the normalized input) and output neurons 
+// inactive neurons (returning the normalized input) and output neurons
 // are linear. Hidden neurons may be anything, the default being sigmoids.
 //
 // This implementation contains several methods to compute the value,
@@ -62,7 +62,7 @@ TNeuron::TNeuron(TNeuron::NeuronType type /*= kSigmoid*/,
    fNewValue = true;
    fNewDeriv = true;
    fNewDeDw = true;
-   fFormula = NULL;
+   fFormula = 0;
    fDeDw  = 0;
    fDEDw  = 0;
    fValue = 0;
@@ -893,7 +893,7 @@ TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
    fNorm[0] = tmp.GetRMS();
    if(fNorm[0]<1e-15) fNorm[0]=1.;
    fNorm[1] = tmp.GetMean();
-   // Check the dimensionality 
+   // Check the dimensionality
    if(fFormula->GetNdata()>1 && fIndex==0)
       Warning("TNeuron::UseBranch()","all indices in arrays must be specified, otherwise the first element will be assumed.");
    return fFormula;
@@ -1085,21 +1085,21 @@ Double_t TNeuron::GetDeDw() const
          // non-softmax
          for (Int_t i = 0; i < nEntries; i++) {
             TSynapse *postSynapse = (TSynapse*)fpost.UncheckedAt(i);
-            ((TNeuron*)this)->fDeDw += 
-              postSynapse->GetWeight() * 
+            ((TNeuron*)this)->fDeDw +=
+              postSynapse->GetWeight() *
               postSynapse->GetPost()->GetDeDw();
          }
       } else {
          // softmax derivative can be taken care of correcting the forward weight
          for (Int_t i = 0; i < nEntries; i++) {
             TSynapse *postSynapse = (TSynapse*)fpost.UncheckedAt(i);
-            ((TNeuron*)this)->fDeDw += 
-              (postSynapse->GetWeight() - postSynapse->GetPost()->GetInput()) * 
+            ((TNeuron*)this)->fDeDw +=
+              (postSynapse->GetWeight() - postSynapse->GetPost()->GetInput()) *
               postSynapse->GetPost()->GetDeDw();
          }
       }
       ((TNeuron*)this)->fDeDw *= GetDerivative();
-   } 
+   }
    return fDeDw;
 }
 

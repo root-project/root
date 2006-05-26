@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.34 2006/05/15 07:43:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.35 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -91,12 +91,12 @@ protected:
    const TGPicture  *fPic;       // menu entry icon
    TGPopupMenu      *fPopup;     // pointer to popup menu (in case of cascading menus)
 
-   TGMenuEntry(const TGMenuEntry&); 
-   TGMenuEntry& operator=(const TGMenuEntry&); 
+   TGMenuEntry(const TGMenuEntry&);
+   TGMenuEntry& operator=(const TGMenuEntry&);
 
 public:
-   TGMenuEntry(): fEntryId(0), fUserData(NULL), fType(), fStatus(0), fEx(0), fEy(0),
-     fEw(0), fEh(0), fLabel(NULL), fPic(NULL), fPopup(NULL) { }
+   TGMenuEntry(): fEntryId(0), fUserData(0), fType(), fStatus(0),
+      fEx(0), fEy(0), fEw(0), fEh(0), fLabel(0), fPic(0), fPopup(0) { }
    virtual ~TGMenuEntry() { if (fLabel) delete fLabel; }
 
    Int_t          GetEntryId() const { return fEntryId; }
@@ -105,12 +105,12 @@ public:
    EMenuEntryType GetType() const { return fType; }
    TGPopupMenu   *GetPopup() const { return fPopup; }
    TGHotString   *GetLabel() const  { return fLabel; }
-   Int_t          GetEx() const { return fEx; } 
+   Int_t          GetEx() const { return fEx; }
    Int_t          GetEy() const { return fEy; }
    UInt_t         GetEw() const { return fEw; }
    UInt_t         GetEh() const { return fEh; }
    const TGPicture *GetPic() const { return fPic; }
-   void          *GetUserData() const { return fUserData; } 
+   void          *GetUserData() const { return fUserData; }
 
    ClassDef(TGMenuEntry,0);  // Menu entry class
 };
@@ -148,7 +148,7 @@ protected:
    Cursor_t           fDefaultCursor; // right pointing cursor
    const TGWindow    *fMsgWindow;     // window which handles menu events
    TGMenuBar         *fMenuBar;       // menu bar (if any)
-   UInt_t             fEntrySep;      // separation distance between ebtris   
+   UInt_t             fEntrySep;      // separation distance between ebtris
 
    static const TGFont *fgDefaultFont;
    static const TGFont *fgHilightFont;

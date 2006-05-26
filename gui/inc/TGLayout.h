@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.12 2006/05/15 11:01:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.13 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -126,7 +126,7 @@ public:
    Int_t           fState;    // EFrameState defined in TGFrame.h
    TGLayoutHints  *fLayout;   // layout hints used in layout
 
-   TGFrameElement(): fFrame(NULL), fState(0), fLayout(NULL) { }
+   TGFrameElement() : fFrame(0), fState(0), fLayout(0) { }
    TGFrameElement(TGFrame *f, TGLayoutHints *l);
    ~TGFrameElement();
 

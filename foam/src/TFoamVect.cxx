@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamVect.cxx,v 1.10 2006/05/13 15:40:17 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamVect.cxx,v 1.11 2006/05/14 07:18:41 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //_____________________________________________________________________________
@@ -41,7 +41,7 @@ TFoamVect::TFoamVect(Int_t n)
    if (n>0) {
       fCoords = new Double_t[fDim];
       if(gDebug) {
-         if(fCoords == NULL)
+         if(fCoords == 0)
             Error("TFoamVect", "Constructor failed to allocate\n");
       }
       for (i=0; i<n; i++) *(fCoords+i)=0.0;
@@ -60,7 +60,7 @@ TFoamVect::TFoamVect(const TFoamVect &Vect): TObject(Vect)
    fCoords = 0;
    if(fDim>0)  fCoords = new Double_t[fDim];
    if(gDebug) {
-      if(fCoords == NULL) {
+      if(fCoords == 0) {
          Error("TFoamVect", "Constructor failed to allocate fCoords\n");
       }
    }

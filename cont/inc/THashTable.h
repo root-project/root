@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.10 2005/03/26 06:47:32 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.11 2006/05/23 04:47:36 brun Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -52,7 +52,7 @@ private:
 
 
 protected:
-   THashTable(const THashTable&); 
+   THashTable(const THashTable&);
    THashTable& operator=(const THashTable&);
 
 public:
@@ -112,7 +112,7 @@ private:
    TListIter        *fListCursor;  //current position in collision list
    Bool_t            fDirection;   //iteration direction
 
-   THashTableIter() : fTable(0), fCursor(0), fListCursor(NULL), fDirection(kIterForward) { }
+   THashTableIter() : fTable(0), fCursor(0), fListCursor(0), fDirection(kIterForward) { }
    Int_t             NextSlot();
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.15 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.16 2006/05/11 12:50:07 antcheva Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -338,12 +338,12 @@ TGMdiTitleBar::TGMdiTitleBar(const TGWindow *p, const TGWindow *mdiwin,
 {
    // TGMdiTitleBar constructor.
    // the TGMdiTitleBar is the frame containing a title (window name)
-   // an icon and MDI picture buttons as minimize, maximize, restore, 
+   // an icon and MDI picture buttons as minimize, maximize, restore,
    // close and help.
 
    fMdiWin = mdiwin;
    fEditDisabled = kTRUE;
-   fWinName = NULL;
+   fWinName = 0;
    fMidButPressed = fLeftButPressed = fRightButPressed = kFALSE;
 
    AddInput(kButtonPressMask | kButtonReleaseMask | kButtonMotionMask);
@@ -683,7 +683,7 @@ TGMdiTitleIcon::TGMdiTitleIcon(const TGWindow *p, const TGWindow *titlebar,
    TGIcon(p, pic, w, h)
 {
    // TGMdiTitleIcon constructor.
-   // the TGMdiTitleIcon is the left icon used also for the MDI 
+   // the TGMdiTitleIcon is the left icon used also for the MDI
    // popup menu allowing access to MDI commands as : restore,
    // move, size, minimize and close.
 
@@ -763,7 +763,7 @@ TGMdiWinResizer::TGMdiWinResizer(const TGWindow *p, const TGWindow *mdiwin,
    // TGMdiWinResizer constructor.
    // The TGMdiWinResizer is a frame allowing to resize MDI window.
    // Could be horizontal, vertical or corner resizer (see derived classes
-   // TGMdiVerticalWinResizer, TGMdiHorizontalWinResizer, and 
+   // TGMdiVerticalWinResizer, TGMdiHorizontalWinResizer, and
    // TGMdiCornerWinResizer).
 
    fWidgetFlags = kWidgetIsEnabled;

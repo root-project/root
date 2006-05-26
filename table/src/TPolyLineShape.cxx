@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.5 2006/05/20 14:06:09 brun Exp $
-// Author: 
-// $Id: TPolyLineShape.cxx,v 1.5 2006/05/20 14:06:09 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.6 2006/05/21 18:05:26 brun Exp $
+// Author:
+// $Id: TPolyLineShape.cxx,v 1.6 2006/05/21 18:05:26 brun Exp $
 // ***********************************************************************
 // *  C++ class library to define an abstract 3D shape os STAR "event" geometry
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -293,7 +293,7 @@ char  *TPolyLineShape::GetObjectInfo(Int_t px, Int_t py) const
    // forward the GetObjectInfo call to the decorated object
    return fPoints ? fPoints->GetObjectInfo(px, py) : TShape::GetObjectInfo(px,py);
 }
-         
+
 //______________________________________________________________________________
 Size_t TPolyLineShape::GetSizeAttribute() const
 {
@@ -530,7 +530,7 @@ void TPolyLineShape::PaintX3DLine(Option_t *)
    fSizeX3D->numSegs   = buff->numSegs   = size-1;
    fSizeX3D->numPolys  = buff->numPolys  = 0;        //NOTE: Because of different structure, our
 
-   buff->polys     = NULL;     //      TPolyLine3D can't use polygons
+   buff->polys     = 0;     //      TPolyLine3D can't use polygons
    TPoints3D x3dPoints(size);
    buff->points    = fPoints->GetXYZ(x3dPoints.GetP(),0,size);
 
@@ -585,7 +585,7 @@ void TPolyLineShape::PaintX3DMarker(Option_t *)
    fSizeX3D->numPoints = buff->numPoints = buff->numSegs*2;
    fSizeX3D->numPolys  = buff->numPolys  = 0;         //NOTE: Because of different structure, our
 
-   buff->polys     = NULL;      //      TPolyMarker3D can't use polygons
+   buff->polys     = 0;      //      TPolyMarker3D can't use polygons
 
 
     //*-* Allocate memory for points *-*

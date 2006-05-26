@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name: v5-11-02 $:$Id: TList.h,v 1.12 2006/04/11 17:51:58 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.13 2006/05/23 04:47:36 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -46,8 +46,8 @@ protected:
    TObjLink  *fCache;     //! cache to speedup sequential calling of Before() and After() functions
    Bool_t     fAscending; //! sorting order (when calling Sort() or for TSortedList)
 
-   TList(const TList&); 
-   TList& operator=(const TList&); 
+   TList(const TList&);
+   TList& operator=(const TList&);
 
    TObjLink          *LinkAt(Int_t idx) const;
    TObjLink          *FindLink(const TObject *obj, Int_t &idx) const;
@@ -58,10 +58,8 @@ protected:
    virtual void       DeleteLink(TObjLink *lnk);
 
 public:
-   TList():
-     fFirst(NULL), fLast(NULL), fCache(NULL), fAscending(kTRUE) { }
-   TList(TObject *):
-     fFirst(NULL), fLast(NULL), fCache(NULL), fAscending(kTRUE) { } // for backward compatibility, don't use
+   TList() : fFirst(0), fLast(0), fCache(0), fAscending(kTRUE) { }
+   TList(TObject *) : fFirst(0), fLast(0), fCache(0), fAscending(kTRUE) { } // for backward compatibility, don't use
    virtual           ~TList();
    virtual void      Clear(Option_t *option="");
    virtual void      Delete(Option_t *option="");
@@ -119,8 +117,7 @@ private:
    TObjLink& operator=(const TObjLink&); // Not implemented
 
 protected:
-   TObjLink():
-     fNext(this), fPrev(this), fObject(0) { }
+   TObjLink() : fNext(0), fPrev(0), fObject(0) { fNext = fPrev = this; }
 
 public:
    TObjLink(TObject *obj) : fNext(0), fPrev(0), fObject(obj) { }
@@ -177,9 +174,8 @@ protected:
    Bool_t             fDirection;    //iteration direction
    Bool_t             fStarted;      //iteration started
 
-   TListIter():
-     fList(NULL), fCurCursor(NULL), fCursor(NULL), fDirection(kTRUE), 
-     fStarted(kFALSE) { }
+   TListIter() : fList(0), fCurCursor(0), fCursor(0), fDirection(kTRUE),
+      fStarted(kFALSE) { }
 
 public:
    TListIter(const TList *l, Bool_t dir = kIterForward);

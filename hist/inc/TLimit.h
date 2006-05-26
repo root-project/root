@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.7 2005/11/29 06:16:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.8 2006/01/15 22:03:51 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimit
@@ -41,31 +41,31 @@ public:
    TLimit() {}
    virtual ~TLimit() {}
    static TConfidenceLevel *ComputeLimit(TLimitDataSource * data,
-                                         Int_t nmc =50000, 
+                                         Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = NULL,
+                                         TRandom * generator = 0,
                                          Double_t(*statistic) (Double_t, Double_t,Double_t) = &(TLimit::LogLikelihood));
    static TConfidenceLevel *ComputeLimit(Double_t s, Double_t b, Int_t d,
-                                         Int_t nmc =50000, 
+                                         Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = NULL,
+                                         TRandom * generator = 0,
                                          Double_t(*statistic) (Double_t, Double_t,Double_t) = &(TLimit::LogLikelihood));
-   static TConfidenceLevel *ComputeLimit(Double_t s, Double_t b, Int_t d, 
+   static TConfidenceLevel *ComputeLimit(Double_t s, Double_t b, Int_t d,
                                          TVectorD* se, TVectorD* be, TObjArray*,
-                                         Int_t nmc =50000, 
+                                         Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = NULL,
+                                         TRandom * generator = 0,
                                          Double_t(*statistic) (Double_t, Double_t,Double_t) = &(TLimit::LogLikelihood));
    static TConfidenceLevel *ComputeLimit(TH1* s, TH1* b, TH1* d,
-                                         Int_t nmc =50000, 
+                                         Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = NULL,
+                                         TRandom * generator = 0,
                                          Double_t(*statistic) (Double_t, Double_t,Double_t) = &(TLimit::LogLikelihood));
-   static TConfidenceLevel *ComputeLimit(TH1* s, TH1* b, TH1* d, 
+   static TConfidenceLevel *ComputeLimit(TH1* s, TH1* b, TH1* d,
                                          TVectorD* se, TVectorD* be, TObjArray*,
-                                         Int_t nmc =50000, 
+                                         Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = NULL,
+                                         TRandom * generator = 0,
                                          Double_t(*statistic) (Double_t, Double_t,Double_t) = &(TLimit::LogLikelihood));
  private:
    static TArrayD *fgTable;              // a log table... just to speed up calculation

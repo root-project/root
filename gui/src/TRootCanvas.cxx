@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.99 2006/04/28 08:32:35 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.100 2006/05/09 07:53:32 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -170,38 +170,38 @@ static const char *gSaveAsTypes[] = { "PostScript",   "*.ps",
 
 static ToolBarData_t gToolBarData[] = {
    // { filename,      tooltip,            staydown,  id,              button}
-   { "newcanvas.xpm",  "New",              kFALSE,    kFileNewCanvas,  NULL },
-   { "open.xpm",       "Open",             kFALSE,    kFileOpen,       NULL },
-   { "save.xpm",       "Save As",          kFALSE,    kFileSaveAs,     NULL },
-   { "printer.xpm",    "Print",            kFALSE,    kFilePrint,      NULL },
-   { "",               "",                 kFALSE,    -1,              NULL },
-   { "interrupt.xpm",  "Interrupt",        kFALSE,    kOptionInterrupt,NULL },
-   { "refresh2.xpm",   "Refresh",          kFALSE,    kOptionRefresh,  NULL },
-   { "",               "",                 kFALSE,    -1,              NULL },
-   { "inspect.xpm",    "Inspect",          kFALSE,    kInspectRoot,    NULL },
-   { "browser.xpm",    "Browser",          kFALSE,    kInspectBrowser, NULL },
-   { 0,                0,                  kFALSE,    0,               NULL }
+   { "newcanvas.xpm",  "New",              kFALSE,    kFileNewCanvas,  0 },
+   { "open.xpm",       "Open",             kFALSE,    kFileOpen,       0 },
+   { "save.xpm",       "Save As",          kFALSE,    kFileSaveAs,     0 },
+   { "printer.xpm",    "Print",            kFALSE,    kFilePrint,      0 },
+   { "",               "",                 kFALSE,    -1,              0 },
+   { "interrupt.xpm",  "Interrupt",        kFALSE,    kOptionInterrupt,0 },
+   { "refresh2.xpm",   "Refresh",          kFALSE,    kOptionRefresh,  0 },
+   { "",               "",                 kFALSE,    -1,              0 },
+   { "inspect.xpm",    "Inspect",          kFALSE,    kInspectRoot,    0 },
+   { "browser.xpm",    "Browser",          kFALSE,    kInspectBrowser, 0 },
+   { 0,                0,                  kFALSE,    0,               0 }
 };
 
 static ToolBarData_t gToolBarData1[] = {
-   { "pointer.xpm",    "Modify",           kFALSE,    kToolModify,     NULL },
-   { "arc.xpm",        "Arc",              kFALSE,    kToolArc,        NULL },
-   { "line.xpm",       "Line",             kFALSE,    kToolLine,       NULL },
-   { "arrow.xpm",      "Arrow",            kFALSE,    kToolArrow,      NULL },
-   { "diamond.xpm",    "Diamond",          kFALSE,    kToolDiamond,    NULL },
-   { "ellipse.xpm",    "Ellipse",          kFALSE,    kToolEllipse,    NULL },
-   { "pad.xpm",        "Pad",              kFALSE,    kToolPad,        NULL },
-   { "pave.xpm",       "Pave",             kFALSE,    kToolPave,       NULL },
-   { "pavelabel.xpm",  "Pave Label",       kFALSE,    kToolPLabel,     NULL },
-   { "pavetext.xpm",   "Pave Text",        kFALSE,    kToolPText,      NULL },
-   { "pavestext.xpm",  "Paves Text",       kFALSE,    kToolPsText,     NULL },
-   { "graph.xpm",      "Graph",            kFALSE,    kToolGraph,      NULL },
-   { "curlyline.xpm",  "Curly Line",       kFALSE,    kToolCurlyLine,  NULL },
-   { "curlyarc.xpm",   "Curly Arc",        kFALSE,    kToolCurlyArc,   NULL },
-   { "latex.xpm",      "Text/Latex",       kFALSE,    kToolLatex,      NULL },
-   { "marker.xpm",     "Marker",           kFALSE,    kToolMarker,     NULL },
-   { "cut.xpm",        "Graphical Cut",    kFALSE,    kToolCutG,       NULL },
-   { 0,                0,                  kFALSE,    0,               NULL }
+   { "pointer.xpm",    "Modify",           kFALSE,    kToolModify,     0 },
+   { "arc.xpm",        "Arc",              kFALSE,    kToolArc,        0 },
+   { "line.xpm",       "Line",             kFALSE,    kToolLine,       0 },
+   { "arrow.xpm",      "Arrow",            kFALSE,    kToolArrow,      0 },
+   { "diamond.xpm",    "Diamond",          kFALSE,    kToolDiamond,    0 },
+   { "ellipse.xpm",    "Ellipse",          kFALSE,    kToolEllipse,    0 },
+   { "pad.xpm",        "Pad",              kFALSE,    kToolPad,        0 },
+   { "pave.xpm",       "Pave",             kFALSE,    kToolPave,       0 },
+   { "pavelabel.xpm",  "Pave Label",       kFALSE,    kToolPLabel,     0 },
+   { "pavetext.xpm",   "Pave Text",        kFALSE,    kToolPText,      0 },
+   { "pavestext.xpm",  "Paves Text",       kFALSE,    kToolPsText,     0 },
+   { "graph.xpm",      "Graph",            kFALSE,    kToolGraph,      0 },
+   { "curlyline.xpm",  "Curly Line",       kFALSE,    kToolCurlyLine,  0 },
+   { "curlyarc.xpm",   "Curly Arc",        kFALSE,    kToolCurlyArc,   0 },
+   { "latex.xpm",      "Text/Latex",       kFALSE,    kToolLatex,      0 },
+   { "marker.xpm",     "Marker",           kFALSE,    kToolMarker,     0 },
+   { "cut.xpm",        "Graphical Cut",    kFALSE,    kToolCutG,       0 },
+   { 0,                0,                  kFALSE,    0,               0 }
 };
 
 //////////////////////////////////////////////////////////////////////////

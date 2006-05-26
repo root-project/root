@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.43 2005/12/09 01:14:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.44 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -224,7 +224,7 @@ public:
    TString(const char *s);              // Copy to embedded null
    TString(const char *s, Ssiz_t n);    // Copy past any embedded nulls
    TString(const std::string &s);
-   TString(char c): fData(NULL) { InitChar(c); }
+   TString(char c) : fData(0) { InitChar(c); }
    TString(char c, Ssiz_t s);
    TString(const TSubString &sub);
 

@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.14 2005/09/04 10:22:34 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.15 2006/01/09 15:47:30 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -40,9 +40,9 @@
 ClassImp(TMLPAnalyzer)
 
 //______________________________________________________________________________
-TMLPAnalyzer::~TMLPAnalyzer() 
+TMLPAnalyzer::~TMLPAnalyzer()
 {
-   // Destructor 
+   // Destructor
    delete fAnalysisTree;
    delete fIOTree;
 }
@@ -122,7 +122,7 @@ TString TMLPAnalyzer::GetNeuronFormula(Int_t idx)
 }
 
 //______________________________________________________________________________
-const char* TMLPAnalyzer::GetInputNeuronTitle(Int_t in) 
+const char* TMLPAnalyzer::GetInputNeuronTitle(Int_t in)
 {
    // Returns the name of any neuron from the input layer
    TNeuron* neuron=(TNeuron*)fNetwork->fFirstLayer[in];
@@ -130,7 +130,7 @@ const char* TMLPAnalyzer::GetInputNeuronTitle(Int_t in)
 }
 
 //______________________________________________________________________________
-const char* TMLPAnalyzer::GetOutputNeuronTitle(Int_t out) 
+const char* TMLPAnalyzer::GetOutputNeuronTitle(Int_t out)
 {
    // Returns the name of any neuron from the output layer
    TNeuron* neuron=(TNeuron*)fNetwork->fLastLayer[out];
@@ -292,7 +292,7 @@ void TMLPAnalyzer::DrawDInputs()
 
    THStack* stack  = new THStack("differences","differences (impact of variables on ANN)");
    TLegend* legend = new TLegend(0.75,0.75,0.95,0.95);
-   TH1F* tmp = NULL;
+   TH1F* tmp = 0;
    char var[64], sel[64];
    for(Int_t i = 0; i < GetNeurons(1); i++) {
       sprintf(var, "diff>>tmp%d", i);
@@ -357,7 +357,7 @@ void TMLPAnalyzer::DrawNetwork(Int_t neuron, const char* signal, const char* bg)
    TLegend *legend = new TLegend(.75, .80, .95, .95);
    legend->AddEntry(bgh, "Background");
    legend->AddEntry(sigh,"Signal");
-   stack->Draw("nostack"); 
+   stack->Draw("nostack");
    legend->Draw();
    // restore the default event list
    data->SetEventList(current);
@@ -366,13 +366,13 @@ void TMLPAnalyzer::DrawNetwork(Int_t neuron, const char* signal, const char* bg)
 }
 
 //______________________________________________________________________________
-TProfile* TMLPAnalyzer::DrawTruthDeviation(Int_t outnode /*=0*/, 
-                                           Option_t *option /*=""*/) 
+TProfile* TMLPAnalyzer::DrawTruthDeviation(Int_t outnode /*=0*/,
+                                           Option_t *option /*=""*/)
 {
    // Create a profile of the difference of the MLP output minus the
-   // true value for a given output node outnode, vs the true value for 
-   // outnode, for all test data events. This method is mainly useful 
-   // when doing regression analysis with the MLP (i.e. not classification, 
+   // true value for a given output node outnode, vs the true value for
+   // outnode, for all test data events. This method is mainly useful
+   // when doing regression analysis with the MLP (i.e. not classification,
    // but continuous truth values).
    // The resulting TProfile histogram is returned.
    // It is not drawn if option "goff" is specified.
@@ -381,7 +381,7 @@ TProfile* TMLPAnalyzer::DrawTruthDeviation(Int_t outnode /*=0*/,
    if (!fIOTree) GatherInformations();
    TString pipehist=Form("MLP_truthdev_%d",outnode);
    TString drawline;
-   drawline.Form("Out.Out%d-True.True%d:True.True%d>>", 
+   drawline.Form("Out.Out%d-True.True%d:True.True%d>>",
                  outnode, outnode, outnode);
    fIOTree->Draw(drawline+pipehist+"(20)", "", "goff prof");
    TProfile* h=(TProfile*)gDirectory->Get(pipehist);
@@ -402,9 +402,9 @@ TProfile* TMLPAnalyzer::DrawTruthDeviation(Int_t outnode /*=0*/,
 THStack* TMLPAnalyzer::DrawTruthDeviations(Option_t *option /*=""*/)
 {
    // Creates TProfiles of the difference of the MLP output minus the
-   // true value vs the true value, one for each output, filled with the 
-   // test data events. This method is mainly useful when doing regression 
-   // analysis with the MLP (i.e. not classification, but continuous truth 
+   // true value vs the true value, one for each output, filled with the
+   // test data events. This method is mainly useful when doing regression
+   // analysis with the MLP (i.e. not classification, but continuous truth
    // values).
    // The returned THStack contains all the TProfiles. It is drawn unless
    // the option "goff" is specified.
@@ -419,8 +419,8 @@ THStack* TMLPAnalyzer::DrawTruthDeviations(Option_t *option /*=""*/)
 
    const char* xAxisTitle=0;
 
-   // create profile for each input neuron, 
-   // adding them into the THStack and the TLegend 
+   // create profile for each input neuron,
+   // adding them into the THStack and the TLegend
    for (Int_t outnode=0; outnode<GetNeurons(GetLayers()); outnode++) {
       TProfile* h=DrawTruthDeviation(outnode, "goff");
       h->SetLineColor(1+outnode);
@@ -443,8 +443,8 @@ THStack* TMLPAnalyzer::DrawTruthDeviations(Option_t *option /*=""*/)
 }
 
 //______________________________________________________________________________
-TProfile* TMLPAnalyzer::DrawTruthDeviationInOut(Int_t innode, 
-                                                Int_t outnode /*=0*/, 
+TProfile* TMLPAnalyzer::DrawTruthDeviationInOut(Int_t innode,
+                                                Int_t outnode /*=0*/,
                                                 Option_t *option /*=""*/)
 {
    // Creates a profile of the difference of the MLP output outnode minus
@@ -457,7 +457,7 @@ TProfile* TMLPAnalyzer::DrawTruthDeviationInOut(Int_t innode,
    if (!fIOTree) GatherInformations();
    TString pipehist=Form("MLP_truthdev_i%d_o%d", innode, outnode);
    TString drawline;
-   drawline.Form("Out.Out%d-True.True%d:In.In%d>>", 
+   drawline.Form("Out.Out%d-True.True%d:In.In%d>>",
                  outnode, outnode, innode);
    fIOTree->Draw(drawline+pipehist+"(50)", "", "goff prof");
    TProfile* h=(TProfile*)gROOT->FindObject(pipehist);
@@ -467,7 +467,7 @@ TProfile* TMLPAnalyzer::DrawTruthDeviationInOut(Int_t innode,
    h->SetTitle(Form("#Delta(output - truth) of %s vs. input %s",
                     titleOutNeuron, titleInNeuron));
    h->GetXaxis()->SetTitle(Form("%s", titleInNeuron));
-   h->GetYaxis()->SetTitle(Form("#Delta(output - truth) for %s", 
+   h->GetYaxis()->SetTitle(Form("#Delta(output - truth) for %s",
                                 titleOutNeuron));
    if (!strstr(option,"goff"))
       h->Draw(option);
@@ -475,13 +475,13 @@ TProfile* TMLPAnalyzer::DrawTruthDeviationInOut(Int_t innode,
 }
 
 //______________________________________________________________________________
-THStack* TMLPAnalyzer::DrawTruthDeviationInsOut(Int_t outnode /*=0*/, 
+THStack* TMLPAnalyzer::DrawTruthDeviationInsOut(Int_t outnode /*=0*/,
                                                 Option_t *option /*=""*/)
 {
    // Creates a profile of the difference of the MLP output outnode minus the
    // true value of outnode vs the input value, stacked for all inputs, for
    // all test data events.
-   // The returned THStack contains all the TProfiles. It is drawn unless 
+   // The returned THStack contains all the TProfiles. It is drawn unless
    // the option "goff" is specified.
    // Options are passed to TProfile::Draw.
    TString sName;
@@ -498,8 +498,8 @@ THStack* TMLPAnalyzer::DrawTruthDeviationInsOut(Int_t outnode /*=0*/,
                       Form("#Delta(output - truth) of %s vs. input for:",
                            outputNodeTitle));
 
-   // create profile for each input neuron, 
-   // adding them into the THStack and the TLegend 
+   // create profile for each input neuron,
+   // adding them into the THStack and the TLegend
    Int_t numInNodes=GetNeurons(1);
    Int_t innode=0;
    for (innode=0; innode<numInNodes; innode++) {
@@ -514,7 +514,7 @@ THStack* TMLPAnalyzer::DrawTruthDeviationInsOut(Int_t outnode /*=0*/,
       leg->Draw();
       // gotta draw before accessing the axes
       hs->GetXaxis()->SetTitle("Input value");
-      hs->GetYaxis()->SetTitle(Form("#Delta(output - truth) for %s", 
+      hs->GetYaxis()->SetTitle(Form("#Delta(output - truth) for %s",
                                  outputNodeTitle));
    }
 

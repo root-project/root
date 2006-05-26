@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.60 2006/05/23 04:47:42 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.61 2006/05/24 15:10:47 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -164,7 +164,7 @@ TSelectorDraw& TSelectorDraw::operator=(const TSelectorDraw& sd)
       fSelectMultiple=sd.fSelectMultiple;
       fCleanElist=sd.fCleanElist;
       fObjEval=sd.fObjEval;
-   } 
+   }
    return *this;
 }
 
@@ -293,7 +293,7 @@ void TSelectorDraw::Begin(TTree *tree)
 
          pstart= strchr(hname,'(');
          pend =  strchr(hname,')');
-         if (pstart != NULL ){  // found the bracket
+         if (pstart != 0 ) {  // found the bracket
 
             mustdelete=1;
 
@@ -304,7 +304,7 @@ void TSelectorDraw::Begin(TTree *tree)
                ncomma=0;
                cdummy = pstart;
                cdummy = strchr(&cdummy[1],',');
-               while (cdummy != NULL) {
+               while (cdummy != 0) {
                   cdummy = strchr(&cdummy[1],',');
                   ncomma++;
                }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.44 2006/05/23 04:47:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.45 2006/05/24 14:55:26 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -77,28 +77,28 @@ THStack::THStack(const char *name, const char *title)
    fHistogram = 0;
    fMaximum   = -1111;
    fMinimum   = -1111;
-   gROOT->GetListOfCleanups()->Add(this);   
+   gROOT->GetListOfCleanups()->Add(this);
 }
 
 
 //______________________________________________________________________________
-THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/, 
+THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
                  const char *name /*=0*/, const char *title /*=0*/,
-                 Int_t firstbin /*=-1*/, Int_t lastbin /*=-1*/, 
-                 Int_t firstbin2 /*=-1*/, Int_t lastbin2 /*=-1*/, 
+                 Int_t firstbin /*=-1*/, Int_t lastbin /*=-1*/,
+                 Int_t firstbin2 /*=-1*/, Int_t lastbin2 /*=-1*/,
                  Option_t* proj_option /*=""*/, Option_t* draw_option /*=""*/): TNamed(name, title) {
 // Creates a new THStack from a TH2 or TH3
 // It is filled with the 1D histograms from GetProjectionX or GetProjectionY
-// for each bin of the histogram. It illustrates the differences and total 
+// for each bin of the histogram. It illustrates the differences and total
 // sum along an axis.
-// 
+//
 // Parameters:
-// - hist:  the histogram used for the projections. Can be an object deriving 
+// - hist:  the histogram used for the projections. Can be an object deriving
 //          from TH2 or TH3.
 // - axis:  for TH2: "x" for ProjectionX, "y" for ProjectionY.
 //          for TH3: see TH3::Project3D.
-// - name:  fName is set to name if given, otherwise to histo's name with 
-//          "_stack_<axis>" appended, where <axis> is the value of the 
+// - name:  fName is set to name if given, otherwise to histo's name with
+//          "_stack_<axis>" appended, where <axis> is the value of the
 //          parameter axis.
 // - title: fTitle is set to title if given, otherwise to histo's title
 //          with ", stack of <axis> projections" appended.
@@ -110,7 +110,7 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
 //          Other axis range for TH3::Project3D, defaults to "all bins".
 //          Ignored for TH2s
 // - proj_option:
-//          option passed to TH2::ProjectionX/Y and TH3::Project3D (along 
+//          option passed to TH2::ProjectionX/Y and TH3::Project3D (along
 //          with axis)
 // - draw_option:
 //          option passed to THStack::Add.
@@ -119,7 +119,7 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
    fHistogram = 0;
    fMaximum   = -1111;
    fMinimum   = -1111;
-   gROOT->GetListOfCleanups()->Add(this);   
+   gROOT->GetListOfCleanups()->Add(this);
 
    if (!axis) {
       Warning("THStack", "Need an axis.");
@@ -163,9 +163,9 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
       if (lastbin  > nbins+1) lastbin = nbins;
       for (Int_t iBin=firstbin; iBin<=lastbin; iBin++) {
          TH1* hProj=0;
-         if (useX) hProj=hist2->ProjectionX(Form("%s_px%d",hist2->GetName(), iBin), 
+         if (useX) hProj=hist2->ProjectionX(Form("%s_px%d",hist2->GetName(), iBin),
                                             iBin, iBin, proj_option);
-         else hProj=hist2->ProjectionY(Form("%s_py%d",hist2->GetName(), iBin), 
+         else hProj=hist2->ProjectionY(Form("%s_py%d",hist2->GetName(), iBin),
                                        iBin, iBin, proj_option);
          Add(hProj, draw_option);
       }
@@ -183,11 +183,11 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
       if (dim==1) {
          TAxis* haxis = 0;
          // look for the haxis _not_ in axis
-         if (sAxis.First('x')==kNPOS) 
+         if (sAxis.First('x')==kNPOS)
             haxis=hist->GetXaxis();
-         else if (sAxis.First('y')==kNPOS) 
+         else if (sAxis.First('y')==kNPOS)
             haxis=hist->GetYaxis();
-         else if (sAxis.First('z')==kNPOS) 
+         else if (sAxis.First('z')==kNPOS)
             haxis=hist->GetZaxis();
          if (!haxis) {
             Warning("HStack","Histogram axis is NULL");
@@ -203,7 +203,7 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
          for (Int_t iBin=firstbin; iBin<=lastbin; iBin++) {
             haxis->SetRange(iBin, iBin);
             // build projection named axis_iBin (passed through "option")
-            TH1* hProj=hist3->Project3D(Form("%s_%s%s_%d", hist3->GetName(), 
+            TH1* hProj=hist3->Project3D(Form("%s_%s%s_%d", hist3->GetName(),
                                              axis, proj_option, iBin));
             Add(hProj, draw_option);
          }
@@ -245,7 +245,7 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
             for (Int_t jBin=firstbin2; jBin<=lastbin2; jBin++) {
                haxis2->SetRange(jBin, jBin);
                // build projection named axis_iBin (passed through "option")
-               TH1* hProj=hist3->Project3D(Form("%s_%s%s_%d", hist3->GetName(), 
+               TH1* hProj=hist3->Project3D(Form("%s_%s%s_%d", hist3->GetName(),
                                                 axis, proj_option, iBin));
                Add(hProj, draw_option);
             }
@@ -262,7 +262,7 @@ THStack::~THStack()
 // THStack destructor
 
 
-   gROOT->GetListOfCleanups()->Remove(this);   
+   gROOT->GetListOfCleanups()->Remove(this);
    if (!fHists) return;
    fHists->Clear("nodelete");
    delete fHists;
@@ -273,13 +273,13 @@ THStack::~THStack()
 }
 
 //______________________________________________________________________________
-THStack::THStack(const THStack &hstack) : 
-  TNamed(hstack),
-  fHists(NULL),
-  fStack(NULL),
-  fHistogram(NULL),
-  fMaximum(hstack.fMaximum),
-  fMinimum(hstack.fMinimum)
+THStack::THStack(const THStack &hstack) :
+   TNamed(hstack),
+   fHists(0),
+   fStack(0),
+   fHistogram(0),
+   fMaximum(hstack.fMaximum),
+   fMinimum(hstack.fMinimum)
 {
    // THStack copy constructor
 
@@ -709,7 +709,7 @@ void THStack::Paint(Option_t *option)
          }
          h1 = (TH1*)fStack->At(nhists-i-1);
          if (i>0) {
-            // Erase before drawing the histogram 
+            // Erase before drawing the histogram
             h1col  = h1->GetFillColor();
             h1fill = h1->GetFillStyle();
             h1->SetFillColor(1000);

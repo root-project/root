@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v5-11-02 $:$Id: TQObject.h,v 1.28 2006/03/21 05:20:33 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.29 2006/05/23 04:47:35 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -76,13 +76,13 @@ protected:
                                  TClass *sender_class, const char *signal,
                                  TClass *receiver_class, const char *slot);
 
-   TQObject(const TQObject& tqo): 
-     fListOfSignals(tqo.fListOfSignals), 
-     fListOfConnections(tqo.fListOfConnections) {}     
+   TQObject(const TQObject& tqo):
+     fListOfSignals(tqo.fListOfSignals),
+     fListOfConnections(tqo.fListOfConnections) {}
 
    TQObject& operator=(const TQObject& tqo) {
      if(this!=&tqo) {
-       fListOfSignals=tqo.fListOfSignals; 
+       fListOfSignals=tqo.fListOfSignals;
        fListOfConnections=tqo.fListOfConnections;
      } return *this;}
 
@@ -194,7 +194,7 @@ protected:
    virtual const char *GetSenderClassName() const { return fSenderClass; }
 
 public:
-   TQObjSender() : TQObject(), fSender(NULL), fSenderClass() { }
+   TQObjSender() : TQObject(), fSender(0), fSenderClass() { }
    virtual ~TQObjSender() { Disconnect(); }
 
    virtual void SetSender(void *sender) { fSender = sender; }
@@ -212,7 +212,7 @@ public:
 extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
                           const char *slot);
 
-// This include is no longer necessary but is kept to be 
+// This include is no longer necessary but is kept to be
 // backward compatible with user code.
 #include "TQClass.h"
 

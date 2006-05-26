@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.228 2006/04/29 17:50:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.229 2006/05/12 07:40:47 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -872,8 +872,8 @@ void TPad::CopyPixmap()
 
    int px, py;
    XYtoAbsPixel(fX1, fY2, px, py);
-   
-   if (fPixmapID != -1) 
+
+   if (fPixmapID != -1)
       gVirtualX->CopyPixmap(fPixmapID, px, py);
 
    if (this == gPad) HighLight(gPad->GetHighLightColor());
@@ -1022,7 +1022,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
       void *arr[7];
       arr[1] = this; arr[2] = (void*)&nx;arr[3] = (void*)& ny;
       arr[4] = (void*)&xmargin; arr[5] = (void *)& ymargin; arr[6] = (void *)&color;
-      if ((*gThreadXAR)("PDCD", 7, arr, NULL)) return;
+      if ((*gThreadXAR)("PDCD", 7, arr, 0)) return;
    }
 
    TPad *padsav = (TPad*)gPad;
@@ -2495,7 +2495,7 @@ void TPad::Paint(Option_t * /*option*/)
       fViewer3D->EndScene();
    }
 
-   // Generate the PS output using gl2ps 
+   // Generate the PS output using gl2ps
    if (GetGLDevice()!=-1 && gVirtualPS) {
       gPad = this;
       gGLManager->PrintViewer(GetViewer3D());
@@ -5493,16 +5493,16 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    // (if any), otherwise a default 'pad' type is returned
 
    Bool_t validType = kFALSE;
-   
+
    if ( (!type || !type[0] || (strstr(type, "gl") && !strstr(type, "ogl"))) && ! fCanvas->UseGL())
       type = "pad";
-   
+
    if (type && type[0]) {
       // Extract plugins types supporting TVirtualViewer3D - cannot be done
       // directly with plugin manager at present
       TString pluginStr = gEnv->GetValue("Plugin.TVirtualViewer3D","");
       TObjArray *pluginTypes = pluginStr.Tokenize(" ");
-      
+
       // Each plugin has 4 entries, 'type' (URI in plugin manager terminology) is zeroth
       Int_t i = 0;
       while (i < pluginTypes->GetSize() && !validType) {
@@ -5550,13 +5550,13 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
          // Return the existing viewer
          return fViewer3D;
       }
-      
+
       if (strstr(type, "gl") && !strstr(type, "ogl"))
          fEmbeddedGL = kTRUE, fCopyGLDevice = kTRUE;
       else
          createdExternal = kTRUE;
 
-   } else 
+   } else
          newViewer = new TViewer3DPad(*this);
 
    // If we had a previous viewer destroy it now

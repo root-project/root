@@ -1,4 +1,4 @@
-// @(#)root/clarens:$Name:  $:$Id: TClSession.cxx,v 1.1 2005/02/07 18:02:36 rdm Exp $
+// @(#)root/clarens:$Name:  $:$Id: TClSession.cxx,v 1.2 2006/05/10 14:06:06 rdm Exp $
 // Author: Maarten Ballintijn   25/10/2004
 
 /*************************************************************************
@@ -42,23 +42,26 @@ ClassImp(TClSession)
 
 
 Bool_t   TClSession::fgInitialized  = kFALSE;
-void    *TClSession::fgPrivRSA   = 0;
-void    *TClSession::fgPubRSA    = 0;
+void    *TClSession::fgPrivRSA      = 0;
+void    *TClSession::fgPubRSA       = 0;
 TString  TClSession::fgUserCert;
 
-// Utility function that encodes instring in base64, and returns a new
-// string with its own memory reference. Free this memory upon deconstruction
+//______________________________________________________________________________
 unsigned char *B64Encode(xmlrpc_env *env,unsigned char *instring,int len)
 {
+   // Utility function that encodes instring in base64, and returns a new
+   // string with its own memory reference. Free this memory upon
+   // deconstruction.
+
     xmlrpc_mem_block *mem;
     mem=xmlrpc_base64_encode (env,instring,len);
     if (env->fault_occurred) {
        cerr<<"XML-RPC Fault: "<<env->fault_string<<"("<< env->fault_code<<")"<<endl;
        if (mem) xmlrpc_mem_block_free (mem);
-       return NULL;
+       return 0;
     }
 
-    if (!mem) return NULL;
+    if (!mem) return 0;
     int olen=xmlrpc_mem_block_size (mem);
 
     unsigned char *outstring=new unsigned char[olen+1];
@@ -69,19 +72,22 @@ unsigned char *B64Encode(xmlrpc_env *env,unsigned char *instring,int len)
     return outstring;
 }
 
-// Utility function that encodes instring in base64, and returns a new
-// string with its own memory reference. Free this memory upon deconstruction
+//______________________________________________________________________________
 unsigned char *B64Decode(xmlrpc_env *env, unsigned char *instring,int *len)
 {
+   // Utility function that encodes instring in base64, and returns a new
+   // string with its own memory reference. Free this memory upon
+   // deconstruction.
+
     xmlrpc_mem_block *mem;
     mem=xmlrpc_base64_decode (env,(char *)instring,strlen((const char *)instring));
     if (env->fault_occurred) {
        cerr<<"XML-RPC Fault: "<<env->fault_string<<"("<< env->fault_code<<")"<<endl;
        if (mem) xmlrpc_mem_block_free (mem);
-       return NULL;
+       return 0;
     }
 
-    if (!mem) return NULL;
+    if (!mem) return 0;
     int olen=xmlrpc_mem_block_size (mem);
     unsigned char *outstring=new unsigned char[olen+1];
     memcpy((void *) outstring,(void *)xmlrpc_mem_block_contents(mem),olen);
@@ -91,14 +97,12 @@ unsigned char *B64Decode(xmlrpc_env *env, unsigned char *instring,int *len)
     return outstring;
 }
 
-
 //______________________________________________________________________________
 TClSession::TClSession(const Char_t *url, const Char_t *user, const Char_t *pw,
                        xmlrpc_server_info *info, void *serverPubRSA)
    : fUrl(url), fUser(user), fPassword(pw), fServerInfo(info), fServerPubRSA(serverPubRSA)
 {
 }
-
 
 //______________________________________________________________________________
 TClSession *TClSession::Create(const Char_t *url)
@@ -217,7 +221,6 @@ TClSession *TClSession::Create(const Char_t *url)
    return new TClSession(url, user, password, info, serverPubRSA);
 }
 
-
 //______________________________________________________________________________
 Bool_t TClSession::InitAuthentication()
 {
@@ -257,7 +260,7 @@ Bool_t TClSession::InitAuthentication()
    if (gDebug > 0) ::Info("TClSession::InitAuthentication",
       "using public key: '%s'", certFile.Data());
 
-   X509* userCert = PEM_read_bio_X509(bio, NULL,NULL,NULL);
+   X509* userCert = PEM_read_bio_X509(bio, 0,0,0);
    if (!userCert) {
       ::Error("TClSession::InitAuthentication", "reading user public key: %s (%ld)",
          ERR_reason_error_string(ERR_get_error()), ERR_get_error());
@@ -330,7 +333,7 @@ Bool_t TClSession::InitAuthentication()
    if (gDebug > 0) ::Info("TClSession::InitAuthentication",
       "using private key: '%s'", privfile.Data());
 
-   fgPrivRSA = PEM_read_bio_RSAPrivateKey(bio, NULL, NULL, NULL);
+   fgPrivRSA = PEM_read_bio_RSAPrivateKey(bio, 0, 0, 0);
    BIO_free(bio);
 
    if (fgPrivRSA == 0) {

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.18 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.19 2006/05/17 16:37:26 couet Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -237,7 +237,7 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
       delete fgSystNames;
       fgSystNames = new TOrdCollection();
       while ((listofnames = ((TObjArray *) errornames->Next()))) {
-         TObjString *name = NULL;
+         TObjString *name = 0;
          TIterator *loniter = listofnames->MakeIterator();
          while ((name = (TObjString *) (loniter->Next())))
             if ((fgSystNames->IndexOf(name)) < 0)
@@ -277,8 +277,8 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
    // goes negative.  (background = 0 is bad too, so put a little protection
    // around it -- must have at least 10% of the bg estimate).
    Bool_t retoss   = kTRUE;
-   Double_t *serrf = NULL;
-   Double_t *berrf = NULL;
+   Double_t *serrf = 0;
+   Double_t *berrf = 0;
    do {
       Double_t *toss = new Double_t[fgSystNames->GetSize()];
       for (Int_t i = 0; i < fgSystNames->GetSize(); i++)
@@ -314,10 +314,10 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
       TH1 *newsignal = (TH1*)(output->GetSignal()->At(channel));
       TH1 *oldsignal = (TH1*)(input->GetSignal()->At(channel));
       if(stat)
-         for(int i=1; i<=newsignal->GetNbinsX(); i++) 
+         for(int i=1; i<=newsignal->GetNbinsX(); i++)
             newsignal->SetBinContent(i,oldsignal->GetBinContent(i)+generator->Gaus(0,oldsignal->GetBinError(i)));
       else
-         for(int i=1; i<=newsignal->GetNbinsX(); i++) 
+         for(int i=1; i<=newsignal->GetNbinsX(); i++)
             newsignal->SetBinContent(i,oldsignal->GetBinContent(i));
       newsignal->Scale(1 + serrf[channel]);
       newsignal->SetDirectory(0);

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.5 2005/11/11 15:38:30 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.6 2006/05/23 04:47:36 brun Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -40,13 +40,13 @@ protected:
    TObject      *fModel;    //selected object, if exists
    TVirtualPad  *fPad;      //selected pad, if exists
    Bool_t        fInit;     //init flag for setting signals/slots
-   TGTab        *fTab;      //pointer to the parent tab          
+   TGTab        *fTab;      //pointer to the parent tab
 
-   TGedFrame(const TGedFrame&); 
-   TGedFrame& operator=(const TGedFrame&); 
+   TGedFrame(const TGedFrame&);
+   TGedFrame& operator=(const TGedFrame&);
 
    virtual void MakeTitle(const char *title);
-   
+
 public:
    TGedFrame(const TGWindow *p, Int_t id,
              Int_t width = 140, Int_t height = 30,
@@ -68,7 +68,7 @@ public:
 };
 
 
-// The GUI editors and corresponding canvases will be registered 
+// The GUI editors and corresponding canvases will be registered
 // in the list TClass::fClassEditors via the class TGedElement
 
 class TGedElement : public TObject {
@@ -80,11 +80,11 @@ protected:
      fCanvas=ge.fCanvas;} return *this;}
 
 public:
-   TGedElement(): fGedFrame(NULL), fCanvas(NULL) { }
+   TGedElement(): fGedFrame(0), fCanvas(0) { }
 
    TGedFrame  *fGedFrame;   //object editor
    TObject    *fCanvas;     //connected canvas (0 if disconnected)
-   
+
    ClassDef(TGedElement, 0); //editor element
 };
 

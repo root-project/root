@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.9 2005/07/18 12:02:02 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.10 2006/01/09 15:47:30 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -63,26 +63,26 @@ class TMultiLayerPerceptron : public TObject {
                          kRibierePolak, kFletcherReeves, kBFGS };
    enum DataSet { kTraining, kTest };
    TMultiLayerPerceptron();
-   TMultiLayerPerceptron(const char* layout, TTree* data = NULL,
+   TMultiLayerPerceptron(const char* layout, TTree* data = 0,
                          const char* training = "Entry$%2==0",
-                         const char* test = "", 
+                         const char* test = "",
                          TNeuron::NeuronType type = TNeuron::kSigmoid,
                          const char* extF = "", const char* extD  = "");
-   TMultiLayerPerceptron(const char* layout, 
-                         const char* weight, TTree* data = NULL,
+   TMultiLayerPerceptron(const char* layout,
+                         const char* weight, TTree* data = 0,
                          const char* training = "Entry$%2==0",
-                         const char* test = "", 
+                         const char* test = "",
                          TNeuron::NeuronType type = TNeuron::kSigmoid,
                          const char* extF = "", const char* extD  = "");
    TMultiLayerPerceptron(const char* layout, TTree* data,
                          TEventList* training,
-                         TEventList* test, 
+                         TEventList* test,
                          TNeuron::NeuronType type = TNeuron::kSigmoid,
                          const char* extF = "", const char* extD  = "");
-   TMultiLayerPerceptron(const char* layout, 
+   TMultiLayerPerceptron(const char* layout,
                          const char* weight, TTree* data,
                          TEventList* training,
-                         TEventList* test, 
+                         TEventList* test,
                          TNeuron::NeuronType type = TNeuron::kSigmoid,
                          const char* extF = "", const char* extD  = "");
    virtual ~TMultiLayerPerceptron();
@@ -156,7 +156,7 @@ class TMultiLayerPerceptron : public TObject {
    TString fStructure;             // String containing the network structure
    TString fWeight;                // String containing the event weight
    TNeuron::NeuronType fType;      // Type of hidden neurons
-   TNeuron::NeuronType fOutType;   // Type of output neurons 
+   TNeuron::NeuronType fOutType;   // Type of output neurons
    TString fextF;                  // String containing the function name
    TString fextD;                  // String containing the derivative name
    TEventList *fTraining;          //! EventList defining the events in the training dataset

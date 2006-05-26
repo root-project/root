@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.26 2006/05/18 16:32:01 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.27 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -46,28 +46,28 @@ protected:
    static Int_t      fgCounter;       // counter of created windows in SavePrimitive
    UInt_t            fEditDisabled;   // flags used for "guibuilding"
 
-   TGWindow(Window_t id): 
-     fParent(NULL), fNeedRedraw(kFALSE), fName(), fEditDisabled(0) { fClient = 0; fId = id; }
-   TGWindow(const TGWindow& tgw):
-     TGObject(tgw), fParent(tgw.fParent), fNeedRedraw(tgw.fNeedRedraw), 
-     fName(tgw.fName), fEditDisabled(tgw.fEditDisabled) { }
+   TGWindow(Window_t id) :
+      fParent(0), fNeedRedraw(kFALSE), fEditDisabled(0) { fClient = 0; fId = id; }
+   TGWindow(const TGWindow& tgw) :
+      TGObject(tgw), fParent(tgw.fParent), fNeedRedraw(tgw.fNeedRedraw),
+      fName(tgw.fName), fEditDisabled(tgw.fEditDisabled) { }
 
    TGWindow& operator=(const TGWindow& tgw)
-     {if(this!=&tgw) { TGObject::operator=(tgw); fParent=tgw.fParent;
-     fNeedRedraw=tgw.fNeedRedraw; fName=tgw.fName; 
-     fEditDisabled=tgw.fEditDisabled;} return *this;}
-     
+      { if (this!=&tgw) { TGObject::operator=(tgw); fParent=tgw.fParent;
+      fNeedRedraw=tgw.fNeedRedraw; fName=tgw.fName;
+      fEditDisabled=tgw.fEditDisabled; } return *this; }
+
    virtual void DoRedraw() { }
 
 public:
-   enum  EEditMode { 
+   enum  EEditMode {
       kEditEnable        = 0,         // allow edit of this window
       kEditDisable       = BIT(0),    // disable edit of this window
       kEditDisableEvents = BIT(1),    // window events cannot be edited
-      kEditDisableGrab   = BIT(2),    // window grab cannot be edited 
-      kEditDisableLayout = BIT(3),    // window layout cannot be edited 
-      kEditDisableResize = BIT(4),    // window size cannot be edited 
-      kEditDisableHeight = BIT(5),    // window height cannot be edited 
+      kEditDisableGrab   = BIT(2),    // window grab cannot be edited
+      kEditDisableLayout = BIT(3),    // window layout cannot be edited
+      kEditDisableResize = BIT(4),    // window size cannot be edited
+      kEditDisableHeight = BIT(5),    // window height cannot be edited
       kEditDisableWidth  = BIT(6),    // window width cannot be edited
       kEditDisableBtnEnable  = BIT(7) // window cannot be edited but can handle mouse button events
    };
@@ -116,7 +116,7 @@ public:
    virtual Bool_t IsEditable() const { return (fClient->GetRoot() == this); }
    virtual UInt_t GetEditDisabled() const { return fEditDisabled; }
    virtual void   SetEditDisabled(UInt_t on = kEditDisable) { fEditDisabled = on; }
-   virtual void   SetEditable(Bool_t on = kTRUE) 
+   virtual void   SetEditable(Bool_t on = kTRUE)
                   { if (!(fEditDisabled & kEditDisable)) fClient->SetRoot(on ? this : 0); }
    virtual Int_t  MustCleanup() const { return 0; }
    virtual void   Print(Option_t *option="") const;

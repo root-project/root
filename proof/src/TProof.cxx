@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.143 2006/04/29 17:57:43 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.144 2006/05/02 13:03:18 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4485,8 +4485,8 @@ void TProof::SetAlias(const char *alias)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadDataSet(const char *dataSetName, 
-                            const char *files, 
+Int_t TProof::UploadDataSet(const char *dataSetName,
+                            const char *files,
                             const char *desiredDest,
                             Int_t opt,
                             TList *skippedFiles)
@@ -4540,7 +4540,7 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
       return kError;
    }
    //If skippedFiles was provided but did not point to a TList the program would crash.
-   if (skippedFiles && &skippedFiles) 
+   if (skippedFiles && &skippedFiles)
       if (skippedFiles->Class() != TList::Class()) {
          Error("UploadDataSet",
                "Provided skippedFiles argument does not point to a TList object.");
@@ -4747,7 +4747,7 @@ TList *TProof::GetDataSets()
       master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
    else {
       Error("GetDataSets", "No connection to the master!");
-      return NULL;
+      return 0;
    }
    Broadcast(kPROOF_QUERY_DATASETS);
    TMessage *retMess;
@@ -4789,7 +4789,7 @@ TList *TProof::GetDataSet(const char *dataset)
       master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
    else {
       Error("GetDataSet", "No connection to the master!");
-      return NULL;
+      return 0;
    }
    TMessage nameMess(kPROOF_GET_DATASET);
    nameMess << TString(dataset);

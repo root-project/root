@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.5 2005/05/14 00:19:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.6 2005/09/05 10:01:46 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 17/07/2003
 
 /*************************************************************************
@@ -53,31 +53,31 @@ enum EToolBox {
 
 static ToolBarData_t gToolBoxData[] = {
   // { filename,      tooltip,            staydown,  id,            button}
-   { "pointer.xpm",    "Modify",           kFALSE,    kToolModify,   NULL },
-   { "arc.xpm",        "Arc",              kFALSE,    kToolArc,      NULL },
-   { "line.xpm",       "Line",             kFALSE,    kToolLine,     NULL },
-   { "arrow.xpm",      "Arrow",            kFALSE,    kToolArrow,    NULL },
-   { "button.xpm",     "Button",           kFALSE,    kToolButton,   NULL },
-   { "diamond.xpm",    "Diamond",          kFALSE,    kToolDiamond,  NULL },
-   { "ellipse.xpm",    "Ellipse",          kFALSE,    kToolEllipse,  NULL },
-   { "pad.xpm",        "Pad",              kFALSE,    kToolPad,      NULL },
-   { "pave.xpm",       "Pave",             kFALSE,    kToolPave,     NULL },
-   { "pavelabel.xpm",  "Pave Label",       kFALSE,    kToolPLabel,   NULL },
-   { "pavetext.xpm",   "Pave Text",        kFALSE,    kToolPText,    NULL },
-   { "pavestext.xpm",  "Paves Text",       kFALSE,    kToolPsText,   NULL },
-   { "graph.xpm",      "Graph",            kFALSE,    kToolGraph,    NULL },
-   { "curlyline.xpm",  "Curly Line",       kFALSE,    kToolCurlyLine,NULL },
-   { "curlyarc.xpm",   "Curly Arc",        kFALSE,    kToolCurlyArc, NULL },
-   { "latex.xpm",      "Text/Latex",       kFALSE,    kToolLatex,    NULL },
-   { "marker.xpm",     "Marker",           kFALSE,    kToolMarker,   NULL },
-   { "cut.xpm",        "Graphical Cut",    kFALSE,    kToolCutG,     NULL },
-   { 0,                0,                  kFALSE,    0,             NULL }
+   { "pointer.xpm",    "Modify",           kFALSE,    kToolModify,   0 },
+   { "arc.xpm",        "Arc",              kFALSE,    kToolArc,      0 },
+   { "line.xpm",       "Line",             kFALSE,    kToolLine,     0 },
+   { "arrow.xpm",      "Arrow",            kFALSE,    kToolArrow,    0 },
+   { "button.xpm",     "Button",           kFALSE,    kToolButton,   0 },
+   { "diamond.xpm",    "Diamond",          kFALSE,    kToolDiamond,  0 },
+   { "ellipse.xpm",    "Ellipse",          kFALSE,    kToolEllipse,  0 },
+   { "pad.xpm",        "Pad",              kFALSE,    kToolPad,      0 },
+   { "pave.xpm",       "Pave",             kFALSE,    kToolPave,     0 },
+   { "pavelabel.xpm",  "Pave Label",       kFALSE,    kToolPLabel,   0 },
+   { "pavetext.xpm",   "Pave Text",        kFALSE,    kToolPText,    0 },
+   { "pavestext.xpm",  "Paves Text",       kFALSE,    kToolPsText,   0 },
+   { "graph.xpm",      "Graph",            kFALSE,    kToolGraph,    0 },
+   { "curlyline.xpm",  "Curly Line",       kFALSE,    kToolCurlyLine,0 },
+   { "curlyarc.xpm",   "Curly Arc",        kFALSE,    kToolCurlyArc, 0 },
+   { "latex.xpm",      "Text/Latex",       kFALSE,    kToolLatex,    0 },
+   { "marker.xpm",     "Marker",           kFALSE,    kToolMarker,   0 },
+   { "cut.xpm",        "Graphical Cut",    kFALSE,    kToolCutG,     0 },
+   { 0,                0,                  kFALSE,    0,             0 }
 };
-                    
+
 
 //______________________________________________________________________________
-TGedToolBox::TGedToolBox(const TGWindow *p, UInt_t w, 
-                         UInt_t h, UInt_t options, ULong_t back) 
+TGedToolBox::TGedToolBox(const TGWindow *p, UInt_t w,
+                         UInt_t h, UInt_t options, ULong_t back)
    : TGToolBar(p, w, h, options, back)
 {
    // Create toolbox widget.
@@ -93,7 +93,7 @@ void TGedToolBox::CreateButtons(ToolBarData_t buttons[])
    // Adds buttons described by buttons table to the ToolBox.
    // the last element of buttons[] table has zero in the filed
    // fPixmap.
-    
+
    for (int i = 0; buttons[i].fPixmap; i++)
       AddButton(this, &buttons[i], 0);
 
@@ -107,14 +107,14 @@ Bool_t TGedToolBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    switch (GET_MSG(msg)) {
 
       case kC_COMMAND:
-              
+
          switch (GET_SUBMSG(msg)) {
 
             case kCM_BUTTON:
             case kCM_MENU:
-                    
+
                switch(parm1) {
-                 
+
                   case kToolModify:
                      gROOT->SetEditorMode();
                      break;
@@ -186,9 +186,9 @@ Bool_t TGedToolBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 void TGedToolBox::SavePrimitive(ofstream &out, Option_t *option)
 {
    // Save the tool box widget as a C++ statement(s) on output stream out
-   
+
    TGToolBar::SavePrimitive(out, option);
-   
+
    // setting layout manager
    out << "   " << GetName() <<"->SetLayoutManager(";
    GetLayoutManager()->SavePrimitive(out,option);
@@ -196,4 +196,4 @@ void TGedToolBox::SavePrimitive(ofstream &out, Option_t *option)
 
    out << "   " << GetName() <<"->Resize();" << endl;
 }
- 
+

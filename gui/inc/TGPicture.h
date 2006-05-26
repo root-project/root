@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.11 2006/05/15 11:01:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.12 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -119,7 +119,7 @@ protected:
 
 public:
    TGPicturePool(const TGClient *client, const char *path):
-      fClient(client), fPath(path), fPicList(NULL) { }
+      fClient(client), fPath(path), fPicList(0) { }
    virtual ~TGPicturePool();
 
    const char      *GetPath() const { return fPath; }

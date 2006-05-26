@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.8 2006/05/17 06:22:06 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.9 2006/05/23 04:47:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -56,8 +56,7 @@ protected:
 
 public:
 
-   TVectorT() :
-     fNrows(0), fRowLwb(0), fElements(NULL), fIsOwner(kTRUE) { }
+   TVectorT() : fNrows(0), fRowLwb(0), fElements(0), fIsOwner(kTRUE) { }
    explicit TVectorT(Int_t n);
    TVectorT(Int_t lwb,Int_t upb);
    TVectorT(Int_t n,const Element *elements);

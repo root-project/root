@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.17 2005/09/04 09:16:25 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.18 2005/11/11 16:12:18 couet Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -143,7 +143,7 @@ ClassImp(TViewerX3D)
 TViewerX3D::TViewerX3D(TVirtualPad *pad)
    : TVirtualViewer3D(),
      fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
-     fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0), 
+     fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0),
      fMenuBarHelpLayout(0), fCanvasLayout(0),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
@@ -164,7 +164,7 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
                        UInt_t width, UInt_t height)
    : TVirtualViewer3D(),
      fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
-     fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0), 
+     fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0),
      fMenuBarHelpLayout(0), fCanvasLayout(0),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
@@ -185,7 +185,7 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
                        Int_t x, Int_t y, UInt_t width, UInt_t height)
    : TVirtualViewer3D(),
      fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
-     fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0), 
+     fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0),
      fMenuBarHelpLayout(0), fCanvasLayout(0),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
@@ -208,7 +208,7 @@ TViewerX3D::~TViewerX3D()
 
    if (!fPad) return;
 
-   if (fgCreated) { 
+   if (fgCreated) {
       DeleteX3DWindow();
    }
    delete fCanvasLayout;
@@ -217,7 +217,7 @@ TViewerX3D::~TViewerX3D()
    delete fMenuBarLayout;
    delete fHelpMenu;
    delete fFileMenu;
-   delete fMenuBar;   
+   delete fMenuBar;
    delete fContainer;
    delete fCanvas;
    delete fMainFrame;
@@ -230,7 +230,7 @@ void TViewerX3D::Close()
 {
    // Close X3D Viewer
    assert(!fBuildingScene);
-   fPad->ReleaseViewer3D();      
+   fPad->ReleaseViewer3D();
    delete this;
 }
 
@@ -342,9 +342,9 @@ void TViewerX3D::BeginScene()
    if (fgCreated) {
       return;
    }
-      
+
    fBuildingScene = kTRUE;
-   
+
    if (fPass == kSize) {
       gSize3D.numPoints = 0;
       gSize3D.numSegs   = 0;
@@ -361,8 +361,8 @@ void  TViewerX3D::EndScene()
       return;
    }
 
-   fBuildingScene = kFALSE;   
-   
+   fBuildingScene = kFALSE;
+
    // Size pass done - and some points actually added
    if (gSize3D.numPoints != 0) {
       if (fPass == kSize) {
@@ -371,12 +371,12 @@ void  TViewerX3D::EndScene()
             Error("InitX3DWindow", "x3d buffer allocation failure");
             return;
          }
-      
+
          // Enter draw pass and invoke another paint
          fPass = kDraw;
          fPad->Paint();
          fPass = kSize;
-         CreateViewer(fTitle); 
+         CreateViewer(fTitle);
          Show();
       }
    } else {
@@ -404,21 +404,21 @@ Int_t TViewerX3D::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
    }
    // Ensure we have the required sections
    UInt_t reqSections = TBuffer3D::kCore|TBuffer3D::kRawSizes;
-   
+
    // Sizing does not require actual raw tesselation information
    if (fPass == kDraw) {
       reqSections |= TBuffer3D::kRaw;
    }
-   
+
    if (!buffer.SectionsValid(reqSections)) {
       return reqSections;
    }
-   
+
    if (buffer.Type() == TBuffer3DTypes::kMarker) {
       PaintPolyMarker(buffer);
       return TBuffer3D::kNone;
    }
-      
+
    switch(fPass) {
       case(kSize): {
          gSize3D.numPoints += buffer.NbPnts();
@@ -445,7 +445,7 @@ Int_t TViewerX3D::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
          break;
       }
    }
-   
+
    return TBuffer3D::kNone;
 }
 
@@ -484,10 +484,10 @@ void TViewerX3D::PaintPolyMarker(const TBuffer3D & buffer) const
          x3dBuff->numPolys  = 0;
          x3dBuff->points    = new Float_t[3*x3dBuff->numPoints];
          x3dBuff->segs      = new Int_t[3*x3dBuff->numSegs];
-         x3dBuff->polys     = NULL;
+         x3dBuff->polys     = 0;
 
          Double_t delta = 0.002;
-         
+
          for (UInt_t i = 0; i < buffer.NbPnts(); i++) {
             for (UInt_t j = 0; j < mode; j++) {
                for (UInt_t k = 0; k < 2; k++) {

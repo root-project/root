@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.3 2006/05/15 06:31:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.4 2006/05/18 07:34:25 brun Exp $
 // Author: Rene Brun from CLHEP & CERNLIB  04/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -26,7 +26,7 @@ int TRandom1::fgNumEngines = 0;
 int TRandom1::fgMaxIndex = 215;
 #ifndef __CINT__
 const Long64_t fgSeedTable[215][2] = {
-                             {           9876, 54321		},		
+                             {           9876, 54321		},
                              {     1299961164, 253987020	},
                              {      669708517, 2079157264	},
                              {      190904760, 417696270	},
@@ -242,7 +242,7 @@ const Long64_t fgSeedTable[215][2] = {
                              {      242242374, 1863206182	},
                              {      957935844, 1490681416	}};
 #endif
-                                             
+
 ClassImp(TRandom1)
 
 //______________________________________________________________________________
@@ -266,7 +266,7 @@ TRandom1::TRandom1(Long64_t seed, Int_t lux)
    fTheSeeds = &fTheSeed;
    fLuxury = lux;
    SetSeed2(seed, fLuxury);
-   
+
    // setSeeds() wants a zero terminated array!
    seedlist[0]=fTheSeed;
    seedlist[1]=0;
@@ -292,7 +292,7 @@ TRandom1::TRandom1()
    GetTableSeeds( seedlist, curIndex );
    seed = seedlist[0]^mask;
    SetSeed2(seed, fLuxury);
-   
+
    // setSeeds() wants a zero terminated array!
    seedlist[0]=fTheSeed; //<=============
    seedlist[1]=0;
@@ -318,7 +318,7 @@ TRandom1::TRandom1(int rowIndex, int colIndex, int lux)
    GetTableSeeds( seedlist, row );
    seed = ( seedlist[col] )^mask;
    SetSeed2(seed, fLuxury);
-   
+
    // setSeeds() wants a zero terminated array!
    seedlist[0]=fTheSeed;
    seedlist[1]=0;
@@ -326,7 +326,7 @@ TRandom1::TRandom1(int rowIndex, int colIndex, int lux)
 }
 
 //______________________________________________________________________________
-TRandom1::~TRandom1() 
+TRandom1::~TRandom1()
 {
    //destructor
 }
@@ -339,11 +339,11 @@ void TRandom1::GetTableSeeds(Long64_t* seeds, Int_t index)
       seeds[0] = fgSeedTable[index][0];
       seeds[1] = fgSeedTable[index][1];
    }
-   else seeds = NULL;
+   else seeds = 0;
 }
 
 //______________________________________________________________________________
-Double_t TRandom1::Rndm(Int_t) 
+Double_t TRandom1::Rndm(Int_t)
 {
    //return a random number in ]0,1]
    float next_random;
@@ -390,7 +390,7 @@ Double_t TRandom1::Rndm(Int_t)
          if(fIlag < 0)fIlag = 23;
          if(fJlag < 0) fJlag = 23;
       }
-   } 
+   }
    return (double) next_random;
 }
 
@@ -454,11 +454,11 @@ void TRandom1::RndmArray(const Int_t size, Double_t *vect)
          }
       }
    }
-} 
+}
 
 
 //______________________________________________________________________________
-void TRandom1::SetSeeds(const Long64_t *seeds, int lux) 
+void TRandom1::SetSeeds(const Long64_t *seeds, int lux)
 {
    //set seeds
    const int ecuyer_a = 53668;
@@ -470,11 +470,11 @@ void TRandom1::SetSeeds(const Long64_t *seeds, int lux)
    int i;
    Long64_t int_seed_table[24];
    Long64_t k_multiple,next_seed;
-   const Long64_t *seedptr; 
+   const Long64_t *seedptr;
 
    fTheSeeds = seeds;
    seedptr   = seeds;
- 
+
    if(seeds == 0) {
       SetSeed2(fTheSeed,lux);
       fTheSeeds = &fTheSeed;
@@ -496,21 +496,21 @@ void TRandom1::SetSeeds(const Long64_t *seeds, int lux)
       fLuxury = lux;
       fNskip  = lux_levels[fLuxury];
    }
-      
+
    for( i = 0;(i != 24)&&(*seedptr != 0);i++) {
       int_seed_table[i] = *seedptr % fIntModulus;
       seedptr++;
-   }		       
+   }
 
    if(i != 24){
       next_seed = int_seed_table[i-1];
       for(;i != 24;i++) {
          k_multiple = next_seed / ecuyer_a;
-         next_seed = ecuyer_b * (next_seed - k_multiple * ecuyer_a) 
+         next_seed = ecuyer_b * (next_seed - k_multiple * ecuyer_a)
          - k_multiple * ecuyer_c ;
          if(next_seed < 0)next_seed += ecuyer_d;
          int_seed_table[i] = next_seed % fIntModulus;
-      }          
+      }
    }
 
    for(i = 0;i != 24;i++)
@@ -521,15 +521,15 @@ void TRandom1::SetSeeds(const Long64_t *seeds, int lux)
    fCarry = 0. ;
 
    if( fFloatSeedTable[23] == 0. ) fCarry = fMantissaBit24;
-  
+
    fCount24 = 0;
 }
 
 //______________________________________________________________________________
-void TRandom1::SetSeed2(Long64_t seed, int lux) 
+void TRandom1::SetSeed2(Long64_t seed, int lux)
 {
 // The initialisation is carried out using a Multiplicative
-// Congruential generator using formula constants of L'Ecuyer 
+// Congruential generator using formula constants of L'Ecuyer
 // as described in "A review of pseudorandom number generators"
 // (Fred James) published in Computer Physics Communications 60 (1990)
 // pages 329-344
@@ -539,13 +539,13 @@ void TRandom1::SetSeed2(Long64_t seed, int lux)
    const int ecuyer_c = 12211;
    const int ecuyer_d = 2147483563;
 
-   const int lux_levels[5] = {0,24,73,199,365};  
+   const int lux_levels[5] = {0,24,73,199,365};
 
    Long64_t int_seed_table[24];
    Long64_t next_seed = seed;
    Long64_t k_multiple;
    int i;
-  
+
 // number of additional random numbers that need to be 'thrown away'
 // every 24 numbers is set using fLuxury level variable.
 
@@ -561,14 +561,14 @@ void TRandom1::SetSeed2(Long64_t seed, int lux)
       fNskip  = lux_levels[fLuxury];
    }
 
-   
+
    for(i = 0;i != 24;i++) {
       k_multiple = next_seed / ecuyer_a;
-      next_seed = ecuyer_b * (next_seed - k_multiple * ecuyer_a) 
+      next_seed = ecuyer_b * (next_seed - k_multiple * ecuyer_a)
       - k_multiple * ecuyer_c ;
       if(next_seed < 0)next_seed += ecuyer_d;
       int_seed_table[i] = next_seed % fIntModulus;
-   }     
+   }
 
    for(i = 0;i != 24;i++)
       fFloatSeedTable[i] = int_seed_table[i] * fMantissaBit24;
@@ -578,7 +578,7 @@ void TRandom1::SetSeed2(Long64_t seed, int lux)
    fCarry = 0. ;
 
    if( fFloatSeedTable[23] == 0. ) fCarry = fMantissaBit24;
-   
+
    fCount24 = 0;
 }
 
