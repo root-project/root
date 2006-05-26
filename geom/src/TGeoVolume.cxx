@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.82 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.83 2006/05/24 17:11:54 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -672,7 +672,7 @@ Int_t TGeoVolume::CountNodes(Int_t nlevels, Int_t option)
 Bool_t TGeoVolume::IsFolder() const
 {
 // Return TRUE if volume contains nodes
-   if (fNodes) return kTRUE;
+   if (fNodes && fNodes->GetEntries()) return kTRUE;
    else return kFALSE;
 }
 

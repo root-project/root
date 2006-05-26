@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.85 2006/04/27 10:19:43 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.86 2006/05/09 10:24:26 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -645,7 +645,8 @@ void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)
       view->SetAutoRange(kTRUE);
       if (has_pad) gPad->Update();
    }
-        
+   Paint("range"); 
+   view->SetAutoRange(kFALSE);    
    // If we are drawing into the pad, then the view needs to be
    // set to perspective
 //   if (!view->IsPerspective()) view->SetPerspective();
@@ -685,7 +686,8 @@ void TGeoPainter::DrawShape(TGeoShape *shape, Option_t *option)
       view->SetAutoRange(kTRUE);
       if (has_pad) gPad->Update();
    }
-         
+   PaintShape(shape,"range");   
+   view->SetAutoRange(kTRUE);   
    // Create a 3D viewer to paint us
    gPad->GetViewer3D(option);
 }
