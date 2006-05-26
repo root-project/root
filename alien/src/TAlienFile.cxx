@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.17 2006/05/09 10:24:26 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.18 2006/05/19 07:30:04 brun Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -42,7 +42,7 @@ ClassImp(TAlienFile)
 
 //______________________________________________________________________________
 TAlienFile::TAlienFile(const char *url, Option_t *option,
-                       const char *ftitle, Int_t compress)
+                       const char *ftitle, Int_t compress,Bool_t parallelopen)
 {
    // Create an Alien File Object. An AliEn File is the same as a TFile
    // except that it is being accessed via an Alien service. The url
@@ -69,20 +69,19 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
    // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
 
+   fSubFileHandle=0;
    fUrl = TUrl(url);
 
    TUrl lUrl(url);
 
    TString name(TString("alien://")+TString(lUrl.GetFile()));
    SetName(name);
-
    TFile::TFile(name, "NET", ftitle, compress);
 
    fOption = option;
 
    TString newurl = AccessURL(lUrl.GetUrl(), fOption, ftitle, compress);
    Bool_t lLocate = kFALSE;
-
    // get the options and check if this is just to prelocate the file ....
    TString urloptions=lUrl.GetOptions();
    TObjArray *objOptions = urloptions.Tokenize("&");
@@ -118,15 +117,24 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
 
    // add the original options from the alien URL
    nUrl.SetOptions(newopt + TString("&") + oldopt + TString("&"));
-   fSubFile = TFile::Open(nUrl.GetUrl(), fOption, ftitle, compress);
+
+   if (parallelopen) {
+     fSubFileHandle = TFile::AsyncOpen(nUrl.GetUrl(), fOption, ftitle, compress);
+     return;
+   } else {
+     fSubFile = TFile::Open(nUrl.GetUrl(), fOption, ftitle, compress);
+   }
 
    if ((!fSubFile) || (fSubFile->IsZombie())) {
       Error("TAlienFile", "cannot open %s!", url);
       goto zombie;
    }
 
-   // gFile would point now to fSubFile, but we don't want that
-   gFile=this;
+   nUrl.SetOptions("");
+   fSubFile->SetName(nUrl.GetUrl());
+   fSubFile->SetTitle(name);
+
+   Init(kFALSE);
    return;
 
 zombie:
@@ -193,6 +201,11 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
    TGridResult* result;
    TAlienResult* alienResult;
    TList* list;
+
+   TString stringurl;
+   TString anchor;
+   TObjArray* tokens;
+   anchor="";
 
    TString newurl;
    if (fOption == "NEW")
@@ -311,16 +324,36 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
    delete result;
 
    fAuthz = authzStr->GetName();
+   stringurl = urlStr->GetName();
+
+   tokens = stringurl.Tokenize("#");
+
+   if (tokens->GetEntries() == 2) {
+     anchor = ((TObjString*)tokens->At(1))->GetName();
+   }
+   urlStr->SetString(((TObjString*)tokens->At(0))->GetName());
+   if (tokens) {
+     delete tokens;
+   }
+
 
    newurl = urlStr->GetName();
    stmp = purl.GetAnchor();
-   if (stmp != "") {
-      newurl += "#";
-      newurl += purl.GetAnchor();
-   }
    newurl += TString("?&authz=");
    newurl += authzStr->GetName();
-
+   if (stmp != "") {
+     newurl += "#";
+     newurl += purl.GetAnchor();
+   } else {
+     if (anchor.Length()) {
+       newurl += "#";
+       newurl += anchor;
+     }
+     //=======
+     //      newurl += "#";
+     //      newurl += purl.GetAnchor();
+     //>>>>>>> 1.17
+   }
    return newurl;
 
 zombie2:
@@ -332,11 +365,17 @@ zombie2:
 TAlienFile::~TAlienFile()
 {
    // TAlienFile file dtor.
-
+  R__LOCKGUARD2(gROOTMutex);
    if (fSubFile) {
       Close();
-      delete fSubFile;
+
+      gROOT->GetListOfFiles()->Remove(fSubFile);
+      gROOT->GetUUIDs()->RemoveUUID(fSubFile->GetUniqueID());
+      SafeDelete(fSubFile);
    }
+   //   gROOT->GetListOfFiles()->Remove(this);
+   //   gROOT->GetUUIDs()->RemoveUUID(this->GetUniqueID());
+
    fSubFile = 0;
    gFile = 0;
    gDirectory = gROOT;
@@ -396,7 +435,7 @@ void TAlienFile::Close(Option_t *option)
    command += fLfn;
 
    if (fSubFile) {
-      fSubFile->Close(option);
+     fSubFile->Close(option);
    }
 
    TGridResult* result = gGrid->Command(command, kFALSE,TAlien::kOUTPUT);
@@ -431,4 +470,29 @@ void TAlienFile::Close(Option_t *option)
    }
 
    gSystem->Unsetenv("GCLIENT_EXTRA_ARG");
+}
+
+//______________________________________________________________________________
+void
+TAlienFile::Init(Bool_t create) {
+   gFile=this;
+   if (fSubFileHandle) {
+     fSubFile = TFile::Open(fSubFileHandle);
+     fSubFileHandle=0;
+     if ((!fSubFile) || (fSubFile->IsZombie())) {
+       Error("TAlienFile", "cannot open %s!", GetName());
+       gFile = 0;
+       gDirectory = gROOT;
+       MakeZombie();
+       return;
+     }
+   }
+   {
+     R__LOCKGUARD2(gROOTMutex);
+     //     gROOT->GetListOfFiles()->Remove(fSubFile);
+     //     gROOT->GetUUIDs()->RemoveUUID(fSubFile->GetUniqueID());
+     //     gROOT->GetListOfFiles()->Add(this);
+     //     gROOT->GetUUIDs()->AddUUID(fUUID,this);
+   }
+
 }

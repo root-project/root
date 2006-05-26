@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.15 2005/10/04 10:34:04 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.16 2006/02/03 14:50:25 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -123,7 +123,8 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
    if (gDebug > 1)
       Info("TAlien", "%s => %s port: %d user: %s",gridurl,fHost.Data(),fPort,fUser.Data());
 
-   Bool_t fstoken = kFALSE;
+   Bool_t fstoken;
+   fstoken = kFALSE;
 
    if (options && (options[0] == 't')) {
        fGc = GapiUI::MakeGapiUI(kTRUE);
@@ -149,6 +150,20 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
          }
       } else {
          fGc->Connect(fHost, fPort, fUser, passwd);
+      }
+
+      char cwd[1024];
+      const char* cwdp=0;
+      cwdp=Pwd();
+      fHome=TString("/");
+      if (cwdp) {
+         sprintf(cwd,"%s",cwdp);
+         if (Cd("")) {
+            cwdp=Pwd();
+            if (cwdp) {
+               fHome = TString(cwdp);
+            }
+         }
       }
 
       if (!fGc->Connected()) {

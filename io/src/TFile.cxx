@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.159 2006/05/22 12:41:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.160 2006/05/26 15:13:01 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 #include "TWebFile.h"
 #include "TArchiveFile.h"
 #include "TEnv.h"
+#include "TVirtualMonitoring.h"
 #include "TVirtualMutex.h"
 
 
@@ -55,6 +56,7 @@ TFile *gFile;                 //Pointer to current file
 
 Long64_t TFile::fgBytesRead  = 0;
 Long64_t TFile::fgBytesWrite = 0;
+Long64_t TFile::fgFileCounter = 0;
 TList *TFile::fgAsyncOpenRequests = 0;
 
 const Int_t kBEGIN = 100;
@@ -246,25 +248,25 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    TDirectory::Build(this, 0);
 
-   fD          = -1;
-   fFree       = 0;
-   fVersion    = gROOT->GetVersionInt();  //ROOT version in integer format
-   fUnits      = 4;
-   fOption     = option;
-   fCompress   = compress;
-   fWritten    = 0;
-   fSumBuffer  = 0;
-   fSum2Buffer = 0;
-   fBytesRead  = 0;
-   fBytesWrite = 0;
-   fClassIndex = 0;
-   fSeekInfo   = 0;
-   fNbytesInfo = 0;
-   fCache      = 0;
-   fProcessIDs = 0;
-   fNProcessIDs= 0;
-   fOffset     = 0;
-   fFilePrefetch  = 0;
+   fD            = -1;
+   fFree         = 0;
+   fVersion      = gROOT->GetVersionInt();  //ROOT version in integer format
+   fUnits        = 4;
+   fOption       = option;
+   fCompress     = compress;
+   fWritten      = 0;
+   fSumBuffer    = 0;
+   fSum2Buffer   = 0;
+   fBytesRead    = 0;
+   fBytesWrite   = 0;
+   fClassIndex   = 0;
+   fSeekInfo     = 0;
+   fNbytesInfo   = 0;
+   fCache        = 0;
+   fProcessIDs   = 0;
+   fNProcessIDs  = 0;
+   fOffset       = 0;
+   fFilePrefetch = 0;
 
    fOption.ToUpper();
 
@@ -669,6 +671,7 @@ void TFile::Close(Option_t *option)
 // the unused TProcessID.
 
    TString opt = option;
+
    opt.ToLower();
 
    if (!IsOpen()) return;
@@ -2210,7 +2213,6 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    // castor:/castor/cern.ch/alice/file.root as recognized by the plugin manager
    TUrl urlname(name, kTRUE);
    name = urlname.GetUrl();
-
    // Check first if a pending async open request matches this one
    if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
       TIter nxr(fgAsyncOpenRequests);
@@ -2327,6 +2329,11 @@ TFileOpenHandle *TFile::AsyncOpen(const char *name, Option_t *option,
          notfound = kFALSE;
       }
    }
+   if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
+        !strcmp(h->GetClass(),"TAlienFile") && h->LoadPlugin() == 0) {
+      f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, kTRUE);
+      notfound = kFALSE;
+   }
 
    // Make sure that no error occured
    if (notfound) {
@@ -2426,7 +2433,6 @@ Int_t TFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 
    return ::write(fd, buf, len);
 }
-
 //______________________________________________________________________________
 Long64_t TFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
@@ -2475,10 +2481,16 @@ Long64_t TFile::GetFileBytesRead() { return fgBytesRead; }
 Long64_t TFile::GetFileBytesWritten() { return fgBytesWrite; }
 
 //______________________________________________________________________________
-void TFile::SetFileBytesRead(Long64_t bytes){ fgBytesRead = bytes; }
+void TFile::SetFileBytesRead(Long64_t bytes) { fgBytesRead = bytes; }
 
 //______________________________________________________________________________
-void TFile::SetFileBytesWritten(Long64_t bytes){ fgBytesWrite = bytes; }
+void TFile::SetFileBytesWritten(Long64_t bytes) { fgBytesWrite = bytes; }
+
+//______________________________________________________________________________
+Long64_t TFile::GetFileCounter() { return fgFileCounter; }
+
+//______________________________________________________________________________
+void TFile::IncrementFileCounter() { fgFileCounter++; }
 
 //______________________________________________________________________________
 Bool_t TFile::Matches(const char *url)

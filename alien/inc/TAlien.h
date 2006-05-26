@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.11 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.12 2006/02/03 14:50:25 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -58,7 +58,7 @@ private:
 
    GapiUI    *fGc;    // the GapiUI object implementing the communication layer
    TString    fPwd;   // working directory
-
+   TString    fHome;  // home directory with alien:// prefix
    TGridResult         *Command(const char *command, bool interactive = kFALSE,
                                 UInt_t stream = kOUTPUT);
    virtual TGridResult *Query(const char *path, const char *pattern,
@@ -90,6 +90,7 @@ public:
    //--- catalogue Interface
    virtual TGridResult *Ls(const char *ldn="", Option_t *options="", Bool_t verbose=kFALSE);
    virtual const char  *Pwd(Bool_t verbose=kFALSE);
+   virtual const char  *GetHomeDirectory() { return fHome.Data(); }
    virtual Bool_t Cd(const char *ldn="", Bool_t verbose=kFALSE);
    virtual Bool_t Mkdir(const char *ldn="", Option_t *options="", Bool_t verbose=kFALSE);
    virtual Bool_t Rmdir(const char *ldn="", Option_t *options="", Bool_t verbose=kFALSE);

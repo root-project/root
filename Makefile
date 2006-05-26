@@ -992,6 +992,7 @@ showbuild:
 	@echo "LDAPINCDIR         = $(LDAPINCDIR)"
 	@echo "LDAPCLILIB         = $(LDAPCLILIB)"
 	@echo "MONALISAINCDIR     = $(MONALISAINCDIR)"
+	@echo "MONALISAWSCLILIB   = $(MONALISAWSCLILIB)"
 	@echo "MONALISACLILIB     = $(MONALISACLILIB)"
 	@echo "QTLIBDIR           = $(QTLIBDIR)"
 	@echo "QTLIB              = $(QTLIB)"

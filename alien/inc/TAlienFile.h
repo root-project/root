@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.12 2005/10/27 10:00:41 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.13 2006/04/18 14:23:19 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -39,6 +39,7 @@ class TAlienFile : public TFile {
 
 private:
    TFile    *fSubFile;             //sub file (PFN)
+   TFileOpenHandle* fSubFileHandle;//handle for the async open request of the subfile
    TString   fAuthz;               //authorization envelope
    TString   fLfn;                 //logical filename
 
@@ -46,12 +47,14 @@ private:
 
 public:
    TAlienFile(const char *url, Option_t *option = "",
-              const char *ftitle = "", Int_t compress = 1);
+              const char *ftitle = "", Int_t compress = 1,
+              Bool_t parallelopen = kFALSE);
    virtual ~TAlienFile();
 
    TString     AccessURL(const char *url, Option_t *option = "",
                          const char *ftitle = "", Int_t compress = 1);
 
+   void        Browse(TBrowser *b) {if (fSubFile) fSubFile->Browse(b);}
    Bool_t      ReadBuffer(char *buf, Int_t len);
    Bool_t      WriteBuffer(const char *buf, Int_t len);
 
@@ -83,6 +86,10 @@ public:
    TList       *GetListOfKeys() const
                   { return (fSubFile) ? fSubFile->GetListOfKeys() : 0; }
    TFile       *GetSubFile() const { return fSubFile; }
+
+   void         Init(Bool_t create);
+
+   TFile::EAsyncOpenStatus GetAsyncOpenStatus() { return (fSubFileHandle) ? TFile::GetAsyncOpenStatus(fSubFileHandle):TFile::kAOSNotAsync; }
 
    void         UseCache(Int_t maxCacheSize = 10, Int_t pageSize = TCache::kDfltPageSize)
                   { if (fSubFile) fSubFile->UseCache(maxCacheSize, pageSize); }

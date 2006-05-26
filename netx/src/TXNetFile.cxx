@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.26 2006/04/27 15:14:11 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.27 2006/05/01 20:13:42 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 #include "TSocket.h"
 #include "TXNetFile.h"
 #include "TROOT.h"
+#include "TVirtualMonitoring.h"
 
 #include <XrdClient/XrdClient.hh>
 #include <XrdClient/XrdClientConst.hh>
@@ -490,6 +491,9 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
    fgBytesRead += bufferLength;
 #endif
 
+   if (gMonitoringWriter)
+      gMonitoringWriter->SendFileReadProgress(this);
+
    return result;
 }
 
@@ -583,12 +587,15 @@ void TXNetFile::Init(Bool_t create)
          bool usecachesave = fClient->UseCache(0);
          // Note that Init will trigger recursive calls
          TFile::Init(create);
-         // Restor requested behaviour
+         // Restore requested behaviour
          fClient->UseCache(usecachesave);
-      } else
+      } else {
          if (gDebug > 0)
             Info("Init","open request failed!");
-
+         SafeDelete(fClient);
+         MakeZombie();
+         gDirectory = gROOT;
+      }
    }
 }
 

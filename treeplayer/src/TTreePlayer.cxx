@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.208 2006/03/29 10:36:27 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.209 2006/05/24 13:43:10 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -262,6 +262,7 @@
 #include "TTreeProxyGenerator.h"
 #include "TTreeIndex.h"
 #include "TChainIndex.h"
+#include "TVirtualMonitoring.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
@@ -2578,6 +2579,12 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
    selector->SlaveBegin(fTree);  //<===call user initialisation function
    selector->Notify();
 
+   if (gMonitoringWriter)
+      gMonitoringWriter->SendProcessingStatus("STARTED",kTRUE);
+
+   Long64_t readbytesatstart = 0;
+   readbytesatstart = TFile::GetFileBytesRead();
+
    if (selector->GetStatus()!=-1) {
 
       //Create a timer to get control in the entry loop(s)
@@ -2590,6 +2597,11 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       Long_t entry, entryNumber, localEntry;
 
       Bool_t useCutFill = selector->Version() == 0;
+
+      // force the first monitoring info
+      if (gMonitoringWriter)
+         gMonitoringWriter->SendProcessingProgress(0,0,kTRUE);
+
       for (entry=firstentry;entry<firstentry+nentries;entry++) {
          entryNumber = fTree->GetEntryNumber(entry);
          if (entryNumber < 0) break;
@@ -2603,6 +2615,8 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
          } else {
             selector->Process(localEntry);
          }
+         if (gMonitoringWriter)
+            gMonitoringWriter->SendProcessingProgress((entry-firstentry),TFile::GetFileBytesRead()-readbytesatstart,kTRUE);
       }
       delete timer;
 
@@ -2610,10 +2624,11 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       selector->Terminate();        //<==call user termination function
    }
 
+   if (gMonitoringWriter)
+      gMonitoringWriter->SendProcessingStatus("DONE");
 
    if (cursav) cursav->cd();
    return selector->GetStatus();
-
 }
 
 //______________________________________________________________________________
@@ -3266,46 +3281,46 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
    Double_t par, we, al, bl;
    Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
    Double_t arglist[10];
-   
+
    // Set the global fit function so that TreeUnbinnedFitLikelihood can find it.
    TF1* fitfunc = (TF1*)gROOT->GetFunction(funcname);
    if (!fitfunc) { Error("UnbinnedFit", "Unknown function: %s",funcname); return 0; }
    npar = fitfunc->GetNpar();
    if (npar <=0) { Error("UnbinnedFit", "Illegal number of parameters = %d",npar); return 0; }
-   
+
    // Spin through the data to select out the events of interest
    // Make sure that the arrays V1,etc are created large enough to accomodate
    // all entries
    Long64_t oldEstimate = fTree->GetEstimate();
    Long64_t nent = fTree->GetEntriesFriend();
    fTree->SetEstimate(TMath::Min(nent,nentries));
-   
+
    Long64_t nsel = DrawSelect(varexp, selection, "goff", nentries, firstentry);
    //printf("fTree=%x, v1=%x,w=%x\n",fTree,GetV1(),GetW());
-   
+
    //if no selected entries return
    Long64_t nrows = GetSelectedRows();
    if (nrows <= 0) {
       Error("UnbinnedFit", "Cannot fit: no entries selected");
       return 0;
    }
-   
+
    // Check that function has same dimension as number of variables
    Int_t ndim = GetDimension();
    if (ndim != fitfunc->GetNdim()) {
       Error("UnbinnedFit", "Function dimension=%d not equal to expression dimension=%d",fitfunc->GetNdim(),ndim);
       return 0;
    }
-   
+
    // Create and set up the fitter
    gTree = fTree;
    //printf("nsel=%lld, data1=%x, weight=%x\n",nsel,GetV1(),GetW());
    tFitter = TVirtualFitter::Fitter(fTree);
    tFitter->Clear();
    tFitter->SetFCN(TreeUnbinnedFitLikelihood);
-   
+
    tFitter->SetObjectFit(fitfunc);
-   
+
    TString opt = option;
    opt.ToLower();
    // Some initialisations
@@ -3315,7 +3330,7 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
       arglist[0] = 0;
       tFitter->ExecuteCommand("SET NOW",   arglist,0);
    }
-   
+
    // Setup the parameters (#, name, start, step, min, max)
    Double_t min, max;
    for(i = 0; i < npar; i++) {
@@ -3332,25 +3347,25 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
                                fitfunc->GetParameter(i),
                                we, 0, 0);
       }
-      
-      
+
+
       // Check for a fixed parameter
       if(max <= min && min > 0.0) {
          tFitter->FixParameter(i);
       }
    }  // end for loop through parameters
-   
+
    // Reset Print level
    if (opt.Contains("v")) {
       arglist[0] = 0;
       tFitter->ExecuteCommand("SET PRINT", arglist,1);
    }
-   
+
    // Set error criterion
    //Note that FCN is multiplied by 2 in the UnbinnedLikelihood function
    arglist[0] = 1;
    tFitter->ExecuteCommand("SET ERR",arglist,1);
-   
+
    // Now ready for minimization step
    arglist[0] = TVirtualFitter::GetMaxIterations();
    arglist[1] = 1;
@@ -3363,7 +3378,7 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
       tFitter->ExecuteCommand("MINOS",arglist,0);
    }
    fitfunc->SetNDF(fitfunc->GetNumberFitPoints()-npar);
-   
+
    // Get return status into function
    char parName[50];
    for (i=0;i<npar;i++) {
@@ -3406,7 +3421,7 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
       }
       fHistogram->Draw();
    }
-   
+
    return nsel;
 }
 

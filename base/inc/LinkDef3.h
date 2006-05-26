@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.23 2005/10/11 12:39:36 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.24 2005/12/10 16:51:57 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -102,6 +102,8 @@
 
 #pragma link C++ global gProof;
 #pragma link C++ global gPerfStats;
+#pragma link C++ global gMonitoringWriter;
+#pragma link C++ global gMonitoringReader;
 
 #pragma link C++ enum EGuiConstants;
 #pragma link C++ enum EGEventType;
@@ -169,6 +171,8 @@
 #pragma link C++ class TVirtualProofDesc;
 #pragma link C++ class TVirtualPerfStats;
 #pragma link C++ enum TVirtualPerfStats::EEventType;
+#pragma link C++ class TVirtualMonitoringWriter;
+#pragma link C++ class TVirtualMonitoringReader;
 
 // Insure the creation of the TClass object for pairs that might be
 // inside the cintdlls.

@@ -880,8 +880,8 @@ with options, prefix with --with-, enables corresponding support
   krb5-libdir        Kerberos5 support, location of libkrb5
   ldap-incdir        LDAP support, location of ldap.h
   ldap-libdir        LDAP support, location of libldap
-  monalisa-incdir    Monalisa support, location of ApMon.h
-  monalisa-libdir    Monalisa support, location of libapmoncpp
+  monalisa-incdir    Monalisa support, location of ApMon.h, monalisawsclient.h
+  monalisa-libdir    Monalisa support, location of libapmoncpp, libmonalisawsclient
   mysql-incdir       MySQL support, location of mysql.h
   mysql-libdir       MySQL support, location of libmysqlclient
   odbc-incdir        ODBC support, location of sqlext.h
@@ -1856,19 +1856,37 @@ fi
 #
 if test ! "x$enable_monalisa" = "xno"; then
     # Check for Monalisa include and library
+    tmpincdir=$monalisaincdir
     check_header "ApMon.h" "$monalisaincdir" $MONALISA $MONALISA/include \
 	/usr/local/include /opt/alien/api/include /opt/monalisa/include \
         /usr/include
     monalisainc=$found_hdr
     monalisaincdir=$found_dir
 
+    tmplibdir=$monalisalibdir
     check_library "libapmoncpp" "$enable_shared" "$monalisalibdir" \
 	$MONALISA $MONALISA/lib /usr/local/lib /opt/alien/api/lib \
         /opt/monalisa/lib /usr/lib
     monalisalib=$found_lib
     monalisalibdir=$found_dir
 
+    check_header "monalisawsclient.h" "$tmpincdir" $MONALISA $MONALISA/include \
+	/usr/local/include /opt/alien/include /opt/monalisa/include \
+	/usr/include
+    monalisawsinc=$found_hdr
+    monalisawsincdir=$found_dir
+
+    check_library "libmonalisawsclient" "$enable_shared" "$tmplibdir" \
+	$MONALISA $MONALISA/lib /usr/local/lib /opt/alien/lib \
+	/opt/monalisa/lib /usr/lib
+    monalisawslib=$found_lib
+    monalisawslibdir=$found_dir
+
     if test "x$monalisaincdir" = "x" || test "x$monalisalib" = "x"; then
+        enable_monalisa="no"
+    fi
+
+    if test "x$monalisawsincdir" = "x" || test "x$monalisawslib" = "x"; then
         enable_monalisa="no"
     fi
 fi
@@ -1996,7 +2014,7 @@ if test ! "x$enable_pythia6" = "xno" ; then
 	    /usr/local/lib/pythia6 /usr/lib /usr/local/lib
 	pythia6lib=$found_lib
 	pythia6libdir=$found_dir
-	
+
 	if test "x$pythia6lib" = "x" ; then
 	    enable_pythia6=no
 	else
@@ -3829,6 +3847,9 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@monalisaincdir@|$monalisaincdir|"    \
     -e "s|@monalisalib@|$monalisalib|"          \
     -e "s|@monalisalibdir@|$monalisalibdir|"    \
+    -e "s|@monalisawsincdir@|$monalisawsincdir|"\
+    -e "s|@monalisawslib@|$monalisawslib|"      \
+    -e "s|@monalisawslibdir@|$monalisawslibdir|"\
     -e "s|@fftw3incdir@|$fftw3incdir|"          \
     -e "s|@fftw3lib@|$fftw3lib|"                \
     -e "s|@fftw3libdir@|$fftw3libdir|"          \

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.47 2006/05/15 11:01:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.48 2006/05/22 11:13:31 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -38,6 +38,7 @@ class TFileOpenHandle;
 class TFilePrefetch;
 
 class TFile : public TDirectory {
+  friend class TAlienFile;
 
 public:
    // Asynchronous open request status
@@ -85,6 +86,7 @@ protected:
 
    static Long64_t fgBytesWrite;  //Number of bytes written by all TFile objects
    static Long64_t fgBytesRead;   //Number of bytes read by all TFile objects
+   static Long64_t fgFileCounter; //Counter for all opened files
 
    virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
    Long64_t GetRelOffset() const { return fOffset - fArchiveOffset; }
@@ -212,8 +214,12 @@ public:
    static void         SetFileBytesRead(Long64_t bytes = 0);
    static void         SetFileBytesWritten(Long64_t bytes = 0);
 
+   static Long64_t     GetFileCounter();
+   static void         IncrementFileCounter();
+
    ClassDef(TFile,7)  //ROOT file
 };
+
 
 //
 // Class holding info about the file being opened
@@ -221,6 +227,7 @@ public:
 class TFileOpenHandle : public TNamed {
 
 friend class TFile;
+friend class TAlienFile;
 
 private:
    TString  fOpt;        // Options

@@ -211,6 +211,9 @@ BUILDMONALISA  := @buildmonalisa@
 MONALISALIBDIR := @monalisalibdir@
 MONALISACLILIB := @monalisalib@
 MONALISAINCDIR := $(filter-out /usr/include, @monalisaincdir@)
+MONALISAWSLIBDIR := @monalisawslibdir@
+MONALISAWSCLILIB := @monalisawslib@
+MONALISAWSINCDIR := $(filter-out /usr/include, @monalisawsincdir@)
 
 SSLLIB         := @ssllib@
 SSLLIBDIR      := @ssllibdir@

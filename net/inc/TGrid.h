@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.16 2006/02/03 14:50:25 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.17 2006/05/23 04:47:40 brun Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -85,6 +85,8 @@ public:
       { MayNotUse("Ls"); return 0; }
    virtual const char  *Pwd(Bool_t /*verbose*/ =kFALSE)
       { MayNotUse("Pwd"); return 0; }
+   virtual const char  *GetHomeDirectory()
+      { MayNotUse("GetHomeDirectory"); return 0; }
    virtual Bool_t Cd(const char* /*ldn*/ ="",Bool_t /*verbose*/ =kFALSE)
       { MayNotUse("Cd"); return kFALSE; }
    virtual Bool_t Mkdir(const char* /*ldn*/ ="", Option_t* /*options*/ ="", Bool_t /*verbose*/ =kFALSE)
