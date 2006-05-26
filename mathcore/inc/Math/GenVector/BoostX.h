@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BoostX.h,v 1.2 2005/12/08 15:52:41 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BoostX.h,v 1.3 2006/04/11 13:06:15 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: BoostX.h,v 1.2 2005/12/08 15:52:41 moneta Exp $
+// Last update: $Id: BoostX.h,v 1.3 2006/04/11 13:06:15 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_BoostX
 #define ROOT_Math_GenVector_BoostX 1
@@ -110,7 +110,7 @@ public:
   /**
      The beta vector for this boost
    */
-  typedef  DisplacementVector3D<Cartesian3D<double> > XYZVector; 
+  typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
   XYZVector BetaVector() const;
 
   /**

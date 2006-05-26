@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.4 2005/10/27 18:00:01 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.5 2006/04/11 13:06:15 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -196,7 +196,7 @@ public:
   /**
      Rotation operation on a cartesian vector
    */
-  typedef  DisplacementVector3D<Cartesian3D<double> > XYZVector; 
+  typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
   XYZVector operator() (const XYZVector & v) const;
 
   /**

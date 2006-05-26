@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.cxx,v 1.6 2006/02/06 17:22:03 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.cxx,v 1.7 2006/04/20 14:36:48 rdm Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005
 
 /**********************************************************************
@@ -29,6 +29,8 @@ namespace ROOT {
    namespace Math {
 
 
+    typedef Transform3D::Point  XYZPoint; 
+    typedef Transform3D::Vector XYZVector; 
 
 
 // ========== Constructors and Assignment =====================

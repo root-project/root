@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.3 2005/10/27 18:00:01 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.4 2006/04/11 13:06:15 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -11,7 +11,7 @@
 // Header file for rotation in 3 dimensions, represented by a quaternion
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.h,v 1.3 2005/10/27 18:00:01 moneta Exp $
+// Last update: $Id: Quaternion.h,v 1.4 2006/04/11 13:06:15 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Quaternion 
 #define ROOT_Math_GenVector_Quaternion  1
@@ -191,7 +191,7 @@ public:
   /**
      Rotation operation on a cartesian vector
    */
-  typedef  DisplacementVector3D<Cartesian3D<double> > XYZVector; 
+  typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
   XYZVector operator() (const XYZVector & v) const;
 
   /**

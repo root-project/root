@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.3 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.4 2006/05/03 13:10:22 moneta Exp $
 // Authors: L. Moneta    12/2005  
 
 /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by:    moneta   at Fri Dec 02   2005
 //
-// Last update: $Id: Plane3D.h,v 1.3 2006/04/11 13:06:15 moneta Exp $
+// Last update: $Id: Plane3D.h,v 1.4 2006/05/03 13:10:22 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Plane3D
 #define ROOT_Math_GenVector_Plane3D  1
@@ -26,8 +26,6 @@ namespace ROOT {
 
   namespace Math {
 
-    typedef  DisplacementVector3D<Cartesian3D<double> > XYZVector; 
-    typedef  PositionVector3D<Cartesian3D<double> > XYZPoint; 
 
 
     /**
@@ -53,8 +51,10 @@ namespace ROOT {
 
       typedef double Scalar;
 
-      typedef XYZVector Vector;
-      typedef XYZPoint  Point;
+      typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > Vector; 
+      typedef  PositionVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag >     Point; 
+
+
 
       /**
          default constructor create plane z = 0 
@@ -76,7 +76,7 @@ namespace ROOT {
 	 \param n normal expressed as a ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
 	 \param p point  expressed as a  ROOT::Math::PositionVector3D<Cartesian3D<double> >
       */
-      Plane3D(const XYZVector & n, const XYZPoint & p );  
+      Plane3D(const Vector & n, const Point & p );  
        
 
       /**
@@ -87,7 +87,7 @@ namespace ROOT {
       */
       template<class T1, class T2, class U>
       Plane3D( const  DisplacementVector3D<T1,U> & n, const  PositionVector3D<T2,U> & p) : 
-	Plane3D( XYZVector(n.X(), n.Y(), n.Z()), XYZPoint(p.X(), p.Y(), p.Z()) ) 
+	Plane3D( Vector(n.X(), n.Y(), n.Z()), Point(p.X(), p.Y(), p.Z()) ) 
       {}
 
       /**
@@ -97,7 +97,7 @@ namespace ROOT {
 	 \param p3 point3  expressed as a generic ROOT::Math::PositionVector3D
 
       */
-      Plane3D(const XYZPoint & p1, const XYZPoint & p2, const XYZPoint & p3  );  
+      Plane3D(const Point & p1, const Point & p2, const Point & p3  );  
 
       /**
          constructor from three generic point belonging to the plane
@@ -107,9 +107,9 @@ namespace ROOT {
       */
       template <class T1, class T2, class T3, class U>
       Plane3D(const  PositionVector3D<T1,U> & p1, const  PositionVector3D<T2,U> & p2, const  PositionVector3D<T3,U> & p3  ) : 
-	Plane3D (  XYZPoint(p1.X(), p1.Y(), p1.Z()),  
-		   XYZPoint(p2.X(), p2.Y(), p2.Z()),  
-		   XYZPoint(p3.X(), p3.Y(), p3.Z()) ) 
+	Plane3D (  Point(p1.X(), p1.Y(), p1.Z()),  
+		   Point(p2.X(), p2.Y(), p2.Z()),  
+		   Point(p3.X(), p3.Y(), p3.Z()) ) 
       {} 
 
 
@@ -135,8 +135,8 @@ namespace ROOT {
       /**
          Return normal vector to the plane as Cartesian DisplacementVector 
       */
-      XYZVector Normal() const {
-        return XYZVector(fA, fB, fC);
+      Vector Normal() const {
+        return Vector(fA, fB, fC);
       }
 
       /** 
@@ -149,10 +149,10 @@ namespace ROOT {
 
 
       /**
-	 Return the distance to a XYZPoint
+	 Return the distance to a Point
 	 \param p Point expressed in Cartesian Coordinates 
        */
-      Scalar Distance(const XYZPoint & p) const; 
+      Scalar Distance(const Point & p) const; 
 
       /**
 	 Return the distance to a Point described with generic coordinates
@@ -160,14 +160,14 @@ namespace ROOT {
        */
       template <class T, class U> 
       Scalar Distance(const PositionVector3D<T,U> & p) const { 
-	return Distance( XYZPoint(p.X(), p.Y(), p.Z() ) );
+	return Distance( Point(p.X(), p.Y(), p.Z() ) );
       }
 
       /**
 	 Return the projection of a Cartesian point to a plane
 	 \param p Point expressed as PositionVector3D<Cartesian3D<double> >
       */
-      XYZPoint ProjectOntoPlane(const XYZPoint & p) const; 
+      Point ProjectOntoPlane(const Point & p) const; 
 
       /**
 	 Return the projection of a point to a plane
@@ -175,7 +175,7 @@ namespace ROOT {
       */
       template <class T, class U> 
       PositionVector3D<T,U> ProjectOntoPlane(const PositionVector3D<T,U> & p) const { 
-	XYZPoint pxyz = ProjectOntoPlane(XYZPoint(p.X(), p.Y(), p.Z() ) );
+	Point pxyz = ProjectOntoPlane(Point(p.X(), p.Y(), p.Z() ) );
 	PositionVector3D<T,U> p2;
 	p2.SetXYZ( pxyz.X(), pxyz.Y(), pxyz.Z() );  
 	return p2;

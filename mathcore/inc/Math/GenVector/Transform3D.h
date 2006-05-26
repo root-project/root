@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.11 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.12 2006/04/13 10:38:30 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -42,9 +42,6 @@ namespace ROOT {
 
     class Plane3D; 
 
-    typedef  DisplacementVector3D<Cartesian3D<double> > XYZVector; 
-    typedef  PositionVector3D<Cartesian3D<double> > XYZPoint; 
-
 
 
   /** 
@@ -64,6 +61,10 @@ namespace ROOT {
     
 
   public: 
+
+    typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag >  Vector; 
+    typedef  PositionVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag >      Point; 
+
 
     enum ETransform3DMatrixIndex {
       kXX = 0, kXY = 1, kXZ = 2, kDX = 3, 
@@ -92,16 +93,16 @@ namespace ROOT {
     }
 
     /**
-       Construct from a rotation and then a translation described by a XYZVector 
+       Construct from a rotation and then a translation described by a Vector 
     */
-    Transform3D( const Rotation3D & r, const XYZVector & v) 
+    Transform3D( const Rotation3D & r, const Vector & v) 
     {
       AssignFrom( r, v ); 
     }
     /**
        Construct from a translation and then a rotation (inverse assignment) 
     */
-    Transform3D( const XYZVector & v, const Rotation3D & r) 
+    Transform3D( const Vector & v, const Rotation3D & r) 
     {
       // is equivalent from having first the rotation and then the translation vector rotated
       AssignFrom( r, r(v) ); 
@@ -140,13 +141,13 @@ namespace ROOT {
     */
     template<class CoordSystem, class Tag>
     explicit Transform3D( const DisplacementVector3D<CoordSystem,Tag> & v) { 
-      AssignFrom(XYZVector(v.X(),v.Y(),v.Z()));
+      AssignFrom(Vector(v.X(),v.Y(),v.Z()));
     }
     /**
        Construct from a translation only, represented by a Cartesian 3D Vector,  
        and with an identity rotation
     */
-    explicit Transform3D( const XYZVector & v) { 
+    explicit Transform3D( const Vector & v) { 
       AssignFrom(v);
     }
 
@@ -157,26 +158,26 @@ namespace ROOT {
        Construct from a rotation (any rotation object)  and then a translation 
        (represented by any DisplacementVector)
        The requirements on the rotation and vector objects are that they can be transformed in a 
-       Rotation3D class and in a XYZVector
+       Rotation3D class and in a Vector
     */
     // to do : change to displacement vector3D
     template <class ARotation, class CoordSystem, class Tag>
     Transform3D( const ARotation & r, const DisplacementVector3D<CoordSystem,Tag> & v) 
     {
-      AssignFrom( Rotation3D(r), XYZVector (v.X(),v.Y(),v.Z()) ); 
+      AssignFrom( Rotation3D(r), Vector (v.X(),v.Y(),v.Z()) ); 
     }
     /**
        Construct from a translation (using any type of DisplacementVector ) 
        and then a rotation (any rotation object). 
        Requirement on the rotation and vector objects are that they can be transformed in a 
-       Rotation3D class and in a XYZVector 
+       Rotation3D class and in a Vector 
     */
     template <class ARotation, class CoordSystem, class Tag>
     Transform3D(const DisplacementVector3D<CoordSystem,Tag> & v , const ARotation & r) 
     {
       // is equivalent from having first the rotation and then the translation vector rotated
       Rotation3D r3d(r);
-      AssignFrom( r3d, r3d( XYZVector(v.X(),v.Y(),v.Z()) ) ); 
+      AssignFrom( r3d, r3d( Vector(v.X(),v.Y(),v.Z()) ) ); 
     }
 
     //#endif
@@ -194,8 +195,8 @@ namespace ROOT {
 
      */
     Transform3D
-    (const XYZPoint & fr0, const XYZPoint & fr1, const XYZPoint & fr2,  
-     const XYZPoint & to0, const XYZPoint & to1, const XYZPoint & to2 );  
+    (const Point & fr0, const Point & fr1, const Point & fr2,  
+     const Point & to0, const Point & to1, const Point & to2 );  
 
 
     // use compiler generated copy ctor, copy assignmet and dtor
@@ -315,7 +316,7 @@ namespace ROOT {
     /**
        Get the rotation and translation vector representing the 3D transformation
     */    
-    void GetDecomposition(Rotation3D &r, XYZVector &v) const;
+    void GetDecomposition(Rotation3D &r, Vector &v) const;
 
 
 
@@ -324,14 +325,14 @@ namespace ROOT {
     /**
        Transformation operation for Position Vector in Cartesian coordinate 
     */
-    XYZPoint operator() (const XYZPoint & p) const;  
+    Point operator() (const Point & p) const;  
 
 
     /**
        Transformation operation for Displacement Vectors in Cartesian coordinate 
        For the Displacement Vectors only the rotation applies - no translations
     */
-    XYZVector operator() (const XYZVector & v) const;
+    Vector operator() (const Vector & v) const;
 
 
     /**
@@ -339,7 +340,7 @@ namespace ROOT {
     */
     template<class CoordSystem > 
     PositionVector3D<CoordSystem> operator() (const PositionVector3D <CoordSystem> & p) const { 
-      XYZPoint xyzNew = operator() ( XYZPoint(p) );
+      Point xyzNew = operator() ( Point(p) );
       return  PositionVector3D<CoordSystem> (xyzNew);
     }
 
@@ -348,7 +349,7 @@ namespace ROOT {
     */
     template<class CoordSystem > 
     DisplacementVector3D<CoordSystem> operator() (const DisplacementVector3D <CoordSystem> & v) const { 
-      XYZVector xyzNew = operator() ( XYZVector(v) );
+      Vector xyzNew = operator() ( Vector(v) );
       return  DisplacementVector3D<CoordSystem> (xyzNew);
     }
 
@@ -357,7 +358,7 @@ namespace ROOT {
     */
     template<class CoordSystem, class Tag1, class Tag2 > 
     void Transform (const PositionVector3D <CoordSystem,Tag1> & p1, PositionVector3D <CoordSystem,Tag2> & p2  ) const { 
-      XYZPoint xyzNew = operator() ( XYZPoint(p1.X(), p1.Y(), p1.Z()) );
+      Point xyzNew = operator() ( Point(p1.X(), p1.Y(), p1.Z()) );
       p2.SetXYZ( xyzNew.X(), xyzNew.Y(), xyzNew.Z() ); 
     }
 
@@ -367,7 +368,7 @@ namespace ROOT {
     */
     template<class CoordSystem,  class Tag1, class Tag2 > 
     void Transform (const DisplacementVector3D <CoordSystem,Tag1> & v1, DisplacementVector3D <CoordSystem,Tag2> & v2  ) const { 
-      XYZVector xyzNew = operator() ( XYZVector(v1.X(), v1.Y(), v1.Z() ) );
+      Vector xyzNew = operator() ( Vector(v1.X(), v1.Y(), v1.Z() ) );
       v2.SetXYZ( xyzNew.X(), xyzNew.Y(), xyzNew.Z() ); 
     }
 
@@ -376,7 +377,7 @@ namespace ROOT {
     */
     template <class CoordSystem > 
     LorentzVector<CoordSystem> operator() (const LorentzVector<CoordSystem> & q) const { 
-      XYZVector xyzNew = operator() ( XYZVector(q.Vect() ) );
+      Vector xyzNew = operator() ( Vector(q.Vect() ) );
       return  LorentzVector<CoordSystem> (xyzNew.X(), xyzNew.Y(), xyzNew.Z(), q.E() );
     }
 
@@ -459,7 +460,7 @@ namespace ROOT {
     /**
        make transformation from first a rotation then a translation
      */
-    void  AssignFrom( const Rotation3D & r, const XYZVector & v);  
+    void  AssignFrom( const Rotation3D & r, const Vector & v);  
 
     /**
        make transformation from only rotations (zero translation)
@@ -469,7 +470,7 @@ namespace ROOT {
     /**
        make transformation from only translation (identity rotations)
      */
-    void  AssignFrom( const XYZVector & v);  
+    void  AssignFrom( const Vector & v);  
 
     /**
        Set identity transformation (identity rotation , zero translation)

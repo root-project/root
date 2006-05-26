@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Plane3D.cxx,v 1.1 2005/12/02 21:35:19 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Plane3D.cxx,v 1.2 2005/12/03 15:15:11 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,6 +13,7 @@
 // Created by: Lorenzo Moneta  December 2 2005
 // 
 // 
+
 #include "Math/GenVector/Plane3D.h"
 
 #include <cmath>
@@ -26,6 +27,8 @@ namespace ROOT {
 
 
     typedef Plane3D::Scalar Scalar; 
+    typedef Plane3D::Point  XYZPoint; 
+    typedef Plane3D::Vector XYZVector; 
 
 // ========== Constructors and Assignment =====================
 
