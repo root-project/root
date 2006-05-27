@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.25 2006/05/11 10:12:36 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.26 2006/05/23 21:00:23 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -405,7 +405,6 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
 //______________________________________________________________________________
 void TPythia6::Initialize(const char *frame, const char *beam, const char *target, float win)
 {
-   ////////////////////////////////////////////////////////////////////////////////////
    // Calls PyInit with the same parameters after performing some checking,
    // sets correct title. This method should preferably be called instead of PyInit.
    // PURPOSE: to initialize the generation procedure.
@@ -420,7 +419,6 @@ void TPythia6::Initialize(const char *frame, const char *beam, const char *targe
    //              for frame=="CMS" - total energy of system
    //              for frame=="FIXT" - momentum of beam particle
    //              for frame=="USER" - dummy - see documentation.
-   ////////////////////////////////////////////////////////////////////////////////////
 
    char  cframe[4];
    strncpy(cframe,frame,4);
@@ -496,8 +494,8 @@ void TPythia6::Initialize(const char *frame, const char *beam, const char *targe
 }
 
 
-void TPythia6::Pyinit(char* frame, char* beam, char* target, double win) {
-   //------------------------------------------------------------------------------
+void TPythia6::Pyinit(char* frame, char* beam, char* target, double win) 
+{
    // Calls Pyinit with the same parameters after performing some checking,
    // sets correct title. This method should preferably be called instead of PyInit.
    // PURPOSE: to initialize the generation procedure.
@@ -513,7 +511,6 @@ void TPythia6::Pyinit(char* frame, char* beam, char* target, double win) {
    //              for frame=="CMS" - total energy of system
    //              for frame=="FIXT" - momentum of beam particle
    //              for frame=="USER" - dummy - see documentation.
-   //------------------------------------------------------------------------------
 
    Double_t lwin = win;
    Long_t  s1    = strlen(frame);

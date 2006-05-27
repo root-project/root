@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.18 2006/05/19 07:30:04 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.19 2006/05/26 16:55:04 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -119,10 +119,10 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
    nUrl.SetOptions(newopt + TString("&") + oldopt + TString("&"));
 
    if (parallelopen) {
-     fSubFileHandle = TFile::AsyncOpen(nUrl.GetUrl(), fOption, ftitle, compress);
-     return;
+      fSubFileHandle = TFile::AsyncOpen(nUrl.GetUrl(), fOption, ftitle, compress);
+      return;
    } else {
-     fSubFile = TFile::Open(nUrl.GetUrl(), fOption, ftitle, compress);
+      fSubFile = TFile::Open(nUrl.GetUrl(), fOption, ftitle, compress);
    }
 
    if ((!fSubFile) || (fSubFile->IsZombie())) {
@@ -342,17 +342,17 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
    newurl += TString("?&authz=");
    newurl += authzStr->GetName();
    if (stmp != "") {
-     newurl += "#";
-     newurl += purl.GetAnchor();
+      newurl += "#";
+      newurl += purl.GetAnchor();
    } else {
-     if (anchor.Length()) {
-       newurl += "#";
-       newurl += anchor;
-     }
-     //=======
-     //      newurl += "#";
-     //      newurl += purl.GetAnchor();
-     //>>>>>>> 1.17
+      if (anchor.Length()) {
+         newurl += "#";
+         newurl += anchor;
+      }
+      //=======
+      //      newurl += "#";
+      //      newurl += purl.GetAnchor();
+      //>>>>>>> 1.17
    }
    return newurl;
 
@@ -365,7 +365,7 @@ zombie2:
 TAlienFile::~TAlienFile()
 {
    // TAlienFile file dtor.
-  R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD2(gROOTMutex);
    if (fSubFile) {
       Close();
 
@@ -473,26 +473,27 @@ void TAlienFile::Close(Option_t *option)
 }
 
 //______________________________________________________________________________
-void
-TAlienFile::Init(Bool_t create) {
+void TAlienFile::Init(Bool_t create) 
+{
+   //initialize an Alien file
    gFile=this;
    if (fSubFileHandle) {
-     fSubFile = TFile::Open(fSubFileHandle);
-     fSubFileHandle=0;
-     if ((!fSubFile) || (fSubFile->IsZombie())) {
-       Error("TAlienFile", "cannot open %s!", GetName());
-       gFile = 0;
-       gDirectory = gROOT;
-       MakeZombie();
-       return;
-     }
+      fSubFile = TFile::Open(fSubFileHandle);
+      fSubFileHandle=0;
+      if ((!fSubFile) || (fSubFile->IsZombie())) {
+         Error("TAlienFile", "cannot open %s!", GetName());
+         gFile = 0;
+         gDirectory = gROOT;
+         MakeZombie();
+         return;
+      }
    }
    {
-     R__LOCKGUARD2(gROOTMutex);
-     //     gROOT->GetListOfFiles()->Remove(fSubFile);
-     //     gROOT->GetUUIDs()->RemoveUUID(fSubFile->GetUniqueID());
-     //     gROOT->GetListOfFiles()->Add(this);
-     //     gROOT->GetUUIDs()->AddUUID(fUUID,this);
+      R__LOCKGUARD2(gROOTMutex);
+      //     gROOT->GetListOfFiles()->Remove(fSubFile);
+      //     gROOT->GetUUIDs()->RemoveUUID(fSubFile->GetUniqueID());
+      //     gROOT->GetListOfFiles()->Add(this);
+      //     gROOT->GetUUIDs()->AddUUID(fUUID,this);
    }
 
 }

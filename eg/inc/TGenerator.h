@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.8 2006/05/23 04:47:36 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.9 2006/05/26 09:07:18 brun Exp $
 // -*- mode: C++ -*-
 // Author: Ola Nordmann   21/09/95
 
@@ -157,7 +157,7 @@ protected:
    TGenerator& operator=(const TGenerator& tg) {
       if(this!=&tg) {
          TNamed::operator=(tg); fPtCut=tg.fPtCut; fShowNeutrons=tg.fShowNeutrons;
-	 fParticles=tg.fParticles;
+         fParticles=tg.fParticles;
       } 
       return *this;
    }
