@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.15 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.16 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -127,9 +127,11 @@ void TGIcon::SetImage(TImage *img)
       return;
    }
 
-   //delete fImage;  !! mem.leak!!
+   delete fImage; //  !! mem.leak!!
    fImage = img;
+
    Resize(fImage->GetWidth(), fImage->GetHeight());
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -161,19 +163,13 @@ void TGIcon::Resize(UInt_t w, UInt_t h)
 
    TGFrame::Resize(w, h);
 
-   // allow dynamic resize of icon during guibuilding
-   if (!fClient->IsEditable()) {
+   // allow scaled resize for icons with TImage
+   if (!fImage) {
       return;
    }
+
    gVirtualX->ClearWindow(fId);
 
-   if (!fImage) {
-      fImage = TImage::Create();
-      if (fPic) {
-         fImage->SetName(fPic->GetName());
-         fImage->SetImage(fPic->GetPicture(), fPic->GetMask());
-      }
-   }
    if (fPic) {
       fClient->FreePicture(fPic);
    }
@@ -184,7 +180,7 @@ void TGIcon::Resize(UInt_t w, UInt_t h)
    fImage->Scale(w - 2*border, h - 2*border);
    fPic = fClient->GetPicturePool()->GetPicture(fImage->GetName(),
                                                 fImage->GetPixmap(), fImage->GetMask());
-   fClient->NeedRedraw(this);
+   DoRedraw();
 }
 
 //______________________________________________________________________________
@@ -212,71 +208,14 @@ void TGIcon::Reset()
 }
 
 //______________________________________________________________________________
-void TGIcon::ChangeImage()
+void TGIcon::SetImagePath(const char *path)
 {
-   // Invoke file dialog to assign a new image.
-   // This method is activated via context menu during guibuilding.
+   // Set directory where image is located
 
-   static const char *gImageTypes[] = {"All files", "*",
-                                       "XPM",     "*.xpm",
-                                       "GIF",     "*.gif",
-                                       "PNG",     "*.png",
-                                       "JPEG",    "*.jpg",
-                                       "TARGA",   "*.tga",
-                                       "BMP",     "*.bmp",
-                                       "ICO",     "*.ico",
-                                       "XCF",     "*.xcf",
-                                       "CURSORS", "*.cur",
-                                       "PPM",     "*.ppm",
-                                       "PNM",     "*.pnm",
-                                       "XBM",     "*.xbm",
-                                       "TIFF",    "*.tiff",
-                                       "Enacapsulated PostScript", "*.eps",
-                                       "PostScript", "*.ps",
-                                       "PDF",        "*.pdf",
-                                       "ASImage XML","*.xml",
-                                        0,             0 };
-
-   TGFileInfo fi;
-   static TString dir(".");
-   static Bool_t overwr = kFALSE;
-   const char *fname;
-
-   fi.fFileTypes = gImageTypes;
-   fi.fIniDir    = StrDup(dir);
-   fi.fOverwrite = overwr;
-
-   TGWindow *root = (TGWindow*)fClient->GetRoot();
-   gDragManager->SetEditable(kFALSE);
-
-   new TGFileDialog(fClient->GetDefaultRoot(), this, kFDOpen, &fi);
-
-   if (!fi.fFilename) {
-      root->SetEditable(kTRUE);
-      gDragManager->SetEditable(kTRUE);
+   if (!path) {
       return;
    }
-
-   dir    = fi.fIniDir;
-   overwr = fi.fOverwrite;
-   fname  = fi.fFilename;
-
-   fImage = TImage::Open(fname);
-
-   if (!fImage) {
-      Int_t retval;
-      new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                   Form("Cannot read image file (%s)", fname),
-                   kMBIconExclamation, kMBRetry | kMBCancel, &retval);
-
-      if (retval == kMBRetry) {
-         ChangeImage();
-      }
-   } else {
-      SetImage(fImage);
-   }
-   root->SetEditable(kTRUE);
-   gDragManager->SetEditable(kTRUE);
+   fPath = gSystem->ExpandPathName(gSystem->UnixPathName(path));
 }
 
 //______________________________________________________________________________
@@ -296,18 +235,26 @@ void TGIcon::SavePrimitive(ofstream &out, Option_t *option)
    const char *picname = fPic->GetName();
 
    out <<"   TGIcon *";
-   out << GetName() << " = new TGIcon(" << fParent->GetName()
-       << ",gClient->GetPicture(" << quote
-       << gSystem->ExpandPathName(gSystem->UnixPathName(picname))                       // if no path
-       << quote << ")" << "," << GetWidth() << "," << GetHeight();
-
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out <<");" << endl;
+   if (!fImage) {
+      out << GetName() << " = new TGIcon(" << fParent->GetName()
+         << ",gClient->GetPicture(" << quote
+         << gSystem->ExpandPathName(gSystem->UnixPathName(picname))   // if no path
+         << quote << ")" << "," << GetWidth() << "," << GetHeight();
+      if (fBackground == GetDefaultFrameBackground()) {
+         if (!GetOptions()) {
+            out <<");" << endl;
+         } else {
+            out << "," << GetOptionString() <<");" << endl;
+         }
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() << ",ucolor);" << endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      TString name = fPath;
+      name += "/";
+      name += fImage->GetName();
+      name.Chop();
+      out << GetName() << " = new TGIcon(" << fParent->GetName()  << ","
+          << quote << name.Data() << quote << ");" << endl;
    }
 }

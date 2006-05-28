@@ -2034,7 +2034,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    //     7 - ouline above, 8 - ouline below, 9 - full ouline.
    //  fore_file specifies foreground texture of text.
 
-   UInt_t width, height ;
+   UInt_t width, height;
    ARGB32 text_color = ARGB32_Black;
    ASImage *fore_im = 0;
    ASImage *text_im = 0;
@@ -2045,7 +2045,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       return;
    }
    if (!InitVisual()) {
-      Warning("DrawFillArea", "Visual not initiated");
+      Warning("DrawText", "Visual not initiated");
       return;
    }
 
@@ -2064,7 +2064,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       parse_argb_color(color, &text_color);
    }
 
-   if (fImage->alt.argb32 && ttfont) {
+   if (fImage && fImage->alt.argb32 && ttfont) {
       DrawTextTTF(x, y, text, size, text_color, fn.Data(), angle);
       return;
    }
@@ -2089,6 +2089,12 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    }
 
    get_text_size(text, font, (ASText3DType)type, &width, &height);
+
+   if (!fImage) {
+      fImage = create_asimage(width, height, 0);
+      fill_asimage(fgVisual, fImage, 0, 0, width, height, 0xFFFFFFFF);
+   }
+
    text_im = draw_text(text, font, (ASText3DType)type, 0);
 
    ASImage *rimg = fImage;
@@ -2267,7 +2273,7 @@ TObject *TASImage::Clone(const char *newname) const
 }
 
 //______________________________________________________________________________
-void TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_threshold)
+Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_threshold)
 {
    // Reduces colordepth of an image and fills vector of "scientific data" [0...1]
    //
@@ -2280,7 +2286,7 @@ void TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_threshol
 
    if (!InitVisual()) {
       Warning("Vectorize", "Visual not initiated");
-      return;
+      return 0;
    }
 
    if (!fImage) {
@@ -2288,7 +2294,7 @@ void TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_threshol
 
       if (!fImage) {
          Warning("Vectorize", "Failed to create image");
-         return;
+         return 0;
       }
 
       fill_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height, ARGB32_White);
@@ -2344,6 +2350,7 @@ void TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_threshol
    fPalette = *pal;
    fImage->alt.vector = vec;
    UnZoom();
+   return (Double_t*)fImage->alt.vector;
 }
 
 //______________________________________________________________________________
@@ -5695,12 +5702,20 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
    delete fScaledImage;
    fScaledImage = 0;
 
-   unsigned char *bits = gVirtualX->GetColorBits(wid, x, y, w, h);
-   if (!bits) { // error
-      return;
+   static int x11 = -1;
+   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
+
+   if (x11) { //use built-in optimized version
+      fImage = pixmap2asimage(fgVisual, wid, x, y, w, h, kAllPlanes, 0, 0);
+   } else {
+      unsigned char *bits = gVirtualX->GetColorBits(wid, 0, 0, w, h);
+
+      if (!bits) { // error
+         return;
+      }
+      fImage = bitmap2asimage(bits, w, h, 0, 0);
+      delete [] bits;
    }
-   fImage = bitmap2asimage(bits, w, h, 0, 0);
-   delete [] bits;
 }
 
 //_______________________________________________________________________

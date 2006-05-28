@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.41 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.42 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -212,7 +212,6 @@ All other keys with valid ASCII codes insert themselves into the line.
 #include "Riostream.h"
 #include "TClass.h"
 #include "TGMsgBox.h"
-#include "TGColorDialog.h"
 
 
 TString      *TGTextEntry::fgClipboardText = 0;
@@ -1732,21 +1731,6 @@ void TGTextEntry::SetTextColor(TColor *color, Bool_t local)
 
    if (color) {
       SetTextColor(color->GetPixel(), local);
-   }
-}
-
-//______________________________________________________________________________
-void TGTextEntry::ChangeTextColor()
-{
-   // Set text color via context menu
-
-   Int_t retc;
-   Pixel_t pixel = fNormGC.GetForeground();
-
-   new TGColorDialog(gClient->GetDefaultRoot(), this, &retc, &pixel);
-
-   if (retc == kMBOk) {
-      SetTextColor(pixel, kTRUE);
    }
 }
 

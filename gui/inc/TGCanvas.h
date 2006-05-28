@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.27 2006/05/14 10:23:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.28 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -232,6 +232,7 @@ public:
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGCanvas,0)  // A canvas with two scrollbars and a viewport

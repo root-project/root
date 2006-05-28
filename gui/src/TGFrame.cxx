@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.131 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.132 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -83,7 +83,6 @@
 #include "TVirtualDragManager.h"
 #include "TGuiBuilder.h"
 #include "TQConnection.h"
-#include "TGColorDialog.h"
 
 
 Bool_t      TGFrame::fgInit = kFALSE;
@@ -106,7 +105,6 @@ UInt_t      TGFrame::fgUserColor = 0;
 const TGFont *TGGroupFrame::fgDefaultFont = 0;
 const TGGC   *TGGroupFrame::fgDefaultGC = 0;
 
-TContextMenu *TGCompositeFrame::fgContextMenu = 0;
 TGLayoutHints *TGCompositeFrame::fgDefaultHints = new TGLayoutHints;
 
 static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
@@ -174,6 +172,10 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fEventMask = (UInt_t) wattr.fEventMask;
 
    SetWindowName();
+
+   if (!p && fClient->IsEditable()) {
+      Resize(100, 100);
+   }
 }
 
 //______________________________________________________________________________
@@ -288,21 +290,7 @@ void TGFrame::ChangeBackground(Pixel_t back)
 
    fBackground = back;
    gVirtualX->SetWindowBackground(fId, back);
-}
-
-//______________________________________________________________________________
-void TGFrame::ChangeBackgroundColor()
-{
-   // Change background color via context menu
-
-   Int_t retc;
-
-   new TGColorDialog(gClient->GetDefaultRoot(), this, &retc, &fBackground);
-
-   if (retc == kMBOk) {
-      SetBackgroundColor(fBackground);
-      fClient->NeedRedraw(this);
-   }
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -1011,25 +999,22 @@ void TGCompositeFrame::SetLayoutBroken(Bool_t on)
 //______________________________________________________________________________
 void TGCompositeFrame::SetEditDisabled(UInt_t on)
 {
-   // Set edit disable flag for this frame:
+   // Set edit disable flag for this frame and subframes
    //
    //  - if (on & kEditDisable) - disable edit for this frame and all subframes.
-   //  - if (on == kEditEnable) - enable edit for this frame and all subframes.
 
    fEditDisabled = on;
-
-   TGFrameElement *el;
-   TIter next(fList);
-
    UInt_t set = on & kEditDisable;
 
-   if ((set != 0) && (set != 1)) { // propagate only kEditDisable or kEditEnable 
-      return;
-   }
+   // propagate only kEditDisable
+   if (set == kEditDisable) { 
 
-   while ((el = (TGFrameElement *) next())) {
-      if (el->fFrame) {
-         el->fFrame->SetEditDisabled(set);
+      TGFrameElement *el;
+      TIter next(fList);
+      while ((el = (TGFrameElement *) next())) {
+         if (el->fFrame) {
+            el->fFrame->SetEditDisabled(set);
+         }
       }
    }
 }
@@ -1273,17 +1258,20 @@ void TGCompositeFrame::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TGCompositeFrame::ChangeBackgroundColor()
+void TGCompositeFrame::ChangeSubframesBackground(Pixel_t back)
 {
-   // Change background color via context menu for this frame and all subframes.
+   // Change background color for this frame and all subframes.
 
-   TGFrame::ChangeBackgroundColor();
+   TGFrame::ChangeBackground(back);
    TGFrameElement *el;
 
    TIter next(fList);
  
    while ((el = (TGFrameElement*)next())) {
-      el->fFrame->SetBackgroundColor(fBackground);
+      el->fFrame->SetBackgroundColor(back);
+      if (el->fFrame->InheritsFrom(TGCompositeFrame::Class())) {
+         ((TGCompositeFrame*)el->fFrame)->ChangeSubframesBackground(back);
+      }
       fClient->NeedRedraw(el->fFrame);
    }
    fClient->NeedRedraw(this);
@@ -1364,9 +1352,9 @@ Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
 
       Float_t r, g, b;
       TColor::Pixel2RGB(fBackground, r, g, b);
-      r *= 1.05;
-      g *= 1.07;
-      b *= 1.07;
+      r *= 1.12;
+      g *= 1.13;
+      b *= 1.12;
       Pixel_t back = TColor::RGB2Pixel(r, g, b);
       gVirtualX->SetWindowBackground(fId, back);
       DoRedraw();
@@ -1965,6 +1953,7 @@ TGGroupFrame::TGGroupFrame(const TGWindow *p, TGString *title,
    fFontStruct = font;
    fNormGC     = norm;
    fTitlePos   = kLeft;
+   fHasOwnFont = kFALSE;
 
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
@@ -1983,6 +1972,7 @@ TGGroupFrame::TGGroupFrame(const TGWindow *p, const char *title,
    fFontStruct = font;
    fNormGC     = norm;
    fTitlePos   = kLeft;
+   fHasOwnFont = kFALSE;
 
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
@@ -1996,6 +1986,11 @@ TGGroupFrame::~TGGroupFrame()
 {
    // Delete a group frame.
 
+   if (fHasOwnFont) {
+      TGGCPool *pool = fClient->GetGCPool();
+      TGGC *gc = pool->FindGC(fNormGC);
+      pool->FreeGC(gc);
+   }
    delete fText;
 }
 
@@ -2021,6 +2016,73 @@ void TGGroupFrame::DoRedraw()
    gVirtualX->ClearArea(fId, 0, 0, fWidth, fHeight);
 
    DrawBorder();
+}
+
+
+//______________________________________________________________________________
+void TGGroupFrame::SetTextColor(Pixel_t color, Bool_t local)
+{
+   // Changes text color.
+   // If local is true color is changed locally, otherwise - globally.
+
+   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool(); 
+   TGGC *gc = pool->FindGC(fNormGC);
+
+   if (local) {
+      gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
+      fHasOwnFont = kTRUE;
+   }
+
+   gc->SetForeground(color);
+   fNormGC = gc->GetGC();
+   fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGGroupFrame::SetTextFont(FontStruct_t font, Bool_t local)
+{
+   // Changes text font.
+   // If local is true font is changed locally - otherwise globally.
+
+   FontH_t v = gVirtualX->GetFontHandle(font);
+   if (!v) return;
+
+   fFontStruct = font;
+
+   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool(); 
+   TGGC *gc = pool->FindGC(fNormGC);
+
+   if (local) {
+      gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
+      fHasOwnFont = kTRUE;
+   }
+
+   gc->SetFont(v);
+   fNormGC = gc->GetGC();
+
+   fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGGroupFrame::SetTextFont(const char *fontName, Bool_t local)
+{
+   // Changes text font specified by name.
+   // If local is true font is changed locally - otherwise globally.
+
+   TGFont *font = fClient->GetFont(fontName);
+
+   if (font) {
+      SetTextFont(font->GetFontStruct(), local);
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGGroupFrame::HasOwnFont() const
+{
+   // Returns kTRUE if text attributes are unique,
+   // returns kFALSE if text attributes are shared (global).
+
+   return fHasOwnFont;
 }
 
 //______________________________________________________________________________
@@ -2623,6 +2685,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    while ((fhidden = (TGFrame*)nexth())) {
       out << "   " <<fhidden->GetName()<< "->UnmapWindow();" << endl;
    }
+
    out << endl;
    gListOfHiddenFrames->Clear();
 
@@ -2637,7 +2700,6 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    // needed in case the frame was resized
    // otherwhice the frame became bigger showing all hidden widgets (layout algorithm)
    out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<endl;
-
    out << "}  " << endl;
 
    // writing slots

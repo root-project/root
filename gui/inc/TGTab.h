@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.18 2006/05/15 07:43:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.19 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -151,6 +151,7 @@ public:
    void                SetText(TGString *text);
    virtual void        SetEnabled(Bool_t on = kTRUE) { fEnabled = on; }
    Bool_t              IsEnabled() const { return fEnabled; }
+   virtual void        SetEditDisabled(UInt_t) {}
 
    ClassDef(TGTabElement,0)  // Little tab on tab widget
 };

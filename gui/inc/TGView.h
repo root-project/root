@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.14 2005/12/13 16:58:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.15 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -73,7 +73,7 @@ protected:
    TViewTimer       *fScrollTimer;  // scrollbar timer
    TGGC              fWhiteGC;      // graphics context used for scrolling
                                     // generates GraphicsExposure events
-   Bool_t            fReadOnly;     //
+   Bool_t            fReadOnly;     // text cannot be editted
 
    TGView(const TGView&); 
    TGView& operator=(const TGView&); 
@@ -88,7 +88,6 @@ public:
    virtual ~TGView();
 
    TGViewFrame   *GetCanvas() const { return fCanvas; }
-   virtual void   SetBackgroundColor(Pixel_t col);
 
    virtual void   Clear(Option_t * = "");
    virtual void   SetVisibleStart(Int_t newTop, Int_t direction);
@@ -96,6 +95,7 @@ public:
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    virtual void   DrawBorder();
    virtual void   Layout();
+   virtual void   SetLayoutManager(TGLayoutManager*) { }
    virtual void   HLayout();
    virtual void   VLayout();
    virtual void   SetSBRange(Int_t direction);
@@ -128,8 +128,10 @@ public:
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t HandleDoubleClick(Event_t *event);
    virtual Bool_t HandleTimer(TTimer *t);
-   virtual void SetReadOnly(Bool_t on = kTRUE) { fReadOnly = on; }
+   virtual void SetReadOnly(Bool_t on = kTRUE) { fReadOnly = on; } //*TOGGLE* *GETTER=IsReadOnly
    virtual Bool_t IsReadOnly() const { return fReadOnly; }
+   virtual void   ChangeBackground(Pixel_t);
+   const TGGC &GetWhiteGC() { return fWhiteGC; }    
 
    virtual void Marked(Bool_t mark) { Emit("Marked(Bool_t)", mark); } // *SIGNAL*
 

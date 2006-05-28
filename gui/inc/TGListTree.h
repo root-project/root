@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.25 2006/05/16 06:18:48 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.26 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -274,6 +274,11 @@ public:
    TGListTreeItem *FindChildByData(TGListTreeItem *item, void *userData);
    TGListTreeItem *FindItemByPathname(const char *path);
    TGListTreeItem *FindItemByObj(TGListTreeItem *item, void *ptr);
+
+   void  AddItem(const char *string) { AddItem(fSelected, string); } //*MENU*
+   void  AddRoot(const char *string) { AddItem(0, string); } //*MENU*
+   Int_t DeleteSelected() { return (fSelected ? DeleteItem(fSelected) : 0); } //*MENU*
+   void  RenameSelected(const char *string) { if (fSelected) RenameItem(fSelected, string); } //*MENU*
 
    virtual void OnMouseOver(TGListTreeItem *entry);  //*SIGNAL*
    virtual void KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask);  //*SIGNAL*

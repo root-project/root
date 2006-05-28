@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.8 2006/05/15 09:41:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.9 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -37,7 +37,7 @@ protected:
    const TGPicture  *fPic;     // icon picture
    TImage           *fImage;   // image  
    TString           fPath;    // directory of image
-
+ 
    virtual void DoRedraw();
 
 protected:
@@ -48,17 +48,18 @@ public:
    TGIcon(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,
       UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground()) :
          TGFrame(p, w, h, options, back), fPic(pic), fImage(0), fPath() { SetWindowName(); }
+
    TGIcon(const TGWindow *p = 0, const char *image = 0);
 
    virtual ~TGIcon();
 
-   virtual void ChangeImage();   //*MENU* *DIALOG*icon=bld_open.png*
    virtual void Reset();         //*MENU*
    const TGPicture *GetPicture() const { return fPic; }
    TImage *GetImage() const { return fImage; }
    virtual void SetPicture(const TGPicture *pic);
    virtual void SetImage(const char *img); 
    virtual void SetImage(TImage *img);
+   virtual void SetImagePath(const char *path);
 
    virtual void Resize(UInt_t w = 0, UInt_t h = 0);
    virtual void Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }

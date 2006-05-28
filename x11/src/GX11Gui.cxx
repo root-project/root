@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.45 2005/11/11 15:29:46 couet Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.46 2006/05/15 13:31:01 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -165,6 +165,17 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
 
    char msg[80];
    XGetErrorText(disp, err->error_code, msg, 80);
+
+   // force segV. to allow backtracing the error with gdb
+   if (gDebug == (int)gVirtualX) {
+      gSystem->ProcessEvents();
+      ::Error("RootX11ErrorHandler", "%s (XID: %u, XREQ: %u)", msg,
+               err->resourceid, err->request_code);
+      int *kil = (int*)1;
+      delete kil; 
+      return 0;
+   }
+
    if (!err->resourceid) return 0;
 
    TObject *w = (TObject *)gROOT->ProcessLineFast(Form("gClient->GetWindowById(%d)", err->resourceid));

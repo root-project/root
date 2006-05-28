@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.14 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.15 2006/04/24 13:53:04 antcheva Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -42,9 +42,11 @@
 #include "TGScrollBar.h"
 #include "TGResourcePool.h"
 #include "TGPicture.h"
+#include "TImage.h"
 #include "TSystem.h"
 #include "TTimer.h"
 #include "TMath.h"
+#include "TEnv.h"
 #include "Riostream.h"
 
 
@@ -76,6 +78,27 @@ Bool_t TSBRepeatTimer::Notify()
    return kFALSE;
 }
 
+//______________________________________________________________________________
+TGScrollBarElement::TGScrollBarElement(const TGWindow *p, const TGPicture *pic, 
+                                       UInt_t w, UInt_t h, UInt_t options, Pixel_t back) :  
+                                       TGFrame(p, w, h, options | kOwnBackground, back)
+{
+   // ctor
+
+   fPic = fPicN = pic;
+   fState = kButtonUp;
+   fPicD = 0;
+}
+
+//______________________________________________________________________________
+TGScrollBarElement::~TGScrollBarElement()
+{
+   // dtor
+
+   if (fPicD) {
+      fClient->FreePicture(fPicD);
+   }
+}
 
 //______________________________________________________________________________
 void TGScrollBarElement::SetState(Int_t state)
@@ -89,6 +112,7 @@ void TGScrollBarElement::SetState(Int_t state)
             fOptions |= kSunkenFrame;
             break;
          case kButtonUp:
+         case kButtonDisabled:
             fOptions &= ~kSunkenFrame;
             fOptions |= kRaisedFrame;
             break;
@@ -96,6 +120,45 @@ void TGScrollBarElement::SetState(Int_t state)
       fState = state;
       fClient->NeedRedraw(this);
    }
+}
+
+//______________________________________________________________________________
+void TGScrollBarElement::SetEnabled(Bool_t on)
+{
+   // Enable/Disable scroll bar button chaging the state
+
+   if (on) {
+      if (fState == kButtonUp) {
+         return;
+      }
+      SetState(kButtonUp);
+      fPic = fPicN;
+   } else {
+      if (fState == kButtonDisabled) {
+         return;
+      }
+      SetState(kButtonDisabled);
+
+      if (!fPicD) {
+         TImage *img = TImage::Create();
+         TImage *img2 = TImage::Create();
+
+         TString back = gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0");
+         img2->FillRectangle(back.Data(), 0, 0, fPic->GetWidth(), fPic->GetHeight());
+         img->SetImage(fPicN->GetPicture(), fPicN->GetMask());
+         Pixmap_t mask = img->GetMask();
+         img2->Merge(img, "overlay");
+
+         TString name = "disbl_";
+         name += fPic->GetName();
+         fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), img2->GetPixmap(),
+                                                       mask);
+         delete img;
+         delete img2;
+      }
+      fPic = fPicD;
+   }
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -123,6 +186,7 @@ void TGScrollBarElement::DrawBorder()
          break;
 
       case kRaisedFrame: // normal
+      case kButtonDisabled:
          gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, fWidth-2, 0);
          gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, 0, fHeight-2);
          gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, fWidth-3, 1);
@@ -203,6 +267,16 @@ Int_t TGScrollBar::GetScrollBarWidth()
    return fgScrollBarWidth;
 }
 
+//______________________________________________________________________________
+void TGScrollBar::ChangeBackground(Pixel_t back)
+{
+   // Change background color
+
+   TGFrame::ChangeBackground(back);
+   fHead->ChangeBackground(back);
+   fTail->ChangeBackground(back);
+   fSlider->ChangeBackground(back);
+}
 
 //______________________________________________________________________________
 TGHScrollBar::TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
@@ -268,6 +342,9 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
    Int_t newpos;
 
    if (event->fCode == kButton4) {
+      if (!fHead->IsEnabled()) {
+         return kFALSE;
+      }
       //scroll left
       newpos = fPos - fPsize;
       if (newpos<0) newpos = 0;
@@ -275,6 +352,9 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
       return kTRUE;
    }
    if (event->fCode == kButton5) {
+      if (!fTail->IsEnabled()) {
+         return kFALSE;
+      }
       // scroll right
       newpos = fPos + fPsize;
       SetPosition(newpos);
@@ -293,6 +373,7 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
          fSlider->Move(fX0, 0);
 
          SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERTRACK), fPos, 0);
+         PositionChanged(fPos);
          return kTRUE;
       }
 
@@ -314,9 +395,15 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
          fSubw = subw;
 
          if (subw == fHead->GetId()) {
+            //if (!fHead->IsEnabled()) {
+             //  return kFALSE;
+            //}
             fHead->SetState(kButtonDown);
             fPos--;
          } else if (subw == fTail->GetId()) {
+            //if (!fTail->IsEnabled()) {
+           //    return kFALSE;
+           // }
             fTail->SetState(kButtonDown);
             fPos++;
          } else if (event->fX > fgScrollBarWidth && event->fX < fX0)
@@ -335,6 +422,7 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
          fSlider->Move(fX0, 0);
 
          SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERTRACK), fPos, 0);
+         PositionChanged(fPos);
       }
 
       // last argument kFALSE forces all specified events to this window
@@ -342,7 +430,7 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
          gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
                                 kPointerMotionMask, kNone, kNone, 
                                 kTRUE, kFALSE);
-   } else {
+   } else { 
       fHead->SetState(kButtonUp);
       fTail->SetState(kButtonUp);
 
@@ -357,6 +445,7 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
       fPos = TMath::Min(fPos, fRange-fPsize);
 
       SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERPOS), fPos, 0);
+      PositionChanged(fPos);
 
       if (fGrabPointer)
          gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
@@ -382,6 +471,7 @@ Bool_t TGHScrollBar::HandleMotion(Event_t *event)
       fPos = TMath::Min(fPos, fRange-fPsize);
 
       SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERTRACK), fPos, 0);
+      PositionChanged(fPos);
    }
    return kTRUE;
 }
@@ -413,6 +503,9 @@ void TGHScrollBar::SetRange(Int_t range, Int_t page_size)
    fPos = TMath::Min(fPos, fRange-fPsize);
 
    SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERPOS), fPos, 0);
+   PositionChanged(fPos);
+   RangeChanged(fRange);
+   PageSizeChanged(fPsize);
 }
 
 //______________________________________________________________________________
@@ -430,6 +523,7 @@ void TGHScrollBar::SetPosition(Int_t pos)
    fSlider->MoveResize(fX0, 0, fSliderSize, fgScrollBarWidth);
 
    SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERPOS), fPos, 0);
+   PositionChanged(fPos);
 }
 
 
@@ -498,6 +592,9 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
    Int_t newpos;
 
    if (event->fCode == kButton4) {
+      if (!fHead->IsEnabled()) {
+         return kFALSE;
+      }
       //scroll up
       newpos = fPos - fPsize;
       if (newpos<0) newpos = 0;
@@ -505,6 +602,10 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
       return kTRUE;
    }
    if (event->fCode == kButton5) {
+      if (!fTail->IsEnabled()) {
+         return kFALSE;
+      }
+
       // scroll down
       newpos = fPos + fPsize;
       SetPosition(newpos);
@@ -523,6 +624,7 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
          fSlider->Move(0, fY0);
 
          SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERTRACK), fPos, 0);
+         PositionChanged(fPos);
          return kTRUE;
       }
 
@@ -544,9 +646,15 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
          fSubw = subw;
 
          if (subw == fHead->GetId()) {
+            //if (!fHead->IsEnabled()) {
+            //   return kFALSE;
+           // }
             fHead->SetState(kButtonDown);
             fPos--;
          } else if (subw == fTail->GetId()) {
+            //if (!fTail->IsEnabled()) {
+            //   return kFALSE;
+            //}
             fTail->SetState(kButtonDown);
             fPos++;
          } else if (event->fY > fgScrollBarWidth && event->fY < fY0)
@@ -565,7 +673,7 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
          fSlider->Move(0, fY0);
 
          SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERTRACK), fPos, 0);
-
+         PositionChanged(fPos);
       }
 
       // last argument kFALSE forces all specified events to this window
@@ -588,6 +696,7 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
       fPos = TMath::Min(fPos, fRange-fPsize);
 
       SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
+      PositionChanged(fPos);
 
       if (fGrabPointer)
          gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
@@ -613,6 +722,7 @@ Bool_t TGVScrollBar::HandleMotion(Event_t *event)
       fPos = TMath::Min(fPos, fRange-fPsize);
 
       SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERTRACK), fPos, 0);
+      PositionChanged(fPos);
    }
    return kTRUE;
 }
@@ -621,7 +731,7 @@ Bool_t TGVScrollBar::HandleMotion(Event_t *event)
 void TGVScrollBar::SetRange(Int_t range, Int_t page_size)
 {
    // Set range of vertical scrollbar.
-   
+
    fRange = TMath::Max(range, 1);
    fPsize = TMath::Max(page_size, 0);
 
@@ -644,6 +754,9 @@ void TGVScrollBar::SetRange(Int_t range, Int_t page_size)
    fPos = TMath::Min(fPos, fRange-fPsize);
    
    SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
+   PositionChanged(fPos);
+   RangeChanged(fRange);
+   PageSizeChanged(fPsize);
 }
 
 //______________________________________________________________________________
@@ -661,6 +774,7 @@ void TGVScrollBar::SetPosition(Int_t pos)
    fSlider->MoveResize(0, fY0, fgScrollBarWidth, fSliderSize);
 
    SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
+   PositionChanged(fPos);
 }
 
 //______________________________________________________________________________

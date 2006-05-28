@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.6 2006/03/28 16:19:37 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.7 2006/05/26 09:16:29 brun Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -100,7 +100,11 @@ TGuiBldAction::TGuiBldAction(const char *name, const char *title,
                Int_t type,  TGLayoutHints *hints) :
    TNamed(name, title), fType(type), fHints(hints)
 {
-   // cconstructor
+   // constructor
+
+   fPicture = 0;
+   fPic = 0;  
+   fAct = "";
 }
 
 //______________________________________________________________________________

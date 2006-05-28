@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.41 2006/04/14 17:54:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.42 2006/04/24 13:49:56 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -46,6 +46,8 @@
 #include "TGResourcePool.h"
 #include "Riostream.h"
 #include "TGTextEntry.h"
+
+
 
 ClassImp(TGComboBoxPopup)
 ClassImp(TGComboBox)
@@ -283,9 +285,11 @@ void TGComboBox::EnableTextInput(Bool_t on)
 
    UInt_t w, h;
    const char *text = "";
+   Pixel_t back = TGFrame::GetWhitePixel(); // default
 
    if (on) {
       if (fSelEntry) {
+         back = fSelEntry->GetBackground();
          text = ((TGTextLBEntry*)fSelEntry)->GetText()->GetString();
          if (fTextEntry && fSelEntry->InheritsFrom(TGTextLBEntry::Class())) {
             fTextEntry->SetText(text);
@@ -304,10 +308,12 @@ void TGComboBox::EnableTextInput(Bool_t on)
          AddFrame(fTextEntry, fLhs);
          fTextEntry->SetEditDisabled(kEditDisable | kEditDisableGrab | kEditDisableBtnEnable);
       }
+      fTextEntry->SetBackgroundColor(back);
       MapSubwindows();
       GetLayoutManager()->Layout();
    } else {
       if (fTextEntry) {
+         back = fTextEntry->GetBackground();
          text = fTextEntry->GetText();
          RemoveFrame(fTextEntry);
          fTextEntry->DestroyWindow();
@@ -322,6 +328,7 @@ void TGComboBox::EnableTextInput(Bool_t on)
          AddFrame(fSelEntry, fLhs);
          fSelEntry->SetEditDisabled(kEditDisable | kEditDisableGrab);
       }
+      fSelEntry->SetBackgroundColor(back);
       MapSubwindows();
       GetLayoutManager()->Layout();
    }
@@ -372,7 +379,7 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
 {
    // Handle mouse button events in the combo box.
 
-   if (!fDDButton) return kTRUE;
+   if (!fDDButton || !fDDButton->IsEnabled()) return kFALSE;
 
    if (event->fType == kButtonPress) {
       Window_t child = (Window_t)event->fUser[0];  // fUser[0] = child window
@@ -469,7 +476,7 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
                   TGTextLBEntry *te = (TGTextLBEntry*)e;
                   fTextEntry->SetText(te->GetText()->GetString());
                }
-               Layout();
+               GetLayoutManager()->Layout();
                fComboFrame->EndPopup();
                fDDButton->SetState(kButtonUp);
                SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_COMBOBOX),

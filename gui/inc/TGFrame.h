@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.73 2006/05/15 11:01:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.74 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -46,7 +46,7 @@
 
 class TList;
 class TGResourcePool;
-class TContextMenu;
+
 
 //---- frame states
 
@@ -173,6 +173,7 @@ protected:
 
    TString GetOptionString() const;                //used in SavePrimitive()
 
+   // some protected methods use in gui builder
    virtual void StartGuiBuilding(Bool_t on = kTRUE);
 
 public:
@@ -235,7 +236,6 @@ public:
    virtual UInt_t  GetDefaultHeight() const { return GetDefaultSize().fHeight; }
    virtual Pixel_t GetBackground() const { return fBackground; }
    virtual void    ChangeBackground(Pixel_t back);
-   virtual void    ChangeBackgroundColor();   //*MENU* *DIALOG*
    virtual void    SetBackgroundColor(Pixel_t back);
    virtual Pixel_t GetForeground() const;
    virtual void    SetForegroundColor(Pixel_t /*fore*/) { }
@@ -335,7 +335,6 @@ protected:
    Int_t            fMustCleanup;     // cleanup mode (see EFrameCleanup)
    Bool_t           fMapSubwindows;   // kTRUE - map subwindows
 
-   static TContextMenu  *fgContextMenu;   // context menu for setting GUI attributes
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
 
 public:
@@ -402,7 +401,7 @@ public:
    virtual Bool_t IsMapSubwindows() const { return fMapSubwindows; }
 
    virtual void   Print(Option_t *option="") const;
-   virtual void   ChangeBackgroundColor();       //*MENU* *DIALOG*
+   virtual void   ChangeSubframesBackground(Pixel_t back);
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
    virtual void   SavePrimitiveSubframes(ofstream &out, Option_t *option);
 
@@ -529,7 +528,7 @@ public:
    EInitialState GetWMState() const { return fWMInitState; }
 
    virtual void SavePrimitive(ofstream &out, Option_t *option);
-   virtual void SaveSource(const char *filename = "Rootappl.C", Option_t *option = ""); // *MENU*
+   virtual void SaveSource(const char *filename = "Rootappl.C", Option_t *option = ""); // *MENU*icon=bld_save.png*
 
    ClassDef(TGMainFrame,0)  // Top level window frame
 };
@@ -564,7 +563,7 @@ public:
    virtual void    CenterOnParent(Bool_t croot = kTRUE, EPlacement pos = kCenter);
    const TGWindow *GetMain() const { return fMain; }
    virtual void    SavePrimitive(ofstream &out, Option_t *option);
-   virtual void    SaveSource(const char *filename = "Rootdlog.C", Option_t *option = ""); // *MENU*
+   virtual void    SaveSource(const char *filename = "Rootdlog.C", Option_t *option = ""); // *MENU*icon=bld_save.png*
 
    ClassDef(TGTransientFrame,0)  // Frame for dialog (transient) windows
 };
@@ -589,7 +588,8 @@ protected:
    TGString      *fText;         // title text
    FontStruct_t   fFontStruct;   // title fontstruct
    GContext_t     fNormGC;       // title graphics context
-   Int_t          fTitlePos;     // title position
+   Int_t          fTitlePos;     // *OPTION={GetMethod="GetTitlePos";SetMethod="SetTitlePos";Items=(-1="Left",0="Center",1="Right")}*
+   Bool_t         fHasOwnFont;   // kTRUE - font defined locally,  kFALSE - globally
 
    virtual void DoRedraw();
 
@@ -619,14 +619,22 @@ public:
    virtual ~TGGroupFrame();
 
    virtual TGDimension GetDefaultSize() const;
-   virtual void DrawBorder();
-   virtual void SetTitlePos(ETitlePos pos = kLeft) { fTitlePos = pos; }  //*MENU*
-   Int_t        GetTitlePos() const { return fTitlePos; }
-   virtual void SetTitle(TGString *title);
-   virtual void SetTitle(const char *title);
-           void Rename(const char *title)  { SetTitle(title); } //*MENU*
+   virtual void  DrawBorder();
+   virtual void  SetTitle(TGString *title);
+   virtual void  SetTitle(const char *title);
+   virtual void  Rename(const char *title)  { SetTitle(title); } //*MENU*icon=bld_rename.png*
+           Int_t GetTitlePos() const { return fTitlePos; }
+   virtual void  SetTitlePos(ETitlePos pos = kLeft) { fTitlePos = pos; }  //*SUBMENU*
+   virtual void  SetTextColor(Pixel_t color, Bool_t local = kTRUE);
+   virtual void  SetTextFont(const char *fontName, Bool_t local = kTRUE);
+   virtual void  SetTextFont(FontStruct_t font, Bool_t local = kTRUE);
+   GContext_t GetNormGC() const { return fNormGC; }
+   FontStruct_t GetFontStruct() const { return fFontStruct; }
+
    virtual const char *GetTitle() const { return fText->GetString(); }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   Bool_t HasOwnFont() const;
+
+   virtual void  SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGGroupFrame,0)  // A composite frame with border and title
 };

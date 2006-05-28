@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.12 2006/05/15 11:01:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.13 2006/05/23 04:47:38 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -162,9 +162,9 @@ class TGNumberEntry : public TGCompositeFrame, public TGWidget,
    public TGNumberFormat {
 
    // dummy data members - just to say about options for context menu
-   EStyle fNumStyle;//*OPTION={GetMethod="GetNumStyle";SetMethod="SetNumStyle";Items=(TGNumberFormat::kNESInteger="Int",TGNumberFormat::kNESReal="Real",TGNumberFormat::kNESDegree="Degree")}*
-   EAttribute fNumAttr; // *OPTION={GetMethod="GetNumAttr";SetMethod="SetNumAttr";Items=(TGNumberFormat::kNEAAnyNumber="&AnyNumber",TGNumberFormat::kNEAPositive="&Positive")}*
-   ELimit fNumLimits; // *OPTION={GetMethod="GetNumLimits";SetMethod="SetNumLimits";Items=(TGNumberFormat::kNELNoLimits="&NoLimits",TGNumberFormat::kNELLimitMinMax="Upper&AndLower")}*
+   EStyle fNumStyle;//*OPTION={GetMethod="GetNumStyle";SetMethod="SetNumStyle";Items=(0="Int",5="Real",6="Degree",9="Hour:Min:Sec",10="Day/Month/Year",12="Hex")}*
+   EAttribute fNumAttr; // *OPTION={GetMethod="GetNumAttr";SetMethod="SetNumAttr";Items=(0="&AnyNumber",1="&Non negative",2="&Positive")}*
+   ELimit fNumLimits; // *OPTION={GetMethod="GetNumLimits";SetMethod="SetNumLimits";Items=(0="&No Limits",1="Limit M&in",2="Limit M&ax",2="Min &and Max")}*
 
 private:
    const TGPicture  *fPicUp;      // Up arrow

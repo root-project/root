@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.19 2006/05/15 07:43:33 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.20 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -39,7 +39,7 @@ protected:
    TGString      *fText;         // label text
    UInt_t         fTWidth;       // text width
    UInt_t         fTHeight;      // text height
-   Int_t          fTMode;        // text drawing mode (ETextJustification)
+   Int_t          fTMode;        // text justify
    Bool_t         fTextChanged;  // has text changed
    GContext_t     fNormGC;       // graphics context used for drawing label
    FontStruct_t   fFontStruct;   // font to draw label
@@ -68,6 +68,7 @@ public:
            FontStruct_t font = GetDefaultFontStruct(),
            UInt_t options = kChildFrame,
            Pixel_t back = GetDefaultFrameBackground());
+
    virtual ~TGLabel();
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(fTWidth, fTHeight+1); }
@@ -75,21 +76,25 @@ public:
    virtual const char *GetTitle() const { return fText->Data(); }
    virtual void SetText(TGString *newText);
    void SetText(const char *newText) { SetText(new TGString(newText)); }
-   void ChangeText(const char *newText) { SetText(newText); } //*MENU*
+   virtual void ChangeText(const char *newText) { SetText(newText); } //*MENU*icon=bld_rename.png*
    virtual void SetTitle(const char *label) { SetText(label); }
    void SetText(Int_t number) { SetText(new TGString(number)); }
    void SetTextJustify(Int_t tmode);
+   Int_t GetTextJustify() const { return fTMode; }
    virtual void SetTextFont(TGFont *font, Bool_t global = kFALSE);
    virtual void SetTextFont(FontStruct_t font, Bool_t global = kFALSE);
    virtual void SetTextFont(const char *fontName, Bool_t global = kFALSE);
    virtual void SetTextColor(Pixel_t color, Bool_t global = kFALSE);
    virtual void SetTextColor(TColor *color, Bool_t global = kFALSE);
-   virtual void SetForegroundColor(Pixel_t fore) { SetTextColor(fore, kFALSE); }
+   virtual void SetForegroundColor(Pixel_t fore) { SetTextColor(fore); }
    virtual void Disable(Bool_t on = kTRUE) 
                { fDisabled = on; fClient->NeedRedraw(this); } //*TOGGLE* *GETTER=IsDisabled
    virtual void Enable() { fDisabled = kFALSE; fClient->NeedRedraw(this); }
    Bool_t IsDisabled() const { return fDisabled; }
    Bool_t HasOwnFont() const;
+
+   GContext_t GetNormGC() const { return fNormGC; }
+   FontStruct_t GetFontStruct() const { return fFontStruct; }
 
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 

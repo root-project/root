@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.28 2006/05/15 07:43:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.29 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -135,6 +135,8 @@ public:
    virtual TGToolTip   *GetToolTip() const { return fTip; }
    virtual const char  *GetTitle() const { return GetText(); }
             Bool_t      HasMarkedText() const  { return fSelectionOn && (fStartIX != fEndIX); }
+            Pixel_t     GetTextColor() const { return fNormGC.GetForeground(); }
+           FontStruct_t GetFontStruct() const { return fFontStruct; }
             void        Home(Bool_t mark = kFALSE);
    virtual  void        Insert(const char *);
    virtual  void        InsertText(const char *text, Int_t pos);
@@ -147,20 +149,19 @@ public:
             void        NewMark(Int_t pos);
             void        Remove();
    virtual  void        RemoveText(Int_t start, Int_t end);
-   virtual  void        SetFont(TGFont *font, Bool_t local = kFALSE);
-   virtual  void        SetFont(FontStruct_t font, Bool_t local = kFALSE);
-   virtual  void        SetFont(const char *fontName, Bool_t local = kFALSE);
-   virtual  void        SetTextColor(Pixel_t color, Bool_t local = kFALSE);
-   virtual  void        SetTextColor(TColor *color, Bool_t local = kFALSE);
+   virtual  void        SetFont(TGFont *font, Bool_t local = kTRUE);
+   virtual  void        SetFont(FontStruct_t font, Bool_t local = kTRUE);
+   virtual  void        SetFont(const char *fontName, Bool_t local = kTRUE);
+   virtual  void        SetTextColor(Pixel_t color, Bool_t local = kTRUE);
+   virtual  void        SetTextColor(TColor *color, Bool_t local = kTRUE);
    virtual  void        SetText(const char *text);                               //*MENU*
-   virtual  void        SetToolTipText(const char *text, Long_t delayms = 1000); //*MENU*
+   virtual  void        SetToolTipText(const char *text, Long_t delayms = 500);  //*MENU*
    virtual  void        SetMaxLength(Int_t maxlen);                              //*MENU*
    virtual  void        SelectAll();
    virtual  void        SetAlignment(ETextJustification mode = kTextLeft);       //*SUBMENU*         
    virtual  void        SetInsertMode(EInsertMode mode = kInsert);               //*SUBMENU*               
    virtual  void        SetEchoMode(EEchoMode mode = kNormal);                   //*SUBMENU*
             void        SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }    //*TOGGLE* *GETTER=IsEnabled
-   void                 ChangeTextColor();                                       //*MENU* *DIALOG*
    virtual  void        SetCursorPosition(Int_t pos);
             void        SetEdited(Bool_t flag = kTRUE) { fEdited = flag; }
    virtual  void        SetFocus();

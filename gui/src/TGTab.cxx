@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.32 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.33 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -318,7 +318,7 @@ TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
    AddFrame(fContainer, 0);
 
    fEditDisabled = kEditDisable | kEditDisableLayout;
-   fContainer->SetEditDisabled(kEditDisable |  kEditDisableGrab);
+   fContainer->SetEditDisabled(kEditDisable | kEditDisableGrab);
 
    if (!p && fClient->IsEditable()) {  // default ctor used in the GUI builder
       AddTab("Tab1");

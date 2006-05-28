@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.12 2005/11/01 16:42:26 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.13 2006/01/09 09:03:35 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -152,8 +152,8 @@ public:
    virtual void Crop(Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*width*/ = 0, UInt_t /*height*/ = 0) {}
    virtual void Pad(const char * /*color*/ = "#FFFFFFFF", UInt_t /*left*/ = 0, 
                    UInt_t /*right*/ = 0, UInt_t /*top*/ = 0, UInt_t /*bottom*/ = 0) {}
-   virtual void Blur(Double_t /*horizontal*/ = 3, Double_t /*vertical*/ = 3) {}
-   virtual void Vectorize(UInt_t /*max_colors*/ = 256, UInt_t /*dither*/ = 4, Int_t /*opaque_threshold*/ = 0) {}
+   virtual void Blur(Double_t /*horizontal*/ = 3, Double_t /*vertical*/ = 3) { }
+   virtual Double_t *Vectorize(UInt_t /*max_colors*/ = 256, UInt_t /*dither*/ = 4, Int_t /*opaque_threshold*/ = 0) { return 0; }
    virtual void HSV(UInt_t /*hue*/ = 0, UInt_t /*radius*/ = 360, Int_t /*H*/ = 0, Int_t /*S*/ = 0, Int_t /*V*/ = 0, 
                     Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*width*/ = 0, UInt_t /*height*/ = 0) {}
    virtual void Gradient(UInt_t /*angle*/ = 0, const char * /*colors*/ = "#FFFFFF #000000", const char * /*offsets*/ = 0,

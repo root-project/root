@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.15 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.16 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -49,7 +49,8 @@ protected:
    TGPopupMenu     *fMenu;          // popup menu with editor actions
    TGSearchType    *fSearch;        // structure used by search dialog
    TGLongPosition   fCurrent;       // current cursor position
-   EInsertMode      fInsertMode;    // text insertion mode (kInsert (default), kReplace)
+   EInsertMode      fInsertMode;    // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="&Insert",kReplace="&Replace")}*
+   Bool_t           fEnableMenu;    // enable context menu with editor actions
 
    static TGGC     *fgCursor0GC;
    static TGGC     *fgCursor1GC;
@@ -101,9 +102,11 @@ public:
    virtual Bool_t Replace(TGLongPosition pos, const char *oldText, const char *newText,
                           Bool_t direction, Bool_t caseSensitive);
    virtual Bool_t Goto(Long_t line, Long_t column = 0);
-   virtual void   SetInsertMode(EInsertMode mode = kInsert);
+   virtual void   SetInsertMode(EInsertMode mode = kInsert); //*SUBMENU*
    EInsertMode    GetInsertMode() const { return fInsertMode; }
    TGPopupMenu   *GetMenu() const { return fMenu; }
+   virtual void   EnableMenu(Bool_t on = kTRUE) { fEnableMenu = on; } //*TOGGLE* *GETTER=IsMenuEnabled
+   virtual Bool_t IsMenuEnabled() const { return fEnableMenu; }
 
    virtual void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual void   ScrollCanvas(Int_t newTop, Int_t direction);

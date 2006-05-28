@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.43 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.44 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -128,7 +128,7 @@ TGViewPort::TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
 
    AddInput(kStructureNotifyMask);
    SetWindowName();
-   fEditDisabled = kEditDisable;
+   fEditDisabled = kEditDisable | kEditDisableGrab;
 }
 
 //______________________________________________________________________________
@@ -138,10 +138,17 @@ void TGViewPort::SetContainer(TGFrame *f)
    // container is at least a TGCompositeFrame (TGCanvas::AddFrame depends 
    // on it).
 
+   if (!f) {
+      RemoveFrame(fContainer);
+      fContainer = 0;
+      return;
+   }
+
    if (!fContainer) {
       fContainer = f;
       AddFrame(f, 0);
-
+      fContainer->SetEditDisabled(fContainer->GetEditDisabled() | kEditDisableGrab);
+ 
       if (fContainer->InheritsFrom(TGContainer::Class())) {
          ((TGContainer*)fContainer)->fViewPort = this;
          if (fParent->InheritsFrom(TGCanvas::Class())) 
@@ -307,7 +314,7 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
 
    AddInput(kKeyPressMask | kPointerMotionMask);
    SetWindowName();
-   fEditDisabled = kEditDisableLayout | kEditDisableGrab;
+   fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable;
 }
 
 //______________________________________________________________________________
@@ -341,7 +348,7 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
 
    AddInput(kKeyPressMask | kPointerMotionMask);
    SetWindowName();
-   fEditDisabled = kEditDisableLayout | kEditDisableGrab;
+   fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable;
 }
 
 //______________________________________________________________________________
@@ -1919,20 +1926,9 @@ TGCanvas::TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
    fVScrollbar->Associate(this);
 
    SetWindowName();
-   fVScrollbar->SetEditDisabled(kEditDisable);
-   fHScrollbar->SetEditDisabled(kEditDisable);
-   fEditDisabled = kEditDisableLayout;
-
-   if (!p && fClient->IsEditable()) {
-      fVport->SetEditDisabled(kEditDisable | kEditDisableLayout);
-      TGCompositeFrame *cont = new TGCompositeFrame(fVport, 120, 120, 
-                                                    kHorizontalFrame | kOwnBackground, 
-                                                    TGFrame::GetWhitePixel());
-      SetContainer(cont);
-      cont->SetEditDisabled(kEditEnable);
-      Resize(20, 20);
-      MapSubwindows();
-   }
+   fVScrollbar->SetEditDisabled(kEditDisable | kEditDisableGrab | kEditDisableBtnEnable);
+   fHScrollbar->SetEditDisabled(kEditDisable | kEditDisableGrab | kEditDisableBtnEnable);
+   //fEditDisabled = kEditDisableLayout;
 }
 
 //______________________________________________________________________________
@@ -2045,8 +2041,10 @@ void TGCanvas::Layout()
       return;
    }
 
-   Bool_t fixedw = (container->GetOptions() & kFixedWidth) ? kTRUE : kFALSE;
-   Bool_t fixedh = (container->GetOptions() & kFixedHeight) ? kTRUE : kFALSE;
+   Bool_t fixedw = container->IsLayoutBroken() || (container->GetOptions() & kFixedWidth) ? 
+                   kTRUE : kFALSE;
+   Bool_t fixedh = container->IsLayoutBroken() || (container->GetOptions() & kFixedHeight) ?
+                   kTRUE : kFALSE;
 
    // test whether we need scrollbars
    cw = fWidth  - UInt_t(fBorderWidth << 1);
@@ -2121,6 +2119,9 @@ void TGCanvas::Layout()
       } else {
          fHScrollbar->UnmapWindow();
          fHScrollbar->SetPosition(0);
+         if (container->IsLayoutBroken()) {
+            container->Resize(fVport->GetWidth(), container->GetHeight());
+         }
       }
    }
 
@@ -2132,6 +2133,9 @@ void TGCanvas::Layout()
       } else {
          fVScrollbar->UnmapWindow();
          fVScrollbar->SetPosition(0);
+         if (container->IsLayoutBroken()) {
+            container->Resize(container->GetWidth(), fVport->GetHeight());
+         }
       }
    }
 }

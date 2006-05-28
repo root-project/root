@@ -1,5 +1,5 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.13 2005/11/21 00:25:37 rdm Exp $
-// Author: Bertrand Bellenot + Fons Rademakers   23/04/03
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.14 2006/02/28 16:48:17 rdm Exp $
+// Author: Bertrand Bellenot + Fons Rademakers + Valeriy Onuchin  23/04/03
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -38,6 +38,14 @@
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TString.h"
+#include "TError.h"
+#include "TGColorSelect.h"
+#include "TGButton.h"
+#include "TGLabel.h"
+#include "TGListBox.h"
+#include "TGComboBox.h"
+
+
 
 enum EFontDialog {
    kFDLG_OK          = 1,
@@ -64,6 +72,9 @@ static const char *gFontStyles[] = {
    "Normal", "Bold", "Italic", "Bold Italic", 0
 };
 
+static TString gFontStylesReal[4];
+
+
 static const char *gAlignTypes[] = {
     "top left", "top center", "top right",
     "middle left", "middle center", "middle right",
@@ -71,7 +82,7 @@ static const char *gAlignTypes[] = {
     0
 };
 
-static const UInt_t gAlignValues[] = {
+static const Int_t gAlignValues[] = {
     kTextTop     | kTextLeft,
     kTextTop     | kTextCenterX,
     kTextTop     | kTextRight,
@@ -84,6 +95,7 @@ static const UInt_t gAlignValues[] = {
     0
 };
 
+/*
 static const char *gFontList[] = {
    "Arial",
    "Comic Sans MS",
@@ -107,13 +119,14 @@ static const char *gFontList2[] = {
    "OpenSymbol",
    0
 };
+*/
 
 ClassImp(TGFontDialog)
 
 //________________________________________________________________________________
 TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
                            FontProp_t *fontProp, const TString &sample,
-                           const char **fontList) :
+                           char **fontList, Bool_t wait) :
               TGTransientFrame(p, t, 100, 100)
 {
    // Create font dialog. When closed via OK button fontProp is set to
@@ -130,11 +143,11 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    fLabelFont    = 0;
    fSample       = 0;
    fHitOK        = kFALSE;
+   fWaitFor      = wait;
+   fInitFont     = 0;
+   fInitColor    = 0;
+   fInitAlign    = 0;
 
-   if (!p && !t) {
-      MakeZombie();
-      return;
-   }
    if (!fontProp) {
       Error("TGFontDialog", "fontProp argument may not be 0");
       return;
@@ -162,28 +175,32 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    }
 
    hf = new TGHorizontalFrame(this, 10, 10);
-   AddFrame(hf, new TGLayoutHints(kLHintsNormal, 5, 5, 5, 5));
+   AddFrame(hf, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 5, 5, 5, 5));
 
    //--------------------- font names listbox
 
    vf = new TGVerticalFrame(hf, 10, 10);
 
-   lbl = new TGLabel(vf, new TGString("Font"));
+   lbl = new TGLabel(vf, new TGString("Font:"));
    vf->AddFrame(lbl, lh2);
 
    fFontNames = new TGListBox(vf, kFDLG_FONTNAMES);
-   fFontNames->Resize(120, 120);
-   fFontNames->Associate(this);
-   vf->AddFrame(fFontNames, lh1);
+   fFontNames->Resize(120, fFontNames->GetDefaultHeight());
 
-   hf->AddFrame(vf, new TGLayoutHints(kLHintsLeft | kLHintsExpandY,
+   if (gVirtualX->InheritsFrom("TGX11")) {
+      fFontNames->Connect("Selected(char*)", "TGFontDialog", this, "UpdateStyleSize(char*)");
+   }
+   fFontNames->Associate(this);
+   vf->AddFrame(fFontNames,  new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+
+   hf->AddFrame(vf, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY,
                                       0, 10, 2, 2));
 
    //--------------------- font styles listbox
 
    vf = new TGVerticalFrame(hf, 10, 10);
 
-   lbl = new TGLabel(vf, new TGString("Style"));
+   lbl = new TGLabel(vf, new TGString("Style:"));
    vf->AddFrame(lbl, lh2);
 
    fFontStyles = new TGListBox(vf, kFDLG_FONTSTYLES);
@@ -198,7 +215,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
 
    vf = new TGVerticalFrame(hf, 10, 10);
 
-   lbl = new TGLabel(vf, new TGString("Size"));
+   lbl = new TGLabel(vf, new TGString("Size:"));
    vf->AddFrame(lbl, lh2);
 
    fFontSizes = new TGListBox(vf, kFDLG_FONTSIZES);
@@ -234,45 +251,39 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    lbl = new TGLabel(hf2, new TGString("Text Color"));
    hf2->AddFrame(lbl, new TGLayoutHints(kLHintsLeft, 5, 5, 20, 5));
 
-   TGColorSelect *colorsel = new TGColorSelect(hf2, fTextColor, kFDLG_COLORSEL);
-   colorsel->Associate(this);
+   fColorSelect = new TGColorSelect(hf2, fTextColor, kFDLG_COLORSEL);
+   fColorSelect->Associate(this);
 
-   hf2->AddFrame(colorsel, new TGLayoutHints(kLHintsRight | kLHintsTop, 5, 5, 20, 5));
+   hf2->AddFrame(fColorSelect, new TGLayoutHints(kLHintsRight | kLHintsTop, 5, 5, 20, 5));
 
    vf->Resize(vf->GetDefaultSize());
 
-   hf->AddFrame(vf, new TGLayoutHints(kLHintsLeft | kLHintsExpandY,
+   hf->AddFrame(vf, new TGLayoutHints(kLHintsLeft | kLHintsExpandY | kLHintsTop,
                                       10, 0, lbl->GetDefaultHeight()+6, 0));
 
    //--------------------- initialize controls
 
    Resize(GetDefaultSize());
 
-   if (!fontList)
-      fontList = gFontList;
+   Int_t cnt = 0;
+   Bool_t own = kFALSE;
 
-   Int_t n = 0;
-   for (i = 0; fontList[i] != 0; ++i)
-      if (GetFontProperties(fontList[i])) {
-         n++;
-         fFontNames->AddEntry(new TGString(fontList[i]), i);
-      }
-   if (n == 0) {
-      fontList = gFontList2;
-      for (i = 0; fontList[i] != 0; ++i)
-         if (GetFontProperties(fontList[i]))
-            fFontNames->AddEntry(new TGString(fontList[i]), i);
+   if (!fontList) {
+      fontList = gVirtualX->ListFonts("-*-*-*-*", 10000, cnt);
+      own = kTRUE;
    }
 
-   for (i = 0; gFontSizes[i] != 0; ++i)
-      fFontSizes->AddEntry(new TGString(gFontSizes[i]), i);
+   Build(fontList, cnt);
 
-   for (i = 0; gAlignTypes[i] != 0; ++i)
+   for (i = 0; gAlignTypes[i] != 0; ++i) {
       fTextAligns->AddEntry(new TGString(gAlignTypes[i]), i);
+   }
 
-   for (i = 0; gAlignValues[i] != 0; ++i)
-      if (gAlignValues[i] == fTextAlign)
+   for (i = 0; gAlignValues[i] != 0; ++i) {
+      if (gAlignValues[i] == fTextAlign) {
          fTextAligns->Select(i);
+      }
+   }
 
    //--------------------- sample box
 
@@ -291,14 +302,6 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
       fSampleText = gFDLG_DEFAULTSAMPLE;
    else
       fSampleText = sample;
-
-   for (i = 0; fontList[i] != 0; ++i) {
-      if (strstr(fName, fontList[i])) {
-         fFontNames->Select(i);
-         GetFontProperties();   // sets the supported font styles
-         break;
-      }
-   }
 
    for (i = 0; gFontSizes[i] != 0; ++i) {
       if (fSize == atoi(gFontSizes[i])) {
@@ -323,12 +326,13 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    gcval.fForeground = fTextColor;
    gcval.fFont = fLabelFont->GetFontHandle();
    fSampleTextGC = fClient->GetGC(&gcval, kTRUE);
-   fSample = new TGLabel(cf, fSampleText, (*fSampleTextGC)(), (*fLabelFont)());
+   fSample = new TGLabel(cf, fSampleText); //, (*fSampleTextGC)(), (*fLabelFont)());
    fSample->SetTextJustify(gAlignValues[fTextAligns->GetSelected()]);
    cf->AddFrame(fSample, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY |
                                            kLHintsExpandX | kLHintsExpandY,
                                            1, 1, 1, 1));
    cf->Layout();
+   if (own) gVirtualX->FreeFontNames(fontList);
 
    gf->Resize(w, 80);
 
@@ -347,22 +351,16 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    vf->Resize(cancel->GetDefaultWidth()+70, vf->GetDefaultHeight());
 
    hf->AddFrame(vf, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 5, 5, 5, 5));
+   SetEditDisabled(kEditDisable);
 
-   MapSubwindows();
+   fInitAlign = fTextAlign;
+   fInitColor = fTextColor;
+   fInitFont = fLabelFont;
 
-   width  = GetDefaultWidth();
-   height = GetDefaultHeight();
-
-   Resize(width, height);
-
-   //---- position the dialog relative to the parent's window
-
-   CenterOnParent();
-
-   //---- make the dialog box non-resizable
-
-   SetWMSize(width, height);
-   SetWMSizeHints(width, height, width, height, 0, 0);
+   fFontNames->GetScrollBar()->SetPosition(fFontNames->GetSelected()-3);
+   fFontSizes->GetScrollBar()->SetPosition(fFontSizes->GetSelected()-3);
+   fFontSizes->Layout();
+   fFontNames->Layout();
 
    SetWindowName("Font Selection");
    SetIconName("Font Selection");
@@ -374,15 +372,24 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
                               kMWMFuncMinimize,
                kMWMInputModeless);
 
-   MapWindow();
+   //---- set minimum size to the dialog box
+   width  = GetDefaultWidth();
+   height = GetDefaultHeight();
+   MapSubwindows();
+   Resize(width, height);
 
-   fFontNames->GetScrollBar()->SetPosition(fFontNames->GetSelected()-3);
-   fFontSizes->GetScrollBar()->SetPosition(fFontSizes->GetSelected()-3);
-   fFontSizes->Layout();
-   fFontNames->Layout();
+   //---- position the dialog relative to the parent's window
+   CenterOnParent();
 
-   fClient->WaitForUnmap(this);
-   DeleteWindow();
+   // set minimum size 
+   SetWMSize(width, height);
+   SetWMSizeHints(width, height, 10000, 10000, 0, 0);
+
+   if (fWaitFor) {
+      MapWindow();
+      fClient->WaitForUnmap(this);
+      DeleteWindow();
+   }
 }
 
 //________________________________________________________________________________
@@ -390,8 +397,7 @@ TGFontDialog::~TGFontDialog()
 {
    // Delete all widgets.
 
-   if (IsZombie()) return;
-   fClient->FreeFont(fLabelFont);
+   //fClient->FreeFont(fLabelFont);
    fClient->FreeGC(fSampleTextGC);
 }
 
@@ -400,8 +406,31 @@ void TGFontDialog::CloseWindow()
 {
    // Called when window is closed via window manager.
 
-   if (!fHitOK)
+   if (fWaitFor) {
+      UnmapWindow();
+      return;
+   }
+
+   if (!fHitOK) {
       fFontProp->fName = "";
+
+      if (fInitFont) {
+         SetFont(fInitFont);
+         FontSelected((char*)fInitFont->GetName());
+      }
+      if (fInitColor) {
+         SetColor(fInitColor);
+         ColorSelected(fInitColor);
+      }
+
+      if (fInitAlign) {
+         SetAlign(fInitAlign);
+         AlignSelected(fInitAlign);
+      }
+   }
+   fFontNames->Select(0);
+   fFontStyles->Select(0);
+   fFontSizes->Select(0);
 
    // don't call DeleteWindow() here since that will cause access
    // to the deleted dialog in the WaitFor() method (see ctor)
@@ -430,17 +459,13 @@ Bool_t TGFontDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      CloseWindow();
                      break;
                   case kFDLG_CANCEL:
+                     fHitOK = kFALSE;
                      CloseWindow();
                      break;
                }
                break;
 
             case kCM_LISTBOX:
-               switch (parm1) {
-                  case kFDLG_FONTNAMES:
-                     GetFontProperties();
-                  break;
-               }
                GetFontName();
                break;
 
@@ -457,8 +482,12 @@ Bool_t TGFontDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          switch (GET_SUBMSG(msg)) {
 
             case kCOL_SELCHANGED:
-               fTextColor = parm2;
-               GetFontName();
+               {
+                  if (parm2 != (Int_t)fTextColor) {
+                     fTextColor = parm2;
+                     GetFontName();
+                  }
+               }
                break;
 
             default:
@@ -473,71 +502,217 @@ Bool_t TGFontDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 }
 
 //________________________________________________________________________________
-Bool_t TGFontDialog::GetFontProperties(const char *fontFamily)
+Bool_t TGFontDialog::Build(char **fontList, Int_t cnt)
 {
-   // Get possible styles and sizes for the selected font family if
-   // fontFamily = 0, otherwise check if fontFamily exists. Returns
-   // kFALSE if fontFamily does not exist.
+   // Build font dialog.
 
    TString family;
+   TString font;
 
-   if (fontFamily) {
-      family = fontFamily;
-   } else {
-      TGTextLBEntry *e = (TGTextLBEntry *) fFontNames->GetSelectedEntry();
-      family = e ? e->GetText()->GetString() : "";
-   }
-
-   if (family == "") {
-      Error("GetFontProperties", "no font selected or specified, should not happen");
-      return kFALSE;
-   }
-
-   // only the MS versions of these fonts work good
-   TString rgstry = "*";
-   if (family == "Symbol" || family == "Webdings" || family == "Wingdings")
-      rgstry = "microsoft";
-
-   TString font = Form("-*-%s-*-*-*-*-*-*-*-*-*-*-%s-*", family.Data(),
-                       rgstry.Data());
-
-   Int_t cnt;
-   char **fontList = gVirtualX->ListFonts(font, 1024, cnt);
-   if (!fontList) {
-      if (!fontFamily)
-         Warning("GetFontProperties", "font %s not found", font.Data());
-      return kFALSE;
-   }
-   if (fontFamily) {
-      gVirtualX->FreeFontNames(fontList);
-      return kTRUE;
-   }
-
-   Bool_t styles[4] = { kFALSE, kFALSE, kFALSE, kFALSE };
    Int_t  i;
+   fNumberOfFonts = 1;
+   Int_t n1, n2;
+ 
    for (i = 0; i < cnt; i++) {
-      if (strstr(fontList[i], "-medium-r-")) styles[0]  = kTRUE;
-      if (strstr(fontList[i], "-normal-r-")) styles[0]  = kTRUE;
-      if (strstr(fontList[i], "-bold-r-"))   styles[1]  = kTRUE;
-      if (strstr(fontList[i], "-medium-i-")) styles[2]  = kTRUE;
-      if (strstr(fontList[i], "-medium-o-")) styles[2]  = kTRUE;
-      if (strstr(fontList[i], "-normal-i-")) styles[2]  = kTRUE;
-      if (strstr(fontList[i], "-normal-o-")) styles[2]  = kTRUE;
-      if (strstr(fontList[i], "-bold-i-"))   styles[3]  = kTRUE;
-      if (strstr(fontList[i], "-bold-o-"))   styles[3]  = kTRUE;
+      font = fontList[i];
+      n1 = font.Index("-", 1);
+      n2 = font.Index("-", n1+1);
+      family = font(n1+1, n2-n1-1);
+
+      if (family.BeginsWith("@")) {
+         continue;
+      }
+
+      if (!fFontNames->FindEntry(family.Data())) {
+         fFontNames->AddEntry(family.Data(), fNumberOfFonts++);
+      }
+   }
+
+   fFontNames->SortByName();
+   
+   TGTextLBEntry *le = (TGTextLBEntry*)fFontNames->FindEntry(fName.Data());
+
+   if (le) {
+      fFontNames->Select(le->EntryId());
+   }
+
+   UpdateStyleSize(fName.Data());
+
+   return kTRUE;
+}
+
+//________________________________________________________________________________
+void TGFontDialog::UpdateStyleSize(const char *family)
+{
+   // Build font style and size list boxes
+
+   if (!family) {
+      return;
+   }
+
+   TString font = family;
+   Bool_t styles[4] = { kFALSE, kFALSE, kFALSE, kFALSE };
+   Int_t cnt = 0;
+   Int_t i = 0;
+
+   TString fname;
+   char **fontList = 0;
+
+   fname = Form("-*-%s-*-*", family);
+   fontList = gVirtualX->ListFonts(fname.Data(), 1000, cnt);
+
+   fFontSizes->RemoveEntries(0, 1000);
+   fFontSizes->Layout();
+
+   fFontStyles->RemoveEntries(0, 100);
+   fFontStyles->Layout();
+
+   if (!cnt || !fontList) {
+      return;
+   }
+
+   TString style1;
+   TString style2;
+   TString sz;
+   TString name;
+   Int_t n1, n2;
+   Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
+   Bool_t all_sizes = !x11;
+   Bool_t all_styles = !x11;
+   int szn = 0;
+
+   fFontSizes->AddEntry("12", szn++);
+
+   for (i = 0; i < cnt; i++) {
+      name = fontList[i];
+      n1 = name.Index(family);
+
+      if (n1 == kNPOS) {
+         break;
+      }
+      n1 += font.Length() + 1;
+      n2 = name.Index("-", n1);
+      if (n2 == kNPOS) {
+         break;
+      }
+
+      style1 = name(n1, n2 - n1);
+
+      n1 = n2 + 1;
+      n2 = name.Index("-", n1);
+      if (n2 == kNPOS) {
+         break;
+      }
+      style2 = name(n1, n2 - n1);
+
+      if ((style1 == "normal") || (style1 == "medium")) {
+         if (style2 == "r") {
+            styles[0]  = kTRUE;
+            gFontStylesReal[0] = style1 + "-" + style2; 
+         } else if (style2 == "i") {
+            styles[2]  = kTRUE;
+            gFontStylesReal[2] = style1 + "-" + style2; 
+         } else if (style2 == "o") {
+            styles[2]  = kTRUE;
+            gFontStylesReal[2] = style1 + "-" + style2; 
+         }
+      } else if (style1 == "bold") {
+         if (style2 == "r") {
+            styles[1]  = kTRUE;
+            gFontStylesReal[1] = style1 + "-" + style2; 
+         } else if (style2 == "i") {
+            styles[3]  = kTRUE;
+            gFontStylesReal[3] = style1 + "-" + style2; 
+         } else if (style2 == "o") {
+            styles[3]  = kTRUE;
+            gFontStylesReal[3] = style1 + "-" + style2; 
+         }
+      } else if (style1 == "(null)") {
+         styles[0]  = kTRUE;
+         gFontStylesReal[0] = "normal-r"; 
+         styles[1]  = kTRUE;
+         gFontStylesReal[1] = "bold-r"; 
+         styles[2]  = kTRUE;
+         gFontStylesReal[2] = "normal-i"; 
+         styles[3]  = kTRUE;
+         gFontStylesReal[3] = "bold-i"; 
+      }
+
+      n1++;
+      n2 = name.Index("-", n1);
+      n1 = n2 + 1;
+      n2 = name.Index("-", n1);
+      n1 = n2 + 1;
+
+      if (n2 != kNPOS) {
+         n1 = n2 + 2;
+         n2 = name.Index("-", n1);
+         sz = name(n1, n2 - n1);
+         if (!sz.IsDigit()) {
+            continue;
+         }
+
+         all_sizes = (sz == "0") && !x11;
+         if (!all_sizes) {
+            sz.Strip();
+            if (sz.Length() == 1) {
+               sz = " " + sz;
+            }
+            if (!fFontSizes->FindEntry(sz.Data())) {
+               fFontSizes->AddEntry(sz.Data(), szn++);
+            }
+         }
+      }
    }
    gVirtualX->FreeFontNames(fontList);
 
-   // update style list box
-   fFontStyles->RemoveEntries(0, 1000);
-   for (i = 0; gFontStyles[i] != 0; ++i)
-      if (styles[i])
+   Bool_t nostyles = kTRUE;
+   for (i = 0; gFontStyles[i] != 0; ++i) {
+      if (all_styles || styles[i]) {
+         nostyles = kFALSE;
          fFontStyles->AddEntry(new TGString(gFontStyles[i]), i);
+      }
+   }
+
+   if (!fBold) {
+      if (!fItalic) {
+         fFontStyles->Select(0);
+      } else {
+         fFontStyles->Select(2);
+      }
+   } else {
+      if (!fItalic) {
+         fFontStyles->Select(1);
+      } else {
+         fFontStyles->Select(3);
+      }
+   }
+
+//   if (nostyles) {
+//      fFontNames->RemoveEntry(fFontNames->FindEntry(family)->EntryId());
+//   }
+
    fFontStyles->MapSubwindows();
    fFontStyles->Layout();
-   fFontStyles->Select(0);
+//
+ 
+   sz = Form("%d", fSize);
+   if (sz.Length() == 1) {
+      sz = " " + sz;
+   }
 
-   return kTRUE;
+   for (i = 0; gFontSizes[i] != 0; ++i) {
+      if (all_sizes && !fFontSizes->FindEntry(gFontSizes[i])) {
+         fFontSizes->AddEntry(new TGString(gFontSizes[i]), i);
+      }
+      if (sz == gFontSizes[i]) {
+         fFontSizes->Select(i);
+      }
+   }
+
+   fFontSizes->SortByName();
+   fFontSizes->MapSubwindows();
+   fFontSizes->Layout();
 }
 
 //________________________________________________________________________________
@@ -547,93 +722,223 @@ void TGFontDialog::GetFontName()
 
    TGTextLBEntry *e;
    const char *size, *name;
-   char st1[12];
-   char st2;
    Int_t sel;
+   Int_t sav = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = kFatal;
 
+   TString oldName = fName;
    e = (TGTextLBEntry *) fFontNames->GetSelectedEntry();
+
+   if (!e) {
+      fFontNames->Select(1);
+      e = (TGTextLBEntry *) fFontNames->GetSelectedEntry();
+   }
    name = e ? e->GetText()->GetString() : "";
    fName = name;
 
    e = (TGTextLBEntry *) fFontSizes->GetSelectedEntry();
-   size = e ? e->GetText()->GetString() : "";
+   size = e ? e->GetText()->GetString() : "0";
    fSize = atoi(size);
 
    sel = fFontStyles->GetSelected();
 
    switch(sel) {
       case 0:
-         sprintf(st1, "medium");
-         st2     = 'r';
          fItalic = kFALSE;
          fBold   = kFALSE;
          break;
       case 1:
-         sprintf(st1, "bold");
-         st2     = 'r';
          fItalic = kFALSE;
          fBold   = kTRUE;
          break;
       case 2:
-         sprintf(st1, "medium");
-         st2     = 'i';
          fItalic = kTRUE;
          fBold   = kFALSE;
          break;
       case 3:
-         sprintf(st1, "bold");
-         st2     = 'i';
          fItalic = kTRUE;
          fBold   = kTRUE;
          break;
       default:
-         sprintf(st1, "medium");
-         st2     = 'r';
          fItalic = kFALSE;
          fBold   = kFALSE;
          break;
    }
 
-   TString rgstry = "*";
-   if (fName == "Symbol" || fName == "Webdings" || fName == "Wingdings")
+   const char *rgstry = "*";
+
+   if ((fName == "Symbol") || (fName == "Webdings") || (fName == "Wingdings")) {
       rgstry = "microsoft";
+   }
 
    TString oldFont = fLName;
-   fLName = Form("-*-%s-%s-%c-*-*-%s-*-*-*-*-*-%s-*", name, st1, st2, size,
-                 rgstry.Data());
+   fLName = Form("-*-%s-%s-*-*-%s-*-*-*-*-*-%s-*", name, gFontStylesReal[sel].Data(), size, rgstry);
+
    if (oldFont != fLName) {
-      Int_t cnt;
-      char **fontList = gVirtualX->ListFonts(fLName, 1, cnt);
-      if (!fontList) {
-         if (fItalic) {
-            // try oblique
-            fLName = Form("-*-%s-%s-o-*-*-%s-*-*-*-*-*-%s-*", name, st1, size,
-                          rgstry.Data());
-            fontList = gVirtualX->ListFonts(fLName, 1, cnt);
-         }
-         if (!fontList) {
-            Warning("GetFontName", "font %s not found", fLName.Data());
-            fLName = oldFont;
-            if (!fLabelFont)
-               fLabelFont = fClient->GetFont("fixed");
-            return;
-         }
-      }
-      gVirtualX->FreeFontNames(fontList);
       if (fLabelFont) {
-         fClient->FreeFont(fLabelFont);
+         //fClient->FreeFont(fLabelFont);
          fLabelFont = fClient->GetFont(fLName, kFALSE);
-      } else
-         fLabelFont = fClient->GetFont(fLName);
+
+         if (!fLabelFont) {
+            fLabelFont = fClient->GetFont("fixed");
+         }
+      } else {
+         fLabelFont = fClient->GetFont("fixed");
+      }
+
       if (!fLabelFont) {
          // should not happen
          fLName = oldFont;
-         return;
+         goto out;
       }
-      if (fSample) fSample->SetTextFont(fLabelFont);
+
+      if (fSample) {
+         fSample->SetTextFont(fLabelFont);
+      }
    }
+
+out:
+   Int_t oldAlign = fTextAlign;
+
    fTextAlign = gAlignValues[fTextAligns->GetSelected()];
-   if (fSample) fSample->SetTextJustify(fTextAlign);
-   if (fSample) fSample->SetTextColor(fTextColor);
+
+   if (fSample) {
+      if (fTextAlign != oldAlign) {
+         fSample->SetTextJustify(fTextAlign);
+         AlignSelected(fTextAlign);
+      }
+      fSample->SetTextColor(fTextColor);
+      fColorSelect->SetColor(fTextColor, kFALSE);
+      ColorSelected(fTextColor);
+   }
+   FontSelected((char*)fLName.Data());
    fClient->NeedRedraw(this);
+   gErrorIgnoreLevel = sav;
+}
+
+//________________________________________________________________________________
+void TGFontDialog::SetFont(TGFont *font)
+{
+   // Set font
+
+   if (!font) {
+      return;
+   }
+   TString name = font->GetName();
+
+   if (name.Index("-", 1) == kNPOS) {
+      return;
+   }
+
+   if (fSample) {
+      fLabelFont = font;
+      fSample->SetTextFont(fLabelFont);
+   }
+   fInitFont = font;
+
+   TString style1;
+   TString style2;
+   TString sz;
+
+   TString family;
+   Int_t n1, n2;
+
+   n1 = name.Index("-", 1);
+   n2 = name.Index("-", n1 + 1);
+   n1++;
+   family = name(n1, n2 - n1);
+
+   TGTextLBEntry *le = (TGTextLBEntry*)fFontNames->FindEntry(family.Data());
+
+   if (le) {
+      fFontNames->Select(le->EntryId());
+   }
+
+   n1 = n2 + 1;
+   n2 = name.Index("-", n1);
+
+   style1 = name(n1, n2 - n1);
+
+   n1 = n2 + 1;
+   n2 = name.Index("-", n1);
+   if (n2 == kNPOS) {
+      return;
+   }
+   style2 = name(n1, n2 - n1);
+
+   if ((style1 == "normal") || (style1 == "medium")) {
+      if (style2 == "r") {
+         fFontStyles->Select(0);
+      } else if (style2 == "i") {
+         fFontStyles->Select(2);
+      } else if (style2 == "o") {
+         fFontStyles->Select(2);
+      }
+   } else if (style1 == "bold") {
+      if (style2 == "r") {
+        fFontStyles->Select(1);
+      } else if (style2 == "i") {
+        fFontStyles->Select(3);
+      } else if (style2 == "o") {
+        fFontStyles->Select(3);
+      }
+   }
+   n1++;
+   n2 = name.Index("-", n1);
+   n1 = n2 + 1;
+   n2 = name.Index("-", n1);
+   n1 = n2 + 1;
+   n2 = name.Index("-", n1);
+   n1 = n2 + 1;
+   if (n2 != kNPOS) {
+      n1 = n2 + 1;
+      n2 = name.Index("-", n1);
+      sz = name(n1, n2 - n1);
+
+      le = (TGTextLBEntry*)fFontSizes->FindEntry(sz.Data());
+      if (le) {
+         fFontSizes->Select(le->EntryId());
+      }
+   }
+}
+
+//________________________________________________________________________________
+void TGFontDialog::SetColor(Pixel_t color)
+{
+   // Set color
+
+   if (fSample) {
+      fTextColor = color;
+      fSample->SetTextColor(fTextColor);
+   }
+   fColorSelect->SetColor(color, kFALSE);
+   fClient->NeedRedraw(fColorSelect);
+   fInitColor = color;
+}
+
+//________________________________________________________________________________
+void TGFontDialog::SetAlign(Int_t align)
+{
+   // Set align
+
+   if (fSample) {
+      fTextAlign = align;
+      fSample->SetTextJustify(fTextAlign);
+   }
+
+   for (int i = 0; gAlignValues[i] != 0; ++i) {
+      if (gAlignValues[i] == align) {
+         fTextAligns->Select(i);
+      }
+   }
+   fInitAlign = align;
+   fClient->NeedRedraw(fTextAligns);
+}
+
+//________________________________________________________________________________
+void TGFontDialog::EnableAlign(Bool_t on)
+{
+   // Enable/disable align combobox
+
+   fTextAligns->SetEnabled(on);
 }

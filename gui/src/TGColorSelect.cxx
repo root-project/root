@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.17 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.18 2006/05/24 18:20:12 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -449,7 +449,7 @@ TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    AddInput(kButtonPressMask | kButtonReleaseMask);
    SetColor(fColor);
 
-   fEditDisabled = kEditDisable | kEditDisableBtnEnable;
+   fEditDisabled = kEditDisable;
 }
 
 //________________________________________________________________________________

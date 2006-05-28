@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.10 2006/04/12 12:56:32 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.11 2006/04/24 13:52:12 antcheva Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -80,6 +80,9 @@ public:
    TString      GetFormat() const { return fFormat; }
    const char*  GetValueFormat() const { return fFormat.Data(); }
    Bool_t       UsePercent() const { return fPercent; }
+   Pixel_t      GetBarColor() const { return fBarColorGC.GetForeground(); }
+   GContext_t   GetNormGC() const { return fNormGC; }
+   FontStruct_t GetFontStruct() const { return fFontStruct; }
 
    void         SetPosition(Float_t pos);                //*MENU*  *GETTER=GetPosition
    void         SetRange(Float_t min, Float_t max);      //*MENU*
@@ -91,10 +94,11 @@ public:
    virtual void Format(const char *format = "%.2f");     //*MENU* *GETTER=GetValueFormat
    void         SetMin(Float_t min) { fMin = min; }
    void         SetMax(Float_t max) { fMax = max; }
-   void         SetBarColor(Pixel_t color);
+   virtual void SetBarColor(Pixel_t color);
    void         SetBarColor(const char *color="blue");
-   void         Reset();                                 //*MENU*
-   void         ChangeBarColor();                        //*MENU* *DIALOG*
+   virtual void Reset();                                 //*MENU*
+   virtual void SetForegroundColor(Pixel_t pixel);
+
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGProgressBar,0)  // Progress bar abstract base class
@@ -122,6 +126,7 @@ public:
 
    void ShowPosition(Bool_t set = kTRUE, Bool_t percent = kTRUE,
                      const char *format = "%.2f");
+
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGHProgressBar,0)  // Horizontal progress bar widget

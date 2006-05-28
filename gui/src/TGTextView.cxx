@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.22 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.23 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -205,11 +205,11 @@ void TGTextView::AddLineFast(const char *string)
 }
 
 //______________________________________________________________________________
-void TGTextView::Update ()
+void TGTextView::Update()
 {
    // Call this function after AddLineFast().
 
-   Layout();
+   TGView::Layout();
    DrawRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());
 }
 

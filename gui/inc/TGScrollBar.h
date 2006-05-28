@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.12 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.13 2006/04/24 13:53:04 antcheva Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -52,16 +52,20 @@ class TGScrollBarElement : public TGFrame {
 protected:
    Int_t            fState;  // state of scrollbar element (button up or down)
    const TGPicture *fPic;    // picture in scrollbar element
+   const TGPicture *fPicN;   // picture for normal state of scrollbar element
+   const TGPicture *fPicD;   // picture for disabled state of scrollbar element
 
 public:
-   TGScrollBarElement(const TGWindow *p = 0, const TGPicture *pic = 0, UInt_t w = 1, UInt_t h = 1,
-              UInt_t options = kRaisedFrame | kDoubleBorder,
-              Pixel_t back = GetDefaultFrameBackground()) :
-      TGFrame(p, w, h, options | kOwnBackground, back)
-      { fPic = pic; fState = kButtonUp; }
+   TGScrollBarElement(const TGWindow *p = 0, const TGPicture *pic = 0, 
+                      UInt_t w = 1, UInt_t h = 1,
+                      UInt_t options = kRaisedFrame | kDoubleBorder,
+                      Pixel_t back = GetDefaultFrameBackground()); 
+   virtual ~TGScrollBarElement();
 
    virtual void SetState(Int_t state);
    virtual void DrawBorder();
+   virtual void SetEnabled(Bool_t on = kTRUE);
+   virtual Bool_t IsEnabled() const { return !(fState & kButtonDisabled); }
 
    ClassDef(TGScrollBarElement,0)  // Scrollbar element (head, tail, slider)
 };
@@ -119,8 +123,16 @@ public:
    virtual void  MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) 
                   { TGFrame::MoveResize(x, y, w, h); SetRange(fRange, fPsize); }
    virtual void  Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
+   virtual void  ChangeBackground(Pixel_t back);
 
    virtual void MapSubwindows() { TGWindow::MapSubwindows(); }
+   TGScrollBarElement *GetHead() const { return fHead; }
+   TGScrollBarElement *GetTail() const { return fTail; }
+   TGScrollBarElement *GetSlider() const { return fSlider; }
+
+   virtual void  PositionChanged(Int_t pos) { Emit("PositionChanged(Int_t)", pos); } //*SIGNAL*
+   virtual void  RangeChanged(Int_t range) { Emit("RangeChanged(Int_t)", range); } //*SIGNAL*
+   virtual void  PageSizeChanged(Int_t range) { Emit("PageSizeChanged(Int_t)", range); } //*SIGNAL*
 
    ClassDef(TGScrollBar,0)  // Scrollbar widget
 };

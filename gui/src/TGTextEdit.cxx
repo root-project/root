@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.31 2005/09/05 14:26:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.32 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -64,6 +64,17 @@ TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
    // Create a text edit widget.
 
    Init();
+
+   if (!parent && fClient->IsEditable()) {
+      AddLine("all work and no play makes jack a pretty");
+      AddLine("dull boy. all work and no play makes jack");
+      AddLine("a pretty dull boy. all work and no play ");
+      AddLine("makes jack a pretty dull boy. all work");
+      AddLine("and no play makes jack a pretty dull boy.");
+
+      MapSubwindows();
+      Layout();  
+   }
 }
 
 //______________________________________________________________________________
@@ -112,6 +123,7 @@ void TGTextEdit::Init()
    fInsertMode  = kInsert;
    fCurBlink    = 0;
    fSearch      = 0;
+   fEnableMenu  = kTRUE;
 
    gVirtualX->SetCursor(fCanvas->GetId(), fClient->GetResourcePool()->GetTextCursor());
 
@@ -755,6 +767,8 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
 
    if (event->fType == kButtonPress) {
       SetFocus();
+      Update();
+
       if (event->fCode == kButton1 || event->fCode == kButton2) {
          pos.fY = ToObjYCoord(fVisible.fY + event->fY);
          if (pos.fY >= fText->RowCount())
@@ -772,6 +786,10 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
             gVirtualX->ConvertPrimarySelection(fId, fClipboard, event->fTime);
       }
       if (event->fCode == kButton3) {
+         // do not handle during guibuilding
+         if (fClient->IsEditable() || !fEnableMenu) {
+            return kTRUE;
+         }
          SetMenuState();
          fMenu->PlaceMenu(event->fXRoot, event->fYRoot, kFALSE, kTRUE);
       }
@@ -1355,6 +1373,10 @@ void TGTextEdit::InsChar(char character)
       SetCurrent(pos);
       return;
    } else {
+      if (fInsertMode == kReplace) {
+         fCurrent.fX++;
+         DelChar();
+      }
       fText->InsChar(fCurrent, character);
       pos.fX = fCurrent.fX + 1;
       pos.fY = fCurrent.fY;
@@ -1759,6 +1781,18 @@ void TGTextEdit::SavePrimitive(ofstream &out, Option_t *)
    out << GetName() << " = new TGTextEdit(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight()
        << ");"<< endl;
+
+   if (IsReadOnly()) {
+      out << "   " << GetName() << "->SetReadOnly(kTRUE);" << endl;
+   }
+
+   if (!IsMenuEnabled()) {
+      out << "   " << GetName() << "->EnableMenu(kFALSE);" << endl;
+   }
+
+   if (fWhiteGC.GetForeground() != TGFrame::fgWhitePixel) {
+      out << "   " << GetName() << "->ChangeBackground(" << fWhiteGC.GetForeground() << ");" << endl;
+   }
 
    TGText *txt = GetText();
    Bool_t fromfile = strlen(txt->GetFileName()) ? kTRUE : kFALSE;

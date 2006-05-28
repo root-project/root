@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.h,v 1.1 2004/10/15 15:34:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.h,v 1.2 2006/03/23 15:56:03 antcheva Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -29,6 +29,7 @@ enum EGuiBldAction { kGuiBldNone, kGuiBldCtor,  kGuiBldProj,
 
 class TGFrame;
 class TGLayoutHints;
+class TGPicture;
 //////////////////////////////////////////////////////////////////////////
 class TGuiBldAction : public TNamed {
 
@@ -36,6 +37,7 @@ public:
    Int_t          fType;   // type of action
    TString        fAct;    // action, after action execution new frame is created
    const char    *fPic;    // picture name
+   const TGPicture *fPicture; // picture
    TGLayoutHints *fHints;  // layout hints for frame created by action
 
    TGuiBldAction(const char *name = 0, const char *title = 0,

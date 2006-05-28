@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.28 2006/02/01 14:32:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.29 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -124,6 +124,7 @@ public:
    virtual void  DrawCopy(Handle_t id, Int_t x, Int_t y);
    virtual void  Update(TGLBEntry *e)
                   { SetText(new TGString(((TGTextLBEntry *)e)->GetText())); }
+
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
    ClassDef(TGTextLBEntry,0)  // Text listbox entry
@@ -252,6 +253,8 @@ public:
 
    virtual TGVScrollBar  *GetVScrollbar() const;
    virtual void   SetVsbPosition(Int_t newPos);
+   virtual void   Layout();
+   virtual UInt_t GetDefaultWidth() const  { return fWidth; }
 
    virtual void   SetMultipleSelections(Bool_t multi);
    virtual Bool_t GetMultipleSelections() const { return fMultiSelect; }
@@ -298,9 +301,7 @@ public:
    virtual void InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID);
    virtual void NewEntry(const char *s = "Entry");             //*MENU*
    virtual void RemoveEntry(Int_t id = -1);                    //*MENU*
-//   virtual void MoveSelectedUp();                              //*MENU*
-//   virtual void MoveSelectedDown();                            //*MENU*
-   virtual void SetBgndColor(const char *color);               //*MENU*
+   virtual void ChangeBackground(Pixel_t back);
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID) 
                   { fLbc->RemoveEntries(from_ID, to_ID); }
    virtual void SetTopEntry(Int_t id = -1);
@@ -322,6 +323,8 @@ public:
    virtual void Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
    virtual void MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void Layout();
+   virtual void SetLayoutManager(TGLayoutManager*) { }
+   virtual void SortByName(Bool_t ascend = kTRUE);   //*MENU*icon=bld_sortup.png*
    virtual void IntegralHeight(Bool_t mode) { fIntegralHeight = mode; }
    virtual TGDimension GetDefaultSize() const;
 
@@ -333,6 +336,7 @@ public:
    virtual Bool_t GetSelection(Int_t id) { return fLbc->GetSelection(id); }
    virtual TGLBEntry *GetSelectedEntry() const { return fLbc->GetSelectedEntry(); }
    virtual void GetSelectedEntries(TList *selected);
+
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    virtual void Selected(Int_t widgetId, Int_t id);   //*SIGNAL*

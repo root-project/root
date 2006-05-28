@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.17 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.18 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -81,6 +81,8 @@ TGViewFrame::TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options,
 
    AddInput(kKeyPressMask | kEnterWindowMask | kLeaveWindowMask |
             kFocusChangeMask | kStructureNotifyMask);
+
+   fEditDisabled = kEditDisableGrab | kEditDisableKeyEnable | kEditDisableBtnEnable;
 }
 
 
@@ -134,30 +136,43 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
    fScrollTimer = new TViewTimer(this, 75);
    gSystem->AddTimer(fScrollTimer);
    fReadOnly = kFALSE;
+
+   if (fVsb) {
+      fVsb->SetEditDisabled(kEditDisableGrab | kEditDisableBtnEnable);
+   }
+   if (fHsb) {
+      fHsb->SetEditDisabled(kEditDisableGrab  | kEditDisableBtnEnable);
+   }
+
+   fEditDisabled = kEditDisableLayout;
+
+   // layout manager is not used
+   delete fLayoutManager;
+   fLayoutManager = 0;
 }
 
 //______________________________________________________________________________
 TGView::TGView(const TGView& gv) : 
-  TGCompositeFrame(gv), 
-  TGWidget(gv),
-  fMarkedStart(gv.fMarkedStart),
-  fMarkedEnd(gv.fMarkedEnd),
-  fVisible(gv.fVisible),
-  fMousePos(gv.fMousePos),
-  fScrollVal(gv.fScrollVal),
-  fIsMarked(gv.fIsMarked),
-  fIsMarking(gv.fIsMarking),
-  fIsSaved(gv.fIsSaved),
-  fScrolling(gv.fScrolling),
-  fClipboard(gv.fClipboard),
-  fXMargin(gv.fXMargin),
-  fYMargin(gv.fYMargin),
-  fCanvas(gv.fCanvas),
-  fHsb(gv.fHsb),
-  fVsb(gv.fVsb),
-  fScrollTimer(gv.fScrollTimer),
-  fWhiteGC(gv.fWhiteGC),
-  fReadOnly(gv.fReadOnly)
+   TGCompositeFrame(gv), 
+   TGWidget(gv),
+   fMarkedStart(gv.fMarkedStart),
+   fMarkedEnd(gv.fMarkedEnd),
+   fVisible(gv.fVisible),
+   fMousePos(gv.fMousePos),
+   fScrollVal(gv.fScrollVal),
+   fIsMarked(gv.fIsMarked),
+   fIsMarking(gv.fIsMarking),
+   fIsSaved(gv.fIsSaved),
+   fScrolling(gv.fScrolling),
+   fClipboard(gv.fClipboard),
+   fXMargin(gv.fXMargin),
+   fYMargin(gv.fYMargin),
+   fCanvas(gv.fCanvas),
+   fHsb(gv.fHsb),
+   fVsb(gv.fVsb),
+   fScrollTimer(gv.fScrollTimer),
+   fWhiteGC(gv.fWhiteGC),
+   fReadOnly(gv.fReadOnly)
 { 
    //copy constructor
 }
@@ -166,6 +181,7 @@ TGView::TGView(const TGView& gv) :
 TGView& TGView::operator=(const TGView& gv) 
 {
    //equal operator
+
    if(this!=&gv) {
       TGCompositeFrame::operator=(gv);
       TGWidget::operator=(gv);
@@ -189,7 +205,6 @@ TGView& TGView::operator=(const TGView& gv)
       fReadOnly=gv.fReadOnly;
    } 
    return *this;
-
 }
 
 //______________________________________________________________________________
@@ -756,9 +771,12 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
 }
 
 //______________________________________________________________________________
-void TGView::SetBackgroundColor(Pixel_t col)
+void TGView::ChangeBackground(Pixel_t col)
 {
-   // set  background color
+   // Change background color of the canvas frame.
 
-   fCanvas->SetBackgroundColor(col); 
+   fCanvas->SetBackgroundColor(col);
+   fWhiteGC.SetBackground(col);
+   fWhiteGC.SetForeground(col);
+   DrawRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());
 }

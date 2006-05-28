@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.40 2006/05/15 11:01:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.41 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -114,14 +114,17 @@ public:
    TGButtonGroup       *GetGroup() const { return fGroup; }
 
    virtual Bool_t       IsDown() const { return !(fOptions & kRaisedFrame); }
-   virtual void         SetDown(Bool_t on = kTRUE, Bool_t emit = kFALSE);  //*MENU*
+   virtual void         SetDown(Bool_t on = kTRUE, Bool_t emit = kFALSE);
    virtual Bool_t       IsOn() const { return IsDown(); }
    virtual void         SetOn(Bool_t on = kTRUE,  Bool_t emit = kFALSE) { SetDown(on, emit); }
    virtual Bool_t       IsToggleButton() const { return kFALSE; }
    virtual Bool_t       IsExclusiveToggle() const { return kFALSE; }
    virtual void         Toggle(Bool_t emit = kFALSE) { SetDown(IsDown() ? kFALSE : kTRUE, emit); }
-   virtual void         SetEnabled(Bool_t e = kTRUE) { SetState(e ? kButtonUp : kButtonDisabled); } //*MENU*
+   virtual void         SetEnabled(Bool_t e = kTRUE); //*TOGGLE* *GETTER=IsEnabled
+
    virtual void         SavePrimitive(ofstream &out, Option_t *option);
+
+   GContext_t GetNormGC() const { return fNormGC; }
 
    virtual void Pressed()  { Emit("Pressed()"); }   // *SIGNAL*
    virtual void Released() { Emit("Released()"); }  // *SIGNAL*
@@ -136,7 +139,7 @@ class TGTextButton : public TGButton {
 
 protected:
    TGHotString   *fLabel;         // button text
-   Int_t          fTMode;         // text drawing mode (ETextJustification)
+   Int_t          fTMode;         // text justify mode
    Int_t          fHKeycode;      // hotkey
    FontStruct_t   fFontStruct;    // font to draw text
    Bool_t         fHasOwnFont;    // kTRUE - font defined locally,  kFALSE - globally
@@ -174,17 +177,19 @@ public:
    const TGHotString *GetText() const { return fLabel; }
    virtual const char *GetTitle() const { return fLabel->Data(); }
    TString            GetString() const { return TString(fLabel->GetString()); }
-   void               SetTextJustify(Int_t tmode) { fTMode = tmode; }
+   void               SetTextJustify(Int_t tmode)  { fTMode = tmode; fClient->NeedRedraw(this); }
+   Int_t GetTextJustify() const { return fTMode; }
    virtual void       SetText(TGHotString *new_label);
    virtual void       SetText(const TString &new_label);
    virtual void       SetTitle(const char *label) { SetText(label); }
-           void       Rename(const char *title)  { SetTitle(title); } //*MENU*
    virtual void       SetFont(FontStruct_t font, Bool_t global = kFALSE);
-   virtual void       SetFont(const char *fontName, Bool_t global = kFALSE);  //*MENU*
+   virtual void       SetFont(const char *fontName, Bool_t global = kFALSE);
    virtual void       SetTextColor(Pixel_t color, Bool_t global = kFALSE);
-   virtual void       SetForegroundColor(Pixel_t fore) { SetTextColor(fore, kFALSE); }
-
+   virtual void       SetForegroundColor(Pixel_t fore) { SetTextColor(fore); }
    Bool_t             HasOwnFont() const;
+   void               ChangeText(const char *title)  { SetTitle(title); } //*MENU*icon=bld_rename.png*
+
+   FontStruct_t GetFontStruct() const { return fFontStruct; }
 
    virtual void       SavePrimitive(ofstream &out, Option_t *option);
 
@@ -222,6 +227,7 @@ public:
    virtual void     SetPicture(const TGPicture *new_pic);
    virtual void     SetDisabledPicture(const TGPicture *pic);
    const TGPicture *GetPicture() const { return fPic; };
+   const TGPicture *GetDisabledPicture() const { return fPicD; };
    virtual void     SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGPictureButton,0)  // A picture button widget

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.29 2006/01/30 17:36:29 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -89,6 +89,7 @@ class TVirtualProof;
 class TSessionViewer;
 class TSessionLogView;
 class TQueryResult;
+class TContextMenu;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

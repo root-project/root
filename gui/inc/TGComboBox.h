@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.21 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.22 2006/04/24 13:49:56 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -106,12 +106,8 @@ public:
    virtual void NewEntry(const char *s = "Entry") 
                         { fListBox->NewEntry(s); Resize(); }       //*MENU*
    virtual void RemoveEntry(Int_t id = -1);                        //*MENU*
-//   virtual void MoveSelectedUp()
-//                        { fListBox->MoveSelectedUp(); }            //*MENU*
-//   virtual void MoveSelectedDown()
-//                        { fListBox->MoveSelectedDown(); }          //*MENU*
    virtual Bool_t IsTextInputEnabled() const { return (fTextEntry != 0); }
-   virtual void   EnableTextInput(Bool_t on);    //*TOGGLE* *GETTER=IsTextInputEnabled
+   virtual void EnableTextInput(Bool_t on);    //*TOGGLE* *GETTER=IsTextInputEnabled
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID)
                         { fListBox->RemoveEntries(from_ID, to_ID); }
    virtual Int_t GetNumberOfEntries() const
@@ -124,13 +120,17 @@ public:
    virtual Int_t GetSelected() const { return fListBox->GetSelected(); }
    virtual TGLBEntry *GetSelectedEntry() const
                         { return fListBox->GetSelectedEntry(); }
-
    virtual void SetTopEntry(TGLBEntry *e, TGLayoutHints *lh);
+   virtual void SetEnabled(Bool_t on = kTRUE)
+                  { fDDButton->SetEnabled(on); }   //*TOGGLE* *GETTER=IsEnabled
+   virtual Bool_t IsEnabled() const { return  fDDButton->IsEnabled(); }
+   virtual void SortByName(Bool_t ascend = kTRUE)
+                  { fListBox->SortByName(ascend); }            //*MENU*icon=bld_sortup.png*
 
-   virtual void Selected(Int_t widgetId, Int_t id); // *SIGNAL*
-   virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); } // *SIGNAL*
+   virtual void Selected(Int_t widgetId, Int_t id);                  // *SIGNAL*
+   virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  // *SIGNAL*
    virtual void Selected(const char *txt) { Emit("Selected(char*)", txt); } // *SIGNAL*
-   virtual void ReturnPressed(); // *SIGNAL*
+   virtual void ReturnPressed();                                     // *SIGNAL*
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGComboBox,0)  // Combo box widget

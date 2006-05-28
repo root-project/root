@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.4 2004/09/07 08:13:56 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.5 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -120,6 +120,7 @@ TGFont *TGFontPool::GetFont(const char *font, Bool_t fixedDefault)
    }
 
    FontStruct_t fs = fClient->GetFontByName(font, fixedDefault);
+
    if (fs) {
       f = new TGFont(font);
       f->fFontStruct = fs;

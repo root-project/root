@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.20 2005/11/21 00:25:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.21 2006/04/24 14:07:47 antcheva Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -1074,7 +1074,7 @@ void TGColorPick::DrawLcursor(Int_t onoff)
 
 //________________________________________________________________________________
 TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
-                             Int_t *retc, ULong_t *color) :
+                             Int_t *retc, ULong_t *color, Bool_t wait) :
    TGTransientFrame(p, m, 200, 150, kHorizontalFrame)
 {
    // Color selection dialog constructor.
@@ -1088,11 +1088,9 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    fRetc = retc;
    fRetColor = color;
+   fWaitFor = wait;
+   fInitColor = *fRetColor;
 
-   if (!p && !m) {
-      MakeZombie();
-      return;
-   }
    if (fRetc) *fRetc = kMBCancel;
 
    TGVerticalFrame *vf1 = new TGVerticalFrame(this, 20, 20);
@@ -1118,6 +1116,43 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
       fPalette->SetColor(i, TColor::Number2Pixel(i+10));  // root colors
       // the basic colors were set via bcolor
       //fPalette->SetColor(i, TColor::GetPixel(bcolor[i][0], bcolor[i][1], bcolor[i][2]));
+
+   // add some default colors
+   fPalette->SetColor(47, TGFrame::GetDefaultFrameBackground());
+
+   Float_t r, g, b;
+
+   r = 232./255;
+   g = 232./255;
+   b = 222./255;
+
+   // Gui Builder background 
+   Pixel_t pixel = TColor::RGB2Pixel(r, g, b);
+   fPalette->SetColor(46, pixel);
+
+   r = 230./255;
+   g = 230./255;
+   b = 230./255;
+
+   // a la MAC background 
+   pixel = TColor::RGB2Pixel(r, g, b);
+   fPalette->SetColor(45, pixel);
+
+   r = 172./255;
+   g = 174./255;
+   b = 205./255;
+
+   // a la CDE background 
+   pixel = TColor::RGB2Pixel(r, g, b);
+   fPalette->SetColor(44, pixel);
+
+   r = 205./255;
+   g = 195./255;
+   b = 175./255;
+
+   // a la FOX background 
+   pixel = TColor::RGB2Pixel(r, g, b);
+   fPalette->SetColor(43, pixel);
 
    // custom colors
 
@@ -1239,10 +1274,6 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    Resize(GetDefaultSize());
    SetEditDisabled(kEditDisable);
 
-   //---- position relative to the parent's window
-
-   CenterOnParent();
-
    //---- make the message box non-resizable
 
    SetWMSize(fWidth, fHeight);
@@ -1258,17 +1289,23 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
                               kMWMFuncMinimize,
                kMWMInputModeless);
 
-   MapWindow();
+
+   //---- position relative to the parent's window
 
    if (fClient->IsEditable()) {
       const TGWindow *main = fMain;
       fMain = fClient->GetRoot();
       CenterOnParent(kTRUE, TGTransientFrame::kRight);
       fMain = main;
+   } else {
+      CenterOnParent();
    }
 
-   fClient->WaitForUnmap(this);
-   DeleteWindow();
+   if (fWaitFor) {
+      MapWindow();
+      fClient->WaitForUnmap(this);
+      DeleteWindow();
+   }
 }
 
 //________________________________________________________________________________
@@ -1280,6 +1317,28 @@ TGColorDialog::~TGColorDialog()
 }
 
 //________________________________________________________________________________
+void TGColorDialog::SetCurrentColor(Pixel_t col)
+{
+   // Change current color
+
+   if (fCurrentColor == col) {
+      return;
+   }
+   fInitColor = *fRetColor = col;
+   fCurrentColor = col;
+   fColors->SetColor(col);
+   fSample->SetBackgroundColor(col);
+}
+
+//________________________________________________________________________________
+void TGColorDialog::ColorSelected(Pixel_t color)
+{
+   // emit signal when color was selected
+
+   Emit("ColorSelected(Pixel_t)", color);
+}
+
+//________________________________________________________________________________
 void TGColorDialog::CloseWindow()
 {
    // Called when window is closed via window manager.
@@ -1288,6 +1347,11 @@ void TGColorDialog::CloseWindow()
    for (Int_t i = 0; i < 24; ++i)
       gUcolor[i] = fCpalette->GetColorByIndex(i);
 
+   if (*fRetc != kMBOk) {
+      ColorSelected(fInitColor);
+   } else {
+      ColorSelected(*fRetColor);
+   }
    // don't call DeleteWindow() here since that will cause access
    // to the deleted dialog in the WaitFor() method (see ctor)
    UnmapWindow();
@@ -1371,7 +1435,8 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                      *fRetColor = TColor::RGB2Pixel(atoi(fRtb->GetString()),
                                                     atoi(fGtb->GetString()),
                                                     atoi(fBtb->GetString()));
-                     // fall through
+                     CloseWindow();
+                     break;
                   case kCDLG_CANCEL:
                      CloseWindow();
                      break;
@@ -1386,6 +1451,7 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                   case kCDLG_SPALETTE:
                      color = fPalette->GetCurrentColor();
                      fSample->SetBackgroundColor(color);
+                     ColorSelected(color);
                      gClient->NeedRedraw(fSample);
                      fCurrentColor = color;
                      fColors->SetColor(color);
@@ -1396,6 +1462,7 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                   case kCDLG_CPALETTE:
                      color = fCpalette->GetCurrentColor();
                      fSample->SetBackgroundColor(color);
+                     ColorSelected(color);
                      gClient->NeedRedraw(fSample);
                      fCurrentColor = color;
                      fColors->SetColor(color);
@@ -1406,6 +1473,7 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                   case kCDLG_COLORPICK:
                      color = fColors->GetCurrentColor();
                      fSample->SetBackgroundColor(color);
+                     ColorSelected(color);
                      gClient->NeedRedraw(fSample);
                      fCurrentColor = color;
                      UpdateRGBentries(&color);
@@ -1432,6 +1500,7 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
 
                      color = TColor::RGB2Pixel(r, g, b);
                      fSample->SetBackgroundColor(color);
+                     ColorSelected(color);
                      gClient->NeedRedraw(fSample);
                      fCurrentColor = color;
                      fColors->SetColor(color);
@@ -1445,6 +1514,7 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                                                atoi(fGtb->GetString()),
                                                atoi(fBtb->GetString()));
                      fSample->SetBackgroundColor(color);
+                     ColorSelected(color);
                      gClient->NeedRedraw(fSample);
                      fCurrentColor = color;
                      fColors->SetColor(color);

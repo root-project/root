@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.67 2006/05/24 18:20:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.68 2006/05/26 09:16:29 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -63,6 +63,7 @@
 #include "TEnv.h"
 #include "TClass.h"
 
+
 const TGGC *TGButton::fgHibckgndGC = 0;
 const TGGC *TGButton::fgDefaultGC = 0;
 
@@ -99,6 +100,7 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
    fNormGC   = norm;
    fState    = kButtonUp;
    fStayDown = kFALSE;
+   fWidgetFlags = kWidgetIsEnabled;
 
    if (p && p->IsA()->InheritsFrom(TGButtonGroup::Class())) {
       TGButtonGroup *bg = (TGButtonGroup*) p;
@@ -322,6 +324,17 @@ void TGButton::SetToolTipText(const char *text, Long_t delayms)
 }
 
 //______________________________________________________________________________
+void TGButton::SetEnabled(Bool_t e)
+{
+   // Set enabled or disabled state of button
+ 
+   SetState(e ? kButtonUp : kButtonDisabled);
+
+   if (e) fWidgetFlags |= kWidgetIsEnabled;
+   else   fWidgetFlags &= ~kWidgetIsEnabled;
+} 
+
+//______________________________________________________________________________
 const TGGC &TGButton::GetDefaultGC()
 {
    // Return default graphics context.
@@ -461,7 +474,11 @@ TGTextButton::~TGTextButton()
       main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
    }
    if (fLabel) delete fLabel;
-   if (fHasOwnFont) delete fClient->GetGCPool()->FindGC(fNormGC);
+   if (fHasOwnFont) {
+      TGGCPool *pool = fClient->GetGCPool();
+      TGGC *gc = pool->FindGC(fNormGC);
+      pool->FreeGC(gc);
+   }
 }
 
 //______________________________________________________________________________
@@ -603,27 +620,30 @@ FontStruct_t TGTextButton::GetDefaultFontStruct()
 void TGTextButton::SetFont(FontStruct_t font, Bool_t global)
 {
    // Changes text font.
-   // If global is true font is changed globally.
+   // If global is kTRUE font is changed globally, otherwise - locally.
 
    if (font != fFontStruct) {
       FontH_t v = gVirtualX->GetFontHandle(font);
       if (!v) return;
 
       fFontStruct = font;
-      TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool(); 
+      TGGC *gc = pool->FindGC(fNormGC);
 
-      if (global) {
-         gc = new TGGC(*gc); // copy
+      if (!global) {
+         gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
          fHasOwnFont = kTRUE;
       }
+
       gc->SetFont(v);
+
       fNormGC = gc->GetGC();
       int max_ascent, max_descent;
 
       fTWidth  = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
       gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
       fTHeight = max_ascent + max_descent;
-      Resize();
+      fClient->NeedRedraw(this);
    }
 }
 
@@ -631,7 +651,7 @@ void TGTextButton::SetFont(FontStruct_t font, Bool_t global)
 void TGTextButton::SetFont(const char *fontName, Bool_t global)
 {
    // Changes text font specified by name.
-   // If global is true font is changed globally.
+   // If global is true color is changed globally, otherwise - locally.
 
    TGFont *font = fClient->GetFont(fontName);
    if (font) {
@@ -643,12 +663,13 @@ void TGTextButton::SetFont(const char *fontName, Bool_t global)
 void TGTextButton::SetTextColor(Pixel_t color, Bool_t global)
 {
    // Changes text color.
-   // If global is true color is changed globally.
+   // If global is true color is changed globally, otherwise - locally.
 
-   TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool(); 
+   TGGC *gc = pool->FindGC(fNormGC);
 
-   if (global) {
-      gc = new TGGC(*gc); // copy
+   if (!global) {
+      gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
       fHasOwnFont = kTRUE;
    }
 
@@ -1494,6 +1515,8 @@ void TGTextButton::SavePrimitive(ofstream &out, Option_t *option)
 
    delete [] outext;
 
+   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << endl;
+
    out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight()
        << ");" << endl;
 
@@ -1525,7 +1548,9 @@ void TGPictureButton::SavePrimitive(ofstream &out, Option_t *option)
 
    char quote = '"';
    const char *picname = fPic->GetName();
+
    out <<"   TGPictureButton *";
+
    out << GetName() << " = new TGPictureButton(" << fParent->GetName()
        << ",gClient->GetPicture(" << quote
        << gSystem->ExpandPathName(gSystem->UnixPathName(picname)) << quote << ")";

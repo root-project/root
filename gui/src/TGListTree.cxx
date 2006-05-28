@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.50 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.51 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -317,6 +317,8 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    AddInput(kPointerMotionMask | kEnterWindowMask |
             kLeaveWindowMask | kKeyPressMask);
    SetWindowName();
+
+   fEditDisabled = kEditDisable | kEditDisableGrab | kEditDisableBtnEnable;
 }
 
 //______________________________________________________________________________
@@ -356,6 +358,8 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    AddInput(kPointerMotionMask | kEnterWindowMask |
             kLeaveWindowMask | kKeyPressMask);
    SetWindowName();
+
+   fEditDisabled = kEditDisable | kEditDisableGrab | kEditDisableBtnEnable;
 }
 
 //______________________________________________________________________________
@@ -1610,8 +1614,9 @@ TGListTreeItem *TGListTree::AddItem(TGListTreeItem *parent, const char *string,
    item = new TGListTreeItem(fClient, string, open, closed, checkbox);
    InsertChild(parent, item);
 
-   //fClient->NeedRedraw(this);
-
+   if (fClient->IsEditable()) {
+      fClient->NeedRedraw(this);
+   }
    return item;
 }
 
@@ -1640,7 +1645,9 @@ void TGListTree::RenameItem(TGListTreeItem *item, const char *string)
    if (item)
       item->Rename(string);
 
-   //fClient->NeedRedraw(this);
+   if (fClient->IsEditable()) {
+      fClient->NeedRedraw(this);
+   }
 }
 
 //______________________________________________________________________________
@@ -1660,7 +1667,9 @@ Int_t TGListTree::DeleteItem(TGListTreeItem *item)
 
    delete item;
 
-   //fClient->NeedRedraw(this);
+   if (fClient->IsEditable()) {
+      fClient->NeedRedraw(this);
+   }
 
    return 1;
 }

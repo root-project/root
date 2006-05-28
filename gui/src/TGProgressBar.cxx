@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.13 2006/04/24 13:52:12 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.14 2006/05/26 09:16:29 brun Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 #include "Riostream.h"
 #include "TColor.h"
 #include "TGMsgBox.h"
-#include "TGColorDialog.h"
+
 
 const TGFont *TGProgressBar::fgDefaultFont = 0;
 TGGC         *TGProgressBar::fgDefaultGC = 0;
@@ -172,22 +172,6 @@ void TGProgressBar::SetBarColor(const char *color)
 }
 
 //______________________________________________________________________________
-void TGProgressBar::ChangeBarColor()
-{
-   // Set progress bar color via TGColorDialog
-
-   Int_t retc;
-   ULong_t color = fBarColorGC.GetForeground();
-  
-   new TGColorDialog(gClient->GetDefaultRoot(), this, &retc, &color);
-
-   if (retc == kMBOk) {
-      fBarColorGC.SetForeground(color);
-      fClient->NeedRedraw(this);
-   }
-}
-
-//______________________________________________________________________________
 void TGProgressBar::Format(const char *format)
 {
    // Set format for displaying a value.
@@ -215,6 +199,22 @@ const TGGC &TGProgressBar::GetDefaultGC()
    if (!fgDefaultGC)
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
    return *fgDefaultGC;
+}
+
+//______________________________________________________________________________
+void TGProgressBar::SetForegroundColor(Pixel_t pixel)
+{
+   // Change text color drawing.
+
+   TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+
+   if (!gc) {
+      return;
+   }
+   gc->SetForeground(pixel);
+   fNormGC = gc->GetGC();
+
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________

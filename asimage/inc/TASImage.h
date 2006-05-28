@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.18 2005/10/07 13:00:30 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.19 2006/01/09 09:03:35 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -136,7 +136,7 @@ public:
    void  Pad(const char *color = "#00FFFFFF", UInt_t left = 0,
              UInt_t right = 0, UInt_t top = 0, UInt_t bottom = 0);      //*MENU*
    void  Blur(Double_t hr = 3, Double_t vr = 3);                        //*MENU*
-   void  Vectorize(UInt_t max_colors = 256, UInt_t dither = 4, Int_t opaque_threshold = 1);
+   Double_t *Vectorize(UInt_t max_colors = 256, UInt_t dither = 4, Int_t opaque_threshold = 1);
    void  Gray(Bool_t on = kTRUE);                                       //*TOGGLE* *GETTER=IsGray
    void  StartPaletteEditor();                                          //*MENU*
    void  HSV(UInt_t hue = 0, UInt_t radius = 360, Int_t H = 0, Int_t S = 0, Int_t V = 0,

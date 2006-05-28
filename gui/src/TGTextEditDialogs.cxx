@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.13 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.14 2006/04/11 06:25:43 antcheva Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -65,7 +65,6 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
    }
    fRetCode = ret_code;
    fType = sstruct;
-   fEditDisabled = kEditDisable;
 
    ChangeOptions((GetOptions() & ~kVerticalFrame) | kHorizontalFrame);
 
@@ -150,6 +149,7 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
 
    MapSubwindows();
    Resize(GetDefaultSize());
+   SetEditDisabled(kEditDisable);
 
    CenterOnParent();
 

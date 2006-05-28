@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.5 2004/09/14 09:23:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.6 2005/11/21 00:25:37 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -151,6 +151,7 @@ class TGColorDialog : public TGTransientFrame {
 
 protected:
    Pixel_t         fCurrentColor;   // currently selected color
+   Pixel_t         fInitColor;      // initially set color
    Int_t          *fRetc;           // return code (kMBOk, kMBCancel)
    Pixel_t        *fRetColor;       // return color
 
@@ -160,6 +161,7 @@ protected:
    TGFrame        *fSample;         // color sample frame
    TGTextEntry    *fRte, *fGte, *fBte, *fHte, *fLte, *fSte; // RGB/HLS text entries
    TGTextBuffer   *fRtb, *fGtb, *fBtb, *fHtb, *fLtb, *fStb; // RGB/HLS associated buffers
+   Bool_t          fWaitFor;        // call WaitFor method in constructor
 
    void           UpdateRGBentries(Pixel_t *c);
    void           UpdateHLSentries(Pixel_t *c);
@@ -168,8 +170,14 @@ protected:
 
 public:
    TGColorDialog(const TGWindow *p = 0, const TGWindow *m = 0, Int_t *retc = 0,
-                 Pixel_t *color = 0);
+                 Pixel_t *color = 0, Bool_t wait = kTRUE);
    virtual ~TGColorDialog();
+
+   TGColorPalette *GetPalette() const { return fPalette; }
+   TGColorPalette *GetCustomPalette() const { return fCpalette; }
+
+   virtual void ColorSelected(Pixel_t); //*SIGNAL*
+   virtual void SetCurrentColor(Pixel_t col);
 
    ClassDef(TGColorDialog,0)  // Color selection dialog
 };

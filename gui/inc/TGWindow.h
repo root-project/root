@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.27 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.28 2006/05/26 15:13:01 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -60,16 +60,17 @@ protected:
    virtual void DoRedraw() { }
 
 public:
-   enum  EEditMode {
-      kEditEnable        = 0,         // allow edit of this window
-      kEditDisable       = BIT(0),    // disable edit of this window
-      kEditDisableEvents = BIT(1),    // window events cannot be edited
-      kEditDisableGrab   = BIT(2),    // window grab cannot be edited
-      kEditDisableLayout = BIT(3),    // window layout cannot be edited
-      kEditDisableResize = BIT(4),    // window size cannot be edited
-      kEditDisableHeight = BIT(5),    // window height cannot be edited
-      kEditDisableWidth  = BIT(6),    // window width cannot be edited
-      kEditDisableBtnEnable  = BIT(7) // window cannot be edited but can handle mouse button events
+   enum  EEditMode { 
+      kEditEnable        = 0,          // allow edit of this window
+      kEditDisable       = BIT(0),     // disable edit of this window
+      kEditDisableEvents = BIT(1),     // window events cannot be editted
+      kEditDisableGrab   = BIT(2),     // window grab cannot be editted 
+      kEditDisableLayout = BIT(3),     // window layout cannot be editted 
+      kEditDisableResize = BIT(4),     // window size cannot be editted 
+      kEditDisableHeight = BIT(5),     // window height cannot be editted 
+      kEditDisableWidth  = BIT(6),     // window width cannot be editted
+      kEditDisableBtnEnable = BIT(7),  // window can handle mouse button events
+      kEditDisableKeyEnable = BIT(8)   // window can handle keyboard events
    };
 
    TGWindow(const TGWindow *p = 0, Int_t x = 0, Int_t y = 0,

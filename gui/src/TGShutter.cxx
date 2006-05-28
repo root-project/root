@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.13 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.14 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -43,21 +43,110 @@ TGShutter::TGShutter(const TGWindow *p, UInt_t options) :
    fClosingHadScrollbar = kFALSE;
    fTimer               = 0;
    fTrash               = new TList;
+
+   // layout manager is not used 
+   delete fLayoutManager;
+   fLayoutManager = 0;
+
+   if (!p && fClient->IsEditable()) {
+      TGShutterItem *item;
+      TGCompositeFrame *container;
+      const TGPicture  *buttonpic;
+      TGPictureButton  *button;
+
+      TGLayoutHints *l = new TGLayoutHints(kLHintsTop | kLHintsCenterX,
+                                           5, 5, 5, 0);
+      item = AddPage("Histograms");
+      container = (TGCompositeFrame *)item->GetContainer();
+      buttonpic = fClient->GetPicture("h1_s.xpm");
+
+      if (buttonpic) {
+         button = new TGPictureButton(container, buttonpic);
+         button->SetToolTipText("TH1");
+         container->AddFrame(button, l);
+      }
+      buttonpic = fClient->GetPicture("h2_s.xpm");
+
+      if (buttonpic) {
+         button = new TGPictureButton(container, buttonpic);
+         button->SetToolTipText("TH2");
+         container->AddFrame(button, l);
+      }
+      buttonpic = fClient->GetPicture("h3_s.xpm");
+
+      if (buttonpic) {
+         button = new TGPictureButton(container, buttonpic);
+         button->SetToolTipText("TH3");
+         container->AddFrame(button, l);
+      }
+      buttonpic = fClient->GetPicture("profile_s.xpm");
+
+      if (buttonpic) {
+         button = new TGPictureButton(container, buttonpic);
+         button->SetToolTipText("TProfile");
+         container->AddFrame(button, l);
+      }
+      // new page
+      item = AddPage("Functions");
+      container = (TGCompositeFrame *)item->GetContainer();
+      buttonpic = fClient->GetPicture("f1_s.xpm");
+
+      if (buttonpic) {
+         button = new TGPictureButton(container, buttonpic);
+         button->SetToolTipText("TF1");
+         container->AddFrame(button, l);
+      }
+      buttonpic = fClient->GetPicture("f2_s.xpm");
+
+      if (buttonpic) {
+         button = new TGPictureButton(container, buttonpic);
+         button->SetToolTipText("TF2");
+         container->AddFrame(button, l);
+      }
+      // new page
+      item = AddPage("Trees");
+      container = (TGCompositeFrame *)item->GetContainer();
+      buttonpic = fClient->GetPicture("ntuple_s.xpm");
+
+      if (buttonpic) {
+         button = new TGPictureButton(container, buttonpic);
+         button->SetToolTipText("TNtuple");
+         container->AddFrame(button, l);
+      }
+      buttonpic = fClient->GetPicture("tree_s.xpm");
+
+      if (buttonpic) {
+         button = new TGPictureButton(container, buttonpic);
+         button->SetToolTipText("TTree");
+         container->AddFrame(button, l);
+      }
+
+      buttonpic = fClient->GetPicture("chain_s.xpm");
+
+      if (buttonpic) {
+         button = new TGPictureButton(container, buttonpic);
+         button->SetToolTipText("TChain");
+         container->AddFrame(button, l);
+      }
+
+      MapSubwindows();
+      MapRaised();
+   }
 }
 
 
 //______________________________________________________________________________
 TGShutter::TGShutter(const TGShutter& sh) :
-  TGCompositeFrame(sh),
-  fTimer(sh.fTimer),
-  fSelectedItem(sh.fSelectedItem),
-  fClosingItem(sh.fClosingItem),
-  fTrash(sh.fTrash),
-  fHeightIncrement(sh.fHeightIncrement),
-  fClosingHeight(sh.fClosingHeight),
-  fClosingHadScrollbar(sh.fClosingHadScrollbar)
+   TGCompositeFrame(sh),
+   fTimer(sh.fTimer),
+   fSelectedItem(sh.fSelectedItem),
+   fClosingItem(sh.fClosingItem),
+   fTrash(sh.fTrash),
+   fHeightIncrement(sh.fHeightIncrement),
+   fClosingHeight(sh.fClosingHeight),
+   fClosingHadScrollbar(sh.fClosingHadScrollbar)
 { 
-   //copy constructor
+   // Copy ctor.
 }
 
 //______________________________________________________________________________
@@ -99,8 +188,81 @@ void TGShutter::AddItem(TGShutterItem *item)
    TGLayoutHints *hints = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
    AddFrame(item, hints);
    fTrash->Add(hints);
-   if (!fSelectedItem)
+   if (!fSelectedItem) {
       fSelectedItem = item;
+   }
+}
+
+//______________________________________________________________________________
+void TGShutter::RemoveItem(const char *name)
+{
+   // Remove item from shutter
+
+   TGShutterItem *item = GetItem(name);
+
+   if (!item) {
+      return;
+   }
+
+   if (fList->GetEntries() <= 1) {
+      return;
+   }
+
+   if (item == fSelectedItem) {
+      TGFrameElement *fe = (TGFrameElement*)fList->FindObject(item->GetFrameElement());
+      if (fe) {
+         TGFrameElement *sel = (TGFrameElement*)fList->Before(fe);
+         if (!sel) {
+            sel = (TGFrameElement*)fList->After(fe);
+         }
+         if (!sel) {
+            return;
+         }
+         SetSelectedItem((TGShutterItem*)sel->fFrame);
+      }
+   }
+   RemoveFrame(item);
+
+   item->DestroyWindow();
+   delete item;
+   Layout();
+}
+
+//______________________________________________________________________________
+void TGShutter::RemovePage()
+{
+   // Remove selected page
+
+   if (!fSelectedItem) {
+      return;
+   }
+   TGTextButton *btn = (TGTextButton*)fSelectedItem->GetButton();
+   RemoveItem(btn->GetString().Data());
+}
+
+//______________________________________________________________________________
+void TGShutter::RenamePage(const char *name)
+{
+   // Rename selected page
+
+   if (!fSelectedItem) {
+      return;
+   }
+   TGTextButton *btn = (TGTextButton*)fSelectedItem->GetButton();
+   btn->SetText(name);
+}
+
+//______________________________________________________________________________
+TGShutterItem *TGShutter::AddPage(const char *name)
+{
+   // Add new page (shutter item)
+
+   static int id = 1000;
+   TGShutterItem *item = new TGShutterItem(this, new TGHotString(name), id++);
+   AddItem(item);
+   MapSubwindows();
+   Layout();
+   return item;
 }
 
 //______________________________________________________________________________
@@ -134,6 +296,7 @@ Bool_t TGShutter::ProcessMessage(Long_t /*msg*/, Long_t parm1, Long_t /*parm2*/)
    fClosingHeight -= fClosingItem->fButton->GetDefaultHeight();
    fSelectedItem = item;
    Selected(fSelectedItem);
+   fSelectedItem->Selected();
 
    if (!fTimer) fTimer = new TTimer(this, 6); //10);
    fTimer->Reset();
@@ -261,19 +424,24 @@ TGShutterItem::TGShutterItem(const TGWindow *p, TGHotString *s, Int_t id,
    AddFrame(fCanvas, fL2 = new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
    fButton->Associate((TGFrame *) p);
+
+   fCanvas->SetEditDisabled(kEditDisableGrab | kEditDisableLayout);
+   fButton->SetEditDisabled(kEditDisableGrab | kEditDisableBtnEnable);
+   fContainer->SetEditDisabled(kEditDisableGrab);
+   fEditDisabled = kEditDisableGrab | kEditDisableLayout;
 }
 
 //______________________________________________________________________________
 TGShutterItem::TGShutterItem(const TGShutterItem& si) :
-  TGVerticalFrame(si),
-  TGWidget(si),
-  fButton(si.fButton),
-  fCanvas(si.fCanvas),
-  fContainer(si.fContainer),
-  fL1(si.fL1),
-  fL2(si.fL2)
-{ 
-   //copy constructor
+   TGVerticalFrame(si),
+   TGWidget(si),
+   fButton(si.fButton),
+   fCanvas(si.fCanvas),
+   fContainer(si.fContainer),
+   fL1(si.fL1),
+   fL2(si.fL2)
+{
+   // Copy ctor.
 }
 
 //______________________________________________________________________________
@@ -309,7 +477,7 @@ TGShutterItem::~TGShutterItem()
 //______________________________________________________________________________
 void TGShutterItem::SavePrimitive(ofstream &out, Option_t *option)
 {
-    // Save a shutter item widget as a C++ statement(s) on output stream out
+   // Save a shutter item widget as a C++ statement(s) on output stream out
 
    char quote = '"';
    TGTextButton *b = (TGTextButton *)fButton;
@@ -318,7 +486,6 @@ void TGShutterItem::SavePrimitive(ofstream &out, Option_t *option)
    Int_t lentext = b->GetText()->GetLength();
    char *outext = new char[lentext+2];       // should be +2 because of \0
    Int_t i=0;
-
 
    while (lentext) {
       if (i == hotpos-1) {
@@ -362,7 +529,7 @@ void TGShutterItem::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TGShutter::SavePrimitive(ofstream &out, Option_t *option)
 {
-    // Save a shutter widget as a C++ statement(s) on output stream out.
+   // Save a shutter widget as a C++ statement(s) on output stream out.
 
    out << endl;
    out << "   // shutter" << endl;
@@ -386,6 +553,5 @@ void TGShutter::SavePrimitive(ofstream &out, Option_t *option)
    out << "   " << GetName() << "->SetSelectedItem("
        << GetSelectedItem()->GetName() << ");" << endl;
    out << "   " <<GetName()<< "->Resize("<<GetWidth()<<","<<GetHeight()<<");"<<endl;
-
 }
 
