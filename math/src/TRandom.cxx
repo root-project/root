@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.31 2006/05/26 16:30:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.32 2006/05/26 16:38:56 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -548,8 +548,8 @@ Int_t TRandom::Poisson(Double_t mean)
     
       do {
          do {
-	    y = TMath::Tan(pi*Rndm());
-	    em = sq*y + mean;
+            y = TMath::Tan(pi*Rndm());
+            em = sq*y + mean;
          } while( em < 0.0 );
 
          em = TMath::Floor(em);
@@ -600,8 +600,8 @@ Double_t TRandom::PoissonD(Double_t mean)
     
       do {
          do {
-	    y = TMath::Tan(pi*Rndm());
-	    em = sq*y + mean;
+            y = TMath::Tan(pi*Rndm());
+            em = sq*y + mean;
          } while( em < 0.0 );
 
          em = TMath::Floor(em);
