@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.42 2006/03/23 06:20:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.43 2006/04/06 05:38:31 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -44,9 +44,30 @@ R__EXTERN PyObject* gRootModule;
 
 namespace {
 
-// to prevent having to walk scopes, track python classes by full name
-   typedef std::map< std::string, PyObject* > PyClassMap_t;
+// to prevent having to walk scopes, track python classes by ROOT class
+   typedef std::map< TClass*, PyObject* > PyClassMap_t;
    PyClassMap_t gPyClasses;
+
+// helper for creating new ROOT python types
+   PyObject* CreateNewROOTPythonClass( const std::string& name, PyObject* pybases )
+   {
+      Py_XINCREF( pybases );
+      if ( ! pybases ) {
+         pybases = PyTuple_New( 1 );
+         Py_INCREF( &PyROOT::ObjectProxy_Type );
+         PyTuple_SET_ITEM( pybases, 0, (PyObject*)&PyROOT::ObjectProxy_Type );
+      }
+
+      PyObject* pytrue = PyString_FromString( const_cast< char* >( name.c_str() ) );
+      PyObject* args = Py_BuildValue( const_cast< char* >( "OO{}" ), pytrue, pybases );
+      PyObject* pyclass = PyType_Type.tp_new( &PyROOT::PyRootType_Type, args, NULL );
+
+      Py_DECREF( args );
+      Py_DECREF( pytrue );
+      Py_DECREF( pybases );
+
+      return pyclass;
+   }
 
 } // unnamed namespace
 
@@ -169,10 +190,10 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
          Utility::TC2POperatorMapping_t::iterator pop = Utility::gC2POperatorMapping.find( op );
          if ( pop != Utility::gC2POperatorMapping.end() ) {
             mtName = pop->second;
-         } else if ( op == "[]" ) {
-            mtName = "__getitem__";
+         } else if ( op == "[]" || op == "()" ) {   // index or call
+            mtName = op == "()" ? "__call__" : "__getitem__";
 
-         // operator[] returning a reference type will be used for __setitem__
+         // operator[]/() returning a reference type will be used for __setitem__
             std::string cpd = Utility::Compound( method->GetReturnTypeName() );
             if ( cpd[ cpd.size() - 1 ] == '&' )
                setupSetItem = kTRUE;
@@ -226,7 +247,7 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
          std::make_pair( mtName, Callables_t() ) ).first)).second;
       md.push_back( pycall );
 
-   // special case for operator[] that returns by ref, use for getitem and setitem
+   // special case for operator[]/() that returns by ref, use for getitem/call and setitem
       if ( setupSetItem ) {
          Callables_t& setitem = (*(cache.insert(
             std::make_pair( std::string( "__setitem__" ), Callables_t() ) ).first)).second;
@@ -337,10 +358,10 @@ PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject* scope )
+PyObject* PyROOT::MakeRootClassFromType( TClass* klass )
 {
 // locate class by full name, if possible to prevent parsing scopes/templates anew
-   PyClassMap_t::iterator pci = gPyClasses.find( fullname );
+   PyClassMap_t::iterator pci = gPyClasses.find( klass );
    if ( pci != gPyClasses.end() ) {
       PyObject* pyclass = PyWeakref_GetObject( pci->second );
       if ( pyclass ) {
@@ -349,7 +370,14 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       }
    }
 
-// force building of the class if a scope is specified
+// still here ... pyclass not created or no longer valid, need full parsing
+   return MakeRootClassFromString( klass->GetName() );
+}
+
+//____________________________________________________________________________
+PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject* scope )
+{
+// force building of the class if a scope is specified (prevents loops)
    Bool_t force = scope != 0;
 
 // working copy
@@ -369,6 +397,9 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       Py_DECREF( pyscope );
       if ( PyErr_Occurred() )
          return 0;
+
+   // work with scope from now on
+      Py_INCREF( scope );
    }
 
 // retrieve ROOT class (this verifies name)
@@ -385,21 +416,48 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       klass = gROOT->GetClass( lookup.c_str() );
    }
 
-   if ( ! klass ) {
-   // in case a "naked" templated class is requested, return callable proxy for instantiations
-      if ( G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
-         PyObject* pytcl = PyObject_GetAttrString( gRootModule, const_cast< char* >( "Template" ) );
-         PyObject* pytemplate = PyObject_CallFunction(
-            pytcl, const_cast< char* >( "s" ), const_cast< char* >( lookup.c_str() ) );
-         Py_DECREF( pytcl );
-         return pytemplate;
+   if ( ! klass && G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
+   // a "naked" templated class is requested: return callable proxy for instantiations
+      PyObject* pytcl = PyObject_GetAttrString( gRootModule, const_cast< char* >( "Template" ) );
+      PyObject* pytemplate = PyObject_CallFunction(
+         pytcl, const_cast< char* >( "s" ), const_cast< char* >( lookup.c_str() ) );
+      Py_DECREF( pytcl );
+
+   // cache the result
+      PyObject_SetAttrString( scope ? scope : gRootModule, (char*)name.c_str(), pytemplate );
+
+   // done, next step should be a call into this template
+      Py_XDECREF( scope );
+      return pytemplate;
+   }
+
+   if ( ! klass && G__defined_tagname( lookup.c_str(), 2 ) != -1 ) {
+   // an unloaded namespace is requested
+      PyObject* pyns = CreateNewROOTPythonClass( lookup, NULL );
+
+   // cache the result
+      PyObject_SetAttrString( scope ? scope : gRootModule, (char*)name.c_str(), pyns );
+
+   // done, next step should be a lookup into this namespace
+      Py_XDECREF( scope );
+      return pyns;
+   }
+
+   if ( ! klass ) {   // if so, all options have been exhausted: it doesn't exist
+      if ( ! scope && fullname.find( "ROOT::" ) == std::string::npos ) {
+      // final attempt, for convenience, the "ROOT" namespace isn't required, try again ...
+         PyObject* rtns = PyObject_GetAttrString( gRootModule, const_cast< char* >( "ROOT" ) );
+         PyObject* pyclass = PyObject_GetAttrString( rtns, (char*)fullname.c_str() );
+         Py_DECREF( rtns );
+         return pyclass;
       }
 
       PyErr_Format( PyExc_TypeError, "requested class \'%s\' does not exist", lookup.c_str() );
+      Py_XDECREF( scope );
       return 0;
    }
 
-// locate the scope for building the class if not specified
+// locate the scope, if necessary, for building the class if not specified
    if ( ! scope ) {
    // cut template part, if present
       std::string genName = name.substr( 0, name.find( "<" ) );
@@ -432,8 +490,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
             pos = last + 2;
          } while ( last != std::string::npos );
       }
-   } else
-     Py_INCREF( scope );
+   }
 
 // use global scope if no inner scope found
    if ( ! scope ) {
@@ -447,9 +504,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
 
 // first try to retrieve an existing class representation
    PyObject* pyactual = PyString_FromString( actual.c_str() );
-   PyObject* pyclass = 0;
-   if ( force == kFALSE )
-      pyclass = PyObject_GetAttr( scope, pyactual );
+   PyObject* pyclass = force ? 0 : PyObject_GetAttr( scope, pyactual );
 
    Bool_t bClassFound = pyclass ? kTRUE : kFALSE;
 
@@ -462,12 +517,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       PyObject* pybases = BuildRootClassBases( klass );
       if ( pybases != 0 ) {
       // create a fresh Python class, given bases, name, and empty dictionary
-         PyObject* pytrue = PyString_FromString( klass->GetName() );
-         PyObject* args = Py_BuildValue( const_cast< char* >( "OO{}" ), pytrue, pybases );
-         pyclass = PyType_Type.tp_new( &PyRootType_Type, args, NULL );
-
-         Py_DECREF( args );
-         Py_DECREF( pytrue );
+         pyclass = CreateNewROOTPythonClass( klass->GetName(), pybases );
          Py_DECREF( pybases );
       }
 
@@ -495,8 +545,8 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       }
    }
 
-// store a reference from the full name to this class
-   gPyClasses[ fullname ] = PyWeakref_NewRef( pyclass, NULL );
+   if ( pyclass )                      // store a ref from ROOT TClass to new python class
+      gPyClasses[ klass ] = PyWeakref_NewRef( pyclass, NULL );
 
 // all done
    return pyclass;
@@ -563,7 +613,7 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, Bool_t isR
    }
 
 // retrieve python class
-   PyObject* pyclass = MakeRootClassFromString( klass->GetName() );
+   PyObject* pyclass = MakeRootClassFromType( klass );
    if ( ! pyclass )
       return 0;                    // error has been set in MakeRootClass
 

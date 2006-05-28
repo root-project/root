@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.27 2006/01/05 08:09:09 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.28 2006/02/23 18:29:26 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -42,7 +42,7 @@ namespace {
       InitOperatorMapping_t() {
          // gC2POperatorMapping[ "[]" ]  = "__getitem__";   // depends on return type
          // gC2POperatorMapping[ "[]" ]  = "__setitem__";   // id.
-         gC2POperatorMapping[ "()" ]  = "__call__";
+         // gC2POperatorMapping[ "()" ]  = "__call__";      // depends on return type
          gC2POperatorMapping[ "+" ]   = "__add__";
          gC2POperatorMapping[ "-" ]   = "__sub__";
          // gC2POperatorMapping[ "*" ]   = "__mul__";       // double meaning in C++

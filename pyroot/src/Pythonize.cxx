@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.36 2006/03/24 06:04:09 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.37 2006/04/19 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -1763,6 +1763,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name == "TMinuit" )   // allow call with python callable
       return Utility::AddToClass( pyclass, "SetFCN", new TMinuitSetFCN );
+
+   if ( name == "TFile" )     // allow member-style access to entries in file
+      return Utility::AddToClass( pyclass, "__getattr__", "Get" );
 
 // default (no pythonization) is by definition ok
    return kTRUE;

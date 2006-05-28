@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.37 2006/03/16 06:07:32 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.38 2006/05/11 08:13:37 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 05/10/06
+# Last: 05/28/06
 
 """PyROOT user module.
 
@@ -95,7 +95,7 @@ sys.setcheckinterval( 100 )
 
 
 ### data ________________________________________________________________________
-__version__ = '4.0.0'
+__version__ = '4.2.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 __pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'gVirtualX',
@@ -124,8 +124,13 @@ class Template:
       self.__name__ = name
 
    def __call__( self, *args ):
-      name = self.__name__[ 0 <= self.__name__.find( 'std::' ) and 5 or 0:]
-      return MakeRootTemplateClass( name, *args )
+      newargs = [ self.__name__[ 0 <= self.__name__.find( 'std::' ) and 5 or 0:] ]
+      for arg in args:
+         if type(arg) == str:
+            arg = pystring.join(
+               map( lambda x: pystring.strip(x), pystring.split(arg,',') ), ',' )
+         newargs.append( arg )
+      return MakeRootTemplateClass( *newargs )
 
 sys.modules[ 'libPyROOT' ].Template = Template
 
@@ -137,6 +142,8 @@ class std:
 
    for name in stlclasses:
       exec '%(name)s = Template( "std::%(name)s" )' % { 'name' : name }
+
+sys.modules[ 'libPyROOT' ].std = std
 
 
 ### special cases for gPad, gVirtualX (are C++ macro's) -------------------------
@@ -158,6 +165,18 @@ class _ExpandMacroFunction( object ):
 
 gPad      = _ExpandMacroFunction( "TVirtualPad", "Pad" )
 gVirtualX = _ExpandMacroFunction( "TVirtualX",   "Instance" )
+
+
+### special case pythonization --------------------------------------------------
+def _TTree__iter__( self ):
+  n = self.GetEntries()
+  i = 0
+  while i < n:
+    self.GetEntry( i )
+    yield self                  # TODO: not sure how to do this w/ C-API ...
+    i += 1
+
+MakeRootClass( "TTree" ).__iter__    = _TTree__iter__
 
 
 ### RINT command emulation ------------------------------------------------------
@@ -200,6 +219,12 @@ TPad or TPad.cd, etc."""
          return sys.modules[ __name__ ].gDirectory.ls()
       elif cmd == '.pwd':
          return sys.modules[ __name__ ].gDirectory.pwd()
+   elif isinstance( value, SyntaxError ) and \
+      value.msg == "can't assign to function call":
+         print """Are you trying to assign a value to a reference return, for example to the
+result of a call to "double& SMatrix<>::operator()(int,int)"? If so, then
+please use operator[] instead, as in e.g. "mymatrix[i,j] = somevalue".
+"""
 
  # normal exception processing
    _orig_ehook( exctype, value, traceb )

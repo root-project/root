@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.23 2006/03/16 06:07:32 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.24 2006/03/23 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -154,12 +154,9 @@ namespace {
          PyObject* tn = PyTuple_GET_ITEM( args, i );
          if ( PyString_Check( tn ) )
             PyString_Concat( &pyname, tn );
-         else {
+         else if ( PyObject_HasAttrString( tn, const_cast< char* >( "__name__" ) ) ) {
+         // this works for type objects
             PyObject* tpName = PyObject_GetAttrString( tn, const_cast< char* >( "__name__" ) );
-            if ( PyErr_Occurred() ) {
-               Py_DECREF( pyname );
-               return 0;
-            }
 
          // special case for strings
             if ( strcmp( PyString_AS_STRING( tpName ), "str" ) == 0 ) {
@@ -168,6 +165,15 @@ namespace {
             }
 
             PyString_ConcatAndDel( &pyname, tpName );
+         } else {
+         // last ditch attempt, works for things like int values
+            PyObject* pystr = PyObject_Str( tn );
+            if ( ! pystr ) {
+               Py_DECREF( pyname );
+               return 0;
+            }
+
+            PyString_ConcatAndDel( &pyname, pystr );
          }
 
       // add a comma, as needed
@@ -392,4 +398,7 @@ extern "C" void initlibPyROOT()
 
 // signal policy: don't abort interpreter in interactive mode
    Utility::SetSignalPolicy( gROOT->IsBatch() ? Utility::kFast : Utility::kSafe );
+
+// inject ROOT namespace for convenience
+   PyModule_AddObject( gRootModule, (char*)"ROOT", MakeRootClassFromString( "ROOT" ) );
 }
