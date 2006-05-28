@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.6 2006/04/13 15:33:02 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.7 2006/04/28 19:21:43 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -34,6 +34,8 @@ enum EGuiBuilderMenuIds {
    kGUIBLD_FILE_STOP,
    kGUIBLD_FILE_SAVE,
 
+   kGUIBLD_EDIT_PREF,
+
    kGUIBLD_WINDOW_HOR,
    kGUIBLD_WINDOW_VERT,
    kGUIBLD_WINDOW_CASCADE,
@@ -58,6 +60,8 @@ class TGMdiFrame;
 class TGuiBldEditor;
 class TGButton;
 class TGPictureButton;
+class TImage;
+class TTimer;
 
 class TRootGuiBuilder : public TGuiBuilder, public TGMainFrame {
 
@@ -69,9 +73,10 @@ private:
    TGMdiMainFrame    *fMain;        // main mdi frame
    TGDockableFrame   *fToolDock;    // dockable frame where toolbar is located 
    TGDockableFrame   *fShutterDock; // dockable frame where widget palette is located  
-   TGMdiMenuBar      *fMenuBar;     // guibuildere menu bar
+   TGMdiMenuBar      *fMenuBar;     // guibuilder menu bar
    TGPopupMenu       *fMenuFile;    // "File" popup menu
    TGPopupMenu       *fMenuWindow;  // "Window" popup menu
+   TGPopupMenu       *fMenuEdit;    // "Edit" popup menu
    TGPopupMenu       *fMenuHelp;    // "Help" popup menu
    TGStatusBar       *fStatusBar;   //  guibuilder status bar
    TGFrame           *fSelected;    //  selected frame
@@ -89,12 +94,14 @@ private:
    void EnableSelectedButtons(Bool_t on = kTRUE);
    void EnableEditButtons(Bool_t on = kTRUE);
    void BindKeys();
+   TGButton *FindActionButton(const char *name, const char *section);
 
 public:
    TRootGuiBuilder(const TGWindow *p = 0);
    virtual ~TRootGuiBuilder();
 
    virtual void      AddAction(TGuiBldAction *act, const char *sect);
+   virtual void      AddMacro(const char *macro, TImage *img);
    virtual void      AddSection(const char *sect);
    virtual TGFrame  *ExecuteAction();
    virtual void      HandleButtons();
@@ -121,6 +128,7 @@ public:
    static TGFrame   *HSplitter();
    static TGFrame   *VSplitter();
    TGMdiMainFrame   *GetMdiMain() const { return fMain; }  
+   TGMdiFrame       *GetEditable() const { return fEditable; }
 
    static ULong_t    GetBgnd();
    static TGGC      *GetBgndGC();
@@ -134,7 +142,9 @@ public:
    static void       PropagateBgndColor(TGFrame *frame, Pixel_t color);
 
    static TGPopupMenu *CreatePopup();
-      
+   static TGFrame     *BuildListTree();
+   static TGFrame     *BuildCanvas();
+
    ClassDef(TRootGuiBuilder,0)  // ROOT GUI Builder
 };
 

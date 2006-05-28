@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.29 2006/04/24 14:09:16 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.30 2006/04/28 19:21:43 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -34,6 +34,10 @@
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TRootHelpDialog.h"
+#include "TGListTree.h"
+#include "TImage.h"
+#include "TTimer.h"
+
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -296,7 +300,6 @@ public:
       fEditDisabled = kEditDisable;
       SetBackgroundColor(TRootGuiBuilder::GetPopupBgnd());
       fEntrySep = 8;
-
    }
    void DrawEntry(TGMenuEntry *entry); 
 };
@@ -615,6 +618,8 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    cf->AddFrame(splitter, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
 
    fMain = new TGMdiMainFrame(cf, fMenuBar, 1, 1);
+   fMain->Connect("FrameClosed(Int_t)", "TRootGuiBuilder", this, "HandleWindowClosed(Int_t)");
+
    cf->AddFrame(fMain, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    fMain->GetContainer()->SetEditDisabled(kEditDisable);
@@ -639,10 +644,17 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddSection("Projects");
    AddSection("Buttons");
    AddSection("Containers");
+   AddSection("Bars");
    AddSection("Input");
+   AddSection("Complex Input");
    AddSection("Display");
    AddSection("Dialogs");
-//   AddSection("Extended");
+
+   // create an empty section
+   AddSection("User's Macros");
+   TGShutterItem *item = fShutter->GetItem("User's Macros");
+   TGCompositeFrame *cont = (TGCompositeFrame *)item->GetContainer();
+   cont->SetBackgroundColor(TColor::Number2Pixel(18));
 
    TGuiBldAction *act = new TGuiBldAction("TGMainFrame", "Main Frame", kGuiBldProj);
    act->fAct = "new TGMainFrame(gClient->GetRoot(), 300, 300)";
@@ -673,6 +685,11 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act = new TGuiBldAction("TGTextEntry", "Text Entry", kGuiBldCtor);
    act->fAct = "new TGTextEntry()";
    act->fPic = "bld_entry.xpm";
+   AddAction(act, "Input");
+
+   act = new TGuiBldAction("TGTextEdit", "Text Edit", kGuiBldCtor);
+   act->fAct = "new TGTextEdit()";
+   act->fPic = "bld_text.xpm";
    AddAction(act, "Input");
 
    act = new TGuiBldAction("TGNumberEntry", "Number Entry", kGuiBldCtor);
@@ -710,6 +727,11 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fPic = "bld_vscrollbar.xpm";
    AddAction(act, "Input");
 
+   act = new TGuiBldAction("TGListTree", "List Tree", kGuiBldCtor);
+   act->fAct = "TRootGuiBuilder::BuildListTree()";
+   act->fPic = "bld_listtree.xpm";
+   AddAction(act, "Complex Input");
+
    act = new TGuiBldAction("TGLabel", "Text Label", kGuiBldCtor);
    act->fAct = "new TGLabel()";
    act->fPic = "bld_label.xpm";
@@ -734,7 +756,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fAct = "new TGStatusBar()";
    act->fPic = "bld_statusbar.xpm";
    act->fHints = new TGLayoutHints(kLHintsBottom | kLHintsExpandX);
-   AddAction(act, "Display");
+   AddAction(act, "Bars");
 
    act = new TGuiBldAction("TGHProgressBar", "HProgress Bar", kGuiBldCtor);
    act->fAct = "new TGHProgressBar()";
@@ -772,11 +794,10 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fPic = "bld_tab.xpm";
    AddAction(act, "Containers");
 
-//   act = new TGuiBldAction("TGCanvas", "Scrolled Canvas", kGuiBldCtor);
-//   act->fAct = "new TGCanvas()";
-//   act->fPic = "bld_canvas.xpm";
-//   AddAction(act, "Containers");
-
+   act = new TGuiBldAction("TGCanvas", "Scrolled Canvas", kGuiBldCtor);
+   act->fAct = "TRootGuiBuilder::BuildCanvas()";
+   act->fPic = "bld_canvas.xpm";
+   AddAction(act, "Containers");
 
 /*
    act = new TGuiBldAction("TGVSplitter", "Horizontal Panes", kGuiBldFunc);
@@ -806,11 +827,11 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    MapSubwindows();
 
    Int_t qq; 
-   UInt_t ww; 
+   UInt_t ww;
    UInt_t hh;
    gVirtualX->GetWindowSize(gVirtualX->GetDefaultRootWindow(), qq, qq, ww, hh);
-   MoveResize(50, 50, ww - 100, hh - 100);
-   SetWMPosition(50, 50);
+   MoveResize(100, 100, ww - 200, hh - 200);
+   SetWMPosition(100, 100);
 
    SetWindowName("ROOT GuiBuilder");
    SetIconName("ROOT GuiBuilder");
@@ -827,7 +848,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    fMenuHelp->Connect("Activated(Int_t)", "TRootGuiBuilder", this,
                       "HandleMenu(Int_t)");
 
-   fMain->Connect("FrameClosed(Int_t)", "TRootGuiBuilder", this, "HandleWindowClosed(Int_t)");
+   //
 
    BindKeys();
    UpdateStatusBar("Ready");
@@ -872,6 +893,35 @@ void TRootGuiBuilder::CloseWindow()
 }
 
 //______________________________________________________________________________
+TGButton *TRootGuiBuilder::FindActionButton(const char *name, const char *sect)
+{
+   // Find action by name
+
+   if (!name || !sect) return 0;
+
+   TGShutterItem *item = fShutter->GetItem(sect);
+   if (!item) return 0;
+
+   TGCompositeFrame *cont = (TGCompositeFrame *)item->GetContainer();
+   TGHorizontalFrame *hf;
+   TGFrameElement *fe;
+
+   TIter next(cont->GetList());
+   TGLabel *lb;
+   TGButton *btn;
+
+   while ((fe = (TGFrameElement*)next())) {
+      hf = (TGHorizontalFrame*)fe->fFrame;
+      btn = (TGButton*)((TGFrameElement*)hf->GetList()->First())->fFrame;
+      lb = (TGLabel*)((TGFrameElement*)hf->GetList()->Last())->fFrame;
+      if (*(lb->GetText()) == name) {
+         return (TGButton*)btn;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 void TRootGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
 {
    // Add new action to widget palette.
@@ -885,7 +935,11 @@ void TRootGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
    TGCompositeFrame *cont = (TGCompositeFrame *)item->GetContainer();
    cont->SetBackgroundColor(TColor::Number2Pixel(18));
 
-   const TGPicture *pic = fClient->GetPicture(act->fPic);
+   const TGPicture *pic = 0;
+   if (!act->fPicture) {
+      act->fPicture = fClient->GetPicture(act->fPic);
+   }
+   pic = act->fPicture;
 
    TGHorizontalFrame *hf = new TGHorizontalFrame(cont);
 
@@ -901,10 +955,14 @@ void TRootGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
 
    hf->AddFrame(btn, new TGLayoutHints(kLHintsTop | kLHintsCenterY, 1, 1, 1, 1));
 
-   TGLabel *lb = new TGLabel(hf, act->GetTitle());
+   TGLabel *lb = new TGLabel(hf, act->fType != kGuiBldMacro ? act->GetTitle() : act->GetName());
    lb->SetBackgroundColor(cont->GetBackground());
    hf->AddFrame(lb, new TGLayoutHints(kLHintsTop | kLHintsCenterY, 1, 1, 1, 1));
    hf->SetBackgroundColor(cont->GetBackground());
+
+   // disable edit
+   cont->SetEditDisabled(kEditDisable);
+   hf->SetEditDisabled(kEditDisable);
 
    cont->AddFrame(hf, new TGLayoutHints(kLHintsTop, 5, 5, 5, 0));
    cont->MapSubwindows();
@@ -919,6 +977,7 @@ void TRootGuiBuilder::AddSection(const char *sect)
    static int id = 10000;
    TGShutterItem *item = new TGShutterItem(fShutter, new TGHotString(sect), id++);
    fShutter->AddItem(item);
+   item->Connect("Selected()", "TRootGuiBuilder", this, "HandleMenu(=3)");
 }
 
 //______________________________________________________________________________
@@ -941,12 +1000,14 @@ void TRootGuiBuilder::HandleButtons()
    fActionButton = (TGButton *)gTQSender;
    TGuiBldAction *act  = (TGuiBldAction *)fActionButton->GetUserData();
    parent = (TGFrame*)fActionButton->GetParent();
+
    parent->ChangeOptions(parent->GetOptions() | kSunkenFrame);
    fClient->NeedRedraw(parent, kTRUE);
 
    if (act) {
       fAction = act;
-      if (fAction->fType == kGuiBldProj) ExecuteAction();
+      fManager->UngrabFrame();
+      if (fAction->fType != kGuiBldCtor) ExecuteAction();
    }
 }
 
@@ -959,7 +1020,7 @@ TGFrame *TRootGuiBuilder::ExecuteAction()
 
    TGFrame *ret = 0;
 
-   if (!fClient->IsEditable()) { 
+   if (!fClient->IsEditable() && (fAction->fType != kGuiBldMacro)) { 
       TGMdiFrame *current = fMain->GetCurrent();
       if (current) current->SetEditable(kTRUE);
    }
@@ -969,8 +1030,17 @@ TGFrame *TRootGuiBuilder::ExecuteAction()
          NewProject();
          fAction = 0;
          break;
+      case kGuiBldMacro:
+         {
+         TGWindow *root = (TGWindow*)fClient->GetRoot();
+         if (root) root->SetEditable(kFALSE);
+         gROOT->Macro(fAction->fAct.Data());
+         if (root) root->SetEditable(kTRUE);
+         fAction = 0;
+         break;
+         }
       default:
-         ret = (TGFrame *)gROOT->ProcessLineFast(fAction->fAct.Data());
+         ret = (TGFrame *)gROOT->ProcessLineFast(fAction->fAct.Data());      
          break;
    }
 
@@ -1000,7 +1070,11 @@ void TRootGuiBuilder::InitMenu()
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry(new TGHotString("E&xit"), kGUIBLD_FILE_EXIT,
                         0, fClient->GetPicture("bld_exit.png"));
-
+/*
+   fMenuEdit = new TGuiBldPopupMenu();
+   fMenuEdit->AddSeparator();
+   fMenuEdit->AddEntry(new TGHotString("&Preferences ..."), kGUIBLD_EDIT_PREF);
+*/
    fMenuWindow = new TGuiBldPopupMenu();
    fMenuWindow->AddEntry(new TGHotString("Tile &Horizontally"), kGUIBLD_WINDOW_HOR);
    fMenuWindow->AddEntry(new TGHotString("Tile &Vertically"), kGUIBLD_WINDOW_VERT);
@@ -1024,6 +1098,9 @@ void TRootGuiBuilder::InitMenu()
    TGuiBldMenuTitle *title;
    title = new TGuiBldMenuTitle(bar, new TGHotString("&File"), fMenuFile);
    bar->AddTitle(title, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
+
+   //title = new TGuiBldMenuTitle(bar, new TGHotString("&Edit"), fMenuEdit);
+   //bar->AddTitle(title, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
 
    title = new TGuiBldMenuTitle(bar, new TGHotString("&Windows"), fMenuWindow);
    bar->AddTitle(title, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
@@ -1328,7 +1405,7 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
    TGFileInfo fi;
    static TString dir(".");
    static Bool_t overwr = kFALSE;
-   const char *fname;
+   TString fname;
 
    fi.fFileTypes = gSaveMacroTypes;
    fi.fIniDir    = StrDup(dir);
@@ -1347,13 +1424,13 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
    overwr = fi.fOverwrite;
    fname  = fi.fFilename;
 
-   if (strstr(fname, ".C")) {
+   if (fname.EndsWith(".C")) {
       NewProject();        // create new project
-      gROOT->Macro(fname); // put content of the macro as child frame
+      gROOT->Macro(fname.Data()); // put content of the macro as child frame
    } else {
       Int_t retval;
       new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                   Form("file (%s) must have extension .C", fname),
+                   Form("file (%s) must have extension .C", fname.Data()),
                    kMBIconExclamation, kMBRetry | kMBCancel, &retval);
 
       if (retval == kMBRetry) {
@@ -1382,11 +1459,18 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
    TGMdiFrame *savfr = fMain->GetCurrent();
    if (!savfr) return kFALSE;
 
+   static TImage *img = 0;
+
+   if (!img) {
+      img = TImage::Create();
+   }
+   img->FromWindow(savfr->GetParent()->GetId());
+
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    TGFileInfo fi;
    static TString dir(".");
    static Bool_t overwr = kFALSE;
-   const char *fname;
+   TString fname;
    root->SetEditable(kFALSE);
 
    fi.fFileTypes = gSaveMacroTypes;
@@ -1405,7 +1489,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
    overwr = fi.fOverwrite;
    fname = gSystem->UnixPathName(fi.fFilename);
 
-   if (strstr(fname, ".C")) {
+   if (fname.EndsWith(".C")) {
       TGuiBldSaveFrame *main = new TGuiBldSaveFrame(fClient->GetDefaultRoot(),
                                                     savfr->GetWidth(),
                                                     savfr->GetHeight());
@@ -1414,33 +1498,83 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
       savfr->SetName(main->GetName());
       main->SetList(savfr->GetList());
       main->SetLayoutBroken(savfr->IsLayoutBroken());
-
-      main->SaveSource(fname, "");
-      savfr->SetWindowName(fname);
-
+      main->SaveSource(fname.Data(), "");
+      savfr->SetWindowName(fname.Data());
       main->SetList(list);
+
       main->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputFullApplicationModal);
       main->SetWMSize(main->GetWidth(), main->GetHeight());
-      //main->SetWMSizeHints(main->GetDefaultWidth(), main->GetDefaultHeight(), 10000, 10000, 0, 0);
-      main->SetWindowName(fname);
-      main->SetIconName(fname);
-      main->SetClassHints(fname, fname);
+      main->SetWMSizeHints(main->GetDefaultWidth(), main->GetDefaultHeight(), 10000, 10000, 0, 0);
+      main->SetWindowName(fname.Data());
+      main->SetIconName(fname.Data());
+      main->SetClassHints(fname.Data(), fname.Data());
+      // some problems here under win32
+      if (gVirtualX->InheritsFrom("TGX11")) main->SetIconPixmap("bld_rgb.xpm");
 
       savfr->SetName(name.Data());
+
+      AddMacro(fname.Data(), img);
       delete main;
    } else {
       Int_t retval;
       new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                   Form("file (%s) must have extension .C", fname),
+                   Form("file (%s) must have extension .C", fname.Data()),
                    kMBIconExclamation, kMBRetry | kMBCancel, &retval);
       if (retval == kMBRetry) {
          HandleKey(event);
       }
+      SwitchToolbarButton();
    }
-   //root->SetEditable(kTRUE);
    SwitchToolbarButton();
-
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TRootGuiBuilder::AddMacro(const char *macro, TImage *img)
+{
+   // Add macro to "User's Macros" section
+   // Input img must be static - do not delete it.
+
+   if (!img || !img->GetWidth() || !img->GetHeight()) {
+      return;
+   }
+
+   UInt_t w = 100;
+   Float_t ratio = Float_t(w)/img->GetWidth();
+   Float_t rh = img->GetHeight()*ratio;
+   UInt_t h = UInt_t(rh);
+   img->Scale(w, h);
+   img->Merge(img, "overlay");
+
+   static int i = 0;
+   const TGPicture *pic = fClient->GetPicturePool()->GetPicture(Form("%s;%d", macro, i++), 
+                                                                img->GetPixmap(),
+                                                                img->GetMask());
+   const char *name = gSystem->BaseName(macro);
+
+   TGButton *btn = FindActionButton(name, "User's Macros");
+   TGuiBldAction *act = 0;
+
+   if (!btn) {
+      act = new TGuiBldAction(name, macro, kGuiBldMacro);
+      act->fAct = macro;
+      act->fPic = macro;
+      act->fPicture = pic;
+
+      AddAction(act, "User's Macros");
+   } else {
+      act = (TGuiBldAction*)btn->GetUserData();
+      act->fAct = macro;
+      act->fPic = macro;
+      act->fPicture = pic;
+
+      if (btn->InheritsFrom(TGPictureButton::Class())) {
+         btn->Resize(w, h);
+         fClient->FreePicture(((TGPictureButton*)btn)->GetPicture());
+         ((TGPictureButton*)btn)->SetPicture(pic);
+      }
+   }
+   fClient->NeedRedraw(fShutter);
 }
 
 //______________________________________________________________________________
@@ -1449,11 +1583,12 @@ TGMdiFrame *TRootGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
    // Find the editable frame.
 
    const TGWindow *parent = win;
+   TGMdiFrame *ret = 0;
 
    while (parent && (parent != fClient->GetDefaultRoot())) {
       if (parent->InheritsFrom(TGMdiFrame::Class())) {
-         fEditable = (TGMdiFrame*)parent;
-         return fEditable;
+         ret = (TGMdiFrame*)parent;
+         return ret;
       }
       parent = parent->GetParent();
    }
@@ -1497,6 +1632,9 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
 
    switch (id) {
       case kGUIBLD_FILE_START:
+         if (fClient->IsEditable()) {
+            break;
+         }
          fEditable = fMain->GetCurrent();
          if (fEditable) {
             fEditable->SetEditable(kTRUE);
@@ -1510,7 +1648,11 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
          break;
 
       case kGUIBLD_FILE_STOP:
+         if (!fClient->IsEditable()) {
+            break;
+         }
          fEditable = FindEditableMdiFrame(root);
+
          if (fEditable) {
             root->SetEditable(kFALSE);
 
@@ -1826,9 +1968,9 @@ ULong_t TRootGuiBuilder::GetBgnd()
 
    Float_t r, g, b;
 
-   r = 223./255;
-   g = 219./255;
-   b = 215./255;
+   r = 232./255;
+   g = 232./255;
+   b = 222./255;
 
    gPixel = TColor::RGB2Pixel(r, g, b);
    return gPixel;
@@ -1882,9 +2024,9 @@ ULong_t TRootGuiBuilder::GetPopupBgnd()
 
    Float_t r, g, b;
 
-   r = 245./255;
-   g = 244./255;
-   b = 240./255;
+   r = 250./255;
+   g = 250./255;
+   b = 250./255;
 
    gPixel = TColor::RGB2Pixel(r, g, b);
 
@@ -1949,4 +2091,44 @@ TGPopupMenu *TRootGuiBuilder::CreatePopup()
    // Return style popup menu.
 
    return new TGuiBldPopupMenu();
+}
+
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildListTree()
+{
+   // Helper method used in guibuilding
+
+   TGCanvas *canvas = new TGCanvas(gClient->GetRoot(), 100, 100);
+   TGListTree *lt = new TGListTree(canvas, kHorizontalFrame);
+   lt->AddItem(0, "Entry 1");
+   lt->AddItem(0, "Entry 2");
+   lt->AddItem(0, "Entry 3");
+   lt->AddItem(0, "Entry 4");
+   lt->AddItem(0, "Entry 5");
+   canvas->Resize(100, 60);
+   canvas->MapSubwindows();
+
+   return canvas;
+}
+
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildCanvas()
+{
+   // Helper method used in guibuilding
+
+   TGCanvas *canvas = new TGCanvas(gClient->GetRoot(), 100, 100);
+   TGCompositeFrame *cont = new TGCompositeFrame(canvas->GetViewPort(), 200, 200, 
+                                                kHorizontalFrame | kOwnBackground);
+                                                 //,TGFrame::GetWhitePixel());
+
+   cont->SetCleanup(kDeepCleanup);
+   cont->SetLayoutManager(new TGTileLayout(cont, 8));
+   cont->AddFrame(new TGTextButton(cont, "Button1"));
+   cont->AddFrame(new TGTextButton(cont, "Button2"));
+   cont->AddFrame(new TGTextButton(cont, "Button3"));
+   cont->AddFrame(new TGTextButton(cont, "Button4"));
+
+   canvas->SetContainer(cont);
+ //  canvas-MapSubwindows();
+   return canvas;
 }

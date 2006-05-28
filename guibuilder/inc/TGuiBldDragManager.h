@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.11 2006/04/24 14:09:16 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.12 2006/04/28 19:21:43 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -33,6 +33,18 @@ class TRootGuiBuilder;
 class TQUndoManager;
 class TGPopupMenu;
 class TGuiBldEditor;
+class TGColorDialog;
+class TGFontDialog;
+class TGTextButton;
+class TGPictureButton;
+class TGCanvas;
+class TGComboBox;
+class TGLabel;
+class TGListBox;
+class TGProgressBar;
+class TGScrollBar;
+class TGTextEntry;
+class TGIcon;
 
 
 enum EActionType { kNoneAct, kPropertyAct, kEditableAct, kReparentAct,
@@ -49,6 +61,9 @@ class TGuiBldDragManager : public TVirtualDragManager, public TGFrame {
 friend class TGClient;
 friend class TGFrame;
 friend class TGMainFrame;
+friend class TGGrabRect;
+friend class TRootGuiBuilder;
+friend class TGuiBldDragManagerRepeatTimer;
 
 private:
    TGuiBldDragManagerPimpl *fPimpl;    // private data
@@ -64,6 +79,16 @@ private:
    Window_t       fTargetId;           // an id of window where drop 
    Bool_t         fDropStatus;         // kTRUE if drop was successfull
    Bool_t         fStop;               // kTRUE if stopped
+   TGFrame       *fSelected;           // selected frame. In most cases selected is 
+                                       // the same frame as grabbed frame. 
+   TList         *fListOfDialogs;      // list of dialog methods
+
+   static TGColorDialog *fgGlobalColorDialog;   // color dialog
+   static TGColorDialog *GetGlobalColorDialog(Bool_t create = kTRUE);
+
+   static TGFontDialog *fgGlobalFontDialog;     // font dialog
+   static TGFontDialog *GetGlobalFontDialog();  //
+   static void MapGlobalDialog(TGMainFrame *dialog, TGFrame *fr);
 
    void           Reset1();
    void           DrawGrabRectangles(TGWindow *win = 0);
@@ -79,6 +104,10 @@ private:
    Bool_t         IsFixedH(TGWindow *f) const { return (f && (f->GetEditDisabled() & kEditDisableHeight)); }
    Bool_t         IsFixedW(TGWindow *f) const { return (f && (f->GetEditDisabled() & kEditDisableWidth)); }
    Bool_t         IsFixedSize(TGWindow *f) const { return (f && (f->GetEditDisabled() & kEditDisableResize)); }
+   Bool_t         CanChangeLayout(TGWindow *w) const;
+   Bool_t         CanChangeLayoutOrder(TGWindow *w) const;
+   Bool_t         CanCompact(TGWindow *w) const;
+
    void           ChangeSelected(TGFrame *f); 
    TGFrame       *GetEditableParent(TGFrame *f);
    TGFrame       *GetMovableParent(TGWindow *p);
@@ -88,14 +117,18 @@ private:
    void           RaiseMdiFrame(TGFrame *in);
    Bool_t         CheckTargetAtPoint(Int_t x, Int_t y);
    void           AddClassMenuMethods(TGPopupMenu *menu, TObject *object);
+   void           AddDialogMethods(TGPopupMenu *menu, TObject *object);
    void           DeleteMenuDialog();
+   void           CreateListOfDialogs();
 
-public:
+private:
    TGFrame       *InEditable(Window_t id);
    void           SelectFrame(TGFrame *frame, Bool_t add = kFALSE);
    void           GrabFrame(TGFrame *frame);
    void           UngrabFrame();
-   Bool_t         CheckDragResize(Event_t *event);
+   void           SetPropertyEditor(TGuiBldEditor *e);
+   void           DeletePropertyEditor();
+
    TList         *GetFramesInside(Int_t x0, Int_t y0, Int_t x, Int_t y);
    void           ToGrid(Int_t &x, Int_t &y);
    void           DoReplace(TGFrame *frame);
@@ -109,6 +142,8 @@ public:
    void           HandleReplace();
    void           HandleGrid();
    void           CloneEditable();
+   void           DropCanvas(TGCanvas *canvas);
+   void           PutToCanvas(TGCompositeFrame *cont);
    Bool_t         Save(const char *file = "");
    Bool_t         SaveFrame(const char *file = 0);
    void           HandleLayoutOrder(Bool_t forward = kTRUE);
@@ -130,20 +165,17 @@ public:
    void           Menu4Frame(TGFrame *, Int_t x, Int_t y);
    void           Menu4Lasso(Int_t x, Int_t y);
    void           CreatePropertyEditor();
-   void           SetPropertyEditor(TGuiBldEditor *e);
-   void           DeletePropertyEditor();
-   void           SetEditable(Bool_t on = kTRUE);
    void           DoRedraw();
    void           SwitchEditable(TGFrame *frame);
    void           UnmapAllPopups();
+   void           BreakLayout();
+   void           SwitchLayout();
 
-   Bool_t         HandleEvent(Event_t *);
    Bool_t         RecognizeGesture(Event_t *, TGFrame *frame = 0);
    Bool_t         HandleButtonPress(Event_t *);
    Bool_t         HandleButtonRelease(Event_t *);
    Bool_t         HandleButton(Event_t *);
    Bool_t         HandleDoubleClick(Event_t*);
-   Bool_t         HandleKey(Event_t *);
    Bool_t         HandleMotion(Event_t *);
    Bool_t         HandleClientMessage(Event_t *);
    Bool_t         HandleDestroyNotify(Event_t *);
@@ -152,45 +184,68 @@ public:
    Bool_t         HandleConfigureNotify(Event_t *);
    Bool_t         HandleSelectionRequest(Event_t *);
    void           HandleButon3Pressed(Event_t *, TGFrame *frame = 0);
-
-   virtual        ~TGuiBldDragManager();
-
-public:
-   TGuiBldDragManager();
-
+   Bool_t         HandleEvent(Event_t *);
    Bool_t         HandleTimer(TTimer *);
-   void           HandleAction(Int_t act);
 
    Bool_t         IsMoveWaiting() const;
    Bool_t         IsLassoDrawn() const { return fLassoDrawn; }
+   void           HideGrabRectangles();
+   Bool_t         IgnoreEvent(Event_t *e);
+   Bool_t         CheckDragResize(Event_t *event);
+   Bool_t         IsPasteFrameExist();
+
+public:
+   TGuiBldDragManager();
+   virtual        ~TGuiBldDragManager();
+
+   void           HandleAction(Int_t act);
+   Bool_t         HandleKey(Event_t *);
+
    TGFrame       *GetTarget() const { return fTarget; }
    TGFrame       *GetSelected() const;
    void           Snap2Grid();
    void           SetGridStep(UInt_t step);
    UInt_t         GetGridStep();
    void           HandleUpdateSelected(TGFrame *);
-   void           HideGrabRectangles();
-   Bool_t         IgnoreEvent(Event_t *e);
    Int_t          GetStrartDragX() const;     
    Int_t          GetStrartDragY() const;
    Int_t          GetEndDragX() const;
    Int_t          GetEndDragY() const;
-   void           BreakLayout();
-   void           SwitchLayout();
+
    Bool_t         GetDropStatus() const { return fDropStatus; }
    void           SetBuilder(TRootGuiBuilder *b) { fBuilder = b; }
 
-   Bool_t         CanChangeLayout(TGWindow *w) const;
-   Bool_t         CanChangeLayoutOrder(TGWindow *w) const;
-   Bool_t         CanCompact(TGWindow *w) const;
    Bool_t         IsStopped() const { return fStop; }
-   Bool_t         IsPasteFrameExist();
+   void           SetEditable(Bool_t on = kTRUE);
 
    // hadndling dynamic context menus
-   void           DoClassMenu(Int_t);
-   void           DoDialogOK();
-   void           DoDialogApply();
-   void           DoDialogCancel();
+   void DoClassMenu(Int_t);
+   void DoDialogOK();
+   void DoDialogApply();
+   void DoDialogCancel();
+
+   void ChangeProperties(TGLabel *);         //*MENU* *DIALOG*icon=bld_fontselect.png*
+   void ChangeProperties(TGTextButton *);    //*MENU* *DIALOG*icon=bld_fontselect.png*
+
+   void ChangeTextFont(TGGroupFrame *);      //*MENU* *DIALOG*icon=bld_fontselect.png*
+   void ChangeTextFont(TGTextEntry *);       //*MENU* *DIALOG*icon=bld_fontselect.png*
+
+   void ChangePicture(TGPictureButton *);    //*MENU* *DIALOG*icon=bld_open.png*
+   void ChangeImage(TGIcon *);               //*MENU* *DIALOG*icon=bld_open.png*
+
+   void ChangeBarColor(TGProgressBar *);     //*MENU* *DIALOG*icon=bld_colorselect.png*
+
+   void ChangeTextColor(TGGroupFrame *);     //*MENU* *DIALOG*icon=bld_colorselect.png*
+   void ChangeTextColor(TGLabel *);          //*MENU* *DIALOG*icon=bld_colorselect.png*
+   void ChangeTextColor(TGTextButton *);     //*MENU* *DIALOG*icon=bld_colorselect.png*
+   void ChangeTextColor(TGProgressBar *);    //*MENU* *DIALOG*icon=bld_colorselect.png*
+   void ChangeTextColor(TGTextEntry *);      //*MENU* *DIALOG*icon=bld_colorselect.png*
+
+   void ChangeBackgroundColor(TGListBox *);  //*MENU* *DIALOG*icon=bld_colorselect.png*
+   void ChangeBackgroundColor(TGCanvas *);   //*MENU* *DIALOG*icon=bld_colorselect.png*
+   void ChangeBackgroundColor(TGComboBox *); //*MENU* *DIALOG*icon=bld_colorselect.png*
+   void ChangeBackgroundColor(TGFrame *);             //*MENU* *DIALOG*icon=bld_colorselect.png*
+   void ChangeBackgroundColor(TGCompositeFrame *);    //*MENU* *DIALOG*icon=bld_colorselect.png*
 
    ClassDef(TGuiBldDragManager,0)  // drag and drop manager
 };

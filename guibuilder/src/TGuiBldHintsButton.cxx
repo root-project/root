@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsButton.cxx,v 1.2 2005/09/04 10:34:43 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsButton.cxx,v 1.3 2005/12/08 13:03:57 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -48,7 +48,7 @@ TGuiBldHintsButton::TGuiBldHintsButton(const TGWindow* p, Int_t id) :
 //______________________________________________________________________________
 void TGuiBldHintsButton::DoRedraw()
 {
-   //
+   // Redraw button
 
    TGButton::DoRedraw();
 
@@ -86,7 +86,7 @@ void TGuiBldHintsButton::DoRedraw()
 //______________________________________________________________________________
 void TGuiBldHintsButton::DrawExpandX()
 {
-   //
+   // Draw expand X button
 
    const int dist = 3;
    const int amplitude = TMath::Min(3, (int)fHeight/3);
@@ -99,11 +99,12 @@ void TGuiBldHintsButton::DrawExpandX()
       base++;
    }
 
-        for ( i = 1; i < (int)fWidth/3 - 2; ++i ) {
-           gVirtualX->DrawLine(fId, gc->GetGC(), i * dist, base - amplitude,
+   for ( i = 1; i < (int)fWidth/3 - 2; ++i ) {
+      gVirtualX->DrawLine(fId, gc->GetGC(), i * dist, base - amplitude,
                            i * dist + dist/2, base + amplitude);
    }
-   gc = pool->GetSelectedBckgndGC();   // blue
+   gc = IsEnabled() ? pool->GetSelectedBckgndGC() : pool->GetFrameShadowGC();
+
    for ( i = 1; i < (int)fWidth/3 - 2; ++i ) {
       gVirtualX->DrawLine(fId, gc->GetGC(), i * dist + dist/2, base + amplitude,
                            i * dist + dist, base - amplitude);
@@ -115,7 +116,7 @@ void TGuiBldHintsButton::DrawExpandX()
 //______________________________________________________________________________
 void TGuiBldHintsButton::DrawExpandY()
 {
-   //
+   //  Draw expand X button
 
    const int dist = 3;
    const int amplitude = TMath::Min(3, (int)fWidth/3);
@@ -128,12 +129,13 @@ void TGuiBldHintsButton::DrawExpandY()
    const TGResourcePool *pool = fClient->GetResourcePool();
    const TGGC* gc = pool->GetWhiteGC();
 
-        for ( i = 1; i < (int)fHeight/3 - 2; ++i ) {
-           gVirtualX->DrawLine(fId, gc->GetGC(), base - amplitude, i * dist,
+   for ( i = 1; i < (int)fHeight/3 - 2; ++i ) {
+      gVirtualX->DrawLine(fId, gc->GetGC(), base - amplitude, i * dist,
                            base + amplitude,i * dist + dist/2);
    }
 
-   gc = pool->GetSelectedBckgndGC();   // blue
+   gc = IsEnabled() ? pool->GetSelectedBckgndGC() : pool->GetFrameShadowGC();
+
    for ( i = 1; i < (int)fHeight/3 - 2; ++i ) {
       gVirtualX->DrawLine(fId, gc->GetGC(), base + amplitude, i * dist + dist/2,
                            base - amplitude, i * dist + dist );
@@ -162,7 +164,7 @@ void TGuiBldHintsButton::DrawCenterX()
 
    gVirtualX->DrawLine(fId, gc->GetGC(), x, base, x + fWidth - 12, base);
 
-   gc = pool->GetSelectedBckgndGC();   // blue
+   gc = IsEnabled() ? pool->GetSelectedBckgndGC() : pool->GetFrameShadowGC();
 
    gVirtualX->DrawLine(fId, gc->GetGC(), x, base - 1, x + fWidth/2 - 12, base - 1);
    gVirtualX->DrawLine(fId, gc->GetGC(), x + fWidth/2, base - 1, x + fWidth - 12, base - 1);
@@ -187,7 +189,7 @@ void TGuiBldHintsButton::DrawCenterX()
 //______________________________________________________________________________
 void TGuiBldHintsButton::DrawCenterY()
 {
-   //
+   // Draw center Y button
 
    int base = fWidth/2;
    int x = 6;
@@ -204,7 +206,7 @@ void TGuiBldHintsButton::DrawCenterY()
 
    gVirtualX->DrawLine(fId, gc->GetGC(), base, y, base, y + fHeight - 12);
 
-   gc = pool->GetSelectedBckgndGC();   // blue
+   gc = IsEnabled() ? pool->GetSelectedBckgndGC() : pool->GetFrameShadowGC();
 
    gVirtualX->DrawLine(fId, gc->GetGC(), base - 1, y,  base - 1, y + fHeight/2 - 12);
    gVirtualX->DrawLine(fId, gc->GetGC(),  base - 1, y + fHeight/2, base - 1, y + fHeight - 12);

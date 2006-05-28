@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsEditor.cxx,v 1.4 2006/03/29 15:44:57 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsEditor.cxx,v 1.5 2006/04/07 10:05:09 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -142,6 +142,10 @@ void TGuiBldHintsManager::ChangeSelected(TGFrame *frame)
    } else {
       TGCompositeFrame *comp = (TGCompositeFrame*)frame;
       TGLayoutManager *lm = comp->GetLayoutManager();
+
+      if (!lm) {
+         return;
+      }
       Int_t n = comp->GetList()->GetEntries();
 
       MapWindow();
@@ -169,7 +173,7 @@ void TGuiBldHintsManager::ChangeSelected(TGFrame *frame)
 TGuiBldHintsEditor::TGuiBldHintsEditor(const TGWindow *p, TGuiBldEditor *e) :
                      TGVerticalFrame(p, 1, 1), fEditor(e)
 {
-   //
+   // ctor.
 
    SetCleanup(kDeepCleanup);
 
@@ -299,7 +303,7 @@ TGuiBldHintsEditor::TGuiBldHintsEditor(const TGWindow *p, TGuiBldEditor *e) :
 //______________________________________________________________________________
 void  TGuiBldHintsEditor::ChangeSelected(TGFrame *frame)
 {
-   //
+   // Change selected
 
    if (!frame) {
       fNameFrame->Reset();
@@ -319,8 +323,10 @@ void  TGuiBldHintsEditor::ChangeSelected(TGFrame *frame)
 
    fCenterX->SetEnabled(kTRUE);
    fCenterY->SetEnabled(kTRUE);
-   fExpandX->SetEnabled(kTRUE);
-   fExpandY->SetEnabled(kTRUE);
+   fExpandX->SetEnabled(!(frame->GetEditDisabled() & kEditDisableWidth));
+   fExpandY->SetEnabled(!(frame->GetEditDisabled() & kEditDisableHeight));
+   fClient->NeedRedraw(fExpandX);
+   fClient->NeedRedraw(fExpandY);
 
    fHintsTop->SetEnabled(kTRUE);
    fHintsRight->SetEnabled(kTRUE);
@@ -346,7 +352,7 @@ void  TGuiBldHintsEditor::ChangeSelected(TGFrame *frame)
 //______________________________________________________________________________
 void TGuiBldHintsEditor::UpdateState()
 {
-   //
+   // Update state
 
    TGFrame *frame = fEditor->GetSelected();
 
@@ -491,7 +497,11 @@ void TGuiBldHintsEditor::LayoutSubframes(Bool_t on)
       if (!(frame->GetParent()->GetEditDisabled() & kEditDisableLayout)) {
          comp->Resize();
       } else {
-         comp->GetLayoutManager()->Layout();
+         if (comp->GetLayoutManager()) {
+            comp->GetLayoutManager()->Layout();
+         } else {
+            comp->Layout();
+         }
       }
       return;
    }
@@ -520,6 +530,7 @@ void TGuiBldHintsEditor::SetMatrixSep()
 
    Bool_t enable = frame->InheritsFrom(TGCompositeFrame::Class()) &&
                    !(frame->GetEditDisabled() & kEditDisableLayout) && 
+                    ((TGCompositeFrame*)frame)->GetLayoutManager() &&
                     ((TGCompositeFrame*)frame)->GetLayoutManager()->InheritsFrom(TGMatrixLayout::Class());
 
    if (!enable) {

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldNameFrame.cxx,v 1.1 2006/03/29 15:44:57 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldNameFrame.cxx,v 1.2 2006/04/07 10:05:09 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -53,7 +53,7 @@ TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
    f->AddFrame(fLabel, new TGLayoutHints(kLHintsCenterX, 10, 1, 0, 0));
    fFrameName = new TGTextEntry(f, frame ? frame->GetName() : "noname");
    fFrameName->SetAlignment(kTextLeft);
-   fFrameName->Resize(80, fFrameName->GetHeight());
+   fFrameName->Resize(120, fFrameName->GetHeight());
    f->AddFrame(fFrameName, new TGLayoutHints(kLHintsCenterX,1));
    fFrameName->SetEnabled(kFALSE);
 }
