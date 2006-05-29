@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.27 2006/03/28 23:58:12 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.29 2006/04/10 13:48:39 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004
@@ -63,15 +63,13 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
 {
    // Create a dCache file object. A dCache file is the same as a TFile
    // except that it is being accessed via a dCache server. The url
-   // argument must be of the form: dcache://path/file.root or
-   // dcap://path/file.root. If the file specified in the URL does not
-   // exist, is not accessable or can not be created the kZombie bit will
-   // be set in the TDCacheFile object. Use IsZombie() to see if the file
-   // is accessable. For a description of the option and other arguments
+   // argument must be of the form: dcache:/pnfs/<path>/<file>.root or
+   // dcap://<nodename.org>/<path>/<file>.root. If the file specified in the
+   // URL does not exist, is not accessable or can not be created the kZombie
+   // bit will be set in the TDCacheFile object. Use IsZombie() to see if the
+   // file is accessable. For a description of the option and other arguments
    // see the TFile ctor. The preferred interface to this constructor is
    // via TFile::Open().
-
-   SetName(path);
 
    TString pathString = GetDcapPath(path);
    path = pathString.Data();
@@ -105,7 +103,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
       char *tname;
       if ((tname = gSystem->ExpandPathName(path))) {
          stmp = tname;
-         stmp2 = DCAP_PREFIX;
+         stmp2 = DCACHE_PREFIX;
          stmp2 += tname;
          delete [] tname;
          fname = stmp;
@@ -118,7 +116,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
 
    if (recreate) {
       if (!gSystem->AccessPathName(fnameWithPrefix, kFileExists))
-         gSystem->Unlink(fname);
+         dc_unlink(fname);
       recreate = kFALSE;
       create   = kTRUE;
       fOption  = "CREATE";
@@ -482,7 +480,7 @@ TString TDCacheFile::GetDcapPath(const char *path)
 {
    // Transform the input path into a path usuable by the dcap C library,
    // i.e either dcap://nodename.org/where/filename.root or
-   // //pnfs/where/filename.root
+   // /pnfs/where/filename.root
 
    if (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN)) {
       path += DCACHE_PREFIX_LEN;
@@ -491,8 +489,12 @@ TString TDCacheFile::GetDcapPath(const char *path)
       path += DCAP_PREFIX_LEN;
    }
    TString pathString(path);
+   if (!strncmp(path, "///", 3)) {
+      path += 2;
+      pathString = path;
+   }
    if (!strncmp(path, "//", 2)) {
-      pathString  = DCAP_PREFIX + pathString;
+      pathString = DCAP_PREFIX + pathString;
    }
    return pathString;
 }
