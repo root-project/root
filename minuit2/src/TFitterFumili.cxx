@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.cxx,v 1.3 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.cxx,v 1.4 2006/04/26 10:40:09 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -53,7 +53,7 @@ void TFitterFumili::CreateMinimizer(EMinimizerType ) {
   if (!minimizer) delete minimizer;
   SetMinimizer( new FumiliMinimizer() );
 
-  SetStrategy(2);
+  SetStrategy(1);
   // Fumili cannot deal with tolerance too smalls (10-3 corrsponds to 10-7 in FumiliBuilder)
   SetMinimumTolerance(0.001); 
 
