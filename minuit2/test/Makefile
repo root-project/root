@@ -11,7 +11,7 @@ include $(ROOTSYS)/test/Makefile.arch
 #------------------------------------------------------------------------------
 
 ifeq ($(PLATFORM),win32)
-EXTRALIBS        = $(ROOTSYS)/lib/libMinuit2.lib
+EXTRALIBS        = "$(ROOTSYS)/lib/libMinuit2.lib"
 else
 EXTRALIBS        = -lMinuit2 
 endif

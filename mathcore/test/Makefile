@@ -11,7 +11,7 @@ include $(ROOTSYS)/test/Makefile.arch
 #------------------------------------------------------------------------------
 
 ifeq ($(PLATFORM),win32)
-EXTRALIBS        = $(ROOTSYS)/lib/libMathCore.lib
+EXTRALIBS        = "$(ROOTSYS)/lib/libMathCore.lib"
 else
 EXTRALIBS        = -lMathCore
 endif

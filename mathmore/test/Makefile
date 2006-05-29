@@ -15,7 +15,7 @@ CXXFLAGS += -g
 
 
 ifeq ($(PLATFORM),win32)
-EXTRALIBS        = $(ROOTSYS)/lib/libMathMore.lib $(ROOTSYS)/lib/libMathCore.lib $(GSLLIBS)
+EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib" "$(ROOTSYS)/lib/libMathCore.lib" $(GSLLIBS)
 else
 EXTRALIBS        = -lMathMore -lMathCore $(GSLLIBS)
 endif
