@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.18 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.19 2006/05/28 20:08:00 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -100,8 +100,6 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
    fWidgetId    = id;
    fMsgWindow   = p;
    fWidgetFlags = kWidgetWantFocus;
-
-   SetLayoutManager(new TGHorizontalLayout(this));
 
    fXMargin = xMargin;
    fYMargin = yMargin;
@@ -776,7 +774,5 @@ void TGView::ChangeBackground(Pixel_t col)
    // Change background color of the canvas frame.
 
    fCanvas->SetBackgroundColor(col);
-   fWhiteGC.SetBackground(col);
-   fWhiteGC.SetForeground(col);
    DrawRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());
 }

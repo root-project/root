@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.32 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.33 2006/05/28 20:08:00 brun Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -1790,8 +1790,8 @@ void TGTextEdit::SavePrimitive(ofstream &out, Option_t *)
       out << "   " << GetName() << "->EnableMenu(kFALSE);" << endl;
    }
 
-   if (fWhiteGC.GetForeground() != TGFrame::fgWhitePixel) {
-      out << "   " << GetName() << "->ChangeBackground(" << fWhiteGC.GetForeground() << ");" << endl;
+   if (fCanvas->GetBackground() != TGFrame::fgWhitePixel) {
+      out << "   " << GetName() << "->ChangeBackground(" << fCanvas->GetBackground() << ");" << endl;
    }
 
    TGText *txt = GetText();

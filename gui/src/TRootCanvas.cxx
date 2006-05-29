@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.101 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.102 2006/05/28 20:08:00 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -1370,12 +1370,10 @@ void TRootCanvas::CreateEditor()
    // Create embedded editor.
 
    if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0) {
-         TVirtualPadEditor::HideEditor();
+      TVirtualPadEditor::HideEditor();
    }
-   if (fClient->IsEditable()) {
-      ((TGWindow*)fClient->GetRoot())->SetEditable(kFALSE);
-   }
-   SetEditDisabled(kEditEnable);
+
+   fEditorFrame->SetEditDisabled(kEditEnable);
    fEditorFrame->SetEditable();
    gPad = Canvas();
    // next two lines are related to the old editor
@@ -1383,8 +1381,8 @@ void TRootCanvas::CreateEditor()
    gEnv->SetValue("Canvas.ShowEditor","true");
    fEditor = TVirtualPadEditor::LoadEditor();
    fEditor->SetGlobal(kFALSE);
-   fEditorFrame->SetEditable(0);
-   SetEditDisabled(kEditDisable);
+   fEditorFrame->SetEditable(kEditDisable);
+   fEditorFrame->SetEditable(kFALSE);
 
    // next line is related to the old editor
    if (show == "false") gEnv->SetValue("Canvas.ShowEditor","false");
