@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.21 2006/05/18 04:57:57 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.22 2006/05/24 20:07:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -119,6 +119,8 @@ ClassImp(TDecompBase)
 //______________________________________________________________________________
 TDecompBase::TDecompBase()
 {
+// Default constructor
+
    fTol       = std::numeric_limits<double>::epsilon();
    fDet1      = 0;
    fDet2      = 0;
@@ -130,6 +132,8 @@ TDecompBase::TDecompBase()
 //______________________________________________________________________________
 TDecompBase::TDecompBase(const TDecompBase &another) : TObject(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -236,6 +240,8 @@ void TDecompBase::DiagProd(const TVectorD &diag,Double_t tol,Double_t &d1,Double
 //______________________________________________________________________________
 Double_t TDecompBase::Condition()
 {
+// Matrix condition number
+
    if ( !TestBit(kCondition) ) {
       fCondition = -1;
       if (TestBit(kSingular))
@@ -279,6 +285,8 @@ Bool_t TDecompBase::MultiSolve(TMatrixD &B)
 //______________________________________________________________________________
 void TDecompBase::Det(Double_t &d1,Double_t &d2)
 {
+// Matrix determinant
+
    if ( !TestBit(kDetermined) ) {
       if ( !TestBit(kDecomposed) )
          Decompose();
@@ -302,6 +310,8 @@ void TDecompBase::Det(Double_t &d1,Double_t &d2)
 //______________________________________________________________________________
 void TDecompBase::Print(Option_t * /*opt*/) const
 {
+// Print class members
+
    printf("fTol       = %.4e\n",fTol);
    printf("fDet1      = %.4e\n",fDet1);
    printf("fDet2      = %.4e\n",fDet2);
@@ -313,6 +323,8 @@ void TDecompBase::Print(Option_t * /*opt*/) const
 //______________________________________________________________________________
 TDecompBase &TDecompBase::operator=(const TDecompBase &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TObject::operator=(source);
       fTol       = source.fTol;

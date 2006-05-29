@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBK.cxx,v 1.5 2006/05/17 06:22:06 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBK.cxx,v 1.6 2006/05/24 20:07:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Sep 2004
 
 /*************************************************************************
@@ -46,7 +46,7 @@ ClassImp(TDecompBK)
 // matrix D and the multipliers used to obtain the factor U, see above . //
 //                                                                       //
 // fIpiv if dimension n contains details of the interchanges and the     //
-// the block structure of D . if (fIPiv(k) > 0, then rows and columns k  //
+// the block structure of D . If (fIPiv(k) > 0, then rows and columns k  //
 // and fIPiv(k) were interchanged and D(k,k) is a 1-by-1 diagonal block. //
 // If IPiv(k) = fIPiv(k-1) < 0, rows and columns k-1 and -IPiv(k) were   //
 // interchanged and D(k-1:k,k-1:k) is a 2-by-2 diagonal block.           //
@@ -56,6 +56,7 @@ ClassImp(TDecompBK)
 //______________________________________________________________________________
 TDecompBK::TDecompBK()
 {
+// Default constructor
    fNIpiv = 0;
    fIpiv  = 0;
 }
@@ -63,6 +64,8 @@ TDecompBK::TDecompBK()
 //______________________________________________________________________________
 TDecompBK::TDecompBK(Int_t nrows)
 {
+// Constructor for (nrows x nrows) symmetric matrix
+
    fNIpiv = nrows;
    fIpiv = new Int_t[fNIpiv];
    memset(fIpiv,0,fNIpiv*sizeof(Int_t));
@@ -72,6 +75,8 @@ TDecompBK::TDecompBK(Int_t nrows)
 //______________________________________________________________________________
 TDecompBK::TDecompBK(Int_t row_lwb,Int_t row_upb)
 {
+// Constructor for ([row_lwb..row_upb] x [row_lwb..row_upb]) symmetric matrix
+
    const Int_t nrows = row_upb-row_lwb+1;
    fNIpiv = nrows;
    fIpiv = new Int_t[fNIpiv];
@@ -83,6 +88,8 @@ TDecompBK::TDecompBK(Int_t row_lwb,Int_t row_upb)
 //______________________________________________________________________________
 TDecompBK::TDecompBK(const TMatrixDSym &a,Double_t tol)
 {
+// Constructor for symmetric matrix A
+
    R__ASSERT(a.IsValid());
 
    SetBit(kMatrixSet);
@@ -104,6 +111,8 @@ TDecompBK::TDecompBK(const TMatrixDSym &a,Double_t tol)
 //______________________________________________________________________________
 TDecompBK::TDecompBK(const TDecompBK &another) : TDecompBase(another)
 {
+// Copy constructor
+
    fNIpiv = 0;
    fIpiv  = 0;
    *this = another;
@@ -112,6 +121,9 @@ TDecompBK::TDecompBK(const TDecompBK &another) : TDecompBase(another)
 //______________________________________________________________________________
 Bool_t TDecompBK::Decompose()
 {
+// Matrix A is decomposed in components U and D so that A = U*D*U^T
+// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
+
    if ( !TestBit(kMatrixSet) )
       return kFALSE;
 
@@ -289,6 +301,8 @@ Bool_t TDecompBK::Decompose()
 //______________________________________________________________________________
 void TDecompBK::SetMatrix(const TMatrixDSym &a)
 {
+// Set the matrix to be decomposed, decomposition status is reset.
+
    R__ASSERT(a.IsValid());
 
    ResetStatus();
@@ -312,7 +326,7 @@ void TDecompBK::SetMatrix(const TMatrixDSym &a)
 //______________________________________________________________________________
 Bool_t TDecompBK::Solve(TVectorD &b)
 {
-   // Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
+// Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
 
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
@@ -447,7 +461,7 @@ Bool_t TDecompBK::Solve(TVectorD &b)
 //______________________________________________________________________________
 Bool_t TDecompBK::Solve(TMatrixDColumn &cb)
 {
-   // Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
+// Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
 
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
@@ -585,7 +599,7 @@ Bool_t TDecompBK::Solve(TMatrixDColumn &cb)
 //______________________________________________________________________________
 void TDecompBK::Invert(TMatrixDSym &inv)
 {
-   // For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
+// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
 
    if (inv.GetNrows() != GetNrows() || inv.GetRowLwb() != GetRowLwb()) {
       Error("Invert(TMatrixDSym &","Input matrix has wrong shape");
@@ -610,7 +624,7 @@ void TDecompBK::Invert(TMatrixDSym &inv)
 //______________________________________________________________________________
 TMatrixDSym TDecompBK::Invert()
 {
-   // For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
+// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
 
    const Int_t rowLwb = GetRowLwb();
    const Int_t rowUpb = rowLwb+GetNrows()-1;
@@ -625,6 +639,8 @@ TMatrixDSym TDecompBK::Invert()
 //______________________________________________________________________________
 void TDecompBK::Print(Option_t *opt) const
 {
+// Print the class members
+
    TDecompBase::Print(opt);
    printf("fIpiv:\n");
    for (Int_t i = 0; i < fNIpiv; i++)
@@ -635,6 +651,8 @@ void TDecompBK::Print(Option_t *opt) const
 //______________________________________________________________________________
 TDecompBK &TDecompBK::operator=(const TDecompBK &source)
 {
+// Assigment operator
+
    if (this != &source) {
       TDecompBase::operator=(source);
       fU.ResizeTo(source.fU);

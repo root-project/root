@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.13 2006/04/04 05:51:06 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.14 2006/04/19 08:22:24 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1783,7 +1783,7 @@ template<class Element>
 TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
                      const TVectorT<Element> &source1,const TVectorT<Element> &source2)
 {
-  // Modify addition: target += scalar * ElementMult(source1,source2) .
+  // Modify addition: target += scalar * ElementDiv(source1,source2) .
 
   if (gMatrixCheck && !(AreCompatible(target,source1) && AreCompatible(target,source1))) {
     Error("AddElemDiv(TVectorT<Element> &,Element,const TVectorT<Element> &,const TVectorT<Element> &)",
@@ -1816,7 +1816,7 @@ template<class Element>
 TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
                      const TVectorT<Element> &source1,const TVectorT<Element> &source2,const TVectorT<Element> &select)
 {
-  // Modify addition: target += scalar * ElementMult(source1,source2) only for those elements
+  // Modify addition: target += scalar * ElementDiv(source1,source2) only for those elements
   // where select[i] != 0.0
 
   if (gMatrixCheck && !( AreCompatible(target,source1) && AreCompatible(target,source1) &&

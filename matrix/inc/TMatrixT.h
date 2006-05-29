@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.h,v 1.10 2006/05/17 06:22:06 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.h,v 1.11 2006/05/23 04:47:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -109,7 +109,7 @@ public:
    virtual       Element *GetMatrixArray  ();
    virtual const Int_t   *GetRowIndexArray() const { return 0; }
    virtual       Int_t   *GetRowIndexArray()       { return 0; }
-    virtual const Int_t   *GetColIndexArray() const { return 0; }
+   virtual const Int_t   *GetColIndexArray() const { return 0; }
    virtual       Int_t   *GetColIndexArray()       { return 0; }
 
    virtual       TMatrixTBase<Element> &SetRowIndexArray(Int_t * /*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); return *this; }
