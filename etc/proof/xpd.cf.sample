@@ -10,7 +10,7 @@
 ###
 ### To load this configuration file:
 ###
-### ~> xrootd -c $ROOTSYS/etc/xpd.cf
+### ~> xrootd -c $ROOTSYS/etc/proof/xpd.cf
 ###
 ### See http://www.slac.stanford.edu/xrootd for more details on the
 ### data serving part.
