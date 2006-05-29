@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.259 2006/05/09 16:53:44 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.260 2006/05/14 09:53:04 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -5832,7 +5832,7 @@ void THistPainter::PaintText(Option_t *)
             }
             if (!IsInside(x,y)) continue;
             z     = fH->GetBinContent(bin);
-            if (z <= Hparam.zmin) continue;
+            if (z < Hparam.zmin) continue;
             sprintf(value,format,z);
             gPad->PaintText(x,y,value);
          }
