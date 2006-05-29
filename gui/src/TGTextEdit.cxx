@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.33 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.34 2006/05/29 14:00:36 antcheva Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -802,7 +802,7 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
 {
-   // handle double click
+   // Handle double click event.
 
    if (event->fWindow != fCanvas->GetId()) {
       return kFALSE;
