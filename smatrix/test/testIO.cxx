@@ -235,7 +235,7 @@ double writeTMatrixSym(int n) {
   TMatrixDSym * m2 = new TMatrixDSym(5);
   TMatrixDSym::Class()->IgnoreTObjectStreamer();
 
-  t2.Branch("TMatrix branch","TMatrixDSym",&m2,16000,2);
+  t2.Branch("TMatrix branch","TMatrixDSym",&m2,16000,0);
 
   double etot = 0;
   timer.Start();

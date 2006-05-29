@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.237 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.238 2006/05/24 15:09:22 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1914,7 +1914,7 @@ Double_t TStreamerInfo::GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_
 void TStreamerInfo::ls(Option_t *option) const
 {
    //  List the TStreamerElement list and also the precomputed tables
-   if (fClass->IsForeign()) {
+   if (fClass && fClass->IsForeign()) {
       Printf("\nStreamerInfo for class: %s, checksum=0x%x",GetName(),GetCheckSum());
    } else {
       Printf("\nStreamerInfo for class: %s, version=%d",GetName(),fClassVersion);
