@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.15 2006/02/28 16:48:17 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.16 2006/04/21 16:29:33 rdm Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -219,7 +219,7 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Double_t msize = 0.23*fMarkerSize*TMath::Max(fImage->GetWidth(), fImage->GetHeight())/20;
+   Double_t msize = 0.20*fMarkerSize*TMath::Max(fImage->GetWidth(), fImage->GetHeight())/20;
    if (ms == 6) msize *= 0.2;
    if (ms == 7) msize *= 0.3;
    Double_t m  = msize;
@@ -276,19 +276,20 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          break;
       // Down triangle
       case 23:
+      case 26:
+         pt[0].fX = Short_t(ix-m2); pt[0].fY = Short_t(iy-m2);
+         pt[1].fX = Short_t(ix+m2); pt[1].fY = Short_t(iy-m2);
+         pt[2].fX = Short_t(ix);    pt[2].fY = Short_t(iy+m2);
+         pt[3].fX = Short_t(ix-m2); pt[3].fY = Short_t(iy-m2);
+         ms == 26 ? fImage->DrawPolyLine(4, pt, col->AsHexString()) :
+                    fImage->FillPolygon(3, pt, col->AsHexString());
+         break;
+      // Up triangle
+      case 22:
          pt[0].fX = Short_t(ix);    pt[0].fY = Short_t(iy-m2);
          pt[1].fX = Short_t(ix+m2); pt[1].fY = Short_t(iy+m2);
          pt[2].fX = Short_t(ix-m2); pt[2].fY = Short_t(iy+m2);
          fImage->FillPolygon(3, pt, col->AsHexString());
-         break;
-      // Up triangle
-      case 26:
-      case 22:
-         pt[0].fX = Short_t(ix-m2); pt[0].fY = Short_t(iy-m2);
-         pt[1].fX = Short_t(ix+m2); pt[1].fY = Short_t(iy-m2);
-         pt[2].fX = Short_t(ix);    pt[2].fY = Short_t(iy+m2);
-         ms == 26 ? fImage->DrawPolyLine(3, pt, col->AsHexString()) :
-                    fImage->FillPolygon(3, pt, col->AsHexString());
          break;
       case 27:
          fImage->DrawLine(UInt_t(ix), UInt_t(iy-m2), UInt_t(ix+m3), UInt_t(iy), col->AsHexString());
@@ -322,8 +323,9 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          pt[7].fX = Short_t(ix-0.181635*m);  pt[7].fY = Short_t(iy-0.05902*m);
          pt[8].fX = Short_t(ix-0.47552*m);   pt[8].fY = Short_t(iy+0.15451*m);
          pt[9].fX = Short_t(ix-0.112255*m);  pt[9].fY = Short_t(iy+0.15451*m);
-         ms == 300 ? fImage->DrawPolyLine(10, pt, col->AsHexString()) :
-                     fImage->FillPolygon(10, pt, col->AsHexString());
+         pt[10].fX = Short_t(ix);             pt[10].fY = Short_t(iy+m2);
+         ms == 30 ? fImage->DrawPolyLine(11, pt, col->AsHexString()) :
+                    fImage->FillPolygon(10, pt, col->AsHexString());
          break;
       default:
          fImage->PutPixel(UInt_t(ix), UInt_t(iy), col->AsHexString());
