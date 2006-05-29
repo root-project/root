@@ -29,8 +29,6 @@ typedef ROOT::Math::SMatrix<double,5,5 >  SMatrix5;
 
 template<class Matrix> 
 void FillMatrix(Matrix & m) { 
-  // use same seed 
-  R.SetSeed(1);
   for (int i = 0; i < 5; ++i) { 
     for (int j = 0; j < 5; ++j) { 
       m(i,j) = R.Rndm() + 1;
@@ -40,8 +38,6 @@ void FillMatrix(Matrix & m) {
 
 template<class Matrix> 
 void FillMatrixSym(Matrix & m) { 
-  // use same seed 
-  R.SetSeed(1);
   for (int i = 0; i < 5; ++i) { 
     for (int j = 0; j < 5; ++j) { 
       if (j>=i) m(i,j) = R.Rndm() + 1; 
@@ -79,6 +75,7 @@ void initMatrix(int n) {
 
   timer.Start();
   SMatrix5 s;
+  R.SetSeed(1);   // use same seed 
   for (int i = 0; i < n; ++i) { 
     FillMatrix(s);
   }
@@ -87,6 +84,7 @@ void initMatrix(int n) {
 
   timer.Start();
   SMatrixSym5 ss;
+  R.SetSeed(1);   // use same seed 
   for (int i = 0; i < n; ++i) { 
     FillMatrixSym(ss);
   }
@@ -95,6 +93,7 @@ void initMatrix(int n) {
 
   timer.Start();
   TMatrixD  t(5,5);
+  R.SetSeed(1);   // use same seed 
   for (int i = 0; i < n; ++i) { 
     FillMatrix(t);
   }
@@ -103,6 +102,7 @@ void initMatrix(int n) {
 
   timer.Start();
   TMatrixDSym  ts(5);
+  R.SetSeed(1);   // use same seed 
   for (int i = 0; i < n; ++i) { 
     FillMatrixSym(ts);
   }
@@ -128,6 +128,7 @@ double writeSMatrix(int n) {
 
   timer.Start();
   double etot = 0;
+  R.SetSeed(1);   // use same seed 
   for (int i = 0; i < n; ++i) { 
     FillMatrix(*m1);
     etot += SumSMatrix(*m1);
@@ -163,6 +164,7 @@ double writeSMatrixSym(int n) {
 
   timer.Start();
   double etot = 0;
+  R.SetSeed(1);   // use same seed 
   for (int i = 0; i < n; ++i) { 
     FillMatrixSym(*m1);
     etot += SumSMatrix(*m1);
@@ -199,6 +201,7 @@ double writeTMatrix(int n) {
 
   double etot = 0;
   timer.Start();
+  R.SetSeed(1);   // use same seed 
   for (int i = 0; i < n; ++i) { 
     FillMatrix(*m2);
     etot += SumTMatrix(*m2);
@@ -236,6 +239,7 @@ double writeTMatrixSym(int n) {
 
   double etot = 0;
   timer.Start();
+  R.SetSeed(1);   // use same seed 
   for (int i = 0; i < n; ++i) { 
     FillMatrixSym(*m2);
     etot += SumTMatrix(*m2);
