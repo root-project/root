@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.46 2006/05/15 13:31:01 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.47 2006/05/28 20:08:00 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -167,7 +167,7 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
    XGetErrorText(disp, err->error_code, msg, 80);
 
    // force segV. to allow backtracing the error with gdb
-   if (gDebug == (int)gVirtualX) {
+   if (gDebug == (Long_t)gVirtualX) {
       gSystem->ProcessEvents();
       ::Error("RootX11ErrorHandler", "%s (XID: %u, XREQ: %u)", msg,
                err->resourceid, err->request_code);
