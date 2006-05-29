@@ -1,4 +1,5 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.38 2006/05/11 08:13:37 brun Exp $
+from __future__ import generators
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.39 2006/05/28 19:05:24 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
 # Last: 05/28/06
