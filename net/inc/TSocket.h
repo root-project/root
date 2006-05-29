@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.21 2006/05/23 04:47:40 brun Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -66,8 +66,8 @@ class THostAuth;
 
 class TSocket : public TNamed {
 
-friend class TProofServ;   // to be able to call SetDescriptor(), RecvHostAuth()
 friend class TServerSocket;
+friend class TProofServ;   // to be able to call SetDescriptor(), RecvHostAuth()
 friend class TSlave;       // to be able to call SendHostAuth()
 
 public:
@@ -95,11 +95,8 @@ protected:
 
    static Int_t  fgClientProtocol; // client "protocol" version
 
-   TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0),
-     fCompress(0), fLocalAddress(), fRemoteProtocol(),
-     fSecContext(0), fService(), fServType(kSOCKD),
-     fSocket(-1), fTcpWindowSize(0), fUrl() { }
-
+   TSocket() : fBytesRecv(0), fBytesSent(0), fCompress(0), fRemoteProtocol(),
+      fSecContext(0), fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0) { }
 
    Bool_t       Authenticate(const char *user);
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
