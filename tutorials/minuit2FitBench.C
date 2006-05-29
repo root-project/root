@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: minuit2FitBench.Cv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: minuit2FitBench.C,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -44,7 +44,7 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    TVirtualFitter::SetDefaultFitter(fitter);
    pad->SetGrid();
    pad->SetLogy();
-   fitFcn->SetParameters(1,1,1,5,.03,1);
+   fitFcn->SetParameters(1,1,1,6,.03,1);
    fitFcn->Update();
    histo = new TH1D(fitter,"Fit bench",200,0,3);
          
@@ -54,7 +54,7 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
       for (Int_t i=0;i<5000;i++) {
          histo->Fill(fitFcn->GetRandom());
       }
-            histo->Fit("fitFcn","0q");
+      histo->Fit("fitFcn","0q");
    }
 
    histo->Fit("fitFcn");

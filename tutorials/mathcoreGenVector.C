@@ -318,7 +318,7 @@ int testPoint3D() {
   RhoEtaPhiPoint q4 = q3 - v2; 
   ok+= compare( q4.X(), q1.X(), "PV op X"  );
   ok+= compare( q4.Y(), q1.Y(), "PV op Y" );
-  ok+= compare( q4.Z(), q1.Z(), "PV op Z" );
+  ok+= compare( q4.Z(), q1.Z(), "PV op Z" ,2);
   //#endif
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
@@ -560,7 +560,7 @@ int testRotation() {
 	    << "\n************************************************************************\n";
 
   std::cout << "Test Vector Rotations :         ";
-
+  ok = 0; 
 
   XYZPoint v(1.,2,3.); 
 
@@ -606,8 +606,11 @@ int testRotation() {
 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
+  else  std::cout << std::endl;
 
   std::cout << "Test Axial Rotations :          ";
+  ok = 0; 
+
   RotationX rx( pi/3);
   RotationY ry( pi/4);
   RotationZ rz( 4*pi/5);
@@ -633,14 +636,16 @@ int testRotation() {
   
   XYZPoint vinv1 = rx.Inverse()*ry.Inverse()*rz.Inverse()*vrot1;
 
-  ok+= compare(vinv1.X(), v.X(), "x"); 
+  ok+= compare(vinv1.X(), v.X(), "x",2); 
   ok+= compare(vinv1.Y(), v.Y(), "y"); 
   ok+= compare(vinv1.Z(), v.Z(), "z"); 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
+  else  std::cout << std::endl;
 
 
   std::cout << "Test Inversions :               "; 
+  ok = 0; 
 
   EulerAngles s1 = r1.Inverse();
   Rotation3D  s2 = r2.Inverse();
@@ -670,10 +675,12 @@ int testRotation() {
   ok+= compare(p.Z(), v.Z(), "z",10); 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
+  else  std::cout << std::endl;
 
   // test Rectify 
 
   std::cout << "Test rectify :                  "; 
+  ok = 0; 
 
   XYZVector u1(0.999498,-0.00118212,-0.0316611); 
   XYZVector u2(0,0.999304,-0.0373108); 
@@ -684,8 +691,10 @@ int testRotation() {
   ok+= compare(v.R(), vrr.R(), "R",1.E9); 
 
   if (ok == 0) std::cout << "\t\t OK " << std::endl;
+  else  std::cout << std::endl;
   
   std::cout << "Test Transform3D :              "; 
+  ok = 0; 
 
   XYZVector d(1.,-2.,3.);
   Transform3D t(r2,d);
@@ -744,8 +753,10 @@ int testRotation() {
 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
+  else  std::cout << std::endl;
 
   std::cout << "Test Plane3D :                  "; 
+  ok = 0; 
 
   // test transfrom a 3D plane
 
@@ -782,8 +793,10 @@ int testRotation() {
   ok += compare(plane1.Distance(pt1), 0.0, "distance",10);
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
+  else  std::cout << std::endl;
 
   std::cout << "Test LorentzRotation :          "; 
+  ok = 0; 
 
   XYZTVector lv(1.,2.,3.,4.);
   
@@ -849,10 +862,12 @@ int testRotation() {
   ok+= compare(lv0.E(), lv.E(), "t"); 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
+  else  std::cout << std::endl;
 
   // test Boosts
 
   std::cout << "Test Boost :                    "; 
+  ok = 0; 
 
 
   Boost bst( 0.3,0.4,0.5);   //  boost (must be <= 1)
@@ -893,6 +908,7 @@ int testRotation() {
 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
+  else  std::cout << std::endl;
 
   return ok;
 }
