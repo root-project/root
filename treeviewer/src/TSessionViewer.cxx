@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.60 2006/05/13 19:34:41 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.61 2006/05/26 15:13:03 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -282,6 +282,49 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
    fTxtConfig->Connect("DoubleClicked()", "TSessionServerFrame", this,
                        "OnConfigFileClicked()");
 
+   fTxtName->Connect("TextChanged(char*)", "TSessionServerFrame", this,
+                       "SettingsChanged()");
+   fTxtAddress->Connect("TextChanged(char*)", "TSessionServerFrame", this,
+                       "SettingsChanged()");
+   fTxtConfig->Connect("TextChanged(char*)", "TSessionServerFrame", this,
+                       "SettingsChanged()");
+   fTxtUsrName->Connect("TextChanged(char*)", "TSessionServerFrame", this,
+                       "SettingsChanged()");
+   fSync->Connect("Clicked()", "TSessionServerFrame", this,
+                       "SettingsChanged()");
+   fLogLevel->Connect("ValueChanged(Long_t)", "TSessionServerFrame", this,
+                       "SettingsChanged()");
+   fLogLevel->Connect("ValueSet(Long_t)", "TSessionServerFrame", this,
+                       "SettingsChanged()");
+   fNumPort->Connect("ValueChanged(Long_t)", "TSessionServerFrame", this,
+                       "SettingsChanged()");
+   fNumPort->Connect("ValueSet(Long_t)", "TSessionServerFrame", this,
+                       "SettingsChanged()");
+}
+
+//______________________________________________________________________________
+void TSessionServerFrame::SettingsChanged()
+{
+
+   TGTextEntry *sender = dynamic_cast<TGTextEntry*>((TQObject*)gTQSender);
+   Bool_t issync = (fSync->GetState() == kButtonDown);
+   if ((strcmp(fViewer->GetActDesc()->GetName(), fTxtName->GetText())) ||
+       (strcmp(fViewer->GetActDesc()->fAddress.Data(), fTxtAddress->GetText())) ||
+       (strcmp(fViewer->GetActDesc()->fConfigFile.Data(), fTxtConfig->GetText())) ||
+       (strcmp(fViewer->GetActDesc()->fUserName.Data(), fTxtUsrName->GetText())) ||
+       (fViewer->GetActDesc()->fLogLevel != fLogLevel->GetIntNumber()) ||
+       (fViewer->GetActDesc()->fPort != fNumPort->GetIntNumber()) ||
+       (fViewer->GetActDesc()->fSync != issync)) {
+      ShowFrame(fBtnAdd);
+      HideFrame(fBtnConnect);
+   }
+   else {
+      HideFrame(fBtnAdd);
+      ShowFrame(fBtnConnect);
+   }
+   if (sender) {
+      sender->SetFocus();
+   }
 }
 
 //______________________________________________________________________________
@@ -289,8 +332,8 @@ Bool_t TSessionServerFrame::HandleExpose(Event_t * /*event*/)
 {
    // Handle expose event in server frame.
 
-   fTxtName->SelectAll();
-   fTxtName->SetFocus();
+   //fTxtName->SelectAll();
+   //fTxtName->SetFocus();
    return kTRUE;
 }
 
@@ -613,7 +656,7 @@ void TSessionServerFrame::OnBtnAddClicked()
           Form("The session \"%s\" already exists ! Overwrite ?",
           fTxtName->GetText()), kMBIconQuestion, kMBYes | kMBNo |
           kMBCancel, &retval);
-      if (retval != kMBOk)
+      if (retval != kMBYes)
          return;
       newSession = kFALSE;
    }
@@ -627,20 +670,18 @@ void TSessionServerFrame::OnBtnAddClicked()
       desc->fProof = 0;
       desc->fProofMgr = 0;
       desc->fAutoEnable = kFALSE;
-   }
-   desc->fAddress = fTxtAddress->GetText();
-   desc->fPort = fNumPort->GetIntNumber();
-   desc->fConnected = kFALSE;
-   desc->fAttached = kFALSE;
-   desc->fLocal = kFALSE;
-   if (strlen(fTxtConfig->GetText()) > 1)
-      desc->fConfigFile = TString(fTxtConfig->GetText());
-   else
-      desc->fConfigFile = "";
-   desc->fLogLevel = fLogLevel->GetIntNumber();
-   desc->fUserName = fTxtUsrName->GetText();
-   desc->fSync = (fSync->GetState() == kButtonDown);
-   if (newSession) {
+      desc->fAddress = fTxtAddress->GetText();
+      desc->fPort = fNumPort->GetIntNumber();
+      desc->fConnected = kFALSE;
+      desc->fAttached = kFALSE;
+      desc->fLocal = kFALSE;
+      if (strlen(fTxtConfig->GetText()) > 1)
+         desc->fConfigFile = TString(fTxtConfig->GetText());
+      else
+         desc->fConfigFile = "";
+      desc->fLogLevel = fLogLevel->GetIntNumber();
+      desc->fUserName = fTxtUsrName->GetText();
+      desc->fSync = (fSync->GetState() == kButtonDown);
       // add newly created session config to our session list
       fViewer->GetSessions()->Add((TObject *)desc);
       // save into configuration file
@@ -657,7 +698,22 @@ void TSessionServerFrame::OnBtnAddClicked()
       fClient->NeedRedraw(fViewer->GetSessionHierarchy());
       fViewer->OnListTreeClicked(item, 1, 0, 0);
    }
+   else {
+      fViewer->GetActDesc()->fName = fTxtName->GetText();
+      fViewer->GetActDesc()->fAddress = fTxtAddress->GetText();
+      fViewer->GetActDesc()->fPort = fNumPort->GetIntNumber();
+      if (strlen(fTxtConfig->GetText()) > 1)
+         fViewer->GetActDesc()->fConfigFile = TString(fTxtConfig->GetText());
+      fViewer->GetActDesc()->fLogLevel = fLogLevel->GetIntNumber();
+      fViewer->GetActDesc()->fUserName = fTxtUsrName->GetText();
+      fViewer->GetActDesc()->fSync = (fSync->GetState() == kButtonDown);
+      TGListTreeItem *item2 = fViewer->GetSessionHierarchy()->GetSelected();
+      item2->SetUserData(fViewer->GetActDesc());
+      fViewer->OnListTreeClicked(fViewer->GetSessionHierarchy()->GetSelected(),
+                                 1, 0, 0);
+   }
    HideFrame(fBtnAdd);
+   ShowFrame(fBtnConnect);
    if (fViewer->IsAutoSave())
       fViewer->WriteConfiguration();
 }
@@ -1235,7 +1291,7 @@ void TSessionFrame::OnUploadPackages()
       TIter next(&selected);
       while ((obj = next())) {
          TString name = obj->GetTitle();
-         if (fViewer->GetActDesc()->fProof->UploadPackage(name) != 0)
+         if (fViewer->GetActDesc()->fProof->UploadPackage(name.Data()) != 0)
             Error("Submit", "Upload package failed");
          else {
             TObject *o = fViewer->GetActDesc()->fPackages->FindObject(name);
@@ -1278,7 +1334,7 @@ void TSessionFrame::OnEnablePackages()
             dynamic_cast<TPackageDescription *>(o);
          if (package) {
             if (!package->fUploaded) {
-               if (fViewer->GetActDesc()->fProof->UploadPackage(name) != 0)
+               if (fViewer->GetActDesc()->fProof->UploadPackage(name.Data()) != 0)
                   Error("Submit", "Upload package failed");
                else {
                   package->fUploaded = kTRUE;
@@ -1375,7 +1431,7 @@ void TSessionFrame::OnBtnAddClicked()
    new TGFileDialog(fClient->GetRoot(), fViewer, kFDOpen, &fi);
    if (!fi.fFilename) return;
    TPackageDescription *package = new TPackageDescription;
-   package->fName = fi.fFilename;
+   package->fName = gSystem->UnixPathName(fi.fFilename);
    package->fId   = fViewer->GetActDesc()->fPackages->GetEntries();
    package->fUploaded = kFALSE;
    package->fEnabled = kFALSE;
@@ -2224,17 +2280,17 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
    // if no change since last call, just return
    if (fPrevProcessed == processed)
       return;
-   char buf[256];
+   char *buf;
 
    // Update informations at first call
    if (fEntries != total) {
-      sprintf(buf, "PROOF cluster : \"%s\" - %d worker nodes",
+      buf = Form("PROOF cluster : \"%s\" - %d worker nodes",
             fViewer->GetActDesc()->fProof->GetMaster(),
             fViewer->GetActDesc()->fProof->GetParallel());
       fLabInfos->SetText(buf);
 
       fEntries = total;
-      sprintf(buf, " %d files, %lld events, starting event %lld",
+      buf = Form(" %d files, %lld events, starting event %lld",
               fFiles, fEntries, fFirst);
       fLabStatus->SetText(buf);
    }
@@ -2258,20 +2314,20 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
 
    if (processed == total) {
       // finished
-      sprintf(buf, " Processed : %lld events in %.1f sec", total, Long_t(tdiff)/1000.);
+      buf = Form(" Processed : %lld events in %.1f sec", total, Long_t(tdiff)/1000.);
       fTotal->SetText(buf);
    } else {
       // update status infos
       if (fStatus > kDone) {
-         sprintf(buf, " Estimated time left : %.1f sec (%lld events of %lld processed) - %s  ",
-                 eta, processed, total, cproc[fStatus]);
+         buf = Form(" Estimated time left : %.1f sec (%lld events of %lld processed) - %s  ",
+                     eta, processed, total, cproc[fStatus]);
       } else {
-         sprintf(buf, " Estimated time left : %.1f sec (%lld events of %lld processed)        ",
-                 eta, processed, total);
+         buf = Form(" Estimated time left : %.1f sec (%lld events of %lld processed)        ",
+                    eta, processed, total);
       }
       fTotal->SetText(buf);
-      sprintf(buf, " Processing Rate : %.1f events/sec   ",
-              Float_t(processed)/Long_t(tdiff)*1000.);
+      buf = Form(" Processing Rate : %.1f events/sec   ",
+                 Float_t(processed)/Long_t(tdiff)*1000.);
       fRate->SetText(buf);
    }
    fPrevProcessed = processed;
@@ -2310,7 +2366,7 @@ void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t fi
 {
    // Reset progress frame information fields.
 
-   char buf[256];
+   char *buf;
    fFiles         = files > 0 ? files : 0;
    fFirst         = first;
    fEntries       = entries;
@@ -2321,7 +2377,7 @@ void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t fi
    frmProg->SetBarColor("green");
    frmProg->Reset();
 
-   sprintf(buf, "%0d files, %0lld events, starting event %0lld",
+   buf = Form("%0d files, %0lld events, starting event %0lld",
            fFiles > 0 ? fFiles : 0, fEntries > 0 ? fEntries : 0,
            fFirst >= 0 ? fFirst : 0);
    fLabStatus->SetText(buf);
@@ -2659,7 +2715,7 @@ void TSessionQueryFrame::UpdateInfos()
 {
    // Update query information (header) text view.
 
-   char buffer[8192];
+   char *buffer;
    const char *qst[] = {"aborted  ", "submitted", "running  ",
                         "stopped  ", "completed"};
 
@@ -2689,49 +2745,49 @@ void TSessionQueryFrame::UpdateInfos()
 
    Int_t qry = result->GetSeqNum();
 
-   sprintf(buffer,"------------------------------------------------------\n");
+   buffer = Form("------------------------------------------------------\n");
    // Print header
    if (!result->IsDraw()) {
       const char *fin = result->IsFinalized() ? "finalized" : qst[st];
       const char *arc = result->IsArchived() ? "(A)" : "";
-      sprintf(buffer,"%s Query No  : %d\n", buffer, qry);
-      sprintf(buffer,"%s Ref       : \"%s:%s\"\n", buffer, result->GetTitle(),
-              result->GetName());
-      sprintf(buffer,"%s Selector  : %s\n", buffer,
-              result->GetSelecImp()->GetTitle());
-      sprintf(buffer,"%s Status    : %9s%s\n", buffer, fin, arc);
-      sprintf(buffer,"%s------------------------------------------------------\n",
-              buffer);
+      buffer = Form("%s Query No  : %d\n", buffer, qry);
+      buffer = Form("%s Ref       : \"%s:%s\"\n", buffer, result->GetTitle(),
+                 result->GetName());
+      buffer = Form("%s Selector  : %s\n", buffer,
+                 result->GetSelecImp()->GetTitle());
+      buffer = Form("%s Status    : %9s%s\n", buffer, fin, arc);
+      buffer = Form("%s------------------------------------------------------\n",
+                 buffer);
    } else {
-      sprintf(buffer,"%s Query No  : %d\n", buffer, qry);
-      sprintf(buffer,"%s Ref       : \"%s:%s\"\n", buffer, result->GetTitle(),
-              result->GetName());
-      sprintf(buffer,"%s Selector  : %s\n", buffer,
-              result->GetSelecImp()->GetTitle());
-      sprintf(buffer,"%s------------------------------------------------------\n",
-              buffer);
+      buffer = Form("%s Query No  : %d\n", buffer, qry);
+      buffer = Form("%s Ref       : \"%s:%s\"\n", buffer, result->GetTitle(),
+                 result->GetName());
+      buffer = Form("%s Selector  : %s\n", buffer,
+                 result->GetSelecImp()->GetTitle());
+      buffer = Form("%s------------------------------------------------------\n",
+                 buffer);
    }
 
    // Time information
    Int_t elapsed = (Int_t)(result->GetEndTime().Convert() -
                            result->GetStartTime().Convert());
-   sprintf(buffer,"%s Started   : %s\n",buffer,
-           result->GetStartTime().AsString());
-   sprintf(buffer,"%s Real time : %d sec (CPU time: %.1f sec)\n", buffer, elapsed,
-           result->GetUsedCPU());
+   buffer = Form("%s Started   : %s\n",buffer,
+              result->GetStartTime().AsString());
+   buffer = Form("%s Real time : %d sec (CPU time: %.1f sec)\n", buffer, elapsed,
+              result->GetUsedCPU());
 
    // Number of events processed, rate, size
    Double_t rate = 0.0;
    if (result->GetEntries() > -1 && elapsed > 0)
       rate = result->GetEntries() / (Double_t)elapsed ;
    Float_t size = ((Float_t)result->GetBytes())/(1024*1024);
-   sprintf(buffer,"%s Processed : %lld events (size: %.3f MBs)\n",buffer,
-          result->GetEntries(), size);
-   sprintf(buffer,"%s Rate      : %.1f evts/sec\n",buffer, rate);
+   buffer = Form("%s Processed : %lld events (size: %.3f MBs)\n",buffer,
+              result->GetEntries(), size);
+   buffer = Form("%s Rate      : %.1f evts/sec\n",buffer, rate);
 
    // Package information
    if (strlen(result->GetParList()) > 1) {
-      sprintf(buffer,"%s Packages  :  %s\n",buffer, result->GetParList());
+      buffer = Form("%s Packages  :  %s\n",buffer, result->GetParList());
    }
 
    // Result information
@@ -2748,16 +2804,16 @@ void TSessionQueryFrame::UpdateInfos()
       }
    }
    if (res.Length() > 1) {
-      sprintf(buffer,"%s------------------------------------------------------\n",
-              buffer);
-      sprintf(buffer,"%s Results   : %s\n",buffer, res.Data());
+      buffer = Form("%s------------------------------------------------------\n",
+                    buffer);
+      buffer = Form("%s Results   : %s\n",buffer, res.Data());
    }
 
    if (result->GetOutputList() && result->GetOutputList()->GetSize() > 0) {
-      sprintf(buffer,"%s Outlist   : %d objects\n",buffer,
-              result->GetOutputList()->GetSize());
-      sprintf(buffer,"%s------------------------------------------------------\n",
-              buffer);
+      buffer = Form("%s Outlist   : %d objects\n",buffer,
+                    result->GetOutputList()->GetSize());
+      buffer = Form("%s------------------------------------------------------\n",
+                    buffer);
    }
    fInfoTextView->LoadBuffer(buffer);
 }
@@ -3761,8 +3817,6 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
    }
    else if (entry->GetParent()->GetParent() == 0) { // Server
-      fServerFrame->SetAddEnabled(kFALSE);
-      fServerFrame->SetConnectEnabled();
       if (entry->GetUserData()) {
          obj = (TObject *)entry->GetUserData();
          if (obj->IsA() != TSessionDescription::Class())
@@ -3828,6 +3882,8 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       // update session information frame
       fSessionFrame->ProofInfos();
       fSessionFrame->UpdatePackages();
+      fServerFrame->SetAddEnabled(kFALSE);
+      fServerFrame->SetConnectEnabled();
    }
    else if (entry->GetParent()->GetParent()->GetParent() == 0) { // query
       obj = (TObject *)entry->GetParent()->GetUserData();
