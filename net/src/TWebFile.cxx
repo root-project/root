@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.13 2006/05/22 12:41:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.14 2006/05/23 11:59:07 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -131,30 +131,90 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
          return kFALSE;
    }
 
-   TSocket s(fUrl.GetHost(), fUrl.GetPort());
-   if (!s.IsValid())
-      return kTRUE;
-
-   char *msg;
-
    // Give full URL so Apache's virtual hosts solution works.
    // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
-   msg = Form("GET %s://%s:%d/%s?%lld:%d\r\n", fUrl.GetProtocol(),
-              fUrl.GetHost(), fUrl.GetPort(), fUrl.GetFile(), fOffset, len);
+   TString msg = "GET ";
+   msg += fUrl.GetUrl();
+   msg += "?";
+   msg += fOffset;
+   msg += ":";
+   msg += len;
+   msg += "\r\n";
 
-   s.SendRaw(msg, strlen(msg));
-   s.RecvRaw(buf, len);
+   if (GetFromWeb(buf, len, msg) == -1)
+      return kTRUE;
 
    fOffset += len;
 
-   fBytesRead  += len;
-#ifdef WIN32
-   SetFileBytesRead(GetFileBytesRead() + len);
-#else
-   fgBytesRead += len;
-#endif
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TWebFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
+{
+   // Read the nbuf blocks described in arrays pos and len,
+   // where pos[i] is the seek position of block i of length len[i].
+   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer
+   // This function is overloaded by TNetFile, TWebFile, etc.
+   // Returns kTRUE in case of failure.
+
+   // Give full URL so Apache's virtual hosts solution works.
+   // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
+   TString msgh = "GET ";
+   msgh += fUrl.GetUrl();
+   msgh += "?";
+
+   TString msg = msgh;
+
+   Int_t k = 0, n = 0;
+   for (Int_t i = 0; i < nbuf; i++) {
+      if (n) msg += ",";
+      msg += pos[i];
+      msg += ":";
+      msg += len[i];
+      n   += len[i];
+      if (msg.Length() > 8000) {
+         msg += "\r\n";
+         if (GetFromWeb(&buf[k], n, msg) == -1)
+            return kTRUE;
+         msg = msgh;
+         k = n;
+         n = 0;
+      }
+   }
+
+   msg += "\r\n";
+
+   if (GetFromWeb(&buf[k], n, msg) == -1)
+      return kTRUE;
+
+   fOffset = pos[nbuf-1] + len[nbuf-1];
 
    return kFALSE;
+}
+
+//______________________________________________________________________________
+Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
+{
+   // Read request from web server. Returns -1 in case of error,
+   // 0 in case of success.
+
+   if (!len) return 0;
+
+   TSocket s(fUrl.GetHost(), fUrl.GetPort());
+   if (!s.IsValid())
+      return -1;
+
+   if (s.SendRaw(msg.Data(), msg.Length()) == -1)
+      return -1;
+
+   if (s.RecvRaw(buf, len) == -1)
+      return -1;
+
+   fBytesRead  += len;
+   SetFileBytesRead(GetFileBytesRead() + len);
+
+   return 0;
 }
 
 //______________________________________________________________________________
