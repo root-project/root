@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.15 2006/04/24 13:53:04 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.16 2006/05/28 20:08:00 brun Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -83,7 +83,7 @@ TGScrollBarElement::TGScrollBarElement(const TGWindow *p, const TGPicture *pic,
                                        UInt_t w, UInt_t h, UInt_t options, Pixel_t back) :  
                                        TGFrame(p, w, h, options | kOwnBackground, back)
 {
-   // ctor
+   // constructor
 
    fPic = fPicN = pic;
    fState = kButtonUp;
@@ -93,7 +93,7 @@ TGScrollBarElement::TGScrollBarElement(const TGWindow *p, const TGPicture *pic,
 //______________________________________________________________________________
 TGScrollBarElement::~TGScrollBarElement()
 {
-   // dtor
+   // destructor
 
    if (fPicD) {
       fClient->FreePicture(fPicD);

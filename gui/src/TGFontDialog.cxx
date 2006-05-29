@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.14 2006/02/28 16:48:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.15 2006/05/28 20:07:59 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers + Valeriy Onuchin  23/04/03
 
 /*************************************************************************
@@ -876,11 +876,11 @@ void TGFontDialog::SetFont(TGFont *font)
       }
    } else if (style1 == "bold") {
       if (style2 == "r") {
-        fFontStyles->Select(1);
+         fFontStyles->Select(1);
       } else if (style2 == "i") {
-        fFontStyles->Select(3);
+         fFontStyles->Select(3);
       } else if (style2 == "o") {
-        fFontStyles->Select(3);
+         fFontStyles->Select(3);
       }
    }
    n1++;
