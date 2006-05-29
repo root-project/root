@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.51 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.52 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -1615,6 +1615,8 @@ TGListTreeItem *TGListTree::AddItem(TGListTreeItem *parent, const char *string,
    InsertChild(parent, item);
 
    if (fClient->IsEditable()) {
+      if (parent)
+         OpenItem(parent);
       fClient->NeedRedraw(this);
    }
    return item;
