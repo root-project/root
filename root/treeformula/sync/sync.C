@@ -94,6 +94,7 @@ Int_t sync(bool skipKnownFail) {
       }
     }
   }
+  tree->SetBranchAddress("event", 0);
   new TCanvas("c2");
   bool result = true;
   cout << result << endl;
