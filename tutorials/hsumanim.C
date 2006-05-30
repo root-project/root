@@ -65,7 +65,7 @@
   //the corresponding lines to test one or the other.
   
   //for information about gifsicle, see http://www.lcdf.org/~eddietwo/gifsicle/
-  //  gSystem->Exec("gifsicle --delay=10 --loop=5 hsum*.gif > anim.gif");
+  //gSystem->Exec("gifsicle -O2 --delay=10 --loop=5 hsum*.gif > anim.gif");
 
   //for information about convert, see http://www.imagemagick.org/script/command-line-options.php
   gSystem->Exec("convert hsum*.gif anim.gif");
