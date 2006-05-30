@@ -2,27 +2,29 @@
 // testrandom.C tests the generator TRandom3 against some ref values
 // and creates a timing table against TRandom and TRandom2.
 //
-// E.g. on an Origin 2000 with KCC 3.3:
+// E.g. on an MacOSX with 2 GHz Intel Dual Core and compiled with gcc 4.0
 //
 // Distribution            microseconds/call
-//                      TRandom  TRandom2 TRandom3
-// Rndm..............    0.110    0.480    0.220
-// Gaus..............    1.030    1.750    1.280
-// Landau............   15.670   16.010   15.830
-// Binomial(5,0.5)...    0.530    1.150    0.730
-// Binomial(15,0.5)..    0.540    1.190    0.750
-// Poisson(3)........    0.900    2.280    1.370
-// Poisson(10).......    1.630    5.560    2.890
-// Poisson(70).......    7.940   33.650   15.970
-// Poisson(100)......    1.370    2.080    1.600
-// GausTF1...........    1.770    2.130    1.890
-// LandauTF1.........    1.780    2.130    1.890
+//                     TRandom  TRandom1 TRandom2 TRandom3
+// Rndm..............    0.030    0.130    0.030    0.040
+// RndmArray.........    0.010    0.130    0.020    0.020
+// Gaus..............    0.250    0.460    0.250    0.270
+// Landau............    0.070    0.170    0.070    0.080
+// Binomial(5,0.5)...    0.160    0.700    0.180    0.200
+// Binomial(15,0.5)..    0.430    2.060    0.490    0.590
+// Poisson(3)........    0.220    0.650    0.240    0.260
+// Poisson(10).......    0.460    1.610    0.490    0.570
+// Poisson(70).......    1.260    1.670    1.290    1.310
+// Poisson(100)......    1.280    1.680    1.300    1.320
+// GausTF1...........    0.210    0.330    0.210    0.220
+// LandauTF1.........    0.210    0.330    0.210    0.220
 //
 // Note that this tutorial can be executed in interpreted or compiled mode
 //  Root > .x testrandom.C
 //  Root > .x testrandom.C++
 
 #ifndef __CINT__
+#include <TRandom1.h>
 #include <TRandom2.h>
 #include <TRandom3.h>
 #include <TStopwatch.h>
@@ -43,19 +45,25 @@ void testAll() {
   float cpn = 1000000./N;
   float x;
 
-  TRandom *r1 = new TRandom();
+  TRandom *r0 = new TRandom();
+  TRandom *r1 = new TRandom1();
   TRandom *r2 = new TRandom2();
   TRandom *r3 = new TRandom3();
 
   TStopwatch sw;
   printf("Distribution            microseconds/call\n");
-  printf("                    TRandom  TRandom2 TRandom3\n");
+  printf("                    TRandom  TRandom1 TRandom2 TRandom3\n");
 
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r0->Rndm(i);
+  }
+  printf("Rndm.............. %8.3f",sw.CpuTime()*cpn);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r1->Rndm(i);
   }
-  printf("Rndm.............. %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Rndm(i);
@@ -67,11 +75,39 @@ void testAll() {
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
 
+  const int NR = 1000;
+  double rn[NR];
+  sw.Start();
+  for (i=0;i<N;i+=NR) {
+     r0->RndmArray(NR,rn);
+  }
+  printf("RndmArray......... %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i+=NR) {
+     r1->RndmArray(NR,rn);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i+=NR) {
+     r2->RndmArray(NR,rn);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i+=NR) {
+     r3->RndmArray(NR,rn);
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r0->Gaus(0,1);
+  }
+  printf("Gaus.............. %8.3f",sw.CpuTime()*cpn);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r1->Gaus(0,1);
   }
-  printf("Gaus.............. %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Gaus(0,1);
@@ -85,9 +121,14 @@ void testAll() {
 
   sw.Start();
   for (i=0;i<N;i++) {
-     x = r1->Landau(0,1);
+     x = r0->Landau(0,1);
   }
   printf("Landau............ %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r1->Landau(0,1);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Landau(0,1);
@@ -101,9 +142,14 @@ void testAll() {
 
   sw.Start();
   for (i=0;i<N;i++) {
-     x = r1->Binomial(5,0.5);
+     x = r0->Binomial(5,0.5);
   }
   printf("Binomial(5,0.5)... %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r1->Binomial(5,0.5);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Binomial(5,0.5);
@@ -117,9 +163,14 @@ void testAll() {
 
   sw.Start();
   for (i=0;i<N;i++) {
-     x = r1->Binomial(15,0.5);
+     x = r0->Binomial(15,0.5);
   }
   printf("Binomial(15,0.5).. %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r1->Binomial(15,0.5);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Binomial(15,0.5);
@@ -133,9 +184,14 @@ void testAll() {
 
   sw.Start();
   for (i=0;i<N;i++) {
-     x = r1->Poisson(3);
+     x = r0->Poisson(3);
   }
   printf("Poisson(3)........ %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r1->Poisson(3);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Poisson(3);
@@ -149,9 +205,14 @@ void testAll() {
 
   sw.Start();
   for (i=0;i<N;i++) {
-     x = r1->Poisson(10);
+     x = r0->Poisson(10);
   }
   printf("Poisson(10)....... %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r1->Poisson(10);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Poisson(10);
@@ -165,9 +226,14 @@ void testAll() {
 
   sw.Start();
   for (i=0;i<N;i++) {
-     x = r1->Poisson(70);
+     x = r0->Poisson(70);
   }
   printf("Poisson(70)....... %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r1->Poisson(70);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Poisson(70);
@@ -181,9 +247,14 @@ void testAll() {
 
   sw.Start();
   for (i=0;i<N;i++) {
-     x = r1->Poisson(100);
+     x = r0->Poisson(100);
   }
   printf("Poisson(100)...... %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r1->Poisson(100);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Poisson(100);
@@ -197,12 +268,18 @@ void testAll() {
 
   TF1 *f1 = new TF1("f1","gaus",-4,4);
   f1->SetParameters(1,0,1);
-  gRandom = r1;
+  gRandom = r0;
   sw.Start();
   for (i=0;i<N;i++) {
      x = f1->GetRandom();
   }
   printf("GausTF1........... %8.3f",sw.CpuTime()*cpn);
+  gRandom = r1;
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = f1->GetRandom();
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
   gRandom = r2;
   sw.Start();
   for (i=0;i<N;i++) {
@@ -219,12 +296,18 @@ void testAll() {
   TF1 *f2 = new TF1("f2","landau",-5,15);
   f2->SetParameters(1,0,1);
 
-  gRandom = r1;
+  gRandom = r0;
   sw.Start();
   for (i=0;i<N;i++) {
      x = f2->GetRandom();
   }
   printf("LandauTF1......... %8.3f",sw.CpuTime()*cpn);
+  gRandom = r1;
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = f2->GetRandom();
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
   gRandom = r2;
   sw.Start();
   for (i=0;i<N;i++) {
