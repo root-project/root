@@ -1,6 +1,6 @@
 local_clean = Event libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ Event.new.split0.root  Event.root result $(ALL_LIBRARIES)
 
-CLEAN_TARGETS += $(local_clean)
+CLEAN_TARGETS += $(local_clean) *.log
 TEST_TARGETS += enum retobjTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)

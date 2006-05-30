@@ -1,6 +1,6 @@
 
 TEST_TARGETS += feature
-CLEAN_TARGETS += $(ALL_LIBRARIES) run.out
+CLEAN_TARGETS += $(ALL_LIBRARIES) run.out *.build.log
 
 #include $(ROOTSYS)/test/Makefile.arch
 

@@ -1,4 +1,5 @@
 TEST_TARGETS = SelectorTest
+CLEAN_TARGETS += selector.log
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
