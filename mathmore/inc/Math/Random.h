@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Random.h,v 1.1 2006/05/26 14:26:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -40,6 +40,9 @@ namespace Math {
 
   /**
      User class for random numbers
+
+     @defgroup Random Random numbers and distributions
+
    */ 
   template < class Engine> 
   class Random { 

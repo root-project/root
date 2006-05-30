@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.h,v 1.1 2006/05/26 14:26:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -48,6 +48,8 @@ namespace Math {
 
     /**
      Base class for all GSL engines
+
+     @ingroup Random
     */ 
   class GSLRandomEngine { 
 
@@ -203,6 +205,8 @@ namespace Math {
 
   /**
      Mersenne-Twister genertaor
+
+     @ingroup Random
    */
   class GSLRngMT : public GSLRandomEngine { 
   public: 
@@ -211,6 +215,8 @@ namespace Math {
 
   /**
      Ranlux generator (James, Luscher) (defaul luxury)
+
+     @ingroup Random
    */
   class GSLRngRanLux : public GSLRandomEngine { 
   public: 
@@ -220,6 +226,8 @@ namespace Math {
 
   /**
      Tausworthe generator by L'Ecuyer
+
+     @ingroup Random
    */
   class GSLRngTaus : public GSLRandomEngine { 
   public: 
@@ -228,6 +236,8 @@ namespace Math {
 
   /**
      Lagged Fibonacci generator by Ziff
+
+     @ingroup Random
    */
   class GSLRngGFSR4 : public GSLRandomEngine { 
   public: 
@@ -236,6 +246,8 @@ namespace Math {
 
   /**
      Combined multiple recursive  generator (L'Ecuyer)
+
+     @ingroup Random
    */ 
   class GSLRngCMRG : public GSLRandomEngine { 
   public: 
@@ -244,6 +256,8 @@ namespace Math {
 
   /**
      5-th order multiple recursive  generator (L'Ecuyer, Blouin and Coutre)
+
+     @ingroup Random
    */ 
   class GSLRngMRG : public GSLRandomEngine { 
   public: 
@@ -252,6 +266,8 @@ namespace Math {
 
   /**
      BSD rand() generator  
+
+     @ingroup Random
    */
   class GSLRngRand : public GSLRandomEngine { 
   public: 
@@ -260,6 +276,8 @@ namespace Math {
 
   /**
      RANMAR generator 
+
+     @ingroup Random
    */
   class GSLRngRanMar : public GSLRandomEngine { 
   public: 
@@ -268,6 +286,8 @@ namespace Math {
 
   /**
      MINSTD generator (Park and Miller)
+
+     @ingroup Random
    */
   class GSLRngMinStd : public GSLRandomEngine { 
   public: 
