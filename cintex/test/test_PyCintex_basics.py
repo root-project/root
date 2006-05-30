@@ -9,7 +9,6 @@ import unittest
 import sys
 
 import PyCintex
-#PyCintex.loadDict('test_CintexTestRflx')
 
 class BasicsTestCase(unittest.TestCase):
   def setUp(self):
@@ -380,6 +379,20 @@ class BasicsTestCase(unittest.TestCase):
     self.assertRaises(RuntimeError, g.intThrow, True)
     self.assertRaises(TypeError, self.gbl.ExceptionGenerator, True)
 
+  def test24STLArgTypes(self):
+    p = self.A.B.C.Primitives()
+    self.failUnless( isinstance(p, self.A.B.C.Primitives) )
+    v = self.std.vector('double')()
+    v.push_back(1.0)
+    p.set_doubles('a', v)
+    self.failUnlessEqual(p.doubles().size(), 1 )
+    self.failUnlessEqual(p.doubles()[0], 1.0 )
+
+  def test25STLIterator(self):
+    self.failUnless( PyCintex.makeClass('std::vector<MyA>') )
+    self.failUnless( PyCintex.makeClass('std::vector<MyA>::iterator') )
+    self.failUnless( PyCintex.makeClass('std::vector<MyA>::reverse_iterator') )
+    
 
 suite = unittest.makeSuite(BasicsTestCase,'test')
 if __name__ == '__main__':

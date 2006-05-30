@@ -56,6 +56,7 @@ struct Primitives {
   float m_f;
   double m_d;
   std::string m_str;
+  std::vector<double> m_vd;
 
   bool b() { return m_b;}
   char c() { return m_c;}
@@ -73,6 +74,7 @@ struct Primitives {
   std::string str() { return m_str;}
   const char* ccstr() { return m_str.c_str();}
   char* cstr() { return const_cast<char*>(m_str.c_str());}
+  std::vector<double>& doubles() { return m_vd; }
 
   void set_b( bool a)  { m_b = a;}
   void set_c( char a)  { m_c = a;}
@@ -92,6 +94,7 @@ struct Primitives {
   void set_all( bool b, char c, short s, int i, long l, float f, double d, const std::string& str) {
     m_b = b; m_c = c; m_s = s; m_i = i; m_l = l; m_f = f; m_d = d; m_str = str;
   }
+  void set_doubles( const std::string&, const std::vector<double>& v) { m_vd = v; }
 };
 
 enum Answer { no=0, yes, maybe };
@@ -381,6 +384,7 @@ struct _Instantiations {
   std::vector<int> Vi;
   std::vector<unsigned int> Vui;
   std::vector<long> Vl;
+  std::vector<double> Vd;
   std::list<int> Li;
   std::list<int>::iterator ILi;
   std::list<A::B::C::MyClass*> Lm;
@@ -514,6 +518,7 @@ typedef OData NewData;
 
 struct Final : public NewData, public Aggregate, public std::string {
   Data dval;
+  std::vector<Data*> dvector;
 };
 
 namespace a {
@@ -654,13 +659,14 @@ class ExceptionGenerator {
 };
 
 
-class MyA {};
+struct MyA {int a;};
 
 #include <list>
 struct __ins {
   std::vector<MyA> mya;
   std::vector<MyA>::iterator myai;
- std::list<ExceptionGenerator*> a;
+  std::vector<MyA>::reverse_iterator myar;
+  std::list<ExceptionGenerator*> a;
 };
 
 namespace N {

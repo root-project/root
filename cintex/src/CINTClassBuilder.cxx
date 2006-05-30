@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.11 2006/04/28 06:40:18 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.12 2006/04/28 15:59:48 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -160,10 +160,14 @@ namespace ROOT { namespace Cintex {
   }
 
   void CINTClassBuilder::Setup_memfunc_with_context(void* ctx) {
+    int autoload = G__set_class_autoloading(0); // To avoid recursive loads
     ((CINTClassBuilder*)ctx)->Setup_memfunc();
+    G__set_class_autoloading(autoload);
   }
   void CINTClassBuilder::Setup_memvar_with_context(void* ctx) {
+    int autoload = G__set_class_autoloading(0); // To avoid recursive loads
     ((CINTClassBuilder*)ctx)->Setup_memvar();
+    G__set_class_autoloading(autoload);
   }
 
   void CINTClassBuilder::Setup_memfunc() {

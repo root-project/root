@@ -6,7 +6,7 @@
     CINT dictionaries from Reflex ones.
 """
 #---- system modules--------------------------------------------------
-import os, sys, exceptions, string
+import os, sys, exceptions, string, warnings
 
 #---- Import PyROOT module -------------------------------------------
 
@@ -31,6 +31,14 @@ libPyROOT.MakeRootClass( 'PyROOT::TPyROOTApplication' ).InitCINTMessageCallback(
 try:    libPyROOT.gInterpreter.EnableAutoLoading()
 except: pass
 
+#--- Load CINT dictionaries for STL classes first before other "Reflex" dictionaries
+#    are loaded. The Reflex once are protected against the class being there 
+#libPyROOT.gROOT.ProcessLine('int sav = gErrorIgnoreLevel; gErrorIgnoreLevel = 2001;')
+#for c in ('vector', 'list', 'set', 'deque') : 
+#  if libPyROOT.gSystem.Load('lib%sDict' % c ) == -1 :
+#    warnings.warn('CINT dictionary for STL class %s could not be loaded' % c )
+#libPyROOT.gROOT.ProcessLine('gErrorIgnoreLevel = sav;')
+
 #--- template support ------------------------------------------------------------
 class Template:
    def __init__( self, name ):
@@ -41,13 +49,6 @@ class Template:
 
 sys.modules[ 'libPyROOT' ].Template = Template
 
-#--- scope place holder for STL classes ------------------------------------------
-class std:
-   stlclasses = ( 'complex', 'exception', 'pair', \
-      'deque', 'list', 'queue', 'stack', 'vector', 'map', 'multimap', 'set', 'multiset' )
-
-   for name in stlclasses:
-      exec '%(name)s = Template( "std::%(name)s" )' % { 'name' : name }
 
 #--- LoadDictionary function and aliases -----------------------------
 def loadDictionary(name) :
@@ -67,7 +68,13 @@ Cintex.SetDebug(0)
 Cintex.Enable()
 
 #--- Other functions needed -------------------------------------------
-class _global_cpp: pass
+class _global_cpp: 
+  class std:  #--- scope place holder for STL classes ------------------------------------------
+     stlclasses = ( 'complex', 'exception', 'pair', 'deque', 'list', 'queue',\
+                     'stack', 'vector', 'map', 'multimap', 'set', 'multiset' )
+     for name in stlclasses:
+        exec '%(name)s = Template( "std::%(name)s" )' % { 'name' : name }
+
 libPyROOT.SetRootLazyLookup( _global_cpp.__dict__ ) 
  
 def Namespace( name ) :
