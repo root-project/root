@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.88 2006/05/23 04:47:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.89 2006/05/24 16:44:33 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -672,6 +672,10 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          optionText = 1;
          ndiv = fAxis->GetLast()-fAxis->GetFirst()+1;
       }
+   }
+   if (ndiv <= 0) {
+      Error(where, "Invalid number of divisions: %d",ndiv);
+      return;
    }
 
 //*-*-              Set the grid length
