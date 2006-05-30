@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.53 2006/04/24 14:00:54 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.54 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -1045,18 +1045,6 @@ TGListBox::TGListBox(const TGWindow *p, Int_t id,
    fIntegralHeight = kTRUE;
 
    InitListBox();
-
-   if (!p && fClient->IsEditable()) {  // defauld used in the GUI builder
-      AddEntry("Entry 1", 0);
-      AddEntry("Entry 2", 1);
-      AddEntry("Entry 3", 2);
-      AddEntry("Entry 4", 3);
-      AddEntry("Entry 5", 4);
-      AddEntry("Entry 6", 5);
-      AddEntry("Entry 7", 6);
-      MapSubwindows();
-      Resize(60, fItemVsize*4);
-   }
 }
 
 //______________________________________________________________________________

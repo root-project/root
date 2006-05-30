@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.34 2006/05/29 14:00:36 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.35 2006/05/29 15:40:35 antcheva Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -64,17 +64,6 @@ TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
    // Create a text edit widget.
 
    Init();
-
-   if (!parent && fClient->IsEditable()) {
-      AddLine("all work and no play makes jack a pretty");
-      AddLine("dull boy. all work and no play makes jack");
-      AddLine("a pretty dull boy. all work and no play ");
-      AddLine("makes jack a pretty dull boy. all work");
-      AddLine("and no play makes jack a pretty dull boy.");
-
-      MapSubwindows();
-      Layout();  
-   }
 }
 
 //______________________________________________________________________________

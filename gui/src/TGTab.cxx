@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.33 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.34 2006/05/28 20:08:00 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -202,9 +202,9 @@ TGTabLayout::TGTabLayout(TGTab *main)
 
 //______________________________________________________________________________
 TGTabLayout::TGTabLayout(const TGTabLayout& tl) :
-  TGLayoutManager(tl),
-  fMain(tl.fMain),
-  fList(tl.fList)
+   TGLayoutManager(tl),
+   fMain(tl.fMain),
+   fList(tl.fList)
 { 
    //copy constructor
 }
@@ -319,24 +319,18 @@ TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
 
    fEditDisabled = kEditDisable | kEditDisableLayout;
    fContainer->SetEditDisabled(kEditDisable | kEditDisableGrab);
-
-   if (!p && fClient->IsEditable()) {  // default ctor used in the GUI builder
-      AddTab("Tab1");
-      AddTab("Tab2");
-      MapSubwindows();
-   }
 }
 
 //______________________________________________________________________________
 TGTab::TGTab(const TGTab& gt) :
-  TGCompositeFrame(gt),
-  TGWidget(gt),
-  fCurrent(gt.fCurrent),
-  fTabh(gt.fTabh),
-  fContainer(gt.fContainer),
-  fRemoved(gt.fRemoved),
-  fFontStruct(gt.fFontStruct),
-  fNormGC(gt.fNormGC)
+   TGCompositeFrame(gt),
+   TGWidget(gt),
+   fCurrent(gt.fCurrent),
+   fTabh(gt.fTabh),
+   fContainer(gt.fContainer),
+   fRemoved(gt.fRemoved),
+   fFontStruct(gt.fFontStruct),
+   fNormGC(gt.fNormGC)
 { 
    //copy constructor
 }

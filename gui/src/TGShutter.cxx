@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.14 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.15 2006/05/28 20:08:00 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -47,91 +47,6 @@ TGShutter::TGShutter(const TGWindow *p, UInt_t options) :
    // layout manager is not used 
    delete fLayoutManager;
    fLayoutManager = 0;
-
-   if (!p && fClient->IsEditable()) {
-      TGShutterItem *item;
-      TGCompositeFrame *container;
-      const TGPicture  *buttonpic;
-      TGPictureButton  *button;
-
-      TGLayoutHints *l = new TGLayoutHints(kLHintsTop | kLHintsCenterX,
-                                           5, 5, 5, 0);
-      item = AddPage("Histograms");
-      container = (TGCompositeFrame *)item->GetContainer();
-      buttonpic = fClient->GetPicture("h1_s.xpm");
-
-      if (buttonpic) {
-         button = new TGPictureButton(container, buttonpic);
-         button->SetToolTipText("TH1");
-         container->AddFrame(button, l);
-      }
-      buttonpic = fClient->GetPicture("h2_s.xpm");
-
-      if (buttonpic) {
-         button = new TGPictureButton(container, buttonpic);
-         button->SetToolTipText("TH2");
-         container->AddFrame(button, l);
-      }
-      buttonpic = fClient->GetPicture("h3_s.xpm");
-
-      if (buttonpic) {
-         button = new TGPictureButton(container, buttonpic);
-         button->SetToolTipText("TH3");
-         container->AddFrame(button, l);
-      }
-      buttonpic = fClient->GetPicture("profile_s.xpm");
-
-      if (buttonpic) {
-         button = new TGPictureButton(container, buttonpic);
-         button->SetToolTipText("TProfile");
-         container->AddFrame(button, l);
-      }
-      // new page
-      item = AddPage("Functions");
-      container = (TGCompositeFrame *)item->GetContainer();
-      buttonpic = fClient->GetPicture("f1_s.xpm");
-
-      if (buttonpic) {
-         button = new TGPictureButton(container, buttonpic);
-         button->SetToolTipText("TF1");
-         container->AddFrame(button, l);
-      }
-      buttonpic = fClient->GetPicture("f2_s.xpm");
-
-      if (buttonpic) {
-         button = new TGPictureButton(container, buttonpic);
-         button->SetToolTipText("TF2");
-         container->AddFrame(button, l);
-      }
-      // new page
-      item = AddPage("Trees");
-      container = (TGCompositeFrame *)item->GetContainer();
-      buttonpic = fClient->GetPicture("ntuple_s.xpm");
-
-      if (buttonpic) {
-         button = new TGPictureButton(container, buttonpic);
-         button->SetToolTipText("TNtuple");
-         container->AddFrame(button, l);
-      }
-      buttonpic = fClient->GetPicture("tree_s.xpm");
-
-      if (buttonpic) {
-         button = new TGPictureButton(container, buttonpic);
-         button->SetToolTipText("TTree");
-         container->AddFrame(button, l);
-      }
-
-      buttonpic = fClient->GetPicture("chain_s.xpm");
-
-      if (buttonpic) {
-         button = new TGPictureButton(container, buttonpic);
-         button->SetToolTipText("TChain");
-         container->AddFrame(button, l);
-      }
-
-      MapSubwindows();
-      MapRaised();
-   }
 }
 
 
