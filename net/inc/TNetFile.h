@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.24 2006/05/23 04:47:40 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.25 2006/05/26 15:13:02 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -70,7 +70,7 @@ protected:
 public:
    TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
             Int_t compress = 1, Int_t netopt = 0);
-   TNetFile() : fEndpointUrl(), fSocket(0), fProtocol(0), fErrorCode(0) { }
+   TNetFile() : fEndpointUrl(), fUser(), fSocket(0), fProtocol(0), fErrorCode(0) { }
    virtual ~TNetFile();
 
    void    Close(Option_t *option="");  // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.6 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.7 2006/05/26 15:13:01 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -93,6 +93,7 @@ private:
    Bool_t       fIsGlobal;  // plugin ctor is a global function
 
    TPluginHandler() :
+      fBase(), fRegexp(), fClass(), fPlugin(), fCtor(),
       fCallEnv(0), fMethod(0), fCanCall(0), fIsMacro(kTRUE), fIsGlobal(kTRUE) { }
    TPluginHandler(const char *base, const char *regexp,
                   const char *className, const char *pluginName,

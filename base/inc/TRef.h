@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.7 2005/08/26 12:17:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.8 2005/11/21 11:17:18 rdm Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
    //status bits
    enum { kNotComputed = BIT(12)};
 
-   TRef() {fPID = 0;}
+   TRef(): fPID(0) { }
    TRef(TObject *obj);
    TRef(const TRef &ref);
    void  operator=(TObject *obj);
