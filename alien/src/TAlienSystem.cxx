@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAlienSystem.cxx,v 1.139 2006/03/29 10:29:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAlienSystem.cxx,v 1.1 2006/05/26 16:55:04 rdm Exp $
 // Author: Andreas Peters   15/05/2006
 
 /*************************************************************************
@@ -318,7 +318,7 @@ int TAlienSystem::AlienFilestat(const char *fpath, FileStat_t &buf)
    if ((gapi_lstat(url.GetUrl(), (struct GAPI_STAT*)(&sbuf))) == 0) {
 #else
    struct stat sbuf;
-   if ((gapi_lstat(path, (struct GAPI_STAT*)(&sbuf))) == 0) {
+   if ((gapi_lstat(url.GetUrl(), (struct GAPI_STAT*)(&sbuf))) == 0) {
 #endif
       buf.fIsLink = S_ISLNK(sbuf.st_mode);
       buf.fDev   = sbuf.st_dev;
