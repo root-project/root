@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.54 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.55 2006/05/30 06:40:10 antcheva Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -449,7 +449,18 @@ public:
       }
       TGTextLBEntry *f1 = (TGTextLBEntry*)fFrame;
       TGTextLBEntry *f2 = (TGTextLBEntry *) ((TGFrameElement *) obj)->fFrame;
-      return strcmp(f1->GetText()->Data(), f2->GetText()->Data());
+
+
+      double d1, d2;
+      const char *t1 = f1->GetText()->Data();
+      const char *t2 = f2->GetText()->Data();
+
+      if ((d1 = atof(t1)) && (d2 = atof(t2))) {
+         return (d1 > d2);
+      } else {
+         return strcmp(t1, t2);
+      }
+      return 0;
    }
 };
 
@@ -594,13 +605,13 @@ void TGLBContainer::RemoveEntry(Int_t id)
          if (fLastActive == e) fLastActive = 0;
          e->DestroyWindow();
          fList->Remove(el);  // avoid calling RemoveFrame(e)
-         delete el;          // idem
+         delete el;          // item
          delete e;
          delete l;
-         fClient->NeedRedraw(this);
          break;
       }
    }
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -625,10 +636,34 @@ void TGLBContainer::RemoveEntries(Int_t from_ID, Int_t to_ID)
          delete el;          // idem
          delete e;
          delete l;
-         fClient->NeedRedraw(this);
       }
    }
+   fClient->NeedRedraw(this);
 }
+
+//______________________________________________________________________________
+void TGLBContainer::RemoveAll()
+{
+   // Remove all entries in this container.
+ 
+   TGLBEntry      *e;
+   TGFrameElement *el;
+   TGLayoutHints  *l;
+
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      e = (TGLBEntry *) el->fFrame;
+      l = el->fLayout;
+      if (fLastActive == e) fLastActive = 0;
+      e->DestroyWindow();
+      fList->Remove(el);  // avoid calling RemoveFrame(e)
+      delete el;          // item
+      delete e;
+      delete l;
+   }
+   fClient->NeedRedraw(this);
+}  
 
 //______________________________________________________________________________
 TGLBEntry *TGLBContainer::Select(Int_t id)
@@ -1259,6 +1294,23 @@ void TGListBox:: RemoveEntry(Int_t id)
    Layout();
 }
 
+//______________________________________________________________________________
+void TGListBox::RemoveAll()
+{
+   // Remove all entries.
+   
+   fLbc->RemoveAll();
+   Layout();
+}
+
+//______________________________________________________________________________
+void TGListBox::RemoveEntries(Int_t from_ID, Int_t to_ID)
+{
+   // Remove a range of entries defined by from_ID and to_ID.
+   
+   fLbc->RemoveEntries(from_ID, to_ID);
+   Layout();
+}
 
 //______________________________________________________________________________
 void TGListBox::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, int afterID)
@@ -1408,6 +1460,7 @@ void TGListBox::SortByName(Bool_t ascend)
 
    fLbc->GetList()->Sort(ascend);
    Layout();
+   fClient->NeedRedraw(fLbc);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.29 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.30 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -237,6 +237,7 @@ public:
    virtual void InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID);
    virtual void RemoveEntry(Int_t id);
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID);
+   virtual void RemoveAll();
 
    virtual void       Associate(const TGWindow *w) { fMsgWindow = w; }
    virtual void       SetListBox(TGListBox *lb) { fListBox = lb; }
@@ -301,9 +302,9 @@ public:
    virtual void InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID);
    virtual void NewEntry(const char *s = "Entry");             //*MENU*
    virtual void RemoveEntry(Int_t id = -1);                    //*MENU*
+   virtual void RemoveAll();                                   //*MENU*
+   virtual void RemoveEntries(Int_t from_ID, Int_t to_ID); 
    virtual void ChangeBackground(Pixel_t back);
-   virtual void RemoveEntries(Int_t from_ID, Int_t to_ID) 
-                  { fLbc->RemoveEntries(from_ID, to_ID); }
    virtual void SetTopEntry(Int_t id = -1);
    virtual void SetMultipleSelections(Bool_t multi = kTRUE)
                   { fLbc->SetMultipleSelections(multi); }      //*TOGGLE* *GETTER=GetMultipleSelections
@@ -311,11 +312,11 @@ public:
                   { return fLbc->GetMultipleSelections(); }
    virtual Int_t  GetNumberOfEntries() const
                   { return fLbc->GetList()->GetSize(); }
-   virtual TGLBEntry   *GetEntry(Int_t id) const;
-   virtual TGLBEntry   *FindEntry(const char *s) const;
-   virtual TGFrame     *GetContainer() const { return fVport->GetContainer(); }
-   virtual TGViewPort  *GetViewPort() const { return fVport; }
-   virtual TGScrollBar *GetScrollBar() const { return fVScrollbar; }
+   virtual TGLBEntry    *GetEntry(Int_t id) const;
+   virtual TGLBEntry    *FindEntry(const char *s) const;
+   virtual TGFrame      *GetContainer() const { return fVport->GetContainer(); }
+   virtual TGViewPort   *GetViewPort() const { return fVport; }
+   virtual TGScrollBar  *GetScrollBar() const { return fVScrollbar; }
    virtual TGVScrollBar *GetVScrollbar() const { return fVScrollbar; }
 
    virtual void DrawBorder();
