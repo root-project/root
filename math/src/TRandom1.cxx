@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.4 2006/05/18 07:34:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.5 2006/05/26 15:13:01 rdm Exp $
 // Author: Rene Brun from CLHEP & CERNLIB  04/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -18,6 +18,7 @@
 
 #include "TMath.h"
 #include "TRandom1.h"
+#include "TRandom3.h"
 
 // Number of instances with automatic seed selection
 int TRandom1::fgNumEngines = 0;
@@ -25,7 +26,7 @@ int TRandom1::fgNumEngines = 0;
 // Maximum index into the seed table
 int TRandom1::fgMaxIndex = 215;
 #ifndef __CINT__
-const Long64_t fgSeedTable[215][2] = {
+const UInt_t fgSeedTable[215][2] = {
                              {           9876, 54321		},
                              {     1299961164, 253987020	},
                              {      669708517, 2079157264	},
@@ -246,7 +247,7 @@ const Long64_t fgSeedTable[215][2] = {
 ClassImp(TRandom1)
 
 //______________________________________________________________________________
-TRandom1::TRandom1(Long64_t seed, Int_t lux)
+TRandom1::TRandom1(UInt_t seed, Int_t lux)
         : fIntModulus(0x1000000),
           fMantissaBit24( pow(0.5,24.) ),
           fMantissaBit12( pow(0.5,12.) )
@@ -261,14 +262,14 @@ TRandom1::TRandom1(Long64_t seed, Int_t lux)
 //  level 3  (p=223): DEFAULT VALUE.  Any theoretically possible
 //           correlations have very small chance of being observed.
 //  level 4  (p=389): highest possible luxury, all 24 bits chaotic.
-   Long64_t seedlist[2]={0,0};
+   UInt_t seedlist[2]={0,0};
 
-   fTheSeeds = &fTheSeed;
+   fTheSeeds = &fSeed;
    fLuxury = lux;
    SetSeed2(seed, fLuxury);
 
    // setSeeds() wants a zero terminated array!
-   seedlist[0]=fTheSeed;
+   seedlist[0]=fSeed;
    seedlist[1]=0;
    SetSeeds(seedlist, fLuxury);
 }
@@ -280,21 +281,21 @@ TRandom1::TRandom1()
           fMantissaBit12( pow(0.5,12.) )
 {
    //default constructor
-   fTheSeeds = &fTheSeed;
-   Long64_t seed;
-   Long64_t seedlist[2]={0,0};
+   fTheSeeds = &fSeed;
+   UInt_t seed;
+   UInt_t seedlist[2]={0,0};
 
    fLuxury = 3;
    int cycle = abs(int(fgNumEngines/fgMaxIndex));
    int curIndex = abs(int(fgNumEngines%fgMaxIndex));
    fgNumEngines +=1;
-   Long64_t mask = ((cycle & 0x007fffff) << 8);
+   UInt_t mask = ((cycle & 0x007fffff) << 8);
    GetTableSeeds( seedlist, curIndex );
    seed = seedlist[0]^mask;
    SetSeed2(seed, fLuxury);
 
    // setSeeds() wants a zero terminated array!
-   seedlist[0]=fTheSeed; //<=============
+   seedlist[0]=fSeed; //<=============
    seedlist[1]=0;
    SetSeeds(seedlist, fLuxury);
 }
@@ -306,21 +307,21 @@ TRandom1::TRandom1(int rowIndex, int colIndex, int lux)
           fMantissaBit12( pow(0.5,12.) )
 {
    //constructor
-   fTheSeeds = &fTheSeed;
-   Long64_t seed;
-   Long64_t seedlist[2]={0,0};
+   fTheSeeds = &fSeed;
+   UInt_t seed;
+   UInt_t seedlist[2]={0,0};
 
    fLuxury = lux;
    int cycle = abs(int(rowIndex/fgMaxIndex));
    int row = abs(int(rowIndex%fgMaxIndex));
    int col = abs(int(colIndex%2));
-   Long64_t mask = (( cycle & 0x000007ff ) << 20 );
+   UInt_t mask = (( cycle & 0x000007ff ) << 20 );
    GetTableSeeds( seedlist, row );
    seed = ( seedlist[col] )^mask;
    SetSeed2(seed, fLuxury);
 
    // setSeeds() wants a zero terminated array!
-   seedlist[0]=fTheSeed;
+   seedlist[0]=fSeed;
    seedlist[1]=0;
    SetSeeds(seedlist, fLuxury);
 }
@@ -332,7 +333,7 @@ TRandom1::~TRandom1()
 }
 
 //______________________________________________________________________________
-void TRandom1::GetTableSeeds(Long64_t* seeds, Int_t index)
+void TRandom1::GetTableSeeds(UInt_t* seeds, Int_t index)
 {
    //static function returning the table of seeds
    if ((index >= 0) && (index < 215)) {
@@ -374,14 +375,14 @@ Double_t TRandom1::Rndm(Int_t)
 // every 24th number generation, several random numbers are generated
 // and wasted depending upon the fLuxury level.
 
-   if(fCount24 == 24 ){
+   if(fCount24 == 24 ) {
       fCount24 = 0;
-      for( i = 0; i != fNskip ; i++){
+      for( i = 0; i != fNskip ; i++) {
          uni = fFloatSeedTable[fJlag] - fFloatSeedTable[fIlag] - fCarry;
-         if(uni < 0. ){
+         if(uni < 0. ) {
             uni += 1.0;
             fCarry = fMantissaBit24;
-         }else{
+         } else {
             fCarry = 0.;
          }
          fFloatSeedTable[fIlag] = uni;
@@ -458,7 +459,7 @@ void TRandom1::RndmArray(const Int_t size, Double_t *vect)
 
 
 //______________________________________________________________________________
-void TRandom1::SetSeeds(const Long64_t *seeds, int lux)
+void TRandom1::SetSeeds(const UInt_t *seeds, int lux)
 {
    //set seeds
    const int ecuyer_a = 53668;
@@ -468,20 +469,20 @@ void TRandom1::SetSeeds(const Long64_t *seeds, int lux)
 
    const int lux_levels[5] = {0,24,73,199,365};
    int i;
-   Long64_t int_seed_table[24];
+   UInt_t int_seed_table[24];
    Long64_t k_multiple,next_seed;
-   const Long64_t *seedptr;
+   const UInt_t *seedptr;
 
    fTheSeeds = seeds;
    seedptr   = seeds;
 
    if(seeds == 0) {
-      SetSeed2(fTheSeed,lux);
-      fTheSeeds = &fTheSeed;
+      SetSeed2(fSeed,lux);
+      fTheSeeds = &fSeed;
       return;
    }
 
-   fTheSeed = *seeds;
+   fSeed = *seeds;
 
 // number of additional random numbers that need to be 'thrown away'
 // every 24 numbers is set using fLuxury level variable.
@@ -526,13 +527,17 @@ void TRandom1::SetSeeds(const Long64_t *seeds, int lux)
 }
 
 //______________________________________________________________________________
-void TRandom1::SetSeed2(Long64_t seed, int lux)
+void TRandom1::SetSeed2(UInt_t seed, int lux)
 {
 // The initialisation is carried out using a Multiplicative
 // Congruential generator using formula constants of L'Ecuyer
 // as described in "A review of pseudorandom number generators"
 // (Fred James) published in Computer Physics Communications 60 (1990)
 // pages 329-344
+//
+// modified for the case of seed = 0. In that case a random 64 bits seed based on 
+// TUUID (using TRandom3(0) ) is generated in order to have a unique seed 
+//
 
    const int ecuyer_a = 53668;
    const int ecuyer_b = 40014;
@@ -541,15 +546,24 @@ void TRandom1::SetSeed2(Long64_t seed, int lux)
 
    const int lux_levels[5] = {0,24,73,199,365};
 
-   Long64_t int_seed_table[24];
+   UInt_t int_seed_table[24];
+
+   // case of seed == 0 
+   // use a random seed based on TRandom3(0) which is base don the UUID
+   if (seed == 0) { 
+      TRandom3 r3(0); 
+      seed =  static_cast<UInt_t> (4294967296.*r3.Rndm());
+   }
+
+
    Long64_t next_seed = seed;
    Long64_t k_multiple;
    int i;
 
-// number of additional random numbers that need to be 'thrown away'
-// every 24 numbers is set using fLuxury level variable.
+   // number of additional random numbers that need to be 'thrown away'
+   // every 24 numbers is set using fLuxury level variable.
 
-   fTheSeed = seed;
+   fSeed = seed;
    if( (lux > 4)||(lux < 0) ) {
       if(lux >= 24) {
          fNskip = lux - 24;
@@ -582,3 +596,8 @@ void TRandom1::SetSeed2(Long64_t seed, int lux)
    fCount24 = 0;
 }
 
+void TRandom1::SetSeed(UInt_t seed)
+{
+   // Set RanLux seed using default luxury level
+   SetSeed2(seed);
+}
