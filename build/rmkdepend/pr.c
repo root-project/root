@@ -100,19 +100,19 @@ pr(ip, file, base)
 	len = strlen(ip->i_file)+1;
         ipifile = 0;
         if (len>2 && ip->i_file[1]==':') {
-           // generic cygwin
-           if (getenv("OSTYPE") && !strcmp(getenv("OSTYPE"),"cygwin")) {
+           // windows path   
+           if (getenv("OSTYPE") && !strcmp(getenv("OSTYPE"),"msys")) {   
+              ipifile = malloc(len);   
+              strcpy(ipifile, ip->i_file);   
+              ipifile[1] = ipifile[0];   
+              ipifile[0] = '/';   
+           } else { 
+              // generic cygwin
               ipifile = malloc(len+11);
               strcpy(ipifile, "/cygdrive/");
               ipifile[10] = ip->i_file[0];
               strcpy(ipifile+11, ip->i_file+2);
               len += 9;
-           } else {
-              // windows path
-              ipifile = malloc(len);
-              strcpy(ipifile, ip->i_file);
-              ipifile[1] = ipifile[0];
-              ipifile[0] = '/';
            }
         } else ipifile = ip->i_file;
         
