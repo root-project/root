@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.160 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.161 2006/05/26 16:55:04 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -442,11 +442,6 @@ void TFile::Init(Bool_t create)
       return;
    fInitDone = kTRUE;
 
-   if (!fIsRootFile) {
-      gDirectory = gROOT;
-      return;
-   }
-
    if (fArchive) {
       if (fOption != "READ") {
          Error("Init", "archive %s can only be opened in read mode", GetName());
@@ -474,6 +469,11 @@ void TFile::Init(Bool_t create)
          fIsArchive = kFALSE;
          goto zombie;
       }
+   }
+
+   if (!fIsRootFile) {
+      gDirectory = gROOT;
+      return;
    }
 
    Int_t nfree;
@@ -675,6 +675,9 @@ void TFile::Close(Option_t *option)
    opt.ToLower();
 
    if (!IsOpen()) return;
+
+ 
+   if (gMonitoringWriter && (!fWritable)) gMonitoringWriter->SendFileReadProgress(this,true);
 
    if (fIsArchive || !fIsRootFile) {
       SysClose(fD);
@@ -1254,6 +1257,11 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 
       Double_t start = 0;
       if (gPerfStats != 0) start = TTimeStamp();
+
+      if (gMonitoringWriter) {
+	 gMonitoringWriter->SendFileReadProgress(this);
+	 printf("Sending Stats\n");
+      }
 
       while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
          ResetErrno();
@@ -2209,6 +2217,8 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    TPluginHandler *h;
    TFile *f = 0;
 
+   IncrementFileCounter();
+
    // change names from e.g. /castor/cern.ch/alice/file.root to
    // castor:/castor/cern.ch/alice/file.root as recognized by the plugin manager
    TUrl urlname(name, kTRUE);
@@ -2277,7 +2287,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
       delete f;
       f = 0;
    }
-
+   if (gMonitoringWriter && (!f->IsWritable())) gMonitoringWriter->SendFileReadProgress(f,true);
    return f;
 }
 

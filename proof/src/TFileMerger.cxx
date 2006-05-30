@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.5 2006/03/21 14:54:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.6 2006/05/15 09:45:03 brun Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -166,6 +166,7 @@ Bool_t TFileMerger::Cp(const char *src, const char *dst, Bool_t progressbar,
       }
 
       Long64_t b0 = sfile->GetBytesRead();
+      sfile->Seek(totalread,TFile::kBeg);
       readop = sfile->ReadBuffer(copybuffer, readsize);
       read   = sfile->GetBytesRead() - b0;
       if (read < 0) {
