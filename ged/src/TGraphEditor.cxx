@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.16 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.17 2006/04/13 13:22:31 antcheva Exp $
 // Author: Carsten Hof   16/08/04
 
 /*************************************************************************
@@ -345,8 +345,10 @@ void TGraphEditor::DoShape(Int_t s)
    if (opt.Contains("L") || opt.Contains("C")) {
       if (fGraph->GetLineWidth()<0) fExSide->SetState(kButtonDown, kFALSE);
       else fExSide->SetState(kButtonUp, kFALSE);
+      fWidthCombo->SetEnabled(kTRUE);
    } else {
       fExSide->SetState(kButtonDisabled);
+      fWidthCombo->SetEnabled(kFALSE);
    }
 
    SetDrawOption(opt);
