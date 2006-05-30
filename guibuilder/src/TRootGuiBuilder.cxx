@@ -37,6 +37,9 @@
 #include "TGListTree.h"
 #include "TImage.h"
 #include "TTimer.h"
+#include "TGTextEdit.h"
+#include "TGTab.h"
+#include "TGListBox.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -688,7 +691,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddAction(act, "Input");
 
    act = new TGuiBldAction("TGTextEdit", "Text Edit", kGuiBldCtor);
-   act->fAct = "new TGTextEdit()";
+   act->fAct = "TRootGuiBuilder::BuildTextEdit()";
    act->fPic = "bld_text.xpm";
    AddAction(act, "Input");
 
@@ -703,7 +706,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddAction(act, "Input");
 
    act = new TGuiBldAction("TGListBox", "List Box", kGuiBldCtor);
-   act->fAct = "new TGListBox()";
+   act->fAct = "TRootGuiBuilder::BuildListBox()";
    act->fPic = "bld_listbox.xpm";
    AddAction(act, "Input");
 
@@ -730,6 +733,11 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act = new TGuiBldAction("TGListTree", "List Tree", kGuiBldCtor);
    act->fAct = "TRootGuiBuilder::BuildListTree()";
    act->fPic = "bld_listtree.xpm";
+   AddAction(act, "Complex Input");
+
+   act = new TGuiBldAction("TGShutter", "Shutter", kGuiBldCtor);
+   act->fAct = "TRootGuiBuilder::BuildShutter()";
+   act->fPic = "bld_shutter.png";
    AddAction(act, "Complex Input");
 
    act = new TGuiBldAction("TGLabel", "Text Label", kGuiBldCtor);
@@ -790,7 +798,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddAction(act, "Containers");
 
    act = new TGuiBldAction("TGTab", "Tabbed Frame", kGuiBldCtor);
-   act->fAct = "new TGTab()";
+   act->fAct = "TRootGuiBuilder::BuildTab()";
    act->fPic = "bld_tab.xpm";
    AddAction(act, "Containers");
 
@@ -798,7 +806,6 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fAct = "TRootGuiBuilder::BuildCanvas()";
    act->fPic = "bld_canvas.xpm";
    AddAction(act, "Containers");
-
 /*
    act = new TGuiBldAction("TGVSplitter", "Horizontal Panes", kGuiBldFunc);
    act->fAct = "TRootGuiBuilder::VSplitter()";
@@ -810,7 +817,6 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fPic = "bld_vpaned.xpm";
    AddAction(act, "Containers");
 */
-
    act = new TGuiBldAction("TGColorSelect", "Color Selector", kGuiBldFunc);
    act->fAct = "new TGColorSelect()";
    act->fPic = "bld_colorselect.xpm";
@@ -1911,14 +1917,18 @@ TGFrame *TRootGuiBuilder::VSplitter()
    ret->SetCleanup(kDeepCleanup);
    TGVerticalFrame *v1 = new TGVerticalFrame(ret, 40, 10, kSunkenFrame |  kFixedWidth);
    ret->AddFrame(v1, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
+   //v1->SetEditDisabled(kEditDisableGrab);
 
    TGVSplitter *splitter = new TGVSplitter(ret);
    splitter->SetFrame(v1, kTRUE);
    ret->AddFrame(splitter, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
+   splitter->SetEditDisabled(kEditDisableBtnEnable);
 
    TGVerticalFrame *v2 = new TGVerticalFrame(ret, 10, 10, kSunkenFrame);
    v2->ChangeOptions(kSunkenFrame);
    ret->AddFrame(v2, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY));
+   //v2->SetEditDisabled(kEditDisableGrab);
+   ret->SetEditDisabled(kEditDisableLayout);
 
    ret->MapSubwindows();
    ret->SetLayoutBroken(kFALSE);
@@ -1934,14 +1944,18 @@ TGFrame *TRootGuiBuilder::HSplitter()
    ret->SetCleanup(kDeepCleanup);
    TGHorizontalFrame *v1 = new TGHorizontalFrame(ret, 10, 40, kSunkenFrame | kFixedHeight);
    ret->AddFrame(v1, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+   //v1->SetEditDisabled(kEditDisableGrab);
 
    TGHSplitter *splitter = new TGHSplitter(ret);
    splitter->SetFrame(v1, kTRUE);
    ret->AddFrame(splitter, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+   splitter->SetEditDisabled(kEditDisable);
 
    TGHorizontalFrame *v2 = new TGHorizontalFrame(ret, 10, 10);
    v2->ChangeOptions(kSunkenFrame);
    ret->AddFrame(v2, new TGLayoutHints(kLHintsBottom | kLHintsExpandX | kLHintsExpandY));
+   //v2->SetEditDisabled(kEditDisableGrab);
+   ret->SetEditDisabled(kEditDisableLayout);
 
    ret->MapSubwindows();
    ret->SetLayoutBroken(kFALSE);
@@ -2114,7 +2128,7 @@ TGFrame *TRootGuiBuilder::BuildListTree()
 //______________________________________________________________________________
 TGFrame *TRootGuiBuilder::BuildCanvas()
 {
-   // Helper method used in guibuilding
+   // Helper method used in guibuilding to create TGCanvas widget
 
    TGCanvas *canvas = new TGCanvas(gClient->GetRoot(), 100, 100);
    TGCompositeFrame *cont = new TGCompositeFrame(canvas->GetViewPort(), 200, 200, 
@@ -2131,4 +2145,148 @@ TGFrame *TRootGuiBuilder::BuildCanvas()
    canvas->SetContainer(cont);
  //  canvas-MapSubwindows();
    return canvas;
+}
+
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildShutter()
+{
+   // Helper method used in guibuilding to create TGShutter widget
+
+   TGShutterItem *item;
+   TGCompositeFrame *container;
+   const TGPicture  *buttonpic;
+   TGPictureButton  *button;
+
+   TGLayoutHints *l = new TGLayoutHints(kLHintsTop | kLHintsCenterX,
+                                           5, 5, 5, 0);
+   TGShutter *shut = new TGShutter();
+
+   item = shut->AddPage("Histograms");
+   container = (TGCompositeFrame *)item->GetContainer();
+   buttonpic = gClient->GetPicture("h1_s.xpm");
+
+   if (buttonpic) {
+      button = new TGPictureButton(container, buttonpic);
+      button->SetToolTipText("TH1");
+      container->AddFrame(button, l);
+   }
+   buttonpic = gClient->GetPicture("h2_s.xpm");
+
+   if (buttonpic) {
+      button = new TGPictureButton(container, buttonpic);
+      button->SetToolTipText("TH2");
+      container->AddFrame(button, l);
+   }
+   buttonpic = gClient->GetPicture("h3_s.xpm");
+
+   if (buttonpic) {
+      button = new TGPictureButton(container, buttonpic);
+      button->SetToolTipText("TH3");
+      container->AddFrame(button, l);
+   }
+   buttonpic = gClient->GetPicture("profile_s.xpm");
+
+   if (buttonpic) {
+      button = new TGPictureButton(container, buttonpic);
+      button->SetToolTipText("TProfile");
+      container->AddFrame(button, l);
+   }
+
+   // new page
+   item = shut->AddPage("Functions");
+   container = (TGCompositeFrame *)item->GetContainer();
+   buttonpic = gClient->GetPicture("f1_s.xpm");
+
+   if (buttonpic) {
+      button = new TGPictureButton(container, buttonpic);
+      button->SetToolTipText("TF1");
+      container->AddFrame(button, l);
+   }
+   buttonpic = gClient->GetPicture("f2_s.xpm");
+
+   if (buttonpic) {
+      button = new TGPictureButton(container, buttonpic);
+      button->SetToolTipText("TF2");
+      container->AddFrame(button, l);
+   }
+
+   // new page
+   item = shut->AddPage("Trees");
+   container = (TGCompositeFrame *)item->GetContainer();
+   buttonpic = gClient->GetPicture("ntuple_s.xpm");
+
+   if (buttonpic) {
+      button = new TGPictureButton(container, buttonpic);
+      button->SetToolTipText("TNtuple");
+      container->AddFrame(button, l);
+   }
+   buttonpic = gClient->GetPicture("tree_s.xpm");
+
+   if (buttonpic) {
+      button = new TGPictureButton(container, buttonpic);
+      button->SetToolTipText("TTree");
+      container->AddFrame(button, l);
+   }
+   buttonpic = gClient->GetPicture("chain_s.xpm");
+
+   if (buttonpic) {
+      button = new TGPictureButton(container, buttonpic);
+      button->SetToolTipText("TChain");
+      container->AddFrame(button, l);
+   }
+
+   shut->MapSubwindows();
+   return shut;
+}
+
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildTextEdit()
+{
+   // Helper method to create TGTextEdit widget
+
+   TGTextEdit *te = new TGTextEdit();
+
+   te->AddLine("all work and no play makes jack a pretty");
+   te->AddLine("dull boy. all work and no play makes jack");
+   te->AddLine("a pretty dull boy. all work and no play ");
+   te->AddLine("makes jack a pretty dull boy. all work");
+   te->AddLine("and no play makes jack a pretty dull boy.");
+
+   te->MapSubwindows();
+   te->Layout();
+
+   return te;
+}
+
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildTab()
+{
+   // Helper method to create TGTab widget
+
+   TGTab *tab = new TGTab();
+
+   tab->AddTab("Tab1");
+   tab->AddTab("Tab2");
+   tab->MapSubwindows();
+
+   return tab;
+}
+
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildListBox()
+{
+   // Helper method to create TGListBox widget
+
+   TGListBox *lb = new TGListBox();
+
+   lb->AddEntry("Entry 1", 0);
+   lb->AddEntry("Entry 2", 1);
+   lb->AddEntry("Entry 3", 2);
+   lb->AddEntry("Entry 4", 3);
+   lb->AddEntry("Entry 5", 4);
+   lb->AddEntry("Entry 6", 5);
+   lb->AddEntry("Entry 7", 6);
+   lb->MapSubwindows();
+
+   return lb;
 }

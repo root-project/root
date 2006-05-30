@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.7 2006/04/28 19:21:43 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.8 2006/05/28 20:15:09 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -144,6 +144,10 @@ public:
    static TGPopupMenu *CreatePopup();
    static TGFrame     *BuildListTree();
    static TGFrame     *BuildCanvas();
+   static TGFrame     *BuildShutter();
+   static TGFrame     *BuildTextEdit();
+   static TGFrame     *BuildTab();
+   static TGFrame     *BuildListBox();
 
    ClassDef(TRootGuiBuilder,0)  // ROOT GUI Builder
 };
