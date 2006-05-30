@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.14 2006/05/23 11:59:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.15 2006/05/29 07:59:27 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -178,7 +178,7 @@ Bool_t TWebFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
          if (GetFromWeb(&buf[k], n, msg) == -1)
             return kTRUE;
          msg = msgh;
-         k = n;
+         k += n;
          n = 0;
       }
    }
