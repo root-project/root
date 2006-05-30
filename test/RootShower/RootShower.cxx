@@ -561,7 +561,7 @@ void RootShower::CloseWindow()
     // Got close message for this RootShower. The EventDislay and the
     // application will be terminated.
 
-    if(fModified) {
+    if (fModified) {
         new RootShowerMsgBox(gClient->GetRoot(),this, 400, 200);
         if ( fOk ) {
             fRootShowerEnv->SetValue("RootShower.fFirstParticle",fFirstParticle);
@@ -613,10 +613,10 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
             case kCM_BUTTON:
             case kCM_MENU:
-                switch(parm1) {
+                switch (parm1) {
 
                     case M_EVENT_NEXT:
-                        if(fDisplayFrame->GetCurrent() != 0)
+                        if (fDisplayFrame->GetCurrent() != 0)
                             fDisplayFrame->SetTab(0);
                         Initialize(0);
                         fStatusBar->SetText("Simulation running, please wait...",0);
@@ -631,7 +631,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         fStatusBar->SetText(strtmp,0);
                         break;
                     case M_EVENT_SELECT:
-                        if(fDisplayFrame->GetCurrent() != 1)
+                        if (fDisplayFrame->GetCurrent() != 1)
                             fDisplayFrame->SetTab(1);
                         if ((item = fEventListTree->GetSelected()) != 0)
                             OnShowSelected(item);
@@ -669,7 +669,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_FILE_OPEN:
-                        if(fIsRunning) break;
+                        if (fIsRunning) break;
                         fi.fFileTypes = filetypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen,&fi);
                         if (!fi.fFilename) return kTRUE;
@@ -689,7 +689,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_FILE_SAVEAS:
-                        if(fIsRunning) break;
+                        if (fIsRunning) break;
                         fi.fFileTypes = filetypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDSave,&fi);
                         if (!fi.fFilename) return kTRUE;
@@ -701,7 +701,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_SHOW_PROCESS:
-                        if(fShowProcess) {
+                        if (fShowProcess) {
                             fMenuEvent->UnCheckEntry(M_SHOW_PROCESS);
                             fShowProcess = kFALSE;
                         }
@@ -712,7 +712,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_ANIMATE_GIF:
-                        if(fCreateGIFs) {
+                        if (fCreateGIFs) {
                             fMenuEvent->UnCheckEntry(M_ANIMATE_GIF);
                             fCreateGIFs = kFALSE;
                         }
@@ -723,9 +723,9 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_SETTINGS_DLG:
-                        if(fIsRunning) break;
+                        if (fIsRunning) break;
                         new SettingsDialog(fClient->GetRoot(), this, 400, 200);
-                        if(fSettingsModified) {
+                        if (fSettingsModified) {
                             fEvent->Init(0, fFirstParticle, fE0, fB);
                             Initialize(0);
                             gRootShower->Modified();
@@ -746,7 +746,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_SHOW_INFOS:
-                        if(fIsRunning) break;
+                        if (fIsRunning) break;
                         ShowInfos();
                         break;
 
@@ -810,14 +810,14 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_SHOW_3D:
-                        if(fIsRunning) break;
+                        if (fIsRunning) break;
                         fCA->cd();
                         fCA->GetViewer3D("ogl");
                         break;
 
                     case M_SHOW_TRACK:
-                        if(fIsRunning) break;
-                        if(fDisplayFrame->GetCurrent() != 1)
+                        if (fIsRunning) break;
+                        if (fDisplayFrame->GetCurrent() != 1)
                             fDisplayFrame->SetTab(1);
                         if ((item = fEventListTree->GetSelected()) != 0)
                             OnShowSelected(item);
@@ -881,10 +881,10 @@ void RootShower::Initialize(Int_t set_angles)
     fCB->SetFillColor(1);
     fCB->Clear();
     gGeoManager->GetTopVolume()->Draw();
-
     fCB->GetView()->SetPerspective();
-    if(set_angles)
+    if (set_angles)
         fCB->GetView()->SideView();
+    gGeoManager->GetTopVolume()->Draw();
     fCB->cd();
     fCB->Update();
 
@@ -893,8 +893,9 @@ void RootShower::Initialize(Int_t set_angles)
     fCA->Clear();
     gGeoManager->GetTopVolume()->Draw();
     fCA->GetView()->SetPerspective();
-    if(set_angles)
+    if (set_angles)
         fCA->GetView()->SideView();
+    gGeoManager->GetTopVolume()->Draw();
     fCA->cd();
     fCA->Update();
     fStatusBar->SetText("",1);
@@ -909,7 +910,7 @@ void RootShower::produce()
     Char_t    strtmp[80];
 
     // Check if some Event parameters have changed
-    if((fEvent->GetHeader()->GetDate() != fEventTime) ||
+    if ((fEvent->GetHeader()->GetDate() != fEventTime) ||
        (fEvent->GetHeader()->GetPrimary() != fFirstParticle) ||
        (fEvent->GetHeader()->GetEnergy() != fE0) ||
        (fEvent->GetB() != fB)) {
@@ -927,15 +928,15 @@ void RootShower::produce()
     first_pass = kTRUE;
     old_num = -1;
     // loop events until user interrupt or until all particles are dead
-    while((!IsInterrupted()) && (fEvent->GetNAlives() > 0)) {
+    while ((!IsInterrupted()) && (fEvent->GetNAlives() > 0)) {
         gSystem->ProcessEvents();  // handle GUI events
-        if(first_pass && fEvent->GetTotal() > 1) {
+        if (first_pass && fEvent->GetTotal() > 1) {
             fEventListTree->OpenItem(gBaseLTI);
             fEventListTree->OpenItem(gLTI[0]);
             fClient->NeedRedraw(fEventListTree);
             first_pass = kFALSE;
         }
-        if(fEvent->GetTotal() > old_num) {
+        if (fEvent->GetTotal() > old_num) {
             sprintf(strtmp,"Simulation running, particles : %4d, please wait...",fEvent->GetTotal());
             old_num = fEvent->GetTotal();
             fStatusBar->SetText(strtmp,0);
@@ -944,20 +945,20 @@ void RootShower::produce()
         local_last = fEvent->GetLast();
         local_num = 0;
         local_end = kFALSE;
-        while((!IsInterrupted()) && (local_end == kFALSE) && (local_num < (local_last + 1))) {
+        while ((!IsInterrupted()) && (local_end == kFALSE) && (local_num < (local_last + 1))) {
             gSystem->ProcessEvents();  // handle GUI events
             // Update display here if fast machine...
-            if(fEvent->GetParticle(local_num)->GetStatus() != DEAD) {
-                if(fEvent->Action(local_num) == DEAD)
+            if (fEvent->GetParticle(local_num)->GetStatus() != DEAD) {
+                if (fEvent->Action(local_num) == DEAD)
                     local_end = kTRUE;
-                if(fEvent->GetParticle(local_num)->GetStatus() == CREATED)
+                if (fEvent->GetParticle(local_num)->GetStatus() == CREATED)
                     fEvent->GetParticle(local_num)->SetStatus(ALIVE);
             }
             local_num ++;
         }
     }
     fMenuEvent->EnableEntry(M_SHOW_INFOS);
-    if(!IsInterrupted()) {
+    if (!IsInterrupted()) {
        fMenuEvent->EnableEntry(M_SHOW_3D);
        fToolBar->GetButton(M_SHOW_3D)->SetState(kButtonUp);
        fToolBar->GetButton(M_FILE_SAVEAS)->SetState(kButtonUp);
@@ -975,7 +976,7 @@ void RootShower::OnShowerProduce()
     SetWindowName("Root Shower Event Display");
 
     // animation logo handling
-    if(fPicReset > 0) fPicIndex = 1;
+    if (fPicReset > 0) fPicIndex = 1;
     // animation timer
     if (!fTimer) fTimer = new TTimer(this, fPicDelay);
     fTimer->Reset();
@@ -986,12 +987,12 @@ void RootShower::OnShowerProduce()
     produce();
     Interrupt(kFALSE);
     gifindex = 0;
-    for(i=0;i<=fEvent->GetTotal();i++) {
+    for (i=0;i<=fEvent->GetTotal();i++) {
         gSystem->ProcessEvents();  // handle GUI events
-        if(IsInterrupted()) break;
+        if (IsInterrupted()) break;
         // if particle has no child, represent it by a leaf,
         // otherwise by a branch
-        if(fEvent->GetParticle(i)->GetChildId(0) == 0) {
+        if (fEvent->GetParticle(i)->GetChildId(0) == 0) {
             lpic = gClient->GetPicture("leaf_t.xpm");
             lspic = gClient->GetPicture("leaf_t.xpm");
             gLTI[i]->SetPictures(lpic, lspic);
@@ -1002,7 +1003,7 @@ void RootShower::OnShowerProduce()
             gLTI[i]->SetPictures(bpic, bspic);
         }
         // Show only charged and massive particles...
-        if((fEvent->GetParticle(i)->GetPdgCode() != PHOTON) &&
+        if ((fEvent->GetParticle(i)->GetPdgCode() != PHOTON) &&
            (fEvent->GetParticle(i)->GetPdgCode() != NEUTRINO_E) &&
            (fEvent->GetParticle(i)->GetPdgCode() != NEUTRINO_MUON) &&
            (fEvent->GetParticle(i)->GetPdgCode() != NEUTRINO_TAU) &&
@@ -1011,16 +1012,16 @@ void RootShower::OnShowerProduce()
            (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
             // Fill histogram for particle's energy loss
             fHisto_dEdX->Fill(fEvent->GetParticle(i)->GetELoss());
-            for(j=0;j<fEvent->GetParticle(i)->GetNTracks();j++)
+            for (j=0;j<fEvent->GetParticle(i)->GetNTracks();j++)
                fEvent->GetParticle(i)->GetTrack(j)->Draw();
             // show track by track if "show process" has been choosen
             // into the menu
-            if(fShowProcess) {
+            if (fShowProcess) {
                 fCA->Modified();
                 fCA->Update();
                 // create one gif image by step if "Animated GIF"
                 // has been choosen into the menu
-                if(fCreateGIFs) {
+                if (fCreateGIFs) {
                     sprintf(gifname,"event_%04d.gif",gifindex);
                     fCA->SaveAs(gifname);
                     gifindex++;
@@ -1035,7 +1036,7 @@ void RootShower::OnShowerProduce()
     fCA->Update();
     fPadC->cd();
     // do not fit if not enough particles
-    if(fHisto_dEdX->GetEntries() > 10) {
+    if (fHisto_dEdX->GetEntries() > 10) {
        fHisto_dEdX->Fit("landau","L");
        TF1 *f1 = fHisto_dEdX->GetFunction("landau");
        //delete fit function is fit is a non sense
@@ -1061,7 +1062,7 @@ void RootShower::OnShowerProduce()
     fEventListTree->OpenItem(gLTI[0]);
     fTimer->TurnOff();
     fIsRunning = kFALSE;
-    if(fPicReset > 0)
+    if (fPicReset > 0)
         fTitleFrame->ChangeRightLogo(1);
 }
 
@@ -1088,13 +1089,13 @@ void RootShower::OnShowSelected(TGListTreeItem *item)
     fCB->cd();
     fCB->Update();
     retval = -1;
-    for(i=0;i<=fEvent->GetTotal();i++) {
-        if(gLTI[i] == item) {
+    for (i=0;i<=fEvent->GetTotal();i++) {
+        if (gLTI[i] == item) {
             retval = i;
             break;
         }
     }
-    if((retval > -1) &&
+    if ((retval > -1) &&
        (fEvent->GetParticle(i)->GetPdgCode() != PHOTON) &&
        (fEvent->GetParticle(i)->GetPdgCode() != NEUTRINO_E) &&
        (fEvent->GetParticle(i)->GetPdgCode() != NEUTRINO_MUON) &&
@@ -1102,7 +1103,7 @@ void RootShower::OnShowSelected(TGListTreeItem *item)
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_E) &&
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_MUON) &&
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
-        for(j=0;j<fEvent->GetParticle(retval)->GetNTracks();j++)
+        for (j=0;j<fEvent->GetParticle(retval)->GetNTracks();j++)
            fEvent->GetParticle(retval)->GetTrack(j)->Draw();
     }
     fCB->GetView()->SetPerspective();
@@ -1126,7 +1127,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
     fEvent->Init(0, fFirstParticle, fE0, fB);
     fHisto_dEdX->Reset();
     tree = (TTree *)f->Get("RootShower");
-    if(tree == NULL) return;
+    if (tree == NULL) return;
     branch = tree->GetBranch("Event");
     branch->SetAddress(&fEvent);
     tree->GetEntry(0, 1);
@@ -1136,13 +1137,13 @@ void RootShower::OnOpenFile(const Char_t *filename)
     gGeoManager->Import(filename, "detector");
     Initialize(1);
 
-    for(i=0;i<=fEvent->GetTotal();i++) {
+    for (i=0;i<=fEvent->GetTotal();i++) {
         gTmpLTI = fEventListTree->AddItem(gBaseLTI, fEvent->GetParticle(i)->GetName());
         sprintf(strtmp,"%1.2f GeV",fEvent->GetParticle(i)->Energy());
         fEventListTree->SetToolTipItem(gTmpLTI, strtmp);
         gLTI[i] = gTmpLTI;
 
-        if(fEvent->GetParticle(i)->GetChildId(0) == 0) {
+        if (fEvent->GetParticle(i)->GetChildId(0) == 0) {
             lpic = gClient->GetPicture("leaf_t.xpm");
             lspic = gClient->GetPicture("leaf_t.xpm");
             gLTI[i]->SetPictures(lpic, lspic);
@@ -1153,7 +1154,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
             gLTI[i]->SetPictures(bpic, bspic);
         }
 
-        if((fEvent->GetParticle(i)->GetPdgCode() != PHOTON) &&
+        if ((fEvent->GetParticle(i)->GetPdgCode() != PHOTON) &&
            (fEvent->GetParticle(i)->GetPdgCode() != NEUTRINO_E) &&
            (fEvent->GetParticle(i)->GetPdgCode() != NEUTRINO_MUON) &&
            (fEvent->GetParticle(i)->GetPdgCode() != NEUTRINO_TAU) &&
@@ -1162,13 +1163,13 @@ void RootShower::OnOpenFile(const Char_t *filename)
            (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
             // Fill histogram for particle's energy loss
             fHisto_dEdX->Fill(fEvent->GetParticle(i)->GetELoss());
-            for(j=0;j<fEvent->GetParticle(i)->GetNTracks();j++)
+            for (j=0;j<fEvent->GetParticle(i)->GetNTracks();j++)
                fEvent->GetParticle(i)->GetTrack(j)->Draw();
         }
     }
     // Reparent each list tree item regarding the
     // corresponding particle relations
-    for(i=1;i<=fEvent->GetTotal();i++) {
+    for (i=1;i<=fEvent->GetTotal();i++) {
         fEventListTree->Reparent(gLTI[i],
             gLTI[fEvent->GetParticle(i)->GetFirstMother()]);
     }
@@ -1182,7 +1183,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
     fStatusBar->SetText(strtmp,0);
     fPadC->cd();
     // do not fit if not enough particles
-    if(fHisto_dEdX->GetEntries() > 10) {
+    if (fHisto_dEdX->GetEntries() > 10) {
        fHisto_dEdX->Fit("landau","L");
        TF1 *f1 = fHisto_dEdX->GetFunction("landau");
        //delete fit function is fit is a non sense
@@ -1301,7 +1302,7 @@ Bool_t RootShower::HandleKey(Event_t *event)
             break;
       }
       if (event->fState & kKeyControlMask) {   // Cntrl key modifier pressed
-         switch((EKeySym)keysym & ~0x20) {   // treat upper and lower the same
+         switch ((EKeySym)keysym & ~0x20) {   // treat upper and lower the same
             case kKey_A:
                SendMessage(this, MK_MSG(kC_COMMAND, kCM_MENU),
                            M_FILE_SAVEAS, 0);
@@ -1335,7 +1336,7 @@ Bool_t RootShower::HandleTimer(TTimer *)
 {
    // Logo animation timer handling.
 
-   if(fPicIndex > fPicNumber) fPicIndex = 1;
+   if (fPicIndex > fPicNumber) fPicIndex = 1;
    fTitleFrame->ChangeRightLogo(fPicIndex);
    fPicIndex++;
    fTimer->Reset();
@@ -1349,10 +1350,10 @@ Int_t RootShower::DistancetoPrimitive(Int_t px, Int_t py)
     Int_t i,j;
     Int_t dist = 9999;
 
-    if(fEvent->GetTotal() <= 0) return 0;
+    if (fEvent->GetTotal() <= 0) return 0;
     // Browse every track and get related particle infos.
-    for(i=0;i<fEvent->GetTotal();i++) {
-        for(j=0;j<fEvent->GetParticle(i)->GetNTracks();j++) {
+    for (i=0;i<fEvent->GetTotal();i++) {
+        for (j=0;j<fEvent->GetParticle(i)->GetNTracks();j++) {
            dist = fEvent->GetParticle(i)->GetTrack(j)->DistancetoPrimitive(px, py);
            if (dist < 2) {
                gPad->SetSelected((TObject*)fEvent->GetParticle(i));

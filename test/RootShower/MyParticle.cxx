@@ -99,7 +99,7 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
     fChild[3] = 0;
     fChild[4] = 0;
     fChild[5] = 0;
-    if(GetMass() == 0.0)
+    if (GetMass() == 0.0)
         energy = pMomentum.Mag();
     else
         energy = TMath::Sqrt((pMomentum * pMomentum)
@@ -123,7 +123,7 @@ void MyParticle::SetMoment(const TVector3 &mom)
 {
     // Set particle momentum with TVector3 members
     Double_t energy;
-    if(GetMass() == 0.0)
+    if (GetMass() == 0.0)
         energy = mom.Mag();
     else
         energy = TMath::Sqrt((mom * mom) +  (GetMass() * GetMass()));
@@ -136,13 +136,13 @@ void MyParticle::GenerateTimeOfDecay()
     // Generates time of decay for this type of particle.
     Int_t i;
     fTimeOfDecay = (GetPDG()->Lifetime() > 0 && GetPDG()->Lifetime() < 1e8)
-	  ? gRandom->Exp(GetPDG()->Lifetime())
-	  : GetPDG()->Lifetime();
-    if(fTimeOfDecay == 0.0) {
+     ? gRandom->Exp(GetPDG()->Lifetime())
+     : GetPDG()->Lifetime();
+    if (fTimeOfDecay == 0.0) {
         Int_t my_code = GetPdgCode();
         fTimeOfDecay = 1.0e-20;
-        for(i=0;i<total_defs;i++) {
-            if(particle_def[i].code == my_code) {
+        for (i=0;i<total_defs;i++) {
+            if (particle_def[i].code == my_code) {
                 fTimeOfDecay = particle_def[i].lifetime;
                 break;
             }
@@ -165,8 +165,8 @@ const Char_t *MyParticle::GetName() const
     Int_t i;
     Int_t my_code = GetPdgCode();
 
-    for(i=0;i<total_defs;i++) {
-        if(particle_def[i].code == my_code)
+    for (i=0;i<total_defs;i++) {
+        if (particle_def[i].code == my_code)
             return(particle_def[i].name);
     }
     return ("Unknown");
@@ -206,7 +206,7 @@ void MyParticle::SetNextPoint(Int_t color)
    TPolyLine3D *poly;
    poly = (TPolyLine3D *)fTracks->At(fNtrack);
    poly->SetNextPoint(fLocation->x(), fLocation->y(), fLocation->z());
-   if(color != poly->GetLineColor())
+   if (color != poly->GetLineColor())
       AddTrack(fLocation->x(), fLocation->y(), fLocation->z(), color);
 }
 

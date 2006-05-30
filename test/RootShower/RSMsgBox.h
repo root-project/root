@@ -59,7 +59,7 @@ private:
 
 public:
     RootShowerMsgBox(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
-	                 UInt_t options = kMainFrame | kVerticalFrame);
+                    UInt_t options = kMainFrame | kVerticalFrame);
     virtual ~RootShowerMsgBox();
 
     virtual void CloseWindow();

@@ -135,7 +135,7 @@ void MyDetector::Init()
 
     gGeoManager->CloseGeometry();
 
-    for(i=0;i<6;i++) {
+    for (i=0;i<6;i++) {
         Material = fVolume[i+1]->GetMaterial();
         // Ionisation constant in MeV/cm
         fI[i] = 16.0e-06 * (TMath::Power(Material->GetZ(),0.9));

@@ -59,7 +59,7 @@ private:
 public:
   
     RootShowerAbout(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
-	                UInt_t options = kMainFrame | kVerticalFrame);
+                   UInt_t options = kMainFrame | kVerticalFrame);
     virtual ~RootShowerAbout();
 
     virtual void CloseWindow();

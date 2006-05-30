@@ -165,7 +165,7 @@ SettingsDialog::SettingsDialog(const TGWindow *p, const TGWindow *main, UInt_t w
     fF4->Resize(fF4->GetDefaultWidth(),fF3->GetDefaultHeight());
 
     for (i = 0; choice_def[i].pdg_name; i++) {
-        if(gRootShower->fFirstParticle == choice_def[i].pdg_code) {
+        if (gRootShower->fFirstParticle == choice_def[i].pdg_code) {
             fListBox->Select(i);
             fListBox->GetScrollBar()->SetPosition(i-2);
             break;
@@ -241,10 +241,10 @@ Bool_t SettingsDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
          switch (GET_SUBMSG(msg)) {
             case kCM_BUTTON:
-               switch(parm1) {
+               switch (parm1) {
                   case 1:
                      Selection = fListBox->GetSelected();
-                     if(Selection > 37) {
+                     if (Selection > 37) {
                          new TGMsgBox(fClient->GetRoot(), this, "Particle selection",
                                "This particle is not implemented yet !",
                                kMBIconExclamation, kMBOk, &retval);

@@ -65,7 +65,7 @@ void MyEvent::Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0)
    // generate array of energies threshold used
    // to give a track color related to the particle
    // energy
-   for(i=0;i<16;i++)
+   for (i=0;i<16;i++)
       fEThreshold[i] = EMass + E_0 / (2 << i);
 
    Clear();
@@ -143,14 +143,14 @@ Int_t MyEvent::Action(Int_t id)
    // main event's action
    Int_t  nchild;
    CheckMatter(id);
-   if(GetParticle(id)->GetDecayType() == UNDEFINE)
+   if (GetParticle(id)->GetDecayType() == UNDEFINE)
       DefineDecay(id);
-   if(GetParticle(id)->GetPdgCode() == PHOTON) {
+   if (GetParticle(id)->GetPdgCode() == PHOTON) {
       // compute the step delta x to be covered by the particle
       TVector3 delta_x(GetParticle(id)->GetvMoment() *
                (CSpeed * fDetector.GetdT(fMatter) / GetParticle(id)->Energy()));
       // check if moved too far (out of detector's bouds)
-      if(Move(id, delta_x) == DEAD)
+      if (Move(id, delta_x) == DEAD)
          // set its status as dead
          DeleteParticle(id);
       else {
@@ -158,8 +158,8 @@ Int_t MyEvent::Action(Int_t id)
          // apply pair production and check if particle is dead. If not,
          // increment total alive particles by the two created children,
          // then set the particle status as dead
-         if(GetParticle(id)->GetPassed() >= GetParticle(id)->GetDecayLength()) {
-            if(PairCreation(id) == DEAD) return(DEAD);
+         if (GetParticle(id)->GetPassed() >= GetParticle(id)->GetDecayLength()) {
+            if (PairCreation(id) == DEAD) return(DEAD);
             else {
                fAliveParticles += 2;
                DeleteParticle(id);
@@ -167,7 +167,7 @@ Int_t MyEvent::Action(Int_t id)
          }
       }
    }
-   else if((GetParticle(id)->GetPdgCode() == NEUTRINO_E) ||
+   else if ((GetParticle(id)->GetPdgCode() == NEUTRINO_E) ||
            (GetParticle(id)->GetPdgCode() == NEUTRINO_TAU) ||
            (GetParticle(id)->GetPdgCode() == NEUTRINO_MUON) ||
            (GetParticle(id)->GetPdgCode() == ANTINEUTRINO_E) ||
@@ -180,27 +180,27 @@ Int_t MyEvent::Action(Int_t id)
    }
    else { // particle is not a photon or neutrino
       // if current particle is charged, apply magnetic field influence
-      if(GetParticle(id)->GetPDG()->Charge() != 0)
+      if (GetParticle(id)->GetPDG()->Charge() != 0)
          ScatterAngle(id);
-      if((fB != 0) && (GetParticle(id)->GetPDG()->Charge() != 0))
+      if ((fB != 0) && (GetParticle(id)->GetPDG()->Charge() != 0))
          MagneticField(id);
       // compute the step delta x to be covered by the particle
       TVector3 delta_x(GetParticle(id)->GetvMoment() *  (CSpeed *
                        fDetector.GetdT(fMatter) / GetParticle(id)->Energy()));
       // check if moved too far (out of detector's bouds)
-      if(Move(id, delta_x) == DEAD) {
+      if (Move(id, delta_x) == DEAD) {
          // set its status as dead
          DeleteParticle(id);
       }
       else {
          // check energy loss, and if too much energy loss
          // ( particle at rest ) set its status as dead
-         if(DEDX(id) == DEAD) DeleteParticle(id);
+         if (DEDX(id) == DEAD) DeleteParticle(id);
          else {
             // if at end of particle's life time, decay it
-            if(CheckDecayTime(id) == 1) {
+            if (CheckDecayTime(id) == 1) {
                // if no child found
-               if((nchild = Decay(id)) == -1) return(DEAD);
+               if ((nchild = Decay(id)) == -1) return(DEAD);
                else {
                   // else increment total alive particles by amount
                   // of particle's children
@@ -213,18 +213,18 @@ Int_t MyEvent::Action(Int_t id)
             // defined decay type and check if particle is dead. If not,
             // increment total alive particles by the two created children,
             // then set the particle status as dead
-            else if(GetParticle(id)->GetPassed() >=
+            else if (GetParticle(id)->GetPassed() >=
                     GetParticle(id)->GetDecayLength()) {
-               switch(GetParticle(id)->GetDecayType()) {
+               switch (GetParticle(id)->GetDecayType()) {
                   case BREMS:
-                     if(Bremsstrahlung(id) == DEAD) return(DEAD);
+                     if (Bremsstrahlung(id) == DEAD) return(DEAD);
                      else {
                         fAliveParticles += 2;
                         DeleteParticle(id);
                      }
                      break;
                   case CONVERSION:
-                     if(PairCreation(id) == DEAD) return(DEAD);
+                     if (PairCreation(id) == DEAD) return(DEAD);
                      else {
                         fAliveParticles += 2;
                         DeleteParticle(id);
@@ -246,7 +246,7 @@ Double_t MyEvent::BremsProb(Int_t id)
    // radiation length (X0)
    Double_t p, retval;
 
-   if(GetParticle(id)->Energy() > GetParticle(id)->GetMass()) {
+   if (GetParticle(id)->Energy() > GetParticle(id)->GetMass()) {
       p = gRandom->Uniform(0.0, 1.0);
       retval = (-fDetector.GetX0(fMatter))*TMath::Log(p);
       return (retval);
@@ -264,7 +264,7 @@ Int_t MyEvent::Bremsstrahlung(Int_t id)
     MyParticle *part;
 
     // find two ids for children particles
-    if((FindFreeId(&d_num1) != DEAD) && (FindFreeId(&d_num2) != DEAD)) {
+    if ((FindFreeId(&d_num1) != DEAD) && (FindFreeId(&d_num2) != DEAD)) {
         // compute the particle's energy ratio...
         ratio = (GetParticle(id)->Energy() - GetParticle(id)->GetMass()) /
                 (2 * GetParticle(id)->P());
@@ -320,7 +320,7 @@ Int_t MyEvent::CheckDecayTime(Int_t id)
         (GetParticle(id)->GetPdgCode() == POSITRON ))
       return 0;
    Double_t timeofdecay = GetParticle(id)->GetTimeOfDecay();
-   if(timeofdecay == 0.0)  return 0;
+   if (timeofdecay == 0.0)  return 0;
    Double_t distToDecay = timeofdecay * 0.996 * CSpeed;
    // check if actual particle life is greater than particle life time
    if (GetParticle(id)->GetPassed() >= distToDecay) {
@@ -336,7 +336,7 @@ void MyEvent::CheckMatter(Int_t id)
              GetParticle(id)->GetvLocation().x(),
              GetParticle(id)->GetvLocation().y(),
              GetParticle(id)->GetvLocation().z());
-   if(Node) fMatter = Node->GetNumber();
+   if (Node) fMatter = Node->GetNumber();
 }
 
 //______________________________________________________________________________
@@ -353,7 +353,7 @@ Int_t MyEvent::Decay(Int_t id)
    MyParticle *part;
 
    // compute total branching ratio
-   for(i=0;i<GetParticle(id)->GetPDG()->NDecayChannels();i++) {
+   for (i=0;i<GetParticle(id)->GetPDG()->NDecayChannels();i++) {
       sumBR += GetParticle(id)->GetPDG()->DecayChannel(i)->BranchingRatio();
    }
    // choose random decay in respect to the branching ratio
@@ -366,11 +366,11 @@ again:
 
    // set number of daughters
    n_daughters = GetParticle(id)->GetPDG()->DecayChannel(index)->NDaughters();
-   for(i=0;i<n_daughters;i++) {
+   for (i=0;i<n_daughters;i++) {
       // create temporary child particle to obtain its mass
       ptype[i] =
          GetParticle(id)->GetPDG()->DecayChannel(index)->DaughterPdgCode(i);
-      if(TMath::Abs(ptype[i]) < 6) // it is a quark...do it again
+      if (TMath::Abs(ptype[i]) < 6) // it is a quark...do it again
          goto again;
       Particle[i] = new MyParticle(0,ptype[i], CREATED, UNDEFINE,
                                    GetParticle(id)->GetvLocation(),
@@ -382,17 +382,17 @@ again:
    // setup the decay
    TLorentzVector W(GetParticle(id)->GetvMoment(), GetParticle(id)->Energy());
    TGenPhaseSpace genPhaseSpace;
-   if(!genPhaseSpace.SetDecay( W, n_daughters, mass ))
+   if (!genPhaseSpace.SetDecay( W, n_daughters, mass ))
       return (-1);
    genPhaseSpace.Generate();
 
    // find ids for children
-   for(i=0;i<n_daughters;i++) {
-      if(FindFreeId(&d_num[i]) == DEAD) return -1;
+   for (i=0;i<n_daughters;i++) {
+      if (FindFreeId(&d_num[i]) == DEAD) return -1;
    }
 
    TLorentzVector *p;
-   for(i=0;i<n_daughters;i++) {
+   for (i=0;i<n_daughters;i++) {
       p = genPhaseSpace.GetDecay(i);
       // create child
       part = AddParticle(d_num[i], ptype[i], GetParticle(id)->GetvLocation(),
@@ -426,24 +426,24 @@ void MyEvent::DefineDecay(Int_t id)
    if ( (GetParticle(id)->GetPdgCode() == ELECTRON) ||
         (GetParticle(id)->GetPdgCode() == POSITRON)) {
       // check if bremsstrahlung is allowed
-      if( (iactual_length = BremsProb(id)) > 0.) {
-         if( (idecay_length == -1) || (iactual_length < idecay_length) ) {
+      if ( (iactual_length = BremsProb(id)) > 0.) {
+         if ( (idecay_length == -1) || (iactual_length < idecay_length) ) {
             idecay_length = iactual_length;
             idecay_type = BREMS;
          }
       }
    }
-   else if(GetParticle(id)->GetPdgCode() == PHOTON) {
+   else if (GetParticle(id)->GetPdgCode() == PHOTON) {
       // check if pair production is allowed
-      if( (iactual_length = PairProb(id)) > 0. ) {
-         if( (idecay_length == -1) ||
+      if ( (iactual_length = PairProb(id)) > 0. ) {
+         if ( (idecay_length == -1) ||
              (iactual_length < idecay_length) ) {
             idecay_length = iactual_length;
             idecay_type = CONVERSION;
          }
       }
    }
-   if( idecay_length > 0) {
+   if ( idecay_length > 0) {
       GetParticle(id)->SetDecayType(idecay_type);
       GetParticle(id)->SetDecayLength(idecay_length);
    }
@@ -459,7 +459,7 @@ void MyEvent::DeleteParticle(Int_t id)
    // Delete the particle id
 
    // To be sure that the last track has at least two points
-   if(GetParticle(id)->GetTrack(GetParticle(id)->GetNTracks()-1)->GetN() < 2) {
+   if (GetParticle(id)->GetTrack(GetParticle(id)->GetNTracks()-1)->GetN() < 2) {
       GetParticle(id)->SetNextPoint(GetParticle(id)->GetTrack(GetParticle(id)->GetNTracks()-1)->GetLineColor());
    }
    // Add this particle's energy loss at the total
@@ -482,11 +482,11 @@ Int_t MyEvent::DEDX(Int_t id)
 
    // if particle's energy is equal to its mass, it is at rest,
    // so set its status as dead
-   if(GetParticle(id)->Energy() <= GetParticle(id)->GetMass()) return(DEAD);
+   if (GetParticle(id)->Energy() <= GetParticle(id)->GetMass()) return(DEAD);
    else {
       // absolute value of momentum
       abs_p = GetParticle(id)->P();
-      if(abs_p <= 0) {
+      if (abs_p <= 0) {
          // if absolute value of momentum is less or equal to zero,
          // set it to the particle's mass (minimum allowed value for momentum)
          GetParticle(id)->SetMomentum(0.0, 0.0, 0.0,GetParticle(id)->GetMass());
@@ -498,14 +498,14 @@ Int_t MyEvent::DEDX(Int_t id)
          abs_beta = abs_p / GetParticle(id)->Energy();
          dX = fDetector.GetdT(fMatter) * CSpeed * abs_beta;
          abs_beta *= abs_beta;
-         if(abs_beta < .9999999999) gamma = 1/TMath::Sqrt(1.0-abs_beta);
+         if (abs_beta < .9999999999) gamma = 1/TMath::Sqrt(1.0-abs_beta);
          else gamma = MAX_GAMMA;
          abs_loss = (fDetector.GetPreconst(fMatter) * dX / abs_beta) *
                     (TMath::Log(2.0 * GetParticle(id)->GetMass() *
                      gamma * gamma * abs_beta /
                      fDetector.GetI(fMatter)) - abs_beta);
-         if(abs_loss < 0) abs_loss = -abs_loss;
-         if(abs_loss >= (GetParticle(id)->Energy() -
+         if (abs_loss < 0) abs_loss = -abs_loss;
+         if (abs_loss >= (GetParticle(id)->Energy() -
                          GetParticle(id)->GetMass())) {
             // if energy loss leave less energy to the particle than
             // its mass, set its momentum equal to its mass
@@ -526,7 +526,7 @@ Int_t MyEvent::DEDX(Int_t id)
             GetParticle(id)->AddELoss(abs_loss);
          }
       }
-      if(GetParticle(id)->Energy() > GetParticle(id)->GetMass()) return(ALIVE);
+      if (GetParticle(id)->Energy() > GetParticle(id)->GetMass()) return(ALIVE);
       else return(DEAD);
    }
 }
@@ -537,7 +537,7 @@ Int_t MyEvent::FindFreeId(Int_t *FreeId)
    // give next available particle's id
    fTotalParticles++;
    *FreeId = fTotalParticles;
-   if(fTotalParticles > fLast) fLast = fTotalParticles;
+   if (fTotalParticles > fLast) fLast = fTotalParticles;
    return(ALIVE);
 }
 
@@ -585,7 +585,7 @@ Int_t MyEvent::Move(Int_t id, TVector3 &dist)
    GetParticle(id)->SetLocation(GetParticle(id)->GetvLocation() + dist);
    GetParticle(id)->SetPassed(GetParticle(id)->GetPassed() + dist.Mag());
 
-   if((GetParticle(id)->GetvLocation().x() > fDetector.GetMaxX()) ||
+   if ((GetParticle(id)->GetvLocation().x() > fDetector.GetMaxX()) ||
       (GetParticle(id)->GetvLocation().x() < fDetector.GetMinX()) ||
       (GetParticle(id)->GetvLocation().y() > fDetector.GetMaxY()) ||
       (GetParticle(id)->GetvLocation().y() < fDetector.GetMinY()) ||
@@ -595,7 +595,7 @@ Int_t MyEvent::Move(Int_t id, TVector3 &dist)
    }
    // If not out of bounds, set related Track's next point
    else {
-      if((GetParticle(id)->GetPdgCode() != PHOTON) &&
+      if ((GetParticle(id)->GetPdgCode() != PHOTON) &&
          (GetParticle(id)->GetPdgCode() != NEUTRINO_E) &&
          (GetParticle(id)->GetPdgCode() != NEUTRINO_MUON) &&
          (GetParticle(id)->GetPdgCode() != NEUTRINO_TAU) &&
@@ -616,7 +616,7 @@ Double_t MyEvent::PairProb(Int_t id)
    // radiation length (X0)
    Double_t p;
 
-   if(GetParticle(id)->Energy() > 2.0 * EMass) {
+   if (GetParticle(id)->Energy() > 2.0 * EMass) {
       p = gRandom->Uniform(0.0, 1.0);
       return ((-9.)*fDetector.GetX0(fMatter)*TMath::Log(p)/7.);
    }
@@ -639,7 +639,7 @@ Int_t MyEvent::PairCreation(Int_t id)
    TLorentzVector W = beam + target;
    Double_t masses[2] = { EMass, EMass } ;
 
-   if(!genPhaseSpace.SetDecay( W, 2, masses ))
+   if (!genPhaseSpace.SetDecay( W, 2, masses ))
       return (DEAD);
    genPhaseSpace.Generate();
 
@@ -647,7 +647,7 @@ Int_t MyEvent::PairCreation(Int_t id)
    // calculate the location of the decay vertex
 
    // find two ids for children particles
-   if((FindFreeId(&d_num1) != DEAD) && (FindFreeId(&d_num2) != DEAD)) {
+   if ((FindFreeId(&d_num1) != DEAD) && (FindFreeId(&d_num2) != DEAD)) {
       p = genPhaseSpace.GetDecay(0);
       // create child
       part = AddParticle(d_num1, POSITRON, GetParticle(id)->GetvLocation(),
@@ -699,9 +699,9 @@ Int_t MyEvent::ParticleColor(Int_t id)
    // return color index related to particle's energy
    //Int_t ctable[11] = {2,50,46,45,44,43,42,41,21,19,5};
    Int_t i;
-   for(i=0;i<16;i++)
-      if(GetParticle(id)->Energy() > fEThreshold[i]) break;
-   if(i > 16) i = 16;
+   for (i=0;i<16;i++)
+      if (GetParticle(id)->Energy() > fEThreshold[i]) break;
+   if (i > 16) i = 16;
    return(gColIndex + i);
    //return ctable[i];
 }
@@ -722,7 +722,7 @@ void MyEvent::ScatterAngle(Int_t id)
       p1 = gRandom->Uniform(-1.0, 1.0);
       p2 = gRandom->Uniform(-1.0, 1.0);
       r_2 = (p1 * p1) + (p2 * p2);
-   } while(r_2 > 1.0);
+   } while (r_2 > 1.0);
    abs_p = GetParticle(id)->P();
    alpha = TMath::Sqrt(-2.0 * TMath::Log(r_2) / r_2) *
            fDetector.GetTheta0(fMatter) / abs_p;

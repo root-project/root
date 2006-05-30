@@ -19,7 +19,7 @@
 
 //______________________________________________________________________________
 GButtonFrame::GButtonFrame(const TGWindow* p,
-						       TGWindow* buttonHandler, Int_t nextEventId,
+                         TGWindow* buttonHandler, Int_t nextEventId,
                                Int_t showTrackId, Int_t interruptSimId):
               TGCompositeFrame(p, 100, 100, kVerticalFrame)
 {
