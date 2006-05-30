@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.42 2006/04/24 13:49:56 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.43 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -281,7 +281,7 @@ void TGComboBox::DrawBorder()
 //______________________________________________________________________________
 void TGComboBox::EnableTextInput(Bool_t on)
 {
-   // switch text input or readonly mode of combobox (not perfect yet)
+   // Switch text input or readonly mode of combobox (not perfect yet).
 
    UInt_t w, h;
    const char *text = "";
@@ -510,6 +510,22 @@ void TGComboBox::Selected(Int_t widgetId, Int_t id)
    args[1] = id;
 
    Emit("Selected(Int_t,Int_t)", args);
+}
+
+//______________________________________________________________________________
+void TGComboBox::SetEnabled(Bool_t on)
+{
+   // Set state of combo box. If kTRUE=enabled, kFALSE=disabled.
+   
+   fDDButton->SetEnabled(on);
+   if (on) {
+      SetFlags(kWidgetIsEnabled);
+      fSelEntry->SetBackgroundColor(GetBackground());
+   } else {
+      ClearFlags(kWidgetIsEnabled);
+      fSelEntry->SetBackgroundColor(GetDefaultFrameBackground());
+   }
+   fClient->NeedRedraw(fSelEntry);   
 }
 
 //______________________________________________________________________________

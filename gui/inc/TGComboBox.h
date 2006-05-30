@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.22 2006/04/24 13:49:56 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.23 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -121,8 +121,7 @@ public:
    virtual TGLBEntry *GetSelectedEntry() const
                         { return fListBox->GetSelectedEntry(); }
    virtual void SetTopEntry(TGLBEntry *e, TGLayoutHints *lh);
-   virtual void SetEnabled(Bool_t on = kTRUE)
-                  { fDDButton->SetEnabled(on); }   //*TOGGLE* *GETTER=IsEnabled
+   virtual void SetEnabled(Bool_t on = kTRUE);   //*TOGGLE* *GETTER=IsEnabled
    virtual Bool_t IsEnabled() const { return  fDDButton->IsEnabled(); }
    virtual void SortByName(Bool_t ascend = kTRUE)
                   { fListBox->SortByName(ascend); }            //*MENU*icon=bld_sortup.png*
