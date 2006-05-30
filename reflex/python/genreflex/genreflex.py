@@ -228,10 +228,11 @@ class genreflex:
         break
     bcomp = os.path.basename(compiler)
     vopt = ''
-    if   bcomp in ('gcc','g++','c++') : vopt = '--version'
+    if   bcomp in ('msvc7','msvc71')  : return s
+    elif bcomp in ('gcc','g++','c++') : vopt = '--version'
     elif bcomp in ('cl.exe','cl')     : vopt = '' # there is no option to print only the version with cl
     else :
-      print '--->> genreflex: WARNING: While trying to retrieve compiler version, found unknow compiler' % compiler
+      print '--->> genreflex: WARNING: While trying to retrieve compiler version, found unknown compiler %s' % compiler
       return s
     (inp,out,err) = os.popen3('%s %s'%(compiler,vopt))
     serr = err.read()
