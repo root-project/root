@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.28 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.29 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -47,7 +47,7 @@ protected:
    UInt_t            fEditDisabled;   // flags used for "guibuilding"
 
    TGWindow(Window_t id) :
-      fParent(0), fNeedRedraw(kFALSE), fEditDisabled(0) { fClient = 0; fId = id; }
+      fParent(0), fNeedRedraw(kFALSE), fName(), fEditDisabled(0) { fClient = 0; fId = id; }
    TGWindow(const TGWindow& tgw) :
       TGObject(tgw), fParent(tgw.fParent), fNeedRedraw(tgw.fNeedRedraw),
       fName(tgw.fName), fEditDisabled(tgw.fEditDisabled) { }

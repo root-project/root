@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.21 2006/05/23 04:47:40 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.22 2006/05/29 07:58:32 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -95,8 +95,9 @@ protected:
 
    static Int_t  fgClientProtocol; // client "protocol" version
 
-   TSocket() : fBytesRecv(0), fBytesSent(0), fCompress(0), fRemoteProtocol(),
-      fSecContext(0), fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0) { }
+   TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0), 
+      fLocalAddress(), fRemoteProtocol(), fSecContext(0), fService(), 
+      fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0), fUrl() { }
 
    Bool_t       Authenticate(const char *user);
    void         SetDescriptor(Int_t desc) { fSocket = desc; }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.74 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.75 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -614,7 +614,7 @@ public:
                 Pixel_t back = GetDefaultFrameBackground());
    TGGroupFrame(const TGGroupFrame& tgf): TGCompositeFrame(tgf),
       fText(tgf.fText), fFontStruct(tgf.fFontStruct), fNormGC(tgf.fNormGC),
-      fTitlePos(tgf.fTitlePos) { }
+      fTitlePos(tgf.fTitlePos), fHasOwnFont(tgf.fHasOwnFont) { }
 
    virtual ~TGGroupFrame();
 
