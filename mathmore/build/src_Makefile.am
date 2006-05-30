@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: src_Makefile.am,v 1.1 2005/09/18 17:33:47 brun Exp $
+# @(#)root/mathcore:$Name:  $:$Id: src_Makefile.am,v 1.1 2005/09/21 09:34:04 moneta Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .
@@ -23,6 +23,7 @@ libMathMore_la_SOURCES =	       \
          GSLIntegrator.h               \
          GSLInterpolator.cxx           \
          GSLInterpolator.h             \
+	 GSLRndmEngines.cxx            \
          GSLRootFdFSolver.h            \
          GSLRootFinder.cxx             \
          GSLRootFinderDeriv.cxx        \
@@ -35,7 +36,8 @@ libMathMore_la_SOURCES =	       \
          ProbFuncInv.cxx               \
          ProbFuncMathMore.cxx          \
          RootFinderAlgorithms.cxx      \
-         SpecFuncMathMore.cxx          
+         SpecFuncMathMore.cxx          \
+         complex_quartic.h
 
 
 INCLUDES = -I$(top_srcdir)/inc

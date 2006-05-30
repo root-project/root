@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: inc_Math_Makefile.am,v 1.1 2005/09/18 17:33:47 brun Exp $
+# @(#)root/mathcore:$Name:  $:$Id: inc_Math_Makefile.am,v 1.1 2005/09/21 09:34:04 moneta Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .
@@ -14,6 +14,7 @@ math_HEADERS =           	       \
          Chebyshev.h                   \
          Derivator.h                   \
          GSLFunctionAdapter.h          \
+	 GSLRndmEngines.h	       \
          GSLRootFinder.h               \
          GSLRootFinderDeriv.h          \
          GSLRootHelper.h               \
@@ -22,16 +23,12 @@ math_HEADERS =           	       \
          InterpolationTypes.h          \
          Interpolator.h                \
          IParamFunction.h              \
-         LinkDef.h                     \
-         LinkDef_Func.h                \
-         LinkDef_RootFinding.h         \
-         LinkDef_SpecFunc.h            \
-         LinkDef_StatFunc.h            \
          ParamFunction.h               \
          Polynomial.h                  \
          ProbFunc.h                    \
          ProbFuncInv.h                 \
          ProbFuncMathMore.h            \
+	 Random.h                      \
          RootFinder.h                  \
          RootFinderAlgorithms.h        \
          SpecFunc.h                    \
