@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.61 2006/05/26 15:13:03 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.62 2006/05/29 09:35:29 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -305,7 +305,7 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
 //______________________________________________________________________________
 void TSessionServerFrame::SettingsChanged()
 {
-
+   //Inform viewer that settings have changed
    TGTextEntry *sender = dynamic_cast<TGTextEntry*>((TQObject*)gTQSender);
    Bool_t issync = (fSync->GetState() == kButtonDown);
    if ((strcmp(fViewer->GetActDesc()->GetName(), fTxtName->GetText())) ||
