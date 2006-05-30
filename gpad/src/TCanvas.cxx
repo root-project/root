@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.110 2006/05/11 08:09:20 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.111 2006/05/15 11:01:13 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -765,8 +765,14 @@ TObject *TCanvas::DrawClonePad()
    TPad *selpad = (TPad*)gROOT->GetSelectedPad();
    TPad *pad = padsav;
    if (pad == this) pad = selpad;
-   if (fCanvasID == -1 || padsav == 0 || pad == this) {
+   if (padsav == 0 || pad == 0 || pad == this) {
       return DrawClone();
+   }
+   if (fCanvasID == -1) {
+      fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
+                                             fWindowWidth, fWindowHeight);
+      fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
+      fCanvasID = fCanvasImp->InitWindow();
    }
    this->cd();
    TObject *obj, *clone;
