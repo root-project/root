@@ -115,7 +115,8 @@ class genreflex:
       ['help','debug=', 'output=','selection_file=','pool','deep','gccxmlpath=',
        'capabilities=','rootmap=','rootmap-lib=','comments','no_membertypedefs',
        'fail_on_warnings', 'quiet', 'reflex', 'split'])
-    except getopt.GetoptError:
+    except getopt.GetoptError, e:
+      print "--->> genreflex: ERROR:",e
       self.usage(2)
     self.output = '.'
     self.select = None
