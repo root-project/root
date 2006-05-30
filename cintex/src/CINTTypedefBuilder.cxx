@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.6 2006/05/04 19:31:31 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.7 2006/05/30 08:14:13 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -22,45 +22,49 @@
 using namespace ROOT::Reflex;
 using namespace std;
 
-namespace ROOT { namespace Cintex {
+namespace ROOT { 
 
-  int CINTTypedefBuilder::Setup(const Type& t) {
-    if ( t.IsTypedef() )  {
+  namespace Cintex {
 
-      std::string nam = CintName(t.Name(SCOPED));
+    int CINTTypedefBuilder::Setup(const Type& t) {
+      if ( t.IsTypedef() )  {
 
-      Type rt(t);
-      Scope ScopeNth = rt.DeclaringScope();
-      CINTScopeBuilder::Setup( ScopeNth );
-      while ( rt.IsTypedef() ) rt = rt.ToType();
+        std::string nam = CintName(t.Name(SCOPED));
 
-      Indirection indir = IndirectionGet(rt);
-      Scope rscope = indir.second.DeclaringScope();
+        Type rt(t);
+        Scope ScopeNth = rt.DeclaringScope();
+        CINTScopeBuilder::Setup( ScopeNth );
+        while ( rt.IsTypedef() ) rt = rt.ToType();
 
-      if ( ScopeNth != rscope ) {
-        if ( rscope ) CINTScopeBuilder::Setup(rscope);
-        else {
-          rscope = Scope::ByName(Tools::GetScopeName(indir.second.Name(SCOPED)));
-          CINTScopeBuilder::Setup(rscope);
+        Indirection indir = IndirectionGet(rt);
+        Scope rscope = indir.second.DeclaringScope();
+
+        if ( ScopeNth != rscope ) {
+          if ( rscope ) CINTScopeBuilder::Setup(rscope);
+          else {
+            rscope = Scope::ByName(Tools::GetScopeName(indir.second.Name(SCOPED)));
+            CINTScopeBuilder::Setup(rscope);
+          }
         }
+
+        if( -1 != G__defined_typename(nam.c_str()) ) return -1;
+
+        if ( Cintex::Debug() )  {
+          std::cout << "Building typedef " << nam << std::endl;
+        }
+
+        int typenum;
+        int tagnum;
+        CintType(rt, typenum, tagnum );
+
+        // If the final type was was not found create a place holder in the G__struct for it
+        if (tagnum == -1) tagnum = G__search_tagname(CintName(rt).c_str(), 'a');
+
+        int r = ::G__search_typename2( nam.c_str(), typenum, tagnum, 0, -1);
+        ::G__setnewtype(-1,NULL,0);
+        return r;
       }
-
-      if( -1 != G__defined_typename(nam.c_str()) ) return -1;
-
-      if ( Cintex::Debug() )  {
-        std::cout << "Building typedef " << nam << std::endl;
-      }
-
-      int typenum;
-      int tagnum;
-      CintType(rt, typenum, tagnum );
-
-      // If the final type was was not found create a place holder in the G__struct for it
-      if (tagnum == -1) tagnum = G__search_tagname(CintName(rt).c_str(), 'a');
-
-      int r = ::G__search_typename2( nam.c_str(), typenum, tagnum, 0, -1);
-      ::G__setnewtype(-1,NULL,0);
-      return r;
+      return -1;
     }
   }
-}}
+}

@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.12 2006/04/28 15:59:48 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.13 2006/05/30 08:14:13 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -41,10 +41,10 @@ namespace ROOT { namespace Cintex {
   };
 
 
-  static list<PendingBase>& pendingBases() {
-     static list<PendingBase> s_pendingBases;
-     return s_pendingBases;
-  }  
+//   static list<PendingBase>& pendingBases() {
+//      static list<PendingBase> s_pendingBases;
+//      return s_pendingBases;
+//   }  
 
   CINTClassBuilder& CINTClassBuilder::Get(const Type& cl) {
     CINTClassBuilders& builders = CINTClassBuilders::Instance();
