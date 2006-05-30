@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtBrush.h,v 1.3 2005/03/01 07:24:01 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtBrush.h,v 1.4 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
    virtual ~TQtBrush(){;}
    void SetStyle(int style=1000){  SetStyle(style/1000,style%1000); };
    void SetStyle(int style, int fasi);
-   void SetColor(QColor &color);
+   void SetColor(const QColor &color);
    const QColor &GetColor() const { return fBackground;}
    int   GetStyle()         const { return 1000*fStyle + fFasi; }
    ClassDef(TQtBrush,0); // create QBrush object based on the ROOT "fill" attributes 

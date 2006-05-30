@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.23 2005/12/11 10:51:39 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.24 2006/05/08 13:16:56 antcheva Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -513,7 +513,8 @@ public:
 #if QT_VERSION < 0x40000
             setRasterOp (rootContext.fROp);
 #else /* QT_VERSION */
-          /*  setCompositionMode(rootContext.fROp); */
+           if (device()->devType() !=  QInternal::Widget ) 
+              setCompositionMode(rootContext.fROp);
 #endif /* QT_VERSION */
          }
          if (rootContext.HasValid(QtGContext::kPen)) {

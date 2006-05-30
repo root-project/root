@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.30 2006/05/03 09:55:49 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.31 2006/05/08 13:16:56 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -655,7 +655,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.130 2006/05/05 15:32:44 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.31 2006/05/08 13:16:56 antcheva Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -768,15 +768,14 @@ Bool_t TGQt::Init(void* /*display*/)
    TQtEventInputHandler::Instance();
    // Add $QTDIR include  path to the  the list of includes for ACliC
    gSystem->AddIncludePath("-I$QTDIR/include");
-   TString newPath = "$(ROOTSYS)/cint/include";
 #ifndef R__WIN32
-     newPath += ":";
-#else
-     newPath += ";";
-#endif
+   TString newPath = "$(ROOTSYS)/cint/include";
+   newPath += ":";
    newPath += gSystem->GetDynamicPath();
+   // SetDynamicPath causes the SegFault on Win32 platform
    gSystem->SetDynamicPath(newPath.Data());
-   return fDisplayOpened;
+#endif
+  return fDisplayOpened;
 }
 
 //______________________________________________________________________________
@@ -847,7 +846,7 @@ Int_t TGQt::OpenPixmap(UInt_t w, UInt_t h)
 }
 
 //______________________________________________________________________________
-QColor &TGQt::ColorIndex(Color_t ic)
+const QColor &TGQt::ColorIndex(Color_t ic) const
 {
    // Define the QColor object by ROOT color index
 #ifndef R__QTWIN32
@@ -871,7 +870,7 @@ QColor &TGQt::ColorIndex(Color_t ic)
 
    return colorBuffer;
 #else
-   QColor &c = fPallete[ic+ColorOffset];
+   const QColor &c = fPallete[ic+ColorOffset];
    return c;
 #endif
 }
@@ -1271,7 +1270,7 @@ void  TGQt::DrawPolyMarker(int n, TPoint *xy)
 
       TQtMarker *CurMarker = fQtMarker;
       /* Set marker Color */
-      QColor &mColor  = ColorIndex(fMarkerColor);
+      const QColor &mColor  = ColorIndex(fMarkerColor);
 
       if( CurMarker->GetNumber() <= 0 )
       {
@@ -1512,7 +1511,7 @@ void  TGQt::GetRGB(int index, float &r, float &g, float &b)
    TQtLock lock;
    if (fSelectedWindow != NoOperation) {
       int c[3];
-      QColor &color = fPallete[index];
+      const QColor &color = fPallete[index];
       color.rgb(&c[0],&c[1],&c[2]);
 
       r = c[0]/BIGGEST_RGB_VALUE;
@@ -1890,7 +1889,9 @@ void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
 #if QT_VERSION < 0x40000
       if (fQPainter->isActive()) { fQPainter->setRasterOp(fDrawMode); }
 #else /* QT_VERSION */
-      if (fQPainter->isActive()) { /* fQPainter->setCompositionMode(fDrawMode); */}
+      if (fQPainter->isActive() && (fQPainter->device()->devType() !=  QInternal::Widget )) {
+         fQPainter->setCompositionMode(fDrawMode);
+     }
 #endif /* QT_VERSION */
    }
 }
@@ -2297,7 +2298,44 @@ void  TGQt::SetRGB(int cindex, float r, float g, float b)
          );
    }
 }
+//______________________________________________________________________________
+void  TGQt::SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b, Float_t a)
+{
+   // Set the color with the alpha component (supported wuth Qt 4 only)
+   SetRGB(cindex, r, g,b);
+   SetAlpha(cindex,a);
+}
+//______________________________________________________________________________
+void  TGQt::SetAlpha(Int_t cindex, Float_t a)
+{      
+   // Add  the alpha component (supported with Qt 4 only)
+  if (cindex < 0 || a < 0 ) return;
+#if QT_VERSION >= 0x40000
+   QColor &color = fPallete[cindex];
+   color.setAlphaF(a);
+#endif
+}
+//______________________________________________________________________________
+void  TGQt::GetRGBA(Int_t cindex, Float_t &r, Float_t &g, Float_t &b, Float_t &a)
+{
+   // Return RGBA components for the color cindex
+   GetRGB(cindex,r,g,b);
+   a = GetAlpha(cindex);
+}
+//______________________________________________________________________________
+Float_t TGQt::GetAlpha(Int_t cindex)
+{
+   // Return Alpha component for the color cindex
+   if (cindex < 0 ) return 1.0;
+#if QT_VERSION >= 0x40000
+   const QColor &color = fPallete[cindex];
+   return (Float_t)color.alphaF();
+#else
+   return 1.0;
+#endif
+  
 
+}
 //______________________________________________________________________________
 void  TGQt::SetTextAlign(Short_t talign)
 {
@@ -2715,7 +2753,8 @@ void TGQt::Begin()
 #if QT_VERSION < 0x40000
          fQPainter->setRasterOp(fDrawMode);
 #else /* QT_VERSION */
-       /*  fQPainter->setCompositionMode(fDrawMode); */ 
+         if (fQPainter->device()->devType() !=  QInternal::Widget )
+                 fQPainter->setCompositionMode(fDrawMode);
 #endif /* QT_VERSION */
       }
    }

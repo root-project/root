@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.7 2005/10/27 06:41:23 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.8 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -172,6 +172,7 @@ QPixmap* TQtPixmapGuard::Create(int width, int height, int depth)
 #if QT_VERSION < 0x40000
    QPixmap *w =  new QPixmap(width,height,depth); // ,optimization);
 #else /* QT_VERSION */
+   if (depth) {/* fool the compiler wit  Qt4 */ }
    QPixmap *w =  new QPixmap(width,height); // ,optimization);
 #endif /* QT_VERSION */
    Add(w);

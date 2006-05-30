@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.14 2006/03/24 15:31:10 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.15 2006/04/07 09:29:06 rdm Exp $
  // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -196,7 +196,7 @@ public:
 #include "TVirtualX.interface.h"
 #ifndef __CINT__
 // extracted methods
-    virtual QColor&   ColorIndex(Color_t indx);
+    virtual const QColor&   ColorIndex(Color_t indx) const;
     virtual QPaintDevice *GetSelectedWindow(){ return fSelectedWindow; }
     virtual void      SetFillStyleIndex( Int_t style, Int_t fasi);
     virtual void      SetMarkerType( Int_t type, Int_t n, TPoint *xy );
@@ -231,6 +231,11 @@ public:
 
    TQtEmitter *Emitter(){ return &fEmitter;}
 #endif
+// Future interface :
+   virtual void      SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b, Float_t a);
+   virtual void      SetAlpha(Int_t cindex, Float_t a);
+   virtual void      GetRGBA(Int_t cindex, Float_t &r, Float_t &g, Float_t &b, Float_t &a);
+   virtual Float_t   GetAlpha(Int_t cindex);
    virtual Int_t LoadQt(const char *shareLibFileName);
    static void PostQtEvent(QObject *receiver, QEvent *event);
    virtual Int_t processQtEvents(Int_t maxtime=300); //milliseconds

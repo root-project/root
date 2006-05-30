@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtBrush.cxx,v 1.5 2005/07/13 20:10:12 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtBrush.cxx,v 1.6 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -143,7 +143,7 @@ TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0)
 #endif
 {}
 //______________________________________________________________________________
-void TQtBrush::SetColor(QColor &color)
+void TQtBrush::SetColor(const QColor &color)
 {
   fBackground = color;
   setColor(fBackground);
