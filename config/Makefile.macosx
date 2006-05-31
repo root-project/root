@@ -4,7 +4,10 @@
 
 PLATFORM      = macosx
 
-DEBUGFLAGS    = -g
+DWARF2       := $(shell gcc --version | sed -n 's,.*build \([0-9]*\).$$,\1,p' |\
+                  awk '{ if ($$1>=5341) print "dwarf-2" }')
+
+DEBUGFLAGS    = -g$(DWARF2)
 OPTFLAGS      = -O2
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
