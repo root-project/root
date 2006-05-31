@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.19 2006/05/26 16:55:04 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.20 2006/05/27 20:31:54 brun Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -148,7 +148,8 @@ zombie:
 TString TAlienFile::AccessURL(const char *url, Option_t *option,
                               const char *, Int_t)
 {
-   //access a URL
+   // Access a URL.
+
    TString stmp;
    Bool_t create;
    Bool_t recreate;
@@ -365,6 +366,7 @@ zombie2:
 TAlienFile::~TAlienFile()
 {
    // TAlienFile file dtor.
+
    R__LOCKGUARD2(gROOTMutex);
    if (fSubFile) {
       Close();
@@ -397,7 +399,7 @@ Bool_t TAlienFile::ReadBuffer(char *buf, Int_t len)
 //______________________________________________________________________________
 Bool_t TAlienFile::WriteBuffer(const char *buf, Int_t len)
 {
-   // Write specified byte range
+   // Write specified byte range.
    // Returns kTRUE in case of error.
 
    if (fSubFile)
@@ -473,9 +475,10 @@ void TAlienFile::Close(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TAlienFile::Init(Bool_t create) 
+void TAlienFile::Init(Bool_t /*create*/)
 {
-   //initialize an Alien file
+   // Initialize an Alien file.
+
    gFile=this;
    if (fSubFileHandle) {
       fSubFile = TFile::Open(fSubFileHandle);
@@ -495,5 +498,4 @@ void TAlienFile::Init(Bool_t create)
       //     gROOT->GetListOfFiles()->Add(this);
       //     gROOT->GetUUIDs()->AddUUID(fUUID,this);
    }
-
 }
