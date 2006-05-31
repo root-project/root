@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.5 2005/12/12 09:14:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.6 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -103,11 +103,11 @@ namespace ROOT {
           */
          /*
            virtual Object Construct( const Type & signature,
-           std::vector < Object > values,
-           void * mem = 0 ) const;
+                                     const std::vector < Object > & values,
+                                     void * mem = 0 ) const;
          */
          virtual Object Construct( const Type & signature = Type(),
-                                   std::vector < void * > values = std::vector<void*>(),
+                                   const std::vector < void * > & values = std::vector<void*>(),
                                    void * mem = 0 ) const;
 
 

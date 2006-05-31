@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.8 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.9 2006/04/12 10:21:11 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -102,8 +102,8 @@ ROOT::Reflex::Object ROOT::Reflex::Class::CastObject( const Type & to,
     
 /*/-------------------------------------------------------------------------------
   ROOT::Reflex::Object ROOT::Reflex::Class::Construct( const Type & signature, 
-  std::vector < Object > args, 
-  void * mem ) const {
+                                                       const std::vector < Object > & args, 
+                                                       void * mem ) const {
 //------------------------------------------------------------------------------- 
   static Type defSignature = Type::ByName("void (void)");
   Type signature2 = signature;
@@ -135,7 +135,7 @@ ROOT::Reflex::Object ROOT::Reflex::Class::CastObject( const Type & to,
     
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Object ROOT::Reflex::Class::Construct( const Type & signature, 
-                                                     std::vector < void * > args, 
+                                                     const std::vector < void * > & args, 
                                                      void * mem ) const {
 //------------------------------------------------------------------------------- 
    static Type defSignature = Type::ByName("void (void)");

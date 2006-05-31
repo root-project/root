@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionMember.cxx,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionMember.cxx,v 1.7 2006/03/20 09:46:18 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -116,11 +116,8 @@ ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
       return Object();
    }
    void * mem = CalculateBaseObject( obj );
-   std::vector < void * > paramValues;
-   // needs more checking FIXME
-   for (std::vector<void*>::const_iterator it = paramList.begin();
-        it != paramList.end(); ++it ) paramValues.push_back(*it);
-   return Object(TypeOf().ReturnType(), fStubFP( mem, paramValues, fStubCtx ));
+   // parameters need more checking FIXME
+   return Object(TypeOf().ReturnType(), fStubFP( mem, paramList, fStubCtx ));
 }
 
 
@@ -141,11 +138,8 @@ ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
 ROOT::Reflex::Object
 ROOT::Reflex::FunctionMember::Invoke( const std::vector < void * > & paramList ) const {
 //-------------------------------------------------------------------------------
-   std::vector < void * > paramValues;
-   // needs more checking FIXME
-   for (std::vector<void*>::const_iterator it = paramList.begin();
-        it != paramList.end(); ++it ) paramValues.push_back(*it);
-   return Object(TypeOf().ReturnType(), fStubFP( 0, paramValues, fStubCtx ));
+   // parameters need more checking FIXME
+   return Object(TypeOf().ReturnType(), fStubFP( 0, paramList, fStubCtx ));
 }
 
 
