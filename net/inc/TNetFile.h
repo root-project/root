@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.25 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.26 2006/05/30 15:27:52 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -80,6 +80,7 @@ public:
    Bool_t  Matches(const char *url);
    Int_t   ReOpen(Option_t *mode);
    Bool_t  ReadBuffer(char *buf, Int_t len);
+   Bool_t  ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf);
    Bool_t  WriteBuffer(const char *buf, Int_t len);
    void    Seek(Long64_t offset, ERelativeTo pos = kBeg);
 

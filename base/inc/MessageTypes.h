@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.27 2005/09/22 23:29:30 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.28 2006/03/21 14:52:41 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -129,7 +129,8 @@ enum EMessageTypes {
    kROOTD_OPENDIR,                       //Open directory
    kROOTD_FREEDIR,                       //Free directory
    kROOTD_DIRENTRY,                      //Get directory entry
-   kROOTD_ACCESS                         //Test Access
+   kROOTD_ACCESS,                        //Test Access
+   kROOTD_GETS                           //Multiple buffers in one call
 };
 
 #endif

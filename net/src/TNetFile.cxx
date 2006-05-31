@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.70 2006/05/24 15:10:46 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.71 2006/05/26 09:19:26 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -67,6 +67,7 @@
 #include "TApplication.h"
 #include "TEnv.h"
 #include "TNetFile.h"
+#include "TFilePrefetch.h"
 #include "TPSocket.h"
 #include "TROOT.h"
 #include "TSysEvtHandler.h"
@@ -317,6 +318,14 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
    // Returns kTRUE in case of error.
 
    if (!fSocket) return kTRUE;
+   if (len == 0)
+      return kFALSE;
+
+   if (fFilePrefetch) {
+      if (!fFilePrefetch->ReadBuffer(buf, fOffset, len))
+         return kFALSE;
+   } 
+
 
    Bool_t result = kFALSE;
 
@@ -375,6 +384,125 @@ end:
 
    if (gApplication && gApplication->GetSignalHandler())
       gApplication->GetSignalHandler()->HandleDelayedSignal();
+
+   return result;
+}
+  
+  //______________________________________________________________________________
+Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
+{
+   // Read a list of buffers given in pos[] and len[] and return it in a single
+   // buffer.
+   // Returns kTRUE in case of error.
+
+   if (!fSocket) return kTRUE;
+
+   int    num_digits = 0;         //Total number of digits in the buffer
+   char   *data_buf  = NULL;      // buf to put the info
+   int    actual_pos = 0;         // tmp variable
+   Bool_t result     = kFALSE;
+
+   if (gApplication && gApplication->GetSignalHandler())
+      gApplication->GetSignalHandler()->Delay();
+
+   Double_t start = 0;
+   if (gPerfStats != 0) start = TTimeStamp();
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Here we put the information of all the buffers in a single string
+   // then it's up to server to interpret it and send us all the data
+   // in a single buffer
+   for(int i=0;i<nbuf;i++){
+      long long res_off=pos[i];
+      int res_len=len[i];
+      int dig_len=1;
+      int dig_off=1;
+       
+      while ((res_off /= 10))  // Find number of digits
+         dig_off++;
+      
+      num_digits += dig_off;   // Add Offset
+      num_digits ++;           // Add separator
+       
+      while ((res_len /= 10))  // Find number of digits
+         dig_len++;
+       
+      num_digits += dig_len;   // Add len
+      num_digits ++;           // Add separator
+   }  
+   
+   data_buf= new char[num_digits+1];
+   actual_pos=0;
+   int total_len = 0;
+   for(int i=0;i<nbuf;i++){
+      sprintf(data_buf+actual_pos, "%llu-%d/", pos[i],len[i]); 
+      actual_pos=strlen(data_buf);
+      total_len+=len[i];
+   }      
+   
+   // Send the command with the lenght of the info and number of buffers
+   if (fSocket->Send(Form("%d %d", nbuf, num_digits), kROOTD_GETS) < 0) {
+      Error("ReadBuffers", "error sending kROOTD_GETS command");
+      result = kTRUE;
+      goto end;
+   }
+   // Send buffer with the list of offsets and lengths
+   if (fSocket->SendRaw(data_buf, num_digits) < 0) {
+      SetBit(kWriteError);
+      Error("ReadBuffers", "error sending buffer");
+      result = kTRUE;
+      goto end;
+   }
+   /////////////////////////////////////////////////////////////////////////////
+
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Here we read the response with all the buffers in the single chunk
+   //
+   Int_t         stat, n;
+   EMessageTypes kind;
+
+   fErrorCode = -1;
+   if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
+      PrintError("ReadBuffers", stat);
+      result = kTRUE;
+      goto end;
+   }
+
+   while ((n = fSocket->RecvRaw(buf, total_len)) < 0 
+         && TSystem::GetErrno() == EINTR)
+      TSystem::ResetErrno();
+
+   if (n != total_len) {
+      Error("ReadBuffers", "error receiving buffer of length %d, got %d", total_len, n);
+      result = kTRUE;
+      goto end;
+   }
+   /////////////////////////////////////////////////////////////////////////////
+
+   fOffset += pos[nbuf] + len[nbuf];
+
+   fBytesRead  += total_len;
+#ifdef WIN32
+   SetFileBytesRead(GetFileBytesRead() + total_len);
+#else
+   fgBytesRead += total_len;
+#endif
+
+end:
+
+   if (gPerfStats != 0) {
+      gPerfStats->FileReadEvent(this, total_len, double(TTimeStamp())-start);
+   }
+
+   if (gApplication && gApplication->GetSignalHandler())
+      gApplication->GetSignalHandler()->HandleDelayedSignal();
+
+   delete [] data_buf;
+
+   // If found problems try the generic implementation
+   if ( result )
+      return TFile::ReadBuffers(buf, pos, len, nbuf);
 
    return result;
 }

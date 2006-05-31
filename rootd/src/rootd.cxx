@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.115 2006/05/10 07:43:35 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.116 2006/05/11 10:15:28 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -203,6 +203,7 @@
 // 13 -> 14: support for TNetFile setup via TXNetFile
 // 14 -> 15: support for SSH authentication via SSH tunnel
 // 15 -> 16: cope with the bug fix in TUrl::GetFile
+// 16 -> 17: Addition of "Gets" (multiple buffers in a single request)
 
 #include "config.h"
 #include "RConfig.h"
@@ -342,7 +343,7 @@ enum EFileMode{ kBinary, kAscii };
 static std::string gRootdTab;     // keeps track of open files
 static std::string gRpdAuthTab;   // keeps track of authentication info
 static EService gService         = kROOTD;
-static int gProtocol             = 16;      // increase when protocol changes
+static int gProtocol             = 17;      // increase when protocol changes
 static int gClientProtocol       = -1;      // Determined by RpdInitSession
 static int gAnon                 = 0;       // anonymous user flag
 static double gBytesRead         = 0;
@@ -1286,6 +1287,83 @@ void RootdGet(const char *msg)
       ErrorInfo("RootdGet: read %d bytes starting at %lld from file %s",
                 len, offset, gFile);
 }
+  
+  //______________________________________________________________________________
+void RootdGets(const char *msg)
+{
+   // Gets multiple buffers from the specified list of offsets and lengths from
+   // the currently open file and send it to the client in a single buffer.
+   // (BUt rem it gets the buffer with the info in the same way it would get
+   // new data)
+
+   if (!RootdIsOpen())
+      Error(ErrFatal, kErrNoAccess, "RootdGets: file %s not open", gFile);
+   
+   
+   int num_buf;   // Number of buffers
+   int len;       // len of the data buffer with the list of buffers
+
+   sscanf(msg, "%d %d", &num_buf, &len);
+   
+   long long offsets[num_buf];          // list to be filled
+   int lens[num_buf];                   // list to be filled 
+   char *buf_in = new char[len+1];      // buff coming from the server 
+   
+   NetRecvRaw(buf_in, len);
+   buf_in[len+1]='\0';
+   
+   char *ptr = buf_in;
+   int total_len = 0;
+   for(int i=0; i<num_buf; i++){
+      sscanf(ptr, "%llu-%d/", &offsets[i], &lens[i]);
+      ptr = strchr(ptr, '/') + 1;
+      total_len+=lens[i];
+   }
+
+   char *buf_out = new char[total_len];
+   int actual_pos=0;
+   ssize_t siz=0;
+   for (int i=0;i<num_buf;i++) {
+      
+#if defined (R__SEEK64)
+   if (lseek64(gFd, offsets[i], SEEK_SET) < 0)
+#elif defined(WIN32)
+   if (_lseeki64(gFd, offsets[i], SEEK_SET) < 0)
+#else
+   if (lseek(gFd, offsets[i], SEEK_SET) < 0)
+#endif
+      Error(ErrSys, kErrFileGet, "RootdGets: cannot seek to position %lld in"
+            " file %s", offsets[i], gFile);
+
+      while ((siz = read(gFd, buf_out + actual_pos, lens[i])) < 0 
+	     && GetErrno() == EINTR)
+	 ResetErrno();
+      
+      if (siz != lens[i])
+	 break;
+      
+      actual_pos += lens[i];
+   }
+
+   if (siz < 0)
+      Error(ErrSys, kErrFileGet, "RootdGets: error reading from file %s", gFile);
+
+   if (actual_pos != total_len)
+      Error(ErrFatal, kErrFileGet, "RootdGets: error reading all requested bytes"
+            " from file %s, got %d of %d",gFile, actual_pos, total_len);
+
+   NetSend(0, kROOTD_GETS);
+   NetSendRaw(buf_out, actual_pos);
+
+   delete [] buf_in;
+   delete [] buf_out;
+
+   gBytesRead += actual_pos;
+
+   if (gDebug > 0)
+      ErrorInfo("RootdGets: read %d bytes from file %s",
+                actual_pos, gFile);
+}
 
 //______________________________________________________________________________
 void RootdPutFile(const char *msg)
@@ -2039,6 +2117,9 @@ void RootdLoop()
             break;
          case kROOTD_GET:
             RootdGet(recvbuf);
+            break;
+         case kROOTD_GETS:
+            RootdGets(recvbuf);
             break;
          case kROOTD_FLUSH:
             RootdFlush();
