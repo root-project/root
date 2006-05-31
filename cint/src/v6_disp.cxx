@@ -2096,7 +2096,7 @@ char* fmt;
 va_list arg;
 #endif
 {
-  int result;
+  int result = 0;
   va_list argptr;
   va_start(argptr,fmt);
   if(G__ErrMsgCallback && G__serr==G__stderr) {
