@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.11 2004/09/24 18:22:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.12 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -130,6 +130,32 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
    }
 
    // No need to Connect.
+}
+
+//______________________________________________________________________________
+TFriendElement::TFriendElement(const TFriendElement& tfe) : 
+   TNamed(tfe),
+   fParentTree(tfe.fParentTree),
+   fTree(tfe.fTree),
+   fFile(tfe.fFile),
+   fTreeName(tfe.fTreeName),
+   fOwnFile(tfe.fOwnFile)
+{ 
+   // Copy constructor
+}
+
+//______________________________________________________________________________
+TFriendElement& TFriendElement::operator=(const TFriendElement& tfe) 
+{
+   // Equal operator
+   if(this!=&tfe) {
+      TNamed::operator=(tfe);
+      fParentTree=tfe.fParentTree;
+      fTree=tfe.fTree;
+      fFile=tfe.fFile;
+      fTreeName=tfe.fTreeName;
+      fOwnFile=tfe.fOwnFile;
+   } return *this;
 }
 
 //______________________________________________________________________________

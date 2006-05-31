@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.6 2005/04/28 07:29:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.7 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -40,6 +40,9 @@ protected:
    TFile        *fFile;        //!pointer to the file containing the friend TTree
    TString       fTreeName;    // name of the friend TTree
    Bool_t        fOwnFile;     // true if file is managed by this class
+
+   TFriendElement(const TFriendElement&);
+   TFriendElement& operator=(const TFriendElement&);
 
 public:
    enum { kFromChain = BIT(11) };
