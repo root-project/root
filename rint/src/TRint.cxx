@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.56 2006/05/23 04:47:41 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.57 2006/05/24 15:10:46 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -219,7 +219,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 }
 
 //______________________________________________________________________________
-TRint::TRint(const TRint& ri) : 
+TRint::TRint(const TRint& ri) :
   TApplication(ri),
   fNcmd(ri.fNcmd),
   fDefaultPrompt(ri.fDefaultPrompt),
@@ -231,7 +231,7 @@ TRint::TRint(const TRint& ri) :
 }
 
 //______________________________________________________________________________
-TRint& TRint::operator=(const TRint& ri) 
+TRint& TRint::operator=(const TRint& ri)
 {
    //assignement operator
    if(this!=&ri) {
@@ -241,7 +241,7 @@ TRint& TRint::operator=(const TRint& ri)
       strncpy(fPrompt,ri.fPrompt,64);
       fInterrupt=ri.fInterrupt;
       fInputHandler=ri.fInputHandler;
-   } 
+   }
    return *this;
 }
 
@@ -267,13 +267,13 @@ void TRint::Run(Bool_t retrn)
 
    Long_t retval = 0;
    Int_t  error = 0;
+   volatile Bool_t needGetlinemInit = kFALSE;
 
    // Process shell command line input files
    if (InputFiles()) {
       // Make sure that calls into the event loop
       // ignore end-of-file on the terminal.
       fInputHandler->DeActivate();
-      Bool_t needGetlinemInit = kFALSE;
       TIter next(InputFiles());
       RETRY {
          retval = 0; error = 0;
