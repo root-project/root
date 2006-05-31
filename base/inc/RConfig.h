@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.87 2006/03/29 22:15:56 pcanal Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.88 2006/05/31 15:24:46 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -129,6 +129,7 @@
 #   if __SUNPRO_CC > 0x420
 #      define R__SOLARIS_CC50
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
+#      define R__SSTREAM         /* use sstream or strstream header */
 #      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
 #   if __SUNPRO_CC >= 0x420
