@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.23 2006/05/13 17:28:15 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.24 2006/05/14 07:22:20 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -569,7 +569,7 @@ Bool_t THbookFile::IsOpen() const
 //______________________________________________________________________________
 void THbookFile::SetBranchAddress(Int_t id, const char *bname, void *add)
 {
-//
+   //Set branch address
 #ifndef WIN32
    hbnam(id,PASSCHAR(bname),(Int_t&)add,PASSCHAR("$SET"),0,strlen(bname),4);
 #else

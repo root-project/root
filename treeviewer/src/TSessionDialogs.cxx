@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.22 2006/01/30 17:42:06 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -555,7 +555,7 @@ void TNewQueryDlg::OnBrowseSelector()
 //______________________________________________________________________________
 void TNewQueryDlg::OnBrowseEventList()
 {
-   //
+   //Browse event list
 
 }
 

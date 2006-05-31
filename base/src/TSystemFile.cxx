@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemFile.cxx,v 1.6 2004/10/15 17:09:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemFile.cxx,v 1.7 2005/05/30 10:21:14 rdm Exp $
 // Author: Rene Brun   26/06/96
 
 /*************************************************************************
@@ -162,13 +162,13 @@ void TSystemFile::Rename(const char *name)
 //______________________________________________________________________________
 void TSystemFile::Inspect() const
 {
-   //
+   // inspect this file
 }
 
 //______________________________________________________________________________
 void TSystemFile::Dump() const
 {
-   //
+   // dump this file
 }
 
 

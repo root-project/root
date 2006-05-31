@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.16 2006/04/21 16:29:33 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.17 2006/05/29 12:41:18 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -594,7 +594,7 @@ static Int_t   gCellArrayIdx = 0;
 void TImageDump::CellArrayBegin(Int_t w, Int_t h, Double_t x1, Double_t x2,
                                 Double_t y1, Double_t y2)
 {
-   //
+   //cell array begin
 
    if (!gPad || !fImage || (w <= 0) || (h <= 0)) {
       return;
@@ -620,7 +620,7 @@ void TImageDump::CellArrayBegin(Int_t w, Int_t h, Double_t x1, Double_t x2,
 //______________________________________________________________________________
 void TImageDump::CellArrayFill(Int_t r, Int_t g, Int_t b)
 {
-   //
+   //Cell array fill
 
    if (gCellArrayIdx >= gCellArrayN) return;
 
@@ -631,7 +631,7 @@ void TImageDump::CellArrayFill(Int_t r, Int_t g, Int_t b)
 //______________________________________________________________________________
 void TImageDump::CellArrayEnd()
 {
-   //
+   //Cell array end
 
    if (!fImage || !gCellArrayColors || !gCellArrayW || !gCellArrayH) {
       return;

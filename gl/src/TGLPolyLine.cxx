@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPloyLine.cxx $
+// @(#)root/gl:$Name:  $:$Id: TGLPolyLine.cxx,v 1.1 2006/02/20 11:10:06 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -28,7 +28,7 @@ TGLPolyLine::TGLPolyLine(const TBuffer3D & buffer) :
    TGLLogicalShape(buffer),
    fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts())
 {
-   //
+   // constructor
 }
 
 //______________________________________________________________________________

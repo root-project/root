@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCylinder.cxx $
+// @(#)root/gl:$Name:  $:$Id: TGLCylinder.cxx,v 1.1 2006/02/20 11:10:06 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -113,13 +113,13 @@ TGLMesh::TGLMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4,
    fRmin1(r1), fRmax1(r2), fRmin2(r3), fRmax2(r4),
    fDz(dz), fNlow(l), fNhigh(h)
 {
-   //
+   // constructor
 }
 
 //______________________________________________________________________________
 void TGLMesh::GetNormal(const TGLVertex3 &v, TGLVector3 &n)const
 {
-   //
+   // get normal
    Double_t z = (fRmax1 - fRmax2) / (2 * fDz);
    Double_t mag = TMath::Sqrt(v[0] * v[0] + v[1] * v[1] + z * z);
 
@@ -131,7 +131,7 @@ void TGLMesh::GetNormal(const TGLVertex3 &v, TGLVector3 &n)const
 //______________________________________________________________________________
 Double_t TGLMesh::GetZcoord(Double_t x, Double_t y, Double_t z)const
 {
-   //
+   // get Z coordinate
    Double_t newz = 0;
    if (z < 0) newz = -fDz - (x * fNlow[0] + y * fNlow[1]) / fNlow[2];
    else newz = fDz - (x * fNhigh[0] + y * fNhigh[1]) / fNhigh[2];
@@ -142,7 +142,7 @@ Double_t TGLMesh::GetZcoord(Double_t x, Double_t y, Double_t z)const
 //______________________________________________________________________________
 const TGLVertex3 &TGLMesh::MakeVertex(Double_t x, Double_t y, Double_t z)const
 {
-   //
+   // make vertex
    static TGLVertex3 vert(0., 0., 0.);
    vert[0] = x;
    vert[1] = y;
@@ -158,7 +158,7 @@ TubeSegMesh::TubeSegMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Doub
                  :TGLMesh(LOD, r1, r2, r3, r4, dz, l, h), fMesh(), fNorm()
 
 {
-   //
+   // constructor
    const Double_t delta = (phi2 - phi1) / LOD;
    Double_t currAngle = phi1;
 
@@ -251,7 +251,7 @@ TubeMesh::TubeMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r
                    const TGLVector3 &l, const TGLVector3 &h)
              :TGLMesh(LOD, r1, r2, r3, r4, z, l, h), fMesh(), fNorm()
 {
-   //
+   // constructor
    const Double_t delta = TMath::TwoPi() / fLOD;
    Double_t currAngle = 0.;
 
@@ -318,7 +318,7 @@ TCylinderMesh::TCylinderMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t dz,
                              const TGLVector3 &l, const TGLVector3 &h)
                  :TGLMesh(LOD, 0., r1, 0., r2, dz, l, h), fMesh(), fNorm()
 {
-   //
+   // constructor
    const Double_t delta = TMath::TwoPi() / fLOD;
    Double_t currAngle = 0.;
 
@@ -363,7 +363,7 @@ TCylinderMesh::TCylinderMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t dz,
 //______________________________________________________________________________
 void TCylinderMesh::Draw() const
 {
-   //
+   // draw cylinder mesh
    glEnableClientState(GL_VERTEX_ARRAY);
    glEnableClientState(GL_NORMAL_ARRAY);
 
@@ -536,6 +536,7 @@ TGLCylinder::TGLCylinder(const TBuffer3DTube &buffer) :
 //______________________________________________________________________________
 TGLCylinder::~TGLCylinder()
 {
+   //destructor
 }
 
 //______________________________________________________________________________

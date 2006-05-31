@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.62 2006/05/29 09:35:29 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.63 2006/05/30 07:42:48 brun Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -1957,7 +1957,7 @@ void TEditQueryFrame::OnBrowseSelector()
 //______________________________________________________________________________
 void TEditQueryFrame::OnBrowseEventList()
 {
-   //
+   //Browse event list
 
 }
 

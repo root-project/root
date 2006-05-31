@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLFaceSet.cxx $
+// @(#)root/gl:$Name:  $:$Id: TGLFaceSet.cxx,v 1.1 2006/02/20 11:10:06 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -61,7 +61,7 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buffer) :
    fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()),
    fNormals(3 * buffer.NbPols())
 {
-   //
+   // constructor
    fNbPols = buffer.NbPols();
 
    Int_t *segs = buffer.fSegs;
@@ -200,7 +200,7 @@ void TGLFaceSet::DirectDraw(const TGLDrawFlags & flags) const
 //______________________________________________________________________________
 Int_t TGLFaceSet::CheckPoints(const Int_t *source, Int_t *dest) const
 {
-   //
+   // CheckPoints
    const Double_t * p1 = &fVertices[source[0] * 3];
    const Double_t * p2 = &fVertices[source[1] * 3];
    const Double_t * p3 = &fVertices[source[2] * 3];
@@ -232,7 +232,7 @@ Int_t TGLFaceSet::CheckPoints(const Int_t *source, Int_t *dest) const
 //______________________________________________________________________________
 Bool_t TGLFaceSet::Eq(const Double_t *p1, const Double_t *p2)
 {
-   //
+   // test equality
    Double_t dx = TMath::Abs(p1[0] - p2[0]);
    Double_t dy = TMath::Abs(p1[1] - p2[1]);
    Double_t dz = TMath::Abs(p1[2] - p2[2]);
@@ -242,7 +242,7 @@ Bool_t TGLFaceSet::Eq(const Double_t *p1, const Double_t *p2)
 //______________________________________________________________________________
 void TGLFaceSet::CalculateNormals()
 {
-   //
+   // CalculateNormals
    Double_t *pnts = &fVertices[0];
    for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
       Int_t polEnd = fPolyDesc[j] + j + 1;

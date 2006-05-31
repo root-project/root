@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.cxx $
+// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.cxx,v 1.1 2006/02/20 11:10:06 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -105,7 +105,7 @@ void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
 //______________________________________________________________________________
 void TGLPolyMarker::DrawStars()const
 {
-   //
+   // Draw stars
    glDisable(GL_LIGHTING);
    
    for (UInt_t i = 0; i < fVertices.size(); i += 3) {

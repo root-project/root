@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.9 2005/11/24 12:29:12 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.10 2005/11/29 09:25:51 couet Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -187,7 +187,7 @@ void Matrix4dSetRotationFromMatrix3d(Double_t *NewObj, const Double_t *m1)
 //______________________________________________________________________________
 inline void TArcBall::MapToSphere(const TPoint &NewPt, Double_t *NewVec) const
 {
-   //
+   //map to sphere
    Double_t tempPt[] = {NewPt.fX, NewPt.fY};
    //Adjust point coords and scale down to range of [-1 ... 1]
    tempPt[0]  = tempPt[0] * fAdjustWidth  - 1.;
@@ -216,7 +216,7 @@ TArcBall::TArcBall(UInt_t Width, UInt_t Height)
          fEnVec(), fAdjustWidth(0.),
          fAdjustHeight(0.)
 {
-   //
+   // constructor
    SetBounds(Width, Height);
    ResetMatrices();
 }

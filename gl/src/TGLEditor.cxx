@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.27 2006/03/13 09:33:50 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.28 2006/04/20 14:36:48 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -38,21 +38,21 @@ private:
 TGLMatView::TGLMatView(const TGWindow *parent, Window_t wid, TGLColorEditor *owner)
                :TGCompositeFrame(gClient, wid, parent), fOwner(owner)
 {
-   //
+   // constructor
    AddInput(kExposureMask | kStructureNotifyMask);
 }
 
 //______________________________________________________________________________
 Bool_t TGLMatView::HandleConfigureNotify(Event_t *event)
 {
-   //
+   //HandleConfigureNotify
    return fOwner->HandleContainerNotify(event);
 }
 
 //______________________________________________________________________________
 Bool_t TGLMatView::HandleExpose(Event_t *event)
 {
-   //
+   //HandleExpose
    return fOwner->HandleContainerExpose(event);
 }
 
