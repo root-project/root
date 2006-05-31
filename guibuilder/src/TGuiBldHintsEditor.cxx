@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsEditor.cxx,v 1.5 2006/04/07 10:05:09 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsEditor.cxx,v 1.6 2006/05/28 20:15:09 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -53,7 +53,7 @@ TGuiBldHintsManager::TGuiBldHintsManager(const TGWindow *p, TGuiBldEditor *e,
                                           TGuiBldHintsEditor *hints) : 
                      TGVerticalFrame(p, 1, 1), fEditor(e), fHints(hints)
 {
-   // ctor
+   // Constructor.
 
    fEditDisabled = kEditDisable;
    SetCleanup(kDeepCleanup);
@@ -453,7 +453,7 @@ void TGuiBldHintsEditor::UpdateState()
 //______________________________________________________________________________
 void TGuiBldHintsEditor::LayoutSubframes(Bool_t on)
 {
-   //
+   // Layout subframes.
 
    if (!fEditor) {
       return;
@@ -512,7 +512,7 @@ void TGuiBldHintsEditor::LayoutSubframes(Bool_t on)
 //______________________________________________________________________________
 void TGuiBldHintsEditor::SetMatrixSep()
 {
-   //
+   // Set matrix layout separator.
 
    TGFrame *frame = fEditor->GetSelected();
 
@@ -560,7 +560,7 @@ void TGuiBldHintsEditor::SetMatrixSep()
 //______________________________________________________________________________
 void TGuiBldHintsEditor::MatrixLayout()
 {
-   //
+   // Apply matrix layout.
 
    TGFrame *frame = fEditor->GetSelected();
 

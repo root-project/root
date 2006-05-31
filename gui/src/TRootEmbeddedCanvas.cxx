@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.22 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.23 2006/05/28 20:08:00 brun Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -127,13 +127,14 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const TRootEmbeddedCanvas& ec) :
   fAutoFit(ec.fAutoFit),
   fButton(ec.fButton)
 { 
-   //copy constructor
+   // Copy constructor.
 }
 
 //______________________________________________________________________________
 TRootEmbeddedCanvas& TRootEmbeddedCanvas::operator=(const TRootEmbeddedCanvas& ec)
 {
-   //equal operator
+   // Equal operator.
+   
    if(this!=&ec) {
       TGCanvas::operator=(ec),
       fCWinId=ec.fCWinId;
@@ -159,7 +160,7 @@ TRootEmbeddedCanvas::~TRootEmbeddedCanvas()
 //______________________________________________________________________________
 void TRootEmbeddedCanvas::AdoptCanvas(TCanvas *c)
 {
-   //
+   // Canvas c is adopted from this embedded canvas.
 
    if(c == 0) return;
    c->EmbedInto(fCWinId, fWidth, fHeight);

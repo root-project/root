@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsButton.cxx,v 1.3 2005/12/08 13:03:57 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsButton.cxx,v 1.4 2006/05/28 20:15:09 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -26,7 +26,7 @@ ClassImp(TGuiBldHintsButton)
 TGuiBldHintsButton::TGuiBldHintsButton(const TGWindow* p, Int_t id) :
                      TGButton(p, id)
 {
-   //
+   // Constructor.
 
    fStayDown = kTRUE;
 
@@ -48,7 +48,7 @@ TGuiBldHintsButton::TGuiBldHintsButton(const TGWindow* p, Int_t id) :
 //______________________________________________________________________________
 void TGuiBldHintsButton::DoRedraw()
 {
-   // Redraw button
+   // Redraw button.
 
    TGButton::DoRedraw();
 
@@ -86,7 +86,7 @@ void TGuiBldHintsButton::DoRedraw()
 //______________________________________________________________________________
 void TGuiBldHintsButton::DrawExpandX()
 {
-   // Draw expand X button
+   // Draw expand X button.
 
    const int dist = 3;
    const int amplitude = TMath::Min(3, (int)fHeight/3);
@@ -116,7 +116,7 @@ void TGuiBldHintsButton::DrawExpandX()
 //______________________________________________________________________________
 void TGuiBldHintsButton::DrawExpandY()
 {
-   //  Draw expand X button
+   // Draw expand Y button.
 
    const int dist = 3;
    const int amplitude = TMath::Min(3, (int)fWidth/3);
@@ -147,7 +147,7 @@ void TGuiBldHintsButton::DrawExpandY()
 //______________________________________________________________________________
 void TGuiBldHintsButton::DrawCenterX()
 {
-   //
+   // Draw center X buton.
 
    int base = fHeight/2;
    int x = 6;
@@ -189,7 +189,7 @@ void TGuiBldHintsButton::DrawCenterX()
 //______________________________________________________________________________
 void TGuiBldHintsButton::DrawCenterY()
 {
-   // Draw center Y button
+   // Draw center Y button.
 
    int base = fWidth/2;
    int x = 6;
@@ -230,24 +230,24 @@ void TGuiBldHintsButton::DrawCenterY()
 //______________________________________________________________________________
 void TGuiBldHintsButton::DrawTopLeft()
 {
-   //
+   // DrawTopLeft.
 }
 
 //______________________________________________________________________________
 void TGuiBldHintsButton::DrawTopRight()
 {
-   //
+   // DrawTopRight.
 }
 
 //______________________________________________________________________________
 void TGuiBldHintsButton::DrawBottomLeft()
 {
-   //
+   // DrawBottomLeft.
 }
 
 //______________________________________________________________________________
 void TGuiBldHintsButton::DrawBottomRight()
 {
-   //
+   // DrawBottomRight.
 }
 

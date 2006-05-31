@@ -1,4 +1,4 @@
-// $Id: TVirtualDragManager.cxx,v 1.2 2004/09/08 17:34:19 rdm Exp $
+// $Id: TVirtualDragManager.cxx,v 1.3 2004/11/23 00:07:22 rdm Exp $
 // Author: Valeriy Onuchin   02/08/04
 
 /*************************************************************************
@@ -29,7 +29,7 @@ TVirtualDragManager *gDragManager = 0;
 //______________________________________________________________________________
 TVirtualDragManager::TVirtualDragManager()
 {
-   // ctor
+   // Constructor.
 
    Init();
 }
@@ -60,7 +60,7 @@ TVirtualDragManager *TVirtualDragManager::Instance()
 //______________________________________________________________________________
 void TVirtualDragManager::Init()
 {
-   //
+   // Initialization.
 
    fDragging = kFALSE;
    fMoveWaiting = kFALSE;

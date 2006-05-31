@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldNameFrame.cxx,v 1.2 2006/04/07 10:05:09 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldNameFrame.cxx,v 1.3 2006/05/28 20:15:09 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -30,7 +30,7 @@
 TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
                   TGCompositeFrame(p, 1, 1)
 {
-   //
+   // Constructor.
 
    fEditor = editor;
    fEditDisabled = kEditDisable;
@@ -61,7 +61,7 @@ TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
 //______________________________________________________________________________
 void TGuiBldNameFrame::DoRedraw()
 {
-   // redraw frame (just prototyping)
+   // Redraw frame (just a prototype).
 
    //TColor *col = gROOT->GetColor(29);
    //TRootGuiBuilder::SetBgndColor(fTitleFrame, col->GetPixel());
@@ -71,7 +71,7 @@ void TGuiBldNameFrame::DoRedraw()
 //______________________________________________________________________________
 void TGuiBldNameFrame::Reset()
 {
-   // reset
+   // Reset name frame.
 
    fFrameName->SetText("");
    fLabel->SetText("");
@@ -81,7 +81,7 @@ void TGuiBldNameFrame::Reset()
 //______________________________________________________________________________
 void TGuiBldNameFrame::ChangeSelected(TGFrame *frame)
 {
-   //
+   // Change selected frame.
 
    fFrameName->Disconnect();
 

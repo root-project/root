@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.17 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.18 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -33,8 +33,8 @@
 #include "Riostream.h"
 
 
-const TGFont *TGStatusBar::fgDefaultFont = 0;
-TGGC         *TGStatusBar::fgDefaultGC = 0;
+const TGFont  *TGStatusBar::fgDefaultFont = 0;
+TGGC          *TGStatusBar::fgDefaultGC = 0;
 TGLayoutHints *TGStatusBar::fgHints = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 0, 0);
 
 
@@ -130,13 +130,14 @@ TGStatusBar::TGStatusBar(const TGStatusBar& sb) :
   fXt(sb.fXt),
   f3DCorner(sb.f3DCorner)
 { 
-   //copy constructor
+   // Copy constructor.
 }
 
 //______________________________________________________________________________
 TGStatusBar& TGStatusBar::operator=(const TGStatusBar& sb) 
 { 
-   //equal operator
+   // Equal operator.
+   
    if(this!=&sb) {
       TGHorizontalFrame::operator=(sb);
       fStatusPart=sb.fStatusPart;
@@ -374,7 +375,7 @@ TGCompositeFrame *TGStatusBar::GetBarPart(Int_t npart) const
 //______________________________________________________________________________
 TGDimension TGStatusBar::GetDefaultSize() const
 {
-   //
+   // Return default size.
 
    UInt_t h = fHeight;
 

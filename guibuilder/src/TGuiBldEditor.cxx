@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.11 2006/04/07 10:05:09 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.12 2006/05/26 09:17:50 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -45,7 +45,7 @@ public:
 TGuiBldGeometryFrame::TGuiBldGeometryFrame(const TGWindow *p, TGuiBldEditor *editor) :
                         TGVerticalFrame(p, 1, 1)
 {
-   //
+   // Constructor.
 
    fEditor = editor;
    fEditDisabled = 1;
@@ -134,7 +134,7 @@ public:
 TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor) :
              TGHorizontalFrame(p, 1, 1)
 {
-   //
+   // Constructor.
 
    fEditor = editor;
    fEditDisabled = 1;
@@ -192,7 +192,7 @@ TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor)
 //______________________________________________________________________________
 void TGuiBldBorderFrame::ChangeSelected(TGFrame *frame)
 {
-   // perform actions when selected frame was changed
+   // Perform actions when selected frame was changed.
 
    if (!frame) {
       return;
@@ -215,7 +215,7 @@ void TGuiBldBorderFrame::ChangeSelected(TGFrame *frame)
 //______________________________________________________________________________
 TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGCompositeFrame(p, 1, 1)
 {
-   // ctor.
+   // Constructor.
 
    fSelected = 0;
    SetCleanup(kDeepCleanup);
@@ -252,14 +252,14 @@ TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGCompositeFrame(p, 1, 1)
 //______________________________________________________________________________
 TGuiBldEditor::~TGuiBldEditor()
 {
-   // destructor
+   // Destructor.
 
 }
 
 //______________________________________________________________________________
 void TGuiBldEditor::TabSelected(Int_t id)
 {
-   // handle  selected
+   // Handle  selected.
 
    if (id == fLayoutId) {
       //printf("%d\n", fSelected);
@@ -269,7 +269,7 @@ void TGuiBldEditor::TabSelected(Int_t id)
 //______________________________________________________________________________
 void TGuiBldEditor::Hide()
 {
-   //
+   // Hide editor.
 
    UnmapWindow();
 }
@@ -277,7 +277,7 @@ void TGuiBldEditor::Hide()
 //______________________________________________________________________________
 void TGuiBldEditor::ChangeSelected(TGFrame *frame)
 {
-   //
+   // Change selected frame.
 
    TGTabElement *tab = fTab->GetTabTab(fLayoutId);
 
@@ -330,7 +330,7 @@ void TGuiBldEditor::ChangeSelected(TGFrame *frame)
 //______________________________________________________________________________
 void TGuiBldEditor::UpdateSelected(TGFrame *frame)
 {
-   //
+   // Update selected frame.
 
    Emit("UpdateSelected(TGFrame*)", (long)frame);
 }
@@ -374,7 +374,7 @@ void TGuiBldEditor::UpdateBorder(Int_t b)
 //______________________________________________________________________________
 void TGuiBldEditor::UpdateBackground(Pixel_t col)
 {
-   //
+   // Update background.
 
    if (!fSelected) return;
 
@@ -385,7 +385,7 @@ void TGuiBldEditor::UpdateBackground(Pixel_t col)
 //______________________________________________________________________________
 void TGuiBldEditor::UpdateForeground(Pixel_t col)
 {
-   //
+   // Update foreground.
 
    if (!fSelected) return;
 
@@ -396,7 +396,7 @@ void TGuiBldEditor::UpdateForeground(Pixel_t col)
 //______________________________________________________________________________
 void TGuiBldEditor::Reset()
 {
-   // reset
+   // Reset the editor.
 
    fSelected = 0;
    fNameFrame->Reset();

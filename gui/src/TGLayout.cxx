@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.20 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.21 2006/04/18 12:32:43 antcheva Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -72,7 +72,7 @@ ClassImp(TGListDetailsLayout)
 //______________________________________________________________________________
 TGFrameElement::TGFrameElement(TGFrame *f, TGLayoutHints *l)
 {
-   // ctor
+   // Constructor.
 
    fFrame  = f;
    if (f) f->SetFrameElement(this);
@@ -89,14 +89,14 @@ TGFrameElement::TGFrameElement(TGFrame *f, TGLayoutHints *l)
 //______________________________________________________________________________
 TGFrameElement::~TGFrameElement()
 {
-   // destructor. Decrease ref.count of fLayout
+   // Destructor. Decrease ref. count of fLayout.
 
 }
 
 //______________________________________________________________________________
 void TGFrameElement::Print(Option_t *option) const
 {
-   // print this
+   // Print this frame element.
 
    TObject::Print(option);
 
@@ -113,7 +113,7 @@ void TGFrameElement::Print(Option_t *option) const
 //______________________________________________________________________________
 TGLayoutHints::TGLayoutHints(const TGLayoutHints &lh) : TObject(lh), TRefCnt(lh)
 {
-   // ctor
+   // Constructor.
 
    fPadleft = lh.fPadleft; fPadright = lh.fPadright;
    fPadtop  = lh.fPadtop;  fPadbottom = lh.fPadbottom;
@@ -125,14 +125,14 @@ TGLayoutHints::TGLayoutHints(const TGLayoutHints &lh) : TObject(lh), TRefCnt(lh)
 //______________________________________________________________________________
 TGLayoutHints::~TGLayoutHints()
 {
-   // dtor
+   // Destructor.
 
 }
 
 //______________________________________________________________________________
 void TGLayoutHints::UpdateFrameElements(TGLayoutHints *l)
 {
-   //
+   // Update layout hints of frame elements.
 
    if (fFE) fFE->fLayout = l;
    else return;
