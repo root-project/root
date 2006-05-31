@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.4 2002/04/02 15:13:54 rdm Exp $
+// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.5 2002/04/02 15:44:15 rdm Exp $
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
@@ -41,9 +41,7 @@ TPgSQLServer::TPgSQLServer(const char *db, const char *uid, const char *pw)
       return;
    }
 
-   const char *dbase = 0;
-   if (strcmp(url.GetFile(), "/"))
-      dbase = url.GetFile()+1;   //skip leading /
+   const char *dbase = url.GetFile();
 
    if (url.GetPort()) {
       TString port;

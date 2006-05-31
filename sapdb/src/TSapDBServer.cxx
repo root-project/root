@@ -1,4 +1,4 @@
-// @(#)root/sapdb:$Name:  $:$Id: TSapDBServer.cxx,v 1.1 2001/08/24 16:41:19 rdm Exp $
+// @(#)root/sapdb:$Name:  $:$Id: TSapDBServer.cxx,v 1.2 2003/08/06 21:31:24 rdm Exp $
 // Author: Mark Hemberger & Fons Rademakers   03/08/2001
 
 /*************************************************************************
@@ -46,9 +46,7 @@ TSapDBServer::TSapDBServer(const char *db, const char *uid, const char *pw)
       return;
    }
 
-   const char *dbase = 0;
-   if (strcmp(url.GetFile(), "/"))
-      dbase = url.GetFile()+1;   //skip leading /
+   const char *dbase = url.GetFile();
 
    // Allocate environment, connection, and statement handle
    RETCODE rc = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &fEnv);
