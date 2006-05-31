@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Random.h,v 1.1 2006/05/26 14:26:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Random.h,v 1.2 2006/05/30 16:03:46 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -34,14 +34,21 @@
 #include <string> 
 #include <vector> 
 
+/**
+   @defgroup Random Random numbers and distributions
+*/ 
+
+
+
 namespace ROOT {
 namespace Math {
 
 
   /**
-     User class for random numbers
+     User class for MathMore random numbers template on the Engine type. 
+     The API of this class followed that of the class ROOT::TRandom. 
 
-     @defgroup Random Random numbers and distributions
+     @ingroup Random 
 
    */ 
   template < class Engine> 
