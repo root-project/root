@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.116 2006/05/11 10:15:28 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.117 2006/05/31 15:26:06 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1305,8 +1305,8 @@ void RootdGets(const char *msg)
 
    sscanf(msg, "%d %d", &num_buf, &len);
    
-   long long offsets[num_buf];          // list to be filled
-   int lens[num_buf];                   // list to be filled 
+   Long64_t *offsets = new Long64_t[num_buf];          // list to be filled
+   Int_t *lens = new Int_t[num_buf];                   // list to be filled 
    char *buf_in = new char[len+1];      // buff coming from the server 
    
    NetRecvRaw(buf_in, len);
@@ -1357,6 +1357,8 @@ void RootdGets(const char *msg)
 
    delete [] buf_in;
    delete [] buf_out;
+   delete [] lens;
+   delete [] offsets;
 
    gBytesRead += actual_pos;
 
