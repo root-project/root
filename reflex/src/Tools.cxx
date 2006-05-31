@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.10 2006/04/26 09:16:45 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.11 2006/05/31 21:00:39 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -369,6 +369,8 @@ std::string ROOT::Reflex::Tools::NormalizeName( const std::string & nam ) {
    unsigned int nlen = nam.length();
    unsigned int par = 0;
    bool first_word = true;
+   char cprev = ' ';
+   char cnext = ' ';
 
    for (unsigned int i = 0; i < nlen; ++i ) {
 
@@ -388,8 +390,8 @@ std::string ROOT::Reflex::Tools::NormalizeName( const std::string & nam ) {
          // if the last pos and the next pos is char 
          // or we are at the closing of angular braces 
          // then insert a space and the next position
-         char cprev = nam[i-1];
-         char cnext = nam[i+1];
+         cprev = nam[i-1];
+         cnext = nam[i+1];
          if ( ( isalphanum(cprev) &&  isalpha(cnext) ) ||
               ( cprev == '>' && cnext == '>' ) ) norm_name += ' ' + nam[i+1];
          // otherwise only add the next pos
