@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.86 2006/01/24 18:59:18 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.87 2006/03/29 22:15:56 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -413,6 +413,9 @@
 #   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   if _MSC_VER >= 1200
 #     define R__ANSISTREAM    /* ANSI C++ Standard Library conformant */
+#   endif
+#   if _MSC_VER >= 1310
+#     define R__SSTREAM       /* has <sstream> iso <strstream> */
 #   endif
 #   if _MSC_VER < 1310
 #      define R__NO_CLASS_TEMPLATE_SPECIALIZATION
