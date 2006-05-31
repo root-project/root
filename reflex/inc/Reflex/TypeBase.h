@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.7 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.8 2006/04/12 10:21:11 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -125,7 +125,7 @@ namespace ROOT {
            std::vector < Object > values,
            void * mem) const;*/
          virtual Object Construct( const Type & signature,
-                                   std::vector < void * > values,
+                                   const std::vector < void * > & values,
                                    void * mem) const;
       
          /**
