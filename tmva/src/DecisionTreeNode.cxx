@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTreeNode.cxx,v 1.7 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -35,9 +35,9 @@
 // (background-enhanced) and a right (signal-enhanced) sample.                                                                       
 //_______________________________________________________________________
 
-#include <iostream>
 #include <algorithm>
 
+#include "Riostream.h"
 #include "TMVA/DecisionTreeNode.h"
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/Tools.h"

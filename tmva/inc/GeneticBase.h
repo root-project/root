@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticBase.h,v 1.8 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: GeneticBase.h,v 1.2 2006/05/23 13:03:15 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -41,7 +41,7 @@
 #include <string>
 
 #include <stdio.h>
-#include <iostream>
+#include "Riostream.h"
 
 #ifndef ROOT_TMVA_GeneticPopulation
 #include "TMVA/GeneticPopulation.h"

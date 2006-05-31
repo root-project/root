@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTree.cxx,v 1.11 2006/05/23 09:53:10 stelzer Exp $
+// @(#)root/tmva $Id: DecisionTree.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: DecisionTree.cxx,v 1.11 2006/05/23 09:53:10 stelzer Exp $
+ * $Id: DecisionTree.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -55,9 +55,9 @@
 // more signal respective background events from the training sample.
 //_______________________________________________________________________
 
-#include <iostream>
 #include <algorithm>
 
+#include "Riostream.h"
 #include "TVirtualFitter.h"
 
 #include "TMVA/DecisionTree.h"

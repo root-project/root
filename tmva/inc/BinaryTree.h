@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinaryTree.h,v 1.5 2006/05/22 09:06:25 helgevoss Exp $    
+// @(#)root/tmva $Id: BinaryTree.h,v 1.2 2006/05/23 13:03:15 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -38,8 +38,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <fstream>
 #include <vector>
 #include "Riostream.h"
 #include "TROOT.h"
@@ -58,6 +56,9 @@
 // the Tree consists of a "root-node" wich might have  0 to 2 daughther nodes
 
 namespace TMVA {
+
+  class BinaryTree;
+  ostream& operator<< ( ostream& os, const BinaryTree& tree );
 
   class BinaryTree {
     

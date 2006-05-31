@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Node.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: Node.h,v 1.2 2006/05/23 13:03:15 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Node.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $    
+ * $Id: Node.h,v 1.2 2006/05/23 13:03:15 brun Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Node
@@ -40,8 +40,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <fstream>
 #include <vector>
 #include "Riostream.h"
 #include "Rtypes.h"
@@ -53,7 +51,10 @@
 namespace TMVA {
   
    class NodeID;
+   class Node;
    class Event;
+   ostream& operator << (ostream& os, const Node& node);
+   ostream& operator << (ostream& os, const Node* node);
 
    // a class used to identify a Node; (needed for recursive reading from text file)
    // (currently it is NOT UNIQUE... but could eventually made it

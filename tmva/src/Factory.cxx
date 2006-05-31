@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Factory.cxx,v 1.10 2006/05/23 09:53:10 stelzer Exp $   
+// @(#)root/tmva $Id: Factory.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -35,8 +35,6 @@
 // phase space requirements (cuts).                                     
 //_______________________________________________________________________
 
-#include <iostream>
-#include <fstream>
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TFile.h"

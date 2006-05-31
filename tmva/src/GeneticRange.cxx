@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticRange.cxx,v 1.6 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: GeneticRange.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -23,7 +23,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: GeneticRange.cxx,v 1.6 2006/05/23 09:53:10 stelzer Exp $
+ * $Id: GeneticRange.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -33,7 +33,7 @@
 //_______________________________________________________________________
 
 #include "TMVA/GeneticRange.h"
-#include <iostream>
+#include "Riostream.h"
 
 ClassImp(TMVA::GeneticRange)
 

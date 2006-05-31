@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Event.h,v 1.7 2006/05/23 09:53:10 stelzer Exp $     
+// @(#)root/tmva $Id: Event.h,v 1.2 2006/05/23 13:03:15 brun Exp $     
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -38,8 +38,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <fstream>
 #include <vector>
 #include "Riostream.h"
 #include "TVector.h"
@@ -51,6 +49,10 @@
 // but could also be inherited from and extened if needed 
 
 namespace TMVA {
+
+   class Event;
+   ostream& operator << (ostream& os, const Event& event);
+   ostream& operator << (ostream& os, const Event* event);
 
    class Event {
     

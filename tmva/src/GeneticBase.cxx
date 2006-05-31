@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticBase.cxx,v 1.7 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: GeneticBase.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -30,7 +30,7 @@
 //_______________________________________________________________________
 
 #include "TMVA/GeneticBase.h"
-#include <iostream>
+#include "Riostream.h"
 
 namespace TMVA {
    const Bool_t GeneticBase__DEBUG__=kFALSE;

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: NodeID.h,v 1.4 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: NodeID.h,v 1.2 2006/05/23 13:03:15 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -39,8 +39,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <fstream>
 #include <vector>
 #include "Rtypes.h"
 #include "Riostream.h"

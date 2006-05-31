@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticPopulation.cxx,v 1.7 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: GeneticPopulation.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -26,11 +26,11 @@
 
 #include "TMVA/GeneticPopulation.h"
 #include "TMVA/GeneticGenes.h"
-#include <iostream>
+#include "Riostream.h"
+#include "Rstrstream.h"
 #include "TSystem.h"
 #include "TRandom3.h"
 #include "TH1.h"
-#include <sstream>
 
 using namespace std;
 

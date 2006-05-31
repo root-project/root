@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Reader.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $ 
+// @(#)root/tmva $Id: Reader.h,v 1.2 2006/05/23 13:03:15 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -27,7 +27,7 @@
  * (http://tmva.sourceforge.net/license.txt)                                      *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Reader.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $        
+ * $Id: Reader.h,v 1.2 2006/05/23 13:03:15 brun Exp $        
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Reader
@@ -56,11 +56,10 @@
 #include "TVectorD.h"
 #endif
 
-#include <iostream>
-#include <fstream>
 #include <vector>
 #include <string>
 #include <math.h>
+#include "Riostream.h"
 
 using namespace std;
 

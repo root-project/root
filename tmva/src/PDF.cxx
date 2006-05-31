@@ -24,7 +24,7 @@
  *                                                                                *
  **********************************************************************************/
 
-#include <iostream> // Stream declarations
+#include "Riostream.h"
 
 #include "TMVA/PDF.h"
 #include "TMVA/TSpline1.h"
