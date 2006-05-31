@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.3 2006/01/06 08:34:39 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.4 2006/04/26 09:16:04 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -103,12 +103,12 @@ void ReflexUnitTest::any_type()
   Any i(10);
   CPPUNIT_ASSERT(!i.Empty());
   CPPUNIT_ASSERT_EQUAL(10, any_cast<int>(i));
-  //CPPUNIT_ASSERT_THROW(any_cast<float>(i), ROOT::Reflex::bad_any_cast);
+  //CPPUNIT_ASSERT_THROW(any_cast<float>(i), ROOT::Reflex::BadAnyCast);
   try {
     any_cast<float>(i);
   }
-  catch (ROOT::Reflex::bad_any_cast e) {
-    CPPUNIT_ASSERT_EQUAL(std::string("bad_any_cast: failed conversion using any_cast"), std::string(e.What()));
+  catch (ROOT::Reflex::BadAnyCast e) {
+    CPPUNIT_ASSERT_EQUAL(std::string("BadAnyCast: failed conversion using any_cast"), std::string(e.what()));
   }
   Any f(10.66F);
   CPPUNIT_ASSERT_EQUAL(10.66F, any_cast<float>(f));
@@ -210,7 +210,7 @@ void ReflexUnitTest::exception() {
     t.UpdateMembers();
   }
   catch (ROOT::Reflex::RuntimeError e) {
-    CPPUNIT_ASSERT_EQUAL(std::string("REFLEX: Function UpdateMembers can only be called on Class/Struct"), std::string(e.What()));
+    CPPUNIT_ASSERT_EQUAL(std::string("REFLEX: Function UpdateMembers can only be called on Class/Struct"), std::string(e.what()));
   }
 }
 

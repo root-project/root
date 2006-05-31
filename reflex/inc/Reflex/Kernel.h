@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.11 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.12 2006/03/13 22:24:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -190,7 +190,7 @@ namespace ROOT {
       // TY = TYPE
       // ME = MEMBER
       //                              BA  CL  DM  FM  TY  ME 
-      enum {
+      enum ENTITY_DESCRIPTION {
          PUBLIC          = (1<<0),  //  X       X   X       X
          PROTECTED       = (1<<1),  //  X       X   X       X
          PRIVATE         = (1<<2),  //  X       X   X       X
@@ -233,7 +233,7 @@ namespace ROOT {
 
 
       /** enum for printing names */
-      enum {
+      enum ENTITY_HANDLING {
          FINAL     = (1<<0),
          QUALIFIED = (1<<1),
          SCOPED    = (1<<2),
@@ -263,11 +263,6 @@ namespace ROOT {
       };
 
 
-      /** all possible status codes of the package */
-      enum STATUS { SUCCESS = 0,
-                    FAILURE
-      };
-    
       /** the Name of the status code -- don't use this to check */
 #define SRSTATUSNAME rstat
       /** the Name of the status code to check for */
@@ -308,7 +303,7 @@ namespace ROOT {
       public:
          RuntimeError(const std::string& msg) : fMsg(Reflex::Argv0() + ": " + msg) { }
          ~RuntimeError() throw() {}
-         virtual const char * What() const throw( ) { return fMsg.c_str();}
+         virtual const char * what() const throw( ) { return fMsg.c_str();}
          std::string fMsg;
       };
 

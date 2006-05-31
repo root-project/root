@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Any.h,v 1.6 2006/01/27 16:10:20 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Any.h,v 1.7 2006/03/13 15:49:50 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // See http://www.boost.org/libs/any for Documentation.
@@ -146,18 +146,18 @@ namespace ROOT {
     
     
       /**
-       * @class bad_any_cast Any.h Reflex/Any.h
+       * @class BadAnyCast Any.h Reflex/Any.h
        * @author K. Henney
        */
-      class bad_any_cast : public std::bad_cast {
+      class BadAnyCast : public std::bad_cast {
       public:
       
          /** Constructor */
-         bad_any_cast() {}
+         BadAnyCast() {}
 
          /** Query */
-         virtual const char * What() const throw() {
-            return "bad_any_cast: failed conversion using any_cast";
+         virtual const char * what() const throw() {
+            return "BadAnyCast: failed conversion using any_cast";
          }
       };
     
@@ -180,7 +180,7 @@ namespace ROOT {
       /** value */
       template< typename ValueType > ValueType any_cast( const Any & operand ) {
          const ValueType * result = any_cast< ValueType >( & operand );
-         if ( ! result ) { throw_exception( bad_any_cast()); }
+         if ( ! result ) { throw_exception( BadAnyCast()); }
          return * result;
       }
 

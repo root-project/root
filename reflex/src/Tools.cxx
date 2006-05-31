@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.9 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.10 2006/04/26 09:16:45 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -23,6 +23,7 @@
 #elif defined(__SUNPRO_CC)
 #include <demangle.h>
 #endif
+
 
 //-------------------------------------------------------------------------------
 static std::string splitScopedName( const std::string & Name, 
@@ -109,19 +110,19 @@ size_t ROOT::Reflex::Tools::GetBasePosition( const std::string & name ) {
    int i = 0;
    size_t pos = 0;
    for ( i = name.size()-1; i >= 0; --i) {
-     switch (name[i]) {
-     case '>' : ab++; break;
-     case '<' : ab--; break;
-     case ')' : rb++; break;
-     case '(' : rb--; break;
-     case ':' : 
-       if ( ab == 0 && rb == 0 && name[i-1] == ':' ) {
-         pos = i + 1;
-         break; 
-       }
-     default: continue;
-     }
-     if ( pos ) break;
+      switch (name[i]) {
+      case '>' : ab++; break;
+      case '<' : ab--; break;
+      case ')' : rb++; break;
+      case '(' : rb--; break;
+      case ':' : 
+         if ( ab == 0 && rb == 0 && name[i-1] == ':' ) {
+            pos = i + 1;
+            break; 
+         }
+      default: continue;
+      }
+      if ( pos ) break;
    }
    return pos;
 }
@@ -353,3 +354,89 @@ std::string ROOT::Reflex::Tools::GetTemplateName( const char * name ) {
    return templateName;
 }
 
+
+bool isalphanum(int i) {
+   return isalpha(i) || isdigit(i);
+}
+
+
+//-------------------------------------------------------------------------------
+std::string ROOT::Reflex::Tools::NormalizeName( const std::string & nam ) {
+//-------------------------------------------------------------------------------
+
+   std::string norm_name = "";
+   //char lchar = ' ';
+   unsigned int nlen = nam.length();
+   unsigned int par = 0;
+   bool first_word = true;
+
+   for (unsigned int i = 0; i < nlen; ++i ) {
+
+      switch (nam[i]) {
+
+      case ' ':
+         // are we at the beginning of the name
+         //bool fist_pos = i ? false : true;
+
+         // consume all spaces
+         while (i < nlen && nam[i+1] == ' ') ++i;
+      
+         // if only white spaces at the beginning break or
+         // spaces at the end of the name then break
+         if ( first_word || ( i = nlen -1) ) break;
+
+         // if the last pos and the next pos is char 
+         // or we are at the closing of angular braces 
+         // then insert a space and the next position
+         char cprev = nam[i-1];
+         char cnext = nam[i+1];
+         if ( ( isalphanum(cprev) &&  isalpha(cnext) ) ||
+              ( cprev == '>' && cnext == '>' ) ) norm_name += ' ' + nam[i+1];
+         // otherwise only add the next pos
+         else norm_name += nam[i+1];
+         // increase counter by consumed pos
+         ++i;
+         break;
+
+      case '(':
+      case '<':
+         ++par;
+         norm_name += nam[i];
+         ++i;
+         break;
+
+      case ')':
+      case '>':
+         --par;
+         norm_name += nam[i];
+         ++i;
+         break;
+
+      case '*':
+      case '&':
+         first_word = false;
+         norm_name += nam[i];
+         ++i;
+         break;
+
+      case 'c':
+         norm_name += nam[i];
+         ++i;
+         break;
+
+      case 'v':
+         norm_name += nam[i];
+         ++i;
+         break;
+
+      default:
+         norm_name += nam[i];
+         ++i;
+         break;
+
+      }
+
+   }
+
+   return norm_name;
+}

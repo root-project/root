@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.8 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.9 2006/04/20 17:18:23 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -74,7 +74,7 @@ ROOT::Reflex::Type::CastObject( const Type & to,
   ROOT::Reflex::Type::Construct( const Type & signature,
   const std::vector < Object > & values, 
   void * mem ) const {
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
   if ( * this ) return fTypeName->fTypeBase->Construct( signature, 
   values, 
   mem ); 
@@ -139,68 +139,68 @@ ROOT::Reflex::Member ROOT::Reflex::Type::FunctionMemberByName( const std::string
 
 //-------------------------------------------------------------------------------
 bool ROOT::Reflex::Type::IsEquivalentTo( const Type & typ ) const {
-  //-------------------------------------------------------------------------------
-  Type t1 = *this;
-  Type t2 = typ;
-  if (!t1.Id() & !t2.Id()) return true;
+//-------------------------------------------------------------------------------
+   Type t1 = *this;
+   Type t2 = typ;
+   if (!t1.Id() & !t2.Id()) return true;
 
-  unsigned int mod1 = t1.fModifiers;
-  unsigned int mod2 = t2.fModifiers;
+   unsigned int mod1 = t1.fModifiers;
+   unsigned int mod2 = t2.fModifiers;
 
-  while (t1.IsTypedef()) { 
-    t1 = t1.ToType();
-    mod1 |= t1.fModifiers;
-  }
-  while ( t2.IsTypedef()) {
-    t2 = t2.ToType();
-    mod2 |= t2.fModifiers;
-  }
+   while (t1.IsTypedef()) { 
+      t1 = t1.ToType();
+      mod1 |= t1.fModifiers;
+   }
+   while ( t2.IsTypedef()) {
+      t2 = t2.ToType();
+      mod2 |= t2.fModifiers;
+   }
 
-  if (mod1 == mod2) {
+   if (mod1 == mod2) {
 
-    switch ( t1.TypeType() ) {
-    case CLASS:
-      if ( t2.IsClass() )           return ( t1.fTypeName == t2.fTypeName ); 
-    case FUNDAMENTAL:
-      if ( t2.IsFundamental() )     return ( t1.fTypeName == t2.fTypeName );
-    case UNION:
-      if ( t2.IsUnion() )           return ( t1.fTypeName == t2.fTypeName ); 
-    case ENUM:
-      if ( t2.IsEnum() )            return ( t1.fTypeName == t2.fTypeName ); 
-    case POINTER:
-      if ( t2.IsPointer() )         return ( t1.ToType().IsEquivalentTo(t2.ToType()) );
-    case POINTERTOMEMBER:
-      if ( t2.IsPointerToMember() ) return ( t1.ToType().IsEquivalentTo(t2.ToType()) );
-    case ARRAY:
-      if ( t2.IsArray() )           return ( t1.ToType().IsEquivalentTo(t2.ToType()) && t1.ArrayLength() == t2.ArrayLength() );
-    case FUNCTION:
-      if ( t2.IsFunction() ) {
+      switch ( t1.TypeType() ) {
+      case CLASS:
+         if ( t2.IsClass() )           return ( t1.fTypeName == t2.fTypeName ); 
+      case FUNDAMENTAL:
+         if ( t2.IsFundamental() )     return ( t1.fTypeName == t2.fTypeName );
+      case UNION:
+         if ( t2.IsUnion() )           return ( t1.fTypeName == t2.fTypeName ); 
+      case ENUM:
+         if ( t2.IsEnum() )            return ( t1.fTypeName == t2.fTypeName ); 
+      case POINTER:
+         if ( t2.IsPointer() )         return ( t1.ToType().IsEquivalentTo(t2.ToType()) );
+      case POINTERTOMEMBER:
+         if ( t2.IsPointerToMember() ) return ( t1.ToType().IsEquivalentTo(t2.ToType()) );
+      case ARRAY:
+         if ( t2.IsArray() )           return ( t1.ToType().IsEquivalentTo(t2.ToType()) && t1.ArrayLength() == t2.ArrayLength() );
+      case FUNCTION:
+         if ( t2.IsFunction() ) {
 
-        if ( t1.ReturnType().IsEquivalentTo(t2.ReturnType())) {
+            if ( t1.ReturnType().IsEquivalentTo(t2.ReturnType())) {
 
-          if ( t1.FunctionParameterSize() == t2.FunctionParameterSize() ) {
+               if ( t1.FunctionParameterSize() == t2.FunctionParameterSize() ) {
 
-            Type_Iterator pi1;
-            Type_Iterator pi2;
-            for ( pi1 = t1.FunctionParameter_Begin(), pi2 = t2.FunctionParameter_Begin(); 
-                  pi1 != t1.FunctionParameter_End(),  pi2 != t2.FunctionParameter_End(); 
-                  ++pi1, ++pi2 ) {
+                  Type_Iterator pi1;
+                  Type_Iterator pi2;
+                  for ( pi1 = t1.FunctionParameter_Begin(), pi2 = t2.FunctionParameter_Begin(); 
+                        pi1 != t1.FunctionParameter_End(),  pi2 != t2.FunctionParameter_End(); 
+                        ++pi1, ++pi2 ) {
 
-              if ( ! pi1->IsEquivalentTo(*pi2)) return false;
+                     if ( ! pi1->IsEquivalentTo(*pi2)) return false;
 
+                  }
+                  return true;
+               }
             }
-            return true;
-          }
-        }
-        return false;
+            return false;
+         }
+      default:
+         return false;
       }
-    default:
+   }
+   else {
       return false;
-    }
-  }
-  else {
-    return false;
-  }
+   }
 }
 
 
