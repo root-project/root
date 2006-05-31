@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.46 2006/04/28 19:21:43 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.47 2006/05/28 20:15:09 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -4872,6 +4872,10 @@ void TGuiBldDragManager::HandleGrid()
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
 
+   if (!root || (root == fClient->GetDefaultRoot())) {
+      return;
+   }
+
    if (fPimpl->fGrid->fgStep > 1) {
       fPimpl->fGrid->SetStep(1);
       if (fBuilder) {
@@ -4902,9 +4906,7 @@ void TGuiBldDragManager::HandleGrid()
       }
    }
 
-   root->SetEditable(kFALSE);
-   DoRedraw();
-   root->SetEditable(kTRUE);
+   Snap2Grid();   
    DrawGrabRectangles();
 }
 

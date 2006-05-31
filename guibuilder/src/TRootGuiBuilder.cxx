@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.30 2006/04/28 19:21:43 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.32 2006/05/30 06:41:15 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -893,6 +893,10 @@ void TRootGuiBuilder::CloseWindow()
       fMenuFile->EnableEntry(kGUIBLD_FILE_CLOSE);
    }
 
+   TGButton *btn = fToolBar->GetButton(kGridAct);
+   if (btn) {
+      btn->SetState(!fClient->IsEditable() ? kButtonDisabled : kButtonUp);
+   }
    fMain->CloseAll();
    SwitchToolbarButton();
    Hide();
@@ -1167,11 +1171,23 @@ void TRootGuiBuilder::EnableSelectedButtons(Bool_t on)
 
    fSelected = fManager->GetSelected();
 
+   TGButton *btn = 0;
+
    if (!fSelected) {
+      btn = fToolBar->GetButton(kCompactAct);
+      if (btn) btn->SetState(kButtonDisabled);
+
+      btn = fToolBar->GetButton(kLayoutVAct);
+      if (btn) btn->SetState(kButtonDisabled);
+
+      btn = fToolBar->GetButton(kLayoutHAct);
+      if (btn) btn->SetState(kButtonDisabled);
+
+      btn = fToolBar->GetButton(kBreakLayoutAct);
+      if (btn) btn->SetState(kButtonDisabled);
       return;
    }
 
-   TGButton *btn = 0;
    Bool_t comp = kFALSE;
    TGLayoutManager *lm = 0;
    Bool_t hor = kFALSE;
@@ -1230,11 +1246,6 @@ void TRootGuiBuilder::EnableEditButtons(Bool_t on)
    btn = fToolBar->GetButton(kReplaceAct);
    if (btn) {
       btn->SetState(!on ? kButtonDisabled : kButtonUp);
-   }
-
-   btn = fToolBar->GetButton(kGridAct);
-   if (btn) {
-      btn->SetState(!fClient->IsEditable() ? kButtonDisabled : kButtonUp);
    }
 
    btn = fToolBar->GetButton(kCutAct);
@@ -1668,6 +1679,7 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
             fEditable = 0;
             SwitchToolbarButton();
          }
+         fEditor->Reset();
          break;
 
       case kGUIBLD_FILE_NEW:
