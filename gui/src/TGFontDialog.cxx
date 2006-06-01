@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.15 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.16 2006/05/29 12:04:45 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers + Valeriy Onuchin  23/04/03
 
 /*************************************************************************
@@ -672,6 +672,12 @@ void TGFontDialog::UpdateStyleSize(const char *family)
          nostyles = kFALSE;
          fFontStyles->AddEntry(new TGString(gFontStyles[i]), i);
       }
+   }
+
+   if (nostyles && x11) {
+      fFontStyles->AddEntry(new TGString(gFontStyles[0]), 0);
+      fBold = kFALSE;
+      fItalic = kFALSE;
    }
 
    if (!fBold) {
