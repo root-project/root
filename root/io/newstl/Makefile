@@ -21,6 +21,8 @@ FILEDIR := $(VERSION)
 
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log *.clog $(LIBDIRTOP) result.root
+# We intentionally do not delete the output file in $(FILEDIR) so that 
+# we can keep the historic versions.
 
 #Set the list of target to make while testing
 TEST_TARGETS += base emptyCollection stlIoTest emulatedWrite
