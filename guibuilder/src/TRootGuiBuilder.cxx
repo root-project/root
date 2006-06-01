@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.32 2006/05/30 06:41:15 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.33 2006/05/31 14:26:31 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 #include "TGTextEdit.h"
 #include "TGTab.h"
 #include "TGListBox.h"
+#include "TGComboBox.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -701,7 +702,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddAction(act, "Input");
 
    act = new TGuiBldAction("TGComboBox", "Combo Box", kGuiBldCtor);
-   act->fAct = "new TGComboBox()";
+   act->fAct = "TRootGuiBuilder::BuildComboBox()";
    act->fPic = "bld_combobox.xpm";
    AddAction(act, "Input");
 
@@ -733,11 +734,6 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act = new TGuiBldAction("TGListTree", "List Tree", kGuiBldCtor);
    act->fAct = "TRootGuiBuilder::BuildListTree()";
    act->fPic = "bld_listtree.xpm";
-   AddAction(act, "Complex Input");
-
-   act = new TGuiBldAction("TGShutter", "Shutter", kGuiBldCtor);
-   act->fAct = "TRootGuiBuilder::BuildShutter()";
-   act->fPic = "bld_shutter.png";
    AddAction(act, "Complex Input");
 
    act = new TGuiBldAction("TGLabel", "Text Label", kGuiBldCtor);
@@ -801,6 +797,12 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fAct = "TRootGuiBuilder::BuildTab()";
    act->fPic = "bld_tab.xpm";
    AddAction(act, "Containers");
+
+   act = new TGuiBldAction("TGShutter", "Shutter", kGuiBldCtor);
+   act->fAct = "TRootGuiBuilder::BuildShutter()";
+   act->fPic = "bld_shutter.png";
+   AddAction(act, "Containers");
+
 
    act = new TGuiBldAction("TGCanvas", "Scrolled Canvas", kGuiBldCtor);
    act->fAct = "TRootGuiBuilder::BuildCanvas()";
@@ -2302,3 +2304,29 @@ TGFrame *TRootGuiBuilder::BuildListBox()
 
    return lb;
 }
+
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildComboBox()
+{
+   // Helper method to create TGComboBox widget
+
+   TGComboBox *cb = new TGComboBox();
+
+   cb->AddEntry("Entry 1 ", 0);
+   cb->AddEntry("Entry 2 ", 1);
+   cb->AddEntry("Entry 3 ", 2);
+   cb->AddEntry("Entry 4 ", 3);
+   cb->AddEntry("Entry 5 ", 4);
+   cb->AddEntry("Entry 6 ", 5);
+   cb->AddEntry("Entry 7 ", 6);
+   cb->MapSubwindows();
+
+   FontStruct_t fs = TGTextLBEntry::GetDefaultFontStruct();
+   int max_ascent, max_descent;
+   gVirtualX->GetFontProperties(fs, max_ascent, max_descent);
+
+   cb->Resize(cb->GetListBox()->GetDefaultWidth(), max_ascent + max_descent + 7);
+   return cb;
+}
+
+
