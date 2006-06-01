@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.28 2006/03/21 14:52:41 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.29 2006/05/31 15:26:06 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -84,6 +84,9 @@ enum EMessageTypes {
    kPROOF_VERIFY_DATASET,                //Try open all files from a dataset and report results
    kPROOF_RM_DATASET,                    //Remove a dataset but leave files belonging to it
    kPROOF_APPEND_DATASET,                //Add new files to an existing dataset
+   kPROOF_PACKAGE_LIST,                  //A list of package names (TObjString's) follows
+   kPROOF_MESSAGE,                       //A message for the client follows
+   kPROOF_LIB_INC_PATH,                  //A list of lib/inc paths follows
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows
@@ -130,7 +133,7 @@ enum EMessageTypes {
    kROOTD_FREEDIR,                       //Free directory
    kROOTD_DIRENTRY,                      //Get directory entry
    kROOTD_ACCESS,                        //Test Access
-   kROOTD_GETS                           //Multiple buffers in one call
+   kROOTD_GETS                           //Multiple offset, number of byte pairs
 };
 
 #endif

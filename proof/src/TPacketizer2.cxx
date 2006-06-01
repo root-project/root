@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.44 2006/04/19 10:51:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.45 2006/05/15 09:45:03 brun Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -193,6 +193,8 @@ TPacketizer2::TFileNode::TFileNode(const char *name)
    : fNodeName(name), fFiles(new TList), fUnAllocFileNext(0),fActFiles(new TList),
      fActFileNext(0), fMySlaveCnt(0), fSlaveCnt(0)
 {
+   // Constructor
+
    fFiles->SetOwner();
    fActFiles->SetOwner(kFALSE);
 }
@@ -237,6 +239,8 @@ ClassImp(TPacketizer2)
 TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
                            Long64_t num, TList *input)
 {
+   // Constructor
+
    PDB(kPacketizer,1) Info("TPacketizer2", "Enter (first %lld, num %lld)", first, num);
 
    // Init pointer members
@@ -422,6 +426,8 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
 //______________________________________________________________________________
 TPacketizer2::~TPacketizer2()
 {
+   // Destructor
+
    if (fSlaveStats) {
       fSlaveStats->DeleteValues();
    }
@@ -437,6 +443,8 @@ TPacketizer2::~TPacketizer2()
 //______________________________________________________________________________
 TPacketizer2::TFileStat *TPacketizer2::GetNextUnAlloc(TFileNode *node)
 {
+   // Get next unallocated file
+
    TFileStat *file = 0;
 
    if (node != 0) {
@@ -749,8 +757,12 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
 
          // disable element
          slavestat->fCurFile->SetDone();
-         fValid = kFALSE; // all element must be readable!
-
+         // fValid = kFALSE; // all element must be readable!
+         if (gProofServ) {
+            TMessage m(kPROOF_MESSAGE);
+            m << TString(Form("Cannot get entries for file: %s - skipping", e->GetFileName()));
+            gProofServ->GetSocket()->Send(m);
+         }
       }
 
       workers.Add(slave); // Ready for the next job
