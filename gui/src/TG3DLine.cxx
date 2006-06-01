@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TG3DLine.cxx,v 1.4 2006/04/24 13:50:29 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TG3DLine.cxx,v 1.5 2006/05/26 09:16:29 brun Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -36,10 +36,6 @@ TGHorizontal3DLine::TGHorizontal3DLine(const TGWindow *p, UInt_t w, UInt_t h,
 
    SetWindowName();
    fEditDisabled = kEditDisableHeight;
-
-   if (!p && fClient->IsEditable()) {
-      Resize(100, 5);
-   }
 }
 
 //______________________________________________________________________________
@@ -51,10 +47,6 @@ TGVertical3DLine::TGVertical3DLine(const TGWindow *p, UInt_t w, UInt_t h,
 
    SetWindowName();
    fEditDisabled = kEditDisableWidth;
-
-   if (!p && fClient->IsEditable()) {
-      Resize(5, 100);
-   }
 }
 
 //______________________________________________________________________________

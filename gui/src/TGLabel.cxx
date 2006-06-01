@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.24 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.25 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -72,10 +72,6 @@ TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
     TGFrame(p, 1, 1, options, back)
 {
    // Create a label GUI object.
-
-   if (!p && fClient->IsEditable()) {
-      text = "New Label";
-   }
 
    fText        = new TGString(!text && !p ? GetName() : text);
    fTMode       = kTextCenterX | kTextCenterY;

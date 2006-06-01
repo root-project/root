@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.33 2006/05/31 14:26:31 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.34 2006/06/01 09:13:56 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -747,12 +747,12 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddAction(act, "Display");
 
    act = new TGuiBldAction("TGHorizontal3DLine", "Horizontal Line", kGuiBldCtor);
-   act->fAct = "new TGHorizontal3DLine()";
+   act->fAct = "TRootGuiBuilder::BuildH3DLine()";
    act->fPic = "bld_hseparator.xpm";
    AddAction(act, "Display");
 
    act = new TGuiBldAction("TGVertical3DLine", "Vertical Line", kGuiBldCtor);
-   act->fAct = "new TGVertical3DLine()";
+   act->fAct = "TRootGuiBuilder::BuildV3DLine()";
    act->fPic = "bld_vseparator.xpm";
    AddAction(act, "Display");
 
@@ -2268,6 +2268,7 @@ TGFrame *TRootGuiBuilder::BuildTextEdit()
 
    te->MapSubwindows();
    te->Layout();
+   te->Resize(100, 60);
 
    return te;
 }
@@ -2327,6 +2328,28 @@ TGFrame *TRootGuiBuilder::BuildComboBox()
 
    cb->Resize(cb->GetListBox()->GetDefaultWidth(), max_ascent + max_descent + 7);
    return cb;
+}
+
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildH3DLine()
+{
+   // Helper method to create TGHorizontal3DLine widget.
+
+   TGHorizontal3DLine *l = new TGHorizontal3DLine(0, 100, 2);
+   l->Resize(100, 2);
+
+   return l;
+}
+
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildV3DLine()
+{
+   // Helper method to create TGVertical3DLine widget.
+
+   TGVertical3DLine *l = new TGVertical3DLine();
+   l->Resize(2, 100);
+
+   return l;
 }
 
 

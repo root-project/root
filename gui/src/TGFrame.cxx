@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.133 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.134 2006/05/31 09:02:00 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -172,10 +172,6 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fEventMask = (UInt_t) wattr.fEventMask;
 
    SetWindowName();
-
-   if (!p && fClient->IsEditable()) {
-      Resize(100, 100);
-   }
 }
 
 //______________________________________________________________________________
