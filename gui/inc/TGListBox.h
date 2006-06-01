@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.30 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.31 2006/05/30 11:29:42 antcheva Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -124,6 +124,9 @@ public:
    virtual void  DrawCopy(Handle_t id, Int_t x, Int_t y);
    virtual void  Update(TGLBEntry *e)
                   { SetText(new TGString(((TGTextLBEntry *)e)->GetText())); }
+
+   GContext_t     GetNormGC() const { return fNormGC; }
+   FontStruct_t   GetFontStruct() const { return fFontStruct; }
 
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
