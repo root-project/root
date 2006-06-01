@@ -35,7 +35,6 @@ endif
 ifeq ($(VC_MAJOR),14)
   BLDCXXFLAGS+= -EHa
   BLDCFLAGS  += -EHa
-  #DEBUGFLAGS  = -Zi -Fdbin/root.pdb
   DEBUGFLAGS  = -Zi
 
   ifeq (yes,$(WINRTDEBUG))
@@ -57,6 +56,7 @@ endif
 
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
+CINTOPT       = $(DEBUGFLAGS)
 LDOPT        += -debug
 F77OPT        = -debug -nopdbfile
 else
@@ -75,8 +75,8 @@ CXXFLAGS      = -nologo -FIw32pragma.h \
 CXXOUT        = -Fo
 CFLAGS        = -nologo -Ibuild/win -FIw32pragma.h -FIsehmap.h \
                 $(BLDCFLAGS) $(EXTRA_CFLAGS)
-CINTCXXFLAGS := $(CXXFLAGS)
-CINTCFLAGS   := $(CFLAGS)
+CINTCXXFLAGS := $(CXXFLAGS) $(CINTOPT)
+CINTCFLAGS   := $(CFLAGS) $(CINTOPT)
 
 # Linker:
 LD            = build/win/ld.sh
