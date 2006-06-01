@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log opdict.* templateMembersDict*
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log opdict.* templateMembersDict* templateMembers.ref templateMembersNoMem.ref
 
 #Set the list of target to make while testing
 TEST_TARGETS += duplicate operatorEqual mytest templateConstructorTest operatorTest templateMembers

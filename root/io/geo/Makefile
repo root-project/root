@@ -17,6 +17,8 @@ phobos.C phobos_all.C star_all.C star_svtt.C tesla.C tesla_all.C \
 lhcb.C lhcb_all.C lhcbfull_all.C lhcbnobool_all.C lhcbfull.root lhcbnobool.root \
 aleph.root  brahms.root  cdf.root  e907.root  star.root \
 ams.root    btev.root    d0.root   gem.root   phobos.root  tesla.root \
+babar_all.C babar_emca.C babar_ssvd.C lhcb_mag.C
+
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then

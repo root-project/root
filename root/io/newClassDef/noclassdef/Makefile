@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 TEST_TARGETS += noclassdef
 CLEAN_TARGETS += *.o *.so ti_files ii_files mydict.* driver$(ExeSuf) *~ \
-	*.obj .def *.root *.mode
+	*.obj .def *.root *.mode driver.output
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
