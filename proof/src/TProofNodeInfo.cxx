@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofNodeInfo.cxx,v 1.1 2005/12/09 01:12:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofNodeInfo.cxx,v 1.2 2006/03/16 08:49:28 rdm Exp $
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************
@@ -68,6 +68,10 @@ TProofNodeInfo::TProofNodeInfo(const char *str)
 
    // Host and user name
    PNISETSTRING(fNodeName);
+
+   // Default image is the node name
+   fImage = fNodeName;
+   fImage.Remove(0, fImage.Index("@")+1);
 
    // Port
    PNISETINT(fPort);
