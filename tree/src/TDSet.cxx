@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.29 2005/09/22 09:57:25 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.30 2005/09/25 14:13:58 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -46,6 +46,7 @@
 #include "TCut.h"
 #include "TError.h"
 #include "TFile.h"
+#include "TFileInfo.h"
 #include "TKey.h"
 #include "TList.h"
 #include "TMap.h"
@@ -53,12 +54,14 @@
 #include "TTimeStamp.h"
 #include "TTree.h"
 #include "TUrl.h"
+#include "TRegexp.h"
 #include "TVirtualPerfStats.h"
 #include "TVirtualProof.h"
 #include "TChainProof.h"
 #include "TPluginManager.h"
 #include "TChain.h"
 #include "TChainElement.h"
+#include "TSystem.h"
 #include <set>
 #include <queue>
 
@@ -90,6 +93,7 @@ TDSetElement::TDSetElement(const char *file, const char *objname, const char *di
    fEventList   = 0;
    fFriends     = 0;
    fValid       = kFALSE;
+   fEntries     = -1;
 
    if (objname)
       fObjName = objname;
@@ -302,19 +306,23 @@ TDSet::TDSet()
 }
 
 //______________________________________________________________________________
-TDSet::TDSet(const char *type, const char *objname, const char *dir)
+TDSet::TDSet(const char *name,
+             const char *objname, const char *dir, const char *type)
 {
-   // Create a TDSet object. The "type" defines the class of which objects
-   // will be processed. The optional "objname" argument specifies the
-   // name of the objects of the specified class (the name is mandatory
-   // if the type inherits from a TTree). If the "objname" is not given all
-   // objects of the class found in the specified directory are processed.
+   // Create a named TDSet object. The "type" defines the class of which objects
+   // will be processed (default 'TTree'). The optional "objname" argument
+   // specifies the name of the objects of the specified class.
+   // If the "objname" is not given the behaviour depends on the 'type':
+   // for 'TTree' the first TTree is analyzed; for other types, all objects of
+   // the class found in the specified directory are processed.
    // The "dir" argument specifies in which directory the objects are
    // to be found, the top level directory ("/") is the default.
    // Directories can be specified using wildcards, e.g. "*" or "/*"
    // means to look in all top level directories, "/dir/*" in all
    // directories under "/dir", and "/*/*" to look in all directories
    // two levels deep.
+   // For backward compatibility the type can also be passed via 'name',
+   // in which case 'type' is ignored.
 
    fElements = new TList;
    fElements->SetOwner();
@@ -322,26 +330,46 @@ TDSet::TDSet(const char *type, const char *objname, const char *dir)
    fCurrent  = 0;
    fEventList = 0;
 
-   if (!type || !*type) {
-      Error("TDSet", "type name must be specified");
-      return;
+   fType = "TTree";
+   TClass *c = 0;
+   // Check name
+   if (name && strlen(name) > 0) {
+      // In the old constructor signature it was the 'type'
+      if (!type) {
+         if ((c = gROOT->GetClass(name)))
+            fType = name;
+         else
+            // Default type is 'TTree'
+            fName = name;
+      } else {
+         // Set name
+         fName = name;
+         // Check type
+         if (strlen(type) > 0)
+            if ((c = gROOT->GetClass(type)))
+               fType = type;
+      }
+   } else if (type && strlen(type) > 0) {
+      // Check the type
+      if ((c = gROOT->GetClass(type)))
+         fType = type;
    }
+   // The correct class type
+   c = gROOT->GetClass(fType);
 
-   TClass *c;
-   if (!(c = gROOT->GetClass(type)))
-      Warning("TDSet", "type %s not yet known", type);
-
-   fName   = type;
-   fIsTree = kFALSE;
-
-   if (c && c->InheritsFrom("TTree"))
-      fIsTree = kTRUE;
+   fIsTree = (c->InheritsFrom("TTree")) ? kTRUE : kFALSE;
 
    if (objname)
       fObjName = objname;
 
    if (dir)
-      fTitle = dir;
+      fDir = dir;
+
+   // Default name is the object name
+   if (fName.Length() <= 0)
+      fName = fObjName;
+   // We set the default title to the 'type'
+   fTitle = fType;
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
@@ -453,7 +481,7 @@ void TDSet::SetDirectory(const char *dir)
    // Set/change directory.
 
    if (dir)
-      fTitle = dir;
+      fDir = dir;
 }
 
 //______________________________________________________________________________
@@ -488,7 +516,6 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
    return kTRUE;
 }
 
-
 //______________________________________________________________________________
 Bool_t TDSet::Add(TDSet *dset)
 {
@@ -497,7 +524,7 @@ Bool_t TDSet::Add(TDSet *dset)
    if (!dset)
       return kFALSE;
 
-   if (dset->fName != fName) {
+   if (fType != dset->GetType()) {
       Error("Add", "cannot add a set with a different type");
       return kFALSE;
    }
@@ -512,6 +539,84 @@ Bool_t TDSet::Add(TDSet *dset)
    }
 
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TDSet::Add(TList *fileinfo)
+{
+   // Add files passed as list of TfileInfo objects
+
+   if (!fileinfo)
+      return kFALSE;
+
+   TFileInfo *fi = 0;
+   TIter next(fileinfo);
+   while ((fi = (TFileInfo *) next())) {
+      Add(fi->GetFirstUrl()->GetUrl(kTRUE), 0, 0,
+          fi->GetFirst(), fi->GetEntries());
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TDSet::ExportFileList(const char *fpath, Option_t *opt)
+{
+   // Export TDSetElements files as list of TFileInfo objects in file
+   // 'fpath'. If the file exists already the action fails, unless
+   // 'opt == "F"'.
+   // Return 0 on success, -1 otherwise
+
+   if (!fElements)
+      return -1;
+   if (fElements->GetSize() <= 0)
+      return 0;
+
+   Bool_t force = (opt[0] == 'F' || opt[0] == 'f');
+
+   if (gSystem->AccessPathName(fpath, kFileExists) == kFALSE) {
+      if (force) {
+         // Try removing the file
+          if (gSystem->Unlink(fpath)) {
+             Info("ExportFileList","error removing dataset file: %s", fpath);
+             return -1;
+          }
+      }
+   }
+
+   // Create the file list
+   TList *fileinfo = new TList;
+   fileinfo->SetOwner();
+   TFileInfo *fi = 0;
+
+   TDSetElement *dse = 0;
+   TIter next(fElements);
+   while ((dse = (TDSetElement *) next())) {
+      Long64_t last = (dse->GetNum() > 0) ? dse->GetFirst()+dse->GetNum()-1 : -1;
+      fi = new TFileInfo(dse->GetFileName(), (Long64_t)(-1), 0,
+                         0, dse->GetEntries(), dse->GetFirst(),
+                         last);
+      fileinfo->Add(fi);
+   }
+
+   // Write to file
+   TFile *f = TFile::Open(fpath, "RECREATE");
+   if (f) {
+      f->cd();
+      fileinfo->Write("fileList", TObject::kSingleKey);
+      f->Close();
+   } else {
+      Info("ExportFileList","error creating dataset file: %s", fpath);
+      SafeDelete(fileinfo);
+      return -1;
+   }
+
+   // Cleanup
+   SafeDelete(f);
+   SafeDelete(fileinfo);
+
+   // We are done
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -609,7 +714,39 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
 
    Long64_t entries;
    if (isTree) {
-      TKey *key = dir->GetKey(objname);
+
+      TString on(objname);
+      TString sreg(objname);
+      // If a wild card we will use the first object of the type
+      // requested compatible with the reg expression we got
+      if (sreg.Length() <= 0 || sreg == "" || sreg.Contains("*")) {
+         if (sreg.Contains("*"))
+            sreg.ReplaceAll("*", ".*");
+         else
+            sreg = ".*";
+         TRegexp re(sreg);
+         if (dir->GetListOfKeys()) {
+            TIter nxk(dir->GetListOfKeys());
+            TKey *k = 0;
+            Bool_t notfound = kTRUE;
+            while ((k = (TKey *) nxk())) {
+               if (!strcmp(k->GetClassName(), "TTree")) {
+                  TString kn(k->GetName());
+                  if (kn.Index(re) != kNPOS) {
+                     if (notfound) {
+                        on = kn;
+                        notfound = kFALSE;
+                     } else if (kn != on) {
+                       ::Warning("TDSet::GetEntries",
+                                 "additional tree found in the file: %s", kn.Data());
+                     }
+                  }
+               }
+            }
+         }
+      }
+
+      TKey *key = dir->GetKey(on);
       if (key == 0) {
          ::Error("TDSet::GetEntries", "cannot find tree \"%s\" in %s",
                  objname, filename);

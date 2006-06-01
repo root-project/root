@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.15 2005/09/18 01:06:02 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.16 2005/09/22 09:57:25 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -56,6 +56,7 @@
 class TList;
 class TDSet;
 class TEventList;
+class TFileInfo;
 class TCut;
 class TTree;
 class TChain;
@@ -96,6 +97,8 @@ public:
    Long64_t         GetFirst() const { return fFirst; }
    void             SetFirst(Long64_t first) { fFirst = first; }
    Long64_t         GetNum() const { return fNum; }
+   Long64_t         GetEntries() const { return fEntries; }
+   void             SetEntries(Long64_t ent) { fEntries = ent; }
    const char      *GetMsd() const { return fMsd; }
    void             SetNum(Long64_t num) { fNum = num; }
    Bool_t           GetValid() const { return fValid; }
@@ -108,6 +111,7 @@ public:
    void             SetEventList(TEventList *aList) { fEventList = aList; }
    void             Validate(Bool_t isTree);
    void             Validate(TDSetElement *elem);
+   void             Invalidate() { fValid = kFALSE; }
    Int_t            Compare(const TObject *obj) const;
    Bool_t           IsSortable() const { return kTRUE; }
 
@@ -119,6 +123,8 @@ class TDSet : public TNamed {
 public:
 
 private:
+   TString        fDir;         // name of the directory
+   TString        fType;        // type of objects (e.g. TTree);
    TString        fObjName;     // name of objects to be analyzed (e.g. TTree name)
    TList         *fElements;    //-> list of TDSetElements
    Bool_t         fIsTree;      // true if type is a TTree (or TTree derived)
@@ -132,13 +138,14 @@ protected:
 
 public:
    TDSet();
-   TDSet(const char *type, const char *objname = "*", const char *dir = "/");
+   TDSet(const char *name, const char *objname = "*", const char *dir = "/", const char *type=0);
    virtual ~TDSet();
 
    virtual Bool_t        Add(const char *file, const char *objname = 0,
                              const char *dir = 0, Long64_t first = 0,
                              Long64_t num = -1, const char *msd = 0);
    virtual Bool_t        Add(TDSet *set);
+   virtual Bool_t        Add(TList *fileinfo);
    virtual void          AddFriend(TDSet *friendset, const char *alias);
 
    virtual Int_t         Process(const char *selector, Option_t *option = "",
@@ -153,17 +160,19 @@ public:
                               Long64_t firstentry = 0); // *MENU*
    virtual void          Draw(Option_t *opt) { Draw(opt, "", "", 1000000000, 0); }
 
+   Int_t                 ExportFileList(const char *filepath, Option_t *opt = "");
+
    void                  Print(Option_t *option="") const;
 
    void                  SetObjName(const char *objname);
    void                  SetDirectory(const char *dir);
 
    Bool_t                IsTree() const { return fIsTree; }
-   Bool_t                IsValid() const { return !fName.IsNull(); }
+   Bool_t                IsValid() const { return !fType.IsNull(); }
    Bool_t                ElementsValid() const;
-   const char           *GetType() const { return fName; }
+   const char           *GetType() const { return fType; }
    const char           *GetObjName() const { return fObjName; }
-   const char           *GetDirectory() const { return fTitle; }
+   const char           *GetDirectory() const { return fDir; }
    TList                *GetListOfElements() const { return fElements; }
 
    virtual void          Reset();
@@ -185,7 +194,7 @@ public:
    void                  Validate();
    void                  Validate(TDSet *dset);
 
-   ClassDef(TDSet,2)  // Data set for remote processing (PROOF)
+   ClassDef(TDSet,3)  // Data set for remote processing (PROOF)
 };
 
 #endif
