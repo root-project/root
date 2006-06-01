@@ -133,10 +133,29 @@ Double_t TGraphDelaunay::ComputeZ(Double_t x, Double_t y)
 {
    // Return the z value corresponding to the (x,y) point in fGraph2D
 
+   // Initialise the Delaunay algorithm if needed.
+   // CreateTrianglesDataStructure computes fXoffset, fYoffset and fScaleFactor
+   // needed in this function.
+   if (!fInit) {
+      CreateTrianglesDataStructure();
+      FindHull();
+      fInit = kTRUE;
+   }
+
+   // Find the z value corresponding to the point (x,y).
    Double_t xx, yy;
    xx = (x+fXoffset)*fScaleFactor;
    yy = (y+fYoffset)*fScaleFactor;
-   return Interpolate(xx, yy);
+   Double_t Z = Interpolate(xx, yy);
+
+   // Wrong zeros may appear when points sit on a regular grid.
+   // The following lines try to avoid this problem.
+   if (Z==0) {
+      xx += 0.001;
+      yy += 0.001;
+      Z = Interpolate(xx, yy);
+   }
+   return Z;
 }
 
 
@@ -612,7 +631,7 @@ Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
    Bool_t shouldbein;
    Double_t dx1,dx2,dx3,dy1,dy2,dy3,u,v,dxz[3],dyz[3];
 
-   // initialise the Delaunay algorithm
+   // initialise the Delaunay algorithm if needed
    if (!fInit) {
       CreateTrianglesDataStructure();
       FindHull();
