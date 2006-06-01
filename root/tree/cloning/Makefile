@@ -2,7 +2,8 @@
 
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS += *.log hsimple1.root hsimple2.root event1.root event2.root merge.root \
-	CopyTree.root
+	CopyTree.root Event.h copiedEvent hsimple.out
+
 
 #Set the list of target to make while testing
 TEST_TARGETS += deepClass mergeWithDir treeCloneTest treeCloneTest2
