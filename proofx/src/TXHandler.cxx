@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name$:$Id$
+// @(#)root/proofx:$Name:  $:$Id: TXHandler.cxx,v 1.1 2006/04/19 10:50:01 rdm Exp $
 // Author: G. Ganis Mar 2006
 
 /*************************************************************************
@@ -21,6 +21,8 @@
 
 #include "TError.h"
 #include "TXHandler.h"
+
+ClassImp(TXHandler)
 
 //________________________________________________________________________
 Bool_t TXHandler::HandleInput()
