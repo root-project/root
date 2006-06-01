@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.117 2006/05/31 15:26:06 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.118 2006/05/31 19:48:58 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1335,12 +1335,11 @@ void RootdGets(const char *msg)
       Error(ErrSys, kErrFileGet, "RootdGets: cannot seek to position %lld in"
             " file %s", offsets[i], gFile);
 
-      while ((siz = read(gFd, buf_out + actual_pos, lens[i])) < 0 
-	     && GetErrno() == EINTR)
-	 ResetErrno();
+      while ((siz = read(gFd, buf_out + actual_pos, lens[i])) < 0 && GetErrno() == EINTR)
+         ResetErrno();
       
       if (siz != lens[i])
-	 break;
+         break;
       
       actual_pos += lens[i];
    }

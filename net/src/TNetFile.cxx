@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.71 2006/05/26 09:19:26 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.72 2006/05/31 15:26:06 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -413,7 +413,7 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    // then it's up to server to interpret it and send us all the data
    // in a single buffer
    for(int i=0;i<nbuf;i++){
-      long long res_off=pos[i];
+      Long64_t res_off=pos[i];
       int res_len=len[i];
       int dig_len=1;
       int dig_off=1;
