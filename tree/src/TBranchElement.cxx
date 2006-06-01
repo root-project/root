@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.196 2006/05/23 04:47:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.197 2006/05/24 15:10:47 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -463,6 +463,7 @@ TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont,
    fStreamerType  = -1; // TStreamerInfo::kSTLp;
    fType          = 0;
    fClassVersion  = cont->GetCollectionClass()->GetClassVersion();
+   fCheckSum      = cont->GetCollectionClass()->GetCheckSum();
    fBranchCount   = 0;
    fBranchCount2  = 0;
    fObject        = 0;
