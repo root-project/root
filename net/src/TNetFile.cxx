@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.72 2006/05/31 15:26:06 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.73 2006/06/01 07:43:59 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -326,7 +326,6 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
          return kFALSE;
    } 
 
-
    Bool_t result = kFALSE;
 
    Int_t st;
@@ -388,7 +387,7 @@ end:
    return result;
 }
   
-  //______________________________________________________________________________
+//______________________________________________________________________________
 Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    // Read a list of buffers given in pos[] and len[] and return it in a single
@@ -397,10 +396,10 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 
    if (!fSocket) return kTRUE;
 
-   int    num_digits = 0;         //Total number of digits in the buffer
-   char   *data_buf  = NULL;      // buf to put the info
-   int    actual_pos = 0;         // tmp variable
-   Bool_t result     = kFALSE;
+   Int_t   stat, n;
+   Bool_t  result = kFALSE;
+   EMessageTypes kind;
+   TString data_buf;      // buf to put the info
 
    if (gApplication && gApplication->GetSignalHandler())
       gApplication->GetSignalHandler()->Delay();
@@ -408,59 +407,29 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    Double_t start = 0;
    if (gPerfStats != 0) start = TTimeStamp();
 
-   /////////////////////////////////////////////////////////////////////////////
-   // Here we put the information of all the buffers in a single string
-   // then it's up to server to interpret it and send us all the data
-   // in a single buffer
-   for(int i=0;i<nbuf;i++){
-      Long64_t res_off=pos[i];
-      int res_len=len[i];
-      int dig_len=1;
-      int dig_off=1;
-       
-      while ((res_off /= 10))  // Find number of digits
-         dig_off++;
-      
-      num_digits += dig_off;   // Add Offset
-      num_digits ++;           // Add separator
-       
-      while ((res_len /= 10))  // Find number of digits
-         dig_len++;
-       
-      num_digits += dig_len;   // Add len
-      num_digits ++;           // Add separator
-   }  
-   
-   data_buf= new char[num_digits+1];
-   actual_pos=0;
-   int total_len = 0;
-   for(int i=0;i<nbuf;i++){
-      sprintf(data_buf+actual_pos, "%llu-%d/", pos[i],len[i]); 
-      actual_pos=strlen(data_buf);
-      total_len+=len[i];
+   // Make the string with a list of offsets and lenghts
+   Int_t total_len = 0;
+   for(Int_t i = 0; i < nbuf; i++) {
+      data_buf += pos[i];
+      data_buf += "-";
+      data_buf += len[i];
+      data_buf += "/";
+      total_len += len[i];
    }      
    
    // Send the command with the lenght of the info and number of buffers
-   if (fSocket->Send(Form("%d %d", nbuf, num_digits), kROOTD_GETS) < 0) {
+   if (fSocket->Send(Form("%d %d", nbuf, data_buf.Length()), kROOTD_GETS) < 0) {
       Error("ReadBuffers", "error sending kROOTD_GETS command");
       result = kTRUE;
       goto end;
    }
    // Send buffer with the list of offsets and lengths
-   if (fSocket->SendRaw(data_buf, num_digits) < 0) {
+   if (fSocket->SendRaw(data_buf, data_buf.Length()) < 0) {
       SetBit(kWriteError);
       Error("ReadBuffers", "error sending buffer");
       result = kTRUE;
       goto end;
    }
-   /////////////////////////////////////////////////////////////////////////////
-
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Here we read the response with all the buffers in the single chunk
-   //
-   Int_t         stat, n;
-   EMessageTypes kind;
 
    fErrorCode = -1;
    if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
@@ -469,6 +438,7 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       goto end;
    }
 
+   // Get the big buffer with everything inseide it
    while ((n = fSocket->RecvRaw(buf, total_len)) < 0 
          && TSystem::GetErrno() == EINTR)
       TSystem::ResetErrno();
@@ -478,9 +448,8 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       result = kTRUE;
       goto end;
    }
-   /////////////////////////////////////////////////////////////////////////////
 
-   fOffset += pos[nbuf] + len[nbuf];
+   fOffset += pos[nbuf-1] + len[nbuf-1];
 
    fBytesRead  += total_len;
 #ifdef WIN32
@@ -497,8 +466,6 @@ end:
 
    if (gApplication && gApplication->GetSignalHandler())
       gApplication->GetSignalHandler()->HandleDelayedSignal();
-
-   delete [] data_buf;
 
    // If found problems try the generic implementation
    if ( result )

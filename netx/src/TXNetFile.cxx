@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.27 2006/05/01 20:13:42 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.28 2006/05/26 16:55:04 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -48,6 +48,7 @@
 #include "TXNetFile.h"
 #include "TROOT.h"
 #include "TVirtualMonitoring.h"
+#include "TFilePrefetch.h"
 
 #include <XrdClient/XrdClient.hh>
 #include <XrdClient/XrdClientConst.hh>
@@ -466,6 +467,11 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
    if (bufferLength==0)
       return 0;
 
+   if (fFilePrefetch) {
+      if (!fFilePrefetch->ReadBuffer(buffer, fOffset, bufferLength))
+         return kFALSE;
+   } 
+
    Int_t st;
    if ((st = ReadBufferViaCache(buffer, bufferLength))) {
       if (st == 2)
@@ -495,6 +501,46 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
       gMonitoringWriter->SendFileReadProgress(this);
 
    return result;
+}
+
+//______________________________________________________________________________
+Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
+{
+   // Read the nbuf blocks described in arrays pos and len,
+   // where pos[i] is the seek position of block i of length len[i].
+   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer
+   // This function is overloaded by TNetFile, TWebFile, etc.
+   // Returns kTRUE in case of failure.
+   // Note: This is the oberloading made in TXNetFile, If ReadBuffers
+   // is supported by xrootd it will try to gt the whole list from one single
+   // call avoiding the latency of multiple call
+
+   if (IsZombie()) {
+      Error("ReadBuffers", "ReadBuffers is not possible because object"
+            " is in 'zombie' state");
+      return kTRUE;
+   }
+
+   if (fIsRootd) {
+      if (gDebug > 1)
+         Info("ReadBuffers","Calling TNetFile::ReadBuffers");
+      return TNetFile::ReadBuffers(buf, pos, len, nbuf);
+   }
+
+   if (!IsOpen()) {
+      Error("ReadBuffers","The remote file is not open");
+      return kTRUE;
+   }
+
+   // Read for the remote xrootd
+   //Int_t nr = fClient->Reads(buf, pos, len, nbuf);
+   
+   //if (nr>0)
+   //   return kFALSE;
+
+   // If it wasnt able to use the specialized call
+   // then use the generic one that is like a queue
+   return TFile::ReadBuffers(buf, pos, len, nbuf);
 }
 
 //_____________________________________________________________________________

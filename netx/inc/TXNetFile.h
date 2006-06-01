@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.7 2006/04/06 23:01:45 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.8 2006/04/27 15:14:11 rdm Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -103,6 +103,7 @@ public:
    TFile::EAsyncOpenStatus GetAsyncOpenStatus();
    virtual Bool_t IsOpen() const;
    virtual Bool_t ReadBuffer(char *buf, Int_t len);
+   virtual Bool_t ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf);
    virtual Int_t  ReOpen(const Option_t *mode);
    Long64_t       Size(void);
    virtual Bool_t WriteBuffer(const char *buffer, Int_t BufferLength);

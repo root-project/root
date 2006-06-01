@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.118 2006/05/31 19:48:58 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.119 2006/06/01 07:43:59 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1288,7 +1288,7 @@ void RootdGet(const char *msg)
                 len, offset, gFile);
 }
   
-  //______________________________________________________________________________
+//______________________________________________________________________________
 void RootdGets(const char *msg)
 {
    // Gets multiple buffers from the specified list of offsets and lengths from
@@ -1299,31 +1299,30 @@ void RootdGets(const char *msg)
    if (!RootdIsOpen())
       Error(ErrFatal, kErrNoAccess, "RootdGets: file %s not open", gFile);
    
-   
-   int num_buf;   // Number of buffers
-   int len;       // len of the data buffer with the list of buffers
+   Int_t num_buf;   // Number of buffers
+   Int_t len;       // len of the data buffer with the list of buffers
 
    sscanf(msg, "%d %d", &num_buf, &len);
    
-   Long64_t *offsets = new Long64_t[num_buf];          // list to be filled
-   Int_t *lens = new Int_t[num_buf];                   // list to be filled 
-   char *buf_in = new char[len+1];      // buff coming from the server 
+   Long64_t *offsets = new Long64_t[num_buf];  // list to be filled
+   Int_t *lens = new Int_t[num_buf];           // list to be filled 
+   char *buf_in = new char[len+1];             // buff coming from the server 
    
    NetRecvRaw(buf_in, len);
-   buf_in[len+1]='\0';
+   buf_in[len+1] = '\0';
    
    char *ptr = buf_in;
-   int total_len = 0;
-   for(int i=0; i<num_buf; i++){
+   Int_t total_len = 0;
+   for(Int_t i = 0 ; i < num_buf ; i++) {
       sscanf(ptr, "%llu-%d/", &offsets[i], &lens[i]);
       ptr = strchr(ptr, '/') + 1;
-      total_len+=lens[i];
+      total_len += lens[i];
    }
 
    char *buf_out = new char[total_len];
-   int actual_pos=0;
-   ssize_t siz=0;
-   for (int i=0;i<num_buf;i++) {
+   Int_t actual_pos = 0;
+   ssize_t siz = 0;
+   for (Int_t i = 0; i < num_buf; i++) {
       
 #if defined (R__SEEK64)
    if (lseek64(gFd, offsets[i], SEEK_SET) < 0)
@@ -1337,7 +1336,7 @@ void RootdGets(const char *msg)
 
       while ((siz = read(gFd, buf_out + actual_pos, lens[i])) < 0 && GetErrno() == EINTR)
          ResetErrno();
-      
+
       if (siz != lens[i])
          break;
       
