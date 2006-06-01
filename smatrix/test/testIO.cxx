@@ -18,19 +18,24 @@
 
 #include <iostream>
 
+#ifdef USE_REFLEX
+#include "Cintex/Cintex.h"
+#include "Reflex/Reflex.h"
+#endif
+
 TRandom3 R; 
 TStopwatch timer;
 
 // if I use double32 or not depends on the dictionary
 //#define USE_DOUBLE32
-#ifndef USE_DOUBLE32
-typedef ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >  SMatrixSym5;
-typedef ROOT::Math::SMatrix<double,5,5 >  SMatrix5;
-double tol = 1.E-16;
-#else
+#ifdef USE_DOUBLE32
 typedef ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >  SMatrixSym5;
 typedef ROOT::Math::SMatrix<Double32_t,5,5 >  SMatrix5;
 double tol = 1.E-6; 
+#else
+typedef ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >  SMatrixSym5;
+typedef ROOT::Math::SMatrix<double,5,5 >  SMatrix5;
+double tol = 1.E-16;
 #endif
 
 
@@ -79,8 +84,6 @@ double SumTMatrix(TM & m) {
 
 void initMatrix(int n) { 
 
-  gSystem->Load("libSmatrix");  
-  gSystem->Load("libMatrix");  
   //  using namespace ROOT::Math;
 
   timer.Start();
@@ -420,7 +423,18 @@ double readSMatrixSym() {
 
 int testIO() { 
 
+#ifdef USE_REFLEX
+
+   gSystem->Load("libReflex");  
+   gSystem->Load("libCintex");  
+   ROOT::Cintex::Cintex::SetDebug(1);
+   ROOT::Cintex::Cintex::Enable();
+   gSystem->Load("libSmatrixReflex");  
+#endif
+
+  gSystem->Load("libSmatrix");  
   gSystem->Load("libMatrix");  
+
 
   int iret = 0;
   int nEvents = 100000;
