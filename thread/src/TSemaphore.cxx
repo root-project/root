@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TSemaphore.cxx,v 1.3 2005/12/09 15:12:19 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TSemaphore.cxx,v 1.4 2006/05/23 07:43:55 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -63,8 +63,13 @@ Int_t TSemaphore::Wait(Int_t millisec)
                                : fCond.Wait();
 
       if (crc != 0) {
-         Error("Wait", "TCondition::Wait() returns %d [%ld]",
-               crc, TThread::SelfId());
+         if (crc == 1 && gDebug > 0) {
+            Info("Wait", "TCondition::Wait() returns %d [%ld]",
+                  crc, TThread::SelfId());
+         } else if (crc != 1) {
+            Error("Wait", "TCondition::Wait() returns %d [%ld]",
+                  crc, TThread::SelfId());
+         }
          if ((rc = fMutex.UnLock()))
             Error("Wait", "UnLock on error returns %d [%ld]",
                   rc, TThread::SelfId());
