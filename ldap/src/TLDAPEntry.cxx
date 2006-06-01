@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: TLDAPEntry.cxx,v 1.1 2002/11/24 22:42:31 rdm Exp $
+// @(#)root/ldap:$Name:  $:$Id: TLDAPEntry.cxx,v 1.2 2002/12/02 18:50:04 rdm Exp $
 // Author: Evgenia Smirnova   21/09/2001
 
 /*************************************************************************
@@ -39,6 +39,18 @@ TLDAPEntry::TLDAPEntry(const TLDAPEntry &e) : TObject(e), fNCount(e.fNCount)
    while (TLDAPAttribute *att = (TLDAPAttribute *)next()) {
       fAttr->AddLast(new TLDAPAttribute(*att));
    }
+}
+
+//______________________________________________________________________________
+TLDAPEntry& TLDAPEntry::operator=(const TLDAPEntry& lde) 
+{
+   // Equal operator
+   if(this!=&lde) {
+      TObject::operator=(lde);
+      fDn=lde.fDn;
+      fAttr=lde.fAttr;
+      fNCount=lde.fNCount;
+   } return *this;
 }
 
 //______________________________________________________________________________

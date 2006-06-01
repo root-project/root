@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: TLDAPEntry.h,v 1.1 2002/11/24 22:42:31 rdm Exp $
+// @(#)root/ldap:$Name:  $:$Id: TLDAPEntry.h,v 1.2 2006/05/14 08:05:00 brun Exp $
 // Author: Evgenia Smirnova   21/09/2001
 
 /*************************************************************************
@@ -37,6 +37,9 @@ private:
    mutable Int_t   fNCount;   // Index of attribute to be returned from GetAttribute()
 
    LDAPMod       **GetMods(Int_t op);  // Get array of LDAPMod structures of the entry
+
+protected:
+   TLDAPEntry& operator=(const TLDAPEntry&);
 
 public:
    TLDAPEntry(const char *dn);

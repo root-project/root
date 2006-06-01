@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: TLDAPServer.cxx,v 1.2 2006/04/25 10:30:20 rdm Exp $
+// @(#)root/ldap:$Name:  $:$Id: TLDAPServer.cxx,v 1.3 2006/05/14 08:05:00 brun Exp $
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************
@@ -52,6 +52,30 @@ TLDAPServer::TLDAPServer(const char *host, Int_t port, const char *binddn,
 
       Bind( );
    }
+}
+
+//______________________________________________________________________________
+TLDAPServer::TLDAPServer(const TLDAPServer& lds) : 
+   TObject(lds),
+   fLd(lds.fLd),
+   fBinddn(lds.fBinddn),
+   fPassword(lds.fPassword),
+   fIsConnected(lds.fIsConnected)
+{
+   // Copy constructor
+}
+
+//______________________________________________________________________________
+TLDAPServer& TLDAPServer::operator=(const TLDAPServer& lds) 
+{
+   // Equal operator
+   if(this!=&lds) {
+      TObject::operator=(lds);
+      fLd=lds.fLd;
+      fBinddn=lds.fBinddn;
+      fPassword=lds.fPassword;
+      fIsConnected=lds.fIsConnected;
+   } return *this;
 }
 
 //______________________________________________________________________________

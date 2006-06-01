@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: TLDAPServer.h,v 1.1 2002/11/24 22:42:31 rdm Exp $
+// @(#)root/ldap:$Name:  $:$Id: TLDAPServer.h,v 1.2 2006/04/25 10:30:20 rdm Exp $
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************
@@ -36,6 +36,10 @@ private:
    void          Unbind();
 
    static void   DeleteMods(LDAPMod **mods);
+
+protected:
+   TLDAPServer(const TLDAPServer&);
+   TLDAPServer& operator=(const TLDAPServer&);
 
 public:
    TLDAPServer(const char *host, Int_t port = LDAP_PORT,

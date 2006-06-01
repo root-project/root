@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: TLDAPAttribute.h,v 1.1 2002/11/24 22:42:31 rdm Exp $
+// @(#)root/ldap:$Name:  $:$Id: TLDAPAttribute.h,v 1.2 2006/05/14 08:05:00 brun Exp $
 // Author: Evgenia Smirnova   21/09/2001
 
 /*************************************************************************
@@ -31,6 +31,9 @@ private:
    mutable Int_t   fNCount;        // next value to be returned by GetValue()
 
    LDAPMod    *GetMod(Int_t op);   // for getting mod for attribute
+
+protected:
+   TLDAPAttribute& operator=(const TLDAPAttribute &);
 
 public:
    TLDAPAttribute(const char *name);

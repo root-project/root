@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:$:$Id:$
+// @(#)root/ldap:$Name:  $:$Id: TLDAPResult.h,v 1.1 2002/11/24 22:42:31 rdm Exp $
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************
@@ -31,8 +31,12 @@ private:
    LDAPMessage  *fCurrentEntry;    // Pointer to the current entry to be returned from the next GetNext() call
 
    TLDAPEntry   *CreateEntry(LDAPMessage *entry);
-   TLDAPResult() { fLd = 0; fSearchResult = fCurrentEntry = 0; }
+   TLDAPResult() : fLd(NULL), fSearchResult(NULL), fCurrentEntry(NULL) { }
    TLDAPResult(LDAP *ld, LDAPMessage *searchresult);
+
+protected:
+   TLDAPResult(const TLDAPResult&);
+   TLDAPResult& operator=(const TLDAPResult&);
 
 public:
    virtual ~TLDAPResult();

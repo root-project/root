@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: TLDAPAttribute.cxx,v 1.2 2002/12/02 18:50:04 rdm Exp $
+// @(#)root/ldap:$Name:  $:$Id: TLDAPAttribute.cxx,v 1.3 2006/05/14 08:05:00 brun Exp $
 // Author: Evgenia Smirnova   21/09/2001
 
 /*************************************************************************
@@ -47,6 +47,17 @@ TLDAPAttribute::TLDAPAttribute(const TLDAPAttribute &attr)
    while (TObjString *str = (TObjString*) next()) {
       fValues->AddLast(new TObjString(str->GetName()));
    }
+}
+
+//______________________________________________________________________________
+TLDAPAttribute& TLDAPAttribute::operator=(const TLDAPAttribute &attr)
+{
+   // Equal operator
+   if(this!=&attr) {
+      TNamed::operator=(attr);
+      fValues=attr.fValues;
+      fNCount=attr.fNCount;
+   } return *this;
 }
 
 //______________________________________________________________________________

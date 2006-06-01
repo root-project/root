@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: TLDAPResult.cxx,v 1.1 2002/11/24 22:42:31 rdm Exp $
+// @(#)root/ldap:$Name:  $:$Id: TLDAPResult.cxx,v 1.2 2005/12/02 14:43:28 rdm Exp $
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************
@@ -24,6 +24,28 @@ TLDAPResult::TLDAPResult(LDAP *ld, LDAPMessage *searchresult)
 
    if (!GetCount())
       fCurrentEntry = 0;
+}
+
+//______________________________________________________________________________
+TLDAPResult::TLDAPResult(const TLDAPResult& ldr) :
+   TObject(ldr),
+   fLd(ldr.fLd),
+   fSearchResult(ldr.fSearchResult),
+   fCurrentEntry(ldr.fCurrentEntry)
+{
+   // Copy constructor
+}
+
+//______________________________________________________________________________
+TLDAPResult& TLDAPResult::operator=(const TLDAPResult& ldr)
+{
+   // Equal operator
+   if(this!=&ldr) {
+      TObject::operator=(ldr);
+      fLd=ldr.fLd;
+      fSearchResult=ldr.fSearchResult;
+      fCurrentEntry=ldr.fCurrentEntry;
+   } return *this;
 }
 
 //______________________________________________________________________________
