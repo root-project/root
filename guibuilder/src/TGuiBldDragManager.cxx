@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.47 2006/05/28 20:15:09 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.48 2006/05/31 14:26:31 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -3919,12 +3919,14 @@ void TGuiBldDragManager::PlaceFrame(TGFrame *frame, TGLayoutHints *hints)
 
    frame->Move(x, y);
 
+   UInt_t grid = GetGridStep();
+
    if (IsFixedW(frame) || IsFixedH(frame) || IsFixedSize(frame)) {
       w = IsFixedW(frame) ? frame->GetDefaultWidth() : w;
       h = IsFixedH(frame) ? frame->GetDefaultHeight() : h;
-      frame->Resize(w < 20 ? 20 : w, h < 20 ? 20 : h);
+      frame->Resize(w < grid ? grid : w, h < grid ? grid : h);
    } else {
-      frame->Resize(w < 20 ? 20 : w, h < 20 ? 20 : h);
+      frame->Resize(w < 2*grid ? 2*grid : w, h < 2*grid ?  2*grid : h);
    }
 
    frame->MapRaised();
@@ -5996,6 +5998,7 @@ void TGuiBldDragManager::ChangeBackgroundColor(TGComboBox *fr)
       cd->Connect("ColorSelected(Pixel_t)", "TGTextEntry", te,
                   "SetBackgroundColor(Pixel_t)");
    }
+
    MapGlobalDialog(cd, fr);
    fClient->WaitForUnmap(cd);
    TQObject::Disconnect(cd);
@@ -6003,6 +6006,7 @@ void TGuiBldDragManager::ChangeBackgroundColor(TGComboBox *fr)
    if (se) {
       fClient->NeedRedraw(se, kTRUE); // force redraw
    }
+
    if (te) {
       fClient->NeedRedraw(te, kTRUE);
    }
@@ -6052,6 +6056,7 @@ void TGuiBldDragManager::ChangeTextColor(TGLabel *fr)
    if (!gc) {
       return;
    }
+
    ULong_t color = gc->GetForeground();
  
    TGColorDialog *cd = GetGlobalColorDialog();
@@ -6169,6 +6174,7 @@ void TGuiBldDragManager::ChangeTextFont(TGTextEntry *fr)
       TString dummy('w', fr->GetBuffer()->GetBufferLength());
       tw = gVirtualX->TextWidth(fs, dummy.Data(), dummy.Length());
    }
+
    gVirtualX->GetFontProperties(fs, max_ascent, max_descent);
    fr->Resize(tw + 8, max_ascent + max_descent + 7);
 }
@@ -6222,3 +6228,4 @@ void TGuiBldDragManager::ChangeImage(TGIcon *fr)
    root->SetEditable(kTRUE);
    SetEditable(kTRUE);
 }
+
