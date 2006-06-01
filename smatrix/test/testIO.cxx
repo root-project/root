@@ -21,8 +21,18 @@
 TRandom3 R; 
 TStopwatch timer;
 
+// if I use double32 or not depends on the dictionary
+//#define USE_DOUBLE32
+#ifndef USE_DOUBLE32
 typedef ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >  SMatrixSym5;
 typedef ROOT::Math::SMatrix<double,5,5 >  SMatrix5;
+double tol = 1.E-16;
+#else
+typedef ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >  SMatrixSym5;
+typedef ROOT::Math::SMatrix<Double32_t,5,5 >  SMatrix5;
+double tol = 1.E-6; 
+#endif
+
 
 //using namespace ROOT::Math;
 
@@ -111,6 +121,7 @@ void initMatrix(int n) {
 
 }
 
+
 double writeSMatrix(int n) { 
 
   std::cout << "\n";
@@ -124,7 +135,8 @@ double writeSMatrix(int n) {
   TTree t1("t1","Tree with SMatrix");
 
   SMatrix5 * m1 = new  SMatrix5;
-  t1.Branch("SMatrix branch","ROOT::Math::SMatrix<double,5,5>",&m1);
+  //t1.Branch("SMatrix branch","ROOT::Math::SMatrix<Double32_t,5,5>",&m1);
+  t1.Branch("SMatrix branch",&m1);
 
   timer.Start();
   double etot = 0;
@@ -160,7 +172,8 @@ double writeSMatrixSym(int n) {
   TTree t1("t1","Tree with SMatrix");
 
   SMatrixSym5 * m1 = new  SMatrixSym5;
-  t1.Branch("SMatrix branch","ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >",&m1);
+  // t1.Branch("SMatrixSym branch","ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >",&m1);
+  t1.Branch("SMatrixSym branch",&m1);
 
   timer.Start();
   double etot = 0;
@@ -182,6 +195,8 @@ double writeSMatrixSym(int n) {
 }
 
 
+
+
 double writeTMatrix(int n) { 
 
   // create tree with TMatrix
@@ -197,7 +212,8 @@ double writeTMatrix(int n) {
   TMatrixD * m2 = new TMatrixD(5,5);
   TMatrixD::Class()->IgnoreTObjectStreamer();
 
-  t2.Branch("TMatrix branch","TMatrixD",&m2,16000,2);
+  //t2.Branch("TMatrix branch","TMatrixD",&m2,16000,2);
+  t2.Branch("TMatrix branch",&m2,16000,2);
 
   double etot = 0;
   timer.Start();
@@ -235,7 +251,8 @@ double writeTMatrixSym(int n) {
   TMatrixDSym * m2 = new TMatrixDSym(5);
   TMatrixDSym::Class()->IgnoreTObjectStreamer();
 
-  t2.Branch("TMatrix branch","TMatrixDSym",&m2,16000,0);
+  //t2.Branch("TMatrix branch","TMatrixDSym",&m2,16000,0);
+  t2.Branch("TMatrixSym branch",&m2,16000,0);
 
   double etot = 0;
   timer.Start();
@@ -312,7 +329,7 @@ double readTMatrixSym() {
 
 
   TMatrixDSym * v2 = 0;
-  t2->SetBranchAddress("TMatrix branch",&v2);
+  t2->SetBranchAddress("TMatrixSym branch",&v2);
 
   timer.Start();
   int n = (int) t2->GetEntries();
@@ -380,7 +397,7 @@ double readSMatrixSym() {
   TTree *t1 = (TTree*)f1.Get("t1");
 
   SMatrixSym5 *v1 = 0;
-  t1->SetBranchAddress("SMatrix branch",&v1);
+  t1->SetBranchAddress("SMatrixSym branch",&v1);
 
   timer.Start();
   int n = (int) t1->GetEntries();
@@ -412,7 +429,7 @@ int testIO() {
 
   double w1 = writeTMatrix(nEvents);
   double w2 = writeSMatrix(nEvents);
-  if ( fabs(w1-w2) > 1.E-16) { 
+  if ( fabs(w1-w2) > tol) { 
     std::cout << "ERROR: Differeces found  when writing \n" << std::endl;
     iret = 1;
   }
@@ -420,16 +437,16 @@ int testIO() {
 
   double r1 = readTMatrix();
   double r2 = readSMatrix();
-  if ( fabs(r1-r2) > 1.E-16) { 
+  if ( fabs(r1-r2) > tol) { 
     std::cout << "ERROR: Differeces found  when reading \n" << std::endl;
     iret = 2;
   }
 
-  if ( fabs(w1-r1)  > 1.E-16) { 
+  if ( fabs(w1-r1)  > tol) { 
     std::cout << "ERROR: Differeces found  when reading TMatrices\n" << std::endl;
     iret = 3;
   }
-  if ( fabs(w2-r2)  > 1.E-16) { 
+  if ( fabs(w2-r2)  > tol) { 
     std::cout << "ERROR: Differeces found  when reading SMatrices\n" << std::endl;
     iret = 4;
   }
@@ -441,7 +458,7 @@ int testIO() {
 
   w1 = writeTMatrixSym(nEvents);
   w2 = writeSMatrixSym(nEvents);
-  if ( fabs(w1-w2) > 1.E-16) { 
+  if ( fabs(w1-w2) > tol) { 
     std::cout << "ERROR: Differeces found  when writing \n" << std::endl;
     iret = 11;
   }
@@ -449,16 +466,16 @@ int testIO() {
 
   r1 = readTMatrixSym();
   r2 = readSMatrixSym();
-  if ( fabs(r1-r2) > 1.E-16) { 
+  if ( fabs(r1-r2) > tol) { 
     std::cout << "ERROR: Differeces found  when reading \n" << std::endl;
     iret = 12;
   }
 
-  if ( fabs(w1-r1)  > 1.E-16) { 
+  if ( fabs(w1-r1)  > tol) { 
     std::cout << "ERROR: Differeces found  when reading TMatrices\n" << std::endl;
     iret = 13;
   }
-  if ( fabs(w2-r2)  > 1.E-16) { 
+  if ( fabs(w2-r2)  > tol) { 
     std::cout << "ERROR: Differeces found  when reading SMatrices\n" << std::endl;
     iret = 14;
   }
