@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name$:$Id$
+// @(#)root/proof:$Name:  $:$Id: TObjectCache.cxx,v 1.1 2006/04/03 14:19:09 rdm Exp $
 // Author: M. Biskup, G. Ganis  2/4/06
 
 /*************************************************************************
@@ -25,8 +25,9 @@
 #include "TVirtualPerfStats.h"
 #include "TTimeStamp.h"
 #include "TTree.h"
+#include "TRegexp.h"
 
-TFileCache      *TFileCache::fgInstance = 0;
+TFileCache *TFileCache::fgInstance = 0;
 TDirectoryCache *TDirectoryCache::fgInstance = 0;
 
 //______________________________________________________________________________
@@ -156,7 +157,32 @@ TTreeCache::ObjectAndBool_t TTreeCache::Load(const TCacheKey &k)
    if (!dir)
       return make_pair((TTree*)0, kFALSE);
 
-   TKey *key = dir->GetKey(treeName);
+   TString on(treeName);
+   TString sreg(treeName);
+   // If a wild card we will use the first object of the type
+   // requested compatible with the reg expression we got
+   if (sreg.Length() <= 0 || sreg == "" || sreg.Contains("*")) {
+      if (sreg.Contains("*"))
+         sreg.ReplaceAll("*", ".*");
+      else
+         sreg = ".*";
+      TRegexp re(sreg);
+      if (dir->GetListOfKeys()) {
+         TIter nxk(dir->GetListOfKeys());
+         TKey *k = 0;
+         while ((k = (TKey *) nxk())) {
+            if (!strcmp(k->GetClassName(), "TTree")) {
+               TString kn(k->GetName());
+               if (kn.Index(re) != kNPOS) {
+                  on = kn;
+                  break;
+               }
+            }
+         }
+      }
+   }
+
+   TKey *key = dir->GetKey(on);
 
    if (key == 0) {
       ::Error("TTreeCache::Load","Cannot find tree \"%s\" in %s",
