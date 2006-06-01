@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.6 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.7 2006/05/15 09:45:03 brun Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -85,6 +85,8 @@ Int_t TPerfEvent::Compare(const TObject *obj) const
 //______________________________________________________________________________
 void TPerfEvent::Print(Option_t *) const
 {
+   // Dump content of this instance
+
    cout << "TPerfEvent: ";
 
    if ( fEvtNode == -2 ) {
