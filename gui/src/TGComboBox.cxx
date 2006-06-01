@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.43 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.44 2006/05/30 11:45:59 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -149,18 +149,6 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
    AddFrame(fSelEntry, fLhs = new TGLayoutHints(kLHintsLeft |
                                                 kLHintsExpandY | kLHintsExpandX));
    Init();
-
-   if (!p && fClient->IsEditable()) {  // defauld used in the GUI builder
-      AddEntry("Entry 1 ", 0);
-      AddEntry("Entry 2 ", 1);
-      AddEntry("Entry 3 ", 2);
-      AddEntry("Entry 4 ", 3);
-      AddEntry("Entry 5 ", 4);
-      AddEntry("Entry 6 ", 5);
-      AddEntry("Entry 7 ", 6);
-      MapSubwindows();
-      Resize(fListBox->GetDefaultWidth(), fSelEntry->GetDefaultHeight() + 7);
-   }
 }
 
 //______________________________________________________________________________
@@ -554,6 +542,22 @@ void TGComboBox::ReturnPressed()
    Int_t nn = GetNumberOfEntries() + 1;
    AddEntry(text.Data(), nn);
    Select(nn);
+}
+
+//______________________________________________________________________________
+void TGComboBox::RemoveAll()
+{
+   // Remove all entries from combo box.
+
+   fListBox->RemoveAll();
+
+   if (fSelEntry) {
+      ((TGTextLBEntry*)fSelEntry)->SetTitle("");
+      fClient->NeedRedraw(fSelEntry);
+   } else {
+      fTextEntry->SetTitle("");
+      fClient->NeedRedraw(fTextEntry);
+   }
 }
 
 //______________________________________________________________________________
