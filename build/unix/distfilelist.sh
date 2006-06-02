@@ -38,7 +38,7 @@ WILDCARDS="LICENSE README bin \
 FILES=
 for wc in ${WILDCARDS}; do
    if [ -d "${wc}" ]; then
-      FILES="${FILES} `find ${wc} -type f`"
+      FILES="${FILES} `find ${wc} -type f -o -type l`"
    else
       FILES="${FILES} ${wc}"
    fi
@@ -50,10 +50,15 @@ if [ "x${HAVEPRECOMP}" != "x" ]; then
    HAVEPRECOMP=include/precompile.h
 fi
 
+VETODLLSINLIB=""
+ARCH=`grep -e '^ARCH' config/Makefile.config | sed 's,^ARCH.*:= ,,'`
+if [ "x$ARCH" = "xwin32" ]; then
+    VETODLLSINLIB="-e 's,^lib/.*\.dll$,,'"
+fi
 # remove all files we don't want, put one file per line
 echo `echo ${FILES} | tr ' ' '\n' | sed \
   -e 's,^include/precompile\..*$,,' \
-  -e 's,^lib/.*\.dll$,,' \
+  $VETODLLSINLIB \
   -e 's,^.*.cvsignore$,,' \
   -e 's,^.*/CVS/.*$,,' \
    | grep -v '^$'` ${HAVEPRECOMP} | tr ' ' '\n' | sort | uniq | sed -e 's,^,'${PREPENDDIR}','
