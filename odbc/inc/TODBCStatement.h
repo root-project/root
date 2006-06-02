@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.h,v 1.4 2006/05/16 09:37:57 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.h,v 1.5 2006/05/18 06:57:22 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -85,6 +85,7 @@ public:
    virtual Int_t       GetBufferLength() const { return fBufferLength; }
    virtual Int_t       GetNumParameters();
 
+   virtual Bool_t      SetNull(Int_t npar);
    virtual Bool_t      SetInt(Int_t npar, Int_t value);
    virtual Bool_t      SetUInt(Int_t npar, UInt_t value);
    virtual Bool_t      SetLong(Int_t npar, Long_t value);
@@ -103,6 +104,7 @@ public:
    virtual const char *GetFieldName(Int_t nfield);
    virtual Bool_t      NextResultRow();
 
+   virtual Bool_t      IsNull(Int_t);
    virtual Int_t       GetInt(Int_t npar);
    virtual UInt_t      GetUInt(Int_t npar);
    virtual Long_t      GetLong(Int_t npar);

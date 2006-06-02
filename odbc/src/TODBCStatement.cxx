@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.6 2006/05/22 08:55:30 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.7 2006/05/23 06:20:36 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -84,16 +84,6 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize) :
       SQLSetStmtAttr(fHstmt, SQL_ATTR_PARAM_STATUS_PTR, fStatusBuffer, 0);
       SQLSetStmtAttr(fHstmt, SQL_ATTR_PARAMS_PROCESSED_PTR, &fNumParsProcessed, 0);
 
-/*
-      for (int n=0;n<paramsCount;n++) {
-         SQLSMALLINT   dataType = 0, decimalDigits = 0, nullable = 0;
-         SQLUINTEGER   ParamSize = 0;
-         SQLDescribeParam(fHstmt, n + 1, &dataType, &ParamSize, &decimalDigits, &nullable);
-         cout << "Par" << n << "  type = " << dataType
-              << "  size = " << ParamSize << "  Digits = " <<  decimalDigits << "  Null = " << nullable << endl;
-      }
-*/
-
       // indicates that we are starting
       fBufferCounter = -1;
    }
@@ -177,7 +167,7 @@ Int_t TODBCStatement::GetNumAffectedRows()
 //______________________________________________________________________________
 Bool_t TODBCStatement::StoreResult()
 {
-   //store result.
+   // Store result of statement processing.
    // Results set, produced by processing of statement, can be stored, and accessed by
    // TODBCStamenet methoods like NextResultRow(), GetInt(), GetLong() and so on.
 
@@ -599,6 +589,17 @@ const char* TODBCStatement::ConvertToString(Int_t npar)
 }
 
 //______________________________________________________________________________
+Bool_t TODBCStatement::IsNull(Int_t npar)
+{
+   // Verifies if field value is NULL
+
+   void* addr = GetParAddr(npar);
+   if (addr==0) return kTRUE;
+   
+   return fBuffer[npar].fBlenarray[fBufferCounter] == SQL_NULL_DATA;
+}
+
+//______________________________________________________________________________
 Int_t TODBCStatement::GetInt(Int_t npar)
 {
    //get parameter as integer
@@ -680,6 +681,7 @@ Double_t TODBCStatement::GetDouble(Int_t npar)
 const char* TODBCStatement::GetString(Int_t npar)
 {
    //get parameter as string
+   
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
@@ -714,6 +716,26 @@ const char* TODBCStatement::GetString(Int_t npar)
    return ConvertToString(npar);
 }
 
+//______________________________________________________________________________
+Bool_t TODBCStatement::SetNull(Int_t npar)
+{
+   // Set NULL as parameter value
+   // If NULL should be set for statement parameter during first iteration,
+   // one should call before proper Set... method to identify type of argument for
+   // the future. For instance, if one suppose to have double as type of parameter,
+   // code should look like:
+   //    stmt->SetDouble(2, 0.);
+   //    stmt->SetNull(2);
+   
+   void* addr = GetParAddr(npar, kInt_t);
+   if (addr!=0) 
+      *((long int*) addr) = 0;
+
+   if ((npar>=0) && (npar<fNumBuffers))
+      fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NULL_DATA;
+
+   return kTRUE;
+}
 
 //______________________________________________________________________________
 Bool_t TODBCStatement::SetInt(Int_t npar, Int_t value)
@@ -775,6 +797,7 @@ Bool_t TODBCStatement::SetLong64(Int_t npar, Long64_t value)
 Bool_t TODBCStatement::SetULong64(Int_t npar, ULong64_t value)
 {
    //set parameter as ULong64_t
+   
    void* addr = GetParAddr(npar, kULong64_t);
    if (addr==0) return kFALSE;
 
@@ -789,6 +812,7 @@ Bool_t TODBCStatement::SetULong64(Int_t npar, ULong64_t value)
 Bool_t TODBCStatement::SetDouble(Int_t npar, Double_t value)
 {
    //set parameter as Double_t
+   
    void* addr = GetParAddr(npar, kDouble_t);
    if (addr==0) return kFALSE;
 

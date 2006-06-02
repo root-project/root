@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.h,v 1.3 2006/05/22 08:55:30 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.h,v 1.4 2006/05/23 04:47:40 brun Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -39,7 +39,8 @@
 
 class TSQLResult;
 class TSQLStatement;
-
+class TSQLTableInfo;
+class TList;
 
 class TSQLServer : public TObject {
 
@@ -60,16 +61,32 @@ protected:
    void                SetError(Int_t code, const char* msg, const char* method = 0);
 
 public:
+   enum ESQLDataTypes {  // data types, recognised by TSQLServer and other classes, extrction from ODBC
+      kSQL_NONE = -1,      // data type unknown
+      kSQL_CHAR = 1,       // CHAR(n) - string with fixed length n
+      kSQL_VARCHAR = 2,    // VARCHAR(n) - string with variable length upto n
+      kSQL_INTEGER = 3,    // INTEGER, INT - integer value
+      kSQL_FLOAT = 4,      // FLOAT - float value
+      kSQL_DOUBLE = 5,     // DOUBLE - double value
+      kSQL_NUMERIC = 6,    // NUMERIC - numeric values with length and precion
+      kSQL_BINARY = 7,     // BLOB - binary data
+      kSQL_TIMESTAMP = 8   // TIMESTAMP - 
+   };
+
    virtual ~TSQLServer() { }
 
    virtual void        Close(Option_t *option="") = 0;
    virtual TSQLResult *Query(const char *sql) = 0;
+   virtual Bool_t      Exec(const char* sql);
    virtual TSQLStatement *Statement(const char*, Int_t = 100)
                            { AbstractMethod("Statement"); return 0; }
    virtual Bool_t      IsSupportStatement() const { return kFALSE; }
    virtual Int_t       SelectDataBase(const char *dbname) = 0;
    virtual TSQLResult *GetDataBases(const char *wild = 0) = 0;
    virtual TSQLResult *GetTables(const char *dbname, const char *wild = 0) = 0;
+   virtual TList      *GetTablesList(const char* wild = 0);
+   virtual Bool_t      IsTableExists(const char* tablename);
+   virtual TSQLTableInfo *GetTableInfo(const char* tablename);
    virtual TSQLResult *GetColumns(const char *dbname, const char *table, const char *wild = 0) = 0;
    virtual Int_t       GetMaxIdentifierLength() { return 20; }
    virtual Int_t       CreateDataBase(const char *dbname) = 0;

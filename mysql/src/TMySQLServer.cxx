@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.9 2006/05/16 10:59:35 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.10 2006/05/22 08:55:30 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -12,7 +12,12 @@
 #include "TMySQLServer.h"
 #include "TMySQLResult.h"
 #include "TMySQLStatement.h"
+#include "TSQLColumnInfo.h"
+#include "TSQLTableInfo.h"
+#include "TSQLRow.h"
 #include "TUrl.h"
+#include "TList.h"
+#include "TObjString.h"
 
 
 ClassImp(TMySQLServer)
@@ -120,13 +125,27 @@ TSQLResult *TMySQLServer::Query(const char *sql)
 
    CheckConnect("Query", 0);
 
-   if (mysql_query(fMySQL, sql) != 0) 
+   if (mysql_query(fMySQL, sql)) 
       CheckErrNo("Query",kTRUE,0);
 
    MYSQL_RES *res = mysql_store_result(fMySQL);
    CheckErrNo("Query", kFALSE, 0);
    
    return new TMySQLResult(res);
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLServer::Exec(const char* sql)
+{
+   // Execute SQL command which does not produce any result sets
+   // Returns kTRUE is successfull
+
+   CheckConnect("Exec", kFALSE);
+
+   if (mysql_query(fMySQL, sql)) 
+      CheckErrNo("Exec",kTRUE,kFALSE);
+
+   return !IsError();
 }
 
 //______________________________________________________________________________
@@ -178,6 +197,284 @@ TSQLResult *TMySQLServer::GetTables(const char *dbname, const char *wild)
    
    return new TMySQLResult(res);
 }
+
+
+//______________________________________________________________________________
+TList* TMySQLServer::GetTablesList(const char* wild)
+{
+   // Return list of tables with specified wildcard
+   
+   CheckConnect("GetTablesList", 0);
+   
+   MYSQL_RES *res = mysql_list_tables(fMySQL, wild);
+   
+   CheckErrNo("GetTablesList", kFALSE, 0);
+   
+   MYSQL_ROW row = mysql_fetch_row(res);
+   
+   TList* lst = 0;
+   
+   while (row!=0) {
+      CheckErrNo("GetTablesList", kFALSE, lst);
+      
+      const char* tablename = row[0]; 
+      
+      if (tablename!=0) {
+         if (lst==0) {
+            lst = new TList();
+            lst->SetOwner(kTRUE);   
+         } 
+         lst->Add(new TObjString(tablename));   
+      }
+       
+      row = mysql_fetch_row(res); 
+   }
+   
+   mysql_free_result(res);
+
+   return lst;
+}
+
+//______________________________________________________________________________
+TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
+{
+   // Produces SQL table info
+   // Object must be deleted by user
+   
+   CheckConnect("GetTableInfo", 0);
+   
+   if ((tablename==0) || (*tablename==0)) return 0;
+
+   TString sql;
+   sql.Form("SELECT * FROM `%s` LIMIT 1", tablename);
+
+   if (mysql_query(fMySQL, sql.Data()) != 0) 
+      CheckErrNo("GetTableInfo", kTRUE, 0);
+
+   MYSQL_RES *res = mysql_store_result(fMySQL);
+   CheckErrNo("GetTableInfo", kFALSE, 0);
+
+   unsigned int numfields = mysql_num_fields(res);
+
+   MYSQL_FIELD* fields = mysql_fetch_fields(res);
+   
+   sql.Form("SHOW COLUMNS FROM `%s`", tablename);
+   TSQLStatement* stmt = Statement(sql.Data());
+
+   if ((stmt!=0) && !stmt->Process()) {
+      delete stmt;
+      stmt = 0;
+   }
+   
+   if (stmt==0) {
+      mysql_free_result(res);
+      return 0;
+   }
+   
+   TList* lst = 0;
+   
+   unsigned int nfield = 0;
+
+   stmt->StoreResult();  
+
+   while (stmt->NextResultRow()) {
+      const char* column_name = stmt->GetString(0);
+      const char* type_name = stmt->GetString(1);
+      
+      if ((nfield>=numfields) ||
+          (strcmp(column_name, fields[nfield].name)!=0))
+       {
+         SetError(-1,"missmatch in column names","GetTableInfo");
+         break;
+      }
+      
+      Int_t sqltype = kSQL_NONE;
+      
+      Int_t data_size = -1;    // size in bytes
+      Int_t data_length = -1;  // declaration like VARCHAR(n) or NUMERIC(n)
+      Int_t data_scale = -1;   // second argument in declaration
+      Int_t data_sign = -1; // signed type or not
+      
+      if (IS_NUM(fields[nfield].type))
+         if (fields[nfield].flags & UNSIGNED_FLAG)
+            data_sign = 0;
+         else
+            data_sign = 1;    
+
+      Bool_t Nullable = (fields[nfield].flags & NOT_NULL_FLAG) == 0;
+
+      data_length = fields[nfield].length;
+      if (data_length==0) data_length = -1;
+
+      switch (fields[nfield].type) {
+         case MYSQL_TYPE_TINY:
+         case MYSQL_TYPE_SHORT:
+         case MYSQL_TYPE_LONG:
+         case MYSQL_TYPE_INT24:
+         case MYSQL_TYPE_LONGLONG:
+            sqltype = kSQL_INTEGER;
+            break;
+         case MYSQL_TYPE_DECIMAL:
+            sqltype = kSQL_NUMERIC;
+            data_scale = fields[nfield].decimals;
+            break;
+         case MYSQL_TYPE_FLOAT:
+            sqltype = kSQL_FLOAT;
+            break;
+         case MYSQL_TYPE_DOUBLE:
+            sqltype = kSQL_DOUBLE;
+            break;
+         case MYSQL_TYPE_TIMESTAMP:
+            sqltype = kSQL_TIMESTAMP;
+            break;
+         case MYSQL_TYPE_DATE:
+         case MYSQL_TYPE_TIME:
+         case MYSQL_TYPE_DATETIME:
+         case MYSQL_TYPE_YEAR:
+            break;
+         case MYSQL_TYPE_STRING:
+            if (fields[nfield].charsetnr==63)
+               sqltype = kSQL_BINARY;
+            else
+               sqltype = kSQL_CHAR;
+            data_size = data_length;
+            break;
+         case MYSQL_TYPE_VAR_STRING:
+            if (fields[nfield].charsetnr==63)
+               sqltype = kSQL_BINARY;
+            else
+               sqltype = kSQL_VARCHAR;
+            data_size = data_length;   
+            break;
+         case MYSQL_TYPE_BLOB:
+            if (fields[nfield].charsetnr==63)
+               sqltype = kSQL_BINARY;
+            else
+               sqltype = kSQL_VARCHAR;
+            data_length = fields[nfield].max_length;
+            if (data_length==0) data_length = -1;
+            data_size = data_length;
+            break;
+         case MYSQL_TYPE_SET:
+         case MYSQL_TYPE_ENUM:
+         case MYSQL_TYPE_GEOMETRY:
+         case MYSQL_TYPE_NULL:
+            break;
+         default:
+            if (IS_NUM(fields[nfield].type))
+               sqltype = kSQL_NUMERIC; 
+      }
+      
+      if (lst==0) lst = new TList;
+      lst->Add(new TSQLColumnInfo(column_name, 
+                                  type_name, 
+                                  Nullable,
+                                  sqltype,
+                                  data_size,
+                                  data_length,
+                                  data_scale,
+                                  data_sign));
+      
+      nfield++;
+   }
+   
+   mysql_free_result(res);
+   delete stmt;
+
+   sql.Form("SHOW TABLE STATUS LIKE '%s'", tablename);
+
+   TSQLTableInfo* info = 0;
+
+   TSQLResult* stats = Query(sql.Data());
+   
+   if (stats!=0) {
+      TSQLRow* row = 0;
+      
+      while ((row = stats->Next()) != 0) {
+         if (strcmp(row->GetField(0), tablename)!=0) {
+            delete row;
+            continue;  
+         }
+         const char* comments = 0;
+         const char* engine = 0;
+         const char* create_time = 0;
+         const char* update_time = 0;
+         
+         for (int n=1;n<stats->GetFieldCount();n++) {
+            TString fname = stats->GetFieldName(n);
+            fname.ToLower();
+            if (fname=="engine") engine = row->GetField(n); else
+            if (fname=="comment") comments = row->GetField(n); else
+            if (fname=="create_time") create_time = row->GetField(n); else
+            if (fname=="update_time") update_time = row->GetField(n);
+         }
+         
+         info = new TSQLTableInfo(tablename, 
+                                  lst,
+                                  comments,
+                                  engine,
+                                  create_time,
+                                  update_time);
+         
+         delete row;
+         break;
+      }
+      delete stats;    
+   }
+   
+   if (info==0)
+      info = new TSQLTableInfo(tablename, lst);
+   
+   return info;
+}
+
+
+/*
+//______________________________________________________________________________
+TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
+{
+   // Produces SQL table info
+   // Object must be deleted by user
+   
+   CheckConnect("GetTableInfo", 0);
+   
+   if ((tablename==0) || (*tablename==0)) return 0;
+
+   TString sql;
+   sql.Form("SHOW COLUMNS FROM `%s`", tablename);
+   
+   TSQLStatement* stmt = Statement(sql.Data(), 10);
+   if (stmt==0) return 0;
+   
+   if (!stmt->Process()) {
+      delete stmt;
+      return 0;
+   }
+
+   TList* lst = 0;
+
+   stmt->StoreResult();  
+   
+   while (stmt->NextResultRow()) {
+      const char* columnname = stmt->GetString(0);
+      const char* sqltype = stmt->GetString(1);
+      const char* nstr = stmt->GetString(2);
+      
+      Bool_t IsNullable = kFALSE;
+      if (nstr!=0)
+         IsNullable = (strcmp(nstr,"YES")==0) || (strcmp(nstr,"yes")==0);
+      
+      if (lst==0) lst = new TList;
+      
+      lst->Add(new TSQLColumnInfo(columnname, sqltype, IsNullable));
+   }
+   
+   delete stmt;
+   
+   return new TSQLTableInfo(tablename, lst);
+}
+
+*/
 
 //______________________________________________________________________________
 TSQLResult *TMySQLServer::GetColumns(const char *dbname, const char *table,

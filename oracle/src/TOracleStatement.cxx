@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.cxx,v 1.1 2006/04/12 20:53:45 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.cxx,v 1.2 2006/05/22 08:55:30 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 
@@ -106,7 +106,7 @@ void TOracleStatement::Close(Option_t *)
       }                                                 \
    }
 
-#define CheckGetPar(method)                             \
+#define CheckGetField(method)                             \
    {                                                    \
       ClearError();                                     \
       if (!IsResultSet()) {                             \
@@ -181,6 +181,9 @@ Bool_t TOracleStatement::Process()
 //______________________________________________________________________________
 Int_t TOracleStatement::GetNumAffectedRows()
 {
+   // Return number of affected rows after statement Process() was called
+   // Make sense for queries like SELECT, INSERT, UPDATE
+    
    CheckStatement("GetNumAffectedRows", -1);
 
    try {
@@ -195,6 +198,9 @@ Int_t TOracleStatement::GetNumAffectedRows()
 //______________________________________________________________________________
 Int_t TOracleStatement::GetNumParameters()
 {
+   // Return number of parameters in statement
+   // Not yet implemented for Oracle 
+    
    CheckStatement("GetNumParameters", -1);
 
    Info("GetParametersNumber","Not implemented");
@@ -203,8 +209,29 @@ Int_t TOracleStatement::GetNumParameters()
 }
 
 //______________________________________________________________________________
+Bool_t TOracleStatement::SetNull(Int_t npar)
+{
+   // Set NULL as value of parameter npar
+   
+   CheckSetPar("SetNull");
+
+   try {
+      fStmt->setNull(npar+1, OCCIINT);
+
+      return kTRUE;
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetNull");
+   }
+
+   return kFALSE;
+}
+
+
+//______________________________________________________________________________
 Bool_t TOracleStatement::SetInt(Int_t npar, Int_t value)
 {
+   // Set integer value for parameter npar
+    
    CheckSetPar("SetInt");
 
    try {
@@ -221,6 +248,8 @@ Bool_t TOracleStatement::SetInt(Int_t npar, Int_t value)
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetUInt(Int_t npar, UInt_t value)
 {
+   // Set unsigned integer value for parameter npar
+
    CheckSetPar("SetUInt");
 
    try {
@@ -236,6 +265,8 @@ Bool_t TOracleStatement::SetUInt(Int_t npar, UInt_t value)
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetLong(Int_t npar, Long_t value)
 {
+   // Set long integer value for parameter npar
+
    CheckSetPar("SetLong");
 
    try {
@@ -250,6 +281,8 @@ Bool_t TOracleStatement::SetLong(Int_t npar, Long_t value)
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetLong64(Int_t npar, Long64_t value)
 {
+   // Set 64-bit integer value for parameter npar
+
    CheckSetPar("SetLong64");
    
    try {
@@ -264,6 +297,8 @@ Bool_t TOracleStatement::SetLong64(Int_t npar, Long64_t value)
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetULong64(Int_t npar, ULong64_t value)
 {
+   // Set unsigned 64-bit integer value for parameter npar
+
    CheckSetPar("SetULong64");
 
    try {
@@ -278,6 +313,8 @@ Bool_t TOracleStatement::SetULong64(Int_t npar, ULong64_t value)
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetDouble(Int_t npar, Double_t value)
 {
+   // Set double value for parameter npar
+
    CheckSetPar("SetDouble");
    
    try {
@@ -292,6 +329,8 @@ Bool_t TOracleStatement::SetDouble(Int_t npar, Double_t value)
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
+   // Set string value for parameter npar
+
    CheckSetPar("SetString");
 
    try {
@@ -313,6 +352,8 @@ Bool_t TOracleStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 //______________________________________________________________________________
 Bool_t TOracleStatement::NextIteration()
 {
+   // Add next iteration for statement with parameters
+
    CheckStatement("NextIteration", kFALSE);
 
    try {
@@ -338,6 +379,8 @@ Bool_t TOracleStatement::NextIteration()
 //______________________________________________________________________________
 Bool_t TOracleStatement::StoreResult()
 {
+   // Store result of statement processing.
+   // Required to access results of SELECT queries 
 
    CheckStatement("StoreResult", kFALSE);
 
@@ -360,13 +403,17 @@ Bool_t TOracleStatement::StoreResult()
 //______________________________________________________________________________
 Int_t TOracleStatement::GetNumFields()
 {
+   // Returns number of fields in result set 
+    
    return IsResultSet() ?  fBufferSize : -1;
 }
 
 //______________________________________________________________________________
 const char* TOracleStatement::GetFieldName(Int_t npar)
 {
-   CheckGetPar("GetFieldName");
+   // Return field name in result set 
+    
+   CheckGetField("GetFieldName");
 
    if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
 
@@ -386,6 +433,9 @@ const char* TOracleStatement::GetFieldName(Int_t npar)
 //______________________________________________________________________________
 Bool_t TOracleStatement::NextResultRow()
 {
+   // Move cursor to next row in result set.
+   // For Oracle it may lead to additional request to database 
+    
    ClearError();
    
    if (fResult==0) {
@@ -415,9 +465,27 @@ Bool_t TOracleStatement::NextResultRow()
 }
 
 //______________________________________________________________________________
+Bool_t TOracleStatement::IsNull(Int_t npar)
+{
+   // Checks if fieled value in result set is NULL  
+    
+   CheckGetField("IsNull");
+
+   try {
+      return fResult->isNull(npar+1);
+   } catch (SQLException &oraex) {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "IsNull");
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Int_t TOracleStatement::GetInt(Int_t npar)
 {
-   CheckGetPar("GetInt");
+   // return field value as integer
+    
+   CheckGetField("GetInt");
 
    Int_t res = 0;
 
@@ -434,7 +502,9 @@ Int_t TOracleStatement::GetInt(Int_t npar)
 //______________________________________________________________________________
 UInt_t TOracleStatement::GetUInt(Int_t npar)
 {
-   CheckGetPar("GetUInt");
+   // return field value as unsigned integer
+
+   CheckGetField("GetUInt");
 
    UInt_t res = 0;
 
@@ -452,7 +522,9 @@ UInt_t TOracleStatement::GetUInt(Int_t npar)
 //______________________________________________________________________________
 Long_t TOracleStatement::GetLong(Int_t npar)
 {
-   CheckGetPar("GetLong");
+   // return field value as long integer
+
+   CheckGetField("GetLong");
 
    Long_t res = 0;
 
@@ -469,7 +541,9 @@ Long_t TOracleStatement::GetLong(Int_t npar)
 //______________________________________________________________________________
 Long64_t TOracleStatement::GetLong64(Int_t npar)
 {
-   CheckGetPar("GetLong64");
+   // return field value as 64-bit integer
+
+   CheckGetField("GetLong64");
 
    Long64_t res = 0;
 
@@ -486,7 +560,9 @@ Long64_t TOracleStatement::GetLong64(Int_t npar)
 //______________________________________________________________________________
 ULong64_t TOracleStatement::GetULong64(Int_t npar)
 {
-   CheckGetPar("GetULong64");
+   // return field value as unsigned 64-bit integer
+
+   CheckGetField("GetULong64");
 
    ULong64_t res = 0;
 
@@ -503,7 +579,9 @@ ULong64_t TOracleStatement::GetULong64(Int_t npar)
 //______________________________________________________________________________
 Double_t TOracleStatement::GetDouble(Int_t npar)
 {
-   CheckGetPar("GetDouble");
+   // return field value as double
+
+   CheckGetField("GetDouble");
 
    Double_t res = 0;
 
@@ -520,7 +598,9 @@ Double_t TOracleStatement::GetDouble(Int_t npar)
 //______________________________________________________________________________
 const char* TOracleStatement::GetString(Int_t npar)
 {
-   CheckGetPar("GetString");
+   // return field value as string
+
+   CheckGetField("GetString");
 
    if (fBuffer[npar].strbuf!=0) return fBuffer[npar].strbuf;
 

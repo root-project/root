@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.1 2006/04/12 20:53:45 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.2 2006/05/22 08:55:30 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -32,6 +32,9 @@ TMySQLStatement::TMySQLStatement(MYSQL_STMT* stmt) :
    fBuffer(0),
    fWorkingMode(0)
 {
+   // Normal constructor 
+   // Checks if statement contains parameters tags 
+    
    unsigned long paramcount = mysql_stmt_param_count(fStmt);
 
    if (paramcount>0) {
@@ -45,6 +48,8 @@ TMySQLStatement::TMySQLStatement(MYSQL_STMT* stmt) :
 //______________________________________________________________________________
 TMySQLStatement::~TMySQLStatement()
 {
+   // destructor
+    
    Close();
 }
 
@@ -86,22 +91,24 @@ void TMySQLStatement::Close(Option_t *)
 
 
 // check last mysql statement error code
-#define CheckGetPar(method)                             \
+#define CheckGetField(method, res)                      \
    {                                                    \
       ClearError();                                     \
       if (!IsResultSetMode()) {                         \
          SetError(-1,"Cannot get statement parameters",method); \
-         return 0;                                      \
+         return res;                                    \
       }                                                 \
       if ((npar<0) || (npar>=fNumBuffers)) {            \
          SetError(-1,Form("Invalid parameter number %d", npar),method); \
-         return 0;                                      \
+         return res;                                    \
       }                                                 \
    }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::Process()
 {
+   // Process statement 
+    
    CheckStmt("Process",kFALSE); 
 
    // if parameters was set, processing just means of closing parameters and variables
@@ -124,6 +131,8 @@ Bool_t TMySQLStatement::Process()
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetNumAffectedRows()
 {
+   // Return number of affected rows after statement is processed 
+    
    CheckStmt("Process", -1); 
    
    my_ulonglong res = mysql_stmt_affected_rows(fStmt);
@@ -137,6 +146,8 @@ Int_t TMySQLStatement::GetNumAffectedRows()
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetNumParameters()
 {
+   // Return number of statement parameters 
+    
    CheckStmt("GetNumParameters", -1); 
 
    Int_t res = mysql_stmt_param_count(fStmt);
@@ -149,6 +160,9 @@ Int_t TMySQLStatement::GetNumParameters()
 //______________________________________________________________________________
 Bool_t TMySQLStatement::StoreResult()
 {
+   // Store result of statement processing to access them 
+   // via GetInt(), GetDouble() and so on methods.
+    
    CheckStmt("StoreResult", kFALSE); 
    if (fWorkingMode!=0) {
       SetError(-1,"Cannot store result for that statement","StoreResult");
@@ -192,12 +206,16 @@ Bool_t TMySQLStatement::StoreResult()
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetNumFields()
 {
+   // Return number of fields in result set 
+    
    return IsResultSetMode() ? fNumBuffers : -1;
 }
 
 //______________________________________________________________________________
 const char* TMySQLStatement::GetFieldName(Int_t nfield)
 {
+   // Returns field name in result set 
+    
    if (!IsResultSetMode() || (nfield<0) || (nfield>=fNumBuffers)) return 0;
 
    return fBuffer[nfield].fFieldName;
@@ -206,6 +224,8 @@ const char* TMySQLStatement::GetFieldName(Int_t nfield)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::NextResultRow()
 {
+   // Shift cursor to nect row in result set
+    
    if ((fStmt==0) || !IsResultSetMode()) return kFALSE;
 
    Bool_t res = !mysql_stmt_fetch(fStmt);
@@ -222,6 +242,10 @@ Bool_t TMySQLStatement::NextResultRow()
 //______________________________________________________________________________
 Bool_t TMySQLStatement::NextIteration()
 {
+   // Increment iteration counter for statement, where parameter can be set.
+   // Statement with parameters of previous iteration 
+   // automatically will be applied to database
+
    ClearError(); 
     
    if (!IsSetParsMode() || (fBind==0)) {
@@ -248,6 +272,8 @@ Bool_t TMySQLStatement::NextIteration()
 //______________________________________________________________________________
 void TMySQLStatement::FreeBuffers()
 {
+   // Release all buffers, used by statement 
+    
    if (fBuffer) {
      for (Int_t n=0; n<fNumBuffers;n++) {
        free(fBuffer[n].buffer);
@@ -267,10 +293,11 @@ void TMySQLStatement::FreeBuffers()
    fNumBuffers = 0;
 }
 
-
 //______________________________________________________________________________
 void TMySQLStatement::SetBuffersNumber(Int_t numpars)
 {
+   // Allocate buffers for statement parameters/ result fields 
+    
    FreeBuffers();
    if (numpars<=0) return;
 
@@ -286,6 +313,8 @@ void TMySQLStatement::SetBuffersNumber(Int_t numpars)
 //______________________________________________________________________________
 const char* TMySQLStatement::ConvertToString(Int_t npar)
 {
+   // Convert field value to string 
+    
    if (fBuffer[npar].fResNull) return 0;
 
    void* addr = fBuffer[npar].buffer;
@@ -334,6 +363,8 @@ const char* TMySQLStatement::ConvertToString(Int_t npar)
 //______________________________________________________________________________
 long double TMySQLStatement::ConvertToNumeric(Int_t npar)
 {
+   // Convert field to numeric value
+    
    if (fBuffer[npar].fResNull) return 0;
 
    void* addr = fBuffer[npar].buffer;
@@ -381,9 +412,21 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
 }
 
 //______________________________________________________________________________
+Bool_t TMySQLStatement::IsNull(Int_t npar)
+{
+   // Checks if field value is null 
+    
+   CheckGetField("IsNull", kTRUE);
+   
+   return fBuffer[npar].fResNull;
+}
+
+//______________________________________________________________________________
 Int_t TMySQLStatement::GetInt(Int_t npar)
 {
-   CheckGetPar("GetInt");
+   // Return field value as integer 
+    
+   CheckGetField("GetInt", 0);
 
    if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONG) && fBuffer[npar].sign)
      return (Int_t) *((long*) fBuffer[npar].buffer);
@@ -394,7 +437,9 @@ Int_t TMySQLStatement::GetInt(Int_t npar)
 //______________________________________________________________________________
 UInt_t TMySQLStatement::GetUInt(Int_t npar)
 {
-   CheckGetPar("GetUInt");
+   // Return field value as unsigned integer 
+
+   CheckGetField("GetUInt", 0);
 
    if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONG) && !fBuffer[npar].sign)
      return (UInt_t) *((unsigned long*) fBuffer[npar].buffer);
@@ -405,7 +450,9 @@ UInt_t TMySQLStatement::GetUInt(Int_t npar)
 //______________________________________________________________________________
 Long_t TMySQLStatement::GetLong(Int_t npar)
 {
-   CheckGetPar("GetLong");
+   // Return field value as long integer 
+
+   CheckGetField("GetLong", 0);
 
    if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONG) && fBuffer[npar].sign)
      return (Long_t) *((long*) fBuffer[npar].buffer);
@@ -416,7 +463,9 @@ Long_t TMySQLStatement::GetLong(Int_t npar)
 //______________________________________________________________________________
 Long64_t TMySQLStatement::GetLong64(Int_t npar)
 {
-   CheckGetPar("GetLong64");
+   // Return field value as 64-bit integer 
+
+   CheckGetField("GetLong64", 0);
 
    if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONGLONG) && fBuffer[npar].sign)
      return (Long64_t) *((long long*) fBuffer[npar].buffer);
@@ -427,7 +476,9 @@ Long64_t TMySQLStatement::GetLong64(Int_t npar)
 //______________________________________________________________________________
 ULong64_t TMySQLStatement::GetULong64(Int_t npar)
 {
-   CheckGetPar("GetULong64");
+   // Return field value as unsigned 64-bit integer 
+
+   CheckGetField("GetULong64", 0);
 
    if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONGLONG) && !fBuffer[npar].sign)
      return (ULong64_t) *((unsigned long long*) fBuffer[npar].buffer);
@@ -438,7 +489,9 @@ ULong64_t TMySQLStatement::GetULong64(Int_t npar)
 //______________________________________________________________________________
 Double_t TMySQLStatement::GetDouble(Int_t npar)
 {
-   CheckGetPar("GetDouble");
+   // Return field value as double 
+
+   CheckGetField("GetDouble", 0);
 
    if (fBuffer[npar].sqltype==MYSQL_TYPE_DOUBLE)
      return (Double_t) *((double*) fBuffer[npar].buffer);
@@ -449,7 +502,9 @@ Double_t TMySQLStatement::GetDouble(Int_t npar)
 //______________________________________________________________________________
 const char *TMySQLStatement::GetString(Int_t npar)
 {
-   CheckGetPar("GetString");
+   // Return field value as string 
+
+   CheckGetField("GetString", 0);
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
       (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING))
@@ -461,6 +516,10 @@ const char *TMySQLStatement::GetString(Int_t npar)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int sqlsize)
 {
+   // Set parameter type to be used as buffer
+   // Used in both setting data to database and retriving data from data base
+   // Initialize proper MYSQL_BIND structure and allocate required buffers
+
    if ((npar<0) || (npar>=fNumBuffers)) return kFALSE;
 
    fBuffer[npar].buffer = 0;
@@ -501,6 +560,9 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
 //______________________________________________________________________________
 void *TMySQLStatement::BeforeSet(Int_t npar, Int_t sqltype, Bool_t sig, Int_t size)
 {
+   // Check boundary condition before setting value of parameter
+   // Return address of parameter buffer
+    
    ClearError(); 
     
    if (!IsSetParsMode()) {
@@ -515,20 +577,45 @@ void *TMySQLStatement::BeforeSet(Int_t npar, Int_t sqltype, Bool_t sig, Int_t si
 
    if ((fIterationCount==0) && (fBuffer[npar].sqltype==0))
       if (!SetSQLParamType(npar, sqltype, sig, size)) {
-          Error("Here","Problem");
+          SetError(-1,"Cannot initialize parameter buffer","BeforeSet");
           return 0;
       }
 
    if ((fBuffer[npar].sqltype!=sqltype) ||
       (fBuffer[npar].sign != sig)) return 0;
+      
+   fBuffer[npar].fResNull = false;
 
    return fBuffer[npar].buffer;
 }
 
+//______________________________________________________________________________
+Bool_t TMySQLStatement::SetNull(Int_t npar)
+{
+   // Set NULL as parameter value
+   // If NULL should be set for statement parameter during first iteration,
+   // one should call before proper Set... method to identify type of argument for
+   // the future. For instance, if one suppose to have double as type of parameter,
+   // code should look like:
+   //    stmt->SetDouble(2, 0.);
+   //    stmt->SetNull(2);
+
+   void* addr = BeforeSet(npar, MYSQL_TYPE_LONG);
+
+   if (addr!=0) 
+      *((long*) addr) = 0;
+      
+   if ((npar>=0) && (npar<fNumBuffers)) 
+      fBuffer[npar].fResNull = true;
+
+   return kTRUE;
+}
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetInt(Int_t npar, Int_t value)
 {
+   // Set parameter value as integer 
+    
    void* addr = BeforeSet(npar, MYSQL_TYPE_LONG);
 
    if (addr!=0)
@@ -540,6 +627,8 @@ Bool_t TMySQLStatement::SetInt(Int_t npar, Int_t value)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetUInt(Int_t npar, UInt_t value)
 {
+   // Set parameter value as unsigned integer 
+
    void* addr = BeforeSet(npar, MYSQL_TYPE_LONG, kFALSE);
 
    if (addr!=0)
@@ -551,6 +640,8 @@ Bool_t TMySQLStatement::SetUInt(Int_t npar, UInt_t value)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetLong(Int_t npar, Long_t value)
 {
+   // Set parameter value as long integer 
+
    void* addr = BeforeSet(npar, MYSQL_TYPE_LONG);
 
    if (addr!=0)
@@ -562,6 +653,8 @@ Bool_t TMySQLStatement::SetLong(Int_t npar, Long_t value)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetLong64(Int_t npar, Long64_t value)
 {
+   // Set parameter value as 64-bit integer 
+
    void* addr = BeforeSet(npar, MYSQL_TYPE_LONGLONG);
 
    if (addr!=0)
@@ -573,6 +666,8 @@ Bool_t TMySQLStatement::SetLong64(Int_t npar, Long64_t value)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetULong64(Int_t npar, ULong64_t value)
 {
+   // Set parameter value as unsigned 64-bit integer 
+
    void* addr = BeforeSet(npar, MYSQL_TYPE_LONGLONG, kFALSE);
 
    if (addr!=0)
@@ -584,6 +679,8 @@ Bool_t TMySQLStatement::SetULong64(Int_t npar, ULong64_t value)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetDouble(Int_t npar, Double_t value)
 {
+   // Set parameter value as double
+
    void* addr = BeforeSet(npar, MYSQL_TYPE_DOUBLE, kFALSE);
 
    if (addr!=0)
@@ -595,6 +692,8 @@ Bool_t TMySQLStatement::SetDouble(Int_t npar, Double_t value)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
+   // Set parameter value as string
+
    Int_t len = value ? strlen(value) : 0;
 
    void* addr = BeforeSet(npar, MYSQL_TYPE_STRING, true, maxsize);

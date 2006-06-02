@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.9 2005/07/12 15:57:08 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.10 2006/05/22 08:55:30 brun Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -28,7 +28,12 @@
 
 #include "TSQLServer.h"
 #include "TSQLResult.h"
+#include "TSQLRow.h"
+#include "TSQLTableInfo.h"
+#include "TSQLColumnInfo.h"
 #include "TROOT.h"
+#include "TList.h"
+#include "TObjString.h"
 #include "TPluginManager.h"
 #include "TVirtualMutex.h"
 
@@ -61,6 +66,22 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
 
    return serv;
 }
+
+//______________________________________________________________________________
+Bool_t TSQLServer::Exec(const char* sql)
+{
+   // Execute sql query. 
+   // Usefull for command like DROP TABLE or INSERT, where result set
+   // is not interested. Return kTRUE if no error
+   
+   TSQLResult* res = Query(sql);
+   if (res==0) return kFALSE;
+   
+   delete res;
+   
+   return !IsError();
+}
+
 
 //______________________________________________________________________________
 Int_t TSQLServer::GetErrorCode() const
@@ -135,3 +156,97 @@ Bool_t TSQLServer::Rollback()
    if (res!=0) delete res;
    return !IsError();
 }
+
+//______________________________________________________________________________
+TList* TSQLServer::GetTablesList(const char* wild)
+{
+   // Return list of user tables
+   // Parameter wild specifies wildcard for table names.
+   // It either contains exact table name to verify that table is exists or
+   // wildcard with "%" (any number of symbols) and "_" (exactly one symbol).
+   // Example of vaild wildcards: "%", "%name","___user__".
+   // If wild=="", list of all available tables will be produced.
+   // List contain just tables names in the TObjString. 
+   // List must be deleted by the user.
+   // Example code of method usage:
+   //
+   // TList* lst = serv->GetTablesList();
+   // TIter next(lst);
+   // TObject* obj;
+   // while (obj = next()) 
+   //   cout << "Table: " << obj->GetName() << endl; 
+   // delete lst;
+   
+   TSQLResult* res = GetTables(fDB.Data(), wild);
+   if (res==0) return 0;
+
+   TList* lst = 0;
+   TSQLRow* row = 0;
+   while ((row = res->Next())!=0) {
+      const char* tablename = row->GetField(0);
+      if (lst==0) {
+         lst = new TList;
+         lst->SetOwner(kTRUE);  
+      }
+      lst->Add(new TObjString(tablename));
+      delete row;
+   }
+   
+   delete res;
+   
+   return lst;
+}
+
+//______________________________________________________________________________
+Bool_t TSQLServer::IsTableExists(const char* tablename)
+{
+	// Tests if table of that name exists in database
+   // Return kTRUE, if table exists
+   
+   if ((tablename==0) || (strlen(tablename)==0)) return kFALSE;
+   
+   TList* lst = GetTablesList(tablename);
+   if (lst==0) return kFALSE;
+   
+   Bool_t res = kFALSE;
+   
+   TObject* obj = 0;
+   TIter iter(lst);
+   
+   // Can be, that tablename contains "_" or "%" symbols, which are wildcards in SQL,
+   // therefore more than one table can be returned as result. 
+   // One should check that exactly same name is appears
+   
+   while ((obj = iter()) != 0) 
+      if (strcmp(tablename, obj->GetName())==0) res = kTRUE;
+   
+   delete lst;
+   return res;
+}
+
+//______________________________________________________________________________
+TSQLTableInfo* TSQLServer::GetTableInfo(const char* tablename)
+{
+   // Producec TSQLTableInfo object, which contain info about 
+   // table itself and each table column
+   // Object must be deleted by user.
+   
+   if ((tablename==0) || (*tablename==0)) return 0;
+   
+   TSQLResult* res = GetColumns(fDB.Data(), tablename);
+   if (res==0) return 0;
+
+   TList* lst = 0;
+   TSQLRow* row = 0;
+   while ((row = res->Next())!=0) {
+      const char* columnname = row->GetField(0);
+      if (lst==0) lst = new TList;
+      lst->Add(new TSQLColumnInfo(columnname));
+      delete row;
+   }
+   
+   delete res;
+   
+   return new TSQLTableInfo(tablename, lst);
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.9 2006/05/16 10:59:35 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.10 2006/05/22 08:55:30 brun Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -12,7 +12,11 @@
 #include "TOracleServer.h"
 #include "TOracleResult.h"
 #include "TOracleStatement.h"
+#include "TSQLColumnInfo.h"
+#include "TSQLTableInfo.h"
 #include "TUrl.h"
+#include "TList.h"
+#include "TObjString.h"
 
 ClassImp(TOracleServer)
 
@@ -161,6 +165,36 @@ TSQLResult *TOracleServer::Query(const char *sql)
 }
 
 //______________________________________________________________________________
+Bool_t TOracleServer::Exec(const char* sql)
+{
+   // Execute sql command wich does not produce any result set.
+   // Return kTRUE if succesfull
+
+   ClearError();
+
+   if (!IsConnected()) {
+      SetError(-1, "Database is not connected","Exec");
+      return 0;
+   }
+
+   if (!sql || !*sql) {
+      SetError(-1, "no query string specified","Exec");
+      return 0;
+   }
+
+   try {
+      oracle::occi::Statement *stmt = fConn->createStatement(sql);
+      stmt->execute();
+      delete stmt;
+      return kTRUE;
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "Exec");
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 TSQLResult *TOracleServer::GetTables(const char *dbname, const char * /*wild*/)
 {
    // List all tables in the specified database. Wild is for wildcarding
@@ -187,6 +221,150 @@ TSQLResult *TOracleServer::GetTables(const char *dbname, const char * /*wild*/)
       sqlstr = sqlstr + " AND owner='" + dbname + "'";
 
    return Query(sqlstr.Data());
+}
+
+//______________________________________________________________________________
+TList* TOracleServer::GetTablesList(const char* wild)
+{
+   ClearError();
+
+   if (!IsConnected()) {
+      SetError(-1, "Database is not connected","GetTablesList");
+      return 0;
+   }
+   
+   TString cmd("SELECT table_name FROM user_tables");
+   if ((wild!=0) && (*wild!=0)) 
+      cmd+=Form(" WHERE table_name LIKE '%s'", wild);
+
+   TSQLStatement* stmt = Statement(cmd);
+   if (stmt==0) return 0;
+   
+   TList* lst = 0;
+   
+   if (stmt->Process()) {
+      stmt->StoreResult();
+      while (stmt->NextResultRow()) {
+         const char* tablename = stmt->GetString(0); 
+         if (tablename==0) continue;
+         if (lst==0) {
+            lst = new TList;
+            lst->SetOwner(kTRUE);   
+         }
+         lst->Add(new TObjString(tablename));
+      }
+   }
+   
+   delete stmt;
+   
+   return lst;
+}
+
+//______________________________________________________________________________
+TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
+{
+   // Produces SQL table info
+   // Object must be deleted by user
+
+   ClearError();
+
+   if (!IsConnected()) {
+      SetError(-1, "Database is not connected","GetTableInfo");
+      return 0;
+   }
+   
+   if ((tablename==0) || (*tablename==0)) return 0;
+
+   TString sql;
+   sql.Form("SELECT COLUMN_NAME, DATA_TYPE, DATA_LENGTH, DATA_PRECISION, DATA_SCALE, NULLABLE, CHAR_COL_DECL_LENGTH FROM user_tab_columns WHERE table_name = '%s'", tablename);
+   
+   TSQLStatement* stmt = Statement(sql.Data(), 10);
+   if (stmt==0) return 0;
+   
+   if (!stmt->Process()) {
+      delete stmt;
+      return 0;
+   }
+
+   TList* lst = 0;
+
+   stmt->StoreResult();  
+   
+   while (stmt->NextResultRow()) {
+      const char* columnname = stmt->GetString(0);
+      TString data_type = stmt->GetString(1);
+      Int_t data_length = stmt->GetInt(2);      // this is size in bytes
+      Int_t data_precision = stmt->GetInt(3);    
+      Int_t data_scale = stmt->GetInt(4);
+      const char* nstr = stmt->GetString(5);
+      Int_t char_col_decl_length = stmt->GetInt(6);
+      Int_t data_sign = -1; // no info about sign
+      
+      Int_t sqltype = kSQL_NONE;
+      
+      if (data_type=="NUMBER") {
+         sqltype = kSQL_NUMERIC;
+         if (data_precision<=0) {
+            data_precision = -1;
+            data_scale = -1;
+         } else
+         if (data_scale<=0)
+            data_scale = -1;
+         data_sign = 1;
+      } else 
+      
+      if (data_type=="CHAR") {
+         sqltype = kSQL_CHAR;
+         data_precision = char_col_decl_length;
+         data_scale = -1;
+      } else 
+      
+      if ((data_type=="VARCHAR") || (data_type=="VARCHAR2")) {
+         sqltype = kSQL_VARCHAR;
+         data_precision = char_col_decl_length;
+         data_scale = -1;
+      } else
+      
+      if (data_type=="FLOAT") {
+         sqltype = kSQL_FLOAT;
+         data_scale = -1;
+         if (data_precision==126) data_precision = -1;
+         data_sign = 1;
+      } else 
+
+      if (data_type=="LONG") {
+         sqltype = kSQL_VARCHAR;
+         data_length = 0x7fffffff; // size of LONG 2^31-1
+         data_precision = -1;
+         data_scale = -1;
+      } else
+      
+      if (data_type.Contains("TIMESTAMP")) {
+         sqltype = kSQL_TIMESTAMP;
+         data_precision = -1;
+      }
+      
+      Bool_t IsNullable = kFALSE;
+      if (nstr!=0)
+         IsNullable = (*nstr=='Y') || (*nstr=='y');
+      
+      TSQLColumnInfo* info = 
+         new TSQLColumnInfo(columnname, 
+                            data_type, 
+                            IsNullable,
+                            sqltype,
+                            data_length,
+                            data_precision,
+                            data_scale,
+                            data_sign);
+                            
+      if (lst==0) lst = new TList;
+      lst->Add(info);
+   }
+   
+   delete stmt;
+   
+   return new TSQLTableInfo(tablename, lst);
 }
 
 //______________________________________________________________________________

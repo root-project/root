@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStatement.cxx,v 1.1 2006/04/12 20:53:45 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStatement.cxx,v 1.2 2006/05/22 08:55:30 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -108,6 +108,10 @@
 // Therefore, similar to example query will look like:
 //
 //    TSQLStatement* stmt = serv->Statement("INSERT INTO TESTTABLE (ID1, ID2, FFIELD, FVALUE) VALUES (:1, :2, :3, :4)", 100);
+//  
+// There is a possibility to set parameter value to NULL with SetNull() method.
+// If this method called for first iteration, before one should call other Set...
+// to identify actual parameter type, which will be used for parameter later.
 //
 //
 // 3. Getting data from database
@@ -129,7 +133,8 @@
 // values, GetInt(), GetLong64(), GetDouble() and GetString() methods can be used.
 // If column has float point format, GetDouble() and GetString() methods can
 // be used without loss of precision while GetInt() or GetLong64() will return
-// integer part of the value.
+// integer part of the value. One also can test, if value is NULL with IsNull()
+// method.
 //
 // Buffer length, specified for statement in TSQLServer::Statement() call,
 // will also be used to allocate buffers for column values. Usage of these

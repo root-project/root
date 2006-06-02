@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.h,v 1.1 2006/04/17 14:12:52 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.h,v 1.2 2006/05/22 08:55:30 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -45,11 +45,14 @@ public:
 
    void        Close(Option_t *opt="");
    TSQLResult *Query(const char *sql);
+   Bool_t      Exec(const char* sql);
    TSQLStatement *Statement(const char *sql, Int_t = 100);
    Bool_t      IsSupportStatement() const { return kTRUE; }
    Int_t       SelectDataBase(const char *dbname);
    TSQLResult *GetDataBases(const char *wild = 0);
    TSQLResult *GetTables(const char *dbname, const char *wild = 0);
+   TList      *GetTablesList(const char* wild = 0);
+   TSQLTableInfo* GetTableInfo(const char* tablename);
    TSQLResult *GetColumns(const char *dbname, const char *table, const char *wild = 0);
    Int_t       GetMaxIdentifierLength();
    Int_t       CreateDataBase(const char *dbname);

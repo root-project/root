@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStatement.h,v 1.2 2006/05/22 08:55:30 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStatement.h,v 1.3 2006/05/24 15:10:46 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -38,6 +38,7 @@ public:
 
    virtual Bool_t      NextIteration() = 0;
 
+   virtual Bool_t      SetNull(Int_t) { return kFALSE; }
    virtual Bool_t      SetInt(Int_t, Int_t) { return kFALSE; }
    virtual Bool_t      SetUInt(Int_t, UInt_t) { return kFALSE; }
    virtual Bool_t      SetLong(Int_t, Long_t) { return kFALSE; }
@@ -54,6 +55,7 @@ public:
    virtual const char *GetFieldName(Int_t) = 0;
    virtual Bool_t      NextResultRow() = 0;
 
+   virtual Bool_t      IsNull(Int_t) { return kTRUE; }
    virtual Int_t       GetInt(Int_t) { return 0; }
    virtual UInt_t      GetUInt(Int_t) { return 0; }
    virtual Long_t      GetLong(Int_t) { return 0; }

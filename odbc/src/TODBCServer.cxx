@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.6 2006/05/22 08:55:30 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.7 2006/05/23 06:20:36 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -11,12 +11,15 @@
 
 #include "TODBCServer.h"
 
+#include "TODBCRow.h"
 #include "TODBCResult.h"
 #include "TODBCStatement.h"
+#include "TSQLColumnInfo.h"
+#include "TSQLTableInfo.h"
 #include "TUrl.h"
-
 #include "TString.h"
-#include "Riostream.h"
+#include "TObjString.h"
+#include "TList.h"
 
 #include <sqlext.h>
 
@@ -152,8 +155,6 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
 
    SQLSMALLINT reslen;
 
-//   cout << "Conn: " << connstr << "  simple = " << simpleconnect << endl;
-
    hwnd = 0;
 
    if (simpleconnect)
@@ -262,6 +263,28 @@ TSQLResult *TODBCServer::Query(const char *sql)
 }
 
 //______________________________________________________________________________
+Bool_t TODBCServer::Exec(const char* sql)
+{
+   // Executes query which does not produce any results set
+   // Return kTRUE if successfull
+
+   CheckConnect("Exec", 0);
+
+   SQLRETURN    retcode;
+   SQLHSTMT     hstmt;
+
+   SQLAllocHandle(SQL_HANDLE_STMT, fHdbc, &hstmt);
+
+   retcode = SQLExecDirect(hstmt, (SQLCHAR*) sql, SQL_NTS);
+   
+   Bool_t res = !ExtractErrors(retcode, "Exec");
+
+   SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+
+   return res;
+}
+
+//______________________________________________________________________________
 Int_t TODBCServer::SelectDataBase(const char *)
 {
    // Select a database. Returns 0 if successful, non-zero otherwise.
@@ -319,6 +342,180 @@ TSQLResult *TODBCServer::GetTables(const char *, const char* wild)
    }
 
    return new TODBCResult(hstmt);
+}
+
+//______________________________________________________________________________
+TList* TODBCServer::GetTablesList(const char* wild)
+{
+   // Return list of tables in database
+   // See TSQLServer::GetTablesList() for details.
+   
+   CheckConnect("GetTablesList", 0);
+
+   TSQLResult* res = GetTables("", wild);
+   if (res==0) return 0;
+ 
+   TList* lst = 0;
+   
+   TSQLRow* row = 0;
+   
+   while ((row = res->Next())!=0) {
+      const char* tablename = row->GetField(2); 
+      if (tablename!=0) {
+         if (lst==0) {
+            lst = new TList;
+            lst->SetOwner(kTRUE);   
+         }
+         lst->Add(new TObjString(tablename));
+      }
+      delete row;
+   }
+   
+   delete res;
+   
+   return lst;
+}
+
+
+//______________________________________________________________________________
+TSQLTableInfo* TODBCServer::GetTableInfo(const char* tablename)
+{
+   // Produces SQL table info
+   // Object must be deleted by user
+   
+   CheckConnect("GetTableInfo", 0);
+
+   #define STR_LEN 128+1
+   #define REM_LEN 254+1
+
+   /* Declare buffers for result set data */
+   
+   SQLCHAR       szCatalog[STR_LEN], szSchema[STR_LEN];
+   SQLCHAR       szTableName[STR_LEN], szColumnName[STR_LEN];
+   SQLCHAR       szTypeName[STR_LEN], szRemarks[REM_LEN];
+   SQLCHAR       szColumnDefault[STR_LEN], szIsNullable[STR_LEN];
+   SQLINTEGER    ColumnSize, BufferLength, CharOctetLength, OrdinalPosition;
+   SQLSMALLINT   DataType, DecimalDigits, NumPrecRadix, Nullable;
+   SQLSMALLINT   SQLDataType, DatetimeSubtypeCode;
+   SQLRETURN     retcode;
+   SQLHSTMT      hstmt;
+
+   /* Declare buffers for bytes available to return */
+   
+   SQLINTEGER cbCatalog, cbSchema, cbTableName, cbColumnName;
+   SQLINTEGER cbDataType, cbTypeName, cbColumnSize, cbBufferLength;
+   SQLINTEGER cbDecimalDigits, cbNumPrecRadix, cbNullable, cbRemarks;
+   SQLINTEGER cbColumnDefault, cbSQLDataType, cbDatetimeSubtypeCode, cbCharOctetLength;
+   SQLINTEGER cbOrdinalPosition, cbIsNullable;
+
+
+   SQLAllocHandle(SQL_HANDLE_STMT, fHdbc, &hstmt);
+
+   retcode = SQLColumns(hstmt, NULL, 0, NULL, 0, (SQLCHAR*) tablename, SQL_NTS, NULL, 0);
+   if (ExtractErrors(retcode, "GetTableInfo")) {
+      SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+      return 0;
+   }
+   
+   TList* lst = 0;
+
+   /* Bind columns in result set to buffers */
+
+   SQLBindCol(hstmt, 1, SQL_C_CHAR, szCatalog, STR_LEN,&cbCatalog);
+   SQLBindCol(hstmt, 2, SQL_C_CHAR, szSchema, STR_LEN, &cbSchema);
+   SQLBindCol(hstmt, 3, SQL_C_CHAR, szTableName, STR_LEN,&cbTableName);
+   SQLBindCol(hstmt, 4, SQL_C_CHAR, szColumnName, STR_LEN, &cbColumnName);
+   SQLBindCol(hstmt, 5, SQL_C_SSHORT, &DataType, 0, &cbDataType);
+   SQLBindCol(hstmt, 6, SQL_C_CHAR, szTypeName, STR_LEN, &cbTypeName);
+   SQLBindCol(hstmt, 7, SQL_C_SLONG, &ColumnSize, 0, &cbColumnSize);
+   SQLBindCol(hstmt, 8, SQL_C_SLONG, &BufferLength, 0, &cbBufferLength);
+   SQLBindCol(hstmt, 9, SQL_C_SSHORT, &DecimalDigits, 0, &cbDecimalDigits);
+   SQLBindCol(hstmt, 10, SQL_C_SSHORT, &NumPrecRadix, 0, &cbNumPrecRadix);
+   SQLBindCol(hstmt, 11, SQL_C_SSHORT, &Nullable, 0, &cbNullable);
+   SQLBindCol(hstmt, 12, SQL_C_CHAR, szRemarks, REM_LEN, &cbRemarks);
+   SQLBindCol(hstmt, 13, SQL_C_CHAR, szColumnDefault, STR_LEN, &cbColumnDefault);
+   SQLBindCol(hstmt, 14, SQL_C_SSHORT, &SQLDataType, 0, &cbSQLDataType);
+   SQLBindCol(hstmt, 15, SQL_C_SSHORT, &DatetimeSubtypeCode, 0, &cbDatetimeSubtypeCode);
+   SQLBindCol(hstmt, 16, SQL_C_SLONG, &CharOctetLength, 0, &cbCharOctetLength);
+   SQLBindCol(hstmt, 17, SQL_C_SLONG, &OrdinalPosition, 0, &cbOrdinalPosition);
+   SQLBindCol(hstmt, 18, SQL_C_CHAR, szIsNullable, STR_LEN, &cbIsNullable);
+   
+   retcode = SQLFetch(hstmt);
+   
+   while ((retcode==SQL_SUCCESS) || (retcode==SQL_SUCCESS_WITH_INFO)) {
+      
+      Int_t sqltype = kSQL_NONE;
+      
+      Int_t data_size = -1;    // size in bytes
+      Int_t data_length = -1;  // declaration like VARCHAR(n) or NUMERIC(n)
+      Int_t data_scale = -1;   // second argument in declaration
+      Int_t data_sign = -1; // no info about sign
+      
+      switch (DataType) {
+         case SQL_CHAR: 
+            sqltype = kSQL_CHAR;
+            data_size = ColumnSize;
+            data_length = CharOctetLength;
+            break;
+         case SQL_VARCHAR: 
+         case SQL_LONGVARCHAR: 
+            sqltype = kSQL_VARCHAR;
+            data_size = ColumnSize;
+            data_length = CharOctetLength;
+            break;
+         case SQL_DECIMAL:   
+         case SQL_NUMERIC:
+            sqltype = kSQL_NUMERIC;
+            data_size = ColumnSize; // size of column in database
+            data_length = ColumnSize;
+            data_scale = DecimalDigits;
+            break;
+         case SQL_INTEGER:
+         case SQL_TINYINT:
+         case SQL_BIGINT:
+            sqltype = kSQL_INTEGER;
+            data_size = ColumnSize;
+            break;
+         case SQL_REAL:
+         case SQL_FLOAT:
+            sqltype = kSQL_FLOAT;
+            data_size = ColumnSize;
+            data_sign = 1;
+            break;
+         case SQL_DOUBLE:
+            sqltype = kSQL_DOUBLE;
+            data_size = ColumnSize;
+            data_sign = 1;
+            break;
+         case SQL_BINARY:
+         case SQL_VARBINARY:
+         case SQL_LONGVARBINARY:
+            sqltype = kSQL_BINARY;
+            data_size = ColumnSize;
+            break;
+         case SQL_TYPE_TIMESTAMP:   
+            sqltype = kSQL_TIMESTAMP;
+            data_size = ColumnSize;
+            break;
+      }
+      
+      if (lst==0) lst = new TList;
+      
+      lst->Add(new TSQLColumnInfo((const char*) szColumnName, 
+                                  (const char*) szTypeName, 
+                                  Nullable!=0,
+                                  sqltype,
+                                  data_size,
+                                  data_length,
+                                  data_scale,
+                                  data_sign));
+      
+      retcode = SQLFetch(hstmt);                            
+   }
+   
+   SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+   
+   return new TSQLTableInfo(tablename, lst);
 }
 
 //______________________________________________________________________________
