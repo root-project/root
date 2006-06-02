@@ -18,10 +18,10 @@ if ! which candle > /dev/null 2>&1; then
 fi
 
 MSIFILE=$1
-[ "$MSIFILE" == "" ] && MSIFILE=root.msi
+[ "$MSIFILE" = "" ] && MSIFILE=root.msi
 
 MSIDIR=`dirname $MSIFILE`
-[ "$MSIDIR" == "" ] && MSIDIR=$PWD
+[ "$MSIDIR" = "" ] && MSIDIR=$PWD
 [ -d $MSIDIR ] || mkdir -p $MSIDIR
 
 WIXDIR=`which light | sed 's,^\(.*/\)[^/].*$,\1,'`
