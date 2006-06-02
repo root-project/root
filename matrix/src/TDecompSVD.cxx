@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.27 2006/05/18 04:57:57 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.28 2006/05/24 20:07:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -46,6 +46,8 @@ ClassImp(TDecompSVD)
 //______________________________________________________________________________
 TDecompSVD::TDecompSVD(Int_t nrows,Int_t ncols)
 {
+// Constructor for (nrows x ncols) matrix
+
    if (nrows < ncols) {
       Error("TDecompSVD(Int_t,Int_t","matrix rows should be >= columns");
       return;
@@ -58,6 +60,8 @@ TDecompSVD::TDecompSVD(Int_t nrows,Int_t ncols)
 //______________________________________________________________________________
 TDecompSVD::TDecompSVD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
 {
+// Constructor for ([row_lwb..row_upb] x [col_lwb..col_upb]) matrix
+
    const Int_t nrows = row_upb-row_lwb+1;
    const Int_t ncols = col_upb-col_lwb+1;
 
@@ -75,6 +79,8 @@ TDecompSVD::TDecompSVD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
 //______________________________________________________________________________
 TDecompSVD::TDecompSVD(const TMatrixD &a,Double_t tol)
 {
+// Constructor for general matrix A .
+
    R__ASSERT(a.IsValid());
    if (a.GetNrows() < a.GetNcols()) {
       Error("TDecompSVD(const TMatrixD &","matrix rows should be >= columns");
@@ -102,12 +108,17 @@ TDecompSVD::TDecompSVD(const TMatrixD &a,Double_t tol)
 //______________________________________________________________________________
 TDecompSVD::TDecompSVD(const TDecompSVD &another): TDecompBase(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
 //______________________________________________________________________________
 Bool_t TDecompSVD::Decompose()
 {
+// SVD decomposition of matrix
+// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
+
    if ( !TestBit(kMatrixSet) )
       return kFALSE;
 
@@ -260,7 +271,7 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
 //______________________________________________________________________________
 Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag)
 {
-// Diagonalizes in an iterativ fashion the bidiagonal matrix C as described through
+// Diagonalizes in an iterative fashion the bidiagonal matrix C as described through
 // sDiag and oDiag, so that S' = U'^T . C . V' is diagonal. U' and V' are orthogonal
 // matrices .
 //
@@ -350,6 +361,8 @@ Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD 
 //______________________________________________________________________________
 void TDecompSVD::Diag_1(TMatrixD &v,TVectorD &sDiag,TVectorD &oDiag,Int_t k)
 {
+// Step 1 in the matrix diagonalization
+
    const Int_t nCol_v = v.GetNcols();
 
    TMatrixDColumn vc_k = TMatrixDColumn(v,k);
@@ -372,6 +385,8 @@ void TDecompSVD::Diag_1(TMatrixD &v,TVectorD &sDiag,TVectorD &oDiag,Int_t k)
 //______________________________________________________________________________
 void TDecompSVD::Diag_2(TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l)
 {
+// Step 2 in the matrix diagonalization
+
    for (Int_t i = l; i <= k; i++) {
       Double_t h,cs,sn;
       if (i == l)
@@ -388,6 +403,8 @@ void TDecompSVD::Diag_2(TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l)
 //______________________________________________________________________________
 void TDecompSVD::Diag_3(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l)
 {
+// Step 3 in the matrix diagonalization
+
    Double_t *pS = sDiag.GetMatrixArray();
    Double_t *pO = oDiag.GetMatrixArray();
 
@@ -552,6 +569,8 @@ const TMatrixD TDecompSVD::GetMatrix()
 //______________________________________________________________________________
 void TDecompSVD::SetMatrix(const TMatrixD &a)
 {
+// Set matrix to be decomposed
+
    R__ASSERT(a.IsValid());
 
    ResetStatus();
@@ -750,6 +769,8 @@ Bool_t TDecompSVD::TransSolve(TVectorD &b)
 //______________________________________________________________________________
 Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
 {
+// Solve A^T x=b assuming the SVD form of A is stored . Solution returned in b.
+
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
@@ -803,6 +824,8 @@ Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
 //______________________________________________________________________________
 Double_t TDecompSVD::Condition()
 {
+// Matrix condition number
+
    if ( !TestBit(kCondition) ) {
       fCondition = -1;
       if (TestBit(kSingular))
@@ -824,6 +847,8 @@ Double_t TDecompSVD::Condition()
 //______________________________________________________________________________
 void TDecompSVD::Det(Double_t &d1,Double_t &d2)
 {
+// Matrix determinant det = d1*TMath::Power(2.,d2)
+
    if ( !TestBit(kDetermined) ) {
       if ( !TestBit(kDecomposed) )
          Decompose();
@@ -883,6 +908,8 @@ TMatrixD TDecompSVD::Invert()
 //______________________________________________________________________________
 void TDecompSVD::Print(Option_t *opt) const
 {
+// Print class members
+
    TDecompBase::Print(opt);
    fU.Print("fU");
    fV.Print("fV");
@@ -892,6 +919,8 @@ void TDecompSVD::Print(Option_t *opt) const
 //______________________________________________________________________________
 TDecompSVD &TDecompSVD::operator=(const TDecompSVD &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TDecompBase::operator=(source);
       fU.ResizeTo(source.fU);

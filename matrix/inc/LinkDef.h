@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.25 2006/03/23 11:23:14 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.26 2006/04/04 05:51:06 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,6 +15,9 @@
 #pragma link off all functions;
 
 #pragma link C++ global gMatrixCheck;
+
+#pragma link C++ namespace TMatrixTCramerInv;
+#pragma link C++ namespace TMatrixTSymCramerInv;
 
 #pragma link C++ class TVectorT                <Float_t>-;
 #pragma link C++ class TMatrixTBase            <Float_t>-;

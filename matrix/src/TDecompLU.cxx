@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.25 2006/05/24 20:07:45 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.26 2006/05/26 09:18:35 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -41,6 +41,8 @@ ClassImp(TDecompLU)
 //______________________________________________________________________________
 TDecompLU::TDecompLU()
 {
+// Default constructor
+
    fSign = 0.0;
    fNIndex = 0;
    fIndex = 0;
@@ -50,6 +52,8 @@ TDecompLU::TDecompLU()
 //______________________________________________________________________________
 TDecompLU::TDecompLU(Int_t nrows)
 {
+// Constructor for (nrows x nrows) matrix
+
    fSign = 1.0;
    fNIndex = nrows;
    fIndex = new Int_t[fNIndex];
@@ -61,6 +65,8 @@ TDecompLU::TDecompLU(Int_t nrows)
 //______________________________________________________________________________
 TDecompLU::TDecompLU(Int_t row_lwb,Int_t row_upb)
 {
+// Constructor for ([row_lwb..row_upb] x [row_lwb..row_upb]) matrix
+
    const Int_t nrows = row_upb-row_lwb+1;
    fSign = 1.0;
    fNIndex = nrows;
@@ -75,6 +81,8 @@ TDecompLU::TDecompLU(Int_t row_lwb,Int_t row_upb)
 //______________________________________________________________________________
 TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
 {
+// Constructor for matrix a
+
    R__ASSERT(a.IsValid());
 
    if (a.GetNrows() != a.GetNcols() || a.GetRowLwb() != a.GetColLwb()) {
@@ -103,6 +111,8 @@ TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
 //______________________________________________________________________________
 TDecompLU::TDecompLU(const TDecompLU &another) : TDecompBase(another)
 {
+// Copy constructor
+
    fNIndex = 0;
    fIndex  = 0;
    *this = another;
@@ -111,6 +121,9 @@ TDecompLU::TDecompLU(const TDecompLU &another) : TDecompBase(another)
 //______________________________________________________________________________
 Bool_t TDecompLU::Decompose()
 {
+// Matrix A is decomposed in components U and L so that P * A = U * L
+// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
+
    if ( !TestBit(kMatrixSet) )
       return kFALSE;
 
@@ -181,6 +194,8 @@ const TMatrixD TDecompLU::GetMatrix()
 //______________________________________________________________________________
 void TDecompLU::SetMatrix(const TMatrixD &a)
 {
+// Set matrix to be decomposed
+
    R__ASSERT(a.IsValid());
 
    ResetStatus();
@@ -494,6 +509,8 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 //______________________________________________________________________________
 void TDecompLU::Det(Double_t &d1,Double_t &d2)
 {
+// Calculate determinant det = d1*TMath::Power(2.,d2) 
+
    if ( !TestBit(kDetermined) ) {
       if ( !TestBit(kDecomposed) )
          Decompose();
@@ -508,8 +525,8 @@ void TDecompLU::Det(Double_t &d1,Double_t &d2)
 //______________________________________________________________________________
 void TDecompLU::Invert(TMatrixD &inv)
 {
-  // For a matrix A(m,m), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
-  // (m x m) Ainv is returned .
+// For a matrix A(m,m), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+// (m x m) Ainv is returned .
 
    if (inv.GetNrows()  != GetNrows()  || inv.GetNcols()  != GetNcols() ||
         inv.GetRowLwb() != GetRowLwb() || inv.GetColLwb() != GetColLwb()) {
@@ -525,8 +542,8 @@ void TDecompLU::Invert(TMatrixD &inv)
 //______________________________________________________________________________
 TMatrixD TDecompLU::Invert()
 {
-  // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
-  // (n x m) Ainv is returned .
+// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+// (n x m) Ainv is returned .
 
    const Int_t rowLwb = GetRowLwb();
    const Int_t rowUpb = rowLwb+GetNrows()-1;

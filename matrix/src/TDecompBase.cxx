@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.22 2006/05/24 20:07:45 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.23 2006/05/29 05:03:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -285,7 +285,7 @@ Bool_t TDecompBase::MultiSolve(TMatrixD &B)
 //______________________________________________________________________________
 void TDecompBase::Det(Double_t &d1,Double_t &d2)
 {
-// Matrix determinant
+// Matrix determinant det = d1*TMath::Power(2.,d2)
 
    if ( !TestBit(kDetermined) ) {
       if ( !TestBit(kDecomposed) )

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.10 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.11 2006/05/19 04:44:59 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -30,6 +30,8 @@ ClassImp(TMatrixDSymEigen)
 //______________________________________________________________________________
 TMatrixDSymEigen::TMatrixDSymEigen(const TMatrixDSym &a)
 {
+// Constructor for eigen-problem of symmetric matrix A .
+
    R__ASSERT(a.IsValid());
 
    const Int_t nRows  = a.GetNrows();
@@ -55,6 +57,8 @@ TMatrixDSymEigen::TMatrixDSymEigen(const TMatrixDSym &a)
 //______________________________________________________________________________
 TMatrixDSymEigen::TMatrixDSymEigen(const TMatrixDSymEigen &another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -320,6 +324,8 @@ void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
 //______________________________________________________________________________
 TMatrixDSymEigen &TMatrixDSymEigen::operator=(const TMatrixDSymEigen &source)
 {
+// Assignment operator
+
    if (this != &source) {
       fEigenVectors.ResizeTo(source.fEigenVectors);
       fEigenValues.ResizeTo(source.fEigenValues);

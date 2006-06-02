@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.20 2006/05/18 04:57:57 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.21 2006/05/29 05:03:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -318,7 +318,8 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
 //______________________________________________________________________________
 void TDecompChol::Det(Double_t &d1,Double_t &d2)
 {
-// determinant is square of diagProd of cholesky factor
+// Matrix determinant det = d1*TMath::Power(2.,d2) is square of diagProd
+// of cholesky factor
 
    if ( !TestBit(kDetermined) ) {
       if ( !TestBit(kDecomposed) )

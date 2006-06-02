@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.13 2006/05/19 04:44:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.14 2006/05/24 20:07:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -48,6 +48,8 @@ ClassImp(TMatrixDEigen)
 //______________________________________________________________________________
 TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
 {
+// Constructor for eigen-problem of matrix A .
+
    R__ASSERT(a.IsValid());
  
    const Int_t nRows  = a.GetNrows();
@@ -87,6 +89,8 @@ TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
 //______________________________________________________________________________
 TMatrixDEigen::TMatrixDEigen(const TMatrixDEigen &another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -728,6 +732,8 @@ void TMatrixDEigen::Sort(TMatrixD &v,TVectorD &d,TVectorD &e)
 //______________________________________________________________________________
 TMatrixDEigen &TMatrixDEigen::operator=(const TMatrixDEigen &source)
 {
+// Assignment operator
+
    if (this != &source) {
       fEigenVectors.ResizeTo(source.fEigenVectors);
       fEigenValuesRe.ResizeTo(source.fEigenValuesRe);
