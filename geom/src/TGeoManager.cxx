@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.151 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.152 2006/05/24 17:11:54 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1847,11 +1847,11 @@ void TGeoManager::CloseGeometry(Option_t *option)
       Error("CloseGeometry","you MUST call SetTopVolume() first !");
       return;
    }
-   if (!gROOT->GetListOfBrowsables()->FindObject(this)) gROOT->GetListOfBrowsables()->Add(this);
-   TSeqCollection *brlist = gROOT->GetListOfBrowsers();
-   TIter next(brlist);
-   TBrowser *browser = 0;
-   while ((browser=(TBrowser*)next())) browser->Refresh();
+//   if (!gROOT->GetListOfBrowsables()->FindObject(this)) gROOT->GetListOfBrowsables()->Add(this);
+//   TSeqCollection *brlist = gROOT->GetListOfBrowsers();
+//   TIter next(brlist);
+//   TBrowser *browser = 0;
+//   while ((browser=(TBrowser*)next())) browser->Refresh();
    TString opt(option);
    opt.ToLower();
    Bool_t dummy = opt.Contains("d");
@@ -5206,7 +5206,6 @@ ULong_t TGeoManager::SizeOf(const TGeoNode * /*node*/, Option_t * /*option*/)
 void TGeoManager::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TGeoManager.
-
    if (R__b.IsReading()) {
       TGeoManager::Class()->ReadBuffer(R__b, this);
       fIsGeomReading = kTRUE;
