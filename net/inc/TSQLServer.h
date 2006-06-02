@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.h,v 1.4 2006/05/23 04:47:40 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.h,v 1.5 2006/06/02 14:02:03 brun Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -85,7 +85,7 @@ public:
    virtual TSQLResult *GetDataBases(const char *wild = 0) = 0;
    virtual TSQLResult *GetTables(const char *dbname, const char *wild = 0) = 0;
    virtual TList      *GetTablesList(const char* wild = 0);
-   virtual Bool_t      IsTableExists(const char* tablename);
+   virtual Bool_t      HasTable(const char* tablename);
    virtual TSQLTableInfo *GetTableInfo(const char* tablename);
    virtual TSQLResult *GetColumns(const char *dbname, const char *table, const char *wild = 0) = 0;
    virtual Int_t       GetMaxIdentifierLength() { return 20; }

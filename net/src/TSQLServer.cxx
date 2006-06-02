@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.10 2006/05/22 08:55:30 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.11 2006/06/02 14:02:03 brun Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -198,9 +198,9 @@ TList* TSQLServer::GetTablesList(const char* wild)
 }
 
 //______________________________________________________________________________
-Bool_t TSQLServer::IsTableExists(const char* tablename)
+Bool_t TSQLServer::HasTable(const char* tablename)
 {
-	// Tests if table of that name exists in database
+   // Tests if table of that name exists in database
    // Return kTRUE, if table exists
    
    if ((tablename==0) || (strlen(tablename)==0)) return kFALSE;
