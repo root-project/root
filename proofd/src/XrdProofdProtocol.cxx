@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.11 2006/04/19 13:55:36 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.12 2006/06/02 15:14:35 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -39,6 +39,16 @@
 #define _FILE_OFFSET_BITS 32
 #undef  _LARGEFILE_SOURCE
 #endif
+#endif
+
+// System info on Solaris
+#if (defined(SUNCC) || defined(SUN)) && !defined(__KCC)
+#   define XPD__SUNCC
+#   include <sys/systeminfo.h>
+#   include <sys/filio.h>
+#   include <sys/sockio.h>
+#   define HASNOT_INETATON
+#   define INADDR_NONE (UInt_t)-1
 #endif
 
 #include <dlfcn.h>
@@ -167,8 +177,7 @@ XrdProofdProtocol::fgProtStack("ProtStack", "xproofd protocol anchor");
 #endif
 
 typedef struct {
-   kXR_unt16 streamid;
-   kXR_unt16 status;
+   kXR_int32 ptyp;  // must be always 0 !
    kXR_int32 rlen;
    kXR_int32 pval;
    kXR_int32 styp;
@@ -581,7 +590,7 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
    struct ClientInitHandShake hsdata;
    char  *hsbuff = (char *)&hsdata;
 
-   static hs_response_t hsresp = {0, 0, htonl(1), htonl(XPROOFD_VERSBIN), 0};
+   static hs_response_t hsresp = {0, 0, htonl(XPROOFD_VERSBIN), 0};
 
    XrdProofdProtocol *xp;
    int dlen;
@@ -858,7 +867,7 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
          // Initialize the list of workers if a static config has been required
          // Default file path, if none specified
          if (!fgPROOFcfg) {
-            const char *cfg = "/proof/etc/proof.conf";
+            const char *cfg = "/etc/proof/proof.conf";
             fgPROOFcfg = new char[strlen(fgROOTsys)+strlen(cfg)+1];
             sprintf(fgPROOFcfg, "%s%s", fgROOTsys, cfg);
             // Check if the file exists and is readable
@@ -2489,7 +2498,7 @@ int XrdProofdProtocol::SetProofServEnv(XrdProofdProtocol *p,
 
    // Session tag
    char hn[64], stag[512];
-#if defined(R__SOLARIS) && !defined(R__KCC)
+#if defined(XPD__SUNCC)
    sysinfo(SI_HOSTNAME, hn, sizeof(hn));
 #else
    gethostname(hn, sizeof(hn));
