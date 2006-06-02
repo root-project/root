@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.7 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.8 2006/06/02 15:34:56 rdm Exp $
 // Author: Fons Rademakers   15/02/97
 
 /*************************************************************************
@@ -16,6 +16,8 @@
 // Main program used to create PROOF server application.                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+#include <stdio.h>
+#include <errno.h>
 
 #ifdef WIN32
 #include <io.h>
@@ -33,21 +35,21 @@
 
 // Special type for the hook to the TXProofServ constructor, needed to avoid
 // using the plugin manager
-typedef TApplication *(*TProofServ_t)(Int_t *argc, char **argv);
+typedef TApplication *(*TProofServ_t)(Int_t *argc, char **argv, FILE *flog);
 
 //______________________________________________________________________________
-static int RedirectOutput(const char *logfile, const char *loc)
+static FILE *RedirectOutput(const char *logfile, const char *loc)
 {
    // Redirect stdout to 'logfile'. This log file will be flushed to the
    // client or master after each command.
-   // On success return descriptor of the open log file. Return -1 on failure.
+   // On success return a pointer to the open log file. Return 0 on failure.
 
    if (loc)
       Printf("%s: RedirectOutput: enter: %s", loc, logfile);
 
    if (!logfile || strlen(logfile) <= 0) {
       Printf("%s: RedirectOutput: logfile path undefined", loc);
-      return -1;
+      return 0;
    }
 
    if (loc)
@@ -55,28 +57,28 @@ static int RedirectOutput(const char *logfile, const char *loc)
    FILE *flog = freopen(logfile, "w", stdout);
    if (!flog) {
       Printf("%s: RedirectOutput: could not freopen stdout", loc);
-      return -1;
+      return 0;
    }
 
    if (loc)
       Printf("%s: RedirectOutput: dup2 ...", loc);
    if ((dup2(fileno(stdout), fileno(stderr))) < 0) {
       Printf("%s: RedirectOutput: could not redirect stderr", loc);
-      return -1;
+      return 0;
    }
 
    if (loc)
       Printf("%s: RedirectOutput: read open ...", loc);
-   flog = fopen(logfile, "r");
-   if (!flog) {
+   FILE *fLog = fopen(logfile, "r");
+   if (!fLog) {
       Printf("%s: RedirectOutput: could not open logfile %s", loc, logfile);
-      return -1;
+      return 0;
    }
 
    if (loc)
       Printf("%s: RedirectOutput: done!", loc);
    // We are done
-   return fileno(flog);
+   return fLog;
 }
 
 //______________________________________________________________________________
@@ -84,7 +86,6 @@ int main(int argc, char **argv)
 {
    // PROOF server main program.
 
-//#define R__DEBUG
 #ifdef R__DEBUG
    int debug = 1;
    while (debug)
@@ -98,20 +99,16 @@ int main(int argc, char **argv)
       Printf("%s: starting %s", argv[1], argv[0]);
 
    // Redirect the output
+   FILE *fLog = 0;
    const char *logfile = 0;
-   int logfiledes = -1;
    if ((logfile = getenv("ROOTPROOFLOGFILE"))) {
       char *loc = (loglevel > 0) ? argv[1] : 0;
       if (loglevel > 0)
          Printf("%s: redirecting output to %s", argv[1], logfile);
-      if ((logfiledes = RedirectOutput(logfile, loc)) < 0) {
+      if (!(fLog = RedirectOutput(logfile, loc))) {
          Printf("%s: problems redirecting output to file %s", argv[1], logfile);
          exit(1);
       }
-      // Transmit the file descriptor to the TProofServ application
-      char *ev = new char[strlen("ROOTPROOFLOGFILEDES=")+10];
-      sprintf(ev, "ROOTPROOFLOGFILEDES=%d", logfiledes);
-      putenv(ev);
    }
    if (loglevel > 0)
       Printf("%s: output redirected to %s", argv[1], logfile);
@@ -148,7 +145,7 @@ int main(int argc, char **argv)
    // Locate constructor
    Func_t f = gSystem->DynFindSymbol(prooflib, getter);
    if (f) {
-      theApp = (TApplication *) (*((TProofServ_t)f))(&argc, argv);
+      theApp = (TApplication *) (*((TProofServ_t)f))(&argc, argv, fLog);
    } else {
       Printf("%s: can't find %s", argv[1], getter.Data());
       exit(1);

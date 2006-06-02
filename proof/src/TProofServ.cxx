@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.120 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.121 2006/06/02 15:34:56 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -82,18 +82,6 @@
 #include "TProofResourcesStatic.h"
 #include "TProofNodeInfo.h"
 #include "TFileInfo.h"
-
-#ifdef R__AFS
-extern "C" {
-#include <afs/stds.h>
-#include <afs/kautils.h>
-afs_int32 ka_UserAuthenticateGeneral(afs_int32 flags, char *name,
-                                     char *instance, char *realm,
-                                     char *password, Date lifetime,
-                                     afs_int32 * password_expires,
-                                     afs_int32 spare2, char **reasonP);
-}
-#endif
 
 #ifndef R__WIN32
 const char* const kCP     = "/bin/cp -f";
@@ -253,69 +241,17 @@ Bool_t TProofServInputHandler::Notify()
    return kTRUE;
 }
 
-//----- Utility function -------------------------------------------------------
-//______________________________________________________________________________
-static int Reads(int fd, char *buf, int len)
-{
-   // Reads in at most one less than len characters from open
-   // descriptor fd and stores them into the buffer pointed to by buf.
-   // Reading stops after an EOF or a newline. If a newline is
-   // read, it  is stored into the buffer.
-   // A '\0' is stored after the last character in the buffer.
-   // The number of characters read is returned (newline included).
-   // Returns < 0 in case of error.
-
-   int k = 0;
-   int nread = -1;
-   int nr = read(fd,buf,1);
-   while (nr > 0 && buf[k] != '\n' && k < (len-1)) {
-      k++;
-      nr = read(fd,buf+k,1);
-   }
-   if (k == len-1) {
-      buf[k] = 0;
-      nread = k;
-   } else if (buf[k] == '\n'){
-      if (k <= len-2) {
-         buf[k+1] = 0;
-         nread = k+1;
-      } else {
-         buf[k] = 0;
-         nread = k;
-      }
-   } else if (nr == 0) {
-      if (k > 0) {
-         buf[k-1] = 0;
-         nread = k-1;
-      } else {
-         buf[0] = 0;
-         nread = 0;
-      }
-   } else if (nr < 0) {
-      if (k > 0) {
-         buf[k] = 0;
-         nread = -(k-1);
-      } else {
-         buf[0] = 0;
-         nread = -1;
-      }
-   }
-
-   return nread;
-}
-
-
 ClassImp(TProofServ)
 
 // Hook to the constructor. This is needed to avoid using the plugin manager
 // which may create problems in multi-threaded environments.
 extern "C" {
-   TApplication *GetTProofServ(Int_t *argc, char **argv)
-   { return new TProofServ(argc, argv); }
+   TApplication *GetTProofServ(Int_t *argc, char **argv, FILE *flog)
+   { return new TProofServ(argc, argv, flog); }
 }
 
 //______________________________________________________________________________
-TProofServ::TProofServ(Int_t *argc, char **argv)
+TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
        : TApplication("proofserv", argc, argv, 0, -1)
 {
    // Main constructor. Create an application environment. The TProofServ
@@ -362,7 +298,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
    fEnabledPackages = new TList;
    fEnabledPackages->SetOwner();
 
-   fLogFile         = 0;
+   fLogFile         = flog;
    fLogFileDes      = -1;
 
    fArchivePath     = "";
@@ -455,13 +391,20 @@ void TProofServ::CreateServer()
            fService.Data(), fConfDir.Data(), (Int_t)fMasterServ);
 
    Setup();
-   RedirectOutput();
-
-   // If for some reason we failed setting a redirection fole for the logs
-   // we cannot continue
-   if (!fLogFile || (fLogFileDes = fileno(fLogFile)) < 0) {
-      SendLogFile(-98);
-      Terminate(0);
+   if (!fLogFile) {
+      RedirectOutput();
+      // If for some reason we failed setting a redirection fole for the logs
+      // we cannot continue
+      if (!fLogFile || (fLogFileDes = fileno(fLogFile)) < 0) {
+         SendLogFile(-98);
+         Terminate(0);
+      }
+   } else {
+      // Use the file already open by pmain
+      if ((fLogFileDes = fileno(fLogFile)) < 0) {
+         SendLogFile(-98);
+         Terminate(0);
+      }
    }
 
    // Send message of the day to the client
@@ -2433,7 +2376,7 @@ void TProofServ::AddLogFile(TProofQueryResult *pq)
    // Read the lines and add then to the internal container
    const Int_t kMAXBUF = 4096;
    char line[kMAXBUF];
-   while (Reads(fLogFileDes, line, sizeof(line))) {
+   while (fgets(line, sizeof(line), fLogFile)) {
       if (line[strlen(line)-1] == '\n')
          line[strlen(line)-1] = 0;
       pq->AddLogLine((const char *)line);
@@ -3987,26 +3930,6 @@ TList *TProofServ::GetDataSet(const char *name)
       return fileList;
    } else
       return 0;
-}
-
-//______________________________________________________________________________
-Int_t TProofServ::GetAFSToken()
-{
-   // Utility function used to initialize an AFS token when users require
-   // access to AFS. return 0 on success, -1 otherwise
-   Int_t rc = 0;
-
-#ifdef R__AFS
-   afs_int32 f = KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG;
-   char *u = (char *)fAFSUser.Data();
-   char *p = (char *)fAFSPasswd.Data();
-   afs_int32 lf = MAXKTCTICKETLIFETIME;
-   char *emsg = 0;
-   rc = (Int_t) ka_UserAuthenticateGeneral(f, u, "", "", p, lf, 0, 0, &emsg);
-   if (rc)
-      Info("GetAFSToken","failure acquiring AFS token: %s", emsg);
-#endif
-   return rc;
 }
 
 //______________________________________________________________________________

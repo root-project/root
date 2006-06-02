@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.36 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.37 2006/06/02 15:14:35 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -107,9 +107,6 @@ private:
    TList        *fWaitingQueries;   //list of TProofQueryResult wating to be processed
    Bool_t        fIdle;             //TRUE if idle
 
-   TString       fAFSUser;          //AFS username
-   TString       fAFSPasswd;        //AFS password for token initialization
-
    static Int_t  fgMaxQueries;      //Max number of queries fully kept
 
    virtual void  RedirectOutput();
@@ -122,7 +119,7 @@ private:
    void          AddLogFile(TProofQueryResult *pq);
    void          FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq);
    TList        *GetDataSet(const char *name);
-   Int_t         GetAFSToken();
+
    TProofQueryResult *MakeQueryResult(Long64_t nentries, const char *opt,
                                       TList *inl, Long64_t first, TDSet *dset,
                                       const char *selec, TEventList *evl);
@@ -150,7 +147,7 @@ protected:
    virtual void  Setup();
 
 public:
-   TProofServ(Int_t *argc, char **argv);
+   TProofServ(Int_t *argc, char **argv, FILE *flog = 0);
    virtual ~TProofServ();
 
    virtual void   CreateServer();

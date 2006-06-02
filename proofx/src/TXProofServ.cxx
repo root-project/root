@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.5 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.6 2006/06/02 15:14:35 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -202,8 +202,8 @@ ClassImp(TXProofServ)
 // Hook to the constructor. This is needed to avoid using the plugin manager
 // which may create problems in multi-threaded environments.
 extern "C" {
-   TApplication *GetTXProofServ(Int_t *argc, char **argv)
-   { return new TXProofServ(argc, argv); }
+   TApplication *GetTXProofServ(Int_t *argc, char **argv, FILE *flog)
+   { return new TXProofServ(argc, argv, flog); }
 }
 
 //______________________________________________________________________________
@@ -216,13 +216,12 @@ void TXProofServ::CreateServer()
       Info("CreateServer", "starting server creation");
 
    // Get file descriptor for log file
-   const char *lfd = 0;
-   if (Argc() <= 3) {
-      if (!(lfd = gSystem->Getenv("ROOTPROOFLOGFILEDES"))) {
-         Error("CreateServer", "Descriptor for log file missing");
+   if (fLogFile) {
+      // Use the file already open by pmain
+      if ((fLogFileDes = fileno(fLogFile)) < 0) {
+         Error("CreateServer", "resolving the log file description number");
          exit(1);
       }
-      fLogFileDes = (Int_t) strtol(lfd, 0, 10);
    }
 
    // Global location string in TXSocket
@@ -297,6 +296,16 @@ void TXProofServ::CreateServer()
            fService.Data(), fConfDir.Data(), (Int_t)fMasterServ);
 
    Setup();
+
+   if (!fLogFile) {
+      RedirectOutput();
+      // If for some reason we failed setting a redirection fole for the logs
+      // we cannot continue
+      if (!fLogFile || (fLogFileDes = fileno(fLogFile)) < 0) {
+         SendLogFile(-98);
+         Terminate(0);
+      }
+   }
 
    // Send message of the day to the client
    if (IsMaster()) {
