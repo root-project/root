@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpResidual.cxx,v 1.3 2004/06/09 12:23:16 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpResidual.cxx,v 1.4 2005/09/04 10:02:30 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -57,303 +57,314 @@ ClassImp(TQpResidual)
 //______________________________________________________________________________
 TQpResidual::TQpResidual()
 {
-  fNx   = 0;
-  fMy   = 0;
-  fMz   = 0;
-  
-  fNxup = 0.0;
-  fNxlo = 0.0;
-  fMcup = 0.0;
-  fMclo = 0.0;
+   fNx   = 0;
+   fMy   = 0;
+   fMz   = 0;
+
+   fNxup = 0.0;
+   fNxlo = 0.0;
+   fMcup = 0.0;
+   fMclo = 0.0;
 }
+
 
 //______________________________________________________________________________
 TQpResidual::TQpResidual(Int_t nx,Int_t my,Int_t mz,TVectorD &ixlo,TVectorD &ixup,
-                                                    TVectorD &iclo,TVectorD &icup)
+TVectorD &iclo,TVectorD &icup)
 {
-  fNx = nx;
-  fMy = my;
-  fMz = mz;
-  
-  if (ixlo.GetNrows() > 0) fXloIndex.Use(ixlo.GetNrows(),ixlo.GetMatrixArray());
-  if (ixup.GetNrows() > 0) fXupIndex.Use(ixup.GetNrows(),ixup.GetMatrixArray());
-  if (iclo.GetNrows() > 0) fCloIndex.Use(iclo.GetNrows(),iclo.GetMatrixArray());
-  if (icup.GetNrows() > 0) fCupIndex.Use(icup.GetNrows(),icup.GetMatrixArray());
-  fNxlo = ixlo.NonZeros();
-  fNxup = ixup.NonZeros();
-  fMclo = iclo.NonZeros();
-  fMcup = icup.NonZeros();
+   fNx = nx;
+   fMy = my;
+   fMz = mz;
 
-  fRQ.ResizeTo(fNx);
-  fRA.ResizeTo(fMy);
-  fRC.ResizeTo(fMz);
+   if (ixlo.GetNrows() > 0) fXloIndex.Use(ixlo.GetNrows(),ixlo.GetMatrixArray());
+   if (ixup.GetNrows() > 0) fXupIndex.Use(ixup.GetNrows(),ixup.GetMatrixArray());
+   if (iclo.GetNrows() > 0) fCloIndex.Use(iclo.GetNrows(),iclo.GetMatrixArray());
+   if (icup.GetNrows() > 0) fCupIndex.Use(icup.GetNrows(),icup.GetMatrixArray());
+   fNxlo = ixlo.NonZeros();
+   fNxup = ixup.NonZeros();
+   fMclo = iclo.NonZeros();
+   fMcup = icup.NonZeros();
 
-  fRz.ResizeTo(fMz);
-  if (fMclo > 0) {
-    fRt.ResizeTo(fMz);
-    fRlambda.ResizeTo(fMz);
-  }
-  if (fMcup > 0) {
-    fRu.ResizeTo(fMz);
-    fRpi.ResizeTo(fMz);
-  }
-  if (fNxlo > 0) {
-    fRv.ResizeTo(fNx);
-    fRgamma.ResizeTo(fNx);
-  }
-  if (fNxup > 0) {
-    fRw.ResizeTo(fNx);
-    fRphi.ResizeTo(fNx);
-  }
+   fRQ.ResizeTo(fNx);
+   fRA.ResizeTo(fMy);
+   fRC.ResizeTo(fMz);
+
+   fRz.ResizeTo(fMz);
+   if (fMclo > 0) {
+      fRt.ResizeTo(fMz);
+      fRlambda.ResizeTo(fMz);
+   }
+   if (fMcup > 0) {
+      fRu.ResizeTo(fMz);
+      fRpi.ResizeTo(fMz);
+   }
+   if (fNxlo > 0) {
+      fRv.ResizeTo(fNx);
+      fRgamma.ResizeTo(fNx);
+   }
+   if (fNxup > 0) {
+      fRw.ResizeTo(fNx);
+      fRphi.ResizeTo(fNx);
+   }
 }
+
 
 //______________________________________________________________________________
 TQpResidual::TQpResidual(const TQpResidual &another) : TObject(another)
 {
-  *this = another;
+   *this = another;
 }
+
 
 //______________________________________________________________________________
 void TQpResidual::CalcResids(TQpDataBase *prob_in,TQpVar *vars)
 {
-  TQpDataDens *prob = (TQpDataDens *) prob_in;
+   TQpDataDens *prob = (TQpDataDens *) prob_in;
 
-  fRQ.ResizeTo(prob->fG); fRQ = prob->fG;
-  prob->Qmult(1.0,fRQ,1.0,vars->fX);
+   fRQ.ResizeTo(prob->fG); fRQ = prob->fG;
+   prob->Qmult(1.0,fRQ,1.0,vars->fX);
 
-  // calculate x^T (g+Qx) - contribution to the duality gap
-  Double_t gap = fRQ*vars->fX;
+   // calculate x^T (g+Qx) - contribution to the duality gap
+   Double_t gap = fRQ*vars->fX;
 
-  prob->ATransmult(1.0,fRQ,-1.0,vars->fY);
-  prob->CTransmult(1.0,fRQ,-1.0,vars->fZ);
-  if (fNxlo > 0) Add(fRQ,-1.0,vars->fGamma);
-  if (fNxup > 0) Add(fRQ, 1.0,vars->fPhi);
+   prob->ATransmult(1.0,fRQ,-1.0,vars->fY);
+   prob->CTransmult(1.0,fRQ,-1.0,vars->fZ);
+   if (fNxlo > 0) Add(fRQ,-1.0,vars->fGamma);
+   if (fNxup > 0) Add(fRQ, 1.0,vars->fPhi);
 
-  Double_t norm = 0.0;
-  Double_t componentNorm = fRQ.NormInf();
-  if (componentNorm > norm) norm = componentNorm;
+   Double_t norm = 0.0;
+   Double_t componentNorm = fRQ.NormInf();
+   if (componentNorm > norm) norm = componentNorm;
 
-  fRA.ResizeTo(prob->fBa); fRA = prob->fBa;
-  prob->Amult(-1.0,fRA,1.0,vars->fX);
+   fRA.ResizeTo(prob->fBa); fRA = prob->fBa;
+   prob->Amult(-1.0,fRA,1.0,vars->fX);
 
-  // contribution -d^T y to duality gap
-  gap -= prob->fBa*vars->fY;
-  
-  componentNorm = fRA.NormInf();
-  if( componentNorm > norm ) norm = componentNorm;
+   // contribution -d^T y to duality gap
+   gap -= prob->fBa*vars->fY;
 
-  fRC.ResizeTo(vars->fS); fRC = vars->fS;
-  prob->Cmult(-1.0,fRC,1.0,vars->fX);
+   componentNorm = fRA.NormInf();
+   if( componentNorm > norm ) norm = componentNorm;
 
-  componentNorm = fRC.NormInf();
-  if( componentNorm > norm ) norm = componentNorm;
+   fRC.ResizeTo(vars->fS); fRC = vars->fS;
+   prob->Cmult(-1.0,fRC,1.0,vars->fX);
 
-  fRz.ResizeTo(vars->fZ); fRz = vars->fZ;
+   componentNorm = fRC.NormInf();
+   if( componentNorm > norm ) norm = componentNorm;
 
-  if (fMclo > 0) {
-    Add(fRz,-1.0,vars->fLambda);
+   fRz.ResizeTo(vars->fZ); fRz = vars->fZ;
 
-    fRt.ResizeTo(vars->fS); fRt = vars->fS;
-    Add(fRt,-1.0,prob->GetSlowerBound());
-    fRt.SelectNonZeros(fCloIndex);
-    Add(fRt,-1.0,vars->fT);
+   if (fMclo > 0) {
+      Add(fRz,-1.0,vars->fLambda);
 
-    gap -= prob->fCloBound*vars->fLambda;
+      fRt.ResizeTo(vars->fS); fRt = vars->fS;
+      Add(fRt,-1.0,prob->GetSlowerBound());
+      fRt.SelectNonZeros(fCloIndex);
+      Add(fRt,-1.0,vars->fT);
 
-    componentNorm = fRt.NormInf();
-    if( componentNorm > norm ) norm = componentNorm;
-  }
+      gap -= prob->fCloBound*vars->fLambda;
 
-  if (fMcup > 0) { 
-    Add(fRz,1.0,vars->fPi);
+      componentNorm = fRt.NormInf();
+      if( componentNorm > norm ) norm = componentNorm;
+   }
 
-    fRu.ResizeTo(vars->fS); fRu = vars->fS;
-    Add(fRu,-1.0,prob->GetSupperBound() );
-    fRu.SelectNonZeros(fCupIndex);
-    Add(fRu,1.0,vars->fU);
+   if (fMcup > 0) {
+      Add(fRz,1.0,vars->fPi);
 
-    gap += prob->fCupBound*vars->fPi;
+      fRu.ResizeTo(vars->fS); fRu = vars->fS;
+      Add(fRu,-1.0,prob->GetSupperBound() );
+      fRu.SelectNonZeros(fCupIndex);
+      Add(fRu,1.0,vars->fU);
 
-    componentNorm = fRu.NormInf();
-    if( componentNorm > norm ) norm = componentNorm;
-  }
+      gap += prob->fCupBound*vars->fPi;
 
-  componentNorm = fRz.NormInf();
-  if( componentNorm > norm ) norm = componentNorm;
+      componentNorm = fRu.NormInf();
+      if( componentNorm > norm ) norm = componentNorm;
+   }
 
-  if (fNxlo > 0) {
-    fRv.ResizeTo(vars->fX); fRv = vars->fX;
-    Add(fRv,-1.0,prob->GetXlowerBound());
-    fRv.SelectNonZeros(fXloIndex);
-    Add(fRv,-1.0,vars->fV);
+   componentNorm = fRz.NormInf();
+   if( componentNorm > norm ) norm = componentNorm;
 
-    gap -= prob->fXloBound*vars->fGamma;
+   if (fNxlo > 0) {
+      fRv.ResizeTo(vars->fX); fRv = vars->fX;
+      Add(fRv,-1.0,prob->GetXlowerBound());
+      fRv.SelectNonZeros(fXloIndex);
+      Add(fRv,-1.0,vars->fV);
 
-    componentNorm = fRv.NormInf();
-    if( componentNorm > norm ) norm = componentNorm;
-  }
+      gap -= prob->fXloBound*vars->fGamma;
 
-  if (fNxup > 0) {
-    fRw.ResizeTo(vars->fX); fRw = vars->fX;
-    Add(fRw,-1.0,prob->GetXupperBound());
-    fRw.SelectNonZeros(fXupIndex);
-    Add(fRw,1.0,vars->fW);
+      componentNorm = fRv.NormInf();
+      if( componentNorm > norm ) norm = componentNorm;
+   }
 
-    gap += prob->fXupBound*vars->fPhi;
+   if (fNxup > 0) {
+      fRw.ResizeTo(vars->fX); fRw = vars->fX;
+      Add(fRw,-1.0,prob->GetXupperBound());
+      fRw.SelectNonZeros(fXupIndex);
+      Add(fRw,1.0,vars->fW);
 
-    componentNorm = fRw.NormInf();
-    if (componentNorm > norm) norm = componentNorm;
-  }
-  
-  fDualityGap   = gap;
-  fResidualNorm = norm;
+      gap += prob->fXupBound*vars->fPhi;
+
+      componentNorm = fRw.NormInf();
+      if (componentNorm > norm) norm = componentNorm;
+   }
+
+   fDualityGap   = gap;
+   fResidualNorm = norm;
 }
+
 
 //______________________________________________________________________________
 void TQpResidual::Add_r3_xz_alpha(TQpVar *vars,Double_t alpha)
 {
-  if (fMclo > 0) AddElemMult(fRlambda,1.0,vars->fT,vars->fLambda);
-  if (fMcup > 0) AddElemMult(fRpi    ,1.0,vars->fU,vars->fPi);
-  if (fNxlo > 0) AddElemMult(fRgamma ,1.0,vars->fV,vars->fGamma);
-  if (fNxup > 0) AddElemMult(fRphi   ,1.0,vars->fW,vars->fPhi);
+   if (fMclo > 0) AddElemMult(fRlambda,1.0,vars->fT,vars->fLambda);
+   if (fMcup > 0) AddElemMult(fRpi    ,1.0,vars->fU,vars->fPi);
+   if (fNxlo > 0) AddElemMult(fRgamma ,1.0,vars->fV,vars->fGamma);
+   if (fNxup > 0) AddElemMult(fRphi   ,1.0,vars->fW,vars->fPhi);
 
-  if (alpha != 0.0) {
-    if (fMclo > 0) fRlambda.AddSomeConstant(alpha,fCloIndex);
-    if (fMcup > 0) fRpi    .AddSomeConstant(alpha,fCupIndex);
-    if (fNxlo > 0) fRgamma .AddSomeConstant(alpha,fXloIndex);
-    if (fNxup > 0) fRphi   .AddSomeConstant(alpha,fXupIndex);
-  }
+   if (alpha != 0.0) {
+      if (fMclo > 0) fRlambda.AddSomeConstant(alpha,fCloIndex);
+      if (fMcup > 0) fRpi    .AddSomeConstant(alpha,fCupIndex);
+      if (fNxlo > 0) fRgamma .AddSomeConstant(alpha,fXloIndex);
+      if (fNxup > 0) fRphi   .AddSomeConstant(alpha,fXupIndex);
+   }
 }
+
 
 //______________________________________________________________________________
 void TQpResidual::Set_r3_xz_alpha(TQpVar *vars,Double_t alpha)
 {
-  this->Clear_r3();
-  this->Add_r3_xz_alpha(vars,alpha);
+   this->Clear_r3();
+   this->Add_r3_xz_alpha(vars,alpha);
 }
-  
+
+
 //______________________________________________________________________________
 void TQpResidual::Clear_r3()
 {
-  if (fMclo > 0) fRlambda.Zero();
-  if (fMcup > 0) fRpi    .Zero();
-  if (fNxlo > 0) fRgamma .Zero();
-  if (fNxup > 0) fRphi   .Zero();
+   if (fMclo > 0) fRlambda.Zero();
+   if (fMcup > 0) fRpi    .Zero();
+   if (fNxlo > 0) fRgamma .Zero();
+   if (fNxup > 0) fRphi   .Zero();
 }
-  
+
+
 //______________________________________________________________________________
 void TQpResidual::Clear_r1r2()
 {
-  fRQ.Zero();
-  fRA.Zero();
-  fRC.Zero();
-  fRz.Zero();
-  if (fNxlo > 0) fRv.Zero();
-  if (fNxup > 0) fRw.Zero();
-  if (fMclo > 0) fRt.Zero();
-  if (fMcup > 0) fRu.Zero();
+   fRQ.Zero();
+   fRA.Zero();
+   fRC.Zero();
+   fRz.Zero();
+   if (fNxlo > 0) fRv.Zero();
+   if (fNxup > 0) fRw.Zero();
+   if (fMclo > 0) fRt.Zero();
+   if (fMcup > 0) fRu.Zero();
 }
+
 
 //______________________________________________________________________________
 void TQpResidual::Project_r3(Double_t rmin,Double_t rmax)
 {
-  if (fMclo > 0) {
-    GondzioProjection(fRlambda,rmin,rmax);
-    fRlambda.SelectNonZeros(fCloIndex);
-  }
-  if (fMcup > 0) {
-    GondzioProjection(fRpi,rmin,rmax);
-    fRpi.SelectNonZeros(fCupIndex);
-  }
-  if (fNxlo > 0) {
-    GondzioProjection(fRgamma,rmin,rmax);
-    fRgamma.SelectNonZeros(fXloIndex);
-  }
-  if (fNxup > 0) {
-    GondzioProjection(fRphi,rmin,rmax);
-    fRphi.SelectNonZeros(fXupIndex);
-  }
+   if (fMclo > 0) {
+      GondzioProjection(fRlambda,rmin,rmax);
+      fRlambda.SelectNonZeros(fCloIndex);
+   }
+   if (fMcup > 0) {
+      GondzioProjection(fRpi,rmin,rmax);
+      fRpi.SelectNonZeros(fCupIndex);
+   }
+   if (fNxlo > 0) {
+      GondzioProjection(fRgamma,rmin,rmax);
+      fRgamma.SelectNonZeros(fXloIndex);
+   }
+   if (fNxup > 0) {
+      GondzioProjection(fRphi,rmin,rmax);
+      fRphi.SelectNonZeros(fXupIndex);
+   }
 }
-  
+
+
 //______________________________________________________________________________
 Bool_t TQpResidual::ValidNonZeroPattern()
 {
-  if (fNxlo > 0 && 
+   if (fNxlo > 0 &&
       (!fRv    .MatchesNonZeroPattern(fXloIndex) ||
-       !fRgamma.MatchesNonZeroPattern(fXloIndex)) ) {
-    return kFALSE;
-  }
+   !fRgamma.MatchesNonZeroPattern(fXloIndex)) ) {
+      return kFALSE;
+   }
 
-  if (fNxup > 0 &&
+   if (fNxup > 0 &&
       (!fRw  .MatchesNonZeroPattern(fXupIndex) ||
-       !fRphi.MatchesNonZeroPattern(fXupIndex)) ) {
-    return kFALSE;
-  }
-  if (fMclo > 0 &&
+   !fRphi.MatchesNonZeroPattern(fXupIndex)) ) {
+      return kFALSE;
+   }
+   if (fMclo > 0 &&
       (!fRt     .MatchesNonZeroPattern(fCloIndex) ||
-       !fRlambda.MatchesNonZeroPattern(fCloIndex)) ) {
-    return kFALSE;
-  }
+   !fRlambda.MatchesNonZeroPattern(fCloIndex)) ) {
+      return kFALSE;
+   }
 
-  if (fMcup > 0 &&
-     (!fRu .MatchesNonZeroPattern(fCupIndex) ||
-      !fRpi.MatchesNonZeroPattern(fCupIndex)) ) {
-    return kFALSE;
-  }
-  
-  return kTRUE;
+   if (fMcup > 0 &&
+      (!fRu .MatchesNonZeroPattern(fCupIndex) ||
+   !fRpi.MatchesNonZeroPattern(fCupIndex)) ) {
+      return kFALSE;
+   }
+
+   return kTRUE;
 }
+
 
 //______________________________________________________________________________
 void TQpResidual::GondzioProjection(TVectorD &v,Double_t rmin,Double_t rmax)
 {
-        Double_t *        ep = v.GetMatrixArray();
-  const Double_t * const fep = ep+v.GetNrows();
+   Double_t *        ep = v.GetMatrixArray();
+   const Double_t * const fep = ep+v.GetNrows();
 
-  while (ep < fep) {
-    if (*ep < rmin)
-      *ep = rmin - *ep;
-    else if (*ep > rmax)
-      *ep = rmax - *ep;
-    else
-      *ep = 0.0;
-    if (*ep < -rmax) *ep = -rmax;
-    ep++;
-  }
+   while (ep < fep) {
+      if (*ep < rmin)
+         *ep = rmin - *ep;
+      else if (*ep > rmax)
+         *ep = rmax - *ep;
+      else
+         *ep = 0.0;
+      if (*ep < -rmax) *ep = -rmax;
+      ep++;
+   }
 }
+
 
 //______________________________________________________________________________
 TQpResidual &TQpResidual::operator=(const TQpResidual &source)
 {
-  if (this != &source) {
-    TObject::operator=(source);
+   if (this != &source) {
+      TObject::operator=(source);
 
-    fNx   = source.fNx;
-    fMy   = source.fMy;
-    fMz   = source.fMz;
+      fNx   = source.fNx;
+      fMy   = source.fMy;
+      fMz   = source.fMz;
 
-    fNxup = source.fNxup;
-    fNxlo = source.fNxlo;
-    fMcup = source.fMcup;
-    fMclo = source.fMclo;
+      fNxup = source.fNxup;
+      fNxlo = source.fNxlo;
+      fMcup = source.fMcup;
+      fMclo = source.fMclo;
 
-    fXupIndex.ResizeTo(source.fXupIndex); fXupIndex = source.fXupIndex;
-    fXloIndex.ResizeTo(source.fXloIndex); fXloIndex = source.fXloIndex;
-    fCupIndex.ResizeTo(source.fCupIndex); fCupIndex = source.fCupIndex;
-    fCloIndex.ResizeTo(source.fCloIndex); fCupIndex = source.fCupIndex;
+      fXupIndex.ResizeTo(source.fXupIndex); fXupIndex = source.fXupIndex;
+      fXloIndex.ResizeTo(source.fXloIndex); fXloIndex = source.fXloIndex;
+      fCupIndex.ResizeTo(source.fCupIndex); fCupIndex = source.fCupIndex;
+      fCloIndex.ResizeTo(source.fCloIndex); fCupIndex = source.fCupIndex;
 
-    fRQ     .ResizeTo(source.fRQ);      fRQ      = source.fRQ;
-    fRA     .ResizeTo(source.fRA);      fRA      = source.fRA;
-    fRC     .ResizeTo(source.fRC);      fRC      = source.fRC;
-    fRz     .ResizeTo(source.fRz);      fRz      = source.fRz;
-    fRv     .ResizeTo(source.fRv);      fRv      = source.fRv;
-    fRw     .ResizeTo(source.fRw);      fRw      = source.fRw;
-    fRt     .ResizeTo(source.fRt);      fRt      = source.fRt;
-    fRu     .ResizeTo(source.fRu);      fRu      = source.fRu;
-    fRgamma .ResizeTo(source.fRgamma);  fRgamma  = source.fRgamma;
-    fRphi   .ResizeTo(source.fRphi);    fRphi    = source.fRphi;
-    fRlambda.ResizeTo(source.fRlambda); fRlambda = source.fRlambda;
-    fRpi    .ResizeTo(source.fRpi);     fRpi     = source.fRpi;
-  }
-  return *this;
+      fRQ     .ResizeTo(source.fRQ);      fRQ      = source.fRQ;
+      fRA     .ResizeTo(source.fRA);      fRA      = source.fRA;
+      fRC     .ResizeTo(source.fRC);      fRC      = source.fRC;
+      fRz     .ResizeTo(source.fRz);      fRz      = source.fRz;
+      fRv     .ResizeTo(source.fRv);      fRv      = source.fRv;
+      fRw     .ResizeTo(source.fRw);      fRw      = source.fRw;
+      fRt     .ResizeTo(source.fRt);      fRt      = source.fRt;
+      fRu     .ResizeTo(source.fRu);      fRu      = source.fRu;
+      fRgamma .ResizeTo(source.fRgamma);  fRgamma  = source.fRgamma;
+      fRphi   .ResizeTo(source.fRphi);    fRphi    = source.fRphi;
+      fRlambda.ResizeTo(source.fRlambda); fRlambda = source.fRlambda;
+      fRpi    .ResizeTo(source.fRpi);     fRpi     = source.fRpi;
+   }
+   return *this;
 }

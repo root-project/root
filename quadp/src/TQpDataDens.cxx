@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.cxx,v 1.4 2004/06/09 12:23:16 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.cxx,v 1.5 2006/04/19 08:22:25 rdm Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -55,238 +55,254 @@ ClassImp(TQpDataDens)
 
 //______________________________________________________________________________
 TQpDataDens::TQpDataDens(Int_t nx,Int_t my,Int_t mz)
-  : TQpDataBase(nx,my,mz)
+: TQpDataBase(nx,my,mz)
 {
-  fQ.ResizeTo(fNx,fNx);
-  fA.ResizeTo(fMy,fNx);
-  fC.ResizeTo(fMz,fNx);
+   fQ.ResizeTo(fNx,fNx);
+   fA.ResizeTo(fMy,fNx);
+   fC.ResizeTo(fMz,fNx);
 }
+
 
 //______________________________________________________________________________
 TQpDataDens::TQpDataDens(TVectorD &c_in,   TMatrixDSym &Q_in,
-                         TVectorD &xlow_in,TVectorD    &ixlow_in,
-                         TVectorD &xupp_in,TVectorD    &ixupp_in,
-                         TMatrixD &A_in,   TVectorD    &bA_in,
-                         TMatrixD &C_in,
-                         TVectorD &clow_in,TVectorD    &iclow_in,
-                         TVectorD &cupp_in,TVectorD    &icupp_in)
+TVectorD &xlow_in,TVectorD    &ixlow_in,
+TVectorD &xupp_in,TVectorD    &ixupp_in,
+TMatrixD &A_in,   TVectorD    &bA_in,
+TMatrixD &C_in,
+TVectorD &clow_in,TVectorD    &iclow_in,
+TVectorD &cupp_in,TVectorD    &icupp_in)
 {
-  fG       .ResizeTo(c_in)    ; fG        = c_in;
-  fBa      .ResizeTo(bA_in)   ; fBa       = bA_in;
-  fXloBound.ResizeTo(xlow_in) ; fXloBound = xlow_in;
-  fXloIndex.ResizeTo(ixlow_in); fXloIndex = ixlow_in;
-  fXupBound.ResizeTo(xupp_in) ; fXupBound = xupp_in;
-  fXupIndex.ResizeTo(ixupp_in); fXupIndex = ixupp_in;
-  fCloBound.ResizeTo(clow_in) ; fCloBound = clow_in;
-  fCloIndex.ResizeTo(iclow_in); fCloIndex = iclow_in;
-  fCupBound.ResizeTo(cupp_in) ; fCupBound = cupp_in;
-  fCupIndex.ResizeTo(icupp_in); fCupIndex = icupp_in;
+   fG       .ResizeTo(c_in)    ; fG        = c_in;
+   fBa      .ResizeTo(bA_in)   ; fBa       = bA_in;
+   fXloBound.ResizeTo(xlow_in) ; fXloBound = xlow_in;
+   fXloIndex.ResizeTo(ixlow_in); fXloIndex = ixlow_in;
+   fXupBound.ResizeTo(xupp_in) ; fXupBound = xupp_in;
+   fXupIndex.ResizeTo(ixupp_in); fXupIndex = ixupp_in;
+   fCloBound.ResizeTo(clow_in) ; fCloBound = clow_in;
+   fCloIndex.ResizeTo(iclow_in); fCloIndex = iclow_in;
+   fCupBound.ResizeTo(cupp_in) ; fCupBound = cupp_in;
+   fCupIndex.ResizeTo(icupp_in); fCupIndex = icupp_in;
 
-  fNx = fG.GetNrows();
-  fQ.Use(Q_in);
+   fNx = fG.GetNrows();
+   fQ.Use(Q_in);
 
-  if (A_in.GetNrows() > 0) {
-    fA.Use(A_in);
-    fMy = fA.GetNrows();
-  } else
-    fMy = 0;
+   if (A_in.GetNrows() > 0) {
+      fA.Use(A_in);
+      fMy = fA.GetNrows();
+   } else
+   fMy = 0;
 
-  if (C_in.GetNrows() > 0) {
-    fC.Use(C_in);
-    fMz = fC.GetNrows();
-  } else
-    fMz = 0;
+   if (C_in.GetNrows() > 0) {
+      fC.Use(C_in);
+      fMz = fC.GetNrows();
+   } else
+   fMz = 0;
 }
+
 
 //______________________________________________________________________________
 TQpDataDens::TQpDataDens(const TQpDataDens &another) : TQpDataBase(another)
 {
-  *this = another;
+   *this = another;
 }
+
 
 //______________________________________________________________________________
 void TQpDataDens::Qmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x )
 {
-  y *= beta;
-  if (fQ.GetNoElements() > 0)
-    y += alpha*(fQ*x);
+   y *= beta;
+   if (fQ.GetNoElements() > 0)
+      y += alpha*(fQ*x);
 }
+
 
 //______________________________________________________________________________
 void TQpDataDens::Amult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
-  y *= beta;
-  if (fA.GetNoElements() > 0)
-    y += alpha*(fA*x);
+   y *= beta;
+   if (fA.GetNoElements() > 0)
+      y += alpha*(fA*x);
 }
+
 
 //______________________________________________________________________________
 void TQpDataDens::Cmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
-  y *= beta;
-  if (fC.GetNoElements() > 0)
-    y += alpha*(fC*x);
+   y *= beta;
+   if (fC.GetNoElements() > 0)
+      y += alpha*(fC*x);
 }
+
 
 //______________________________________________________________________________
 void TQpDataDens::ATransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
-  y *= beta;
-  if (fA.GetNoElements() > 0)
-    y += alpha*(TMatrixD(TMatrixD::kTransposed,fA)*x);
+   y *= beta;
+   if (fA.GetNoElements() > 0)
+      y += alpha*(TMatrixD(TMatrixD::kTransposed,fA)*x);
 }
+
 
 //______________________________________________________________________________
 void TQpDataDens::CTransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
-  y *= beta;
-  if (fC.GetNoElements() > 0)
-    y += alpha*(TMatrixD(TMatrixD::kTransposed,fC)*x);
+   y *= beta;
+   if (fC.GetNoElements() > 0)
+      y += alpha*(TMatrixD(TMatrixD::kTransposed,fC)*x);
 }
+
 
 //______________________________________________________________________________
 Double_t TQpDataDens::DataNorm()
 {
-  Double_t norm = 0.0;
+   Double_t norm = 0.0;
 
-  Double_t componentNorm = fG.NormInf();
-  if (componentNorm > norm) norm = componentNorm;
+   Double_t componentNorm = fG.NormInf();
+   if (componentNorm > norm) norm = componentNorm;
 
-  TMatrixDSym fQ_abs(fQ);
-  componentNorm = (fQ_abs.Abs()).Max();
-  if (componentNorm > norm) norm = componentNorm;
+   TMatrixDSym fQ_abs(fQ);
+   componentNorm = (fQ_abs.Abs()).Max();
+   if (componentNorm > norm) norm = componentNorm;
 
-  componentNorm = fBa.NormInf();
-  if (componentNorm > norm) norm = componentNorm;
+   componentNorm = fBa.NormInf();
+   if (componentNorm > norm) norm = componentNorm;
 
-  TMatrixD fA_abs(fQ);
-  componentNorm = (fA_abs.Abs()).Max();
-  if (componentNorm > norm) norm = componentNorm;
+   TMatrixD fA_abs(fQ);
+   componentNorm = (fA_abs.Abs()).Max();
+   if (componentNorm > norm) norm = componentNorm;
 
-  TMatrixD fC_abs(fQ);
-  componentNorm = (fC_abs.Abs()).Max();
-  if (componentNorm > norm) norm = componentNorm;
+   TMatrixD fC_abs(fQ);
+   componentNorm = (fC_abs.Abs()).Max();
+   if (componentNorm > norm) norm = componentNorm;
 
-  R__ASSERT(fXloBound.MatchesNonZeroPattern(fXloIndex));
-  componentNorm = fXloBound.NormInf();
-  if (componentNorm > norm) norm = componentNorm;
+   R__ASSERT(fXloBound.MatchesNonZeroPattern(fXloIndex));
+   componentNorm = fXloBound.NormInf();
+   if (componentNorm > norm) norm = componentNorm;
 
-  R__ASSERT(fXupBound.MatchesNonZeroPattern(fXupIndex));
-  componentNorm = fXupBound.NormInf();
-  if (componentNorm > norm) norm = componentNorm;
+   R__ASSERT(fXupBound.MatchesNonZeroPattern(fXupIndex));
+   componentNorm = fXupBound.NormInf();
+   if (componentNorm > norm) norm = componentNorm;
 
-  R__ASSERT(fCloBound.MatchesNonZeroPattern(fCloIndex));
-  componentNorm = fCloBound.NormInf();
-  if (componentNorm > norm) norm = componentNorm;
+   R__ASSERT(fCloBound.MatchesNonZeroPattern(fCloIndex));
+   componentNorm = fCloBound.NormInf();
+   if (componentNorm > norm) norm = componentNorm;
 
-  R__ASSERT(fCupBound.MatchesNonZeroPattern(fCupIndex));
-  componentNorm = fCupBound.NormInf();
-  if (componentNorm > norm) norm = componentNorm;
+   R__ASSERT(fCupBound.MatchesNonZeroPattern(fCupIndex));
+   componentNorm = fCupBound.NormInf();
+   if (componentNorm > norm) norm = componentNorm;
 
-  return norm;
+   return norm;
 }
+
 
 //______________________________________________________________________________
 void TQpDataDens::Print(Option_t * /*opt*/) const
 {
-  fQ.Print("Q");
-  fG.Print("c");
+   fQ.Print("Q");
+   fG.Print("c");
 
-  fXloBound.Print("xlow");
-  fXloIndex.Print("ixlow");
+   fXloBound.Print("xlow");
+   fXloIndex.Print("ixlow");
 
-  fXupBound.Print("xupp");
-  fXupIndex.Print("ixupp");
+   fXupBound.Print("xupp");
+   fXupIndex.Print("ixupp");
 
-  fA.Print("A");
-  fBa.Print("b");
-  fC.Print("C");
+   fA.Print("A");
+   fBa.Print("b");
+   fC.Print("C");
 
-  fCloBound.Print("clow");
-  fCloIndex.Print("iclow");
+   fCloBound.Print("clow");
+   fCloIndex.Print("iclow");
 
-  fCupBound.Print("cupp");
-  fCupIndex.Print("icupp");
+   fCupBound.Print("cupp");
+   fCupIndex.Print("icupp");
 }
+
 
 //______________________________________________________________________________
 void TQpDataDens::PutQIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
-  m.SetSub(row,col,fQ);
+   m.SetSub(row,col,fQ);
 }
+
 
 //______________________________________________________________________________
 void TQpDataDens::PutAIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
-  m.SetSub(row,col,fA);
+   m.SetSub(row,col,fA);
 }
+
 
 //______________________________________________________________________________
 void TQpDataDens::PutCIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
-  m.SetSub(row,col,fC);
+   m.SetSub(row,col,fC);
 }
+
 
 //______________________________________________________________________________
 void TQpDataDens::GetDiagonalOfQ(TVectorD &dq)
 {
-  const Int_t n = TMath::Min(fQ.GetNrows(),fQ.GetNcols());
-  dq.ResizeTo(n);
-  dq = TMatrixDDiag(fQ);
+   const Int_t n = TMath::Min(fQ.GetNrows(),fQ.GetNcols());
+   dq.ResizeTo(n);
+   dq = TMatrixDDiag(fQ);
 }
+
 
 //______________________________________________________________________________
 Double_t TQpDataDens::ObjectiveValue(TQpVar *vars)
 {
-  TVectorD tmp(fG);
-  this->Qmult(1.0,tmp,0.5,vars->fX);
+   TVectorD tmp(fG);
+   this->Qmult(1.0,tmp,0.5,vars->fX);
 
-  return tmp*vars->fX;
+   return tmp*vars->fX;
 }
+
 
 //______________________________________________________________________________
 void TQpDataDens::DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s)
 {
-  Double_t ix = 3074.20374;
+   Double_t ix = 3074.20374;
 
-  TVectorD xdual(fNx);
-  this->RandomlyChooseBoundedVariables(x,xdual,fXloBound,fXloIndex,fXupBound,fXupIndex,ix,.25,.25,.25);
-  TVectorD sprime(fMz);
-  this->RandomlyChooseBoundedVariables(sprime,z,fCloBound,fCloIndex,fCupBound,fCupIndex,ix,.25,.25,.5);
+   TVectorD xdual(fNx);
+   this->RandomlyChooseBoundedVariables(x,xdual,fXloBound,fXloIndex,fXupBound,fXupIndex,ix,.25,.25,.25);
+   TVectorD sprime(fMz);
+   this->RandomlyChooseBoundedVariables(sprime,z,fCloBound,fCloIndex,fCupBound,fCupIndex,ix,.25,.25,.5);
 
-  fQ.RandomizePD(0.0,1.0,ix);
-  fA.Randomize(-10.0,10.0,ix);
-  fC.Randomize(-10.0,10.0,ix);
-  y .Randomize(-10.0,10.0,ix);
+   fQ.RandomizePD(0.0,1.0,ix);
+   fA.Randomize(-10.0,10.0,ix);
+   fC.Randomize(-10.0,10.0,ix);
+   y .Randomize(-10.0,10.0,ix);
 
-  fG = xdual;
-  fG -= fQ*x;
+   fG = xdual;
+   fG -= fQ*x;
 
-  fG += TMatrixD(TMatrixD::kTransposed,fA)*y;
-  fG += TMatrixD(TMatrixD::kTransposed,fC)*z;
+   fG += TMatrixD(TMatrixD::kTransposed,fA)*y;
+   fG += TMatrixD(TMatrixD::kTransposed,fC)*z;
 
-  fBa = fA*x;
-  s   = fC*x;
+   fBa = fA*x;
+   s   = fC*x;
 
-  // Now compute the real q = s-sprime
-  const TVectorD q = s-sprime;
+   // Now compute the real q = s-sprime
+   const TVectorD q = s-sprime;
 
-  // Adjust fCloBound and fCupBound appropriately
-  Add(fCloBound,1.0,q);
-  Add(fCupBound,1.0,q);
+   // Adjust fCloBound and fCupBound appropriately
+   Add(fCloBound,1.0,q);
+   Add(fCupBound,1.0,q);
 
-  fCloBound.SelectNonZeros(fCloIndex);
-  fCupBound.SelectNonZeros(fCupIndex);
+   fCloBound.SelectNonZeros(fCloIndex);
+   fCupBound.SelectNonZeros(fCupIndex);
 }
+
 
 //______________________________________________________________________________
 TQpDataDens &TQpDataDens::operator=(const TQpDataDens &source)
 {
-  if (this != &source) {
-    TQpDataBase::operator=(source);
-    fQ.ResizeTo(source.fQ); fQ = source.fQ;
-    fA.ResizeTo(source.fA); fA = source.fA;
-    fC.ResizeTo(source.fC); fC = source.fC;
-  }
-  return *this;
+   if (this != &source) {
+      TQpDataBase::operator=(source);
+      fQ.ResizeTo(source.fQ); fQ = source.fQ;
+      fA.ResizeTo(source.fA); fA = source.fA;
+      fC.ResizeTo(source.fC); fC = source.fC;
+   }
+   return *this;
 }

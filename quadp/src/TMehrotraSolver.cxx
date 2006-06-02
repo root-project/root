@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TMehrotraSolver.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TMehrotraSolver.cxx,v 1.3 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -54,47 +54,49 @@ ClassImp(TMehrotraSolver)
 //______________________________________________________________________________
 TMehrotraSolver::TMehrotraSolver()
 {
-  fPrintlevel = 0;
-  fTsig       = 0.0;
-  fStep       = 0;
-  fFactory    = 0;
+   fPrintlevel = 0;
+   fTsig       = 0.0;
+   fStep       = 0;
+   fFactory    = 0;
 }
+
 
 //______________________________________________________________________________
 TMehrotraSolver::TMehrotraSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose)
 {
-  fFactory = of;
-  fStep = fFactory->MakeVariables(prob);
-  
-  fPrintlevel = verbose;
-  fTsig       = 3.0; // the usual value for the centering exponent (tau)
+   fFactory = of;
+   fStep = fFactory->MakeVariables(prob);
+
+   fPrintlevel = verbose;
+   fTsig       = 3.0;            // the usual value for the centering exponent (tau)
 }
+
 
 //______________________________________________________________________________
 TMehrotraSolver::TMehrotraSolver(const TMehrotraSolver &another) : TQpSolverBase(another)
 {
-  *this = another;
+   *this = another;
 }
+
 
 //______________________________________________________________________________
 Int_t TMehrotraSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid)
 {
-  Int_t status_code;
-  Double_t alpha = 1;
-  Double_t sigma = 1;
+   Int_t status_code;
+   Double_t alpha = 1;
+   Double_t sigma = 1;
 
-  fDnorm = prob->DataNorm();
+   fDnorm = prob->DataNorm();
 
-  // initialization of (x,y,z) and factorization routine.
-  fSys = fFactory->MakeLinSys(prob);
-  this->Start(fFactory,iterate,prob,resid,fStep);
+   // initialization of (x,y,z) and factorization routine.
+   fSys = fFactory->MakeLinSys(prob);
+   this->Start(fFactory,iterate,prob,resid,fStep);
 
-  fIter = 0;
-  Double_t mu = iterate->GetMu();
+   fIter = 0;
+   Double_t mu = iterate->GetMu();
 
-  Int_t done = 0;
-  do
-    {
+   Int_t done = 0;
+   do {
       fIter++;
 
       // evaluate residuals and update algorithm status:
@@ -104,7 +106,7 @@ Int_t TMehrotraSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resi
       status_code = this->DoStatus(prob,iterate,resid,fIter,mu,0);
       if (status_code != kNOT_FINISHED ) break;
       if (fPrintlevel >= 10)
-        this->DoMonitor(prob,iterate,resid,alpha,sigma,fIter,mu,status_code,0);
+         this->DoMonitor(prob,iterate,resid,alpha,sigma,fIter,mu,status_code,0);
 
       // *** Predictor step ***
 
@@ -116,7 +118,7 @@ Int_t TMehrotraSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resi
 
       alpha = iterate->StepBound(fStep);
 
-      // calculate centering parameter 
+      // calculate centering parameter
       Double_t muaff = iterate->MuStep(fStep,alpha);
       sigma = TMath::Power(muaff/mu,fTsig);
 
@@ -138,72 +140,76 @@ Int_t TMehrotraSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resi
       // actually take the step and calculate the new mu
       iterate->Saxpy(fStep,alpha);
       mu = iterate->GetMu();
-    } while(!done);
-  
-  resid->CalcResids(prob,iterate);
-  if (fPrintlevel >= 10)
-    this->DoMonitor(prob,iterate,resid,alpha,sigma,fIter,mu,status_code,1);
+   } while(!done);
 
-  return status_code;
+   resid->CalcResids(prob,iterate);
+   if (fPrintlevel >= 10)
+      this->DoMonitor(prob,iterate,resid,alpha,sigma,fIter,mu,status_code,1);
+
+   return status_code;
 }
+
 
 //______________________________________________________________________________
 void TMehrotraSolver::DefMonitor(TQpDataBase * /* data */,TQpVar * /* vars */,
-                                  TQpResidual *resids,
-                                  Double_t alpha,Double_t /* sigma */,Int_t i,Double_t mu,
-                                  Int_t status_code,Int_t level)
+TQpResidual *resids,
+Double_t alpha,Double_t /* sigma */,Int_t i,Double_t mu,
+Int_t status_code,Int_t level)
 {
-  switch (level) {
-    case 0 : case 1: { 
-      cout << endl << "Duality Gap: " << resids->GetDualityGap() << endl;
-      if (i > 1) {
-        cout << " alpha = " << alpha << endl;
-      }
-      cout << " *** Iteration " << i << " *** " << endl;
-      cout << " mu = " << mu << " relative residual norm = " 
-  	 << resids->GetResidualNorm()/fDnorm << endl;
+   switch (level) {
+      case 0 : case 1:
+      {
+         cout << endl << "Duality Gap: " << resids->GetDualityGap() << endl;
+         if (i > 1) {
+            cout << " alpha = " << alpha << endl;
+         }
+         cout << " *** Iteration " << i << " *** " << endl;
+         cout << " mu = " << mu << " relative residual norm = "
+            << resids->GetResidualNorm()/fDnorm << endl;
 
-      if (level == 1) { 
-        // Termination has been detected by the status check; print
-        // appropriate message
-        switch (status_code) {
-          case kSUCCESSFUL_TERMINATION:
-          cout << endl << " *** SUCCESSFUL TERMINATION ***" << endl;
-          break;
-        case kMAX_ITS_EXCEEDED:
-          cout << endl << " *** MAXIMUM ITERATIONS REACHED *** " << endl;
-          break;
-        case kINFEASIBLE:
-          cout << endl << " *** TERMINATION: PROBABLY INFEASIBLE *** " << endl;
-          break;
-        case kUNKNOWN:
-          cout << endl << " *** TERMINATION: STATUS UNKNOWN *** " << endl;
-          break;
-        }
-      }
-    } break; // end case 0: case 1:
-  } // end switch(level)
+         if (level == 1) {
+            // Termination has been detected by the status check; print
+            // appropriate message
+            switch (status_code) {
+               case kSUCCESSFUL_TERMINATION:
+                  cout << endl << " *** SUCCESSFUL TERMINATION ***" << endl;
+                  break;
+               case kMAX_ITS_EXCEEDED:
+                  cout << endl << " *** MAXIMUM ITERATIONS REACHED *** " << endl;
+                  break;
+               case kINFEASIBLE:
+                  cout << endl << " *** TERMINATION: PROBABLY INFEASIBLE *** " << endl;
+                  break;
+               case kUNKNOWN:
+                  cout << endl << " *** TERMINATION: STATUS UNKNOWN *** " << endl;
+                  break;
+            }
+         }
+      } break;                   // end case 0: case 1:
+   }                             // end switch(level)
 }
+
 
 //______________________________________________________________________________
 TMehrotraSolver::~TMehrotraSolver()
 {
-  delete fStep;
+   delete fStep;
 }
+
 
 //______________________________________________________________________________
 TMehrotraSolver &TMehrotraSolver::operator=(const TMehrotraSolver &source)
 {
-  if (this != &source) {
-    TQpSolverBase::operator=(source);
-  
-    fPrintlevel = source.fPrintlevel;
-    fTsig       = source.fTsig;
+   if (this != &source) {
+      TQpSolverBase::operator=(source);
 
-    if (fStep) delete fStep;
+      fPrintlevel = source.fPrintlevel;
+      fTsig       = source.fTsig;
 
-    fStep    = new TQpVar(*source.fStep);
-    fFactory = source.fFactory;
-  }
-  return *this;
+      if (fStep) delete fStep;
+
+      fStep    = new TQpVar(*source.fStep);
+      fFactory = source.fFactory;
+   }
+   return *this;
 }

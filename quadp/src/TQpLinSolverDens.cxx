@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverDens.cxx,v 1.3 2004/06/02 06:45:34 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverDens.cxx,v 1.4 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -56,64 +56,70 @@ ClassImp(TQpLinSolverDens)
 
 //______________________________________________________________________________
 TQpLinSolverDens::TQpLinSolverDens(TQpProbDens *factory,TQpDataDens *data) :
-                  TQpLinSolverBase(factory,data)
+TQpLinSolverBase(factory,data)
 {
-  const Int_t n = factory->fNx+factory->fMy+factory->fMz;
-  fKkt.ResizeTo(n,n);
+   const Int_t n = factory->fNx+factory->fMy+factory->fMz;
+   fKkt.ResizeTo(n,n);
 
-  data->PutQIntoAt(fKkt,0,      0);
-  if (fMy > 0) data->PutAIntoAt(fKkt,fNx,    0);
-  if (fMz > 0) data->PutCIntoAt(fKkt,fNx+fMy,0);
-  for (Int_t ix = fNx; ix < fNx+fMy+fMz; ix++) {
-    for (Int_t iy = fNx; iy < fNx+fMy+fMz; iy++)
-      fKkt(ix,iy) = 0.0;
-  }
+   data->PutQIntoAt(fKkt,0,      0);
+   if (fMy > 0) data->PutAIntoAt(fKkt,fNx,    0);
+   if (fMz > 0) data->PutCIntoAt(fKkt,fNx+fMy,0);
+   for (Int_t ix = fNx; ix < fNx+fMy+fMz; ix++) {
+      for (Int_t iy = fNx; iy < fNx+fMy+fMz; iy++)
+         fKkt(ix,iy) = 0.0;
+   }
 
-  fSolveLU = TDecompLU(n);
+   fSolveLU = TDecompLU(n);
 }
+
 
 //______________________________________________________________________________
 void TQpLinSolverDens::Factor(TQpDataBase *prob,TQpVar *vars)
 {
-  TQpLinSolverBase::Factor(prob,vars);
-  fSolveLU.SetMatrix(fKkt);
+   TQpLinSolverBase::Factor(prob,vars);
+   fSolveLU.SetMatrix(fKkt);
 }
+
 
 //______________________________________________________________________________
 TQpLinSolverDens::TQpLinSolverDens(const TQpLinSolverDens &another) : TQpLinSolverBase(another)
 {
-  *this = another;
+   *this = another;
 }
+
 
 //______________________________________________________________________________
 void TQpLinSolverDens::PutXDiagonal(TVectorD &xdiag)
 {
-  TMatrixDDiag diag(fKkt);
-  for (Int_t i = 0; i < xdiag.GetNrows(); i++)
-     diag[i] = xdiag[i];
+   TMatrixDDiag diag(fKkt);
+   for (Int_t i = 0; i < xdiag.GetNrows(); i++)
+      diag[i] = xdiag[i];
 }
+
 
 //______________________________________________________________________________
 void TQpLinSolverDens::PutZDiagonal(TVectorD &zdiag)
 {
-  TMatrixDDiag diag(fKkt);
-  for (Int_t i = 0; i < zdiag.GetNrows(); i++)
-     diag[i+fNx+fMy] = zdiag[i];
+   TMatrixDDiag diag(fKkt);
+   for (Int_t i = 0; i < zdiag.GetNrows(); i++)
+      diag[i+fNx+fMy] = zdiag[i];
 }
+
 
 //______________________________________________________________________________
 void TQpLinSolverDens::SolveCompressed(TVectorD &compressedRhs)
 {
-  fSolveLU.Solve(compressedRhs);
+   fSolveLU.Solve(compressedRhs);
 }
+
 
 //______________________________________________________________________________
 TQpLinSolverDens &TQpLinSolverDens::operator=(const TQpLinSolverDens &source)
 {
-  if (this != &source) {
-    TQpLinSolverBase::operator=(source);
-    fKkt.ResizeTo(source.fKkt); fKkt = source.fKkt;
-    fSolveLU = source.fSolveLU;
-  }
-  return *this;
+   if (this != &source) {
+      TQpLinSolverBase::operator=(source);
+      fKkt.ResizeTo(source.fKkt); fKkt = source.fKkt;
+      fSolveLU = source.fSolveLU;
+   }
+   return *this;
 }

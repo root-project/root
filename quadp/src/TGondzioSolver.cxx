@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.6 2005/08/30 12:19:23 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.7 2005/09/04 09:41:03 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -55,78 +55,80 @@ ClassImp(TGondzioSolver)
 //______________________________________________________________________________
 TGondzioSolver::TGondzioSolver()
 {
-  fPrintlevel               = 0;
-  fTsig                     = 0.0;
-  fMaximum_correctors       = 0;
-  fNumberGondzioCorrections = 0;
+   fPrintlevel               = 0;
+   fTsig                     = 0.0;
+   fMaximum_correctors       = 0;
+   fNumberGondzioCorrections = 0;
 
-  fStepFactor0 = 0.0;
-  fStepFactor1 = 0.0;
-  fAcceptTol   = 0.0;
-  fBeta_min    = 0.0;
-  fBeta_max    = 0.0;
+   fStepFactor0 = 0.0;
+   fStepFactor1 = 0.0;
+   fAcceptTol   = 0.0;
+   fBeta_min    = 0.0;
+   fBeta_max    = 0.0;
 
-  fCorrector_step  = 0;
-  fStep            = 0;
-  fCorrector_resid = 0;
-  fFactory         = 0;
+   fCorrector_step  = 0;
+   fStep            = 0;
+   fCorrector_resid = 0;
+   fFactory         = 0;
 }
+
 
 //______________________________________________________________________________
 TGondzioSolver::TGondzioSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose)
 {
-  fFactory = of;
-  fStep            = fFactory->MakeVariables(prob);
-  fCorrector_step  = fFactory->MakeVariables(prob);
-  fCorrector_resid = fFactory->MakeResiduals(prob);
+   fFactory = of;
+   fStep            = fFactory->MakeVariables(prob);
+   fCorrector_step  = fFactory->MakeVariables(prob);
+   fCorrector_resid = fFactory->MakeResiduals(prob);
 
-  fPrintlevel = verbose;
-  fTsig       = 3.0; // the usual value for the centering exponent (tau)
+   fPrintlevel = verbose;
+   fTsig       = 3.0;            // the usual value for the centering exponent (tau)
 
-  fMaximum_correctors = 3; // maximum number of Gondzio correctors
+   fMaximum_correctors = 3;      // maximum number of Gondzio correctors
 
-  fNumberGondzioCorrections = 0;
+   fNumberGondzioCorrections = 0;
 
-  // the two StepFactor constants set targets for increase in step
-  // length for each corrector
-  fStepFactor0 = 0.08; 
-  fStepFactor1 = 1.08; 
+   // the two StepFactor constants set targets for increase in step
+   // length for each corrector
+   fStepFactor0 = 0.08;
+   fStepFactor1 = 1.08;
 
-  // accept the enhanced step if it produces a small improvement in
-  // the step length
-  fAcceptTol = 0.005; 
+   // accept the enhanced step if it produces a small improvement in
+   // the step length
+   fAcceptTol = 0.005;
 
-  //define the Gondzio correction box 
-  fBeta_min = 0.1;  
-  fBeta_max = 10.0;
+   //define the Gondzio correction box
+   fBeta_min = 0.1;
+   fBeta_max = 10.0;
 }
+
 
 //______________________________________________________________________________
 TGondzioSolver::TGondzioSolver(const TGondzioSolver &another) : TQpSolverBase(another)
 {
-  *this = another;
+   *this = another;
 }
+
 
 //______________________________________________________________________________
 Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid)
 {
-  Int_t status_code;
-  Double_t alpha = 1;
-  Double_t sigma = 1;
+   Int_t status_code;
+   Double_t alpha = 1;
+   Double_t sigma = 1;
 
-  fDnorm = prob->DataNorm();
+   fDnorm = prob->DataNorm();
 
-  // initialization of (x,y,z) and factorization routine.
-  fSys = fFactory->MakeLinSys(prob);
-  this->Start(fFactory,iterate,prob,resid,fStep);
+   // initialization of (x,y,z) and factorization routine.
+   fSys = fFactory->MakeLinSys(prob);
+   this->Start(fFactory,iterate,prob,resid,fStep);
 
-  fIter = 0;
-  fNumberGondzioCorrections = 0; 
-  Double_t mu = iterate->GetMu();
+   fIter = 0;
+   fNumberGondzioCorrections = 0;
+   Double_t mu = iterate->GetMu();
 
-  Int_t done = 0;
-  do
-    {
+   Int_t done = 0;
+   do {
       fIter++;
       // evaluate residuals and update algorithm status:
       resid->CalcResids(prob,iterate);
@@ -135,7 +137,7 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
       status_code = this->DoStatus(prob,iterate,resid,fIter,mu,0);
       if (status_code != kNOT_FINISHED ) break;
       if (fPrintlevel >= 10)
-        this->DoMonitor(prob,iterate,resid,alpha,sigma,fIter,mu,status_code,0);
+         this->DoMonitor(prob,iterate,resid,alpha,sigma,fIter,mu,status_code,0);
 
       // *** Predictor step ***
 
@@ -147,12 +149,12 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
 
       alpha = iterate->StepBound(fStep);
 
-      // calculate centering parameter 
+      // calculate centering parameter
       Double_t muaff = iterate->MuStep(fStep,alpha);
       sigma = TMath::Power(muaff/mu,fTsig);
-      
+
       if (fPrintlevel >= 10)
-        this->DoMonitor(prob,iterate,resid,alpha,sigma,fIter,mu,status_code,2);
+         this->DoMonitor(prob,iterate,resid,alpha,sigma,fIter,mu,status_code,2);
 
       // *** Corrector step ***
 
@@ -179,54 +181,56 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
 
       // enter the Gondzio correction loop:
       if (fPrintlevel >= 10)
-        cout << "**** Entering the correction loop ****" << endl;
+         cout << "**** Entering the correction loop ****" << endl;
 
       while (fNumberGondzioCorrections < fMaximum_correctors  &&
-             alpha < 1.0 && !stopCorrections) {
+      alpha < 1.0 && !stopCorrections) {
 
-        // copy current variables into fcorrector_step
-        *fCorrector_step = *iterate;
+         // copy current variables into fcorrector_step
+         *fCorrector_step = *iterate;
 
-        // calculate target steplength
-        Double_t alpha_target = fStepFactor1*alpha+fStepFactor0;
-        if (alpha_target > 1.0) alpha_target = 1.0;
+         // calculate target steplength
+         Double_t alpha_target = fStepFactor1*alpha+fStepFactor0;
+         if (alpha_target > 1.0) alpha_target = 1.0;
 
-        // add a step of this length to corrector_step
-        fCorrector_step->Saxpy(fStep,alpha_target);
+         // add a step of this length to corrector_step
+         fCorrector_step->Saxpy(fStep,alpha_target);
 
-        // place XZ into the r3 component of corrector_resids
-        fCorrector_resid->Set_r3_xz_alpha(fCorrector_step,0.0);
+         // place XZ into the r3 component of corrector_resids
+         fCorrector_resid->Set_r3_xz_alpha(fCorrector_step,0.0);
 
-        // do the projection operation
-        fCorrector_resid->Project_r3(rmin,rmax);
+         // do the projection operation
+         fCorrector_resid->Project_r3(rmin,rmax);
 
-        // solve for corrector direction
-        fSys->Solve(prob,iterate,fCorrector_resid,fCorrector_step);
+         // solve for corrector direction
+         fSys->Solve(prob,iterate,fCorrector_resid,fCorrector_step);
 
-        // add the current step to corrector_step, and calculate the
-        // step to boundary along the resulting direction
-        fCorrector_step->Saxpy(fStep,1.0);
-        Double_t alpha_enhanced = iterate->StepBound(fCorrector_step);
+         // add the current step to corrector_step, and calculate the
+         // step to boundary along the resulting direction
+         fCorrector_step->Saxpy(fStep,1.0);
+         Double_t alpha_enhanced = iterate->StepBound(fCorrector_step);
 
-        // if the enhanced step length is actually 1, make it official
-        // and stop correcting
-        if (alpha_enhanced == 1.0) {
-          *fStep = *fCorrector_step;
-          alpha = alpha_enhanced;
-          fNumberGondzioCorrections++;
-          stopCorrections = 1;
-        } else if(alpha_enhanced >= (1.0+fAcceptTol)*alpha) {
-          // if enhanced step length is significantly better than the
-          // current alpha, make the enhanced step official, but maybe
-          // keep correcting
-          *fStep = *fCorrector_step;
-          alpha = alpha_enhanced;
-          fNumberGondzioCorrections++;
-          stopCorrections = 0;
-        } else {
-          // otherwise quit the correction loop
-          stopCorrections = 1;
-        }
+         // if the enhanced step length is actually 1, make it official
+         // and stop correcting
+         if (alpha_enhanced == 1.0) {
+            *fStep = *fCorrector_step;
+            alpha = alpha_enhanced;
+            fNumberGondzioCorrections++;
+            stopCorrections = 1;
+         }
+         else if(alpha_enhanced >= (1.0+fAcceptTol)*alpha) {
+            // if enhanced step length is significantly better than the
+            // current alpha, make the enhanced step official, but maybe
+            // keep correcting
+            *fStep = *fCorrector_step;
+            alpha = alpha_enhanced;
+            fNumberGondzioCorrections++;
+            stopCorrections = 0;
+         }
+         else {
+            // otherwise quit the correction loop
+            stopCorrections = 1;
+         }
       }
 
       // We've finally decided on a step direction, now calculate the
@@ -240,91 +244,98 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
 
       iterate->Saxpy(fStep,alpha);
       mu = iterate->GetMu();
-    } while (!done);
-  
-  resid->CalcResids(prob,iterate);
-  if (fPrintlevel >= 10)
-    this->DoMonitor(prob,iterate,resid,alpha,sigma,fIter,mu,status_code,1);
+   } while (!done);
 
-  return status_code;
+   resid->CalcResids(prob,iterate);
+   if (fPrintlevel >= 10)
+      this->DoMonitor(prob,iterate,resid,alpha,sigma,fIter,mu,status_code,1);
+
+   return status_code;
 }
+
 
 //______________________________________________________________________________
 void TGondzioSolver::DefMonitor(TQpDataBase* /* data */,TQpVar* /* vars */,
-                                TQpResidual *resid,
-                                Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
-                                Int_t status_code,Int_t level)
+TQpResidual *resid,
+Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
+Int_t status_code,Int_t level)
 {
-  switch (level) {
-  case 0 : case 1: { 
-    cout << endl << "Duality Gap: " << resid->GetDualityGap() << endl;
-    if (i > 1) {
-      cout << " Number of Corrections = " << fNumberGondzioCorrections
-           << " alpha = " << alpha << endl;
-    }
-    cout << " *** Iteration " << i << " *** " << endl;
-    cout << " mu = " << mu << " relative residual norm = " 
-         << resid->GetResidualNorm()/fDnorm << endl;
+   switch (level) {
+      case 0 : case 1:
+      {
+         cout << endl << "Duality Gap: " << resid->GetDualityGap() << endl;
+         if (i > 1) {
+            cout << " Number of Corrections = " << fNumberGondzioCorrections
+               << " alpha = " << alpha << endl;
+         }
+         cout << " *** Iteration " << i << " *** " << endl;
+         cout << " mu = " << mu << " relative residual norm = "
+            << resid->GetResidualNorm()/fDnorm << endl;
 
-    if (level == 1) { 
-      // Termination has been detected by the status check; print
-      // appropriate message
-      if (status_code == kSUCCESSFUL_TERMINATION) {
-        cout << endl 
-             << " *** SUCCESSFUL TERMINATION ***" 
-             << endl;
-      } else if (status_code == kMAX_ITS_EXCEEDED) {
-        cout << endl 
-             << " *** MAXIMUM ITERATIONS REACHED *** " << endl;
-      } else if (status_code == kINFEASIBLE) {
-        cout << endl 
-             << " *** TERMINATION: PROBABLY INFEASIBLE *** " 
-             << endl;
-      } else if (status_code == kUNKNOWN) {
-        cout << endl 
-             << " *** TERMINATION: STATUS UNKNOWN *** " << endl;
-      }
-    }
-  } break;
-  case 2:
-    cout << " *** sigma = " << sigma << endl;
-    break;
-  }
+         if (level == 1) {
+            // Termination has been detected by the status check; print
+            // appropriate message
+            if (status_code == kSUCCESSFUL_TERMINATION) {
+               cout << endl
+                  << " *** SUCCESSFUL TERMINATION ***"
+                  << endl;
+            }
+            else if (status_code == kMAX_ITS_EXCEEDED) {
+               cout << endl
+                  << " *** MAXIMUM ITERATIONS REACHED *** " << endl;
+            }
+            else if (status_code == kINFEASIBLE) {
+               cout << endl
+                  << " *** TERMINATION: PROBABLY INFEASIBLE *** "
+                  << endl;
+            }
+            else if (status_code == kUNKNOWN) {
+               cout << endl
+                  << " *** TERMINATION: STATUS UNKNOWN *** " << endl;
+            }
+         }
+      } break;
+      case 2:
+         cout << " *** sigma = " << sigma << endl;
+         break;
+   }
 }
+
 
 //______________________________________________________________________________
 TGondzioSolver::~TGondzioSolver()
 {
-  if (fCorrector_step)  { delete fCorrector_step;  fCorrector_step  = 0; }
-  if (fStep)            { delete fStep;            fStep            = 0; }
-  if (fCorrector_resid) { delete fCorrector_resid; fCorrector_resid = 0; }
+   if (fCorrector_step)  { delete fCorrector_step;  fCorrector_step  = 0; }
+   if (fStep)            { delete fStep;            fStep            = 0; }
+   if (fCorrector_resid) { delete fCorrector_resid; fCorrector_resid = 0; }
 }
+
 
 //______________________________________________________________________________
 TGondzioSolver &TGondzioSolver::operator=(const TGondzioSolver &source)
 {
-  if (this != &source) {
-    TQpSolverBase::operator=(source);
+   if (this != &source) {
+      TQpSolverBase::operator=(source);
 
-    fPrintlevel               = source.fPrintlevel;
-    fTsig                     = source.fTsig ;
-    fMaximum_correctors       = source.fMaximum_correctors;
-    fNumberGondzioCorrections = source.fNumberGondzioCorrections;
+      fPrintlevel               = source.fPrintlevel;
+      fTsig                     = source.fTsig ;
+      fMaximum_correctors       = source.fMaximum_correctors;
+      fNumberGondzioCorrections = source.fNumberGondzioCorrections;
 
-    fStepFactor0 = source.fStepFactor0;
-    fStepFactor1 = source.fStepFactor1;
-    fAcceptTol   = source.fAcceptTol;
-    fBeta_min    = source.fBeta_min;
-    fBeta_max    = source.fBeta_max;
+      fStepFactor0 = source.fStepFactor0;
+      fStepFactor1 = source.fStepFactor1;
+      fAcceptTol   = source.fAcceptTol;
+      fBeta_min    = source.fBeta_min;
+      fBeta_max    = source.fBeta_max;
 
-    if (fCorrector_step)  delete fCorrector_step;
-    if (fStep)            delete fStep;
-    if (fCorrector_resid) delete fCorrector_resid;
+      if (fCorrector_step)  delete fCorrector_step;
+      if (fStep)            delete fStep;
+      if (fCorrector_resid) delete fCorrector_resid;
 
-    fCorrector_step  = new TQpVar(*source.fCorrector_step);
-    fStep            = new TQpVar(*source.fStep);
-    fCorrector_resid = new TQpResidual(*source.fCorrector_resid);
-    fFactory         = source.fFactory;
-  }
-  return *this;
+      fCorrector_step  = new TQpVar(*source.fCorrector_step);
+      fStep            = new TQpVar(*source.fStep);
+      fCorrector_resid = new TQpResidual(*source.fCorrector_resid);
+      fFactory         = source.fFactory;
+   }
+   return *this;
 }

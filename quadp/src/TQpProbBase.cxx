@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.cxx,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -60,33 +60,36 @@ ClassImp(TQpProbBase)
 //______________________________________________________________________________
 TQpProbBase::TQpProbBase()
 {
-  fNx = 0;
-  fMy = 0;
-  fMz = 0;
+   fNx = 0;
+   fMy = 0;
+   fMz = 0;
 }
+
 
 //______________________________________________________________________________
 TQpProbBase::TQpProbBase(Int_t nx,Int_t my,Int_t mz)
 {
-  fNx = nx;
-  fMy = my;
-  fMz = mz;
+   fNx = nx;
+   fMy = my;
+   fMz = mz;
 }
 
+
 //______________________________________________________________________________
-TQpProbBase::TQpProbBase(const TQpProbBase &another) : TObject(another)  
+TQpProbBase::TQpProbBase(const TQpProbBase &another) : TObject(another)
 {
-  *this = another;
+   *this = another;
 }
+
 
 //______________________________________________________________________________
 TQpProbBase &TQpProbBase::operator=(const TQpProbBase &source)
 {
-  if (this != &source) {
-    TObject::operator=(source);
-    fNx = source.fNx;
-    fMy = source.fMy;
-    fMz = source.fMz;
-  }
-  return *this;
+   if (this != &source) {
+      TObject::operator=(source);
+      fNx = source.fNx;
+      fMy = source.fMy;
+      fMz = source.fMz;
+   }
+   return *this;
 }

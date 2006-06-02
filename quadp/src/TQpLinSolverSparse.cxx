@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverSparse.cxx,v 1.3 2004/06/02 06:45:34 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverSparse.cxx,v 1.4 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -56,66 +56,72 @@ ClassImp(TQpLinSolverSparse)
 
 //______________________________________________________________________________
 TQpLinSolverSparse::TQpLinSolverSparse(TQpProbSparse *factory,TQpDataSparse *data) :
-                    TQpLinSolverBase(factory,data)
+TQpLinSolverBase(factory,data)
 {
-  const Int_t n = factory->fNx+factory->fMy+factory->fMz;
-  fKkt.ResizeTo(n,n);
+   const Int_t n = factory->fNx+factory->fMy+factory->fMz;
+   fKkt.ResizeTo(n,n);
 
-  if (fMy > 0) data->PutAIntoAt(fKkt,fNx,    0);
-  if (fMz > 0) data->PutCIntoAt(fKkt,fNx+fMy,0);                                     
+   if (fMy > 0) data->PutAIntoAt(fKkt,fNx,    0);
+   if (fMz > 0) data->PutCIntoAt(fKkt,fNx+fMy,0);
 
-  // trick to make sure that A and C are inserted symmetrically
-  if (fMy > 0 || fMz > 0) {
-    TMatrixDSparse tmp(TMatrixDSparse::kTransposed,fKkt);                 
-    fKkt += tmp;
-  }
+   // trick to make sure that A and C are inserted symmetrically
+   if (fMy > 0 || fMz > 0) {
+      TMatrixDSparse tmp(TMatrixDSparse::kTransposed,fKkt);
+      fKkt += tmp;
+   }
 
-  data->PutQIntoAt(fKkt,0,0); 
+   data->PutQIntoAt(fKkt,0,0);
 }
+
 
 //______________________________________________________________________________
 void TQpLinSolverSparse::Factor(TQpDataBase *prob,TQpVar *vars)
 {
-  TQpLinSolverBase::Factor(prob,vars);
-  fSolveSparse.SetMatrix(fKkt);
+   TQpLinSolverBase::Factor(prob,vars);
+   fSolveSparse.SetMatrix(fKkt);
 }
+
 
 //______________________________________________________________________________
 TQpLinSolverSparse::TQpLinSolverSparse(const TQpLinSolverSparse &another) :
-                    TQpLinSolverBase(another)
+TQpLinSolverBase(another)
 {
-  *this = another;
+   *this = another;
 }
+
 
 //______________________________________________________________________________
 void TQpLinSolverSparse::PutXDiagonal(TVectorD &xdiag)
 {
-  TMatrixDSparseDiag diag(fKkt);
-  for (Int_t i = 0; i < xdiag.GetNrows(); i++)
-     diag[i] = xdiag[i];
+   TMatrixDSparseDiag diag(fKkt);
+   for (Int_t i = 0; i < xdiag.GetNrows(); i++)
+      diag[i] = xdiag[i];
 }
+
 
 //______________________________________________________________________________
 void TQpLinSolverSparse::PutZDiagonal(TVectorD &zdiag)
 {
-  TMatrixDSparseDiag diag(fKkt);
-  for (Int_t i = 0; i < zdiag.GetNrows(); i++)
-    diag[i+fNx+fMy] = zdiag[i];
+   TMatrixDSparseDiag diag(fKkt);
+   for (Int_t i = 0; i < zdiag.GetNrows(); i++)
+      diag[i+fNx+fMy] = zdiag[i];
 }
+
 
 //______________________________________________________________________________
 void TQpLinSolverSparse::SolveCompressed(TVectorD &compressedRhs)
 {
-  fSolveSparse.Solve(compressedRhs);
+   fSolveSparse.Solve(compressedRhs);
 }
+
 
 //______________________________________________________________________________
 TQpLinSolverSparse &TQpLinSolverSparse::operator=(const TQpLinSolverSparse &source)
 {
-  if (this != &source) {
-    TQpLinSolverBase::operator=(source);
-    fKkt.ResizeTo(source.fKkt); fKkt = source.fKkt;
-    fSolveSparse = source.fSolveSparse;
-  }
-  return *this;
+   if (this != &source) {
+      TQpLinSolverBase::operator=(source);
+      fKkt.ResizeTo(source.fKkt); fKkt = source.fKkt;
+      fSolveSparse = source.fSolveSparse;
+   }
+   return *this;
 }
