@@ -276,7 +276,7 @@ int test8() {
   SVector<float,3>    z(4,16,64);
   cout << "x + y: " << x+y << endl;
 
-  cout << "x * y: " << x * -y << endl;
+  cout << "x * -y: " << x * -y << endl;
   x += z - y;
   cout << "x += z - y: " << x << endl;
 
@@ -294,6 +294,9 @@ int test8() {
   a.Place_at(b,2);
   cout << "a: " << a << endl;
 #endif
+
+  SVector<float,3> x2 = Square(x); 
+  std::cout << x2 << std::endl;
 
 
   return 0;
