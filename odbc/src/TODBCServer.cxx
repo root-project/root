@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.8 2006/06/02 14:02:03 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.9 2006/06/02 14:07:02 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -383,7 +383,6 @@ TSQLTableInfo* TODBCServer::GetTableInfo(const char* tablename)
    // Produces SQL table info
    // Object must be deleted by user
    
-#ifdef NEVER
    CheckConnect("GetTableInfo", 0);
 
    #define STR_LEN 128+1
@@ -395,7 +394,7 @@ TSQLTableInfo* TODBCServer::GetTableInfo(const char* tablename)
    SQLCHAR       szTableName[STR_LEN], szColumnName[STR_LEN];
    SQLCHAR       szTypeName[STR_LEN], szRemarks[REM_LEN];
    SQLCHAR       szColumnDefault[STR_LEN], szIsNullable[STR_LEN];
-   SQLINTEGER    ColumnSize, BufferLength, CharOctetLength, OrdinalPosition;
+   SQLLEN        ColumnSize, BufferLength, CharOctetLength, OrdinalPosition;
    SQLSMALLINT   DataType, DecimalDigits, NumPrecRadix, Nullable;
    SQLSMALLINT   SQLDataType, DatetimeSubtypeCode;
    SQLRETURN     retcode;
@@ -403,11 +402,11 @@ TSQLTableInfo* TODBCServer::GetTableInfo(const char* tablename)
 
    /* Declare buffers for bytes available to return */
    
-   SQLINTEGER cbCatalog, cbSchema, cbTableName, cbColumnName;
-   SQLINTEGER cbDataType, cbTypeName, cbColumnSize, cbBufferLength;
-   SQLINTEGER cbDecimalDigits, cbNumPrecRadix, cbNullable, cbRemarks;
-   SQLINTEGER cbColumnDefault, cbSQLDataType, cbDatetimeSubtypeCode, cbCharOctetLength;
-   SQLINTEGER cbOrdinalPosition, cbIsNullable;
+   SQLLEN cbCatalog, cbSchema, cbTableName, cbColumnName;
+   SQLLEN cbDataType, cbTypeName, cbColumnSize, cbBufferLength;
+   SQLLEN cbDecimalDigits, cbNumPrecRadix, cbNullable, cbRemarks;
+   SQLLEN cbColumnDefault, cbSQLDataType, cbDatetimeSubtypeCode, cbCharOctetLength;
+   SQLLEN cbOrdinalPosition, cbIsNullable;
 
 
    SQLAllocHandle(SQL_HANDLE_STMT, fHdbc, &hstmt);
@@ -517,8 +516,6 @@ TSQLTableInfo* TODBCServer::GetTableInfo(const char* tablename)
    SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
    
    return new TSQLTableInfo(tablename, lst);
-#endif
-   return 0;
 }
 
 //______________________________________________________________________________
