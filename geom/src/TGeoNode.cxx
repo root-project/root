@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.34 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.35 2006/05/24 17:11:54 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -151,7 +151,7 @@ void TGeoNode::Browse(TBrowser *b)
 {
 // How-to-browse for a node.
    if (!b) return;
-   if (!GetNdaughters()) b->Add(this, 0, fVolume->IsVisible());
+   if (!GetNdaughters()) return;
    TGeoNode *daughter;
    TString title;
    for (Int_t i=0; i<GetNdaughters(); i++) {

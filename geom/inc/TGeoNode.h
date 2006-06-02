@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name: v5-11-02 $:$Id: TGeoNode.h,v 1.23 2006/04/03 16:19:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.24 2006/05/23 04:47:37 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -104,7 +104,7 @@ public:
    virtual char     *GetObjectInfo(Int_t px, Int_t py) const;
    virtual Int_t     GetOptimalVoxels() const {return 0;}
    void              InspectNode() const; // *MENU*
-   virtual Bool_t    IsFolder() const {return kTRUE;}
+   virtual Bool_t    IsFolder() const {return (GetNdaughters()?kTRUE:kFALSE);}
    Bool_t            IsOffset() const {return TObject::TestBit(kGeoNodeOffset);}
    Bool_t            IsOnScreen() const; // *MENU*
    Bool_t            IsOverlapping() const {return TObject::TestBit(kGeoNodeOverlap);}

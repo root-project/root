@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.152 2006/05/24 17:11:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.153 2006/06/02 07:21:21 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -556,6 +556,8 @@ TGeoManager::TGeoManager(const char *name, const char *title)
             :TNamed(name, title)
 {
 // Constructor.
+   if (!gROOT->GetListOfGeometries()->FindObject(this)) gROOT->GetListOfGeometries()->Add(this);
+   if (!gROOT->GetListOfBrowsables()->FindObject(this)) gROOT->GetListOfBrowsables()->Add(this);
    Init();
    gGeoIdentity = new TGeoIdentity("Identity");
    BuildDefaultMaterials();
@@ -869,11 +871,12 @@ TGeoManager::~TGeoManager()
 // Destructor
    if (gGeoManager != this) gGeoManager = this;
 
+   gROOT->GetListOfGeometries()->Remove(this);
    gROOT->GetListOfBrowsables()->Remove(this);
-   TSeqCollection *brlist = gROOT->GetListOfBrowsers();
-   TIter next(brlist);
-   TBrowser *browser = 0;
-   while ((browser=(TBrowser*)next())) browser->RecursiveRemove(this);
+//   TSeqCollection *brlist = gROOT->GetListOfBrowsers();
+//   TIter next(brlist);
+//   TBrowser *browser = 0;
+//   while ((browser=(TBrowser*)next())) browser->RecursiveRemove(this);
    delete [] fBits;
    if (fCache) delete fCache;
    if (fNodes) delete fNodes;
@@ -1847,7 +1850,8 @@ void TGeoManager::CloseGeometry(Option_t *option)
       Error("CloseGeometry","you MUST call SetTopVolume() first !");
       return;
    }
-//   if (!gROOT->GetListOfBrowsables()->FindObject(this)) gROOT->GetListOfBrowsables()->Add(this);
+   if (!gROOT->GetListOfGeometries()->FindObject(this)) gROOT->GetListOfGeometries()->Add(this);
+   if (!gROOT->GetListOfBrowsables()->FindObject(this)) gROOT->GetListOfBrowsables()->Add(this);
 //   TSeqCollection *brlist = gROOT->GetListOfBrowsers();
 //   TIter next(brlist);
 //   TBrowser *browser = 0;
@@ -5317,7 +5321,8 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    }
    if (old) old->cd();
    delete f;
-   if (gGeoManager && (!gROOT->GetListOfBrowsables()->FindObject(gGeoManager))) gROOT->GetListOfBrowsables()->Add(gGeoManager);
+   if (!gROOT->GetListOfGeometries()->FindObject(gGeoManager)) gROOT->GetListOfGeometries()->Add(gGeoManager);
+   if (!gROOT->GetListOfBrowsables()->FindObject(gGeoManager)) gROOT->GetListOfBrowsables()->Add(gGeoManager);
    return gGeoManager;
 }
 //______________________________________________________________________________
