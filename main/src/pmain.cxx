@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.6 2006/04/21 16:29:33 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.7 2006/06/02 15:14:35 rdm Exp $
 // Author: Fons Rademakers   15/02/97
 
 /*************************************************************************
@@ -17,6 +17,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifdef WIN32
+#include <io.h>
+#endif
 #include <stdio.h>
 #include <errno.h>
 

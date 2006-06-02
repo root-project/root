@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.119 2006/04/25 09:17:17 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.120 2006/06/02 15:14:35 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1031,11 +1031,12 @@ void TProofServ::HandleSocketInput()
          break;
 
       case kPROOF_CACHE:
+         {
+            Int_t status = HandleCache(mess);
 
-         Int_t status = HandleCache(mess);
-
-         // Notify
-         SendLogFile(status);
+            // Notify
+            SendLogFile(status);
+         }
          break;
 
       case kPROOF_GETSLAVEINFO:
@@ -3899,22 +3900,24 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          fSocket->Send(msg);
          break;
       case TProof::kListPackages:
-         TList *pack = new TList;
-         void *dir = gSystem->OpenDirectory(fPackageDir);
-         if (dir) {
-            TString pac(gSystem->GetDirEntry(dir));
-            while (pac.Length() > 0) {
-               if (pac.EndsWith(".par")) {
-                  pac.ReplaceAll(".par","");
-                  pack->Add(new TObjString(pac.Data()));
+         {
+            TList *pack = new TList;
+            void *dir = gSystem->OpenDirectory(fPackageDir);
+            if (dir) {
+               TString pac(gSystem->GetDirEntry(dir));
+               while (pac.Length() > 0) {
+                  if (pac.EndsWith(".par")) {
+                     pac.ReplaceAll(".par","");
+                     pack->Add(new TObjString(pac.Data()));
+                  }
+                  pac = gSystem->GetDirEntry(dir);
                }
-               pac = gSystem->GetDirEntry(dir);
             }
+            gSystem->FreeDirectory(dir);
+            msg.Reset(kPROOF_PACKAGE_LIST);
+            msg << type << pack;
+            fSocket->Send(msg);
          }
-         gSystem->FreeDirectory(dir);
-         msg.Reset(kPROOF_PACKAGE_LIST);
-         msg << type << pack;
-         fSocket->Send(msg);
          break;
       default:
          Error("HandleCache", "unknown type %d", type);
