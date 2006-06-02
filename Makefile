@@ -755,7 +755,7 @@ install: all
 	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
 	fi; \
 	inode2=`ls -id $$PWD/bin | awk '{ print $$1 }'`; \
-	if [ -d $(BINDIR) ] && [ $$inode1 -eq $$inode2 ]; then \
+	if [ -d $(BINDIR) ] && [ "x$$inode1" = "x$$inode2" ]; then \
 	   echo "Everything already installed..."; \
 	else \
 	   echo "Installing binaries in $(DESTDIR)$(BINDIR)"; \
@@ -851,7 +851,7 @@ uninstall:
 	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
 	fi; \
 	inode2=`ls -id $$PWD/bin | awk '{ print $$1 }'`; \
-	if [ -d $(BINDIR) ] && [ $$inode1 -eq $$inode2 ]; then \
+	if [ -d $(BINDIR) ] && [ "x$$inode1" = "x$$inode2" ]; then \
 	   $(MAKE) distclean ; \
 	else \
 	   rm -f $(DESTDIR)$(BINDIR)/`basename $(CINT)`; \
