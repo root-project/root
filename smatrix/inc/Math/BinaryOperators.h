@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: BinaryOperators.h,v 1.3 2006/02/28 15:54:33 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: BinaryOperators.h,v 1.4 2006/03/20 17:11:44 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_BinaryOperators
@@ -42,6 +42,12 @@ public:
 };
 
 
+/**
+   Addition of two vectors v3 = v1+v2
+   returning a vector expression
+
+   @ingroup VectFunction
+*/
 //==============================================================================
 // operator+ (SVector, binary)
 //==============================================================================
@@ -90,6 +96,12 @@ inline VecExpr<BinaryOp<AddOp<T>, VecExpr<A,T,D>, VecExpr<B,T,D>, T>, T, D>
 }
 
 
+/**
+   Addition of a scalar to a each vector element:  v2(i) = v1(i) + a 
+   returning a vector expression
+
+   @ingroup VectFunction
+*/
 //==============================================================================
 // operator+ (SVector, binary, Constant)
 //==============================================================================
@@ -101,6 +113,12 @@ inline VecExpr<BinaryOpCopyR<AddOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
   return VecExpr<AddOpBinOp,T,D>(AddOpBinOp(AddOp<T>(),lhs,Constant<A>(rhs)));
 }
 
+/**
+   Addition of a scalar to each vector element v2(i) = a + v1(i)
+   returning a vector expression
+
+   @ingroup VectFunction
+*/
 //==============================================================================
 // operator+ (SVector, binary, Constant)
 //==============================================================================
@@ -136,6 +154,12 @@ inline VecExpr<BinaryOpCopyL<AddOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
 }
 
 
+/**
+   Addition of two matrices C = A+B
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //==============================================================================
 // operator+ (SMatrix, binary)
 //==============================================================================
@@ -184,6 +208,12 @@ inline Expr<BinaryOp<AddOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T>, T, D, D
 }
 
 
+/**
+   Addition element by element of matrix and a scalar  C(i,j) = A(i,j) + s
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //=============================================================================
 // operator+ (SMatrix, binary, Constant)
 //=============================================================================
@@ -195,6 +225,12 @@ inline Expr<BinaryOpCopyR<AddOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2
   return Expr<AddOpBinOp,T,D,D2,R>(AddOpBinOp(AddOp<T>(),lhs,Constant<A>(rhs)));
 }
 
+/**
+   Addition element by element of matrix and a scalar  C(i,j) = s + A(i,j) 
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //==============================================================================
 // operator+ (SMatrix, binary, Constant)
 //==============================================================================
@@ -245,6 +281,12 @@ public:
 };
 
 
+/**
+   Vector Subtraction:  v3 = v1 - v2
+   returning a vector expression
+
+   @ingroup VectFunction
+*/
 //==============================================================================
 // operator- (SVector, binary)
 //==============================================================================
@@ -293,6 +335,12 @@ inline VecExpr<BinaryOp<MinOp<T>, VecExpr<A,T,D>, VecExpr<B,T,D>, T>, T, D>
 }
 
 
+/**
+   Subtraction of a scalar from each vector element:  v2(i) = v1(i) - a
+   returning a vector expression
+
+   @ingroup VectFunction
+*/
 //==============================================================================
 // operator- (SVector, binary, Constant)
 //==============================================================================
@@ -304,6 +352,12 @@ inline VecExpr<BinaryOpCopyR<MinOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
   return VecExpr<MinOpBinOp,T,D>(MinOpBinOp(MinOp<T>(),lhs,Constant<A>(rhs)));
 }
 
+/**
+   Subtraction  scalar vector (for each vector element) v2(i) = a - v1(i)
+   returning a vector expression
+
+   @ingroup VectFunction
+*/
 //==============================================================================
 // operator- (SVector, binary, Constant)
 //==============================================================================
@@ -339,6 +393,12 @@ inline VecExpr<BinaryOpCopyL<MinOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
 }
 
 
+/**
+   Subtraction of two matrices  C = A-B
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //==============================================================================
 // operator- (SMatrix, binary)
 //==============================================================================
@@ -387,6 +447,12 @@ inline Expr<BinaryOp<MinOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T>, T, D, D
 }
 
 
+/**
+   Subtraction of a scalar and a matrix (element wise)  B(i,j)  = A(i,j) - s 
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //==============================================================================
 // operator- (SMatrix, binary, Constant)
 //==============================================================================
@@ -399,6 +465,12 @@ inline Expr<BinaryOpCopyR<MinOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2
                                               lhs,Constant<A>(rhs)));
 }
 
+/**
+   Subtraction of a scalar and a matrix (element wise)  B(i,j)  = s - A(i,j) 
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //==============================================================================
 // operator- (SMatrix, binary, Constant)
 //==============================================================================
@@ -445,7 +517,13 @@ public:
   }
 };
 
+/**
+   Element by element vector product v3(i) = v1(i)*v2(i) 
+   returning a vector expression.
+   Note this is NOT the Dot, Cross or Tensor product. 
 
+   @ingroup VectFunction
+*/
 //==============================================================================
 // operator* (SVector, binary)
 //==============================================================================
@@ -542,6 +620,13 @@ inline VecExpr<BinaryOpCopyL<MulOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
   return VecExpr<MulOpBinOp,T,D>(MulOpBinOp(MulOp<T>(),Constant<A>(lhs),rhs));
 }
 
+/**
+   Element by element matrix multiplication  C(i,j) = A(i,j)*B(i,j) 
+   returning a matrix expression. This is not a matrix-matrix multiplication and works only 
+   for matrices of the same dimensions. 
+
+   @ingroup MatrixFunctions
+*/
 // Times:  Function for element - wise multiplication
 //==============================================================================
 // Times (SMatrix, binary)
@@ -591,6 +676,12 @@ inline Expr<BinaryOp<MulOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T>, T, D, D
 }
 
 
+/**
+   Multiplication (element wise) of a matrix and a scalar, B(i,j) = A(i,j) * s
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //=============================================================================
 // operator* (SMatrix, binary, Constant)
 //=============================================================================
@@ -603,6 +694,12 @@ inline Expr<BinaryOpCopyR<MulOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2
                                               lhs,Constant<A>(rhs)));
 }
 
+/**
+   Multiplication (element wise) of a matrix and a scalar, B(i,j) = s * A(i,j) 
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //=============================================================================
 // operator* (SMatrix, binary, Constant)
 //=============================================================================
@@ -652,7 +749,12 @@ public:
   }
 };
 
+/**
+   Element by element division of vectors of the same dimension:   v3(i) = v1(i)/v2(i)
+   returning a vector expression
 
+   @ingroup VectFunction
+ */
 //==============================================================================
 // operator/ (SVector, binary)
 //==============================================================================
@@ -700,6 +802,12 @@ inline VecExpr<BinaryOp<DivOp<T>, VecExpr<A,T,D>, VecExpr<B,T,D>, T>, T, D>
 }
 
 
+/**
+   Division of the vector element by a scalar value:  v2(i) = v1(i)/a
+   returning a vector expression
+
+   @ingroup VectFunction
+*/
 //==============================================================================
 // operator/ (SVector, binary, Constant)
 //==============================================================================
@@ -711,6 +819,12 @@ inline VecExpr<BinaryOpCopyR<DivOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
   return VecExpr<DivOpBinOp,T,D>(DivOpBinOp(DivOp<T>(),lhs,Constant<A>(rhs)));
 }
 
+/**
+   Division of a scalar value by the vector element:  v2(i) = a/v1(i) 
+   returning a vector expression
+
+   @ingroup VectFunction
+*/
 //==============================================================================
 // operator/ (SVector, binary, Constant)
 //==============================================================================
@@ -746,6 +860,12 @@ inline VecExpr<BinaryOpCopyL<DivOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
 }
 
 
+/**
+   Division (element wise) of two matrices of the same dimensions:  C(i,j) = A(i,j) / B(i,j)
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //==============================================================================
 // operator/ (SMatrix, binary)
 //==============================================================================
@@ -794,6 +914,12 @@ inline Expr<BinaryOp<DivOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T>, T, D, D
 }
 
 
+/**
+   Division (element wise) of a matrix and a scalar, B(i,j) = A(i,j) / s
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //=============================================================================
 // operator/ (SMatrix, binary, Constant)
 //=============================================================================
@@ -806,6 +932,12 @@ inline Expr<BinaryOpCopyR<DivOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2
                                               lhs,Constant<A>(rhs)));
 }
 
+/**
+   Division (element wise) of a matrix and a scalar, B(i,j) = s / A(i,j) 
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //==============================================================================
 // operator/ (SMatrix, binary, Constant)
 //==============================================================================

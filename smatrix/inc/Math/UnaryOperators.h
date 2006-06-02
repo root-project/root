@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: UnaryOperators.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: UnaryOperators.h,v 1.2 2006/02/08 14:45:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_UnaryOperators
@@ -53,6 +53,12 @@ inline VecExpr<UnaryOp<Minus<T>, VecExpr<A,T,D>, T>, T, D>
 }
 
 
+/**
+   Unary - operator   v2 = -v1 .
+   returning a vector expression
+
+   @ingroup VectFunction
+*/
 //==============================================================================
 // operator- (SVector, unary)
 //==============================================================================
@@ -76,6 +82,12 @@ inline Expr<UnaryOp<Minus<T>, Expr<A,T,D,D2,R>, T>, T, D, D2,R>
 }
 
 
+/**
+   Unary - operator   B  = - A
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //==============================================================================
 // operator- (SMatrix, unary)
 //==============================================================================
@@ -111,6 +123,12 @@ inline VecExpr<UnaryOp<Fabs<T>, VecExpr<A,T,D>, T>, T, D>
 }
 
 
+/**
+   abs of a vector : v2(i) = | v1(i) | 
+   returning a vector expression
+
+   @ingroup VectFunction
+*/
 //==============================================================================
 // fabs (SVector, unary)
 //==============================================================================
@@ -134,6 +152,12 @@ inline Expr<UnaryOp<Fabs<T>, Expr<A,T,D,D2,R>, T>, T, D, D2, R>
 }
 
 
+/**
+   abs of a matrix  m2(i,j) = | m1(i,j) | 
+   returning a matrix epression
+
+   @ingroup MatrixFunctions
+*/
 //==============================================================================
 // fabs (SMatrix, unary)
 //==============================================================================
@@ -169,6 +193,12 @@ inline VecExpr<UnaryOp<Sqr<T>, VecExpr<A,T,D>, T>, T, D>
 }
 
 
+/**
+   square of a vector   v2(i) = v1(i)*v1(i) .  
+   returning a vector expression
+
+   @ingroup VectFunction
+*/
 //==============================================================================
 // sqr (SVector, unary)
 //==============================================================================
@@ -192,6 +222,12 @@ inline Expr<UnaryOp<Sqr<T>, Expr<A,T,D,D2,R>, T>, T, D, D2, R>
 }
 
 
+/**
+   square of a matrix B(i,j)  = A(i,j)*A(i,j)
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+*/
 //==============================================================================
 // sqr (SMatrix, unary)
 //==============================================================================
@@ -227,6 +263,12 @@ inline VecExpr<UnaryOp<Sqrt<T>, VecExpr<A,T,D>, T>, T, D>
 }
 
 
+/**
+   square root of a vector (element by element) v2(i) = sqrt( v1(i) )  
+   returning a vector expression
+
+   @ingroup VectFunction
+*/
 //==============================================================================
 // sqrt (SVector, unary)
 //==============================================================================
@@ -249,7 +291,12 @@ inline Expr<UnaryOp<Sqrt<T>, Expr<A,T,D,D2,R>, T>, T, D, D2, R>
   return Expr<SqrtUnaryOp,T,D,D2,R>(SqrtUnaryOp(Sqrt<T>(),rhs));
 }
 
+/**
+   square root of a matrix (element by element) m2(i,j) = sqrt ( m1(i,j) )
+   returning a matrix expression
 
+   @ingroup MatrixFunctions
+*/
 //==============================================================================
 // sqrt (SMatrix, unary)
 //==============================================================================

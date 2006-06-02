@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.4 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.5 2006/05/12 08:12:16 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_Dinv
@@ -43,7 +43,7 @@ namespace ROOT {
 
 /** Inverter.
     Class to specialize calls to Dinv. Dinv computes the inverse of a square
-    matrix if dimension $idim$ and order $n$. The content of the matrix will be
+    matrix if dimension idim and order n. The content of the matrix will be
     replaced by its inverse. In case the inversion fails, the matrix content is
     destroyed. Invert specializes Dinv by the matrix order. E.g. if the order
     of the matrix is two, the routine Inverter<2> is called which implements
@@ -164,7 +164,7 @@ public:
     
 
 /** Inverter<1>.
-    $1\times1$ (sub-)matrix. $a_{11} \to 1/a_{11}$
+    1x1 (sub-)matrix. \f$a_{11} \to 1/a_{11}\f$
 
     @author T. Glebe
 */
@@ -188,7 +188,7 @@ public:
 
 
 /** Inverter<2>.
-    $2\times2$ (sub-)matrix. Use Cramers rule.
+    2x2 (sub-)matrix. Use Cramers rule.
 
     @author T. Glebe
 */
@@ -244,7 +244,7 @@ public:
 
 
 /** Inverter<3>.
-    $3\times3$ (sub-)matrix. Use pivotisation.
+    3x3 (sub-)matrix. Use pivotisation.
 
     @author T. Glebe
 */
@@ -266,7 +266,8 @@ public:
 };
 
 /** 
-    Inverter<4> Using Cramers rule.
+    Inverter<4> 
+    4x4 matrix inversion using Cramers rule.
 */
 template <>
 class Inverter<4> {
@@ -281,7 +282,8 @@ public:
 };
 
 /** 
-    Inverter<5> Using Cramers rule.
+    Inverter<5> 
+    5x5 Matrix inversion using Cramers rule.
 */
 template <>
 class Inverter<5> {
@@ -296,7 +298,8 @@ public:
 };
 
 /** 
-    Inverter<6> Using Cramers rule.
+    Inverter<6> 
+    6x6 matrix inversion using Cramers rule.
 */
 template <>
 class Inverter<6> {

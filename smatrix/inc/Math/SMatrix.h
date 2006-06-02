@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.20 2006/04/25 13:54:01 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.21 2006/05/12 08:12:16 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -42,15 +42,22 @@
 #include <iosfwd>
 
 
+//doxygen tag
+/**
+   @defgroup SMatrix Matrix and Vector classes
+
+   <ul>
+    <li>\ref SVectorDoc
+    <li>\ref SMatrixDoc
+   </ul>
+*/
+
+
 // expression engine
 
 #include "Math/Expression.h"
 //#include "Math/MatrixRepresentations.h"
 #include "Math/MatrixRepresentationsStatic.h"
-//doxygen tag
-/**
-   @defgroup SMatrix Matrix and Vector classes
-*/
 
 
 namespace ROOT {
@@ -64,9 +71,10 @@ namespace ROOT {
  
 
 /** 
-    SMatrix: a generic fixed size n x m Matrix class.
+    SMatrix: a generic fixed size D1 x D2 Matrix class.
     The class is template on the scalar type and on the matrix sizes: 
     D1 = number of rows and D2 = number of columns.
+    See \ref SMatrixDoc.
     
     @ingroup SMatrix
     @memo SMatrix
@@ -111,7 +119,7 @@ public:
   */ 
   SMatrix(const SMatrix<T,D1,D2,R>& rhs);
   /**
-     construct from a matrix with different representation
+     construct from a matrix with different representation.
      Works only from symmetric to general and not viceversa. 
    */ 
   template <class R2>
@@ -128,33 +136,36 @@ public:
 
   // new constructs using STL iterator interface
   /**
-   * Constructor with STL iterator interface. The data will be copied into the matrix
-   * \param triang if true only the triangular lower/upper part of the matrix is filled from the iterators 
-   * \param lower if true the lower triangular part is filled 
-   * 
-   * Size of the matrix must match size of the iterators if triang is false, otherwise the size of the 
-   * triangular block 
-   * In the case of symmetric matrices triang is considered always to be true (what-ever the user specifies) and 
-   * the size of the iterators must be equal to the size of the symmetric representation (number of independent 
-   * elements), N*(N+1)/2 
-   * 
-   * 
-   */
+     Constructor with STL iterator interface. The data will be copied into the matrix
+     \param begin start iterator position
+     \param end end iterator position
+     \param triang if true only the triangular lower/upper part of the matrix is filled from the iterators 
+     \param lower if true the lower triangular part is filled 
+     
+     Size of the matrix must match size of the iterators if triang is false, otherwise the size of the 
+     triangular block 
+     In the case of symmetric matrices triang is considered always to be true (what-ever the user specifies) and 
+     the size of the iterators must be equal to the size of the symmetric representation (number of independent 
+     elements), N*(N+1)/2 
+     
+  */
   template<class InputIterator>
   SMatrix(InputIterator begin, InputIterator end, bool triang = false, bool lower = true);
 
   /**
-   * Constructor with STL iterator interface. The data will be copied into the matrix
-   * \param triang if true only the triangular lower/upper part of the matrix is filled from the iterators 
-   * \param lower if true the lower triangular part is filled 
-   * 
-   * Size of the matrix must match size of the iterators if triang is false, otherwise the size of the 
-   * triangular block 
-   * In the case of symmetric matrices triang is considered always to be true (what-ever the user specifies) and 
-   * the size of the iterators must be equal to the size of the symmetric representation (number of independent 
-   * elements), N*(N+1)/2 
-   * 
-   */
+    Constructor with STL iterator interface. The data will be copied into the matrix
+    \param begin  start iterator position
+    \param size   iterator size 
+    \param triang if true only the triangular lower/upper part of the matrix is filled from the iterators 
+    \param lower if true the lower triangular part is filled 
+    
+    Size of the matrix must match size of the iterators if triang is false, otherwise the size of the 
+    triangular block 
+    In the case of symmetric matrices triang is considered always to be true (what-ever the user specifies) and 
+    the size of the iterators must be equal to the size of the symmetric representation (number of independent 
+    elements), N*(N+1)/2 
+    
+  */
   template<class InputIterator>
   SMatrix(InputIterator begin, unsigned int size, bool triang = false, bool lower = true);
 
@@ -239,8 +250,8 @@ public:
       \f[
        M = \left( \begin{array}{ccc} 
        a_0 & a_1 & a_3  \\ 
-       a1 & a_2  & a_4  \\
-       a3 & a_4 & a_5   \end{array} \right)
+       a_1 & a_2  & a_4  \\
+       a_3 & a_4 & a_5   \end{array} \right)
        \f]
   */
 

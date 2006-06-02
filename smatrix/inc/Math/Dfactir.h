@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dfactir.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dfactir.h,v 1.2 2006/02/08 14:45:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Dfactir
@@ -36,8 +36,8 @@ namespace ROOT {
 
 
 /** Dfactir.
-    Function to compute the determinant from a square matrix ($\det(A)$) of
-    dimension $idim$ and order $n$. A working area $ir$ is returned which is
+    Function to compute the determinant from a square matrix, Det(A) of
+    dimension idim and order n. A working area ir is returned which is
     needed by the Dfinv routine.
 
     @author T. Glebe

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.20 2006/04/25 13:54:01 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.21 2006/05/12 08:12:16 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -44,6 +44,10 @@
 #include "Math/Functions.h"
 #include "Math/HelperOps.h"
 #include "Math/StaticCheck.h"
+
+
+
+
 
 
 namespace ROOT { 

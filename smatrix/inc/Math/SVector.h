@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.8 2006/04/20 13:13:21 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.9 2006/05/12 08:12:16 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector
@@ -57,7 +57,7 @@ namespace ROOT {
 /** 
     SVector: a generic fixed size Vector class.
     The class is template on the scalar type and on the vector size D. 
-
+    See \ref SVectorDoc
 
 
     @ingroup SMatrix

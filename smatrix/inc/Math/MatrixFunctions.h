@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.11 2006/05/12 08:12:16 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.12 2006/05/12 14:15:32 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -29,6 +29,15 @@
 //                  through static members of Matrix and Expr class
 //
 // ********************************************************************
+
+//doxygen tag
+/**
+   @defgroup MatrixFunctions Matrix Functions
+
+   These function apply to matrices (and also Matrix expression) and can return a 
+   matrix expression of a particular defined type, like in the matrix multiplication or 
+   a vector, like in the matrix-vector product or a scalar like in the Similarity vector-matrix product.
+*/
 
 #include "Math/BinaryOpPolicy.h"
 
@@ -99,7 +108,7 @@ public:
   ///
   ~VectorMatrixRowOp() {}
 
-  /// calc $\sum_{j} a_{ij} * v_j$
+  /// calc \f$ \sum_{j} a_{ij} * v_j \f$
   inline typename Matrix::value_type apply(unsigned int i) const {
     return meta_row_dot<D2-1>::f(lhs_, rhs_, i*D2);
   }
@@ -149,7 +158,7 @@ public:
   ///
   ~VectorMatrixColOp() {}
 
-  /// calc $\sum_{j} a_{ij} * v_j$
+  /// calc \f$ \sum_{j} a_{ij} * v_j \f$
   inline typename Matrix::value_type apply(unsigned int i) const {
     return meta_col_dot<D1-1>::f(rhs_, lhs_, i);
   }
@@ -159,6 +168,12 @@ protected:
   const Matrix&    rhs_;
 };
 
+/**
+   Matrix *  Vector multiplication   \f$ a(i) = \sum_{j} M(i,j) * b(j) \f$
+   returning a vector expression 
+
+   @ingroup MatrixFunctions
+ */
 //==============================================================================
 // operator*: SMatrix * SVector
 //==============================================================================
@@ -303,7 +318,7 @@ public:
   ///
   ~MatrixMulOp() {}
 
-  /// calc $\sum_{j} a_{ik} * b_{kj}$
+  /// calc \f$\sum_{j} a_{ik} * b_{kj}\f$
   inline T apply(unsigned int i) const {
     return meta_matrix_dot<D-1>::f(lhs_, rhs_, i);
   }
@@ -323,6 +338,12 @@ protected:
 };
 
 
+/**
+   Matrix *  Matrix multiplication , \f$ C(i,j) = \sum_{k} A(i,k) * B(k,j)\f$ 
+   returning a matrix expression 
+
+   @ingroup MatrixFunctions
+ */
 //==============================================================================
 // operator* (SMatrix * SMatrix, binary)
 //==============================================================================
@@ -464,6 +485,12 @@ protected:
 };
 
 
+/**
+   Matrix Transpose   B(i,j) = A(j,i) 
+   returning a matrix expression
+
+   @ingroup MatrixFunctions
+ */
 //==============================================================================
 // transpose
 //==============================================================================
@@ -583,9 +610,12 @@ inline T Product(const VecExpr<A,T,D>& lhs, const Expr<B,T,D,D,R>& rhs) {
 }
 #endif
 
-//---------------------------------------------------------------------------
-//Similarity (for vector equaal to product) 
-//---------------------------------------------------------------------------
+/**
+   Similarity Vector - Matrix Product:  v^T * A * v
+   returning a scalar value of type T   \f$ s = \sum_{i,j} v(i) * A(i,j) * v(j)\f$ 
+
+   @ingroup MatrixFunctions
+ */
 
 //==============================================================================
 // product: SMatrix/SVector calculate v^T * A * v
@@ -652,6 +682,13 @@ inline T Similarity(const VecExpr<A,T,D>& lhs, const Expr<B,T,D,D,R>& rhs) {
 }
 
 
+/**
+   Similarity Matrix Product :  B = U * A * U^T for A symmetric 
+   returning a symmetric matrix expression: 
+   \f$ B(i,j) = \sum_{k,l} U(i,k) * A(k,l) * U(j,l) \f$ 
+
+   @ingroup MatrixFunctions
+ */
 //==============================================================================
 // product: SMatrix/SMatrix calculate M * A * M^T where A is a symmetric matrix
 // return matrix will be nrows M x nrows M
@@ -696,6 +733,12 @@ inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const SMatrix<T,D1,D1,MatRep
 #endif
 
 
+/**
+   Transpose Similarity Matrix Product :  B = U^T * A * U for A symmetric
+   returning a symmetric matrix expression: \f$ B(i,j) = \sum_{k,l} U(k,i) * A(k,l) * U(l,j) \f$ 
+
+   @ingroup MatrixFunctions
+ */
 //==============================================================================
 // product: SMatrix/SMatrix calculate M^T * A * M where A is a symmetric matrix
 // return matrix will be ncolsM x ncols M
@@ -777,6 +820,12 @@ protected:
 
 
 
+/**
+   Tensor Vector Product : M(i,j) = v(i) * v(j) 
+   returning a matrix expression 
+
+   @ingroup VectFunction
+ */
 
 #ifndef _WIN32
 

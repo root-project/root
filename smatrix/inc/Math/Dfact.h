@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dfact.h,v 1.2 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dfact.h,v 1.3 2006/02/28 15:54:33 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Dfact
@@ -37,8 +37,8 @@ namespace ROOT {
 
 
 /** Dfact.
-    Function to compute the determinant from a square matrix ($\det(A)$) of
-    dimension $idim$ and order $n$.
+    Function to compute the determinant from a square matrix (\f$ \det(A)\f$) of
+    dimension idim and order n.
 
     @author T. Glebe
 */

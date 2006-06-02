@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Functions.h,v 1.2 2005/12/11 00:24:49 rdm Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Functions.h,v 1.3 2006/02/08 14:45:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_Functions
@@ -34,6 +34,19 @@
 #include <cmath>
 #include "Math/Expression.h"
 
+/**
+   @defgroup TempFunction Template Functions 
+
+   These functions apply for any type T, such as a scalar, a vector or a matrix. 
+ */
+/**
+   @defgroup VectFunction Vector Functions
+
+   These functions apply to SVector types (and also to Vector expressions) and can 
+   return a vector expression or 
+   a scalar, like in the Dot product, or a matrix, like in the Tensor product 
+ */
+
 
 namespace ROOT {
 
@@ -44,9 +57,10 @@ namespace ROOT {
 template <class T, unsigned int D> class SVector;
 
 
-/** square.
-    Template to compute $x\cdot x$
+/** square  
+    Template function to compute \f$x\cdot x$, for any type T returning a type T
 
+    @ingroup TempFunction
     @author T. Glebe
 */
 //==============================================================================
@@ -56,8 +70,9 @@ template <class T>
 inline const T Square(const T& x) { return x*x; }
 
 /** maximum.
-    Template to compute $\max(i,j)$
+    Template to find max(a,b) where a,b are of type T
 
+    @ingroup TempFunction
     @author T. Glebe
 */
 //==============================================================================
@@ -69,8 +84,9 @@ inline const T Maximum(const T& lhs, const T& rhs) {
 }
 
 /** minimum.
-    Template to compute $\min(i,j)$
+    Template to find min(a,b) where a,b are of type T
 
+    @ingroup TempFunction
     @author T. Glebe
 */
 //==============================================================================
@@ -82,8 +98,8 @@ inline const T Minimum(const T& lhs, const T& rhs) {
 }
 
 /** round.
-    Template to compute nearest integer value.
-
+    Template to compute nearest integer value for any type T
+    @ingroup TempFunction
     @author T. Glebe
 */
 //==============================================================================
@@ -96,8 +112,9 @@ inline int Round(const T& x) {
 
 
 /** sign.
-    Template to compute the sign of a number $\textrm{sgn}(i)$.
+    Template to compute the sign of a number 
 
+    @ingroup TempFunction
     @author T. Glebe
 */
 //==============================================================================
@@ -130,9 +147,11 @@ struct meta_dot<0> {
 };
 
 
-/** dot.
-    Template to compute $\vec{a}\cdot\vec{b} = \sum_i a_i\cdot b_i$.
+/** 
+    Vector dot product. 
+    Template to compute \f$\vec{a}\cdot\vec{b} = \sum_i a_i\cdot b_i \f$.
 
+    @ingroup VectFunction
     @author T. Glebe
 */
 //==============================================================================
@@ -193,9 +212,11 @@ struct meta_mag<0> {
 };
 
 
-/** mag2.
-    Template to compute $|\vec{v}|^2 = \sum_iv_i^2$.
+/** 
+    Vector magnitude square
+    Template to compute \f$|\vec{v}|^2 = \sum_iv_i^2 \f$.
 
+    @ingroup VectFunction
     @author T. Glebe
 */
 //==============================================================================
@@ -214,9 +235,11 @@ inline T Mag2(const VecExpr<A,T,D>& rhs) {
   return meta_mag<D-1>::f(rhs, T());
 }
 
-/** mag.
-    Length of a vector: $|\vec{v}| = \sqrt{\sum_iv_i^2}$.
+/** 
+    Vector magnitude (Euclidian norm) 
+    Compute : \f$ |\vec{v}| = \sqrt{\sum_iv_i^2} \f$.
 
+    @ingroup VectFunction
     @author T. Glebe
 */
 //==============================================================================
@@ -236,9 +259,10 @@ inline T Mag(const VecExpr<A,T,D>& rhs) {
 }
 
 
-/** Lmag2.
-    Template to compute $|\vec{v}|^2 = v_0^2 - v_1^2 - v_2^2 -v_3^2$.
+/** Lmag2: Square of Minkowski Lorentz-Vector norm (only for 4D Vectors)
+    Template to compute \f$ |\vec{v}|^2 = v_0^2 - v_1^2 - v_2^2 -v_3^2 \f$.
 
+    @ingroup VectFunction
     @author T. Glebe
 */
 //==============================================================================
@@ -258,10 +282,11 @@ inline T Lmag2(const VecExpr<A,T,4>& rhs) {
     - Square(rhs.apply(1)) - Square(rhs.apply(2)) - Square(rhs.apply(3));
 }
 
-/** Lmag.
-    Length of a vector Lorentz-Vector: $|\vec{v}| = \sqrt{v_0^2 -
-    v_1^2 - v_2^2 -v_3^2}$.
+/** Lmag: Minkowski Lorentz-Vector norm (only for 4-dim vectors)
+    Length of a vector Lorentz-Vector: 
+    \f$ |\vec{v}| = \sqrt{v_0^2 - v_1^2 - v_2^2 -v_3^2} \f$.
 
+    @ingroup VectFunction
     @author T. Glebe
 */
 //==============================================================================
@@ -281,9 +306,10 @@ inline T Lmag(const VecExpr<A,T,4>& rhs) {
 }
 
 
-/** cross.
-    Cross product of two 3-dim vectors: $\vec{c} = \vec{a}\times\vec{b}$.
+/** Vector Cross Product (only for 3-dim vectors)
+    \f$ \vec{c} = \vec{a}\times\vec{b} \f$.
 
+    @ingroup VectFunction
     @author T. Glebe
 */
 //==============================================================================
@@ -340,8 +366,9 @@ inline SVector<T,3> Cross(const VecExpr<A,T,3>& lhs, const VecExpr<B,T,3>& rhs) 
 
 
 /** Unit.
-    Return a vector of unit lenght: $\vec{e}_v = \vec{v}/|\vec{v}|$.
+    Return a vector of unit lenght: \f$ \vec{e}_v = \vec{v}/|\vec{v}| \f$.
 
+    @ingroup VectFunction
     @author T. Glebe
 */
 //==============================================================================
