@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.10 2004/09/24 19:44:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.11 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -49,7 +49,7 @@ public:
    TObject        *GetObject() const {return (TObject*)(*fObjAddress);}
    const char     *GetTypeName() const ;
    virtual void   *GetValuePointer() const {return fObjAddress;}
-   Bool_t          IsOnTerminalBranch() const    { return kFALSE; }
+   Bool_t          IsOnTerminalBranch() const;
    Bool_t          IsVirtual() const {return fVirtual;}
    virtual Bool_t  Notify();
    virtual void    PrintValue(Int_t i=0) const;

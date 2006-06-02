@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.15 2004/01/10 10:52:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.16 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -225,4 +225,13 @@ void TLeafObject::Streamer(TBuffer &b)
    } else {
       TLeafObject::Class()->WriteBuffer(b,this);
    }
+}
+
+//______________________________________________________________________________
+Bool_t TLeafObject::IsOnTerminalBranch() const
+{
+   // Return true if this leaf is does not have any sub-branch/leaf.
+
+   if (fBranch->GetListOfBranches()->GetEntriesFast()) return kFALSE;
+   return kTRUE;
 }
