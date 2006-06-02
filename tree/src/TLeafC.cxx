@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.17 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.18 2006/05/12 17:00:30 pcanal Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -180,7 +180,8 @@ void TLeafC::SetAddress(void *add)
          fPointer = (char**)add;
          Int_t ncountmax = fLen;
          if (fLeafCount) ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
-         if (ncountmax > fNdata || *fPointer == 0) {
+         if ((fLeafCount && ncountmax > Int_t(fLeafCount->GetValue())) ||
+             ncountmax > fNdata || *fPointer == 0) {
             if (*fPointer) delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
             *fPointer = new char[fNdata];

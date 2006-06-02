@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafO.cxx,v 1.1 2005/01/20 01:10:52 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafO.cxx,v 1.2 2005/02/11 18:40:09 rdm Exp $
 // Author: Philippe Canal  20/1/05
 
 /*************************************************************************
@@ -173,7 +173,8 @@ void TLeafO::SetAddress(void *add)
          fPointer = (Bool_t**) add;
          Int_t ncountmax = fLen;
          if (fLeafCount) ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
-         if (ncountmax > fNdata || *fPointer == 0) {
+         if ((fLeafCount && ncountmax > Int_t(fLeafCount->GetValue())) ||
+             ncountmax > fNdata || *fPointer == 0) {
             if (*fPointer) delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
             *fPointer = new Bool_t[fNdata];
