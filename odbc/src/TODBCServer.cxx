@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.7 2006/05/23 06:20:36 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.8 2006/06/02 14:02:03 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -383,6 +383,7 @@ TSQLTableInfo* TODBCServer::GetTableInfo(const char* tablename)
    // Produces SQL table info
    // Object must be deleted by user
    
+#ifdef NEVER
    CheckConnect("GetTableInfo", 0);
 
    #define STR_LEN 128+1
@@ -439,7 +440,7 @@ TSQLTableInfo* TODBCServer::GetTableInfo(const char* tablename)
    SQLBindCol(hstmt, 16, SQL_C_SLONG, &CharOctetLength, 0, &cbCharOctetLength);
    SQLBindCol(hstmt, 17, SQL_C_SLONG, &OrdinalPosition, 0, &cbOrdinalPosition);
    SQLBindCol(hstmt, 18, SQL_C_CHAR, szIsNullable, STR_LEN, &cbIsNullable);
-   
+      
    retcode = SQLFetch(hstmt);
    
    while ((retcode==SQL_SUCCESS) || (retcode==SQL_SUCCESS_WITH_INFO)) {
@@ -516,6 +517,8 @@ TSQLTableInfo* TODBCServer::GetTableInfo(const char* tablename)
    SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
    
    return new TSQLTableInfo(tablename, lst);
+#endif
+   return 0;
 }
 
 //______________________________________________________________________________
