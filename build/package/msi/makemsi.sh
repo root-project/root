@@ -55,4 +55,5 @@ echo $CMD
 $CMD || exit 1
 echo ""
 rm $ROOTXMSO $ROOTXMS
+chmod a+rx $MSIFILE
 echo "Done."
