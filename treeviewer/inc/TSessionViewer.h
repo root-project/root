@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.30 2006/05/28 20:08:00 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.29 2006/01/30 17:36:29 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -234,10 +234,11 @@ public:
    void        SetPortNumber(Int_t port) { fNumPort->SetIntNumber(port); }
    void        SetLogLevel(Int_t log) { fLogLevel->SetIntNumber(log); }
    void        SetConfigText(const char *str) { fTxtConfig->SetText(str); }
-   void        SettingsChanged();
    void        SetUserName(const char *str) { fTxtUsrName->SetText(str); }
    void        SetSync(Bool_t sync) {
                fSync->SetState(sync ? kButtonDown : kButtonUp); }
+
+   void        SettingsChanged();
 
    void        OnBtnConnectClicked();
    void        OnBtnNewServerClicked();
@@ -613,6 +614,7 @@ public:
    void     ReadConfiguration(const char *filename = 0);
    void     UpdateListOfProofs();
    void     UpdateListOfSessions();
+   void     UpdateListOfPackages();
    void     WriteConfiguration(const char *filename = 0);
    void     SetBusy(Bool_t busy = kTRUE) { fBusy = busy; }
    void     SetChangePic(Bool_t change) { fChangePic = change;}

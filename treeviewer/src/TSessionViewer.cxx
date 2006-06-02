@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.63 2006/05/30 07:42:48 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.64 2006/05/31 07:48:56 brun Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -300,12 +300,13 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
                        "SettingsChanged()");
    fNumPort->Connect("ValueSet(Long_t)", "TSessionServerFrame", this,
                        "SettingsChanged()");
+
 }
 
 //______________________________________________________________________________
 void TSessionServerFrame::SettingsChanged()
 {
-   //Inform viewer that settings have changed
+
    TGTextEntry *sender = dynamic_cast<TGTextEntry*>((TQObject*)gTQSender);
    Bool_t issync = (fSync->GetState() == kButtonDown);
    if ((strcmp(fViewer->GetActDesc()->GetName(), fTxtName->GetText())) ||
@@ -326,6 +327,7 @@ void TSessionServerFrame::SettingsChanged()
       sender->SetFocus();
    }
 }
+
 
 //______________________________________________________________________________
 Bool_t TSessionServerFrame::HandleExpose(Event_t * /*event*/)
@@ -581,6 +583,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
       msg.Form("PROOF Cluster %s ready", fViewer->GetActDesc()->fName.Data());
       fViewer->GetStatusBar()->SetText(msg.Data(), 1);
       fViewer->GetSessionFrame()->ProofInfos();
+      fViewer->UpdateListOfPackages();
       // Enable previously uploaded packages if in auto-enable mode
       if (fViewer->GetActDesc()->fAutoEnable) {
          TPackageDescription *package;
@@ -2805,15 +2808,15 @@ void TSessionQueryFrame::UpdateInfos()
    }
    if (res.Length() > 1) {
       buffer = Form("%s------------------------------------------------------\n",
-                    buffer);
+                 buffer);
       buffer = Form("%s Results   : %s\n",buffer, res.Data());
    }
 
    if (result->GetOutputList() && result->GetOutputList()->GetSize() > 0) {
       buffer = Form("%s Outlist   : %d objects\n",buffer,
-                    result->GetOutputList()->GetSize());
+                 result->GetOutputList()->GetSize());
       buffer = Form("%s------------------------------------------------------\n",
-                    buffer);
+                 buffer);
    }
    fInfoTextView->LoadBuffer(buffer);
 }
@@ -3188,34 +3191,6 @@ void TSessionViewer::ReadConfiguration(const char *filename)
             delete [] v;
          }
       }
-      if ((s = strstr(er->GetName(), "PackageDescription."))) {
-         const char *val = fViewerEnv->GetValue(s, (const char*)0);
-         if (val) {
-            Int_t cnt = 0;
-            char *v = StrDup(val);
-            s += 7;
-            while (1) {
-
-               TString name = strtok(!cnt ? v : 0, ";");
-               if (name.IsNull()) break;
-               TString ident = strtok(0, ";");
-               if (ident.IsNull()) break;
-               TString uploaded = strtok(0, ";");
-               if (uploaded.IsNull()) break;
-               TString enabled = strtok(0, ";");
-               if (enabled.IsNull()) break;
-
-               TPackageDescription *package = new TPackageDescription;
-               package->fName = name;
-               package->fId   = atoi(ident);
-               package->fUploaded = (Bool_t)atoi(uploaded);
-               package->fEnabled = (Bool_t)atoi(enabled);
-               fActDesc->fPackages->Add((TObject *)package);
-               cnt++;
-            }
-            delete [] v;
-         }
-      }
    }
    fSessionHierarchy->ClearHighlighted();
    fSessionHierarchy->OpenItem(fSessionItem);
@@ -3368,8 +3343,7 @@ void TSessionViewer::WriteConfiguration(const char *filename)
 
    TSessionDescription *session;
    TQueryDescription *query;
-   TPackageDescription *package;
-   Int_t scnt = 0, qcnt = 1, pcnt = 1;
+   Int_t scnt = 0, qcnt = 1;
    const char *fname = filename ? filename : fConfigFile.Data();
 
    delete fViewerEnv;
@@ -3450,19 +3424,6 @@ void TSessionViewer::WriteConfiguration(const char *filename)
          querystring += Form("%d",query->fFirstEntry);
          fViewerEnv->SetValue(Form("QueryDescription.%d",qcnt), querystring);
          qcnt++;
-      }
-      TIter pnext(session->fPackages);
-      while ((package = (TPackageDescription *) pnext())) {
-         TString packagestring;
-         packagestring += package->fName;
-         packagestring += ";";
-         packagestring += Form("%d", package->fId);
-         packagestring += ";";
-         packagestring += Form("%d", package->fUploaded);
-         packagestring += ";";
-         packagestring += Form("%d", package->fEnabled);
-         fViewerEnv->SetValue(Form("PackageDescription.%d",pcnt), packagestring);
-         pcnt++;
       }
    }
 
@@ -3839,6 +3800,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          fPopupSrv->DisableEntry(kSessionConnect);
          fSessionMenu->DisableEntry(kSessionConnect);
          fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
+         UpdateListOfPackages();
       }
       else {
          fPopupSrv->EnableEntry(kSessionConnect);
@@ -3851,6 +3813,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
             fV2->HideFrame(fActFrame);
             fV2->ShowFrame(fSessionFrame);
             fActFrame = fSessionFrame;
+            UpdateListOfPackages();
          }
          fSessionFrame->GetTab()->HideFrame(
                fSessionFrame->GetTab()->GetTabTab("Options"));
@@ -4353,6 +4316,46 @@ void TSessionViewer::ShowPackages()
                                     0, 0, ax, ay, wdummy);
    fLogWindow->Move(ax, ay + GetHeight() + 35);
    fLogWindow->Popup();
+}
+
+//______________________________________________________________________________
+void TSessionViewer::UpdateListOfPackages()
+{
+   TObjString *packname;
+   TPackageDescription *package;
+   if (fActDesc->fConnected && fActDesc->fAttached &&
+       fActDesc->fProof && fActDesc->fProof->IsValid() &&
+       fActDesc->fProof->IsParallel()) {
+      fActDesc->fPackages->Clear();
+      TList *packlist = fActDesc->fProof->GetListOfEnabledPackages();
+      if(packlist) {
+         TIter nextenabled(packlist);
+         while ((packname = (TObjString *)nextenabled())) {
+            package = new TPackageDescription;
+            package->fName = packname->GetName();
+            package->fId   = fActDesc->fPackages->GetEntries();
+            package->fUploaded = kTRUE;
+            package->fEnabled = kTRUE;
+            if (!fActDesc->fPackages->FindObject(packname->GetName())) {
+               fActDesc->fPackages->Add((TObject *)package);
+            }
+         }
+      }
+      packlist = fActDesc->fProof->GetListOfPackages();
+      if(packlist) {
+         TIter nextpack(packlist);
+         while ((packname = (TObjString *)nextpack())) {
+            package = new TPackageDescription;
+            package->fName = packname->GetName();
+            package->fId   = fActDesc->fPackages->GetEntries();
+            package->fUploaded = kTRUE;
+            package->fEnabled = kFALSE;
+            if (!fActDesc->fPackages->FindObject(packname->GetName())) {
+               fActDesc->fPackages->Add((TObject *)package);
+            }
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
