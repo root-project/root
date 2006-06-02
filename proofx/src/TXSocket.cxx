@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.10 2006/05/23 07:43:55 brun Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.11 2006/06/02 15:14:35 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -481,8 +481,6 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
          Printf("| %.*s", len, (char *)pdata);
          // Handle error
          fHandler->HandleError();
-//         Info("ProcessUnsolicitedMsg","closing ...");
-//         Close();
          break;
       case kXPD_msgsid:
          //

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.8 2006/04/19 10:52:46 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.9 2006/06/02 15:14:35 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -636,8 +636,8 @@ bool XrdProofConn::GetAccessToSrv()
    // The login and authorization steps are performed here.
 
    // Now we are connected and we ask for the kind of the server
-   { XrdClientPhyConnLocker pcl(fPhyConn);
-   fServerType = DoHandShake();
+   {  XrdClientPhyConnLocker pcl(fPhyConn);
+      fServerType = DoHandShake();
    }
 
    switch (fServerType) {

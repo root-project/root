@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.145 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.146 2006/06/02 15:14:35 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2034,7 +2034,8 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             // answer contains number of processed events;
             Long64_t events;
             Bool_t abort = kFALSE;
-            if (fProtocol > 8)
+
+            if ((mess->BufferSize() > mess->Length()) && (fProtocol > 8))
                (*mess) >> events >> abort;
             else
                (*mess) >> events;
