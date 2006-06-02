@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.78 2006/04/29 17:57:43 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.79 2006/05/26 15:13:02 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -103,7 +103,8 @@ const char* const kPROOF_QueryDir = "queries";     // query dir, under WorkDir
 const char* const kPROOF_DataSetDir      = "datasets";
 const char* const kPROOF_CacheLockFile   = "/tmp/proof-cache-lock-";   // cache lock file
 const char* const kPROOF_PackageLockFile = "/tmp/proof-package-lock-"; // package lock file
-const char* const kPROOF_QueryLockFile = "/tmp/proof-query-lock-"; // package lock file
+const char* const kPROOF_QueryLockFile   = "/tmp/proof-query-lock-";   // query lock file
+const char* const kPROOF_DataSetLockFile = "/tmp/proof-dataset-lock-"; // dataset lock file
 R__EXTERN TVirtualMutex *gProofMutex;
 
 
@@ -221,24 +222,26 @@ private:
       kShutdownInterrupt
    };
    enum EProofCacheCommands {
-      kShowCache = 1,
-      kClearCache = 2,
-      kShowPackages = 3,
-      kClearPackages = 4,
-      kClearPackage = 5,
-      kBuildPackage = 6,
-      kLoadPackage = 7,
+      kShowCache           = 1,
+      kClearCache          = 2,
+      kShowPackages        = 3,
+      kClearPackages       = 4,
+      kClearPackage        = 5,
+      kBuildPackage        = 6,
+      kLoadPackage         = 7,
       kShowEnabledPackages = 8,
-      kShowSubCache = 9,
-      kClearSubCache = 10,
-      kShowSubPackages = 11,
-      kDisableSubPackages = 12,
-      kDisableSubPackage = 13,
-      kBuildSubPackage = 14,
-      kUnloadPackage = 15,
-      kDisablePackage = 16,
-      kUnloadPackages = 17,
-      kDisablePackages = 18
+      kShowSubCache        = 9,
+      kClearSubCache       = 10,
+      kShowSubPackages     = 11,
+      kDisableSubPackages  = 12,
+      kDisableSubPackage   = 13,
+      kBuildSubPackage     = 14,
+      kUnloadPackage       = 15,
+      kDisablePackage      = 16,
+      kUnloadPackages      = 17,
+      kDisablePackages     = 18,
+      kListPackages        = 19,
+      kListEnabledPackages = 20
    };
    enum ESendFileOpt {
       kAscii         = 0x0,
@@ -310,6 +313,8 @@ protected:
    Bool_t          fDataReady;      //true if data is ready to be analyzed
    Long64_t        fBytesReady;     //number of bytes staged
    Long64_t        fTotalBytes;     //number of bytes to be analyzed
+   TList          *fAvailablePackages; //list of available packages
+   TList          *fEnabledPackages;   //list of enabled packages
 
    static TSemaphore *fgSemaphore;  //semaphore to control no of parallel startup threads
 
@@ -446,12 +451,19 @@ public:
    //-- cache and package management
    void        ShowCache(Bool_t all = kFALSE);
    void        ClearCache();
+   TList      *GetListOfPackages();
+   TList      *GetListOfEnabledPackages();
    void        ShowPackages(Bool_t all = kFALSE);
    void        ShowEnabledPackages(Bool_t all = kFALSE);
    Int_t       ClearPackages();
    Int_t       ClearPackage(const char *package);
    Int_t       EnablePackage(const char *package);
-   Int_t       UploadPackage(const char *par);
+   Int_t       UploadPackage(const char *par, EUploadPackageOpt opt = kUntar);
+
+   Int_t       AddDynamicPath(const char *libpath);
+   Int_t       AddIncludePath(const char *incpath);
+   Int_t       RemoveDynamicPath(const char *libpath);
+   Int_t       RemoveIncludePath(const char *incpath);
 
    //-- dataset management
    Int_t       UploadDataSet(const char *dataset,

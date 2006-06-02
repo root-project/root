@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.77 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.78 2006/05/23 07:43:55 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TSlave.h"
 #include "TROOT.h"
 #include "TError.h"
+#include "TException.h"
 #include "MessageTypes.h"
 #include "TMessage.h"
 #include "TDSetProxy.h"
@@ -462,10 +463,16 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    SafeDelete(fSelector);
    fSelectorClass = 0;
-   if (!(fSelector = TSelector::GetSelector(selector_file))) {
+   TRY {
+      if (!(fSelector = TSelector::GetSelector(selector_file))) {
+         Error("Process", "cannot load: %s", selector_file );
+         return -1;
+      }
+   } CATCH(excode) {
+      Error("Process","exception %d caught", excode);
       Error("Process", "cannot load: %s", selector_file );
       return -1;
-   }
+   } ENDTRY;
 
    fSelectorClass = fSelector->IsA();
    Int_t version = fSelector->Version();
@@ -532,8 +539,18 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          }
       } else {
          PDB(kLoop,3)Info("Process","Call Process(%lld)", entry);
-         fSelector->Process(entry);
+
+         TRY {
+            fSelector->Process(entry);
+         } CATCH(excode) {
+            Error("Process","exception %d caught", excode);
+            // Set interrupt
+            gROOT->SetInterrupt();
+            // Perhaps we need a dedicated status code here ...
+            fExitStatus = kAborted;
+         } ENDTRY;
       }
+
       fEventsProcessed++;
 
       gSystem->DispatchOneEvent(kTRUE);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.144 2006/05/02 13:03:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.145 2006/05/26 15:13:02 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -61,7 +61,6 @@
 #include "TChain.h"
 #include "TProofServ.h"
 #include "TMap.h"
-#include "TTimer.h"
 #include "TThread.h"
 #include "TSemaphore.h"
 #include "TMutex.h"
@@ -88,6 +87,8 @@ TProofThreadArg::TProofThreadArg(const char *h, Int_t po, const char *o,
     fSlaves(s), fProof(prf), fCslave(0), fClaims(0),
     fType(TSlave::kSlave)
 {
+   // Constructor
+
    fUrl = new TUrl(Form("%s:%d",h,po));
 }
 
@@ -98,6 +99,8 @@ TProofThreadArg::TProofThreadArg(TCondorSlave *csl, TList *clist,
     fSlaves(s), fProof(prf), fCslave(csl), fClaims(clist),
     fType(TSlave::kSlave)
 {
+   // Constructor
+
    if (csl) {
       fUrl     = new TUrl(Form("%s:%d",csl->fHostname.Data(),csl->fPort));
       fImage   = csl->fImage;
@@ -115,6 +118,8 @@ TProofThreadArg::TProofThreadArg(const char *h, Int_t po, const char *o,
     fMsd(m), fSlaves(s), fProof(prf), fCslave(0), fClaims(0),
     fType(TSlave::kSlave)
 {
+   // Constructor
+
    fUrl = new TUrl(Form("%s:%d",h,po));
 }
 
@@ -123,6 +128,8 @@ TProofThreadArg::TProofThreadArg(const char *h, Int_t po, const char *o,
 Bool_t TProofInterruptHandler::Notify()
 {
    // TProof interrupt handler.
+
+   Info("Notify","Processing interrupt signal ...");
 
    // Stop any remote processing
    fProof->StopProcess(kTRUE);
@@ -137,6 +144,8 @@ Bool_t TProofInterruptHandler::Notify()
 //______________________________________________________________________________
 Bool_t TProofInputHandler::Notify()
 {
+   // Handle input
+
    fProof->CollectInputFrom(fSocket);
    return kTRUE;
 }
@@ -242,12 +251,12 @@ extern "C" {
                             const char *dir, Int_t log, const char *al)
    { return (new TProof(url, file, dir, log, al)); }
 }
-class ProofInit {
- public:
-   ProofInit() {
+class TProofInit {
+public:
+   TProofInit() {
       TVirtualProof::SetTProofHook(&GetTProof);
 }};
-static ProofInit proof_init;
+static TProofInit gproof_init;
 
 TSemaphore    *TProof::fgSemaphore = 0;
 
@@ -321,6 +330,8 @@ TProof::~TProof()
    SafeDelete(fPlayer);
    SafeDelete(fFeedback);
    SafeDelete(fWaitingSlaves);
+   SafeDelete(fAvailablePackages);
+   SafeDelete(fEnabledPackages);
 
    // remove file with redirected logs
    if (!IsMaster()) {
@@ -402,6 +413,8 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fStatus         = 0;
    fSlaveInfo      = 0;
    fChains         = new TList;
+   fAvailablePackages = 0;
+   fEnabledPackages = 0;
 
    fProgressDialog        = 0;
    fProgressDialogStarted = kFALSE;
@@ -501,7 +514,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
       return 0;
 
    if (fgSemaphore)
-     SafeDelete(fgSemaphore);
+      SafeDelete(fgSemaphore);
 
    // we are now properly initialized
    fValid = kTRUE;
@@ -523,6 +536,10 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    SetActive(kFALSE);
 
    if (IsValid()) {
+
+      // Activate input handler
+      ActivateAsyncInput();
+
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
@@ -732,6 +749,10 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
          StartupMessage("Connection to master opened", kTRUE, 1, 1);
 
          if (!attach) {
+
+            // Set worker interrupt handler
+            slave->SetInterruptHandler(kTRUE);
+
             // Finalize setup of the server
             slave->SetupServ(TSlave::kMaster, fConfFile);
 
@@ -754,6 +775,14 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
 
                fSlaves->Add(slave);
                fAllMonitor->Add(slave->GetSocket());
+
+               // Unset worker interrupt handler
+               slave->SetInterruptHandler(kFALSE);
+
+               // Set interrupt PROOF handler from now on
+               fIntHandler = new TProofInterruptHandler(this);
+               fIntHandler->Add();
+
                Collect(slave);
                Int_t slStatus = slave->GetStatus();
                if (slStatus == -99 || slStatus == -98) {
@@ -779,9 +808,6 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
                         "failed to setup connection with PROOF master server");
                   return kFALSE;
                }
-
-               fIntHandler = new TProofInterruptHandler(this);
-               fIntHandler->Add();
 
                if (!gROOT->IsBatch()) {
                   if ((fProgressDialog =
@@ -1637,7 +1663,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
    what = mess->What();
 
    PDB(kGlobal,3)
-     Info("CollectInputFrom","got %d",what);
+      Info("CollectInputFrom","got %d",what);
 
    switch (what) {
 
@@ -1741,6 +1767,28 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          rc = 1;
          break;
 
+      case kPROOF_PACKAGE_LIST:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_PACKAGE_LIST","Enter");
+            Int_t type = 0;
+            (*mess) >> type;
+            switch (type) {
+            case TProof::kListEnabledPackages:
+               SafeDelete(fEnabledPackages);
+               fEnabledPackages = (TList *) mess->ReadObject(TList::Class());
+               fEnabledPackages->SetOwner();
+               break;
+            case TProof::kListPackages:
+               SafeDelete(fAvailablePackages);
+               fAvailablePackages = (TList *) mess->ReadObject(TList::Class());
+               fAvailablePackages->SetOwner();
+               break;
+            default:
+               Info("Collect:kPROOF_PACKAGE_LIST","Unknown type: %d", type);
+            }
+         }
+         break;
+
       case kPROOF_OUTPUTLIST:
          {
             PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","Enter");
@@ -1799,6 +1847,9 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   Progress(-1, fPlayer->GetEventsProcessed());
                   Emit("StopProcess(Bool_t)", kFALSE);
                }
+
+               // Final update of the dialog box
+               EmitVA("Progress(Long64_t,Long64_t)", 2, (Long64_t)(-1), (Long64_t)(-1));
             }
          }
          break;
@@ -1939,7 +1990,11 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             TList *out = (TList *) mess->ReadObject(TList::Class());
             out->SetOwner();
             sl = FindSlave(s);
-            fPlayer->StoreFeedback(sl, out); // Adopts the list
+            if (fPlayer)
+               fPlayer->StoreFeedback(sl, out); // Adopts the list
+            else
+               // Not yet ready: stop collect asap
+               rc = 1;
          }
          break;
 
@@ -2044,6 +2099,17 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_PING:
          // do nothing (ping is already acknowledged)
+         break;
+
+      case kPROOF_MESSAGE:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_MESSAGE","Enter");
+
+            // We have received the unique tag and save it as name of this object
+            TString msg;
+            (*mess) >> msg;
+            Info("Collect:kPROOF_MESSAGE","%s", msg.Data());
+         }
          break;
 
       default:
@@ -3652,7 +3718,7 @@ Int_t TProof::EnablePackage(const char *package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadPackage(const char *tpar)
+Int_t TProof::UploadPackage(const char *tpar, EUploadPackageOpt opt)
 {
    // Upload a PROOF archive (PAR file). A PAR file is a compressed
    // tar file with one special additional directory, PROOF-INF
@@ -3663,6 +3729,10 @@ Int_t TProof::UploadPackage(const char *tpar)
    // file don't specify a build script or make it a no-op. Then there is
    // SETUP.C which sets the right environment variables to use the package,
    // like LD_LIBRARY_PATH, etc.
+   // The 'opt' allows to specify whether the .PAR should be just unpacked
+   // in the exiting dir (opt = kUntar, default) or a remove of the existing
+   // directory should be executed (opt = kRemoveOld), so triggering a full
+   // re-build. The option if effective only for PROOF protocol > 8 .
    // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
@@ -3694,9 +3764,16 @@ Int_t TProof::UploadPackage(const char *tpar)
    mess3 << TString("=")+TString(gSystem->BaseName(par)) << (*md5);
    delete md5;
 
-   // loop over all unique nodes
+   if (fProtocol > 8) {
+      // Send also the option
+      mess << (UInt_t) opt;
+      mess2 << (UInt_t) opt;
+      mess3 << (UInt_t) opt;
+   }
+
+   // loop over all selected nodes
    TIter next(fUniqueSlaves);
-   TSlave *sl;
+   TSlave *sl = 0;
    while ((sl = (TSlave *) next())) {
       if (!sl->IsValid())
          continue;
@@ -3724,15 +3801,15 @@ Int_t TProof::UploadPackage(const char *tpar)
 
          // install package and unlock dir
          sl->GetSocket()->Send(mess2);
-         delete reply;
+         SafeDelete(reply);
          sl->GetSocket()->Recv(reply);
-         if (reply->What() != kPROOF_CHECKFILE) {
+         if (!reply || reply->What() != kPROOF_CHECKFILE) {
             Error("UploadPackage", "unpacking of package %s failed", par.Data());
-            delete reply;
+            SafeDelete(reply);
             return -1;
          }
       }
-      delete reply;
+      SafeDelete(reply);
    }
 
    // loop over all other master nodes
@@ -3744,19 +3821,171 @@ Int_t TProof::UploadPackage(const char *tpar)
 
       ma->GetSocket()->Send(mess3);
 
-      TMessage *reply;
+      TMessage *reply = 0;
       ma->GetSocket()->Recv(reply);
-      if (reply->What() != kPROOF_CHECKFILE) {
+      if (!reply || reply->What() != kPROOF_CHECKFILE) {
          // error -> package should have been found
          Error("UploadPackage", "package %s did not exist on submaster %s",
                par.Data(), ma->GetOrdinal());
-         delete reply;
+         SafeDelete(reply);
          return -1;
       }
-      delete reply;
+      SafeDelete(reply);
    }
 
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProof::AddDynamicPath(const char *libpath)
+{
+   // Add 'libpath' to the lib path search.
+   // Multiple paths can be specified at once separating them with a comma or
+   // a blank.
+   // Return 0 on success, -1 otherwise
+
+   if ((!libpath || !strlen(libpath))) {
+      if (gDebug > 0)
+         Info("AddDynamicPath", "list is empty - nothing to do");
+      return 0;
+   }
+
+   TMessage m(kPROOF_LIB_INC_PATH);
+   m << TString("lib") << (Bool_t)kTRUE;
+
+   // Add paths
+   if (libpath && strlen(libpath))
+      m << TString(libpath);
+   else
+      m << TString("-");
+
+   // Forward the request
+   Broadcast(m);
+   Collect();
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProof::AddIncludePath(const char *incpath)
+{
+   // Add 'incpath' to the inc path search.
+   // Multiple paths can be specified at once separating them with a comma or
+   // a blank.
+   // Return 0 on success, -1 otherwise
+
+   if ((!incpath || !strlen(incpath))) {
+      if (gDebug > 0)
+         Info("AddIncludePath", "list is empty - nothing to do");
+      return 0;
+   }
+
+   TMessage m(kPROOF_LIB_INC_PATH);
+   m << TString("inc") << (Bool_t)kTRUE;
+
+   // Add paths
+   if (incpath && strlen(incpath))
+      m << TString(incpath);
+   else
+      m << TString("-");
+
+   // Forward the request
+   Broadcast(m);
+   Collect();
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProof::RemoveDynamicPath(const char *libpath)
+{
+   // Remove 'libpath' from the lib path search.
+   // Multiple paths can be specified at once separating them with a comma or
+   // a blank.
+   // Return 0 on success, -1 otherwise
+
+   if ((!libpath || !strlen(libpath))) {
+      if (gDebug > 0)
+         Info("AddDynamicPath", "list is empty - nothing to do");
+      return 0;
+   }
+
+   TMessage m(kPROOF_LIB_INC_PATH);
+   m << TString("lib") <<(Bool_t)kFALSE;
+
+   // Add paths
+   if (libpath && strlen(libpath))
+      m << TString(libpath);
+   else
+      m << TString("-");
+
+   // Forward the request
+   Broadcast(m);
+   Collect();
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProof::RemoveIncludePath(const char *incpath)
+{
+   // Remove 'incpath' from the inc path search.
+   // Multiple paths can be specified at once separating them with a comma or
+   // a blank.
+   // Return 0 on success, -1 otherwise
+
+   if ((!incpath || !strlen(incpath))) {
+      if (gDebug > 0)
+         Info("RemoveIncludePath", "list is empty - nothing to do");
+      return 0;
+   }
+
+   TMessage m(kPROOF_LIB_INC_PATH);
+   m << TString("inc") << (Bool_t)kFALSE;
+
+   // Add paths
+   if (incpath && strlen(incpath))
+      m << TString(incpath);
+   else
+      m << TString("-");
+
+   // Forward the request
+   Broadcast(m);
+   Collect();
+
+   return 0;
+}
+
+//______________________________________________________________________________
+TList *TProof::GetListOfPackages()
+{
+   // Get from the master the list of names of the packages available.
+
+   if (!IsValid())
+      return (TList *)0;
+
+   TMessage mess(kPROOF_CACHE);
+   mess << Int_t(kListPackages);
+   Broadcast(mess);
+   Collect();
+
+   return fAvailablePackages;
+}
+
+//______________________________________________________________________________
+TList *TProof::GetListOfEnabledPackages()
+{
+   // Get from the master the list of names of the packages enabled.
+
+   if (!IsValid())
+      return (TList *)0;
+
+   TMessage mess(kPROOF_CACHE);
+   mess << Int_t(kListEnabledPackages);
+   Broadcast(mess);
+   Collect();
+
+   return fEnabledPackages;
 }
 
 //______________________________________________________________________________
@@ -4471,6 +4700,9 @@ void TProof::SetAlias(const char *alias)
 
    // Set it locally
    TNamed::SetTitle(alias);
+   if (IsMaster())
+      // Set the name at the same value
+      TNamed::SetName(alias);
 
    // Nothing to do if not in contact with coordinator
    if (!IsValid()) return;
@@ -4650,7 +4882,7 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
 
             // Copy the file to the redirector indicated
             if (goodFileName == 1 || overwriteAll) {
-            //must be == 1 as -1 was meant for bad name!
+               //must be == 1 as -1 was meant for bad name!
                Printf("Uploading %s/%s ...", gSystem->DirName(files), ent);
                if (fileCopier.Cp(Form("%s/%s", gSystem->DirName(files), ent),
                                  Form("%s/%s", dest, ent))) {
@@ -4658,17 +4890,17 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
                } else
                   Error("UploadDataSet", "file %s/%s was not copied",
                         gSystem->DirName(files), ent);
-             } else {// don't overwrite, but file exist and must be included
-                fileList->Add(new TFileInfo(Form("%s/%s", dest, ent)));
-                if (skippedFiles && &skippedFiles) {
-                // user specified the TList *skippedFiles argument so we create the list of skipped files
-                   TUrl *url = new TUrl(Form("%s/%s",
-                                        gSystem->DirName(files), ent));
-                   url->SetProtocol("file");
-                   skippedFiles->Add(new TFileInfo(url->GetUrl()));
-                   delete url;
-                }
-             }
+            } else {// don't overwrite, but file exist and must be included
+               fileList->Add(new TFileInfo(Form("%s/%s", dest, ent)));
+               if (skippedFiles && &skippedFiles) {
+                  // user specified the TList *skippedFiles argument so we create the list of skipped files
+                  TUrl *url = new TUrl(Form("%s/%s",
+                                       gSystem->DirName(files), ent));
+                  url->SetProtocol("file");
+                  skippedFiles->Add(new TFileInfo(url->GetUrl()));
+                  delete url;
+               }
+            }
          } //if matching dir entry
       } //while
 

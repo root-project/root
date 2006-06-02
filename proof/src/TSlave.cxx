@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.50 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.51 2006/04/21 16:29:33 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -154,7 +154,7 @@ void TSlave::Init(const char *host, Int_t port, Int_t stype)
 }
 
 //______________________________________________________________________________
-void TSlave::SetupServ(Int_t stype, const char *conffile)
+Int_t TSlave::SetupServ(Int_t stype, const char *conffile)
 {
    // Init a PROOF slave object. Called via the TSlave ctor.
    // The Init method is technology specific and is overwritten by derived
@@ -167,12 +167,12 @@ void TSlave::SetupServ(Int_t stype, const char *conffile)
    if (fSocket->Recv(buf, sizeof(buf), what) <= 0) {
       Error("SetupServ", "failed to receive slave startup message");
       SafeDelete(fSocket);
-      return;
+      return -1;
    }
 
    if (what == kMESS_NOTOK) {
       SafeDelete(fSocket);
-      return;
+      return -1;
    }
 
    // exchange protocol level between client and master and between
@@ -180,13 +180,13 @@ void TSlave::SetupServ(Int_t stype, const char *conffile)
    if (fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL) != 2*sizeof(Int_t)) {
       Error("SetupServ", "failed to send local PROOF protocol");
       SafeDelete(fSocket);
-      return;
+      return -1;
    }
 
    if (fSocket->Recv(fProtocol, what) != 2*sizeof(Int_t)) {
       Error("SetupServ", "failed to receive remote PROOF protocol");
       SafeDelete(fSocket);
-      return;
+      return -1;
    }
 
    // protocols less than 4 are incompatible
@@ -194,7 +194,7 @@ void TSlave::SetupServ(Int_t stype, const char *conffile)
       Error("SetupServ", "incompatible PROOF versions (remote version"
                       " must be >= 4, is %d)", fProtocol);
       SafeDelete(fSocket);
-      return;
+      return -1;
    }
 
    fProof->fProtocol   = fProtocol;   // protocol of last slave on master
@@ -207,7 +207,7 @@ void TSlave::SetupServ(Int_t stype, const char *conffile)
       if (OldAuthSetup(isMaster, wconf) != 0) {
          Error("SetupServ", "OldAuthSetup: failed to setup authentication");
          SafeDelete(fSocket);
-         return;
+         return -1;
       }
    } else {
       //
@@ -221,12 +221,15 @@ void TSlave::SetupServ(Int_t stype, const char *conffile)
       if (fSocket->Send(mess) < 0) {
          Error("SetupServ", "failed to send ordinal and config info");
          SafeDelete(fSocket);
-         return;
+         return -1;
       }
    }
 
    // set some socket options
    fSocket->SetOption(kNoDelay, 1);
+
+   // We are done
+   return 0;
 }
 
 //______________________________________________________________________________

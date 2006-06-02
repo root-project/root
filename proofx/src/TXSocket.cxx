@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.9 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.10 2006/05/23 07:43:55 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -101,9 +101,10 @@ Int_t        TXSocket::fgPipe[2] = {-1,-1}; // Pipe for input monitoring
 TString      TXSocket::fgLoc = "undef";     // Location string
 
 //_____________________________________________________________________________
-TXSocket::TXSocket(const char *url,
-                   Char_t m, Int_t psid, Char_t capver, const char *alias)
-         : TSocket(), fMode(m), fSessionID(psid), fAlias(alias), fASem(0), fISem(0)
+TXSocket::TXSocket(const char *url, Char_t m, Int_t psid,
+                   Char_t capver, const char *alias, Int_t loglevel)
+         : TSocket(), fMode(m), fAlias(alias),
+           fLogLevel(loglevel), fASem(0), fISem(0), fDontTimeout(kFALSE)
 {
    // Constructor
    // Open the connection to a remote XrdProofd instance and start a PROOF
@@ -113,9 +114,10 @@ TXSocket::TXSocket(const char *url,
    //     'i'      Internal; used by a TXProofServ to call back its creator
    //              (see XrdProofUnixConn)
    //     'C'      PROOF manager: open connection only (do not start a session)
-   //     'M'      Client contacting a top master
-   //     'm'      Top master contacting a submaster
-   //     's'      Master contacting a slave
+   //     'M'      Client creating a top master
+   //     'A'      Client attaching to top master
+   //     'm'      Top master creating a submaster
+   //     's'      Master creating a slave
 
    // Enable tracing in the XrdProof client. if not done already
    eDest.logger(&eLogger);
@@ -156,6 +158,7 @@ TXSocket::TXSocket(const char *url,
    fRemoteProtocol = -1;
    // By default forward directly to end-point
    fSendOpt = (fMode == 'i') ? (kXPD_internal | kXPD_async) : kXPD_async;
+   fSessionID = (fMode == 'C') ? -1 : psid;
    fSocket = -1;
 
    // This is used by external code to create a link between this object
@@ -175,8 +178,8 @@ TXSocket::TXSocket(const char *url,
 
       // Create connection (for managers the type of the connection is the same
       // as for top masters)
-      char md = (m != 'C') ? m : 'M';
-      fConn = new XrdProofConn(url, md, psid, capver, this);
+      char md = (m != 'A' && m != 'C') ? m : 'M';
+      fConn = new XrdProofConn(url, md, psid, capver, this, fAlias.Data());
       if (!fConn || !(fConn->IsValid())) {
          if (fConn->GetServType() != XrdProofConn::kSTProofd)
              Error("TXSocket", "severe error occurred while opening a connection"
@@ -185,7 +188,7 @@ TXSocket::TXSocket(const char *url,
       }
 
       // Create new proofserv if not client manager or administrator or internal mode
-      if (m == 'm' || m == 's' || m == 'M') {
+      if (m == 'm' || m == 's' || m == 'M' || m == 'A') {
          // We attach or create
          if (!Create()) {
             // Failure
@@ -330,22 +333,38 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    // responses are asynchronous by nature.
    UnsolRespProcResult rc = kUNSOL_KEEP;
 
+   if (gDebug > 2)
+      Info("TXSocket::ProcessUnsolicitedMsg", "Processing unsolicited msg: %p", m);
+   if (!m) {
+      // Some one is perhaps interested in empty messages
+      return kUNSOL_CONTINUE;
+   } else {
+      if (gDebug > 2)
+         Info("TXSocket::ProcessUnsolicitedMsg", "status: %d, len: %d bytes",
+              m->GetStatusCode(), m->DataLen());
+   }
+
    // Error notification
    if (m->IsError()) {
-      Info("ProcessUnsolicitedMsg","got error from underlying connection");
-      fASem.Post();
-      fHandler->HandleError();
-      Info("ProcessUnsolicitedMsg","closing ...");
-      Close();
-      return rc;
+      if (m->GetStatusCode() != XrdClientMessage::kXrdMSC_timeout) {
+         if (gDebug > 0)
+            Info("ProcessUnsolicitedMsg","got error from underlying connection");
+         fHandler->HandleError();
+         // Avoid to contact the server any more
+         fSessionID = -1;
+      } else {
+         // Time out
+         if (gDebug > 2)
+            Info("TXSocket::ProcessUnsolicitedMsg", "underlying connection timed out");
+      }
+      // Propagate the message to other possible handlers
+      return kUNSOL_CONTINUE;
    }
 
    // From now on make sure is for us
-   if (!m->MatchStreamid(fConn->fStreamid))
+   if (!fConn || !m->MatchStreamid(fConn->fStreamid))
       return kUNSOL_CONTINUE;
 
-   if (gDebug > 2)
-      Info("TXSocket::ProcessUnsolicitedMsg", "Processing unsolicited response");
 
    // Local processing ...
    if (!m) {
@@ -453,6 +472,17 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
          Printf(" ");
          Printf("| Message from server:");
          Printf("| %.*s", len, (char *)pdata);
+         break;
+      case kXPD_errmsg:
+         //
+         // Error condition with message
+         Printf(" ");
+         Printf("| Error condition occured: message from server:");
+         Printf("| %.*s", len, (char *)pdata);
+         // Handle error
+         fHandler->HandleError();
+//         Info("ProcessUnsolicitedMsg","closing ...");
+//         Close();
          break;
       case kXPD_msgsid:
          //
@@ -673,12 +703,15 @@ Bool_t TXSocket::Create()
    fConn->SetSID(reqhdr.header.streamid);
 
    // This will be a kXP_attach or kXP_create request
-   if (fSessionID > -1) {
+   if (fMode == 'A') {
       reqhdr.header.requestid = kXP_attach;
       reqhdr.proof.sid = fSessionID;
    } else {
       reqhdr.header.requestid = kXP_create;
    }
+
+   // Send log level
+   reqhdr.proof.int1 = fLogLevel;
 
    // Send also the chosen alias
    const void *buf = (const void *)(fAlias.Data());
@@ -701,7 +734,7 @@ Bool_t TXSocket::Create()
       void *pdata = (void *)(xrsp->GetData());
       Int_t len = xrsp->DataLen();
 
-      if (len > (Int_t)sizeof(kXR_int32)) {
+      if (len >= (Int_t)sizeof(kXR_int32)) {
          // The first 4 bytes contain the session ID
          kXR_int32 psid = 0;
          memcpy(&psid, pdata, sizeof(kXR_int32));
@@ -712,8 +745,8 @@ Bool_t TXSocket::Create()
          Error("Create","session ID is undefined!");
       }
 
-      if (len > (Int_t)sizeof(kXR_int32)) {
-         // The second 4 bytes contain the remote daemon version
+      if (len >= (Int_t)sizeof(kXR_int32)) {
+         // The second 4 bytes contain the remote protocol version
          kXR_int32 dver = 0;
          memcpy(&dver, pdata, sizeof(kXR_int32));
          fRemoteProtocol = net2host(dver);
@@ -849,19 +882,41 @@ Int_t TXSocket::PickUpReady()
    fByteLeft = 0;
    fByteCur = 0;
    if (gDebug > 2)
-      Info("RecvRaw","%p: going to sleep", this);
-   if (fASem.Wait() != 0) {
-      Error("RecvRaw","error waiting at semaphore");
-      return -1;
+      Info("PickUpReady","%p: going to sleep", this);
+
+   // User can choose whether to wait forever or for a fixed amount of time
+   if (!fDontTimeout) {
+      static Int_t timeout = gEnv->GetValue("XProof.ReadTimeout", 60) * 1000;
+      static Int_t dt = 2000;
+      Int_t to = timeout;
+      while (to) {
+         if (fASem.Wait(dt) != 0) {
+            to -= dt;
+            if (to <= 0) {
+               Error("PickUpReady","error waiting at semaphore");
+               return -1;
+            } else {
+               if (gDebug > 0)
+                  Info("PickUpReady","%p: got timeout: retring (%d secs)", this, to/1000);
+            }
+         } else
+            break;
+      }
+   } else {
+      // We wait forever
+      if (fASem.Wait() != 0) {
+         Error("PickUpReady","error waiting at semaphore");
+         return -1;
+      }
    }
    if (gDebug > 2)
-      Info("RecvRaw","%p: waken up", this);
+      Info("PickUpReady","%p: waken up", this);
 
    R__LOCKGUARD(fAMtx);
 
    // Get message, if any
    if (fAQue.size() <= 0) {
-      Error("RecvRaw","queue is empty - protocol error ?");
+      Error("PickUpReady","queue is empty - protocol error ?");
       return -1;
    }
    fBufCur = fAQue.front();
@@ -872,7 +927,7 @@ Int_t TXSocket::PickUpReady()
       fByteLeft = fBufCur->fLen;
 
    if (gDebug > 2)
-      Info("RecvRaw","%p: got message (%d bytes)", this, (Int_t)(fBufCur ? fBufCur->fLen : 0));
+      Info("PickUpReady","%p: got message (%d bytes)", this, (Int_t)(fBufCur ? fBufCur->fLen : 0));
 
    // Update counters
    fBytesRecv += fBufCur->fLen;

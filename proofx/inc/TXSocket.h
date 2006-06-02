@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.3 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.4 2006/05/23 07:43:55 brun Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -73,6 +73,8 @@ private:
    Int_t               fPort;          // Remote port
    TString             fAlias;         // An alias name for this connection
 
+   Int_t               fLogLevel;      // Log level to be transmitted to servers
+
    TObject            *fReference;     // Generic object reference of this socket
    TXHandler          *fHandler;       // Handler of asynchronous events (input, error)
 
@@ -97,6 +99,9 @@ private:
 
    // Process ID of the instatiating process (to signal interrupts)
    Int_t               fPid;
+
+   // Whether to timeout or not
+   Bool_t              fDontTimeout;   // If true wait forever for incoming messages
 
    // Static area for input handling
    static TList        fgReadySock;    // Static list of sockets ready to be read
@@ -126,8 +131,8 @@ public:
    enum ECoordMsgType { kQuerySessions = 1000,
                         kSessionTag, kSessionAlias, kGetWorkers, kQueryWorkers };
 
-   TXSocket(const char *url,
-            Char_t mode = 'M', Int_t psid = -1, Char_t ver = -1, const char *alias = 0);
+   TXSocket(const char *url, Char_t mode = 'M',
+            Int_t psid = -1, Char_t ver = -1, const char *alias = 0, Int_t loglevel = -1);
    TXSocket(const TXSocket &xs);
    TXSocket& operator=(const TXSocket& xs);
    virtual ~TXSocket();
@@ -183,6 +188,9 @@ public:
    Int_t               SendInterrupt(Int_t type);
    Int_t               GetInterrupt(Int_t timeout = 0);
 
+   // Interrupt the low level socket
+   void                SetInterrupt() { if (fConn) fConn->SetInterrupt(); }
+
    // Flush the asynchronous queue
    Int_t               Flush();
 
@@ -191,6 +199,10 @@ public:
 
    // Standard options cannot be set
    Int_t               SetOption(ESockOptions, Int_t) { return 0; }
+
+   // Disable / Enable read timeout
+   void                DisableTimeout() { fDontTimeout = kTRUE; }
+   void                EnableTimeout() { fDontTimeout = kFALSE; }
 
    ClassDef(TXSocket, 0) //A high level connection class for PROOF
 };

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.3 2006/03/01 15:46:33 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -43,6 +43,7 @@ void clientMarshall(XPClientRequest* str)
       break;
    case kXP_create:
       // no swap on ASCII fields
+      str->proof.int1 = host2net(str->proof.int1);
       break;
    case kXP_destroy:
       str->proof.sid = host2net(str->proof.sid);

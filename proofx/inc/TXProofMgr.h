@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.2 2006/02/26 16:09:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.3 2006/04/19 10:57:44 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -33,6 +33,12 @@
 #ifndef ROOT_TXHandler
 #include "TXHandler.h"
 #endif
+
+//
+// XPROOF client version: increase whenever a non backward compatible
+// change occur
+//  ->1      first version being tested by ALICE
+const Int_t kXPROOF_Protocol = 1; 
 
 class TXSocket;
 

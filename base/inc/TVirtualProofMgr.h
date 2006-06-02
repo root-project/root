@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.h,v 1.1 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.h,v 1.2 2006/04/19 10:57:44 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -50,13 +50,15 @@ private:
    static TVirtualProofMgr_t GetProofMgrHook(const char *type);
 
 protected:
-   EServType      fServType;  // Type of server: old-proofd, XrdProofd
-   TList         *fSessions;  // PROOF session managed by this server
-   TUrl           fUrl;       // Server URL
+   Int_t          fRemoteProtocol; // Protocol number run by the daemon server
+   EServType      fServType;       // Type of server: old-proofd, XrdProofd
+   TList         *fSessions;       // PROOF session managed by this server
+   TUrl           fUrl;            // Server URL
 
    static TList   fgListOfManagers; // Sub-list of TROOT::ListOfProofs for managers
 
-   TVirtualProofMgr() : TNamed("",""), fServType(kXProofd), fSessions(0), fUrl("") { }
+   TVirtualProofMgr() : fRemoteProtocol(-1),
+                        fServType(kXProofd), fSessions(0), fUrl() { }
 
 public:
    TVirtualProofMgr(const char *url, Int_t /*loglevel*/ = 0, const char * /*alias*/ = 0);
@@ -69,12 +71,14 @@ public:
    virtual TVirtualProof *CreateSession(const char * = 0, const char * = 0, Int_t = -1);
    virtual void        DetachSession(Int_t, Option_t * = "") = 0;
    virtual TVirtualProofDesc *GetProofDesc(Int_t id);
+   virtual Int_t       GetRemoteProtocol() const { return fRemoteProtocol; }
    virtual const char *GetUrl() { return fUrl.GetUrl(); }
    virtual Bool_t      MatchUrl(const char *url);
    virtual TList      *QuerySessions(Option_t *opt = "S") = 0;
    virtual void        ShowWorkers();
    virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }
    virtual void        ShutdownSession(Int_t id) { DetachSession(id,"S"); }
+   virtual void        ShutdownSession(TVirtualProof *p);
 
    static TList       *GetListOfManagers();
 

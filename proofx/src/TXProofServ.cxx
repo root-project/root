@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.4 2006/02/26 16:09:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.5 2006/04/19 10:57:44 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -86,81 +86,22 @@
 #include <XrdClient/XrdClientConst.hh>
 #include <XrdClient/XrdClientEnv.hh>
 
+#ifndef R__WIN32
+const char* const kCP     = "/bin/cp -f";
+const char* const kRM     = "/bin/rm -rf";
+const char* const kLS     = "/bin/ls -l";
+const char* const kUNTAR  = "%s -c %s/%s | (cd %s; tar xf -)";
+const char* const kGUNZIP = "gunzip";
+#else
+const char* const kCP     = "copy";
+const char* const kRM     = "delete";
+const char* const kLS     = "dir";
+const char* const kUNTAR  = "...";
+const char* const kGUNZIP = "gunzip";
+#endif
+
 // debug hook
 static volatile Int_t gProofServDebug = 1;
-
-//______________________________________________________________________________
-static void ProofServErrorHandler(Int_t level, Bool_t abort, const char *location,
-                                  const char *msg)
-{
-   // The PROOF error handler function. It prints the message on stderr and
-   // if abort is set it aborts the application.
-
-   if (!gProofServ)
-      return;
-
-   if (level < gErrorIgnoreLevel)
-      return;
-
-   const char *type   = 0;
-   ELogLevel loglevel = kLogInfo;
-
-   if (level >= kInfo) {
-      loglevel = kLogInfo;
-      type = "Info";
-   }
-   if (level >= kWarning) {
-      loglevel = kLogWarning;
-      type = "Warning";
-   }
-   if (level >= kError) {
-      loglevel = kLogErr;
-      type = "Error";
-   }
-   if (level >= kBreak) {
-      loglevel = kLogErr;
-      type = "*** Break ***";
-   }
-   if (level >= kSysError) {
-      loglevel = kLogErr;
-      type = "SysError";
-   }
-   if (level >= kFatal) {
-      loglevel = kLogErr;
-      type = "Fatal";
-   }
-
-   TString node = gProofServ->IsMaster() ? "master" : "slave ";
-   node += gProofServ->GetOrdinal();
-   char *bp;
-
-   if (!location || strlen(location) == 0 ||
-       (level >= kBreak && level < kSysError)) {
-      fprintf(stderr, "%s on %s: %s\n", type, node.Data(), msg);
-      bp = Form("%s:%s:%s:%s", gProofServ->GetUser(), node.Data(), type, msg);
-   } else {
-      fprintf(stderr, "%s in <%s> on %s: %s\n", type, location, node.Data(), msg);
-      bp = Form("%s:%s:%s:<%s>:%s", gProofServ->GetUser(), node.Data(), type, location, msg);
-   }
-   fflush(stderr);
-   gSystem->Syslog(loglevel, bp);
-
-   if (abort) {
-
-      static Bool_t recursive = kFALSE;
-
-      if (!recursive) {
-         recursive = kTRUE;
-         gProofServ->GetSocket()->Send(kPROOF_FATAL);
-         recursive = kFALSE;
-      }
-
-      fprintf(stderr, "aborting\n");
-      fflush(stderr);
-      gSystem->StackTrace();
-      gSystem->Abort();
-   }
-}
 
 //----- Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
@@ -199,6 +140,43 @@ Bool_t TXProofServSigPipeHandler::Notify()
    return kTRUE;
 }
 
+//----- Termination signal handler ---------------------------------------------
+//______________________________________________________________________________
+class TXProofServTerminationHandler : public TSignalHandler {
+   TXProofServ  *fServ;
+public:
+   TXProofServTerminationHandler(TXProofServ *s)
+      : TSignalHandler(kSigTermination, kFALSE) { fServ = s; }
+   Bool_t  Notify();
+};
+
+//______________________________________________________________________________
+Bool_t TXProofServTerminationHandler::Notify()
+{
+   fServ->HandleTermination();
+   return kTRUE;
+}
+
+//----- Seg violation signal handler ---------------------------------------------
+//______________________________________________________________________________
+class TXProofServSegViolationHandler : public TSignalHandler {
+   TXProofServ  *fServ;
+public:
+   TXProofServSegViolationHandler(TXProofServ *s)
+      : TSignalHandler(kSigSegmentationViolation, kFALSE) { fServ = s; }
+   Bool_t  Notify();
+};
+
+//______________________________________________________________________________
+Bool_t TXProofServSegViolationHandler::Notify()
+{
+   Printf("**** ");
+   Printf("**** Segmentation violation: terminating ****");
+   Printf("**** ");
+   fServ->HandleTermination();
+   return kTRUE;
+}
+
 //----- Input handler for messages from parent or master -----------------------
 //______________________________________________________________________________
 class TXProofServInputHandler : public TFileHandler {
@@ -225,22 +203,7 @@ ClassImp(TXProofServ)
 // which may create problems in multi-threaded environments.
 extern "C" {
    TApplication *GetTXProofServ(Int_t *argc, char **argv)
-   { return ((TApplication *)(new TXProofServ(argc, argv))); }
-}
-
-//______________________________________________________________________________
-TXProofServ::TXProofServ(Int_t *argc, char **argv) : TProofServ(argc, argv)
-{
-   // Main constructor. Create an application environment. The TProofServ
-   // environment provides an eventloop via inheritance of TApplication.
-   // Actual server creation work is done in CreateServer() to allow
-   // overloading.
-
-   // crude check on number of arguments
-   if (*argc < 2) {
-     Fatal("TXProofServ", "Must have at least 1 arguments (see  proofd).");
-     exit(1);
-   }
+   { return new TXProofServ(argc, argv); }
 }
 
 //______________________________________________________________________________
@@ -249,31 +212,18 @@ void TXProofServ::CreateServer()
    // Finalize the server setup. If master, create the TProof instance to talk
    // the worker or submaster nodes.
 
+   if (gProofDebugLevel > 0)
+      Info("CreateServer", "starting server creation");
 
-   // wait (loop) to allow debugger to connect
-   if ((gEnv->GetValue("Proof.GdbHook",0) == 3 && fService != "prooftest") ||
-       (gEnv->GetValue("Proof.GdbHook",0) == 4 && fService == "prooftest")) {
-      while (gProofServDebug)
-         ;
+   // Get file descriptor for log file
+   const char *lfd = 0;
+   if (Argc() <= 3) {
+      if (!(lfd = gSystem->Getenv("ROOTPROOFLOGFILEDES"))) {
+         Error("CreateServer", "Descriptor for log file missing");
+         exit(1);
+      }
+      fLogFileDes = (Int_t) strtol(lfd, 0, 10);
    }
-
-   // abort on higher than kSysError's and set error handler
-   gErrorAbortLevel = kSysError + 1;
-   SetErrorHandler(ProofServErrorHandler);
-
-   fNcmd            = 0;
-   fInterrupt       = kFALSE;
-   fProtocol        = 0;
-   fOrdinal         = "-1";
-   fGroupId         = -1;
-   fGroupSize       = 0;
-   fLogLevel        = gEnv->GetValue("Proof.DebugLevel",0);
-   fRealTime        = 0.0;
-   fCpuTime         = 0.0;
-   fProof           = 0;
-   fPlayer          = 0;
-   fEnabledPackages = new TList;
-   fEnabledPackages->SetOwner();
 
    // Global location string in TXSocket
    TXSocket::fgLoc = (IsMaster()) ? "master" : "slave" ;
@@ -284,15 +234,17 @@ void TXProofServ::CreateServer()
    // Get socket to be used to call back our xpd
    const char *sockpath = 0;
    if (!(sockpath = gSystem->Getenv("ROOTOPENSOCK"))) {
-     Fatal("CreateServer", "Socket setup by xpd undefined");
+     Error("CreateServer", "Socket setup by xpd undefined");
      exit(1);
    }
-   // If test session, just send the protcol version and exit
+
+   // If test session, just send the protocol version and exit
    if (Argc() > 3) {
       Int_t fpw = (Int_t) strtol(sockpath, 0, 10);
       int proto = htonl(kPROOF_Protocol);
       if (write(fpw, &proto, sizeof(proto)) != sizeof(proto)) {
          Error("CreateServer", "test: sending protocol number");
+         exit(1);
       }
       exit(0);
    }
@@ -300,7 +252,7 @@ void TXProofServ::CreateServer()
    // Get the sessions ID
    const char *sessID = 0;
    if (!(sessID = gSystem->Getenv("ROOTSESSIONID"))) {
-     Fatal("CreateServer", "Session ID undefined");
+     Error("CreateServer", "Session ID undefined");
      exit(1);
    }
    Int_t psid = (Int_t) strtol(sessID, 0, 10);
@@ -308,7 +260,7 @@ void TXProofServ::CreateServer()
    // Call back the server
    fSocket = new TXUnixSocket(sockpath, psid);
    if (!fSocket || !(fSocket->IsValid())) {
-      Fatal("CreateServer", "Failed to open connection to XrdProofd coordinator");
+      Error("CreateServer", "Failed to open connection to XrdProofd coordinator");
       exit(1);
    }
 
@@ -318,45 +270,12 @@ void TXProofServ::CreateServer()
    // Get the client ID
    const char *clntID = 0;
    if (!(clntID = gSystem->Getenv("ROOTCLIENTID"))) {
-     Fatal("CreateServer", "Client ID undefined");
+     Error("CreateServer", "Client ID undefined");
+     SendLogFile();
      exit(1);
    }
    Int_t cid = (Int_t) strtol(clntID, 0, 10);
    ((TXSocket *)fSocket)->SetClientID(cid);
-
-   fArchivePath     = "";
-
-   fSeqNum          = 0;
-   fDrawQueries     = 0;
-   fKeptQueries     = 0;
-   fQueries         = new TList;
-   fWaitingQueries  = new TList;
-   fPreviousQueries = 0;
-   fIdle            = kTRUE;
-
-   if (gErrorIgnoreLevel == kUnset) {
-      gErrorIgnoreLevel = 0;
-      if (gEnv) {
-         TString level = gEnv->GetValue("Root.ErrorIgnoreLevel", "Info");
-         if (!level.CompareTo("Info",TString::kIgnoreCase))
-            gErrorIgnoreLevel = kInfo;
-         else if (!level.CompareTo("Warning",TString::kIgnoreCase))
-            gErrorIgnoreLevel = kWarning;
-         else if (!level.CompareTo("Error",TString::kIgnoreCase))
-            gErrorIgnoreLevel = kError;
-         else if (!level.CompareTo("Break",TString::kIgnoreCase))
-            gErrorIgnoreLevel = kBreak;
-         else if (!level.CompareTo("SysError",TString::kIgnoreCase))
-            gErrorIgnoreLevel = kSysError;
-         else if (!level.CompareTo("Fatal",TString::kIgnoreCase))
-            gErrorIgnoreLevel = kFatal;
-      }
-   }
-
-   gProofDebugLevel = gEnv->GetValue("Proof.DebugLevel",0);
-   gProofDebugMask = (TProofDebug::EProofDebugMask) gEnv->GetValue("Proof.DebugMask",~0);
-   if (gProofDebugLevel > 0)
-      Info("CreateServer", "DebugLevel %d Mask %u", gProofDebugLevel, gProofDebugMask);
 
    // debug hooks
    if (IsMaster()) {
@@ -374,11 +293,10 @@ void TXProofServ::CreateServer()
    }
 
    if (gProofDebugLevel > 0)
-      Info("CreateServer", "Service %s ConfDir %s IsMaster %d\n",
+      Info("CreateServer", "Service: %s, ConfDir: %s, IsMaster: %d",
            fService.Data(), fConfDir.Data(), (Int_t)fMasterServ);
 
    Setup();
-   RedirectOutput();
 
    // Send message of the day to the client
    if (IsMaster()) {
@@ -426,17 +344,16 @@ void TXProofServ::CreateServer()
    gInterpreter->SaveGlobalsContext();
 
    // Install interrupt and message input handlers
-   gSystem->AddSignalHandler(new TXProofServInterruptHandler(this));
-   TXSocketHandler *sh =
+   fInterruptHandler = new TXProofServInterruptHandler(this);
+   gSystem->AddSignalHandler(fInterruptHandler);
+   fInputHandler =
       TXSocketHandler::GetSocketHandler(new TXProofServInputHandler(this, sock), fSocket);
-   gSystem->AddFileHandler(sh);
+   gSystem->AddFileHandler(fInputHandler);
 
    // Set the this as reference of this socket
    ((TXSocket *)fSocket)->fReference = this;
    // Set this has handler
    ((TXSocket *)fSocket)->fHandler = this;
-
-   gProofServ = this;
 
    // if master, start slave servers
    if (IsMaster()) {
@@ -478,10 +395,11 @@ void TXProofServ::CreateServer()
       }
 
       // make instance of TProof
-      fProof = reinterpret_cast<TProof*>(h->ExecPlugin(4, master.Data(),
+      fProof = reinterpret_cast<TProof*>(h->ExecPlugin(5, master.Data(),
                                                           fConfFile.Data(),
                                                           fConfDir.Data(),
-                                                          fLogLevel));
+                                                          fLogLevel,
+                                                          fSessionTag.Data()));
       if (!fProof || !fProof->IsValid()) {
          Error("CreateServer", "plugin for TVirtualProof could not be executed");
          delete fProof;
@@ -490,8 +408,8 @@ void TXProofServ::CreateServer()
          Terminate(0);
       }
 
-      SendLogFile();
    }
+   SendLogFile();
 }
 
 //______________________________________________________________________________
@@ -567,19 +485,11 @@ void TXProofServ::HandleUrgentData()
 
          break;
 
+
       case TProof::kShutdownInterrupt:
          Info("HandleUrgentData", "Shutdown Interrupt");
 
-         // If master server, propagate interrupt to slaves
-         // (shutdown interrupt send internally).
-         if (IsMaster())
-            fProof->Close("S");
-
-         // Close link with coordinator
-         ((TXSocket *)fSocket)->SetSessionID(-1);
-         fSocket->Close();
-
-         Terminate(0);  // will not return from here....
+         HandleTermination();
 
          break;
 
@@ -607,6 +517,23 @@ void TXProofServ::HandleSigPipe()
 }
 
 //______________________________________________________________________________
+void TXProofServ::HandleTermination()
+{
+   // Called when the client is not alive anymore; terminate the session.
+
+   // If master server, propagate interrupt to slaves
+   // (shutdown interrupt send internally).
+   if (IsMaster())
+      fProof->Close("S");
+
+   // Close link with coordinator
+   ((TXSocket *)fSocket)->SetSessionID(-1);
+   fSocket->Close();
+
+   Terminate(0);  // will not return from here....
+}
+
+//______________________________________________________________________________
 void TXProofServ::Setup()
 {
    // Print the ProofServ logo on standard output.
@@ -616,65 +543,45 @@ void TXProofServ::Setup()
    if (IsMaster()) {
       sprintf(str, "**** Welcome to the PROOF server @ %s ****", gSystem->HostName());
    } else {
-      sprintf(str, "**** PROOF slave server @ %s started ****", gSystem->HostName());
+      sprintf(str, "**** PROOF worker server @ %s started ****", gSystem->HostName());
    }
 
    if (fSocket->Send(str) != 1+static_cast<Int_t>(strlen(str))) {
       Error("Setup", "failed to send proof server startup message");
+      SendLogFile();
       gSystem->Exit(1);
    }
 
-   // exchange protocol level between client and master and between
-   // master and slave
-   Int_t what;
-   if (fSocket->Recv(fProtocol, what) != 2*sizeof(Int_t)) {
-      Error("Setup", "failed to receive remote proof protocol");
+   // Get client protocol
+   if (!gSystem->Getenv("ROOTPROOFCLNTVERS")) {
+      Error("Setup", "remote proof protocol missing");
+      SendLogFile();
       gSystem->Exit(1);
    }
-   if (fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL) != 2*sizeof(Int_t)) {
-      Error("Setup", "failed to send local proof protocol");
-      gSystem->Exit(1);
+   fProtocol = atoi(gSystem->Getenv("ROOTPROOFCLNTVERS"));
+
+   // The local user
+   UserGroup_t *pw = gSystem->GetUserInfo();
+   if (pw) {
+      fUser = pw->fUser;
+      delete pw;
    }
 
-   // Receive some useful information
-   TMessage *mess;
-   if ((fSocket->Recv(mess) <= 0) || !mess) {
-      Error("Setup", "failed to receive ordinal and config info");
-      gSystem->Exit(1);
-   }
-   if (IsMaster()) {
-      (*mess) >> fUser >> fOrdinal >> fConfFile;
+   // Work dir and ...
+   if (IsMaster())
+      if (gSystem->Getenv("ROOTPROOFCFGFILE"))
+         fConfFile = gSystem->Getenv("ROOTPROOFCFGFILE");
+   if (gSystem->Getenv("ROOTPROOFWORKDIR"))
+      fWorkDir = gSystem->Getenv("ROOTPROOFWORKDIR");
+   else
       fWorkDir = kPROOF_WorkDir;
-   } else {
-      (*mess) >> fUser >> fOrdinal >> fWorkDir;
-      if (fWorkDir.IsNull()) fWorkDir = kPROOF_WorkDir;
-   }
-   delete mess;
-
-   if (IsMaster()) {
-
-      // strip off any prooftype directives
-      TString conffile = fConfFile;
-      conffile.Remove(0, 1 + conffile.Index(":"));
-      // parse config file to find working directory
-      TProofResourcesStatic resources(fConfDir, conffile);
-      if (resources.IsValid()) {
-         if (resources.GetMaster()) {
-            TString tmpWorkDir = resources.GetMaster()->GetWorkDir();
-            if (tmpWorkDir != "")
-               fWorkDir = tmpWorkDir;
-         }
-      } else {
-         Error("Setup", "reading config file %s",
-                        resources.GetFileName().Data());
-         gSystem->Exit(1);
-      }
-   }
 
    // goto to the main PROOF working directory
    char *workdir = gSystem->ExpandPathName(fWorkDir.Data());
    fWorkDir = workdir;
    delete [] workdir;
+   if (gProofDebugLevel > 0)
+      Info("Setup", "working directory set to %s", fWorkDir.Data());
 
    // deny write access for group and world
    gSystem->Umask(022);
@@ -711,16 +618,20 @@ void TXProofServ::Setup()
    if (gSystem->AccessPathName(fWorkDir)) {
       gSystem->mkdir(fWorkDir, kTRUE);
       if (!gSystem->ChangeDirectory(fWorkDir)) {
-         SysError("Setup", "can not change to PROOF directory %s",
-                  fWorkDir.Data());
+         Error("Setup", "can not change to PROOF directory %s",
+               fWorkDir.Data());
+         SendLogFile();
+         gSystem->Exit(1);
       }
    } else {
       if (!gSystem->ChangeDirectory(fWorkDir)) {
          gSystem->Unlink(fWorkDir);
          gSystem->mkdir(fWorkDir, kTRUE);
          if (!gSystem->ChangeDirectory(fWorkDir)) {
-            SysError("Setup", "can not change to PROOF directory %s",
+            Error("Setup", "can not change to PROOF directory %s",
                      fWorkDir.Data());
+            SendLogFile();
+            gSystem->Exit(1);
          }
       }
    }
@@ -730,48 +641,57 @@ void TXProofServ::Setup()
    fCacheDir += TString("/") + kPROOF_CacheDir;
    if (gSystem->AccessPathName(fCacheDir))
       gSystem->MakeDirectory(fCacheDir);
-
-   fCacheLock = kPROOF_CacheLockFile;
-   fCacheLock += fUser;
+   if (gProofDebugLevel > 0)
+      Info("Setup", "cache directory set to %s", fCacheDir.Data());
+   fCacheLock =
+      new TProofLockPath(Form("%s%s",kPROOF_CacheLockFile,fUser.Data()));
 
    // check and make sure "packages" directory exists
    fPackageDir = fWorkDir;
    fPackageDir += TString("/") + kPROOF_PackDir;
    if (gSystem->AccessPathName(fPackageDir))
       gSystem->MakeDirectory(fPackageDir);
+   if (gProofDebugLevel > 0)
+      Info("Setup", "package directory set to %s", fPackageDir.Data());
+   fPackageLock =
+      new TProofLockPath(Form("%s%s",kPROOF_PackageLockFile,fUser.Data()));
 
-   fPackageLock = kPROOF_PackageLockFile;
-   fPackageLock += fUser;
+   // Get Session tag
+   if (!gSystem->Getenv("ROOTPROOFSESSIONTAG")) {
+     Error("Setup", "Session tag missing");
+     SendLogFile();
+     gSystem->Exit(1);
+   }
+   fSessionTag = gSystem->Getenv("ROOTPROOFSESSIONTAG");
+   if (gProofDebugLevel > 0)
+      Info("Setup", "session tag is %s", fSessionTag.Data());
 
-   // host first name
-   TString host = gSystem->HostName();
-   if (host.Index(".") != kNPOS)
-      host.Remove(host.Index("."));
-
-   // Session tag
-   fSessionTag = Form("%s-%s-%d-%d", fOrdinal.Data(), host.Data(),
-                          TTimeStamp().GetSec(),gSystem->GetPid());
-
-   // create session directory and make it the working directory
-   fSessionDir = fWorkDir;
-   if (IsMaster())
-      fSessionDir += "/master-";
-   else
-      fSessionDir += "/slave-";
-   fSessionDir += fSessionTag;
+   // Get Session dir (sandbox)
+   if (!gSystem->Getenv("ROOTPROOFSESSDIR")) {
+     Error("Setup", "Session dir missing");
+     SendLogFile();
+     gSystem->Exit(1);
+   }
+   fSessionDir = gSystem->Getenv("ROOTPROOFSESSDIR");
 
    if (gSystem->AccessPathName(fSessionDir)) {
       gSystem->MakeDirectory(fSessionDir);
       if (!gSystem->ChangeDirectory(fSessionDir)) {
-         SysError("Setup", "can not change to working directory %s",
-                  fSessionDir.Data());
+         Error("Setup", "can not change to working directory %s",
+               fSessionDir.Data());
+         SendLogFile();
+         gSystem->Exit(1);
       } else {
          gSystem->Setenv("PROOF_SANDBOX", fSessionDir);
       }
    }
+   if (gProofDebugLevel > 0)
+      Info("Setup", "session dir is %s", fSessionDir.Data());
 
-   // On masters, check and make sure "queries" directory exists
+   // On masters, check and make sure that "queries" and "datasets"
+   // directories exist
    if (IsMaster()) {
+      // 'queries'
       fQueryDir = fWorkDir;
       fQueryDir += TString("/") + kPROOF_QueryDir;
       if (gSystem->AccessPathName(fQueryDir))
@@ -781,13 +701,24 @@ void TXProofServ::Setup()
       fQueryDir += TString("/session-") + fSessionTag;
       if (gSystem->AccessPathName(fQueryDir))
          gSystem->MakeDirectory(fQueryDir);
+      if (gProofDebugLevel > 0)
+         Info("Setup", "queries dir is %s", fQueryDir.Data());
 
-      fQueryLock = kPROOF_QueryLockFile;
-      fQueryLock += fSessionTag;
-      fQueryLock += fUser;
+      // Create 'queries' locker instance and lock it
+      fQueryLock = new TProofLockPath(Form("%s%s-%s",
+                       kPROOF_QueryLockFile,fSessionTag.Data(),fUser.Data()));
+      fQueryLock->Lock();
 
-      // Lock the query dir owned by this session
-      fQueryLockId = LockQueryFile(fQueryLock);
+      // 'datasets'
+      fDataSetDir = fWorkDir;
+      fDataSetDir += TString("/") + kPROOF_DataSetDir;
+      if (gSystem->AccessPathName(fDataSetDir))
+         gSystem->MakeDirectory(fDataSetDir);
+      if (gProofDebugLevel > 0)
+         Info("Setup", "dataset dir is %s", fDataSetDir.Data());
+
+      fDataSetLock =
+         new TProofLockPath(Form("%s%s", kPROOF_DataSetLockFile,fUser.Data()));
 
       // Send session tag to client
       TMessage m(kPROOF_SESSIONTAG);
@@ -806,6 +737,15 @@ void TXProofServ::Setup()
 
    // Install SigPipe handler to handle kKeepAlive failure
    gSystem->AddSignalHandler(new TXProofServSigPipeHandler(this));
+
+   // Install Termination handler
+   gSystem->AddSignalHandler(new TXProofServTerminationHandler(this));
+
+   // Install seg violation handler
+   gSystem->AddSignalHandler(new TXProofServSegViolationHandler(this));
+
+   if (gProofDebugLevel > 0)
+      Info("Setup", "successfully completed");
 }
 
 //______________________________________________________________________________
@@ -822,11 +762,11 @@ void TXProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
    Int_t left;
 
    ltot = lseek(fileno(stdout),   (off_t) 0, SEEK_END);
-   lnow = lseek(fileno(fLogFile), (off_t) 0, SEEK_CUR);
+   lnow = lseek(fLogFileDes, (off_t) 0, SEEK_CUR);
 
    Bool_t adhoc = kFALSE;
    if (start > -1) {
-      lseek(fileno(fLogFile), (off_t) start, SEEK_SET);
+      lseek(fLogFileDes, (off_t) start, SEEK_SET);
       if (end <= start || end > ltot)
          end = ltot;
       left = (Int_t)(end - start);
@@ -845,7 +785,7 @@ void TXProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
       Int_t wanted = (left > kMAXBUF) ? kMAXBUF : left;
       Int_t len;
       do {
-         while ((len = read(fileno(fLogFile), buf, wanted)) < 0 &&
+         while ((len = read(fLogFileDes, buf, wanted)) < 0 &&
                 TSystem::GetErrno() == EINTR)
             TSystem::ResetErrno();
 
@@ -871,7 +811,7 @@ void TXProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
 
    // Restore initial position if partial send
    if (adhoc)
-      lseek(fileno(fLogFile), lnow, SEEK_SET);
+      lseek(fLogFileDes, lnow, SEEK_SET);
 
    TMessage mess(kPROOF_LOGDONE);
    if (IsMaster())
@@ -925,10 +865,6 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
             SafeDelete(master);
             return kQueryStop;
          }
-         // Work dir, if defined
-         TString tmpwrk = master->GetWorkDir(); 
-         if (tmpwrk != "")
-            fWorkDir = tmpwrk;
 
          // Now the workers
          while ((to = (TObjString *) nxos()))
@@ -951,7 +887,7 @@ Bool_t TXProofServ::HandleError()
 {
    // Handle error on the input socket
 
-   Printf("HandleError: %p: got called ...", this);
+   Printf("TXProofServ::HandleError: %p: got called ...", this);
 
    // If master server, propagate interrupt to slaves
    // (shutdown interrupt send internally).
@@ -964,7 +900,7 @@ Bool_t TXProofServ::HandleError()
 
    Terminate(0);  // will not return from here....
 
-   Printf("HandleError: %p: DONE ... ", this);
+   Printf("TXProofServ::HandleError: %p: DONE ... ", this);
 
    // We are done
    return kTRUE;
@@ -976,10 +912,72 @@ Bool_t TXProofServ::HandleInput()
    // Handle asynchronous input on the input socket
 
    if (gDebug > 2)
-      Info("HandleInput","%p", this);
+      Printf("TXProofServ::HandleInput %p", this);
    HandleSocketInput();
    // This request has been completed: remove the client ID from the pipe
    ((TXSocket *)fSocket)->RemoveClientID();
    // We are done
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TXProofServ::DisableTimeout()
+{
+   // Disable read timeout on the underlying socket
+
+   if (fSocket)
+     ((TXSocket *)fSocket)->DisableTimeout();
+}
+
+//______________________________________________________________________________
+void TXProofServ::EnableTimeout()
+{
+   // Enable read timeout on the underlying socket
+
+   if (fSocket)
+     ((TXSocket *)fSocket)->EnableTimeout();
+}
+
+//______________________________________________________________________________
+void TXProofServ::Terminate(Int_t status)
+{
+   // Terminate the proof server.
+   if (fTerminated)
+      // Avoid doubling the exit operations
+      exit(1);
+   fTerminated = kTRUE;
+
+   // Cleanup session directory
+   if (status == 0) {
+      // make sure we remain in a "connected" directory
+      gSystem->ChangeDirectory("/");
+      // needed in case fSessionDir is on NFS ?!
+      gSystem->MakeDirectory(fSessionDir+"/.delete");
+      gSystem->Exec(Form("%s %s", kRM, fSessionDir.Data()));
+   }
+
+   // Cleanup queries directory if empty
+   if (IsMaster()) {
+      if (!(fQueries->GetSize())) {
+         // make sure we remain in a "connected" directory
+         gSystem->ChangeDirectory("/");
+         // needed in case fQueryDir is on NFS ?!
+         gSystem->MakeDirectory(fQueryDir+"/.delete");
+         gSystem->Exec(Form("%s %s", kRM, fQueryDir.Data()));
+         // Remove lock file
+         if (fQueryLock)
+            gSystem->Unlink(fQueryLock->GetName());
+       }
+
+      // Unlock the query dir owned by this session
+      if (fQueryLock)
+         fQueryLock->Unlock();
+   }
+
+   // Remove input handler to avoid spurious signals in socket
+   // selection for closing activities executed upon exit()
+   gSystem->RemoveFileHandler(fInputHandler);
+   gSystem->RemoveSignalHandler(fInterruptHandler);
+
+   gSystem->Exit(status);
 }

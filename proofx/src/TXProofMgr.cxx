@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.8 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.9 2006/05/01 20:13:42 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -37,12 +37,12 @@ extern "C" {
    TVirtualProofMgr *GetTXProofMgr(const char *url, Int_t l, const char *al)
    { return ((TVirtualProofMgr *) new TXProofMgr(url, l, al)); }
 }
-class XProofMgrInit {
- public:
-   XProofMgrInit() {
+class TXProofMgrInit {
+public:
+   TXProofMgrInit() {
       TVirtualProofMgr::SetTProofMgrHook(&GetTXProofMgr, "xpd");
 }};
-static XProofMgrInit xproofmgr_init;
+static TXProofMgrInit gxproofmgr_init;
 
 //______________________________________________________________________________
 TXProofMgr::TXProofMgr(const char *url, Int_t dbg, const char *alias)
@@ -102,13 +102,17 @@ Int_t TXProofMgr::Init(Int_t)
    // even when it matches the default value
    TString u = fUrl.GetUrl(kTRUE);
 
-   if (!(fSocket = new TXSocket(u,'C')) || !(fSocket->IsValid())) {
+   if (!(fSocket = new TXSocket(u,'C',kPROOF_Protocol,kXPROOF_Protocol)) ||
+       !(fSocket->IsValid())) {
       if (!fSocket || !(fSocket->IsServProofd()))
          Error("Init", "while opening the connection to %s - exit", u.Data());
       if (fSocket && fSocket->IsServProofd())
          fServType = TVirtualProofMgr::kProofd;
       return -1;
    }
+
+   // Protocol run by remote PROOF server
+   fRemoteProtocol = fSocket->GetRemoteProtocol();
 
    // Set this has handler
    ((TXSocket *)fSocket)->fHandler = this;
@@ -190,6 +194,8 @@ void TXProofMgr::DetachSession(Int_t id, Option_t *opt)
       if (d) {
          if (fSocket)
             fSocket->DisconnectSession(d->GetRemoteId(), opt);
+         TVirtualProof *p = d->GetProof();
+         SafeDelete(p);
          fSessions->Remove(d);
          delete d;
       }
@@ -200,8 +206,16 @@ void TXProofMgr::DetachSession(Int_t id, Option_t *opt)
          TString o = Form("%sA",opt);
          fSocket->DisconnectSession(-1, o);
       }
-      if (fSessions)
+      if (fSessions) {
+         // Delete PROOF sessions
+         TIter nxd(fSessions);
+         TVirtualProofDesc *d = 0;
+         while ((d = (TVirtualProofDesc *)nxd())) {
+            TVirtualProof *p = d->GetProof();
+            SafeDelete(p);
+         }
          fSessions->Delete();
+      }
    }
 
    return;
@@ -339,7 +353,7 @@ Bool_t TXProofMgr::HandleError()
 {
    // Handle error on the input socket
 
-   Printf("HandleError: %p: got called ...", this);
+   Printf("TXProofMgr::HandleError: %p: got called ...", this);
 
    // Interrupt any PROOF session in Collect
    if (fSessions && fSessions->GetSize() > 0) {
@@ -351,7 +365,8 @@ Bool_t TXProofMgr::HandleError()
             p->InterruptCurrentMonitor();
       }
    }
-   Printf("HandleError: %p: DONE ... ", this);
+   if (gDebug > 0)
+      Printf("TXProofMgr::HandleError: %p: DONE ... ", this);
 
    // We are done
    return kTRUE;

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.2 2006/02/26 16:09:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.3 2006/04/19 10:57:44 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -28,17 +28,30 @@
 #include "TXHandler.h"
 #endif
 
+class TXProofServInterruptHandler;
+class TXSocketHandler;
+
 class TXProofServ : public TProofServ, public TXHandler {
 
 private:
+   TXProofServInterruptHandler *fInterruptHandler;
+   TXSocketHandler             *fInputHandler;
+
+   Bool_t        fTerminated; //true if Terminate() has been already called
+
    void          SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
    void          Setup();
 
 public:
-   TXProofServ(Int_t *argc, char **argv);
+   TXProofServ(Int_t *argc, char **argv) : TProofServ(argc, argv)
+                 { fInterruptHandler = 0; fInputHandler = 0; fTerminated = kFALSE;}
    virtual ~TXProofServ();
 
    void          CreateServer();
+
+   // Disable / Enable read timeout
+   void          DisableTimeout();
+   void          EnableTimeout();
 
    EQueryAction  GetWorkers(TList *workers, Int_t &prioritychange);
 
@@ -47,6 +60,9 @@ public:
 
    void          HandleUrgentData();
    void          HandleSigPipe();
+   void          HandleTermination();
+
+   void          Terminate(Int_t status);
 
    ClassDef(TXProofServ,0)  //XRD PROOF Server Application Interface
 };

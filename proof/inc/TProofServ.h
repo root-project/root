@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.35 2006/03/21 15:07:53 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.36 2006/04/19 10:57:44 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -53,6 +53,7 @@ class TMessage;
 typedef Int_t (*OldProofServAuthSetup_t)(TSocket *, Bool_t, Int_t,
                                          TString &, TString &, TString &);
 class TList;
+class TProofLockPath;
 
 class TProofServ : public TApplication {
 
@@ -73,18 +74,18 @@ private:
    TString       fPackageDir;       //directory containing packages and user libs
    TString       fCacheDir;         //directory containing cache of user files
    TString       fQueryDir;         //directory containing query results and status
-   TString       fPackageLock;      //package dir lock file
-   TString       fCacheLock;        //cache dir lock file
-   TString       fQueryLock;        //query dir lock file
+   TString       fDataSetDir;       //directory containing info about known data sets
+   TProofLockPath *fPackageLock;     //package dir locker
+   TProofLockPath *fCacheLock;       //cache dir locker
+   TProofLockPath *fQueryLock;       //query dir locker
+   TProofLockPath *fDataSetLock;     //dataset dir locker
    TString       fArchivePath;      //default archive path
    TSocket      *fSocket;           //socket connection to client
    TProof       *fProof;            //PROOF talking to slave servers
    TProofPlayer *fPlayer;           //actual player
    FILE         *fLogFile;          //log file
+   Int_t         fLogFileDes;       //log file descriptor
    TList        *fEnabledPackages;  //list of enabled packages
-   Int_t         fPackageLockId;    //file id of package dir lock
-   Int_t         fCacheLockId;      //file id of cache dir lock
-   Int_t         fQueryLockId;      //file id of query dir lock
    Int_t         fProtocol;         //protocol version number
    TString       fOrdinal;          //slave ordinal number
    Int_t         fGroupId;          //slave unique id in the active slave group
@@ -106,16 +107,13 @@ private:
    TList        *fWaitingQueries;   //list of TProofQueryResult wating to be processed
    Bool_t        fIdle;             //TRUE if idle
 
+   TString       fAFSUser;          //AFS username
+   TString       fAFSPasswd;        //AFS password for token initialization
+
    static Int_t  fgMaxQueries;      //Max number of queries fully kept
 
    virtual void  RedirectOutput();
    Int_t         CatMotd();
-   Int_t         LockDir(const TString &lock);
-   Int_t         UnlockDir(const TString &lock);
-   Int_t         LockCache() { return LockDir(fCacheLock); }
-   Int_t         UnlockCache() { return UnlockDir(fCacheLock); }
-   Int_t         LockPackage() { return LockDir(fPackageLock); }
-   Int_t         UnlockPackage() { return UnlockDir(fPackageLock); }
    Int_t         UnloadPackage(const char *package);
    Int_t         UnloadPackages();
    Int_t         OldAuthSetup(TString &wconf);
@@ -123,6 +121,8 @@ private:
    // Query handlers
    void          AddLogFile(TProofQueryResult *pq);
    void          FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq);
+   TList        *GetDataSet(const char *name);
+   Int_t         GetAFSToken();
    TProofQueryResult *MakeQueryResult(Long64_t nentries, const char *opt,
                                       TList *inl, Long64_t first, TDSet *dset,
                                       const char *selec, TEventList *evl);
@@ -132,15 +132,15 @@ private:
    void          SaveQuery(TQueryResult *qr, const char *fout = 0);
    void          SetQueryRunning(TProofQueryResult *pq);
 
-   Int_t         LockQueryFile(const char *qlock);
-   Int_t         UnlockQueryFile(Int_t fid);
-   Int_t         LockSession(const char *sessiontag, Int_t &fid, TString &qlock);
+   Int_t         LockSession(const char *sessiontag, TProofLockPath **lck);
    Int_t         CleanupSession(const char *sessiontag);
    void          ScanPreviousQueries(const char *dir);
-   TList        *GetDataSets();
 
 protected:
    virtual void  HandleArchive(TMessage *mess);
+   virtual Int_t HandleCache(TMessage *mess);
+   virtual void  HandleCheckFile(TMessage *mess);
+   virtual void  HandleLibIncPath(TMessage *mess);
    virtual void  HandleProcess(TMessage *mess);
    virtual void  HandleQueryList(TMessage *mess);
    virtual void  HandleRemove(TMessage *mess);
@@ -195,6 +195,10 @@ public:
    void           SendStatistics();
    void           SendParallel();
 
+   // Disable / Enable read timeout
+   virtual void   DisableTimeout() { }
+   virtual void   EnableTimeout() { }
+
    virtual void   Terminate(Int_t status);
 
    static Bool_t      IsActive();
@@ -204,5 +208,28 @@ public:
 };
 
 R__EXTERN TProofServ *gProofServ;
+
+class TProofLockPath : public TNamed {
+private:
+   Int_t         fLockId;        //file id of dir lock
+
+public:
+   TProofLockPath(const char *path) : TNamed(path,path), fLockId(-1) { }
+   ~TProofLockPath() { if (IsLocked()) Unlock(); }
+
+   Int_t         Lock();
+   Int_t         Unlock();
+
+   Bool_t        IsLocked() const { return (fLockId > -1); }
+};
+
+class TProofLockPathGuard {
+private:
+   TProofLockPath  *fLocker; //locker instance
+
+public:
+   TProofLockPathGuard(TProofLockPath *l) { fLocker = l; if (fLocker) fLocker->Lock(); }
+   ~TProofLockPathGuard() { if (fLocker) fLocker->Unlock(); }
+};
 
 #endif

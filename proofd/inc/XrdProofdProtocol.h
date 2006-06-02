@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.4 2006/03/01 15:46:33 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.5 2006/04/19 10:57:44 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -97,8 +97,6 @@ public:
    int           Process2();
    void          Reset();
    int           SendMsg();
-   void          SetIgnoreZombieChild();
-   void          SetProofServEnv(int psid);
    int           SetUserEnvironment(const char *usr, const char *dir = 0);
 
    // Static methods
@@ -111,6 +109,9 @@ public:
    static int    GetWorkers(XrdOucString &workers, XrdProofServProxy *);
    static XrdSecService *LoadSecurity(char *seclib, char *cfn);
    static int    ReadPROOFcfg();
+   static void   SetIgnoreZombieChild();
+   static int    SetProofServEnv(XrdProofdProtocol *p = 0, int psid = -1,
+                                 int loglevel = -1, const char *cfg = 0);
    static int    SetSrvProtVers();
 
    // Local members
@@ -207,19 +208,37 @@ public:
 class XrdProofClient {
 
  public:
-   XrdProofClient(XrdProofdProtocol *p)
+   XrdProofClient(XrdProofdProtocol *p, short int clientvers = -1,
+                  const char *tag = 0, const char *ord = 0)
                               { fClientID = (p && p->GetID()) ? strdup(p->GetID()) : 0;
+                                fSessionTag = (tag) ? strdup(tag) : 0;
+                                fOrdinal = (ord) ? strdup(ord) : 0;
+                                fClientVers = clientvers;
                                 fProofServs.reserve(10); fClients.reserve(10); }
    virtual ~XrdProofClient()
-                              { if (fClientID) free(fClientID); }
+                              { if (fClientID) free(fClientID);
+                                if (fSessionTag) free(fSessionTag);
+                                if (fOrdinal) free(fOrdinal); }
 
 
    inline const char      *ID() const
                               { return (const char *)fClientID; }
    bool                    Match(const char *id)
                               { return (id ? !strcmp(id, fClientID) : 0); }
+   inline const char      *SessionTag() const
+                              { return (const char *)fSessionTag; }
+   inline const char      *Ordinal() const
+                              { return (const char *)fOrdinal; }
+   inline const short      Version() const { return fClientVers; }
 
    int                     GetClientID(XrdProofdProtocol *p);
+
+   void                    SetSessionTag(const char *tag)
+                              { if (fSessionTag) free(fSessionTag);
+                                fSessionTag = (tag) ? strdup(tag) : 0; }
+   void                    SetOrdinal(const char *ord)
+                              { if (fOrdinal) free(fOrdinal);
+                                fOrdinal = (ord) ? strdup(ord) : 0; }
 
    std::vector<XrdProofServProxy *> fProofServs; // Allocated ProofServ sessions
    std::vector<XrdProofdProtocol *> fClients;    // Attached Client sessions
@@ -227,7 +246,10 @@ class XrdProofClient {
    XrdOucMutex                      fMutex; // Local mutex
 
  private:
-   char                            *fClientID;  // String identifying this client
+   char                            *fClientID;   // String identifying this client
+   char                            *fSessionTag; // [workers, submasters] session tag of the master
+   char                            *fOrdinal;    // [workers, submasters] ordinal number 
+   short int                        fClientVers; // PROOF version run by client
 };
 
 //////////////////////////////////////////////////////////////////////////

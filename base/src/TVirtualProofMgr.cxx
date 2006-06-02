@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.5 2006/04/21 16:29:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.6 2006/05/01 20:13:41 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -42,7 +42,8 @@ TVirtualProofMgr_t TVirtualProofMgr::fgTProofMgrHook[2] = { 0, 0 };
 
 //______________________________________________________________________________
 TVirtualProofMgr::TVirtualProofMgr(const char *url, Int_t, const char *)
-                 : TNamed("",""), fServType(kXProofd), fSessions(0)
+                 : TNamed("",""), fRemoteProtocol(-1),
+                   fServType(kXProofd), fSessions(0)
 {
    // Constructor
 
@@ -91,6 +92,26 @@ TVirtualProofDesc *TVirtualProofMgr::GetProofDesc(Int_t id)
 }
 
 //______________________________________________________________________________
+void TVirtualProofMgr::ShutdownSession(TVirtualProof *p)
+{
+   // Discard PROOF session 'p'
+
+   if (p) {
+      TVirtualProofDesc *d = 0;
+      if (fSessions) {
+         TIter nxd(fSessions);
+         while ((d = (TVirtualProofDesc *)nxd())) {
+            if (p == d->GetProof()) {
+               fSessions->Remove(d);
+               delete d;
+               break;
+            }
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
 TVirtualProof *TVirtualProofMgr::CreateSession(const char *cfg,
                                                const char *cfgdir, Int_t loglevel)
 {
@@ -99,12 +120,6 @@ TVirtualProof *TVirtualProofMgr::CreateSession(const char *cfg,
    // Create
    if (IsProofd())
       fUrl.SetOptions("std");
-
-   TPluginManager *pm = gROOT->GetPluginManager();
-   if (!pm) {
-      Error("CreateSession", "plugin manager not found");
-      return 0;
-   }
 
    TProof_t proofhook = TVirtualProof::GetTProofHook();
    if (!proofhook) {
@@ -189,7 +204,7 @@ Bool_t TVirtualProofMgr::MatchUrl(const char *url)
    }
 
    // Now we can check
-   if (!strcmp(u.GetHostFQDN(), fUrl.GetHost()))
+   if (!strcmp(u.GetHostFQDN(), fUrl.GetHostFQDN()))
       if (u.GetPort() == fUrl.GetPort())
          if (strlen(u.GetUser()) <= 0 || !strcmp(u.GetUser(),fUrl.GetUser()))
             return kTRUE;

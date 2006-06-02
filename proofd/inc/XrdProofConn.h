@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.h,v 1.2 2006/03/01 15:46:33 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.h,v 1.3 2006/04/19 10:52:46 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -76,6 +76,8 @@ private:
    XErrorCode          fLastErr;       // Last error code
    char                fCapVer;        // a version number (e.g. a protocol num)
 
+   XrdOucString        fLoginBuffer;   // Buffer to be sent over at login
+
    XrdClientPhyConnection *fPhyConn;   // underlying physical connection
 
    int                 fOpenSockFD;    // Underlying socket descriptor
@@ -102,9 +104,11 @@ private:
    virtual void        SetAsync(XrdClientAbsUnsolMsgHandler *uh);
    void                SetSID(kXR_char *sid);
 
+   void                SetInterrupt();
+
 public:
    XrdProofConn(const char *url, char mode = 'M', int psid = -1, char ver = -1,
-                XrdClientAbsUnsolMsgHandler * uh = 0);
+                XrdClientAbsUnsolMsgHandler * uh = 0, const char *logbuf = 0);
    virtual ~XrdProofConn();
 
    virtual void        Close(const char *opt = "");

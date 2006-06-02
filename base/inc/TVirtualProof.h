@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.30 2006/04/29 17:57:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.31 2006/05/26 15:13:01 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -70,6 +70,10 @@ public:
       kError = -1,
       kDataSetExists = -2
    };
+   enum EUploadPackageOpt {
+      kUntar             = 0x0,  //Untar over existing dir [default]
+      kRemoveOld         = 0x1   //Remove existing dir with same name
+   };
 
 private:
    static TProof_t              fgProofHook; // Hook to TProof constructor
@@ -79,7 +83,7 @@ protected:
    TVirtualProofMgr            *fManager;   // Manager to which this session belongs (if any)
    EQueryMode                   fQueryMode; // default query mode
 
-   TVirtualProof() : fServType(TVirtualProofMgr::kXProofd), fQueryMode(kSync) { }
+   TVirtualProof() : fServType(TVirtualProofMgr::kXProofd), fManager(0), fQueryMode(kSync) { }
 
 public:
    TVirtualProof(const char * /*masterurl*/, const char * /*conffile*/ = 0,
@@ -128,12 +132,19 @@ public:
    //-- cache and package management
    virtual void        ShowCache(Bool_t all = kFALSE) = 0;
    virtual void        ClearCache() = 0;
+   virtual TList      *GetListOfPackages() = 0;
+   virtual TList      *GetListOfEnabledPackages() = 0;
    virtual void        ShowPackages(Bool_t all = kFALSE) = 0;
    virtual void        ShowEnabledPackages(Bool_t all = kFALSE) = 0;
    virtual Int_t       ClearPackages() = 0;
    virtual Int_t       ClearPackage(const char *package) = 0;
    virtual Int_t       EnablePackage(const char *package) = 0;
-   virtual Int_t       UploadPackage(const char *par) = 0;
+   virtual Int_t       UploadPackage(const char *par, EUploadPackageOpt opt = kUntar) = 0;
+
+   virtual Int_t       AddDynamicPath(const char *libpath) = 0;
+   virtual Int_t       AddIncludePath(const char *incpath) = 0;
+   virtual Int_t       RemoveDynamicPath(const char *libpath) = 0;
+   virtual Int_t       RemoveIncludePath(const char *incpath) = 0;
 
    //-- dataset management
    virtual Int_t       UploadDataSet(const char *dataset,

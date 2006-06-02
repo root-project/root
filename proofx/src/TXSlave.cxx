@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.5 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.6 2006/04/19 10:57:44 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 
 #include "TXSlave.h"
 #include "TProof.h"
+#include "TProofServ.h"
 #include "TSystem.h"
 #include "TEnv.h"
 #include "TROOT.h"
@@ -27,6 +28,7 @@
 #include "TMessage.h"
 #include "TMonitor.h"
 #include "TError.h"
+#include "TSysEvtHandler.h"
 #include "TVirtualMutex.h"
 #include "TThread.h"
 #include "TXSocket.h"
@@ -69,6 +71,32 @@ void TXSlave::DoError(int level, const char *location, const char *fmt, va_list 
    ::ErrorHandler(level, Form("TXSlave::%s", location), fmt, va);
 }
 
+//
+// Specific Interrupt signal handler
+//
+class TXSlaveInterruptHandler : public TSignalHandler {
+private:
+   TXSocket *fSocket;
+public:
+   TXSlaveInterruptHandler(TXSocket *s = 0)
+      : TSignalHandler(kSigInterrupt, kFALSE), fSocket(s) { }
+   Bool_t Notify();
+};
+
+//______________________________________________________________________________
+Bool_t TXSlaveInterruptHandler::Notify()
+{
+   // TXSlave interrupt handler.
+
+   Info("Notify","Processing interrupt signal ...");
+
+   // Handle also interrupt condition on socket(s)
+   if (fSocket)
+      fSocket->SetInterrupt();
+
+   return kTRUE;
+}
+
 //______________________________________________________________________________
 TXSlave::TXSlave(const char *url, const char *ord, Int_t perf,
                const char *image, TProof *proof, Int_t stype,
@@ -83,6 +111,8 @@ TXSlave::TXSlave(const char *url, const char *ord, Int_t perf,
    fProof = proof;
    fSlaveType = (ESlaveType)stype;
    fMsd = msd;
+   fIntHandler = 0;
+   fValid = kFALSE;
 
    // Instance of the socket input handler to monitor all the XPD sockets
    TXSocketHandler *sh = TXSocketHandler::GetSocketHandler();
@@ -128,31 +158,44 @@ void TXSlave::Init(const char *host, Int_t stype)
    fName = url.GetHost();
    fPort = url.GetPort(); // We get the right default if the port is not specified
 
-   // If we are attaching to an existing process, the ID is passed in the
-   // options field of the url
-   Int_t psid = (strlen(url.GetOptions()) > 0) ? atoi(url.GetOptions()) : -1;
+
+   // The field 'psid' is interpreted as session ID when we are attaching
+   // to an existing session (ID passed in the options field of the url) or
+   // to our PROOF protocl version when we are creating a new session
+   TString opts(url.GetOptions());
+   Bool_t attach = (opts.Length() > 0 && opts.IsDigit()) ? kTRUE : kFALSE;
+   Int_t psid = (attach) ? opts.Atoi() : kPROOF_Protocol;
 
    // Add information about our status (Client or Master)
    TString iam;
    Char_t mode = 's';
+   TString alias = fProof->GetTitle();
    if (fProof->IsMaster() && stype == kSlave) {
       iam = "Master";
       mode = 's';
+      // Send session tag of the closest master to the slaves
+      alias = Form("session-%s|ord:%s", fProof->GetName(), fOrdinal.Data());
    } else if (fProof->IsMaster() && stype == kMaster) {
       iam = "Master";
       mode = 'm';
+      // Send session tag of the closest master to the slaves
+      alias = Form("session-%s|ord:%s", fProof->GetName(), fOrdinal.Data());
    } else if (!fProof->IsMaster() && stype == kMaster) {
       iam = "Local Client";
-      mode = 'M';
+      mode = (attach) ? 'A' : 'M';
    } else {
       Error("Init","Impossible PROOF <-> SlaveType Configuration Requested");
       R__ASSERT(0);
    }
 
+   // Add conf file, if required
+   if (fProof->fConfFile.Length() > 0)
+      alias += Form("|cf:%s",fProof->fConfFile.Data());
+
    // Open connection to a remote XrdPROOF slave server.
    // Login and authentication are dealt with at this level, if required.
    if (!(fSocket = new TXSocket(url.GetUrl(kTRUE),
-                                mode, psid, -1, fProof->GetTitle()))) {
+                                mode, psid, -1, alias, fProof->GetLogLevel()))) {
       Error("Init", "while opening the connection to %s - exit", url.GetUrl(kTRUE));
       return;
    }
@@ -168,6 +211,9 @@ void TXSlave::Init(const char *host, Int_t stype)
    ((TXSocket *)fSocket)->fReference = fProof;
    // Set this has handler
    ((TXSocket *)fSocket)->fHandler = this;
+
+   // Protocol run by remote PROOF server
+   fProtocol = fSocket->GetRemoteProtocol();
 
    // Set server type
    fProof->fServType = TVirtualProofMgr::kXProofd;
@@ -191,10 +237,13 @@ void TXSlave::Init(const char *host, Int_t stype)
    PDB(kGlobal,3) {
       Info("Init","%s: fUser is .... %s", iam.Data(), fUser.Data());
    }
+
+   // Set valid
+   fValid = kTRUE;
 }
 
 //______________________________________________________________________________
-void TXSlave::SetupServ(Int_t stype, const char *conffile)
+Int_t TXSlave::SetupServ(Int_t, const char *)
 {
    // Init a PROOF slave object. Called via the TXSlave ctor.
    // The Init method is technology specific and is overwritten by derived
@@ -206,27 +255,16 @@ void TXSlave::SetupServ(Int_t stype, const char *conffile)
    char buf[512];
    if (fSocket->Recv(buf, sizeof(buf), what) <= 0) {
       Error("SetupServ", "failed to receive slave startup message");
+      Close("S");
       SafeDelete(fSocket);
-      return;
+      fValid = kFALSE;
+      return -1;
    }
 
    if (what == kMESS_NOTOK) {
       SafeDelete(fSocket);
-      return;
-   }
-
-   // exchange protocol level between client and master and between
-   // master and slave
-   if (fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL) != 2*sizeof(Int_t)) {
-      Error("SetupServ", "failed to send local PROOF protocol");
-      SafeDelete(fSocket);
-      return;
-   }
-
-   if (fSocket->Recv(fProtocol, what) != 2*sizeof(Int_t)) {
-      Error("SetupServ", "failed to receive remote PROOF protocol");
-      SafeDelete(fSocket);
-      return;
+      fValid = kFALSE;
+      return -1;
    }
 
    // protocols less than 4 are incompatible
@@ -234,39 +272,17 @@ void TXSlave::SetupServ(Int_t stype, const char *conffile)
       Error("SetupServ", "incompatible PROOF versions (remote version"
                       " must be >= 4, is %d)", fProtocol);
       SafeDelete(fSocket);
-      return;
+      fValid = kFALSE;
+      return -1;
    }
 
    fProof->fProtocol   = fProtocol;   // protocol of last slave on master
 
-   if (fProtocol < 5) {
-      //
-      // Setup authentication related stuff for ald versions
-      Bool_t isMaster = (stype == kMaster);
-      TString wconf = isMaster ? TString(conffile) : fProofWorkDir;
-      if (OldAuthSetup(isMaster, wconf) != 0) {
-         Error("SetupServ", "OldAuthSetup: failed to setup authentication");
-         SafeDelete(fSocket);
-         return;
-      }
-   } else {
-      //
-      // Send ordinal (and config) info to slave (or master)
-      TMessage mess;
-      if (stype == kMaster)
-         mess << fUser << fOrdinal << TString(conffile);
-      else
-         mess << fUser << fOrdinal << fProofWorkDir;
-
-      if (fSocket->Send(mess) < 0) {
-         Error("SetupServ", "failed to send ordinal and config info");
-         SafeDelete(fSocket);
-         return;
-      }
-   }
-
    // set some socket options
    fSocket->SetOption(kNoDelay, 1);
+
+   // We are done
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -403,32 +419,68 @@ Bool_t TXSlave::HandleError()
 {
    // Handle error on the input socket
 
-   Printf("HandleError: %p: got called ...", this);
+   Printf("TXSlave::HandleError: %p: got called ... fProof: %p", this, fProof);
 
-   // Post semaphore to wake up anybody waiting; send as many posts as needed
-   TSemaphore *sem = &(((TXSocket *)fSocket)->fASem);
-   while (sem->TryWait() != 1)
-      sem->Post();
+   // Interrupt underlying socket operations
+   ((TXSocket *)fSocket)->SetInterrupt();
+
+   // Remove signal handler
+   SetInterruptHandler(kFALSE);
 
    if (fProof) {
+
+      // Remove PROOF signal handler
+      if (fProof->fIntHandler)
+         fProof->fIntHandler->Remove();
 
       // Attach to the monitor instance, if any
       TMonitor *mon = fProof->fCurrentMonitor;
 
       if (gDebug > 2)
-         Info("HandleInput","%p: proof: %p, mon: %p", this, fProof, mon);
+         Printf("TXSlave::HandleError %p: proof: %p, mon: %p", this, fProof, mon);
 
       if (mon && mon->GetListOfActives()->FindObject(fSocket)) {
          // Synchronous collection in TProof
          if (gDebug > 2)
-            Info("HandleInput","%p: deactivating from monitor %p", this, mon);
+            Printf("TXSlave::HandleError %p: deactivating from monitor %p", this, mon);
          mon->DeActivate(fSocket);
       }
+      // Update lists:
+      if (fProof->IsMaster()) {
+         // On masters we have to update the lists
+         TString msg(Form("Worker '%s-%s' has been removed from the active list",
+                          fName.Data(), fOrdinal.Data()));
+         TMessage m(kPROOF_MESSAGE);
+         m << msg;
+         if (gProofServ)
+            gProofServ->GetSocket()->Send(m);
+         else
+            Printf("Warning in TXSlave::HandleError %p: global reference to TProofServ missing");
+         // The session is gone
+         ((TXSocket *)fSocket)->SetSessionID(-1);
+         fProof->MarkBad(this);
+      } else {
+         // On clients the proof session should be removed from the lists
+         // and deleted, since it is not valid anymore
+         fProof->GetListOfSlaves()->Remove(this);
+         TVirtualProofMgr *mgr= fProof->GetManager();
+         if (mgr)
+            mgr->ShutdownSession(fProof);
+      }
    } else {
-      Warning("HandleInput", "%p: reference to PROOF missing", this);
+      Printf("Warning in TXSlave::HandleError %p: reference to PROOF missing", this);
    }
 
-   Printf("HandleError: %p: DONE ... ", this);
+   // Post semaphore to wake up anybody waiting; send as many posts as needed
+   if (fSocket) {
+      R__LOCKGUARD(((TXSocket *)fSocket)->fAMtx);
+      TSemaphore *sem = &(((TXSocket *)fSocket)->fASem);
+      while (sem->TryWait() != 1)
+         sem->Post();
+   }
+
+   if (gDebug > 0)
+      Printf("TXSlave::HandleError: %p: DONE ... ", this);
 
    // We are done
    return kTRUE;
@@ -465,4 +517,22 @@ Bool_t TXSlave::HandleInput()
 
    // We are done
    return kTRUE;
+}
+
+//_____________________________________________________________________________
+void TXSlave::SetInterruptHandler(Bool_t on)
+{
+   // Set/Unset the interrupt handler
+
+   if (gDebug > 1)
+      Info("SetInterruptHandler", "enter: %d", on);
+
+   if (on) {
+      if (!fIntHandler)
+         fIntHandler = new TXSlaveInterruptHandler((TXSocket *)fSocket);
+      fIntHandler->Add();
+   } else {
+      if (fIntHandler)
+         fIntHandler->Remove();
+   }
 }

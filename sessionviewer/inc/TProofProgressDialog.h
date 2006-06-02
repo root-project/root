@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.8 2005/08/31 11:11:06 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.9 2005/12/12 12:54:27 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -44,7 +44,7 @@ class TProofProgressDialog {
 friend class TProofProgressLog;
 
 private:
-   enum EQueryStatus { kRunning = 0, kDone, kStopped, kAborted };
+   enum EQueryStatus { kRunning = 0, kDone, kStopped, kAborted, kIncomplete };
 
    TGTransientFrame   *fDialog;  // transient frame, main dialog window
    TGProgressBar      *fBar;     // progress bar

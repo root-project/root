@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.19 2005/12/12 12:54:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.20 2006/04/19 10:57:44 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -280,9 +280,11 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
 void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
 {
    // Update progress bar and status labels.
+   // Use "processed == total" or "processed < 0" to indicate end of processing.
 
    char buf[256];
-   static const char *cproc[] = { "running", "done", "STOPPED", "ABORTED" };
+   static const char *cproc[] = { "running", "done",
+                                  "STOPPED", "ABORTED", "***EVENTS SKIPPED***"};
 
    // Update title
    sprintf(buf, "Executing on PROOF cluster \"%s\" with %d parallel workers:",
@@ -295,8 +297,12 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
    else
       fPrevTotal = total;
 
+   // Nothing to update
    if (fPrevProcessed == processed)
       return;
+
+   // Number of processed events
+   Long64_t evproc = (processed >= 0) ? processed : fPrevProcessed;
 
    if (fEntries != total) {
       fEntries = total;
@@ -305,17 +311,18 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
       fFilesEvents->SetText(buf);
    }
 
-   Float_t pos = Float_t(Double_t(processed * 100)/Double_t(total));
+   // Update position
+   Float_t pos = Float_t(Double_t(evproc * 100)/Double_t(total));
    fBar->SetPosition(pos);
 
    // get current time
    fEndTime = gSystem->Now();
    TTime tdiff = fEndTime - fStartTime;
    Float_t eta = 0;
-   if (processed)
-      eta = ((Float_t)((Long_t)tdiff)*total/Float_t(processed) - Long_t(tdiff))/1000.;
+   if (evproc > 0)
+      eta = ((Float_t)((Long_t)tdiff)*total/Float_t(evproc) - Long_t(tdiff))/1000.;
 
-   if (processed == total) {
+   if (processed >= 0 && processed >= total) {
       fProcessed->SetText("Processed:");
       sprintf(buf, "%lld events in %.1f sec", total, Long_t(tdiff)/1000.);
       fTotal->SetText(buf);
@@ -334,18 +341,36 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
       if (!fKeep)
          DoClose();
    } else {
+      // A negative value for process indicates that we are finished,
+      // no matter whether the processing was complete
+      Bool_t incomplete = (processed < 0 &&
+                          (fPrevProcessed < total || fPrevProcessed == 0))
+                        ? kTRUE : kFALSE;
+      if (incomplete) {
+         fStatus = kIncomplete;
+         // We use a different color to highlight incompletion
+         fBar->SetBarColor("magenta");
+      }
+
       if (fStatus > kDone) {
          sprintf(buf, "%.1f sec (%lld events of %lld processed) - %s",
-                      eta, processed, total, cproc[fStatus]);
+                      eta, evproc, total, cproc[fStatus]);
       } else {
          sprintf(buf, "%.1f sec (%lld events of %lld processed)",
-                      eta, processed, total);
+                      eta, evproc, total);
       }
       fTotal->SetText(buf);
-      sprintf(buf, "%.1f events/sec", Float_t(processed)/Long_t(tdiff)*1000.);
+      sprintf(buf, "%.1f events/sec", Float_t(evproc)/Long_t(tdiff)*1000.);
       fRate->SetText(buf);
+
+      if (processed < 0) {
+         // And we disable the buttons
+         fStop->SetState(kButtonDisabled);
+         fAbort->SetState(kButtonDisabled);
+         fClose->SetState(kButtonUp);
+      }
    }
-   fPrevProcessed = processed;
+   fPrevProcessed = evproc;
 
    fDialog->Layout();
 }

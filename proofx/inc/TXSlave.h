@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.h,v 1.2 2006/02/26 16:09:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.h,v 1.3 2006/04/19 10:57:44 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 
 class TObjString;
 class TSocket;
+class TSignalHandler;
 
 class TXSlave : public TSlave, public TXHandler {
 
@@ -38,6 +39,9 @@ friend class TProof;
 friend class TXProofMgr;
 
 private:
+   Bool_t   fValid;
+   TSignalHandler *fIntHandler;     //interrupt signal handler (ctrl-c)
+
    void  Init(const char *host, Int_t stype);
 
    // Static methods
@@ -63,7 +67,9 @@ public:
    Bool_t HandleError(); // Error Handler
    Bool_t HandleInput(); // Input handler
 
-   void   SetupServ(Int_t stype, const char *conffile);
+   void   SetInterruptHandler(Bool_t on = kTRUE);
+
+   Int_t  SetupServ(Int_t stype, const char *conffile);
 
    ClassDef(TXSlave,0)  //Xrd PROOF slave server
 };

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.3 2006/03/01 15:46:33 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -234,6 +234,34 @@ int XrdProofdResponse::Send(kXR_int32 int1, kXR_int32 int2, void *data, int dlen
              " int1=" <<int1<<"; int2="<<int2);
    } else {
       TRACES(RSP,(int *)fLink<<": sending int1=" <<int1 <<"; int2=" <<int2);
+   }
+   fResp.dlen          = static_cast<kXR_int32>(htonl((dlen+ilen)));
+
+   if (fLink->Send(fRespIO, nn, sizeof(fResp) + dlen) < 0)
+      return fLink->setEtext("send failure");
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdResponse::Send(kXR_int32 int1, void *data, int dlen )
+{
+   // Auxilliary Send method
+
+   kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
+   int ilen = sizeof(i1);
+   int nn = 2;
+
+   fResp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
+   fRespIO[1].iov_base = (caddr_t)(&i1);
+   fRespIO[1].iov_len  = sizeof(i1);
+   if (data) {
+      nn = 3;
+      fRespIO[2].iov_base = (caddr_t)data;
+      fRespIO[2].iov_len  = dlen;
+      TRACES(RSP,(int *)fLink<<": sending " <<dlen << " data bytes;"<<
+             " int1=" <<int1);
+   } else {
+      TRACES(RSP,(int *)fLink<<": sending int1=" <<int1);
    }
    fResp.dlen          = static_cast<kXR_int32>(htonl((dlen+ilen)));
 

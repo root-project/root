@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtocol.h,v 1.2 2006/03/01 15:46:33 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtocol.h,v 1.3 2006/04/19 10:52:46 rdm Exp $
 // Author: G. Ganis  June 2005
 
 #ifndef ROOT_XProofProtocol
@@ -95,7 +95,8 @@ enum XProofActionCode {
    kXPD_interrupt, // 5102,
    kXPD_feedback,  // 5103
    kXPD_srvmsg,    // 5104
-   kXPD_msgsid     // 5105
+   kXPD_msgsid,    // 5105
+   kXPD_errmsg     // 5106
 };
 
 //_______________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.19 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.20 2006/04/19 10:57:44 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -132,11 +132,13 @@ public:
    TFileHandler  *GetInputHandler() const { return fInput; }
    void           SetInputHandler(TFileHandler *ih);
 
-   Bool_t         IsValid() const { return fSocket ? kTRUE : kFALSE; }
+   virtual Bool_t IsValid() const { return fSocket ? kTRUE : kFALSE; }
 
    void           Print(Option_t *option="") const;
 
-   virtual void   SetupServ(Int_t stype, const char *conffile);
+   virtual Int_t  SetupServ(Int_t stype, const char *conffile);
+
+   virtual void   SetInterruptHandler(Bool_t /* on */) { }
 
    static void    SetTXSlaveHook(TSlave_t xslavehook);
 

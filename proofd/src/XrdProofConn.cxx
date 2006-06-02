@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.7 2006/04/18 10:34:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.8 2006/04/19 10:52:46 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -80,9 +80,9 @@ XrdClientConnectionMgr *XrdProofConn::fgConnMgr = 0;
 
 //_____________________________________________________________________________
 XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
-                           XrdClientAbsUnsolMsgHandler *uh)
+                           XrdClientAbsUnsolMsgHandler *uh, const char *logbuf)
    : fMode(m), fConnected(0), fSessionID(psid), fLastErr(kXR_Unsupported),
-     fCapVer(capver), fPhyConn(0), fUnsolMsgHandler(uh)
+     fCapVer(capver), fLoginBuffer(logbuf), fPhyConn(0), fUnsolMsgHandler(uh)
 {
    // Constructor. Open the connection to a remote XrdProofd instance.
    // The mode 'm' indicates the role of this connection:
@@ -92,6 +92,9 @@ XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
    //     'M'      Client contacting a top master
    //     'm'      Top master contacting a submaster
    //     's'      Master contacting a slave
+   // The buffer 'logbuf' is a null terminated string to be sent over at
+   // login. In case of need, internally it is overwritten with a token
+   // needed during redirection.
 
    // Initialization
    if (url && !Init(url)) {
@@ -831,20 +834,19 @@ bool XrdProofConn::Login()
       strcpy( (char *)reqhdr.login.username, "????" );
 
    // This is the place to send a token for fast authentication
-   // or id tothe server
-   XrdOucString internalToken = "";
-   reqhdr.header.dlen = internalToken.length();
+   // or id to the server (or any other information)
+   const void *buf = (const void *)(fLoginBuffer.c_str());
+   reqhdr.header.dlen = fLoginBuffer.length();
 
    // Set the connection mode (see constructor header)
    reqhdr.login.role[0] = fMode;
 
-   // If internal, we need to send the id of the session we want to be
-   // connected
-   int sessID = fSessionID;
-   if (fMode == 'i' && sessID > -1) {
-      // We use the 2 reserved bytes
-      memcpy(&reqhdr.login.reserved[0], &sessID, 2);
-   }
+   // For normal connections this is the PROOF protocol version run by the client.
+   // For internal connections this is the id of the session we want to be
+   // connected.
+   short int sessID = fSessionID;
+   // We use the 2 reserved bytes
+   memcpy(&reqhdr.login.reserved[0], &sessID, 2);
 
    // Send also a capability (protocol) version number
    reqhdr.login.capver[0] = (char)fCapVer;
@@ -867,14 +869,26 @@ bool XrdProofConn::Login()
       char *pltmp = 0;
       SetSID(reqhdr.header.streamid);
       reqhdr.header.requestid = kXP_login;
-      XrdClientMessage *xrsp = SendReq(&reqhdr, internalToken.c_str(),
+      XrdClientMessage *xrsp = SendReq(&reqhdr, buf,
                                        (void **)&pltmp, "XrdProofConn::Login");
 
       // If positive answer
       secp = 0;
+      char *plref = pltmp;
       if (xrsp) {
+         //
+         // Pointer to data
+         int len = xrsp->DataLen();
+         if (len >= (int)sizeof(kXR_int32)) {
+            // The first 4 bytes contain the remote daemon version
+            kXR_int32 vers = 0;
+            memcpy(&vers, pltmp, sizeof(kXR_int32));
+            fRemoteProtocol = ntohl(vers);
+            pltmp = (char *)((char *)pltmp + sizeof(kXR_int32));
+            len -= sizeof(kXR_int32);
+         }
          // Check if we need to authenticate
-         if (pltmp && (xrsp->DataLen() > 0)) {
+         if (pltmp && (len > 0)) {
             //
             // Reset the result
             resp = 0;
@@ -910,12 +924,12 @@ bool XrdProofConn::Login()
             }
             //
             // Null-terminate server reply
-            char *plist = new char[xrsp->DataLen()+1];
-            memcpy(plist, pltmp, xrsp->DataLen());
-            plist[xrsp->DataLen()] = 0;
+            char *plist = new char[len+1];
+            memcpy(plist, pltmp, len);
+            plist[len] = 0;
             TRACE(REQ,"XrdProofConn::Login: server requires authentication");
 
-            secp = Authenticate(plist, (int)(xrsp->DataLen()+1));
+            secp = Authenticate(plist, (int)(len+1));
             resp = (secp != 0);
 
             if (plist)
@@ -934,8 +948,8 @@ bool XrdProofConn::Login()
       }
 
       // Cleanup
-      if (pltmp)
-         free(pltmp);
+      if (plref)
+         free(plref);
 
    }
 
@@ -1117,4 +1131,13 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
    // Return the result of the negotiation
    //
    return protocol;
+}
+
+//_____________________________________________________________________________
+void XrdProofConn::SetInterrupt()
+{
+   // Interrupt the underlying socket
+
+   if (fPhyConn)
+      fPhyConn->SetInterrupt();
 }
