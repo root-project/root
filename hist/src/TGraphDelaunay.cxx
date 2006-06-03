@@ -146,16 +146,16 @@ Double_t TGraphDelaunay::ComputeZ(Double_t x, Double_t y)
    Double_t xx, yy;
    xx = (x+fXoffset)*fScaleFactor;
    yy = (y+fYoffset)*fScaleFactor;
-   Double_t Z = Interpolate(xx, yy);
+   Double_t zz = Interpolate(xx, yy);
 
    // Wrong zeros may appear when points sit on a regular grid.
    // The following lines try to avoid this problem.
-   if (Z==0) {
+   if (zz==0) {
       xx += 0.001;
       yy += 0.001;
-      Z = Interpolate(xx, yy);
+      zz = Interpolate(xx, yy);
    }
-   return Z;
+   return zz;
 }
 
 
