@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpResidual.h,v 1.3 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpResidual.h,v 1.4 2006/03/21 05:20:33 pcanal Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -75,80 +75,84 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-class TQpResidual : public TObject {
+class TQpResidual : public TObject
+{
 
 protected:
-  Double_t fResidualNorm; // The norm of the residuals, ommiting the complementariy conditions
-  Double_t fDualityGap;   // A quantity that measures progress toward feasibility. In terms
-                          //  of the abstract problem formulation, this quantity is defined as
-                          //   x' * Q * x - b' * y + c' * x - d' * z
+   Double_t fResidualNorm;                     // The norm of the residuals, ommiting the complementariy conditions
+   Double_t fDualityGap;                       // A quantity that measures progress toward feasibility. In terms
+                                               //  of the abstract problem formulation, this quantity is defined as
+                                               //   x' * Q * x - b' * y + c' * x - d' * z
 
-  Int_t    fNx;
-  Int_t    fMy;
-  Int_t    fMz;
+   Int_t    fNx;
+   Int_t    fMy;
+   Int_t    fMz;
 
-  Double_t fNxup;
-  Double_t fNxlo;
-  Double_t fMcup;
-  Double_t fMclo;
+   Double_t fNxup;
+   Double_t fNxlo;
+   Double_t fMcup;
+   Double_t fMclo;
 
-  // these variables will be "Used" not copied
-  TVectorD fXupIndex;
-  TVectorD fXloIndex;
-  TVectorD fCupIndex;
-  TVectorD fCloIndex;
+   // these variables will be "Used" not copied
+   TVectorD fXupIndex;
+   TVectorD fXloIndex;
+   TVectorD fCupIndex;
+   TVectorD fCloIndex;
 
-  static void GondzioProjection(TVectorD &v,Double_t rmin,Double_t rmax);
+   static void GondzioProjection(TVectorD &v,Double_t rmin,Double_t rmax);
 
 public:
-  TVectorD fRQ;
-  TVectorD fRA;
-  TVectorD fRC;
-  TVectorD fRz;
-  TVectorD fRv;
-  TVectorD fRw;
-  TVectorD fRt;
-  TVectorD fRu;
-  TVectorD fRgamma;
-  TVectorD fRphi;
-  TVectorD fRlambda;
-  TVectorD fRpi;
+   TVectorD fRQ;
+   TVectorD fRA;
+   TVectorD fRC;
+   TVectorD fRz;
+   TVectorD fRv;
+   TVectorD fRw;
+   TVectorD fRt;
+   TVectorD fRu;
+   TVectorD fRgamma;
+   TVectorD fRphi;
+   TVectorD fRlambda;
+   TVectorD fRpi;
 
-  TQpResidual();
-  TQpResidual(Int_t nx,Int_t my,Int_t mz,
-             TVectorD &ixlow,TVectorD &ixupp,TVectorD &iclow,TVectorD &icupp);
-  TQpResidual(const TQpResidual &another);
+   TQpResidual();
+   TQpResidual(Int_t nx,Int_t my,Int_t mz,
+               TVectorD &ixlow,TVectorD &ixupp,TVectorD &iclow,TVectorD &icupp);
+   TQpResidual(const TQpResidual &another);
 
-  virtual ~TQpResidual() {}
+   virtual ~TQpResidual() {}
 
-  Double_t GetResidualNorm() { return fResidualNorm; }
-  Double_t GetDualityGap  () { return fDualityGap; };
+   Double_t GetResidualNorm() { return fResidualNorm; }
+   Double_t GetDualityGap  () { return fDualityGap; };
 
-  void   CalcResids         (TQpDataBase *problem,TQpVar *vars);     // calculate residuals, their norms, and duality/
-                                                                     // complementarity gap, given a problem and variable set.
-  void   Add_r3_xz_alpha    (TQpVar *vars,Double_t alpha);           // Modify the "complementarity" component of the
-                                                                     // residuals, by adding the pairwise products of the
-                                                                     // complementary variables plus a constant alpha to this
-                                                                     // term.
-  void   Set_r3_xz_alpha    (TQpVar *vars,Double_t alpha);           // Set the "complementarity" component of the residuals
-                                                                     // to the pairwise products of the complementary variables
-                                                                     // plus a constant alpha
-  void   Clear_r3           ();                                      // set the complementarity component of the residuals
-                                                                     // to 0.
-  void   Clear_r1r2         ();                                      // set the noncomplementarity components of the residual
-                                                                     // (the terms arising from the linear equalities in the
-                                                                     // KKT conditions) to 0.
-  void   Project_r3         (Double_t rmin,Double_t rmax);           // perform the projection operation required by Gondzio
-                                                                     // algorithm: replace each component r3_i of the
-                                                                     // complementarity component of the residuals by
-                                                                     // r3p_i-r3_i, where r3p_i is the projection of r3_i onto
-                                                                     // the box [rmin, rmax]. Then if the resulting value is
-                                                                     // less than -rmax, replace it by -rmax.
-  Bool_t ValidNonZeroPattern();
+   void   CalcResids         (TQpDataBase *problem,TQpVar *vars);
+                                               // calculate residuals, their norms, and duality/
+                                               // complementarity gap, given a problem and variable set.
+   void   Add_r3_xz_alpha    (TQpVar *vars,Double_t alpha);
+                                               // Modify the "complementarity" component of the
+                                               // residuals, by adding the pairwise products of the
+                                               // complementary variables plus a constant alpha to this
+                                               // term.
+   void   Set_r3_xz_alpha    (TQpVar *vars,Double_t alpha);
+                                               // Set the "complementarity" component of the residuals
+                                               // to the pairwise products of the complementary variables
+                                               // plus a constant alpha
+   void   Clear_r3           ();               // set the complementarity component of the residuals
+                                               // to 0.
+   void   Clear_r1r2         ();               // set the noncomplementarity components of the residual
+                                               // (the terms arising from the linear equalities in the
+                                               // KKT conditions) to 0.
+   void   Project_r3         (Double_t rmin,Double_t rmax);
+                                               // perform the projection operation required by Gondzio
+                                               // algorithm: replace each component r3_i of the
+                                               // complementarity component of the residuals by
+                                               // r3p_i-r3_i, where r3p_i is the projection of r3_i onto
+                                               // the box [rmin, rmax]. Then if the resulting value is
+                                               // less than -rmax, replace it by -rmax.
+   Bool_t ValidNonZeroPattern();
 
-  TQpResidual &operator= (const TQpResidual &source);
+   TQpResidual &operator= (const TQpResidual &source);
 
-  ClassDef(TQpResidual,1) // Qp Residual class
+   ClassDef(TQpResidual,1)                     // Qp Residual class
 };
-
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.h,v 1.4 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.h,v 1.5 2006/03/21 05:20:33 pcanal Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -76,7 +76,7 @@
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
 // default general problem formulation:                                  //
-//                                                                       // 
+//                                                                       //
 //  minimize    c' x + ( 1/2 ) x' * Q x        ;                         //
 //  subject to                      A x  = b   ;                         //
 //                          clo <=  C x <= cup ;                         //
@@ -107,37 +107,37 @@
 ///////////////////////////////////////////////////////////////////////////
 
 class TQpLinSolverBase;
-class TQpProbBase : public TObject {
+class TQpProbBase : public TObject
+{
 
 public:
-  Int_t fNx; // number of elements in x
-  Int_t fMy; // number of rows in A and b
-  Int_t fMz; // number of rows in C
+   Int_t fNx;                                  // number of elements in x
+   Int_t fMy;                                  // number of rows in A and b
+   Int_t fMz;                                  // number of rows in C
 
-  TQpProbBase();
-  TQpProbBase(Int_t nx,Int_t my,Int_t mz);
-  TQpProbBase(const TQpProbBase &another);
+   TQpProbBase();
+   TQpProbBase(Int_t nx,Int_t my,Int_t mz);
+   TQpProbBase(const TQpProbBase &another);
 
-  virtual ~TQpProbBase() {}
+   virtual ~TQpProbBase() {}
 
-  virtual TQpDataBase      *MakeData     (TVectorD     &c,
-                                          TMatrixDBase &Q_in,
-                                          TVectorD     &xlo, TVectorD &ixlo,
-                                          TVectorD     &xup, TVectorD &ixup,
-                                          TMatrixDBase &A_in,TVectorD &bA,
-                                          TMatrixDBase &C_in,
-                                          TVectorD     &clo, TVectorD &iclo,
-                                          TVectorD     &cup, TVectorD &icup) = 0;
-  virtual TQpResidual      *MakeResiduals(const TQpDataBase *data) = 0;
-  virtual TQpVar           *MakeVariables(const TQpDataBase *data) = 0;
-  virtual TQpLinSolverBase *MakeLinSys   (const TQpDataBase *data) = 0;
+   virtual TQpDataBase      *MakeData     (TVectorD     &c,
+                                           TMatrixDBase &Q_in,
+                                           TVectorD     &xlo, TVectorD &ixlo,
+                                           TVectorD     &xup, TVectorD &ixup,
+                                           TMatrixDBase &A_in,TVectorD &bA,
+                                           TMatrixDBase &C_in,
+                                           TVectorD     &clo, TVectorD &iclo,
+                                           TVectorD     &cup, TVectorD &icup) = 0;
+   virtual TQpResidual      *MakeResiduals(const TQpDataBase *data) = 0;
+   virtual TQpVar           *MakeVariables(const TQpDataBase *data) = 0;
+   virtual TQpLinSolverBase *MakeLinSys   (const TQpDataBase *data) = 0;
 
-  virtual void JoinRHS     (TVectorD &rhs_in,TVectorD &rhs1_in,TVectorD &rhs2_in,TVectorD &rhs3_in) = 0;
-  virtual void SeparateVars(TVectorD &x_in,TVectorD &y_in,TVectorD &z_in,TVectorD &vars_in)         = 0;
+   virtual void JoinRHS     (TVectorD &rhs_in,TVectorD &rhs1_in,TVectorD &rhs2_in,TVectorD &rhs3_in) = 0;
+   virtual void SeparateVars(TVectorD &x_in,TVectorD &y_in,TVectorD &z_in,TVectorD &vars_in)         = 0;
 
-  TQpProbBase &operator= (const TQpProbBase &source);
+   TQpProbBase &operator= (const TQpProbBase &source);
 
-  ClassDef(TQpProbBase,1) // Qp problem formulation base class
+   ClassDef(TQpProbBase,1)                     // Qp problem formulation base class
 };
-
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TMehrotraSolver.h,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TMehrotraSolver.h,v 1.3 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -52,36 +52,36 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-class TMehrotraSolver : public TQpSolverBase {
+class TMehrotraSolver : public TQpSolverBase
+{
 protected:
 
-  Int_t        fPrintlevel;               // parameter in range [0,100] determines verbosity. (Higher value
-                                          //  => more verbose.)
-  Double_t     fTsig;                     // exponent in Mehrotra's centering parameter, which is usually
-                                          // chosen to me (muaff/mu)^tsig, where muaff is the predicted
-                                          // complementarity gap obtained from an affine-scaling step, while
-                                          // mu is the current complementarity gap
+   Int_t        fPrintlevel;                   // parameter in range [0,100] determines verbosity. (Higher value
+                                               //  => more verbose.)
+   Double_t     fTsig;                         // exponent in Mehrotra's centering parameter, which is usually
+                                               // chosen to me (muaff/mu)^tsig, where muaff is the predicted
+                                               // complementarity gap obtained from an affine-scaling step, while
+                                               // mu is the current complementarity gap
 
-  TQpVar      *fStep;                     // storage for step vectors
+   TQpVar      *fStep;                         // storage for step vectors
 
-  TQpProbBase *fFactory;
+   TQpProbBase *fFactory;
 
 public:
 
-  TMehrotraSolver();
-  TMehrotraSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose=0);
-  TMehrotraSolver(const TMehrotraSolver &another);
+   TMehrotraSolver();
+   TMehrotraSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose=0);
+   TMehrotraSolver(const TMehrotraSolver &another);
 
-  virtual ~TMehrotraSolver();
+   virtual ~TMehrotraSolver();
 
-  virtual Int_t Solve           (TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid);
-  virtual void  DefMonitor      (TQpDataBase *data,TQpVar *vars,TQpResidual *resids,
-                                 Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
-                                 Int_t status_code,Int_t level);
+   virtual Int_t Solve           (TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid);
+   virtual void  DefMonitor      (TQpDataBase *data,TQpVar *vars,TQpResidual *resids,
+                                  Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
+                                  Int_t status_code,Int_t level);
 
-  TMehrotraSolver &operator=(const TMehrotraSolver &source);
+   TMehrotraSolver &operator=(const TMehrotraSolver &source);
 
-  ClassDef(TMehrotraSolver,1) // Mehrotra Qp Solver class
+   ClassDef(TMehrotraSolver,1)                 // Mehrotra Qp Solver class
 };
-
 #endif

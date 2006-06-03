@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.h,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.h,v 1.3 2006/03/20 21:43:44 pcanal Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -40,8 +40,8 @@
  * WITH THE DEPARTMENT OF ENERGY.                                        *
  *************************************************************************/
 
-#ifndef ROOT_TQpDataSparse                                                 
-#define ROOT_TQpDataSparse 
+#ifndef ROOT_TQpDataSparse
+#define ROOT_TQpDataSparse
 
 #ifndef ROOT_TQpDataBase
 #include "TQpDataBase.h"
@@ -62,57 +62,66 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TQpDataSparse : public TQpDataBase {
+class TQpDataSparse : public TQpDataBase
+{
 
 protected:
 
-  // these variables will be "Used" not copied
-  TMatrixDSparse fQ; // quadratic part of Objective function
-  TMatrixDSparse fA; // Equality constraints
-  TMatrixDSparse fC; // Inequality constraints
+   // these variables will be "Used" not copied
+   TMatrixDSparse fQ;                          // quadratic part of Objective function
+   TMatrixDSparse fA;                          // Equality constraints
+   TMatrixDSparse fC;                          // Inequality constraints
 
 public:
 
-  TQpDataSparse() {}
-  // data objects of the specified dimensions 
-  TQpDataSparse(Int_t nx,Int_t my,Int_t mz);
+   TQpDataSparse() {}
+   // data objects of the specified dimensions
+   TQpDataSparse(Int_t nx,Int_t my,Int_t mz);
 
-  // sets up pointers to the data objects that are passed as arguments
-  TQpDataSparse(TVectorD &c,TMatrixDSparse &Q,TVectorD &xlow,TVectorD &ixlow,TVectorD &xupp,
-                TVectorD &ixupp,TMatrixDSparse &A,TVectorD &bA,TMatrixDSparse &C,TVectorD &clow,
-                TVectorD &iclow,TVectorD &cupp,TVectorD &icupp);
-  TQpDataSparse(const TQpDataSparse &another);
+   // sets up pointers to the data objects that are passed as arguments
+   TQpDataSparse(TVectorD &c,TMatrixDSparse &Q,TVectorD &xlow,TVectorD &ixlow,TVectorD &xupp,
+                 TVectorD &ixupp,TMatrixDSparse &A,TVectorD &bA,TMatrixDSparse &C,TVectorD &clow,
+                 TVectorD &iclow,TVectorD &cupp,TVectorD &icupp);
+   TQpDataSparse(const TQpDataSparse &another);
 
-  virtual ~TQpDataSparse() {}
+   virtual ~TQpDataSparse() {}
 
-  void SetNonZeros(Int_t nnzQ,Int_t nnzA,Int_t nnzC);
+   void SetNonZeros(Int_t nnzQ,Int_t nnzA,Int_t nnzC);
 
-  virtual void PutQIntoAt(TMatrixDBase &M,Int_t row,Int_t col); // insert the Hessian Q into the matrix M for the fundamental
-                                                                // linear system, where M is stored as a TMatrixDSparse
-  virtual void PutAIntoAt(TMatrixDBase &M,Int_t row,Int_t col); // insert the constraint matrix A into the matrix M for the
-                                                                // fundamental linear system, where M is stored as a TMatrixD
-  virtual void PutCIntoAt(TMatrixDBase &M,Int_t row,Int_t col); // insert the constraint matrix C into the matrix M for the
-                                                                // fundamental linear system, where M is stored as a
-                                                                // TMatrixDSparse
+                                               // insert the Hessian Q into the matrix M for the fundamental
+   virtual void PutQIntoAt(TMatrixDBase &M,Int_t row,Int_t col);
+                                               // linear system, where M is stored as a TMatrixDSparse
+                                               // insert the constraint matrix A into the matrix M for the
+   virtual void PutAIntoAt(TMatrixDBase &M,Int_t row,Int_t col);
+                                               // fundamental linear system, where M is stored as a TMatrixD
+                                               // insert the constraint matrix C into the matrix M for the
+   virtual void PutCIntoAt(TMatrixDBase &M,Int_t row,Int_t col);
+                                               // fundamental linear system, where M is stored as a
+                                               // TMatrixDSparse
 
-  virtual void Qmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x); // y = beta * y + alpha * Q * x
-  virtual void Amult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x); // y = beta * y + alpha * A * x
-  virtual void Cmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x); // y = beta * y + alpha * C * x
-  virtual void ATransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x); // y = beta * y + alpha * A^T * x
-  virtual void CTransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x); // y = beta * y + alpha * C^T * x
+                                               // y = beta * y + alpha * Q * x
+   virtual void Qmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+                                               // y = beta * y + alpha * A * x
+   virtual void Amult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+                                               // y = beta * y + alpha * C * x
+   virtual void Cmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+                                               // y = beta * y + alpha * A^T * x
+   virtual void ATransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+                                               // y = beta * y + alpha * C^T * x
+   virtual void CTransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
 
-  virtual void GetDiagonalOfQ(TVectorD &dQ); // extract the diagonal of Q and put it in the vector dQ
+   virtual void GetDiagonalOfQ(TVectorD &dQ);  // extract the diagonal of Q and put it in the vector dQ
 
-  virtual Double_t DataNorm();
-  virtual void DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s); // Create a random problem (x,y,z,s)
-                                                                            // the solution to the random problem
-  virtual void Print(Option_t *opt="") const;
+   virtual Double_t DataNorm();
+                                               // Create a random problem (x,y,z,s)
+   virtual void DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s);
+                                               // the solution to the random problem
+   virtual void Print(Option_t *opt="") const;
 
-  virtual Double_t ObjectiveValue(TQpVar *vars);
+   virtual Double_t ObjectiveValue(TQpVar *vars);
 
-  TQpDataSparse &operator= (const TQpDataSparse &source);
+   TQpDataSparse &operator= (const TQpDataSparse &source);
 
-  ClassDef(TQpDataSparse,1) // Qp Data class for Sparse formulation
+   ClassDef(TQpDataSparse,1)                   // Qp Data class for Sparse formulation
 };
-
 #endif

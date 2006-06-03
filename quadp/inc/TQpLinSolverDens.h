@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverDens.h,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverDens.h,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -61,28 +61,28 @@
 ///////////////////////////////////////////////////////////////////////////
 
 class TQpProbDens;
-class TQpLinSolverDens : public TQpLinSolverBase {
+class TQpLinSolverDens : public TQpLinSolverBase
+{
 
 protected:
 
-  TMatrixDSym fKkt;
-  TDecompLU   fSolveLU;
+   TMatrixDSym fKkt;
+   TDecompLU   fSolveLU;
 
 public:
-  TQpLinSolverDens() {}
-  TQpLinSolverDens(TQpProbDens *factory,TQpDataDens *data);
-  TQpLinSolverDens(const TQpLinSolverDens &another);
+   TQpLinSolverDens() {}
+   TQpLinSolverDens(TQpProbDens *factory,TQpDataDens *data);
+   TQpLinSolverDens(const TQpLinSolverDens &another);
 
-  virtual ~TQpLinSolverDens() {}
+   virtual ~TQpLinSolverDens() {}
 
-  virtual void Factor         (TQpDataBase *prob,TQpVar *vars);
-  virtual void SolveCompressed(TVectorD &rhs);
-  virtual void PutXDiagonal   (TVectorD &xdiag);
-  virtual void PutZDiagonal   (TVectorD &zdiag);
+   virtual void Factor         (TQpDataBase *prob,TQpVar *vars);
+   virtual void SolveCompressed(TVectorD &rhs);
+   virtual void PutXDiagonal   (TVectorD &xdiag);
+   virtual void PutZDiagonal   (TVectorD &zdiag);
 
-  TQpLinSolverDens &operator= (const TQpLinSolverDens &source);
+   TQpLinSolverDens &operator= (const TQpLinSolverDens &source);
 
-  ClassDef(TQpLinSolverDens,1) // Qp linear solver class for Dens formulation
+   ClassDef(TQpLinSolverDens,1)                // Qp linear solver class for Dens formulation
 };
-
 #endif

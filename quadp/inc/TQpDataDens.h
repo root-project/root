@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.h,v 1.4 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.h,v 1.5 2006/03/21 05:20:33 pcanal Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -40,8 +40,8 @@
  * WITH THE DEPARTMENT OF ENERGY.                                        *
  *************************************************************************/
 
-#ifndef ROOT_TQpDataDens                                                 
-#define ROOT_TQpDataDens 
+#ifndef ROOT_TQpDataDens
+#define ROOT_TQpDataDens
 
 #ifndef ROOT_TROOT
 #include "TROOT.h"
@@ -78,54 +78,63 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TQpDataDens : public TQpDataBase {
+class TQpDataDens : public TQpDataBase
+{
 
 protected:
 
-  // these variables will be "Used" not copied
-  TMatrixDSym fQ; // Quadratic part of Objective function
-  TMatrixD    fA; // Equality constraints
-  TMatrixD    fC; // Inequality constraints
+   // these variables will be "Used" not copied
+   TMatrixDSym fQ;                             // Quadratic part of Objective function
+   TMatrixD    fA;                             // Equality constraints
+   TMatrixD    fC;                             // Inequality constraints
 
 public:
 
-  TQpDataDens() {}
-  // data objects of the specified dimensions 
-  TQpDataDens(Int_t nx,Int_t my,Int_t mz);
+   TQpDataDens() {}
+   // data objects of the specified dimensions
+   TQpDataDens(Int_t nx,Int_t my,Int_t mz);
 
-  // sets up pointers to the data objects that are passed as arguments
-  TQpDataDens(TVectorD &c,TMatrixDSym &Q,TVectorD &xlow,TVectorD &ixlow,TVectorD &xupp,
-              TVectorD &ixupp,TMatrixD &A,TVectorD &bA,TMatrixD &C,TVectorD &clow,
-              TVectorD &iclow,TVectorD &cupp,TVectorD &icupp);
-  TQpDataDens(const TQpDataDens &another);
+   // sets up pointers to the data objects that are passed as arguments
+   TQpDataDens(TVectorD &c,TMatrixDSym &Q,TVectorD &xlow,TVectorD &ixlow,TVectorD &xupp,
+               TVectorD &ixupp,TMatrixD &A,TVectorD &bA,TMatrixD &C,TVectorD &clow,
+               TVectorD &iclow,TVectorD &cupp,TVectorD &icupp);
+   TQpDataDens(const TQpDataDens &another);
 
-  virtual ~TQpDataDens() {}
+   virtual ~TQpDataDens() {}
 
-  virtual void PutQIntoAt(TMatrixDBase &M,Int_t row,Int_t col); // insert the Hessian Q into the matrix M for the fundamental
-                                                                // linear system, where M is stored as a TMatrixD
-  virtual void PutAIntoAt(TMatrixDBase &M,Int_t row,Int_t col); // insert the constraint matrix A into the matrix M for the
-                                                                // fundamental linear system, where M is stored as a TMatrixD
-  virtual void PutCIntoAt(TMatrixDBase &M,Int_t row,Int_t col); // insert the constraint matrix C into the matrix M for the
-                                                                // fundamental linear system, where M is stored as a TMatrixD
+                                               // insert the Hessian Q into the matrix M for the fundamental
+   virtual void PutQIntoAt(TMatrixDBase &M,Int_t row,Int_t col);
+                                               // linear system, where M is stored as a TMatrixD
+                                               // insert the constraint matrix A into the matrix M for the
+   virtual void PutAIntoAt(TMatrixDBase &M,Int_t row,Int_t col);
+                                               // fundamental linear system, where M is stored as a TMatrixD
+                                               // insert the constraint matrix C into the matrix M for the
+   virtual void PutCIntoAt(TMatrixDBase &M,Int_t row,Int_t col);
+                                               // fundamental linear system, where M is stored as a TMatrixD
 
-  virtual void Qmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x); // y = beta * y + alpha * Q * x
-  virtual void Amult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x); // y = beta * y + alpha * A * x
-  virtual void Cmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x); // y = beta * y + alpha * C * x
-  virtual void ATransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x); // y = beta * y + alpha * A^T * x
-  virtual void CTransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x); // y = beta * y + alpha * C^T * x
+                                               // y = beta * y + alpha * Q * x
+   virtual void Qmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+                                               // y = beta * y + alpha * A * x
+   virtual void Amult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+                                               // y = beta * y + alpha * C * x
+   virtual void Cmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+                                               // y = beta * y + alpha * A^T * x
+   virtual void ATransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+                                               // y = beta * y + alpha * C^T * x
+   virtual void CTransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
 
-  virtual void GetDiagonalOfQ(TVectorD &dQ); // extract the diagonal of Q and put it in the vector dQ
+   virtual void GetDiagonalOfQ(TVectorD &dQ);  // extract the diagonal of Q and put it in the vector dQ
 
-  virtual Double_t DataNorm();
-  virtual void DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s); // Create a random problem (x,y,z,s)
-                                                                            // the solution to the random problem
-  virtual void Print(Option_t *opt="") const;
+   virtual Double_t DataNorm();
+                                               // Create a random problem (x,y,z,s)
+   virtual void DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s);
+                                               // the solution to the random problem
+   virtual void Print(Option_t *opt="") const;
 
-  virtual Double_t ObjectiveValue(TQpVar *vars);
+   virtual Double_t ObjectiveValue(TQpVar *vars);
 
-  TQpDataDens &operator= (const TQpDataDens &source);
+   TQpDataDens &operator= (const TQpDataDens &source);
 
-  ClassDef(TQpDataDens,1) // Qp Data class for Dens formulation
+   ClassDef(TQpDataDens,1)                     // Qp Data class for Dens formulation
 };
-
 #endif

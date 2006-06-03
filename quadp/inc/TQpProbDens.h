@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbDens.h,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbDens.h,v 1.3 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -62,43 +62,43 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TQpProbDens : public TQpProbBase {
+class TQpProbDens : public TQpProbBase
+{
 
 public:
 
-  TQpProbDens() {}
-  TQpProbDens(Int_t nx,Int_t my,Int_t mz);
-  TQpProbDens(const TQpProbDens &another);
+   TQpProbDens() {}
+   TQpProbDens(Int_t nx,Int_t my,Int_t mz);
+   TQpProbDens(const TQpProbDens &another);
 
-  virtual ~TQpProbDens() {}
+   virtual ~TQpProbDens() {}
 
-  virtual TQpDataBase      *MakeData     (Double_t *c,
-                                          Double_t *Q,
-                                          Double_t *xlo,Bool_t *ixlo,
-                                          Double_t *xup,Bool_t *ixup,
-                                          Double_t *A,  Double_t *bA,
-                                          Double_t *C,
-                                          Double_t *clo,Bool_t *iclo,
-                                          Double_t *cup,Bool_t *icup);
-  virtual TQpDataBase      *MakeData     (TVectorD     &c,
-                                          TMatrixDBase &Q_in,
-                                          TVectorD     &xlo, TVectorD &ixlo,
-                                          TVectorD     &xup, TVectorD &ixup,
-                                          TMatrixDBase &A_in,TVectorD &bA,
-                                          TMatrixDBase &C_in,
-                                          TVectorD     &clo, TVectorD &iclo,
-                                          TVectorD     &cup, TVectorD &icup);
-  virtual TQpResidual      *MakeResiduals(const TQpDataBase *data);
-  virtual TQpVar           *MakeVariables(const TQpDataBase *data);
-  virtual TQpLinSolverBase *MakeLinSys   (const TQpDataBase *data);
+   virtual TQpDataBase      *MakeData     (Double_t *c,
+                                           Double_t *Q,
+                                           Double_t *xlo,Bool_t *ixlo,
+                                           Double_t *xup,Bool_t *ixup,
+                                           Double_t *A,  Double_t *bA,
+                                           Double_t *C,
+                                           Double_t *clo,Bool_t *iclo,
+                                           Double_t *cup,Bool_t *icup);
+   virtual TQpDataBase      *MakeData     (TVectorD     &c,
+                                           TMatrixDBase &Q_in,
+                                           TVectorD     &xlo, TVectorD &ixlo,
+                                           TVectorD     &xup, TVectorD &ixup,
+                                           TMatrixDBase &A_in,TVectorD &bA,
+                                           TMatrixDBase &C_in,
+                                           TVectorD     &clo, TVectorD &iclo,
+                                           TVectorD     &cup, TVectorD &icup);
+   virtual TQpResidual      *MakeResiduals(const TQpDataBase *data);
+   virtual TQpVar           *MakeVariables(const TQpDataBase *data);
+   virtual TQpLinSolverBase *MakeLinSys   (const TQpDataBase *data);
 
-  virtual void JoinRHS       (TVectorD &rhs_in,TVectorD &rhs1_in,TVectorD &rhs2_in,TVectorD &rhs3_in);
-  virtual void SeparateVars  (TVectorD &x_in,TVectorD &y_in,TVectorD &z_in,TVectorD &vars_in);
-          void MakeRandomData(TQpDataDens *&data,TQpVar *&soln,Int_t nnzQ,Int_t nnzA,Int_t nnzC);
+   virtual void JoinRHS       (TVectorD &rhs_in,TVectorD &rhs1_in,TVectorD &rhs2_in,TVectorD &rhs3_in);
+   virtual void SeparateVars  (TVectorD &x_in,TVectorD &y_in,TVectorD &z_in,TVectorD &vars_in);
+           void MakeRandomData(TQpDataDens *&data,TQpVar *&soln,Int_t nnzQ,Int_t nnzA,Int_t nnzC);
 
-  TQpProbDens &operator= (const TQpProbDens &source);
+   TQpProbDens &operator= (const TQpProbDens &source);
 
-  ClassDef(TQpProbDens,1) // Qp dens problem formulation class
+   ClassDef(TQpProbDens,1)                     // Qp dens problem formulation class
 };
-
 #endif

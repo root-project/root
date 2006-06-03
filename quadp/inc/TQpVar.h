@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpVar.h,v 1.4 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpVar.h,v 1.5 2006/03/21 05:20:33 pcanal Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -71,132 +71,137 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-class TQpVar : public TObject {
+class TQpVar : public TObject
+{
 
 protected:
-  Int_t fNx;
-  Int_t fMy;
-  Int_t fMz;
-  Int_t fNxup;
-  Int_t fNxlo;
-  Int_t fMcup;
-  Int_t fMclo;
+   Int_t fNx;
+   Int_t fMy;
+   Int_t fMz;
+   Int_t fNxup;
+   Int_t fNxlo;
+   Int_t fMcup;
+   Int_t fMclo;
 
-  // these variables will be "USed" not copied
-  TVectorD fXloIndex;
-  TVectorD fXupIndex;
-  TVectorD fCupIndex;
-  TVectorD fCloIndex;
+   // these variables will be "Used" not copied
+   TVectorD fXloIndex;
+   TVectorD fXupIndex;
+   TVectorD fCupIndex;
+   TVectorD fCloIndex;
 
-  static Double_t StepBound      (TVectorD &v,TVectorD &dir,Double_t maxStep);
-  static Double_t FindBlocking   (TVectorD &w,TVectorD &wstep,TVectorD &u,TVectorD &ustep,
-                                  Double_t maxStep,Double_t &w_elt,Double_t &wstep_elt,Double_t &u_elt,
-                                  Double_t &ustep_elt,int& first_or_second);
-  static Double_t FindBlockingSub(Int_t n,Double_t *w,Int_t incw,Double_t *wstep,Int_t incwstep,
-                                  Double_t *u,Int_t incu,Double_t *ustep,Int_t incustep,
-                                  Double_t maxStep,Double_t &w_elt,Double_t &wstep_elt,
-                                  Double_t &u_elt,Double_t &ustep_elt,Int_t &first_or_second);
+   static Double_t StepBound      (TVectorD &v,TVectorD &dir,Double_t maxStep);
+   static Double_t FindBlocking   (TVectorD &w,TVectorD &wstep,TVectorD &u,TVectorD &ustep,
+                                   Double_t maxStep,Double_t &w_elt,Double_t &wstep_elt,Double_t &u_elt,
+                                   Double_t &ustep_elt,int& first_or_second);
+   static Double_t FindBlockingSub(Int_t n,Double_t *w,Int_t incw,Double_t *wstep,Int_t incwstep,
+                                   Double_t *u,Int_t incu,Double_t *ustep,Int_t incustep,
+                                   Double_t maxStep,Double_t &w_elt,Double_t &wstep_elt,
+                                   Double_t &u_elt,Double_t &ustep_elt,Int_t &first_or_second);
 
 public:
 
-  Int_t fNComplementaryVariables; // number of complementary primal-dual variables.
+   Int_t fNComplementaryVariables;             // number of complementary primal-dual variables.
 
-  // these variables will be "Used" not copied
-  TVectorD fX;
-  TVectorD fS;
-  TVectorD fY;
-  TVectorD fZ;
+   // these variables will be "Used" not copied
+   TVectorD fX;
+   TVectorD fS;
+   TVectorD fY;
+   TVectorD fZ;
 
-  TVectorD fV;
-  TVectorD fPhi;
+   TVectorD fV;
+   TVectorD fPhi;
 
-  TVectorD fW;
-  TVectorD fGamma;
+   TVectorD fW;
+   TVectorD fGamma;
 
-  TVectorD fT;
-  TVectorD fLambda;
+   TVectorD fT;
+   TVectorD fLambda;
 
-  TVectorD fU;
-  TVectorD fPi;
+   TVectorD fU;
+   TVectorD fPi;
 
-  TQpVar();
-  // constructor in which the data and variable pointers are set to point to the given arguments
-  TQpVar(TVectorD &x_in,TVectorD &s_in,TVectorD &y_in,TVectorD &z_in,
-         TVectorD &v_in,TVectorD &gamma_in,TVectorD &w_in,TVectorD &phi_in,
-         TVectorD &t_in,TVectorD &lambda_in,TVectorD &u_in,TVectorD &pi_in,
-         TVectorD &ixlow_in,TVectorD &ixupp_in,TVectorD &iclow_in,TVectorD &icupp_in);
+   TQpVar();
+   // constructor in which the data and variable pointers are set to point to the given arguments
+   TQpVar(TVectorD &x_in,TVectorD &s_in,TVectorD &y_in,TVectorD &z_in,
+          TVectorD &v_in,TVectorD &gamma_in,TVectorD &w_in,TVectorD &phi_in,
+          TVectorD &t_in,TVectorD &lambda_in,TVectorD &u_in,TVectorD &pi_in,
+          TVectorD &ixlow_in,TVectorD &ixupp_in,TVectorD &iclow_in,TVectorD &icupp_in);
 
-  // constructor that creates variables objects of specified dimensions.
-  TQpVar(Int_t nx,Int_t my,Int_t mz,
-         TVectorD &ixlow,TVectorD &ixupp,TVectorD &iclow,TVectorD &icupp);
-  TQpVar(const TQpVar &another);
+   // constructor that creates variables objects of specified dimensions.
+   TQpVar(Int_t nx,Int_t my,Int_t mz,
+      TVectorD &ixlow,TVectorD &ixupp,TVectorD &iclow,TVectorD &icupp);
+   TQpVar(const TQpVar &another);
 
-  virtual ~TQpVar() {}
+   virtual ~TQpVar() {}
 
-  // Indicates what type is the blocking variable in the step length determination. If kt_block,
-  // then the blocking variable is one of the slack variables t for a general lower bound,
-  // and so on. Special value kno_block is for the case in which a step length of 1 can be
-  // taken without hitting the bound.
-  
-  enum EVarBlock { kno_block,kt_block,klambda_block,ku_block,kpi_block,
-                   kv_block,kgamma_block,kw_block,kphi_block};
+   // Indicates what type is the blocking variable in the step length determination. If kt_block,
+   // then the blocking variable is one of the slack variables t for a general lower bound,
+   // and so on. Special value kno_block is for the case in which a step length of 1 can be
+   // taken without hitting the bound.
 
+   enum EVarBlock { kno_block,kt_block,klambda_block,ku_block,kpi_block,
+                    kv_block,kgamma_block,kw_block,kphi_block };
 
-  virtual Double_t GetMu       ();                                // compute complementarity gap, obtained by taking the
-                                                                  // inner product of the complementary vectors and dividing
-                                                                  // by the total number of components
-                                                                  // computes mu = (t'lambda +u'pi + v'gamma + w'phi)/
-                                                                  //                    (mclow+mcupp+nxlow+nxupp)
-  virtual Double_t MuStep      (TQpVar *step,Double_t alpha);     // compute the complementarity gap resulting from a step
-                                                                  // of length "alpha" along direction "step"
-  virtual void     Saxpy       (TQpVar *b,Double_t alpha);        // given variables b, compute a <- a + alpha b,
-                                                                  // where a are the variables in this class
+   virtual Double_t GetMu       ();            // compute complementarity gap, obtained by taking the
+                                               // inner product of the complementary vectors and dividing
+                                               // by the total number of components
+                                               // computes mu = (t'lambda +u'pi + v'gamma + w'phi)/
+                                               //                    (mclow+mcupp+nxlow+nxupp)
+   virtual Double_t MuStep      (TQpVar *step,Double_t alpha);
+                                               // compute the complementarity gap resulting from a step
+                                               // of length "alpha" along direction "step"
+   virtual void     Saxpy       (TQpVar *b,Double_t alpha);
+                                               // given variables b, compute a <- a + alpha b,
+                                               // where a are the variables in this class
 
-  virtual void     Negate      ();                                // negate the value of all the variables in this structure
+   virtual void     Negate      ();            // negate the value of all the variables in this structure
 
-  virtual Double_t StepBound   (TQpVar *b);                       // calculate the largest alpha in (0,1] such that the
-                                                                  // nonnegative variables stay nonnegative in the given
-                                                                  // search direction. In the general QP problem formulation
-                                                                  // this is the largest value of alpha such that
-                                                                  // (t,u,v,w,lambda,pi,phi,gamma) + alpha * (b->t,b->u,
-                                                                  //   b->v,b->w,b->lambda,b->pi,b->phi,b->gamma) >= 0.
+   virtual Double_t StepBound   (TQpVar *b);   // calculate the largest alpha in (0,1] such that the
+                                               // nonnegative variables stay nonnegative in the given
+                                               // search direction. In the general QP problem formulation
+                                               // this is the largest value of alpha such that
+                                               // (t,u,v,w,lambda,pi,phi,gamma) + alpha * (b->t,b->u,
+                                               //   b->v,b->w,b->lambda,b->pi,b->phi,b->gamma) >= 0.
 
-  virtual Double_t FindBlocking(TQpVar   *step,                   // Performs the same function as StepBound, and supplies
-                                Double_t &primalValue,            // additional information about which component of the
-                                Double_t &primalStep,             // nonnegative variables is responsible for restricting
-                                Double_t &dualValue,              // alpha. In terms of the abstract formulation, the
-                                Double_t &dualStep,               // components have the following meanings.
-                                Int_t    &firstOrSecond);         //
-                                                                  // primalValue: the value of the blocking component of the
-                                                                  // primal variables variables (u,t,v,w).
-                                                                  // primalStep: the corresponding value of the blocking
-                                                                  // component of the primal step variables (b->u,b->t,
-                                                                  // b->v,b->w)
-                                                                  // dualValue: the value of the blocking component of the
-                                                                  // dual variables (lambda,pi,phi,gamma).
-                                                                  // dualStep: the corresponding value of the blocking
-                                                                  // component of the dual step variables (b->lambda,b->pi,
-                                                                  // b->phi,b->gamma)
-                                                                  // firstOrSecond:  1 if the primal step is blocking, 2
-                                                                  // if the dual step is block, 0 if no step is blocking.
+   virtual Double_t FindBlocking(TQpVar *step,Double_t &primalValue,Double_t &primalStep,Double_t &dualValue,
+                                 Double_t &dualStep,Int_t &firstOrSecond);
+                                               // Performs the same function as StepBound, and supplies
+                                               // additional information about which component of the
+                                               // nonnegative variables is responsible for restricting
+                                               // alpha. In terms of the abstract formulation, the
+                                               // components have the following meanings.
+                                               //
+                                               // primalValue: the value of the blocking component of the
+                                               // primal variables variables (u,t,v,w).
+                                               // primalStep: the corresponding value of the blocking
+                                               // component of the primal step variables (b->u,b->t,
+                                               // b->v,b->w)
+                                               // dualValue: the value of the blocking component of the
+                                               // dual variables (lambda,pi,phi,gamma).
+                                               // dualStep: the corresponding value of the blocking
+                                               // component of the dual step variables (b->lambda,b->pi,
+                                               // b->phi,b->gamma)
+                                               // firstOrSecond:  1 if the primal step is blocking, 2
+                                               // if the dual step is block, 0 if no step is blocking.
 
-  virtual void     InteriorPoint(Double_t alpha,Double_t beta);   // sets components of (u,t,v,w) to alpha and of
-                                                                  // (lambda,pi,phi,gamma) to beta
-  virtual void     ShiftBoundVariables
-                                (Double_t alpha,Double_t beta);   // add alpha to components of (u,t,v,w) and beta to
-                                                                  // components of (lambda,pi,phi,gamma)
-  virtual Bool_t   IsInteriorPoint();                             // check whether this is an interior point. Useful as a
-                                                                  // sanity check.
-  virtual Double_t Violation    ();                               // The amount by which the current variables violate the
-                                                                  //  non-negativity constraints.
-  virtual void     Print        (Option_t *option="") const;
-  virtual Double_t Norm1        ();                               // compute the 1-norm of the variables
-  virtual Double_t NormInf      ();                               // compute the inf-norm of the variables
-  virtual Bool_t   ValidNonZeroPattern();
+   virtual void     InteriorPoint(Double_t alpha,Double_t beta);
+                                               // sets components of (u,t,v,w) to alpha and of
+                                               // (lambda,pi,phi,gamma) to beta
+   virtual void     ShiftBoundVariables
+                                 (Double_t alpha,Double_t beta);
+                                               // add alpha to components of (u,t,v,w) and beta to
+                                               // components of (lambda,pi,phi,gamma)
+   virtual Bool_t   IsInteriorPoint();         // check whether this is an interior point. Useful as a
+                                               // sanity check.
+   virtual Double_t Violation    ();           // The amount by which the current variables violate the
+                                               //  non-negativity constraints.
+   virtual void     Print        (Option_t *option="") const;
+   virtual Double_t Norm1        ();           // compute the 1-norm of the variables
+   virtual Double_t NormInf      ();           // compute the inf-norm of the variables
+   virtual Bool_t   ValidNonZeroPattern();
 
-  TQpVar &operator= (const TQpVar &source);
+   TQpVar &operator= (const TQpVar &source);
 
-  ClassDef(TQpVar,1) // Qp Variables class
+   ClassDef(TQpVar,1)                          // Qp Variables class
 };
-
 #endif

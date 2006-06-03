@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.h,v 1.3 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.h,v 1.4 2006/03/21 05:20:33 pcanal Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -84,85 +84,93 @@
 ///////////////////////////////////////////////////////////////////////////
 
 class TQpProbBase;
-class TQpLinSolverBase : public TObject {
+class TQpLinSolverBase : public TObject
+{
 
 protected:
 
-  TVectorD     fNomegaInv; // stores a critical diagonal matrix as a vector
-  TVectorD     fRhs;       // right-hand side of the system
+   TVectorD     fNomegaInv;                    // stores a critical diagonal matrix as a vector
+   TVectorD     fRhs;                          // right-hand side of the system
 
-  Int_t        fNx;        // dimensions of the vectors in the general QP formulation
-  Int_t        fMy;
-  Int_t        fMz;
+   Int_t        fNx;                           // dimensions of the vectors in the general QP formulation
+   Int_t        fMy;
+   Int_t        fMz;
 
-  TVectorD     fDd;        // temporary storage vectors
-  TVectorD     fDq;
+   TVectorD     fDd;                           // temporary storage vectors
+   TVectorD     fDq;
 
-  TVectorD     fXupIndex;  // index matrices for the upper and lower bounds on x and Cx
-  TVectorD     fCupIndex;
-  TVectorD     fXloIndex;
-  TVectorD     fCloIndex;
+   TVectorD     fXupIndex;                     // index matrices for the upper and lower bounds on x and Cx
+   TVectorD     fCupIndex;
+   TVectorD     fXloIndex;
+   TVectorD     fCloIndex;
 
-  Int_t        fNxup;     // dimensions of the upper and lower bound vectors
-  Int_t        fNxlo;
-  Int_t        fMcup;
-  Int_t        fMclo;
+   Int_t        fNxup;                         // dimensions of the upper and lower bound vectors
+   Int_t        fNxlo;
+   Int_t        fMcup;
+   Int_t        fMclo;
 
-  TQpProbBase *fFactory;
+   TQpProbBase *fFactory;
 
 public:
-  TQpLinSolverBase();
-  TQpLinSolverBase(TQpProbBase *factory,TQpDataBase *data);
-  TQpLinSolverBase(const TQpLinSolverBase &another);
+   TQpLinSolverBase();
+   TQpLinSolverBase(TQpProbBase *factory,TQpDataBase *data);
+   TQpLinSolverBase(const TQpLinSolverBase &another);
 
-  virtual ~TQpLinSolverBase() {};
+   virtual ~TQpLinSolverBase() {}
 
-  virtual void Factor      (TQpDataBase *prob,TQpVar *vars);        // sets up the matrix for the main linear system in
-                                                                    // "augmented system" form. The actual factorization is
-                                                                    // performed by a routine specific to either the sparse
-                                                                    // or dense case
-  virtual void Solve       (TQpDataBase *prob,TQpVar *vars,         // solves the system for a given set of residuals.
-                            TQpResidual *resids,TQpVar *step);      // Assembles the right-hand side appropriate to the
-                                                                    // matrix factored in factor, solves the system using
-                                                                    // the factorization produced there, partitions the
-                                                                    // solution vector into step components, then recovers
-                                                                    // the step components eliminated during the block
-                                                                    // elimination that produced the augmented system form
-  virtual void JoinRHS     (TVectorD &rhs, TVectorD &rhs1,          // assembles a single vector object from three given vectors
-                            TVectorD &rhs2,TVectorD &rhs3);         //  rhs (output) final joined vector
-                                                                    //  rhs1 (input) first part of rhs
-                                                                    //  rhs2 (input) middle part of rhs
-                                                                    //  rhs3 (input) last part of rhs
-  virtual void SeparateVars(TVectorD &vars1,TVectorD &vars2,        // extracts three component vectors from a given aggregated
-                            TVectorD &vars3,TVectorD &vars);        // vector.
-                                                                    //  vars (input) aggregated vector
-                                                                    //  vars1 (output) first part of vars
-                                                                    //  vars2 (output) middle part of vars
-                                                                    //  vars3 (output) last part of vars
+   virtual void Factor          (TQpDataBase *prob,TQpVar *vars);
+                                               // sets up the matrix for the main linear system in
+                                               // "augmented system" form. The actual factorization is
+                                               // performed by a routine specific to either the sparse
+                                               // or dense case
+   virtual void Solve           (TQpDataBase *prob,TQpVar *vars,TQpResidual *resids,TQpVar *step);
+                                               // solves the system for a given set of residuals.
+                                               // Assembles the right-hand side appropriate to the
+                                               // matrix factored in factor, solves the system using
+                                               // the factorization produced there, partitions the
+                                               // solution vector into step components, then recovers
+                                               // the step components eliminated during the block
+                                               // elimination that produced the augmented system form
+   virtual void JoinRHS         (TVectorD &rhs, TVectorD &rhs1,TVectorD &rhs2,TVectorD &rhs3);
+                                               // assembles a single vector object from three given vectors
+                                               //  rhs (output) final joined vector
+                                               //  rhs1 (input) first part of rhs
+                                               //  rhs2 (input) middle part of rhs
+                                               //  rhs3 (input) last part of rhs
+   virtual void SeparateVars    (TVectorD &vars1,TVectorD &vars2,TVectorD &vars3,TVectorD &vars);
+                                               // extracts three component vectors from a given aggregated
+                                               // vector.
+                                               //  vars (input) aggregated vector
+                                               //  vars1 (output) first part of vars
+                                               //  vars2 (output) middle part of vars
+                                               //  vars3 (output) last part of vars
 
-  virtual void SolveXYZS   (TVectorD &stepx,TVectorD &stepy,        // assemble right-hand side of augmented system and call
-                            TVectorD &stepz,TVectorD &steps,        // SolveCompressed to solve it
-                            TVectorD &ztemp,TQpDataBase *data);
+   virtual void SolveXYZS       (TVectorD &stepx,TVectorD &stepy,TVectorD &stepz,TVectorD &steps,
+                                 TVectorD &ztemp,TQpDataBase *data);
+                                               // assemble right-hand side of augmented system and call
+                                               // SolveCompressed to solve it
 
-  virtual void SolveCompressed                                      // perform the actual solve using the factors produced in
-                           (TVectorD &rhs) = 0;                     // factor.
-                                                                    //  rhs on input contains the aggregated right-hand side of
-                                                                    //  the augmented system; on output contains the solution in
-                                                                    //  aggregated form
+   virtual void SolveCompressed (TVectorD &rhs) = 0;
+                                               // perform the actual solve using the factors produced in
+                                               // factor.
+                                               //  rhs on input contains the aggregated right-hand side of
+                                               //  the augmented system; on output contains the solution in
+                                               //  aggregated form
 
-  virtual void PutXDiagonal(TVectorD &xdiag) = 0;                   // places the diagonal resulting from the bounds on x into                                                                      // the augmented system matrix
-  virtual void PutZDiagonal(TVectorD& zdiag) = 0;                   // places the diagonal resulting from the bounds on Cx into
-                                                                    // the augmented system matrix
-  virtual void ComputeDiagonals                                     // computes the diagonal matrices in the augmented system
-                           (TVectorD &dd,TVectorD &omega,           // from the current set of variables
-                            TVectorD &t, TVectorD &lambda,
-                            TVectorD &u, TVectorD &pi,
-                            TVectorD &v, TVectorD &gamma,
-                            TVectorD &w, TVectorD &phi);
+   virtual void PutXDiagonal    (TVectorD &xdiag) = 0;
+                                               // places the diagonal resulting from the bounds on x into
+                                               // the augmented system matrix
+   virtual void PutZDiagonal    (TVectorD& zdiag) = 0;
+                                               // places the diagonal resulting from the bounds on Cx into
+                                               // the augmented system matrix
+   virtual void ComputeDiagonals(TVectorD &dd,TVectorD &omega,TVectorD &t, TVectorD &lambda,
+                                 TVectorD &u, TVectorD &pi,TVectorD &v, TVectorD &gamma,
+                                 TVectorD &w, TVectorD &phi);
+                                               // computes the diagonal matrices in the augmented system
+                                               // from the current set of variables
 
-  TQpLinSolverBase &operator= (const TQpLinSolverBase &source);
+   TQpLinSolverBase &operator= (const TQpLinSolverBase &source);
 
-  ClassDef(TQpLinSolverBase,1) // Qp linear solver base class
+   ClassDef(TQpLinSolverBase,1)                // Qp linear solver base class
 };
-
 #endif

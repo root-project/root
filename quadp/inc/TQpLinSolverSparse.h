@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverSparse.h,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverSparse.h,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -61,28 +61,28 @@
 ///////////////////////////////////////////////////////////////////////////
 
 class TQpProbSparse;
-class TQpLinSolverSparse : public TQpLinSolverBase {
+class TQpLinSolverSparse : public TQpLinSolverBase
+{
 
 protected:
 
-  TMatrixDSparse fKkt;
-  TDecompSparse  fSolveSparse;
+   TMatrixDSparse fKkt;
+   TDecompSparse  fSolveSparse;
 
 public:
-  TQpLinSolverSparse() {}
-  TQpLinSolverSparse(TQpProbSparse *factory,TQpDataSparse *data);
-  TQpLinSolverSparse(const TQpLinSolverSparse &another);
+   TQpLinSolverSparse() {}
+   TQpLinSolverSparse(TQpProbSparse *factory,TQpDataSparse *data);
+   TQpLinSolverSparse(const TQpLinSolverSparse &another);
 
-  virtual ~TQpLinSolverSparse() {}
+   virtual ~TQpLinSolverSparse() {}
 
-  virtual void Factor         (TQpDataBase *prob,TQpVar *vars);
-  virtual void SolveCompressed(TVectorD &rhs);
-  virtual void PutXDiagonal   (TVectorD &xdiag);
-  virtual void PutZDiagonal   (TVectorD &zdiag);
+   virtual void Factor         (TQpDataBase *prob,TQpVar *vars);
+   virtual void SolveCompressed(TVectorD &rhs);
+   virtual void PutXDiagonal   (TVectorD &xdiag);
+   virtual void PutZDiagonal   (TVectorD &zdiag);
 
-  TQpLinSolverSparse &operator= (const TQpLinSolverSparse &source);
+   TQpLinSolverSparse &operator= (const TQpLinSolverSparse &source);
 
-  ClassDef(TQpLinSolverSparse,1) // Qp linear solver class for Sparse formulation
+   ClassDef(TQpLinSolverSparse,1)              // Qp linear solver class for Sparse formulation
 };
-
 #endif

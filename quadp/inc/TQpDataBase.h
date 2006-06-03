@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataBase.h,v 1.3 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataBase.h,v 1.4 2006/03/21 05:20:33 pcanal Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -72,69 +72,69 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TQpDataBase : public TObject {
+class TQpDataBase : public TObject
+{
 
 protected:
 
-  // as part of setting up a random test problem, generate a random
-  //  set of upper, lower, and two-sided bounds
-  static void RandomlyChooseBoundedVariables(TVectorD &x,TVectorD &dualx,TVectorD &blx,TVectorD &ixlow,
-                                             TVectorD &bux,TVectorD &ixupp,Double_t &ix,Double_t percentLowerOnly,
-                                             Double_t percentUpperOnly,Double_t percentBound);
+   // as part of setting up a random test problem, generate a random
+   //  set of upper, lower, and two-sided bounds
+   static void RandomlyChooseBoundedVariables(TVectorD &x,TVectorD &dualx,TVectorD &blx,TVectorD &ixlow,
+                                              TVectorD &bux,TVectorD &ixupp,Double_t &ix,Double_t percentLowerOnly,
+                                              Double_t percentUpperOnly,Double_t percentBound);
 
 public:
 
-  Int_t    fNx;
-  Int_t    fMy;
-  Int_t    fMz;
+   Int_t    fNx;
+   Int_t    fMy;
+   Int_t    fMz;
 
-  TVectorD fG;        // linear part of Objective function
-  TVectorD fBa;       // vector of equality constraint
-  TVectorD fXupBound; // Bounds on variables
-  TVectorD fXupIndex;
-  TVectorD fXloBound;
-  TVectorD fXloIndex;
-  TVectorD fCupBound; // Inequality constraints
-  TVectorD fCupIndex;
-  TVectorD fCloBound;
-  TVectorD fCloIndex;
+   TVectorD fG;                                // linear part of Objective function
+   TVectorD fBa;                               // vector of equality constraint
+   TVectorD fXupBound;                         // Bounds on variables
+   TVectorD fXupIndex;
+   TVectorD fXloBound;
+   TVectorD fXloIndex;
+   TVectorD fCupBound;                         // Inequality constraints
+   TVectorD fCupIndex;
+   TVectorD fCloBound;
+   TVectorD fCloIndex;
 
-  TQpDataBase();
-  TQpDataBase(Int_t nx,Int_t my,Int_t mz);
-  TQpDataBase(const TQpDataBase &another);
-  virtual ~TQpDataBase() {}
+   TQpDataBase();
+   TQpDataBase(Int_t nx,Int_t my,Int_t mz);
+   TQpDataBase(const TQpDataBase &another);
+   virtual ~TQpDataBase() {}
 
-  virtual void PutQIntoAt(TMatrixDBase &M,Int_t row,Int_t col) = 0;
-  virtual void PutAIntoAt(TMatrixDBase &M,Int_t row,Int_t col) = 0;
-  virtual void PutCIntoAt(TMatrixDBase &M,Int_t row,Int_t col) = 0;
+   virtual void PutQIntoAt(TMatrixDBase &M,Int_t row,Int_t col) = 0;
+   virtual void PutAIntoAt(TMatrixDBase &M,Int_t row,Int_t col) = 0;
+   virtual void PutCIntoAt(TMatrixDBase &M,Int_t row,Int_t col) = 0;
 
-  virtual void Qmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) = 0;
-  virtual void Amult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) = 0;
-  virtual void Cmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) = 0;
-  virtual void ATransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) = 0;
-  virtual void CTransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) = 0;
+   virtual void Qmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) = 0;
+   virtual void Amult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) = 0;
+   virtual void Cmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) = 0;
+   virtual void ATransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) = 0;
+   virtual void CTransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) = 0;
 
-  virtual void GetDiagonalOfQ(TVectorD &dQ) = 0;
+   virtual void GetDiagonalOfQ(TVectorD &dQ) = 0;
 
-  virtual TVectorD &GetG           () { return fG; }
-  virtual TVectorD &GetBa          () { return fBa; }
+   virtual TVectorD &GetG           () { return fG; }
+   virtual TVectorD &GetBa          () { return fBa; }
 
-  virtual TVectorD &GetXupperBound () { return fXupBound; }
-  virtual TVectorD &GetiXupperBound() { return fXupIndex; }
-  virtual TVectorD &GetXlowerBound () { return fXloBound; }
-  virtual TVectorD &GetiXlowerBound() { return fXloIndex; }
-  virtual TVectorD &GetSupperBound () { return fCupBound;  }
-  virtual TVectorD &GetiSupperBound() { return fCupIndex; }
-  virtual TVectorD &GetSlowerBound () { return fCloBound;  }
-  virtual TVectorD &GetiSlowerBound() { return fCloIndex; }
+   virtual TVectorD &GetXupperBound () { return fXupBound; }
+   virtual TVectorD &GetiXupperBound() { return fXupIndex; }
+   virtual TVectorD &GetXlowerBound () { return fXloBound; }
+   virtual TVectorD &GetiXlowerBound() { return fXloIndex; }
+   virtual TVectorD &GetSupperBound () { return fCupBound;  }
+   virtual TVectorD &GetiSupperBound() { return fCupIndex; }
+   virtual TVectorD &GetSlowerBound () { return fCloBound;  }
+   virtual TVectorD &GetiSlowerBound() { return fCloIndex; }
 
-  virtual Double_t  DataNorm      () = 0;
-  virtual void      DataRandom    (TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s) = 0;
-  virtual Double_t  ObjectiveValue(TQpVar *vars) = 0;
+   virtual Double_t  DataNorm      () = 0;
+   virtual void      DataRandom    (TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s) = 0;
+   virtual Double_t  ObjectiveValue(TQpVar *vars) = 0;
 
-  TQpDataBase &operator= (const TQpDataBase &source);
+   TQpDataBase &operator= (const TQpDataBase &source);
 
-  ClassDef(TQpDataBase,1) // Qp Base Data class
+   ClassDef(TQpDataBase,1)                     // Qp Base Data class
 };
-
 #endif
