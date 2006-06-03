@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.30 2005/09/25 14:13:58 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.31 2006/06/01 15:58:41 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -577,10 +577,10 @@ Int_t TDSet::ExportFileList(const char *fpath, Option_t *opt)
    if (gSystem->AccessPathName(fpath, kFileExists) == kFALSE) {
       if (force) {
          // Try removing the file
-          if (gSystem->Unlink(fpath)) {
-             Info("ExportFileList","error removing dataset file: %s", fpath);
-             return -1;
-          }
+         if (gSystem->Unlink(fpath)) {
+            Info("ExportFileList","error removing dataset file: %s", fpath);
+            return -1;
+         }
       }
    }
 
