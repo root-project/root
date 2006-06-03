@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.26 2006/05/26 09:18:35 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.27 2006/06/02 05:11:20 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -558,6 +558,7 @@ TMatrixD TDecompLU::Invert()
 //______________________________________________________________________________
 void TDecompLU::Print(Option_t *opt) const
 {
+   //Print internals of this object
    TDecompBase::Print(opt);
    printf("fImplicitPivot = %d\n",fImplicitPivot);
    printf("fSign          = %f\n",fSign);
@@ -570,6 +571,7 @@ void TDecompLU::Print(Option_t *opt) const
 //______________________________________________________________________________
 TDecompLU &TDecompLU::operator=(const TDecompLU &source)
 {
+   //assignement operator
    if (this != &source) {
       TDecompBase::operator=(source);
       fLU.ResizeTo(source.fLU);
