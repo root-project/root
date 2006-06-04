@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.86 2006/05/09 10:24:26 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.87 2006/05/26 16:26:25 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -1249,8 +1249,8 @@ Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t *  option ) con
 
       // We need the addDaughters flag returned from the viewer from paint
       // so can't use the normal TObject::Paint()
-      TGeoHMatrix *matrix = (TGeoHMatrix*)TGeoShape::GetTransform();
-      if (viewer->PreferLocalFrame()) matrix->Clear();
+//      TGeoHMatrix *matrix = (TGeoHMatrix*)TGeoShape::GetTransform();
+//      if (viewer->PreferLocalFrame()) matrix->Clear();
       addDaughters = composite->PaintComposite(option);
    }
 

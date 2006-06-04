@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.33 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.34 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -363,8 +363,11 @@ Bool_t TGeoCompositeShape::PaintComposite(Option_t *option) const
       TBuffer3D::IncCSLevel();
 
       // Paint the boolean node - will add more buffers to viewer
+      TGeoHMatrix *matrix = (TGeoHMatrix*)TGeoShape::GetTransform();
+      TGeoHMatrix backup(*matrix); 
+      if (viewer->PreferLocalFrame()) matrix->Clear();
       if (paintComponents) fNode->Paint(option);
-
+      if (viewer->PreferLocalFrame()) *matrix = backup;
       // Close the composite shape
       if (!TBuffer3D::DecCSLevel())
          viewer->CloseComposite();
