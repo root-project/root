@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.16 2004/08/05 23:51:55 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.17 2006/04/23 21:48:03 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -220,25 +220,16 @@ inline void tobuf(char *&buf, Float_t x)
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
    *((UInt_t *)buf) = Rbswap_32(*((UInt_t *)&x));
-# elif defined(R__KCC)
-   // Use an union to prevent over-zealous optimization by KCC
-   // related to aliasing float.
-   // + Use a volatile here to work around error in KCC optimizer
+# else
    union {
-     volatile char    c[4];
-     volatile Float_t f;
+      volatile char    c[4];
+      volatile Float_t f;
    } u;
    u.f = x;
    buf[0] = u.c[3];
    buf[1] = u.c[2];
    buf[2] = u.c[1];
    buf[3] = u.c[0];
-# else
-   char *sw = (char *)&x;
-   buf[0] = sw[3];
-   buf[1] = sw[2];
-   buf[2] = sw[1];
-   buf[3] = sw[0];
 # endif
 #else
    memcpy(buf, &x, sizeof(Float_t));
@@ -251,13 +242,10 @@ inline void tobuf(char *&buf, Double_t x)
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
    *((ULong64_t *)buf) = Rbswap_64(*((ULong64_t *)&x));
-# elif defined(R__KCC)
-   // Use an union to prevent over-zealous optimization by KCC
-   // related to aliasing double.
-   // + Use a volatile here to work around error in KCC optimizer
+# else
    union {
-     volatile char     c[8];
-     volatile Double_t d;
+      volatile char     c[8];
+      volatile Double_t d;
    } u;
    u.d = x;
    buf[0] = u.c[7];
@@ -268,16 +256,6 @@ inline void tobuf(char *&buf, Double_t x)
    buf[5] = u.c[2];
    buf[6] = u.c[1];
    buf[7] = u.c[0];
-# else
-   char *sw = (char *)&x;
-   buf[0] = sw[7];
-   buf[1] = sw[6];
-   buf[2] = sw[5];
-   buf[3] = sw[4];
-   buf[4] = sw[3];
-   buf[5] = sw[2];
-   buf[6] = sw[1];
-   buf[7] = sw[0];
 # endif
 #else
    memcpy(buf, &x, sizeof(Double_t));
@@ -393,10 +371,7 @@ inline void frombuf(char *&buf, Float_t *x)
    } u;
    u.i = Rbswap_32(*((UInt_t *)buf));
    *x = u.f;
-# elif defined(R__KCC)
-   // Use an union to prevent over-zealous optimization by KCC
-   // related to aliasing float.
-   // + Use a volatile here to work around error in KCC optimizer
+# else
    union {
       volatile char    c[4];
       volatile Float_t f;
@@ -406,12 +381,6 @@ inline void frombuf(char *&buf, Float_t *x)
    u.c[2] = buf[1];
    u.c[3] = buf[0];
    *x = u.f;
-# else
-   char *sw = (char *)x;
-   sw[0] = buf[3];
-   sw[1] = buf[2];
-   sw[2] = buf[1];
-   sw[3] = buf[0];
 # endif
 #else
    memcpy(x, buf, sizeof(Float_t));
@@ -430,10 +399,7 @@ inline void frombuf(char *&buf, Double_t *x)
    } u;
    u.l = Rbswap_64(*((ULong64_t *)buf));
    *x = u.d;
-# elif defined(R__KCC)
-   // Use an union to prevent over-zealous optimization by KCC
-   // related to aliasing double.
-   // + Use a volatile here to work around error in KCC optimizer
+# else
    union {
       volatile char     c[8];
       volatile Double_t d;
@@ -447,16 +413,6 @@ inline void frombuf(char *&buf, Double_t *x)
    u.c[6] = buf[1];
    u.c[7] = buf[0];
    *x = u.d;
-# else
-   char *sw = (char *)x;
-   sw[0] = buf[7];
-   sw[1] = buf[6];
-   sw[2] = buf[5];
-   sw[3] = buf[4];
-   sw[4] = buf[3];
-   sw[5] = buf[2];
-   sw[6] = buf[1];
-   sw[7] = buf[0];
 # endif
 #else
    memcpy(x, buf, sizeof(Double_t));
@@ -545,20 +501,19 @@ inline ULong64_t host2net(ULong64_t x)
 
 inline Float_t host2net(Float_t xx)
 {
-#if defined(R__USEASMSWAP)
    // Use a union to allow strict-aliasing
    union {
       volatile UInt_t  i;
       volatile Float_t f;
    } u;
+#if defined(R__USEASMSWAP)
    u.i = Rbswap_32(*((UInt_t *)&xx));
-   return u.f;
 #else
-   UInt_t *x = (UInt_t *)&xx;
-   *x = (((*x & 0x000000ffU) << 24) | ((*x & 0x0000ff00U) <<  8) |
-         ((*x & 0x00ff0000U) >>  8) | ((*x & 0xff000000U) >> 24));
-   return xx;
+   u.f = xx;
+   u.i = (((u.i & 0x000000ffU) << 24) | ((u.i & 0x0000ff00U) <<  8) |
+          ((u.i & 0x00ff0000U) >>  8) | ((u.i & 0xff000000U) >> 24));
 #endif
+   return u.f;
 }
 
 inline Double_t host2net(Double_t x)
