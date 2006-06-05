@@ -22,7 +22,6 @@ WILDCARDS="LICENSE README bin \
    cint/lib cint/stl tutorials/*.cxx tutorials/*.C \
    tutorials/*.h tutorials/*.dat tutorials/mlpHiggs.root \
    tutorials/gallery.root tutorials/galaxy.root \
-   tutorials/fillrandom.root tutorials/na49.root \
    tutorials/stock.root tutorials/worldmap.jpg tutorials/rose512.jpg \
    tutorials/mditestbg.xpm tutorials/fore.xpm \
    tutorials/runcatalog.sql tutorials/*.py tutorials/*.rb \
