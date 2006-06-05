@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.38 2006/01/24 21:32:46 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.39 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -347,9 +347,11 @@ AfterBuffer:
    }
    delete [] fDisplacement;
    fDisplacement = 0;
-   if (fBufferRef->Length() != fBufferRef->BufferSize()) {
+   if (fBufferRef->Length() != len) { 
       // There is more data in the buffer!  It is the displacement
-      // array.
+      // array.  If len is less than TBuffer::kMinimalSize the actual
+      // size of the buffer is too large, so we can not use the
+      // fBufferRef->BufferSize()
       fBufferRef->ReadArray(fDisplacement);
    }
 
