@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFilePrefetch.cxx,v 1.1 2006/05/22 11:13:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFilePrefetch.cxx,v 1.2 2006/05/22 12:41:23 rdm Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -64,6 +64,21 @@ TFilePrefetch::TFilePrefetch(TFile *file, Int_t buffersize)
    fIsSorted    = kFALSE;
    if (file) file->SetFilePrefetch(this);
 }
+
+//______________________________________________________________________________
+TFilePrefetch::TFilePrefetch(const TFilePrefetch &pf) : TObject(pf)
+{
+   // Copy Constructor.
+}
+
+//______________________________________________________________________________
+TFilePrefetch& TFilePrefetch::operator=(const TFilePrefetch& pf)
+{
+   // Assignment.
+
+   if (this != &pf) TObject::operator=(pf);
+   return *this;
+}         
 
 //_____________________________________________________________________________
 TFilePrefetch::~TFilePrefetch()

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFilePrefetch.h,v 1.47 2006/05/15 11:01:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFilePrefetch.h,v 1.1 2006/05/22 11:13:33 brun Exp $
 // Author: Rene Brun   19/05/2006
 
 /*************************************************************************
@@ -25,9 +25,6 @@
 #include "TFile.h"
 #endif
 
-class TFile;
-
-
 class TFilePrefetch : public TObject {
 
 protected:
@@ -49,9 +46,9 @@ protected:
    char         *fBuffer;         //[fBufferSize] buffer of contiguous prefetched blocks
    Bool_t        fIsSorted;       //True if fSeek array is sorted
 
-private:
+protected:
    TFilePrefetch(const TFilePrefetch &);            //FilePrefetch cannot be copied
-   void operator=(const TFilePrefetch &);
+   TFilePrefetch& operator=(const TFilePrefetch &);
 
 public:
    TFilePrefetch();
