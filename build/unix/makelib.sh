@@ -113,8 +113,8 @@ elif [ $PLATFORM = "macosx" ]; then
    # Add versioning information to shared library if available
    if [ "x$MAJOR" != "x" ]; then
        VERSION="-compatibility_version ${MAJOR} -current_version ${MAJOR}.${MINOR}.${REVIS}"
-       SONAME=`echo $SONAME | sed "s/.*\./&${MAJOR}./"`
-       LIB=`echo $LIB | sed "s/\/*.*\/.*\./&${MAJOR}.${MINOR}./"`
+       SONAME=`echo $SONAME | sed "s/\(.*\)\.dylib/\1.${MAJOR}.dylib/"`
+       LIB=`echo $LIB | sed "s/\(\/*.*\/.*\)\.dylib/\1.${MAJOR}.${MINOR}.dylib/"`
    fi
    if [ $macosx_minor -ge 4 ]; then
       cmd="$LD $SOFLAGS$SONAME $m64 -o $LIB $OBJS \
@@ -135,19 +135,21 @@ elif [ $PLATFORM = "macosx" ]; then
    else
       opt=-O
    fi
-   if [ $macosx_minor -ge 4 ]; then
-      cmd="ln -fs `basename $LIB` $BUNDLE"
-   elif [ $macosx_minor -ge 3 ]; then
-      cmd="$LD $opt $m64 -bundle -undefined dynamic_lookup -o \
-          $BUNDLE $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
-          -ldl $EXTRA $EXPLLNKCORE"
-   else
-      cmd="$LD $opt -bundle -undefined suppress -o $BUNDLE \
-	   $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
-           -ldl $EXTRA $EXPLLNKCORE"
+   if [ $LIB != $BUNDLE ]; then
+       if [ $macosx_minor -ge 4 ]; then
+	   cmd="ln -fs `basename $LIB` $BUNDLE"
+       elif [ $macosx_minor -ge 3 ]; then
+	   cmd="$LD $opt $m64 -bundle -undefined dynamic_lookup -o \
+                $BUNDLE $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
+                -ldl $EXTRA $EXPLLNKCORE"
+       else
+	   cmd="$LD $opt -bundle -undefined suppress -o $BUNDLE \
+	        $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
+                -ldl $EXTRA $EXPLLNKCORE"
+       fi
+       echo $cmd
+       $cmd
    fi
-   echo $cmd
-   $cmd
 elif [ $LD = "KCC" ]; then
    cmd="$LD $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
    echo $cmd
@@ -195,8 +197,11 @@ if [ "x$MAJOR" != "x" ]; then
 	ln -fs $SONAME.$MAJOR        $LIB
     elif [ -f $LIB ]; then
 	# Versioned library has format foo.3.05.so
-	ln -fs `echo $SONAME | sed "s/.*\./&${MINOR}./"` `echo $LIB | sed "s/\.${MINOR}//"`
-	ln -fs `echo $SONAME | sed "s/.*\./&${MINOR}./"` `echo $LIB | sed "s/\.${MAJOR}\.${MINOR}//"`
+	source_file=`echo $SONAME | sed "s/.*\./&${MINOR}./"`
+	if [ $LIB != ${LIB/.${MAJOR}.${MINOR}/} ]; then
+	    ln -fs $source_file ${LIB/.${MINOR}/}
+	    ln -fs $source_file ${LIB/.${MAJOR}.${MINOR}/}
+	fi
     fi
 fi
 
