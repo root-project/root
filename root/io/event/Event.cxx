@@ -88,28 +88,27 @@ TClonesArray *Event::fgTracks = 0;
 TH1F *Event::fgHist = 0;
 
 //______________________________________________________________________________
-Event::Event() : fIsValid(kFALSE)
+Event::Event() : fEventName(0), fNtrack(0), fNseg(0), 
+                 fNvertex(0), fFlag(0), fTemperature(0), fClosestDistance(0), 
+                 fTracks(0), fHighPt(0), fMuons(0), fH(0), fIsValid(kFALSE)
 {
    // Create an Event object.
    // When the constructor is invoked for the first time, the class static
    // variable fgTracks is 0 and the TClonesArray fgTracks is created.
 
+
    if (!fgTracks) fgTracks = new TClonesArray("Track", 1000);
    fTracks = fgTracks;
    fHighPt = new TRefArray;
    fMuons  = new TRefArray;
-   fNtrack = 0;
-   fH      = 0;
    Int_t i0,i1;
    for (i0 = 0; i0 < 4; i0++) {
       for (i1 = 0; i1 < 4; i1++) {
          fMatrix[i0][i1] = 0.0;
       }
    }
-   for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
    for (i0 = 0; i0 <20; i0++) fType[i0] = 0;
-   fClosestDistance = 0;
-   fEventName = 0;
+   for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
    fWebHistogram.SetAction(this);
 }
 
@@ -341,7 +340,7 @@ void Track::Clear(Option_t * /*option*/)
 {
    fTriggerBits.Clear(); 
    delete [] fPointValue; 
-   fPointValue=0; 
+   fPointValue=0;
 }
 
 //______________________________________________________________________________
