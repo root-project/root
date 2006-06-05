@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.39 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.40 2006/06/05 19:45:50 pcanal Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -325,6 +325,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          badread = 1;
       }
       fBufferRef->SetBuffer(fBuffer, fObjlen+fKeylen );
+      len = fObjlen+fKeylen;
    } else {
       fBuffer = fBufferRef->Buffer();
    }
