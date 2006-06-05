@@ -28,6 +28,7 @@ WILDCARDS="LICENSE README bin \
    tutorials/saxexample.xml tutorials/person.xml \
    tutorials/person.dtd \
    test/*.cxx test/*.h test/Makefile* test/README \
+   test/*.C test/*.sh test/linearIO.root \
    test/RootShower/*.h test/RootShower/*.cxx \
    test/RootShower/*.rc test/RootShower/*.ico \
    test/RootShower/*.png test/RootShower/Makefile \
