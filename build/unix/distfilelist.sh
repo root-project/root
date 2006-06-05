@@ -22,13 +22,15 @@ WILDCARDS="LICENSE README bin \
    cint/lib cint/stl tutorials/*.cxx tutorials/*.C \
    tutorials/*.h tutorials/*.dat tutorials/mlpHiggs.root \
    tutorials/gallery.root tutorials/galaxy.root \
-   tutorials/stock.root tutorials/worldmap.jpg \
+   tutorials/fillrandom.root tutorials/na49.root \
+   tutorials/stock.root tutorials/worldmap.jpg tutorials/rose512.jpg \
    tutorials/mditestbg.xpm tutorials/fore.xpm \
    tutorials/runcatalog.sql tutorials/*.py tutorials/*.rb \
    tutorials/saxexample.xml tutorials/person.xml \
-   tutorials/person.dtd \
+   tutorials/person.dtd tutorials/FileDialog.png \
+   tutorials/rose512.jpg tutorials/foam_README \
    test/*.cxx test/*.h test/Makefile* test/README \
-   test/*.C test/*.sh test/linearIO.root \
+   test/*.C test/*.sh test/dt_Makefile test/linearIO.root \
    test/RootShower/*.h test/RootShower/*.cxx \
    test/RootShower/*.rc test/RootShower/*.ico \
    test/RootShower/*.png test/RootShower/Makefile \
