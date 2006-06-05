@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.20 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.21 2006/06/02 15:14:35 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -97,6 +97,7 @@ protected:
    TString       fMsd;       //mass storage domain of slave
 
    TSlave();
+   virtual void  FlushSocket() { }
    void          Init(TSocket *s, Int_t stype);
    virtual void  Interrupt(Int_t type);
    virtual Int_t Ping();

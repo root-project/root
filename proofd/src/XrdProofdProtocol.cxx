@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.12 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.13 2006/06/02 18:15:26 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -2298,12 +2298,11 @@ int XrdProofdProtocol::Destroy()
                // We need the right privileges to do this
                XrdSysPrivGuard pGuard(0);
 
-               if (kill(xps->SrvID(), SIGTERM) != 0) {
-                 PRINT("Destroy: problems sending termination signal to"
-                       " proofserv (pid: "<< xps->SrvID()<<")");
-               } else {
-                 PRINT("Destroy: termination signal sent to proofserv (pid: "
-                       << xps->SrvID()<<")");
+               int type = 3;
+               if (xps->fProofSrv.Send(kXR_attn, kXPD_interrupt, type) != 0) {
+                  fResponse.Send(kXP_ServerError,
+                                 "Destroy: could not send hard interrupt to proofsrv");
+                  return rc;
                }
             }
 

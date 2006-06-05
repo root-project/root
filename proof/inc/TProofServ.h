@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.37 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.38 2006/06/02 23:38:19 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -129,7 +129,7 @@ private:
    void          SaveQuery(TQueryResult *qr, const char *fout = 0);
    void          SetQueryRunning(TProofQueryResult *pq);
 
-   Int_t         LockSession(const char *sessiontag, TProofLockPath **lck);
+   virtual Int_t LockSession(const char *sessiontag, TProofLockPath **lck);
    Int_t         CleanupSession(const char *sessiontag);
    void          ScanPreviousQueries(const char *dir);
 

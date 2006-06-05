@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.4 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.5 2006/06/02 23:38:20 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -39,6 +39,8 @@ private:
 
    Bool_t        fTerminated; //true if Terminate() has been already called
 
+   Int_t         LockSession(const char *sessiontag, TProofLockPath **lck);
+
    void          SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
    void          Setup();
 
@@ -55,8 +57,8 @@ public:
 
    EQueryAction  GetWorkers(TList *workers, Int_t &prioritychange);
 
-   Bool_t        HandleError(); // Error Handler
-   Bool_t        HandleInput(); // Input handler
+   Bool_t        HandleError(const void *in = 0); // Error Handler
+   Bool_t        HandleInput(const void *in = 0); // Input handler
 
    void          HandleUrgentData();
    void          HandleSigPipe();

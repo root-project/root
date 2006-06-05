@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.h,v 1.3 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.h,v 1.4 2006/06/02 15:14:35 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -48,6 +48,7 @@ private:
    static Int_t GetProofdProtocol(TSocket *s);
 
 protected:
+   void     FlushSocket();
    void     Interrupt(Int_t type);
    Int_t    Ping();
    TObjString *SendCoordinator(Int_t kind, const char *msg = 0);
@@ -64,8 +65,8 @@ public:
    void   DoError(int level, const char *location, const char *fmt,
                   va_list va) const;
 
-   Bool_t HandleError(); // Error Handler
-   Bool_t HandleInput(); // Input handler
+   Bool_t HandleError(const void *in = 0); // Error Handler
+   Bool_t HandleInput(const void *in = 0); // Input handler
 
    void   SetInterruptHandler(Bool_t on = kTRUE);
 

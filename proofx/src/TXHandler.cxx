@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXHandler.cxx,v 1.1 2006/04/19 10:50:01 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXHandler.cxx,v 1.2 2006/06/01 16:27:44 rdm Exp $
 // Author: G. Ganis Mar 2006
 
 /*************************************************************************
@@ -25,7 +25,7 @@
 ClassImp(TXHandler)
 
 //________________________________________________________________________
-Bool_t TXHandler::HandleInput()
+Bool_t TXHandler::HandleInput(const void *)
 {
    // Handler of asynchronous input events
 
@@ -34,7 +34,7 @@ Bool_t TXHandler::HandleInput()
 }
 
 //________________________________________________________________________
-Bool_t TXHandler::HandleError()
+Bool_t TXHandler::HandleError(const void *)
 {
    // Handler of asynchronous error events
 

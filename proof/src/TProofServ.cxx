@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.121 2006/06/02 15:34:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.122 2006/06/02 23:38:19 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3247,6 +3247,16 @@ void TProofServ::HandleRemove(TMessage *mess)
 
    TString queryref;
    (*mess) >> queryref;
+
+   if (queryref == "cleanupqueue") {
+      Int_t pend = fWaitingQueries->GetSize();
+      // Remove pending requests
+      fWaitingQueries->Delete();
+      // Notify
+      Info("HandleRemove", "%d queries removed from the waiting list", pend);
+      // We are done
+      return;
+   }
 
    TProofLockPath *lck = 0;
    if (LockSession(queryref, &lck) == 0) {

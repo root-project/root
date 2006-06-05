@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.h,v 1.3 2006/04/19 10:52:46 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.h,v 1.4 2006/06/02 15:14:35 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 class XrdClientConnectionMgr;
 class XrdClientMessage;
 class XrdClientPhyConnection;
+class XrdOucRecMutex;
 class XrdSecProtocol;
 
 class XrdProofConn  : public XrdClientAbsUnsolMsgHandler {
@@ -77,6 +78,8 @@ private:
    char                fCapVer;        // a version number (e.g. a protocol num)
 
    XrdOucString        fLoginBuffer;   // Buffer to be sent over at login
+
+   XrdOucRecMutex     *fMutex;         // Lock SendRecv actions
 
    XrdClientPhyConnection *fPhyConn;   // underlying physical connection
 

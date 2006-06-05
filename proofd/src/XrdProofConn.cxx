@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.9 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.10 2006/06/02 23:41:40 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "XrdClient/XrdClientMessage.hh"
 #include "XrdClient/XrdClientUrlInfo.hh"
 #include "XrdNet/XrdNetDNS.hh"
+#include "XrdOuc/XrdOucPthread.hh"
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdSec/XrdSecInterface.hh"
 
@@ -82,7 +83,8 @@ XrdClientConnectionMgr *XrdProofConn::fgConnMgr = 0;
 XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
                            XrdClientAbsUnsolMsgHandler *uh, const char *logbuf)
    : fMode(m), fConnected(0), fSessionID(psid), fLastErr(kXR_Unsupported),
-     fCapVer(capver), fLoginBuffer(logbuf), fPhyConn(0), fUnsolMsgHandler(uh)
+     fCapVer(capver), fLoginBuffer(logbuf), fMutex(0), fPhyConn(0),
+     fUnsolMsgHandler(uh)
 {
    // Constructor. Open the connection to a remote XrdProofd instance.
    // The mode 'm' indicates the role of this connection:
@@ -277,6 +279,9 @@ void XrdProofConn::Close(const char *opt)
    // A session ID can be given using #...# signature, e.g. "#1#".
    // Default is opt = "".
 
+   // Cleanup mutex
+   SafeDelete(fMutex);
+
    // Make sure we are connected
    if (!fConnected) {
       TRACE(REQ,"XrdProofConn::Close: not connected: nothing to do");
@@ -342,6 +347,10 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
    // the buffer is internally allocated and must be freed by the caller.
    // If (*answData != 0) the program assumes that the caller has allocated
    // enough bytes to contain the reply.
+   if (!fMutex)
+      fMutex = new XrdOucRecMutex();
+   XrdOucMutexHelper l(*fMutex);
+
    XrdClientMessage *xmsg = 0;
 
    // We have to unconditionally set the streamid inside the

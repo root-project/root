@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.3 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.4 2006/06/02 15:14:35 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
    TXProofMgr(const char *url, Int_t loglevel = -1, const char *alias = "");
    virtual ~TXProofMgr();
 
-   Bool_t      HandleError();
+   Bool_t      HandleError(const void *in = 0);
 
    Bool_t      IsValid() const { return fSocket; }
 

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocketHandler.cxx,v 1.3 2006/02/26 16:09:24 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocketHandler.cxx,v 1.4 2006/04/19 10:57:44 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -25,7 +25,10 @@
 #include "TXSocketHandler.h"
 #include "TXHandler.h"
 
- // Unique instance of the socket input handler
+
+ClassImp(TXSocketHandler)
+
+// Unique instance of the socket input handler
 TXSocketHandler *TXSocketHandler::fgSocketHandler = 0;
 
 //______________________________________________________________________________

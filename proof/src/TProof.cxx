@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.146 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.147 2006/06/02 23:41:40 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -528,6 +528,9 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    // Send relevant initial state to slaves
    if (!attach)
       SendInitialState();
+   else if (!IsIdle())
+      // redirect log
+      fRedirLog = kTRUE;
 
    // Done at this point, the alias will be communicated to the coordinator, if any
    if (!IsMaster())
@@ -2539,6 +2542,8 @@ Int_t TProof::Remove(const char *ref, Bool_t all)
    // Send remove request for the query specified by ref.
    // If all = TRUE remove also local copies of the query, if any.
    // Generic method working for all queries known by the server.
+   // This method can be also used to reset the list of queries
+   // waiting to be processed: for that purpose use ref == "cleanupqueue".
 
    if (all) {
       // Remove also local copies, if any
@@ -4018,6 +4023,22 @@ void TProof::Feedback(TList *objs)
 }
 
 //______________________________________________________________________________
+void TProof::CloseProgressDialog()
+{
+   // Close progress dialog.
+
+   PDB(kGlobal,1)
+      Info("CloseProgressDialog",
+           "called: have progress dialog: %d", fProgressDialogStarted);
+
+   // Nothing to do if not there
+   if (!fProgressDialogStarted)
+      return;
+
+   Emit("CloseProgressDialog()");
+}
+
+//______________________________________________________________________________
 void TProof::ResetProgressDialog(const char *sel, Int_t sz, Long64_t fst,
                                  Long64_t ent)
 {
@@ -4670,8 +4691,40 @@ void TProof::Detach(Option_t *opt)
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) return;
 
-   // Close session (we always close the physical connection)
+   // Get worker and socket instances
+   TSlave *sl = (TSlave *) fActiveSlaves->First();
+   TSocket *s = sl->GetSocket();
+   if (!sl || !(sl->IsValid()) || !s) {
+      Error("Detach","corrupted worker instance: wrk:%p, sock:%p", sl, s);
+      return;
+   }
+
+   Bool_t shutdown = (strchr(opt,'s') || strchr(opt,'S')) ? kTRUE : kFALSE;
+
+   // If processing, try to stop processing first
+   if (shutdown && !IsIdle()) {
+      // Remove pending requests
+      Remove("cleanupqueue");
+      // Send stop signal
+      StopProcess(kFALSE);
+      // Receive end-of-processing messages
+      while (CollectInputFrom(s) == 0) {  }
+      if (!IsIdle())
+         Warning("Detach","opt: %s: processing could not be stopped", opt);
+   }
+
+   // Avoid spurious messages: deactivate new inputs ...
+   DeActivateAsyncInput();
+
+   // ... and discard existing ones
+   sl->FlushSocket();
+
+   // Close session (we always close the connection)
    Close(opt);
+
+   // Close the progress dialog, if any
+   if (fProgressDialogStarted)
+      CloseProgressDialog();
 
    // Update info in the table of our manager, if any
    if (GetManager() && GetManager()->QuerySessions("L")) {
@@ -4687,7 +4740,11 @@ void TProof::Detach(Option_t *opt)
    }
 
    // Delete this instance
-   delete this;
+   if (!fProgressDialogStarted)
+      delete this;
+   else
+      // ~TProgressDialog will delete this
+      fValid = kFALSE;
 
    return;
 }

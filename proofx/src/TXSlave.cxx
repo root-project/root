@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.6 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.7 2006/06/02 15:14:35 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -415,7 +415,7 @@ void TXSlave::SetAlias(const char *alias)
 }
 
 //_____________________________________________________________________________
-Bool_t TXSlave::HandleError()
+Bool_t TXSlave::HandleError(const void *)
 {
    // Handle error on the input socket
 
@@ -487,7 +487,7 @@ Bool_t TXSlave::HandleError()
 }
 
 //_____________________________________________________________________________
-Bool_t TXSlave::HandleInput()
+Bool_t TXSlave::HandleInput(const void *)
 {
    // Handle asynchronous input on the socket
 
@@ -535,4 +535,16 @@ void TXSlave::SetInterruptHandler(Bool_t on)
       if (fIntHandler)
          fIntHandler->Remove();
    }
+}
+
+//_____________________________________________________________________________
+void TXSlave::FlushSocket()
+{
+   // Clean any input on the socket
+
+   if (gDebug > 1)
+      Info("FlushSocket", "enter: %p", fSocket);
+
+   if (fSocket)
+      TXSocket::FlushPipe(fSocket);
 }

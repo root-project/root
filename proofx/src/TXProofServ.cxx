@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.6 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.7 2006/06/02 23:38:20 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -82,6 +82,8 @@
 #include "compiledata.h"
 #include "TProofResourcesStatic.h"
 #include "TProofNodeInfo.h"
+
+#include "XProofProtocol.h"
 
 #include <XrdClient/XrdClientConst.hh>
 #include <XrdClient/XrdClientEnv.hh>
@@ -532,8 +534,22 @@ void TXProofServ::HandleTermination()
 
    // If master server, propagate interrupt to slaves
    // (shutdown interrupt send internally).
-   if (IsMaster())
+   if (IsMaster()) {
+      // If not idle, try first to stop processing
+      if (!fIdle) {
+         // Remove pending requests
+         fWaitingQueries->Delete();
+         // Processing will be aborted
+         fProof->StopProcess(kTRUE);
+         // Receive end-of-processing messages
+         fProof->Collect();
+         // Still not idle
+         if (!fIdle)
+            Warning("HandleTermination","processing could not be stopped");
+      }
+      // Close the session
       fProof->Close("S");
+   }
 
    // Close link with coordinator
    ((TXSocket *)fSocket)->SetSessionID(-1);
@@ -700,7 +716,12 @@ void TXProofServ::Setup()
    // On masters, check and make sure that "queries" and "datasets"
    // directories exist
    if (IsMaster()) {
-      // 'queries'
+
+      // Create 'queries' locker instance and lock it
+      fQueryLock = new TProofLockPath(Form("%s%s-%s",
+                       kPROOF_QueryLockFile,fSessionTag.Data(),fUser.Data()));
+
+      // Make sure that the 'queries' dir exist
       fQueryDir = fWorkDir;
       fQueryDir += TString("/") + kPROOF_QueryDir;
       if (gSystem->AccessPathName(fQueryDir))
@@ -712,10 +733,6 @@ void TXProofServ::Setup()
          gSystem->MakeDirectory(fQueryDir);
       if (gProofDebugLevel > 0)
          Info("Setup", "queries dir is %s", fQueryDir.Data());
-
-      // Create 'queries' locker instance and lock it
-      fQueryLock = new TProofLockPath(Form("%s%s-%s",
-                       kPROOF_QueryLockFile,fSessionTag.Data(),fUser.Data()));
       fQueryLock->Lock();
 
       // 'datasets'
@@ -892,7 +909,7 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
 }
 
 //_____________________________________________________________________________
-Bool_t TXProofServ::HandleError()
+Bool_t TXProofServ::HandleError(const void *)
 {
    // Handle error on the input socket
 
@@ -916,15 +933,32 @@ Bool_t TXProofServ::HandleError()
 }
 
 //_____________________________________________________________________________
-Bool_t TXProofServ::HandleInput()
+Bool_t TXProofServ::HandleInput(const void *in)
 {
    // Handle asynchronous input on the input socket
 
    if (gDebug > 2)
-      Printf("TXProofServ::HandleInput %p", this);
-   HandleSocketInput();
-   // This request has been completed: remove the client ID from the pipe
-   ((TXSocket *)fSocket)->RemoveClientID();
+      Printf("TXProofServ::HandleInput %p, in: %p", this, in);
+
+   // Check the type of input
+   Bool_t interrupt = kFALSE;
+   if (in) {
+      Int_t acod = *((kXR_int32 *)in);
+      if (acod == kXPD_ping || acod == kXPD_interrupt)
+         interrupt = kTRUE;
+   }
+
+   // Act accordingly
+   if (interrupt) { 
+      // Interrupt or Ping
+      HandleUrgentData();
+   } else {
+      // Standard socket input
+      HandleSocketInput();
+      // This request has been completed: remove the client ID from the pipe
+      ((TXSocket *)fSocket)->RemoveClientID();
+   }
+
    // We are done
    return kTRUE;
 }
@@ -989,4 +1023,62 @@ void TXProofServ::Terminate(Int_t status)
    gSystem->RemoveSignalHandler(fInterruptHandler);
 
    gSystem->Exit(status);
+}
+
+//______________________________________________________________________________
+Int_t TXProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
+{
+   // Try locking query area of session tagged sessiontag.
+   // The id of the locking file is returned in fid and must be
+   // unlocked via UnlockQueryFile(fid).
+
+   // We do not need to lock our own session
+   if (strstr(sessiontag, fSessionTag))
+      return 0;
+
+   if (!lck) {
+      Info("LockSession","locker space undefined");
+      return -1;
+   }
+   *lck = 0;
+
+   // Check the format
+   TString stag = sessiontag;
+   TRegexp re("session-.*-.*-.*");
+   Int_t i1 = stag.Index(re);
+   if (i1 == kNPOS) {
+      Info("LockSession","bad format: %s", sessiontag);
+      return -1;
+   }
+   stag.ReplaceAll("session-","");
+
+   // Drop query number, if any
+   Int_t i2 = stag.Index(":q");
+   if (i2 != kNPOS)
+      stag.Remove(i2);
+
+   // Make sure that parent process does not exist anylonger
+   TString parlog = fSessionDir;
+   parlog = parlog.Remove(parlog.Index("master-")+strlen("master-"));
+   parlog += stag;
+   if (!gSystem->AccessPathName(parlog)) {
+      Info("LockSession","parent still running: do nothing");
+      return -1;
+   }
+
+   // Lock the query lock file
+   TString qlock = fQueryLock->GetName();
+   qlock.ReplaceAll(fSessionTag, stag);
+
+   if (!gSystem->AccessPathName(qlock)) {
+      *lck = new TProofLockPath(qlock);
+      if (((*lck)->Lock()) < 0) {
+         Info("LockSession","problems locking query lock file");
+         SafeDelete(*lck);
+         return -1;
+      }
+   }
+
+   // We are done
+   return 0;
 }

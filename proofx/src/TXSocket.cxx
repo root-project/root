@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.11 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.12 2006/06/02 23:41:40 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -104,7 +104,7 @@ TString      TXSocket::fgLoc = "undef";     // Location string
 TXSocket::TXSocket(const char *url, Char_t m, Int_t psid,
                    Char_t capver, const char *alias, Int_t loglevel)
          : TSocket(), fMode(m), fAlias(alias),
-           fLogLevel(loglevel), fASem(0), fISem(0), fDontTimeout(kFALSE)
+           fLogLevel(loglevel), fASem(0), fDontTimeout(kFALSE)
 {
    // Constructor
    // Open the connection to a remote XrdProofd instance and start a PROOF
@@ -289,6 +289,9 @@ void TXSocket::Close(Option_t *opt)
    // A session ID can be given using #...# signature, e.g. "#1#".
    // Default is opt = "".
 
+   // Remove any reference in the glovbal pipe and ready-sock queue
+   TXSocket::FlushPipe(this);
+
    // Make sure we are connected
    if (!IsValid()) {
       if (gDebug > 0)
@@ -411,24 +414,10 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             //
             // Save the interrupt
             fILev = ilev;
-            //
-            // Post it
-            if (gDebug > 3)
-               Info("ProcessUnsolicitedMsg","%p: posting interrupt: %d",this,ilev);
-            fISem.Post();
-            //
-            // Signal it
-            if (gDebug > 3)
-               Info("ProcessUnsolicitedMsg","%p: sending SIGURG: %d",this,ilev);
-#ifndef WIN32
-            if (kill(fPid, SIGURG) != 0) {
-               Error("ProcessUnsolicitedMsg","%d: problems sending kSigUrgent", this);
-#else
-            if(!TerminateProcess((HANDLE)fPid, 0)) {
-               Error("ProcessUnsolicitedMsg","%d: problems calling TerminateProcess()", this);
-#endif
-               return rc;
-            }
+
+            // Handle this input in this thread to avoid queuing on the 
+            // main thread
+            fHandler->HandleInput((const void *)&acod);
          }
          break;
       case kXPD_msg:
@@ -595,7 +584,7 @@ Int_t TXSocket::CleanPipe(TSocket *s)
    // Only one char
    Char_t c = 0;
    if (read(fgPipe[0],(void *)&c, sizeof(Char_t)) < 1) {
-      ::Error("TXSocket::CleanPipe", "can't read from pipe");
+      ::Error("TXSocket::CleanPipe", "%s: can't read from pipe", fgLoc.Data());
       return -1;
    }
 
@@ -607,6 +596,36 @@ Int_t TXSocket::CleanPipe(TSocket *s)
 
    if (gDebug > 2)
       Printf("TXSocket::CleanPipe: %s: %p: pipe cleaned", fgLoc.Data(), s);
+
+   // We are done
+   return 0;
+}
+
+//____________________________________________________________________________
+Int_t TXSocket::FlushPipe(TSocket *s)
+{
+   // Remove any reference to socket 's' from the global pipe and
+   // ready-socket queue
+
+   // Pipe must have been created
+   if (fgPipe[0] < 0)
+      return -1;
+
+   // This must be an atomic action
+   R__LOCKGUARD(&TXSocket::fgReadyMtx);
+
+   while (TXSocket::fgReadySock.FindObject(s)) {
+      // Remove from the list
+      TXSocket::fgReadySock.Remove(s);
+      // Remove one notification from the pipe
+      Char_t c = 0;
+      if (read(fgPipe[0],(void *)&c, sizeof(Char_t)) < 1)
+         ::Warning("TXSocket::FlushPipe", "%s: can't read from pipe", fgLoc.Data());
+   }
+
+   // Notify
+   if (gDebug > 0)
+      Printf("TXSocket::ResetPipe: %s: %p: pipe flushed", fgLoc.Data(), s);
 
    // We are done
    return 0;
@@ -625,16 +644,12 @@ Bool_t TXSocket::IsServProofd()
 }
 
 //_____________________________________________________________________________
-Int_t TXSocket::GetInterrupt(Int_t to)
+Int_t TXSocket::GetInterrupt()
 {
    // Get highest interrupt level in the queue
 
    if (gDebug > 2)
-      Info("GetInterrupt","%p: waiting at interrupt semaphore: %p", this, &fISem);
-   if (fISem.Wait(to) != 0) {
-      Error("GetInterrupt","error waiting at semaphore");
-      return -1;
-   }
+      Info("GetInterrupt","%p: waiting to lock mutex %p", fIMtx);
 
    R__LOCKGUARD(fIMtx);
 

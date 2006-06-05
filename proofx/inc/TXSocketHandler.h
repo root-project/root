@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TProofServ.h,v 1.34 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocketHandler.h,v 1.2 2006/02/26 16:09:57 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -51,6 +51,8 @@ public:
    Bool_t  ReadNotify() { return Notify(); }
 
    static TXSocketHandler *GetSocketHandler(TFileHandler *h = 0, TSocket *s = 0);
+
+   ClassDef(TXSocketHandler, 0) //Input handler class for xproofd sockets
 };
 
 #endif

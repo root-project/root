@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.20 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.21 2006/06/02 15:14:35 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -181,6 +181,7 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
       fProof->Connect("ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
                       "TProofProgressDialog", this,
                       "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
+      fProof->Connect("CloseProgressDialog()", "TProofProgressDialog", this, "DoClose()");
    }
 
    // set dialog title
@@ -390,7 +391,11 @@ TProofProgressDialog::~TProofProgressDialog()
       fProof->Disconnect("ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
                          this,
                          "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
+      fProof->Disconnect("CloseProgressDialog()", this, "CloseProgressDialog()");
       fProof->ResetProgressDialogStatus();
+      // We are called after a TProofDetach: we delete the instance
+      if (!fProof->IsValid())
+         SafeDelete(fProof);
    }
    if (fLogWindow)
       delete fLogWindow;

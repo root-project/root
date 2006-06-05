@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.4 2006/05/23 07:43:55 brun Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.5 2006/06/02 15:14:35 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -93,7 +93,6 @@ private:
    std::list<TXSockBuf *> fSQue;       // list of spare buffers
 
    // Interrupts
-   TSemaphore          fISem;          // Control access to interrupt queue
    TMutex             *fIMtx;          // To protect interrupt queue
    kXR_int32           fILev;          // Highest received interrupt
 
@@ -121,6 +120,7 @@ private:
    static Int_t        GetPipeRead(); // Return the read-descriptor of the global pipe
    static Int_t        PostPipe(TSocket *s=0);  // Notify socket ready via global pipe
    static Int_t        CleanPipe(TSocket *s=0); // Clean previous pipe notification
+   static Int_t        FlushPipe(TSocket *s=0); // Remove any instance of 's' from the pipe
 
    static void         InitEnvs(); // Initialize environment variables
 
@@ -186,7 +186,7 @@ public:
 
    // Interrupts
    Int_t               SendInterrupt(Int_t type);
-   Int_t               GetInterrupt(Int_t timeout = 0);
+   Int_t               GetInterrupt();
 
    // Interrupt the low level socket
    void                SetInterrupt() { if (fConn) fConn->SetInterrupt(); }

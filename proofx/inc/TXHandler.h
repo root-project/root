@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXHandler.h,v 1.1 2006/04/19 10:50:01 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXHandler.h,v 1.2 2006/06/01 16:27:44 rdm Exp $
 // Author: G. Ganis Mar 2006
 
 /*************************************************************************
@@ -28,8 +28,8 @@ public:
    TXHandler() { }
    virtual ~TXHandler() { }
 
-   virtual Bool_t HandleInput();
-   virtual Bool_t HandleError();
+   virtual Bool_t HandleInput(const void *in = 0);
+   virtual Bool_t HandleError(const void *in = 0);
 
    ClassDef(TXHandler, 0) //Template class for handling of async events
 };

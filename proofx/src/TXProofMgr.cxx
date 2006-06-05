@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.9 2006/05/01 20:13:42 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.10 2006/06/02 15:14:35 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -349,7 +349,7 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
 }
 
 //_____________________________________________________________________________
-Bool_t TXProofMgr::HandleError()
+Bool_t TXProofMgr::HandleError(const void *)
 {
    // Handle error on the input socket
 
