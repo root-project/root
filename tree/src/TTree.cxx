@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.282 2006/05/23 04:47:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.283 2006/05/24 15:10:47 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -306,6 +306,7 @@
 #include "TVirtualFitter.h"
 #include "TVirtualIndex.h"
 #include "TCut.h"
+#include "TTreeFilePrefetch.h"
 #include "Api.h"
 
 Int_t    TTree::fgBranchStyle = 1;  //use new TBranch style with TBranchElement
@@ -340,7 +341,7 @@ TTree::TFriendLock::TFriendLock(const TFriendLock& tfl) :
   fTree(tfl.fTree),
   fMethodBit(tfl.fMethodBit),
   fPrevious(tfl.fPrevious)
-{ 
+{
    //copy constructor
 }
 
@@ -352,7 +353,7 @@ TTree::TFriendLock& TTree::TFriendLock::operator=(const TTree::TFriendLock& tfl)
       fTree=tfl.fTree;
       fMethodBit=tfl.fMethodBit;
       fPrevious=tfl.fPrevious;
-   } 
+   }
    return *this;
 }
 
@@ -406,6 +407,7 @@ TTree::TTree(): TNamed(),fFriendLockStatus(0)
    fUserInfo       = 0;
    fTreeIndex      = 0;
    fBranchRef      = 0;
+   fCacheSize      = 10000000;
 }
 
 //______________________________________________________________________________
@@ -423,6 +425,7 @@ TTree::TTree(const TTree& tt): TNamed(tt), TAttLine(tt), TAttFill(tt), TAttMarke
      fMaxVirtualSize(tt.fMaxVirtualSize),
      fAutoSave(tt.fAutoSave),
      fEstimate(tt.fEstimate),
+     fCacheSize(10000000),
      fChainOffset(tt.fChainOffset),
      fReadEntry(tt.fReadEntry),
      fTotalBuffers(tt.fTotalBuffers),
@@ -447,13 +450,13 @@ TTree::TTree(const TTree& tt): TNamed(tt), TAttLine(tt), TAttFill(tt), TAttMarke
      fPlayer(tt.fPlayer),
      fClones(tt.fClones),
      fBranchRef(tt.fBranchRef),
-     fFriendLockStatus(tt.fFriendLockStatus) 
-{ 
+     fFriendLockStatus(tt.fFriendLockStatus)
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TTree& TTree::operator=(const TTree& tt) 
+TTree& TTree::operator=(const TTree& tt)
 {
    //assignement operator
    if(this!=&tt) {
@@ -474,6 +477,7 @@ TTree& TTree::operator=(const TTree& tt)
       fMaxVirtualSize=tt.fMaxVirtualSize;
       fAutoSave=tt.fAutoSave;
       fEstimate=tt.fEstimate;
+      fCacheSize=tt.fCacheSize;
       fChainOffset=tt.fChainOffset;
       fReadEntry=tt.fReadEntry;
       fTotalBuffers=tt.fTotalBuffers;
@@ -499,7 +503,7 @@ TTree& TTree::operator=(const TTree& tt)
       fClones=tt.fClones;
       fBranchRef=tt.fBranchRef;
       fFriendLockStatus=tt.fFriendLockStatus;
-   } 
+   }
    return *this;
 }
 
@@ -549,6 +553,7 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
    fUserInfo       = 0;
    fTreeIndex      = 0;
    fBranchRef      = 0;
+   fCacheSize      = 10000000;
 
    SetFillColor(gStyle->GetHistFillColor());
    SetFillStyle(gStyle->GetHistFillStyle());
@@ -580,6 +585,18 @@ TTree::~TTree()
    if (fDirectory) {
       if (!fDirectory->TestBit(TDirectory::kCloseDirectory)) {
          if (fDirectory->GetList()) fDirectory->GetList()->Remove(this);
+      }
+      //delete the file cache if it points to this Tree
+      TFile *file = fDirectory->GetFile();
+      if (file) {
+         TFilePrefetch *pf = file->GetFilePrefetch();
+         if (pf && pf->InheritsFrom(TTreeFilePrefetch::Class())) {
+            TTreeFilePrefetch *tpf = (TTreeFilePrefetch*)pf;
+            if (tpf->GetTree() == this) {
+               delete tpf;
+               file->SetFilePrefetch(0);
+            }
+         }
       }
    }
    fLeaves.Clear();
@@ -615,6 +632,8 @@ TTree::~TTree()
    delete fTreeIndex;
 
    delete fBranchRef;
+
+
 
    fDirectory  = 0; //must be done after the destruction of friends
 }
@@ -4744,6 +4763,25 @@ void TTree::SetBranchStyle(Int_t style)
   // style = 1 new Bronch
 
    fgBranchStyle = style;
+}
+
+//______________________________________________________________________________
+void TTree::SetCacheSize(Long64_t cacheSize)
+{
+   //set maximum size of the file cache (default is 10000000 ,ie 10 Mbytes)
+
+   fCacheSize = cacheSize;
+   TFile *file = GetCurrentFile();
+   if (!file) return;
+   TFilePrefetch *pf = file->GetFilePrefetch();
+   if (pf) {
+      if (cacheSize == fCacheSize) return;
+      delete pf;
+      if (cacheSize <= 0) {delete pf; file->SetFilePrefetch(0); return;}
+   }
+   fCacheSize = cacheSize;
+   if (cacheSize <= 0) return;
+   new TTreeFilePrefetch(this,cacheSize);
 }
 
 //______________________________________________________________________________

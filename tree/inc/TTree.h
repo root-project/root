@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name: v5-11-02 $:$Id: TTree.h,v 1.86 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.87 2006/05/23 04:47:42 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -106,6 +106,7 @@ protected:
    Long64_t       fMaxVirtualSize;    //  Maximum total size of buffers kept in memory
    Long64_t       fAutoSave;          //  Autosave tree when fAutoSave bytes produced
    Long64_t       fEstimate;          //  Number of entries to estimate histogram limits
+   Long64_t       fCacheSize;         //! Maximum size of file buffers
    Long64_t       fChainOffset;       //! Offset of 1st entry of this Tree in a TChain
    Long64_t       fReadEntry;         //! Number of the entry being processed
    Long64_t       fTotalBuffers;      //! Total number of bytes in branch buffers
@@ -247,6 +248,7 @@ public:
    virtual TBranchRef  *GetBranchRef() const {return fBranchRef;};
    virtual Bool_t       GetBranchStatus(const char *branchname) const;
    static  Int_t        GetBranchStyle();
+   virtual Long64_t     GetCacheSize() const {return fCacheSize;}
    virtual Long64_t     GetChainEntryNumber(Long64_t entry) const {return entry;}
    virtual Long64_t     GetChainOffset() const { return fChainOffset; }
    TFile               *GetCurrentFile() const;
@@ -363,6 +365,7 @@ public:
 #endif
    virtual void         SetBranchStatus(const char *bname,Bool_t status=1,UInt_t *found=0);
    static  void         SetBranchStyle(Int_t style=1);  //style=0 for old branch, =1 for new branch style
+   virtual void         SetCacheSize(Long64_t cachesize=10000000);
    virtual void         SetChainOffset(Int_t offset=0) {fChainOffset=offset;}
    virtual void         SetCircular(Long64_t maxEntries);
    virtual void         SetDebug(Int_t level=1, Long64_t min=0, Long64_t max=9999999); // *MENU*
@@ -389,7 +392,7 @@ public:
                          ,Long64_t nentries=1000000000, Long64_t firstentry=0);
    void                 UseCurrentStyle();
 
-   ClassDef(TTree,15)  //Tree descriptor (the main ROOT I/O class)
+   ClassDef(TTree,16)  //Tree descriptor (the main ROOT I/O class)
 };
 
 //////////////////////////////////////////////////////////////////////////

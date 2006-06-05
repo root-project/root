@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.128 2006/05/23 22:57:36 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.129 2006/05/24 15:10:47 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -50,6 +50,7 @@
 #include "TFileInfo.h"
 #include "TUrl.h"
 #include "TTreeCloner.h"
+#include "TTreeFilePrefetch.h"
 
 #include <queue>
 #include <map>
@@ -1048,6 +1049,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    //Set the branches status and address for the newly connected file
    fTree->SetMakeClass(fMakeClass);
    fTree->SetMaxVirtualSize(fMaxVirtualSize);
+   //fTree->SetCacheSize(fCacheSize);
    SetChainOffset(fTreeOffset[t]);
    TIter next(fStatus);
    Int_t status;
