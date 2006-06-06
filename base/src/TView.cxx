@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.38 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.39 2006/05/26 09:01:58 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -64,23 +64,24 @@ TView::TView()
 
 //____________________________________________________________________________
 TView::TView(const TView& tv) :
-  TObject(tv),
-  TAttLine(tv),
-  fLatitude(tv.fLatitude),
-  fLongitude(tv.fLongitude),
-  fPsi(tv.fPsi),
-  fDview(tv.fDview),
-  fDproj(tv.fDproj),
-  fUpix(tv.fUpix),
-  fVpix(tv.fVpix),
-  fSystem(tv.fSystem),
-  fOutline(tv.fOutline),
-  fDefaultOutline(tv.fDefaultOutline),
-  fAutoRange(tv.fAutoRange),
-  fChanged(tv.fChanged)
+   TObject(tv),
+   TAttLine(tv),
+   fLatitude(tv.fLatitude),
+   fLongitude(tv.fLongitude),
+   fPsi(tv.fPsi),
+   fDview(tv.fDview),
+   fDproj(tv.fDproj),
+   fUpix(tv.fUpix),
+   fVpix(tv.fVpix),
+   fSystem(tv.fSystem),
+   fOutline(tv.fOutline),
+   fDefaultOutline(tv.fDefaultOutline),
+   fAutoRange(tv.fAutoRange),
+   fChanged(tv.fChanged)
 {
-   //copy constructor
-   for(Int_t i=0; i<16; i++) {
+   // Copy constructor.
+
+   for (Int_t i=0; i<16; i++) {
       fTN[i]=tv.fTN[i];
       fTB[i]=tv.fTB[i];
       fTnorm[i]=tv.fTnorm[i];
@@ -89,7 +90,6 @@ TView::TView(const TView& tv) :
    for(Int_t i=0; i<3; i++) {
       fRmax[i]=tv.fRmax[i];
       fRmin[i]=tv.fRmin[i];
-      fUVcoord[4]=tv.fUVcoord[4];
       fX1[i]=tv.fX1[i];
       fX2[i]=tv.fX2[i];
       fY1[i]=tv.fY1[i];
@@ -104,8 +104,9 @@ TView::TView(const TView& tv) :
 //____________________________________________________________________________
 TView& TView::operator=(const TView& tv)
 {
-   //equal operator
-   if(this!=&tv) {
+   // Assignment operator.
+
+   if (this!=&tv) {
       TObject::operator=(tv);
       TAttLine::operator=(tv);
       fLatitude=tv.fLatitude;
@@ -129,7 +130,6 @@ TView& TView::operator=(const TView& tv)
       for(Int_t i=0; i<3; i++) {
          fRmax[i]=tv.fRmax[i];
          fRmin[i]=tv.fRmin[i];
-         fUVcoord[4]=tv.fUVcoord[4];
          fX1[i]=tv.fX1[i];
          fX2[i]=tv.fX2[i];
          fY1[i]=tv.fY1[i];
