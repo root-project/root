@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <limits>
+
 
 using namespace ROOT::Math;
 
@@ -16,15 +18,18 @@ using std::endl;
 
 #define XXX
 
-int compare( double a, double b, const std::string & s="") { 
+template<class T> 
+int compare( T a, T b, const std::string & s="",double tol = 1) { 
   if (a == b) return 0; 
-  if (fabs(a-b) < a*1E-15) return 0; 
+  double eps = tol*8.*std::numeric_limits<T>::epsilon();
+  if (fabs(a-b) < a*eps) return 0; 
   if ( s =="" ) 
     std::cout << "\nFailure " << a << " diffent than " << b << std::endl;
   else 
     std::cout << "\n" << s << " : Failure " << a << " diffent than " << b << std::endl;
   return 1;
 }
+
 
 int test1() { 
 
@@ -339,7 +344,7 @@ int test10() {
   SVector<double,2> v69 = A.SubCol<SVector<double,2> >( 2,1);    
 
   std::cout << " v23 =  " << v23 << " \tv69 = " << v69 << std::endl;
-  iret |= compare( Dot(v23,v69),(2*6+3*9) ); 
+  iret |= compare( Dot(v23,v69),double(2*6+3*9) ); 
   
 //    SMatrix<double,2,2> subA1 = A.Sub<2,2>( 1,0);
 //    SMatrix<double,2,3> subA2 = A.Sub<2,3>( 0,0);
@@ -353,7 +358,7 @@ int test10() {
 
   SVector<double,3> diag = A.Diagonal();
   std::cout << " diagonal =  " << diag << std::endl; 
-  iret |= compare( Mag2(diag) , 1+5*5+9*9 ); 
+  iret |= compare( Mag2(diag) , double(1+5*5+9*9) ); 
 
 
   SMatrix<double,3> B = Transpose(A);
@@ -909,7 +914,7 @@ int test17() {
   SVector<double,3> v2(1,2,3); 
 
   SMatrix<double,2,3> m = TensorProd(v1,v2); 
-  std::cout << "Tensor Product \n" << m << std::endl;
+  //std::cout << "Tensor Product \n" << m << std::endl;
 
   SVector<double,4> a1(2,-1,3,4); 
   SVector<double,4> a2(5,6,1,-2); 
@@ -938,6 +943,121 @@ int test17() {
   return iret;
 }
 
+// test inverison of large matrix (double) 
+int test18() { 
+  int iret =0;
+  // data for a 7x7 sym matrix to invert
+  SMatrix<double,7,7,MatRepSym<double,7> > S;
+  for (int i = 0; i < 7; ++i) {
+    for (int j = 0; j <= i; ++j) { 
+      if (i == j) 
+	S(i,j) = 10*double(std::rand())/(RAND_MAX); // generate between 0,10
+      else
+	S(i,j) = 2*double(std::rand())/(RAND_MAX)-1; // generate between -1,1
+    }
+  }
+  int ifail = 0;
+  SMatrix<double,7,7,MatRepSym<double,7> > Sinv = S.Inverse(ifail);
+  iret |= compare(ifail,0,"sym7x7 inversion");
+  SMatrix<double,7> Id = S*Sinv; 
+  for (int i = 0; i < 7; ++i)
+    iret |= compare(Id(i,i),1.,"inv result");
+
+  double sum = 0; 
+  for (int i = 0; i < 7; ++i) 
+    for (int j = 0; j <i; ++j)
+      sum+= std::fabs(Id(i,j) );  // sum of off diagonal elements
+
+  iret |= compare(sum < 1.E-10, true,"inv off diag");
+
+  // now test inversion of general 
+  SMatrix<double,7> M;
+  for (int i = 0; i < 7; ++i) {
+    for (int j = 0; j < 7; ++j) { 
+      if (i == j) 
+	M(i,j) = 10*double(std::rand())/(RAND_MAX); // generate between 0,10
+      else
+	M(i,j) = 2*double(std::rand())/(RAND_MAX)-1; // generate between -1,1
+    }
+  }
+  ifail = 0;
+  SMatrix<double,7 > Minv = M.Inverse(ifail);
+  iret |= compare(ifail,0,"7x7 inversion");
+  Id = M*Minv; 
+  for (int i = 0; i < 7; ++i)
+    iret |= compare(Id(i,i),1.,"inv result");
+
+  sum = 0; 
+  for (int i = 0; i < 7; ++i) 
+    for (int j = 0; j <i; ++j)
+      sum+= std::fabs(Id(i,j) );  // sum of off diagonal elements
+
+  iret |= compare(sum < 1.E-10, true,"inv off diag");
+  
+  
+  return iret; 
+}
+
+// test inversion of large matrices (float)
+int test19() { 
+  int iret =0;
+  // data for a 7x7 sym matrix to invert
+  SMatrix<float,7,7,MatRepSym<float,7> > S;
+  for (int i = 0; i < 7; ++i) {
+    for (int j = 0; j <= i; ++j) { 
+      if (i == j) 
+	S(i,j) = 10*float(std::rand())/(RAND_MAX); // generate between 0,10
+      else
+	S(i,j) = 2*float(std::rand())/(RAND_MAX)-1; // generate between -1,1
+    }
+  }
+  int ifail = 0;
+  SMatrix<float,7,7,MatRepSym<float,7> > Sinv = S.Inverse(ifail);
+  iret |= compare(ifail,0,"sym7x7 inversion");
+  SMatrix<float,7> Id = S*Sinv; 
+
+  //std::cout << S << "\n" << Sinv << "\n" << Id << "\n";
+
+  for (int i = 0; i < 7; ++i)
+    iret |= compare(Id(i,i),float(1.),"inv sym result");
+
+  double sum = 0; 
+  for (int i = 0; i < 7; ++i) 
+    for (int j = 0; j <i; ++j)
+      sum+= std::fabs(Id(i,j) );  // sum of off diagonal elements
+
+  iret |= compare(sum < 1.E-5, true,"inv sym off diag");
+
+  // now test inversion of general 
+  SMatrix<float,7> M;
+  for (int i = 0; i < 7; ++i) {
+    for (int j = 0; j < 7; ++j) { 
+      if (i == j) 
+	M(i,j) = 10*float(std::rand())/(RAND_MAX); // generate between 0,10
+      else
+	M(i,j) = 2*float(std::rand())/(RAND_MAX)-1; // generate between -1,1
+    }
+  }
+  ifail = 0;
+  SMatrix<float,7 > Minv = M.Inverse(ifail);
+  iret |= compare(ifail,0,"7x7 inversion");
+  Id = M*Minv; 
+
+  //std::cout << M << "\n" << Minv << "\n" << Id << "\n";
+
+  for (int i = 0; i < 7; ++i)
+    iret |= compare(Id(i,i),float(1.),"inv result");
+
+  sum = 0; 
+  for (int i = 0; i < 7; ++i) 
+    for (int j = 0; j <i; ++j)
+      sum+= std::fabs(Id(i,j) );  // sum of off diagonal elements
+
+  iret |= compare(sum < 1.E-5, true,"inv off diag");
+  
+  
+  return iret; 
+}
 
 #define TEST(N)                                                                 \
   itest = N;                                                                    \
@@ -967,7 +1087,8 @@ int main() {
   TEST(15);
   TEST(16);
   TEST(17);
-
+  TEST(18);
+  TEST(19);
 
 
   return 0;

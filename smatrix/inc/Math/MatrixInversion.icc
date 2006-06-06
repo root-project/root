@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixInversion.icc,v 1.1 2006/05/12 08:12:16 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixInversion.icc,v 1.2 2006/05/12 10:02:48 moneta Exp $
 // Authors: CLHEP authors, L. Moneta    2006  
 
 #include "Math/SVector.h"
@@ -41,7 +41,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
   // by having a new without a delete that is only done once.
   
 
-  static SVector<double, N> xvec; 
+  static SVector<T, N> xvec; 
   static SVector<int, N> pivv; 
   
   typedef int* pivIter; 
@@ -442,7 +442,7 @@ int Inverter<idim,n>::DfactMatrix(MatRepStd<T,idim,n> & rhs, T &det, unsigned in
   double p, q, t;
   double s11, s12;
 
-  double epsilon = 8*std::numeric_limits<double>::epsilon();
+  double epsilon = 8*std::numeric_limits<T>::epsilon();
   // could be set to zero (like it was before)
   // but then the algorithm often doesn't detect
   // that a matrix is singular
