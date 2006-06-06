@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.5 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.6 2006/06/02 15:14:35 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -229,7 +229,7 @@ class XrdProofClient {
                               { return (const char *)fSessionTag; }
    inline const char      *Ordinal() const
                               { return (const char *)fOrdinal; }
-   inline const short      Version() const { return fClientVers; }
+   inline short            Version() const { return fClientVers; }
 
    int                     GetClientID(XrdProofdProtocol *p);
 
