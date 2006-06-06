@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.78 2006/05/23 07:43:55 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.79 2006/06/02 15:14:35 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -102,7 +102,7 @@ TProofPlayer::TProofPlayer()
 //______________________________________________________________________________
 TProofPlayer::~TProofPlayer()
 {
-   // Destructor
+   // Destructor.
 
    SafeDelete(fInput);
    SafeDelete(fSelector);
@@ -114,7 +114,7 @@ TProofPlayer::~TProofPlayer()
 //______________________________________________________________________________
 void TProofPlayer::StopProcess(Bool_t abort)
 {
-   // Stop the process after this event
+   // Stop the process after this event.
 
    if (fEvIter != 0)
       fEvIter->StopProcess(abort);
@@ -128,7 +128,7 @@ void TProofPlayer::StopProcess(Bool_t abort)
 void TProofPlayer::AddQueryResult(TQueryResult *q)
 {
    // Add query result to the list, making sure that there are no
-   // duplicates
+   // duplicates.
 
    if (!q) {
       Warning("AddQueryResult","query undefined - do nothing");
@@ -191,7 +191,7 @@ void TProofPlayer::AddQueryResult(TQueryResult *q)
 void TProofPlayer::RemoveQueryResult(const char *ref)
 {
    // Remove all query result instances referenced 'ref' from
-   // the list of results
+   // the list of results.
 
    if (fQueryResults) {
       TIter nxq(fQueryResults);
@@ -209,7 +209,7 @@ void TProofPlayer::RemoveQueryResult(const char *ref)
 TQueryResult *TProofPlayer::GetQueryResult(const char *ref)
 {
    // Get query result instances referenced 'ref' from
-   // the list of results
+   // the list of results.
 
    if (fQueryResults) {
       TIter nxq(fQueryResults);
@@ -227,7 +227,7 @@ TQueryResult *TProofPlayer::GetQueryResult(const char *ref)
 //______________________________________________________________________________
 void TProofPlayer::SetCurrentQuery(TQueryResult *q)
 {
-   // Set current query and save previous value
+   // Set current query and save previous value.
 
    fPreviousQuery = fQuery;
    fQuery = q;
@@ -236,18 +236,24 @@ void TProofPlayer::SetCurrentQuery(TQueryResult *q)
 //______________________________________________________________________________
 void TProofPlayer::AddInput(TObject *inp)
 {
+   // Add object to input list.
+
    fInput->Add(inp);
 }
 
 //______________________________________________________________________________
 void TProofPlayer::ClearInput()
 {
+   // Clear input list.
+
    fInput->Clear();
 }
 
 //______________________________________________________________________________
 TObject *TProofPlayer::GetOutput(const char *name) const
 {
+   // Get output object by name.
+
    if (fOutput != 0) {
       return fOutput->FindObject(name);
    } else {
@@ -258,6 +264,8 @@ TObject *TProofPlayer::GetOutput(const char *name) const
 //______________________________________________________________________________
 TList *TProofPlayer::GetOutputList() const
 {
+   // Get output list.
+
    return fOutput;
 }
 
@@ -266,7 +274,8 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
 {
    // Reinitialize fSelector using the selector files in the query result.
    // Needed when Finalize is called after a Process execution for the same
-   // selector name
+   // selector name.
+
    Int_t rc = 0;
 
    // Make sure we have a query
@@ -430,24 +439,32 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
 //______________________________________________________________________________
 void TProofPlayer::StoreOutput(TList *)
 {
+   // Store output list (may not be used in this class).
+
    MayNotUse("StoreOutput");
 }
 
 //______________________________________________________________________________
 void TProofPlayer::StoreFeedback(TObject *, TList *)
 {
+   // Store feedback list (may not be used in this class).
+
    MayNotUse("StoreFeedback");
 }
 
 //______________________________________________________________________________
 void TProofPlayer::Progress(Long64_t /*total*/, Long64_t /*processed*/)
 {
+   // Report progress (may not be used in this class).
+
    MayNotUse("Progress");
 }
 
 //______________________________________________________________________________
 void TProofPlayer::Feedback(TList *)
 {
+   // Set feedback list (may not be used in this class).
+
    MayNotUse("Feedback");
 }
 
@@ -456,6 +473,9 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                                Option_t *option, Long64_t nentries,
                                Long64_t first, TEventList * /*evl*/)
 {
+   // Process specified TDSet on PROOF worker. Returns -1 in case of error and
+   // 0 in case of success.
+
    PDB(kGlobal,1) Info("Process","Enter");
 
    fExitStatus = kFinished;
@@ -595,6 +615,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 //______________________________________________________________________________
 Long64_t TProofPlayer::Finalize(Bool_t, Bool_t)
 {
+   // Finalize query (may not be used in this class).
+
    MayNotUse("Finalize");
    return -1;
 }
@@ -602,6 +624,8 @@ Long64_t TProofPlayer::Finalize(Bool_t, Bool_t)
 //______________________________________________________________________________
 Long64_t TProofPlayer::Finalize(TQueryResult *)
 {
+   // Finalize query (may not be used in this class).
+
    MayNotUse("Finalize");
    return -1;
 }
@@ -612,6 +636,8 @@ void TProofPlayer::UpdateAutoBin(const char *name,
                                  Double_t& ymin, Double_t& ymax,
                                  Double_t& zmin, Double_t& zmax)
 {
+   // Update automatic binning parameters for given object "name".
+
    if ( fAutoBins == 0 ) {
       fAutoBins = new THashList;
    }
@@ -635,7 +661,8 @@ void TProofPlayer::UpdateAutoBin(const char *name,
 //______________________________________________________________________________
 TDSetElement *TProofPlayer::GetNextPacket(TSlave *, TMessage *)
 {
-   // Get next packet
+   // Get next packet (may not be used in this class).
+
    MayNotUse("GetNextPacket");
    return 0;
 }
@@ -643,14 +670,16 @@ TDSetElement *TProofPlayer::GetNextPacket(TSlave *, TMessage *)
 //______________________________________________________________________________
 void TProofPlayer::SetupFeedback()
 {
-   // Set up feedback
+   // Set up feedback (may not be used in this class).
+
    MayNotUse("SetupFeedback");
 }
 
 //______________________________________________________________________________
 void TProofPlayer::StopFeedback()
 {
-   // Stop feedback
+   // Stop feedback (may not be used in this class).
+
    MayNotUse("StopFeedback");
 }
 
@@ -659,7 +688,8 @@ Long64_t TProofPlayer::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
                                const char * /*selection*/, Option_t * /*option*/,
                                Long64_t /*nentries*/, Long64_t /*firstentry*/)
 {
-   // Draw
+   // Draw (may not be used in this class).
+
    MayNotUse("DrawSelect");
    return 0;
 }
@@ -679,7 +709,7 @@ ClassImp(TProofPlayerRemote)
 //______________________________________________________________________________
 TProofPlayerRemote::~TProofPlayerRemote()
 {
-   // Destructor
+   // Destructor.
 
    SafeDelete(fOutput);      // owns the output list
    SafeDelete(fOutputLists);
@@ -699,7 +729,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                      Option_t *option, Long64_t nentries,
                                      Long64_t first, TEventList * /*evl*/)
 {
-   // Process specified TDSet on PROOF.
+   // Process specified TDSet on PROOF. This method runs on a master.
    // Returns -1 in case error, 0 otherwise.
 
    PDB(kGlobal,1) Info("Process","Enter");
@@ -941,7 +971,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
 //______________________________________________________________________________
 Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
 {
-   // Finalize the results of a query already processed
+   // Finalize the results of a query already processed.
 
    PDB(kGlobal,1) Info("Finalize(TQueryResult *)","Enter");
 
@@ -1006,7 +1036,7 @@ Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
 //______________________________________________________________________________
 Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
 {
-   // Send the selector file to the slave nodes
+   // Send the selector file to the slave nodes.
 
    // If the filename does not contain "." assume class is compiled in
    if ( strchr(selector_file,'.') != 0 ) {
@@ -1081,7 +1111,8 @@ void TProofPlayerRemote::MergeOutput()
 //______________________________________________________________________________
 void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed)
 {
-   // Progress signal
+   // Progress signal.
+
    PDB(kGlobal,1)
       Info("Progress","%2f (%lld/%lld)", 100.*processed/total, processed, total);
 
@@ -1093,7 +1124,7 @@ void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed)
 //______________________________________________________________________________
 void TProofPlayerRemote::Feedback(TList *objs)
 {
-   // Feedback signal
+   // Feedback signal.
 
    PDB(kGlobal,1) Info("Feedback","%d Objects", objs->GetSize());
    PDB(kFeedback,1) {
@@ -1109,7 +1140,7 @@ void TProofPlayerRemote::Feedback(TList *objs)
 //______________________________________________________________________________
 void TProofPlayerRemote::StopProcess(Bool_t abort)
 {
-   // Stop process after this event
+   // Stop process after this event.
 
    if (fPacketizer != 0) fPacketizer->StopProcess(abort);
    if (abort == kTRUE)
@@ -1121,7 +1152,7 @@ void TProofPlayerRemote::StopProcess(Bool_t abort)
 //______________________________________________________________________________
 void TProofPlayerRemote::StoreOutput(TList *out)
 {
-   // Store received output list
+   // Store received output list.
 
    PDB(kOutput,1) Info("StoreOutput","Enter");
 
@@ -1445,7 +1476,7 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
                                const char *selection, Option_t *option,
                                Long64_t nentries, Long64_t firstentry)
 {
-   // Draw
+   // Draw (support for TChain::Draw()).
 
    TTreeDrawArgsParser info;
    info.Parse(varexp, selection, option);
@@ -1497,7 +1528,7 @@ ClassImp(TProofPlayerSlave)
 //______________________________________________________________________________
 void TProofPlayerSlave::SetupFeedback()
 {
-   // Setup feedback
+   // Setup feedback.
 
    TList *fb = (TList*) fInput->FindObject("FeedbackList");
 
@@ -1519,7 +1550,7 @@ void TProofPlayerSlave::SetupFeedback()
 //______________________________________________________________________________
 void TProofPlayerSlave::StopFeedback()
 {
-   // Stop feedback
+   // Stop feedback.
 
    if (fFeedbackTimer == 0) return;
 
@@ -1533,7 +1564,7 @@ void TProofPlayerSlave::StopFeedback()
 //______________________________________________________________________________
 Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
 {
-   // Handle timer event
+   // Handle timer event.
 
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 
@@ -1584,7 +1615,8 @@ Long64_t TProofPlayerSlave::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
                                const char * /*selection*/, Option_t * /*option*/,
                                Long64_t /*nentries*/, Long64_t /*firstentry*/)
 {
-   // Draw
+   // Draw (may not be used in this class).
+
    MayNotUse("DrawSelect");
    return -1;
 }
@@ -1604,6 +1636,7 @@ TProofPlayerSuperMaster::TProofPlayerSuperMaster(const TProofPlayerSuperMaster &
 TProofPlayerSuperMaster& TProofPlayerSuperMaster::operator=(const TProofPlayerSuperMaster&)
 {
    // TProofPlayerSuperMaster assignment operator.
+
    return *this;
 }
 
@@ -1612,7 +1645,7 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
                                           Option_t *option, Long64_t nentries,
                                           Long64_t first, TEventList * /*evl*/)
 {
-   // Process specified TDSet on PROOF.
+   // Process specified TDSet on PROOF. Runs on super master.
    // Returns -1 in case error, 0 otherwise.
 
    fEventsProcessed = 0;

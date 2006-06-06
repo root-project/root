@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofLimitsFinder.cxx,v 1.3 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofLimitsFinder.cxx,v 1.4 2006/05/15 09:45:03 brun Exp $
 // Author: Maarten Ballintijn   19/04/2002
 
 /*************************************************************************
@@ -44,14 +44,16 @@ void TProofLimitsFinder::AutoBinFunc(TString& key,
                                      Double_t& ymin, Double_t& ymax,
                                      Double_t& zmin, Double_t& zmax)
 {
+   // Get bining information. Send current min and max and receive common
+   // min max in return.
+
    if ( gProofServ == 0 ) return;
 
    TSocket *s = gProofServ->GetSocket();
    TMessage mess(kPROOF_AUTOBIN);
 
    PDB(kGlobal, 2) {
-      TProofLimitsFinder f;
-      f.Info("AutoBinFunc", Form("Sending %f, %f, %f, %f, %f, %f", xmin, xmax, ymin, ymax, zmin, zmax));
+      ::Info("TProofLimitsFinder::AutoBinFunc", Form("Sending %f, %f, %f, %f, %f, %f", xmin, xmax, ymin, ymax, zmin, zmax));
    }
    mess << key << xmin << xmax << ymin << ymax << zmin << zmax;
 

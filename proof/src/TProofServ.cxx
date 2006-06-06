@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.122 2006/06/02 23:38:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.123 2006/06/05 22:51:13 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -274,8 +274,8 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    // crude check on number of arguments
    if (*argc < 2) {
-     Error("TProofServ", "Must have at least 1 arguments (see  proofd).");
-     exit(1);
+      Error("TProofServ", "Must have at least 1 arguments (see  proofd).");
+      exit(1);
    }
 
    // abort on higher than kSysError's and set error handler
@@ -361,13 +361,13 @@ void TProofServ::CreateServer()
 
    // get socket to be used (setup in proofd)
    if (!(gSystem->Getenv("ROOTOPENSOCK"))) {
-     Fatal("CreateServer", "Socket setup by proofd undefined");
-     exit(1);
+      Fatal("CreateServer", "Socket setup by proofd undefined");
+      exit(1);
    }
    Int_t sock = strtol(gSystem->Getenv("ROOTOPENSOCK"), (char **)0, 10);
    if (sock <= 0) {
-     Fatal("CreateServer", "Invalid socket descriptor number (%d)", sock);
-     exit(1);
+      Fatal("CreateServer", "Invalid socket descriptor number (%d)", sock);
+      exit(1);
    }
    fSocket = new TSocket(sock);
 
@@ -706,8 +706,8 @@ void TProofServ::GetOptions(Int_t *argc, char **argv)
 
    // Confdir
    if (!(gSystem->Getenv("ROOTCONFDIR"))) {
-     Fatal("GetOptions", "Must specify a config directory");
-     exit(1);
+      Fatal("GetOptions", "Must specify a config directory");
+      exit(1);
    }
    fConfDir = gSystem->Getenv("ROOTCONFDIR");
 }
@@ -1287,8 +1287,7 @@ void TProofServ::HandleSocketInput()
                TFileInfo *fileInfo;
                while ((fileInfo = (TFileInfo *)next())) {
                   if (gSystem->AccessPathName(fileInfo->GetFirstUrl()->GetUrl(),
-                                              kFileExists)
-                      != kFALSE)
+                                              kFileExists) != kFALSE)
                      missingFileList->Add(fileInfo);
                }
                fSocket->SendObject(missingFileList, kMESS_OK);
@@ -2213,7 +2212,7 @@ void TProofServ::Terminate(Int_t status)
          // Remove lock file
          if (fQueryLock)
             gSystem->Unlink(fQueryLock->GetName());
-       }
+      }
 
       // Unlock the query dir owned by this session
       if (fQueryLock)
@@ -3765,8 +3764,8 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                fProof->LoadPackage(package);
 
             PDB(kPackage, 1)
-                Info("HandleCache",
-                     "package %s successfully loaded", package.Data());
+               Info("HandleCache",
+                    "package %s successfully loaded", package.Data());
          }
          break;
       case TProof::kShowEnabledPackages:
