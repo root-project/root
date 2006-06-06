@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.7 2005/09/18 13:19:22 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.8 2006/05/18 21:25:26 pcanal Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -169,16 +169,22 @@ static TReAllocInit gReallocInit;
 
 //------------------------------------------------------------------------------
 
-#ifdef R__THROWNEWDELETE
-# ifdef R__OLDHPACC
-# define R__THROW_BAD  throw(bad_alloc)
-# else
-# define R__THROW_BAD  throw(std::bad_alloc)
+#ifdef __GNUC__
+#   if !defined(R__THROWNEWDELETE) && __GNUC__ >= 3
+#      define R__THROWNEWDELETE
+#   endif
 #endif
-#define R__THROW_NULL throw()
+
+#ifdef R__THROWNEWDELETE
+#   ifdef R__OLDHPACC
+#      define R__THROW_BAD  throw(bad_alloc)
+#   else
+#      define R__THROW_BAD  throw(std::bad_alloc)
+#   endif
+#   define R__THROW_NULL throw()
 #else
-#define R__THROW_BAD
-#define R__THROW_NULL
+#   define R__THROW_BAD
+#   define R__THROW_NULL
 #endif
 
 static const char *gSpaceErr = "storage exhausted (failed to allocate %ld bytes)";
