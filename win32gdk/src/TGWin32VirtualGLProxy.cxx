@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.19 2006/03/08 21:09:43 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.20 2006/03/09 11:18:31 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -154,5 +154,6 @@ VOID_METHOD_ARG1(GLManager, PrintViewer, TVirtualViewer3D *, vv, 1)
 VOID_METHOD_ARG1(GLManager, PaintSingleObject, TVirtualGLPainter *, p, 1)
 VOID_METHOD_ARG3(GLManager, PanObject, TVirtualGLPainter *, p, Int_t, x, Int_t, y, 1)
 RETURN_METHOD_ARG2(GLManager, Bool_t, SelectViewer, TVirtualViewer3D *, viewer, const TGLRect *, rect)
+RETURN_METHOD_ARG3(GLManager, TObject *, Select, TVirtualGLPainter *, painter, Int_t, x, Int_t, y)
 RETURN_METHOD_ARG4(GLManager, Bool_t, SelectManip, TVirtualGLManip *, manip, const TGLCamera *, camera, const TGLRect *, rect, const TGLBoundingBox *, box)
 

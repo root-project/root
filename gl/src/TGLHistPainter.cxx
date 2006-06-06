@@ -91,9 +91,9 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 
       if (!MakeCurrent())return 1000;
 
-      
+      const TGLHistPainter &cRef = *this;//To avoid dummy method call.
 
-      if (!Select(px, py))
+      if (!cRef.Select(px, py))
          gPad->SetSelected(gPad);// To avoid TF2 selection
 
       return 0;

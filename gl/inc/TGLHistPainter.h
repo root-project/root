@@ -233,6 +233,7 @@ private:
    
    void           Pan(Int_t newX, Int_t newY);
    Bool_t         Select(Int_t x, Int_t y)const;
+   TObject       *Select(Int_t /*x*/, Int_t /*y*/){return 0;}//Temporary empty method (to close pure-virtual function)
    void           SelectAxes(Int_t front, Int_t x, Int_t y)const;
 
    TGLHistPainter(const TGLHistPainter &);

@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.17 2006/03/14 08:59:47 brun Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.18 2006/05/16 08:04:42 couet Exp $
 // Author: Timur Pocheptsov (TX11GLManager) / Valeriy Onuchin (TX11GL)
 
 /*************************************************************************
@@ -689,4 +689,10 @@ void TX11GLManager::PanObject(TVirtualGLPainter *o, Int_t x, Int_t y)
    // Pan objects.
    
    return o->Pan(x, y);
+}
+
+//______________________________________________________________________________
+TObject *TX11GLManager::Select(TVirtualGLPainter *painter, Int_t px, Int_t py)
+{
+   return painter->Select(px, py);
 }
