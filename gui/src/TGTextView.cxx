@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.23 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.24 2006/05/28 20:08:00 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -35,6 +35,8 @@
 #include "TGTextView.h"
 #include "TGScrollBar.h"
 #include "TGResourcePool.h"
+#include "TSystem.h"
+#include "Riostream.h"
 
 
 const TGFont *TGTextView::fgDefaultFont = 0;
@@ -839,4 +841,33 @@ const TGGC &TGTextView::GetDefaultSelectedBackgroundGC()
    if (!fgDefaultSelectedBackgroundGC)
       fgDefaultSelectedBackgroundGC = gClient->GetResourcePool()->GetSelectedBckgndGC();
    return *fgDefaultSelectedBackgroundGC;
+}
+
+//______________________________________________________________________________
+void TGTextView::SavePrimitive(ofstream &out, Option_t *)
+{
+   // Save a text edit widget as a C++ statement(s) on output stream out
+
+   char quote = '"';
+   out << "   TGTextView *";
+   out << GetName() << " = new TGTextView(" << fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight()
+       << ");"<< endl;
+
+   if (fCanvas->GetBackground() != TGFrame::fgWhitePixel) {
+      out << "   " << GetName() << "->ChangeBackground(" << fCanvas->GetBackground() << ");" << endl;
+   }
+
+   TGText *txt = GetText();
+   Bool_t fromfile = strlen(txt->GetFileName()) ? kTRUE : kFALSE;
+   char fn[kMAXPATHLEN];
+
+   if (fromfile) {
+      const char *filename = txt->GetFileName();
+      sprintf(fn, gSystem->ExpandPathName(gSystem->UnixPathName(filename)));
+   } else {
+      sprintf(fn,"Txt%s",GetName()+5);
+      txt->Save(fn);
+   }
+   out << "   " << GetName() << "->LoadFile(" << quote << fn << quote << ");" << endl;
 }

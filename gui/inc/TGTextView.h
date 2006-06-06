@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.13 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.14 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -98,6 +98,7 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleSelectionRequest(Event_t *event);
 
+   virtual void SavePrimitive(ofstream &out, Option_t *);
    virtual void SetText(TGText *text);
    virtual void AddText(TGText *text);
    virtual void AddLine(const char *string);
