@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.64 2006/05/31 07:48:56 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.65 2006/06/02 23:32:40 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -272,40 +272,41 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
             new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 5, 15, 5));
    fBtnAdd->SetToolTipText("Add server to the list");
    fBtnAdd->Connect("Clicked()", "TSessionServerFrame", this,
-                   "OnBtnAddClicked()");
+                    "OnBtnAddClicked()");
    AddFrame(fBtnConnect = new TGTextButton(this, "          Connect          "),
                  new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 5, 15, 5));
    fBtnConnect->Connect("Clicked()", "TSessionServerFrame", this,
-                   "OnBtnConnectClicked()");
+                        "OnBtnConnectClicked()");
    fBtnConnect->SetToolTipText("Connect to the selected server");
 
    fTxtConfig->Connect("DoubleClicked()", "TSessionServerFrame", this,
                        "OnConfigFileClicked()");
 
    fTxtName->Connect("TextChanged(char*)", "TSessionServerFrame", this,
-                       "SettingsChanged()");
+                     "SettingsChanged()");
    fTxtAddress->Connect("TextChanged(char*)", "TSessionServerFrame", this,
                        "SettingsChanged()");
    fTxtConfig->Connect("TextChanged(char*)", "TSessionServerFrame", this,
                        "SettingsChanged()");
    fTxtUsrName->Connect("TextChanged(char*)", "TSessionServerFrame", this,
-                       "SettingsChanged()");
+                        "SettingsChanged()");
    fSync->Connect("Clicked()", "TSessionServerFrame", this,
-                       "SettingsChanged()");
+                  "SettingsChanged()");
    fLogLevel->Connect("ValueChanged(Long_t)", "TSessionServerFrame", this,
-                       "SettingsChanged()");
+                      "SettingsChanged()");
    fLogLevel->Connect("ValueSet(Long_t)", "TSessionServerFrame", this,
-                       "SettingsChanged()");
+                      "SettingsChanged()");
    fNumPort->Connect("ValueChanged(Long_t)", "TSessionServerFrame", this,
-                       "SettingsChanged()");
+                     "SettingsChanged()");
    fNumPort->Connect("ValueSet(Long_t)", "TSessionServerFrame", this,
-                       "SettingsChanged()");
+                     "SettingsChanged()");
 
 }
 
 //______________________________________________________________________________
 void TSessionServerFrame::SettingsChanged()
 {
+   // Settings have changed, update GUI accordingly.
 
    TGTextEntry *sender = dynamic_cast<TGTextEntry*>((TQObject*)gTQSender);
    Bool_t issync = (fSync->GetState() == kButtonDown);
@@ -4321,6 +4322,8 @@ void TSessionViewer::ShowPackages()
 //______________________________________________________________________________
 void TSessionViewer::UpdateListOfPackages()
 {
+   // Update the list of packages.
+
    TObjString *packname;
    TPackageDescription *package;
    if (fActDesc->fConnected && fActDesc->fAttached &&
