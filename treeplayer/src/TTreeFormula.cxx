@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.194 2006/02/22 06:59:15 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.195 2006/04/19 08:22:26 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2555,7 +2555,8 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
             continue;
 
          } else {
-            clonesinfo = new TFormLeafInfoClones(cl, 0);
+            Bool_t toplevel = (branch == branch->GetMother());
+            clonesinfo = new TFormLeafInfoClones(cl, 0, toplevel);
             clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leafcur,0);
          }
          if (clones) cl = clones->GetClass();
