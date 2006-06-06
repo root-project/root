@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.5 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.1 2006/06/05 20:30:28 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TTreeFilePrefetch.h"
 #include "TTree.h"
 #include "TBranch.h"
+#include "TLeaf.h"
 
 ClassImp(TTreeFilePrefetch)
 
@@ -106,11 +107,12 @@ Bool_t TTreeFilePrefetch::Register(Long64_t offset)
    
    //reset cache when reaching the maximum cache size
    if (fNtot+30000 > fBufferSize) TFilePrefetch::Prefetch(0,0);
-   Int_t nbranches = fTree->GetNbranches();
+   Int_t nleaves = fTree->GetListOfLeaves()->GetEntriesFast();
    //loop on all the branches to find the branch with a buffer starting at offset
-   Bool_t ok = kFALSE;
-   for (Int_t i=0;i<nbranches;i++) {
-      TBranch *branch = (TBranch*)fTree->GetListOfBranches()->At(i);
+   for (Int_t i=0;i<nleaves;i++) {
+      TLeaf *leaf = (TLeaf*)fTree->GetListOfLeaves()->At(i);
+      TBranch *branch = leaf->GetBranch();
+      if (branch->GetListOfBranches()->GetEntriesFast() > 0) continue;
       Int_t nb = branch->GetMaxBaskets();
       Int_t *lbaskets   = branch->GetBasketBytes();
       Long64_t *entries = branch->GetBasketEntry();
@@ -120,20 +122,19 @@ Bool_t TTreeFilePrefetch::Register(Long64_t offset)
          if (branch->GetBasketSeek(j) == offset) {
             for (Int_t k=j;k<nb;k++) {
                Long64_t pos = branch->GetBasketSeek(k);
-               if (pos <= 0) continue;
                Int_t len = lbaskets[k];
+               if (pos <= 0) continue;
                if (fNtot+len > fBufferSize || entries[k] > fEntryMax) {
-                  //printf("registering branch %s offset=%lld\n",branch->GetName(),offset);
                   return kFALSE;
                }
-               TFilePrefetch::Prefetch(branch->GetBasketSeek(k),lbaskets[k]);
+               TFilePrefetch::Prefetch(pos,len);
             }
             if (gDebug > 0) printf("registering branch %s offset=%lld\n",branch->GetName(),offset);
             return kTRUE;
          }
       }
    }
-   return ok;
+   return kFALSE;
 }
 
 //_____________________________________________________________________________
