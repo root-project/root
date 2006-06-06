@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.11 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.12 2006/03/13 15:49:50 roiser Exp $
 // Author: Markus Frank 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -44,16 +44,6 @@ namespace stdext {     // Visual C++
 }
 #endif
 
-#if defined(_WIN32) 
-#if _MSC_VER<1300
-#define RFLX_TYPENAME
-#else
-#define RFLX_TYPENAME typename
-#endif
-#else
-#define RFLX_TYPENAME typename
-#endif
-
 namespace ROOT {
    namespace Reflex  {
 
@@ -76,16 +66,16 @@ namespace ROOT {
 #endif
 
       template <typename T> struct Address {
-         static void* addressGet(T ref) {
+         static void* address(T ref) {
             return (void*)&ref;
          }
       };
 
       template <class T> struct CollType 
 #ifdef _KCC  // KAI compiler
-         : public Address<RFLX_TYPENAME T::value_type&> 
+         : public Address<typename T::value_type&> 
 #else 
-         : public Address<RFLX_TYPENAME T::const_reference> 
+         : public Address<typename T::const_reference> 
 #endif 
       {
          typedef T                               Cont_t;
@@ -116,11 +106,11 @@ namespace ROOT {
             e->size  = c->size();
             if ( 0 == e->size ) return e->start = 0;
 #ifdef _KCC  // KAI compiler
-            RFLX_TYPENAME T::value_type& ref = *(e->iter());
+            typename T::value_type& ref = *(e->iter());
 #else
-            RFLX_TYPENAME T::const_reference ref = *(e->iter());
+            typename T::const_reference ref = *(e->iter());
 #endif
-            return e->start = addressGet(ref);
+            return e->start = address(ref);
          }
          static void* next(void* env)  {
             PEnv_t  e = PEnv_t(env);
@@ -129,11 +119,11 @@ namespace ROOT {
             // TODO: Need to find something for going backwards....
             if ( e->iter() == c->end() ) return 0;
 #ifdef _KCC  // KAI compiler
-            RFLX_TYPENAME T::value_type& ref = *(e->iter());
+            typename T::value_type& ref = *(e->iter());
 #else
-            RFLX_TYPENAME T::const_reference ref = *(e->iter());
+            typename T::const_reference ref = *(e->iter());
 #endif
-            return addressGet(ref);
+            return address(ref);
          }
          static void* construct(void* env)  {
             PEnv_t  e = PEnv_t(env);
@@ -181,7 +171,7 @@ namespace ROOT {
             PCont_t c = PCont_t(e->object);
             c->resize(e->size);
             e->idx = 0;
-            return e->start = addressGet(*c->begin());
+            return e->start = address(*c->begin());
          }
          static void* feed(void* env)  {
             PEnv_t   e = PEnv_t(env);
@@ -263,7 +253,7 @@ namespace ROOT {
       };
 
       // Need specialization for boolean references due to stupid STL vector<bool>
-      template<> inline void* ROOT::Reflex::Address<std::vector<bool,std::allocator<bool> >::const_reference>::addressGet(std::vector<bool,std::allocator<bool> >::const_reference ) {
+      template<> inline void* ROOT::Reflex::Address<std::vector<bool,std::allocator<bool> >::const_reference>::address(std::vector<bool,std::allocator<bool> >::const_reference ) {
          return 0;
       }
 
