@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.7 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.8 2006/05/19 04:44:59 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -216,6 +216,8 @@ templateClassImp(TMatrixTBase)
 template<class Element>
 void TMatrixTBase<Element>::DoubleLexSort(Int_t n,Int_t *first,Int_t *second,Element *data)
 {
+// Lexical sort on array data using indices first and second
+
    const int incs[] = {1,5,19,41,109,209,505,929,2161,3905,8929,16001,INT_MAX};
 
    Int_t kinc = 0;
@@ -254,6 +256,8 @@ template<class Element>
 void TMatrixTBase<Element>::IndexedLexSort(Int_t n,Int_t *first,Int_t swapFirst,
                                            Int_t *second,Int_t swapSecond,Int_t *index)
 {
+// Lexical sort on array data using indices first and second
+
    const int incs[] = {1,5,19,41,109,209,505,929,2161,3905,8929,16001,INT_MAX};
 
    Int_t kinc = 0;
@@ -386,6 +390,8 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::SetMatrixArray(const Element *data
 template<class Element>
 Bool_t TMatrixTBase<Element>::IsSymmetric() const
 {
+// Check whether matrix is symmetric
+
   R__ASSERT(IsValid());
 
    if ((fNrows != fNcols) || (fRowLwb != fColLwb))
@@ -408,12 +414,12 @@ Bool_t TMatrixTBase<Element>::IsSymmetric() const
 template<class Element>
 void TMatrixTBase<Element>::GetMatrix2Array(Element *data,Option_t *option) const
 {
-  // Copy matrix data to array . It is assumed that array is of size >= fNelems
-  // (=)))) fNrows*fNcols
-  // option indicates how the data is stored in the array:
-  // option =
-  //          'F'   : column major (Fortran) array[i+j*fNrows] = m[i][j]
-  //          else  : row major    (C)       array[i*fNcols+j] = m[i][j] (default)
+// Copy matrix data to array . It is assumed that array is of size >= fNelems
+// (=)))) fNrows*fNcols
+// option indicates how the data is stored in the array:
+// option =
+//          'F'   : column major (Fortran) array[i+j*fNrows] = m[i][j]
+//          else  : row major    (C)       array[i*fNcols+j] = m[i][j] (default)
 
    R__ASSERT(IsValid());
 
@@ -438,6 +444,8 @@ void TMatrixTBase<Element>::GetMatrix2Array(Element *data,Option_t *option) cons
 template<class Element>
 TMatrixTBase<Element> &TMatrixTBase<Element>::InsertRow(Int_t rown,Int_t coln,const Element *v,Int_t n)
 {
+// Copy n elements from array v to row rown starting at column coln
+
    const Int_t arown = rown-fRowLwb;
    const Int_t acoln = coln-fColLwb;
    const Int_t nr = (n > 0) ? n : fNcols;
@@ -473,7 +481,7 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::InsertRow(Int_t rown,Int_t coln,co
 template<class Element>
 void TMatrixTBase<Element>::ExtractRow(Int_t rown,Int_t coln,Element *v,Int_t n) const
 {
-  // Store in array v, n matrix elements of row rown starting at column coln
+// Store in array v, n matrix elements of row rown starting at column coln
 
    const Int_t arown = rown-fRowLwb;
    const Int_t acoln = coln-fColLwb;
@@ -505,9 +513,9 @@ void TMatrixTBase<Element>::ExtractRow(Int_t rown,Int_t coln,Element *v,Int_t n)
 template<class Element>
 TMatrixTBase<Element> &TMatrixTBase<Element>::Shift(Int_t row_shift,Int_t col_shift)
 {
-  // Shift the row index by adding row_shift and the column index by adding
-  // col_shift, respectively. So [rowLwb..rowUpb][colLwb..colUpb] becomes
-  // [rowLwb+row_shift..rowUpb+row_shift][colLwb+col_shift..colUpb+col_shift]
+// Shift the row index by adding row_shift and the column index by adding
+// col_shift, respectively. So [rowLwb..rowUpb][colLwb..colUpb] becomes
+// [rowLwb+row_shift..rowUpb+row_shift][colLwb+col_shift..colUpb+col_shift]
 
    fRowLwb += row_shift;
    fColLwb += col_shift;
@@ -519,6 +527,8 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::Shift(Int_t row_shift,Int_t col_sh
 template<class Element>
 TMatrixTBase<Element> &TMatrixTBase<Element>::Zero()
 {
+// Set matrix elements to zero
+
    R__ASSERT(IsValid());
    memset(this->GetMatrixArray(),0,fNelems*sizeof(Element));
 
@@ -529,7 +539,7 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::Zero()
 template<class Element>
 TMatrixTBase<Element> &TMatrixTBase<Element>::Abs()
 {
-  // Take an absolute value of a matrix, i.e. apply Abs() to each element.
+// Take an absolute value of a matrix, i.e. apply Abs() to each element.
 
    R__ASSERT(IsValid());
 
@@ -547,7 +557,7 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::Abs()
 template<class Element>
 TMatrixTBase<Element> &TMatrixTBase<Element>::Sqr()
 {
-  // Square each element of the matrix.
+// Square each element of the matrix.
 
    R__ASSERT(IsValid());
 
@@ -565,7 +575,7 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::Sqr()
 template<class Element>
 TMatrixTBase<Element> &TMatrixTBase<Element>::Sqrt()
 {
-  // Take square root of all elements.
+// Take square root of all elements.
 
    R__ASSERT(IsValid());
 
@@ -583,7 +593,7 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::Sqrt()
 template<class Element>
 TMatrixTBase<Element> &TMatrixTBase<Element>::UnitMatrix()
 {
-  // Make a unit matrix (matrix need not be a square one).
+// Make a unit matrix (matrix need not be a square one).
 
    R__ASSERT(IsValid());
 
@@ -600,9 +610,9 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::UnitMatrix()
 template<class Element>
 TMatrixTBase<Element> &TMatrixTBase<Element>::NormByDiag(const TVectorT<Element> &v,Option_t *option)
 {
-  // option:
-  // "D"   :  b(i,j) = a(i,j)/sqrt(abs*(v(i)*v(j)))  (default)
-  // else  :  b(i,j) = a(i,j)*sqrt(abs*(v(i)*v(j)))  (default)
+// option:
+// "D"   :  b(i,j) = a(i,j)/sqrt(abs*(v(i)*v(j)))  (default)
+// else  :  b(i,j) = a(i,j)*sqrt(abs*(v(i)*v(j)))  (default)
 
    R__ASSERT(IsValid());
    R__ASSERT(v.IsValid());
@@ -647,8 +657,8 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::NormByDiag(const TVectorT<Element>
 template<class Element>
 Element TMatrixTBase<Element>::RowNorm() const
 {
-  // Row matrix norm, MAX{ SUM{ |M(i,j)|, over j}, over i}.
-  // The norm is induced by the infinity vector norm.
+// Row matrix norm, MAX{ SUM{ |M(i,j)|, over j}, over i}.
+// The norm is induced by the infinity vector norm.
 
    R__ASSERT(IsValid());
 
@@ -674,8 +684,8 @@ Element TMatrixTBase<Element>::RowNorm() const
 template<class Element>
 Element TMatrixTBase<Element>::ColNorm() const
 {
-  // Column matrix norm, MAX{ SUM{ |M(i,j)|, over i}, over j}.
-  // The norm is induced by the 1 vector norm.
+// Column matrix norm, MAX{ SUM{ |M(i,j)|, over i}, over j}.
+// The norm is induced by the 1 vector norm.
 
    R__ASSERT(IsValid());
 
@@ -702,7 +712,7 @@ Element TMatrixTBase<Element>::ColNorm() const
 template<class Element>
 Element TMatrixTBase<Element>::E2Norm() const
 {
-  // Square of the Euclidian norm, SUM{ m(i,j)^2 }.
+// Square of the Euclidian norm, SUM{ m(i,j)^2 }.
 
    R__ASSERT(IsValid());
 
@@ -720,7 +730,7 @@ Element TMatrixTBase<Element>::E2Norm() const
 template<class Element>
 Int_t TMatrixTBase<Element>::NonZeros() const
 {
-  // Compute the number of elements != 0.0
+// Compute the number of elements != 0.0
 
    R__ASSERT(IsValid());
 
@@ -737,7 +747,7 @@ Int_t TMatrixTBase<Element>::NonZeros() const
 template<class Element>
 Element TMatrixTBase<Element>::Sum() const
 {
-  // Compute sum of elements
+// Compute sum of elements
 
    R__ASSERT(IsValid());
 
@@ -754,7 +764,7 @@ Element TMatrixTBase<Element>::Sum() const
 template<class Element>
 Element TMatrixTBase<Element>::Min() const
 {
-  // return minimum matrix element value
+// return minimum matrix element value
 
    R__ASSERT(IsValid());
 
@@ -767,7 +777,7 @@ Element TMatrixTBase<Element>::Min() const
 template<class Element>
 Element TMatrixTBase<Element>::Max() const
 {
-  // return maximum vector element value
+// return maximum vector element value
 
    R__ASSERT(IsValid());
 
@@ -780,8 +790,8 @@ Element TMatrixTBase<Element>::Max() const
 template<class Element>
 void TMatrixTBase<Element>::Draw(Option_t *option)
 {
-  // Draw this matrix using an intermediate histogram
-  // The histogram is named "TMatrixT" by default and no title
+// Draw this matrix using an intermediate histogram
+// The histogram is named "TMatrixT" by default and no title
 
    //create the hist utility manager (a plugin)
    TVirtualUtilHist *util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
@@ -801,7 +811,7 @@ void TMatrixTBase<Element>::Draw(Option_t *option)
 template<class Element>
 void TMatrixTBase<Element>::Print(Option_t *name) const
 {
-  // Print the matrix as a table of elements .
+// Print the matrix as a table of elements .
 
    if (!IsValid()) {
       Error("Print","Matrix is invalid");
@@ -835,7 +845,7 @@ void TMatrixTBase<Element>::Print(Option_t *name) const
 template<class Element>
 Bool_t TMatrixTBase<Element>::operator==(Element val) const
 {
-  // Are all matrix elements equal to val?
+// Are all matrix elements equal to val?
 
    R__ASSERT(IsValid());
 
@@ -855,7 +865,7 @@ Bool_t TMatrixTBase<Element>::operator==(Element val) const
 template<class Element>
 Bool_t TMatrixTBase<Element>::operator!=(Element val) const
 {
-  // Are all matrix elements not equal to val?
+// Are all matrix elements not equal to val?
 
    R__ASSERT(IsValid());
 
@@ -875,7 +885,7 @@ Bool_t TMatrixTBase<Element>::operator!=(Element val) const
 template<class Element>
 Bool_t TMatrixTBase<Element>::operator<(Element val) const
 {
-  // Are all matrix elements < val?
+// Are all matrix elements < val?
 
    R__ASSERT(IsValid());
 
@@ -892,7 +902,7 @@ Bool_t TMatrixTBase<Element>::operator<(Element val) const
 template<class Element>
 Bool_t TMatrixTBase<Element>::operator<=(Element val) const
 {
-  // Are all matrix elements <= val?
+// Are all matrix elements <= val?
 
    R__ASSERT(IsValid());
 
@@ -909,7 +919,7 @@ Bool_t TMatrixTBase<Element>::operator<=(Element val) const
 template<class Element>
 Bool_t TMatrixTBase<Element>::operator>(Element val) const
 {
-  // Are all matrix elements > val?
+// Are all matrix elements > val?
 
    R__ASSERT(IsValid());
 
@@ -926,7 +936,7 @@ Bool_t TMatrixTBase<Element>::operator>(Element val) const
 template<class Element>
 Bool_t TMatrixTBase<Element>::operator>=(Element val) const
 {
-  // Are all matrix elements >= val?
+// Are all matrix elements >= val?
 
    R__ASSERT(IsValid());
 
@@ -943,6 +953,8 @@ Bool_t TMatrixTBase<Element>::operator>=(Element val) const
 template<class Element>
 TMatrixTBase<Element> &TMatrixTBase<Element>::Apply(const TElementActionT<Element> &action)
 {
+// Apply action to each matrix element
+
    R__ASSERT(IsValid());
 
    Element *ep = this->GetMatrixArray();
@@ -957,8 +969,8 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::Apply(const TElementActionT<Elemen
 template<class Element>
 TMatrixTBase<Element> &TMatrixTBase<Element>::Apply(const TElementPosActionT<Element> &action)
 {
-  // Apply action to each element of the matrix. To action the location
-  // of the current element is passed.
+// Apply action to each element of the matrix. To action the location
+// of the current element is passed.
 
    R__ASSERT(IsValid());
 
@@ -976,7 +988,7 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::Apply(const TElementPosActionT<Ele
 template<class Element>
 TMatrixTBase<Element> &TMatrixTBase<Element>::Randomize(Element alpha,Element beta,Double_t &seed)
 {
-  // randomize matrix element values
+// Randomize matrix element values
 
    R__ASSERT(IsValid());
 
@@ -995,7 +1007,7 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::Randomize(Element alpha,Element be
 template<class Element>
 Bool_t operator==(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 {
-  // Check to see if two matrices are identical.
+// Check to see if two matrices are identical.
 
    if (!AreCompatible(m1,m2)) return kFALSE;
    return (memcmp(m1.GetMatrixArray(),m2.GetMatrixArray(),
@@ -1006,7 +1018,7 @@ Bool_t operator==(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m
 template<class Element>
 Element E2Norm(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 {
-  // Square of the Euclidian norm of the difference between two matrices.
+// Square of the Euclidian norm of the difference between two matrices.
 
    if (gMatrixCheck && !AreCompatible(m1,m2)) {
       ::Error("E2Norm","matrices not compatible");
@@ -1028,6 +1040,7 @@ Element E2Norm(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 template<class Element1,class Element2>
 Bool_t AreCompatible(const TMatrixTBase<Element1> &m1,const TMatrixTBase<Element2> &m2,Int_t verbose)
 {
+// Check that matrice sm1 and m2 areboth valid and have identical shapes .
    if (!m1.IsValid()) {
       if (verbose)
          ::Error("AreCompatible", "matrix 1 not valid");
@@ -1053,7 +1066,7 @@ Bool_t AreCompatible(const TMatrixTBase<Element1> &m1,const TMatrixTBase<Element
 template<class Element>
 void Compare(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 {
-  // Compare two matrices and print out the result of the comparison.
+// Compare two matrices and print out the result of the comparison.
 
    if (!AreCompatible(m1,m2)) {
       Error("Compare(const TMatrixTBase<Element> &,const TMatrixTBase<Element> &)","matrices are incompatible");
@@ -1107,7 +1120,7 @@ void Compare(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 template<class Element>
 Bool_t VerifyMatrixValue(const TMatrixTBase<Element> &m,Element val,Int_t verbose,Element maxDevAllow)
 {
-  // Validate that all elements of matrix have value val within maxDevAllow.
+// Validate that all elements of matrix have value val within maxDevAllow.
 
    R__ASSERT(m.IsValid());
 
@@ -1151,7 +1164,7 @@ template<class Element>
 Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2,Int_t verbose,
                             Element maxDevAllow)
 {
-   // Verify that elements of the two matrices are equal within MaxDevAllow .
+// Verify that elements of the two matrices are equal within MaxDevAllow .
 
    if (!AreCompatible(m1,m2,verbose))
       return kFALSE;
@@ -1196,7 +1209,7 @@ Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<E
 template<class Element>
 void TMatrixTBase<Element>::Streamer(TBuffer &R__b)
 {
-  // Stream an object of class TMatrixTBase<Element>.
+// Stream an object of class TMatrixTBase<Element>.
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
