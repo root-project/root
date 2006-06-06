@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Node.h,v 1.2 2006/05/23 13:03:15 brun Exp $    
+// @(#)root/tmva $Id: Node.h,v 1.3 2006/05/31 14:01:33 rdm Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Node.h,v 1.2 2006/05/23 13:03:15 brun Exp $    
+ * $Id: Node.h,v 1.3 2006/05/31 14:01:33 rdm Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Node
@@ -101,9 +101,9 @@ namespace TMVA {
       inline void SetParent(Node* p) { fParent = p;} 
     
       // set index of variable used for discrimination at this node
-      inline void SetSelector( const Short_t i) { fSelector = i; }
+      inline void SetSelector( Short_t i) { fSelector = i; }
       // set index of variable used for discrimination at this node
-      inline void SetSelector( const Int_t i  ) { fSelector = Short_t(i); }
+      inline void SetSelector( Int_t i  ) { fSelector = Short_t(i); }
       // return index of variable used for discrimination at this node 
       inline Short_t GetSelector() const { return fSelector; }
       // set the EVENT that forms this node (in search tree)
@@ -117,14 +117,14 @@ namespace TMVA {
       void   Print( ostream& os ) const;
     
       // recursive printout of the node and it daughters 
-      virtual void PrintRec( ostream& os, const Int_t depth=0, const std::string pos="root" ) const;
+      virtual void PrintRec( ostream& os, Int_t depth=0, const std::string pos="root" ) const;
       // recursive reading of the node (essectially the whole tree) from a text file 
       virtual NodeID ReadRec( ifstream& is, NodeID nodeID, Node* parent=NULL );
     
       // return true/false if the EVENT* that forms the node is owned by the node or not 
       Bool_t      GetEventOwnership( void           ) { return fEventOwnership; }
       // set if the EVENT* that forms the node is owned by the node or not 
-      void        SetEventOwnership( const Bool_t b ) { fEventOwnership = b; }
+      void        SetEventOwnership( Bool_t b ) { fEventOwnership = b; }
     
    private: 
 

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.2 2006/05/23 13:03:15 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -102,7 +102,7 @@ namespace TMVA {
       Double_t GetNEvents( void ) const  { return fNEvents; }
 
       //recursively print the node and its daughters (--> print the 'tree')
-      virtual void        PrintRec( ostream&  os, const Int_t depth=0, const string pos="root" ) const;
+      virtual void        PrintRec( ostream&  os, Int_t depth=0, const string pos="root" ) const;
 
       //recursively read the node and its daughters (--> read the 'tree')
       virtual NodeID ReadRec ( ifstream& is, NodeID nodeID, Node* parent=NULL );
