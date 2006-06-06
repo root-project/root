@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.34 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.35 2006/05/05 16:13:58 antcheva Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -699,9 +699,12 @@ TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
    fColumns    = 0;
    fJmode      = 0;
    fColHeader  = 0;
+   fHeader     = 0;
    fFontStruct = GetDefaultFontStruct();
    fNormGC     = GetDefaultGC()();
-
+   if (fHScrollbar)
+      fHScrollbar->Connect("PositionChanged(Int_t)", "TGListView", this, "ScrollHeader(Int_t)");
+   fHeader = new TGHorizontalFrame(this, 20, 20, kChildFrame);
    SetDefaultHeaders();
 }
 
@@ -716,6 +719,22 @@ TGListView::~TGListView()
       for (int i = 0; i < fNColumns; i++)
          delete fColHeader[i];
       delete [] fColHeader;
+      delete fHeader;
+   }
+}
+
+//______________________________________________________________________________
+void TGListView::ScrollHeader(Int_t pos)
+{
+   // Scroll header buttons with horizontal scrollbar
+
+   Int_t  i, xl = - pos;
+   if (fViewMode == kLVDetails) {
+      for (i = 0; i < fNColumns-1; ++i) {
+         fColHeader[i]->Move(xl, 0);
+         xl += fColHeader[i]->GetWidth();
+      }
+      fColHeader[i]->Move(xl, 0);
    }
 }
 
@@ -752,7 +771,7 @@ void TGListView::SetHeaders(Int_t ncolumns)
    }
 
    // create blank filler header
-   fColHeader[fNColumns-1] = new TGTextButton(this, new TGHotString(""), -1,
+   fColHeader[fNColumns-1] = new TGTextButton(fHeader, new TGHotString(""), -1,
                                               fNormGC, fFontStruct);
    fColHeader[fNColumns-1]->SetTextJustify(kTextCenterX | kTextCenterY);
    fColHeader[fNColumns-1]->SetState(kButtonDisabled);
@@ -773,7 +792,7 @@ void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
       return;
    }
    delete fColHeader[idx];
-   fColHeader[idx] = new TGTextButton(this, new TGHotString(s),
+   fColHeader[idx] = new TGTextButton(fHeader, new TGHotString(s),
                                       idx, fNormGC, fFontStruct);
    fColHeader[idx]->SetTextJustify(hmode | kTextCenterY);
 
@@ -783,7 +802,7 @@ void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
       fJmode[idx-1] = cmode;
 
    if (!fColHeader[0]) return;
-   int xl = fBorderWidth + fColHeader[0]->GetDefaultWidth() + 20 + 10;
+   int xl = fColHeader[0]->GetDefaultWidth() + 20 + 10;
    for (int i = 1; i < fNColumns; i++) {
       fColumns[i-1] = xl;
       if (!fColHeader[i]) break;
@@ -851,7 +870,7 @@ void TGListView::Layout()
 {
    // Layout list view components (container and contents of container).
 
-   Int_t  i, xl = fBorderWidth;
+   Int_t  i, xl = 0;
    UInt_t w, h = 0;
 
    TGLVContainer *container = (TGLVContainer *) fVport->GetContainer();
@@ -865,18 +884,20 @@ void TGListView::Layout()
    if (fViewMode == kLVDetails) {
 
       h = fColHeader[0]->GetDefaultHeight()-4;
+      fHeader->MoveResize(fBorderWidth, fBorderWidth, fWidth-4, h);
+      fHeader->MapWindow();
       for (i = 0; i < fNColumns-1; ++i) {
          w = fColHeader[i]->GetDefaultWidth()+20;
 
          if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
          if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
 
-         fColHeader[i]->MoveResize(xl, fBorderWidth, w, h);
+         fColHeader[i]->MoveResize(xl, 0, w, h);
          fColHeader[i]->MapWindow();
          xl += w;
-         fColumns[i] = xl-fBorderWidth-2;  // -2 is fSep in the layout routine
+         fColumns[i] = xl-2;  // -2 is fSep in the layout routine
       }
-      fColHeader[i]->MoveResize(xl, fBorderWidth, fVport->GetWidth()-xl+fBorderWidth, h);
+      fColHeader[i]->MoveResize(xl, 0, fVport->GetWidth()-xl, h);
       fColHeader[i]->MapWindow();
       fVScrollbar->RaiseWindow();
 
@@ -885,6 +906,7 @@ void TGListView::Layout()
    } else {
       for (i = 0; i < fNColumns; ++i)
          fColHeader[i]->UnmapWindow();
+      fHeader->UnmapWindow();
    }
 
    TGLayoutManager *lm = container->GetLayoutManager();
@@ -892,7 +914,7 @@ void TGListView::Layout()
    TGCanvas::Layout();
 
    if (fViewMode == kLVDetails) {
-      fColHeader[i]->MoveResize(xl, fBorderWidth, fVport->GetWidth()-xl+fBorderWidth, h);
+      fColHeader[i]->MoveResize(xl, 0, fVport->GetWidth()-xl, h);
       fVport->MoveResize(fBorderWidth, fBorderWidth+h, fVport->GetWidth(), fVport->GetHeight()-h);
       fVScrollbar->SetRange(container->GetHeight(), fVport->GetHeight());
    }

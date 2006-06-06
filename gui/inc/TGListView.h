@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.26 2005/09/05 14:21:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.27 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -137,6 +137,7 @@ protected:
    TGTextButton  **fColHeader;    // column headers for in detailed mode
    GContext_t      fNormGC;       // drawing graphics context
    FontStruct_t    fFontStruct;   // text font
+   TGFrame        *fHeader;       // frame used as container for column headers
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;
@@ -152,6 +153,7 @@ public:
 
    virtual void   Layout();
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual void   ScrollHeader(Int_t pos);
    virtual void   SetContainer(TGFrame *f);
    virtual void   SetHeaders(Int_t ncolumns);
    virtual void   SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx);
