@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.6 2006/04/19 10:53:19 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.7 2006/04/19 11:21:30 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -214,10 +214,8 @@ void XrdProofPhyConn::Close(const char *)
    // Close the connection.
 
    // Make sure we are connected
-   if (!fConnected) {
-      TRACE(REQ,"XrdProofPhyConn::Close: not connected: nothing to do");
+   if (!fConnected)
       return;
-   }
 
    // Close connection
    if (fPhyConn)
