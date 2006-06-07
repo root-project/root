@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.153 2006/06/02 07:21:21 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.154 2006/06/02 16:00:43 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -5232,38 +5232,90 @@ void TGeoManager::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *option)
 {
-   // Export this geometry on filename with a key=name
-   // By default the geometry is saved without the voxelisation info.
-   // Use option 'v" to save the voxelisation info.
-   // If file extension is not .root, export as C++ code
+   // Export this geometry to a file
+   //
+   // -Case 1: root file
+   //  if filename end with ".root". The key will be named name
+   //  By default the geometry is saved without the voxelisation info.
+   //  Use option 'v" to save the voxelisation info.
+   //
+   // -Case 2: C++ script
+   //  if filename end with ".C"
+   //
+   // -Case 3: gdml file
+   //  if filename end with ".gdml"
+   //  NOTE that to use this option, the PYTHONPATH must be defined like
+   //      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/gdml
+   //
 
    TString sfile(filename);
-   if (!sfile.Contains(".root")) {
+   if (sfile.Contains(".C")) {
+      //Save geometry as a C++ script
       Info("Export","Exporting %s %s as C++ code", GetName(), GetTitle());
       fTopVolume->SaveAs(filename);
       return 1;
    }   
-   TFile *f = TFile::Open(filename,"recreate");
-   if (!f || f->IsZombie()) {
-      Error("Export","Cannot open file");
-      return 0;
-   }   
-   char keyname[256];
-   if (name) strcpy(keyname,name);
-   if (strlen(keyname) == 0) strcpy(keyname,GetName());
-   TString opt = option;
-   opt.ToLower();
-   if (opt.Contains("v")) {
-      fStreamVoxels = kTRUE;
-      Info("Export","Exporting %s %s as root file. Optimizations streamed.", GetName(), GetTitle());
-   } else {
-      fStreamVoxels = kFALSE;
-      Info("Export","Exporting %s %s as root file. Optimizations not streamed.", GetName(), GetTitle());
+   if (sfile.Contains(".gdml")) {
+      //Save geometry as a gdml file
+      Info("Export","Exporting %s %s as gdml code", GetName(), GetTitle());
+      gROOT->ProcessLine("TPython::Exec(\"from math import *\")");
+      gROOT->ProcessLine("TPython::Exec(\"from units import *\")");
+
+      gROOT->ProcessLine("TPython::Exec(\"import ROOT\")");
+      gROOT->ProcessLine("TPython::Exec(\"import writer\")");
+      gROOT->ProcessLine("TPython::Exec(\"import ROOTwriter\")");
+
+      // get TGeoManager and top volume
+      gROOT->ProcessLine("TPython::Exec(\"geomgr = ROOT.gGeoManager\")");
+      gROOT->ProcessLine("TPython::Exec(\"topV = geomgr.GetTopVolume()\")");
+
+      // instanciate writer
+      const char *cmd=Form("TPython::Exec(\"gdmlwriter = writer.writer('%s')\")",filename);
+      gROOT->ProcessLine(cmd);
+      gROOT->ProcessLine("TPython::Exec(\"binding = ROOTwriter.ROOTwriter(gdmlwriter)\")");
+
+      // dump materials
+      gROOT->ProcessLine("TPython::Exec(\"matlist = geomgr.GetListOfMaterials()\")");
+      gROOT->ProcessLine("TPython::Exec(\"binding.dumpMaterials(matlist)\")");
+
+      // dump solids
+      gROOT->ProcessLine("TPython::Exec(\"shapelist = geomgr.GetListOfShapes()\")");
+      gROOT->ProcessLine("TPython::Exec(\"binding.dumpSolids(shapelist)\")");
+
+      // dump geo tree
+      gROOT->ProcessLine("TPython::Exec(\"print 'Traversing geometry tree'\")");
+      gROOT->ProcessLine("TPython::Exec(\"gdmlwriter.addSetup('default', '1.0', topV.GetName())\")");
+      gROOT->ProcessLine("TPython::Exec(\"binding.examineVol(topV)\")");
+
+      // write file
+      gROOT->ProcessLine("TPython::Exec(\"gdmlwriter.writeFile()\")");
+      return 1;
    }
-   Int_t nbytes = Write(keyname);
-   fStreamVoxels = kFALSE;
-   delete f;
-   return nbytes;
+   if (sfile.Contains(".root")) {  
+      //Save geometry as a root file
+      TFile *f = TFile::Open(filename,"recreate");
+      if (!f || f->IsZombie()) {
+         Error("Export","Cannot open file");
+         return 0;
+      }   
+      char keyname[256];
+      if (name) strcpy(keyname,name);
+      if (strlen(keyname) == 0) strcpy(keyname,GetName());
+      TString opt = option;
+      opt.ToLower();
+      if (opt.Contains("v")) {
+         fStreamVoxels = kTRUE;
+         Info("Export","Exporting %s %s as root file. Optimizations streamed.", GetName(), GetTitle());
+      } else {
+         fStreamVoxels = kFALSE;
+         Info("Export","Exporting %s %s as root file. Optimizations not streamed.", GetName(), GetTitle());
+      }
+      Int_t nbytes = Write(keyname);
+      fStreamVoxels = kFALSE;
+      delete f;
+      return nbytes;
+   }
+   return 0;
 }
 //______________________________________________________________________________
 void TGeoManager::LockGeometry()
@@ -5290,37 +5342,67 @@ Bool_t TGeoManager::IsLocked()
 TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_t * /*option*/)
 {
    //static function
-   //Import in memory from filename the geometry with key=name.
-   //if name="" (default), the first TGeoManager object in the file is returned.
+   //Import a geometry from a gdml or ROOT file
+   //
+   // -Case 1: gdml
+   //  if filename ends with ".gdml" the foreign geomtery described with gdml
+   //  is imported executing some python scriptsin $ROOTSYS/gdml.
+   //  NOTE that to use this option, the PYTHONPATH must be defined like
+   //      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/gdml
+   //
+   // -Case 2: root file
+   //  Import in memory from filename the geometry with key=name.
+   //  if name="" (default), the first TGeoManager object in the file is returned.
+   //
    //Note that this function deletes the current gGeoManager (if one)
    //before importing the new object.
+   
    if (fgLock) {
       printf("WARNING: TGeoManager::Import : TGeoMananager in lock mode. NOT IMPORTING new geometry\n");
       return NULL;
    }
-   printf("Info: TGeoManager::Import : Reading geometry from file\n");
-   TFile *old = gFile;
-   TFile *f = TFile::Open(filename);
-   if (!f || f->IsZombie()) {
-      if (old) old->cd();
-      printf("Error: TGeoManager::Import : Cannot open file\n");
-      return 0;
-   }
+   if (!filename) return 0;
+   printf("Info: TGeoManager::Import : Reading geometry from file: %s\n",filename);
+   
    if (gGeoManager) delete gGeoManager;
    gGeoManager = 0;
-   if (name && strlen(name) > 0) {
-      gGeoManager = (TGeoManager*)f->Get(name);
-   } else {
-      TIter next(f->GetListOfKeys());
-      TKey *key;
-      while ((key = (TKey*)next())) {
-         if (strcmp(key->GetClassName(),"TGeoManager") != 0) continue;
-         gGeoManager = (TGeoManager*)key->ReadObj();
-         break;
+   
+   if (strstr(filename,".gdml")) {
+      // import from a gdml file
+      gROOT->ProcessLine("TPython::Exec(\"import xml.sax\")");
+      gROOT->ProcessLine("TPython::Exec(\"import ROOTBinding\")");
+      gROOT->ProcessLine("TPython::Exec(\"import GDMLContentHandler\")");
+      gROOT->ProcessLine("TPython::Exec(\"gdmlhandler = GDMLContentHandler.GDMLContentHandler(ROOTBinding.ROOTBinding())\")");
+      const char *cmd = Form("TPython::Exec(\"xml.sax.parse('%s',gdmlhandler)\")",filename);
+      gROOT->ProcessLine(cmd);
+      gROOT->ProcessLine("TPython::Exec(\"geomgr = ROOT.gGeoManager\")");
+      gROOT->ProcessLine("TPython::Exec(\"geomgr.SetTopVolume(gdmlhandler.WorldVolume())\")");
+      gROOT->ProcessLine("TPython::Exec(\"geomgr.CloseGeometry()\")");
+      gROOT->ProcessLine("TPython::Exec(\"geomgr.DefaultColors()\")");
+   } else {   
+      // import from a root file
+      TFile *old = gFile;
+      TFile *f = TFile::Open(filename);
+      if (!f || f->IsZombie()) {
+         if (old) old->cd();
+         printf("Error: TGeoManager::Import : Cannot open file\n");
+         return 0;
       }
+      if (name && strlen(name) > 0) {
+         gGeoManager = (TGeoManager*)f->Get(name);
+      } else {
+         TIter next(f->GetListOfKeys());
+         TKey *key;
+         while ((key = (TKey*)next())) {
+            if (strcmp(key->GetClassName(),"TGeoManager") != 0) continue;
+            gGeoManager = (TGeoManager*)key->ReadObj();
+            break;
+         }
+      }
+      if (old) old->cd();
+      delete f;
    }
-   if (old) old->cd();
-   delete f;
+   if (!gGeoManager) return 0;
    if (!gROOT->GetListOfGeometries()->FindObject(gGeoManager)) gROOT->GetListOfGeometries()->Add(gGeoManager);
    if (!gROOT->GetListOfBrowsables()->FindObject(gGeoManager)) gROOT->GetListOfBrowsables()->Add(gGeoManager);
    return gGeoManager;
