@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.283 2006/05/24 15:10:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.284 2006/06/05 20:30:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4769,15 +4769,15 @@ void TTree::SetBranchStyle(Int_t style)
 void TTree::SetCacheSize(Long64_t cacheSize)
 {
    //set maximum size of the file cache (default is 10000000 ,ie 10 Mbytes)
-
-   fCacheSize = cacheSize;
+   //if cachesize <= 0 the existing cache (if any) is deleted
+   
    TFile *file = GetCurrentFile();
    if (!file) return;
    TFilePrefetch *pf = file->GetFilePrefetch();
    if (pf) {
       if (cacheSize == fCacheSize) return;
       delete pf;
-      if (cacheSize <= 0) {delete pf; file->SetFilePrefetch(0); return;}
+      if (cacheSize <= 0) file->SetFilePrefetch(0); 
    }
    fCacheSize = cacheSize;
    if (cacheSize <= 0) return;
