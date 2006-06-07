@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.1 2006/06/05 20:30:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.2 2006/06/06 17:51:51 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -104,15 +104,18 @@ Bool_t TTreeFilePrefetch::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 Bool_t TTreeFilePrefetch::Register(Long64_t offset)
 { 
    // Register branch owning basket at starting position offset
+   // return kTRUE if the registration succeeds
    
    //reset cache when reaching the maximum cache size
    if (fNtot+30000 > fBufferSize) TFilePrefetch::Prefetch(0,0);
    Int_t nleaves = fTree->GetListOfLeaves()->GetEntriesFast();
    //loop on all the branches to find the branch with a buffer starting at offset
+   Bool_t status = kFALSE;
+   TBranch *branch = 0;
    for (Int_t i=0;i<nleaves;i++) {
       TLeaf *leaf = (TLeaf*)fTree->GetListOfLeaves()->At(i);
-      TBranch *branch = leaf->GetBranch();
-      if (branch->GetListOfBranches()->GetEntriesFast() > 0) continue;
+      branch = leaf->GetBranch();
+      //if (branch->GetListOfBranches()->GetEntriesFast() > 0) continue;
       Int_t nb = branch->GetMaxBaskets();
       Int_t *lbaskets   = branch->GetBasketBytes();
       Long64_t *entries = branch->GetBasketEntry();
@@ -125,16 +128,18 @@ Bool_t TTreeFilePrefetch::Register(Long64_t offset)
                Int_t len = lbaskets[k];
                if (pos <= 0) continue;
                if (fNtot+len > fBufferSize || entries[k] > fEntryMax) {
-                  return kFALSE;
+                  return status;
                }
                TFilePrefetch::Prefetch(pos,len);
+               status = kTRUE;
             }
             if (gDebug > 0) printf("registering branch %s offset=%lld\n",branch->GetName(),offset);
-            return kTRUE;
+            return status;
          }
       }
    }
-   return kFALSE;
+   if (status && branch && gDebug > 0) printf("registering branch %s offset=%lld\n",branch->GetName(),offset);
+   return status;
 }
 
 //_____________________________________________________________________________
