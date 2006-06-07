@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.28 2006/05/26 16:55:04 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.29 2006/06/01 09:50:28 brun Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -259,8 +259,7 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
                goto zombie;
             }
          } else {
-            if (gDebug > 0)
-               Info("CreateXClient", "open attempt failed");
+            Error("CreateXClient", "open attempt failed on %s", fUrl.GetUrl());
             goto zombie;
          }
       }
@@ -470,7 +469,7 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
    if (fFilePrefetch) {
       if (!fFilePrefetch->ReadBuffer(buffer, fOffset, bufferLength))
          return kFALSE;
-   } 
+   }
 
    Int_t st;
    if ((st = ReadBufferViaCache(buffer, bufferLength))) {
@@ -534,7 +533,7 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 
    // Read for the remote xrootd
    //Int_t nr = fClient->Reads(buf, pos, len, nbuf);
-   
+
    //if (nr>0)
    //   return kFALSE;
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.73 2006/06/01 07:43:59 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.74 2006/06/01 09:50:28 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -113,12 +113,12 @@ TNetFile::TNetFile(const TNetFile& nf) :
   fSocket(nf.fSocket),
   fProtocol(nf.fProtocol),
   fErrorCode(nf.fErrorCode)
-{ 
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TNetFile& TNetFile::operator=(const TNetFile& nf) 
+TNetFile& TNetFile::operator=(const TNetFile& nf)
 {
    //assignement operator
    if(this!=&nf) {
@@ -128,7 +128,7 @@ TNetFile& TNetFile::operator=(const TNetFile& nf)
       fSocket=nf.fSocket;
       fProtocol=nf.fProtocol;
       fErrorCode=nf.fErrorCode;
-   } 
+   }
    return *this;
 }
 #endif
@@ -324,7 +324,7 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
    if (fFilePrefetch) {
       if (!fFilePrefetch->ReadBuffer(buf, fOffset, len))
          return kFALSE;
-   } 
+   }
 
    Bool_t result = kFALSE;
 
@@ -386,7 +386,7 @@ end:
 
    return result;
 }
-  
+
 //______________________________________________________________________________
 Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 {
@@ -415,8 +415,8 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       data_buf += len[i];
       data_buf += "/";
       total_len += len[i];
-   }      
-   
+   }
+
    // Send the command with the lenght of the info and number of buffers
    if (fSocket->Send(Form("%d %d", nbuf, data_buf.Length()), kROOTD_GETS) < 0) {
       Error("ReadBuffers", "error sending kROOTD_GETS command");
@@ -439,7 +439,7 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    }
 
    // Get the big buffer with everything inseide it
-   while ((n = fSocket->RecvRaw(buf, total_len)) < 0 
+   while ((n = fSocket->RecvRaw(buf, total_len)) < 0
          && TSystem::GetErrno() == EINTR)
       TSystem::ResetErrno();
 
@@ -637,7 +637,7 @@ zombie:
 }
 
 //______________________________________________________________________________
-void TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
+void TNetFile::Create(const char * /*url*/, Option_t *option, Int_t netopt)
 {
    // Create a NetFile object. A net file is the same as a TFile
    // except that it is being accessed via a rootd server. The url
@@ -703,7 +703,7 @@ void TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
    }
 
    if (!fUrl.IsValid()) {
-      Error("Create", "invalid URL specified: %s", url);
+      Error("Create", "invalid URL specified: %s", fUrl.GetUrl());
       goto zombie;
    }
 
@@ -718,6 +718,7 @@ void TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
 
    if (kind == kROOTD_ERR) {
       PrintError("Create", stat);
+      Error("Create", "failing on file %s", fUrl.GetUrl());
       goto zombie;
    }
 
@@ -846,12 +847,12 @@ TNetSystem::TNetSystem(const TNetSystem& ns) :
   fFTPOwner(ns.fFTPOwner),
   fUser(ns.fUser),
   fPort(ns.fPort)
-{ 
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TNetSystem& TNetSystem::operator=(const TNetSystem& ns) 
+TNetSystem& TNetSystem::operator=(const TNetSystem& ns)
 {
    //assignement operator
    if(this!=&ns) {
@@ -863,7 +864,7 @@ TNetSystem& TNetSystem::operator=(const TNetSystem& ns)
       fFTPOwner=ns.fFTPOwner;
       fUser=ns.fUser;
       fPort=ns.fPort;
-   } 
+   }
    return *this;
 }
 
