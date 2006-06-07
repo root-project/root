@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.12 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.13 2006/06/06 16:07:15 roiser Exp $
 // Author: Markus Frank 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -100,6 +100,7 @@ namespace ROOT {
          }
          static void* first(void* env)  {
             PEnv_t  e = PEnv_t(env);
+            e->idx = 0;
             PCont_t c = PCont_t(e->object);
             // Assume iterators do not need destruction
             ::new(e->buff) Iter_t(c->begin()); 
@@ -114,6 +115,7 @@ namespace ROOT {
          }
          static void* next(void* env)  {
             PEnv_t  e = PEnv_t(env);
+            ++e->idx;
             PCont_t c = PCont_t(e->object);
             for (; e->idx > 0 && e->iter() != c->end(); ++(e->iter()), --e->idx );
             // TODO: Need to find something for going backwards....
