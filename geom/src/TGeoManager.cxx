@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.154 2006/06/02 16:00:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.155 2006/06/07 10:12:44 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -5234,10 +5234,11 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
 {
    // Export this geometry to a file
    //
-   // -Case 1: root file
+   // -Case 1: root file or root/xml file
    //  if filename end with ".root". The key will be named name
    //  By default the geometry is saved without the voxelisation info.
    //  Use option 'v" to save the voxelisation info.
+   //  if filename end with ".xml" a root/xml file is produced.
    //
    // -Case 2: C++ script
    //  if filename end with ".C"
@@ -5291,7 +5292,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       gROOT->ProcessLine("TPython::Exec(\"gdmlwriter.writeFile()\")");
       return 1;
    }
-   if (sfile.Contains(".root")) {  
+   if (sfile.Contains(".root") || sfile.Contains(".xml")) {  
       //Save geometry as a root file
       TFile *f = TFile::Open(filename,"recreate");
       if (!f || f->IsZombie()) {
@@ -5345,12 +5346,12 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    //Import a geometry from a gdml or ROOT file
    //
    // -Case 1: gdml
-   //  if filename ends with ".gdml" the foreign geomtery described with gdml
-   //  is imported executing some python scriptsin $ROOTSYS/gdml.
+   //  if filename ends with ".gdml" the foreign geometry described with gdml
+   //  is imported executing some python scripts in $ROOTSYS/gdml.
    //  NOTE that to use this option, the PYTHONPATH must be defined like
    //      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/gdml
    //
-   // -Case 2: root file
+   // -Case 2: root file (.root) or root/xml file (.xml)
    //  Import in memory from filename the geometry with key=name.
    //  if name="" (default), the first TGeoManager object in the file is returned.
    //
@@ -5407,7 +5408,9 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    if (!gROOT->GetListOfBrowsables()->FindObject(gGeoManager)) gROOT->GetListOfBrowsables()->Add(gGeoManager);
    return gGeoManager;
 }
-//______________________________________________________________________________
+
+//___________________________________________________________________________
+
 Int_t *TGeoManager::GetIntBuffer(Int_t length)
 {
 // Get a temporary buffer of Int_t*
