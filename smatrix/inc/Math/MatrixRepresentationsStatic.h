@@ -1,8 +1,8 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixRepresentationsStatic.h,v 1.6 2006/04/25 13:54:01 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixRepresentationsStatic.h,v 1.7 2006/06/02 15:04:54 moneta Exp $
 // Authors: L. Moneta, J. Palacios    2006  
 
-#ifndef ROOT_Math_MatrixRepresentationsStatic_h
-#define ROOT_Math_MatrixRepresentationsStatic_h 1
+#ifndef ROOT_Math_MatrixRepresentationsStatic
+#define ROOT_Math_MatrixRepresentationsStatic 1
 
 // Include files
 
@@ -17,8 +17,10 @@
     operators =, +=, -=, ==.
  
  */
-#include <iostream>
+
+#ifndef ROOT_Math_StaticCheck
 #include "Math/StaticCheck.h"
+#endif
 
 namespace ROOT {
   namespace Math {

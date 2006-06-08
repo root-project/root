@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: UnaryOperators.h,v 1.2 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: UnaryOperators.h,v 1.3 2006/06/02 15:04:54 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_UnaryOperators
@@ -30,6 +30,11 @@ template <class T, unsigned int D> class SVector;
 template <class T, unsigned int D1, unsigned int D2, class R> class SMatrix;
 
 
+/**
+   Unary Minus Operation Class
+
+   @ingroup Expression
+ */
 //==============================================================================
 // Minus
 //==============================================================================
@@ -103,6 +108,11 @@ inline Expr<UnaryOp<Minus<T>, SMatrix<T,D,D2,R>, T>, T, D, D2,R>
 //==============================================================================
 // Fabs
 //==============================================================================
+/**
+   Unary abs Operation Class
+
+   @ingroup Expression
+ */
 template <class T>
 class Fabs {
 public:
@@ -170,6 +180,11 @@ inline Expr<UnaryOp<Fabs<T>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
 }
 
 
+/**
+   Unary Square Operation Class
+
+   @ingroup Expression
+ */
 //==============================================================================
 // Sqr
 //==============================================================================
@@ -243,6 +258,11 @@ inline Expr<UnaryOp<Sqr<T>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
 //==============================================================================
 // Sqrt
 //==============================================================================
+/**
+   Unary Square Root Operation Class
+
+   @ingroup Expression
+ */
 template <class T>
 class Sqrt {
 public:

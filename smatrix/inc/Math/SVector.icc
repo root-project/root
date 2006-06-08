@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.icc,v 1.7 2006/02/27 18:41:58 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.icc,v 1.8 2006/05/12 08:12:16 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector_icc
@@ -33,8 +33,9 @@
 #include <iostream>
 #include <assert.h>
 
-
+#ifndef ROOT_Math_StaticCheck
 #include "Math/StaticCheck.h"
+#endif
 
 namespace ROOT { 
 
@@ -61,12 +62,15 @@ SVector<T,D>::SVector(const SVector<T,D>& rhs) {
     fArray[i] = rhs.fArray[i];
 }
 
+#ifdef OLD_IMPL
 template <class T, unsigned int D>
 template <unsigned int D1>
 SVector<T,D>::SVector(const SVector<T,D1>& rhs) {
   STATIC_CHECK( D >= D1,SVector_dimension_too_small); 
   for(unsigned int i=0; i<D1; ++i)
     fArray[i] = rhs.fArray[i];
+  for(unsigned int i=D1; i<D; ++i)
+    fArray[i] = 0;
 }
 
 template <class T, unsigned int D>
@@ -77,7 +81,7 @@ SVector<T,D>::SVector(const T& a1, const SVector<T,D1>& rhs) {
   for(unsigned int i=0; i<D1; ++i)
     fArray[i+1] = rhs[i];
 }
-
+#endif
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& rhs) {

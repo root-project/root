@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Functions.h,v 1.3 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Functions.h,v 1.4 2006/06/02 15:04:54 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_Functions
@@ -32,7 +32,10 @@
 //
 // ********************************************************************
 #include <cmath>
+
+#ifndef ROOT_Math_Expression
 #include "Math/Expression.h"
+#endif
 
 /**
    @defgroup TempFunction Template Functions 
@@ -58,7 +61,7 @@ template <class T, unsigned int D> class SVector;
 
 
 /** square  
-    Template function to compute \f$x\cdot x$, for any type T returning a type T
+    Template function to compute \f$x\cdot x \f$, for any type T returning a type T
 
     @ingroup TempFunction
     @author T. Glebe

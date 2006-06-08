@@ -1,7 +1,7 @@
-// @(#)root/smatrix:$Name:  $:$Id: BinaryOpPolicy.h,v 1.3 2006/02/28 15:54:33 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: BinaryOpPolicy.h,v 1.4 2006/03/20 17:11:44 moneta Exp $
 // Authors: J. Palacios    2006  
-#ifndef ROOT_Math_BinaryOpPolicy_h 
-#define ROOT_Math_BinaryOpPolicy_h 1
+#ifndef ROOT_Math_BinaryOpPolicy 
+#define ROOT_Math_BinaryOpPolicy 1
 
 // Include files
 
@@ -17,14 +17,18 @@
  *  (and subtraction)
  */
 
-//#include "Math/MatrixRepresentations.h"
+
+#ifndef ROOT_Math_MatrixRepresentationsStatic
 #include "Math/MatrixRepresentationsStatic.h"
+#endif
 
 namespace ROOT { 
 
   namespace Math {
 
-
+    /**
+       matrix-matrix multiplication policy
+     */
     template <class T, class R1, class R2>
     struct MultPolicy
     {
@@ -35,6 +39,9 @@ namespace ROOT {
       typedef MatRepStd<T, N1, N2> RepType;
     };
 
+    /**
+       matrix addition policy
+     */
     template <class T, unsigned int D1, unsigned int D2, class R1, class R2>
     struct AddPolicy
     {
@@ -51,6 +58,9 @@ namespace ROOT {
       typedef  MatRepSym<T,D1> RepType;
     };
 
+    /**
+       matrix transpose policy
+     */
     template <class T, unsigned int D1, unsigned int D2, class R>
     struct TranspPolicy
     {

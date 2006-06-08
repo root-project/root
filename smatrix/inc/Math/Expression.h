@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.9 2006/03/20 17:11:44 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.10 2006/04/25 13:54:01 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Expression
@@ -30,12 +30,10 @@
 //
 // ********************************************************************
 
-/** Expr.
-    An Expression wrapper class.
+/**
+   @defgroup Expression Expression Template Classes
+ */
 
-    @memo Expr.
-    @author T. Glebe
-*/
 //==============================================================================
 // Expr: class representing SVector expressions
 //=============================================================================
@@ -55,6 +53,11 @@ namespace ROOT {
 
 //    template <class T, unsigned int D, unsigned int D2> class MatRepStd;
 
+/** 
+    Expression wrapper class for Vector objects
+
+    @ingroup Expression
+*/
 template <class ExprType, class T, unsigned int D >
 class VecExpr {
 
@@ -107,6 +110,11 @@ private:
 };
 
 
+/** 
+    Expression wrapper class for Matrix objects
+
+    @ingroup Expression
+*/
 
 template <class T, unsigned int D, unsigned int D2> class MatRepStd;
 
@@ -193,10 +201,12 @@ inline std::ostream& operator<<(std::ostream& os, const Expr<A,T,D1,D2,R1>& rhs)
   return rhs.print(os);
 }
 
-/** BinaryOp.
-    A class representing binary operators in the parse tree.
+/** 
+    BinaryOperation class
+    A class representing binary operators in the parse tree. 
+    This is the default case where objects are kept by reference
 
-    @memo BinaryOp
+    @ingroup  Expression
     @author T. Glebe
 */
 
@@ -239,9 +249,13 @@ protected:
 
 //==============================================================================
 /**
-   Special case of BinaryOp where for the left argument a copy is stored instead of a reference 
-   This is use in the coase for example of constant where we cannot store by reference 
-   but need to copy since Constant is a temporary object
+   Binary Operation class with value storage for the left argument. 
+   Special case of BinaryOp where for the left argument the passed object 
+   is copied and stored by value instead of a reference.  
+   This is used in the case of operations involving a constant, where we cannot store a 
+   reference to the constant (we get a temporary object) and we need to copy it. 
+
+   @ingroup  Expression
 */
 //==============================================================================
 template <class Operator, class LHS, class RHS, class T>
@@ -277,9 +291,12 @@ protected:
 
 //==============================================================================
 /**
+   Binary Operation class with value storage for the right argument. 
    Special case of BinaryOp where for the wight argument a copy is stored instead of a reference 
    This is use in the case for example of constant where we cannot store by reference 
    but need to copy since Constant is a temporary object
+
+   @ingroup  Expression
 */
 //==============================================================================
 template <class Operator, class LHS, class RHS, class T>
@@ -314,10 +331,12 @@ protected:
 
 
 
-/** UnaryOp.
+/** 
+    UnaryOperation class
     A class representing unary operators in the parse tree.
+    The objects are stored by reference
 
-    @memo UnaryOp
+    @ingroup  Expression
     @author T. Glebe
 */
 //==============================================================================
@@ -352,10 +371,11 @@ protected:
 };
 
 
-/** Constant.
+/** 
+    Constant expression class
     A class representing constant expressions (literals) in the parse tree.
 
-    @memo Constant
+    @ingroup Expression
     @author T. Glebe
 */
 //==============================================================================

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.12 2006/05/12 14:15:32 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.13 2006/06/02 15:04:54 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -39,7 +39,9 @@
    a vector, like in the matrix-vector product or a scalar like in the Similarity vector-matrix product.
 */
 
+#ifndef ROOT_Math_BinaryOpPolicy
 #include "Math/BinaryOpPolicy.h"
+#endif
 
 namespace ROOT { 
 
@@ -148,6 +150,11 @@ struct meta_col_dot<0> {
 //==============================================================================
 // VectorMatrixColOp
 //==============================================================================
+/**
+   Class for Vector-Matrix multiplication
+
+   @ingroup Expression
+ */
 template <class Vector, class Matrix, unsigned int D1>
 class VectorMatrixColOp {
 public:
@@ -308,6 +315,11 @@ struct meta_matrix_dot<0> {
 //==============================================================================
 // MatrixMulOp
 //==============================================================================
+/**
+   Class for Matrix-Matrix multiplication 
+
+   @ingroup Expression
+ */
 template <class MatrixA, class MatrixB, class T, unsigned int D>
 class MatrixMulOp {
 public:
@@ -458,6 +470,11 @@ inline Expr<MatrixMulOp<Expr<A,T,D1,D,R1>, Expr<B,T,D,D2,R2>, D>, T, D1, D2, typ
 //==============================================================================
 // TransposeOp
 //==============================================================================
+/**
+   Class for Transpose Operations
+
+   @ingroup Expression
+ */
 template <class Matrix, class T, unsigned int D1, unsigned int D2=D1>
 class TransposeOp {
 public:
@@ -785,8 +802,13 @@ inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const Expr<A,T,D1,D2,R>& lh
 
 //==============================================================================
 // TensorMulOp
-//  tensor (or outer) product between two vectors giving a matrix 
 //==============================================================================
+/**
+   Class for Tensor Multiplication (outer product) of two vectors   
+   giving a matrix 
+
+   @ingroup Expression
+ */
 template <class Vector1, class Vector2>
 class TensorMulOp {
 public:

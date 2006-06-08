@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: BinaryOperators.h,v 1.4 2006/03/20 17:11:44 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: BinaryOperators.h,v 1.5 2006/06/02 15:04:54 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_BinaryOperators
@@ -18,7 +18,9 @@
 //
 //======================================================
 
+#ifndef ROOT_Math_BinaryOpPolicy
 #include "Math/BinaryOpPolicy.h"
+#endif
 
 namespace ROOT { 
 
@@ -33,6 +35,11 @@ template <class T, unsigned int D1, unsigned int D2, class R> class SMatrix;
 //==============================================================================
 // AddOp
 //==============================================================================
+/**
+   Addition Operation Class
+
+   @ingroup Expression
+ */
 template <class T>
 class AddOp {
 public:
@@ -272,6 +279,11 @@ inline Expr<BinaryOpCopyL<AddOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T>, T, D, D2,
 //==============================================================================
 // MinOp
 //==============================================================================
+/**
+   Subtraction Operation Class
+
+   @ingroup Expression
+ */
 template <class T>
 class MinOp {
 public:
@@ -506,6 +518,11 @@ inline Expr<BinaryOpCopyL<MinOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T>, T, D, D2,
 }
 
 
+/**
+   Multiplication (element-wise) Operation Class
+
+   @ingroup Expression
+ */
 //==============================================================================
 // MulOp
 //==============================================================================
@@ -741,6 +758,11 @@ inline Expr<BinaryOpCopyL<MulOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T>, T, D, D2,
 //=============================================================================
 // DivOp
 //=============================================================================
+/**
+   Division (element-wise) Operation Class
+
+   @ingroup Expression
+ */
 template <class T>
 class DivOp {
 public:

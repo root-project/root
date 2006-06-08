@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dfact.h,v 1.3 2006/02/28 15:54:33 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dfact.h,v 1.4 2006/06/02 15:04:54 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Dfact
@@ -36,7 +36,8 @@ namespace ROOT {
 
 
 
-/** Dfact.
+/** 
+    Detrminant for a general squared matrix
     Function to compute the determinant from a square matrix (\f$ \det(A)\f$) of
     dimension idim and order n.
 

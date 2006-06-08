@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.5 2006/05/12 08:12:16 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.6 2006/06/02 15:04:54 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_Dinv
@@ -29,10 +29,11 @@
 // 03 Apr 2001 (TG) creation
 //
 // ********************************************************************
+#ifdef OLD_IMPL
 #include "Math/Dfactir.h"
 #include "Math/Dfinv.h"
 #include "Math/Dsinv.h"
-
+#endif
 
  
 namespace ROOT { 
@@ -41,7 +42,8 @@ namespace ROOT {
 
 
 
-/** Inverter.
+/** 
+    Matrix Inverter class (generic class used for matrix sizes larger than 6x6)
     Class to specialize calls to Dinv. Dinv computes the inverse of a square
     matrix if dimension idim and order n. The content of the matrix will be
     replaced by its inverse. In case the inversion fails, the matrix content is
@@ -163,8 +165,8 @@ public:
 };
     
 
-/** Inverter<1>.
-    1x1 (sub-)matrix. \f$a_{11} \to 1/a_{11}\f$
+/** 
+    1x1 matrix inversion \f$a_{11} \to 1/a_{11}\f$
 
     @author T. Glebe
 */
@@ -187,8 +189,8 @@ public:
 };
 
 
-/** Inverter<2>.
-    2x2 (sub-)matrix. Use Cramers rule.
+/** 
+    2x2 matrix inversion  using Cramers rule.
 
     @author T. Glebe
 */
@@ -243,9 +245,8 @@ public:
 };
 
 
-/** Inverter<3>.
-    3x3 (sub-)matrix. Use pivotisation.
-
+/** 
+    3x3 direct matrix inversion 
     @author T. Glebe
 */
 //==============================================================================
@@ -266,7 +267,6 @@ public:
 };
 
 /** 
-    Inverter<4> 
     4x4 matrix inversion using Cramers rule.
 */
 template <>
@@ -282,7 +282,6 @@ public:
 };
 
 /** 
-    Inverter<5> 
     5x5 Matrix inversion using Cramers rule.
 */
 template <>
@@ -298,7 +297,6 @@ public:
 };
 
 /** 
-    Inverter<6> 
     6x6 matrix inversion using Cramers rule.
 */
 template <>
@@ -318,9 +316,14 @@ public:
 
 }  // namespace ROOT
           
-
+#ifndef ROOT_Math_CramerInversion_icc
 #include "CramerInversion.icc"
+#endif
+#ifndef ROOT_Math_CramerInversionSym_icc
 #include "CramerInversionSym.icc"
+#endif
+#ifndef ROOT_Math_MatrixInversion_icc
 #include "MatrixInversion.icc"
+#endif
 
 #endif  /* ROOT_Math_Dinv */

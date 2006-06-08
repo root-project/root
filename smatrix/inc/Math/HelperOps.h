@@ -1,8 +1,8 @@
-// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.8 2006/04/25 13:54:01 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.9 2006/04/25 14:59:54 moneta Exp $
 // Authors: J. Palacios    2006  
 
-#ifndef ROOT_Math_HelperOps_h 
-#define ROOT_Math_HelperOps_h 1
+#ifndef ROOT_Math_HelperOps
+#define ROOT_Math_HelperOps 1
 
 // Include files
 
@@ -30,7 +30,11 @@ namespace ROOT {
     class Expr;
 
     //=========================================================================
-    // for generic matrices 
+    /** 
+        Evaluate the expression from general to general matrices.
+	If the matrix to assign the value is in use in the expression, 
+	a temporary object is created to store the value (case A = B * A)
+    */
     template <class T, 
               unsigned int D1, unsigned int D2, 
               class A, class R1, class R2>
@@ -63,7 +67,12 @@ namespace ROOT {
       }
 	    
     };
-    // specialization in case of symmetric expression to symmetric matrices :  
+
+    /** 
+        Evaluate the expression from  symmetric to symmetric matrices.
+	If the matrix to assign the value is in use in the expression, 
+	a temporary object is created to store the value (case A = B * A)
+    */
     template <class T, 
               unsigned int D1, unsigned int D2, 
               class A>
@@ -98,7 +107,10 @@ namespace ROOT {
     };
 
     
-    // case of general to symmetric matrices (flag an error !) 
+
+    /** 
+        Expression evaluation from general to symmetric (flag an error !)  
+    */
     template <class T, unsigned int D1, unsigned int D2, class A>
     struct Assign<T, D1, D2, A, MatRepSym<T,D1>, MatRepStd<T,D1,D2> > 
     {
@@ -110,8 +122,12 @@ namespace ROOT {
       
     }; // struct Assign
 
-    // have a dedicated structure for symmetric matrices to be used when we are sure the resulting expression is 
-    // symmetric (like in a smilarity operation). This cannot be used in the opersator= of the SMatrix class
+
+    /** 
+        Force Expression evaluation from general to symmetric. 
+	To be used when is known (like in similarity products) that the result 
+	is symmetric
+    */
     struct AssignSym
     {
       // assign a symmetric matrix from an expression
@@ -130,7 +146,11 @@ namespace ROOT {
 	    l++;
 	  }
       }
-      // assign a symmetric matrix from a general matrix that we assume is symmetric 
+    /** 
+        Force assignment from general to symmetric matrix. 
+	To be used when is known (like in similarity products) that the result 
+	is symmetric
+    */
     template <class T, 
               unsigned int D,
 	      class R>
@@ -151,6 +171,9 @@ namespace ROOT {
     
 
     //=========================================================================
+    /** 
+        Evaluate the expression performing a += operation
+    */
     template <class T, unsigned int D1, unsigned int D2, class A,
               class R1, class R2>
     struct PlusEquals

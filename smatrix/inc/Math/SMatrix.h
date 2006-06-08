@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.21 2006/05/12 08:12:16 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.22 2006/06/02 15:04:54 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -37,7 +37,10 @@
 //
 // ********************************************************************
 // for platform specific configurations
+
+#ifndef ROOT_Math_MnConfig
 #include "Math/MConfig.h"
+#endif
 
 #include <iosfwd>
 
@@ -46,18 +49,24 @@
 /**
    @defgroup SMatrix Matrix and Vector classes
 
+   Classes representing Matrices and Vectors of arbitrary type and dimension. 
+   For a detailed description and usage examples see: 
    <ul>
     <li>\ref SVectorDoc
     <li>\ref SMatrixDoc
+    <li>\ref MatVecFunctions
    </ul>
+  
 */
 
 
-// expression engine
 
+#ifndef ROOT_Math_Expression
 #include "Math/Expression.h"
-//#include "Math/MatrixRepresentations.h"
+#endif
+#ifndef ROOT_Math_MatrixRepresentationsStatic 
 #include "Math/MatrixRepresentationsStatic.h"
+#endif
 
 
 namespace ROOT {
@@ -77,8 +86,8 @@ namespace ROOT {
     See \ref SMatrixDoc.
     
     @ingroup SMatrix
-    @memo SMatrix
-    @author T. Glebe
+
+    @authors T. Glebe, L. Moneta and J. Palacios
 */
 //==============================================================================
 // SMatrix: column-wise storage
@@ -90,9 +99,11 @@ template <class T,
 class SMatrix {
 public:
   /** @name --- Typedefs --- */
-  ///
+  
+  /** contained scalar type */ 
   typedef T  value_type;
 
+  /** storage representation type */
   typedef R  rep_type;
 
   /** STL iterator interface. */
@@ -103,7 +114,7 @@ public:
 
 
 
-  /** @name --- Constructors --- */
+  /** @name --- Constructors and Assignment --- */
 
   /**
       Default constructor:
@@ -126,7 +137,7 @@ public:
   SMatrix(const SMatrix<T,D1,D2,R2>& rhs);
 
   /**
-     construct from an expression. 
+     Construct from an expression. 
      In case of symmetric matrices does not work if expression is of type general 
      matrices. In case one needs to force the assignment from general to symmetric, one can use the 
      ROOT::Math::AssignSym::Evaluate function. 
@@ -134,7 +145,7 @@ public:
   template <class A, class R2>
   SMatrix(const Expr<A,T,D1,D2,R2>& rhs);
 
-  // new constructs using STL iterator interface
+
   /**
      Constructor with STL iterator interface. The data will be copied into the matrix
      \param begin start iterator position
@@ -169,8 +180,8 @@ public:
   template<class InputIterator>
   SMatrix(InputIterator begin, unsigned int size, bool triang = false, bool lower = true);
 
-  // skip this methods (they are too ambigous)
-#ifdef OLD_IMPL
+#ifdef OLD_IMPL   // skip this methods (they are too ambigous)
+
   /// 2nd arg: set only diagonal?
   SMatrix(const T& rhs, bool diagonal=false);
   /// constructor via dyadic product
@@ -202,16 +213,25 @@ public:
   SMatrix(const SVector<T,N> & v, bool lower = true );
 #endif
 
-  ///
+  /** 
+      Assign from another compatible matrix. 
+      Possible Symmetirc to general but NOT vice-versa
+  */
   template <class M>
   SMatrix<T,D1,D2,R>& operator=(const M& rhs);
   
+  /** 
+      Assign from a matrix expression
+  */
   template <class A, class R2>
   SMatrix<T,D1,D2,R>& operator=(const Expr<A,T,D1,D2,R2>& rhs);
 
-  /// assign from an identity
+  /**
+     Assign from an identity matrix
+  */
   SMatrix<T,D1,D2,R> & operator=(SMatrixIdentity ); 
 
+  /** @name --- Matrix dimension --- */
 
 #ifdef OLD_IMPL
   /// return no. of matrix rows
@@ -221,6 +241,10 @@ public:
   /// return no of elements: rows*columns
   static const unsigned int kSize = D1*D2;
 #else
+  /**
+     Enumeration defining the matrix dimension, 
+     number of rows, columns and size = rows*columns)
+   */
   enum {
   /// return no. of matrix rows
     kRows = D1,
@@ -230,9 +254,13 @@ public:
     kSize = D1*D2
   };
 #endif
+
   /** @name --- Access functions --- */
-  /** access the parse tree with the index starting from zero and following the C convention for the order in accessing 
+
+  /** access the parse tree with the index starting from zero and 
+      following the C convention for the order in accessing 
       the matrix elements. 
+      Same convention for general and symmetric matrices.
    */  
   T apply(unsigned int i) const;
 
@@ -311,32 +339,38 @@ public:
    */ 
   T& operator()(unsigned int i, unsigned int j);
 
-  ///
+  /**
+     self addition (element wise operation)
+   */ 
   template <class M>
   SMatrix<T,D1,D2,R>&operator+=(const M& rhs);
 
+  /**
+     self subtruction (element wise operation)
+   */ 
   template <class M>
   SMatrix<T,D1,D2,R>& operator-=(const M& rhs);
 
 #ifdef OLD_IMPL
-  // this operations are not well defines 
-  // in th eold impl they were implemented not as matrix - matrix multiplication, but as 
-  //  m(i,j)*m(i,j) multiplication
+  // this operations are not well defines - they are implmented as element - wise operations 
+  // not as matrix multiplication
   SMatrix<T,D1,D2,R>& operator*=(const SMatrix<T,D1,D2,R>& rhs);
 
   SMatrix<T,D1,D2,R>& operator/=(const SMatrix<T,D1,D2,R>& rhs);
 #endif
 
 #ifndef __CINT__
-  ///
+  /**
+     self addition from a matrix expression (element wise operation)
+   */ 
   template <class A, class R2>
   SMatrix<T,D1,D2,R>& operator+=(const Expr<A,T,D1,D2,R2>& rhs);
-  ///
-  ///
+  /**
+     self subtraction from a matrix expression (element wise operation)
+   */ 
   template <class A, class R2>
   SMatrix<T,D1,D2,R>& operator-=(const Expr<A,T,D1,D2,R2>& rhs);
-  ///
-  ///
+
 #ifdef OLD_IMPL
   template <class A, class R2>
   SMatrix<T,D1,D2,R>& operator*=(const Expr<A,T,D1,D2,R2>& rhs);
@@ -348,8 +382,9 @@ public:
 
 #endif
 
+  /** @name --- Linear Algebra Functions --- */
+
 #ifdef OLD_IMPL
-  /** @name --- Expert functions --- */
 
   /**
      invert symmetric, pos. def. Matrix via Dsinv.
@@ -378,7 +413,7 @@ public:
 
 
   /**
-     invert square Matrix ( this method change the current matrix)
+     Invert a square Matrix ( this method change the current matrix)
      The method used for general square matrices is the LU factorization taken from Dinv routine 
      from the CERNLIB (written in C++ from CLHEP authors)
      In case of symmetric matrices Bunch-Kaufman diagonal pivoting method is used
@@ -387,7 +422,7 @@ public:
   bool Invert();
 
   /**
-     invert a square Matrix and  returns a new matrix. In case the inversion fails
+     Invert a square Matrix and  returns a new matrix. In case the inversion fails
      the current matrix is returned. 
      Return ifail = 0 when successfull. 
      See ROOT::Math::SMatrix::Invert for the inversion algorithm
@@ -395,18 +430,19 @@ public:
   SMatrix<T,D1,D2,R> Inverse(int & ifail ) const;
 
   /**
-      determinant of square Matrix via Dfact. \textbf{Note:} this will destroy
+      determinant of square Matrix via Dfact. \b Note: this will destroy
       the contents of the Matrix!
   */
   bool Det(T& det);
 
   /**
-      determinant of square Matrix via Dfact. \textbf{Note:} this will preserve
+      determinant of square Matrix via Dfact. \b Note: this will preserve
       the content of the Matrix!
   */
   bool Det2(T& det) const;
 
 
+  /** @name --- Matrix Slice Functions --- */
 
   /// place a vector in a Matrix row
   template <unsigned int D>
@@ -498,6 +534,7 @@ SMatrix<T,D1,D2,R>& Place_in_col(const VecExpr<A,T,D>& rhs,
   template<class SubVector>
   SubVector UpperBlock() const;
 #endif
+
   /**
      return the lower Triangular block of the matrices (including the diagonal) as
      a vector of sizes N = D1 * (D1 + 1)/2.
@@ -511,12 +548,15 @@ SMatrix<T,D1,D2,R>& Place_in_col(const VecExpr<A,T,D>& rhs,
 #endif
 
 
+  /** @name --- Other Functions --- */
+
   /** 
-      check if matrix is sharing same memory location.
-      This functionis used by the expression to avoid the alias problem when 
-      evaluating them. In case  matrix is in use, a temporary object is automatically 
-      created evaluating the expression. Then the correct result is obtained for operations 
-      like  A = B * A
+      Function to check if a matrix is sharing same memory location of the passed pointer
+      This function is used by the expression templates to avoid the alias problem during  
+      expression evaluation. When  the matrix is in use, for example in operations 
+      like A = B * A, a temporary object storing the intermediate result is automatically 
+      created when evaluating the expression. 
+      
    */
   bool IsInUse(const T* p) const; 
 
@@ -526,7 +566,12 @@ SMatrix<T,D1,D2,R>& Place_in_col(const VecExpr<A,T,D>& rhs,
   std::ostream& Print(std::ostream& os) const;
 
 public:
-  //  T fArray[D1*D2];
+
+  /** @name --- Data Member --- */
+  
+  /**
+     Matrix Storage Object containing matrix data 
+   */
   R fRep;
   
 }; // end of class SMatrix
@@ -553,9 +598,13 @@ inline std::ostream& operator<<(std::ostream& os, const ROOT::Math::SMatrix<T,D1
 
 #ifndef __CINT__
 
+#ifndef ROOT_Math_SMatrix_icc
 #include "Math/SMatrix.icc"
-// include Matrix-Vector multiplication
+#endif
+
+#ifndef ROOT_Math_MatrixFunctions
 #include "Math/MatrixFunctions.h"
+#endif
 
 #endif //__CINT__
 

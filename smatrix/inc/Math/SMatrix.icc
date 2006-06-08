@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.21 2006/05/12 08:12:16 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.22 2006/06/02 15:04:54 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -36,14 +36,27 @@
 #include <iostream>
 #include <iomanip>
 #include <assert.h>
-#include "Math/Dsinv.h"
+//#ifndef ROOT_Math_Dsinv
+//#include "Math/Dsinv.h"
+//#endif
 //#include "Math/Dsinv_array.h"
-#include "Math/Dsfact.h"
+//#include "Math/Dsfact.h"
+
+#ifndef ROOT_Math_Dfact
 #include "Math/Dfact.h"
+#endif
+#ifndef ROOT_Math_Dinv
 #include "Math/Dinv.h"
+#endif
+#ifndef ROOT_Math_Functions
 #include "Math/Functions.h"
+#endif
+#ifndef ROOT_Math_HelperOps
 #include "Math/HelperOps.h"
+#endif
+#ifndef ROOT_Math_StaticCheck
 #include "Math/StaticCheck.h"
+#endif
 
 
 
