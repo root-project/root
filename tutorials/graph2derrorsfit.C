@@ -35,5 +35,5 @@ void graph2derrorsfit()
    TF2 *fit2 = (TF2*)dte->FindObject("f2");
    fit2->SetTitle("Minuit fit result on the Graph2DErrors points");
    fit2->Draw("surf1");
-   dte->Draw("axis p0");
+   dte->Draw("same p0");
 }
