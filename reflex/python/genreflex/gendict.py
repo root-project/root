@@ -342,7 +342,10 @@ class genDictionary(object) :
     f_shadow += '}\n\n'
     f_buffer += self.genFunctionsStubs( selfunctions )
     f_buffer += self.genInstantiateDict(selclasses, selfunctions, selenums, selvariables)
+    f.write('namespace {\n')
+    f.write(self.genNamespaces(selclasses))
     f.write(self.genAllTypes())
+    f.write('} // unnamed namespace\n')
     f.write(f_shadow)
     f.write('namespace {\n')
     f.write(f_buffer)
@@ -510,7 +513,6 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def genInstantiateDict( self, selclasses, selfunctions, selenums, selvariables) :
     c = 'namespace {\n  struct Dictionaries {\n    Dictionaries() {\n'
-    c += self.genNamespaces(selclasses)
     c += self.genFunctions(selfunctions)
     c += self.genEnums(selenums)
     c += self.genVariables(selvariables)
@@ -791,8 +793,7 @@ class genDictionary(object) :
     return 'type'+id
 #----------------------------------------------------------------------------------
   def genAllTypes(self) :
-    c  = 'namespace { \n'
-    c += '  Type type_void = TypeBuilder("void");\n'
+    c = '  Type type_void = TypeBuilder("void");\n'
     for id in self.typeids :      
       c += '  Type type%s = ' % id
       if id[-1] == 'c':
@@ -845,17 +846,18 @@ class genDictionary(object) :
            name += attrs['name']
          name = normalizeClass(name,False)
          c += 'TypeBuilder("'+name+'");\n'
-    c += '}\n'
     return c 
 #----------------------------------------------------------------------------------
   def genNamespaces(self, selclasses ) :
     used_context = []
     s = ''
     for c in selclasses :
-      if 'incomplete' not in c : used_context.append(c['context'])          
+      if 'incomplete' not in c : used_context.append(c['context'])
+    idx = 0
     for ns in self.namespaces :
       if ns['id'] in used_context and ns['name'] != '::' :
-        s += '      NamespaceBuilder( "%s" );\n' % self.genTypeName(ns['id'])
+        s += '  NamespaceBuilder nsb%d( "%s" );\n' % (idx, self.genTypeName(ns['id']))
+        idx += 1
     return s
 #----------------------------------------------------------------------------------
   def genFunctionsStubs(self, selfunctions) :
