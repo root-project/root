@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFilePrefetch.cxx,v 1.2 2006/05/22 12:41:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFilePrefetch.cxx,v 1.3 2006/06/05 20:16:56 brun Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -157,6 +157,14 @@ Bool_t TFilePrefetch::ReadBuffer(char *buf, Long64_t pos, Int_t len)
       return kFALSE;
    }
    return kTRUE;
+}
+
+//_____________________________________________________________________________
+void TFilePrefetch::SetFile(TFile *file)
+{
+   //set the file using this cache
+   
+   fFile = file;
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFilePrefetch.h,v 1.1 2006/05/22 11:13:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFilePrefetch.h,v 1.2 2006/06/05 20:16:56 brun Exp $
 // Author: Rene Brun   19/05/2006
 
 /*************************************************************************
@@ -57,6 +57,7 @@ public:
    virtual void        Prefetch(Long64_t pos, Int_t len);
    virtual void        Print(Option_t *option="") const;
    virtual Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
+   virtual void        SetFile(TFile *file);
    virtual void        Sort();
 
    ClassDef(TFilePrefetch,1)  //ROOT file prefetch manager

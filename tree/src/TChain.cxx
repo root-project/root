@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.129 2006/05/24 15:10:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.130 2006/06/05 20:30:27 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -954,12 +954,16 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    //Delete current tree and connect new tree
    TDirectory *cursav = gDirectory;
+   TTreeFilePrefetch *tpf = 0;
    //delete file unless the file owns this chain !!
    if (fFile) {
       if (!fDirectory->GetList()->FindObject(this)) {
          if (cursav && cursav->GetFile()==fFile) {
             cursav = gROOT;
          }
+         tpf = (TTreeFilePrefetch*)fFile->GetFilePrefetch();
+         fFile->SetFilePrefetch(0);
+         if(tpf) tpf->Prefetch(0,0);
          if (fCanDeleteRefs) fFile->Close("R");
          delete fFile; fFile = 0; fTree = 0;
       }
@@ -999,6 +1003,14 @@ Long64_t TChain::LoadTree(Long64_t entry)
    }
    fTreeNumber = t;
    fDirectory = fFile;
+   //reuse cache from previous file (if any)
+   if (tpf) {
+      fFile->SetFilePrefetch(tpf);
+      tpf->SetFile(fFile);
+      tpf->SetTree(fTree);
+   } else {
+      fTree->SetCacheSize(fCacheSize);
+   }
 
    //check if fTreeOffset has really been set
    Long64_t nentries = fTree ? fTree->GetEntries() : 0;
@@ -1049,7 +1061,6 @@ Long64_t TChain::LoadTree(Long64_t entry)
    //Set the branches status and address for the newly connected file
    fTree->SetMakeClass(fMakeClass);
    fTree->SetMaxVirtualSize(fMaxVirtualSize);
-   //fTree->SetCacheSize(fCacheSize);
    SetChainOffset(fTreeOffset[t]);
    TIter next(fStatus);
    Int_t status;

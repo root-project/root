@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.h,v 1.1 2006/05/22 11:13:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.h,v 1.1 2006/06/05 20:30:27 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -45,7 +45,8 @@ public:
    virtual Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
    Bool_t              Register(Long64_t offset);
    void                SetEntryMax(Long64_t emax);
-      
+   void                SetTree(TTree *tree);
+        
    ClassDef(TTreeFilePrefetch,1)  //Specialization of TFilePrefetch for a TTree 
 };
 
