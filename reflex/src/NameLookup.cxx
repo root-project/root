@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.1 2006/06/08 16:05:14 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -14,6 +14,7 @@
 #endif
 
 #include "NameLookup.h"
+#include "Reflex/Base.h"
 #include "Reflex/Scope.h"
 #include "Reflex/Type.h"
 #include "Reflex/Member.h"
