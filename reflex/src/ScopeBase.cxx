@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.8 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.9 2006/04/20 17:18:23 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -31,6 +31,7 @@
 #include "FunctionMember.h"
 #include "Union.h"
 #include "Enum.h"
+#include "NameLookup.h"
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::ScopeBase::ScopeBase( const char * scope, 
@@ -211,6 +212,25 @@ bool ROOT::Reflex::ScopeBase::IsTopScope() const {
    if ( fDeclaringScope == Scope::fg__NIRVANA__ ) return true;
    return false;
 }
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member 
+ROOT::Reflex::ScopeBase::LookupMember( const std::string & nam,
+                                       const Scope & current ) const {
+//------------------------------------------------------------------------------- 
+  return NameLookup::LookupMember( nam, current );
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type
+ROOT::Reflex::ScopeBase::LookupType( const std::string & nam,
+                                     const Scope & current ) const {
+//-------------------------------------------------------------------------------
+   return NameLookup::LookupType( nam, current );
+}
+
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member ROOT::Reflex::ScopeBase::MemberAt( size_t nth ) const {
@@ -540,4 +560,22 @@ void ROOT::Reflex::ScopeBase::RemoveSubTypeTemplate( const TypeTemplate & tt ) c
    }
 }
 
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::ScopeBase::AddUsingDirective( const Scope & ud ) const {
+//-------------------------------------------------------------------------------
+   fUsingDirectives.push_back( ud );
+}
+
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::ScopeBase::RemoveUsingDirective( const Scope & ud ) const {
+//-------------------------------------------------------------------------------
+   for ( Scope_Iterator it = UsingDirective_Begin(); it != UsingDirective_End(); ++ it ) {
+      if ( *it == ud ) {
+         fUsingDirectives.erase( it ); 
+         break;
+      }
+   }
+}
 

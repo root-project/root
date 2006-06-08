@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.5 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.6 2006/03/13 15:49:50 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -297,6 +297,22 @@ namespace ROOT {
           * @return true if type represents a union
           */
          bool IsUnion() const;
+
+
+         /**
+          * LookupMember will lookup a member in the current scope
+          * @param nam the string representation of the member to lookup
+          * @return if a matching member is found return it, otherwise return empty member
+          */
+         Member LookupMember( const std::string & nam ) const;
+
+
+         /**
+          * LookupType will lookup a type in the current scope
+          * @param nam the string representation of the type to lookup
+          * @return if a matching type is found return it, otherwise return empty type
+          */
+         Type LookupType( const std::string & nam ) const;
 
 
          /**
@@ -665,6 +681,27 @@ namespace ROOT {
           */
          TypeTemplate TemplateFamily() const;
 
+         
+         /**
+          * UsingDirectiveAt will return the nth using directive
+          * @param  nth using directive
+          * @return nth using directive
+          */
+         Scope UsingDirectiveAt( size_t nth ) const;
+         
+         
+         /**
+          * UsingDirectiveSize will return the number of using directives of this scope
+          * @return number of using directives declared in this scope
+          */
+         size_t UsingDirectiveSize() const;
+         
+         
+         Scope_Iterator UsingDirective_Begin() const;
+         Scope_Iterator UsingDirective_End() const;
+         Reverse_Scope_Iterator UsingDirective_RBegin() const;
+         Reverse_Scope_Iterator UsingDirective_REnd() const;
+         
       public:
 
          /**
@@ -761,6 +798,13 @@ namespace ROOT {
           * @param tt type template to add
           */
          void AddSubTypeTemplate( const TypeTemplate & mt ) const ;
+         
+         
+         /**
+          * AddUsingDirective will add a using namespace directive to this scope
+          * @param ud using directive to add
+          */
+         void AddUsingDirective( const Scope & ud ) const;
 
 
          /**
@@ -804,6 +848,13 @@ namespace ROOT {
           */
          void RemoveSubTypeTemplate( const TypeTemplate & tt ) const;
 
+         
+         /** 
+          * RemoveUsingDirective will remove a using namespace directive from this scope
+          * @param ud using namespace directive to remove
+          */
+         void RemoveUsingDirective( const Scope & ud ) const;
+         
 
          /** */
          const ScopeBase * ToScopeBase() const;
@@ -1344,6 +1395,54 @@ inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::Scope::SubTypeT
 
 
 //-------------------------------------------------------------------------------
+inline ROOT::Reflex::Scope ROOT::Reflex::Scope::UsingDirectiveAt( size_t nth ) const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fScopeName->fScopeBase->UsingDirectiveAt( nth );
+   return Scope();
+}
+
+
+//-------------------------------------------------------------------------------
+inline size_t ROOT::Reflex::Scope::UsingDirectiveSize() const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fScopeName->fScopeBase->UsingDirectiveSize();
+   return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Scope::UsingDirective_Begin() const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fScopeName->fScopeBase->UsingDirective_Begin();
+   return Scope_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Scope::UsingDirective_End() const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fScopeName->fScopeBase->UsingDirective_End();
+   return Scope_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Scope::UsingDirective_RBegin() const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fScopeName->fScopeBase->UsingDirective_RBegin();
+   return Reverse_Scope_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Scope::UsingDirective_REnd() const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fScopeName->fScopeBase->UsingDirective_REnd();
+   return Reverse_Scope_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
 inline void ROOT::Reflex::Scope::AddSubScope( const Scope & sc ) const {
 //-------------------------------------------------------------------------------
    if ( * this) fScopeName->fScopeBase->AddSubScope( sc );
@@ -1364,6 +1463,19 @@ inline void ROOT::Reflex::Scope::RemoveSubScope( const Scope & sc ) const {
    if ( * this) fScopeName->fScopeBase->RemoveSubScope( sc );
 }
 
+
+//-------------------------------------------------------------------------------
+inline void ROOT::Reflex::Scope::AddUsingDirective( const Scope & ud ) const {
+//-------------------------------------------------------------------------------
+   if ( * this ) fScopeName->fScopeBase->AddUsingDirective( ud );
+}
+
+
+//-------------------------------------------------------------------------------
+inline void ROOT::Reflex::Scope::RemoveUsingDirective( const Scope & ud ) const {
+//-------------------------------------------------------------------------------
+   if ( * this ) fScopeName->fScopeBase->RemoveUsingDirective( ud );
+}
 
 
 #endif // ROOT_Reflex_Scope

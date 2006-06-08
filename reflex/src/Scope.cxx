@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.6 2006/03/13 15:49:51 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.7 2006/03/20 09:46:18 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -112,6 +112,24 @@ size_t ROOT::Reflex::Scope::FunctionMemberSize() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->FunctionMemberSize(); 
    return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member 
+ROOT::Reflex::Scope::LookupMember( const std::string & nam ) const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fScopeName->fScopeBase->LookupMember( nam, *this );
+   return Member();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type
+ROOT::Reflex::Scope::LookupType( const std::string & nam ) const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fScopeName->fScopeBase->LookupType( nam, *this );
+   return Type();
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.8 2006/04/12 10:21:11 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.9 2006/05/31 22:23:12 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -122,12 +122,13 @@ namespace ROOT {
           */
          /*
            virtual Object Construct( const Type & signature,
-           std::vector < Object > values,
-           void * mem) const;*/
+                                     const std::vector < Object > & values,
+                                     void * mem ) const;*/
          virtual Object Construct( const Type & signature,
                                    const std::vector < void * > & values,
                                    void * mem) const;
       
+
          /**
           * DataMemberAt will return the nth data MemberAt of the At
           * @param  nth data MemberAt

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.5 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.6 2006/03/13 15:49:50 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -200,6 +200,26 @@ namespace ROOT {
 
 
          /**
+          * LookupMember will lookup a member in the current scope
+          * @param nam the string representation of the member to lookup
+          * @param current the current scope
+          * @return if a matching member is found return it, otherwise return empty member
+          */
+         Member LookupMember( const std::string & nam,
+                              const Scope & current ) const;
+
+
+         /**
+          * LookupType will lookup a type in the current scope
+          * @param nam the string representation of the type to lookup
+          * @param current the current scope
+          * @return if a matching type is found return it, otherwise return empty type
+          */
+         Type LookupType( const std::string & nam,
+                          const Scope & current ) const;
+
+
+         /**
           * MemberByName will return the first MemberAt with a given Name
           * @param Name  MemberAt Name
           * @return pointer to MemberAt
@@ -359,15 +379,15 @@ namespace ROOT {
 
          /** 
           * SubTypeTemplateAt will return the nth At template of this At
-          * @param nth At template
-          * @return nth At template
+          * @param  nth sub type template
+          * @return nth sub type template
           */
          TypeTemplate SubTypeTemplateAt( size_t nth ) const;
 
 
          /** 
           * SubTypeTemplateSize will return the number of At templates in this socpe
-          * @return number of defined At templates
+          * @return number of defined sub type templates
           */
          size_t SubTypeTemplateSize() const;
 
@@ -376,6 +396,28 @@ namespace ROOT {
          TypeTemplate_Iterator SubTypeTemplate_End() const;
          Reverse_TypeTemplate_Iterator SubTypeTemplate_RBegin() const;
          Reverse_TypeTemplate_Iterator SubTypeTemplate_REnd() const;
+
+
+         /**
+          * UsingDirectiveAt will return the nth using directive
+          * @param  nth using directive
+          * @return nth using directive
+          */
+         Scope UsingDirectiveAt( size_t nth ) const;
+
+
+         /**
+          * UsingDirectiveSize will return the number of using directives of this scope
+          * @return number of using directives declared in this scope
+          */
+         size_t UsingDirectiveSize() const;
+
+
+         Scope_Iterator UsingDirective_Begin() const;
+         Scope_Iterator UsingDirective_End() const;
+         Reverse_Scope_Iterator UsingDirective_RBegin() const;
+         Reverse_Scope_Iterator UsingDirective_REnd() const;
+         
 
       protected:
 
@@ -433,6 +475,9 @@ namespace ROOT {
 
 
          void AddSubTypeTemplate( const TypeTemplate & tt ) const;
+         
+         
+         void AddUsingDirective( const Scope & ud ) const;
 
 
          /**
@@ -467,6 +512,9 @@ namespace ROOT {
 
 
          virtual void RemoveSubTypeTemplate( const TypeTemplate & tt ) const;
+         
+         
+         void RemoveUsingDirective( const Scope & ud ) const;
 
       protected:
       
@@ -548,7 +596,7 @@ namespace ROOT {
 
          /**
           * pointer to types
-          * @label At types
+          * @label sub types
           * @link aggregationByValue
           * @supplierCardinality 0..*
           * @clientCardinality 1
@@ -558,8 +606,8 @@ namespace ROOT {
 
 
          /**
-          * container for At templates defined in this At
-          * @label At templates
+          * container for type templates defined in this scope
+          * @label type templates
           * @link aggregationByValue
           * @supplierCardinality 0..*
           * @clientCardinality 1
@@ -569,14 +617,25 @@ namespace ROOT {
  
  
          /**
-          * container for At templates defined in this At
-          * @label At templates
+          * container for member templates defined in this scope
+          * @label member templates
           * @link aggregationByValue
           * @supplierCardinality 0..*
           * @clientCardinality 1
           */
          mutable
             std::vector < MemberTemplate > fMemberTemplates;
+
+
+         /** 
+          * container for using directives of this scope
+          * @label using directives
+          * @link aggregationByValue
+          * @supplierCardinality 0..*
+          * @clientCardinality 1
+          */
+         mutable
+            std::vector < Scope > fUsingDirectives;
 
 
          /**
@@ -927,5 +986,49 @@ inline size_t ROOT::Reflex::ScopeBase::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
    return 0;
 }
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::UsingDirectiveAt( size_t nth ) const {
+//-------------------------------------------------------------------------------
+   if ( nth < fUsingDirectives.size() ) { return fUsingDirectives[ nth ]; }
+   return Scope( 0 );
+}
+
+
+//-------------------------------------------------------------------------------
+inline size_t ROOT::Reflex::ScopeBase::UsingDirectiveSize() const {
+//-------------------------------------------------------------------------------
+   return fUsingDirectives.size();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeBase::UsingDirective_Begin() const {
+//-------------------------------------------------------------------------------
+   return fUsingDirectives.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeBase::UsingDirective_End() const {
+//-------------------------------------------------------------------------------
+   return fUsingDirectives.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeBase::UsingDirective_RBegin() const {
+//-------------------------------------------------------------------------------
+   return fUsingDirectives.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeBase::UsingDirective_REnd() const {
+//-------------------------------------------------------------------------------
+   return fUsingDirectives.rend();
+}
+
 
 #endif // ROOT_Reflex_ScopeBase
