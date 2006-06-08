@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFdFSolver.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFdFSolver.h,v 1.1 2005/09/08 07:14:56 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -39,6 +39,11 @@ namespace ROOT {
 namespace Math {
 
 
+/**
+   Root-Finder with derivatives implementation class using  GSL  
+
+   @ingroup RootFinders
+ */
 class GSLRootFdFSolver {
 
 public: 

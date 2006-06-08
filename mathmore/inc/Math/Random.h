@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Random.h,v 1.2 2006/05/30 16:03:46 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Random.h,v 1.3 2006/05/31 09:56:21 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -35,7 +35,7 @@
 #include <vector> 
 
 /**
-   @defgroup Random Random numbers and distributions
+   @defgroup Random Random number generators and distributions
 */ 
 
 

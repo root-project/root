@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionWrapper.h,v 1.2 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionWrapper.h,v 1.3 2005/09/19 13:06:53 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -44,6 +44,10 @@ namespace Math {
   typedef double ( * GSLFuncPointer ) ( double, void *);
   typedef void ( * GSLFdfPointer ) ( double, void *, double *, double *);
 
+
+  /**
+     class to wrap a gsl_function and have a signature like a ROOT::Math::IGenFunction
+   */
   class GSLFunctionWrapper { 
 
   public: 
@@ -77,8 +81,10 @@ namespace Math {
 
   };
 
-  // wrapper to function with derivatives 
 
+  /**
+     class to wrap a gsl_function_fdf (with derivatives)   
+   */
   class GSLFunctionDerivWrapper { 
 
   public: 

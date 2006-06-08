@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Derivator.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Derivator.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -123,14 +123,15 @@ namespace Math {
      /** 
 	 Computes the numerical derivative of a function f at a point x using an adaptive central 
 	 difference algorithm with a step size h
-     
-    template <class UserFunc>
-    inline double EvalCentral(const UserFunc & f, double x, double h) { 
-      SetFunction(f); 
-      return EvalCentral(x,h); 
-    }
      */
+     
     double EvalCentral(const IGenFunction & f, double x, double h = 1E-8);
+
+//     template <class UserFunc>
+//     inline double EvalCentral(const UserFunc & f, double x, double h) { 
+//       SetFunction(f); 
+//       return EvalCentral(x,h); 
+//     }
 
 
      /** 

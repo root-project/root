@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: WrappedFunction.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: WrappedFunction.h,v 1.2 2005/09/19 13:06:53 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -33,11 +33,14 @@ namespace ROOT {
 namespace Math {
 
 
+/**
+   Template class to wrap any C++ callable object which takes one argument 
+   i.e. implementing operator() (double x). 
+   It provides a ROOT::Math::IGenFunction-like signature
+ */
 template< class CALLABLE >
 class WrappedFunction : public IGenFunction {
 
-  // Concrete class, wraps a callable object which takes one
-  // argument, and provides the IGeneralFunction interface.
 
  public:
 
