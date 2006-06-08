@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.4 2006/05/03 13:10:22 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.5 2006/05/26 15:10:39 moneta Exp $
 // Authors: L. Moneta    12/2005  
 
 /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by:    moneta   at Fri Dec 02   2005
 //
-// Last update: $Id: Plane3D.h,v 1.4 2006/05/03 13:10:22 moneta Exp $
+// Last update: $Id: Plane3D.h,v 1.5 2006/05/26 15:10:39 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Plane3D
 #define ROOT_Math_GenVector_Plane3D  1
@@ -149,7 +149,9 @@ namespace ROOT {
 
 
       /**
-	 Return the distance to a Point
+	 Return the signed distance to a Point. 
+	 The distance is signed positive if the Point is in the same side of the 
+	 normal vector to the plane.   
 	 \param p Point expressed in Cartesian Coordinates 
        */
       Scalar Distance(const Point & p) const; 
