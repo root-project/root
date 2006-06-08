@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.130 2006/06/05 20:30:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.131 2006/06/08 12:46:45 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1450,6 +1450,19 @@ void TChain::SetAutoDelete(Bool_t autodelete)
 
    if (autodelete) SetBit(kAutoDelete,1);
    else            SetBit(kAutoDelete,0);
+}
+
+//______________________________________________________________________________
+void TChain::ResetBranchAddresses()
+{
+   // Reset the address of the branches.
+
+   TIter next(fStatus);
+   TChainElement *element = 0;
+   while ((element = (TChainElement*)next())) {
+      element->SetBaddress(0);
+   }
+   if (fTree) fTree->ResetBranchAddresses();
 }
 
 //_______________________________________________________________________

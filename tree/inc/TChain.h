@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.50 2006/05/12 12:24:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.51 2006/05/23 04:47:42 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -122,6 +122,7 @@ public:
    virtual Long64_t  Process(const char *filename,Option_t *option="", Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
    virtual Long64_t  Process(TSelector *selector,Option_t *option="",  Long64_t nentries=kBigNumber, Long64_t firstentry=0);
    virtual void      Reset(Option_t *option="");
+   virtual void      ResetBranchAddresses();
    virtual Long64_t  Scan(const char *varexp="", const char *selection="", Option_t *option=""
                           ,Long64_t nentries=1000000000, Long64_t firstentry=0); // *MENU*
    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
