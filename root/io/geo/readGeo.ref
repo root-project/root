@@ -76,18 +76,18 @@ Info in <TGeoManager::SetTopVolume>: Top volume is HALL. Master volume is HALL
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoManager::CloseGeometry>: 68776 nodes/ 2316 volume UID's in star.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
-Info: TGeoManager::Import : Reading geometry from file
+Info: TGeoManager::Import : Reading geometry from file: aleph.root
+Info: TGeoManager::Import : Reading geometry from file: ams.root
+Info: TGeoManager::Import : Reading geometry from file: alice.root
+Info: TGeoManager::Import : Reading geometry from file: atlas.root
+Info: TGeoManager::Import : Reading geometry from file: brahms.root
+Info: TGeoManager::Import : Reading geometry from file: btev.root
+Info: TGeoManager::Import : Reading geometry from file: cdf.root
+Info: TGeoManager::Import : Reading geometry from file: cms.root
+Info: TGeoManager::Import : Reading geometry from file: d0.root
+Info: TGeoManager::Import : Reading geometry from file: e907.root
+Info: TGeoManager::Import : Reading geometry from file: gem.root
+Info: TGeoManager::Import : Reading geometry from file: lhcbfull.root
+Info: TGeoManager::Import : Reading geometry from file: phobos.root
+Info: TGeoManager::Import : Reading geometry from file: tesla.root
+Info: TGeoManager::Import : Reading geometry from file: star.root
