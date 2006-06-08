@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.155 2006/06/07 10:12:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.156 2006/06/07 12:22:23 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -5262,7 +5262,6 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       gROOT->ProcessLine("TPython::Exec(\"from math import *\")");
       gROOT->ProcessLine("TPython::Exec(\"from units import *\")");
 
-      gROOT->ProcessLine("TPython::Exec(\"import ROOT\")");
       gROOT->ProcessLine("TPython::Exec(\"import writer\")");
       gROOT->ProcessLine("TPython::Exec(\"import ROOTwriter\")");
 
