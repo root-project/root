@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.10 2006/06/02 23:41:40 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.11 2006/06/05 22:51:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -283,10 +283,8 @@ void XrdProofConn::Close(const char *opt)
    SafeDelete(fMutex);
 
    // Make sure we are connected
-   if (!fConnected) {
-      TRACE(REQ,"XrdProofConn::Close: not connected: nothing to do");
+   if (!fConnected)
       return;
-   }
 
    // Parse options
    bool hard = (opt) ? (strchr(opt,'P') || strchr(opt,'p')) : 0;
