@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.210 2006/05/26 16:55:05 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.211 2006/06/05 20:30:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2587,11 +2587,11 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
    readbytesatstart = TFile::GetFileBytesRead();
    
    //set the file cache
-   //fTree->SetCacheSize(fTree->GetCacheSize());
    TFile *curfile = fTree->GetCurrentFile();
-   if (curfile) {
+   if (curfile && fTree->GetCacheSize() > 0) {
       TTreeFilePrefetch *tpf = (TTreeFilePrefetch*)curfile->GetFilePrefetch();
       if (tpf) tpf->SetEntryMax(firstentry+nentries);
+      else fTree->SetCacheSize(fTree->GetCacheSize());
    }
    
    if (selector->GetStatus()!=-1) {

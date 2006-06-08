@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.2 2006/06/06 17:51:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.3 2006/06/07 18:52:26 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -150,4 +150,12 @@ void TTreeFilePrefetch::SetEntryMax(Long64_t emax)
    // when prefetching the branch buffers.
    
    fEntryMax = emax;
+}
+
+//_____________________________________________________________________________
+void TTreeFilePrefetch::SetTree(TTree *tree)
+{
+   //change current tree
+   
+   fTree = tree;
 }

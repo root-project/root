@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.284 2006/06/05 20:30:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.285 2006/06/07 18:48:05 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4772,7 +4772,7 @@ void TTree::SetCacheSize(Long64_t cacheSize)
    //if cachesize <= 0 the existing cache (if any) is deleted
    
    TFile *file = GetCurrentFile();
-   if (!file) return;
+   if (!file) {fCacheSize = cacheSize; return;}
    TFilePrefetch *pf = file->GetFilePrefetch();
    if (pf) {
       if (cacheSize == fCacheSize) return;
