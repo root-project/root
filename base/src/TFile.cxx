@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.162 2006/05/30 12:00:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.163 2006/05/31 07:48:56 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -88,7 +88,7 @@ TFile::TFile() : TDirectory(), fInfoCache(0)
    fInitDone      = kFALSE;
    fMustFlush     = kTRUE;
    fAsyncHandle   = 0;
-   fAsyncOpenStatus   = kAOSNotAsync;
+   fAsyncOpenStatus = kAOSNotAsync;
 
    if (gDebug)
       Info("TFile", "default ctor");
@@ -676,7 +676,7 @@ void TFile::Close(Option_t *option)
 
    if (!IsOpen()) return;
 
- 
+
    if (gMonitoringWriter && (!fWritable)) gMonitoringWriter->SendFileReadProgress(this,true);
 
    if (fIsArchive || !fIsRootFile) {

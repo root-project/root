@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.15 2006/05/29 07:59:27 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.16 2006/05/30 12:23:29 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -70,7 +70,7 @@ void TWebFile::Init(Bool_t)
       return;
    }
 
-   if (strncmp(buf, "root", 4)) {
+   if (strncmp(buf, "root", 4) && strncmp(buf, "PK", 2)) {  // PK is zip file
       Error("TWebFile", "remote file does not exists or is not a ROOT file");
       MakeZombie();
       gDirectory = gROOT;
@@ -134,7 +134,13 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
    // Give full URL so Apache's virtual hosts solution works.
    // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
    TString msg = "GET ";
-   msg += fUrl.GetUrl();
+   msg += fUrl.GetProtocol();
+   msg += "://";
+   msg += fUrl.GetHost();
+   msg += ":";
+   msg += fUrl.GetPort();
+   msg += "/";
+   msg += fUrl.GetFile();
    msg += "?";
    msg += fOffset;
    msg += ":";
@@ -161,7 +167,13 @@ Bool_t TWebFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    // Give full URL so Apache's virtual hosts solution works.
    // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
    TString msgh = "GET ";
-   msgh += fUrl.GetUrl();
+   msgh += fUrl.GetProtocol();
+   msgh += "://";
+   msgh += fUrl.GetHost();
+   msgh += ":";
+   msgh += fUrl.GetPort();
+   msgh += "/";
+   msgh += fUrl.GetFile();
    msgh += "?";
 
    TString msg = msgh;
@@ -169,7 +181,7 @@ Bool_t TWebFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    Int_t k = 0, n = 0;
    for (Int_t i = 0; i < nbuf; i++) {
       if (n) msg += ",";
-      msg += pos[i];
+      msg += pos[i] + fArchiveOffset;
       msg += ":";
       msg += len[i];
       n   += len[i];
@@ -188,7 +200,7 @@ Bool_t TWebFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    if (GetFromWeb(&buf[k], n, msg) == -1)
       return kTRUE;
 
-   fOffset = pos[nbuf-1] + len[nbuf-1];
+   fOffset = pos[nbuf-1] + len[nbuf-1] + fArchiveOffset;
 
    return kFALSE;
 }
@@ -211,7 +223,7 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
    if (s.RecvRaw(buf, len) == -1)
       return -1;
 
-   fBytesRead  += len;
+   fBytesRead += len;
    SetFileBytesRead(GetFileBytesRead() + len);
 
    return 0;
@@ -224,12 +236,15 @@ void TWebFile::Seek(Long64_t offset, ERelativeTo pos)
 
    switch (pos) {
    case kBeg:
-      fOffset = offset;
+      fOffset = offset + fArchiveOffset;
       break;
    case kCur:
       fOffset += offset;
       break;
    case kEnd:
+      // this option is not used currently in the ROOT code
+      if (fArchiveOffset)
+         Error("Seek", "seeking from end in archive is not (yet) supported");
       fOffset = fEND - offset;  // is fEND really EOF or logical EOF?
       break;
    }
@@ -238,7 +253,27 @@ void TWebFile::Seek(Long64_t offset, ERelativeTo pos)
 //______________________________________________________________________________
 Long64_t TWebFile::GetSize() const
 {
-   // Return maximum file size to by-pass truncation checking.
+   // Return maximum file size.
 
-   return kMaxInt;
+   Long64_t size;
+   char     asize[64];
+
+   TString msg = "GET ";
+   msg += fUrl.GetProtocol();
+   msg += "://";
+   msg += fUrl.GetHost();
+   msg += ":";
+   msg += fUrl.GetPort();
+   msg += "/";
+   msg += fUrl.GetFile();
+   msg += "?";
+   msg += -1;
+   msg += "\r\n";
+
+   if (const_cast<TWebFile*>(this)->GetFromWeb(asize, 64, msg) == -1)
+      return kMaxInt;
+
+   size = atoll(asize);
+
+   return size;
 }

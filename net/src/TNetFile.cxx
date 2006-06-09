@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.74 2006/06/01 09:50:28 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.75 2006/06/07 10:34:37 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -102,36 +102,6 @@ TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
 
    fSocket = 0;
 }
-
-#if 0
-// NetFiles cannot be copied
-//______________________________________________________________________________
-TNetFile::TNetFile(const TNetFile& nf) :
-  TFile(nf),
-  fEndpointUrl(nf.fEndpointUrl),
-  fUser(nf.fUser),
-  fSocket(nf.fSocket),
-  fProtocol(nf.fProtocol),
-  fErrorCode(nf.fErrorCode)
-{
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TNetFile& TNetFile::operator=(const TNetFile& nf)
-{
-   //assignement operator
-   if(this!=&nf) {
-      TFile::operator=(nf);
-      fEndpointUrl=nf.fEndpointUrl;
-      fUser=nf.fUser;
-      fSocket=nf.fSocket;
-      fProtocol=nf.fProtocol;
-      fErrorCode=nf.fErrorCode;
-   }
-   return *this;
-}
-#endif
 
 //______________________________________________________________________________
 TNetFile::~TNetFile()
@@ -410,7 +380,7 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    // Make the string with a list of offsets and lenghts
    Int_t total_len = 0;
    for(Int_t i = 0; i < nbuf; i++) {
-      data_buf += pos[i];
+      data_buf += pos[i] + fArchiveOffset;
       data_buf += "-";
       data_buf += len[i];
       data_buf += "/";
@@ -438,7 +408,7 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       goto end;
    }
 
-   // Get the big buffer with everything inseide it
+   // Get the big buffer with everything inside it
    while ((n = fSocket->RecvRaw(buf, total_len)) < 0
          && TSystem::GetErrno() == EINTR)
       TSystem::ResetErrno();
@@ -449,7 +419,7 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       goto end;
    }
 
-   fOffset += pos[nbuf-1] + len[nbuf-1];
+   fOffset += pos[nbuf-1] + len[nbuf-1] + fArchiveOffset;
 
    fBytesRead  += total_len;
 #ifdef WIN32
@@ -468,7 +438,7 @@ end:
       gApplication->GetSignalHandler()->HandleDelayedSignal();
 
    // If found problems try the generic implementation
-   if ( result )
+   if (result)
       return TFile::ReadBuffers(buf, pos, len, nbuf);
 
    return result;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TArchiveFile.cxx,v 1.2 2004/07/19 09:40:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TArchiveFile.cxx,v 1.3 2005/05/31 13:30:04 rdm Exp $
 // Author: Fons Rademakers   30/6/04
 
 /*************************************************************************
@@ -109,7 +109,7 @@ TArchiveFile *TArchiveFile::Open(const char *url, TFile *file)
    // where tpc.root is the file in the archive to be opened.
    // Alternatively the sub-file can be specified via its index number,
    // e.g. "root://pcsalo.cern.ch/alice/event_1.zip#3".
-   // This function is normall only called via TFile::Open().
+   // This function is normally only called via TFile::Open().
 
    if (!file) {
       ::Error("TArchiveFile::Open", "must specify a valid TFile to access %s",
