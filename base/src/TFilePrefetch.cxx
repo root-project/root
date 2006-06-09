@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFilePrefetch.cxx,v 1.3 2006/06/05 20:16:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFilePrefetch.cxx,v 1.4 2006/06/08 12:46:45 brun Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -107,8 +107,44 @@ void TFilePrefetch::Prefetch(Long64_t pos, Int_t len)
       return;
    }
    if (fNseek >= fSeekSize) {
-      //must reallocate buffers in this place
+      //reallocate buffers
+      fSeekSize *= 2;
+      Long64_t *aSeek        = new Long64_t[fSeekSize];
+      Long64_t *aSeekIndex   = new Long64_t[fSeekSize];
+      Long64_t *aSeekSort    = new Long64_t[fSeekSize];
+      Long64_t *aPos         = new Long64_t[fSeekSize];
+      Int_t    *aSeekLen     = new Int_t[fSeekSize];
+      Int_t    *aSeekSortLen = new Int_t[fSeekSize];
+      Int_t    *aSeekPos     = new Int_t[fSeekSize];
+      Int_t    *aLen         = new Int_t[fSeekSize];
+      for (Int_t i=0;i<fNseek;i++) {
+         aSeek[i]        = fSeek[i];
+         aSeekIndex[i]   = fSeekIndex[i];
+         aSeekSort[i]    = fSeekSort[i];
+         aPos[i]         = fPos[i];
+         aSeekLen[i]     = fSeekLen[i];
+         aSeekSortLen[i] = fSeekSortLen[i];
+         aSeekPos[i]     = fSeekPos[i];
+         aLen[i]         = fLen[i];
+      }
+      delete [] fSeek;
+      delete [] fSeekIndex;
+      delete [] fSeekSort;
+      delete [] fPos;
+      delete [] fSeekLen;
+      delete [] fSeekSortLen;
+      delete [] fSeekPos;
+      delete [] fLen;
+      fSeek        = aSeek;
+      fSeekIndex   = aSeekIndex;
+      fSeekSort    = aSeekSort;
+      fPos         = aPos;
+      fSeekLen     = aSeekLen;
+      fSeekSortLen = aSeekSortLen;
+      fSeekPos     = aSeekPos;
+      fLen         = aLen;
    }
+   
    fSeek[fNseek] = pos;
    fSeekLen[fNseek] = len;
    fNseek++;
