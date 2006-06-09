@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.h,v 1.5 2005/06/23 00:29:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TError.h,v 1.6 2006/04/19 08:22:22 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -71,17 +71,25 @@ R__EXTERN const char *kAssertMsg;
 R__EXTERN const char *kCheckMsg;
 
 #define R__ASSERT(e) \
-   if (!(e)) Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__)
+   do { \
+      if (!(e)) Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
+   } while (0)
 #define R__CHECK(e) \
-   if (!(e)) Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__)
+   do { \
+      if (!(e)) Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
+   } while (0)
 
 // deprecated macros (will be removed in next release)
 #define Assert(e) \
-   { if (!(e)) Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
-   Warning("", "please change Assert to R__ASSERT in %s at line %d", __FILE__, __LINE__); }
+   do { \
+      if (!(e)) Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
+      Warning("", "please change Assert to R__ASSERT in %s at line %d", __FILE__, __LINE__); \
+   } while (0)
 #define Check(e) \
-   { if (!(e)) Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
-   Warning("", "please change Check to R__CHECK in %s at line %d", __FILE__, __LINE__); }
+   do { \
+      if (!(e)) Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
+      Warning("", "please change Check to R__CHECK in %s at line %d", __FILE__, __LINE__); \
+   } while (0)
 
 R__EXTERN Int_t gErrorIgnoreLevel;
 R__EXTERN Int_t gErrorAbortLevel;
