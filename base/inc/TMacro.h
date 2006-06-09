@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.2 2005/08/16 15:58:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.3 2005/09/16 08:48:39 rdm Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -52,7 +52,7 @@ public:
    virtual void         Exec(const char *params=0);  //*MENU*
    TList               *GetListOfLines() const {return fLines;}
    virtual void         Paint(Option_t *option="");
-   virtual void         Print(Option_t *option="") const;
+   virtual void         Print(Option_t *option="") const;  //*MENU*
    virtual Int_t        ReadFile(const char *filename);
    virtual void         SaveSource(const char *filename);  //*MENU*
    virtual void         SavePrimitive(ofstream &out, Option_t *option);

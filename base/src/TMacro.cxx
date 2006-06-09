@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.5 2005/09/29 15:44:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.6 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -46,6 +46,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TEnv.h"
 #include "TSystem.h"
 #include "TMacro.h"
 #include "TMD5.h"
@@ -124,9 +125,38 @@ TObjString *TMacro::AddLine(const char *text)
 //______________________________________________________________________________
 void TMacro::Browse(TBrowser * /*b*/)
 {
-    // When clicking in the browser, the macro will be executed.
+   // When clicking in the browser, the following action is performed
+   // on this macro, depending the content of the variable TMacro.Browse.
+   // TMacro.Browse can be set in the system.rootrc or .rootrc file like
+   //     TMacro.Browse   :  Action
+   // or set via gEnv->SetValue, eg
+   //     gEnv->SetValue("TMacro.Browse","Print");
+   // By default TMacro.Browse=""
+   // -if TMacro.Browse ="" the macro is executed
+   // -if TMacro.Browse ="Print" the macro is printed in stdout
+   // -if TMacro.Browse is of the form "mymacro.C"
+   //     the macro void mymacro.C(TMacro *m) is called where m=this macro
+   //     An example of macro.C saving the macro into a file and viewing it
+   //     with emacs is shown below:
+   //        void mymacro(TMacro *m) {
+   //           m->SaveSource("xx.log");
+   //           gSystem->Exec("emacs xx.log&");
+   //        }
 
-   Exec();
+   TString opt = gEnv->GetValue("TMacro.Browse","");
+   if (opt.IsNull()) {
+      Exec();
+      return;
+   }
+   if (opt == "Print") {
+      Print();
+      return;
+   }
+   if (opt.Contains(".C")) {
+      const char *cmd = Form(".x %s((TMacro*)0x%x)",opt.Data(),this);
+      gROOT->ProcessLine(cmd);
+      return;
+   }
 }
 
 //______________________________________________________________________________
