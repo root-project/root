@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.16 2006/05/30 12:23:29 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.17 2006/06/09 01:21:43 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -273,7 +273,11 @@ Long64_t TWebFile::GetSize() const
    if (const_cast<TWebFile*>(this)->GetFromWeb(asize, 64, msg) == -1)
       return kMaxInt;
 
+#ifndef R__WIN32
    size = atoll(asize);
+#else
+   size = _atoi64(asize);
+#endif
 
    return size;
 }
