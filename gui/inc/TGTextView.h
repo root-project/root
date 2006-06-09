@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.14 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.15 2006/06/06 07:44:28 antcheva Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -108,7 +108,7 @@ public:
 
    virtual void DataChanged() { Emit("DataChanged()"); }  //*SIGNAL*
 
-   ClassDef(TGTextView,0)  // Editable text widget base class (links TGText to TGEditView)
+   ClassDef(TGTextView,0)  // Non-editable text viewer widget
 };
 
 #endif
