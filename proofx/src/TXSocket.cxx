@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.12 2006/06/02 23:41:40 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.13 2006/06/05 22:51:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -96,7 +96,7 @@ Bool_t TXSocket::fgInitDone = kFALSE;
 
 // Static variables for input notification
 TList        TXSocket::fgReadySock;         // Static list of sockets ready to be read
-TMutex       TXSocket::fgReadyMtx;          // Protect access to the sockets-ready list
+TMutex       TXSocket::fgReadyMtx(kTRUE);   // Protect access to the sockets-ready list
 Int_t        TXSocket::fgPipe[2] = {-1,-1}; // Pipe for input monitoring
 TString      TXSocket::fgLoc = "undef";     // Location string
 
@@ -129,21 +129,21 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid,
       InitEnvs();
 
    // Async queue related stuff
-   if (!(fAMtx = new TMutex())) {
+   if (!(fAMtx = new TMutex(kTRUE))) {
       Error("TXSocket", "problems initializing mutex for async queue");
       return;
    }
    fAQue.clear();
 
    // Queue for spare buffers
-   if (!(fSMtx = new TMutex())) {
+   if (!(fSMtx = new TMutex(kTRUE))) {
       Error("TXSocket", "problems initializing mutex for spare queue");
       return;
    }
    fSQue.clear();
 
    // Interrupts queue related stuff
-   if (!(fIMtx = new TMutex())) {
+   if (!(fIMtx = new TMutex(kTRUE))) {
       Error("TXSocket", "problems initializing mutex for interrupts");
       return;
    }
@@ -415,7 +415,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             // Save the interrupt
             fILev = ilev;
 
-            // Handle this input in this thread to avoid queuing on the 
+            // Handle this input in this thread to avoid queuing on the
             // main thread
             fHandler->HandleInput((const void *)&acod);
          }
