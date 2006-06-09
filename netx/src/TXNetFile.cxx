@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.29 2006/06/01 09:50:28 brun Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.30 2006/06/07 10:34:37 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 //                                                                      //
 // Authors: Alvise Dorigo, Fabrizio Furano                              //
 //          INFN Padova, 2003                                           //
-// Interfaced to the standalone client (XrdClient): G. Ganis, CERN                       //
+// Interfaced to the standalone client (XrdClient): G. Ganis, CERN      //
 //                                                                      //
 // TXNetFile is an extension of TNetFile able to deal with new xrootd   //
 // server. Its new features are:                                        //

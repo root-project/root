@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.8 2006/04/27 15:14:11 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.9 2006/06/01 09:50:28 brun Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -13,13 +13,13 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TXNetFile                                                           //
+// TXNetFile                                                            //
 //                                                                      //
 // Authors: Alvise Dorigo, Fabrizio Furano                              //
 //          INFN Padova, 2003                                           //
 // Interfaced to the posix client: G. Ganis, CERN                       //
 //                                                                      //
-// TXNetFile is an extension of TNetFile able to deal with new xrootd  //
+// TXNetFile is an extension of TNetFile able to deal with new xrootd   //
 // server. Its new features are:                                        //
 //  - Automatic server kind recognition (xrootd load balancer, xrootd   //
 //    data server, old rootd)                                           //
@@ -30,9 +30,9 @@
 //  - Internal connection timeout (tunable indipendently from the OS    //
 //    one) handled by threads                                           //
 //  - handling of redirections from server                              //
-//  - Single TCP physical channel for multiple TXNetFile's instances   //
+//  - Single TCP physical channel for multiple TXNetFile's instances    //
 //    inside the same application                                       //
-//    So, each TXNetFile object client must send messages containing   //
+//    So, each TXNetFile object client must send messages containing    //
 //    its ID (streamid). The server, of course, will respond with       //
 //    messages containing the client's ID, in order to make the client  //
 //    able to recognize its message by matching its streamid with that  //
@@ -71,7 +71,7 @@ private:
 
    // Static members
    static Bool_t  fgInitDone;    // Avoid initializing more than once
-   static Bool_t  fgRootdBC;     // Control rootd backward compatibility 
+   static Bool_t  fgRootdBC;     // Control rootd backward compatibility
 
    XrdOucRecMutex *fInitMtx;     // Protects fInitDone, serializes the
                                  // attempts to Init() for this object only
