@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.3 2006/06/07 18:52:26 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.4 2006/06/08 13:26:01 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -126,7 +126,7 @@ Bool_t TTreeFilePrefetch::Register(Long64_t offset)
             for (Int_t k=j;k<nb;k++) {
                Long64_t pos = branch->GetBasketSeek(k);
                Int_t len = lbaskets[k];
-               if (pos <= 0) continue;
+               if (pos <= 0 || len <= 0) continue;
                if (fNtot+len > fBufferSize || entries[k] > fEntryMax) {
                   return status;
                }
