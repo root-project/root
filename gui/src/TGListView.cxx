@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.35 2006/05/05 16:13:58 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.36 2006/06/06 14:44:59 antcheva Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -699,7 +699,6 @@ TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
    fColumns    = 0;
    fJmode      = 0;
    fColHeader  = 0;
-   fHeader     = 0;
    fFontStruct = GetDefaultFontStruct();
    fNormGC     = GetDefaultGC()();
    if (fHScrollbar)
