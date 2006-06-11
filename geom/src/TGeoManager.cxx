@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.156 2006/06/07 12:22:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.157 2006/06/08 15:11:47 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2828,6 +2828,7 @@ void TGeoManager::SetVisOption(Int_t option) {
 // option=0 (default) all nodes drawn down to vislevel
 // option=1           leaves and nodes at vislevel drawn
 // option=2           path is drawn
+// option=4           visibility changed
    if ((option>=0) && (option<3)) fVisOption=option;
    if (fPainter) fPainter->SetVisOption(option);
 }

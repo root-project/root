@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.29 2006/05/24 17:11:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.30 2006/05/26 09:09:59 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -44,6 +44,7 @@ TGeoMaterial::TGeoMaterial()
    fRadLen   = 0;
    fIntLen   = 0;       
    fCerenkov = 0;
+   fElement  = 0;
 }
 //-----------------------------------------------------------------------------
 TGeoMaterial::TGeoMaterial(const char *name)
@@ -60,6 +61,7 @@ TGeoMaterial::TGeoMaterial(const char *name)
    fRadLen   = 0;
    fIntLen   = 0;
    fCerenkov = 0;
+   fElement  = 0;
    
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
@@ -80,6 +82,7 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
    fZ        = z;
    fDensity  = rho;
    fCerenkov = 0;
+   fElement  = 0;
    SetRadLen(radlen, intlen);
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
@@ -103,6 +106,7 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem,
    fZ        = elem->Z();
    fDensity  = rho;
    fCerenkov = 0;
+   fElement  = elem;
    
    SetRadLen(0,0);
    if (!gGeoManager) {
@@ -124,7 +128,8 @@ TGeoMaterial::TGeoMaterial(const TGeoMaterial& gm) :
   fRadLen(gm.fRadLen),
   fIntLen(gm.fIntLen),
   fShader(gm.fShader),
-  fCerenkov(gm.fCerenkov)
+  fCerenkov(gm.fCerenkov),
+  fElement(gm.fElement)
 { 
    //copy constructor
 }
@@ -143,6 +148,7 @@ TGeoMaterial& TGeoMaterial::operator=(const TGeoMaterial& gm)
       fIntLen=gm.fIntLen;
       fShader=gm.fShader;
       fCerenkov=gm.fCerenkov;
+      fElement=gm.fElement;
    } 
    return *this;
 }
@@ -250,6 +256,7 @@ Int_t TGeoMaterial::GetDefaultColor() const
 TGeoElement *TGeoMaterial::GetElement(Int_t) const
 {
 // Get a pointer to the element this material is made of.
+   if (fElement) return fElement;
    TGeoElementTable *table = gGeoManager->GetElementTable();
    return table->GetElement(Int_t(fZ));
 }
@@ -277,28 +284,21 @@ TGeoMixture::TGeoMixture()
    fZmixture   = 0;
    fAmixture   = 0;
    fWeights    = 0;
+   fNatoms     = 0;
+   fElements   = 0;
 }
 //-----------------------------------------------------------------------------
-TGeoMixture::TGeoMixture(const char *name, Int_t nel, Double_t rho)
+TGeoMixture::TGeoMixture(const char *name, Int_t /*nel*/, Double_t rho)
             :TGeoMaterial(name)
 {
 // constructor
-   if (nel == 0) {
-      fZmixture   = 0;
-      fAmixture   = 0;
-      fWeights    = 0;
-   } else {
-      fZmixture = new Double_t[nel];
-      fAmixture = new Double_t[nel];
-      fWeights  = new Double_t[nel];
-   }
-   fNelements  = nel;
-   for (Int_t j=0;j<fNelements;j++) {
-      fZmixture[j] = 0;
-      fAmixture[j] = 0;
-      fWeights[j]  = 0;
-   }
-   fDensity = rho; //TO BE CORRECTED
+   fZmixture   = 0;
+   fAmixture   = 0;
+   fWeights    = 0;
+   fNelements  = 0;
+   fNatoms     = 0;
+   fDensity = rho;
+   fElements   = 0;
    if (fDensity < 0) fDensity = 0.001;
 }
 //-----------------------------------------------------------------------------
@@ -307,7 +307,9 @@ TGeoMixture::TGeoMixture(const TGeoMixture& gm) :
   fNelements(gm.fNelements),
   fZmixture(gm.fZmixture),
   fAmixture(gm.fAmixture),
-  fWeights(gm.fWeights)
+  fWeights(gm.fWeights),
+  fNatoms(gm.fNatoms),
+  fElements(gm.fElements)
 { 
    //copy constructor
 }
@@ -321,6 +323,8 @@ TGeoMixture& TGeoMixture::operator=(const TGeoMixture& gm)
       fZmixture=gm.fZmixture;
       fAmixture=gm.fAmixture;
       fWeights=gm.fWeights;
+      fNatoms = gm.fNatoms;
+      fElements = gm.fElements;
    } 
    return *this;
 }
@@ -331,23 +335,13 @@ TGeoMixture::~TGeoMixture()
    if (fZmixture) delete[] fZmixture;
    if (fAmixture) delete[] fAmixture;
    if (fWeights)  delete[] fWeights;
+   if (fNatoms)   delete[] fNatoms;
+   if (fElements) delete fElements;
 }
 //-----------------------------------------------------------------------------
-void TGeoMixture:: DefineElement(Int_t i, Double_t a, Double_t z, Double_t weight)
+void TGeoMixture::AverageProperties()
 {
-// add an element to the mixture
-   if ((i<0) || (i>fNelements)) {
-      Error("DefineElement", "wrong index iel=%i in mixture %s, max is %d", i, GetName(), fNelements);
-      return;
-   }
-   fZmixture[i] = z;
-   fAmixture[i] = a;
-   fWeights[i]  = weight;
-   if (z - Int_t(z) > 1E-3)
-      Warning("DefineElement", "Mixture %s has element defined with fractional Z=%f", GetName(), z);
-   GetElement(i)->SetDefined();
-   
-   //compute equivalent radiation length (taken from Geant3/GSMIXT)
+// Compute effective A/Z and radiation length
    const Double_t alr2av = 1.39621E-03 , al183 =5.20948;
    Double_t radinv = 0;
    fA = 0;
@@ -367,38 +361,198 @@ void TGeoMixture:: DefineElement(Int_t i, Double_t a, Double_t z, Double_t weigh
 }
 
 //-----------------------------------------------------------------------------
-void TGeoMixture:: DefineElement(Int_t i, TGeoElement *elem, Double_t weight)
+void TGeoMixture:: AddElement(Double_t a, Double_t z, Double_t weight)
 {
-// Define one component as being a given element with a specified proportion by weight.
-   DefineElement(i, elem->A(), elem->Z(), weight);
+// add an element to the mixture using fraction by weight
+   // Check if the element is already defined
+   Int_t i;
+   for (i=0; i<fNelements; i++) {
+      if (TMath::Abs(z-fZmixture[i])<1.e-6  && TMath::Abs(a-fAmixture[i])<1.e-6) {
+         fWeights[i] += weight;
+         AverageProperties();
+         return;
+      }
+   }      
+   if (!fNelements) {
+      fZmixture = new Double_t[1];
+      fAmixture = new Double_t[1];
+      fWeights  = new Double_t[1];
+   } else {   
+      Int_t nelements = fNelements+1;
+      Double_t *zmixture = new Double_t[nelements];
+      Double_t *amixture = new Double_t[nelements];
+      Double_t *weights  = new Double_t[nelements];
+      for (Int_t j=0; j<fNelements; j++) {
+         zmixture[j] = fZmixture[j];
+         amixture[j] = fAmixture[j];
+         weights[j]  = fWeights[j];
+      }
+      delete [] fZmixture;
+      delete [] fAmixture;
+      delete [] fWeights;
+      fZmixture = zmixture;
+      fAmixture = amixture;
+      fWeights  = weights;
+   }       
+   
+   fNelements++;
+   i = fNelements - 1;   
+   fZmixture[i] = z;
+   fAmixture[i] = a;
+   fWeights[i]  = weight;
+   if (z - Int_t(z) > 1E-3)
+      Warning("DefineElement", "Mixture %s has element defined with fractional Z=%f", GetName(), z);
+   GetElement(i)->SetDefined();
+   
+   //compute equivalent radiation length (taken from Geant3/GSMIXT)
+   AverageProperties();
+}
+
+//-----------------------------------------------------------------------------
+void TGeoMixture::AddElement(TGeoMaterial *mat, Double_t weight)
+{
+// Define one component of the mixture as an existing material/mixture.
+   TGeoElement *elnew, *elem;   
+   Double_t a,z;
+   if (!mat->IsMixture()) {
+      elem = mat->GetBaseElement();
+      if (elem) {
+         AddElement(elem, weight);
+      } else {   
+         a = mat->GetA();
+         z = mat->GetZ();
+         AddElement(a, z, weight);
+      }   
+      return;
+   }
+   // The material is a mixture.
+   TGeoMixture *mix = (TGeoMixture*)mat;
+   Double_t wnew;
+   Int_t nelem = mix->GetNelements();
+   Bool_t elfound;
+   Int_t i,j;
+   // loop the elements of the daughter mixture
+   for (i=0; i<nelem; i++) {
+      elfound = kFALSE;
+      elnew = mix->GetElement(i);
+      if (!elnew) continue;
+      // check if we have the element already defined in the parent mixture
+      for (j=0; j<fNelements; j++) {
+         if (fWeights[j]<=0) continue;
+         elem = GetElement(j);
+         if (elem == elnew) {
+            // element found, compute new weight
+            fWeights[j] += weight * (mix->GetWmixt())[i];
+            elfound = kTRUE;
+            break;
+         }
+      }
+      if (elfound) continue;
+      // element not found, define it
+      wnew = weight * (mix->GetWmixt())[i];
+      AddElement(elnew, wnew);
+   }   
+}         
+
+//-----------------------------------------------------------------------------
+void TGeoMixture::AddElement(TGeoElement *elem, Double_t weight)
+{
+// add an element to the mixture using fraction by weight
+   TGeoElement *elemold;
+   TGeoElementTable *table = gGeoManager->GetElementTable();
+   if (!fElements) fElements = new TObjArray(10);
+   Bool_t exist = kFALSE;
+   // If previous elements were defined by A/Z, add corresponding TGeoElements
+   for (Int_t i=0; i<fNelements; i++) {
+      elemold = (TGeoElement*)fElements->At(i);
+      if (!elemold) fElements->AddAt(elemold = table->GetElement((Int_t)fZmixture[i]), i);   
+      if (elemold == elem) exist = kTRUE;
+   }
+   if (!exist) fElements->AddAt(elem, fNelements);   
+   AddElement(elem->A(), elem->Z(), weight);
 }   
 
 //-----------------------------------------------------------------------------
-void TGeoMixture:: DefineElement(Int_t iel, Int_t z, Int_t natoms)
+void TGeoMixture::AddElement(TGeoElement *elem, Int_t natoms)
+{
+// Add a mixture element by number of atoms in the chemical formula.
+   Int_t i,j;
+   Double_t amol;
+   TGeoElement *elemold;
+   TGeoElementTable *table = gGeoManager->GetElementTable();
+   if (!fElements) fElements = new TObjArray(10);
+   // Check if the element is already defined
+   for (i=0; i<fNelements; i++) {
+      elemold = (TGeoElement*)fElements->At(i);
+      if (!elemold) fElements->AddAt(table->GetElement((Int_t)fZmixture[i]), i);
+      else if (elemold != elem) continue;
+      if ((elem==elemold) || 
+          (TMath::Abs(elem->Z()-fZmixture[i])<1.e-6 && TMath::Abs(elem->A()-fAmixture[i])<1.e-6)) {
+         fNatoms[i] += natoms;
+         amol = 0.;
+         for (j=0; j<fNelements; j++) amol += fAmixture[j]*fNatoms[j];
+         for (j=0; j<fNelements; j++) fWeights[j] = fNatoms[j]*fAmixture[j]/amol;
+         AverageProperties();
+         return;
+      }
+   }
+   // New element      
+   if (!fNelements) {
+      fZmixture = new Double_t[1];
+      fAmixture = new Double_t[1];
+      fWeights  = new Double_t[1];
+      fNatoms   = new Int_t[1];
+   } else {   
+      if (!fNatoms) {
+         Error("AddElement", "Cannot add element by natoms in mixture %s after defining elements by weight",
+               GetName());
+         return;
+      }         
+      Int_t nelements = fNelements+1;
+      Double_t *zmixture = new Double_t[nelements];
+      Double_t *amixture = new Double_t[nelements];
+      Double_t *weights  = new Double_t[nelements];
+      Int_t *nnatoms  = new Int_t[nelements];
+      for (Int_t j=0; j<fNelements; j++) {
+         zmixture[j] = fZmixture[j];
+         amixture[j] = fAmixture[j];
+         weights[j]  = fWeights[j];
+         nnatoms[j]  = fNatoms[j];
+      }
+      delete [] fZmixture;
+      delete [] fAmixture;
+      delete [] fWeights;
+      delete [] fNatoms;
+      fZmixture = zmixture;
+      fAmixture = amixture;
+      fWeights  = weights;
+      fNatoms   = nnatoms;
+   }
+   fNelements++;       
+   Int_t iel = fNelements-1;
+   fZmixture[iel] = elem->Z();
+   fAmixture[iel] = elem->A();
+   fNatoms[iel]  = natoms;
+   fElements->AddAt(elem, iel);
+   amol = 0.;
+   for (i=0; i<fNelements; i++) {
+      if (fNatoms[i]<=0) return;
+      amol += fAmixture[i]*fNatoms[i];
+   }   
+   for (i=0; i<fNelements; i++) fWeights[i] = fNatoms[i]*fAmixture[i]/amol;
+   AverageProperties();
+}          
+
+//-----------------------------------------------------------------------------
+void TGeoMixture::DefineElement(Int_t /*iel*/, Int_t z, Int_t natoms)
 {
 // Define the mixture element at index iel by number of atoms in the chemical formula.
-   Int_t i;
-   if ((iel<0) || (iel>fNelements)) {
-      Error("DefineElement", "wrong index iel=%i in mixture %s, max is %d", iel, GetName(), fNelements);
-      return;
-   }
    TGeoElementTable *table = gGeoManager->GetElementTable();
    TGeoElement *elem = table->GetElement(z);
    if (!elem) Fatal("DefineElement", "In mixture %s, element with Z=%i not found",GetName(),z);
-   fZmixture[iel] = elem->Z();
-   fAmixture[iel] = elem->A();
-   fWeights[iel]  = natoms;
-   Double_t amol = 0.;
-   for (i=0; i<fNelements; i++) {
-      if (fWeights[i]<=0) return;
-      amol += fAmixture[i]*fWeights[i];
-   }   
-   for (i=0; i<fNelements; i++) {
-      fWeights[i] *= fAmixture[i]/amol;
-      DefineElement(i, fAmixture[i], fZmixture[i], fWeights[i]);
-   }
-}          
-
+   AddElement(elem, natoms);
+}
+   
 //-----------------------------------------------------------------------------
 TGeoElement *TGeoMixture::GetElement(Int_t i) const
 {
@@ -407,6 +561,9 @@ TGeoElement *TGeoMixture::GetElement(Int_t i) const
       Error("GetElement", "Mixture %s has only %d elements", GetName(), fNelements);
       return 0;
    }   
+   TGeoElement *elem = 0;
+   if (fElements) elem = (TGeoElement*)fElements->At(i);
+   if (elem) return elem;
    TGeoElementTable *table = gGeoManager->GetElementTable();
    return table->GetElement(Int_t(fZmixture[i]));
 }
@@ -440,7 +597,9 @@ void TGeoMixture::Print(const Option_t * /*option*/) const
    printf("Mixture %s %s   Aeff=%g Zeff=%g rho=%g radlen=%g index=%i\n", GetName(), GetTitle(),
           fA,fZ,fDensity, fRadLen, fIndex);
    for (Int_t i=0; i<fNelements; i++) {
-      printf("   Element #%i : Z=%6.2f A=%6.2f w=%6.2f\n", i, fZmixture[i],
+      if (fNatoms) printf("   Element #%i : Z=%6.2f A=%6.2f w=%6.2f natoms=%i\n", i, fZmixture[i],
+             fAmixture[i], fWeights[i], fNatoms[i]);
+      else printf("   Element #%i : Z=%6.2f A=%6.2f w=%6.2f\n", i, fZmixture[i],
              fAmixture[i], fWeights[i]);
    }
 }

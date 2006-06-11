@@ -125,6 +125,7 @@ public:
    TH2F              *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
                             Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="");
+   void               Lock(Bool_t flag = kTRUE) {fVisLock = flag;}
    virtual void       ModifiedPad() const;
    virtual void       Paint(Option_t *option="");
    virtual void       PaintNode(TGeoNode *node, Option_t *option="");

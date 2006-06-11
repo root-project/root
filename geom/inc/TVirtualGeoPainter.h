@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.33 2006/04/11 11:21:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.34 2006/04/25 09:38:27 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -49,7 +49,8 @@ enum EGeoVisOption {
    kGeoVisDefault = 0,    // default visualization - everything visible 3 levels down
    kGeoVisLeaves  = 1,    // only last leaves are visible
    kGeoVisOnly    = 2,    // only current volume is drawn
-   kGeoVisBranch  = 3     // only a given branch is drawn
+   kGeoVisBranch  = 3,    // only a given branch is drawn
+   kGeoVisChanged = 4     // visibility changed
 };
 enum EGeoBombOption {   
    kGeoNoBomb     = 0,    // default - no bomb

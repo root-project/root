@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.83 2006/05/24 17:11:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.84 2006/05/26 16:26:25 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1650,7 +1650,7 @@ void TGeoVolume::SetVisibility(Bool_t vis)
    }   
    TGeoAtt::SetVisibility(vis);
    if (fGeoManager->IsClosed()) SetVisTouched(kTRUE);
-   fGeoManager->ModifiedPad();
+   fGeoManager->SetVisOption(4);
    TSeqCollection *brlist = gROOT->GetListOfBrowsers();
    TIter next(brlist);
    TBrowser *browser = 0;
@@ -1737,7 +1737,7 @@ void TGeoVolume::VisibleDaughters(Bool_t vis)
 // set visibility for daughters
    SetVisDaughters(vis);
    if (fGeoManager->IsClosed()) SetVisTouched(kTRUE);
-   fGeoManager->ModifiedPad();
+   fGeoManager->SetVisOption(4);
 }
 
 //_____________________________________________________________________________

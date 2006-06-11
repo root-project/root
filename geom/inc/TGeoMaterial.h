@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.19 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.20 2006/05/23 04:47:37 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -58,6 +58,7 @@ protected:
    Double_t                 fIntLen;     // interaction length
    TObject                 *fShader;     // shader with optical properties
    TObject                 *fCerenkov;   // pointer to class with Cerenkov properties
+   TGeoElement             *fElement;    // pointer to element composing the material
 
 // methods
    TGeoMaterial(const TGeoMaterial&);
@@ -82,6 +83,7 @@ public:
    virtual Int_t            GetDefaultColor() const;
    virtual Double_t         GetDensity() const {return fDensity;}
    virtual TGeoElement     *GetElement(Int_t i=0) const;
+   TGeoElement             *GetBaseElement() const {return fElement;}
    char                    *GetPointerName() const;
    virtual Double_t         GetRadLen() const  {return fRadLen;}
    virtual Double_t         GetIntLen() const  {return fIntLen;}
@@ -102,7 +104,7 @@ public:
 
    
 
-   ClassDef(TGeoMaterial, 3)              // base material class
+   ClassDef(TGeoMaterial, 4)              // base material class
 
 //***** Need to add classes and globals to LinkDef.h *****
 };
@@ -120,10 +122,12 @@ protected :
    Double_t                *fZmixture;   // [fNelements] array of Z of the elements
    Double_t                *fAmixture;   // [fNelements] array of A of the elements
    Double_t                *fWeights;    // [fNelements] array of relative proportions by mass
-
+   Int_t                   *fNatoms;     // [fNelements] array of numbers of atoms
+   TObjArray               *fElements;   // array of elements composing the mixture
 // methods
    TGeoMixture(const TGeoMixture&); // Not implemented
    TGeoMixture& operator=(const TGeoMixture&); // Not implemented
+   void                     AverageProperties();
 
 public:
    // constructors
@@ -131,16 +135,24 @@ public:
    TGeoMixture(const char *name, Int_t nel, Double_t rho=-1);
    // destructor
    virtual ~TGeoMixture();
-   // methods
+   // methods for adding elements
+   void                     AddElement(Double_t a, Double_t z, Double_t weight);
+   void                     AddElement(TGeoMaterial *mat, Double_t weight);
+   void                     AddElement(TGeoElement *elem, Double_t weight);
+   void                     AddElement(TGeoElement *elem, Int_t natoms);
+   // backward compatibility for defining elements
    void                     DefineElement(Int_t iel, Double_t a, Double_t z, Double_t weight);
    void                     DefineElement(Int_t iel, TGeoElement *elem, Double_t weight);
    void                     DefineElement(Int_t iel, Int_t z, Int_t natoms);
+   // getters
    virtual Int_t            GetByteCount() const {return 48+12*fNelements;}
    virtual TGeoElement     *GetElement(Int_t i=0) const;
    Int_t                    GetNelements() const {return fNelements;}
    Double_t                *GetZmixt() const     {return fZmixture;}
    Double_t                *GetAmixt() const     {return fAmixture;}
    Double_t                *GetWmixt() const     {return fWeights;}
+   Int_t                   *GetNmixt() const     {return fNatoms;}
+   // utilities
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    virtual Bool_t           IsMixture() const {return kTRUE;}
    virtual void             Print(const Option_t *option="") const;
@@ -148,10 +160,14 @@ public:
    void                     SetA(Double_t a) {fA = a;}
    void                     SetZ(Double_t z) {fZ = z;}
 
-   ClassDef(TGeoMixture, 1)              // material mixtures
-
-//***** Need to add classes and globals to LinkDef.h *****
+   ClassDef(TGeoMixture, 2)              // material mixtures
 };
+
+inline void TGeoMixture::DefineElement(Int_t, Double_t a, Double_t z, Double_t weight) 
+   {return AddElement(a,z,weight);}
+inline void TGeoMixture::DefineElement(Int_t, TGeoElement *elem, Double_t weight) 
+   {return AddElement(elem,weight);}
+
 
 #endif
 

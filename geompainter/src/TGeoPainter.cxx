@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.87 2006/05/26 16:26:25 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.88 2006/06/04 09:35:24 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -344,38 +344,6 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py
    TGeoVolume *vol = volume;
    Bool_t vis = vol->IsVisible();
 //   Bool_t drawDaughters = kTRUE;
-   // Do I need to look for the top volume ?
-   if (fTopVisible && vis) {
-      dist = vol->GetShape()->DistancetoPrimitive(px,py);
-      if (dist<maxdist) {
-         fVolInfo = vol->GetName();
-         gPad->SetSelected(vol);
-         box = (TGeoBBox*)vol->GetShape();
-         memcpy(fCheckedBox, box->GetOrigin(), 3*sizeof(Double_t));
-         fCheckedBox[3] = box->GetDX();
-         fCheckedBox[4] = box->GetDY();
-         fCheckedBox[5] = box->GetDZ();
-         return 0;
-      }
-      return dist;
-   }      
-   // Is this the only volume?
-   if (volume->IsVisOnly()) {
-      if (!fTopVisible) {
-         dist = vol->GetShape()->DistancetoPrimitive(px,py);
-         if (dist<maxdist) {
-            fVolInfo = vol->GetName();
-            gPad->SetSelected(vol);
-            box = (TGeoBBox*)vol->GetShape();
-            memcpy(fCheckedBox, box->GetOrigin(), 3*sizeof(Double_t));
-            fCheckedBox[3] = box->GetDX();
-            fCheckedBox[4] = box->GetDY();
-            fCheckedBox[5] = box->GetDZ();
-            return 0;
-         }
-      } 
-      return dist;  
-   }      
    // Do we need to check a branch only?
    if (volume->IsVisBranch()) {
       if (!fGeoManager->IsClosed()) return big;
@@ -402,6 +370,23 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py
       }
       fGeoManager->PopPath();
       return dist;
+   }      
+
+   // Do I need to look for the top volume ?
+   if ((fTopVisible && vis) || !vol->GetNdaughters() || !vol->IsVisDaughters() || vol->IsVisOnly()) {
+      dist = vol->GetShape()->DistancetoPrimitive(px,py);
+      if (dist<maxdist) {
+         fVolInfo = vol->GetName();
+         gPad->SetSelected(vol);
+         box = (TGeoBBox*)vol->GetShape();
+         memcpy(fCheckedBox, box->GetOrigin(), 3*sizeof(Double_t));
+         fCheckedBox[3] = box->GetDX();
+         fCheckedBox[4] = box->GetDY();
+         fCheckedBox[5] = box->GetDZ();
+         return 0;
+      }
+      if (vol->IsVisOnly() || !vol->GetNdaughters() || !vol->IsVisDaughters())
+         return dist;
    }      
 
    // Iterate the volume content
@@ -460,7 +445,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py
             }
          }
          // Check if we have to skip the branch
-         if (last) next.Skip();
+         if (last || !daughter->IsVisDaughters()) next.Skip();
       }
    }
    return dist;
@@ -1102,36 +1087,10 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option)
    fGlobal->Clear();
    TGeoShape::SetTransform(fGlobal);
    Bool_t drawDaughters = kTRUE;
-   Bool_t vis = top->IsVisible();
+   Bool_t vis = (top->IsVisible() && !top->IsAssembly());
 
    // Update pad attributes in case we need to paint VOL
    if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-
-   // Do I need to draw the top volume ?
-   if (fTopVisible && vis) {
-      fGeoManager->SetPaintVolume(vol);
-      fGeoManager->SetMatrixReflection(kFALSE);
-      drawDaughters = PaintShape(*(vol->GetShape()),option);
-      if (!fVisLock && !vol->TestAttBit(TGeoAtt::kVisOnScreen)) {
-         fVisVolumes->Add(vol);
-         vol->SetAttBit(TGeoAtt::kVisOnScreen);
-      }   
-   }   
-
-   // Do we need to draw only this volume ?
-   if (top->IsVisOnly()) {
-      if (!fTopVisible) {
-         fGeoManager->SetPaintVolume(vol);
-         fGeoManager->SetMatrixReflection(kFALSE);
-         drawDaughters = PaintShape(*(vol->GetShape()),option);
-      }   
-      if (!fVisLock && !vol->TestAttBit(TGeoAtt::kVisOnScreen)) {
-         fVisVolumes->Add(vol);
-         vol->SetAttBit(TGeoAtt::kVisOnScreen);
-      }         
-      fVisLock = kTRUE;
-      return;
-   }   
 
    // Do we need to draw a branch ?
    if (top->IsVisBranch()) {
@@ -1160,6 +1119,21 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option)
       return;
    }   
       
+   // Do I need to draw the top volume ?
+   if ((fTopVisible && vis) || !top->GetNdaughters() || !top->IsVisDaughters() || top->IsVisOnly()) {
+      fGeoManager->SetPaintVolume(vol);
+      fGeoManager->SetMatrixReflection(kFALSE);
+      drawDaughters = PaintShape(*(vol->GetShape()),option);
+      if (!fVisLock && !vol->TestAttBit(TGeoAtt::kVisOnScreen)) {
+         fVisVolumes->Add(vol);
+         vol->SetAttBit(TGeoAtt::kVisOnScreen);
+      } 
+      if (top->IsVisOnly() || !top->GetNdaughters() || !top->IsVisDaughters()) {
+         fVisLock = kTRUE;
+         return;
+      }    
+   }   
+
    // Iterate the volume content
    TGeoIterator next(vol);
    TGeoNode *daughter;
@@ -1203,7 +1177,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option)
             }   
          }
          // Check if we have to skip the branch
-         if (!drawDaughters || last) next.Skip();
+         if (!drawDaughters || last || !daughter->IsVisDaughters()) next.Skip();
       }
    }
    fGeoManager->SetMatrixReflection(kFALSE);
@@ -1633,10 +1607,20 @@ void TGeoPainter::SetVisOption(Int_t option) {
 // option=0 (default) all nodes drawn down to vislevel
 // option=1           leaves and nodes at vislevel drawn
 // option=2           path is drawn
-   if ((fVisOption<0) || (fVisOption>3)) {
+   if ((fVisOption<0) || (fVisOption>4)) {
       Warning("SetVisOption", "wrong visualization option");
       return;
    }
+   
+   if (option == kGeoVisChanged) {
+      if (fVisLock) {
+         ClearVisibleVolumes();
+         fVisLock = kFALSE;
+      }   
+      ModifiedPad();
+      return;
+   }
+   
    if (fTopVolume) {
       TGeoAtt *att = (TGeoAtt*)fTopVolume;
       att->SetAttBit(TGeoAtt::kVisBranch,kFALSE);
