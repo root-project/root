@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.h,v 1.3 2005/12/13 18:13:00 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.h,v 1.4 2006/03/01 12:15:24 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
@@ -215,7 +215,7 @@ namespace Math {
   it is related to the confluent hypergeometric functions of the first kind.
 
   \f[ U(a,b,z)  = \frac{ \pi}{ \sin{\pi b } } \left[ \frac{ _{1}F_{1}(a,b,z) } {\Gamma(a-b+1) } 
-            - \frac{ z^{1-b}  _{1}F_{1}(a-b+1,2-b,z)}{\Gamma(a)} \right]  \f]
+            - \frac{ z^{1-b} { _{1}F_{1}}(a-b+1,2-b,z)}{\Gamma(a)} \right]  \f]
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/ConfluentHypergeometricFunctionoftheSecondKind.html">
