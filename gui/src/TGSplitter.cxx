@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.10 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.11 2006/04/12 11:11:43 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -199,14 +199,14 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    fSplitterPic = fClient->GetPicture("splitterh.xpm");
 
    if (!fSplitterPic)
-      Error("TGVSplitter", "splitterh.xpm not found");
+      Error("TGHSplitter", "splitterh.xpm not found");
 
    if (p && !p->InheritsFrom(TGCompositeFrame::Class())) {
       Error("TGHSplitter", "parent must inherit from a TGCompositeFrame");
       return;
    }
    if (p && !(((TGCompositeFrame*)p)->GetOptions() & kVerticalFrame)) {
-      Error("TGVSplitter", "parent must have a vertical layout manager");
+      Error("TGHSplitter", "parent must have a vertical layout manager");
       return;
    }
 
