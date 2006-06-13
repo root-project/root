@@ -1,3 +1,6 @@
+# @(#)root/gdml:$Name:$:$Id:$
+# Author: Witold Pokorski   05/06/2006
+
 from math import *
 from units import *
 

@@ -1,3 +1,6 @@
+# @(#)root/gdml:$Name:$:$Id:$
+# Author: Witold Pokorski   05/06/2006
+
 from math import *
 from units import *
 
@@ -12,7 +15,7 @@ from units import *
 # TGeoMaterial
 # GeoMixture
 
-# Solids: 
+# Solids:
 # TGeoBBox
 # TGeoSphere
 # TGeoConeSeg
@@ -172,7 +175,7 @@ class ROOTwriter(object):
                 elems = {}
                 for index in range(mat.GetNelements()):
                     elems[mat.GetElement(index).GetTitle()] = mat.GetWmixt()[index]
-                    el = mat.GetElement(index) 
+                    el = mat.GetElement(index)
                     if el not in self.elements:
                         self.elements.append(el)
                         self.writer.addElement(mat.GetElement(index).GetName(), mat.GetElement(index).GetTitle(),

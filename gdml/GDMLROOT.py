@@ -1,5 +1,7 @@
 #!/usr/bin/env python2.3
 # -*- Mode: Python -*-
+# @(#)root/gdml:$Name:$:$Id:$
+# Author: Witold Pokorski   05/06/2006
 #
 import sys
 import xml.sax
@@ -14,7 +16,7 @@ gdmlhandler = GDMLContentHandler.GDMLContentHandler(ROOTBinding.ROOTBinding())
 filename = 'test.gdml'
 if sys.argv.__len__() > 1:
     filename = sys.argv[1]
-    
+
 xml.sax.parse(filename, gdmlhandler)
 geomgr = ROOT.gGeoManager
 

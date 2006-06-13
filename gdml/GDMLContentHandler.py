@@ -1,5 +1,7 @@
 #!/usr/bin/env python2.3
 # -*- Mode: Python -*-
+# @(#)root/gdml:$Name:$:$Id:$
+# Author: Witold Pokorski   05/06/2006
 #
 import processes
 import xml.sax
@@ -7,7 +9,7 @@ import xml.sax
 # This class is an implementation of SAX ContentHandler for parsing GDML files.
 # xml.sax.parse method should be called with an instance of this class as
 # the second argument (the first argument of xml.sax.parse method should be
-# the name of the file to be parsed).  
+# the name of the file to be parsed).
 
 # The constructor of this class requires a 'binding' as the argument.
 # The 'binding' is an application-specific mapping of GDML elements (materials,
@@ -31,10 +33,10 @@ class GDMLContentHandler(xml.sax.ContentHandler):
     def __init__(self, binding):
         self.stack = []
         self.proc = processes.processes(binding)
-    
+
     def startElement(self,name,attrs):
         self.stack.append([name,attrs,[]])
-    
+
     def endElement(self,name):
         elem = self.stack.pop()
 
@@ -46,6 +48,6 @@ class GDMLContentHandler(xml.sax.ContentHandler):
 
     def WorldVolume(self):
         return self.proc.world
-            
+
     def AuxiliaryData(self):
         return self.proc.auxmap

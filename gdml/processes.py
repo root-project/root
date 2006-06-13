@@ -1,5 +1,7 @@
 #!/usr/bin/env python2.3
 # -*- Mode: Python -*-
+# @(#)root/gdml:$Name:$:$Id:$
+# Author: Witold Pokorski   05/06/2006
 #
 from units import *
 from math import *
@@ -23,14 +25,14 @@ from math import *
 # For any question or remarks concerning this code, please send an email to
 # Witold.Pokorski@cern.ch.
 
-class processes(object):    
+class processes(object):
 
     def __init__(self, binding):
         self.bind = binding
 
         self.define_dict = {}
         self.volumes_dict = {}
-        self.reflsolids_dict = {} 
+        self.reflsolids_dict = {}
         self.solids_dict = {}
         self.elements_dict = {}
 	self.isotopes_dict = {}
@@ -45,32 +47,32 @@ class processes(object):
 
     def gdml_proc(self, elem):
 	pass
-    
+
     def setup_proc(self, elem):
         for el in elem[2]:
             if el[0]=='world':
-                self.world = self.volumes_dict[el[1]['ref']]                
+                self.world = self.volumes_dict[el[1]['ref']]
 
     def const_proc(self, elem):
 	globals()[elem[1]['name']] = eval(elem[1]['value'])
 
     def position_proc(self, elem):
         lun = '*'+elem[1].get('lunit','mm')
-	
+
 	x = elem[1].get('x','0')
 	y = elem[1].get('y','0')
 	z = elem[1].get('z','0')
 
 	pos = self.bind.position(eval(x+lun), eval(y+lun), eval(z+lun))
         self.define_dict[elem[1]['name']] = pos
-        
+
     def rotation_proc(self,elem):
         aun = '*'+elem[1].get('aunit','deg')
 
 	dx = elem[1].get('x','0')
 	dy = elem[1].get('y','0')
 	dz = elem[1].get('z','0')
- 
+
 	rot = self.bind.rotation(eval(dx+aun), eval(dy+aun), eval(dz+aun))
         self.define_dict[elem[1]['name']] = rot
 
@@ -83,13 +85,13 @@ class processes(object):
 	    atom = 0
 	    for subele in elem[2]:
 		if subele[0] == 'atom':
-		    atom = eval(subele[1]['value']) 
-		    
+		    atom = eval(subele[1]['value'])
+
 	    ele = self.bind.element(elem[1]['name'],
 				    elem[1]['formula'],
 				    eval(elem[1]['Z']),
-				    atom)		
-					  
+				    atom)
+
 	    self.elements_dict[elem[1]['name']] =  ele
 	else:
 	    for subele in elem[2]:
@@ -107,9 +109,9 @@ class processes(object):
 	    i = 0
 	    for frac_name in fractions.keys():
 		self.bind.mix_addiso(mele,
-				     self.elements_dict[frac_name], 
+				     self.elements_dict[frac_name],
 				     i, fractions[frac_name])
-		i = i + 1	
+		i = i + 1
 
     def isotope_proc(self,elem):
 	a = 0
@@ -119,12 +121,12 @@ class processes(object):
 		a = eval(subele[1]['value'])
 	    elif subele[0]=='D':
 		d = eval(subele[1]['value'])
-	
+
 	iso = self.bind.isotope(elem[1]['name'],
 				int(eval(elem[1]['Z'])),
 				int(eval(elem[1]['N'])),
 				a,d)
-	
+
 	self.isotopes_dict[elem[1]['name']] = iso
 
     def material_proc(self,elem):
@@ -133,7 +135,7 @@ class processes(object):
 
 	if elem[1].has_key('Z'):
 	    a = 0
-	    d = 0 
+	    d = 0
 	    for subele in elem[2]:
 		if subele[0]=='atom':
 		    a = eval(subele[1]['value'])
@@ -169,14 +171,14 @@ class processes(object):
                     self.bind.mix_addele(mat,
                                          self.materials_dict[frac_name],
                                          i, fractions[frac_name])
-                     
+
                 i = i + 1
 
 	self.materials_dict[elem[1]['name']] = mat
 
 	med = self.bind.medium(elem[1]['name'], mat)
 	self.mediums_dict[elem[1]['name']] = med
-        
+
     def volume_proc(self,elem):
         auxpairs = []
         reflex = 0
@@ -206,7 +208,7 @@ class processes(object):
 
         if auxpairs != []:
             self.auxmap[lvol] = auxpairs
-                          
+
         for subele in elem[2]:
             if subele[0] == 'physvol':
                 # we need this variable to tell physvol that we are dealing with reflection
@@ -223,7 +225,7 @@ class processes(object):
                     elif subsubel[0] == 'rotationref':
                         rot = self.define_dict[subsubel[1]['ref']]
 
-		self.bind.physvolume(elem[1]['name'], 
+		self.bind.physvolume(elem[1]['name'],
 				       lv, lvol, rot, pos, reflected_vol)
             elif subele[0] == 'divisionvol':
                 lun = '*'+elem[1].get('lunit','mm')
@@ -237,38 +239,38 @@ class processes(object):
                                       eval(subele[1]['number']),
                                       eval(subele[1]['width']+lun),
                                       eval(subele[1]['offset']+lun))
-                        
-    def assembly_proc(self,elem):          
+
+    def assembly_proc(self,elem):
 	assem = self.bind.assembly(elem[1]['name'])
         self.volumes_dict[elem[1]['name']] = assem
-                          
+
         for subele in elem[2]:
             if subele[0] == 'physvol':
                 for subsubel in subele[2]:
                     if subsubel[0] == 'volumeref':
-                        lv = self.volumes_dict[subsubel[1]['ref']]    
+                        lv = self.volumes_dict[subsubel[1]['ref']]
                     elif subsubel[0] == 'positionref':
                         pos = self.define_dict[subsubel[1]['ref']]
                     elif subsubel[0] == 'rotationref':
                         rot = self.define_dict[subsubel[1]['ref']]
 
-		self.bind.physvolume(elem[1]['name'], 
+		self.bind.physvolume(elem[1]['name'],
 				       lv, assem, rot, pos)
-                        
+
     def box_proc(self,elem):
 	lun = '*'+elem[1].get('lunit','mm')
 
 	box = self.bind.box(elem[1]['name'],
 			    eval(elem[1]['x']+lun)/2,
 			    eval(elem[1]['y']+lun)/2,
-			    eval(elem[1]['z']+lun)/2)	
+			    eval(elem[1]['z']+lun)/2)
 
         self.solids_dict[elem[1]['name']] = box
 
     def tube_proc(self,elem):
 	lun = '*'+elem[1].get('lunit','mm')
 	aun = '*'+elem[1].get('aunit','deg')
- 
+
 	tube = self.bind.tube(elem[1]['name'],
 			      eval(elem[1].get('rmin','0')+lun),
 			      eval(elem[1]['rmax']+lun),
@@ -281,8 +283,8 @@ class processes(object):
     def cone_proc(self,elem):
  	lun = '*'+elem[1].get('lunit','mm')
 	aun = '*'+elem[1].get('aunit','deg')
- 		
-	
+
+
 	cone = self.bind.cone(elem[1]['name'],
 			      eval(elem[1].get('rmin1','0')+lun),
 			      eval(elem[1]['rmax1']+lun),
@@ -308,7 +310,7 @@ class processes(object):
 				      eval(elem[1].get('startphi','0')+aun),
 				      eval(elem[1]['deltaphi']+aun),
 				      zrs)
-					   
+
 	self.solids_dict[elem[1]['name']] = polycone
 
     def trap_proc(self,elem):
@@ -401,10 +403,10 @@ class processes(object):
 			eval(subele[1]['rmin']+lun),
 			eval(subele[1]['rmax']+lun)))
 
-	polyh = self.bind.polyhedra(elem[1]['name'], 
-				    eval(elem[1]['startphi']+aun), 
-				    eval(elem[1]['deltaphi']+aun), 
-				    int(eval(elem[1]['numsides'])), 
+	polyh = self.bind.polyhedra(elem[1]['name'],
+				    eval(elem[1]['startphi']+aun),
+				    eval(elem[1]['deltaphi']+aun),
+				    int(eval(elem[1]['numsides'])),
 				    zrs)
 
 	self.solids_dict[elem[1]['name']] = polyh
@@ -444,9 +446,9 @@ class processes(object):
 				     second,
 				     pos,
 				     rot)
-			     
+
 	self.solids_dict[elem[1]['name']] = subt
-	
+
     def union_proc(self, elem):
 	pos = self.bind.position(0,0,0)
 	rot = self.bind.rotation(0,0,0)
@@ -472,7 +474,7 @@ class processes(object):
 				     second,
 				     pos,
 				     rot)
-			     
+
 	self.solids_dict[elem[1]['name']] = uni
 
     def intersection_proc(self, elem):
@@ -500,27 +502,27 @@ class processes(object):
 				     second,
 				     pos,
 				     rot)
-			     
+
 	self.solids_dict[elem[1]['name']] = inte
 
     def reflection_proc(self, elem):
         refl = self.bind.reflection(elem[1]['name'], elem[1]['solid'],
-                                    eval(elem[1]['sx']), eval(elem[1]['sy']), eval(elem[1]['sz']), 
-                                    eval(elem[1]['rx']), eval(elem[1]['ry']), eval(elem[1]['rz']), 
+                                    eval(elem[1]['sx']), eval(elem[1]['sy']), eval(elem[1]['sz']),
+                                    eval(elem[1]['rx']), eval(elem[1]['ry']), eval(elem[1]['rz']),
                                     eval(elem[1]['dx']), eval(elem[1]['dy']), eval(elem[1]['dz']))
         self.reflsolids_dict[elem[1]['name']] = refl
         self.reflections[elem[1]['name']] = elem[1]['solid']
-        
+
 
 ### dictionary mapping element name to 'process method'
 
     gdmlel_dict = { 'gdml':gdml_proc, 'setup':setup_proc, 'constant':const_proc,
                     'position':position_proc, 'rotation':rotation_proc,
-                    'element':element_proc, 'isotope':isotope_proc, 
+                    'element':element_proc, 'isotope':isotope_proc,
 		    'material':material_proc,
-                    'volume':volume_proc, 'assembly':assembly_proc, 
+                    'volume':volume_proc, 'assembly':assembly_proc,
 		    'box':box_proc, 'tube':tube_proc,
-		    'cone':cone_proc, 'polycone':polycone_proc, 
+		    'cone':cone_proc, 'polycone':polycone_proc,
 		    'trap':trap_proc, 'trd':trd_proc, 'sphere':sphere_proc,
 		    'orb':orb_proc, 'para':para_proc, 'torus':torus_proc,
 		    'polyhedra':polyhedra_proc, 'eltube':eltube_proc,

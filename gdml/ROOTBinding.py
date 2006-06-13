@@ -1,5 +1,7 @@
 #!/usr/bin/env python2.3
 # -*- Mode: Python -*-
+# @(#)root/gdml:$Name:$:$Id:$
+# Author: Witold Pokorski   05/06/2006
 
 import ROOT
 import re
@@ -43,7 +45,7 @@ import array
 
 # For any new TGeo class (new solids, etc), one needs to add the appropriate method
 # in ROOTBinding class (to be called by the appropriate 'process' for processes.py
-# module). 
+# module).
 
 # For any question or remarks concerning this code, please send an email to
 # Witold.Pokorski@cern.ch.
@@ -60,7 +62,7 @@ class ROOTBinding(object):
 	self.medid = 0
 	self.volid = 0
         self.reflections = {}
-	
+
     def position(self, x, y, z):
 	return ROOT.TGeoTranslation(x,y,z)
 
@@ -104,7 +106,7 @@ class ROOTBinding(object):
         if reflex == 0:
             vol = ROOT.TGeoVolume(re.sub('0x........','',name), solid, medium)
         else:
-            vol = ROOT.TGeoVolume(re.sub('0x........','',name), reflex, medium)            
+            vol = ROOT.TGeoVolume(re.sub('0x........','',name), reflex, medium)
         return vol
 
     def assembly(self, name):
@@ -137,17 +139,17 @@ class ROOTBinding(object):
             naxis = 2
 
         motherlv.Divide(name, naxis, number, offset, width)
- 
+
     def box(self, name, x, y, z):
 	return ROOT.TGeoBBox(re.sub('0x........','',name), x, y, z)
 
     def tube(self, name, rmin, rmax, z, startphi, deltaphi):
-	return ROOT.TGeoTubeSeg(re.sub('0x........','',name), rmin, rmax, z, startphi, 
+	return ROOT.TGeoTubeSeg(re.sub('0x........','',name), rmin, rmax, z, startphi,
 				startphi+deltaphi)
 
-    def cone(self, name, rmin1, rmax1, rmin2, rmax2, z, 
+    def cone(self, name, rmin1, rmax1, rmin2, rmax2, z,
 	     startphi, deltaphi):
-	return ROOT.TGeoConeSeg(re.sub('0x........','',name), z, rmin1, rmax1, rmin2, rmax2, 
+	return ROOT.TGeoConeSeg(re.sub('0x........','',name), z, rmin1, rmax1, rmin2, rmax2,
 				startphi, startphi+deltaphi)
 
     def polycone(self, name, startphi, deltaphi, zrs):
@@ -160,18 +162,18 @@ class ROOTBinding(object):
 
 	return poly
 
-    def trap(self, name, x1, x2, x3, x4, y1, y2, z, 
+    def trap(self, name, x1, x2, x3, x4, y1, y2, z,
 	     alpha1, alpha2, phi, theta):
-	return ROOT.TGeoTrap(re.sub('0x........','',name), z, theta, phi, y1, x1, x2, 
+	return ROOT.TGeoTrap(re.sub('0x........','',name), z, theta, phi, y1, x1, x2,
 			     alpha1, y2, x3, x4, alpha2)
 
     def trd(self, name, x1, x2, y1, y2, z):
 	return ROOT.TGeoTrd2(name, x1, x2, y1, y2, z)
 
-    def sphere(self, name, rmin, rmax, 
-	       startphi, deltaphi, 
+    def sphere(self, name, rmin, rmax,
+	       startphi, deltaphi,
 	       starttheta, deltatheta):
-	return ROOT.TGeoSphere(re.sub('0x........','',name), rmin, rmax, 
+	return ROOT.TGeoSphere(re.sub('0x........','',name), rmin, rmax,
 			       starttheta, starttheta+deltatheta,
 			       startphi, startphi+deltaphi)
 
@@ -182,10 +184,10 @@ class ROOTBinding(object):
 	return ROOT.TGeoPara(re.sub('0x........','',name), x, y, z, alpha, theta, phi)
 
     def torus(self, name, rmin, rmax, rtor, startphi, deltaphi):
-	return ROOT.TGeoTorus(re.sub('0x........','',name), rtor, rmin, rmax, startphi, deltaphi) 
+	return ROOT.TGeoTorus(re.sub('0x........','',name), rtor, rmin, rmax, startphi, deltaphi)
 
     def polyhedra(self, name, startphi, deltaphi, numsides, zrs):
-	polyh = ROOT.TGeoPgon(re.sub('0x........','',name), startphi, deltaphi, 
+	polyh = ROOT.TGeoPgon(re.sub('0x........','',name), startphi, deltaphi,
 			      numsides, zrs.__len__())
 
 	nb = 0
@@ -234,10 +236,10 @@ class ROOTBinding(object):
 #        refl_matx = ROOT.TGeoGenTrans(dx, dy, dz, sx, sy, sz, rot)
         newrot = ROOT.TGeoRotation(rot)
 #        newrot.Print()
-        
+
         refl_matx = ROOT.TGeoCombiTrans(dx, dy, dz, newrot)
         rs = solid_reflection(name, solid, refl_matx)
         self.reflections[name] = rs
 
         return rs
-    
+

@@ -1,10 +1,12 @@
 #!/usr/bin/env python2.3
 # -*- Mode: Python -*-
+# @(#)root/gdml:$Name:$:$Id:$
+# Author: Witold Pokorski   05/06/2006
 #
 
 # This module contains a collection of constants and units used in GDML.
-# These constants/units can be used inside GDML files and 
-# the parser will substitute them with the numerical values. 
+# These constants/units can be used inside GDML files and
+# the parser will substitute them with the numerical values.
 
 # For any question or remarks concerning this code, please send an email to
 # Witold.Pokorski@cern.ch.

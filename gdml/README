@@ -1,0 +1,123 @@
+The $ROOTSYS/gdml directory contains a set of Python modules designed
+for processing (reading in as well as writing out) Geometry
+Description Markup Language (GDML) files. They act as a converter
+between the GDML geometry files and the TGeo geometry structures (and
+vice versa).
+
+GDML->ROOT
+----------
+
+The GDML to TGeo converter uses the xml.sax module for parsing
+XML. The GDMLContentHandler module contains a concrete implementation
+of xml.sax.ContentHandler, specific for GDML processing. In addition
+to the standard methods used by the parser (startElement and
+endElement), the GDMLContentHanler class also two additional methods:
+WorldVolume method and AuxiliaryData method. The WorldVolume method
+allows the user to access the top volume object (the top of the
+geometry tree) once the parsing is finished. The AuxiliaryData method
+returns the map of auxiliary (optional) attributes (like colour,
+visibility, sensitive detectors, etc) associated to any volume. The
+GDMLContentHandler requires two other modules for processing the GDML
+file: the 'processes' module and the 'ROOTBinding' module. The
+'processes' module contains specific methods (processes) for each of
+the GDML elements. These methods then use particular 'binding' (in our
+case ROOTBinding) in order to instanciate the appropriate geometry
+(TGeo) object. Please refere to the comment part of ROOTBinding.py
+file for the list of supported TGeo classes.
+
+The GDML to ROOT converter is now interfaced to the
+TGeoManager::Import method which automatically calls the appropriate
+Python scripts whenever a file with .gdml extension is given as
+argument.
+
+Alternatively, one can also use GDML->ROOT converter directly from the
+Python prompt, for instance:
+
+###################
+import sys
+import xml.sax
+import ROOT
+import ROOTBinding
+import GDMLContentHandler
+ 
+ROOT.gSystem.Load("libGeom")
+ 
+gdmlhandler = GDMLContentHandler.GDMLContentHandler(ROOTBinding.ROOTBinding())
+ 
+xml.sax.parse('mygeometry.gdml', gdmlhandler)
+geomgr = ROOT.gGeoManager
+ 
+geomgr.SetTopVolume(gdmlhandler.WorldVolume())
+geomgr.CloseGeometry()
+geomgr.DefaultColors()
+ 
+gdmlhandler.WorldVolume().Draw("ogl")
+###################
+
+where 'mygeometry.gdml' should be replace by the name of the GDML file
+to be read.
+
+
+ROOT->GDML
+----------
+
+The TGeo to GDML converter allows to export ROOT geometries (TGeo
+geometry trees) as GDML files. The writer module writes a GDML file
+out of the 'in-memory' representation of the geometry. The actual
+application-specific (ROOT) binding is implemeted in ROOTwriter
+module. It contains 'binding methods' for TGeo geometry classes which
+can be exported in GDML format. Please refere to the comment part of
+the ROOTwriter.py file for the list of presently supported TGeo
+classes. The ROOTwriter class contains also three methods,
+dumpMaterials, dumpSolids and examineVol which need to be called in
+order to export materials, solids and geometry tree respectively. 
+
+The TGeo to GDML converter is now interfaced to the
+TGeoManager::Export method which automatically calls the appropriate
+Python scripts whenever the geometry output file has the .gdml
+extension. 
+
+Alternatively, one can also use the ROOT->GDML converter directly from
+the Python prompt (assuming the TGeo geometry has already been loaded
+into memory in one or another way), for example:
+
+###################
+from math import *
+from units import *
+ 
+import ROOT
+import writer
+import ROOTwriter
+ 
+# get TGeoManager and
+# get the top volume of the existing (in-memory) geometry tree
+geomgr = ROOT.gGeoManager
+topV = geomgr.GetTopVolume()
+ 
+# instanciate writer
+gdmlwriter = writer.writer('mygeo.gdml')
+binding = ROOTwriter.ROOTwriter(gdmlwriter)
+ 
+# dump materials
+matlist = geomgr.GetListOfMaterials()
+binding.dumpMaterials(matlist)
+ 
+# dump solids
+shapelist = geomgr.GetListOfShapes()
+binding.dumpSolids(shapelist)
+ 
+# dump geo tree
+print 'Traversing geometry tree'
+gdmlwriter.addSetup('default', '1.0', topV.GetName())
+binding.examineVol(topV)
+ 
+# write file
+gdmlwriter.writeFile()
+###################
+
+
+
+For any questions or comments about those converters as well as about
+GDML in general please email Witold.Pokorski@cern.ch.
+
+

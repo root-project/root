@@ -1,4 +1,6 @@
-# This is the application-independent part of the GDML 'writer' implementation. 
+# @(#)root/gdml:$Name:$:$Id:$
+# Author: Witold Pokorski   05/06/2006
+# This is the application-independent part of the GDML 'writer' implementation.
 # It contains the 'writeFile' method (at the end of the file) which does the actual
 # formating and writing out of the GDML file as well as the specialized 'add-element'
 # methods for all the supported GDML elements. These methods are used to build
@@ -6,7 +8,7 @@
 
 # The constructor of this class takes the output file (.gdml) as argument.
 # An instance of this class should be passed to the constructor of application-specific
-# 'writer binding' (in the present case ROOTwriter) as argument. 
+# 'writer binding' (in the present case ROOTwriter) as argument.
 
 # For any question or remarks concerning this code, please send an email to
 # Witold.Pokorski@cern.ch.
@@ -39,17 +41,17 @@ class writer(object):
         subel = [ ['D',{'value':rho},[]] ]
         for el in elems.keys():
             subel.append(['fraction',{'n':elems[el],'ref':el}, []])
-        
+
         self.materials[2].append(['material',{'name':name},
                                            subel])
-        
+
     def addElement(self, symb, name, z, a):
         self.materials[2].append(['element', {'name':name, 'formula':symb, 'Z':z},
                                   [['atom', {'value':a},[]] ]])
-        
+
     def addBox(self, name, dx, dy, dz):
         self.solids[2].append(['box',{'name':name, 'x':dx, 'y':dy, 'z':dz},[]])
-            
+
     def addSphere(self, name, rmin, rmax, startphi, deltaphi, starttheta, deltatheta):
         self.solids[2].append(['sphere',{'name':name, 'rmin':rmin, 'rmax':rmax,
                                          'startphi':startphi, 'deltaphi':deltaphi,
@@ -84,7 +86,7 @@ class writer(object):
             zpls.append( ['zplane',{'z':zplane[0], 'rmin':zplane[1], 'rmax':zplane[2]},[]] )
         self.solids[2].append(['polycone',{'name':name,
                                            'startphi':startphi, 'deltaphi':deltaphi}, zpls])
-                                           
+
     def addTorus(self, name, r, rmin, rmax, startphi, deltaphi):
         self.solids[2].append( ['torus',{'name':name, 'rtor':r, 'rmin':rmin, 'rmax':rmax,
                                          'startphi':startphi, 'deltaphi':deltaphi},[]] )
@@ -136,7 +138,7 @@ class writer(object):
         self.addPos(subels, 'position', rname+'pos', rtr)
         self.addRot(subels, 'rotation', rname+'rot', rrot)
         self.addPos(subels, 'firstposition', lname+'pos', ltr)
-        self.addRot(subels, 'firstrotation', lname+'rot', lrot)                          
+        self.addRot(subels, 'firstrotation', lname+'rot', lrot)
         self.solids[2].append( ['intersection',{'name':name}, subels])
 
     def addVolume(self, volume, solid, material, daughters):
@@ -149,7 +151,7 @@ class writer(object):
                 subsubels.append( ['rotationref',{'ref':child[2]},[]] )
 
             subels.append( ['physvol',{}, subsubels])
-        
+
         self.structure[2].append(['volume',{'name':volume}, subels])
 
     def addSetup(self, name, version, world):
@@ -159,7 +161,7 @@ class writer(object):
     def writeFile(self):
         file = open(self.gdmlfile,'w')
         offset = ''
-        
+
         def writeElement(elem, offset):
             offset = offset + '  '
             file.write(offset+'<%s' %(elem[0]))
@@ -169,11 +171,11 @@ class writer(object):
                 file.write('>\n')
                 for subel in elem[2]:
                     writeElement(subel, offset)
-                    
+
                 file.write(offset+'</%s>\n' %(elem[0]))
             else:
                 file.write('/>\n')
 
-        file.write('<?xml version="1.0" encoding="UTF-8" ?>\n')        
+        file.write('<?xml version="1.0" encoding="UTF-8" ?>\n')
         writeElement(self.document,'')
-            
+
