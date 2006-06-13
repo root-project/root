@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressLog.h,v 1.2 2005/08/31 11:11:06 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressLog.h,v 1.3 2006/05/15 09:45:03 brun Exp $
 // Author: G Ganis, Aug 2005
 
 /*************************************************************************
@@ -12,21 +12,24 @@
 #ifndef ROOT_TProofProgressLog
 #define ROOT_TProofProgressLog
 
-class TGTransientFrame;
+#ifndef ROOT_TGFrame
+#include "TGFrame.h"
+#endif
+
 class TGTextView;
 class TGTextButton;
 class TProofProgressDialog;
 
-class TProofProgressLog {
+
+class TProofProgressLog : public TGTransientFrame {
 
 private:
-   TGTransientFrame     *fMain;   // main frame of this widget
    TGTextView           *fText;   // text widget
    TGTextButton         *fClose;  // close button
    TProofProgressDialog *fDialog; // owner dialog
 
 public:
-   TProofProgressLog(TProofProgressDialog *d);
+   TProofProgressLog(TProofProgressDialog *d, Int_t w = 700, Int_t h = 300);
    virtual ~TProofProgressLog();
 
    void   LoadBuffer(const char *buffer);
@@ -34,12 +37,11 @@ public:
 
    void   LoadFile(const char *file);
 
-   void   Clear();
+   void   Clear(Option_t * = 0);
    void   Popup();
 
    // slots
    void   CloseWindow();
-   void   DoClose();
 
    ClassDef(TProofProgressLog,0) //Class implementing a log graphic box
 };
