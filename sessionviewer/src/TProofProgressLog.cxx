@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.61 2005/08/15 15:57:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressLog.cxx,v 1.1 2005/08/30 10:25:29 rdm Exp $
 // Author: G Ganis, Jul 2005
 
 /*************************************************************************
@@ -21,47 +21,41 @@
 ClassImp(TProofProgressLog)
 
 //____________________________________________________________________________
-TProofProgressLog::TProofProgressLog(TProofProgressDialog *d)
+TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) :
+   TGTransientFrame(gClient->GetRoot(), gClient->GetRoot(), w, h)
 {
    // Create a window frame for log messages.
 
    fDialog = d;
 
-   const TGWindow *main = gClient->GetRoot();
-   Int_t wdt = 700;
-   Int_t hgt = 300;
-
-   fMain = new TGTransientFrame(main, main, wdt, hgt);
-   fMain->Connect("CloseWindow()", "TProofProgressLog", this, "CloseWindow()");
-
    // use hierarchical cleaning
-   fMain->SetCleanup(kDeepCleanup);
+   SetCleanup(kDeepCleanup);
 
-   fText = new TGTextView(fMain, wdt, hgt);
-   fMain->AddFrame(fText, new TGLayoutHints(kLHintsExpandX |
-                                            kLHintsExpandY, 3, 3, 3, 3));
+   fText = new TGTextView(this, w, h);
+   AddFrame(fText, new TGLayoutHints(kLHintsExpandX |
+                                     kLHintsExpandY, 3, 3, 3, 3));
 
-   fClose = new TGTextButton(fMain, "  &Close  ");
-   fClose->Connect("Clicked()", "TProofProgressLog", this, "DoClose()");
-   fMain->AddFrame(fClose, new TGLayoutHints(kLHintsBottom |
-                                             kLHintsCenterX, 0, 0, 5, 5));
+   fClose = new TGTextButton(this, "  &Close  ");
+   fClose->Connect("Clicked()", "TProofProgressLog", this, "CloseWindow()");
+   AddFrame(fClose, new TGLayoutHints(kLHintsBottom |
+                                      kLHintsCenterX, 0, 0, 5, 5));
 
    char title[256] = {0};
    strcpy(title,Form("PROOF Processing Logs: %s",
                      (fDialog->fProof ? fDialog->fProof->GetMaster() : "<dummy>")));
-   fMain->SetWindowName(title);
-   fMain->SetIconName(title);
+   SetWindowName(title);
+   SetIconName(title);
 
-   fMain->MapSubwindows();
+   MapSubwindows();
 
-   fMain->Resize();
+   Resize();
 
    Window_t wdummy;
    int ax, ay;
-   gVirtualX->TranslateCoordinates(main->GetId(), fDialog->fDialog->GetId(),
-       (Int_t)(((TGFrame *)main)->GetWidth() + wdt),
-       (Int_t)(((TGFrame *)main)->GetHeight()- 3*hgt/2), ax, ay, wdummy);
-   fMain->Move(ax, ay);
+   gVirtualX->TranslateCoordinates(GetParent()->GetId(), fDialog->fDialog->GetId(),
+       (Int_t)(((TGFrame *)GetParent())->GetWidth() + w),
+       (Int_t)(((TGFrame *)GetParent())->GetHeight()- 3*h/2), ax, ay, wdummy);
+   Move(ax, ay);
 
    Popup();
 }
@@ -75,7 +69,6 @@ TProofProgressLog::~TProofProgressLog()
    fDialog->fLogWindow = 0;
    fDialog->fProof->Disconnect("LogMessage(const char*,Bool_t)", this,
                                "LogMessage(const char*,Bool_t)");
-   delete fMain;
 }
 
 //____________________________________________________________________________
@@ -83,11 +76,11 @@ void TProofProgressLog::Popup()
 {
    // Show log window.
 
-   fMain->MapWindow();
+   MapWindow();
 }
 
 //____________________________________________________________________________
-void TProofProgressLog::Clear()
+void TProofProgressLog::Clear(Option_t *)
 {
    // Clear log window.
 
@@ -126,22 +119,9 @@ void TProofProgressLog::AddBuffer(const  char *buffer)
 }
 
 //____________________________________________________________________________
-void TProofProgressLog::DoClose()
-{
-   // Handle close button.
-
-   // Detach from owner dialog
-   fDialog->fLog = 0;
-   fDialog->fProof->Disconnect("LogMessage(const char*,Bool_t)", this,
-                               "LogMessage(const char*,Bool_t)");
-
-   fMain->SendCloseMessage();
-}
-
-//____________________________________________________________________________
 void TProofProgressLog::CloseWindow()
 {
-   // Called when closed via window manager action.
+   // Handle close button or when closed via window manager action.
 
-   delete this;
+   DeleteWindow();
 }
