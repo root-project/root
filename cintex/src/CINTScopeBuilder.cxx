@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTScopeBuilder.cxx,v 1.5 2005/12/12 09:12:27 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTScopeBuilder.cxx,v 1.6 2006/02/16 05:58:56 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -61,7 +61,7 @@ namespace ROOT { namespace Cintex {
                            0);                   // Function Setup func
         //-- Create a TClass Instance to please PyROOT adnd ROOT that also wats to have
         //   TClass for namespaces
-        ROOTClassEnhancer::CreateClassForNamespace(sname);
+        if (scope) ROOTClassEnhancer::CreateClassForNamespace(sname);
       }
     }
     return;
