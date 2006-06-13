@@ -101,7 +101,7 @@ GEOMPAINTERLIBEXTRA = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
                       lib/libHist.lib
 GEOMBUILDERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
 GEOMBUILDERLIBEXTRA = lib/libGeom.lib  lib/libGraf3d.lib lib/libGpad.lib \
-                      lib/libGraf.lib lib/libGui.lib
+                      lib/libGraf.lib lib/libGui.lib lib/libGed.lib
 QTROOTLIBDEP        = $(GUILIB) $(GQTLIB)
 QTROOTLIBEXTRA      = lib/libGui.lib lib/libGQt.lib
 GQTLIBDEP           = $(GPADLIB) $(RINTLIB)
@@ -195,7 +195,7 @@ HBOOKLIBEXTRA       = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer
 GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
 GEOMPAINTERLIBEXTRA = -Llib -lGeom -lTree -lGraf3d -lHist
 GEOMBUILDERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
-GEOMBUILDERLIBEXTRA = -Llib -lGeom -lGraf3d -lGpad -lGraf -lGui
+GEOMBUILDERLIBEXTRA = -Llib -lGeom -lGraf3d -lGpad -lGraf -lGui -lGed
 ASIMAGELIBDEP       = $(GRAFLIB) $(HISTLIB) $(GPADLIB)
 ASIMAGELIBEXTRA     = -Llib -lGraf -lHist -lGpad
 ASIMAGEGUILIBDEP    = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB)
