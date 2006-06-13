@@ -58,7 +58,7 @@ map-geombuilder: $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(GEOMBUILDERLIB) \
 		   -d $(GEOMBUILDERLIBDEP) -c $(GEOMBUILDERL)
 
-map::           map-geom
+map::           map-geombuilder
 
 clean-geombuilder:
 		@rm -f $(GEOMBUILDERO) $(GEOMBUILDERDO)
