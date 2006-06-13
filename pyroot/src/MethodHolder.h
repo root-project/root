@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.20 2006/03/23 06:20:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.21 2006/03/24 06:04:09 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_TMETHODHOLDER_H
@@ -40,7 +40,8 @@ namespace PyROOT {
       virtual ~TMethodHolder();
 
    public:
-      virtual PyObject* GetSignatureString();
+      virtual PyObject* GetSignature();
+      virtual PyObject* GetPrototype();
       virtual Int_t GetPriority();
 
    public:

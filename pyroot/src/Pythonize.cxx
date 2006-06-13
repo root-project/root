@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.37 2006/04/19 06:20:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.38 2006/05/28 19:05:24 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -998,6 +998,9 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       }
       ~TTreeMemberFunction() { Py_DECREF( fOrg ); fOrg = 0; }
 
+   public:
+      virtual PyObject* GetSignature() { return PyString_FromString( "(...)" ); }
+
    protected:
       MethodProxy* fOrg;
    };
@@ -1008,7 +1011,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTreeBranch( MethodProxy* org ) : TTreeMemberFunction( org ) {}
 
    public:
-      virtual PyObject* GetSignatureString()
+      virtual PyObject* GetPrototype()
       {
          return PyString_FromString( "TBranch* TTree::Branch( ... )" );
       }
@@ -1127,7 +1130,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTreeSetBranchAddress( MethodProxy* org ) : TTreeMemberFunction( org ) {}
 
    public:
-      virtual PyObject* GetSignatureString()
+      virtual PyObject* GetPrototype()
       {
          return PyString_FromString( "TBranch* TTree::SetBranchAddress( ... )" );
       }
@@ -1352,7 +1355,8 @@ namespace {
       TF1InitWithPyFunc( int ntf = 1 ) : TPretendInterpreted( 2 + 2*ntf ) {}
 
    public:
-      virtual PyObject* GetSignatureString()
+      virtual PyObject* GetSignature() { return PyString_FromString( "(...)" ); }
+      virtual PyObject* GetPrototype()
       {
          return PyString_FromString(
             "TF1::TF1(const char* name, PyObject* callable, "
@@ -1445,7 +1449,7 @@ namespace {
       TF2InitWithPyFunc() : TF1InitWithPyFunc( 2 ) {}
 
    public:
-      virtual PyObject* GetSignatureString()
+      virtual PyObject* GetPrototype()
       {
          return PyString_FromString(
             "TF2::TF2(const char* name, PyObject* callable, "
@@ -1460,7 +1464,7 @@ namespace {
       TF3InitWithPyFunc() : TF1InitWithPyFunc( 3 ) {}
 
    public:
-      virtual PyObject* GetSignatureString()
+      virtual PyObject* GetPrototype()
       {
          return PyString_FromString(
             "TF3::TF3(const char* name, PyObject* callable, "
@@ -1494,10 +1498,11 @@ namespace {
       TMinuitSetFCN() : TPretendInterpreted( 1 ) {}
 
    public:
-      virtual PyObject* GetSignatureString()
+      virtual PyObject* GetSignature() { return PyString_FromString( "(PyObject* callable)" ); }
+      virtual PyObject* GetPrototype()
       {
          return PyString_FromString(
-            "TMinuit::SetFCN( PyObject* callable )" );
+            "TMinuit::SetFCN(PyObject* callable)" );
       }
 
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* )
@@ -1506,7 +1511,7 @@ namespace {
          int argc = PyTuple_GET_SIZE( args );
          if ( argc != 1 ) {
             PyErr_Format( PyExc_TypeError,
-               "TMinuit::SetFCN( PyObject* callable, ...) =>\n"
+               "TMinuit::SetFCN(PyObject* callable, ...) =>\n"
                "    takes exactly 1 argument (%d given)", argc );
             return 0;              // reported as an overload failure
          }
