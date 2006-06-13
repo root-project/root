@@ -4,8 +4,8 @@
 
 PLATFORM      = macosx
 
-DWARF2       := $(shell gcc --version | sed -n 's,.*build \([0-9]*\).$$,\1,p' |\
-                  awk '{ if ($$1>=5341) print "dwarf-2" }')
+#DWARF2       := $(shell gcc --version | sed -n 's,.*build \([0-9]*\).$$,\1,p' |\
+#                  awk '{ if ($$1>=5341) print "dwarf-2" }')
 
 DEBUGFLAGS    = -g$(DWARF2)
 OPTFLAGS      = -O2
