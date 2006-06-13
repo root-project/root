@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.12 2005/06/26 17:59:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.13 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   14/07/2002
 
 /*************************************************************************
@@ -75,11 +75,11 @@ protected:
    TLockGuard(const TLockGuard& vm)
      : fMutex(vm.fMutex) { }
    TLockGuard& operator=(const TLockGuard& vm)
-     {if(this!=&vm) fMutex=vm.fMutex; return *this; }
+     { if(this!=&vm) fMutex=vm.fMutex; return *this; }
 
 public:
    TLockGuard(TVirtualMutex *mutex)
-     : fMutex(mutex) {if (fMutex) fMutex->Lock(); }
+     : fMutex(mutex) { if (fMutex) fMutex->Lock(); }
    virtual ~TLockGuard() { if (fMutex) fMutex->UnLock(); }
 
    ClassDef(TLockGuard,0)  // Exception safe locking/unlocking of mutex

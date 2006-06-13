@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.18 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.19 2006/05/26 09:01:58 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -213,28 +213,29 @@ TBrowser::TBrowser(const char *name,void *obj,  TClass *cl,
 
 //______________________________________________________________________________
 TBrowser::TBrowser(const TBrowser& br) :
-  TNamed(br),
-  fLastSelectedObject(br.fLastSelectedObject),
-  fImp(br.fImp),
-  fTimer(br.fTimer),
-  fContextMenu(br.fContextMenu),
-  fNeedRefresh(br.fNeedRefresh)
-{ 
-   //copy constructor
+   TNamed(br),
+   fLastSelectedObject(br.fLastSelectedObject),
+   fImp(br.fImp),
+   fTimer(br.fTimer),
+   fContextMenu(br.fContextMenu),
+   fNeedRefresh(br.fNeedRefresh)
+{
+   // Copy constructor.
 }
 
 //______________________________________________________________________________
 TBrowser& TBrowser::operator=(const TBrowser& br)
 {
-   //equal operator
-   if(this!=&br) {
+   // Assignment operator.
+
+   if (this != &br) {
       TNamed::operator=(br);
       fLastSelectedObject=br.fLastSelectedObject;
       fImp=br.fImp;
       fTimer=br.fTimer;
       fContextMenu=br.fContextMenu;
       fNeedRefresh=br.fNeedRefresh;
-   } 
+   }
    return *this;
 }
 
@@ -349,7 +350,7 @@ void TBrowser::Create(TObject *obj)
 void TBrowser::ExecuteDefaultAction(TObject *obj)
 {
    // Execute default action for selected object (action is specified
-   // in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
+   // in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file).
 
    if (obj && fImp)
       fImp->ExecuteDefaultAction(obj);
@@ -423,6 +424,7 @@ TBrowserObject::TBrowserObject(void *obj, TClass *cl, const char *brname)
    : TNamed(brname,cl->GetName()), fObj(obj), fClass(cl)
 {
    // Constructor.
+
    if (cl==0) Fatal("Constructor","Class parameter should not be null");
    SetBit(kCanDelete);
 }
@@ -430,7 +432,8 @@ TBrowserObject::TBrowserObject(void *obj, TClass *cl, const char *brname)
 //______________________________________________________________________________
 Bool_t TBrowserObject::IsFolder() const
 {
-   // Return kTRUE if the object is a folder (contains browsable objects);
+   // Return kTRUE if the object is a folder (contains browsable objects).
+
    return fClass->IsFolder(fObj);
 }
 
@@ -438,6 +441,7 @@ Bool_t TBrowserObject::IsFolder() const
 void TBrowserObject::Browse(TBrowser* b)
 {
    // Browse the content of the underlying object.
+
    fClass->Browse(fObj, b);
 }
 

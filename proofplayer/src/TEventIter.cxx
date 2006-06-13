@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.23 2006/04/11 17:51:08 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.24 2006/05/15 09:45:03 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -337,7 +337,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
    // Returns the main tree or 0 in case of an error.
 
    TTree* main = fgTreeCache->Acquire(elem->GetFileName(),
-                                     elem->GetDirectory(), elem->GetObjName());
+                                      elem->GetDirectory(), elem->GetObjName());
    if (!main)
       return 0;
    fAcquiredTrees.push_front(main);

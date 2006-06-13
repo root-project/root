@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.23 2006/05/26 09:23:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.24 2006/06/09 13:41:22 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 //    events in the Tree. The user can create his histograms in this      //
 //    function. When using PROOF Begin() is called on the client only.    //
 //    Histogram creation should preferable be done in SlaveBegin() in     //
-//    that case.
+//    that case.                                                          //
 // void TSelector::SlaveBegin(). This method is called on each PROOF      //
 //    worker node. The user can create his histograms in this method.     //
 //    In local mode this method is called on the client too.              //

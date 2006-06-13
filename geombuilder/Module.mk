@@ -1,54 +1,56 @@
-# Module.mk for geom module
+# Module.mk for geombuilder module
 # Copyright (c) 2000 Rene Brun and Fons Rademakers
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := geombuilder
-MODDIRS      := $(MODDIR)/src
-MODDIRI      := $(MODDIR)/inc
+MODDIR           := geombuilder
+MODDIRS          := $(MODDIR)/src
+MODDIRI          := $(MODDIR)/inc
 
-GEOMBUILDERDIR      := $(MODDIR)
-GEOMBUILDERDIRS     := $(GEOMBUILDERDIR)/src
-GEOMBUILDERDIRI     := $(GEOMBUILDERDIR)/inc
+GEOMBUILDERDIR   := $(MODDIR)
+GEOMBUILDERDIRS  := $(GEOMBUILDERDIR)/src
+GEOMBUILDERDIRI  := $(GEOMBUILDERDIR)/inc
 
 ##### libGeomBuilder #####
-GEOMBUILDERL       := $(MODDIRI)/LinkDef.h
-GEOMBUILDERDS      := $(MODDIRS)/G__GeomBuilder.cxx
-GEOMBUILDERDO      := $(GEOMBUILDERDS:.cxx=.o)
-GEOMBUILDERDH      := $(GEOMBUILDERDS:.cxx=.h)
+GEOMBUILDERL     := $(MODDIRI)/LinkDef.h
+GEOMBUILDERDS    := $(MODDIRS)/G__GeomBuilder.cxx
+GEOMBUILDERDO    := $(GEOMBUILDERDS:.cxx=.o)
+GEOMBUILDERDH    := $(GEOMBUILDERDS:.cxx=.h)
 
-GEOMBUILDERH       := TGeoVolumeEditor.h TGeoBBoxEditor.h TGeoMediumEditor.h \
-		      TGeoNodeEditor.h TGeoMatrixEditor.h TGeoManagerEditor.h \
-                      TGeoTubeEditor.h TGeoConeEditor.h TGeoTrd1Editor.h TGeoTrd2Editor.h \
-                      TGeoMaterialEditor.h TGeoTabManager.h TGeoSphereEditor.h
-GEOMBUILDERH       := $(patsubst %,$(MODDIRI)/%,$(GEOMBUILDERH))
-GEOMBUILDERS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GEOMBUILDERO        := $(GEOMBUILDERS:.cxx=.o)
+GEOMBUILDERH     := TGeoVolumeEditor.h TGeoBBoxEditor.h TGeoMediumEditor.h \
+                    TGeoNodeEditor.h TGeoMatrixEditor.h TGeoManagerEditor.h \
+                    TGeoTubeEditor.h TGeoConeEditor.h TGeoTrd1Editor.h \
+                    TGeoTrd2Editor.h TGeoMaterialEditor.h TGeoTabManager.h \
+                    TGeoSphereEditor.h
+GEOMBUILDERH     := $(patsubst %,$(MODDIRI)/%,$(GEOMBUILDERH))
+GEOMBUILDERS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+GEOMBUILDERO     := $(GEOMBUILDERS:.cxx=.o)
 
-GEOMBUILDERDEP      := $(GEOMBUILDERO:.o=.d) $(GEOMBUILDERDO:.o=.d)
+GEOMBUILDERDEP   := $(GEOMBUILDERO:.o=.d) $(GEOMBUILDERDO:.o=.d)
 
-GEOMBUILDERLIB      := $(LPATH)/libGeomBuilder.$(SOEXT)
+GEOMBUILDERLIB   := $(LPATH)/libGeomBuilder.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEOMBUILDERH))
-ALLLIBS     += $(GEOMBUILDERLIB)
+ALLHDRS          += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEOMBUILDERH))
+ALLLIBS          += $(GEOMBUILDERLIB)
 
 # include all dependency files
-INCLUDEFILES += $(GEOMBUILDERDEP)
+INCLUDEFILES     += $(GEOMBUILDERDEP)
 
 ##### local rules #####
 include/%.h:    $(GEOMBUILDERDIRI)/%.h
 		cp $< $@
 
-$(GEOMBUILDERLIB):     $(GEOMBUILDERO) $(GEOMBUILDERDO) $(ORDER_) $(MAINLIBS) $(GEOMBUILDERLIBDEP)
+$(GEOMBUILDERLIB): $(GEOMBUILDERO) $(GEOMBUILDERDO) $(ORDER_) $(MAINLIBS) \
+                   $(GEOMBUILDERLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libGeomBuilder.$(SOEXT) $@ "$(GEOMBUILDERO) $(GEOMBUILDERDO)" \
+		   "$(SOFLAGS)" libGeomBuilder.$(SOEXT) $@ \
+		   "$(GEOMBUILDERO) $(GEOMBUILDERDO)" \
 		   "$(GEOMBUILDERLIBEXTRA)"
 
-$(GEOMBUILDERDS):     $(GEOMBUILDERH) $(GEOMBUILDERL) $(ROOTCINTTMPEXE)
+$(GEOMBUILDERDS): $(GEOMBUILDERH) $(GEOMBUILDERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEOMBUILDERH) $(GEOMBUILDERL)
-
 
 all-geombuilder: $(GEOMBUILDERLIB)
 
@@ -64,6 +66,7 @@ clean-geombuilder:
 clean::         clean-geombuilder
 
 distclean-geombuilder: clean-geombuilder
-		@rm -f $(GEOMBUILDERDEP) $(GEOMBUILDERDS) $(GEOMBUILDERDH) $(GEOMBUILDERLIB)
+		@rm -f $(GEOMBUILDERDEP) $(GEOMBUILDERDS) $(GEOMBUILDERDH) \
+		   $(GEOMBUILDERLIB)
 
 distclean::     distclean-geombuilder
