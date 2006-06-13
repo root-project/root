@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.285 2006/06/07 18:48:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.286 2006/06/08 13:26:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1153,6 +1153,13 @@ TBranch *TTree::Branch(const char *name, void *address, const char *leaflist,Int
 //             Y/I       : variable Y, type Int_t
 //             Y/I2      ; variable Y, type Int_t converted to a 16 bits integer
 //
+//
+//       * bufsize is the buffer size in bytes for this branch
+//         The default value is 32000 bytes and should be ok for most cases.
+//         You can specify a larger value (eg 256000) if your Tree is not split
+//         and each entry is large (Megabytes)
+//         A small value for bufsize is optimum if you intend to access
+//         the entries in the Tree randomly and your Tree is in split mode.
 
    gTree = this;
    TBranch *branch = new TBranch(name,address,leaflist,bufsize);
@@ -1225,6 +1232,13 @@ TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj,
 //       tree.Branch("B2.","MyClass",&b2,8000,1);
 //    if MyClass has 3 members a,b,c, the two instructions above will generate
 //    subbranches called B1.a, B1.b ,B1.c, B2.a, B2.b, B2.c
+//
+//    bufsize is the buffer size in bytes for this branch
+//    The default value is 32000 bytes and should be ok for most cases.
+//    You can specify a larger value (eg 256000) if your Tree is not split
+//    and each entry is large (Megabytes)
+//    A small value for bufsize is optimum if you intend to access
+//    the entries in the Tree randomly and your Tree is in split mode.
 
    gTree = this;
    TClass *cl = gROOT->GetClass(classname);
@@ -1472,11 +1486,18 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
 //    if MyClass has 3 members a,b,c, the two instructions above will generate
 //    subbranches called B1.a, B1.b ,B1.c, B2.a, B2.b, B2.c
 //
-//   Use splitlevel < 0 instead of splitlevel=0 when the class
-//   has a custom Streamer
+//    bufsize is the buffer size in bytes for this branch
+//    The default value is 32000 bytes and should be ok for most cases.
+//    You can specify a larger value (eg 256000) if your Tree is not split
+//    and each entry is large (Megabytes)
+//    A small value for bufsize is optimum if you intend to access
+//    the entries in the Tree randomly and your Tree is in split mode.
 //
-//   Note: if the split level is set to the default (99),  TTree::Branch will
-//   not issue a warning if the class can not be split.
+//    Use splitlevel < 0 instead of splitlevel=0 when the class
+//    has a custom Streamer
+//
+//    Note: if the split level is set to the default (99),  TTree::Branch will
+//    not issue a warning if the class can not be split.
 
    gTree = this;
    TClass *cl = gROOT->GetClass(classname);
