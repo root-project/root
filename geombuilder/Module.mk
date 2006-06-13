@@ -49,8 +49,6 @@ $(GEOMBUILDERDS):     $(GEOMBUILDERH) $(GEOMBUILDERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEOMBUILDERH) $(GEOMBUILDERL)
 
-$(GEOMBUILDERDO):     $(GEOMBUILDERDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-geombuilder: $(GEOMBUILDERLIB)
 
