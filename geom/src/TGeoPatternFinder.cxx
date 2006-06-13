@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.15 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.16 2006/05/24 17:11:54 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -159,6 +159,26 @@ TGeoNode *TGeoPatternX::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
+Double_t TGeoPatternX::FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext)
+{
+// Compute distance to next division layer returning the index of next section.
+// Point is in the frame of the divided volume.
+   indnext = -1;
+   Double_t dist = TGeoShape::Big();
+   if (TMath::Abs(dir[0])<TGeoShape::Tolerance()) return dist;
+   if (fCurrent<0) {
+      Error("FindNextBoundary", "Must call FindNode first");
+      return dist;
+   }   
+   Int_t inc = (dir[0]>0)?1:0;
+   dist = (fStep*(fCurrent+inc)-point[0])/dir[0];
+   if (dist<0.) Error("FindNextBoundary", "Negative distance d=%g",dist);
+   if (!inc) inc = -1;
+   indnext = fCurrent+inc;
+   return dist;   
+}   
+
+//______________________________________________________________________________
 void TGeoPatternX::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
@@ -228,6 +248,26 @@ TGeoNode *TGeoPatternY::FindNode(Double_t *point)
    cd(ind);
    return node;
 }
+
+//______________________________________________________________________________
+Double_t TGeoPatternY::FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext)
+{
+// Compute distance to next division layer returning the index of next section.
+// Point is in the frame of the divided volume.
+   indnext = -1;
+   Double_t dist = TGeoShape::Big();
+   if (TMath::Abs(dir[1])<TGeoShape::Tolerance()) return dist;
+   if (fCurrent<0) {
+      Error("FindNextBoundary", "Must call FindNode first");
+      return dist;
+   }   
+   Int_t inc = (dir[1]>0)?1:0;
+   dist = (fStep*(fCurrent+inc)-point[1])/dir[1];
+   if (dist<0.) Error("FindNextBoundary", "Negative distance d=%g",dist);
+   if (!inc) inc = -1;
+   indnext = fCurrent+inc;
+   return dist;   
+}   
 
 //______________________________________________________________________________
 void TGeoPatternY::SavePrimitive(ofstream &out, Option_t * /*option*/)
@@ -300,6 +340,26 @@ TGeoNode *TGeoPatternZ::FindNode(Double_t *point)
    return node;
 
 }
+
+//______________________________________________________________________________
+Double_t TGeoPatternZ::FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext)
+{
+// Compute distance to next division layer returning the index of next section.
+// Point is in the frame of the divided volume.
+   indnext = -1;
+   Double_t dist = TGeoShape::Big();
+   if (TMath::Abs(dir[2])<TGeoShape::Tolerance()) return dist;
+   if (fCurrent<0) {
+      Error("FindNextBoundary", "Must call FindNode first");
+      return dist;
+   }   
+   Int_t inc = (dir[2]>0)?1:0;
+   dist = (fStep*(fCurrent+inc)-point[2])/dir[2];
+   if (dist<0.) Error("FindNextBoundary", "Negative distance d=%g",dist);
+   if (!inc) inc = -1;
+   indnext = fCurrent+inc;
+   return dist;   
+}   
 
 //______________________________________________________________________________
 void TGeoPatternZ::SavePrimitive(ofstream &out, Option_t * /*option*/)
