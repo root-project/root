@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.141 2006/06/09 01:21:43 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.142 2006/06/09 08:07:25 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -455,6 +455,7 @@ Plugin.TVirtualTreePlayer:  *  TTreePlayer   TreePlayer   "TTreePlayer()"
 Plugin.TVirtualTreeViewer:  *  TTreeViewer   TreeViewer   "TTreeViewer(const TTree*)"
 Plugin.TSessionViewer:      *  TSessionViewer TreeViewer  "TSessionViewer()"
 Plugin.TVirtualGeoPainter:  *  TGeoPainter   GeomPainter  "TGeoPainter(TGeoManager*)"
+Plugin.TGeoManagerEditor:   *  TGeoManagerEditor  GeomBuilder  "LoadLib()"
 Plugin.TVirtualUtil3D:      *  TUtil3D       Graf3d       "TUtil3D()"
 Plugin.TVirtualUtilHist:    *  TUtilHist     Hist         "TUtilHist()"
 Plugin.TVirtualUtilPad:     *  TUtilPad      Gpad         "TUtilPad()"

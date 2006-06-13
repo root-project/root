@@ -1,0 +1,299 @@
+// @(#):$Name:  $:$Id: Exp $
+// Author: M.Gheata 
+
+/*************************************************************************
+ * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+//  TGeoMaterialEditor                                                      //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+#include "TGeoMaterialEditor.h"
+#include "TGeoTabManager.h"
+#include "TGeoMaterial.h"
+#include "TGeoManager.h"
+#include "TVirtualGeoPainter.h"
+#include "TPad.h"
+#include "TView.h"
+#include "TGTab.h"
+#include "TGComboBox.h"
+#include "TGButton.h"
+#include "TGTextEntry.h"
+#include "TGNumberEntry.h"
+#include "TGLabel.h"
+
+ClassImp(TGeoMaterialEditor)
+
+enum ETGeoMaterialWid {
+   kMATERIAL_NAME, kMATERIAL_A, kMATERIAL_Z, kMATERIAL_RHO,
+   kMATERIAL_RAD, kMATERIAL_ABS,
+   kMATERIAL_APPLY, kMATERIAL_CANCEL, kMATERIAL_UNDO
+};
+
+//______________________________________________________________________________
+TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t id, Int_t width,
+                                   Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+{
+   // Constructor for volume editor
+   fMaterial   = 0;
+   fAi = fZi = 0;
+   fDensityi = 0.0;
+   fNamei = "";
+   fIsModified = kFALSE;
+   fIsMaterialEditable = kTRUE;
+
+   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
+      
+   // TextEntry for shape name
+   MakeTitle("Name");
+   fMaterialName = new TGTextEntry(this, new TGTextBuffer(50), kMATERIAL_NAME);
+   fMaterialName->Resize(135, fMaterialName->GetDefaultHeight());
+   fMaterialName->SetToolTipText("Enter the material name");
+   fMaterialName->Associate(this);
+   AddFrame(fMaterialName, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
+
+   TGTextEntry *nef;
+   MakeTitle("Material properties");
+   TGCompositeFrame *f1 = new TGCompositeFrame(this, 118, 10, kHorizontalFrame |
+                                 kFixedWidth | kOwnBackground);
+   f1->AddFrame(new TGLabel(f1, "A"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
+   fMatA = new TGNumberEntry(f1, 0., 5, kMATERIAL_A);
+   nef = (TGTextEntry*)fMatA->GetNumberEntry();
+   nef->SetToolTipText("Enter the atomic mass");
+   fMatA->Associate(this);
+   f1->AddFrame(fMatA, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   f1->AddFrame(new TGLabel(f1, "Z"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
+   fMatZ = new TGNumberEntry(f1, 0., 5, kMATERIAL_Z);
+   nef = (TGTextEntry*)fMatZ->GetNumberEntry();
+   nef->SetToolTipText("Enter the atomic charge");
+   fMatZ->Associate(this);
+   f1->AddFrame(fMatZ, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   f1->Resize(150,30);
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+   
+   
+   TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
+   // Number entry for density
+   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
+                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+   f1->AddFrame(new TGLabel(f1, "Density"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
+   fMatDensity = new TGNumberEntry(f1, 0., 5, kMATERIAL_RHO);
+   nef = (TGTextEntry*)fMatDensity->GetNumberEntry();
+   nef->SetToolTipText("Enter material density");
+   fMatDensity->Associate(this);
+   f1->AddFrame(fMatDensity, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   
+   // Number entry for radiation length
+   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
+                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+   f1->AddFrame(new TGLabel(f1, "RadLen"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
+   fMatRadLen = new TGNumberEntry(f1, 0., 5, kMATERIAL_RAD);
+   nef = (TGTextEntry*)fMatRadLen->GetNumberEntry();
+   nef->SetToolTipText("Computed radiation length");
+   fMatRadLen->Associate(this);
+   f1->AddFrame(fMatRadLen, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   
+   // Number entry for absorbtion length
+   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
+                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+   f1->AddFrame(new TGLabel(f1, "AbsLen"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
+   fMatAbsLen = new TGNumberEntry(f1, 0., 5, kMATERIAL_ABS);
+   nef = (TGTextEntry*)fMatAbsLen->GetNumberEntry();
+   nef->SetToolTipText("Absorbtion length");
+   fMatAbsLen->Associate(this);
+   f1->AddFrame(fMatAbsLen, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+      
+   compxyz->Resize(150,30);
+   AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+
+   // Buttons
+   TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame | kDoubleBorder);
+   fApply = new TGTextButton(f23, "Apply");
+   f23->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   fApply->Associate(this);
+   fCancel = new TGTextButton(f23, "Cancel");
+   f23->AddFrame(fCancel, new TGLayoutHints(kLHintsCenterX, 2, 2, 4, 4));
+   fCancel->Associate(this);
+   fUndo = new TGTextButton(f23, " Undo ");
+   f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   fUndo->Associate(this);
+   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   fUndo->SetSize(fCancel->GetSize());
+   fApply->SetSize(fCancel->GetSize());
+
+   // Initialize layout
+   MapSubwindows();
+   Layout();
+   MapWindow();
+
+   TClass *cl = TGeoMaterial::Class();
+   TGedElement *ge = new TGedElement;
+   ge->fGedFrame = this;
+   ge->fCanvas = 0;
+   cl->GetEditorList()->Add(ge);
+}
+
+//______________________________________________________________________________
+TGeoMaterialEditor::~TGeoMaterialEditor()
+{
+// Destructor
+   TGFrameElement *el;
+   TIter next(GetList());
+   
+   while ((el = (TGFrameElement *)next())) {
+      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
+         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+   }
+   Cleanup();   
+   TClass *cl = TGeoMaterial::Class();
+   TIter next1(cl->GetEditorList()); 
+   TGedElement *ge;
+   while ((ge=(TGedElement*)next1())) {
+      if (ge->fGedFrame==this) {
+         cl->GetEditorList()->Remove(ge);
+         delete ge;
+         next1.Reset();
+      }
+   }      
+}
+
+//______________________________________________________________________________
+void TGeoMaterialEditor::ConnectSignals2Slots()
+{
+   // Connect signals to slots.
+   fApply->Connect("Clicked()", "TGeoMaterialEditor", this, "DoApply()");
+   fCancel->Connect("Clicked()", "TGeoMaterialEditor", this, "DoCancel()");
+   fUndo->Connect("Clicked()", "TGeoMaterialEditor", this, "DoUndo()");
+   fMaterialName->Connect("TextChanged(const char *)", "TGeoMaterialEditor", this, "DoName()");
+   fMatA->Connect("ValueSet(Long_t)", "TGeoMaterialEditor", this, "DoA()");
+   fMatZ->Connect("ValueSet(Long_t)", "TGeoMaterialEditor", this, "DoZ()");
+   fMatDensity->Connect("ValueSet(Long_t)", "TGeoMaterialEditor", this, "DoDensity()");
+   fMatRadLen->Connect("ValueSet(Long_t)", "TGeoMaterialEditor", this, "DoRadAbs()");
+   fMatAbsLen->Connect("ValueSet(Long_t)", "TGeoMaterialEditor", this, "DoRadAbs()");
+   fInit = kFALSE;
+}
+
+//______________________________________________________________________________
+void TGeoMaterialEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+{
+   // Connect to the picked volume.
+   if (obj == 0 || !(obj->InheritsFrom(TGeoMaterial::Class()))) {
+      SetActive(kFALSE);
+      return;                 
+   } 
+   fModel = obj;
+   fPad = pad;
+   fMaterial = (TGeoMaterial*)fModel;
+   fAi = (Int_t)fMaterial->GetA();
+   fZi = (Int_t)fMaterial->GetZ();
+   fDensityi = fMaterial->GetDensity();
+   fNamei = fMaterial->GetName();
+   fMaterialName->SetText(fMaterial->GetName());
+   fMatA->SetNumber(fAi);
+   fMatZ->SetNumber(fZi);
+   fMatDensity->SetNumber(fDensityi);
+   fMatRadLen->SetNumber(fMaterial->GetRadLen());
+   fMatAbsLen->SetNumber(fMaterial->GetIntLen());
+   fApply->SetEnabled(kFALSE);
+   fUndo->SetEnabled(kFALSE);
+   fCancel->SetEnabled(kFALSE);
+   
+   if (fInit) ConnectSignals2Slots();
+   SetActive();
+}
+
+//______________________________________________________________________________
+void TGeoMaterialEditor::DoName()
+{
+// Perform name change
+   fUndo->SetEnabled();
+   fCancel->SetEnabled(kFALSE);
+   fApply->SetEnabled(kTRUE);
+}
+
+//______________________________________________________________________________
+void TGeoMaterialEditor::DoA()
+{
+   fMatA->SetNumber(fAi);
+   DoModified();
+}
+
+//______________________________________________________________________________
+void TGeoMaterialEditor::DoZ()
+{
+   fMatZ->SetNumber(fZi);
+   DoModified();
+}
+
+//______________________________________________________________________________
+void TGeoMaterialEditor::DoDensity()
+{
+   fMatDensity->SetNumber(fDensityi);
+   DoModified();
+}
+
+//______________________________________________________________________________
+void TGeoMaterialEditor::DoRadAbs()
+{
+   fMatRadLen->SetNumber(fMaterial->GetRadLen());
+   fMatAbsLen->SetNumber(fMaterial->GetIntLen());
+   DoModified();
+}
+
+//______________________________________________________________________________
+void TGeoMaterialEditor::DoApply()
+{
+   const char *name = fMaterialName->GetText();
+   fMaterial->SetName(name);
+   Int_t id = gGeoManager->GetListOfMaterials()->IndexOf(fMaterial);
+   fTabMgr->UpdateMaterial(id);
+   fMatA->SetNumber(fAi);
+   fMatZ->SetNumber(fZi);
+   fMatDensity->SetNumber(fDensityi);
+   fMatRadLen->SetNumber(fMaterial->GetRadLen());
+   fMatAbsLen->SetNumber(fMaterial->GetIntLen());
+   fUndo->SetEnabled();
+   fCancel->SetEnabled(kFALSE);
+   fApply->SetEnabled(kFALSE);
+}
+
+//______________________________________________________________________________
+void TGeoMaterialEditor::DoCancel()
+{
+   fMaterialName->SetText(fNamei.Data());
+   fMatA->SetNumber(fAi);
+   fMatZ->SetNumber(fZi);
+   fMatDensity->SetNumber(fDensityi);
+   fMatRadLen->SetNumber(fMaterial->GetRadLen());
+   fMatAbsLen->SetNumber(fMaterial->GetIntLen());
+   fApply->SetEnabled(kFALSE);
+   fUndo->SetEnabled(kFALSE);
+   fCancel->SetEnabled(kFALSE);
+}
+
+//______________________________________________________________________________
+void TGeoMaterialEditor::DoModified()
+{
+   fApply->SetEnabled();
+   if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
+}
+
+//______________________________________________________________________________
+void TGeoMaterialEditor::DoUndo()
+{
+   DoCancel();
+   fCancel->SetEnabled(kFALSE);
+   fUndo->SetEnabled(kFALSE);
+   fApply->SetEnabled(kFALSE);
+}

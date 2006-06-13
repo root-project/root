@@ -366,10 +366,10 @@ pattern = TGeoGtra
 icon = geogtra_s.xpm geogtra_t.xpm
 action = ->Browse()
 
-#[root/tgeocompositeshape]
-#pattern = TGeoCompositeShape
-#icon = geocomposite_s.xpm geocomposite_t.xpm
-#action = ->Browse()
+[root/tgeocompositeshape]
+pattern = TGeoCompositeShape
+icon = geocomposite_s.xpm geocomposite_t.xpm
+action = ->Browse()
 
 #[root/tgeohalfspace]
 #pattern = TGeoHalfSpace
