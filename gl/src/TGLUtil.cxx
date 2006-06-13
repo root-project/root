@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.25 2006/02/21 16:39:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.26 2006/02/23 16:44:52 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -894,4 +894,79 @@ void TGLUtil::DrawRing(const TGLVertex3 & center, const TGLVector3 & normal,
    gluDisk(quad.Get(), inner, outer, fgDrawQuality, fgDrawQuality); 
    
    glPopMatrix();
+}
+
+namespace RootGL {
+
+   //______________________________________________________________________________
+   TGLEnableGuard::TGLEnableGuard(Int_t cap)
+                   : fCap(cap)
+   {
+      // TGLEnableGuard constructor.
+      glEnable(GLenum(fCap));
+   }
+
+   //______________________________________________________________________________
+   TGLEnableGuard::~TGLEnableGuard()
+   {
+      // TGLEnableGuard destructor.
+      glDisable(GLenum(fCap));
+   }
+
+   //______________________________________________________________________________
+   TGLDisableGuard::TGLDisableGuard(Int_t cap)
+                   : fCap(cap)
+   {
+      // TGLDisableGuard constructor.
+      glDisable(GLenum(fCap));
+   }
+
+   //______________________________________________________________________________
+   TGLDisableGuard::~TGLDisableGuard()
+   {
+      // TGLDisableGuard destructor.
+      glEnable(GLenum(fCap));
+   }
+
+}
+
+ClassImp(TGLSelectionBuffer)
+
+//______________________________________________________________________________
+TGLSelectionBuffer::TGLSelectionBuffer()
+                        : fWidth(0)
+{
+   // TGLSelectionBuffer constructor.
+}
+
+//______________________________________________________________________________
+TGLSelectionBuffer::~TGLSelectionBuffer()
+{
+   // TGLSelectionBuffer destructor.
+}
+
+//______________________________________________________________________________
+void TGLSelectionBuffer::ReadColorBuffer(Int_t w, Int_t h)
+{
+   // Read color buffer.
+   fWidth = w;
+   fHeight = h;
+   fBuffer.resize(w * h * 4);
+   glPixelStorei(GL_PACK_ALIGNMENT, 1);
+   glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, &fBuffer[0]);
+}
+
+//______________________________________________________________________________
+const UChar_t *TGLSelectionBuffer::GetPixelColor(Int_t px, Int_t py)const
+{
+   // Get pixel color.
+   if (px < 0) 
+      px = 0; 
+   if (py < 0)
+      py = 0;
+
+   if (px * fWidth * 4 + py * 4 > fBuffer.size())
+      return &fBuffer[0];
+
+   return &fBuffer[px * fWidth * 4 + py * 4];
 }

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.12 2006/03/09 11:18:31 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.13 2006/06/06 11:49:01 couet Exp $
 // Author: Valeriy Onuchin(TGWin32GL)/ Timur Pocheptsov (TGWin32GLManager)
 
 /*************************************************************************
@@ -426,7 +426,7 @@ Bool_t TGWin32GLManager::CreateDIB(TGLContext &ctx)const
 
    CDCGuard dcGuard(dibDC);
 	
-   BITMAPINFOHEADER bmpHeader = {sizeof bmpHeader, ctx.fW, ctx.fH, 1, 24, BI_RGB};
+   BITMAPINFOHEADER bmpHeader = {sizeof bmpHeader, ctx.fW, ctx.fH, 1, 32, BI_RGB};
    void *bmpCnt = 0;
    HBITMAP hDIB = CreateDIBSection(dibDC, (BITMAPINFO*)&bmpHeader, DIB_RGB_COLORS, &bmpCnt, 0, 0);
    
@@ -507,7 +507,7 @@ void TGWin32GLManager::ReadGLBuffer(Int_t ctxInd)
    if (ctx.fPixmapIndex != -1) {
       glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
       glReadBuffer(GL_BACK);
-      glReadPixels(0, 0, ctx.fW, ctx.fH, GL_BGR_EXT, GL_UNSIGNED_BYTE, ctx.fDIBData);
+      glReadPixels(0, 0, ctx.fW, ctx.fH, GL_BGRA_EXT, GL_UNSIGNED_BYTE, ctx.fDIBData);
    }
 }
 

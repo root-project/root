@@ -67,6 +67,15 @@
 #pragma link C++ class TGLSphere;
 #pragma link C++ class TGLHistPainter;
 #pragma link C++ class TGLViewerEditor;
+
+#pragma link C++ class TGLPadHistPainter;
+#pragma link C++ class TGLPlotPainter;
+#pragma link C++ class TGLAxisPainter;
+#pragma link C++ class TGL2DAxisPainter;
+#pragma link C++ class TGLLegoPainter;
+#pragma link C++ class TGLSelectionBuffer;
+#pragma link C++ class TGLPlotFrame;
+
 #ifndef _WIN32
 #pragma link C++ class TX11GL;
 #pragma link C++ class TX11GLManager;

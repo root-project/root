@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.27 2006/02/21 16:39:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.28 2006/02/23 16:44:51 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -829,5 +829,54 @@ public:
 
    ClassDef(TGLUtil,0) // Wrapper class for misc GL pieces
 };
+
+namespace RootGL {
+
+   class TGLEnableGuard {
+   private:
+      Int_t fCap;
+
+   public:
+      TGLEnableGuard(Int_t cap);
+      ~TGLEnableGuard();
+
+   private:
+      TGLEnableGuard(const TGLEnableGuard &);
+      TGLEnableGuard &operator = (const TGLEnableGuard &);
+   };
+
+   class TGLDisableGuard {
+   private:
+      Int_t fCap;
+
+   public:
+      TGLDisableGuard(Int_t cap);
+      ~TGLDisableGuard();
+
+   private:
+      TGLDisableGuard(const TGLDisableGuard &);
+      TGLDisableGuard &operator = (const TGLDisableGuard &);
+   };
+
+}
+
+class TGLSelectionBuffer {
+   std::vector<UChar_t> fBuffer;
+   Int_t                fWidth;
+   Int_t                fHeight;
+
+public:
+   TGLSelectionBuffer();
+   virtual ~TGLSelectionBuffer();
+
+   void           ReadColorBuffer(Int_t width, Int_t height);
+   const UChar_t *GetPixelColor(Int_t px, Int_t py)const;
+
+private:
+   TGLSelectionBuffer(const TGLSelectionBuffer &);
+   TGLSelectionBuffer &operator = (const TGLSelectionBuffer &);
+
+   ClassDef(TGLSelectionBuffer, 0)//Holds color buffer content for selection
+}; 
 
 #endif // ROOT_TGLUtil

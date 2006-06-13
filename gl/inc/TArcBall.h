@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.8 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.9 2005/11/29 09:25:51 couet Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -34,7 +34,7 @@ private:
 protected:
    void MapToSphere(const TPoint &NewPt, Double_t *NewVec)const;
 public:
-   TArcBall(UInt_t NewWidth, UInt_t NewHeight);
+   TArcBall(UInt_t NewWidth = 100, UInt_t NewHeight = 100);
    virtual ~TArcBall() { }
 
    void SetBounds(UInt_t NewWidth, UInt_t NewHeight)
