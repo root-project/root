@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.88 2006/06/04 09:35:24 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.89 2006/06/11 12:56:48 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -48,7 +48,6 @@ TGeoPainter::TGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
 {
 //*-*-*-*-*-*-*-*-*-*-*Geometry painter default constructor*-*-*-*-*-*-*-*-*
 //*-*                  ====================================
-   printf("Painter created\n");
    TVirtualGeoPainter::SetPainter(this);
    if (manager) fGeoManager = manager;
    else {
@@ -82,6 +81,7 @@ TGeoPainter::TGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
    
    fCheckedNode = fGeoManager->GetTopNode();
    fChecker = new TGeoChecker(fGeoManager);
+   fIsEditable = kFALSE;
    DefineColors();
 }
 //______________________________________________________________________________
@@ -570,17 +570,29 @@ Int_t TGeoPainter::CountVisibleNodes()
 }
 
 //______________________________________________________________________________
-void TGeoPainter::EditGeometry(Option_t *option)
+void TGeoPainter::CheckEdit()
 {
-// Start the geometry editor.
-   if (!gPad) return;
-   if (!strlen(option)) gPad->GetCanvas()->GetCanvasImp()->ShowEditor();
-   else TVirtualPadEditor::ShowEditor();
+// Check if Ged library is loaded and load geometry editor classe.
+   if (fIsEditable) return;
+   if (!gROOT->GetClass("TGedEditor")) return;
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TGeoManagerEditor"))) {
       if (h->LoadPlugin() == -1) return;
       h->ExecPlugin(0);
    }
+   fIsEditable = kTRUE;
+}      
+
+//______________________________________________________________________________
+void TGeoPainter::EditGeometry(Option_t *option)
+{
+// Start the geometry editor.
+   if (!gPad) return;
+   if (!fIsEditable) {
+      if (!strlen(option)) gPad->GetCanvas()->GetCanvasImp()->ShowEditor();
+      else TVirtualPadEditor::ShowEditor();
+      CheckEdit();
+   }   
    gPad->SetSelected(fGeoManager);
    gPad->GetCanvas()->Selected(gPad,fGeoManager,kButton1Down);   
 }
@@ -827,54 +839,64 @@ void TGeoPainter::EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *sta
 }
 
 //______________________________________________________________________________
-void TGeoPainter::ExecuteManagerEvent(TGeoManager * /*geom*/, Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
+void TGeoPainter::ExecuteManagerEvent(TGeoManager * /*geom*/, Int_t event, Int_t /*px*/, Int_t /*py*/)
 {
 // Execute mouse actions on a given volume.
    if (!gPad) return;
    gPad->SetCursor(kPointer);
+   switch (event) {
+      case kButton1Down:
+         if (!fIsEditable) CheckEdit();
+   }          
 }
    
 //______________________________________________________________________________
-void TGeoPainter::ExecuteShapeEvent(TGeoShape * /*shape*/, Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
+void TGeoPainter::ExecuteShapeEvent(TGeoShape * /*shape*/, Int_t event, Int_t /*px*/, Int_t /*py*/)
 {
 // Execute mouse actions on a given shape.
    if (!gPad) return;
    gPad->SetCursor(kHand);
+   switch (event) {
+      case kButton1Down:
+         if (!fIsEditable) CheckEdit();
+   }      
 }
 
 //______________________________________________________________________________
-void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t /*px*/, Int_t /*py*/)
+void TGeoPainter::ExecuteVolumeEvent(TGeoVolume * /*volume*/, Int_t event, Int_t /*px*/, Int_t /*py*/)
 {
 // Execute mouse actions on a given volume.
    if (!gPad) return;
+   if (!fIsEditable) CheckEdit();
 //   if (fIsRaytracing) return;
-   Bool_t istop = (volume==fTopVolume)?kTRUE:kFALSE;
-   if (istop) gPad->SetCursor(kHand);
-   else gPad->SetCursor(kPointer);
-   static Int_t width, color;
+//   Bool_t istop = (volume==fTopVolume)?kTRUE:kFALSE;
+//   if (istop) gPad->SetCursor(kHand);
+//   else gPad->SetCursor(kPointer);
+   gPad->SetCursor(kHand);
+//   static Int_t width, color;
    switch (event) {
    case kMouseEnter:
-      width = volume->GetLineWidth();
-      color = volume->GetLineColor();
+//      width = volume->GetLineWidth();
+//      color = volume->GetLineColor();
       break;
    
    case kMouseLeave:
-      volume->SetLineWidth(width);
-      volume->SetLineColor(color);
+//      volume->SetLineWidth(width);
+//      volume->SetLineColor(color);
       break;
 
    case kButton1Down:
-      volume->SetLineWidth(3);
-      volume->SetLineColor(2);
-      gPad->Modified();
-      gPad->Update();
+//      volume->SetLineWidth(3);
+//      volume->SetLineColor(2);
+//      gPad->Modified();
+//      gPad->Update();
       break;
    
    case kButton1Up:
-      volume->SetLineWidth(width);
-      volume->SetLineColor(color);
-      gPad->Modified();
-      gPad->Update();
+//      volume->SetLineWidth(width);
+//      volume->SetLineColor(color);
+//      gPad->Modified();
+//      gPad->Update();
       break;
       
    case kButton1Double:
