@@ -251,7 +251,7 @@ extern time_t time(time_t *t);
 int S_ISLNK(mode_t m);
 int S_ISSOCK(mode_t m); 
 #endif
-#if defined(G__APPLE) || defined(__APPLE__)
+#if (defined(G__APPLE) || defined(__APPLE__)) && ! defined (_GID_T)
 extern int fchown(int fd,int owner,int group);
 #else
 extern int fchown(int fd,uid_t owner,gid_t group);

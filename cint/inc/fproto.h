@@ -101,10 +101,8 @@ void G__display_note G__P((void));
 int G__display_proto G__P((FILE *fout,char *string));
 int G__display_proto_pretty G__P((FILE *fout,char *string,char friendlyStyle));
 int G__display_newtypes G__P((FILE *fout,char *string));
-int G__display_class G__P((FILE *fout,char *name,int base,int start));
 int G__display_typedef G__P((FILE *fout,char *name,int startin));
 int G__display_template G__P((FILE *fout,char *name));
-int G__display_includepath G__P((FILE *fout));
 int G__display_macro G__P((FILE *fout,char *name));
 int G__display_string G__P((FILE *fout));
 int G__display_files G__P((FILE *fout));
@@ -122,9 +120,6 @@ int G__free_member_table G__P((struct G__var_array *mem));
 int G__free_ipath G__P((struct G__includepath *ipath));
 int G__isfilebusy G__P((int ifn));
 void G__free_preprocessfilekey G__P((struct G__Preprocessfilekey *pkey));
-void G__store_dictposition G__P((struct G__dictposition* dictpos));
-void G__scratch_upto G__P((struct G__dictposition *dictpos));
-void G__scratch_globals_upto G__P((struct G__dictposition *dictpos));
 int G__free_ifunc_table_upto G__P((struct G__ifunc_table *ifunc,struct G__ifunc_table *dictpos,int ifn));
 int G__free_string_upto G__P((struct G__ConstStringList *conststringpos));
 int G__free_typedef_upto G__P((int typenum));
@@ -213,7 +208,6 @@ int G__basedestructrc G__P((struct G__var_array *mem));
 #ifdef G__VIRTUALBASE
 int G__publicinheritance G__P((G__value *val1,G__value *val2));
 int G__ispublicbase G__P((int basetagnum,int derivedtagnum,long pobject));
-int G__isanybase G__P((int basetagnum,int derivedtagnum,long pobject));
 long G__getvirtualbaseoffset G__P((long pobject,int tagnum,struct G__inheritance *baseclass,int basen));
 #else
 int G__ispublicbase G__P((int basetagnum,int derivedtagnum));
@@ -279,7 +273,6 @@ int G__difffile G__P((char *file1,char *file2));
 int G__copyfile G__P((FILE *to,FILE *from));
 
 int G__matchfilename G__P((int i1,char* filename));
-char* G__stripfilename G__P((char* filename));
 int G__cleardictfile G__P((int flag));
 
 void G__openmfp G__P((void));
@@ -384,7 +377,6 @@ G__value G__exec_do G__P((void));
 G__value G__return_value G__P((char *statement));
 void G__free_tempobject G__P((void));
 G__value G__alloc_tempstring G__P((char *string));
-int G__pop_tempobject G__P((void));
 G__value G__exec_switch G__P((void));
 G__value G__exec_if G__P((void));
 G__value G__exec_loop G__P((char *forinit,char *condition,int naction,char **foraction));
@@ -517,7 +509,6 @@ char *G__tagtype2string G__P((int tagtype));
 char* G__rename_templatefunc G__P((char* funcname,int isrealloc));
 char *G__fulltypename G__P((int typenum));
 #endif
-char *G__fulltagname G__P((int tagnum,int mask_dollar));
 int G__val2pointer G__P((G__value *result7));
 char *G__getbase G__P((unsigned int expression,int base,int digit,char *result1));
 int G__getdigit G__P((unsigned int number));
@@ -675,8 +666,6 @@ int G__gettempfilenum G__P((void));
 void G__redirect_on G__P((void));
 void G__redirect_off G__P((void));
 #endif
-
-void G__loadlonglong G__P((int* ptag,int* ptype,int which));
 
 int G__DLL_direct_globalfunc G__P((G__value *result7
 				   ,G__CONST char *funcname

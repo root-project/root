@@ -654,15 +654,15 @@ int G__autocc()
     if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
     system(temp);
 
-#if defined(G__SYMANTEC)
+#if defined(G__SYMANTEC) && !defined(G__HAVE_CONFIG)
     sprintf(temp,"smake -f %s",G__autocc_mak);
     if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
     system(temp);
-#elif defined(G__BORLAND)
+#elif defined(G__BORLAND) && !defined(G__HAVE_CONFIG)
     sprintf(temp,"make.exe -f %s",G__autocc_mak);
     if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
     system(temp);
-#elif defined(G__VISUAL)
+#elif defined(G__VISUAL) && !defined(G__HAVE_CONFIG)
     sprintf(temp,"nmake /f %s CFG=\"%s - Win32 Release\""
             ,G__autocc_mak,G__autocc_h);
     if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);

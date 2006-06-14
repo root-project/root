@@ -52,7 +52,6 @@ G__CallFunc {
   {}
 
   G__CallFunc& operator=(const G__CallFunc& cf) {
-  if(this!=&cf) {
 #ifndef __MAKECINT__
   pfunc=cf.pfunc;
   result=cf.result;
@@ -62,7 +61,7 @@ G__CallFunc {
   method=cf.method;
   para=cf.para;
 #endif /* __MAKECINT__ */
-  } return *this;}
+  return *this;}
 
   void Init() ;
 

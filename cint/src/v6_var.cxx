@@ -4203,14 +4203,46 @@ G__value G__getstructmem(int store_var_type
      * Referencing to freed memory area. So, this
      * implementation is bad.
      ***************************************************/
-    if(varglobal) {
-      result = G__getfunction(tagname,&flag,G__TRYNORMAL);
+    /* let's guess whether this is a function call or an 
+       expression */
+    int isexpression = 0;
+    for(unsigned int cur=0,nested=0,isstring=0,begin=1;
+        cur<strlen(tagname) && isexpression==0; ++cur) {
+       switch (tagname[cur]) {
+          case '(': ++nested; begin = 0; break;
+          case ')': --nested; begin = 0; break;
+          case '"': isstring = !isstring; begin = 0; break;
+
+          case '-': 
+          case '+':
+          case '%':
+          case '|':
+          case '!':
+          case '^':
+          case '/': if (nested==0 && isstring==0) 
+                    {
+                       isexpression = 1;
+                    }
+                    break;
+          case '*':
+          case '&': if (begin && nested==0 && isstring==0) 
+                    {
+                       isexpression = 1;
+                    }
+                    break;
+       }
     }
-    else {
-      /* Strange, I do not recall why I did this. Maybe this wasn't necessary
-       * from the beginning. */
-      /* G__incsetup_memfunc(G__tagnum); */
-      result = G__getfunction(tagname,&flag,G__CALLMEMFUNC);
+
+    if (!isexpression) {
+       if(varglobal) {
+         result = G__getfunction(tagname,&flag,G__TRYNORMAL);
+       }
+       else {
+         /* Strange, I do not recall why I did this. Maybe this wasn't necessary
+         * from the beginning. */
+         /* G__incsetup_memfunc(G__tagnum); */
+         result = G__getfunction(tagname,&flag,G__CALLMEMFUNC);
+      }
     }
 
     if(flag==0 && (strchr(tagname,'+')|| strchr(tagname,'-')||

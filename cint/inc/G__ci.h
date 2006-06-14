@@ -25,10 +25,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_V6      60010012
-#define G__CINTVERSIONSTR_V6  "6.1.12, May 16, 2006"
-#define G__CINTVERSION_V5      501600012
-#define G__CINTVERSIONSTR_V5  "5.16.12, May 16, 2006"
+#define G__CINTVERSION_V6      60010013
+#define G__CINTVERSIONSTR_V6  "6.1.13, June 8, 2006"
+#define G__CINTVERSION_V5      501600013
+#define G__CINTVERSIONSTR_V5  "5.16.13, June 8, 2006"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -443,7 +443,7 @@ typedef long fpos_tt; /* pos_t is defined to be a struct{32,32} in VMS.
                          is used in G__ifunc_table_VMS, G__functentry_VMS*/
 #endif
 
-#ifdef G__BORLAND
+#if defined(G__BORLAND) || defined(G__VISUAL)
 #define G__DLLEXPORT __declspec(dllexport)
 #define G__DLLIMPORT __declspec(dllimport)
 #else
@@ -1026,6 +1026,7 @@ extern G__value G__null;
 **************************************************************************/
 struct G__ifunc_table;
 struct G__var_array;
+struct G__dictposition;
 
 /**************************************************************************
 * comment information
@@ -1618,6 +1619,7 @@ extern void (*G__aterror)();
 
 #endif
 
+
 #ifndef __CINT__
 /**************************************************************************
 * Exported Functions
@@ -1631,18 +1633,6 @@ extern void (*G__aterror)();
 
 extern G__EXPORT unsigned long G__uint G__P((G__value buf));
 
-#ifdef G__NATIVELONGLONG
-extern G__EXPORT void G__letLonglong G__P((G__value* buf,int type,G__int64 value));
-extern G__EXPORT void G__letULonglong G__P((G__value* buf,int type,G__uint64 value));
-extern G__EXPORT void G__letLongdouble G__P((G__value* buf,int type,long double value));
-extern G__EXPORT G__int64 G__Longlong G__P((G__value buf)); 
-extern G__EXPORT G__uint64 G__ULonglong G__P((G__value buf));
-extern G__EXPORT long double G__Longdouble G__P((G__value buf));
-extern G__EXPORT G__int64* G__Longlongref G__P((G__value *buf));
-extern G__EXPORT G__uint64* G__ULonglongref G__P((G__value *buf));
-extern G__EXPORT long double* G__Longdoubleref G__P((G__value *buf));
-#endif
-
 #if defined(G__DEBUG) && !defined(G__MEMTEST_C)
 #include "src/memtest.h"
 #endif
@@ -1655,9 +1645,9 @@ extern int G__fgetline G__P((char *string));
 extern int G__load G__P((char *commandfile));
 /* extern float G__float G__P((G__value buf));*/
 extern G__value (*G__GetSpecialObject) G__P((char *name,void **ptr,void** ppdict));
-extern int  G__call_setup_funcs G__P((void));
+extern G__EXPORT int  G__call_setup_funcs G__P((void));
 extern void G__reset_setup_funcs G__P((void));
-extern char *G__cint_version G__P((void));
+extern G__EXPORT char *G__cint_version G__P((void));
 extern void G__init_garbagecollection G__P((void));
 extern int G__garbagecollection G__P((void));
 extern void G__add_alloctable G__P((void* allocedmem,int type,int tagnum));
@@ -1686,8 +1676,8 @@ struct G__var_array *G__searchvariable G__P((char *varname,int varhash
 
 
 struct G__ifunc_table* G__p2f2funchandle G__P((void* p2f,struct G__ifunc_table* p_ifunc,int* pindex));
-char* G__p2f2funcname G__P((void *p2f));
-int G__isinterpretedp2f G__P((void* p2f));
+G__EXPORT char* G__p2f2funcname G__P((void *p2f));
+G__EXPORT int G__isinterpretedp2f G__P((void* p2f));
 int G__compile_bytecode G__P((struct G__ifunc_table* ifunc,int index));
 
 
@@ -1831,13 +1821,13 @@ extern G__EXPORT void G__RegisterScriptCompiler G__P((int(*p2f)(G__CONST char*,G
 extern G__EXPORT int G__defined_tagname G__P((G__CONST char* tagname,int noerror));
 extern G__EXPORT struct G__Definedtemplateclass *G__defined_templateclass G__P((char *name));
 
-int G__deleteglobal G__P((void* p));
-int G__deletevariable G__P((G__CONST char* varname));
+int G__EXPORT G__deleteglobal G__P((void* p));
+int G__EXPORT G__deletevariable G__P((G__CONST char* varname));
 extern G__EXPORT int G__optimizemode G__P((int optimizemode));
 extern G__EXPORT int G__getoptimizemode G__P((void));
 G__value G__string2type_body G__P((G__CONST char *typenamin,int noerror));
 G__value G__string2type G__P((G__CONST char *typenamin));
-void* G__findsym G__P((G__CONST char *fname));
+extern G__EXPORT void* G__findsym G__P((G__CONST char *fname));
 
 extern G__EXPORT int G__IsInMacro G__P((void));
 extern G__EXPORT void G__storerewindposition G__P((void));
@@ -1890,7 +1880,7 @@ extern G__EXPORT void G__SetCatchException G__P((int mode));
 /**************************************************************************
 * Interface method to run bytecode function
 **************************************************************************/
-extern int G__exec_bytecode G__P((G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash));
+extern G__EXPORT int G__exec_bytecode G__P((G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash));
 #endif
 
 
@@ -1903,8 +1893,8 @@ extern G__EXPORT int G__fprintf (FILE* fp,char* fmt,...);
 extern G__EXPORT int G__fprintf G__P((FILE* fp,char* fmt,...));
 #endif
 extern G__EXPORT int G__setmasksignal G__P((int));
-extern void G__settemplevel G__P((int val));
-extern void G__clearstack G__P((void));
+extern G__EXPORT void G__settemplevel G__P((int val));
+extern G__EXPORT void G__clearstack G__P((void));
 extern G__EXPORT int G__lasterror G__P((void)) ;
 extern G__EXPORT void G__reset_lasterror G__P((void));
 extern G__EXPORT int G__gettempfilenum G__P((void));
@@ -2073,6 +2063,50 @@ extern G__EXPORT long double G__Longdouble G__P((G__value buf));
 extern G__EXPORT G__int64* G__Longlongref G__P((G__value *buf));
 extern G__EXPORT G__uint64* G__ULonglongref G__P((G__value *buf));
 extern G__EXPORT long double* G__Longdoubleref G__P((G__value *buf));
+
+/* Missing interfaces */
+
+extern G__EXPORT int G__clearfilebusy G__P((int));
+/* In Api.h: G__InitGetSpecialObject */
+/* In Api.h: G__InitUpdateClassInfo */
+/* earlier in this file: G__call_setup_funcs */
+/* earlier in this file: G__cint_version */
+/* earlier in this file: G__clearstack */
+extern G__EXPORT int G__close_inputfiles G__P((void));
+extern G__EXPORT int G__const_resetnoerror G__P((void));
+extern G__EXPORT int G__const_setnoerror G__P((void));
+extern G__EXPORT int G__const_whatnoerror G__P((void));
+/* earlier in this file: G__deleteglobal */
+/* earlier in this file: G__exec_bytecode */
+/* earlier in this file: G__findsym */
+extern G__EXPORT int G__close_inputfiles G__P((void));
+/* earlier in this file: G__p2f2funcname */
+extern G__EXPORT void G__scratch_globals_upto G__P((struct G__dictposition *dictpos));
+extern G__EXPORT void G__scratch_upto G__P((struct G__dictposition *dictpos));
+/* earlier in this file: G__settemplevel */
+extern G__EXPORT void G__store_dictposition G__P((struct G__dictposition* dictpos));
+extern G__EXPORT int G__printf (char* fmt,...);
+extern G__EXPORT void G__free_tempobject G__P((void));
+extern G__EXPORT int G__display_class(FILE *fout,char *name,int base,int start);
+extern G__EXPORT int G__display_includepath(FILE *fout);
+extern G__EXPORT void G__set_alloclockfunc(void(*)());
+extern G__EXPORT void G__set_allocunlockfunc(void(*)());
+extern G__EXPORT int G__usermemfunc_setup(char *funcname,int hash,int (*funcp)(),int type,
+                         int tagnum,int typenum,int reftype,
+                         int para_nu,int ansi,int accessin,int isconst,
+                         char *paras, char *comment
+#ifdef G__TRUEP2F
+                         ,void *truep2f,int isvirtual
+#endif
+                         ,void *userparam);
+extern G__EXPORT char *G__fulltagname(int tagnum,int mask_dollar);
+extern G__EXPORT void G__loadlonglong(int* ptag,int* ptype,int which);
+extern G__EXPORT int G__isanybase(int basetagnum,int derivedtagnum,long pobject);
+extern G__EXPORT int G__pop_tempobject(void);
+extern G__EXPORT char* G__stripfilename(char* filename);
+/* C++:
+void G__CurrentCall(int call_type, void* call_ifunc, int* ifunc_idx) - see v6_newlink.cxx
+*/
 
 #else /* G__MULTITHREADLIBCINT */
 

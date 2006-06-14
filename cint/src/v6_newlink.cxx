@@ -165,7 +165,7 @@ static char** G__extra_include = 0; /*  [G__MAXFILENAME] = NULL;  */
 static int   s_CurrentCallType = 0;
 static void* s_CurrentCall  = 0;
 static int   s_CurrentIndex = 0;
-void G__CurrentCall(int call_type, void* call_ifunc, int* ifunc_idx)
+G__EXPORT void G__CurrentCall(int call_type, void* call_ifunc, int* ifunc_idx)
 {
   switch( call_type )   {
   case G__NOP:
@@ -846,7 +846,7 @@ void G__clink_header(FILE *fp)
   if(G__multithreadlibcint)
     fprintf(fp,"#undef G__MULTITHREADLIBCINTC\n");
 
-#ifdef G__BORLAND
+#if defined(G__BORLAND) || defined(G__VISUAL)
   fprintf(fp,"extern G__DLLEXPORT int G__c_dllrev%s();\n",G__DLLID);
   fprintf(fp,"extern G__DLLEXPORT void G__set_c_environment%s();\n",G__DLLID);
   fprintf(fp,"extern G__DLLEXPORT void G__c_setup_tagtable%s();\n",G__DLLID);
@@ -938,7 +938,7 @@ void G__cpplink_header(FILE *fp)
 
   fprintf(fp,"extern \"C\" {\n");
 
-#ifdef G__BORLAND
+#if defined(G__BORLAND) || defined(G__VISUAL)
   fprintf(fp,"extern G__DLLEXPORT int G__cpp_dllrev%s();\n",G__DLLID);
   fprintf(fp,"extern G__DLLEXPORT void G__set_cpp_environment%s();\n",G__DLLID);
   fprintf(fp,"extern G__DLLEXPORT void G__cpp_setup_tagtable%s();\n",G__DLLID);

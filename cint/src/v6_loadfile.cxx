@@ -28,10 +28,12 @@
 #include "process.h"
 #endif
 
-#ifdef G__ROOT
-#ifdef HAVE_CONFIG
+#if defined(HAVE_CONFIG)
 #include "config.h"
 #endif
+
+#if defined(G__HAVE_CONFIG)
+#include "configcint.h"
 #endif
 
 #include "common.h"
@@ -306,7 +308,24 @@ char *G__getmakeinfo(char *item)
 
   buf[0]='\0';
 
-#ifdef G__NOMAKEINFO
+#ifdef G__HAVE_CONFIG
+  if (!strcmp(item,"CPP")) return G__CFG_CXX;
+  else if (!strcmp(item,"CC")) return G__CFG_CC;
+  else if (!strcmp(item,"DLLPOST")) return G__CFG_SOEXT;
+  else if (!strcmp(item,"CSRCPOST")) return ".c";
+  else if (!strcmp(item,"CPPSRCPOST")) return ".cxx";
+  else if (!strcmp(item,"CHDRPOST")) return ".h";
+  else if (!strcmp(item,"CPPHDRPOST")) return ".h";
+  else if (!strcmp(item,"INPUTMODE")) return G__CFG_INPUTMODE;
+  else if (!strcmp(item,"INPUTMODELOCK")) return G__CFG_INPUTMODELOCK;
+  else if (!strcmp(item,"CPREP")) return G__CFG_CPP;
+  else if (!strcmp(item,"CPPPREP")) return G__CFG_CPP;
+  else {
+     printf("G__getmakeinfo for G__HAVE_CONFIG: %s not implemented yet!\n",
+              item);
+     return "";
+  }
+#elif defined(G__NOMAKEINFO)
   return("");
 #endif
 
@@ -369,9 +388,11 @@ char *G__getmakeinfo(char *item)
 char *G__getmakeinfo1(char *item)
 {
   char *buf = G__getmakeinfo(item);
+#ifndef G__HAVE_CONFIG
   char *p = buf;
   while(*p && !isspace(*p)) ++p;
   *p = 0;
+#endif
   return(buf);
 }
 

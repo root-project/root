@@ -142,7 +142,7 @@ extern "C" int G__bc_exec_try_bytecode(int start,
 				       long localmem) ;
 extern "C" int G__bc_exec_throw_bytecode(G__value* pval);
 extern "C" int G__bc_exec_typematch_bytecode(G__value* catchtype,G__value* excptobj);
-extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash);
+extern "C" G__EXPORT int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash);
 extern "C" int G__bc_throw_compile_error();
 extern "C" int G__bc_throw_runtime_error();
 

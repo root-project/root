@@ -33,11 +33,10 @@
 #ifndef G__DICTIONARY
 #define G__DICTIONARY
 #endif
-#define G__CINTBODY /* may not be needed */
 #include "G__ci.h"
 #ifndef __MAKECINT__
 #include "common.h"
-extern "C" void G__CurrentCall(int, const void*, const int&);
+extern "C" G__EXPORT void G__CurrentCall(int, const void*, const int&);
 #else
 struct G__friendtag ;
 typedef int (*G__InterfaceMethod)();
@@ -84,7 +83,7 @@ typedef int (*G__InterfaceMethod)();
 extern "C" {
 typedef void *(*G__pMethodSpecialObject)(char *item,G__ClassInfo *typeinfo
 					 ,void** pptr,void** ppdict);
-void G__InitGetSpecialObject(G__pMethodSpecialObject pmethod);
+G__EXPORT void G__InitGetSpecialObject(G__pMethodSpecialObject pmethod);
 }
 
 /*********************************************************************
@@ -94,7 +93,7 @@ extern "C" {
 typedef void (*G__pMethodSpecialValue)(char *item,G__TypeInfo *typeinfo
 				       ,long *pl,double *pd,void** pptr
 				       ,void** ppdict);
-void G__InitGetSpecialValue(G__pMethodSpecialValue pmethod);
+G__EXPORT void G__InitGetSpecialValue(G__pMethodSpecialValue pmethod);
 }
 
 
@@ -104,7 +103,7 @@ void G__InitGetSpecialValue(G__pMethodSpecialValue pmethod);
 *********************************************************************/
 extern "C" {
 typedef void (*G__pMethodUpdateClassInfo)(char *item,long tagnum);
-void G__InitUpdateClassInfo(G__pMethodUpdateClassInfo pmethod);
+G__EXPORT void G__InitUpdateClassInfo(G__pMethodUpdateClassInfo pmethod);
 }
 
 /*********************************************************************
