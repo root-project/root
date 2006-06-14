@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.6 2006/06/12 09:02:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.7 2006/06/14 13:15:55 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -101,6 +101,7 @@ void TTreeFilePrefetch::AddBranch(TBranch *b)
    //this function is called by TBranch::GetBasket
       
    if (!fIsLearning) return;
+   if (b->GetListOfBranches()->GetEntries() > 0) return;
 
    //Is branch already in the cache?
    Bool_t isNew = kTRUE;
@@ -144,6 +145,7 @@ Bool_t TTreeFilePrefetch::FillBuffer()
    Long64_t oldEntryNext = fEntryNext;
    fEntryNext = entry + tree->GetEntries()*fBufferSize/totbytes;
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
+//printf("FillBuffer, entry=%lld, oldEntryNext=%lld, fEntryNext=%lld\n",entry,oldEntryNext,fEntryNext);
          
    //clear cache buffer
    TFilePrefetch::Prefetch(0,0);
@@ -160,11 +162,11 @@ Bool_t TTreeFilePrefetch::FillBuffer()
          Long64_t pos = b->GetBasketSeek(j);
          Int_t len = lbaskets[j];
          if (pos <= 0 || len <= 0) continue;
-         if (entries[j] >= oldEntryNext && entries[j] < fEntryNext) {
-            TFilePrefetch::Prefetch(pos,len);
-         }
+         if (entries[j] > fEntryNext) continue;
+         if (entries[j] < entry && (j<nb-1 && entries[j+1] < entry)) continue;
+         TFilePrefetch::Prefetch(pos,len);
       }
-      if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s\n",entry,fBranches[i]->GetName());
+      if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,fBranches[i]->GetName(),fEntryNext,fNseek,fNtot);
    }
    fIsLearning = kFALSE;
    return kTRUE;
