@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.11 2005/05/19 20:39:38 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.12 2005/11/11 15:38:30 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -630,13 +630,14 @@ void TGedPatternSelect::DoRedraw()
 }
 
 //______________________________________________________________________________
-void TGedPatternSelect::SetPattern(Style_t pattern)
+void TGedPatternSelect::SetPattern(Style_t pattern, Bool_t emit)
 {
    // Set pattern.
 
    fPattern = pattern;
    gClient->NeedRedraw(this);
-   PatternSelected(fPattern);
+   if (emit)
+      PatternSelected(fPattern);
 }
 
 //______________________________________________________________________________
