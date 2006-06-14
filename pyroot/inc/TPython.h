@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.h,v 1.8 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.h,v 1.9 2005/04/28 07:33:55 brun Exp $
 // Author: Wim Lavrijsen   April 2004
 
 #ifndef ROOT_TPython
@@ -30,6 +30,9 @@ private:
 public:
 // load a python script as if it were a macro
    static void LoadMacro( const char* name );
+
+// execute a python stand-alone script, with argv CLI arguments
+   static void ExecScript( const char* name, int argc = 0, const char** argv = 0 );
 
 // execute a python statement (e.g. "import ROOT" )
    static void Exec( const char* cmd );
