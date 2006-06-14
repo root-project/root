@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.34 2006/06/01 09:13:56 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.35 2006/06/01 11:38:15 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -722,12 +722,12 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddAction(act, "Input");
 
    act = new TGuiBldAction("TGHScrollBar", "HScrollbar", kGuiBldCtor);
-   act->fAct = "new TGHScrollBar()";
+   act->fAct = "TRootGuiBuilder::BuildHScrollBar()";
    act->fPic = "bld_hscrollbar.xpm";
    AddAction(act, "Input");
 
    act = new TGuiBldAction("TGVScrollBar", "VScrollbar", kGuiBldCtor);
-   act->fAct = "new TGVScrollBar()";
+   act->fAct = "TRootGuiBuilder::BuildVScrollBar()";
    act->fPic = "bld_vscrollbar.xpm";
    AddAction(act, "Input");
 
@@ -2352,4 +2352,31 @@ TGFrame *TRootGuiBuilder::BuildV3DLine()
    return l;
 }
 
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildHScrollBar()
+{
+   // Helper method to create TGHScrollBar
+
+   TGHScrollBar *b = new TGHScrollBar();
+
+   b->Resize(100, b->GetDefaultHeight());
+   b->SetRange(100, 20);
+   b->MapSubwindows();
+
+   return b;
+}
+
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildVScrollBar()
+{
+   // Helper method to create TGVScrollBar
+
+   TGVScrollBar *b = new TGVScrollBar();
+
+   b->Resize(b->GetDefaultWidth(), 100);
+   b->MapSubwindows();
+   b->SetRange(100, 20);
+
+   return b;
+}
 

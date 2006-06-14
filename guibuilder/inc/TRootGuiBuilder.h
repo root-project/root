@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.10 2006/06/01 09:13:56 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.11 2006/06/01 11:38:15 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -125,8 +125,6 @@ public:
    TGMdiFrame *FindEditableMdiFrame(const TGWindow *win);
    TGuiBldEditor    *GetEditor() const { return fEditor; }
    TGDockableFrame  *GetToolDock() const { return fToolDock; }
-   static TGFrame   *HSplitter();
-   static TGFrame   *VSplitter();
    TGMdiMainFrame   *GetMdiMain() const { return fMain; }  
    TGMdiFrame       *GetEditable() const { return fEditable; }
 
@@ -141,6 +139,8 @@ public:
 
    static void       PropagateBgndColor(TGFrame *frame, Pixel_t color);
 
+   static TGFrame     *HSplitter();
+   static TGFrame     *VSplitter();
    static TGPopupMenu *CreatePopup();
    static TGFrame     *BuildListTree();
    static TGFrame     *BuildCanvas();
@@ -151,6 +151,8 @@ public:
    static TGFrame     *BuildComboBox();
    static TGFrame     *BuildH3DLine();
    static TGFrame     *BuildV3DLine();
+   static TGFrame     *BuildHScrollBar();
+   static TGFrame     *BuildVScrollBar();
 
    ClassDef(TRootGuiBuilder,0)  // ROOT GUI Builder
 };

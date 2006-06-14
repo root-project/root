@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.16 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.17 2006/05/29 12:04:45 brun Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -315,12 +315,6 @@ TGHScrollBar::TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    fTail->SetEditDisabled(kEditDisable | kEditDisableGrab);
    fSlider->SetEditDisabled(kEditDisable | kEditDisableGrab);
    fEditDisabled = kEditDisableLayout | kEditDisableHeight | kEditDisableBtnEnable;
-
-   if (!p && fClient->IsEditable()) {
-      TGFrame::Resize(100, GetDefaultHeight());
-      SetRange(100, 20);
-      MapSubwindows();
-   }
 }
 
 //______________________________________________________________________________
@@ -564,12 +558,6 @@ TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    fTail->SetEditDisabled(kEditDisable | kEditDisableGrab);
    fSlider->SetEditDisabled(kEditDisable | kEditDisableGrab);
    fEditDisabled = kEditDisableLayout | kEditDisableWidth | kEditDisableBtnEnable;
-
-   if (!p && fClient->IsEditable()) {
-      TGFrame::Resize(GetDefaultWidth(), 100);
-      MapSubwindows();
-      SetRange(100, 20);
-   }
 }
 
 //______________________________________________________________________________
@@ -805,13 +793,13 @@ void TGHScrollBar::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TGVScrollBar::SavePrimitive(ofstream &out, Option_t *option)
 {
-    // Save an horizontal scrollbar as a C++ statement(s) on output stream out.
+    // Save an vertical scrollbar as a C++ statement(s) on output stream out.
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out<<"   TGVScrollBar *";
    out << GetName() <<" = new TGVScrollBar("<< fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight() << ",";
+       << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
 
