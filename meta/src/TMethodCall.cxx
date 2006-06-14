@@ -1,4 +1,4 @@
-// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.23 2005/09/03 00:48:25 pcanal Exp $
+// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.24 2005/11/16 20:10:45 pcanal Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -32,12 +32,6 @@
 #include "Api.h"
 #include "TVirtualMutex.h"
 #include "TCint.h"
-
-#ifndef WIN32
-extern long G__globalvarpointer;
-#endif
-
-extern "C" void G__settemplevel(int);
 
 ClassImp(TMethodCall)
 

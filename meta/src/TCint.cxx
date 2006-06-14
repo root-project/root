@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.121 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.122 2006/05/24 15:09:21 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -56,17 +56,9 @@ R__EXTERN int optind;
 
 // reference cint includes
 // make sure fproto.h is loaded (it was excluded in TCint.h)
-#undef G__FPROTO_H
-#include "fproto.h"
+//#undef G__FPROTO_H
+//#include "fproto.h"
 #include "Api.h"
-
-// Those are missing from the cint API files:
-extern "C" int G__const_whatnoerror();
-extern "C" int G__const_setnoerror();
-extern "C" int G__const_resetnoerror();
-
-extern "C" void G__clearfilebusy(int);
-extern "C" void G__clearstack();
 
 extern "C" int ScriptCompiler(const char *filename, const char *opt) {
    return gSystem->CompileMacro(filename, opt);

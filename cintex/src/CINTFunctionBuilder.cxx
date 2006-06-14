@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.7 2006/05/04 19:31:31 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.8 2006/05/30 08:14:13 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -126,9 +126,9 @@ namespace ROOT { namespace Cintex {
     //---Cint function hash
     G__hash(funcname, hash, tmp);
 
-    G__usermemfunc_setup( funcname.c_str(),                // function Name
+    G__usermemfunc_setup( const_cast<char*>(funcname.c_str()), // function Name
                           hash,                            // function Name hash value
-                          stub,                            // method stub function
+                          (int (*)(void))stub,             // method stub function
                           ret_type,                        // return type (void)
                           ret_tag,                         // return TypeNth tag number
                           ret_typedeft,                    // typedef number
@@ -137,7 +137,7 @@ namespace ROOT { namespace Cintex {
                           memory_type,                     // memory type
                           access,                          // access type
                           const_ness,                      // CV qualifiers
-                          signature.c_str(),               // signature
+                          const_cast<char*>(signature.c_str()), // signature
                           (char*)NULL,                     // comment line
                           (void*)NULL,                     // true2pf
                           virtuality,                      // virtuality

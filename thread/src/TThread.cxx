@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.43 2006/05/23 04:47:41 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.44 2006/05/24 15:10:46 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TTimeStamp.h"
 #include "TError.h"
 #include "snprintf.h"
+#include "Api.h"
 
 TThreadImp     *TThread::fgThreadImp = 0;
 Long_t          TThread::fgMainId = 0;
@@ -46,8 +47,6 @@ void **volatile TThread::fgXArr = 0;
 volatile Int_t  TThread::fgXAnb = 0;
 volatile Int_t  TThread::fgXArt = 0;
 
-extern "C" void G__set_alloclockfunc(void(*)());
-extern "C" void G__set_allocunlockfunc(void(*)());
 static void CINT_alloc_lock()   { gGlobalMutex->Lock(); }
 static void CINT_alloc_unlock() { gGlobalMutex->UnLock(); }
 

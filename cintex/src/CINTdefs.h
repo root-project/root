@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTdefs.h,v 1.5 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTdefs.h,v 1.6 2005/11/18 08:57:09 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -22,28 +22,6 @@
 
 #include "G__ci.h"
 
-// Additions
-  extern "C" G__DLLIMPORT 
-    int G__get_linked_tagnufWith_param(G__linked_taginfo* tag,
-                                        void* param);
-  extern "C" G__DLLIMPORT 
-    void* G__get_linked_user_param(int tag_num );
-
-  extern "C" G__DLLIMPORT
-    int G__usermemfunc_setup(
-          const char *funcname,int hash, G__InterfaceMethod funcp
-		     ,int TypeNth,int tagnum,int typenum,int reftype
-		     ,int para_nu,int ansi,int accessin,int isconst
-		     ,const char* paras,const char* comment
-         #ifdef G__TRUEP2F
-		     ,const void* truep2f
-		     ,int isvirtual
-         #endif
-         ,const void* userparam
-		     );
-
-  extern "C" G__DLLIMPORT
-   char *G__fulltagname(int, int);
 /*
  *  cintex Namespace
  */
