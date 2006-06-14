@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.97 2006/05/16 08:27:12 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.98 2006/05/17 14:17:40 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -3300,6 +3300,10 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                ReplaceSpecialChars(out, keyword);
                out << "</a>";
 
+               if (funcName)
+                  *funcNameEnd = c2;
+               if (funcSig)
+                  *funcSigEnd = c3;
                *end = c;
                keyword = end;
             } else {
@@ -3321,6 +3325,10 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                   out << ":" << keyword << "\">";
                   ReplaceSpecialChars(out, keyword);
                   out << "</a>";
+                  if (funcName)
+                     *funcNameEnd = c2;
+                  if (funcSig)
+                     *funcSigEnd = c3;
                   *end = c;
                   keyword = end;
                } else {
@@ -3601,7 +3609,7 @@ char *THtml::GetHtmlFileName(TClass * classPtr)
          else
             found = kTRUE;
       } else {
-         strcpy(htmlFileName, "./");
+         htmlFileName[0]=0;
          found = kTRUE;
       }
       delete[]tmp;
@@ -3610,7 +3618,8 @@ char *THtml::GetHtmlFileName(TClass * classPtr)
          tmp = StrDup(classPtr->GetName());
          NameSpace2FileName(tmp);
          ret = StrDup(htmlFileName, strlen(tmp)+7);
-         strcat(ret, "/");
+         if (strlen(ret) && ret[strlen(ret)-1] != '/') 
+            strcat(ret, "/");
          strcat(ret, tmp);
          strcat(ret, ".html");
 
