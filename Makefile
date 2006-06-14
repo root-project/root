@@ -343,7 +343,6 @@ MAKEDISTSRC   = build/unix/makedistsrc.sh
 MAKEVERSION   = build/unix/makeversion.sh
 IMPORTCINT    = build/unix/importcint.sh
 MAKECOMPDATA  = build/unix/compiledata.sh
-MAKEMAKEINFO  = build/unix/makeinfo.sh
 MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
@@ -354,13 +353,11 @@ RECONFIGURE   = build/unix/reconfigure.sh
 ifeq ($(PLATFORM),win32)
 MAKELIB       = build/win/makelib.sh
 MAKECOMPDATA  = build/win/compiledata.sh
-MAKEMAKEINFO  = build/win/makeinfo.sh
 endif
 
 ##### Compiler directives and run-control file #####
 
 COMPILEDATA   = include/compiledata.h
-MAKEINFO      = cint/MAKEINFO
 ROOTRC        = etc/system.rootrc
 ROOTMAP       = etc/system.rootmap
 
@@ -490,7 +487,7 @@ rootlibs:       rootcint compiledata $(ALLLIBS)
 
 rootexecs:      rootlibs $(ALLEXECS)
 
-compiledata:    $(COMPILEDATA) $(MAKEINFO)
+compiledata:    $(COMPILEDATA)
 
 config config/Makefile.:
 ifeq ($(BUILDING_WITHIN_IDE),)
@@ -526,9 +523,6 @@ $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 	   "$(CXXFLAGS)" "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" \
 	   "$(LIBDIR)" "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
 	   "$(MAKESHAREDLIB)" "$(MAKEEXE)" "$(ARCH)" "$(ROOTBUILD)"
-
-$(MAKEINFO): config/Makefile.$(ARCH) $(MAKEMAKEINFO)
-	@$(MAKEMAKEINFO) $(MAKEINFO) "$(CXX)" "$(CC)" "$(CPPPREP)"
 
 build/dummy.d: config Makefile $(ALLHDRS) $(RMKDEP) $(BINDEXP) $(PCHDEP)
 	@(if [ ! -f $@ ] ; then \
@@ -675,7 +669,7 @@ rootdrpm:
 	fi
 
 clean::
-	@rm -f __compiledata __makeinfo *~ core $(PCHFILE)
+	@rm -f __compiledata *~ core $(PCHFILE)
 
 ifeq ($(CXX),KCC)
 clean::
@@ -688,7 +682,7 @@ endif
 
 distclean:: clean
 	-@mv -f include/config.h include/config.h1
-	@rm -f include/*.h $(MAKEINFO) $(ROOTMAP) $(CORELIB)
+	@rm -f include/*.h $(ROOTMAP) $(CORELIB)
 	-@mv -f include/config.h1 include/config.h
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
@@ -796,9 +790,6 @@ install: all
 	   $(INSTALLDATA) include/*             $(DESTDIR)$(INCDIR); \
 	   echo "Installing main/src/rmain.cxx in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDATA) main/src/rmain.cxx    $(DESTDIR)$(INCDIR); \
-	   echo "Installing $(MAKEINFO) in $(DESTDIR)$(CINTINCDIR)"; \
-	   $(INSTALLDIR)                        $(DESTDIR)$(CINTINCDIR); \
-	   $(INSTALLDATA) $(MAKEINFO)           $(DESTDIR)$(CINTINCDIR); \
 	   echo "Installing cint/include cint/lib and cint/stl in $(DESTDIR)$(CINTINCDIR)"; \
 	   $(INSTALLDATA) cint/include          $(DESTDIR)$(CINTINCDIR); \
 	   $(INSTALLDATA) cint/lib              $(DESTDIR)$(CINTINCDIR); \
