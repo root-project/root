@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.h,v 1.2 2006/06/08 12:46:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.h,v 1.3 2006/06/12 09:02:03 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -26,14 +26,18 @@
 #endif
 
 class TTree;
+class TBranch;
 
 class TTreeFilePrefetch : public TFilePrefetch {
 
 protected:
-   TTree          *fTree;       //!pointer to the TTree
-   Long64_t        fEntryMin;   //first entry in the cache
-   Long64_t        fEntryMax;   //last entry in the cache
-   static Double_t fgThreshold; //do not register basket if entry-fEntrymin>fgEntryDiff   
+   Long64_t        fEntryMin;    //first entry in the cache
+   Long64_t        fEntryMax;    //last entry in the cache
+   Long64_t        fEntryNext;   //next entry number where cache must be filled
+   Int_t           fNbranches;   //Number of branches in the cache
+   TBranch       **fBranches;    //List of branches to be stored in the cache
+   Bool_t          fIsLearning;  //true if cache is in learning mode
+   static Double_t fgLearnRatio; //fraction of entries used for learning mode
 
 protected:
    TTreeFilePrefetch(const TTreeFilePrefetch &);            //this class cannot be copied
@@ -43,13 +47,15 @@ public:
    TTreeFilePrefetch();
    TTreeFilePrefetch(TTree *tree, Int_t buffersize=0);
    virtual ~TTreeFilePrefetch();
-   static Double_t     GetThreshold();
-   TTree              *GetTree() const {return fTree;}
+   void                AddBranch(TBranch *b);
+   void                Clear(Option_t *option="");
+   static Double_t     GetLearnRatio();
+   Bool_t              FillBuffer();
+   TTree              *GetTree() const;
+   Bool_t              IsLearning() const {return fIsLearning;}
    virtual Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   Bool_t              Register(Long64_t offset);
-   void                SetEntryRange(Long64_t emin, Long64_t emax);
-   void                SetTree(TTree *tree);
-   static void         SetThreshold(Double_t t=0.01);
+   void                SetEntryRange(Long64_t emin,   Long64_t emax);
+   static void         SetLearnRatio(Double_t ratio=0.01);
         
    ClassDef(TTreeFilePrefetch,1)  //Specialization of TFilePrefetch for a TTree 
 };

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.5 2006/06/09 11:54:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.6 2006/06/12 09:02:03 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -16,7 +16,10 @@
 //  A specialized TFilePrefetch object for a TTree                      //
 //  This class acts as a file cache, registering automatically the      //
 //  baskets from the branches being processed (TTree::Draw or           //
-//  TTree::Process and TSelectors.                                      //
+//  TTree::Process and TSelectors) when in the learning phase.          //
+//  The learning phase is by default the first 1 per cent of entries.   //
+//  It can be changed via TTreeFileFrefetch::SetLearnRatio.             //
+//                                                                      //
 //  This cache speeds-up considerably the performance, in particular    //
 //  when the Tree is accessed remotely via a high latency network.      //
 //                                                                      //
@@ -36,26 +39,36 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 
-Double_t TTreeFilePrefetch::fgThreshold = 0.01;
+Double_t TTreeFilePrefetch::fgLearnRatio = 0.01;
 
 ClassImp(TTreeFilePrefetch)
 
 //______________________________________________________________________________
 TTreeFilePrefetch::TTreeFilePrefetch() : TFilePrefetch(),
-   fTree(0),
    fEntryMin(0),
-   fEntryMax(1)
+   fEntryMax(1),
+   fEntryNext(1),
+   fNbranches(0),
+   fBranches(0),
+   fIsLearning(kTRUE)
 {
    // Default Constructor.
 }
 
 //______________________________________________________________________________
 TTreeFilePrefetch::TTreeFilePrefetch(TTree *tree, Int_t buffersize) : TFilePrefetch(tree->GetCurrentFile(),buffersize),
-   fTree(tree),
    fEntryMin(0),
-   fEntryMax(tree->GetEntries())
+   fEntryMax(tree->GetEntries()),
+   fEntryNext(0),
+   fNbranches(0),
+   fBranches(0),
+   fIsLearning(kTRUE)
 {
    // Constructor.
+   fEntryNext = Long64_t(fgLearnRatio*(fEntryMax-fEntryMin));
+   if (fEntryNext == fEntryMin) fEntryNext++;
+   Int_t nleaves = tree->GetListOfLeaves()->GetEntries();
+   fBranches = new TBranch*[nleaves];
 }
 
 //______________________________________________________________________________
@@ -68,6 +81,8 @@ TTreeFilePrefetch::TTreeFilePrefetch(const TTreeFilePrefetch &pf) : TFilePrefetc
 TTreeFilePrefetch::~TTreeFilePrefetch()
 {
    // destructor. (in general called by the TFile destructor
+   
+   delete [] fBranches;
 }
 
 //______________________________________________________________________________
@@ -80,12 +95,97 @@ TTreeFilePrefetch& TTreeFilePrefetch::operator=(const TTreeFilePrefetch& pf)
 }         
 
 //_____________________________________________________________________________
-Double_t TTreeFilePrefetch::GetThreshold()
+void TTreeFilePrefetch::AddBranch(TBranch *b)
 {
-   //static function returning fgThreshold
-   //see SetThreshold
+   //add a branch to the list of branches to be stored in the cache
+   //this function is called by TBranch::GetBasket
+      
+   if (!fIsLearning) return;
+
+   //Is branch already in the cache?
+   Bool_t isNew = kTRUE;
+   for (int i=0;i<fNbranches;i++) {
+      if (fBranches[i] == b) {isNew = kFALSE; break;}
+   }
+   if (isNew) {
+      fBranches[fNbranches] = b;
+      fNbranches++;
+      if (gDebug > 0) printf("Entry: %lld, registering branch: %s\n",b->GetTree()->GetReadEntry(),b->GetName());
+   }
+}
+
+//_____________________________________________________________________________
+void TTreeFilePrefetch::Clear(Option_t *)
+{
+   //clear the cache (called by TChain::LoadTree)
    
-   return fgThreshold;
+   Prefetch(0,0);
+   fNbranches = 0;
+   fIsLearning = kTRUE;
+}
+   
+
+//_____________________________________________________________________________
+Bool_t TTreeFilePrefetch::FillBuffer()
+{
+   //Fill the cache buffer with the branchse in the cache
+   
+   if (fNbranches <= 0) return kFALSE;
+   TTree *tree = fBranches[0]->GetTree();
+   Long64_t entry = tree->GetReadEntry();
+   if (fIsLearning && entry < fEntryNext) return kFALSE;
+   //compute total size of the branches stored in cache
+   Long64_t totbytes = 0;
+   Int_t i;
+   for (i=0;i<fNbranches;i++) {
+      totbytes += fBranches[i]->GetZipBytes();
+   }
+   //estimate number of entries that can fit in the cache
+   Long64_t oldEntryNext = fEntryNext;
+   fEntryNext = entry + tree->GetEntries()*fBufferSize/totbytes;
+   if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
+         
+   //clear cache buffer
+   TFilePrefetch::Prefetch(0,0);
+   //store baskets
+   for (i=0;i<fNbranches;i++) {
+      TBranch *b = fBranches[i];
+      Int_t nb = b->GetMaxBaskets();
+      Int_t *lbaskets   = b->GetBasketBytes();
+      Long64_t *entries = b->GetBasketEntry();
+      if (!lbaskets || !entries) continue;
+      //we have found the branch. We now register all its baskets
+      //from the requested offset to the basket below fEntrymax
+      for (Int_t j=0;j<nb;j++) {
+         Long64_t pos = b->GetBasketSeek(j);
+         Int_t len = lbaskets[j];
+         if (pos <= 0 || len <= 0) continue;
+         if (entries[j] >= oldEntryNext && entries[j] < fEntryNext) {
+            TFilePrefetch::Prefetch(pos,len);
+         }
+      }
+      if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s\n",entry,fBranches[i]->GetName());
+   }
+   fIsLearning = kFALSE;
+   return kTRUE;
+}
+
+
+//_____________________________________________________________________________
+Double_t TTreeFilePrefetch::GetLearnRatio()
+{
+   //static function returning fgLearnRatio
+   //see SetLearnRatio
+   
+   return fgLearnRatio;
+}
+
+//_____________________________________________________________________________
+TTree *TTreeFilePrefetch::GetTree() const
+{
+   //return Tree in the cache
+   if (fNbranches <= 0) return 0;
+   return fBranches[0]->GetTree();
 }
 
 //_____________________________________________________________________________
@@ -93,71 +193,19 @@ Bool_t TTreeFilePrefetch::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    // Read buffer at position pos.
    // If pos is in the list of prefetched blocks read from fBuffer,
+   // then try to fill the cache from the list of selected branches,
    // otherwise normal read from file. Returns kTRUE in case of failure.
-   //This function overloads TFilePrefetch::ReadBuffer.
+   // This function overloads TFilePrefetch::ReadBuffer.
+   // It returns kFALSE if the requested block is in the cache
    
-   if (fNseek > 0 && !fIsSorted) {
-      TFilePrefetch::Sort();
-      if (fFile->ReadBuffers(fBuffer,fPos,fLen,fNb))
-         return kTRUE;
-   }
-   Int_t loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
-   if (loc >= 0 && loc <fNseek && pos == fSeekSort[loc]) {
-      memcpy(buf,&fBuffer[fSeekPos[loc]],len);
-      fFile->Seek(pos+len);
-      return kFALSE;
-   }
+   //Is request already in the cache?
+   Bool_t inCache = !TFilePrefetch::ReadBuffer(buf,pos,len);
+   if (inCache) return kFALSE;
    
-   //not found in cache. Register this block
-   if (!Register(pos)) return kTRUE;
-   return ReadBuffer(buf,pos,len);
-}
-
-//_____________________________________________________________________________
-Bool_t TTreeFilePrefetch::Register(Long64_t offset)
-{ 
-   // Register branch owning basket at starting position offset
-   // return kTRUE if the registration succeeds
-   
-   Bool_t status = kFALSE;
-   //do not cache branches with a small hit rate   
-   if ((fTree->GetReadEntry()-fEntryMin) > 100*fgThreshold) return status;
-   
-   //reset cache when reaching the maximum cache size
-   if (fNtot+30000 > fBufferSize) TFilePrefetch::Prefetch(0,0);
-   Int_t nleaves = fTree->GetListOfLeaves()->GetEntriesFast();
-   //loop on all the branches to find the branch with a buffer starting at offset
-   TBranch *branch = 0;
-   for (Int_t i=0;i<nleaves;i++) {
-      TLeaf *leaf = (TLeaf*)fTree->GetListOfLeaves()->At(i);
-      branch = leaf->GetBranch();
-      //if (branch->GetListOfBranches()->GetEntriesFast() > 0) continue;
-      Int_t nb = branch->GetMaxBaskets();
-      Int_t *lbaskets   = branch->GetBasketBytes();
-      Long64_t *entries = branch->GetBasketEntry();
-      //we have found the branch. We now register all its baskets
-      //from the requested offset to the basket below fEntrymax
-      Int_t ntb = 0;
-      for (Int_t j=0;j<nb;j++) {
-         if (branch->GetBasketSeek(j) == offset) {
-            for (Int_t k=j;k<nb;k++) {
-               Long64_t pos = branch->GetBasketSeek(k);
-               Int_t len = lbaskets[k];
-               if (pos <= 0 || len <= 0) continue;
-               if (fNtot+len > fBufferSize || entries[k] > fEntryMax) {
-                  return status;
-               }
-               TFilePrefetch::Prefetch(pos,len);
-               ntb++;
-               status = kTRUE;
-            }
-            if (gDebug > 0) printf("Entry: %lld, registering branch %s offset=%lld\n",fTree->GetReadEntry(),branch->GetName(),offset);
-            return status;
-         }
-      }
-   }
-   if (status && branch && gDebug > 0) printf("Entry: %lld, registering branch %s offset=%lld\n",fTree->GetReadEntry(),branch->GetName(),offset);
-   return status;
+   //not found in cache. Do we need to fill the cache?
+   Bool_t bufferFilled = FillBuffer();
+   if (bufferFilled) return TFilePrefetch::ReadBuffer(buf,pos,len);
+   return kTRUE;
 }
 
 //_____________________________________________________________________________
@@ -167,26 +215,24 @@ void TTreeFilePrefetch::SetEntryRange(Long64_t emin, Long64_t emax)
    // this information helps to optimize the number of baskets to read
    // when prefetching the branch buffers.
    
-   fEntryMin = emin;
-   fEntryMax = emax;
+   fEntryMin  = emin;
+   fEntryMax  = emax;
+   Long64_t learn = Long64_t(fgLearnRatio*(fEntryMax-fEntryMin));
+   if (learn < 2) learn = 2;
+   fEntryNext = emin + learn;
+   fIsLearning = kTRUE;
+   fNbranches = 0;
+   if (gDebug > 0) printf("SetEntryRange: fEntryMin=%lld, fEntryMax=%lld, fEntryNext=%lld\n",fEntryMin,fEntryMax,fEntryNext);
+   
 }
 
 //_____________________________________________________________________________
-void TTreeFilePrefetch::SetTree(TTree *tree)
+void TTreeFilePrefetch::SetLearnRatio(Double_t ratio)
 {
-   //change current tree
+   // Static function to set the fraction of entries to be used in learning mode
+   // The default value for ratio is 0.01 (1 per cent).
+   // In case the ratio specified is such that less than 2 entries
+   // participate to the learning, a minimum of 2 entries are used.
    
-   fTree = tree;
-}
-
-//_____________________________________________________________________________
-void TTreeFilePrefetch::SetThreshold(Double_t t)
-{
-   // Static function to set fgThreshold
-   // A new basket will not be registered in the cache if
-   // the current (Tree entry < fEntryMin) > 100*fgThreshold
-   // so t is more or less the percentage of baskets read to be considered in the cache
-   // This algorithm eliminates branches where only a few baskets are processed
-   
-   fgThreshold = t;
+   fgLearnRatio = ratio;
 }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.131 2006/06/08 12:46:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.132 2006/06/08 16:59:02 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -963,7 +963,6 @@ Long64_t TChain::LoadTree(Long64_t entry)
          }
          tpf = (TTreeFilePrefetch*)fFile->GetFilePrefetch();
          fFile->SetFilePrefetch(0);
-         if(tpf) tpf->Prefetch(0,0);
          if (fCanDeleteRefs) fFile->Close("R");
          delete fFile; fFile = 0; fTree = 0;
       }
@@ -1007,7 +1006,8 @@ Long64_t TChain::LoadTree(Long64_t entry)
    if (tpf) {
       fFile->SetFilePrefetch(tpf);
       tpf->SetFile(fFile);
-      tpf->SetTree(fTree);
+      tpf->Clear();
+      tpf->SetEntryRange(0,fTree->GetEntries());
    } else {
       fTree->SetCacheSize(fCacheSize);
    }

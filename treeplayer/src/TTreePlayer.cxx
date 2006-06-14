@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.212 2006/06/08 13:26:01 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.213 2006/06/12 09:02:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2587,11 +2587,16 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
    readbytesatstart = TFile::GetFileBytesRead();
    
    //set the file cache
+   TTreeFilePrefetch *tpf = 0;
    TFile *curfile = fTree->GetCurrentFile();
    if (curfile && fTree->GetCacheSize() > 0) {
-      TTreeFilePrefetch *tpf = (TTreeFilePrefetch*)curfile->GetFilePrefetch();
+      tpf = (TTreeFilePrefetch*)curfile->GetFilePrefetch();
       if (tpf) tpf->SetEntryRange(firstentry,firstentry+nentries);
-      else fTree->SetCacheSize(fTree->GetCacheSize());
+      else {
+         fTree->SetCacheSize(fTree->GetCacheSize());
+         tpf = (TTreeFilePrefetch*)curfile->GetFilePrefetch();
+         if (tpf) tpf->SetEntryRange(firstentry,firstentry+nentries);
+      }
    }
    
    if (selector->GetStatus()!=-1) {
@@ -2628,6 +2633,8 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
             gMonitoringWriter->SendProcessingProgress((entry-firstentry),TFile::GetFileBytesRead()-readbytesatstart,kTRUE);
       }
       delete timer;
+      //we must reset the cache
+      if (tpf) tpf->SetEntryRange(0,fTree->GetEntries());
 
       selector->SlaveTerminate();   //<==call user termination function
       selector->Terminate();        //<==call user termination function
