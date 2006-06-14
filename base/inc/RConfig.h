@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.89 2006/05/31 15:52:04 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.90 2006/06/14 18:09:38 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -408,7 +408,6 @@
 #   define NEED_STRING
 #   define NEED_STRCASECMP
 #   define NEED_SNPRINTF
-#   define DONTNEED_VSNPRINTF
 #   define ANSICPP
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
@@ -418,6 +417,9 @@
 #   endif
 #   if _MSC_VER >= 1310
 #     define R__SSTREAM       /* has <sstream> iso <strstream> */
+#   endif
+#   if _MSC_VER >= 1400
+#     define DONTNEED_VSNPRINTF
 #   endif
 #   if _MSC_VER < 1310
 #      define R__NO_CLASS_TEMPLATE_SPECIALIZATION
