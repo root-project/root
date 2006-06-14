@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.14 2006/05/26 09:16:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.15 2006/05/28 20:08:00 brun Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -227,13 +227,6 @@ TGHProgressBar::TGHProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
 
    fBarWidth = h;
    fEditDisabled = kEditDisableHeight;
-
-   if (!p && fClient->IsEditable()) {
-      Resize(100, GetDefaultHeight());
-      SetPosition(25);
-      fFormat =  "%.2f";
-      SetFillType(kBlockFill);
-   }
 }
 
 //______________________________________________________________________________
@@ -341,12 +334,6 @@ TGVProgressBar::TGVProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
 
    fBarWidth = w;
    fEditDisabled = kEditDisableWidth;
-
-   if (!p && fClient->IsEditable()) {
-      Resize(GetDefaultWidth(), 100);
-      SetPosition(25);
-      SetFillType(kBlockFill);
-   }
 }
 
 //______________________________________________________________________________

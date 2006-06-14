@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.35 2006/06/01 11:38:15 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.36 2006/06/14 07:52:55 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 #include "TGTab.h"
 #include "TGListBox.h"
 #include "TGComboBox.h"
+#include "TGProgressBar.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -763,12 +764,12 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddAction(act, "Bars");
 
    act = new TGuiBldAction("TGHProgressBar", "HProgress Bar", kGuiBldCtor);
-   act->fAct = "new TGHProgressBar()";
+   act->fAct = "TRootGuiBuilder::BuildHProgressBar()";
    act->fPic = "bld_hprogressbar.xpm";
    AddAction(act, "Display");
 
    act = new TGuiBldAction("TGVProgressBar", "VProgress Bar", kGuiBldCtor);
-   act->fAct = "new TGVProgressBar()";
+   act->fAct = "TRootGuiBuilder::BuildVProgressBar()";
    act->fPic = "bld_vprogressbar.xpm";
    AddAction(act, "Display");
 
@@ -2380,3 +2381,31 @@ TGFrame *TRootGuiBuilder::BuildVScrollBar()
    return b;
 }
 
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildHProgressBar()
+{
+   // Helper method to create TGHProgressBar
+
+   TGHProgressBar *b = new TGHProgressBar();
+
+   b->Resize(100, b->GetDefaultHeight());
+   b->SetPosition(25);
+   b->Format("%.2f");
+   b->SetFillType(TGProgressBar::kBlockFill);
+
+   return b;
+}
+
+//______________________________________________________________________________
+TGFrame *TRootGuiBuilder::BuildVProgressBar()
+{
+   // Helper method to create TGVProgressBar
+
+   TGVProgressBar *b = new TGVProgressBar();
+
+   b->Resize(b->GetDefaultWidth(), 100);
+   b->SetPosition(25);
+   b->SetFillType(TGProgressBar::kBlockFill);
+
+   return b;
+}
