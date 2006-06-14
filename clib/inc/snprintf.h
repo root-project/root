@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: snprintf.h,v 1.1 2000/12/10 10:54:53 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: snprintf.h,v 1.2 2002/07/09 15:29:54 rdm Exp $ */
 /* Author: Fons Rademakers  10/12/2000 */
 
 /*
@@ -23,7 +23,9 @@
 extern "C" {
 #endif
 
+#ifndef DONTNEED_VSNPRINTF
 int vsnprintf(char *string, size_t length, const char *format, va_list args);
+#endif
 int snprintf(char *string, size_t length, const char *format, ...);
 
 #ifdef __cplusplus

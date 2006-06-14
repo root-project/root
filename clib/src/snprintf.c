@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.7 2005/12/08 17:36:18 pcanal Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.8 2005/12/12 03:33:51 pcanal Exp $ */
 /* Author: Tomi Salo & Fons Rademakers */
 
 /*
@@ -65,6 +65,8 @@ typedef unsigned long long ULong64_t; /* Portable unsigned long integer 8 bytes 
 #define UNSIGNED_DEC 0x200
 #define ZERO_PADDING 0x400
 #define IS_LONG_LONG_INT 0x800
+
+#ifndef DONTNEED_VSNPRINTF
 
 /* Extract a formatting directive from str. Str must point to a '%'.
    Returns number of characters used or zero if extraction failed. */
@@ -333,7 +335,6 @@ static int snprintf_convert_float(char *buffer, size_t buf_size,
    return print_buf_len;
 }
 
-
 int vsnprintf(char *str, size_t size, const char *format, va_list ap)
 {
    int status, left = (int) size - 1;
@@ -576,7 +577,7 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
 
    return size - left - 1;
 }
-
+#endif
 
 int snprintf(char *str, size_t size, const char *format, ...)
 {

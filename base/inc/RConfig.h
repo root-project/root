@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.88 2006/05/31 15:24:46 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.89 2006/05/31 15:52:04 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -408,6 +408,7 @@
 #   define NEED_STRING
 #   define NEED_STRCASECMP
 #   define NEED_SNPRINTF
+#   define DONTNEED_VSNPRINTF
 #   define ANSICPP
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
