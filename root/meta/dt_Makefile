@@ -76,7 +76,7 @@ Streamer="Event::Streamer not available,"
 
 
 dt_RunDrawTest_C.$(DllSuf) : dt_RunDrawTest.C dt_DrawTest.C
-	@root -l -b -q dt_build.C $(OUTPUT) && \
+	@root -l -b -q dt_build.C  2>&1 $(OUTPUT)| grep -v _cint.cxx && \
 	echo "$@ made"
 
 #Windows does not like piping 
