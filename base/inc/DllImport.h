@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name$:$Id$ */
+/* @(#)root/base:$Name:  $:$Id: DllImport.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,7 +9,7 @@
  *************************************************************************/
 
 /*
-  This include file defines DllImport/DllExport macro
+  This include file defines the DllImport macro
   to build DLLs under Windows OS.
 
   They are defined as dummy for UNIX's
@@ -20,16 +20,11 @@
 
 #ifndef __CINT__
 #if defined(WIN32)
-#  define DllImport     __declspec( dllimport )
+#  define R__DllImport  __declspec( dllimport )
 #else
-#  define DllImport
+#  define R__DllImport
 #endif
-#if defined(_DLL)
-#  define DllExport     __declspec( dllexport )
-#else
-#  define DllExport
-#endif
-#  define R__EXTERN       DllImport extern
+#  define R__EXTERN       R__DllImport extern
 #endif
 
 
