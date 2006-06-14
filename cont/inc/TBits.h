@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.12 2005/11/16 20:04:47 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TBits.h,v 1.13 2006/01/11 07:21:05 pcanal Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -46,6 +46,7 @@ protected:
    UInt_t   fNbits;         // Number of bits (around fNbytes*8)
    UInt_t   fNbytes;        // Number of UChars in fAllBits
    UChar_t *fAllBits;       //[fNbytes] array of UChars
+
    void ReserveBytes(UInt_t nbytes);
    void DoAndEqual(const TBits& rhs);
    void DoOrEqual (const TBits& rhs);
@@ -69,27 +70,22 @@ public:
       TReference(); // left undefined
 
 public:
-      TReference(TBits& bit, UInt_t pos) : fBits(bit),fPos(pos) {}
+      TReference(TBits& bit, UInt_t pos) : fBits(bit),fPos(pos) { }
       ~TReference() { }
 
        // For b[i] = val;
-      TReference& operator=(Bool_t val) {
-         fBits.SetBitNumber(fPos,val); return *this;
-      }
+      TReference& operator=(Bool_t val);
 
       // For b[i] = b[__j];
-      TReference& operator=(const TReference& rhs) {
-         fBits.SetBitNumber(fPos,rhs.fBits.TestBitNumber(rhs.fPos)); return *this;
-      }
+      TReference& operator=(const TReference& rhs);
 
 #ifndef __CINT__
       // Flips the bit
-      Bool_t operator~() const { return !fBits.TestBitNumber(fPos); }
+      Bool_t operator~() const;
 #endif
 
       // For val = b[i];
-      operator Bool_t() const { return fBits.TestBitNumber(fPos); }
-
+      operator Bool_t() const;
    };
 
    //----- bit manipulation
@@ -101,7 +97,7 @@ public:
 
    //----- Accessors and operator
    TBits::TReference operator[](UInt_t bitnumber) { return TReference(*this,bitnumber); }
-   Bool_t operator[](UInt_t bitnumber) const { return TestBitNumber(bitnumber); }
+   Bool_t operator[](UInt_t bitnumber) const;
 
    TBits& operator&=(const TBits& rhs) { DoAndEqual(rhs); return *this; }
    TBits& operator|=(const TBits& rhs) {  DoOrEqual(rhs); return *this; }
@@ -246,6 +242,41 @@ inline Bool_t TBits::TestBitNumber(UInt_t bitnumber) const
 inline void TBits::ResetBitNumber(UInt_t bitnumber)
 {
    SetBitNumber(bitnumber,kFALSE);
+}
+
+inline Bool_t TBits::operator[](UInt_t bitnumber) const
+{
+   return TestBitNumber(bitnumber);
+}
+
+inline TBits::TReference& TBits::TReference::operator=(Bool_t val)
+{
+   // For b[i] = val.
+
+   fBits.SetBitNumber(fPos,val); return *this;
+}
+
+inline TBits::TReference& TBits::TReference::operator=(const TReference& rhs)
+{
+   // For b[i] = b[__j].
+
+   fBits.SetBitNumber(fPos,rhs.fBits.TestBitNumber(rhs.fPos)); return *this;
+}
+
+#ifndef __CINT__
+inline Bool_t TBits::TReference::operator~() const
+{
+   // Flips the bit.
+
+   return !fBits.TestBitNumber(fPos);
+}
+#endif
+
+inline TBits::TReference::operator Bool_t() const
+{
+   // For val = b[i].
+
+   return fBits.TestBitNumber(fPos);
 }
 
 #endif

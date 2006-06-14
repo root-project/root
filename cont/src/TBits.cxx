@@ -1,8 +1,7 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.18 2005/10/25 14:27:31 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TBits.cxx,v 1.19 2005/11/16 20:07:50 pcanal Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
-//______________________________________________________________________________
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
