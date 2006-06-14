@@ -1,3 +1,14 @@
+// @(#)root/gl:$Name:  $:$Id: TGLPainterAlgorithms.h,v 1.1 2006/06/14 10:00:00 couet Exp $
+// Author:  Timur Pocheptsov  14/06/2006
+                                                                                
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TGLPainterAlgorithms
 #define ROOT_TGLPainterAlgorithms
 
