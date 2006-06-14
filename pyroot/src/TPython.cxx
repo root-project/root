@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.13 2005/11/17 06:26:35 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.14 2006/06/14 13:46:30 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -181,6 +181,11 @@ void TPython::LoadMacro( const char* name )
 void TPython::ExecScript( const char* name, int argc, const char** argv )
 {
 // Execute a python stand-alone script, with argv CLI arguments.
+//
+// example of use:
+//    const char* argv[] = { "1", "2", "3" };
+//    TPython::ExecScript( "test.py", sizeof(argv)/sizeof(argv[0]), argv );
+
 
 // setup
    if ( ! Initialize() )
