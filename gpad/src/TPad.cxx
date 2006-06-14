@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.229 2006/05/12 07:40:47 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.230 2006/05/26 15:13:01 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1719,6 +1719,7 @@ again:
 
    case kButton1Motion:
 
+      if (TestBit(kCannotMove)) break;
       wx = wy = 0;
 
       if (pA) {
