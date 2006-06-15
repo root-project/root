@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.11 2006/05/14 08:19:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.12 2006/05/18 09:37:04 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -179,6 +179,9 @@ void TRandom3::SetSeed(UInt_t seed)
 // if seed is 0 (default value) a TUUID is generated and used to fill
 // the first 8 integers of the seed array.
 // In this case the seed is guaranteed to be unique in space and time.
+// Use upgraded seeding procedure to fix a known problem when seeding with values 
+// with many zero in the bit pattern (like 2**28).
+// see http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/emt19937ar.html
    
    TRandom::SetSeed(seed);
    fCount624 = 624;
@@ -196,8 +199,9 @@ void TRandom3::SetSeed(UInt_t seed)
       }
       j = 8;
    }
+   // use multipliers from  Knuth's "Art of Computer Programming" Vol. 2, 3rd Ed. p.106 
    for(i=j; i<624; i++) {
-      fMt[i] = (69069 * fMt[i-1]) & 0xffffffff;
+     fMt[i] = (1812433253 * ( fMt[i-1]  ^ ( fMt[i-1] >> 30)) + i);
    }
 }
 
