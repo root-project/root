@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.h,v 1.3 2000/11/22 08:35:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.h,v 1.4 2003/01/26 21:03:16 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 /*************************************************************************
@@ -33,7 +33,7 @@ private:
    Int_t    fCount624;
 
 public:
-   TRandom3(UInt_t seed=65539);
+   TRandom3(UInt_t seed=4357);
    virtual ~TRandom3();
    virtual  Double_t  Rndm(Int_t i=0);
    virtual  void      RndmArray(Int_t n, Float_t *array);
