@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.7 2006/06/14 13:15:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.8 2006/06/14 22:54:35 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -37,7 +37,6 @@
 #include "TTreeFilePrefetch.h"
 #include "TTree.h"
 #include "TBranch.h"
-#include "TLeaf.h"
 
 Double_t TTreeFilePrefetch::fgLearnRatio = 0.01;
 
@@ -101,7 +100,7 @@ void TTreeFilePrefetch::AddBranch(TBranch *b)
    //this function is called by TBranch::GetBasket
       
    if (!fIsLearning) return;
-   if (b->GetListOfBranches()->GetEntries() > 0) return;
+   //if (b->GetListOfBranches()->GetEntries() > 0) return;
 
    //Is branch already in the cache?
    Bool_t isNew = kTRUE;
@@ -142,10 +141,8 @@ Bool_t TTreeFilePrefetch::FillBuffer()
       totbytes += fBranches[i]->GetZipBytes();
    }
    //estimate number of entries that can fit in the cache
-   Long64_t oldEntryNext = fEntryNext;
    fEntryNext = entry + tree->GetEntries()*fBufferSize/totbytes;
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
-//printf("FillBuffer, entry=%lld, oldEntryNext=%lld, fEntryNext=%lld\n",entry,oldEntryNext,fEntryNext);
          
    //clear cache buffer
    TFilePrefetch::Prefetch(0,0);

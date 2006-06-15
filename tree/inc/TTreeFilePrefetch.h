@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.h,v 1.3 2006/06/12 09:02:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.h,v 1.4 2006/06/14 13:15:55 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -31,12 +31,12 @@ class TBranch;
 class TTreeFilePrefetch : public TFilePrefetch {
 
 protected:
-   Long64_t        fEntryMin;    //first entry in the cache
-   Long64_t        fEntryMax;    //last entry in the cache
-   Long64_t        fEntryNext;   //next entry number where cache must be filled
-   Int_t           fNbranches;   //Number of branches in the cache
-   TBranch       **fBranches;    //List of branches to be stored in the cache
-   Bool_t          fIsLearning;  //true if cache is in learning mode
+   Long64_t        fEntryMin;    //! first entry in the cache
+   Long64_t        fEntryMax;    //! last entry in the cache
+   Long64_t        fEntryNext;   //! next entry number where cache must be filled
+   Int_t           fNbranches;   //! Number of branches in the cache
+   TBranch       **fBranches;    //! [fNbranches] List of branches to be stored in the cache
+   Bool_t          fIsLearning;  //! true if cache is in learning mode
    static Double_t fgLearnRatio; //fraction of entries used for learning mode
 
 protected:
