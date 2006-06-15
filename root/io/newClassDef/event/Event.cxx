@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.8 2000/10/02 15:46:19 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.1.1.1 2002/08/02 22:24:36 pcanal Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -81,7 +81,9 @@ TH1F *Event::fgHist = 0;
 Double_t EventHeader::fgNever = 55;
 
 //______________________________________________________________________________
-Event::Event()
+Event::Event() : fEventName(0), fNtrack(0), fNseg(0), fNvertex(0), fFlag(0), 
+                 fTemperature(0), fClosestDistance(0), fTracks(0), fHighPt(0), 
+                 fMuons(0), fH(0)
 {
    // default constructor of an Event object.
    // When the constructor is invoked for the first time, the class static
@@ -90,8 +92,6 @@ Event::Event()
    //if (!fgTracks) fgTracks = new TClonesArray("Track", 1000);
    if (!fgTracks) fgTracks = new TClonesArray("BigTrack", 1000);
    fTracks = fgTracks;
-   fNtrack = 0;
-   fH      = 0;
    Int_t i0,i1;
    for (i0 = 0; i0 < 4; i0++) {
       for (i1 = 0; i1 < 4; i1++) {
@@ -170,7 +170,6 @@ Event::Event()
    } 
    
    fRefH = 0;
-   fEventName = 0;
    fTracksInVertex = 0;
 }
 

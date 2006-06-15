@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.27 2004/01/25 20:33:32 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.1 2004/02/16 22:06:06 pcanal Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -88,7 +88,9 @@ TClonesArray *Event::fgTracks = 0;
 TH1F *Event::fgHist = 0;
 
 //______________________________________________________________________________
-Event::Event()
+Event::Event() : fEventName(0), fNtrack(0), fNseg(0), fNvertex(0), fFlag(0), 
+                 fTemperature(0), fClosestDistance(0), fTracks(0), fHighPt(0), 
+                 fMuons(0), fH(0)
 {
    // Create an Event object.
    // When the constructor is invoked for the first time, the class static
@@ -98,8 +100,6 @@ Event::Event()
    fTracks = fgTracks;
    fHighPt = new TRefArray;
    fMuons  = new TRefArray;
-   fNtrack = 0;
-   fH      = 0;
    Int_t i0,i1;
    for (i0 = 0; i0 < 4; i0++) {
       for (i1 = 0; i1 < 4; i1++) {
@@ -108,9 +108,7 @@ Event::Event()
    }
    for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
    for (i0 = 0; i0 <20; i0++) fType[i0] = 0;
-   fClosestDistance = 0;
    fVClosestDistance.clear();
-   fEventName = 0;
    fWebHistogram.SetAction(this);
 }
 

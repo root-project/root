@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.2 2002/10/22 10:08:51 pcanal Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.3 2004/02/16 16:20:38 pcanal Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -92,6 +92,7 @@ Event::Event()
    fTracks = fgTracks;
    fNtrack = 0;
    fH      = 0;
+   fNvertex= 0;
    Int_t i0,i1;
    for (i0 = 0; i0 < 4; i0++) {
       for (i1 = 0; i1 < 4; i1++) {
