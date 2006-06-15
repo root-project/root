@@ -12,7 +12,8 @@ UTILSDIRS    := $(UTILSDIR)/src
 UTILSDIRI    := $(UTILSDIR)/inc
 
 ##### rootcint #####
-ROOTCINTS    := $(MODDIRS)/rootcint.cxx $(wildcard $(MODDIRS)/R*.cxx)
+ROOTCINTS    := $(MODDIRS)/rootcint.cxx \
+                $(filter-out %_tmp.cxx,$(wildcard $(MODDIRS)/R*.cxx))
 ROOTCINTO    := $(ROOTCINTS:.cxx=.o)
 ROOTCINTDEP  := $(ROOTCINTO:.o=.d)
 ROOTCINTTMPO := $(ROOTCINTS:.cxx=_tmp.o)
