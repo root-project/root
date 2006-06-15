@@ -196,7 +196,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          if (nextbit > ncx) refTriggerBitsFunc->Fill(ncx+1);
          else               refTriggerBitsFunc->Fill(nextbit);
       }
-      if (bits.TestBitNumber(30)) refFiltTriggerBits->Fill(nbits);
+      if (bits.TestBitNumber(28)) refFiltTriggerBits->Fill(nbits);
 
       ntracks = event->GetNtrack();
       refSize->Fill(ntracks);
