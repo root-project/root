@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.cxx,v 1.2 2005/09/19 09:57:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #include "Math/GenVector/BitReproducible.h"
@@ -11,10 +11,11 @@ namespace ROOT {
  namespace Math { 
   namespace GenVector_detail {
 
-bool BitReproducible::byte_order_known = false;
-int  BitReproducible::byte_order[8];
+bool BitReproducible::fgByte_order_known = false;
+int  BitReproducible::fgByte_order[8];
 
 void BitReproducible::Fill_byte_order () {
+  // Fill_byte_order
   double x = 1.0;
   int t30 = 1 << 30;
   int t22 = 1 << 22;
@@ -30,19 +31,19 @@ void BitReproducible::Fill_byte_order () {
   }
   // x, in IEEE format, would now be 0x4330060504030201
   union DB8 {
-    unsigned char b[8];
-    double d;
+    unsigned char fB[8];
+    double fD;
   };
   DB8 xb;
-  xb.d = x;
+  xb.fD = x;
   int n;
-  static const int UNSET = -1;
+  static const int kUNSET = -1;
   for (n=0; n<8; n++) {
-    byte_order[n] = UNSET;
+    fgByte_order[n] = kUNSET;
   }
   int order;
   for (n=0; n<8; n++) {
-    switch ( xb.b[n] ) {
+    switch ( xb.fB[n] ) {
       case 0x43:
         order = 0;
         break;
@@ -71,46 +72,49 @@ void BitReproducible::Fill_byte_order () {
         throw BitReproducibleException(
         "Cannot determine byte-ordering of doubles on this system");
     }
-    if (byte_order[n] != UNSET) {
+    if (fgByte_order[n] != kUNSET) {
         throw BitReproducibleException(
         "Confusion in byte-ordering of doubles on this system");
     }
-    byte_order[n] = order;
-    byte_order_known = true;
+    fgByte_order[n] = order;
+    fgByte_order_known = true;
   }
   return;
 }
 
 std::string BitReproducible::D2x(double d) {
-  if ( !byte_order_known ) Fill_byte_order ();
+  // hex conversion
+  if ( !fgByte_order_known ) Fill_byte_order ();
   DB8 db;
-  db.d = d;
+  db.fD = d;
   std::ostringstream ss;
   for (int i=0; i<8; ++i) {
-    int k = byte_order[i];
-    ss << std::hex << std::setw(2) << std::setfill('0') << (int)db.b[k];
+    int k = fgByte_order[i];
+    ss << std::hex << std::setw(2) << std::setfill('0') << (int)db.fB[k];
   }
   return ss.str();
 }
 
 void BitReproducible::Dto2longs(double d, unsigned long& i, unsigned long& j) {
-  if ( !byte_order_known ) Fill_byte_order ();
+  // conversion to 2 longs
+  if ( !fgByte_order_known ) Fill_byte_order ();
   DB8 db;
-  db.d = d;
-  i    =   ((static_cast<unsigned long>(db.b[byte_order[0]])) << 24)
-         | ((static_cast<unsigned long>(db.b[byte_order[1]])) << 16)
-         | ((static_cast<unsigned long>(db.b[byte_order[2]])) <<  8)
-         | ((static_cast<unsigned long>(db.b[byte_order[3]]))      );
-  j    =   ((static_cast<unsigned long>(db.b[byte_order[4]])) << 24)
-         | ((static_cast<unsigned long>(db.b[byte_order[5]])) << 16)
-         | ((static_cast<unsigned long>(db.b[byte_order[6]])) <<  8)
-         | ((static_cast<unsigned long>(db.b[byte_order[7]]))      );
+  db.fD = d;
+  i    =   ((static_cast<unsigned long>(db.fB[fgByte_order[0]])) << 24)
+         | ((static_cast<unsigned long>(db.fB[fgByte_order[1]])) << 16)
+         | ((static_cast<unsigned long>(db.fB[fgByte_order[2]])) <<  8)
+         | ((static_cast<unsigned long>(db.fB[fgByte_order[3]]))      );
+  j    =   ((static_cast<unsigned long>(db.fB[fgByte_order[4]])) << 24)
+         | ((static_cast<unsigned long>(db.fB[fgByte_order[5]])) << 16)
+         | ((static_cast<unsigned long>(db.fB[fgByte_order[6]])) <<  8)
+         | ((static_cast<unsigned long>(db.fB[fgByte_order[7]]))      );
 }
 
 double BitReproducible::Longs2double (unsigned long i, unsigned long j) {
+  // conversion longs to double
   DB8 db;
   unsigned char bytes[8];
-  if ( !byte_order_known ) Fill_byte_order ();
+  if ( !fgByte_order_known ) Fill_byte_order ();
   bytes[0] = static_cast<unsigned char>((i >> 24) & 0xFF);
   bytes[1] = static_cast<unsigned char>((i >> 16) & 0xFF);
   bytes[2] = static_cast<unsigned char>((i >>  8) & 0xFF);
@@ -120,9 +124,9 @@ double BitReproducible::Longs2double (unsigned long i, unsigned long j) {
   bytes[6] = static_cast<unsigned char>((j >>  8) & 0xFF);
   bytes[7] = static_cast<unsigned char>((j      ) & 0xFF);
   for (int k=0; k<8; ++k) {
-    db.b[byte_order[k]] =  bytes[k];
+    db.fB[fgByte_order[k]] =  bytes[k];
   }
-  return db.d;
+  return db.fD;
 }
 
 }  // namespace _GenVector_detail

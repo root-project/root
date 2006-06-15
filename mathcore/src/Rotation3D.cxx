@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.6 2006/02/26 17:20:11 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.7 2006/04/11 13:06:15 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -26,17 +26,19 @@ namespace ROOT {
 
 // ========== Constructors and Assignment =====================
 
-Rotation3D::Rotation3D() {
-  fM[XX] = 1.0;  fM[XY] = 0.0; fM[XZ] = 0.0;
-  fM[YX] = 0.0;  fM[YY] = 1.0; fM[YZ] = 0.0;
-  fM[ZX] = 0.0;  fM[ZY] = 0.0; fM[ZZ] = 1.0;
+Rotation3D::Rotation3D() 
+{
+  // constructor of a identity rotation
+  fM[kXX] = 1.0;  fM[kXY] = 0.0; fM[kXZ] = 0.0;
+  fM[kYX] = 0.0;  fM[kYY] = 1.0; fM[kYZ] = 0.0;
+  fM[kZX] = 0.0;  fM[kZY] = 0.0; fM[kZZ] = 1.0;
 }
  
 
 void
 Rotation3D::Rectify()
 {
-
+  // rectify rotation matrix (make orthogonal) 
   // The "nearest" orthogonal matrix X to a nearly-orthogonal matrix A
   // (in the sense that X is exaclty orthogonal and the sum of the squares
   // of the element differences X-A is as small as possible) is given by
@@ -44,57 +46,57 @@ Rotation3D::Rectify()
 
   // Step 1 -- form symmetric M = A.transpose * A
 
-  double M11 = fM[XX]*fM[XX] + fM[YX]*fM[YX] + fM[ZX]*fM[ZX];
-  double M12 = fM[XX]*fM[XY] + fM[YX]*fM[YY] + fM[ZX]*fM[ZY];
-  double M13 = fM[XX]*fM[XZ] + fM[YX]*fM[YZ] + fM[ZX]*fM[ZZ];
-  double M22 = fM[XY]*fM[XY] + fM[YY]*fM[YY] + fM[ZY]*fM[ZY];
-  double M23 = fM[XY]*fM[XZ] + fM[YY]*fM[YZ] + fM[ZY]*fM[ZZ];
-  double M33 = fM[XZ]*fM[XZ] + fM[YZ]*fM[YZ] + fM[ZZ]*fM[ZZ];
+  double m11 = fM[kXX]*fM[kXX] + fM[kYX]*fM[kYX] + fM[kZX]*fM[kZX];
+  double m12 = fM[kXX]*fM[kXY] + fM[kYX]*fM[kYY] + fM[kZX]*fM[kZY];
+  double m13 = fM[kXX]*fM[kXZ] + fM[kYX]*fM[kYZ] + fM[kZX]*fM[kZZ];
+  double m22 = fM[kXY]*fM[kXY] + fM[kYY]*fM[kYY] + fM[kZY]*fM[kZY];
+  double m23 = fM[kXY]*fM[kXZ] + fM[kYY]*fM[kYZ] + fM[kZY]*fM[kZZ];
+  double m33 = fM[kXZ]*fM[kXZ] + fM[kYZ]*fM[kYZ] + fM[kZZ]*fM[kZZ];
 
-  // Step 2 -- find lower-triangular L such that L * L.transpose = M
+  // Step 2 -- find lower-triangular U such that U * U.transpose = M
 
-  double L11 = std::sqrt(M11);
-  double L21 = M12/L11;
-  double L31 = M13/L11;
-  double L22 = std::sqrt(M22-L21*L21);
-  double L32 = (M23-M12*M13/M11)/L22;
-  double L33 = std::sqrt(M33 - L31*L31 - L32*L32);
-
-
-  // Step 3 -- find K such that K*K = L.  K is also lower-triangular
-
-  double K33 = 1/L33;
-  double K32 = -K33*L32/L22;
-  double K31 = -(K32*L21+K33*L31)/L11;
-  double K22 = 1/L22;
-  double K21 = -K22*L21/L11;
-  double K11 = 1/L11;
+  double u11 = std::sqrt(m11);
+  double u21 = m12/u11;
+  double u31 = m13/u11;
+  double u22 = std::sqrt(m22-u21*u21);
+  double u32 = (m23-m12*m13/m11)/u22;
+  double u33 = std::sqrt(m33 - u31*u31 - u32*u32);
 
 
-  // Step 4 -- N = K.transpose * K is inverse(sqrt(A.transpose()*A.inverse()))
+  // Step 3 -- find V such that V*V = U.  U is also lower-triangular
 
-  double N11 = K11*K11 + K21*K21 + K31*K31;
-  double N12 = K11*K21 + K21*K22 + K31*K32;
-  double N13 = K11*K31 + K21*K32 + K31*K33;
-  double N22 = K21*K21 + K22*K22 + K32*K32;
-  double N23 = K21*K31 + K22*K32 + K32*K33;
-  double N33 = K31*K31 + K32*K32 + K33*K33;
+  double v33 = 1/u33;
+  double v32 = -v33*u32/u22;
+  double v31 = -(v32*u21+v33*u31)/u11;
+  double v22 = 1/u22;
+  double v21 = -v22*u21/u11;
+  double v11 = 1/u11;
+
+
+  // Step 4 -- N = V.transpose * V is inverse(sqrt(A.transpose()*A.inverse()))
+
+  double n11 = v11*v11 + v21*v21 + v31*v31;
+  double n12 = v11*v21 + v21*v22 + v31*v32;
+  double n13 = v11*v31 + v21*v32 + v31*v33;
+  double n22 = v21*v21 + v22*v22 + v32*v32;
+  double n23 = v21*v31 + v22*v32 + v32*v33;
+  double n33 = v31*v31 + v32*v32 + v33*v33;
 
 
   // Step 5 -- The new matrix is A * N
 
-  double A[9];
-  std::copy(fM, &fM[9], A);
+  double mA[9];
+  std::copy(fM, &fM[9], mA);
 
-  fM[XX] = A[XX]*N11 + A[XY]*N12 + A[XZ]*N13;
-  fM[XY] = A[XX]*N12 + A[XY]*N22 + A[XZ]*N23;
-  fM[XZ] = A[XX]*N13 + A[XY]*N23 + A[XZ]*N33;
-  fM[YX] = A[YX]*N11 + A[YY]*N12 + A[YZ]*N13;
-  fM[YY] = A[YX]*N12 + A[YY]*N22 + A[YZ]*N23;
-  fM[YZ] = A[YX]*N13 + A[YY]*N23 + A[YZ]*N33;
-  fM[ZX] = A[ZX]*N11 + A[ZY]*N12 + A[ZZ]*N13;
-  fM[ZY] = A[ZX]*N12 + A[ZY]*N22 + A[ZZ]*N23;
-  fM[ZZ] = A[ZX]*N13 + A[ZY]*N23 + A[ZZ]*N33;
+  fM[kXX] = mA[kXX]*n11 + mA[kXY]*n12 + mA[kXZ]*n13;
+  fM[kXY] = mA[kXX]*n12 + mA[kXY]*n22 + mA[kXZ]*n23;
+  fM[kXZ] = mA[kXX]*n13 + mA[kXY]*n23 + mA[kXZ]*n33;
+  fM[kYX] = mA[kYX]*n11 + mA[kYY]*n12 + mA[kYZ]*n13;
+  fM[kYY] = mA[kYX]*n12 + mA[kYY]*n22 + mA[kYZ]*n23;
+  fM[kYZ] = mA[kYX]*n13 + mA[kYY]*n23 + mA[kYZ]*n33;
+  fM[kZX] = mA[kZX]*n11 + mA[kZY]*n12 + mA[kZZ]*n13;
+  fM[kZY] = mA[kZX]*n12 + mA[kZY]*n22 + mA[kZZ]*n23;
+  fM[kZZ] = mA[kZX]*n13 + mA[kZY]*n23 + mA[kZZ]*n33;
 
 
 } // Rectify()
@@ -107,61 +109,60 @@ Rotation3D::Rectify()
 // operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
 // {
 //   return  DisplacementVector3D< Cartesian3D<double> >  (
-//       fM[XX] * v.X() + fM[XY] * v.Y() + fM[XZ] * v.Z()
-//     , fM[YX] * v.X() + fM[YY] * v.Y() + fM[YZ] * v.Z()
-//     , fM[ZX] * v.X() + fM[ZY] * v.Y() + fM[ZZ] * v.Z() );
+//       fM[kXX] * v.X() + fM[kXY] * v.Y() + fM[kXZ] * v.Z()
+//     , fM[kYX] * v.X() + fM[kYY] * v.Y() + fM[kYZ] * v.Z()
+//     , fM[kZX] * v.X() + fM[kZY] * v.Y() + fM[kZZ] * v.Z() );
 // }
 
-static inline void swap(double & a, double & b) { double t=b; b=a; a=t; }
-
-void
-Rotation3D::
-Invert() {
-  swap (fM[XY], fM[YX]);
-  swap (fM[XZ], fM[ZX]);
-  swap (fM[YZ], fM[ZY]);
+static inline void swap(double & a, double & b) { 
+  // swap two values
+  double t=b; b=a; a=t; 
 }
 
-Rotation3D
-Rotation3D::
-operator * (const Rotation3D  & r) const {
+void Rotation3D::Invert() {
+  // invert a rotation
+  swap (fM[kXY], fM[kYX]);
+  swap (fM[kXZ], fM[kZX]);
+  swap (fM[kYZ], fM[kZY]);
+}
+
+Rotation3D Rotation3D::operator * (const Rotation3D  & r) const {
+  // combine with a rotation of the same type
+
   return Rotation3D 
   (
-    fM[XX]*r.fM[XX] + fM[XY]*r.fM[YX] + fM[XZ]*r.fM[ZX]
-  , fM[XX]*r.fM[XY] + fM[XY]*r.fM[YY] + fM[XZ]*r.fM[ZY]
-  , fM[XX]*r.fM[XZ] + fM[XY]*r.fM[YZ] + fM[XZ]*r.fM[ZZ]
+    fM[kXX]*r.fM[kXX] + fM[kXY]*r.fM[kYX] + fM[kXZ]*r.fM[kZX]
+  , fM[kXX]*r.fM[kXY] + fM[kXY]*r.fM[kYY] + fM[kXZ]*r.fM[kZY]
+  , fM[kXX]*r.fM[kXZ] + fM[kXY]*r.fM[kYZ] + fM[kXZ]*r.fM[kZZ]
   
-  , fM[YX]*r.fM[XX] + fM[YY]*r.fM[YX] + fM[YZ]*r.fM[ZX]
-  , fM[YX]*r.fM[XY] + fM[YY]*r.fM[YY] + fM[YZ]*r.fM[ZY]
-  , fM[YX]*r.fM[XZ] + fM[YY]*r.fM[YZ] + fM[YZ]*r.fM[ZZ]
+  , fM[kYX]*r.fM[kXX] + fM[kYY]*r.fM[kYX] + fM[kYZ]*r.fM[kZX]
+  , fM[kYX]*r.fM[kXY] + fM[kYY]*r.fM[kYY] + fM[kYZ]*r.fM[kZY]
+  , fM[kYX]*r.fM[kXZ] + fM[kYY]*r.fM[kYZ] + fM[kYZ]*r.fM[kZZ]
   
-  , fM[ZX]*r.fM[XX] + fM[ZY]*r.fM[YX] + fM[ZZ]*r.fM[ZX]
-  , fM[ZX]*r.fM[XY] + fM[ZY]*r.fM[YY] + fM[ZZ]*r.fM[ZY]
-  , fM[ZX]*r.fM[XZ] + fM[ZY]*r.fM[YZ] + fM[ZZ]*r.fM[ZZ]
+  , fM[kZX]*r.fM[kXX] + fM[kZY]*r.fM[kYX] + fM[kZZ]*r.fM[kZX]
+  , fM[kZX]*r.fM[kXY] + fM[kZY]*r.fM[kYY] + fM[kZZ]*r.fM[kZY]
+  , fM[kZX]*r.fM[kXZ] + fM[kZY]*r.fM[kYZ] + fM[kZZ]*r.fM[kZZ]
   );
 }
 
-Rotation3D
-Rotation3D::
-operator * (const AxisAngle   & a) const {
+Rotation3D Rotation3D::operator * (const AxisAngle   & a) const {
+  // combine with an AxisAngle rotation
   return operator* ( Rotation3D(a) );
 }
 
-Rotation3D
-Rotation3D::
-operator * (const EulerAngles & e) const {
+Rotation3D Rotation3D::operator * (const EulerAngles & e) const {
+  // combine with an EulerAngles rotation
   return operator* ( Rotation3D(e) );
 }
 
-Rotation3D
-Rotation3D::
-operator * (const Quaternion  & q) const {
+Rotation3D Rotation3D::operator * (const Quaternion  & q) const {
+  // combine with a Quaternion rotation
   return operator* ( Rotation3D(q) );
 }
 
 std::ostream & operator<< (std::ostream & os, const Rotation3D & r) {
   // TODO - this will need changing for machine-readable issues
-  //        and even the human readable form needs formatiing improvements
+  //        and even the human readable form needs formatting improvements
   double m[9];
   r.GetComponents(m, m+9);
   os << "\n" << m[0] << "  " << m[1] << "  " << m[2]; 

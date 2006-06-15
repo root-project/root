@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.cxx,v 1.2 2005/09/19 09:57:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -63,10 +63,10 @@ AxisAngle::Rectify()
 
 // ======== Transformation to other Rotation Forms ==================
 
-enum Rotation3DMatrixIndex {
-      XX = 0, XY = 1, XZ = 2
-    , YX = 3, YY = 4, YZ = 5
-    , ZX = 6, ZY = 7, ZZ = 8
+enum ERotation3DMatrixIndex {
+      kXX = 0, kXY = 1, kXZ = 2
+    , kYX = 3, kYY = 4, kYZ = 5
+    , kZX = 6, kZY = 7, kZZ = 8
 };
 
 

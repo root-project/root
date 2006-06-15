@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.6 2006/02/06 17:22:03 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.7 2006/04/11 13:06:15 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -216,8 +216,8 @@ public:
   PositionVector3D<CoordSystem, U>
   operator() (const PositionVector3D<CoordSystem,U> & v) const {
     DisplacementVector3D< Cartesian3D<double>,U > xyz(v);
-    DisplacementVector3D< Cartesian3D<double>,U > Rxyz = operator()(xyz);
-    return PositionVector3D<CoordSystem,U> ( Rxyz );
+    DisplacementVector3D< Cartesian3D<double>,U > rxyz = operator()(xyz);
+    return PositionVector3D<CoordSystem,U> ( rxyz );
   }
 
   /**
@@ -241,8 +241,8 @@ public:
   ForeignVector
   operator() (const  ForeignVector & v) const {
     DisplacementVector3D< Cartesian3D<double> > xyz(v);
-    DisplacementVector3D< Cartesian3D<double> > Rxyz = operator()(xyz);
-    return ForeignVector ( Rxyz.X(), Rxyz.Y(), Rxyz.Z() );
+    DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
+    return ForeignVector ( rxyz.X(), rxyz.Y(), rxyz.Z() );
   }
 
   /**

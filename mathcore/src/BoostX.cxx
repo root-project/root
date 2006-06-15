@@ -1,4 +1,4 @@
-       // @(#)root/mathcore:$Name:  $:$Id: BoostX.cpp,v 1.4 2006/02/04 16:10:26 moneta Exp $
+       // @(#)root/mathcore:$Name:  $:$Id: BoostX.cxx,v 1.3 2006/02/06 17:22:03 moneta Exp $
 // Authors:  M. Fischler  2005  
 
  /**********************************************************************
@@ -29,8 +29,8 @@ namespace ROOT {
 
 BoostX::BoostX() : fBeta(0.0), fGamma(1.0) {}
 
-void
-BoostX::SetComponents (Scalar bx ) {
+void BoostX::SetComponents (Scalar bx ) {
+  // set component
   Scalar bp2 = bx*bx;
   if (bp2 >= 1) {
     GenVector_exception e ( 
@@ -42,27 +42,26 @@ BoostX::SetComponents (Scalar bx ) {
   fGamma = 1.0 / std::sqrt(1.0 - bp2);
 }
 
-void
-BoostX::GetComponents (Scalar& bx) const {
+void BoostX::GetComponents (Scalar& bx) const {
+  // get component
   bx = fBeta;
 }
 
 DisplacementVector3D< Cartesian3D<BoostX::Scalar> >
 BoostX::BetaVector() const {
+  // return beta vector
   return DisplacementVector3D< Cartesian3D<Scalar> > ( fBeta, 0.0, 0.0 );
 }
 
-void 
-BoostX::GetLorentzRotation (Scalar r[]) const {
-  r[LXX] = fGamma;        r[LXY] = 0.0;  r[LXZ] = 0.0;  r[LXT] = fGamma*fBeta;  
-  r[LYX] = 0.0;           r[LYY] = 1.0;  r[LYZ] = 0.0;  r[LYT] = 0.0;  
-  r[LZX] = 0.0;           r[LZY] = 0.0;  r[LZZ] = 1.0;  r[LZT] = 0.0;  
-  r[LTX] = fGamma*fBeta;  r[LTY] = 0.0;  r[LTZ] = 0.0;  r[LTT] = fGamma;  
+void BoostX::GetLorentzRotation (Scalar r[]) const {
+  // get corresponding LorentzRotation
+  r[kLXX] = fGamma;        r[kLXY] = 0.0;  r[kLXZ] = 0.0;  r[kLXT] = fGamma*fBeta;  
+  r[kLYX] = 0.0;           r[kLYY] = 1.0;  r[kLYZ] = 0.0;  r[kLYT] = 0.0;  
+  r[kLZX] = 0.0;           r[kLZY] = 0.0;  r[kLZZ] = 1.0;  r[kLZT] = 0.0;  
+  r[kLTX] = fGamma*fBeta;  r[kLTY] = 0.0;  r[kLTZ] = 0.0;  r[kLTT] = fGamma;  
 }
 
-void 
-BoostX::
-Rectify() {
+void BoostX::Rectify() {
   // Assuming the representation of this is close to a true Lorentz Rotation,
   // but may have drifted due to round-off error from many operations,
   // this forms an "exact" orthosymplectic matrix for the Lorentz Rotation
@@ -82,8 +81,8 @@ Rectify() {
 }
 
 LorentzVector< PxPyPzE4D<double> >
-BoostX::
-operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
+BoostX::operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
+  // apply boost to a LV
   Scalar x = v.Px();
   Scalar t = v.E();
   return LorentzVector< PxPyPzE4D<double> > 
@@ -93,16 +92,16 @@ operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
     , fGamma*fBeta*x + fGamma*t );
 }
 
-void 
-BoostX::
-Invert() { fBeta = -fBeta; }
+void BoostX::Invert() { 
+  // invert
+  fBeta = -fBeta; 
+}
 
-BoostX
-BoostX::
-Inverse() const {
-  BoostX I(*this);
-  I.Invert();
-  return I; 
+BoostX BoostX::Inverse() const {
+  // return an inverse boostX
+  BoostX tmp(*this);
+  tmp.Invert();
+  return tmp; 
 }
 
 // ========== I/O =====================

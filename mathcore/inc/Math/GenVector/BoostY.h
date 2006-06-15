@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BoostY.h,v 1.3 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BoostY.h,v 1.4 2006/05/26 15:10:39 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: BoostY.h,v 1.3 2006/04/11 13:06:15 moneta Exp $
+// Last update: $Id: BoostY.h,v 1.4 2006/05/26 15:10:39 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_BoostY
 #define ROOT_Math_GenVector_BoostY 1
@@ -43,17 +43,17 @@ public:
   typedef double Scalar;
 
   enum LorentzRotationMatrixIndex {
-      LXX =  0, LXY =  1, LXZ =  2, LXT =  3
-    , LYX =  4, LYY =  5, LYZ =  6, LYT =  7
-    , LZX =  8, LZY =  9, LZZ = 10, LZT = 11
-    , LTX = 12, LTY = 13, LTZ = 14, LTT = 15
+      kLXX =  0, kLXY =  1, kLXZ =  2, kLXT =  3
+    , kLYX =  4, kLYY =  5, kLYZ =  6, kLYT =  7
+    , kLZX =  8, kLZY =  9, kLZZ = 10, kLZT = 11
+    , kLTX = 12, kLTY = 13, kLTZ = 14, kLTT = 15
   };
 
   enum BoostMatrixIndex {
-      XX =  0, XY =  1, XZ =  2, XT =  3
-    	     , YY =  4, YZ =  5, YT =  6
-    		      , ZZ =  7, ZT =  8
-    			       , TT =  9
+      kXX =  0, kXY =  1, kXZ =  2, kXT =  3
+    	      , kYY =  4, kYZ =  5, kYT =  6
+    		        , kZZ =  7, kZT =  8
+    			          , kTT =  9
   };
 
   // ========== Constructors and Assignment =====================
@@ -139,8 +139,8 @@ public:
   LorentzVector<CoordSystem>
   operator() (const LorentzVector<CoordSystem> & v) const {
     LorentzVector< PxPyPzE4D<double> > xyzt(v);
-    LorentzVector< PxPyPzE4D<double> > Rxyzt = operator()(xyzt);
-    return LorentzVector<CoordSystem> ( Rxyzt );
+    LorentzVector< PxPyPzE4D<double> > r_xyzt = operator()(xyzt);
+    return LorentzVector<CoordSystem> ( r_xyzt );
   }
 
   /**
@@ -152,8 +152,8 @@ public:
   Foreign4Vector
   operator() (const Foreign4Vector & v) const {
     LorentzVector< PxPyPzE4D<double> > xyzt(v);
-    LorentzVector< PxPyPzE4D<double> > Rxyzt = operator()(xyzt);
-    return Foreign4Vector ( Rxyzt.X(), Rxyzt.Y(), Rxyzt.Z(), Rxyzt.T() );
+    LorentzVector< PxPyPzE4D<double> > r_xyzt = operator()(xyzt);
+    return Foreign4Vector ( r_xyzt.X(), r_xyzt.Y(), r_xyzt.Z(), r_xyzt.T() );
   }
 
   /**

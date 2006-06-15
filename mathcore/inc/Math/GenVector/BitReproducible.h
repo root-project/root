@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.h,v 1.3 2005/09/19 15:50:04 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.h,v 1.4 2005/12/12 13:46:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: fischler  at Mon Jun 25  2005
 //
-// Last update: $Id: BitReproducible.h,v 1.3 2005/09/19 15:50:04 brun Exp $
+// Last update: $Id: BitReproducible.h,v 1.4 2005/12/12 13:46:42 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_BitReproducible 
 #define ROOT_Math_GenVector_BitReproducible  1
@@ -95,12 +95,12 @@ public:
 
 private:
   union DB8 {
-    unsigned char b[8];
-    double d;
+    unsigned char fB[8];
+    double fD;
   };
   static void Fill_byte_order ();
-  static bool byte_order_known;
-  static int  byte_order[8];
+  static bool fgByte_order_known;
+  static int  fgByte_order[8];
     // Meaning of byte_order:  The first (high-order in IEEE 754) byte to
     // output (or the high-order byte of the first unsigned long)
     // is  of db.b[byte_order[0]].  Thus the index INTO byte_order

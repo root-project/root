@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Plane3D.cxx,v 1.2 2005/12/03 15:15:11 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Plane3D.cxx,v 1.3 2006/05/26 15:10:39 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -69,8 +69,8 @@ Scalar Plane3D::Distance(const XYZPoint & p) const {
   return fA*p.X() + fB*p.Y() + fC*p.Z() + fD; 
 }
 
-// normalize the plane 
 void Plane3D::Normalize() { 
+// normalize the plane 
   Scalar s = std::sqrt( fA*fA + fB*fB + fC*fC );
   // what to do if s = 0 ??
   if ( s == 0) { fD = 0; return; }

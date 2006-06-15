@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: QuaternionXaxial.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: QuaternionXaxial.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -13,7 +13,7 @@
 //
 // Created by: Mark Fischler Tues July 19,  2005
 //
-// Last update: $Id: QuaternionXaxial.cpp,v 1.2 2005/08/08 21:16:38 wbrown Exp $
+// Last update: $Id: QuaternionXaxial.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 //
 #include "Math/GenVector/Quaternion.h"
 
@@ -26,9 +26,8 @@ namespace ROOT {
 // we know that two of the four quaternion components will be zero,
 // and we exploit that knowledge:
 
-Quaternion
-Quaternion::
-operator * (const RotationX  & rx) const {
+Quaternion Quaternion::operator * (const RotationX  & rx) const {
+  // combination with a RotationX
   Quaternion q(rx);
   return Quaternion (
                       U()*q.U() - I()*q.I()
@@ -38,9 +37,8 @@ operator * (const RotationX  & rx) const {
                     );
 }
 
-Quaternion
-Quaternion::
-operator * (const RotationY  & ry) const {
+Quaternion Quaternion::operator * (const RotationY  & ry) const {
+  // combination with a RotationY
   Quaternion q(ry);
   return Quaternion (
                       U()*q.U() - J()*q.J()
@@ -50,9 +48,8 @@ operator * (const RotationY  & ry) const {
                     );
 }
 
-Quaternion
-Quaternion::
-operator * (const RotationZ  & rz) const {
+Quaternion Quaternion::operator * (const RotationZ  & rz) const {
+  // combination with a RotationZ
   Quaternion q(rz);
   return Quaternion (
                       U()*q.U() - K()*q.K()

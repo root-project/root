@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: 3DDistances.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: 3DDistances.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -34,10 +34,10 @@ namespace Math {
 namespace gv_detail {
 
 
-enum Rotation3DMatrixIndex
-{ XX = 0, XY = 1, XZ = 2
-, YX = 3, YY = 4, YZ = 5
-, ZX = 6, ZY = 7, ZZ = 8
+enum ERotation3DMatrixIndex
+{ kXX = 0, kXY = 1, kXZ = 2
+, kYX = 3, kYY = 4, kYZ = 5
+, kZX = 6, kZY = 7, kZZ = 8
 };
 
 

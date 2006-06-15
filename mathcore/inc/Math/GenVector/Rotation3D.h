@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.5 2005/12/07 09:31:27 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.6 2006/04/11 13:06:15 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.5 2005/12/07 09:31:27 moneta Exp $
+// Last update: $Id: Rotation3D.h,v 1.6 2006/04/11 13:06:15 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -61,9 +61,9 @@ public:
   typedef double Scalar;
 
   enum Rotation3DMatrixIndex {
-      XX = 0, XY = 1, XZ = 2
-    , YX = 3, YY = 4, YZ = 5
-    , ZX = 6, ZY = 7, ZZ = 8
+      kXX = 0, kXY = 1, kXZ = 2
+    , kYX = 3, kYY = 4, kYZ = 5
+    , kZX = 6, kZY = 7, kZZ = 8
     };
 
   // ========== Constructors and Assignment =====================
@@ -189,9 +189,9 @@ public:
   SetComponents (const ForeignVector& v1,
                  const ForeignVector& v2,
                  const ForeignVector& v3 ) {
-    fM[XX]=v1.x();  fM[XY]=v2.x();  fM[XZ]=v3.x();
-    fM[YX]=v1.y();  fM[YY]=v2.y();  fM[YZ]=v3.y();
-    fM[ZX]=v1.z();  fM[ZY]=v2.z();  fM[ZZ]=v3.z();
+    fM[kXX]=v1.x();  fM[kXY]=v2.x();  fM[kXZ]=v3.x();
+    fM[kYX]=v1.y();  fM[kYY]=v2.y();  fM[kYZ]=v3.y();
+    fM[kZX]=v1.z();  fM[kZY]=v2.z();  fM[kZZ]=v3.z();
     Rectify();
   }
 
@@ -205,9 +205,9 @@ public:
   GetComponents ( ForeignVector& v1,
                   ForeignVector& v2,
                   ForeignVector& v3 ) {
-    v1 = ForeignVector ( fM[XX], fM[XY], fM[XZ] );
-    v2 = ForeignVector ( fM[YX], fM[YY], fM[YZ] );
-    v3 = ForeignVector ( fM[ZX], fM[ZY], fM[ZZ] );
+    v1 = ForeignVector ( fM[kXX], fM[kXY], fM[kXZ] );
+    v2 = ForeignVector ( fM[kYX], fM[kYY], fM[kYZ] );
+    v3 = ForeignVector ( fM[kZX], fM[kZY], fM[kZZ] );
   }
 
   /**
@@ -239,9 +239,9 @@ public:
   template<class ForeignMatrix>
   void
   SetComponents (const ForeignMatrix & m) {
-    fM[XX]=m(0,0);  fM[XY]=m(0,1);  fM[XZ]=m(0,2);
-    fM[YX]=m(1,0);  fM[YY]=m(1,1);  fM[YZ]=m(1,2);
-    fM[ZX]=m(2,0);  fM[ZY]=m(2,1);  fM[ZZ]=m(2,2);
+    fM[kXX]=m(0,0);  fM[kXY]=m(0,1);  fM[kXZ]=m(0,2);
+    fM[kYX]=m(1,0);  fM[kYY]=m(1,1);  fM[kYZ]=m(1,2);
+    fM[kZX]=m(2,0);  fM[kZY]=m(2,1);  fM[kZZ]=m(2,2);
   }
 
   /**
@@ -252,9 +252,9 @@ public:
   template<class ForeignMatrix>
   void
   GetComponents (ForeignMatrix & m) const {
-    m(0,0)=fM[XX];  m(0,1)=fM[XY];  m(0,2)=fM[XZ];
-    m(1,0)=fM[YX];  m(1,1)=fM[YY];  m(1,2)=fM[YZ];
-    m(2,0)=fM[ZX];  m(2,1)=fM[ZY];  m(2,2)=fM[ZZ];
+    m(0,0)=fM[kXX];  m(0,1)=fM[kXY];  m(0,2)=fM[kXZ];
+    m(1,0)=fM[kYX];  m(1,1)=fM[kYY];  m(1,2)=fM[kYZ];
+    m(2,0)=fM[kZX];  m(2,1)=fM[kZY];  m(2,2)=fM[kZZ];
   }
 
   /**
@@ -264,9 +264,9 @@ public:
   SetComponents (Scalar  xx, Scalar  xy, Scalar  xz,
                  Scalar  yx, Scalar  yy, Scalar  yz,
                  Scalar  zx, Scalar  zy, Scalar  zz) {
-                 fM[XX]=xx;  fM[XY]=xy;  fM[XZ]=xz;
-                 fM[YX]=yx;  fM[YY]=yy;  fM[YZ]=yz;
-                 fM[ZX]=zx;  fM[ZY]=zy;  fM[ZZ]=zz;
+                 fM[kXX]=xx;  fM[kXY]=xy;  fM[kXZ]=xz;
+                 fM[kYX]=yx;  fM[kYY]=yy;  fM[kYZ]=yz;
+                 fM[kZX]=zx;  fM[kZY]=zy;  fM[kZZ]=zz;
   }
 
   /**
@@ -276,9 +276,9 @@ public:
   GetComponents (Scalar &xx, Scalar &xy, Scalar &xz,
                  Scalar &yx, Scalar &yy, Scalar &yz,
                  Scalar &zx, Scalar &zy, Scalar &zz) const {
-                 xx=fM[XX];  xy=fM[XY];  xz=fM[XZ];
-                 yx=fM[YX];  yy=fM[YY];  yz=fM[YZ];
-                 zx=fM[ZX];  zy=fM[ZY];  zz=fM[ZZ];
+                 xx=fM[kXX];  xy=fM[kXY];  xz=fM[kXZ];
+                 yx=fM[kYX];  yy=fM[kYY];  yz=fM[kYZ];
+                 zx=fM[kZX];  zy=fM[kZY];  zz=fM[kZZ];
   }
 
   // =========== operations ==============
@@ -291,9 +291,9 @@ public:
   DisplacementVector3D<CoordSystem,U>
   operator() (const DisplacementVector3D<CoordSystem,U> & v) const {
     DisplacementVector3D< Cartesian3D<double>,U > xyz;
-    xyz.SetXYZ( fM[XX] * v.X() + fM[XY] * v.Y() + fM[XZ] * v.Z() ,
-		fM[YX] * v.X() + fM[YY] * v.Y() + fM[YZ] * v.Z() , 
-		fM[ZX] * v.X() + fM[ZY] * v.Y() + fM[ZZ] * v.Z() );
+    xyz.SetXYZ( fM[kXX] * v.X() + fM[kXY] * v.Y() + fM[kXZ] * v.Z() ,
+		fM[kYX] * v.X() + fM[kYY] * v.Y() + fM[kYZ] * v.Z() , 
+		fM[kZX] * v.X() + fM[kZY] * v.Y() + fM[kZZ] * v.Z() );
     return  DisplacementVector3D<CoordSystem,U>( xyz ); 
   }
 
@@ -304,8 +304,8 @@ public:
   PositionVector3D<CoordSystem,U>
   operator() (const PositionVector3D<CoordSystem,U> & v) const {
     DisplacementVector3D< Cartesian3D<double>,U > xyz(v);
-    DisplacementVector3D< Cartesian3D<double>,U > Rxyz = operator()(xyz);
-    return PositionVector3D<CoordSystem,U> ( Rxyz );
+    DisplacementVector3D< Cartesian3D<double>,U > rxyz = operator()(xyz);
+    return PositionVector3D<CoordSystem,U> ( rxyz );
   }
 
   /**
@@ -329,8 +329,8 @@ public:
   ForeignVector
   operator() (const  ForeignVector & v) const {
     DisplacementVector3D< Cartesian3D<double> > xyz(v);
-    DisplacementVector3D< Cartesian3D<double> > Rxyz = operator()(xyz);
-    return ForeignVector ( Rxyz.X(), Rxyz.Y(), Rxyz.Z() );
+    DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
+    return ForeignVector ( rxyz.X(), rxyz.Y(), rxyz.Z() );
   }
 
   /**

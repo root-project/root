@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.5 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.6 2006/05/26 15:10:39 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -206,9 +206,9 @@ public:
   DisplacementVector3D<CoordSystem, Tag>
   operator() (const DisplacementVector3D<CoordSystem, Tag> & v) const {
      DisplacementVector3D< Cartesian3D<double> > xyz(v.X(), v.Y(), v.Z());
-     DisplacementVector3D< Cartesian3D<double> > Rxyz = operator()(xyz);
+     DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
      DisplacementVector3D< CoordSystem, Tag > vNew;
-     vNew.SetXYZ( Rxyz.X(), Rxyz.Y(), Rxyz.Z() ); 
+     vNew.SetXYZ( rxyz.X(), rxyz.Y(), rxyz.Z() ); 
      return vNew; 
   }
 
@@ -219,8 +219,8 @@ public:
   PositionVector3D<CoordSystem, Tag>
   operator() (const PositionVector3D<CoordSystem,Tag> & p) const {
     DisplacementVector3D< Cartesian3D<double>,Tag > xyz(p);
-    DisplacementVector3D< Cartesian3D<double>,Tag > Rxyz = operator()(xyz);
-    return PositionVector3D<CoordSystem,Tag> ( Rxyz );
+    DisplacementVector3D< Cartesian3D<double>,Tag > rxyz = operator()(xyz);
+    return PositionVector3D<CoordSystem,Tag> ( rxyz );
   }
 
   /**
@@ -245,8 +245,8 @@ public:
   ForeignVector
   operator() (const  ForeignVector & v) const {
     DisplacementVector3D< Cartesian3D<double> > xyz(v);
-    DisplacementVector3D< Cartesian3D<double> > Rxyz = operator()(xyz);
-    return ForeignVector ( Rxyz.X(), Rxyz.Y(), Rxyz.Z() );
+    DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
+    return ForeignVector ( rxyz.X(), rxyz.Y(), rxyz.Z() );
   }
 
   /**

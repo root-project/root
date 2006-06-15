@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3DxAxial.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3DxAxial.cxx,v 1.2 2005/12/01 17:17:54 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #include "Math/GenVector/Rotation3D.h"
@@ -11,57 +11,57 @@ namespace ROOT {
 
   namespace Math {
 
-Rotation3D
-Rotation3D::
-operator * (const RotationX  & rx) const {
+Rotation3D Rotation3D::operator * (const RotationX  & rx) const {
+  // combination of a Rotation3D with a RotationX
   Scalar s = rx.SinAngle();
   Scalar c = rx.CosAngle();
   return Rotation3D
   (
-    fM[XX],   fM[XY]*c + fM[XZ]*s,   fM[XZ]*c - fM[XY]*s 
-  , fM[YX],   fM[YY]*c + fM[YZ]*s,   fM[YZ]*c - fM[YY]*s 
-  , fM[ZX],   fM[ZY]*c + fM[ZZ]*s,   fM[ZZ]*c - fM[ZY]*s
+    fM[kXX],   fM[kXY]*c + fM[kXZ]*s,   fM[kXZ]*c - fM[kXY]*s 
+  , fM[kYX],   fM[kYY]*c + fM[kYZ]*s,   fM[kYZ]*c - fM[kYY]*s 
+  , fM[kZX],   fM[kZY]*c + fM[kZZ]*s,   fM[kZZ]*c - fM[kZY]*s
   ); 
 }
 
-Rotation3D
-Rotation3D::
-operator * (const RotationY  & ry) const {
+Rotation3D Rotation3D::operator * (const RotationY  & ry) const {
+  // combination of a Rotation3D with a RotationY
   Scalar s = ry.SinAngle();
   Scalar c = ry.CosAngle();
   return Rotation3D
   (
-    fM[XX]*c - fM[XZ]*s,   fM[XY],   fM[XX]*s + fM[XZ]*c
-  , fM[YX]*c - fM[YZ]*s,   fM[YY],   fM[YX]*s + fM[YZ]*c
-  , fM[ZX]*c - fM[ZZ]*s,   fM[ZY],   fM[ZX]*s + fM[ZZ]*c
+    fM[kXX]*c - fM[kXZ]*s,   fM[kXY],   fM[kXX]*s + fM[kXZ]*c
+  , fM[kYX]*c - fM[kYZ]*s,   fM[kYY],   fM[kYX]*s + fM[kYZ]*c
+  , fM[kZX]*c - fM[kZZ]*s,   fM[kZY],   fM[kZX]*s + fM[kZZ]*c
   ); 
 }
 
 
-Rotation3D
-Rotation3D::
-operator * (const RotationZ  & rz) const {
+Rotation3D Rotation3D::operator * (const RotationZ  & rz) const {
+  // combination of a Rotation3D with a RotationZ
   Scalar s = rz.SinAngle();
   Scalar c = rz.CosAngle();
   return Rotation3D
   (
-    fM[XX]*c + fM[XY]*s, fM[XY]*c - fM[XX]*s,   fM[XZ] 
-  , fM[YX]*c + fM[YY]*s, fM[YY]*c - fM[YX]*s,	fM[YZ] 
-  , fM[ZX]*c + fM[ZY]*s, fM[ZY]*c - fM[ZX]*s,	fM[ZZ] 
+    fM[kXX]*c + fM[kXY]*s, fM[kXY]*c - fM[kXX]*s,   fM[kXZ] 
+  , fM[kYX]*c + fM[kYY]*s, fM[kYY]*c - fM[kYX]*s,	fM[kYZ] 
+  , fM[kZX]*c + fM[kZY]*s, fM[kZY]*c - fM[kZX]*s,	fM[kZZ] 
   ); 
 }
 
 Rotation3D operator* (RotationX const & r1, Rotation3D const & r2) {
+  // combination of a RotationX with a Rotation3D 
   // TODO -- recode for much better efficiency!
   return Rotation3D(r1)*r2;
 }
 
 Rotation3D operator* (RotationY const & r1, Rotation3D const & r2) {
+  // combination of a RotationY with a Rotation3D 
   // TODO -- recode for much better efficiency!
   return Rotation3D(r1)*r2;
 }
 
 Rotation3D operator* (RotationZ const & r1, Rotation3D const & r2) {
+  // combination of a RotationZ with a Rotation3D 
   // TODO -- recode for much better efficiency!
   return Rotation3D(r1)*r2;
 }

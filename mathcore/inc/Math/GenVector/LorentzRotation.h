@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.6 2005/11/24 14:45:50 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.7 2005/12/08 15:52:41 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.6 2005/11/24 14:45:50 moneta Exp $
+// Last update: $Id: LorentzRotation.h,v 1.7 2005/12/08 15:52:41 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -57,10 +57,10 @@ public:
   typedef double Scalar;
 
   enum LorentzRotationMatrixIndex {
-      XX =  0, XY =  1, XZ =  2, XT =  3
-    , YX =  4, YY =  5, YZ =  6, YT =  7
-    , ZX =  8, ZY =  9, ZZ = 10, ZT = 11
-    , TX = 12, TY = 13, TZ = 14, TT = 15
+      kXX =  0, kXY =  1, kXZ =  2, kXT =  3
+    , kYX =  4, kYY =  5, kYZ =  6, kYT =  7
+    , kZX =  8, kZY =  9, kZZ = 10, kZT = 11
+    , kTX = 12, kTY = 13, kTZ = 14, kTT = 15
   };
 
   // ========== Constructors and Assignment =====================
@@ -201,10 +201,10 @@ public:
                  const Foreign4Vector& v2,
                  const Foreign4Vector& v3,
                  const Foreign4Vector& v4 ) {
-    fM[XX]=v1.x();  fM[XY]=v2.x();  fM[XZ]=v3.x();  fM[XT]=v4.x();
-    fM[YX]=v1.y();  fM[YY]=v2.y();  fM[YZ]=v3.y();  fM[YT]=v4.y();
-    fM[ZX]=v1.z();  fM[ZY]=v2.z();  fM[ZZ]=v3.z();  fM[ZT]=v4.z();
-    fM[TX]=v1.t();  fM[TY]=v2.t();  fM[TZ]=v3.t();  fM[TT]=v4.t();
+    fM[kXX]=v1.x();  fM[kXY]=v2.x();  fM[kXZ]=v3.x();  fM[kXT]=v4.x();
+    fM[kYX]=v1.y();  fM[kYY]=v2.y();  fM[kYZ]=v3.y();  fM[kYT]=v4.y();
+    fM[kZX]=v1.z();  fM[kZY]=v2.z();  fM[kZZ]=v3.z();  fM[kZT]=v4.z();
+    fM[kTX]=v1.t();  fM[kTY]=v2.t();  fM[kTZ]=v3.t();  fM[kTT]=v4.t();
     Rectify();
   }
 
@@ -219,10 +219,10 @@ public:
                   Foreign4Vector& v2,
                   Foreign4Vector& v3,
                   Foreign4Vector& v4 ) const {
-    v1 = Foreign4Vector ( fM[XX], fM[YX], fM[ZX], fM[TX] );
-    v2 = Foreign4Vector ( fM[XY], fM[YY], fM[ZY], fM[TY] );
-    v3 = Foreign4Vector ( fM[XZ], fM[YZ], fM[ZZ], fM[TZ] );
-    v4 = Foreign4Vector ( fM[XT], fM[YT], fM[ZT], fM[TT] );
+    v1 = Foreign4Vector ( fM[kXX], fM[kYX], fM[kZX], fM[kTX] );
+    v2 = Foreign4Vector ( fM[kXY], fM[kYY], fM[kZY], fM[kTY] );
+    v3 = Foreign4Vector ( fM[kXZ], fM[kYZ], fM[kZZ], fM[kTZ] );
+    v4 = Foreign4Vector ( fM[kXT], fM[kYT], fM[kZT], fM[kTT] );
   }
 
   /**
@@ -254,10 +254,10 @@ public:
   template<class ForeignMatrix>
   void
   SetComponents (const ForeignMatrix & m) {
-    fM[XX]=m(0,0);  fM[XY]=m(0,1);  fM[XZ]=m(0,2);  fM[XT]=m(0,3);
-    fM[YX]=m(1,0);  fM[YY]=m(1,1);  fM[YZ]=m(1,2);  fM[YT]=m(1,3);
-    fM[ZX]=m(2,0);  fM[ZY]=m(2,1);  fM[ZZ]=m(2,2);  fM[ZT]=m(2,3);
-    fM[TX]=m(3,0);  fM[TY]=m(3,1);  fM[TZ]=m(3,2);  fM[TT]=m(3,3);
+    fM[kXX]=m(0,0);  fM[kXY]=m(0,1);  fM[kXZ]=m(0,2);  fM[kXT]=m(0,3);
+    fM[kYX]=m(1,0);  fM[kYY]=m(1,1);  fM[kYZ]=m(1,2);  fM[kYT]=m(1,3);
+    fM[kZX]=m(2,0);  fM[kZY]=m(2,1);  fM[kZZ]=m(2,2);  fM[kZT]=m(2,3);
+    fM[kTX]=m(3,0);  fM[kTY]=m(3,1);  fM[kTZ]=m(3,2);  fM[kTT]=m(3,3);
   }
 
   /**
@@ -268,10 +268,10 @@ public:
   template<class ForeignMatrix>
   void
   GetComponents (ForeignMatrix & m) const {
-    m(0,0)=fM[XX];  m(0,1)=fM[XY];  m(0,2)=fM[XZ]; m(0,3)=fM[XT];
-    m(1,0)=fM[YX];  m(1,1)=fM[YY];  m(1,2)=fM[YZ]; m(1,3)=fM[YT];
-    m(2,0)=fM[ZX];  m(2,1)=fM[ZY];  m(2,2)=fM[ZZ]; m(2,3)=fM[ZT];
-    m(3,0)=fM[TX];  m(3,1)=fM[TY];  m(3,2)=fM[TZ]; m(3,3)=fM[TT];
+    m(0,0)=fM[kXX];  m(0,1)=fM[kXY];  m(0,2)=fM[kXZ]; m(0,3)=fM[kXT];
+    m(1,0)=fM[kYX];  m(1,1)=fM[kYY];  m(1,2)=fM[kYZ]; m(1,3)=fM[kYT];
+    m(2,0)=fM[kZX];  m(2,1)=fM[kZY];  m(2,2)=fM[kZZ]; m(2,3)=fM[kZT];
+    m(3,0)=fM[kTX];  m(3,1)=fM[kTY];  m(3,2)=fM[kTZ]; m(3,3)=fM[kTT];
   }
 
   /**
@@ -282,10 +282,10 @@ public:
                  Scalar  yx, Scalar  yy, Scalar  yz, Scalar  yt,
                  Scalar  zx, Scalar  zy, Scalar  zz, Scalar  zt,
                  Scalar  tx, Scalar  ty, Scalar  tz, Scalar  tt) {
-                 fM[XX]=xx;  fM[XY]=xy;  fM[XZ]=xz;  fM[XT]=xt;
-                 fM[YX]=yx;  fM[YY]=yy;  fM[YZ]=yz;  fM[YT]=yt;
-                 fM[ZX]=zx;  fM[ZY]=zy;  fM[ZZ]=zz;  fM[ZT]=zt;
-                 fM[TX]=tx;  fM[TY]=ty;  fM[TZ]=tz;  fM[TT]=tt;
+                 fM[kXX]=xx;  fM[kXY]=xy;  fM[kXZ]=xz;  fM[kXT]=xt;
+                 fM[kYX]=yx;  fM[kYY]=yy;  fM[kYZ]=yz;  fM[kYT]=yt;
+                 fM[kZX]=zx;  fM[kZY]=zy;  fM[kZZ]=zz;  fM[kZT]=zt;
+                 fM[kTX]=tx;  fM[kTY]=ty;  fM[kTZ]=tz;  fM[kTT]=tt;
   }
 
   /**
@@ -296,10 +296,10 @@ public:
                  Scalar &yx, Scalar &yy, Scalar &yz, Scalar &yt,
                  Scalar &zx, Scalar &zy, Scalar &zz, Scalar &zt,
                  Scalar &tx, Scalar &ty, Scalar &tz, Scalar &tt) const {
-                 xx=fM[XX];  xy=fM[XY];  xz=fM[XZ];  xt=fM[XT];
-                 yx=fM[YX];  yy=fM[YY];  yz=fM[YZ];  yt=fM[YT];
-                 zx=fM[ZX];  zy=fM[ZY];  zz=fM[ZZ];  zt=fM[ZT];
-                 tx=fM[TX];  ty=fM[TY];  tz=fM[TZ];  tt=fM[TT];
+                 xx=fM[kXX];  xy=fM[kXY];  xz=fM[kXZ];  xt=fM[kXT];
+                 yx=fM[kYX];  yy=fM[kYY];  yz=fM[kYZ];  yt=fM[kYT];
+                 zx=fM[kZX];  zy=fM[kZY];  zz=fM[kZZ];  zt=fM[kZT];
+                 tx=fM[kTX];  ty=fM[kTY];  tz=fM[kTZ];  tt=fM[kTT];
   }
 
   // =========== operations ==============
@@ -319,8 +319,8 @@ public:
   LorentzVector<CoordSystem>
   operator() (const LorentzVector<CoordSystem> & v) const {
     LorentzVector< PxPyPzE4D<double> > xyzt(v);
-    LorentzVector< PxPyPzE4D<double> > Rxyzt = operator()(xyzt);
-    return LorentzVector<CoordSystem> ( Rxyzt );
+    LorentzVector< PxPyPzE4D<double> > r_xyzt = operator()(xyzt);
+    return LorentzVector<CoordSystem> ( r_xyzt );
   }
 
   /**
@@ -332,8 +332,8 @@ public:
   Foreign4Vector
   operator() (const Foreign4Vector & v) const {
     LorentzVector< PxPyPzE4D<double> > xyzt(v);
-    LorentzVector< PxPyPzE4D<double> > Rxyzt = operator()(xyzt);
-    return Foreign4Vector ( Rxyzt.X(), Rxyzt.Y(), Rxyzt.Z(), Rxyzt.T() );
+    LorentzVector< PxPyPzE4D<double> > r_xyzt = operator()(xyzt);
+    return Foreign4Vector ( r_xyzt.X(), r_xyzt.Y(), r_xyzt.Z(), r_xyzt.T() );
   }
 
   /**

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Quaternion.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.cpp,v 1.3 2005/08/20 00:07:40 fischler Exp $
+// Last update: $Id: Quaternion.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 //
 #include "Math/GenVector/Quaternion.h"
 
@@ -56,9 +56,9 @@ Quaternion::Rectify()
 // ========== Operations =====================
 
 DisplacementVector3D< Cartesian3D<double> >
-Quaternion::
-operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
+Quaternion::operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
 {
+  // apply to a 3D Vector 
   const Scalar alpha = fU*fU - fI*fI - fJ*fJ - fK*fK;
   const Scalar twoQv = 2*(fI*v.X() + fJ*v.Y() + fK*v.Z());
   const Scalar twoU  = 2 * fU;
@@ -69,9 +69,8 @@ operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
                                                                  );
 }
 
-Quaternion
-Quaternion::
-operator * (const Quaternion & q) const {
+Quaternion Quaternion::operator * (const Quaternion & q) const {
+  // combination of rotations
   return Quaternion                          (
       fU*q.fU - fI*q.fI - fJ*q.fJ - fK*q.fK
     , fU*q.fI + fI*q.fU + fJ*q.fK - fK*q.fJ
@@ -79,27 +78,23 @@ operator * (const Quaternion & q) const {
     , fU*q.fK + fI*q.fJ - fJ*q.fI + fK*q.fU  );
 }
 
-Quaternion
-Quaternion::
-operator * (const Rotation3D  & r) const {
+Quaternion Quaternion::operator * (const Rotation3D  & r) const {
+  // combination of rotations
   return operator* ( Quaternion(r) );
 }
 
-Quaternion
-Quaternion::
-operator * (const AxisAngle   & a) const {
+Quaternion Quaternion::operator * (const AxisAngle   & a) const {
+  // combination of rotations
   return operator* ( Quaternion(a) );
 }
 
-Quaternion
-Quaternion::
-operator * (const EulerAngles & e) const {
+Quaternion Quaternion::operator * (const EulerAngles & e) const {
+  // combination of rotations
   return operator* ( Quaternion(e) );
 }
 
-Quaternion::Scalar
-Quaternion::
-Distance(const Quaternion & q) const {
+Quaternion::Scalar Quaternion::Distance(const Quaternion & q) const {
+  // distance
   Scalar chordLength = std::fabs(fU*q.fU + fI*q.fI + fJ*q.fJ + fK*q.fK);
   if (chordLength > 1) chordLength = 1; // in case roundoff fouls us up
   return acos(chordLength); 

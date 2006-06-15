@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngleXother.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngleXother.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -31,36 +31,31 @@ namespace ROOT {
 
   namespace Math {
 
-AxisAngle
-AxisAngle::
-operator * (const Rotation3D & r) const {
+AxisAngle AxisAngle::operator * (const Rotation3D & r) const {
+  // combination with a Rotation3D
   return operator* ( Quaternion(r) );
 
 }
 
-AxisAngle
-AxisAngle::
-operator * (const AxisAngle   & a) const {
+AxisAngle AxisAngle::operator * (const AxisAngle   & a) const {
+  // combination with another AxisAngle
   return operator* ( Quaternion(a) );
 }
 
-AxisAngle
-AxisAngle::
-operator * (const EulerAngles & e) const {
+AxisAngle AxisAngle::operator * (const EulerAngles & e) const {
+  // combination with EulerAngles
   return operator* ( Quaternion(e) );
 }
 
-AxisAngle
-AxisAngle::
-operator * (const Quaternion  & q) const {
+AxisAngle AxisAngle::operator * (const Quaternion  & q) const {
+  // combination with Quaternion
   return AxisAngle ( Quaternion(*this) * q );
 }
 
 #ifdef MOVE
 
-AxisAngle
-AxisAngle::
-operator * (const Quaternion  & q) const {
+AxisAngle AxisAngle::operator * (const Quaternion  & q) const {
+  // combination with quaternion (not used)
   const Scalar s1 = std::sin(fAngle/2);
   const Scalar au = std::cos(fAngle/2);
   const Scalar ai = s1 * fAxis.X();
@@ -85,9 +80,9 @@ operator * (const Quaternion  & q) const {
 
 #endif
 
-AxisAngle
-AxisAngle::
-operator * (const RotationX & rx) const {
+AxisAngle AxisAngle::operator * (const RotationX & rx) const {
+  // combination with RotationX
+
   const Scalar s1 = std::sin(fAngle/2);
   const Scalar au = std::cos(fAngle/2);
   const Scalar ai = s1 * fAxis.X();
@@ -116,9 +111,9 @@ operator * (const RotationX & rx) const {
   return AxisAngle ( axis, angle );
 }
 
-AxisAngle
-AxisAngle::
-operator * (const RotationY & ry) const {
+AxisAngle AxisAngle::operator * (const RotationY & ry) const {
+  // combination with RotationY
+
   const Scalar s1 = std::sin(fAngle/2);
   const Scalar au = std::cos(fAngle/2);
   const Scalar ai = s1 * fAxis.X();
@@ -147,9 +142,9 @@ operator * (const RotationY & ry) const {
   return AxisAngle ( axis, angle );
 }
 
-AxisAngle
-AxisAngle::
-operator * (const RotationZ & rz) const {
+AxisAngle AxisAngle::operator * (const RotationZ & rz) const {
+  // combination with RotationZ
+
   const Scalar s1 = std::sin(fAngle/2);
   const Scalar au = std::cos(fAngle/2);
   const Scalar ai = s1 * fAxis.X();
@@ -178,18 +173,15 @@ operator * (const RotationZ & rz) const {
   return AxisAngle ( axis, angle );
 }
 
-AxisAngle
-operator*( RotationX const & r, AxisAngle const & a ) {
+AxisAngle operator*( RotationX const & r, AxisAngle const & a ) {
   return AxisAngle(r) * a;  // TODO: improve performance
 }
 
-AxisAngle
-operator*( RotationY const & r, AxisAngle const & a ) {
+AxisAngle operator*( RotationY const & r, AxisAngle const & a ) {
   return AxisAngle(r) * a;  // TODO: improve performance
 }
 
-AxisAngle
-operator*( RotationZ const & r, AxisAngle const & a ) {
+AxisAngle operator*( RotationZ const & r, AxisAngle const & a ) {
   return AxisAngle(r) * a;  // TODO: improve performance
 }
 

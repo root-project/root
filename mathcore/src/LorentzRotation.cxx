@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.3 2005/10/18 09:13:34 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.4 2005/12/08 15:52:41 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -34,98 +34,105 @@ namespace ROOT {
   namespace Math {
 
 LorentzRotation::LorentzRotation() {
-  fM[XX] = 1.0;  fM[XY] = 0.0; fM[XZ] = 0.0; fM[XT] = 0.0;
-  fM[YX] = 0.0;  fM[YY] = 1.0; fM[YZ] = 0.0; fM[YT] = 0.0;
-  fM[ZX] = 0.0;  fM[ZY] = 0.0; fM[ZZ] = 1.0; fM[ZT] = 0.0;
-  fM[TX] = 0.0;  fM[TY] = 0.0; fM[TZ] = 0.0; fM[TT] = 1.0;
+  // constructor of an identity LR
+  fM[kXX] = 1.0;  fM[kXY] = 0.0; fM[kXZ] = 0.0; fM[kXT] = 0.0;
+  fM[kYX] = 0.0;  fM[kYY] = 1.0; fM[kYZ] = 0.0; fM[kYT] = 0.0;
+  fM[kZX] = 0.0;  fM[kZY] = 0.0; fM[kZZ] = 1.0; fM[kZT] = 0.0;
+  fM[kTX] = 0.0;  fM[kTY] = 0.0; fM[kTZ] = 0.0; fM[kTT] = 1.0;
 }
 
 LorentzRotation::LorentzRotation(Rotation3D  const & r) {  
-  r.GetComponents ( fM[XX], fM[XY], fM[XZ],
-                    fM[YX], fM[YY], fM[YZ],
-                    fM[ZX], fM[ZY], fM[ZZ] );
-   					     fM[XT] = 0.0;
-   					     fM[YT] = 0.0;
-   					     fM[ZT] = 0.0;
-  fM[TX] = 0.0;  fM[TY] = 0.0; fM[TZ] = 0.0; fM[TT] = 1.0;
+  // construct from  Rotation3D
+  r.GetComponents ( fM[kXX], fM[kXY], fM[kXZ],
+                    fM[kYX], fM[kYY], fM[kYZ],
+                    fM[kZX], fM[kZY], fM[kZZ] );
+   					     fM[kXT] = 0.0;
+   					     fM[kYT] = 0.0;
+   					     fM[kZT] = 0.0;
+  fM[kTX] = 0.0;  fM[kTY] = 0.0; fM[kTZ] = 0.0; fM[kTT] = 1.0;
 }
 
 LorentzRotation::LorentzRotation(AxisAngle  const & a) {  
+  // construct from  AxisAngle
   const Rotation3D r(a);
-  r.GetComponents ( fM[XX], fM[XY], fM[XZ],
-                    fM[YX], fM[YY], fM[YZ],
-                    fM[ZX], fM[ZY], fM[ZZ] );
-   					     fM[XT] = 0.0;
-   					     fM[YT] = 0.0;
-   					     fM[ZT] = 0.0;
-  fM[TX] = 0.0;  fM[TY] = 0.0; fM[TZ] = 0.0; fM[TT] = 1.0;
+  r.GetComponents ( fM[kXX], fM[kXY], fM[kXZ],
+                    fM[kYX], fM[kYY], fM[kYZ],
+                    fM[kZX], fM[kZY], fM[kZZ] );
+   					     fM[kXT] = 0.0;
+   					     fM[kYT] = 0.0;
+   					     fM[kZT] = 0.0;
+  fM[kTX] = 0.0;  fM[kTY] = 0.0; fM[kTZ] = 0.0; fM[kTT] = 1.0;
 }
 
 LorentzRotation::LorentzRotation(EulerAngles  const & e) {  
+  // construct from  EulerAngles
   const Rotation3D r(e);
-  r.GetComponents ( fM[XX], fM[XY], fM[XZ],
-                    fM[YX], fM[YY], fM[YZ],
-                    fM[ZX], fM[ZY], fM[ZZ] );
-   					     fM[XT] = 0.0;
-   					     fM[YT] = 0.0;
-   					     fM[ZT] = 0.0;
-  fM[TX] = 0.0;  fM[TY] = 0.0; fM[TZ] = 0.0; fM[TT] = 1.0;
+  r.GetComponents ( fM[kXX], fM[kXY], fM[kXZ],
+                    fM[kYX], fM[kYY], fM[kYZ],
+                    fM[kZX], fM[kZY], fM[kZZ] );
+   					     fM[kXT] = 0.0;
+   					     fM[kYT] = 0.0;
+   					     fM[kZT] = 0.0;
+  fM[kTX] = 0.0;  fM[kTY] = 0.0; fM[kTZ] = 0.0; fM[kTT] = 1.0;
 }
 
 LorentzRotation::LorentzRotation(Quaternion  const & q) {  
+  // construct from Quaternion
   const Rotation3D r(q);
-  r.GetComponents ( fM[XX], fM[XY], fM[XZ],
-                    fM[YX], fM[YY], fM[YZ],
-                    fM[ZX], fM[ZY], fM[ZZ] );
-   					     fM[XT] = 0.0;
-   					     fM[YT] = 0.0;
-   					     fM[ZT] = 0.0;
-  fM[TX] = 0.0;  fM[TY] = 0.0; fM[TZ] = 0.0; fM[TT] = 1.0;
+  r.GetComponents ( fM[kXX], fM[kXY], fM[kXZ],
+                    fM[kYX], fM[kYY], fM[kYZ],
+                    fM[kZX], fM[kZY], fM[kZZ] );
+   					     fM[kXT] = 0.0;
+   					     fM[kYT] = 0.0;
+   					     fM[kZT] = 0.0;
+  fM[kTX] = 0.0;  fM[kTY] = 0.0; fM[kTZ] = 0.0; fM[kTT] = 1.0;
 }
 
 LorentzRotation::LorentzRotation(RotationX  const & r) {  
+  // construct from  RotationX
   Scalar s = r.SinAngle();
   Scalar c = r.CosAngle();
-  fM[XX] = 1.0;  fM[XY] = 0.0; fM[XZ] = 0.0; fM[XT] = 0.0;
-  fM[YX] = 0.0;  fM[YY] =  c ; fM[YZ] = -s ; fM[YT] = 0.0;
-  fM[ZX] = 0.0;  fM[ZY] =  s ; fM[ZZ] =  c ; fM[ZT] = 0.0;
-  fM[TX] = 0.0;  fM[TY] = 0.0; fM[TZ] = 0.0; fM[TT] = 1.0;
+  fM[kXX] = 1.0;  fM[kXY] = 0.0; fM[kXZ] = 0.0; fM[kXT] = 0.0;
+  fM[kYX] = 0.0;  fM[kYY] =  c ; fM[kYZ] = -s ; fM[kYT] = 0.0;
+  fM[kZX] = 0.0;  fM[kZY] =  s ; fM[kZZ] =  c ; fM[kZT] = 0.0;
+  fM[kTX] = 0.0;  fM[kTY] = 0.0; fM[kTZ] = 0.0; fM[kTT] = 1.0;
 }
 
 LorentzRotation::LorentzRotation(RotationY  const & r) {  
+  // construct from  RotationY
   Scalar s = r.SinAngle();
   Scalar c = r.CosAngle();
-  fM[XX] =  c ;  fM[XY] = 0.0; fM[XZ] =  s ; fM[XT] = 0.0;
-  fM[YX] = 0.0;  fM[YY] = 1.0; fM[YZ] = 0.0; fM[YT] = 0.0;
-  fM[ZX] = -s ;  fM[ZY] = 0.0; fM[ZZ] =  c ; fM[ZT] = 0.0;
-  fM[TX] = 0.0;  fM[TY] = 0.0; fM[TZ] = 0.0; fM[TT] = 1.0;
+  fM[kXX] =  c ;  fM[kXY] = 0.0; fM[kXZ] =  s ; fM[kXT] = 0.0;
+  fM[kYX] = 0.0;  fM[kYY] = 1.0; fM[kYZ] = 0.0; fM[kYT] = 0.0;
+  fM[kZX] = -s ;  fM[kZY] = 0.0; fM[kZZ] =  c ; fM[kZT] = 0.0;
+  fM[kTX] = 0.0;  fM[kTY] = 0.0; fM[kTZ] = 0.0; fM[kTT] = 1.0;
 }
 
 LorentzRotation::LorentzRotation(RotationZ  const & r) {  
+  // construct from  RotationX
   Scalar s = r.SinAngle();
   Scalar c = r.CosAngle();
-  fM[XX] =  c ;  fM[XY] = -s ; fM[XZ] = 0.0; fM[XT] = 0.0;
-  fM[YX] =  s ;  fM[YY] =  c ; fM[YZ] = 0.0; fM[YT] = 0.0;
-  fM[ZX] = 0.0;  fM[ZY] = 0.0; fM[ZZ] = 1.0; fM[ZT] = 0.0;
-  fM[TX] = 0.0;  fM[TY] = 0.0; fM[TZ] = 0.0; fM[TT] = 1.0;
+  fM[kXX] =  c ;  fM[kXY] = -s ; fM[kXZ] = 0.0; fM[kXT] = 0.0;
+  fM[kYX] =  s ;  fM[kYY] =  c ; fM[kYZ] = 0.0; fM[kYT] = 0.0;
+  fM[kZX] = 0.0;  fM[kZY] = 0.0; fM[kZZ] = 1.0; fM[kZT] = 0.0;
+  fM[kTX] = 0.0;  fM[kTY] = 0.0; fM[kTZ] = 0.0; fM[kTT] = 1.0;
 }
 
 void 
-LorentzRotation::
-Rectify() {
+LorentzRotation::Rectify() {
   // Assuming the representation of this is close to a true Lorentz Rotation,
   // but may have drifted due to round-off error from many operations,
   // this forms an "exact" orthosymplectic matrix for the Lorentz Rotation
   // again.
  
   typedef LorentzVector< PxPyPzE4D<Scalar> > FourVector;
-  if (fM[TT] <= 0) {
+  if (fM[kTT] <= 0) {
     GenVector_exception e ( 
       "LorentzRotation:Rectify(): Non-positive TT component - cannot rectify");
     Throw(e);
     return;
   }  
-  FourVector t ( fM[TX], fM[TY], fM[TZ], fM[TT] );
+  FourVector t ( fM[kTX], fM[kTY], fM[kTZ], fM[kTT] );
   Scalar m2 = t.M2();
   if ( m2 <= 0 ) {
     GenVector_exception e ( 
@@ -134,7 +141,7 @@ Rectify() {
     return;
   }
   t /= std::sqrt(m2);
-  FourVector z ( fM[ZX], fM[ZY], fM[ZZ], fM[ZT] );
+  FourVector z ( fM[kZX], fM[kZY], fM[kZZ], fM[kZT] );
   z = z - z.Dot(t)*t;
   m2 = z.M2();
   if ( m2 >= 0 ) {
@@ -145,7 +152,7 @@ Rectify() {
     return;
   }
   z /= std::sqrt(-m2);
-  FourVector y ( fM[YX], fM[YY], fM[YZ], fM[YT] );
+  FourVector y ( fM[kYX], fM[kYY], fM[kYZ], fM[kYT] );
   y = y - y.Dot(t)*t - y.Dot(z)*z;
   m2 = y.M2();
   if ( m2 >= 0 ) {
@@ -156,7 +163,7 @@ Rectify() {
     return;
   }
   y /= std::sqrt(-m2);
-  FourVector x ( fM[XX], fM[XY], fM[XZ], fM[XT] );
+  FourVector x ( fM[kXX], fM[kXY], fM[kXZ], fM[kXT] );
   x = x - x.Dot(t)*t - x.Dot(z)*z - x.Dot(y)*y;
   m2 = x.M2();
   if ( m2 >= 0 ) {
@@ -170,62 +177,59 @@ Rectify() {
 }
 
 LorentzVector< PxPyPzE4D<double> >
-LorentzRotation::
-operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
+LorentzRotation::operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
+  // apply a LR to a 4D LoentzVector
   Scalar x = v.Px();
   Scalar y = v.Py();
   Scalar z = v.Pz();
   Scalar t = v.E();
   return LorentzVector< PxPyPzE4D<double> > 
-    ( fM[XX]*x + fM[XY]*y + fM[XZ]*z + fM[XT]*t 
-    , fM[YX]*x + fM[YY]*y + fM[YZ]*z + fM[YT]*t
-    , fM[ZX]*x + fM[ZY]*y + fM[ZZ]*z + fM[ZT]*t
-    , fM[TX]*x + fM[TY]*y + fM[TZ]*z + fM[TT]*t );
+    ( fM[kXX]*x + fM[kXY]*y + fM[kXZ]*z + fM[kXT]*t 
+    , fM[kYX]*x + fM[kYY]*y + fM[kYZ]*z + fM[kYT]*t
+    , fM[kZX]*x + fM[kZY]*y + fM[kZZ]*z + fM[kZT]*t
+    , fM[kTX]*x + fM[kTY]*y + fM[kTZ]*z + fM[kTT]*t );
 }
 
-void 
-LorentzRotation::
-Invert() {
+void LorentzRotation::Invert() {
+  // invert modifying current content
   Scalar temp;
-  temp = fM[XY]; fM[XY] =  fM[YX]; fM[YX] =  temp;  
-  temp = fM[XZ]; fM[XZ] =  fM[ZX]; fM[ZX] =  temp;  
-  temp = fM[YZ]; fM[YZ] =  fM[ZY]; fM[ZY] =  temp;  
-  temp = fM[XT]; fM[XT] = -fM[TX]; fM[TX] = -temp;  
-  temp = fM[YT]; fM[YT] = -fM[TY]; fM[TY] = -temp;  
-  temp = fM[ZT]; fM[ZT] = -fM[TZ]; fM[TZ] = -temp;  
+  temp = fM[kXY]; fM[kXY] =  fM[kYX]; fM[kYX] =  temp;  
+  temp = fM[kXZ]; fM[kXZ] =  fM[kZX]; fM[kZX] =  temp;  
+  temp = fM[kYZ]; fM[kYZ] =  fM[kZY]; fM[kZY] =  temp;  
+  temp = fM[kXT]; fM[kXT] = -fM[kTX]; fM[kTX] = -temp;  
+  temp = fM[kYT]; fM[kYT] = -fM[kTY]; fM[kTY] = -temp;  
+  temp = fM[kZT]; fM[kZT] = -fM[kTZ]; fM[kTZ] = -temp;  
 }
 
-LorentzRotation
-LorentzRotation::
-Inverse() const {
+LorentzRotation LorentzRotation::Inverse() const {
+  // return an inverse LR
   return LorentzRotation 
-    (  fM[XX],  fM[YX],  fM[ZX], -fM[TX]
-    ,  fM[XY],  fM[YY],  fM[ZY], -fM[TY]
-    ,  fM[XZ],  fM[YZ],  fM[ZZ], -fM[TZ]
-    , -fM[XT], -fM[YT], -fM[ZT],  fM[TT]
+    (  fM[kXX],  fM[kYX],  fM[kZX], -fM[kTX]
+    ,  fM[kXY],  fM[kYY],  fM[kZY], -fM[kTY]
+    ,  fM[kXZ],  fM[kYZ],  fM[kZZ], -fM[kTZ]
+    , -fM[kXT], -fM[kYT], -fM[kZT],  fM[kTT]
     );
 }
 
-LorentzRotation
-LorentzRotation::
-operator * (const LorentzRotation & r) const {
+LorentzRotation LorentzRotation::operator * (const LorentzRotation & r) const {
+  // combination with another LR
   return LorentzRotation 
-    ( fM[XX]*r.fM[XX] + fM[XY]*r.fM[YX] + fM[XZ]*r.fM[ZX] + fM[XT]*r.fM[TX]
-    , fM[XX]*r.fM[XY] + fM[XY]*r.fM[YY] + fM[XZ]*r.fM[ZY] + fM[XT]*r.fM[TY]
-    , fM[XX]*r.fM[XZ] + fM[XY]*r.fM[YZ] + fM[XZ]*r.fM[ZZ] + fM[XT]*r.fM[TZ]
-    , fM[XX]*r.fM[XT] + fM[XY]*r.fM[YT] + fM[XZ]*r.fM[ZT] + fM[XT]*r.fM[TT]
-    , fM[YX]*r.fM[XX] + fM[YY]*r.fM[YX] + fM[YZ]*r.fM[ZX] + fM[YT]*r.fM[TX]
-    , fM[YX]*r.fM[XY] + fM[YY]*r.fM[YY] + fM[YZ]*r.fM[ZY] + fM[YT]*r.fM[TY]
-    , fM[YX]*r.fM[XZ] + fM[YY]*r.fM[YZ] + fM[YZ]*r.fM[ZZ] + fM[YT]*r.fM[TZ]
-    , fM[YX]*r.fM[XT] + fM[YY]*r.fM[YT] + fM[YZ]*r.fM[ZT] + fM[YT]*r.fM[TT]
-    , fM[ZX]*r.fM[XX] + fM[ZY]*r.fM[YX] + fM[ZZ]*r.fM[ZX] + fM[ZT]*r.fM[TX]
-    , fM[ZX]*r.fM[XY] + fM[ZY]*r.fM[YY] + fM[ZZ]*r.fM[ZY] + fM[ZT]*r.fM[TY]
-    , fM[ZX]*r.fM[XZ] + fM[ZY]*r.fM[YZ] + fM[ZZ]*r.fM[ZZ] + fM[ZT]*r.fM[TZ]
-    , fM[ZX]*r.fM[XT] + fM[ZY]*r.fM[YT] + fM[ZZ]*r.fM[ZT] + fM[ZT]*r.fM[TT]
-    , fM[TX]*r.fM[XX] + fM[TY]*r.fM[YX] + fM[TZ]*r.fM[ZX] + fM[TT]*r.fM[TX]
-    , fM[TX]*r.fM[XY] + fM[TY]*r.fM[YY] + fM[TZ]*r.fM[ZY] + fM[TT]*r.fM[TY]
-    , fM[TX]*r.fM[XZ] + fM[TY]*r.fM[YZ] + fM[TZ]*r.fM[ZZ] + fM[TT]*r.fM[TZ]
-    , fM[TX]*r.fM[XT] + fM[TY]*r.fM[YT] + fM[TZ]*r.fM[ZT] + fM[TT]*r.fM[TT]
+    ( fM[kXX]*r.fM[kXX] + fM[kXY]*r.fM[kYX] + fM[kXZ]*r.fM[kZX] + fM[kXT]*r.fM[kTX]
+    , fM[kXX]*r.fM[kXY] + fM[kXY]*r.fM[kYY] + fM[kXZ]*r.fM[kZY] + fM[kXT]*r.fM[kTY]
+    , fM[kXX]*r.fM[kXZ] + fM[kXY]*r.fM[kYZ] + fM[kXZ]*r.fM[kZZ] + fM[kXT]*r.fM[kTZ]
+    , fM[kXX]*r.fM[kXT] + fM[kXY]*r.fM[kYT] + fM[kXZ]*r.fM[kZT] + fM[kXT]*r.fM[kTT]
+    , fM[kYX]*r.fM[kXX] + fM[kYY]*r.fM[kYX] + fM[kYZ]*r.fM[kZX] + fM[kYT]*r.fM[kTX]
+    , fM[kYX]*r.fM[kXY] + fM[kYY]*r.fM[kYY] + fM[kYZ]*r.fM[kZY] + fM[kYT]*r.fM[kTY]
+    , fM[kYX]*r.fM[kXZ] + fM[kYY]*r.fM[kYZ] + fM[kYZ]*r.fM[kZZ] + fM[kYT]*r.fM[kTZ]
+    , fM[kYX]*r.fM[kXT] + fM[kYY]*r.fM[kYT] + fM[kYZ]*r.fM[kZT] + fM[kYT]*r.fM[kTT]
+    , fM[kZX]*r.fM[kXX] + fM[kZY]*r.fM[kYX] + fM[kZZ]*r.fM[kZX] + fM[kZT]*r.fM[kTX]
+    , fM[kZX]*r.fM[kXY] + fM[kZY]*r.fM[kYY] + fM[kZZ]*r.fM[kZY] + fM[kZT]*r.fM[kTY]
+    , fM[kZX]*r.fM[kXZ] + fM[kZY]*r.fM[kYZ] + fM[kZZ]*r.fM[kZZ] + fM[kZT]*r.fM[kTZ]
+    , fM[kZX]*r.fM[kXT] + fM[kZY]*r.fM[kYT] + fM[kZZ]*r.fM[kZT] + fM[kZT]*r.fM[kTT]
+    , fM[kTX]*r.fM[kXX] + fM[kTY]*r.fM[kYX] + fM[kTZ]*r.fM[kZX] + fM[kTT]*r.fM[kTX]
+    , fM[kTX]*r.fM[kXY] + fM[kTY]*r.fM[kYY] + fM[kTZ]*r.fM[kZY] + fM[kTT]*r.fM[kTY]
+    , fM[kTX]*r.fM[kXZ] + fM[kTY]*r.fM[kYZ] + fM[kTZ]*r.fM[kZZ] + fM[kTT]*r.fM[kTZ]
+    , fM[kTX]*r.fM[kXT] + fM[kTY]*r.fM[kYT] + fM[kTZ]*r.fM[kZT] + fM[kTT]*r.fM[kTT]
     );    
 }
 
