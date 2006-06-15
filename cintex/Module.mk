@@ -46,10 +46,16 @@ ifeq ($(PLATFORM),win32)
 REFLEXLL = lib/libReflex.lib
 CINTEXLL = lib/libCintex.lib
 SHEXT    = .bat
+DICTEXT  = dll
 else
 REFLEXLL = -Llib -lReflex -ldl
 CINTEXLL = -Llib -lCintex
 SHEXT    = .sh
+ifeq ($(PLATFORM),macosx)
+DICTEXT  = so
+else
+DICTEXT  = $(SOEXT)
+endif
 endif
 
 GENREFLEX_CMD2 = python ../../../lib/python/genreflex/genreflex.py 
@@ -59,7 +65,7 @@ CINTEXTESTDICTD = $(CINTEXTESTD)/dict
 CINTEXTESTDICTH = $(CINTEXTESTDICTD)/CintexTest.h
 CINTEXTESTDICTS = $(subst .h,_rflx.cpp,$(CINTEXTESTDICTH))
 CINTEXTESTDICTO = $(subst .cpp,.o,$(CINTEXTESTDICTS))
-CINTEXTESTDICT  = $(subst $(CINTEXTESTDICTD)/,lib/test_,$(subst _rflx.o,Rflx.$(SOEXT),$(CINTEXTESTDICTO)))
+CINTEXTESTDICT  = $(subst $(CINTEXTESTDICTD)/,lib/test_,$(subst _rflx.o,Rflx.$(DICTEXT),$(CINTEXTESTDICTO)))
 
 ##### local rules #####
 include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
