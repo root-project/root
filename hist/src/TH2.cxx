@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.92 2006/04/19 08:22:23 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.93 2006/05/17 16:37:26 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -20,6 +20,8 @@
 #include "TMatrixDBase.h"
 #include "THLimitsFinder.h"
 #include "TError.h"
+#include "TObjString.h"
+
 
 ClassImp(TH2)
 
@@ -2018,8 +2020,19 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    }
    if (pname != name)  delete [] pname;
 
-   // Copy attributes
+   // Copy the axis attributes and the axis labels if needed.
    h1->GetXaxis()->ImportAttributes(this->GetXaxis());
+   THashList* labels=GetXaxis()->GetLabels();
+   if (labels) {
+      TIter iL(labels);
+      TObjString* lb;
+      Int_t i = 1;
+      while ((lb=(TObjString*)iL())) {
+  	 h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
+  	 i++;
+      }
+   }
+      
    h1->SetLineColor(this->GetLineColor());
    h1->SetFillColor(this->GetFillColor());
    h1->SetMarkerColor(this->GetMarkerColor());
@@ -2137,8 +2150,19 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    }
    if (pname != name)  delete [] pname;
 
-   // Copy attributes
+   // Copy the axis attributes and the axis labels if needed.
    h1->GetXaxis()->ImportAttributes(this->GetYaxis());
+   THashList* labels=GetYaxis()->GetLabels();
+   if (labels) {
+      TIter iL(labels);
+      TObjString* lb;
+      Int_t i = 1;
+      while ((lb=(TObjString*)iL())) {
+  	 h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
+  	 i++;
+      }
+   }
+      
    h1->SetLineColor(this->GetLineColor());
    h1->SetFillColor(this->GetFillColor());
    h1->SetMarkerColor(this->GetMarkerColor());
