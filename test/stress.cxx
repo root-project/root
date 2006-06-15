@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.62 2005/06/03 07:37:06 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.63 2006/05/06 16:33:25 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -404,7 +404,7 @@ void stress4()
    ntotout += f.GetBytesWritten();
 
    //Compare results of fit with expected parameters
-   Double_t th0=393.396, th5=614.03, th10=157.775;
+   Double_t th0=395.085, th5=620.957, th10=151.308;
    Double_t dp0  = TMath::Abs((f2form->GetParameter(0) -th0)/th0);
    Double_t dp5  = TMath::Abs((f2form->GetParameter(5) -th5)/th5);
    Double_t dp10 = TMath::Abs((f2form->GetParameter(10)-th10)/th10);
@@ -414,6 +414,7 @@ void stress4()
    else    {
       printf("failed\n");
       printf("%-8s dp0=%g, dp5=%g, dp10=%g\n"," ",dp0,dp5,dp10);
+      printf("%-8s  p0=%g,  p5=%g,  p10=%g\n"," ",f2form->GetParameter(0),f2form->GetParameter(5),f2form->GetParameter(10));
    }
    if (gPrintSubBench) { printf("Test  4 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
@@ -607,7 +608,7 @@ void stress7()
    TH2F *hpxpy = new TH2F("hpxpy","px vx py with cutg",40,-4,4,40,-4,4);
    ntuple->Draw("px:py>>hpxpy","cutg","goff");
    Int_t npxpy = (Int_t)hpxpy->GetEntries();
-   Int_t npxpyGood = 27902;
+   Int_t npxpyGood = 27918;
    hpxpy->Write();
    cutg->Write();
 
