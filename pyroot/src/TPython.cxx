@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.12 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.14 2006/06/14 13:46:30 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -175,7 +175,67 @@ void TPython::LoadMacro( const char* name )
 
    Py_DECREF( current );
    Py_DECREF( old );
-};
+}
+
+//____________________________________________________________________________
+void TPython::ExecScript( const char* name, int argc, const char** argv )
+{
+// Execute a python stand-alone script, with argv CLI arguments.
+//
+// example of use:
+//    const char* argv[] = { "1", "2", "3" };
+//    TPython::ExecScript( "test.py", sizeof(argv)/sizeof(argv[0]), argv );
+
+
+// setup
+   if ( ! Initialize() )
+      return;
+
+// verify arguments
+   if ( ! name ) {
+      std::cerr << "Error: no file name specified." << std::endl;
+      return;
+   }
+
+   FILE* fp = fopen( name, "r" );
+   if ( ! fp ) {
+      std::cerr << "Error: could not open file \"" << name << "\"." << std::endl;
+      return;
+   }
+
+// setup command line part
+   PyObject* oldargv = PySys_GetObject( const_cast< char* >( "argv" ) );
+   if ( ! oldargv )                               // e.g. apache
+      PyErr_Clear();
+   else {
+      PyObject* l = PyList_New( PyList_GET_SIZE( oldargv ) );
+      for ( int i = 1; i < PyList_GET_SIZE( oldargv ); ++i ) {
+         PyObject* item = PyList_GET_ITEM( oldargv, i );
+         Py_INCREF( item );
+         PyList_SET_ITEM( l, i, item );           // steals ref
+      }
+      oldargv = l;
+   }
+
+   argc += 1;
+   const char** argv2 = new const char*[ argc ];
+   for ( int i = 1; i < argc; ++i ) argv2[ i ] = argv[ i-1 ];
+   argv2[ 0 ] = Py_GetProgramName();
+   PySys_SetArgv( argc, const_cast< char** >( argv2 ) );
+   delete argv2;
+
+// actual script execution
+   PyObject* gbl = PyDict_Copy( gMainDict );
+   PyObject* result = PyRun_FileEx( fp, name, Py_file_input, gbl, gbl, 1 /* close fp */ );
+   if ( ! result )
+      PyErr_Print();
+   Py_XDECREF( result );
+   Py_DECREF( gbl );
+
+// restore original command line
+   PySys_SetObject( const_cast< char* >( "argv" ), oldargv );
+   Py_XDECREF( oldargv );
+}
 
 //____________________________________________________________________________
 void TPython::Exec( const char* cmd )

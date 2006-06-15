@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyCallable.h,v 1.3 2006/03/09 09:07:02 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyCallable.h,v 1.4 2006/03/24 06:04:09 brun Exp $
 // Author: Wim Lavrijsen, Aug 2004
 
 #ifndef PYROOT_PYCALLABLE_H
@@ -20,8 +20,9 @@ namespace PyROOT {
       virtual ~PyCallable() {}
 
    public:
-      virtual PyObject* GetSignatureString() = 0;
-      virtual PyObject* GetDocString() { return GetSignatureString(); }
+      virtual PyObject* GetSignature() = 0;
+      virtual PyObject* GetPrototype() = 0;
+      virtual PyObject* GetDocString() { return GetPrototype(); }
       virtual Int_t GetPriority() { return 0; }
 
    public:

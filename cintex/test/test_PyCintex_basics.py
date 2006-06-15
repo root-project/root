@@ -392,6 +392,10 @@ class BasicsTestCase(unittest.TestCase):
     self.failUnless( PyCintex.makeClass('std::vector<MyA>') )
     self.failUnless( PyCintex.makeClass('std::vector<MyA>::iterator') )
     self.failUnless( PyCintex.makeClass('std::vector<MyA>::reverse_iterator') )
+	
+  def test26TypedefRet(self):
+    self.failUnlessEqual( self.gbl.MyNS.theFunction(), 1)
+    self.failUnlessEqual( self.gbl.theFunction(), 1 )  
     
 
 suite = unittest.makeSuite(BasicsTestCase,'test')

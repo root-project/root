@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAlienSystem.cxx,v 1.1 2006/05/26 16:55:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAlienSystem.cxx,v 1.2 2006/05/30 15:34:17 rdm Exp $
 // Author: Andreas Peters   15/05/2006
 
 /*************************************************************************
@@ -315,10 +315,10 @@ int TAlienSystem::AlienFilestat(const char *fpath, FileStat_t &buf)
    }
 #if defined(R__SEEK64)
    struct stat64 sbuf;
-   if ((gapi_lstat(url.GetUrl(), (struct GAPI_STAT*)(&sbuf))) == 0) {
+   if ((gapi_lstat(url.GetUrl(), (GAPI_STAT*)(&sbuf))) == 0) {
 #else
    struct stat sbuf;
-   if ((gapi_lstat(url.GetUrl(), (struct GAPI_STAT*)(&sbuf))) == 0) {
+   if ((gapi_lstat(url.GetUrl(), (GAPI_STAT*)(&sbuf))) == 0) {
 #endif
       buf.fIsLink = S_ISLNK(sbuf.st_mode);
       buf.fDev   = sbuf.st_dev;

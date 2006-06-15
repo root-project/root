@@ -62,6 +62,7 @@ struct Primitives {
   char c() { return m_c;}
   short s() { return m_s;}
   int i() { return m_i;}
+  Int_t ii() { return m_i; }
   long l() { return m_l;}
   long long ll() { return m_ll; }
   unsigned char uc() { return m_uc;}
@@ -646,7 +647,6 @@ namespace A {
   A::B::C::MyClass* gMyPointer = 0;
 }
 
-
 #include <stdexcept>
 
 class ExceptionGenerator {
@@ -661,12 +661,19 @@ class ExceptionGenerator {
 
 struct MyA {int a;};
 
+template < class T > class SpecialET {
+  enum Enum1 { one, two };
+  typedef char* CharPtr;
+};
+
+  
 #include <list>
 struct __ins {
   std::vector<MyA> mya;
   std::vector<MyA>::iterator myai;
   std::vector<MyA>::reverse_iterator myar;
   std::list<ExceptionGenerator*> a;
+  SpecialET<std::vector<std::pair<int,int> > > s;
 };
 
 namespace N {
@@ -713,4 +720,18 @@ namespace N {
     Inner_e* e1p;
     std::vector<InnterT<Inner*> *> vvvv;
   };
+  
+
 }
+
+namespace MyNS {   
+  typedef int MyInteger;
+  inline MyInteger theFunction() { return 1; }
+}
+
+typedef int MyInteger;
+
+inline MyInteger theFunction() {
+  return 1;
+}
+

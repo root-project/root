@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTEnumBuilder.cxx,v 1.6 2006/01/18 08:00:26 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTEnumBuilder.cxx,v 1.7 2006/01/20 17:21:18 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -27,7 +27,7 @@ namespace ROOT { namespace Cintex {
 
   void CINTEnumBuilder::Setup(const Type& e) {
     if ( e.IsEnum() )  {
-      string name = e.Name(SCOPED);
+      string name = CintName(e.Name(SCOPED));
       int tagnum = ::G__defined_tagname(name.c_str(), 2);
       if( -1 != tagnum ) return;
 
@@ -57,7 +57,7 @@ namespace ROOT { namespace Cintex {
         ::G__resetplocal();
       }
       else {
-        string sname = scope.Name(SCOPED);
+        string sname = CintName(scope.Name(SCOPED));
         int stagnum = ::G__defined_tagname(sname.c_str(), 2);
         isstatic = -2;
         if( -1 == stagnum ) return;

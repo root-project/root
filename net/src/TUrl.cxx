@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.29 2006/05/17 17:11:49 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.30 2006/05/24 12:21:52 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -230,7 +230,7 @@ again:
 
    // Find file
    u = s;
-   if (*u == '/')
+   if (*u == '/' && fHost.Length())
       u++;
 
    FindFile(u);
@@ -260,6 +260,7 @@ void TUrl::FindFile(char *u)
       sav = *s;
       *s = 0;
       fFile = u;
+      fFile.ReplaceAll("//", "/");
       *s = sav;
       s++;
       if (sav == '?') {
@@ -281,11 +282,12 @@ void TUrl::FindFile(char *u)
          }
       }
       if (!*s) {
-         // anhor string is empty
+         // anchor string is empty
          return;
       }
    } else {
       fFile = u;
+      fFile.ReplaceAll("//", "/");
       return;
    }
 
@@ -398,6 +400,7 @@ const char *TUrl::GetUrl(Bool_t withDeflt)
       }
    }
 
+   fUrl.ReplaceAll("////", "///");
    return fUrl;
 }
 

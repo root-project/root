@@ -1,8 +1,8 @@
 from __future__ import generators
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.39 2006/05/28 19:05:24 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.40 2006/05/29 15:54:05 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 05/28/06
+# Last: 06/12/06
 
 """PyROOT user module.
 
@@ -266,14 +266,6 @@ class ModuleFacade( object ):
       self.__dict__[ 'module' ]    = module
       self.__dict__[ 'libmodule' ] = sys.modules[ 'libPyROOT' ]
 
-    # root thread to prevent GUIs from starving
-      if not self.module.gROOT.IsBatch():
-         import threading
-         self.__dict__[ 'keeppolling' ] = 1
-         self.__dict__[ 'thread' ] = \
-            threading.Thread( None, _processRootEvents, None, ( self, ) )
-         self.thread.start()
-
     # store already available ROOT objects to prevent spurious lookups
       for name in self.module.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:
           self.__dict__[ name ] = getattr( self.module, name )
@@ -283,6 +275,10 @@ class ModuleFacade( object ):
 
       self.__dict__[ '__doc__'  ] = self.module.__doc__
       self.__dict__[ '__name__' ] = self.module.__name__
+
+      self.__dict__[ 'keeppolling' ] = 0
+
+      self.__class__.__getattr__ = self.__class__.__getattr1
 
    def __setattr__( self, name, value ):
     # to allow assignments to ROOT globals such as ROOT.gDebug
@@ -304,9 +300,11 @@ class ModuleFacade( object ):
 
       super( self.__class__, self ).__setattr__( name, value )
 
-   def __getattr__( self, name ):
-    # support for "from ROOT import *" at the module level
+   def __getattr1( self, name ):
+    # this is the "start-up" getattr, which handles the special cases
+
       if name == '__all__':
+       # support for "from ROOT import *" at the module level
          caller = sys.modules[ sys._getframe( 1 ).f_globals[ '__name__' ] ]
 
          for name in self.module.__pseudo__all__:
@@ -314,11 +312,33 @@ class ModuleFacade( object ):
 
          self.libmodule.gPad = gPad
 
-       # make the distionary of the calling module ROOT lazy
+       # make the dictionary of the calling module ROOT lazy
          self.module.SetRootLazyLookup( caller.__dict__ )
 
+       # all bets are off with import *, so follow -b flag
+         self.__doGUIThread()
+
+       # done with this version of __getattr__, move to general one
+         self.__class__.__getattr__ = self.__class__.__getattr2
+
        # the actual __all__ is empty
+         self.__dict__[ '__all__' ] = self.module.__all__
          return self.module.__all__
+
+      elif name == 'gROOT':
+       # yield gROOT without starting GUI thread just yet
+         return self.module.gROOT
+
+      elif name[0] != '_':
+       # first request for non-private (i.e. presumable ROOT) entity
+         self.__doGUIThread()
+
+       # done with this version of __getattr__, move to general one
+         self.__class__.__getattr__ = self.__class__.__getattr2
+         return getattr( self, name )
+
+   def __getattr2( self, name ):
+    # this is the "running" getattr, which is simpler
 
     # lookup into ROOT (which may cause python-side enum/class/global creation)
       attr = self.libmodule.LookupRootEntity( name )
@@ -334,6 +354,16 @@ class ModuleFacade( object ):
 
     # reaching this point means failure ...
       raise AttributeError( name )
+
+   def __doGUIThread( self ):
+    # root thread to prevent GUIs from starving, as needed
+      if not self.keeppolling and not self.module.gROOT.IsBatch():
+         import threading
+         self.__dict__[ 'keeppolling' ] = 1
+         self.__dict__[ 'thread' ] = \
+            threading.Thread( None, _processRootEvents, None, ( self, ) )
+         self.thread.setDaemon( 1 )
+         self.thread.start()
 
 sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade
@@ -353,8 +383,7 @@ def cleanup():
  # shutdown GUI thread, as appropriate
    if hasattr( facade, 'thread' ):
       facade.keeppolling = 0
-      while facade.thread.isAlive():
-         time.sleep( 0.01 )
+      facade.thread.join( 3. )                         # arbitrary
 
  # destroy ROOT module
    del facade.libmodule

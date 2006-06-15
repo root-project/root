@@ -47,9 +47,13 @@
   <variable pattern="A::g*"/>
 
   <class pattern="*MyA*"/>
+  <class pattern="SpecialET<*>"/>
+
+  <function pattern="*theFunction*" />
 
   <exclusion>
     <class name="A::B::C::MyClass::InnerClass"/>
   </exclusion>
+
 
 </lcgdict>

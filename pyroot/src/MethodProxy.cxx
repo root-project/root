@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.10 2006/03/09 09:07:02 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.11 2006/03/24 06:04:09 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -91,7 +91,6 @@ namespace {
       { (char*)NULL, NULL, NULL, NULL, NULL }
    };
 
-
 //= PyROOT method proxy function behaviour ===================================
    PyObject* mp_call( MethodProxy* meth, PyObject* args, PyObject* kwds )
    {
@@ -149,7 +148,7 @@ namespace {
       // failure: collect error message/trace (automatically clears exception, too)
          if ( ! PyErr_Occurred() ) {
          // this should not happen; set an error to prevent core dump and report
-            PyObject* sig = methods[i]->GetSignatureString();
+            PyObject* sig = methods[i]->GetPrototype();
             PyErr_Format( PyExc_SystemError, "%s =>\n    %s",
                PyString_AS_STRING( sig ), (char*)"NULL result without error in mp_call" );
             Py_DECREF( sig );
@@ -241,6 +240,43 @@ namespace {
       return 0;
    }
 
+//= PyROOT method proxy access to internals =================================
+   PyObject* mp_disp( MethodProxy* meth, PyObject* args, PyObject* )
+   {
+      PyObject* sigarg = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "S:disp" ), &sigarg ) )
+         return 0;
+
+      PyObject* sig1 = PyString_FromFormat( "(%s)", PyString_AS_STRING( sigarg ) );
+
+      MethodProxy::Methods_t& methods = meth->fMethodInfo->fMethods;
+      for ( Int_t i = 0; i < (Int_t)methods.size(); ++i ) {
+         PyObject* sig2 = methods[ i ]->GetSignature();
+         if ( PyObject_Compare( sig1, sig2 ) == 0 ) {
+            Py_DECREF( sig2 );
+
+            MethodProxy* newmeth = mp_new( NULL, NULL, NULL );
+            MethodProxy::Methods_t vec; vec.push_back( methods[ i ] );
+            newmeth->Set( meth->fMethodInfo->fName, vec );
+
+            Py_DECREF( sig1 );
+            return (PyObject*)newmeth;
+         }
+
+         Py_DECREF( sig2 );
+      }
+
+      Py_DECREF( sig1 );
+      PyErr_Format( PyExc_LookupError, "signature \"%s\" not found", PyString_AS_STRING( sigarg ) );
+      return 0;
+   }
+
+//____________________________________________________________________________
+   PyMethodDef mp_methods[] = {
+      { (char*)"disp", (PyCFunction)mp_disp, METH_VARARGS, (char*)"select overload for dispatch" },
+      { (char*)NULL, NULL, 0, NULL }
+   };
+
 } // unnamed namespace
 
 
@@ -274,7 +310,7 @@ PyTypeObject MethodProxy_Type = {
    0,                         // tp_weaklistoffset
    0,                         // tp_iter
    0,                         // tp_iternext
-   0,                         // tp_methods
+   mp_methods,                // tp_methods
    0,                         // tp_members
    mp_getset,                 // tp_getset
    0,                         // tp_base

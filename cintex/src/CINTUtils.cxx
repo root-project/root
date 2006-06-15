@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTUtils.cxx,v 1.6 2006/01/16 17:13:06 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTUtils.cxx,v 1.7 2006/05/04 16:53:11 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -34,14 +34,16 @@ namespace ROOT { namespace Cintex {
 
     CintTypeDesc dsc = CintType( t );
       
+
     typenum  = dsc.first + (indir > 0 ? 'A'-'a' : 0);
     tagnum   = -1;
     if ( dsc.first == 'u' ) {
       tagnum = ::G__defined_tagname(dsc.second.c_str(), 2);
-      if ( tagnum == -1 && (t.IsClass() || t.IsStruct()) ) {
+      if ( tagnum == -1 ) {
         G__linked_taginfo taginfo;
         taginfo.tagnum  = -1;
-        taginfo.tagtype = 'c';
+        if ( t.IsClass() || t.IsStruct() ) taginfo.tagtype = 'c';
+        else                               taginfo.tagtype = 'a';
         taginfo.tagname = dsc.second.c_str();
         G__get_linked_tagnum(&taginfo);
         tagnum = taginfo.tagnum;
