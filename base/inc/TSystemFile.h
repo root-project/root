@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemFile.h,v 1.3 2005/05/24 20:05:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemFile.h,v 1.4 2005/05/30 10:21:14 rdm Exp $
 // Author: Rene Brun   26/06/96
 
 /*************************************************************************
@@ -54,8 +54,8 @@ public:
    void        DrawClass() const { }
    TObject    *DrawClone(Option_t *) const { return 0; }
    void        SetDrawOption(Option_t *) { }
-   void        SetName(const char *) { }
-   void        SetTitle(const char *) { }
+   void        SetName(const char *name) { TNamed::SetName(name); }
+   void        SetTitle(const char *title) { TNamed::SetTitle(title); }
    void        Delete(Option_t *) { }
    void        Copy(TObject & ) const { }
 

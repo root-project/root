@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.8 2005/06/02 16:28:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.9 2006/05/23 04:47:35 brun Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -65,8 +65,8 @@ public:
    void        DrawClass() const { }
    TObject    *DrawClone(Option_t *) const { return 0; }
    void        SetDrawOption(Option_t *) { }
-   void        SetName(const char *) { }
-   void        SetTitle(const char *) { }
+   void        SetName(const char *name) { TSystemFile::SetName(name); }
+   void        SetTitle(const char *title) { TSystemFile::SetTitle(title); }
    void        Delete(Option_t *) { }
    void        Copy(TObject & ) const { }
    ClassDef(TSystemDirectory,0)  //A system directory
