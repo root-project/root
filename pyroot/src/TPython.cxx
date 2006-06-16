@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.14 2006/06/14 13:46:30 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.15 2006/06/14 13:52:01 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -226,7 +226,8 @@ void TPython::ExecScript( const char* name, int argc, const char** argv )
 
 // actual script execution
    PyObject* gbl = PyDict_Copy( gMainDict );
-   PyObject* result = PyRun_FileEx( fp, name, Py_file_input, gbl, gbl, 1 /* close fp */ );
+   PyObject* result =   // PyRun_FileEx closes fp (b/c of last argument "1")
+      PyRun_FileEx( fp, const_cast< char* >( name ), Py_file_input, gbl, gbl, 1 );
    if ( ! result )
       PyErr_Print();
    Py_XDECREF( result );
