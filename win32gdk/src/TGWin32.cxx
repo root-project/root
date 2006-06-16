@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.113 2006/05/15 13:31:01 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.114 2006/05/18 10:46:26 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -6510,10 +6510,9 @@ void TGWin32::GetPasteBuffer(Window_t id, Atom_t atom, TString & text,
    nchar = 1;                   //strlen(data);
    g_free(data);
 
-   if (del) {
-      gdk_property_delete((GdkWindow *) id,
-                          gdk_atom_intern("GDK_SELECTION", FALSE));
-   }
+   // if (del)
+   gdk_property_delete((GdkWindow *) id,
+                       gdk_atom_intern("GDK_SELECTION", FALSE));
 }
 
 //______________________________________________________________________________
