@@ -39,6 +39,7 @@ else
    soext="so"
 fi
 
+LIBVERS=
 VERSION=
 EXPLLNKCORE=
 if [ "x$EXPLICIT" = "xyes" ]; then
@@ -112,9 +113,10 @@ elif [ $PLATFORM = "macosx" ]; then
    BUNDLE=`echo $LIB | sed s/.dylib/.so/`
    # Add versioning information to shared library if available
    if [ "x$MAJOR" != "x" ]; then
-       VERSION="-compatibility_version ${MAJOR} -current_version ${MAJOR}.${MINOR}.${REVIS}"
-       SONAME=`echo $SONAME | sed "s/\(.*\)\.dylib/\1.${MAJOR}.dylib/"`
-       LIB=`echo $LIB | sed "s/\(\/*.*\/.*\)\.dylib/\1.${MAJOR}.${MINOR}.dylib/"`
+      VERSION="-compatibility_version ${MAJOR} -current_version ${MAJOR}.${MINOR}.${REVIS}"
+      SONAME=`echo $SONAME | sed "s/\(.*\)\.dylib/\1.${MAJOR}.dylib/"`
+      LIB=`echo $LIB | sed "s/\(\/*.*\/.*\)\.dylib/\1.${MAJOR}.${MINOR}.dylib/"`
+      LIBVERS=$LIB
    fi
    if [ $macosx_minor -ge 4 ]; then
       cmd="$LD $SOFLAGS$SONAME $m64 -o $LIB $OBJS \
@@ -168,6 +170,7 @@ elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
       VERSION="-Wl,--major-image-version,$MAJOR -Wl,--minor-image-version,$MINORVERSION"
       SONAME=`echo $SONAME | sed "s/.*\./&${MAJOR}./"`
       LIB=`echo $LIB | sed "s/\/*.*\/.*\./&${MAJOR}.${MINOR}./"`
+      LIBVERS=$LIB
    fi
    cmd="$LD $VERSION $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
    echo $cmd
@@ -195,7 +198,7 @@ if [ "x$MAJOR" != "x" ]; then
         # Versioned library has format foo.so.3.05
 	ln -fs $SONAME.$MAJOR.$MINOR $LIB.$MAJOR
 	ln -fs $SONAME.$MAJOR        $LIB
-    elif [ -f $LIB ]; then
+    elif [ -f $LIBVERS ]; then
 	# Versioned library has format foo.3.05.so
 	source_file=`echo $SONAME | sed "s/.*\./&${MINOR}./"`
 	if [ $LIB != ${LIB/.${MAJOR}.${MINOR}/} ]; then
