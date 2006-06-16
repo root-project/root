@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.65 2006/06/02 23:32:40 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.66 2006/06/06 09:55:36 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -590,9 +590,13 @@ void TSessionServerFrame::OnBtnConnectClicked()
          TPackageDescription *package;
          TIter next(fViewer->GetActDesc()->fPackages);
          while ((package = (TPackageDescription *)next())) {
-            if (package->fEnabled) {
+            if (!package->fEnabled) {
                if (fViewer->GetActDesc()->fProof->EnablePackage(package->fName) != 0)
                   Error("Submit", "Enable package failed");
+               else {
+                  package->fEnabled = kTRUE;
+                  fViewer->GetSessionFrame()->UpdatePackages();
+               }
             }
          }
       }
@@ -1276,7 +1280,7 @@ void TSessionFrame::UpdatePackages()
       fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Layout();
-   fClient->NeedRedraw(fLBPackages);
+   fClient->NeedRedraw(fLBPackages->GetContainer());
 }
 
 //______________________________________________________________________________
@@ -1309,11 +1313,9 @@ void TSessionFrame::OnUploadPackages()
             }
          }
       }
-      fLBPackages->Layout();
-      fClient->NeedRedraw(fLBPackages);
-      if (fViewer->IsAutoSave())
-         fViewer->WriteConfiguration();
    }
+   fLBPackages->Layout();
+   fClient->NeedRedraw(fLBPackages->GetContainer());
 }
 
 //______________________________________________________________________________
@@ -1354,11 +1356,9 @@ void TSessionFrame::OnEnablePackages()
             ((TGIconLBEntry *)obj)->SetPicture(fClient->GetPicture("package_add.xpm"));
          }
       }
-      fLBPackages->Layout();
-      fClient->NeedRedraw(fLBPackages);
-      if (fViewer->IsAutoSave())
-         fViewer->WriteConfiguration();
    }
+   fLBPackages->Layout();
+   fClient->NeedRedraw(fLBPackages->GetContainer());
 }
 
 //______________________________________________________________________________
@@ -1390,11 +1390,9 @@ void TSessionFrame::OnDisablePackages()
             }
          }
       }
-      fLBPackages->Layout();
-      fClient->NeedRedraw(fLBPackages);
-      if (fViewer->IsAutoSave())
-         fViewer->WriteConfiguration();
    }
+   fLBPackages->Layout();
+   fClient->NeedRedraw(fLBPackages->GetContainer());
 }
 
 //______________________________________________________________________________
@@ -1416,11 +1414,9 @@ void TSessionFrame::OnClearPackages()
             package->fEnabled = kFALSE;
          }
       }
-      fLBPackages->Layout();
-      fClient->NeedRedraw(fLBPackages);
-      if (fViewer->IsAutoSave())
-         fViewer->WriteConfiguration();
    }
+   fLBPackages->Layout();
+   fClient->NeedRedraw(fLBPackages->GetContainer());
 }
 
 //______________________________________________________________________________
@@ -1445,9 +1441,7 @@ void TSessionFrame::OnBtnAddClicked()
                               fClient->GetPicture("package.xpm"));
    fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    fLBPackages->Layout();
-   fClient->NeedRedraw(fLBPackages);
-   if (fViewer->IsAutoSave())
-      fViewer->WriteConfiguration();
+   fClient->NeedRedraw(fLBPackages->GetContainer());
 }
 
 //______________________________________________________________________________
@@ -1477,9 +1471,7 @@ void TSessionFrame::OnBtnRemoveClicked()
       fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Layout();
-   fClient->NeedRedraw(fLBPackages);
-   if (fViewer->IsAutoSave())
-      fViewer->WriteConfiguration();
+   fClient->NeedRedraw(fLBPackages->GetContainer());
 }
 
 //______________________________________________________________________________
@@ -1514,9 +1506,7 @@ void TSessionFrame::OnBtnUpClicked()
    }
    fLBPackages->Select(pos-1);
    fLBPackages->Layout();
-   fClient->NeedRedraw(fLBPackages);
-   if (fViewer->IsAutoSave())
-      fViewer->WriteConfiguration();
+   fClient->NeedRedraw(fLBPackages->GetContainer());
 }
 
 //______________________________________________________________________________
@@ -1552,9 +1542,7 @@ void TSessionFrame::OnBtnDownClicked()
    }
    fLBPackages->Select(pos+1);
    fLBPackages->Layout();
-   fClient->NeedRedraw(fLBPackages);
-   if (fViewer->IsAutoSave())
-      fViewer->WriteConfiguration();
+   fClient->NeedRedraw(fLBPackages->GetContainer());
 }
 
 //______________________________________________________________________________
@@ -4359,6 +4347,7 @@ void TSessionViewer::UpdateListOfPackages()
          }
       }
    }
+//   fSessionFrame->UpdatePackages();
 }
 
 //______________________________________________________________________________
