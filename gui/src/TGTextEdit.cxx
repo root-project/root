@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.35 2006/05/29 15:40:35 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.36 2006/05/30 06:40:10 antcheva Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -394,6 +394,7 @@ Bool_t TGTextEdit::Search(const char *string, Bool_t direction,
    if (gTQSender && (gTQSender == TGSearchDialog::SearchDialog())) {
       caseSensitive = TGSearchDialog::SearchDialog()->GetType()->fCaseSensitive;
       direction = TGSearchDialog::SearchDialog()->GetType()->fDirection;
+      fSearch = TGSearchDialog::SearchDialog()->GetType();
    }
 
    TGLongPosition pos;
@@ -1185,8 +1186,8 @@ void TGTextEdit::Search(Bool_t close)
 
    if (!close) {
       if (!TGSearchDialog::SearchDialog()) {
-         TGSearchDialog::SearchDialog() = new TGSearchDialog(fClient->GetDefaultRoot(), 
-                                                        fCanvas, 400, 150, srch, &ret);         
+         TGSearchDialog::SearchDialog() = new TGSearchDialog(fClient->GetDefaultRoot(),
+                                                        fCanvas, 400, 150, srch, &ret);
       }
       TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGTextEdit", 
                                           this, "Search(char *,Bool_t,Bool_t)");
