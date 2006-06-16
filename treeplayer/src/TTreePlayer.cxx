@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.213 2006/06/12 09:02:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.214 2006/06/14 13:15:55 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2520,7 +2520,6 @@ Long64_t TTreePlayer::Process(const char *filename,Option_t *option, Long64_t ne
 //   TTree *h2 = (TTree*)f2->Get("h1");
 //   h2->Process("h1test.C+");
 //}
-
 
    DeleteSelectorFromFile(); //delete previous selector if any
 

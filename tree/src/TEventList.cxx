@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.13 2005/06/03 07:37:06 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.14 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -159,6 +159,18 @@ Bool_t TEventList::Contains(Long64_t entry)
    // Return TRUE if list contains entry.
 
    if (GetIndex(entry) < 0) return kFALSE;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TEventList::ContainsRange(Long64_t entrymin, Long64_t entrymax)
+{
+   // Return TRUE if list contains entries from entrymin to entrymax included.
+
+   Long64_t imax = TMath::BinarySearch(fN,fList,entrymax);
+   //printf("ContainsRange: entrymin=%lld, entrymax=%lld,imax=%lld, fList[imax]=%lld\n",entrymin,entrymax,imax,fList[imax]);
+   
+   if (fList[imax] < entrymin) return kFALSE;
    return kTRUE;
 }
 

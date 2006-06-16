@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.9 2006/06/15 07:59:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.10 2006/06/15 10:02:13 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -17,8 +17,8 @@
 //  This class acts as a file cache, registering automatically the      //
 //  baskets from the branches being processed (TTree::Draw or           //
 //  TTree::Process and TSelectors) when in the learning phase.          //
-//  The learning phase is by default the first 1 per cent of entries.   //
-//  It can be changed via TTreeFileFrefetch::SetLearnRatio.             //
+//  The learning phase is by default 100 entries.                       //
+//  It can be changed via TTreeFileFrefetch::SetLearnEntries.           //
 //                                                                      //
 //  This cache speeds-up considerably the performance, in particular    //
 //  when the Tree is accessed remotely via a high latency network.      //
@@ -30,15 +30,25 @@
 //                                                                      //
 //  For each Tree being processed a TTreeFilePrefetch object is created.//
 //  This object is automatically deleted when the Tree is deleted or    //
-//  when the file is deleted.
+//  when the file is deleted.                                           //
+//                                                                      //
+//  -Special case of a TChain                                           //
+//   Once the training is done on the first Tree, the list of branches  //
+//   in the cache is kept for the following files.                      //
+//                                                                      //
+//  -Special case of a TEventlist                                       //
+//   if the Tree or TChain has a TEventlist, only the buffers           //
+//   referenced by the list are put in the cache.                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TTreeFilePrefetch.h"
-#include "TTree.h"
+#include "TChain.h"
 #include "TBranch.h"
+#include "TEventList.h"
+#include "TObjString.h"
 
-Double_t TTreeFilePrefetch::fgLearnRatio = 0.01;
+Int_t TTreeFilePrefetch::fgLearnEntries = 100;
 
 ClassImp(TTreeFilePrefetch)
 
@@ -50,6 +60,9 @@ TTreeFilePrefetch::TTreeFilePrefetch() : TFilePrefetch(),
    fZipBytes(0),
    fNbranches(0),
    fBranches(0),
+   fBrNames(0),
+   fOwner(0),
+   fTree(0),
    fIsLearning(kTRUE)
 {
    // Default Constructor.
@@ -63,13 +76,16 @@ TTreeFilePrefetch::TTreeFilePrefetch(TTree *tree, Int_t buffersize) : TFilePrefe
    fZipBytes(0),
    fNbranches(0),
    fBranches(0),
+   fBrNames(new TList),
+   fOwner(tree),
+   fTree(0),
    fIsLearning(kTRUE)
 {
    // Constructor.
-   fEntryNext = Long64_t(fgLearnRatio*(fEntryMax-fEntryMin));
-   if (fEntryNext == fEntryMin) fEntryNext++;
+   
+   fEntryNext = fEntryMin + fgLearnEntries;
    Int_t nleaves = tree->GetListOfLeaves()->GetEntries();
-   fBranches = new TBranch*[nleaves];
+   fBranches = new TBranch*[nleaves+10]; //add a margin just in case in a TChain?
 }
 
 //______________________________________________________________________________
@@ -84,6 +100,7 @@ TTreeFilePrefetch::~TTreeFilePrefetch()
    // destructor. (in general called by the TFile destructor
    
    delete [] fBranches;
+   if (fBrNames) {fBrNames->Delete(); delete fBrNames;}
 }
 
 //______________________________________________________________________________
@@ -109,24 +126,14 @@ void TTreeFilePrefetch::AddBranch(TBranch *b)
       if (fBranches[i] == b) {isNew = kFALSE; break;}
    }
    if (isNew) {
+      fTree = b->GetTree();
       fBranches[fNbranches] = b;
-      fNbranches++;
+      fBrNames->Add(new TObjString(b->GetName()));
       fZipBytes += b->GetZipBytes();
+      fNbranches++;
       if (gDebug > 0) printf("Entry: %lld, registering branch: %s\n",b->GetTree()->GetReadEntry(),b->GetName());
    }
 }
-
-//_____________________________________________________________________________
-void TTreeFilePrefetch::Clear(Option_t *)
-{
-   //clear the cache (called by TChain::LoadTree)
-   
-   Prefetch(0,0);
-   fNbranches  = 0;
-   fZipBytes   = 0;
-   fIsLearning = kTRUE;
-}
-   
 
 //_____________________________________________________________________________
 Bool_t TTreeFilePrefetch::FillBuffer()
@@ -141,7 +148,20 @@ Bool_t TTreeFilePrefetch::FillBuffer()
    //estimate number of entries that can fit in the cache
    fEntryNext = entry + tree->GetEntries()*fBufferSize/fZipBytes;
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
-         
+
+   //check if owner has a TEventList set. If yes we optimize for this special case
+   //reading only the baskets containing entries in the list
+   TEventList *elist = fOwner->GetEventList();
+   Long64_t chainOffset = 0;
+   if (elist) {
+      fEntryNext = fTree->GetEntries();
+      if (fOwner->IsA() ==TChain::Class()) {
+         TChain *chain = (TChain*)fOwner;
+         Int_t t = chain->GetTreeNumber();
+         chainOffset = chain->GetTreeOffset()[t];
+      }
+   }
+           
    //clear cache buffer
    TFilePrefetch::Prefetch(0,0);
    //store baskets
@@ -159,6 +179,11 @@ Bool_t TTreeFilePrefetch::FillBuffer()
          if (pos <= 0 || len <= 0) continue;
          if (entries[j] > fEntryNext) continue;
          if (entries[j] < entry && (j<nb-1 && entries[j+1] < entry)) continue;
+         if (elist) {
+            Long64_t emax = fEntryMax;
+            if (j<nb-1) emax = entries[j+1]-1;
+            if (!elist->ContainsRange(entries[j]+chainOffset,emax+chainOffset)) continue;
+         }
          TFilePrefetch::Prefetch(pos,len);
       }
       if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,fBranches[i]->GetName(),fEntryNext,fNseek,fNtot);
@@ -169,12 +194,12 @@ Bool_t TTreeFilePrefetch::FillBuffer()
 
 
 //_____________________________________________________________________________
-Double_t TTreeFilePrefetch::GetLearnRatio()
+Int_t TTreeFilePrefetch::GetLearnEntries()
 {
-   //static function returning fgLearnRatio
-   //see SetLearnRatio
+   //static function returning the number of entries used to train the cache
+   //see SetLearnEntries
    
-   return fgLearnRatio;
+   return fgLearnEntries;
 }
 
 //_____________________________________________________________________________
@@ -214,23 +239,45 @@ void TTreeFilePrefetch::SetEntryRange(Long64_t emin, Long64_t emax)
    
    fEntryMin  = emin;
    fEntryMax  = emax;
-   Long64_t learn = Long64_t(fgLearnRatio*(fEntryMax-fEntryMin));
-   if (learn < 2) learn = 2;
-   fEntryNext  = emin + learn;
+   fEntryNext  = fEntryMin + fgLearnEntries;
    fIsLearning = kTRUE;
    fNbranches  = 0;
    fZipBytes   = 0;
+   if (fBrNames) fBrNames->Delete();
    if (gDebug > 0) printf("SetEntryRange: fEntryMin=%lld, fEntryMax=%lld, fEntryNext=%lld\n",fEntryMin,fEntryMax,fEntryNext);
    
 }
 
 //_____________________________________________________________________________
-void TTreeFilePrefetch::SetLearnRatio(Double_t ratio)
+void TTreeFilePrefetch::SetLearnEntries(Int_t n)
 {
-   // Static function to set the fraction of entries to be used in learning mode
-   // The default value for ratio is 0.01 (1 per cent).
-   // In case the ratio specified is such that less than 2 entries
-   // participate to the learning, a minimum of 2 entries are used.
+   // Static function to set the number of entries to be used in learning mode
+   // The default value for n is 10. n must be >= 1
    
-   fgLearnRatio = ratio;
+   if (n < 1) n = 1;
+   fgLearnEntries = n;
+}
+
+//_____________________________________________________________________________
+void TTreeFilePrefetch::UpdateBranches(TTree *tree)
+{
+   //update pointer to current Tree and recompute pointers to the branches in the cache
+   
+   fTree = tree;
+   Prefetch(0,0);
+
+   fEntryMin  = 0;
+   fEntryMax  = fTree->GetEntries();
+   fEntryNext = fEntryMin + fgLearnEntries;
+   fZipBytes  = 0;
+   fNbranches = 0;
+   TIter next(fBrNames);
+   TObjString *os;
+   while ((os = (TObjString*)next())) {
+      TBranch *b = fTree->GetBranch(os->GetName());
+      if (!b) continue;
+      fBranches[fNbranches] = b;
+      fZipBytes   += b->GetZipBytes();
+      fNbranches++;
+   }
 }

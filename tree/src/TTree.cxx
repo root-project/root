@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.286 2006/06/08 13:26:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.287 2006/06/13 06:53:20 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -38,13 +38,8 @@
 */
 //End_Html
 //
-//  ==> TTree *tree = new TTree(name, title, maxvirtualsize)
-//     Creates a Tree with name and title. Maxvirtualsize is by default 64Mbytes,
-//     maxvirtualsize = 64000000(default) means: Keeps as many buffers in memory until
-//     the sum of all buffers is greater than 64 Megabyte. When this happens,
-//     memory buffers are written to disk and deleted until the size of all
-//     buffers is again below the threshold.
-//     maxvirtualsize = 0 means: keep only one buffer in memory.
+//  ==> TTree *tree = new TTree(name, title)
+//     Creates a Tree with name and title.
 //
 //     Various kinds of branches can be added to a tree:
 //       A - simple structures or list of variables. (may be for C or Fortran structures)

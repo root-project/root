@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.10 2005/06/03 07:37:06 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.11 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -48,6 +48,7 @@ public:
    virtual void      Add(const TEventList *list);
    virtual void      Clear(Option_t *option="") {Reset(option);}
    virtual Bool_t    Contains(Long64_t entry);
+   virtual Bool_t    ContainsRange(Long64_t entrymin, Long64_t entrymax);
    virtual void      Enter(Long64_t entry);
    TDirectory       *GetDirectory() const {return fDirectory;}
    virtual Long64_t  GetEntry(Int_t index) const;

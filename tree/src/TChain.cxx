@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.132 2006/06/08 16:59:02 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.133 2006/06/14 13:15:55 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1006,10 +1006,9 @@ Long64_t TChain::LoadTree(Long64_t entry)
    if (tpf) {
       fFile->SetFilePrefetch(tpf);
       tpf->SetFile(fFile);
-      tpf->Clear();
-      tpf->SetEntryRange(0,fTree->GetEntries());
+      tpf->UpdateBranches(fTree);
    } else {
-      fTree->SetCacheSize(fCacheSize);
+      this->SetCacheSize(fCacheSize);
    }
 
    //check if fTreeOffset has really been set
@@ -1389,6 +1388,7 @@ Long64_t TChain::Process(const char *filename,Option_t *option,  Long64_t nentri
 {
    // Process all entries in this chain, calling functions in filename
    // see TTree::Process
+
    if (fChainProof)
       return fChainProof->Process(filename, option, nentries, firstentry);
 
