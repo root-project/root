@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.93 2006/05/17 16:37:26 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.94 2006/06/15 16:47:10 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2028,8 +2028,8 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
       TObjString* lb;
       Int_t i = 1;
       while ((lb=(TObjString*)iL())) {
-  	 h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
-  	 i++;
+         h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
+         i++;
       }
    }
       
@@ -2158,8 +2158,8 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
       TObjString* lb;
       Int_t i = 1;
       while ((lb=(TObjString*)iL())) {
-  	 h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
-  	 i++;
+         h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
+         i++;
       }
    }
       
