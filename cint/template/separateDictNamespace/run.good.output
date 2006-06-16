@@ -2,7 +2,7 @@
 Processing run.C...
 ===========================================================================
 class Master::Container
- size=0xc FILE:libmaster.so LINE:-1
+ size=n/a FILE:libmaster.so LINE:-1
 List of base class--------------------------------------------------------
 0x0        public: TObject //Basic ROOT object
 List of member variable---------------------------------------------------
@@ -30,7 +30,7 @@ libmaster.so     -1:-1   0 public: Master::Container Container(const Master::Con
 libmaster.so     -1:-1   0 public: Master::Container& operator=(const Master::Container&);
 ===========================================================================
 class Master::Container
- size=0xc FILE:libmaster.so LINE:-1
+ size=n/a FILE:libmaster.so LINE:-1
 List of base class--------------------------------------------------------
 0x0        public: TObject //Basic ROOT object
 List of member variable---------------------------------------------------
@@ -59,7 +59,7 @@ libmaster.so     -1:-1   0 public: Master::Container& operator=(const Master::Co
 libmaster.so     -1:-1   0 public: Slave1::Object& func(Slave1::Object* t);
 ===========================================================================
 class Master::Container
- size=0xc FILE:libmaster.so LINE:-1
+ size=n/a FILE:libmaster.so LINE:-1
 List of base class--------------------------------------------------------
 0x0        public: TObject //Basic ROOT object
 List of member variable---------------------------------------------------

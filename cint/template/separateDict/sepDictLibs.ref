@@ -2,7 +2,7 @@
 Processing run.C...
 ===========================================================================
 class Name::MyClass
- size=0xc FILE:libmaster.so LINE:-1
+ size=n/a FILE:libmaster.so LINE:-1
 List of base class--------------------------------------------------------
 0x0        public: TObject //Basic ROOT object
 List of member variable---------------------------------------------------
@@ -29,7 +29,7 @@ libmaster.so     -1:-1   0 public: Name::MyClass MyClass(const Name::MyClass&);
 libmaster.so     -1:-1   0 public: Name::MyClass& operator=(const Name::MyClass&);
 ===========================================================================
 class Name::MyClass
- size=0xc FILE:libmaster.so LINE:-1
+ size=n/a FILE:libmaster.so LINE:-1
 List of base class--------------------------------------------------------
 0x0        public: TObject //Basic ROOT object
 List of member variable---------------------------------------------------
@@ -57,7 +57,7 @@ libmaster.so     -1:-1   0 public: Name::MyClass& operator=(const Name::MyClass&
 libmaster.so     -1:-1   0 public: TObject& func(TObject* t);
 ===========================================================================
 class Name::MyClass
- size=0xc FILE:libmaster.so LINE:-1
+ size=n/a FILE:libmaster.so LINE:-1
 List of base class--------------------------------------------------------
 0x0        public: TObject //Basic ROOT object
 List of member variable---------------------------------------------------

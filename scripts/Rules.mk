@@ -361,4 +361,5 @@ endef
 
 RemoveLeadingDirs := sed -e 's?^[A-Za-z/\].*[/\]??' -e 's/.dll/.so/'
 RemoveDirs := sed -e 's?([A-Za-z]:|[/]).*[/\]??'
+RemoveSizes := sed -e 's?size=0x[0-9a-fA-F]*?size=n/a?'
 
