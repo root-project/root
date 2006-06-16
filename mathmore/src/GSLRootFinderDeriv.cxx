@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -45,14 +45,14 @@ namespace Math {
 
 GSLRootFinderDeriv::GSLRootFinderDeriv() 
 { 
- // create function wrapper
-  fFunction = new GSLFunctionDerivWrapper(); 
+   // create function wrapper
+   fFunction = new GSLFunctionDerivWrapper(); 
 }
 
 GSLRootFinderDeriv::~GSLRootFinderDeriv() 
 {
-  // delete function wrapper
-  if (fFunction) delete fFunction;
+   // delete function wrapper
+   if (fFunction) delete fFunction;
 }
 
 GSLRootFinderDeriv::GSLRootFinderDeriv(const GSLRootFinderDeriv &) 
@@ -61,77 +61,85 @@ GSLRootFinderDeriv::GSLRootFinderDeriv(const GSLRootFinderDeriv &)
 
 GSLRootFinderDeriv & GSLRootFinderDeriv::operator = (const GSLRootFinderDeriv &rhs) 
 {
+   // private operator=
    if (this == &rhs) return *this;  // time saving self-test
-
+   
    return *this;
 }
 
 
-// set Function with signature as GSL
 
-void GSLRootFinderDeriv::SetFunction(  GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer Fdf, void * p, double Root) { 
-  fRoot = Root;
-  fFunction->SetFuncPointer( f ); 
-  fFunction->SetDerivPointer( df ); 
-  fFunction->SetFdfPointer( Fdf ); 
-  fFunction->SetParams( p ); 
-  gsl_root_fdfsolver_set( fS->Solver(), fFunction->GetFunc(), Root); 
+
+void GSLRootFinderDeriv::SetFunction(  GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer Fdf, void * p, double Root) {
+   // set Function with signature as GSL
+   fRoot = Root;
+   fFunction->SetFuncPointer( f ); 
+   fFunction->SetDerivPointer( df ); 
+   fFunction->SetFdfPointer( Fdf ); 
+   fFunction->SetParams( p ); 
+   gsl_root_fdfsolver_set( fS->Solver(), fFunction->GetFunc(), Root); 
 }
 
-void GSLRootFinderDeriv::SetSolver(GSLRootFdFSolver * s ) { 
-  fS = s; 
+void GSLRootFinderDeriv::SetSolver(GSLRootFdFSolver * s ) {
+   // set solver
+   fS = s; 
 }
 
 void GSLRootFinderDeriv::FreeSolver( ) { 
-  if (fS) delete fS; 
+   // free.....
+   if (fS) delete fS; 
 }
 
 int GSLRootFinderDeriv::Iterate() { 
-
-//     // function values (for debugging)
-//     const gsl_function_fdf * func = fFunction->getFunc(); 
-    
-//     double f = GSL_FN_FDF_EVAL_F(func, fRoot); 
-//     //double df = func->df(fRoot,func->params);
-//     double df =  GSL_FN_FDF_EVAL_DF(func, fRoot); 
-//     std::cout << " r = " << fRoot << " f(r) = " << f << " df = " << df;
-//     GSL_FN_FDF_EVAL_F_DF(func,fRoot, &f, &df); 
-//     std::cout << " Fdf = " << f << "  " << df << std::endl;
-
-    int status = gsl_root_fdfsolver_iterate(fS->Solver()); 
-    // update Root
-    fPrevRoot = fRoot;
-    fRoot =  gsl_root_fdfsolver_root(fS->Solver() ); 
-    return status; 
+   // iterate........
+   
+   //     // function values (for debugging)
+   //     const gsl_function_fdf * func = fFunction->getFunc(); 
+   
+   //     double f = GSL_FN_FDF_EVAL_F(func, fRoot); 
+   //     //double df = func->df(fRoot,func->params);
+   //     double df =  GSL_FN_FDF_EVAL_DF(func, fRoot); 
+   //     std::cout << " r = " << fRoot << " f(r) = " << f << " df = " << df;
+   //     GSL_FN_FDF_EVAL_F_DF(func,fRoot, &f, &df); 
+   //     std::cout << " Fdf = " << f << "  " << df << std::endl;
+   
+   int status = gsl_root_fdfsolver_iterate(fS->Solver()); 
+   // update Root
+   fPrevRoot = fRoot;
+   fRoot =  gsl_root_fdfsolver_root(fS->Solver() ); 
+   return status; 
 }
 
 double GSLRootFinderDeriv::Root() const {
-  return fRoot; 
+   // return cached value
+   return fRoot; 
 }
 
 const char * GSLRootFinderDeriv::Name() const {
-  return gsl_root_fdfsolver_name(fS->Solver() ); 
+   // get name from GSL
+   return gsl_root_fdfsolver_name(fS->Solver() ); 
 }
 
 int GSLRootFinderDeriv::Solve (int maxIter, double absTol, double relTol) 
 { 
-  int iter = 0; 
-  int status = 0; 
-  do { 
-    iter++; 
-    
-    status = Iterate();
-    status = GSLRootHelper::TestDelta(fRoot, fPrevRoot, absTol, relTol);
-    if (status == GSL_SUCCESS) { 
-      fIter = iter;
-      return status; 
-    }
-  
-//     std::cout << "iteration " << iter << " Root " << fRoot << " prev Root " << 
-//       fPrevRoot << std::endl;
-  }
-  while (status == GSL_CONTINUE && iter < maxIter); 
-  return status;
+   // solve for roots 
+   int iter = 0; 
+   int status = 0; 
+   do { 
+      iter++; 
+      
+      status = Iterate();
+      status = GSLRootHelper::TestDelta(fRoot, fPrevRoot, absTol, relTol);
+      if (status == GSL_SUCCESS) { 
+         fIter = iter;
+         return status; 
+      }
+      
+      //     std::cout << "iteration " << iter << " Root " << fRoot << " prev Root " << 
+      //       fPrevRoot << std::endl;
+   }
+   while (status == GSL_CONTINUE && iter < maxIter); 
+   return status;
 }
 
 

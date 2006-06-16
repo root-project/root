@@ -1,5 +1,5 @@
-// @(#)root/mathmore:$Name:  $:$Id: Interpolator.cxx,v 1.3 2005/09/18 20:41:25 brun Exp $
-// Authors: L. Moneta, A. Zsenei   08/2005
+// @(#)root/mathmore:$Name:  $:$Id: InterpolationTypes.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
   *                                                                    *
@@ -22,74 +22,57 @@
   *                                                                    *
   **********************************************************************/
 
-// Implementation file for class Interpolator using GSL
-//
-// Created by: moneta  at Fri Nov 26 15:00:25 2004
-//
-// Last update: Fri Nov 26 15:00:25 2004
-//
-
-#include "Math/Interpolator.h"
-#include "GSLInterpolator.h"
+// Header file for class IntegrationTypes
+// 
+// Created by: moneta  at Fri Nov 26 15:40:58 2004
+// 
+// Last update: Fri Nov 26 15:40:58 2004
+// 
+#ifndef ROOT_Math_IntegrationTypes
+#define ROOT_Math_IntegrationTypes
 
 
 namespace ROOT {
 namespace Math {
 
 
-Interpolator::Interpolator(const std::vector<double> & x, const std::vector<double> & y, Interpolation::Type type)
-{
-   // allocate GSL interpolation object
-   
-   fInterp = new GSLInterpolator(type, x, y);
-}
 
-Interpolator::~Interpolator()
-{
-   // destructor (delete underlined obj)
-   if (fInterp) delete fInterp;
-}
+  namespace Integration {
 
-Interpolator::Interpolator(const Interpolator &)
-{
-}
+    /**
+	 enumeration specifying the integration types.
+	 <ul>
+	 <li>NONADAPTIVE : to be used for smooth functions
+	 <li>ADAPTIVE : to be used for general functions without singularities.
+	 <li>ADAPTIVESINGULAR: default adaptive integration type which can be used in the case of the presence of singularities.
+	 </ul>
+	 @ingroup Integration
+    */
 
-Interpolator & Interpolator::operator = (const Interpolator &rhs)
-{
-   // dummy (private) assignment 
-   if (this == &rhs) return *this;  // time saving self-test
-   
-   return *this;
-}
+    // type of integration
 
-double Interpolator::Eval( double x ) const
-{
-   // forward evaluation
-   return fInterp->Eval(x);
-}
+    enum Type { NONADAPTIVE, ADAPTIVE, ADAPTIVESINGULAR } ;
 
-double Interpolator::Deriv( double x ) const
-{
-   // forward deriv evaluation   
-   return fInterp->Deriv(x);
-}
 
-double Interpolator::Deriv2( double x ) const {
-   // forward deriv evaluation   
-   return fInterp->Deriv2(x);
-}
+    /**
+	 enumeration specifying the Gauss-KronRod integration rule for ADAPTIVE integration type
+	 @ingroup Integration
+    */
+    // Gauss KronRod Adaptive rule
 
-double Interpolator::Integ( double a, double b) const {
-   // forward integ evaluation
-   return fInterp->Integ(a,b);
-}
+    enum GKRule { GAUSS15 = 1,
+		  GAUSS21 = 2,
+		  GAUSS31 = 3,
+		  GAUSS41 = 4,
+		  GAUSS51 = 5,
+		  GAUSS61 = 6
+    };
 
-std::string  Interpolator::TypeGet() const {
-   // forward name request
-   return fInterp->Name();
-}
 
+  }    // end namespace Integration
 
 
 } // namespace Math
 } // namespace ROOT
+
+#endif /* ROOT_Math_InterpolationTypes */

@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.cxx,v 1.3 2005/09/19 15:50:04 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.cxx,v 1.4 2005/10/18 10:11:51 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -45,102 +45,113 @@ namespace Math {
 
 
 Chebyshev::Chebyshev(const ROOT::Math::IGenFunction & f, double a, double b, size_t n) : 
-  fOrder(n) , fSeries(0), fFunction(0)
+   fOrder(n) , fSeries(0), fFunction(0)
 {
-  fSeries = new GSLChebSeries(n); 
-  GSLFunctionAdapter<ROOT::Math::IGenFunction> adapter;
-  const void * p = &f; 
-  Initialize(  &adapter.F, const_cast<void *>(p), a, b );     
+   // constructor from function (IGenFunction type) and interval [a,b] and series size n
+   fSeries = new GSLChebSeries(n); 
+   GSLFunctionAdapter<ROOT::Math::IGenFunction> adapter;
+   const void * p = &f; 
+   Initialize(  &adapter.F, const_cast<void *>(p), a, b );     
 }
 
 // constructor with GSL function
 Chebyshev::Chebyshev(GSLFuncPointer f, void * params, double a, double b, size_t n) :
-  fOrder(n) , fSeries(0), fFunction(0)
+fOrder(n) , fSeries(0), fFunction(0)
 {
-  fSeries = new GSLChebSeries(n); 
-  Initialize(  f, params, a, b ); 
+   // constructor from function (GSL type) and interval [a,b] and series size n  
+   fSeries = new GSLChebSeries(n); 
+   Initialize(  f, params, a, b ); 
 }
 
 Chebyshev::~Chebyshev() 
 {
-  if (fFunction) delete fFunction;
-  if (fSeries) delete fSeries;
+   // desctructor (clean up resources)
+   if (fFunction) delete fFunction;
+   if (fSeries) delete fSeries;
 }
 
 Chebyshev::Chebyshev(size_t n) : 
-  fOrder(n) , fSeries(0), fFunction(0)
+fOrder(n) , fSeries(0), fFunction(0)
 {
-  fSeries = new GSLChebSeries(n); 
+   // constructor passing only size (need to initialize setting the function afterwards) 
+   fSeries = new GSLChebSeries(n); 
 }
 
-// cannot copy series because don't know original function
 Chebyshev::Chebyshev(const Chebyshev & /*cheb */ )  
 {
+   // cannot copy series because don't know original function
 }
 
 Chebyshev & Chebyshev::operator = (const Chebyshev &rhs) 
 {
+   // dummy assignment
    if (this == &rhs) return *this;  // time saving self-test
-
+   
    return *this;
 }
 
 void Chebyshev::Initialize( GSLFuncPointer f, void * params, double a, double b) { 
-  // delete previous existing one
-  assert(fSeries != 0); 
-  if (fFunction) delete fFunction;
-  
-  fFunction = new GSLFunctionWrapper(); 
-  fFunction->SetFuncPointer( f ); 
-  fFunction->SetParams( params ); 
-  
-  // check for errors here ???
-  gsl_cheb_init( fSeries->get(), fFunction->GetFunc(), a, b); 
+   // initialize by passing a function and interval [a,b] 
+   // delete previous existing function pointer
+   assert(fSeries != 0); 
+   if (fFunction) delete fFunction;
+   
+   fFunction = new GSLFunctionWrapper(); 
+   fFunction->SetFuncPointer( f ); 
+   fFunction->SetParams( params ); 
+   
+   // check for errors here ???
+   gsl_cheb_init( fSeries->get(), fFunction->GetFunc(), a, b); 
 }
 
-double Chebyshev::operator() ( double x ) const { 
-  return gsl_cheb_eval(fSeries->get(), x);
+double Chebyshev::operator() ( double x ) const {
+   // evaluate the approximation
+   return gsl_cheb_eval(fSeries->get(), x);
 } 
 
 std::pair<double, double>  Chebyshev::EvalErr( double x) const { 
-  double result, error; 
-  gsl_cheb_eval_err(fSeries->get(), x, &result, &error);
-  return std::make_pair( result, error); 
+   // evaluate returning result and error
+   double result, error; 
+   gsl_cheb_eval_err(fSeries->get(), x, &result, &error);
+   return std::make_pair( result, error); 
 }
 
 double Chebyshev::operator() ( double x, size_t n) const {
-  return gsl_cheb_eval_n(fSeries->get(), n, x);
+   // evaluate at most order n ( truncate the series)
+   return gsl_cheb_eval_n(fSeries->get(), n, x);
 }
 
 std::pair<double, double>  Chebyshev::EvalErr( double x, size_t n) const { 
-  double result, error; 
-  gsl_cheb_eval_n_err(fSeries->get(), n, x, &result, &error);
-  return std::make_pair( result, error); 
+   // evaluate at most order n ( truncate the series) returning resutl + error
+   double result, error; 
+   gsl_cheb_eval_n_err(fSeries->get(), n, x, &result, &error);
+   return std::make_pair( result, error); 
 }
 
 
-// need to return auto_ptr because copying is not supported. 
+
 Chebyshev *   Chebyshev::Deriv() { 
-
-  Chebyshev * deriv = new Chebyshev(fOrder); 
-  
-  // check for errors ? 
-  gsl_cheb_calc_deriv( (deriv->fSeries)->get(), fSeries->get() );
-  return deriv;
-  // diable auto_ptr to fix AIX compilation
-//   std::auto_ptr<Chebyshev> pDeriv(deriv);
-//   return pDeriv;  
+   // calculate derivative. Returna pointer to a new series 
+   // used auto_ptr (supprseed since not good support on some compilers)
+   Chebyshev * deriv = new Chebyshev(fOrder); 
+   
+   // check for errors ? 
+   gsl_cheb_calc_deriv( (deriv->fSeries)->get(), fSeries->get() );
+   return deriv;
+   // diable auto_ptr to fix AIX compilation
+   //   std::auto_ptr<Chebyshev> pDeriv(deriv);
+   //   return pDeriv;  
 }
-  
-Chebyshev * Chebyshev::Integral() { 
 
-  Chebyshev * integ = new Chebyshev(fOrder); 
-  
-  // check for errors ? 
-  gsl_cheb_calc_integ( (integ->fSeries)->get(), fSeries->get() );
-  return integ;
-//   std::auto_ptr<Chebyshev> pInteg(integ);
-//   return pInteg;  
+Chebyshev * Chebyshev::Integral() { 
+   // integral (return pointer)
+   Chebyshev * integ = new Chebyshev(fOrder); 
+   
+   // check for errors ? 
+   gsl_cheb_calc_integ( (integ->fSeries)->get(), fSeries->get() );
+   return integ;
+   //   std::auto_ptr<Chebyshev> pInteg(integ);
+   //   return pInteg;  
 }
 
 } // namespace Math

@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.cxx,v 1.2 2005/09/08 08:16:16 rdm Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Integrator.cxx,v 1.3 2005/09/18 20:41:25 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -44,45 +44,49 @@ namespace Math {
 
 
 
-  // full constructor
+  
 
 Integrator::Integrator(const IGenFunction &f, Integration::Type type , Integration::GKRule rule, double absTol, double relTol, size_t size) {
-
-  fIntegrator = new GSLIntegrator(f, type, rule, absTol, relTol, size);
+   // full constructor with IGenFunction
+   fIntegrator = new GSLIntegrator(f, type, rule, absTol, relTol, size);
 }
 
-// constructor with default type (ADaptiveSingular) ,  rule is not needed
 
 Integrator::Integrator(const IGenFunction &f, double absTol, double relTol, size_t size) {
-  fIntegrator = new GSLIntegrator(f, absTol, relTol, size);
+   // constructor with default type (ADaptiveSingular) ,  rule is not needed  
+   fIntegrator = new GSLIntegrator(f, absTol, relTol, size);
 }
 
-// constructor with default rule (gauss31) passing the type
+
 
 Integrator::Integrator(const IGenFunction &f, Integration::Type type , double absTol, double relTol, size_t size) {
-  fIntegrator = new GSLIntegrator(f, type, absTol, relTol, size);
+   // constructor with default rule (gauss31) passing the type
+   fIntegrator = new GSLIntegrator(f, type, absTol, relTol, size);
 }
 
 Integrator::Integrator(GSLFuncPointer f, Integration::Type type , Integration::GKRule rule, double absTol, double relTol, size_t size) {
-  fIntegrator = new GSLIntegrator(f, type, rule, absTol, relTol, size);
+   // full constructor with GSL function pointer type
+   fIntegrator = new GSLIntegrator(f, type, rule, absTol, relTol, size);
 }
 
-// constructor with default type (ADaptiveSingular) ,  rule is not needed
+
 
 Integrator::Integrator(GSLFuncPointer f, double absTol, double relTol, size_t size) {
-  fIntegrator = new GSLIntegrator(f, absTol, relTol, size);
+   // constructor with GSL function pointer type and with default type (ADaptiveSingular) ,  rule is not needed  
+   fIntegrator = new GSLIntegrator(f, absTol, relTol, size);
 }
 
-// constructor with default rule (gauss31) passing the type
+
 
 Integrator::Integrator(GSLFuncPointer f, Integration::Type type , double absTol, double relTol, size_t size) {
-  fIntegrator = new GSLIntegrator(f, type, absTol, relTol, size);
+   // constructor with GSL function pointer type and with default rule (gauss31) passing the type
+   fIntegrator = new GSLIntegrator(f, type, absTol, relTol, size);
 }
 
 Integrator::~Integrator()
 {
-
-    if (fIntegrator) delete fIntegrator;
+   // destructor 
+   if (fIntegrator) delete fIntegrator;
 }
 
 Integrator::Integrator(const Integrator &)
@@ -91,126 +95,147 @@ Integrator::Integrator(const Integrator &)
 
 Integrator & Integrator::operator = (const Integrator &rhs)
 {
-    if (this == &rhs) return *this;  // time saving self-test
-
-    return *this;
+   // private assigment op.
+   if (this == &rhs) return *this;  // time saving self-test
+   
+   return *this;
 }
 
 
 void Integrator::SetFunction(const IGenFunction &f) {
-  fIntegrator->SetFunction(f);
+   // set with IGenFunction type
+   fIntegrator->SetFunction(f);
 }
 
 void Integrator::SetFunction( const GSLFuncPointer &f) {
-  fIntegrator->SetFunction(f);
+   // set with GSL function type
+   fIntegrator->SetFunction(f);
 }
 
 
 
 
-  // evaluation methods
+// evaluation methods
 
-  double  Integrator::Integral(double a, double b) {
-    return fIntegrator->Integral(a, b);
-  }
-
-
-  double  Integrator::Integral( const std::vector<double> & pts) {
-    return fIntegrator->Integral(pts);
-  }
+double  Integrator::Integral(double a, double b) {
+   // evaluation defined integral
+   return fIntegrator->Integral(a, b);
+}
 
 
-  // Eval for indefined integrals: use QAGI method
-
-  double  Integrator::Integral( ) {
-    return fIntegrator->Integral();
-  }
-
-  // Integral between [a, + inf]
-
-  double  Integrator::IntegralUp( double a ) {
-    return fIntegrator->IntegralUp(a);
-  }
-
-  // Integral between [-inf, + b]
-
-  double  Integrator::IntegralLow( double b ) {
-    return fIntegrator->IntegralLow(b);
-  }
+double  Integrator::Integral( const std::vector<double> & pts) {
+   // evaluation singular integral
+   return fIntegrator->Integral(pts);
+}
 
 
-  // use generic function interface
 
-  double  Integrator::Integral(const IGenFunction & f, double a, double b) {
-    return fIntegrator->Integral(f, a, b);
-  }
 
-  double  Integrator::Integral(const IGenFunction & f ) {
-    return fIntegrator->Integral(f);
-  }
+double  Integrator::Integral( ) {
+   // Eval for indefined integrals: use QAGI method
+   return fIntegrator->Integral();
+}
 
-  double  Integrator::IntegralUp(const IGenFunction & f, double a) {
-    return fIntegrator->IntegralUp(f, a);
-  }
 
-  double  Integrator::IntegralLow(const IGenFunction & f, double b) {
-    return fIntegrator->IntegralLow(f, b);
-  }
 
-  double  Integrator::Integral(const IGenFunction & f, const std::vector<double> & pts) {
-    return fIntegrator->Integral(f, pts);
-  }
+double  Integrator::IntegralUp( double a ) {
+   // Integral between [a, + inf]
+   return fIntegrator->IntegralUp(a);
+}
+
+
+
+double  Integrator::IntegralLow( double b ) {
+   // Integral between [-inf, + b]
+   return fIntegrator->IntegralLow(b);
+}
+
+
+// evaluations passing the function
+
+double  Integrator::Integral(const IGenFunction & f, double a, double b) {
+   // evaluation using generic function interface   
+   return fIntegrator->Integral(f, a, b);
+}
+
+double  Integrator::Integral(const IGenFunction & f ) {
+   // evaluation using generic function interface 
+   return fIntegrator->Integral(f);
+}
+
+double  Integrator::IntegralUp(const IGenFunction & f, double a) {
+   // evaluation using generic function interface    
+   return fIntegrator->IntegralUp(f, a);
+}
+
+double  Integrator::IntegralLow(const IGenFunction & f, double b) {
+   // evaluation using generic function interface 
+   return fIntegrator->IntegralLow(f, b);
+}
+
+double  Integrator::Integral(const IGenFunction & f, const std::vector<double> & pts) {
+   // evaluation using generic function interface 
+   return fIntegrator->Integral(f, pts);
+}
 
 
 
 // use c free function pointer
-  double  Integrator::Integral( GSLFuncPointer f , void * p, double a, double b) {
-    return fIntegrator->Integral(f, p, a, b);
-  }
+double  Integrator::Integral( GSLFuncPointer f , void * p, double a, double b) {
+   // eval using GSL function pointer type
+   return fIntegrator->Integral(f, p, a, b);
+}
 
-  double  Integrator::Integral( GSLFuncPointer f, void * p ) {
-    return fIntegrator->Integral(f, p);
-  }
+double  Integrator::Integral( GSLFuncPointer f, void * p ) {
+   // eval using GSL function pointer type
+   return fIntegrator->Integral(f, p);
+}
 
-  double  Integrator::IntegralUp( GSLFuncPointer f, void * p, double a ) {
-    return fIntegrator->IntegralUp(f, p, a);
-  }
+double  Integrator::IntegralUp( GSLFuncPointer f, void * p, double a ) {
+   // eval using GSL function pointer type
+   return fIntegrator->IntegralUp(f, p, a);
+}
 
-  double  Integrator::IntegralLow( GSLFuncPointer f, void * p, double b ) {
-    return fIntegrator->IntegralLow(f, p, b);
-  }
+double  Integrator::IntegralLow( GSLFuncPointer f, void * p, double b ) {
+   // eval using GSL function pointer type
+   return fIntegrator->IntegralLow(f, p, b);
+}
 
-  double  Integrator::Integral( GSLFuncPointer f, void * p, const std::vector<double> & pts ) {
-    return fIntegrator->Integral(f, p, pts);
-  }
+double  Integrator::Integral( GSLFuncPointer f, void * p, const std::vector<double> & pts ) {
+   // eval using GSL function pointer type
+   return fIntegrator->Integral(f, p, pts);
+}
 
 
 
-  double Integrator::Result() const { return fIntegrator->Result(); }
+double Integrator::Result() const { return fIntegrator->Result(); }
 
-  double Integrator::Error() const { return fIntegrator->Error(); }
+double Integrator::Error() const { return fIntegrator->Error(); }
 
-  int Integrator::Status() const { return fIntegrator->Status(); }
+int Integrator::Status() const { return fIntegrator->Status(); }
 
 
 // get and setter methods
 
 //   double Integrator::getAbsTolerance() const { return fAbsTol; }
 
-  void Integrator::SetAbsTolerance(double absTol){
-    fIntegrator->SetAbsTolerance(absTol);
-  }
+void Integrator::SetAbsTolerance(double absTol){
+   // abs tolerance setter
+   fIntegrator->SetAbsTolerance(absTol);
+}
 
 //   double Integrator::getRelTolerance() const { return fRelTol; }
 
-  void Integrator::SetRelTolerance(double relTol){
-    fIntegrator->SetRelTolerance(relTol);
-  }
+void Integrator::SetRelTolerance(double relTol){
+    // rel tolerance setter
+   fIntegrator->SetRelTolerance(relTol);
+}
 
 
-  void Integrator::SetIntegrationRule(Integration::GKRule rule){
-    fIntegrator->SetIntegrationRule(rule);
-  }
+void Integrator::SetIntegrationRule(Integration::GKRule rule){
+   // set rule
+   fIntegrator->SetIntegrationRule(rule);
+}
 
 
 } // namespace Math

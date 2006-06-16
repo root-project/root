@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.h,v 1.2 2005/09/08 08:16:16 rdm Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Integrator.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -32,6 +32,7 @@
 #define ROOT_Math_Integrator
 
 #include "Math/IGenFunction.h"
+#include "Math/IntegrationTypes.h"
 
 #include <vector>
 
@@ -50,40 +51,6 @@ namespace Math {
 
   class GSLIntegrator;
 
-
-  namespace Integration {
-
-    /**
-	 enumeration specifying the integration types.
-	 <ul>
-	 <li>NONADAPTIVE : to be used for smooth functions
-	 <li>ADAPTIVE : to be used for general functions without singularities.
-	 <li>ADAPTIVESINGULAR: default adaptive integration type which can be used in the case of the presence of singularities.
-	 </ul>
-	 @ingroup Integration
-    */
-
-    // type of integration
-
-    enum Type { NONADAPTIVE, ADAPTIVE, ADAPTIVESINGULAR } ;
-
-
-    /**
-	 enumeration specifying the Gauss-KronRod integration rule for ADAPTIVE integration type
-	 @ingroup Integration
-    */
-    // Gauss KronRod Adaptive rule
-
-    enum GKRule { GAUSS15 = 1,
-		  GAUSS21 = 2,
-		  GAUSS31 = 3,
-		  GAUSS41 = 4,
-		  GAUSS51 = 5,
-		  GAUSS61 = 6
-    };
-
-
-  }
 
 
 

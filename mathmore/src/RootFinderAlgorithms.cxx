@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: RootFinderAlgorithms.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: RootFinderAlgorithms.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -42,46 +42,56 @@ namespace Math {
 namespace Roots { 
 
 
+
 Bisection::Bisection() 
 {
-  GSLRootFSolver * s = new GSLRootFSolver( gsl_root_fsolver_bisection ); 
-  SetSolver(s); 
+   // Bisection constructor
+   GSLRootFSolver * s = new GSLRootFSolver( gsl_root_fsolver_bisection ); 
+   SetSolver(s); 
 }
 
 Bisection::~Bisection() 
 {
-  FreeSolver();  
+   // destructor
+   FreeSolver();  
 }
 
 Bisection::Bisection(const Bisection &) : GSLRootFinder()
 {
+  // dummy copy ctr
 }
 
 Bisection & Bisection::operator = (const Bisection &rhs) 
 {
+   // dummy (private) operator=
    if (this == &rhs) return *this;  // time saving self-test
    return *this;
 }
+
 
 // falsepos method
 
 FalsePos::FalsePos() 
 {
-  GSLRootFSolver * s = new GSLRootFSolver( gsl_root_fsolver_falsepos ); 
-  SetSolver(s); 
+   // FalsePos constructor
+   GSLRootFSolver * s = new GSLRootFSolver( gsl_root_fsolver_falsepos ); 
+   SetSolver(s); 
 }
 
 FalsePos::~FalsePos() 
 {
-  FreeSolver();  
+   // destructor
+   FreeSolver();  
 }
 
 FalsePos::FalsePos(const FalsePos &) : GSLRootFinder()
 {
+  // dummy copy ctr
 }
 
 FalsePos & FalsePos::operator = (const FalsePos &rhs) 
 {
+   // dummy (private) operator=
    if (this == &rhs) return *this;  // time saving self-test
    return *this;
 }
@@ -90,21 +100,25 @@ FalsePos & FalsePos::operator = (const FalsePos &rhs)
 
 Brent::Brent() 
 {
-  GSLRootFSolver * s = new GSLRootFSolver( gsl_root_fsolver_brent ); 
-  SetSolver(s); 
+   // Brent constructor
+   GSLRootFSolver * s = new GSLRootFSolver( gsl_root_fsolver_brent ); 
+   SetSolver(s); 
 }
 
 Brent::~Brent() 
 {
-  FreeSolver();  
+   // destructor
+   FreeSolver();  
 }
 
 Brent::Brent(const Brent &) : GSLRootFinder()
 {
+  // dummy copy ctr
 }
 
 Brent & Brent::operator = (const Brent &rhs) 
 {
+   // dummy (private) operator=
    if (this == &rhs) return *this;  // time saving self-test
    return *this;
 }
@@ -118,21 +132,25 @@ Brent & Brent::operator = (const Brent &rhs)
 
 Newton::Newton() 
 {
-  GSLRootFdFSolver * s = new GSLRootFdFSolver( gsl_root_fdfsolver_newton ); 
-  SetSolver(s); 
+   // Newton constructor
+   GSLRootFdFSolver * s = new GSLRootFdFSolver( gsl_root_fdfsolver_newton ); 
+   SetSolver(s); 
 }
 
 Newton::~Newton() 
 {
-  FreeSolver();  
+   // destructor
+   FreeSolver();  
 }
 
 Newton::Newton(const Newton &) : GSLRootFinderDeriv()
 {
+  // dummy copy ctr
 }
 
 Newton & Newton::operator = (const Newton &rhs) 
 {
+   // dummy (private) operator=
    if (this == &rhs) return *this;  // time saving self-test
    return *this;
 }
@@ -141,21 +159,25 @@ Newton & Newton::operator = (const Newton &rhs)
 
 Secant::Secant() 
 {
-  GSLRootFdFSolver * s = new GSLRootFdFSolver( gsl_root_fdfsolver_secant ); 
-  SetSolver(s); 
+   // Secant constructor
+   GSLRootFdFSolver * s = new GSLRootFdFSolver( gsl_root_fdfsolver_secant ); 
+   SetSolver(s); 
 }
 
 Secant::~Secant() 
 {
-  FreeSolver();  
+   // destructor
+   FreeSolver();  
 }
 
 Secant::Secant(const Secant &) : GSLRootFinderDeriv()
 {
+  // dummy copy ctr
 }
 
 Secant & Secant::operator = (const Secant &rhs) 
 {
+   // dummy (private) operator=
    if (this == &rhs) return *this;  // time saving self-test
    return *this;
 }
@@ -164,21 +186,25 @@ Secant & Secant::operator = (const Secant &rhs)
 
 Steffenson::Steffenson() 
 {
-  GSLRootFdFSolver * s = new GSLRootFdFSolver( gsl_root_fdfsolver_steffenson ); 
-  SetSolver(s); 
+   // Steffenson constructor
+   GSLRootFdFSolver * s = new GSLRootFdFSolver( gsl_root_fdfsolver_steffenson ); 
+   SetSolver(s); 
 }
 
 Steffenson::~Steffenson() 
 {
-  FreeSolver();  
+   // destructor
+   FreeSolver();  
 }
 
 Steffenson::Steffenson(const Steffenson &) : GSLRootFinderDeriv()
 {
+  // dummy copy ctr
 }
 
 Steffenson & Steffenson::operator = (const Steffenson &rhs) 
 {
+   // dummy (private) operator=
    if (this == &rhs) return *this;  // time saving self-test
    return *this;
 }

@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: inc_Math_Makefile.am,v 1.1 2005/09/21 09:34:04 moneta Exp $
+# @(#)root/mathcore:$Name:  $:$Id: inc_Math_Makefile.am,v 1.2 2006/05/30 14:01:36 moneta Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .
@@ -19,6 +19,7 @@ math_HEADERS =           	       \
          GSLRootFinderDeriv.h          \
          GSLRootHelper.h               \
          IGenFunction.h                \
+         IntegrationTypes.h            \
          Integrator.h                  \
          InterpolationTypes.h          \
          Interpolator.h                \

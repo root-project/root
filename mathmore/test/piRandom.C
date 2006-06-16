@@ -30,6 +30,7 @@ void generate( R & r, TH1D * h) {
   TStopwatch w; 
 
   r.SetSeed(0);
+  //r.SetSeed(int(std::pow(2.0,28)));
   int m = NLOOP;
   int n = NEVT;
   for (int j = 0; j < m; ++j) { 

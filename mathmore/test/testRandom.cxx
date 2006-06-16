@@ -1,6 +1,7 @@
 #include "Math/Random.h"
 #include "Math/GSLRndmEngines.h"
 #include "TStopwatch.h"
+#include "TRandom1.h"
 #include "TRandom2.h"
 #include "TRandom3.h"
 #include <iostream>
@@ -11,9 +12,9 @@
 #define PI       3.14159265358979323846264338328      /* pi */
 #endif
 
-#define NEVT 10000
+//#define NEVT 10000
 #ifndef NEVT
-#define NEVT 100000000
+#define NEVT 10000000
 #endif
 
 using namespace ROOT::Math;
@@ -53,6 +54,10 @@ void printName( const TRandom & r) {
   std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
 }
 // specializations for TRandom's
+void printName( const TRandom1 & r) { 
+  std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
+}
+// specializations for TRandom's
 void printName( const TRandom2 & r) { 
   std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
 }
@@ -71,7 +76,9 @@ void generate( R & r, bool array=true) {
   double n1=0; 
   double x,y; 
   w.Start();
-  r.SetSeed(0);
+  // use default seeds
+  // r.SetSeed(0);
+  //r.SetSeed(int(pow(2,28)) );
   if (array) { 
     double x[1000];
     double y[1000];
@@ -120,11 +127,13 @@ int main() {
   Random<GSLRngMinStd>     r9;
   RandomStd                r10; 
 
-  TRandom                  tr1;
+  TRandom                  tr0;
+  TRandom1                 tr1;
   TRandom2                 tr2;
   TRandom3                 tr3;
 
 
+  generate(tr0);
   generate(tr1);
   generate(tr2);
   generate(tr3);

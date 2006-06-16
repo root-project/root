@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Derivator.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Derivator.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -42,22 +42,22 @@ namespace ROOT {
 namespace Math {
 
 
-
+   
 Derivator::Derivator(const IGenFunction &f) 
 {
-  // allocate GSLDerivator
+   // allocate GSLDerivator
    fDerivator = new GSLDerivator(f);  
 }
 
 Derivator::Derivator(const GSLFuncPointer &f) 
 {
-  // allocate GSLDerivator
+   // allocate GSLDerivator
    fDerivator = new GSLDerivator(f);  
 }
 
 Derivator::~Derivator() 
 {
-  if (fDerivator) delete fDerivator;
+   if (fDerivator) delete fDerivator;
 }
 
 
@@ -68,51 +68,51 @@ Derivator::Derivator(const Derivator &)
 Derivator & Derivator::operator = (const Derivator &rhs) 
 {
    if (this == &rhs) return *this;  // time saving self-test
-
+   
    return *this;
 }
 
 
 void Derivator::SetFunction(const IGenFunction &f) {
-  fDerivator->SetFunction(f);
+   fDerivator->SetFunction(f);
 }
 
 void Derivator::SetFunction( const GSLFuncPointer &f) {
-  fDerivator->SetFunction(f);
+   fDerivator->SetFunction(f);
 }
 
 
 double Derivator::Eval(const IGenFunction & f, double x, double h ) {
-  return fDerivator->Eval(f, x, h);
+   return fDerivator->Eval(f, x, h);
 }
 
 double Derivator::EvalCentral(const IGenFunction & f, double x, double h) {
-  return fDerivator->EvalCentral(f, x, h);
+   return fDerivator->EvalCentral(f, x, h);
 }
 
 double Derivator::EvalForward(const IGenFunction & f, double x, double h) {
-  return fDerivator->EvalForward(f, x, h);
+   return fDerivator->EvalForward(f, x, h);
 } 
 
 double Derivator::EvalBackward(const IGenFunction & f, double x, double h) {
-  return fDerivator->EvalBackward(f, x, h);
+   return fDerivator->EvalBackward(f, x, h);
 }
 
 
 double Derivator::Eval( double x, double h) { 
-  return fDerivator->EvalCentral(x, h);
+   return fDerivator->EvalCentral(x, h);
 }
 
 double Derivator::EvalCentral( double x, double h) { 
-  return fDerivator->EvalCentral(x, h);
+   return fDerivator->EvalCentral(x, h);
 }
 
 double Derivator::EvalForward( double x, double h) { 
-  return fDerivator->EvalForward(x, h);
+   return fDerivator->EvalForward(x, h);
 }
 
 double Derivator::EvalBackward( double x, double h) { 
-  return fDerivator->EvalBackward(x, h);
+   return fDerivator->EvalBackward(x, h);
 }
 
 

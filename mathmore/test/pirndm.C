@@ -190,7 +190,9 @@ void pirndm(Long64_t n1=1, unsigned int seed = 0) {
 #endif
 #endif
       
-   Double_t reftime = 8.98+33.51+16.72+16.75;
+   // reftime calculated on MACOS Intel dualcore 2GHz
+   // time for TRandom + TRandom2 + TRandom3 + TRandom1 for n = 10**7 (n1=5000)
+   Double_t reftime = (4629.530 + 5358.100  + 5785.240 + 26012.17)/5000.;
    const Double_t rootmarks = 900*Double_t(n1)*reftime/cputot;
    TPaveLabel *pl = new TPaveLabel(0.2,0.92,0.8,0.98,Form("cpu time = %6.1fs - rootmarks = %6.1f",cputot,rootmarks),"brNDC");
    pl->Draw();  

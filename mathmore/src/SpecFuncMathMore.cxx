@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.cxx,v 1.3 2006/03/01 12:15:24 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
@@ -37,9 +37,9 @@ namespace Math {
 // (26.x.12)
 
 double assoc_laguerre(unsigned n, unsigned m, double x) {
-
-  return gsl_sf_laguerre_n(n, m, x);
-
+   
+   return gsl_sf_laguerre_n(n, m, x);
+   
 }
 
 
@@ -48,9 +48,9 @@ double assoc_laguerre(unsigned n, unsigned m, double x) {
 // (26.x.8)
 
 double assoc_legendre(unsigned l, unsigned m, double x) {
-
-  return gsl_sf_legendre_Plm(l, m, x);
-
+   
+   return gsl_sf_legendre_Plm(l, m, x);
+   
 }
 
 
@@ -61,9 +61,9 @@ double assoc_legendre(unsigned l, unsigned m, double x) {
 // (26.x.15.2) 
 
 double comp_ellint_1(double k) {
-
-  return gsl_sf_ellint_Kcomp(k, GSL_PREC_DOUBLE);
-
+   
+   return gsl_sf_ellint_Kcomp(k, GSL_PREC_DOUBLE);
+   
 }
 
 
@@ -72,9 +72,9 @@ double comp_ellint_1(double k) {
 // (26.x.16.2)
 
 double comp_ellint_2(double k) {
-
-  return gsl_sf_ellint_Ecomp(k, GSL_PREC_DOUBLE);
-
+   
+   return gsl_sf_ellint_Ecomp(k, GSL_PREC_DOUBLE);
+   
 }
 
 
@@ -94,34 +94,34 @@ P(\phi,k,n) = \int_0^\phi dt 1/((1 - nu \sin^2(t))\sqrt(1 - k^2 \sin^2(t)))
 
 the former is adopted by
 
-   - GSL 
+- GSL 
      http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC95
 
-   - Planetmath
+- Planetmath
      http://planetmath.org/encyclopedia/EllipticIntegralsAndJacobiEllipticFunctions.html
 
-   - CERNLIB
+- CERNLIB
      http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c346/top.html
 
-while the latter is used by
+   while the latter is used by
 
-   - Abramowitz and Stegun
+- Abramowitz and Stegun
 
-   - Mathematica
+- Mathematica
      http://mathworld.wolfram.com/EllipticIntegraloftheThirdKind.html
 
-   - C++ standard
+- C++ standard
      http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1687.pdf
 
-in order to be C++ compliant, we decided to use the latter, hence the 
-change of the sign in the function call to GSL.
+   in order to be C++ compliant, we decided to use the latter, hence the 
+   change of the sign in the function call to GSL.
 
-*/
+   */
 
 double comp_ellint_3(double n, double k) {
-
-  return gsl_sf_ellint_P(PI/2.0, k, -n, GSL_PREC_DOUBLE);
-
+   
+   return gsl_sf_ellint_P(PI/2.0, k, -n, GSL_PREC_DOUBLE);
+   
 }
 
 
@@ -130,17 +130,17 @@ double comp_ellint_3(double n, double k) {
 // (26.x.14)
 
 double conf_hyperg(double a, double b, double z) {
-
-  return gsl_sf_hyperg_1F1(a, b, z);
-
+   
+   return gsl_sf_hyperg_1F1(a, b, z);
+   
 }
 
 //  confluent hypergeometric functions of second type
 
 double conf_hypergU(double a, double b, double z) {
-
-  return gsl_sf_hyperg_U(a, b, z);
-
+   
+   return gsl_sf_hyperg_U(a, b, z);
+   
 }
 
 
@@ -149,9 +149,9 @@ double conf_hypergU(double a, double b, double z) {
 // (26.x.4.1)
 
 double cyl_bessel_i(double nu, double x) {
-
-  return gsl_sf_bessel_Inu(nu, x);
-  
+   
+   return gsl_sf_bessel_Inu(nu, x);
+   
 }
 
 
@@ -160,9 +160,9 @@ double cyl_bessel_i(double nu, double x) {
 // (26.x.2)
 
 double cyl_bessel_j(double nu, double x) {
-
-  return gsl_sf_bessel_Jnu(nu, x);
-
+   
+   return gsl_sf_bessel_Jnu(nu, x);
+   
 }
 
 
@@ -171,9 +171,9 @@ double cyl_bessel_j(double nu, double x) {
 // (26.x.4.2)
 
 double cyl_bessel_k(double nu, double x) {
-
-  return gsl_sf_bessel_Knu(nu, x);
-
+   
+   return gsl_sf_bessel_Knu(nu, x);
+   
 }
 
 
@@ -183,9 +183,9 @@ double cyl_bessel_k(double nu, double x) {
 // (26.x.3)
 
 double cyl_neumann(double nu, double x) {
-
-  return gsl_sf_bessel_Ynu(nu, x);
-
+   
+   return gsl_sf_bessel_Ynu(nu, x);
+   
 }
 
 
@@ -195,9 +195,9 @@ double cyl_neumann(double nu, double x) {
 // (26.x.15.1) 
 
 double ellint_1(double k, double phi) {
-
-  return gsl_sf_ellint_F(phi, k, GSL_PREC_DOUBLE);
-
+   
+   return gsl_sf_ellint_F(phi, k, GSL_PREC_DOUBLE);
+   
 }
 
 
@@ -207,9 +207,9 @@ double ellint_1(double k, double phi) {
 // (26.x.16.1)
 
 double ellint_2(double k, double phi) {
-
-  return gsl_sf_ellint_E(phi, k, GSL_PREC_DOUBLE);
-
+   
+   return gsl_sf_ellint_E(phi, k, GSL_PREC_DOUBLE);
+   
 }
 
 
@@ -230,34 +230,34 @@ P(\phi,k,n) = \int_0^\phi dt 1/((1 - nu \sin^2(t))\sqrt(1 - k^2 \sin^2(t)))
 
 the former is adopted by
 
-   - GSL 
+- GSL 
      http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC95
 
-   - Planetmath
+- Planetmath
      http://planetmath.org/encyclopedia/EllipticIntegralsAndJacobiEllipticFunctions.html
 
-   - CERNLIB
+- CERNLIB
      http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c346/top.html
 
-while the latter is used by
+   while the latter is used by
 
-   - Abramowitz and Stegun
+- Abramowitz and Stegun
 
-   - Mathematica
+- Mathematica
      http://mathworld.wolfram.com/EllipticIntegraloftheThirdKind.html
 
-   - C++ standard
+- C++ standard
      http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1687.pdf
 
-in order to be C++ compliant, we decided to use the latter, hence the 
-change of the sign in the function call to GSL.
+   in order to be C++ compliant, we decided to use the latter, hence the 
+   change of the sign in the function call to GSL.
 
-*/
+   */
 
 double ellint_3(double n, double k, double phi) {
-
-  return gsl_sf_ellint_P(phi, k, -n, GSL_PREC_DOUBLE);
-
+   
+   return gsl_sf_ellint_P(phi, k, -n, GSL_PREC_DOUBLE);
+   
 }
 
 
@@ -266,9 +266,9 @@ double ellint_3(double n, double k, double phi) {
 // (26.x.20)
 
 double expint(double x) {
-
-  return gsl_sf_expint_Ei(x);
-
+   
+   return gsl_sf_expint_Ei(x);
+   
 }
 
 
@@ -286,9 +286,9 @@ double expint(double x) {
 // (26.x.13) 
 
 double hyperg(double a, double b, double c, double x) {
-
-  return gsl_sf_hyperg_2F1(a, b, c, x);
-
+   
+   return gsl_sf_hyperg_2F1(a, b, c, x);
+   
 }
 
 
@@ -309,9 +309,9 @@ double hyperg(double a, double b, double c, double x) {
 // (26.x.7)
 
 double legendre(unsigned l, double x) {
-
-  return gsl_sf_legendre_Pl(l, x);
-
+   
+   return gsl_sf_legendre_Pl(l, x);
+   
 }
 
 
@@ -320,9 +320,9 @@ double legendre(unsigned l, double x) {
 // (26.x.22)
 
 double riemann_zeta(double x) {
-
-  return gsl_sf_zeta(x);
-
+   
+   return gsl_sf_zeta(x);
+   
 }
 
 
@@ -331,9 +331,9 @@ double riemann_zeta(double x) {
 // (26.x.5)
 
 double sph_bessel(unsigned n, double x) {
-
-  return gsl_sf_bessel_jl(n, x);
-
+   
+   return gsl_sf_bessel_jl(n, x);
+   
 }
 
 
@@ -343,7 +343,7 @@ double sph_bessel(unsigned n, double x) {
 
 //double sph_legendre(unsigned m, unsigned l, double theta) {
 
- 
+
 //}
 
 
@@ -353,9 +353,9 @@ double sph_bessel(unsigned n, double x) {
 // (26.x.6)
 
 double sph_neumann(unsigned n, double x) {
-
-  return gsl_sf_bessel_yl(n, x);
-
+   
+   return gsl_sf_bessel_yl(n, x);
+   
 } 
 
 
