@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.79 2006/05/17 09:37:20 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.80 2006/05/17 16:37:26 couet Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TRandom.h"
 #include "TFile.h"
 #include "TError.h"
+#include "TObjString.h"
 
 ClassImp(TH3)
 
@@ -1485,6 +1486,24 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
    if (opt.Contains("e")) h1->Sumw2();
    if (pname != name)  delete [] pname;
 
+   // Copy the axis attributes and the axis labels if needed.
+   h1->GetXaxis()->ImportAttributes(this->GetZaxis());
+   THashList* labels=GetZaxis()->GetLabels();
+   if (labels) {
+      TIter iL(labels);
+      TObjString* lb;
+      Int_t i = 1;
+      while ((lb=(TObjString*)iL())) {
+         h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
+         i++;
+      }
+   }
+   
+   h1->SetLineColor(this->GetLineColor());
+   h1->SetFillColor(this->GetFillColor());
+   h1->SetMarkerColor(this->GetMarkerColor());
+   h1->SetMarkerStyle(this->GetMarkerStyle());
+
    // Fill the projected histogram
    Float_t cont,e,e1;
    Double_t entries  = 0;
@@ -1783,6 +1802,111 @@ TH1 *TH3::Project3D(Option_t *option) const
          }
          break;
 
+   }
+
+   // Copy the axis attributes and the axis labels if needed.
+   if (pcase >=1 && pcase <=3) {
+      THashList* labels = 0;
+      switch (pcase) {
+         case 1:
+            // "x"
+            h1->GetXaxis()->ImportAttributes(this->GetXaxis());
+            labels = GetXaxis()->GetLabels();
+            break;
+         case 2:
+            // "y"
+            h1->GetXaxis()->ImportAttributes(this->GetYaxis());
+            labels = GetYaxis()->GetLabels();
+            break;
+         case 3:
+            // "z"
+            h1->GetXaxis()->ImportAttributes(this->GetZaxis());
+            labels = GetZaxis()->GetLabels();
+            break;
+      }
+      if (labels) {
+         TIter iL(labels);
+         TObjString* lb;
+         Int_t i = 1;
+         while ((lb=(TObjString*)iL())) {
+            h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
+            i++;
+         }
+      }
+      h1->SetLineColor(this->GetLineColor());
+      h1->SetFillColor(this->GetFillColor());
+      h1->SetMarkerColor(this->GetMarkerColor());
+      h1->SetMarkerStyle(this->GetMarkerStyle());
+   }
+   if (pcase >=4 && pcase <=9) {
+      THashList* labels1 = 0;
+      THashList* labels2 = 0;
+      switch (pcase) {
+         case 4:
+            // "xy"
+            h2->GetXaxis()->ImportAttributes(this->GetYaxis());
+            h2->GetYaxis()->ImportAttributes(this->GetXaxis());
+            labels1 = GetYaxis()->GetLabels();
+            labels2 = GetXaxis()->GetLabels();
+            break;
+         case 5:
+            // "yx"
+            h2->GetXaxis()->ImportAttributes(this->GetXaxis());
+            h2->GetYaxis()->ImportAttributes(this->GetYaxis());
+            labels1 = GetXaxis()->GetLabels();
+            labels2 = GetYaxis()->GetLabels();
+            break;
+         case 6:
+            // "xz"
+            h2->GetXaxis()->ImportAttributes(this->GetZaxis());
+            h2->GetYaxis()->ImportAttributes(this->GetXaxis());
+            labels1 = GetZaxis()->GetLabels();
+            labels2 = GetXaxis()->GetLabels();
+            break;
+         case 7:
+            // "zx"
+            h2->GetXaxis()->ImportAttributes(this->GetXaxis());
+            h2->GetYaxis()->ImportAttributes(this->GetZaxis());
+            labels1 = GetXaxis()->GetLabels();
+            labels2 = GetZaxis()->GetLabels();
+            break;
+         case 8:
+            // "yz"
+            h2->GetXaxis()->ImportAttributes(this->GetZaxis());
+            h2->GetYaxis()->ImportAttributes(this->GetYaxis());
+            labels1 = GetZaxis()->GetLabels();
+            labels2 = GetYaxis()->GetLabels();
+            break;
+         case 9:
+            // "zy"
+            h2->GetXaxis()->ImportAttributes(this->GetYaxis());
+            h2->GetYaxis()->ImportAttributes(this->GetZaxis());
+            labels1 = GetYaxis()->GetLabels();
+            labels2 = GetZaxis()->GetLabels();
+            break;
+      }
+      if (labels1) {
+         TIter iL(labels1);
+         TObjString* lb;
+         Int_t i = 1;
+         while ((lb=(TObjString*)iL())) {
+            h2->GetXaxis()->SetBinLabel(i,lb->String().Data());
+            i++;
+         }
+      }
+      if (labels2) {
+         TIter iL(labels2);
+         TObjString* lb;
+         Int_t i = 1;
+         while ((lb=(TObjString*)iL())) {
+            h2->GetYaxis()->SetBinLabel(i,lb->String().Data());
+            i++;
+         }
+      }
+      h2->SetLineColor(this->GetLineColor());
+      h2->SetFillColor(this->GetFillColor());
+      h2->SetMarkerColor(this->GetMarkerColor());
+      h2->SetMarkerStyle(this->GetMarkerStyle());
    }
 
    delete [] name;
