@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.125 2006/05/16 16:50:02 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.126 2006/05/17 16:37:25 couet Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -3206,8 +3206,8 @@ Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params,
    }
    fnc.SetParameter(fNpar,0);
    fnc.SetParameter(fNpar+1,n);
-   Double_t res = fnc.Integral(a,b,params,epsilon)/norm;
    fgAbsValue = kFALSE;
+   Double_t res = fnc.Integral(a,b,params,epsilon)/norm;
    return res;
 }
 
@@ -3235,6 +3235,7 @@ Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *
       if(params) fncx.SetParameter(i,params[i]);
       else       fncx.SetParameter(i,fParams[i]);
    }
+   fgAbsValue = kFALSE;
    Double_t xbar = fncx.Integral(a,b,params,epsilon)/norm;
 
    //TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x-%f,%f)",GetName(),xbar,n));
@@ -3248,7 +3249,6 @@ Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *
    fnc.SetParameter(fNpar,xbar);
    fnc.SetParameter(fNpar+1,n);
    Double_t res = fnc.Integral(a,b,params,epsilon)/norm;
-   fgAbsValue = kFALSE;
    return res;
 }
 
