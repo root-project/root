@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.h,v 1.4 2005/12/12 13:46:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: fischler  at Mon Jun 25  2005
 //
-// Last update: $Id: BitReproducible.h,v 1.4 2005/12/12 13:46:42 moneta Exp $
+// Last update: $Id: BitReproducible.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_BitReproducible 
 #define ROOT_Math_GenVector_BitReproducible  1
@@ -46,21 +46,21 @@ private:
 class BitReproducible {
 public:
 
-  // dto2longs(d, i1, i2) returns (in i1 and i2) two unsigned longs
+  // dto2longs(d, i1, i2) returns (in i1 and i2) two unsigned ints
   // representation of its double input.  This is byte-ordering
   // independant, and depends for complete portability ONLY on adherance
   // to the IEEE 754 standard for 64-bit floating point representation.
-  // The first unsigned long contains the high-order bits in IEEE; thus
+  // The first unsigned int contains the high-order bits in IEEE; thus
   // 1.0 will always be 0x3FF00000, 00000000
-  static void Dto2longs(double d, unsigned long & i1, unsigned long & i2);
+  static void Dto2longs(double d, unsigned int & i1, unsigned int & i2);
 
   // longs2double (i1,i2) returns a double containing the value represented by
-  // its input, which must be a 2 unsigned longs.
+  // its input, which must be a 2 unsigned ints.
   // The input is taken to be the representation according to
   // the IEEE 754 standard for a 64-bit floating point number, whose value
   // is returned as a double.  The byte-ordering of the double result is,
   // of course, tailored to the proper byte-ordering for the system.
-  static double Longs2double (unsigned long i1, unsigned long i2);
+  static double Longs2double (unsigned int i1, unsigned int i2);
 
   // dtox(d) returns a 16-character string containing the (zero-filled) hex
   // representation of its double input.  This is byte-ordering
@@ -69,25 +69,25 @@ public:
   static std::string D2x(double d);
 
   static void Output ( std::ostream & os, double d ) {
-    unsigned long i1, i2;
+    unsigned int i1, i2;
     Dto2longs(d, i1, i2);
     os << " " << i1 << " " << i2;
   }
 
   static void Input ( std::istream & is, double & d ) {
-    unsigned long i1, i2;
+    unsigned int i1, i2;
     is >> i1 >> i2;
     d = Longs2double(i1, i2);
   }
 
   static void Output ( std::ostream & os, float f ) {
-    unsigned long i1, i2;
+    unsigned int i1, i2;
     Dto2longs( double(f), i1, i2 );
     os << " " << i1 << " " << i2;
   }
 
   static void Input ( std::istream & is, float & f ) {
-    unsigned long i1, i2;
+    unsigned int i1, i2;
     is >> i1 >> i2;
     f = float( Longs2double(i1, i2) );
   }
@@ -102,7 +102,7 @@ private:
   static bool fgByte_order_known;
   static int  fgByte_order[8];
     // Meaning of byte_order:  The first (high-order in IEEE 754) byte to
-    // output (or the high-order byte of the first unsigned long)
+    // output (or the high-order byte of the first unsigned int)
     // is  of db.b[byte_order[0]].  Thus the index INTO byte_order
     // is a position in the IEEE representation of the double, and the value
     // of byte_order[k] is an offset in the memory representation of the

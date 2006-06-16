@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.cxx,v 1.2 2005/09/19 09:57:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.cxx,v 1.3 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #include "Math/GenVector/BitReproducible.h"
@@ -95,22 +95,22 @@ std::string BitReproducible::D2x(double d) {
   return ss.str();
 }
 
-void BitReproducible::Dto2longs(double d, unsigned long& i, unsigned long& j) {
+void BitReproducible::Dto2longs(double d, unsigned int& i, unsigned int& j) {
   // conversion to 2 longs
   if ( !fgByte_order_known ) Fill_byte_order ();
   DB8 db;
   db.fD = d;
-  i    =   ((static_cast<unsigned long>(db.fB[fgByte_order[0]])) << 24)
-         | ((static_cast<unsigned long>(db.fB[fgByte_order[1]])) << 16)
-         | ((static_cast<unsigned long>(db.fB[fgByte_order[2]])) <<  8)
-         | ((static_cast<unsigned long>(db.fB[fgByte_order[3]]))      );
-  j    =   ((static_cast<unsigned long>(db.fB[fgByte_order[4]])) << 24)
-         | ((static_cast<unsigned long>(db.fB[fgByte_order[5]])) << 16)
-         | ((static_cast<unsigned long>(db.fB[fgByte_order[6]])) <<  8)
-         | ((static_cast<unsigned long>(db.fB[fgByte_order[7]]))      );
+  i    =   ((static_cast<unsigned int>(db.fB[fgByte_order[0]])) << 24)
+         | ((static_cast<unsigned int>(db.fB[fgByte_order[1]])) << 16)
+         | ((static_cast<unsigned int>(db.fB[fgByte_order[2]])) <<  8)
+         | ((static_cast<unsigned int>(db.fB[fgByte_order[3]]))      );
+  j    =   ((static_cast<unsigned int>(db.fB[fgByte_order[4]])) << 24)
+         | ((static_cast<unsigned int>(db.fB[fgByte_order[5]])) << 16)
+         | ((static_cast<unsigned int>(db.fB[fgByte_order[6]])) <<  8)
+         | ((static_cast<unsigned int>(db.fB[fgByte_order[7]]))      );
 }
 
-double BitReproducible::Longs2double (unsigned long i, unsigned long j) {
+double BitReproducible::Longs2double (unsigned int i, unsigned int j) {
   // conversion longs to double
   DB8 db;
   unsigned char bytes[8];

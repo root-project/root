@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: 3DDistances.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: 3DDistances.cxx,v 1.2 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -47,7 +47,7 @@ enum ERotation3DMatrixIndex
 double dist( Rotation3D const & from, Rotation3D const & to)
 { /*TODO better */
   return Quaternion(from).Distance(Quaternion(to));
- }
+}
 
 double dist( Rotation3D const & from, AxisAngle const & to)
 {  return Quaternion(from).Distance(Quaternion(to));}
@@ -61,7 +61,7 @@ double dist( Rotation3D const & from, Quaternion const & to)
 double dist( Rotation3D const & from, RotationX const & to)
 { /*TODO better */
   return Quaternion(from).Distance(Quaternion(to));
- }
+}
 
 double dist( Rotation3D const & from, RotationY const & to)
 { /*TODO*/ 
