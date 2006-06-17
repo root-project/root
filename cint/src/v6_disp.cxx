@@ -2112,6 +2112,8 @@ va_list arg;
        int len;
        len = vfprintf(fpnull,fmt,argptr);
        buf = (char*)malloc(len+5);
+       /* Reset the counter */
+       va_start(argptr,fmt);       
        result = vsprintf(buf,fmt,argptr);
        (*G__ErrMsgCallback)(buf);
        free((void*)buf);
