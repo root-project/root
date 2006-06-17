@@ -18,8 +18,8 @@ fi
 
 # mixture of files, wildcards, and directories
 WILDCARDS="LICENSE README bin \
-   include lib cint/MAKEINFO cint/include \
-   cint/lib cint/stl tutorials/*.cxx tutorials/*.C \
+   include lib cint/include \
+   cint/lib cint/stl gdml/*.py tutorials/*.cxx tutorials/*.C \
    tutorials/*.h tutorials/*.dat tutorials/mlpHiggs.root \
    tutorials/gallery.root tutorials/galaxy.root \
    tutorials/stock.root tutorials/worldmap.jpg tutorials/rose512.jpg \
