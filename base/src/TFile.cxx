@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.163 2006/05/31 07:48:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.164 2006/06/09 01:21:43 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1209,9 +1209,7 @@ void TFile::Map()
 //______________________________________________________________________________
 void TFile::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Paint all objects in the file*-*-*-*-*-*-*-*-*-*-*
-//*-*                    =============================
-//
+   // Paint all objects in the file.
 
    GetList()->R__FOR_EACH(TObject,Paint)(option);
 }
@@ -1219,9 +1217,9 @@ void TFile::Paint(Option_t *option)
 //______________________________________________________________________________
 void TFile::Prefetch(Long64_t pos, Int_t len)
 {
-   //create a new block of length len at position pos in a TPrefetchFile
-   //creates the TPreferFile object if it does not exist yet
-   //if pos=0 and len = 0 the TPrefetchFile is reset
+   // Create a new block of length len at position pos in a TPrefetchFile.
+   // Creates the TPreferFile object if it does not exist yet
+   // if pos=0 and len = 0 the TPrefetchFile is reset.
 
    if (!fFilePrefetch) {
       Error("Prefetch","You must create a TFilePrefetch object first");
@@ -1233,9 +1231,7 @@ void TFile::Prefetch(Long64_t pos, Int_t len)
 //______________________________________________________________________________
 void TFile::Print(Option_t *option) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Print all objects in the file*-*-*-*-*-*-*-*-*-*-*
-//*-*                    =============================
-//
+   // Print all objects in the file.
 
    Printf("TFile: name=%s, title=%s, option=%s", GetName(), GetTitle(), GetOption());
    GetList()->R__FOR_EACH(TObject,Print)(option);
@@ -1247,9 +1243,11 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
    // Read a buffer from the file. This is the basic low level read operation.
    // Returns kTRUE in case of failure.
 
-   if (fFilePrefetch) {
-      if (!fFilePrefetch->ReadBuffer(buf,fOffset,len))
-         return kFALSE;
+   Int_t st;
+   if ((st = ReadBufferViaCache(buf, len))) {
+      if (st == 2)
+         return kTRUE;
+      return kFALSE;
    }
 
    if (IsOpen()) {
@@ -1298,9 +1296,9 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    Bool_t result = kTRUE;
    TFilePrefetch *old = fFilePrefetch;
    fFilePrefetch = 0;
-   for (Int_t i=0;i<nbuf;i++) {
+   for (Int_t i = 0; i < nbuf; i++) {
       Seek(pos[i]);
-      result = ReadBuffer(&buf[k],len[i]);
+      result = ReadBuffer(&buf[k], len[i]);
       if (result) break;
       k += len[i];
    }
@@ -1314,10 +1312,18 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
    // Read buffer via cache. Returns 0 if cache is not active, 1 in case
    // read via cache was successful, 2 in case read via cache failed.
 
+   Long64_t off = GetRelOffset();
+   if (fFilePrefetch) {
+      if (!fFilePrefetch->ReadBuffer(buf, off, len)) {
+         // fOffset might have been changed via TFilePrefetch::ReadBuffer(), reset it
+         Seek(off + len);
+         return 1;
+      }
+   }
+
    if (!fCache) return 0;
 
    Int_t st;
-   Long64_t off = GetRelOffset();
    if ((st = fCache->ReadBuffer(off, buf, len)) < 0) {
       Error("ReadBuffer", "error reading from cache");
       return 2;

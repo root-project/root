@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.30 2006/06/07 10:34:37 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.31 2006/06/09 13:38:46 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -465,11 +465,6 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
 
    if (bufferLength==0)
       return 0;
-
-   if (fFilePrefetch) {
-      if (!fFilePrefetch->ReadBuffer(buffer, fOffset, bufferLength))
-         return kFALSE;
-   }
 
    Int_t st;
    if ((st = ReadBufferViaCache(buffer, bufferLength))) {

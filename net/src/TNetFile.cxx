@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.75 2006/06/07 10:34:37 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.76 2006/06/09 01:21:43 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -92,6 +92,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    fSocket = 0;
    Create(url, option, netopt);
 }
+
 //______________________________________________________________________________
 TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
    : TFile(url, "NET", ftitle, compress), fEndpointUrl(url)
@@ -291,11 +292,6 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
    if (len == 0)
       return kFALSE;
 
-   if (fFilePrefetch) {
-      if (!fFilePrefetch->ReadBuffer(buf, fOffset, len))
-         return kFALSE;
-   }
-
    Bool_t result = kFALSE;
 
    Int_t st;
@@ -418,8 +414,6 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       result = kTRUE;
       goto end;
    }
-
-   fOffset += pos[nbuf-1] + len[nbuf-1] + fArchiveOffset;
 
    fBytesRead  += total_len;
 #ifdef WIN32

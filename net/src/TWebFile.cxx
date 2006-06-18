@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.17 2006/06/09 01:21:43 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.18 2006/06/09 07:14:55 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -126,11 +126,6 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
       return kFALSE;
    }
 
-   if (fFilePrefetch) {
-      if (!fFilePrefetch->ReadBuffer(buf, fOffset, len))
-         return kFALSE;
-   }
-
    // Give full URL so Apache's virtual hosts solution works.
    // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
    TString msg = "GET ";
@@ -199,8 +194,6 @@ Bool_t TWebFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 
    if (GetFromWeb(&buf[k], n, msg) == -1)
       return kTRUE;
-
-   fOffset = pos[nbuf-1] + len[nbuf-1] + fArchiveOffset;
 
    return kFALSE;
 }
