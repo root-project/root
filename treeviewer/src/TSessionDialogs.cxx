@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.22 2006/01/30 17:42:06 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.23 2006/05/31 07:48:56 brun Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -412,14 +412,6 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
          new TGTableLayoutHints(2, 3, 2, 3, kLHintsCenterY, 5, 0, 0, 8));
    btnTmp->Connect("Clicked()", "TNewQueryDlg", this, "OnBrowseSelector()");
 
-   // add "Options" label and text entry
-   fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "Options :"),
-         new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 0, 5, 0, 0));
-   fFrmNewQuery->AddFrame(fTxtOptions = new TGTextEntry(fFrmNewQuery,
-         (const char *)0, 4), new TGTableLayoutHints(1, 2, 3, 4,
-         kLHintsCenterY, 5, 0, 0, 8));
-   fTxtOptions->SetText("\"ASYN\"");
-
    // add "Less <<" ("More >>") button
    fFrmNewQuery->AddFrame(fBtnMore = new TGTextButton(fFrmNewQuery, " Less << "),
          new TGTableLayoutHints(2, 3, 4, 5, kLHintsCenterY, 5, 5, 4, 0));
@@ -433,27 +425,35 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
          kLHintsExpandX | kLHintsExpandY));
    fFrmMore->SetLayoutManager(new TGTableLayout(fFrmMore, 4, 3));
 
+   // add "Options" label and text entry
+   fFrmMore->AddFrame(new TGLabel(fFrmMore, "Options :"),
+         new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 0, 5, 0, 0));
+   fFrmMore->AddFrame(fTxtOptions = new TGTextEntry(fFrmMore,
+         (const char *)0, 4), new TGTableLayoutHints(1, 2, 0, 1, 0, 22,
+         0, 0, 8));
+   fTxtOptions->SetText("ASYN");
+
    // add "Nb Entries" label and number entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Nb Entries :"),
-         new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 0, 5, 0, 0));
+         new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 0, 5, 0, 0));
    fFrmMore->AddFrame(fNumEntries = new TGNumberEntry(fFrmMore, 0, 5, -1,
          TGNumberFormat::kNESInteger, TGNumberFormat::kNEAAnyNumber,
-         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 0, 1,
-         0, 37, 0, 0, 8));
+         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 1, 2,
+         0, 22, 0, 0, 8));
    fNumEntries->SetIntNumber(-1);
    // add "First Entry" label and number entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "First entry :"),
-         new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 0, 5, 0, 0));
+         new TGTableLayoutHints(0, 1, 2, 3, kLHintsCenterY, 0, 5, 0, 0));
    fFrmMore->AddFrame(fNumFirstEntry = new TGNumberEntry(fFrmMore, 0, 5, -1,
          TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative,
-         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 1, 2, 0,
-         37, 0, 0, 8));
+         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 2, 3, 0,
+         22, 0, 0, 8));
 
    // add "Event list" label and text entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Event list :"),
          new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 0, 5, 0, 0));
    fFrmMore->AddFrame(fTxtEventList = new TGTextEntry(fFrmMore,
-         (const char *)0, 6), new TGTableLayoutHints(1, 2, 3, 4, 0, 37,
+         (const char *)0, 6), new TGTableLayoutHints(1, 2, 3, 4, 0, 22,
          5, 0, 0));
    // add "Browse" button
    fFrmMore->AddFrame(btnTmp = new TGTextButton(fFrmMore, "Browse..."),
@@ -583,7 +583,7 @@ void TNewQueryDlg::OnBtnSaveClicked()
       newquery->fChain       = 0;
    }
    newquery->fQueryName      = fTxtQueryName->GetText();
-   newquery->fOptions        = fTxtOptions->GetText();
+   newquery->fOptions.Form("\"%s\"",fTxtOptions->GetText());
    newquery->fNoEntries      = fNumEntries->GetIntNumber();
    newquery->fFirstEntry     = fNumFirstEntry->GetIntNumber();
    newquery->fNbFiles        = 0;
