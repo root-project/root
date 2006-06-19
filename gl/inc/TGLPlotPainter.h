@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPainterAlgorithms.h,v 1.1 2006/06/14 10:00:00 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.2 2006/06/14 08:33:23 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -137,9 +137,7 @@ protected:
    void SetCamera();
 
 protected:
-   static Bool_t ExtractAxisInfo(const TAxis *axis, Bool_t log, BinRange_t &bins, Range_t &range);
-   Bool_t ExtractAxisZInfo(TH1 *hist, Bool_t logZ, const BinRange_t &xBins, 
-                           const BinRange_t &yBins, Range_t &zRange);
+   
    static void   AdjustShift(const TPoint &start, const TPoint &finish, TGLVector3 &shiftVec, const Int_t *viewport);
 
    ClassDef(TGLPlotFrame, 0) //Auxilary class
@@ -149,7 +147,12 @@ class TGLQuadric;
 
 namespace RootGL
 {
+   typedef std::pair<Double_t, Double_t> Range_t;
+   typedef std::pair<Int_t, Int_t>       BinRange_t;
 
+   Bool_t FindAxisRange(const TAxis *axis, Bool_t log, BinRange_t &bins, Range_t &range);
+   Bool_t FindAxisRange(TH1 *hist, Bool_t log, const BinRange_t &xBins, const BinRange_t &yBins, 
+                        Range_t &zRange, Double_t &factor, Bool_t errors = kFALSE);
    void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin, 
                      Double_t yMax, Double_t zMin, Double_t zMax);
    void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2, 
@@ -167,6 +170,8 @@ namespace RootGL
    void DrawTrapezoidTextured(const Double_t ver[][3], Double_t texMin, Double_t texMax);
    void DrawTrapezoidTextured2(const Double_t ver[][2], Double_t zMin, Double_t zMax,
                                Double_t texMin, Double_t texMax);
+   void DrawError(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax, Double_t zMin, Double_t zMax);
+   
 }
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.1 2006/06/14 10:00:00 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.2 2006/06/14 08:33:23 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -8,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 #include <algorithm>
 
 #include "TError.h"
@@ -73,140 +72,6 @@ TGLPlotFrame::~TGLPlotFrame()
 {
 }
 
-namespace {
-
-   Double_t FindMinBinWidth(const TAxis *axis)
-   {
-      Int_t currBin = axis->GetFirst();
-      Double_t width = axis->GetBinWidth(currBin);
-
-      if (!axis->IsVariableBinSize())//equal bins
-         return width;
-
-      ++currBin;
-      //variable size bins
-      for (const Int_t lastBin = axis->GetLast(); currBin <= lastBin; ++currBin)
-         width = TMath::Min(width, axis->GetBinWidth(currBin));
-
-      return width;
-   }
-
-}
-
-//______________________________________________________________________________
-Bool_t TGLPlotFrame::ExtractAxisInfo(const TAxis *axis, Bool_t log, BinRange_t &bins, Range_t &range)
-{
-   //"Generic" function, can be used for X/Y/Z axis.
-   //[low edge of first ..... up edge of last]
-   //If log is true, at least up edge of last MUST be positive or function fails (1).
-   //If log is true and low edge is negative, try to find bin with positive low edge, bin number
-   //must be less or equal to last (2). If no such bin, function failes.
-   //When looking for a such bin, I'm trying to find value which is 0.01 of
-   //MINIMUM bin width (3) (if bins are equidimensional, first's bin width is OK).
-   //But even such lookup can fail, so, it's a stupid idea to have negative ranges
-   //and logarithmic scale :)
-
-   bins.first = axis->GetFirst(), bins.second = axis->GetLast();
-   range.first = axis->GetBinLowEdge(bins.first), range.second = axis->GetBinUpEdge(bins.second);
-
-   if (log) {
-      if (range.second <= 0.)
-         return kFALSE;//(1)
-
-      range.second = TMath::Log10(range.second);
-
-      if (range.first <= 0.) {//(2)
-         Int_t bin = axis->FindFixBin(FindMinBinWidth(axis) * 0.01);//(3)
-         //Overflow or something stupid.
-         if (bin > bins.second)
-            return kFALSE;
-         
-         if (axis->GetBinLowEdge(bin) <= 0.) {
-            ++bin;
-            if (bin > bins.second)//Again, something stupid.
-               return kFALSE;
-         }
-
-         bins.first = bin;
-         range.first = axis->GetBinLowEdge(bin);
-      }
-
-      range.first = TMath::Log10(range.first);
-   }
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGLPlotFrame::ExtractAxisZInfo(TH1 *hist, Bool_t logZ, const BinRange_t &xBins, 
-                                        const BinRange_t &yBins, Range_t &zRange)
-{
-   //First, look through hist to find minimum and maximum values.
-   const Bool_t minimum = hist->GetMinimumStored() != -1111;
-   const Bool_t maximum = hist->GetMaximumStored() != -1111;
-   const Double_t margin = gStyle->GetHistTopMargin();
-
-   zRange.second = hist->GetCellContent(xBins.first, yBins.first), zRange.first = zRange.second;
-   Double_t summ = 0.;
-
-   for (Int_t i = xBins.first; i <= xBins.second; ++i) {
-      for (Int_t j = yBins.first; j <= yBins.second; ++j) {
-         Double_t val = hist->GetCellContent(i, j);
-         zRange.second = TMath::Max(val, zRange.second);
-         zRange.first = TMath::Min(val, zRange.first);
-         summ += val;
-      }
-   }
-
-   if (hist->GetMaximumStored() != -1111) 
-      zRange.second = hist->GetMaximumStored();
-   if (hist->GetMinimumStored() != -1111) 
-      zRange.first = hist->GetMinimumStored();
-
-   if (logZ && zRange.second <= 0.)
-      return kFALSE;//cannot setup logarithmic scale
-   
-   if (zRange.first >= zRange.second)
-      zRange.first = 0.001 * zRange.second;
-
-   //Here is a strange (for me) magic with factor. This code is the same as in THistPainter,
-   //to get the same behavior. But (IMHO) it's incorrect, because summ can be negative
-   //and we can still have positive bins, which will be "truncated" by negative zMax.
-   fFactor = hist->GetNormFactor() > 0. ? hist->GetNormFactor() : summ;
-   if (summ) fFactor /= summ;
-   if (!fFactor) fFactor = 1.;
-   if (fFactor < 0.)
-      Warning("TGLPlotPainter::ExtractAxisZInfo", 
-              "Negative factor, negative ranges - possible incorrect behavior");
-
-   zRange.second *= fFactor;
-   zRange.first *= fFactor;
-
-   if (logZ) {
-      if (zRange.first <= 0.)
-         zRange.first = TMath::Min(1., 0.001 * zRange.second);
-      zRange.first = TMath::Log10(zRange.first);
-      if (!minimum) 
-         zRange.first += TMath::Log10(0.5);
-      zRange.second = TMath::Log10(zRange.second);
-      if (!maximum)
-         zRange.second += TMath::Log10(2*(0.9/0.95));//This magic numbers are from THistPainter.
-      return kTRUE;
-   }
-
-   if (!maximum)
-      zRange.second += margin * (zRange.second - zRange.first);
-   if (!minimum) {
-      if (gStyle->GetHistMinimumZero())
-         zRange.first >= 0 ? zRange.first = 0. : zRange.first -= margin * (zRange.second - zRange.first);
-      else 
-         zRange.first >= 0 && zRange.first - margin * (zRange.second - zRange.first) <= 0 ?
-            zRange.first = 0 : zRange.first -= margin * (zRange.second - zRange.first);
-   }
-
-   return kTRUE;
-}
-
 //______________________________________________________________________________
 void TGLPlotFrame::AdjustShift(const TPoint &p1, const TPoint &p2, TGLVector3 &shiftVec, 
                                const Int_t *viewport)
@@ -258,8 +123,6 @@ void TGLPlotFrame::CalculateGLCameraParams(const Range_t &x, const Range_t &y, c
    fFrustum[2] = -100 * maxDim;
    fFrustum[3] = 100 * maxDim;
    fShift = maxDim * 1.5;
-
- //  std::cout<<"scales "<<fScaleX<<' '<<fScaleY<<' '<<fScaleZ<<std::endl;
 }
 
 namespace {
@@ -330,6 +193,140 @@ void TGLPlotFrame::SetCamera()
 
 namespace RootGL
 {
+
+   namespace {
+
+      Double_t FindMinBinWidth(const TAxis *axis)
+      {
+         Int_t currBin = axis->GetFirst();
+         Double_t width = axis->GetBinWidth(currBin);
+
+         if (!axis->IsVariableBinSize())//equal bins
+            return width;
+
+         ++currBin;
+         //variable size bins
+         for (const Int_t lastBin = axis->GetLast(); currBin <= lastBin; ++currBin)
+            width = TMath::Min(width, axis->GetBinWidth(currBin));
+
+         return width;
+      }
+
+   }
+
+   //______________________________________________________________________________
+   Bool_t FindAxisRange(const TAxis *axis, Bool_t log, BinRange_t &bins, Range_t &range)
+   {
+      //"Generic" function, can be used for X/Y/Z axis.
+      //[low edge of first ..... up edge of last]
+      //If log is true, at least up edge of last MUST be positive or function fails (1).
+      //If log is true and low edge is negative, try to find bin with positive low edge, bin number
+      //must be less or equal to last (2). If no such bin, function failes.
+      //When looking for a such bin, I'm trying to find value which is 0.01 of
+      //MINIMUM bin width (3) (if bins are equidimensional, first's bin width is OK).
+      //But even such lookup can fail, so, it's a stupid idea to have negative ranges
+      //and logarithmic scale :)
+
+      bins.first = axis->GetFirst(), bins.second = axis->GetLast();
+      range.first = axis->GetBinLowEdge(bins.first), range.second = axis->GetBinUpEdge(bins.second);
+
+      if (log) {
+         if (range.second <= 0.)
+            return kFALSE;//(1)
+
+         range.second = TMath::Log10(range.second);
+
+         if (range.first <= 0.) {//(2)
+            Int_t bin = axis->FindFixBin(FindMinBinWidth(axis) * 0.01);//(3)
+            //Overflow or something stupid.
+            if (bin > bins.second)
+               return kFALSE;
+            
+            if (axis->GetBinLowEdge(bin) <= 0.) {
+               ++bin;
+               if (bin > bins.second)//Again, something stupid.
+                  return kFALSE;
+            }
+
+            bins.first = bin;
+            range.first = axis->GetBinLowEdge(bin);
+         }
+
+         range.first = TMath::Log10(range.first);
+      }
+
+      return kTRUE;
+   }
+
+   //______________________________________________________________________________
+   Bool_t FindAxisRange(TH1 *hist, Bool_t logZ, const BinRange_t &xBins, const BinRange_t &yBins, 
+                        Range_t &zRange, Double_t &factor, Bool_t errors)
+   {
+      //First, look through hist to find minimum and maximum values.
+      const Bool_t minimum = hist->GetMinimumStored() != -1111;
+      const Bool_t maximum = hist->GetMaximumStored() != -1111;
+      const Double_t margin = gStyle->GetHistTopMargin();
+
+      zRange.second = hist->GetCellContent(xBins.first, yBins.first), zRange.first = zRange.second;
+      Double_t summ = 0.;
+
+      for (Int_t i = xBins.first; i <= xBins.second; ++i) {
+         for (Int_t j = yBins.first; j <= yBins.second; ++j) {
+            Double_t val = hist->GetCellContent(i, j);
+            if (val > 0. && errors)
+               val = TMath::Max(val, val + hist->GetCellError(i, j));
+            zRange.second = TMath::Max(val, zRange.second);
+            zRange.first = TMath::Min(val, zRange.first);
+            summ += val;
+         }
+      }
+
+      if (hist->GetMaximumStored() != -1111) 
+         zRange.second = hist->GetMaximumStored();
+      if (hist->GetMinimumStored() != -1111) 
+         zRange.first = hist->GetMinimumStored();
+
+      if (logZ && zRange.second <= 0.)
+         return kFALSE;//cannot setup logarithmic scale
+      
+      if (zRange.first >= zRange.second)
+         zRange.first = 0.001 * zRange.second;
+
+      factor = hist->GetNormFactor() > 0. ? hist->GetNormFactor() : summ;
+      if (summ) factor /= summ;
+      if (!factor) factor = 1.;
+      if (factor < 0.)
+         Warning("TGLPlotPainter::ExtractAxisZInfo", 
+               "Negative factor, negative ranges - possible incorrect behavior");
+
+      zRange.second *= factor;
+      zRange.first  *= factor;
+
+      if (logZ) {
+         if (zRange.first <= 0.)
+            zRange.first = TMath::Min(1., 0.001 * zRange.second);
+         zRange.first = TMath::Log10(zRange.first);
+         if (!minimum) 
+            zRange.first += TMath::Log10(0.5);
+         zRange.second = TMath::Log10(zRange.second);
+         if (!maximum)
+            zRange.second += TMath::Log10(2*(0.9/0.95));//This magic numbers are from THistPainter.
+         return kTRUE;
+      }
+
+      if (!maximum)
+         zRange.second += margin * (zRange.second - zRange.first);
+      if (!minimum) {
+         if (gStyle->GetHistMinimumZero())
+            zRange.first >= 0 ? zRange.first = 0. : zRange.first -= margin * (zRange.second - zRange.first);
+         else 
+            zRange.first >= 0 && zRange.first - margin * (zRange.second - zRange.first) <= 0 ?
+               zRange.first = 0 : zRange.first -= margin * (zRange.second - zRange.first);
+      }
+
+      return kTRUE;
+   }
+
    //______________________________________________________________________________
    void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin, 
                      Double_t yMax, Double_t zMin, Double_t zMax)
@@ -489,6 +486,39 @@ namespace RootGL
       glEnd();
    }
 
+   namespace {
+      
+      void CylindricalNormal(const Double_t *v, Double_t *normal)
+      {
+         const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1]);
+         if (n > 0.) {
+            normal[0] = v[0] / n;
+            normal[1] = v[1] / n;
+            normal[2] = 0.;
+         } else {
+            normal[0] = v[0];
+            normal[1] = v[1];
+            normal[2] = 0.;
+         }
+      }
+
+      void CylindricalNormalInv(const Double_t *v, Double_t *normal)
+      {
+         const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1]);
+         if (n > 0.) {
+            normal[0] = -v[0] / n;
+            normal[1] = -v[1] / n;
+            normal[2] = 0.;
+         } else {
+            normal[0] = -v[0];
+            normal[1] = -v[1];
+            normal[2] = 0.;
+         }
+      }
+
+   }
+
+
    void DrawTrapezoid(const Double_t ver[][2], Double_t zMin, Double_t zMax, Bool_t color)
    {
       //In polar coordinates, box became trapezoid.
@@ -519,25 +549,17 @@ namespace RootGL
                                  {ver[2][0], ver[2][1], zMax}, {ver[3][0], ver[3][1], zMax}};
       Double_t normal[3] = {0.};
       glBegin(GL_POLYGON);
-      if (color) {
-         TMath::Normal2Plane(trapezoid[1], trapezoid[2], trapezoid[6], normal);
-         glNormal3dv(normal);
-      }
-      glVertex3dv(trapezoid[1]);
-      glVertex3dv(trapezoid[2]);
-      glVertex3dv(trapezoid[6]);
-      glVertex3dv(trapezoid[5]);
+      CylindricalNormal(trapezoid[1], normal), glNormal3dv(normal), glVertex3dv(trapezoid[1]);
+      CylindricalNormal(trapezoid[2], normal), glNormal3dv(normal), glVertex3dv(trapezoid[2]);
+      CylindricalNormal(trapezoid[6], normal), glNormal3dv(normal), glVertex3dv(trapezoid[6]);
+      CylindricalNormal(trapezoid[5], normal), glNormal3dv(normal), glVertex3dv(trapezoid[5]);
       glEnd();
 
       glBegin(GL_POLYGON);
-      if (color) {
-         TMath::Normal2Plane(trapezoid[0], trapezoid[4], trapezoid[7], normal);
-         glNormal3dv(normal);
-      }
-      glVertex3dv(trapezoid[0]);
-      glVertex3dv(trapezoid[4]);
-      glVertex3dv(trapezoid[7]);
-      glVertex3dv(trapezoid[3]);
+      CylindricalNormalInv(trapezoid[0], normal), glNormal3dv(normal), glVertex3dv(trapezoid[0]);
+      CylindricalNormalInv(trapezoid[4], normal), glNormal3dv(normal), glVertex3dv(trapezoid[4]);
+      CylindricalNormalInv(trapezoid[7], normal), glNormal3dv(normal), glVertex3dv(trapezoid[7]);
+      CylindricalNormalInv(trapezoid[3], normal), glNormal3dv(normal), glVertex3dv(trapezoid[3]);
       glEnd();
 
       glBegin(GL_POLYGON);
@@ -561,6 +583,38 @@ namespace RootGL
       glVertex3dv(trapezoid[6]);
       glVertex3dv(trapezoid[2]);
       glEnd();
+   }
+
+   namespace {
+
+      void SphericalNormal(const Double_t *v, Double_t *normal)
+      {
+         const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+         if (n > 0.) {
+            normal[0] = v[0] / n;
+            normal[1] = v[1] / n;
+            normal[2] = v[2] / n;
+         } else {
+            normal[0] = v[0];
+            normal[1] = v[1];
+            normal[2] = v[2];
+         }
+      }
+
+      void SphericalNormalInv(const Double_t *v, Double_t *normal)
+      {
+         const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+         if (n > 0.) {
+            normal[0] = -v[0] / n;
+            normal[1] = -v[1] / n;
+            normal[2] = -v[2] / n;
+         } else {
+            normal[0] = -v[0];
+            normal[1] = -v[1];
+            normal[2] = -v[2];
+         }
+      }
+
    }
 
    //______________________________________________________________________________
@@ -597,12 +651,10 @@ namespace RootGL
       glEnd();
 
       glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[3], ver[2], ver[6], normal);
-      glNormal3dv(normal);
-      glVertex3dv(ver[3]);
-      glVertex3dv(ver[2]);
-      glVertex3dv(ver[6]);
-      glVertex3dv(ver[7]);
+      SphericalNormal(ver[3], normal), glNormal3dv(normal), glVertex3dv(ver[3]);
+      SphericalNormal(ver[2], normal), glNormal3dv(normal), glVertex3dv(ver[2]);
+      SphericalNormal(ver[6], normal), glNormal3dv(normal), glVertex3dv(ver[6]);
+      SphericalNormal(ver[7], normal), glNormal3dv(normal), glVertex3dv(ver[7]);
       glEnd();
 
       glBegin(GL_POLYGON);
@@ -615,12 +667,10 @@ namespace RootGL
       glEnd();
 
       glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[0], ver[4], ver[5], normal);
-      glNormal3dv(normal);
-      glVertex3dv(ver[0]);
-      glVertex3dv(ver[4]);
-      glVertex3dv(ver[5]);
-      glVertex3dv(ver[1]);
+      SphericalNormalInv(ver[0], normal), glNormal3dv(normal), glVertex3dv(ver[0]);
+      SphericalNormalInv(ver[4], normal), glNormal3dv(normal), glVertex3dv(ver[4]);
+      SphericalNormalInv(ver[5], normal), glNormal3dv(normal), glVertex3dv(ver[5]);
+      SphericalNormalInv(ver[1], normal), glNormal3dv(normal), glVertex3dv(ver[1]);
       glEnd();
    }
 
@@ -630,14 +680,15 @@ namespace RootGL
    {
       //In polar coordinates, box became trapezoid.
       //Four faces need normal calculations.
-      const Double_t trapezoid[][3] = {{ver[0][0], ver[0][1], zMin}, {ver[1][0], ver[1][1], zMin},
-                                       {ver[2][0], ver[2][1], zMin}, {ver[3][0], ver[3][1], zMin},
-                                       {ver[0][0], ver[0][1], zMax}, {ver[1][0], ver[1][1], zMax},
-                                       {ver[2][0], ver[2][1], zMax}, {ver[3][0], ver[3][1], zMax}};
       if (zMin > zMax) {
          std::swap(zMin, zMax);
          std::swap(texMin, texMax);
       }
+
+      const Double_t trapezoid[][3] = {{ver[0][0], ver[0][1], zMin}, {ver[1][0], ver[1][1], zMin},
+                                       {ver[2][0], ver[2][1], zMin}, {ver[3][0], ver[3][1], zMin},
+                                       {ver[0][0], ver[0][1], zMax}, {ver[1][0], ver[1][1], zMax},
+                                       {ver[2][0], ver[2][1], zMax}, {ver[3][0], ver[3][1], zMax}};
       //top
       glBegin(GL_POLYGON);
       glNormal3d(0., 0., 1.);
@@ -657,21 +708,17 @@ namespace RootGL
       //
       glBegin(GL_POLYGON);
       Double_t normal[3] = {};
-      TMath::Normal2Plane(trapezoid[1], trapezoid[2], trapezoid[6], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(texMin), glVertex3dv(trapezoid[1]);
-      glTexCoord1d(texMin), glVertex3dv(trapezoid[2]);
-      glTexCoord1d(texMax), glVertex3dv(trapezoid[6]);
-      glTexCoord1d(texMax), glVertex3dv(trapezoid[5]);
+      CylindricalNormal(trapezoid[1], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[1]);
+      CylindricalNormal(trapezoid[2], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[2]);
+      CylindricalNormal(trapezoid[6], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[6]);
+      CylindricalNormal(trapezoid[5], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[5]);
       glEnd();
 
       glBegin(GL_POLYGON);
-      TMath::Normal2Plane(trapezoid[0], trapezoid[4], trapezoid[7], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(texMin), glVertex3dv(trapezoid[0]);
-      glTexCoord1d(texMax), glVertex3dv(trapezoid[4]);
-      glTexCoord1d(texMax), glVertex3dv(trapezoid[7]);
-      glTexCoord1d(texMin), glVertex3dv(trapezoid[3]);
+      CylindricalNormalInv(trapezoid[0], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[0]);
+      CylindricalNormalInv(trapezoid[4], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[4]);
+      CylindricalNormalInv(trapezoid[7], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[7]);
+      CylindricalNormalInv(trapezoid[3], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[3]);
       glEnd();
 
       glBegin(GL_POLYGON);
@@ -725,12 +772,10 @@ namespace RootGL
       glTexCoord1d(tex[4]), glVertex3dv(ver[4]);
       glEnd();
       glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[3], ver[2], ver[6], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[3]), glVertex3dv(ver[3]);
-      glTexCoord1d(tex[2]), glVertex3dv(ver[2]);
-      glTexCoord1d(tex[6]), glVertex3dv(ver[6]);
-      glTexCoord1d(tex[7]), glVertex3dv(ver[7]);
+      SphericalNormal(ver[3], normal), glNormal3dv(normal), glTexCoord1d(tex[3]), glVertex3dv(ver[3]);
+      SphericalNormal(ver[2], normal), glNormal3dv(normal), glTexCoord1d(tex[2]), glVertex3dv(ver[2]);
+      SphericalNormal(ver[6], normal), glNormal3dv(normal), glTexCoord1d(tex[6]), glVertex3dv(ver[6]);
+      SphericalNormal(ver[7], normal), glNormal3dv(normal), glTexCoord1d(tex[7]), glVertex3dv(ver[7]);
       glEnd();
       glBegin(GL_POLYGON);
       TMath::Normal2Plane(ver[5], ver[6], ver[2], normal);
@@ -741,12 +786,10 @@ namespace RootGL
       glTexCoord1d(tex[1]), glVertex3dv(ver[1]);
       glEnd();
       glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[0], ver[4], ver[5], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[0]), glVertex3dv(ver[0]);
-      glTexCoord1d(tex[4]), glVertex3dv(ver[4]);
-      glTexCoord1d(tex[5]), glVertex3dv(ver[5]);
-      glTexCoord1d(tex[1]), glVertex3dv(ver[1]);
+      SphericalNormalInv(ver[0], normal), glNormal3dv(normal), glTexCoord1d(tex[0]), glVertex3dv(ver[0]);
+      SphericalNormalInv(ver[4], normal), glNormal3dv(normal), glTexCoord1d(tex[4]), glVertex3dv(ver[4]);
+      SphericalNormalInv(ver[5], normal), glNormal3dv(normal), glTexCoord1d(tex[5]), glVertex3dv(ver[5]);
+      SphericalNormalInv(ver[1], normal), glNormal3dv(normal), glTexCoord1d(tex[1]), glVertex3dv(ver[1]);
       glEnd();
    }
 
@@ -784,21 +827,17 @@ namespace RootGL
       //
       glBegin(GL_POLYGON);
       Double_t normal[3] = {};
-      TMath::Normal2Plane(trapezoid[1], trapezoid[2], trapezoid[6], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[1]), glVertex3dv(trapezoid[1]);
-      glTexCoord1d(tex[2]), glVertex3dv(trapezoid[2]);
-      glTexCoord1d(tex[6]), glVertex3dv(trapezoid[6]);
-      glTexCoord1d(tex[5]), glVertex3dv(trapezoid[5]);
+      CylindricalNormal(trapezoid[1], normal), glNormal3dv(normal), glTexCoord1d(tex[1]), glVertex3dv(trapezoid[1]);
+      CylindricalNormal(trapezoid[2], normal), glNormal3dv(normal), glTexCoord1d(tex[2]), glVertex3dv(trapezoid[2]);
+      CylindricalNormal(trapezoid[6], normal), glNormal3dv(normal), glTexCoord1d(tex[6]), glVertex3dv(trapezoid[6]);
+      CylindricalNormal(trapezoid[5], normal), glNormal3dv(normal), glTexCoord1d(tex[5]), glVertex3dv(trapezoid[5]);
       glEnd();
 
       glBegin(GL_POLYGON);
-      TMath::Normal2Plane(trapezoid[0], trapezoid[4], trapezoid[7], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[0]), glVertex3dv(trapezoid[0]);
-      glTexCoord1d(tex[4]), glVertex3dv(trapezoid[4]);
-      glTexCoord1d(tex[7]), glVertex3dv(trapezoid[7]);
-      glTexCoord1d(tex[3]), glVertex3dv(trapezoid[3]);
+      CylindricalNormalInv(trapezoid[0], normal), glNormal3dv(normal), glTexCoord1d(tex[0]), glVertex3dv(trapezoid[0]);
+      CylindricalNormalInv(trapezoid[4], normal), glNormal3dv(normal), glTexCoord1d(tex[4]), glVertex3dv(trapezoid[4]);
+      CylindricalNormalInv(trapezoid[7], normal), glNormal3dv(normal), glTexCoord1d(tex[7]), glVertex3dv(trapezoid[7]);
+      CylindricalNormalInv(trapezoid[3], normal), glNormal3dv(normal), glTexCoord1d(tex[3]), glVertex3dv(trapezoid[3]);
       glEnd();
 
       glBegin(GL_POLYGON);
@@ -819,4 +858,27 @@ namespace RootGL
       glTexCoord1d(tex[2]), glVertex3dv(trapezoid[2]);
       glEnd();
    }
+
+   void DrawError(Double_t xMin, Double_t xMax, Double_t yMin, 
+                  Double_t yMax, Double_t zMin, Double_t zMax)
+   {
+      const Double_t xWid = xMax - xMin;
+      const Double_t yWid = yMax - yMin;
+
+      glBegin(GL_LINES);
+      glVertex3d(xMin + xWid / 2, yMin + yWid / 2, zMin);
+      glVertex3d(xMin + xWid / 2, yMin + yWid / 2, zMax);
+      glEnd();
+
+      glBegin(GL_LINES);
+      glVertex3d(xMin + xWid / 2, yMin, zMin);
+      glVertex3d(xMin + xWid / 2, yMax, zMin);
+      glEnd();
+
+      glBegin(GL_LINES);
+      glVertex3d(xMin, yMin + yWid / 2, zMin);
+      glVertex3d(xMax, yMin + yWid / 2, zMin);
+      glEnd();
+   }
+
 }

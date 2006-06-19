@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPadHistPainter.cxx,v 1.1 2006/06/14 10:00:00 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPadHistPainter.cxx,v 1.2 2006/06/14 08:33:23 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -48,9 +48,7 @@ Int_t TGLPadHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 
       if (glContext != -1) {
          fGLPainter->SetGLContext(glContext);
-         if (TObject *object = gGLManager->Select(fGLPainter.get(), px, py));
-            //gPad->SetSelected(object);
-         else
+         if (!gGLManager->Select(fGLPainter.get(), px, py))
             gPad->SetSelected(gPad);
       } else {
          Error("DistancetoPrimitive", 

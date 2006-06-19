@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.h,v 1.1 2006/06/14 10:00:00 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.h,v 1.2 2006/06/14 08:33:23 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -84,13 +84,12 @@ private:
    Double_t              fYOZProfilePos;
    Bool_t                fIsMoving;
 
-   std::vector<Double_t> fX;
-   std::vector<Double_t> fY;
+   std::vector<Range_t>  fXEdges;
+   std::vector<Range_t>  fYEdges;
    std::vector<CosSin_t> fCosSinTableX;
    std::vector<CosSin_t> fCosSinTableY;
 
    TString               fBinInfo;
-   Bool_t                fAntiAliasing;
    TGLAxisPainter       *fAxisPainter;
 
    std::vector<Double_t> fZLevels;
@@ -100,7 +99,7 @@ private:
    std::vector<UChar_t>  fTexture;
    TGLQuadric            fQuadric;
 
-   Double_t              fBinWidth;
+   Bool_t                fDrawErrors;
 
    void         Enable1DTexture();
    void         Disable1DTexture();
@@ -161,17 +160,15 @@ private:
    void         DrawBackPlane(Int_t plane)const;
    void         DrawGrid(Int_t plane)const;
    void         MoveDynamicProfile(Int_t px, Int_t py);
-   void         DrawShadow(Int_t plane)const;
    void         DrawProfiles();
    void         DrawProfileX();
    void         DrawProfileY();
-
-   //Auxiliary functions.
    Bool_t       ClampZ(Double_t &zVal)const;
 
-   static const Float_t   fRedEmission[];
-   static const Float_t  fNullEmission[];
-   static const Float_t fGreenEmission[];
+   static const Float_t    fRedEmission[];
+   static const Float_t    fOrangeEmission[];
+   static const Float_t    fGreenEmission[];
+   static const Float_t    fNullEmission[];
 
    ClassDef(TGLLegoPainter, 0)//Lego painter
 };
