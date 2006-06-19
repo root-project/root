@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.9 2006/05/23 04:47:36 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.10 2006/05/24 14:40:29 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -88,11 +88,11 @@ public:
 
    TObjArray*      DecayList    () { return fDecayList; }
 
-   Int_t   NDecayChannels () { 
+   Int_t   NDecayChannels () const { 
      return (fDecayList) ? fDecayList->GetEntriesFast() : 0;
    }
 
-   Int_t   TrackingCode() { return fTrackingCode; }
+   Int_t   TrackingCode() const { return fTrackingCode; }
 
    TDecayChannel* DecayChannel(Int_t i);
 
