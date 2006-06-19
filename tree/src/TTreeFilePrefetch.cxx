@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.10 2006/06/15 10:02:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.11 2006/06/16 11:01:16 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -71,7 +71,7 @@ TTreeFilePrefetch::TTreeFilePrefetch() : TFilePrefetch(),
 //______________________________________________________________________________
 TTreeFilePrefetch::TTreeFilePrefetch(TTree *tree, Int_t buffersize) : TFilePrefetch(tree->GetCurrentFile(),buffersize),
    fEntryMin(0),
-   fEntryMax(tree->GetEntries()),
+   fEntryMax(tree->GetEntriesFast()),
    fEntryNext(0),
    fZipBytes(0),
    fNbranches(0),
