@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -70,6 +70,7 @@ TGeoTabManager::TGeoTabManager(TVirtualPad *pad, TGTab *tab)
 TGeoTabManager::~TGeoTabManager()
 {
 // Dtor.
+   printf("deleting TGeoTabManager\n");
    if (fShapePanel) delete fShapePanel;
    if (fMaterialPanel) delete fMaterialPanel;
    if (fMatrixPanel) delete fMatrixPanel;
@@ -418,6 +419,7 @@ TGeoTreeDialog::TGeoTreeDialog(TGFrame *caller, const TGWindow *main, UInt_t w, 
    fObjLabel->ChangeOptions(kSunkenFrame | kDoubleBorder);
    f1->AddFrame(fObjLabel, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 2,2,2,2));
    fClose = new TGTextButton(f1, "&Close");
+   fClose->Associate(this);
    f1->AddFrame(fClose, new TGLayoutHints(kLHintsRight, 2,2,2,2)); 
    AddFrame(f1, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 2,2,2,2));
    
@@ -428,9 +430,6 @@ TGeoTreeDialog::TGeoTreeDialog(TGFrame *caller, const TGWindow *main, UInt_t w, 
    Move(ax + ww, ay);
    SetWMPosition(ax, ay);
    
-   MapSubwindows();
-   Layout();
-   MapWindow();
 }
 
 //______________________________________________________________________________
@@ -467,7 +466,11 @@ TGeoVolumeDialog::TGeoVolumeDialog(TGFrame *caller, const TGWindow *main, UInt_t
    SetCleanup(kDeepCleanup);
    BuildListTree();   
    ConnectSignalsToSlots();
-   gClient->WaitFor(this);
+   MapSubwindows();
+   Layout();
+   SetWindowName("Volume dialog");
+   MapWindow();
+   gClient->WaitForUnmap(this);
 }
 
 //______________________________________________________________________________
@@ -572,7 +575,11 @@ TGeoShapeDialog::TGeoShapeDialog(TGFrame *caller, const TGWindow *main, UInt_t w
    SetCleanup(kDeepCleanup);
    BuildListTree();   
    ConnectSignalsToSlots();
-   gClient->WaitFor(this);
+   MapSubwindows();
+   Layout();
+   SetWindowName("Shape dialog");
+   MapWindow();
+   gClient->WaitForUnmap(this);
 }
 
 //______________________________________________________________________________
@@ -642,7 +649,11 @@ TGeoMediumDialog::TGeoMediumDialog(TGFrame *caller, const TGWindow *main, UInt_t
    SetCleanup(kDeepCleanup);
    BuildListTree();   
    ConnectSignalsToSlots();
-   gClient->WaitFor(this);
+   MapSubwindows();
+   Layout();
+   SetWindowName("Medium dialog");
+   MapWindow();
+   gClient->WaitForUnmap(this);
 }
 
 //______________________________________________________________________________
@@ -697,7 +708,11 @@ TGeoMaterialDialog::TGeoMaterialDialog(TGFrame *caller, const TGWindow *main, UI
    SetCleanup(kDeepCleanup);
    BuildListTree();   
    ConnectSignalsToSlots();
-   gClient->WaitFor(this);
+   MapSubwindows();
+   Layout();
+   SetWindowName("Material dialog");
+   MapWindow();
+   gClient->WaitForUnmap(this);
 }
 
 //______________________________________________________________________________
@@ -752,7 +767,11 @@ TGeoMatrixDialog::TGeoMatrixDialog(TGFrame *caller, const TGWindow *main, UInt_t
    SetCleanup(kDeepCleanup);
    BuildListTree();   
    ConnectSignalsToSlots();
-   gClient->WaitFor(this);
+   MapSubwindows();
+   Layout();
+   SetWindowName("Matrix dialog");
+   MapWindow();
+   gClient->WaitForUnmap(this);
 }
 
 //______________________________________________________________________________
@@ -947,6 +966,7 @@ void TGeoTransientPanel::Show()
 //______________________________________________________________________________
 void TGeoTransientPanel::DeleteEditors()
 {
+// Delete editors.
 }
 
    

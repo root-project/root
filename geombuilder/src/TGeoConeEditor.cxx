@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoConeEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -207,7 +207,7 @@ void TGeoConeEditor::ConnectSignals2Slots()
 //______________________________________________________________________________
 void TGeoConeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
-   // Connect to the picked volume.
+   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoCone::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -238,12 +238,14 @@ void TGeoConeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 //______________________________________________________________________________
 void TGeoConeEditor::DoName()
 {
+   // Slot for name.
    DoModified();
 }
 
 //______________________________________________________________________________
 void TGeoConeEditor::DoApply()
 {
+   //Slot for applying current parameters.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) {
       fShape->SetName(name);
@@ -274,6 +276,7 @@ void TGeoConeEditor::DoApply()
 //______________________________________________________________________________
 void TGeoConeEditor::DoCancel()
 {
+   //Slot for changing current parameters.
    fShapeName->SetText(fNamei.Data());
    fERmin1->SetNumber(fRmini1);
    fERmin2->SetNumber(fRmini2);
@@ -288,6 +291,7 @@ void TGeoConeEditor::DoCancel()
 //______________________________________________________________________________
 void TGeoConeEditor::DoModified()
 {
+   //Slot for modifing current parameters.
    fApply->SetEnabled();
    if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
@@ -295,6 +299,7 @@ void TGeoConeEditor::DoModified()
 //______________________________________________________________________________
 void TGeoConeEditor::DoUndo()
 {
+   // Slot for undoing current operation.
    DoCancel();
    DoApply();
    fCancel->SetEnabled(kFALSE);
@@ -305,6 +310,7 @@ void TGeoConeEditor::DoUndo()
 //______________________________________________________________________________
 void TGeoConeEditor::DoRmin1()
 {
+   // Slot for Rmin1
    Double_t rmin1 = fERmin1->GetNumber();
    Double_t rmax1 = fERmax1->GetNumber();
    if (rmax1<rmin1+1.e-10) {
@@ -317,6 +323,7 @@ void TGeoConeEditor::DoRmin1()
 //______________________________________________________________________________
 void TGeoConeEditor::DoRmax1()
 {
+   // Slot for Rmax1
    Double_t rmin1 = fERmin1->GetNumber();
    Double_t rmax1 = fERmax1->GetNumber();
    if (rmax1<rmin1+1.e-10) {
@@ -330,6 +337,7 @@ void TGeoConeEditor::DoRmax1()
 //______________________________________________________________________________
 void TGeoConeEditor::DoRmin2()
 {
+   // Slot for Rmin2
    Double_t rmin2 = fERmin2->GetNumber();
    Double_t rmax2 = fERmax2->GetNumber();
    if (rmax2<rmin2+1.e-10) {
@@ -342,6 +350,7 @@ void TGeoConeEditor::DoRmin2()
 //______________________________________________________________________________
 void TGeoConeEditor::DoRmax2()
 {
+   // Slot for  Rmax2
    Double_t rmin2 = fERmin2->GetNumber();
    Double_t rmax2 = fERmax2->GetNumber();
    if (rmax2<rmin2+1.e-10) {
@@ -355,6 +364,7 @@ void TGeoConeEditor::DoRmax2()
 //______________________________________________________________________________
 void TGeoConeEditor::DoDz()
 {
+   // Slot for Dz
    DoModified();
 }
 
@@ -446,6 +456,7 @@ TGeoConeSegEditor::~TGeoConeSegEditor()
 //______________________________________________________________________________
 void TGeoConeSegEditor::ConnectSignals2Slots()
 {
+   // Connect signals to slots.
    TGeoConeEditor::ConnectSignals2Slots();
    Disconnect(fApply, "Clicked()",(TGeoConeEditor*)this, "DoApply()");
    Disconnect(fUndo, "Clicked()",(TGeoConeEditor*)this, "DoUndo()");
@@ -463,7 +474,7 @@ void TGeoConeSegEditor::ConnectSignals2Slots()
 //______________________________________________________________________________
 void TGeoConeSegEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
-   // Connect to the picked volume.
+   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoConeSeg::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -499,6 +510,7 @@ void TGeoConeSegEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 //______________________________________________________________________________
 void TGeoConeSegEditor::DoPhi1()
 {
+   //Slot for Phi1
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi1 > 360-1.e-10) {
@@ -519,6 +531,7 @@ void TGeoConeSegEditor::DoPhi1()
 //______________________________________________________________________________
 void TGeoConeSegEditor::DoPhi2()
 {
+   // Slot for Phi2
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi2-phi1 > 360.) {
@@ -539,6 +552,7 @@ void TGeoConeSegEditor::DoPhi2()
 //______________________________________________________________________________
 void TGeoConeSegEditor::DoPhi()
 {
+   // Slot for Phi
    if (!fLock) {
       DoModified();
       fLock = kTRUE;
@@ -551,6 +565,7 @@ void TGeoConeSegEditor::DoPhi()
 //______________________________________________________________________________
 void TGeoConeSegEditor::DoApply()
 {
+   // Slot for applying current parameters.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) {
       fShape->SetName(name);
@@ -592,6 +607,7 @@ void TGeoConeSegEditor::DoApply()
 //______________________________________________________________________________
 void TGeoConeSegEditor::DoUndo()
 {
+   // Slot for undoing last operation.
    DoCancel();
    DoApply();
    fCancel->SetEnabled(kFALSE);
@@ -602,6 +618,7 @@ void TGeoConeSegEditor::DoUndo()
 //______________________________________________________________________________
 void TGeoConeSegEditor::DoCancel()
 {
+   // Slot for cancel last operation.
    fEPhi1->SetNumber(fPmini);
    fEPhi2->SetNumber(fPmaxi);
    fSPhi->SetPosition(fPmini,fPmaxi);

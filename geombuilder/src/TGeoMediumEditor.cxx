@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoMediumEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -44,7 +44,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for volume editor   
+   // Constructor for medium editor   
    fMedium   = 0;
    fIsEditable = kFALSE;
    fIsModified = kFALSE;
@@ -265,7 +265,7 @@ void TGeoMediumEditor::ConnectSignals2Slots()
 //______________________________________________________________________________
 void TGeoMediumEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
-   // Connect to the picked volume.
+   // Connect to the selected object.
    if (obj == 0 || !(obj->IsA()==TGeoMedium::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -339,6 +339,7 @@ void TGeoMediumEditor::DoEditMaterial()
 //______________________________________________________________________________
 void TGeoMediumEditor::DoMedName()
 {
+// Slot for medium name.
    const char *name = fMedName->GetText();
    if (!strlen(name) || !strcmp(name, fMedium->GetName())) return;
    fMedium->SetName(name);
@@ -347,11 +348,13 @@ void TGeoMediumEditor::DoMedName()
 //______________________________________________________________________________
 void TGeoMediumEditor::DoMedId()
 {
+// Slot for medium id.
 }
 
 //______________________________________________________________________________
 void TGeoMediumEditor::DoSelectMaterial()
 {
+// Select the material component.
    TGeoMaterial *material = fSelectedMaterial;
    new TGeoMaterialDialog(fBSelMaterial, gClient->GetRoot(), 200,300);  
    fSelectedMaterial = (TGeoMaterial*)TGeoMaterialDialog::GetSelected();
@@ -362,54 +365,63 @@ void TGeoMediumEditor::DoSelectMaterial()
 //______________________________________________________________________________
 void TGeoMediumEditor::DoToggleSensitive()
 {
+// Slot for sensitivity.
    fIsModified = kTRUE;
 }
 
 //______________________________________________________________________________
 void TGeoMediumEditor::DoMagfldSelect(Int_t)
 {
+// Slot for mag. field.
    fIsModified = kTRUE;
 }
 
 //______________________________________________________________________________
 void TGeoMediumEditor::DoFieldm()
 {
+// Slot for max field.
    fIsModified = kTRUE;
 }
 
 //______________________________________________________________________________
 void TGeoMediumEditor::DoTmaxfd()
 {
+// Slot for tmaxfd.
    fIsModified = kTRUE;
 }
 
 //______________________________________________________________________________
 void TGeoMediumEditor::DoStemax()
 {
+// Slot for the max allowed step.
    fIsModified = kTRUE;
 }
 
 //______________________________________________________________________________
 void TGeoMediumEditor::DoDeemax()
 {
+// Slot for the maximum allowed dedx.
    fIsModified = kTRUE;
 }
 
 //______________________________________________________________________________
 void TGeoMediumEditor::DoEpsil()
 {
+// Slot for tracking precision.
    fIsModified = kTRUE;
 }
 
 //______________________________________________________________________________
 void TGeoMediumEditor::DoStmin()
 {
+// Slot for min. step.
    fIsModified = kTRUE;
 }
 
 //______________________________________________________________________________
 void TGeoMediumEditor::DoApply()
 {
+// Slot for applying modifications.
    if (!fIsModified) return;
    Double_t isvol = (fMedSensitive->IsOn())?1:0;
    Double_t ifield = fMagfldOption->GetSelected();
@@ -439,5 +451,6 @@ void TGeoMediumEditor::DoApply()
 //______________________________________________________________________________
 void TGeoMediumEditor::DoUndo()
 {
+// Slot for undoing last operation.
 }
    

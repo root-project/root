@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoMaterialEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -42,7 +42,7 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for volume editor
+   // Constructor for material editor.
    fMaterial   = 0;
    fAi = fZi = 0;
    fDensityi = 0.0;
@@ -52,7 +52,7 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t id, Int_t width,
 
    fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
       
-   // TextEntry for shape name
+   // TextEntry for material name
    MakeTitle("Name");
    fMaterialName = new TGTextEntry(this, new TGTextBuffer(50), kMATERIAL_NAME);
    fMaterialName->Resize(135, fMaterialName->GetDefaultHeight());
@@ -187,7 +187,7 @@ void TGeoMaterialEditor::ConnectSignals2Slots()
 //______________________________________________________________________________
 void TGeoMaterialEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
-   // Connect to the picked volume.
+   // Connect to the selected material.
    if (obj == 0 || !(obj->InheritsFrom(TGeoMaterial::Class()))) {
       SetActive(kFALSE);
       return;                 
@@ -216,7 +216,7 @@ void TGeoMaterialEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 //______________________________________________________________________________
 void TGeoMaterialEditor::DoName()
 {
-// Perform name change
+// Perform name change.
    fUndo->SetEnabled();
    fCancel->SetEnabled(kFALSE);
    fApply->SetEnabled(kTRUE);
@@ -225,6 +225,7 @@ void TGeoMaterialEditor::DoName()
 //______________________________________________________________________________
 void TGeoMaterialEditor::DoA()
 {
+// Slot for atomic mass.
    fMatA->SetNumber(fAi);
    DoModified();
 }
@@ -232,6 +233,7 @@ void TGeoMaterialEditor::DoA()
 //______________________________________________________________________________
 void TGeoMaterialEditor::DoZ()
 {
+// Slot for charge.
    fMatZ->SetNumber(fZi);
    DoModified();
 }
@@ -239,6 +241,7 @@ void TGeoMaterialEditor::DoZ()
 //______________________________________________________________________________
 void TGeoMaterialEditor::DoDensity()
 {
+// Slot for density.
    fMatDensity->SetNumber(fDensityi);
    DoModified();
 }
@@ -246,6 +249,7 @@ void TGeoMaterialEditor::DoDensity()
 //______________________________________________________________________________
 void TGeoMaterialEditor::DoRadAbs()
 {
+// Slot for radiation/absorbtion length. 
    fMatRadLen->SetNumber(fMaterial->GetRadLen());
    fMatAbsLen->SetNumber(fMaterial->GetIntLen());
    DoModified();
@@ -254,6 +258,7 @@ void TGeoMaterialEditor::DoRadAbs()
 //______________________________________________________________________________
 void TGeoMaterialEditor::DoApply()
 {
+// Slot for applying modifications.
    const char *name = fMaterialName->GetText();
    fMaterial->SetName(name);
    Int_t id = gGeoManager->GetListOfMaterials()->IndexOf(fMaterial);
@@ -271,6 +276,7 @@ void TGeoMaterialEditor::DoApply()
 //______________________________________________________________________________
 void TGeoMaterialEditor::DoCancel()
 {
+// Slot for cancelling current modifications.
    fMaterialName->SetText(fNamei.Data());
    fMatA->SetNumber(fAi);
    fMatZ->SetNumber(fZi);
@@ -285,6 +291,7 @@ void TGeoMaterialEditor::DoCancel()
 //______________________________________________________________________________
 void TGeoMaterialEditor::DoModified()
 {
+// Slot for signaling modifications.
    fApply->SetEnabled();
    if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
@@ -292,6 +299,7 @@ void TGeoMaterialEditor::DoModified()
 //______________________________________________________________________________
 void TGeoMaterialEditor::DoUndo()
 {
+// Slot for undoing last operation.
    DoCancel();
    fCancel->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);

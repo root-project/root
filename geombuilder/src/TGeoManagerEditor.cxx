@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -14,6 +14,38 @@
 //  TGeoManagerEditor                                                    //
 //
 //////////////////////////////////////////////////////////////////////////
+/*
+   Editor for TGeoManager class. Provides also builder functionality for the 
+   main TGeo objects: TGeoVolume, TGeoShape - derived classes, TGeoMaterial,
+   TGeoMatrix - derived transformations and TGeoMedium.
+   The GUI represents the main entry point for editing geometry classes. It
+   can be started either by:
+   1. TGeoManager::Edit(). The method must be used when starting from a new 
+   geometry.
+   2. Left-click on the 40x40 pixels top-right corner of a pad containing a
+   drawn volume. The region is always accesible when drawing geometry elements 
+   and allows also restoring the manager editor in the "Style" tab of the GED
+   editor anytime.
+   
+   The TGeoManager editor is vertically split by a TGShutter widget into the
+   following categories:
+   
+   - General. This allows changing the name/title of the geometry, setting the
+   top volume, closing the geometry and saving the geometry in a file. The name
+   of the geometry file is formed by geometry_name.C/.root depending if the geometry
+   need to be saved as a C macro or a .root file.
+   - Shapes. The category provide buttons for creation of all supported shapes. The 
+   new shape name is chosen by the interface, but can be changed from the shape 
+   editor GUI. Existing shapes can be browsed and edited from the same category. 
+   - Volumes. The category allows the creation of a new volume having a given name,
+   shape and medium. For creating a volume assembly only the name is relevant. 
+   Existing volumes can be browsed or edited from this category.
+   - Materials. Allows creation of new materials/mixtures or editing existing ones.
+   - Media. The same for creation/editing of tracking media (materials having a set
+   of properties related to tracking)
+   - Matrices. Allows creation of translations, rotations or combined transformations.
+   Existing matrices can also be browser/edited.   
+*/   
 
 #include "TVirtualPad.h"
 #include "TBaseClass.h"
@@ -38,6 +70,7 @@
 #include "TGeoTrd2.h"
 #include "TGeoCone.h"
 #include "TGeoSphere.h"
+#include "TGeoPcon.h"
 #include "TGeoElement.h"
 #include "TGeoMaterial.h"
 #include "TView.h"
@@ -71,7 +104,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for volume editor
+   // Constructor for manager editor.
    fGeometry = gGeoManager;
    fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
    
@@ -573,14 +606,15 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t id, Int_t width,
 //______________________________________________________________________________
 TGeoManagerEditor::~TGeoManagerEditor()
 {
-// Destructor
+// Destructor.
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
       if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
          ((TGCompositeFrame *)el->fFrame)->Cleanup();
    }
-   Cleanup();   
+   Cleanup(); 
+   if (fTabMgr) delete fTabMgr;
    TClass *cl = TGeoVolume::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
@@ -651,7 +685,7 @@ void TGeoManagerEditor::ConnectSignals2Slots()
 //______________________________________________________________________________
 void TGeoManagerEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t /*event*/)
 {
-   // Connect to the picked volume.
+   // Refresh editor according the selected obj.
    if (obj == 0 || !obj->InheritsFrom(TGeoManager::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -743,7 +777,7 @@ void TGeoManagerEditor::DoCreateBox()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreatePara()
 {
-
+// Create a parallelipiped.
 }
 
 //______________________________________________________________________________
@@ -775,25 +809,26 @@ void TGeoManagerEditor::DoCreateTrd2()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateTrap()
 {
-
+// Create a general trapezoid.
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateGtra()
 {
-
+// Create a twisted trapezoid.
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateXtru()
 {
-
+// Create an extruded polygone.
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateArb8()
 {
-
+// Create an arbitrary polygone with maximum 8 vertices sitting on 2 parallel
+// planes
 }
 
 //______________________________________________________________________________
@@ -851,7 +886,7 @@ void TGeoManagerEditor::DoCreateCons()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateSphe()
 {
-// Create a sphere
+// Create a sphere.
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
    fSelectedShape = new TGeoSphere(Form("sphere_%i",id), 0.5, 1., 0., 180., 0.,360.);
    fTabMgr->AddShape(fSelectedShape->GetName(), id);
@@ -864,55 +899,64 @@ void TGeoManagerEditor::DoCreateSphe()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateCtub()
 {
-
+// Create a cut tube.
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateEltu()
 {
-
+// Create an eliptical tube.
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateTorus()
 {
-
+// Create a torus phi segment with rmin and rmax.
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreatePcon()
 {
-
+// Create a polycone shape.
+   Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
+   fSelectedShape = new TGeoPcon(Form("pcon_%i",id), 0., 360., 2);
+   ((TGeoPcon*)fSelectedShape)->DefineSection(0, -1, 0.5, 1.);
+   ((TGeoPcon*)fSelectedShape)->DefineSection(1, 1, 0.2, 0.5);
+   fTabMgr->AddShape(fSelectedShape->GetName(), id);
+   ShowSelectShape();
+   if (fGeometry->GetListOfMedia()->GetSize())
+      fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
+   DoEditShape();   
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreatePgon()
 {
-
+// Create a polygone shape.
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateHype()
 {
-
+// Create a hyperboloid.
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateParab()
 {
-
+// Create a paraboloid.
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateComposite()
 {
-
+// Create a composite shape.
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateMaterial()
 {
-// Create a new material
+// Create a new material.
    TGeoElement *el = fGeometry->GetElementTable()->GetElement(fElementList->GetSelected());
    Double_t density = fEntryDensity->GetNumber();
    const char *name = fMaterialName->GetText();
@@ -926,14 +970,14 @@ void TGeoManagerEditor::DoCreateMaterial()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateMixture()
 {
-// Create a new mixture
+// Create a new mixture.
 
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateMedium()
 {
-// Create a new medium
+// Create a new medium.
    Int_t id = fMediumId->GetIntNumber();
    if (!fSelectedMaterial2) return;
    const char *name = fMediumName->GetText();
@@ -948,7 +992,7 @@ void TGeoManagerEditor::DoCreateMedium()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateTranslation()
 {
-// Create a new translation
+// Create a new translation.
    const char *name = fMatrixName->GetText();
    fSelectedMatrix = new TGeoTranslation(name, 0., 0., 0.);
    fSelectedMatrix->SetBit(TGeoMatrix::kGeoTranslation);
@@ -961,7 +1005,7 @@ void TGeoManagerEditor::DoCreateTranslation()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateRotation()
 {
-// Create a new translation
+// Create a new rotation.
    const char *name = fMatrixName->GetText();
    fSelectedMatrix = new TGeoRotation(name);
    fSelectedMatrix->SetBit(TGeoMatrix::kGeoRotation);
@@ -974,7 +1018,7 @@ void TGeoManagerEditor::DoCreateRotation()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateVolume()
 {
-// Create a new volume
+// Create a new volume.
    const char *name = fVolumeName->GetText();
    if (!fSelectedShape2 || !fSelectedMedium2) return;
    fSelectedVolume = new TGeoVolume(name, fSelectedShape2, fSelectedMedium2);
@@ -987,7 +1031,7 @@ void TGeoManagerEditor::DoCreateVolume()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateAssembly()
 {
-// Create a new volume assembly
+// Create a new volume assembly.
    const char *name = fVolumeName->GetText();
    fSelectedVolume = new TGeoVolumeAssembly(name);
    fLSelVolume->SetText(name);
@@ -999,7 +1043,7 @@ void TGeoManagerEditor::DoCreateAssembly()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateCombi()
 {
-// Create a new translation
+// Create a new translation + rotation.
    const char *name = fMatrixName->GetText();
    fSelectedMatrix = new TGeoCombiTrans(name, 0., 0., 0., new TGeoRotation());
    fSelectedMatrix->RegisterYourself();
@@ -1022,6 +1066,7 @@ void TGeoManagerEditor::DoSetTopVolume()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoEditShape()
 {
+// Slot for editing selected shape.
    if (!fSelectedShape) return;
    fTabMgr->GetShapeEditor(fSelectedShape);
    fSelectedShape->Draw();
@@ -1031,6 +1076,7 @@ void TGeoManagerEditor::DoEditShape()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoEditVolume()
 {
+// Slot for editing selected volume.
    if (!fSelectedVolume) {
       fTabMgr->SetEnabled(TGeoTabManager::kTabVolume, kFALSE);
       return;
@@ -1046,8 +1092,33 @@ void TGeoManagerEditor::DoEditVolume()
 }
 
 //______________________________________________________________________________
+void TGeoManagerEditor::DoEditMedium()
+{
+// Slot for editing selected medium.
+   if (!fSelectedMedium) return;
+   fTabMgr->GetMediumEditor(fSelectedMedium);
+}
+
+//______________________________________________________________________________
+void TGeoManagerEditor::DoEditMaterial()
+{
+// Slot for editing selected material.
+   if (!fSelectedMaterial) return;
+   fTabMgr->GetMaterialEditor(fSelectedMaterial);
+} 
+
+//______________________________________________________________________________
+void TGeoManagerEditor::DoEditMatrix()
+{
+// Slot for editing selected matrix.
+   if (!fSelectedMatrix) return;
+   fTabMgr->GetMatrixEditor(fSelectedMatrix);
+}
+
+//______________________________________________________________________________
 void TGeoManagerEditor::DoSelectMatrix()
 {
+// Slot for selecting an existing matrix.
    TGeoMatrix *matrix = fSelectedMatrix;
    new TGeoMatrixDialog(fBSelMatrix, gClient->GetRoot(), 200,300);  
    fSelectedMatrix = (TGeoMatrix*)TGeoMatrixDialog::GetSelected();
@@ -1058,6 +1129,7 @@ void TGeoManagerEditor::DoSelectMatrix()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoSelectShape()
 {
+// Slot for selecting an existing shape.
    TGeoShape *shape = fSelectedShape;
    new TGeoShapeDialog(fBSelShape, gClient->GetRoot(), 200,300);  
    fSelectedShape = (TGeoShape*)TGeoShapeDialog::GetSelected();
@@ -1068,6 +1140,7 @@ void TGeoManagerEditor::DoSelectShape()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoSelectShape2()
 {
+// Slot for selecting a shape for making a volume.
    TGeoShape *shape = fSelectedShape2;
    new TGeoShapeDialog(fBSelShape2, gClient->GetRoot(), 200,300);  
    fSelectedShape2 = (TGeoShape*)TGeoShapeDialog::GetSelected();
@@ -1078,6 +1151,7 @@ void TGeoManagerEditor::DoSelectShape2()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoSelectMaterial()
 {
+// Slot for selecting an existing material.
    TGeoMaterial *mat = fSelectedMaterial;
    new TGeoMaterialDialog(fBSelMaterial, gClient->GetRoot(), 200,300);  
    fSelectedMaterial = (TGeoMaterial*)TGeoMaterialDialog::GetSelected();
@@ -1088,6 +1162,7 @@ void TGeoManagerEditor::DoSelectMaterial()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoSelectMaterial2()
 {
+// Slot for selecting an existing material and making a medium.
    TGeoMaterial *mat = fSelectedMaterial2;
    new TGeoMaterialDialog(fBSelMaterial2, gClient->GetRoot(), 200,300);  
    fSelectedMaterial2 = (TGeoMaterial*)TGeoMaterialDialog::GetSelected();
@@ -1098,6 +1173,7 @@ void TGeoManagerEditor::DoSelectMaterial2()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoSelectMedium()
 {
+// Slot for selecting an existing medium.
    TGeoMedium *med = fSelectedMedium;
    new TGeoMediumDialog(fBSelMedium, gClient->GetRoot(), 200,300);  
    fSelectedMedium = (TGeoMedium*)TGeoMediumDialog::GetSelected();
@@ -1108,6 +1184,7 @@ void TGeoManagerEditor::DoSelectMedium()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoSelectMedium2()
 {
+// Slot for selecting an existing medium for making a volume.
    TGeoMedium *med = fSelectedMedium2;
    new TGeoMediumDialog(fBSelMedium2, gClient->GetRoot(), 200,300);  
    fSelectedMedium2 = (TGeoMedium*)TGeoMediumDialog::GetSelected();
@@ -1118,6 +1195,7 @@ void TGeoManagerEditor::DoSelectMedium2()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoSelectVolume()
 {
+// Slot for selecting an existing volume.
    TGeoVolume *vol = fSelectedVolume;
    new TGeoVolumeDialog(fBSelVolume, gClient->GetRoot(), 200,300);  
    fSelectedVolume = (TGeoVolume*)TGeoVolumeDialog::GetSelected();
@@ -1128,6 +1206,7 @@ void TGeoManagerEditor::DoSelectVolume()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoSelectTopVolume()
 {
+// Slot for seting top geometry volume.
    TGeoVolume *vol = fGeometry->GetTopVolume();
    new TGeoVolumeDialog(fBSelTop, gClient->GetRoot(), 200,300);  
    fSelectedVolume = (TGeoVolume*)TGeoVolumeDialog::GetSelected();
@@ -1139,36 +1218,15 @@ void TGeoManagerEditor::DoSelectTopVolume()
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCloseGeometry()
 {
-// Close the geometry
+// Slot for closing the geometry.
    if (!fGeometry->IsClosed()) fGeometry->CloseGeometry();
    fCloseGeometry->SetEnabled(kFALSE);
 }
    
 //______________________________________________________________________________
-void TGeoManagerEditor::DoEditMedium()
-{
-   if (!fSelectedMedium) return;
-   fTabMgr->GetMediumEditor(fSelectedMedium);
-}
-
-//______________________________________________________________________________
-void TGeoManagerEditor::DoEditMaterial()
-{
-   if (!fSelectedMaterial) return;
-   fTabMgr->GetMaterialEditor(fSelectedMaterial);
-} 
-
-//______________________________________________________________________________
-void TGeoManagerEditor::DoEditMatrix()
-{
-   if (!fSelectedMatrix) return;
-   fTabMgr->GetMatrixEditor(fSelectedMatrix);
-}
-
-//______________________________________________________________________________
 void TGeoManagerEditor::ShowSelectShape(Bool_t show)
 {
-// Show/hide interface for shape selection
+// Show/hide interface for shape selection.
    TGCompositeFrame *cont = (TGCompositeFrame*)fCategories->GetItem("Shapes")->GetContainer();
    if (show) cont->ShowFrame(f2);
    else      cont->HideFrame(f2);
@@ -1177,7 +1235,7 @@ void TGeoManagerEditor::ShowSelectShape(Bool_t show)
 //______________________________________________________________________________
 void TGeoManagerEditor::ShowSelectVolume(Bool_t show)
 {
-// Show/hide interface for shape selection
+// Show/hide interface for volume selection.
    TGCompositeFrame *cont = (TGCompositeFrame*)fCategories->GetItem("General")->GetContainer();
    if (show) cont->ShowFrame(f7);
    else      cont->HideFrame(f7);
@@ -1189,7 +1247,7 @@ void TGeoManagerEditor::ShowSelectVolume(Bool_t show)
 //______________________________________________________________________________
 void TGeoManagerEditor::ShowSelectMaterial(Bool_t show)
 {
-// Show/hide interface for shape selection
+// Show/hide interface for material selection.
    TGCompositeFrame *cont = (TGCompositeFrame*)fCategories->GetItem("Materials")->GetContainer();
    if (show) cont->ShowFrame(f4);
    else      cont->HideFrame(f4);
@@ -1198,7 +1256,7 @@ void TGeoManagerEditor::ShowSelectMaterial(Bool_t show)
 //______________________________________________________________________________
 void TGeoManagerEditor::ShowSelectMedium(Bool_t show)
 {
-// Show/hide interface for shape selection
+// Show/hide interface for medium selection.
    TGCompositeFrame *cont = (TGCompositeFrame*)fCategories->GetItem("Media")->GetContainer();
    if (show) cont->ShowFrame(f5);
    else      cont->HideFrame(f5);
@@ -1207,7 +1265,7 @@ void TGeoManagerEditor::ShowSelectMedium(Bool_t show)
 //______________________________________________________________________________
 void TGeoManagerEditor::ShowSelectMatrix(Bool_t show)
 {
-// Show/hide interface for shape selection
+// Show/hide interface for matrix selection.
    TGCompositeFrame *cont = (TGCompositeFrame*)fCategories->GetItem("Matrices")->GetContainer();
    if (show) cont->ShowFrame(f6);
    else      cont->HideFrame(f6);

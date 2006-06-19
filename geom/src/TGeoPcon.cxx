@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.54 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.55 2006/05/24 17:11:54 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -1100,9 +1100,16 @@ void TGeoPcon::SetDimensions(Double_t *param)
    fPhi1    = param[0];
    fDphi    = param[1];
    fNz      = (Int_t)param[2];
-   if (!fRmin) fRmin = new Double_t [fNz];
-   if (!fRmax) fRmax = new Double_t [fNz];
-   if (!fZ)    fZ    = new Double_t [fNz];
+   if (fNz<2) {
+      Error("SetDimensions","Pcon %s: Number of Z sections must be > 2", GetName());
+      return;
+   } 
+   if (fRmin) delete [] fRmin;  
+   if (fRmax) delete [] fRmax;  
+   if (fZ) delete [] fZ;  
+   fRmin = new Double_t [fNz];
+   fRmax = new Double_t [fNz];
+   fZ    = new Double_t [fNz];
    memset(fRmin, 0, fNz*sizeof(Double_t));
    memset(fRmax, 0, fNz*sizeof(Double_t));
    memset(fZ, 0, fNz*sizeof(Double_t));

@@ -21,7 +21,7 @@ GEOMBUILDERH     := TGeoVolumeEditor.h TGeoBBoxEditor.h TGeoMediumEditor.h \
                     TGeoNodeEditor.h TGeoMatrixEditor.h TGeoManagerEditor.h \
                     TGeoTubeEditor.h TGeoConeEditor.h TGeoTrd1Editor.h \
                     TGeoTrd2Editor.h TGeoMaterialEditor.h TGeoTabManager.h \
-                    TGeoSphereEditor.h
+                    TGeoSphereEditor.h TGeoPconEditor.h
 GEOMBUILDERH     := $(patsubst %,$(MODDIRI)/%,$(GEOMBUILDERH))
 GEOMBUILDERS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GEOMBUILDERO     := $(GEOMBUILDERS:.cxx=.o)

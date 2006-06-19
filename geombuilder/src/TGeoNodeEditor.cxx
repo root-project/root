@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoNodeEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t id, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for volume editor
+   // Constructor for node editor
    
    fNode   = 0;
    fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
@@ -173,7 +173,7 @@ void TGeoNodeEditor::ConnectSignals2Slots()
 //______________________________________________________________________________
 void TGeoNodeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t /*event*/)
 {
-   // Connect to the picked volume.
+   // Connect to a editable object.
    if (obj == 0 || !obj->InheritsFrom(TGeoNode::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -262,30 +262,36 @@ void TGeoNodeEditor::DoNodeNumber()
 //______________________________________________________________________________
 void TGeoNodeEditor::DoVolumeSelect()
 {
+// Select the volume for the node.
 }
 
 //______________________________________________________________________________
 void TGeoNodeEditor::DoMotherVolumeSelect()
 {
+// Select the mother volume for the node.
 }
 
 //______________________________________________________________________________
 void TGeoNodeEditor::DoMatrixSelect()
 {
+// Select the matrix for the node.
 }
 
 //______________________________________________________________________________
 void TGeoNodeEditor::DoApply()
 {
+// Slot for applying modifications.
 }
 
 //______________________________________________________________________________
 void TGeoNodeEditor::DoCancel()
 {
+// Slot for cancelling current modifications.
 }
 
 //______________________________________________________________________________
 void TGeoNodeEditor::DoUndo()
 {
+// Slot for undoing last operation.
 }
    

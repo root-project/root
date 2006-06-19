@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -42,7 +42,7 @@ TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for volume editor
+   // Constructor for tube editor
    fShape   = 0;
    fRmini = fRmaxi = fDzi = 0.0;
    fNamei = "";
@@ -176,7 +176,7 @@ void TGeoTubeEditor::ConnectSignals2Slots()
 //______________________________________________________________________________
 void TGeoTubeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
-   // Connect to the picked volume.
+   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTube::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -203,12 +203,14 @@ void TGeoTubeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 //______________________________________________________________________________
 void TGeoTubeEditor::DoName()
 {
+// Perform name change.
    DoModified();
 }
 
 //______________________________________________________________________________
 void TGeoTubeEditor::DoApply()
 {
+// Slot for applying modifications.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) {
       fShape->SetName(name);
@@ -237,6 +239,7 @@ void TGeoTubeEditor::DoApply()
 //______________________________________________________________________________
 void TGeoTubeEditor::DoCancel()
 {
+// Slot for cancelling current modifications.
    fShapeName->SetText(fNamei.Data());
    fERmin->SetNumber(fRmini);
    fERmax->SetNumber(fRmaxi);
@@ -249,6 +252,7 @@ void TGeoTubeEditor::DoCancel()
 //______________________________________________________________________________
 void TGeoTubeEditor::DoModified()
 {
+// Slot for signaling modifications.
    fApply->SetEnabled();
    if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
@@ -256,6 +260,7 @@ void TGeoTubeEditor::DoModified()
 //______________________________________________________________________________
 void TGeoTubeEditor::DoUndo()
 {
+// Slot for undoing last operation.
    DoCancel();
    DoApply();
    fCancel->SetEnabled(kFALSE);
@@ -266,6 +271,7 @@ void TGeoTubeEditor::DoUndo()
 //______________________________________________________________________________
 void TGeoTubeEditor::DoRmin()
 {
+// Slot for rmin.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmax<rmin+1.e-10) {
@@ -278,6 +284,7 @@ void TGeoTubeEditor::DoRmin()
 //______________________________________________________________________________
 void TGeoTubeEditor::DoRmax()
 {
+// Slot for rmax.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmax<rmin+1.e-10) {
@@ -291,6 +298,7 @@ void TGeoTubeEditor::DoRmax()
 //______________________________________________________________________________
 void TGeoTubeEditor::DoDz()
 {
+// Slot for dz.
    DoModified();
 }
 
@@ -382,6 +390,7 @@ TGeoTubeSegEditor::~TGeoTubeSegEditor()
 //______________________________________________________________________________
 void TGeoTubeSegEditor::ConnectSignals2Slots()
 {
+   // Connect signals to slots.
    TGeoTubeEditor::ConnectSignals2Slots();
    Disconnect(fApply, "Clicked()",(TGeoTubeEditor*)this, "DoApply()");
    Disconnect(fUndo, "Clicked()",(TGeoTubeEditor*)this, "DoUndo()");
@@ -399,7 +408,7 @@ void TGeoTubeSegEditor::ConnectSignals2Slots()
 //______________________________________________________________________________
 void TGeoTubeSegEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
-   // Connect to the picked volume.
+   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTubeSeg::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -431,7 +440,8 @@ void TGeoTubeSegEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 //______________________________________________________________________________
 void TGeoTubeSegEditor::DoPhi1()
 {
-   Double_t phi1 = fEPhi1->GetNumber();
+// Slot for phi1.
+  Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi1 > 360-1.e-10) {
       phi1 = 0.;
@@ -451,6 +461,7 @@ void TGeoTubeSegEditor::DoPhi1()
 //______________________________________________________________________________
 void TGeoTubeSegEditor::DoPhi2()
 {
+// Slot for phi2.
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi2-phi1 > 360.) {
@@ -471,6 +482,7 @@ void TGeoTubeSegEditor::DoPhi2()
 //______________________________________________________________________________
 void TGeoTubeSegEditor::DoPhi()
 {
+// Slot for phi slider.
    if (!fLock) {
       DoModified();
       fLock = kTRUE;
@@ -483,6 +495,7 @@ void TGeoTubeSegEditor::DoPhi()
 //______________________________________________________________________________
 void TGeoTubeSegEditor::DoApply()
 {
+// Slot for applying modifications.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) {
       fShape->SetName(name);
@@ -522,6 +535,7 @@ void TGeoTubeSegEditor::DoApply()
 //______________________________________________________________________________
 void TGeoTubeSegEditor::DoUndo()
 {
+// Slot for undoing last operation.
    DoCancel();
    DoApply();
    fCancel->SetEnabled(kFALSE);
@@ -532,6 +546,7 @@ void TGeoTubeSegEditor::DoUndo()
 //______________________________________________________________________________
 void TGeoTubeSegEditor::DoCancel()
 {
+// Slot for cancelling current modifications.
    fEPhi1->SetNumber(fPmini);
    fEPhi2->SetNumber(fPmaxi);
    fSPhi->SetPosition(fPmini,fPmaxi);

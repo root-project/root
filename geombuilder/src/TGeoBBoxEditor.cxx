@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoBBoxEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -215,7 +215,7 @@ void TGeoBBoxEditor::ConnectSignals2Slots()
 //______________________________________________________________________________
 void TGeoBBoxEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
-   // Connect to the picked volume.
+   // Update editor for a new selected box.
    if (obj == 0 || (obj->IsA()!=TGeoBBox::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -250,6 +250,7 @@ void TGeoBBoxEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 //______________________________________________________________________________
 void TGeoBBoxEditor::DoName()
 {
+   //Slot for name.
    const char *name = fShapeName->GetText();
    if (!strcmp(name, "-no_name") || !strcmp(name, fShape->GetName())) return;
    fShape->SetName(name);
@@ -263,6 +264,7 @@ void TGeoBBoxEditor::DoName()
 //______________________________________________________________________________
 Bool_t TGeoBBoxEditor::DoBoxParameters()
 {
+   //Check current box parameters.
    Double_t dx = fBoxDx->GetNumber();
    Double_t dy = fBoxDy->GetNumber();
    Double_t dz = fBoxDz->GetNumber();
@@ -295,6 +297,7 @@ Bool_t TGeoBBoxEditor::DoBoxParameters()
 //______________________________________________________________________________
 void TGeoBBoxEditor::DoApply()
 {
+   //Slot for applying current parameters.
    DoName();
    if (DoBoxParameters()) {
       fUndo->SetEnabled();
@@ -306,6 +309,7 @@ void TGeoBBoxEditor::DoApply()
 //______________________________________________________________________________
 void TGeoBBoxEditor::DoCancel()
 {
+   // Slot for canceling current parameters.
    if (!fNamei.Length()) fShapeName->SetText("-no_name");
    else fShapeName->SetText(fNamei.Data());
    fBoxDx->SetNumber(fDxi);
@@ -322,6 +326,7 @@ void TGeoBBoxEditor::DoCancel()
 //______________________________________________________________________________
 void TGeoBBoxEditor::DoModified()
 {
+   //Slot for modifying current parameters.
    fApply->SetEnabled();
    if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
@@ -329,6 +334,7 @@ void TGeoBBoxEditor::DoModified()
 //______________________________________________________________________________
 void TGeoBBoxEditor::DoUndo()
 {
+   // Slot for undoing last operation.
    DoCancel();
    DoBoxParameters();
    fCancel->SetEnabled(kFALSE);
@@ -339,18 +345,21 @@ void TGeoBBoxEditor::DoUndo()
 //______________________________________________________________________________
 void TGeoBBoxEditor::DoDx()
 {
+   //Slot for Dx modification.
    DoModified();
 }
 
 //______________________________________________________________________________
 void TGeoBBoxEditor::DoDy()
 {
+   //Slot for Dy modification.
    DoModified();
 }
 
 //______________________________________________________________________________
 void TGeoBBoxEditor::DoDz()
 {
+   //Slot for Dz modification.
    DoModified();
 }
 

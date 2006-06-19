@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoTrd2Editor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for volume editor
+   // Constructor for trd2 editor
    fShape   = 0;
    fDxi1 = fDxi2 = fDyi1 = fDyi2 = fDzi = 0.0;
    fNamei = "";
@@ -155,7 +155,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t id, Int_t width,
 //______________________________________________________________________________
 TGeoTrd2Editor::~TGeoTrd2Editor()
 {
-// Destructor
+// Destructor.
    TGFrameElement *el;
    TIter next(GetList());
    
@@ -201,7 +201,7 @@ void TGeoTrd2Editor::ConnectSignals2Slots()
 //______________________________________________________________________________
 void TGeoTrd2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
-   // Connect to the picked volume.
+   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTrd2::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -236,12 +236,14 @@ void TGeoTrd2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoName()
 {
+// Perform name change.
    DoModified();
 }
 
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoApply()
 {
+// Slot for applying modifications.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) {
       fShape->SetName(name);
@@ -278,6 +280,7 @@ void TGeoTrd2Editor::DoApply()
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoCancel()
 {
+// Slot for cancelling current modifications.
    fShapeName->SetText(fNamei.Data());
    fEDx1->SetNumber(fDxi1);
    fEDx2->SetNumber(fDxi2);
@@ -292,6 +295,7 @@ void TGeoTrd2Editor::DoCancel()
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoModified()
 {
+// Slot for signaling modifications.
    fApply->SetEnabled();
    if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
@@ -299,6 +303,7 @@ void TGeoTrd2Editor::DoModified()
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoUndo()
 {
+// Slot for undoing last operation.
    DoCancel();
    DoApply();
    fCancel->SetEnabled(kFALSE);
@@ -309,30 +314,35 @@ void TGeoTrd2Editor::DoUndo()
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoDx1()
 {
+// Slot for dx1.
    DoModified();
 }
 
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoDx2()
 {
+// Slot for dx2.
    DoModified();
 }
 
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoDy1()
 {
+// Slot for dy1.
    DoModified();
 }
 
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoDy2()
 {
+// Slot for dy2.
    DoModified();
 }
 
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoDz()
 {
+// Slot for dz.
    DoModified();
 }
 

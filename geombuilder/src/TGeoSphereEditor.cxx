@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoSphereEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -43,7 +43,7 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for volume editor
+   // Constructor for sphere editor
    fShape   = 0;
    fRmini = fRmaxi = fTheta1i = fTheta2i = fPhi1i = fPhi2i = 0.0;
    fNamei = "";
@@ -182,7 +182,7 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t id, Int_t width,
 //______________________________________________________________________________
 TGeoSphereEditor::~TGeoSphereEditor()
 {
-// Destructor
+// Destructor.
    TGFrameElement *el;
    TIter next(GetList());
    
@@ -226,7 +226,7 @@ void TGeoSphereEditor::ConnectSignals2Slots()
 //______________________________________________________________________________
 void TGeoSphereEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
-   // Connect to the picked volume.
+   // Connect to a given sphere.
    if (obj == 0 || (obj->IsA()!=TGeoSphere::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -262,12 +262,14 @@ void TGeoSphereEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 //______________________________________________________________________________
 void TGeoSphereEditor::DoName()
 {
+// Slot for name.
    DoModified();
 }
 
 //______________________________________________________________________________
 void TGeoSphereEditor::DoApply()
 {
+// Slot for applying modifications.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) {
       fShape->SetName(name);
@@ -308,6 +310,7 @@ void TGeoSphereEditor::DoApply()
 //______________________________________________________________________________
 void TGeoSphereEditor::DoCancel()
 {
+// Slot for cancelling current modifications.
    fShapeName->SetText(fNamei.Data());
    fERmin->SetNumber(fRmini);
    fERmax->SetNumber(fRmaxi);
@@ -325,6 +328,7 @@ void TGeoSphereEditor::DoCancel()
 //______________________________________________________________________________
 void TGeoSphereEditor::DoModified()
 {
+// Slot for signaling modifications.
    fApply->SetEnabled();
    if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
@@ -332,6 +336,7 @@ void TGeoSphereEditor::DoModified()
 //______________________________________________________________________________
 void TGeoSphereEditor::DoUndo()
 {
+// Slot for undoing last operation.
    DoCancel();
    DoApply();
    fCancel->SetEnabled(kFALSE);
@@ -342,6 +347,7 @@ void TGeoSphereEditor::DoUndo()
 //______________________________________________________________________________
 void TGeoSphereEditor::DoRmin()
 {
+// Slot for Rmin.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmax<rmin+1.e-10) {
@@ -354,6 +360,7 @@ void TGeoSphereEditor::DoRmin()
 //______________________________________________________________________________
 void TGeoSphereEditor::DoRmax()
 {
+// Slot for Rmax.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmax<rmin+1.e-10) {
@@ -367,6 +374,7 @@ void TGeoSphereEditor::DoRmax()
 //______________________________________________________________________________
 void TGeoSphereEditor::DoPhi1()
 {
+// Slot for phi1.
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi1 > 360-1.e-10) {
@@ -387,6 +395,7 @@ void TGeoSphereEditor::DoPhi1()
 //______________________________________________________________________________
 void TGeoSphereEditor::DoPhi2()
 {
+// Slot for phi2.
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi2-phi1 > 360.) {
@@ -407,6 +416,7 @@ void TGeoSphereEditor::DoPhi2()
 //______________________________________________________________________________
 void TGeoSphereEditor::DoPhi()
 {
+// Slot for phi slider.
    if (!fLock) {
       DoModified();
       fLock = kTRUE;
@@ -419,6 +429,7 @@ void TGeoSphereEditor::DoPhi()
 //______________________________________________________________________________
 void TGeoSphereEditor::DoTheta1()
 {
+// Slot for theta1.
    Double_t theta1 = fETheta1->GetNumber();
    Double_t theta2 = fETheta2->GetNumber();
    if (theta2<theta1+1.e-10) {
@@ -435,6 +446,7 @@ void TGeoSphereEditor::DoTheta1()
 //______________________________________________________________________________
 void TGeoSphereEditor::DoTheta2()
 {
+// Slot for theta2.
    Double_t theta1 = fETheta1->GetNumber();
    Double_t theta2 = fETheta2->GetNumber();
    if (theta2<theta1+1.e-10) {
@@ -451,7 +463,8 @@ void TGeoSphereEditor::DoTheta2()
 //______________________________________________________________________________
 void TGeoSphereEditor::DoTheta()
 {
-   if (!fLock) {
+ // Slot for theta slider.
+  if (!fLock) {
       DoModified();
       fLock = kTRUE;
       fETheta1->SetNumber(fSTheta->GetMinPosition());
