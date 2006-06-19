@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.133 2006/06/14 13:15:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.134 2006/06/16 11:01:16 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -852,6 +852,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    // We already have been visited while recursively looking
    // through the friends tree, let return
+
    if (kLoadTree & fFriendLockStatus) return 0;
 
    if (!fNtrees) return 1;
@@ -900,23 +901,23 @@ Long64_t TChain::LoadTree(Long64_t entry)
                lnk = lnk->Next();
             }
 
-            TTree *t = fe->GetTree();
-            if (t->InheritsFrom(TChain::Class())) {
-               Int_t oldNumber = ((TChain*)t)->GetTreeNumber();
-               TTree* old = t->GetTree();
+            TTree *at = fe->GetTree();
+            if (at->InheritsFrom(TChain::Class())) {
+               Int_t oldNumber = ((TChain*)at)->GetTreeNumber();
+               TTree* old = at->GetTree();
                TTree* oldintree = fetree ? fetree->GetTree() : 0;
 
-               t->LoadTreeFriend(entry, this);
+               at->LoadTreeFriend(entry, this);
 
-               Int_t newNumber = ((TChain*)t)->GetTreeNumber();
-               if (oldNumber!=newNumber || old!=t->GetTree()
-                   || (oldintree && oldintree != t->GetTree())) {
+               Int_t newNumber = ((TChain*)at)->GetTreeNumber();
+               if (oldNumber!=newNumber || old!=at->GetTree()
+                   || (oldintree && oldintree != at->GetTree())) {
                   // We can not compare just the tree pointers because
                   // they could be reused. So we compare the tree
                   // number instead.
                   needUpdate = kTRUE;
                   fTree->RemoveFriend(oldintree);
-                  fTree->AddFriend(t->GetTree(),fe->GetName())
+                  fTree->AddFriend(at->GetTree(),fe->GetName())
                      ->SetBit(TFriendElement::kFromChain);
                }
             } else {
@@ -924,7 +925,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
                // direct friend of the chain, it should be scanned
                // used the chain entry number and NOT the tree entry
                // number (fReadEntry) hence we redo:
-               t->LoadTreeFriend(entry, this);
+               at->LoadTreeFriend(entry, this);
             }
          }
 
@@ -1003,6 +1004,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    fTreeNumber = t;
    fDirectory = fFile;
    //reuse cache from previous file (if any)
+   
    if (tpf) {
       fFile->SetFilePrefetch(tpf);
       tpf->SetFile(fFile);
@@ -1090,9 +1092,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
          lnk = lnk->Next();
       }
    }
-
+   
    //update list of leaves in all TTreeFormula of the TTreePlayer (if any)
    if (fPlayer) fPlayer->UpdateFormulaLeaves();
+   
 
    //Notify user if requested
    if (fNotify) fNotify->Notify();
