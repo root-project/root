@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.cxx,v 1.2 2005/09/19 09:57:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.cxx,v 1.3 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -28,45 +28,43 @@ namespace ROOT {
 
 // ========== Constructors and Assignment =====================
 
-void
-AxisAngle::RectifyAngle() {
-  // Note: We could require the angle to be in [0,pi) since we 
-  //       can represent negative angles by flipping the axis.
-  //       We choose not to do this.
-
-  if ( fAngle <= Pi() && fAngle > -Pi() ) return;
-  
-  if ( fAngle > 0 ) {
-    int n = static_cast<int>( (fAngle+Pi())/(2*Pi()) );
-    fAngle -= 2*Pi()*n;
-  } else {
-    int n = static_cast<int>( -(fAngle-Pi())/(2*Pi()) );
-    fAngle += 2*Pi()*n;  
-  }
+void AxisAngle::RectifyAngle() {
+   // Note: We could require the angle to be in [0,pi) since we 
+   //       can represent negative angles by flipping the axis.
+   //       We choose not to do this.
+   
+   if ( fAngle <= Pi() && fAngle > -Pi() ) return;
+   
+   if ( fAngle > 0 ) {
+      int n = static_cast<int>( (fAngle+Pi())/(2*Pi()) );
+      fAngle -= 2*Pi()*n;
+   } else {
+      int n = static_cast<int>( -(fAngle-Pi())/(2*Pi()) );
+      fAngle += 2*Pi()*n;  
+   }
 } // RectifyAngle()
 
-void
-AxisAngle::Rectify()
+void AxisAngle::Rectify()
 {
-  // The two conditions are that the angle is in (-pi, pi] and 
-  // the axis is a unit vector.
-
-  Scalar r2 = fAxis.Mag2();
-  if ( r2 == 0 ) {
-    fAxis.SetCoordinates(0,0,1);
-    fAngle = 0;
-    return;
-  }
-  fAxis *= (1.0/r2);
-  RectifyAngle();  
+   // The two conditions are that the angle is in (-pi, pi] and 
+   // the axis is a unit vector.
+   
+   Scalar r2 = fAxis.Mag2();
+   if ( r2 == 0 ) {
+      fAxis.SetCoordinates(0,0,1);
+      fAngle = 0;
+      return;
+   }
+   fAxis *= (1.0/r2);
+   RectifyAngle();  
 } // Rectify()
 
 // ======== Transformation to other Rotation Forms ==================
 
 enum ERotation3DMatrixIndex {
-      kXX = 0, kXY = 1, kXZ = 2
-    , kYX = 3, kYY = 4, kYZ = 5
-    , kZX = 6, kZY = 7, kZZ = 8
+   kXX = 0, kXY = 1, kXZ = 2
+   , kYX = 3, kYY = 4, kYZ = 5
+   , kZX = 6, kZY = 7, kZZ = 8
 };
 
 
@@ -77,24 +75,24 @@ DisplacementVector3D< Cartesian3D<double> >
 AxisAngle::
 operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
 {
-  Scalar c = std::cos(fAngle);
-  Scalar s = std::sin(fAngle);
-  Scalar p = fAxis.Dot(v) * ( 1 - c );
-  return  DisplacementVector3D< Cartesian3D<double> >  
-  (
-      c*v.X() + p*fAxis.X() + s * (fAxis.Y()*v.Z() - fAxis.Z()*v.Y())
-    , c*v.Y() + p*fAxis.Y() + s * (fAxis.Z()*v.X() - fAxis.X()*v.Z())
-    , c*v.Z() + p*fAxis.Z() + s * (fAxis.X()*v.Y() - fAxis.Y()*v.X())
-  );
+   Scalar c = std::cos(fAngle);
+   Scalar s = std::sin(fAngle);
+   Scalar p = fAxis.Dot(v) * ( 1 - c );
+   return  DisplacementVector3D< Cartesian3D<double> >  
+      (
+       c*v.X() + p*fAxis.X() + s * (fAxis.Y()*v.Z() - fAxis.Z()*v.Y())
+       , c*v.Y() + p*fAxis.Y() + s * (fAxis.Z()*v.X() - fAxis.X()*v.Z())
+       , c*v.Z() + p*fAxis.Z() + s * (fAxis.X()*v.Y() - fAxis.Y()*v.X())
+       );
 }
 
 // ========== I/O =====================
 
 std::ostream & operator<< (std::ostream & os, const AxisAngle & a) {
-  // TODO - this will need changing for machine-readable issues
-  //        and even the human readable form may need formatiing improvements
-  os << "\n" << a.Axis() << "  " << a.Angle() << "\n"; 
-  return os;
+   // TODO - this will need changing for machine-readable issues
+   //        and even the human readable form may need formatiing improvements
+   os << "\n" << a.Axis() << "  " << a.Angle() << "\n"; 
+   return os;
 }
 
 

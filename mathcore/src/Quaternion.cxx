@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Quaternion.cxx,v 1.2 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id: Quaternion.cxx,v 1.2 2006/06/15 16:23:44 moneta Exp $
 //
 #include "Math/GenVector/Quaternion.h"
 
@@ -32,24 +32,23 @@ namespace ROOT {
 
 // ========== Constructors and Assignment =====================
 
-void
-Quaternion::Rectify()
+void Quaternion::Rectify()
 {
-
-  // The vector should be a unit vector, and the first element should be
-  // non-negative (though negative fU quaternions would work just fine,
-  // being isomorphic to a quaternion with positive fU).
-  
-  if ( fU < 0 ) {
-    fU = - fU; fI = - fI; fJ = - fJ; fK = - fK;
-  }
-  
-  Scalar a = 1.0 / std::sqrt(fU*fU + fI*fI + fJ*fJ + fK*fK);
-  fU *= a;
-  fI *= a;
-  fJ *= a;
-  fK *= a;
-
+   
+   // The vector should be a unit vector, and the first element should be
+   // non-negative (though negative fU quaternions would work just fine,
+   // being isomorphic to a quaternion with positive fU).
+   
+   if ( fU < 0 ) {
+      fU = - fU; fI = - fI; fJ = - fJ; fK = - fK;
+   }
+   
+   Scalar a = 1.0 / std::sqrt(fU*fU + fI*fI + fJ*fJ + fK*fK);
+   fU *= a;
+   fI *= a;
+   fJ *= a;
+   fK *= a;
+   
 } // Rectify()
 
 
@@ -58,56 +57,56 @@ Quaternion::Rectify()
 DisplacementVector3D< Cartesian3D<double> >
 Quaternion::operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
 {
-  // apply to a 3D Vector 
-  const Scalar alpha = fU*fU - fI*fI - fJ*fJ - fK*fK;
-  const Scalar twoQv = 2*(fI*v.X() + fJ*v.Y() + fK*v.Z());
-  const Scalar twoU  = 2 * fU;
-  return  DisplacementVector3D< Cartesian3D<double> >            (
-      alpha * v.X() + twoU * (fJ*v.Z() - fK*v.Y()) + twoQv * fI
-    , alpha * v.Y() + twoU * (fK*v.X() - fI*v.Z()) + twoQv * fJ
-    , alpha * v.Z() + twoU * (fI*v.Y() - fJ*v.X()) + twoQv * fK
-                                                                 );
+   // apply to a 3D Vector 
+   const Scalar alpha = fU*fU - fI*fI - fJ*fJ - fK*fK;
+   const Scalar twoQv = 2*(fI*v.X() + fJ*v.Y() + fK*v.Z());
+   const Scalar twoU  = 2 * fU;
+   return  DisplacementVector3D< Cartesian3D<double> >            (
+                                                                   alpha * v.X() + twoU * (fJ*v.Z() - fK*v.Y()) + twoQv * fI
+                                                                   , alpha * v.Y() + twoU * (fK*v.X() - fI*v.Z()) + twoQv * fJ
+                                                                   , alpha * v.Z() + twoU * (fI*v.Y() - fJ*v.X()) + twoQv * fK
+                                                                   );
 }
 
 Quaternion Quaternion::operator * (const Quaternion & q) const {
-  // combination of rotations
-  return Quaternion                          (
-      fU*q.fU - fI*q.fI - fJ*q.fJ - fK*q.fK
-    , fU*q.fI + fI*q.fU + fJ*q.fK - fK*q.fJ
-    , fU*q.fJ - fI*q.fK + fJ*q.fU + fK*q.fI
-    , fU*q.fK + fI*q.fJ - fJ*q.fI + fK*q.fU  );
+   // combination of rotations
+   return Quaternion                          (
+                                               fU*q.fU - fI*q.fI - fJ*q.fJ - fK*q.fK
+                                               , fU*q.fI + fI*q.fU + fJ*q.fK - fK*q.fJ
+                                               , fU*q.fJ - fI*q.fK + fJ*q.fU + fK*q.fI
+                                               , fU*q.fK + fI*q.fJ - fJ*q.fI + fK*q.fU  );
 }
 
 Quaternion Quaternion::operator * (const Rotation3D  & r) const {
-  // combination of rotations
-  return operator* ( Quaternion(r) );
+   // combination of rotations
+   return operator* ( Quaternion(r) );
 }
 
 Quaternion Quaternion::operator * (const AxisAngle   & a) const {
-  // combination of rotations
-  return operator* ( Quaternion(a) );
+   // combination of rotations
+   return operator* ( Quaternion(a) );
 }
 
 Quaternion Quaternion::operator * (const EulerAngles & e) const {
-  // combination of rotations
-  return operator* ( Quaternion(e) );
+   // combination of rotations
+   return operator* ( Quaternion(e) );
 }
 
 Quaternion::Scalar Quaternion::Distance(const Quaternion & q) const {
-  // distance
-  Scalar chordLength = std::fabs(fU*q.fU + fI*q.fI + fJ*q.fJ + fK*q.fK);
-  if (chordLength > 1) chordLength = 1; // in case roundoff fouls us up
-  return acos(chordLength); 
+   // distance
+   Scalar chordLength = std::fabs(fU*q.fU + fI*q.fI + fJ*q.fJ + fK*q.fK);
+   if (chordLength > 1) chordLength = 1; // in case roundoff fouls us up
+   return acos(chordLength); 
 }
 
 // ========== I/O =====================
 
 std::ostream & operator<< (std::ostream & os, const Quaternion & q) {
-  // TODO - this will need changing for machine-readable issues
-  //        and even the human readable form may need formatiing improvements
-  os << "\n{" << q.U() << "   " << q.I() 
-     << "   " << q.J() << "   " << q.K() << "}\n"; 
-  return os;
+   // TODO - this will need changing for machine-readable issues
+   //        and even the human readable form may need formatiing improvements
+   os << "\n{" << q.U() << "   " << q.I() 
+   << "   " << q.J() << "   " << q.K() << "}\n"; 
+   return os;
 }
 
 

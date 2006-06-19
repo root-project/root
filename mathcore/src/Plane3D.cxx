@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Plane3D.cxx,v 1.3 2006/05/26 15:10:39 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Plane3D.cxx,v 1.4 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -23,86 +23,86 @@
 
 namespace ROOT {
 
-  namespace Math {
+namespace Math {
 
 
-    typedef Plane3D::Scalar Scalar; 
-    typedef Plane3D::Point  XYZPoint; 
-    typedef Plane3D::Vector XYZVector; 
+typedef Plane3D::Scalar Scalar; 
+typedef Plane3D::Point  XYZPoint; 
+typedef Plane3D::Vector XYZVector; 
 
 // ========== Constructors and Assignment =====================
 
 
 // constructor from 4 scalars numbers (a,b,c,d)
 Plane3D::Plane3D(const Scalar & a, const Scalar & b, const Scalar & c, const Scalar & d) : 
-  fA(a), fB(b), fC(c), fD(d) {
-  //renormalize a,b,c to unit 
-  Normalize();
-}
+   fA(a), fB(b), fC(c), fD(d) {
+      //renormalize a,b,c to unit 
+      Normalize();
+   }
 
 // construct from a normal vector and a point
 Plane3D::Plane3D(const XYZVector & n, const XYZPoint & p ) : 
-  fA( n.X() ), 
-  fB( n.Y() ), 
-  fC( n.Z() ) 
+   fA( n.X() ), 
+   fB( n.Y() ), 
+   fC( n.Z() ) 
 {
-  fD = - n.Dot(p);
-  Normalize();
- 
+      fD = - n.Dot(p);
+      Normalize();
+      
 }
 
-    // constructor from three points
+// constructor from three points
 Plane3D::Plane3D( const XYZPoint & p1, const XYZPoint & p2, const XYZPoint & p3 ) {
-
-  // plane from thre points
-  // normal is (x3-x1) cross (x2 -x1) 
-  XYZVector n = (p2-p1).Cross(p3-p1);
-  fA = n.X(); 
-  fB = n.Y();
-  fC = n.Z();
-  fD = - n.Dot(p1);
-  Normalize();
+   
+   // plane from thre points
+   // normal is (x3-x1) cross (x2 -x1) 
+   XYZVector n = (p2-p1).Cross(p3-p1);
+   fA = n.X(); 
+   fB = n.Y();
+   fC = n.Z();
+   fD = - n.Dot(p1);
+   Normalize();
 }
 
 // distance plane- point
 Scalar Plane3D::Distance(const XYZPoint & p) const { 
-  return fA*p.X() + fB*p.Y() + fC*p.Z() + fD; 
+   return fA*p.X() + fB*p.Y() + fC*p.Z() + fD; 
 }
 
 void Plane3D::Normalize() { 
-// normalize the plane 
-  Scalar s = std::sqrt( fA*fA + fB*fB + fC*fC );
-  // what to do if s = 0 ??
-  if ( s == 0) { fD = 0; return; }
-  Scalar w = 1./s;
-  fA *= w; 
-  fB *= w;
-  fC *= w;
-  fD *= w; 
+   // normalize the plane 
+   Scalar s = std::sqrt( fA*fA + fB*fB + fC*fC );
+   // what to do if s = 0 ??
+   if ( s == 0) { fD = 0; return; }
+   Scalar w = 1./s;
+   fA *= w; 
+   fB *= w;
+   fC *= w;
+   fD *= w; 
 }
-      
+
 
 // projection of a point onto the plane
 XYZPoint Plane3D::ProjectOntoPlane(const XYZPoint & p) const { 
-  Scalar d = Distance(p); 
-  return XYZPoint( p.X() - fA*d, p.Y() - fB*d, p.Z() - fC*d); 
+   Scalar d = Distance(p); 
+   return XYZPoint( p.X() - fA*d, p.Y() - fB*d, p.Z() - fC*d); 
 }
 
 
 // output 
 std::ostream & operator<< (std::ostream & os, const Plane3D & p) { 
-  os << "\n" << p.Normal().X() 
-     << "  " << p.Normal().Y() 
-     << "  " << p.Normal().Z() 
-     << "  " << p.HesseDistance() 
-     << "\n";
-  return os;
+   os << "\n" << p.Normal().X() 
+   << "  " << p.Normal().Y() 
+   << "  " << p.Normal().Z() 
+   << "  " << p.HesseDistance() 
+   << "\n";
+   return os;
 }
 
  
 
  
 
-  }  // end namespace Math
-}   // end namespace ROOT
+}  // end namespace Math
+}  // end namespace ROOT
 

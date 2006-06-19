@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: QuaternionXaxial.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: QuaternionXaxial.cxx,v 1.2 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -13,7 +13,7 @@
 //
 // Created by: Mark Fischler Tues July 19,  2005
 //
-// Last update: $Id: QuaternionXaxial.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id: QuaternionXaxial.cxx,v 1.2 2006/06/15 16:23:44 moneta Exp $
 //
 #include "Math/GenVector/Quaternion.h"
 
@@ -27,51 +27,51 @@ namespace ROOT {
 // and we exploit that knowledge:
 
 Quaternion Quaternion::operator * (const RotationX  & rx) const {
-  // combination with a RotationX
-  Quaternion q(rx);
-  return Quaternion (
+   // combination with a RotationX
+   Quaternion q(rx);
+   return Quaternion (
                       U()*q.U() - I()*q.I()
-                    , I()*q.U() + U()*q.I()
-                    , J()*q.U() + K()*q.I()
-                    , K()*q.U() - J()*q.I()
-                    );
+                      , I()*q.U() + U()*q.I()
+                      , J()*q.U() + K()*q.I()
+                      , K()*q.U() - J()*q.I()
+                      );
 }
 
 Quaternion Quaternion::operator * (const RotationY  & ry) const {
-  // combination with a RotationY
-  Quaternion q(ry);
-  return Quaternion (
+   // combination with a RotationY
+   Quaternion q(ry);
+   return Quaternion (
                       U()*q.U() - J()*q.J()
-                    , I()*q.U() - K()*q.J()
-                    , J()*q.U() + U()*q.J()
-                    , K()*q.U() + I()*q.J()
-                    );
+                      , I()*q.U() - K()*q.J()
+                      , J()*q.U() + U()*q.J()
+                      , K()*q.U() + I()*q.J()
+                      );
 }
 
 Quaternion Quaternion::operator * (const RotationZ  & rz) const {
-  // combination with a RotationZ
-  Quaternion q(rz);
-  return Quaternion (
+   // combination with a RotationZ
+   Quaternion q(rz);
+   return Quaternion (
                       U()*q.U() - K()*q.K()
-                    , I()*q.U() + J()*q.K()
-                    , J()*q.U() - I()*q.K()
-                    , K()*q.U() + U()*q.K()
-                    );
+                      , I()*q.U() + J()*q.K()
+                      , J()*q.U() - I()*q.K()
+                      , K()*q.U() + U()*q.K()
+                      );
 }
 
 Quaternion
 operator * ( RotationX const & r, Quaternion const & q ) {
-  return Quaternion(r) * q;  // TODO: improve performance
+   return Quaternion(r) * q;  // TODO: improve performance
 }
 
 Quaternion
 operator * ( RotationY const & r, Quaternion const & q ) {
-  return Quaternion(r) * q;  // TODO: improve performance
+   return Quaternion(r) * q;  // TODO: improve performance
 }
 
 Quaternion
 operator * ( RotationZ const & r, Quaternion const & q ) {
-  return Quaternion(r) * q;  // TODO: improve performance
+   return Quaternion(r) * q;  // TODO: improve performance
 }
 
 
