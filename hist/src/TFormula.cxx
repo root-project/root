@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.120 2006/05/16 16:50:02 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.121 2006/05/17 16:37:25 couet Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -745,6 +745,14 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                }
                if (k<0 && isrightdecimal)  puiss10bis = 1;
             }
+         }
+         if (puiss10 && (i<=lchain)) {
+            t = chaine[i];
+            puiss10 = (strchr("0123456789.",t)!=0);
+         }
+         if (puiss10bis && (j<=lchain)) {
+            t = chaine[j];
+            puiss10bis = (strchr("0123456789.",t)!=0);
          }
 
          if (chaine(i-1,1) == "\"") inString = !inString;
