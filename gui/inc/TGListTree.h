@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.26 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.27 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -108,6 +108,8 @@ public:
    void            SetColor(Color_t color) { fHasColor = true;fColor = color; }
    void            ClearColor() { fHasColor = false; }
 
+   void            SavePrimitive(ofstream &out, Option_t *option, Int_t n);
+
    ClassDef(TGListTreeItem,0)  //Item that goes into a TGListTree container
 };
 
@@ -174,6 +176,7 @@ protected:
    void  DrawNode(TGListTreeItem *item, Int_t x, Int_t y);
    void  UpdateChecked(TGListTreeItem *item, Bool_t redraw = kFALSE);
 
+   void  SaveChildren(ofstream &out, TGListTreeItem *item, Int_t &n);
    void  RemoveReference(TGListTreeItem *item);
    void  PDeleteChildren(TGListTreeItem *item);
    void  InsertChild(TGListTreeItem *parent, TGListTreeItem *item);

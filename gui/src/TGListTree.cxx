@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.52 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.53 2006/05/29 08:37:10 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -50,6 +50,8 @@
 #include "TGMsgBox.h"
 #include "TError.h"
 #include "TColor.h"
+#include "TSystem.h"
+#include "TString.h"
 #include "Riostream.h"
 
 
@@ -2159,9 +2161,7 @@ const TGGC &TGListTree::GetColorGC()
 //______________________________________________________________________________
 void TGListTree::SavePrimitive(ofstream &out, Option_t *option)
 {
-   // Save a list tree widget as a C++ statement(s) on output stream out.
-
-   char quote = '"';
+   // Save a list tree widget as a C++ statements on output stream out.
 
    if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
 
@@ -2185,8 +2185,129 @@ void TGListTree::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
-   out << "   " << GetName() << "->AddItem(0," << quote
-       << GetFirstItem()->GetText() << quote << ");" << endl;
+   out << endl; 
+
+   static Int_t n = 0; 
+   
+   TGListTreeItem *current;
+   current = GetFirstItem();
+   
+   if (current->fOpenPic)
+      out << "   const TGPicture *popen;       //used for list tree items" << endl;
+   if (current->fClosedPic)
+      out << "   const TGPicture *pclose;      //used for list tree items" << endl;
+   out << endl; 
+
+   while (current) {
+      out << "   TGListTreeItem *item" << n << " = " << GetName() << "->AddItem(";
+      current->SavePrimitive(out, Form("%d",n), n);
+      if (current->IsOpen())
+         out << "   " << GetName() << "->OpenItem(item" << n << ");" << endl;
+      else
+         out << "   " << GetName() << "->CloseItem(item" << n << ");" << endl;
+      
+      if (current == fSelected)
+         out << "   " << GetName() << "->SetSelected(item" << n << ");" << endl;
+
+      n++;
+      if (current->fFirstchild) {
+         SaveChildren(out, current->fFirstchild, n);
+      }
+      current = current->fNextsibling;
+   }
+   
+   out << endl; 
+}
+
+//______________________________________________________________________________
+void TGListTree::SaveChildren(ofstream &out, TGListTreeItem *item, Int_t &n)
+{
+   // Save chil list tree items as a C++ statements on output stream out.
+   
+   Int_t p = n-1;
+   while (item) {
+      out << "   TGListTreeItem *item" << n << " = " << GetName() << "->AddItem(";
+      item->SavePrimitive(out, Form("%d",p),n);
+      n++;
+      if (item->fFirstchild) {
+         SaveChildren(out, item->fFirstchild, n);
+      }
+      item = item->fNextsibling;
+   }
+}
+
+//______________________________________________________________________________
+void TGListTreeItem::SavePrimitive(ofstream &out, Option_t *option, Int_t n)
+{
+   // Save a list tree item attributes as a C++ statements on output stream.
+
+   static const TGPicture *oldopen=0;
+   static const TGPicture *oldclose=0;
+   static const TGPicture *oldcheck=0;
+   static const TGPicture *olduncheck=0;
+   static Bool_t makecheck = kTRUE;
+   static Bool_t makeuncheck = kTRUE;
+   static Color_t oldcolor = -1;
+   
+   char quote = '"';
+   TString s = Form("%d",n);
+
+   if (!fParent)
+      out << "NULL,";
+   else
+      out << "item" << option << ",";
+   out << quote << GetText() << quote;
+   out << ");" << endl; 
+
+   if (oldopen != fOpenPic) {
+      oldopen = fOpenPic;
+      out << "   popen = gClient->GetPicture(" << quote
+          << gSystem->ExpandPathName(gSystem->UnixPathName(fOpenPic->GetName()))
+          << quote << ");" << endl;
+   }
+   if (oldclose != fClosedPic) {
+      oldclose = fClosedPic;
+      out << "   pclose = gClient->GetPicture(" << quote
+          << gSystem->ExpandPathName(gSystem->UnixPathName(fClosedPic->GetName()))
+          << quote << ");" << endl;
+   }
+   out << "   item" << s.Data() << "->SetPictures(popen, pclose);" << endl;
+   if (HasCheckBox()) {
+      if (fCheckedPic && makecheck) {
+         out << "   const TGPicture *pcheck;        //used for checked items" << endl;
+         makecheck = kFALSE;
+      }
+      if (fUncheckedPic && makeuncheck) {
+         out << "   const TGPicture *puncheck;      //used for unchecked items" << endl;
+         makeuncheck = kFALSE;
+      }
+      out << "   item" << s.Data() << "->CheckItem();" << endl;
+      if (oldcheck != fCheckedPic) {
+         oldcheck = fCheckedPic;
+         out << "   pcheck = gClient->GetPicture(" << quote
+             << gSystem->ExpandPathName(gSystem->UnixPathName(fCheckedPic->GetName()))
+             << quote << ");" << endl;
+      }
+      if (olduncheck != fUncheckedPic) {
+         olduncheck = fUncheckedPic;
+         out << "   puncheck = gClient->GetPicture(" << quote
+             << gSystem->ExpandPathName(gSystem->UnixPathName(fUncheckedPic->GetName()))
+             << quote << ");" << endl;
+      }
+      out << "   item" << s.Data() << "->SetCheckBoxPictures(pcheck, puncheck);" << endl;
+      out << "   item" << s.Data() << "->SetCheckBox(kTRUE);" << endl;
+   }
+   if (fHasColor) {
+      if (oldcolor != fColor) {
+         oldcolor = fColor;
+         out << "   item" << s.Data() << "->SetColor(" << fColor << ");" << endl;
+      }
+   }
+   if (fTipText.Length() > 0) {
+      out << "   item" << s.Data() << "->SetTipText(" << quote
+          << GetTipText() << quote << ");" << endl;   
+   }
+      
 }
 
 //______________________________________________________________________________
