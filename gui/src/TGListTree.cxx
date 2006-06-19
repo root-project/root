@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.53 2006/05/29 08:37:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.54 2006/06/19 14:02:27 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -2222,7 +2222,7 @@ void TGListTree::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TGListTree::SaveChildren(ofstream &out, TGListTreeItem *item, Int_t &n)
 {
-   // Save chil list tree items as a C++ statements on output stream out.
+   // Save child items as a C++ statements on output stream out.
    
    Int_t p = n-1;
    while (item) {
