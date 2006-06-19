@@ -19,7 +19,7 @@ ROOTGLIBS    := $(shell root-config --glibs)
 sepDictLibs: run.log
 	$(CMDECHO) diff -b -w run.good.output run.log
 
-run.log: run.C libmaster.$(DllSuf) libslave1.$(DllSuf) libslave2.$(DllSuf) 
+run.log: run.C libmaster.$(DllSuf) libslave1.$(DllSuf) libslave2.$(DllSuf) run.good.output 
 	$(CMDECHO)root.exe -q -l -b run.C 2>&1 | grep -v tagnum | $(RemoveLeadingDirs) | $(RemoveSizes) | sed -e 's?FILE:[A-Za-z]:.*[/\]?FILE:?' > run.log
 
 all: sepDictLibs
