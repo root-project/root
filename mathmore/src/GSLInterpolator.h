@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLInterpolator.h,v 1.2 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLInterpolator.h,v 1.3 2006/06/08 16:36:17 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -44,60 +44,60 @@ namespace ROOT {
 namespace Math {
 
 
-  /**
-     Interpolation class based on GSL interpolation functions
-     @ingroup Interpolation
-   */
-
-  class GSLInterpolator {
-
-  public: 
-    GSLInterpolator(const Interpolation::Type type, const std::vector<double> & x, const std::vector<double> & y ); 
-    virtual ~GSLInterpolator(); 
-
-  private:
-    // usually copying is non trivial, so we make this unaccessible
-    GSLInterpolator(const GSLInterpolator &); 
-    GSLInterpolator & operator = (const GSLInterpolator &); 
-    
-  public: 
-
-    double Eval( double x ) const
-    {
-      return gsl_spline_eval(fSpline, x, fAccel ); 
-    }
-
-    double Deriv( double x ) const 
-    {
-      return gsl_spline_eval_deriv(fSpline, x, fAccel );  
-    }
-    
-    double Deriv2( double x ) const {  
-      return gsl_spline_eval_deriv2(fSpline, x, fAccel );  
-    }
-    
-    double Integ( double a, double b) const { 
-      return gsl_spline_eval_integ(fSpline, a, b, fAccel );  
-    }
-
-    std::string Name() { 
-      //return gsl_interp_name(fInterp); 
-      // Name not impl for gsl_spline objects
-      return fName;
-    }
-
-
-  protected: 
-
-
-  private: 
-
-    std::string  fName;
-    gsl_interp_accel * fAccel; 
-    gsl_spline * fSpline; 
-
-}; 
-
+   /**
+   Interpolation class based on GSL interpolation functions
+    @ingroup Interpolation
+    */
+   
+   class GSLInterpolator {
+      
+   public: 
+      GSLInterpolator(const Interpolation::Type type, const std::vector<double> & x, const std::vector<double> & y ); 
+      virtual ~GSLInterpolator(); 
+      
+   private:
+         // usually copying is non trivial, so we make this unaccessible
+         GSLInterpolator(const GSLInterpolator &); 
+      GSLInterpolator & operator = (const GSLInterpolator &); 
+      
+   public: 
+         
+         double Eval( double x ) const
+      {
+         return gsl_spline_eval(fSpline, x, fAccel ); 
+      }
+      
+      double Deriv( double x ) const 
+      {
+         return gsl_spline_eval_deriv(fSpline, x, fAccel );  
+      }
+      
+      double Deriv2( double x ) const {  
+         return gsl_spline_eval_deriv2(fSpline, x, fAccel );  
+      }
+      
+      double Integ( double a, double b) const { 
+         return gsl_spline_eval_integ(fSpline, a, b, fAccel );  
+      }
+      
+      std::string Name() { 
+         //return gsl_interp_name(fInterp); 
+         // Name not impl for gsl_spline objects
+         return fName;
+      }
+      
+      
+   protected: 
+         
+         
+   private: 
+         
+      std::string  fName;
+      gsl_interp_accel * fAccel; 
+      gsl_spline * fSpline; 
+      
+   }; 
+   
 } // namespace Math
 } // namespace ROOT
 

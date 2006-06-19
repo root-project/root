@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.cxx,v 1.1 2006/05/26 14:26:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.cxx,v 1.2 2006/05/26 14:30:17 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -306,6 +306,16 @@ namespace Math {
 
   GSLRngRanLux::GSLRngRanLux() : 
     GSLRandomEngine(new GSLRng(gsl_rng_ranlux) )
+  {}
+
+  // second generation of Ranlux (double precision version)
+  GSLRngRanLux2::GSLRngRanLux2() : 
+    GSLRandomEngine(new GSLRng(gsl_rng_ranlxs2) )
+  {}
+
+  // 48 bits version
+  GSLRngRanLux48::GSLRngRanLux48() : 
+    GSLRandomEngine(new GSLRng(gsl_rng_ranlxd2) )
   {}
 
   //----------------------------------------------------

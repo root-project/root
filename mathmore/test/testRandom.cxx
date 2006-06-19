@@ -119,6 +119,8 @@ int main() {
   Random<GSLRngMT>         r1;
   Random<GSLRngTaus>       r2;
   Random<GSLRngRanLux>     r3;
+  Random<GSLRngRanLux2>    r31;
+  Random<GSLRngRanLux48>   r32;
   Random<GSLRngGFSR4>      r4;
   Random<GSLRngCMRG>       r5;
   Random<GSLRngMRG>        r6;
@@ -143,6 +145,8 @@ int main() {
   generate(r1);
   generate(r2);
   generate(r3);
+  generate(r31);
+  generate(r32);
   generate(r4);
   generate(r5);
   generate(r6);

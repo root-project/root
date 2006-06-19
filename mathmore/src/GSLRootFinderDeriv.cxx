@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.cxx,v 1.3 2006/06/16 10:34:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -86,7 +86,7 @@ void GSLRootFinderDeriv::SetSolver(GSLRootFdFSolver * s ) {
 }
 
 void GSLRootFinderDeriv::FreeSolver( ) { 
-   // free.....
+   // free the gsl solver
    if (fS) delete fS; 
 }
 

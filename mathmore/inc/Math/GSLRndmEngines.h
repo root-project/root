@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.h,v 1.1 2006/05/26 14:26:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.h,v 1.2 2006/05/30 16:03:46 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -221,6 +221,26 @@ namespace Math {
   class GSLRngRanLux : public GSLRandomEngine { 
   public: 
     GSLRngRanLux(); 
+  };
+
+  /**
+     Second generation of Ranlux generator (with  luxury level of 2)
+
+     @ingroup Random
+   */
+  class GSLRngRanLux2 : public GSLRandomEngine { 
+  public: 
+    GSLRngRanLux2(); 
+  };
+
+  /**
+     48 bits version of Second generation of Ranlux generator (with  luxury level of 2)
+
+     @ingroup Random
+   */
+  class GSLRngRanLux48 : public GSLRandomEngine { 
+  public: 
+    GSLRngRanLux48(); 
   };
 
 
