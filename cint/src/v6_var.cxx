@@ -3998,7 +3998,7 @@ G__value G__getvariable(char *item,int *known2
                        (double)(*(double *)(G__struct_offset+var->p[ig15]+p_inc*G__DOUBLEALLOC)));
         }
         else {
-          G__letint(&result,'i',
+          G__letint(&result,'l',
                     *(long*)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));
         }
         break;
@@ -6064,7 +6064,7 @@ G__value G__allocvariable( /* G__value expression, */
   if('p'==G__var_type && 
      (G__static_alloc || G__constvar || G__prerun || G__def_struct_member)&&
      !G__macro_defining) { /* in case of enumerater */
-    G__var_type='i';
+    G__var_type='l';
   }
   if('u'!=tolower(var->type[ig15])&&'u'==result.type&&-1!=result.tagnum) {
     int store_decl = G__decl;
