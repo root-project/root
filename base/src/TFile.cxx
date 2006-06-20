@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.164 2006/06/09 01:21:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.165 2006/06/18 17:51:32 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -403,6 +403,7 @@ zombie:
 TFile::TFile(const TFile &file) : TDirectory(), fInfoCache(0)
 {
    // Copy constructor.
+
    ((TFile&)file).Copy(*this);
 }
 
@@ -482,13 +483,13 @@ void TFile::Init(Bool_t create)
    // make newly opened file the current file and directory
    cd();
 
-//*-*---------------NEW file
    if (create) {
+      //*-*---------------NEW file
       fFree        = new TList;
       fEND         = fBEGIN;    //Pointer to end of file
       new TFree(fFree, fBEGIN, Long64_t(kStartBigFile));  //Create new free list
 
-//*-* Write Directory info
+      //*-* Write Directory info
       Int_t namelen= TNamed::Sizeof();
       Int_t nbytes = namelen + TDirectory::Sizeof();
       TKey *key    = new TKey(fName, fTitle, IsA(), nbytes, this);
@@ -502,9 +503,8 @@ void TFile::Init(Bool_t create)
       TDirectory::FillBuffer(buffer);
       key->WriteFile();
       delete key;
-   }
-//*-*----------------UPDATE
-   else {
+   } else {
+      //*-*----------------UPDATE
       char *header = new char[kBEGIN];
       Seek(0);
       ReadBuffer(header, kBEGIN);
@@ -545,7 +545,7 @@ void TFile::Init(Bool_t create)
       }
       fSeekDir = fBEGIN;
       delete [] header;
-//*-*-------------Read Free segments structure if file is writable
+      //*-*-------------Read Free segments structure if file is writable
       if (fWritable) {
          fFree = new TList;
          if (fSeekFree > fBEGIN) {
@@ -554,7 +554,7 @@ void TFile::Init(Bool_t create)
             Warning("Init","file %s probably not closed, cannot read free segments",GetName());
          }
       }
-//*-*-------------Read directory info
+      //*-*-------------Read directory info
       Int_t nbytes = fNbytesName + TDirectory::Sizeof();
       header       = new char[nbytes];
       buffer       = header;
@@ -581,7 +581,7 @@ void TFile::Init(Bool_t create)
       }
       if (versiondir > 1) fUUID.ReadBuffer(buffer);
 
-//*-*---------read TKey::FillBuffer info
+      //*-*---------read TKey::FillBuffer info
       buffer = header+nk;
       TString cname;
       cname.ReadBuffer(buffer);
@@ -592,14 +592,15 @@ void TFile::Init(Bool_t create)
          Error("Init","cannot read directory info of file %s", GetName());
          goto zombie;
       }
-//*-* -------------Check if file is truncated
+
+      //*-* -------------Check if file is truncated
       Long64_t size;
       if ((size = GetSize()) == -1) {
          Error("Init", "cannot stat the file %s", GetName());
          goto zombie;
       }
-//*-* -------------Read keys of the top directory
 
+      //*-* -------------Read keys of the top directory
       if (fSeekKeys > fBEGIN && fEND <= size) {
          //normal case. Recover only if file has no keys
          TDirectory::ReadKeys();
@@ -633,7 +634,7 @@ void TFile::Init(Bool_t create)
       gROOT->GetListOfFiles()->Add(this);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
 
-   // Create StreamerInfo index
+      // Create StreamerInfo index
       Int_t lenIndex = gROOT->GetListOfStreamerInfo()->GetSize()+1;
       if (lenIndex < 5000) lenIndex = 5000;
       fClassIndex = new TArrayC(lenIndex);
@@ -660,15 +661,14 @@ zombie:
 //______________________________________________________________________________
 void TFile::Close(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Close a file*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ============
-// if option == "R", all TProcessIDs referenced by this file are deleted.
-// Calling TFile::Close("R") might be necessary in case one reads a long list
-// of files having TRef, writing some of the referenced objects or TRef
-// to a new file. If the TRef or referenced objects of the file being closed
-// will not be referenced again, it is possible to minimize the size
-// of the TProcessID data structures in memory by forcing a delete of
-// the unused TProcessID.
+   // Close a file.
+   // If option == "R", all TProcessIDs referenced by this file are deleted.
+   // Calling TFile::Close("R") might be necessary in case one reads a long list
+   // of files having TRef, writing some of the referenced objects or TRef
+   // to a new file. If the TRef or referenced objects of the file being closed
+   // will not be referenced again, it is possible to minimize the size
+   // of the TProcessID data structures in memory by forcing a delete of
+   // the unused TProcessID.
 
    TString opt = option;
 
@@ -733,7 +733,7 @@ void TFile::Close(Option_t *option)
       gDirectory = gROOT;
    }
 
-   //delete the TProcessIDs
+   // delete the TProcessIDs
    TList pidDeleted;
    TIter next(fProcessIDs);
    TProcessID *pid;
@@ -757,6 +757,7 @@ void TFile::Close(Option_t *option)
 TKey* TFile::CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize)
 {
    // Creates key for object and converts data to buffer.
+
    return new TKey(obj, name, bufsize, mother);
 }
 
@@ -764,29 +765,28 @@ TKey* TFile::CreateKey(TDirectory* mother, const TObject* obj, const char* name,
 TKey* TFile::CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t bufsize)
 {
    // Creates key for object and converts data to buffer.
+
    return new TKey(obj, cl, name, bufsize, mother);
 }
 
 //______________________________________________________________________________
 void TFile::Delete(const char *namecycle)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Delete object namecycle*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =======================
-//  namecycle identifies an object in the top directory of the file
-//   namecycle has the format name;cycle
-//   name  = * means all
-//   cycle = * means all cycles (memory and keys)
-//   cycle = "" or cycle = 9999 ==> apply to a memory object
-//   When name=* use T* to delete subdirectories also
-//
-//   examples:
-//     foo   : delete object named foo in memory
-//     foo;1 : delete cycle 1 of foo on file
-//     foo;* : delete all cycles of foo on disk and also from memory
-//     *;2   : delete all objects on file having the cycle 2
-//     *;*   : delete all objects from memory and file
-//    T*;*   : delete all objects from memory and file and all subdirectories
-//
+   // Delete object namecycle.
+   // Namecycle identifies an object in the top directory of the file
+   //   namecycle has the format name;cycle
+   //   name  = * means all
+   //   cycle = * means all cycles (memory and keys)
+   //   cycle = "" or cycle = 9999 ==> apply to a memory object
+   //   When name=* use T* to delete subdirectories also
+   //
+   // Examples:
+   //     foo   : delete object named foo in memory
+   //     foo;1 : delete cycle 1 of foo on file
+   //     foo;* : delete all cycles of foo on disk and also from memory
+   //     *;2   : delete all objects on file having the cycle 2
+   //     *;*   : delete all objects from memory and file
+   //    T*;*   : delete all objects from memory and file and all subdirectories
 
    if (gDebug)
       Info("Delete", "deleting name = %s", namecycle);
@@ -797,10 +797,8 @@ void TFile::Delete(const char *namecycle)
 //______________________________________________________________________________
 void TFile::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Fill Graphics Structure and Paint-*-*-*-*-*-*-*-*-*-*
-//*-*                    =================================
-// Loop on all objects (memory or file) and all subdirectories
-//
+   // Fill Graphics Structure and Paint.
+   // Loop on all objects (memory or file) and all subdirectories.
 
    GetList()->R__FOR_EACH(TObject,Draw)(option);
 }
@@ -808,7 +806,7 @@ void TFile::Draw(Option_t *option)
 //______________________________________________________________________________
 void TFile::DrawMap(const char *keys, Option_t *option)
 {
-// Draw map of objects in this file
+   // Draw map of objects in this file.
 
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TFileDrawMap"))) {
@@ -835,10 +833,8 @@ void TFile::Flush()
 //______________________________________________________________________________
 void TFile::FillBuffer(char *&buffer)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Encode file output buffer*-*-*-*-*-*-*
-//*-*                    =========================
-// The file output buffer contains only the FREE data record
-//
+   // Encode file output buffer.
+   // The file output buffer contains only the FREE data record.
 
    Version_t version = TFile::Class_Version();
    tobuf(buffer, version);
@@ -847,13 +843,10 @@ void TFile::FillBuffer(char *&buffer)
 //______________________________________________________________________________
 Int_t TFile::GetBestBuffer() const
 {
-//*-*-*-*-*-*-*-*Return the best buffer size of objects on this file*-*-*-*-*-*
-//*-*            ===================================================
-//
-//  The best buffer size is estimated based on the current mean value
-//  and standard deviation of all objects written so far to this file.
-//  Returns mean value + one standard deviation.
-//
+   // Return the best buffer size of objects on this file.
+   // The best buffer size is estimated based on the current mean value
+   // and standard deviation of all objects written so far to this file.
+   // Returns mean value + one standard deviation.
 
    if (!fWritten) return TBuffer::kInitialSize;
    Double_t mean = fSumBuffer/fWritten;
@@ -864,12 +857,10 @@ Int_t TFile::GetBestBuffer() const
 //______________________________________________________________________________
 Float_t TFile::GetCompressionFactor()
 {
-//*-*-*-*-*-*-*-*-*-*Return the file compression factor*-*-*-*-*-*-*-*-*-*
-//*-*                =================================
-//
-//  Add total number of compressed/uncompressed bytes for each key.
-//  return ratio of the two.
-//
+   // Return the file compression factor.
+   // Add total number of compressed/uncompressed bytes for each key.
+   // return ratio of the two.
+
    Short_t  keylen;
    UInt_t   datime;
    Int_t    nbytes, objlen, nwh = 64;
@@ -923,7 +914,7 @@ void TFile::ResetErrno() const
 //______________________________________________________________________________
 TFilePrefetch *TFile::GetFilePrefetch() const
 {
-   //return a pointer to the current TFilePrefetch
+   // Return a pointer to the current TFilePrefetch.
 
    return fFilePrefetch;
 }
@@ -931,19 +922,18 @@ TFilePrefetch *TFile::GetFilePrefetch() const
 //______________________________________________________________________________
 Int_t TFile::GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen)
 {
-//*-*-*-*-*-*-*-*-*Read the logical record header starting at position first
-//*-*              =========================================================
-// maxbytes bytes are read into buf
-// the function reads nread bytes where nread is the minimum of maxbytes
-// and the number of bytes before the end of file.
-// the function returns nread.
-// In output arguments:
-//    nbytes : number of bytes in record
-//             if negative, this is a deleted record
-//             if 0, cannot read record, wrong value of argument first
-//    objlen : uncompressed object size
-//    keylen : length of logical record header
-// Note that the arguments objlen and keylen are returned only if maxbytes >=16
+   // Read the logical record header starting at position first.
+   // Maxbytes bytes are read into buf the function reads nread bytes
+   // where nread is the minimum of maxbytes and the number of bytes
+   // before the end of file. The function returns nread.
+   // In output arguments:
+   //    nbytes : number of bytes in record
+   //             if negative, this is a deleted record
+   //             if 0, cannot read record, wrong value of argument first
+   //    objlen : uncompressed object size
+   //    keylen : length of logical record header
+   // Note that the arguments objlen and keylen are returned only
+   // if maxbytes >=16
 
    if (first < fBEGIN) return 0;
    if (first > fEND)   return 0;
@@ -964,7 +954,7 @@ Int_t TFile::GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &n
    frombuf(buffer,&nb);
    nbytes = nb;
    if (nb < 0) return nread;
-//   const Int_t headerSize = Int_t(sizeof(nb) +sizeof(versionkey) +sizeof(olen) +sizeof(datime) +sizeof(klen));
+   //   const Int_t headerSize = Int_t(sizeof(nb) +sizeof(versionkey) +sizeof(olen) +sizeof(datime) +sizeof(klen));
    const Int_t headerSize = 16;
    if (nread < headerSize) return nread;
    frombuf(buffer, &versionkey);
@@ -1001,22 +991,23 @@ Long64_t TFile::GetSize() const
 const TList *TFile::GetStreamerInfoCache()
 {
    // Returns the cached list of StreamerInfos used in this file.
+
    return fInfoCache ?  fInfoCache : (fInfoCache=GetStreamerInfoList());
 }
 
 //______________________________________________________________________________
 TList *TFile::GetStreamerInfoList()
 {
-// Read the list of TStreamerInfo objects written to this file.
-// The function returns a TList. It is the user'responsability
-// to delete the list created by this function.
-//
-// Using the list, one can access additional information,eg:
-//   TFile f("myfile.root");
-//   TList *list = f.GetStreamerInfoList();
-//   TStreamerInfo *info = (TStreamerInfo*)list->FindObject("MyClass");
-//   Int_t classversionid = info->GetClassVersion();
-//   delete list;
+   // Read the list of TStreamerInfo objects written to this file.
+   // The function returns a TList. It is the user'responsability
+   // to delete the list created by this function.
+   //
+   // Using the list, one can access additional information,eg:
+   //   TFile f("myfile.root");
+   //   TList *list = f.GetStreamerInfoList();
+   //   TStreamerInfo *info = (TStreamerInfo*)list->FindObject("MyClass");
+   //   Int_t classversionid = info->GetClassVersion();
+   //   delete list;
 
    TList *list = 0;
    if (fSeekInfo) {
@@ -1048,13 +1039,10 @@ TList *TFile::GetStreamerInfoList()
 //______________________________________________________________________________
 void TFile::ls(Option_t *option) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*List File contents*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ==================
-//  Indentation is used to identify the file tree
-//  Subdirectories are listed first
-//  then objects in memory
-//  then objects on the file
-//
+   // List File contents.
+   // Indentation is used to identify the file tree.
+   // Subdirectories are listed first, then objects in memory,
+   // then objects on the file.
 
    TROOT::IndentLevel();
    cout <<ClassName()<<"**\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
@@ -1074,15 +1062,13 @@ Bool_t TFile::IsOpen() const
 //______________________________________________________________________________
 void TFile::MakeFree(Long64_t first, Long64_t last)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Mark unused bytes on the file*-*-*-*-*-*-*-*-*-*-*
-//*-*                    =============================
-//  The list of free segments is in the fFree linked list
-//  When an object is deleted from the file, the freed space is added
-//  into the FREE linked list (fFree). The FREE list consists of a chain
-//  of consecutive free segments on the file. At the same time, the first
-//  4 bytes of the freed record on the file are overwritten by GAPSIZE
-//  where GAPSIZE = -(Number of bytes occupied by the record).
-//
+   // Mark unused bytes on the file.
+   // The list of free segments is in the fFree linked list.
+   // When an object is deleted from the file, the freed space is added
+   // into the FREE linked list (fFree). The FREE list consists of a chain
+   // of consecutive free segments on the file. At the same time, the first
+   // 4 bytes of the freed record on the file are overwritten by GAPSIZE
+   // where GAPSIZE = -(Number of bytes occupied by the record).
 
    TFree *f1      = (TFree*)fFree->First();
    if (!f1) return;
@@ -1104,42 +1090,39 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
    delete [] psave;
 }
 
-
 //______________________________________________________________________________
 void TFile::Map()
 {
-//*-*-*-*-*-*-*-*-*-*List the contents of a file sequentially*-*-*-*-*-*
-//*-*                ========================================
-//
-//  For each logical record found, it prints
-//     Date/Time  Record_Adress Logical_Record_Length  ClassName  CompressionFactor
-//
-//  Example of output
-//  20010404/150437  At:64        N=150       TFile
-//  20010404/150440  At:214       N=28326     TBasket        CX =  1.13
-//  20010404/150440  At:28540     N=29616     TBasket        CX =  1.08
-//  20010404/150440  At:58156     N=29640     TBasket        CX =  1.08
-//  20010404/150440  At:87796     N=29076     TBasket        CX =  1.10
-//  20010404/150440  At:116872    N=10151     TBasket        CX =  3.15
-//  20010404/150441  At:127023    N=28341     TBasket        CX =  1.13
-//  20010404/150441  At:155364    N=29594     TBasket        CX =  1.08
-//  20010404/150441  At:184958    N=29616     TBasket        CX =  1.08
-//  20010404/150441  At:214574    N=29075     TBasket        CX =  1.10
-//  20010404/150441  At:243649    N=9583      TBasket        CX =  3.34
-//  20010404/150442  At:253232    N=28324     TBasket        CX =  1.13
-//  20010404/150442  At:281556    N=29641     TBasket        CX =  1.08
-//  20010404/150442  At:311197    N=29633     TBasket        CX =  1.08
-//  20010404/150442  At:340830    N=29091     TBasket        CX =  1.10
-//  20010404/150442  At:369921    N=10341     TBasket        CX =  3.09
-//  20010404/150442  At:380262    N=509       TH1F           CX =  1.93
-//  20010404/150442  At:380771    N=1769      TH2F           CX =  4.32
-//  20010404/150442  At:382540    N=1849      TProfile       CX =  1.65
-//  20010404/150442  At:384389    N=18434     TNtuple        CX =  4.51
-//  20010404/150442  At:402823    N=307       KeysList
-//  20010404/150443  At:403130    N=4548      StreamerInfo   CX =  3.65
-//  20010404/150443  At:407678    N=86        FreeSegments
-//  20010404/150443  At:407764    N=1         END
-//
+   // List the contents of a file sequentially.
+   // For each logical record found, it prints:
+   //  Date/Time  Record_Adress Logical_Record_Length  ClassName  CompressionFactor
+   //
+   //  Example of output
+   //  20010404/150437  At:64        N=150       TFile
+   //  20010404/150440  At:214       N=28326     TBasket        CX =  1.13
+   //  20010404/150440  At:28540     N=29616     TBasket        CX =  1.08
+   //  20010404/150440  At:58156     N=29640     TBasket        CX =  1.08
+   //  20010404/150440  At:87796     N=29076     TBasket        CX =  1.10
+   //  20010404/150440  At:116872    N=10151     TBasket        CX =  3.15
+   //  20010404/150441  At:127023    N=28341     TBasket        CX =  1.13
+   //  20010404/150441  At:155364    N=29594     TBasket        CX =  1.08
+   //  20010404/150441  At:184958    N=29616     TBasket        CX =  1.08
+   //  20010404/150441  At:214574    N=29075     TBasket        CX =  1.10
+   //  20010404/150441  At:243649    N=9583      TBasket        CX =  3.34
+   //  20010404/150442  At:253232    N=28324     TBasket        CX =  1.13
+   //  20010404/150442  At:281556    N=29641     TBasket        CX =  1.08
+   //  20010404/150442  At:311197    N=29633     TBasket        CX =  1.08
+   //  20010404/150442  At:340830    N=29091     TBasket        CX =  1.10
+   //  20010404/150442  At:369921    N=10341     TBasket        CX =  3.09
+   //  20010404/150442  At:380262    N=509       TH1F           CX =  1.93
+   //  20010404/150442  At:380771    N=1769      TH2F           CX =  4.32
+   //  20010404/150442  At:382540    N=1849      TProfile       CX =  1.65
+   //  20010404/150442  At:384389    N=18434     TNtuple        CX =  4.51
+   //  20010404/150442  At:402823    N=307       KeysList
+   //  20010404/150443  At:403130    N=4548      StreamerInfo   CX =  3.65
+   //  20010404/150443  At:407678    N=86        FreeSegments
+   //  20010404/150443  At:407764    N=1         END
+
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
@@ -1339,12 +1322,10 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
 //______________________________________________________________________________
 void TFile::ReadFree()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Read the FREE linked list*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =========================
-//  Every file has a linked list (fFree) of free segments
-//  This linked list has been written on the file via WriteFree
-//  as a single data record
-//
+   // Read the FREE linked list.
+   // Every file has a linked list (fFree) of free segments.
+   // This linked list has been written on the file via WriteFree
+   // as a single data record.
 
    TKey *headerfree = new TKey(fSeekFree, fNbytesFree, this);
    headerfree->ReadFile();
@@ -1363,12 +1344,10 @@ void TFile::ReadFree()
 //______________________________________________________________________________
 Int_t TFile::Recover()
 {
-//*-*-*-*-*-*-*-*-*Attempt to recover file if not correctly closed*-*-*-*-*
-//*-*              ===============================================
-//
-//  The function returns the number of keys that have been recovered.
-//  If no keys can be recovered, the file will be declared Zombie by
-//  the calling function.
+   // Attempt to recover file if not correctly closed.
+   // The function returns the number of keys that have been recovered.
+   // If no keys can be recovered, the file will be declared Zombie by
+   // the calling function.
 
    Short_t  keylen,cycle;
    UInt_t   datime;
@@ -1578,7 +1557,6 @@ void TFile::Seek(Long64_t offset, ERelativeTo pos)
             Error("Seek", "seeking from end in archive is not (yet) supported");
          break;
    }
-   fOffset = offset;
    if (Long64_t retpos = SysSeek(fD, offset, whence) < 0)
       SysError("Seek", "cannot seek to position %lld in file %s, retpos=%lld",
                offset, GetName(), retpos);
@@ -1587,21 +1565,18 @@ void TFile::Seek(Long64_t offset, ERelativeTo pos)
 //______________________________________________________________________________
 void TFile::SetCompressionLevel(Int_t level)
 {
-//*-*-*-*-*-*-*-*-*-*Set level of compression for this file*-*-*-*-*-*-*-*
-//*-*                ======================================
-//
-//  level = 0 objects written to this file will not be compressed.
-//  level = 1 minimal compression level but fast.
-//  ....
-//  level = 9 maximal compression level but slow.
-//
-//  Note that the compression level may be changed at any time.
-//  The new compression level will only apply to newly written objects.
-//  The function TFile::Map shows the compression factor
-//  for each object written to this file.
-//  The function TFile::GetCompressionFactor returns the global
-//  compression factor for this file.
-//
+   // Set level of compression for this file:
+   //  level = 0 objects written to this file will not be compressed.
+   //  level = 1 minimal compression level but fast.
+   //  ....
+   //  level = 9 maximal compression level but slow.
+   //
+   // Note that the compression level may be changed at any time.
+   // The new compression level will only apply to newly written objects.
+   // The function TFile::Map shows the compression factor
+   // for each object written to this file.
+   // The function TFile::GetCompressionFactor returns the global
+   // compression factor for this file.
 
    if (level < 0) level = 0;
    if (level > 9) level = 9;
@@ -1611,7 +1586,8 @@ void TFile::SetCompressionLevel(Int_t level)
 //______________________________________________________________________________
 void TFile::SetFilePrefetch(TFilePrefetch *file)
 {
-   //set a TFilePrefetch
+   // Set a TFilePrefetch.
+
    fFilePrefetch = file;
 }
 
@@ -1638,8 +1614,7 @@ void TFile::Streamer(TBuffer &b)
 //_______________________________________________________________________
 void TFile::SumBuffer(Int_t bufsize)
 {
-//*-*-*-*-*Increment statistics for buffer sizes of objects in this file*-*-*
-//*-*      =============================================================
+   // Increment statistics for buffer sizes of objects in this file.
 
    fWritten++;
    fSumBuffer  += bufsize;
@@ -1686,17 +1661,15 @@ void TFile::UseCache(Int_t maxCacheSize, Int_t pageSize)
 //______________________________________________________________________________
 Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 {
-//*-*-*-*-*-*-*-*-*-*Write memory objects to this file*-*-*-*-*-*-*-*-*-*
-//*-*                =================================
-//  Loop on all objects in memory (including subdirectories).
-//  A new key is created in the KEYS linked list for each object.
-//  The list of keys is then saved on the file (via WriteKeys)
-//  as a single data record.
-//  For values of opt see TObject::Write().
-//  The directory header info is rewritten on the directory header record.
-//  The linked list of FREE segments is written.
-//  The file header is written (bytes 1->fBEGIN).
-//
+   // Write memory objects to this file.
+   // Loop on all objects in memory (including subdirectories).
+   // A new key is created in the KEYS linked list for each object.
+   // The list of keys is then saved on the file (via WriteKeys)
+   // as a single data record.
+   // For values of opt see TObject::Write().
+   // The directory header info is rewritten on the directory header record.
+   // The linked list of FREE segments is written.
+   // The file header is written (bytes 1->fBEGIN).
 
    if (!IsWritable()) {
       if (!TestBit(kWriteError)) {
@@ -1794,13 +1767,11 @@ Int_t TFile::WriteBufferViaCache(const char *buf, Int_t len)
 //______________________________________________________________________________
 void TFile::WriteFree()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Write FREE linked list on the file *-*-*-*-*-*-*-*
-//*-*                    ==================================
-//  The linked list of FREE segments (fFree) is written as a single data
-//  record
-//
+   // Write FREE linked list on the file.
+   // The linked list of FREE segments (fFree) is written as a single data
+   // record.
 
-//*-* Delete old record if it exists
+   //*-* Delete old record if it exists
    if (fSeekFree != 0){
       MakeFree(fSeekFree, fSeekFree + fNbytesFree -1);
    }
@@ -1832,9 +1803,8 @@ void TFile::WriteFree()
 //______________________________________________________________________________
 void TFile::WriteHeader()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Write File Header*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    =================
-//
+   // Write File Header.
+
    SafeDelete(fInfoCache);
    TFree *lastfree = (TFree*)fFree->Last();
    if (lastfree) fEND  = lastfree->GetFirst();
@@ -1880,49 +1850,48 @@ void TFile::WriteHeader()
 void TFile::MakeProject(const char *dirname, const char * /*classes*/,
                         Option_t *option)
 {
-// Generate code in directory dirname for all classes specified in argument classes
-// If classes = "*" (default), the function generates an include file for each
-// class in the StreamerInfo list for which a TClass object does not exist.
-// One can restrict the list of classes to be generated by using expressions like:
-//   classes = "Ali*" generate code only for classes starting with Ali
-//   classes = "myClass" generate code for class MyClass only.
-//
-// if option = "new" (default) a new directory dirname is created.
-//                   If dirname already exist, an error message is printed
-//                   and the function returns.
-// if option = "recreate", then;
-//                   if dirname does not exist, it is created (like in "new")
-//                   if dirname already exist, all existing files in dirname
-//                   are deleted before creating the new files.
-// if option = "update", then new classes are added to the existing directory.
-//                   Existing classes with the same name are replaced by the
-//                   new definition. If the directory dirname doest not exist,
-//                   same effect as "new".
-// if, in addition to one of the 3 above options, the option "+" is specified,
-// the function will generate:
-//   - a script called MAKE to build the shared lib
-//   - a LinkDef.h file
-//   - rootcint will be run to generate a dirnameProjectDict.cxx file
-//   - dirnameProjectDict.cxx will be compiled with the current options in compiledata.h
-//   - a shared lib dirname.so will be created.
-// if the option "++" is specified, the generated shared lib is dynamically
-// linked with the current executable module.
-// example:
-//  file.MakeProject("demo","*","recreate++");
-//  - creates a new directory demo unless it already exist
-//  - clear the previous directory content
-//  - generate the xxx.h files for all classes xxx found in this file
-//    and not yet known to the CINT dictionary.
-//  - creates the build script MAKE
-//  - creates a LinkDef.h file
-//  - runs rootcint generating demoProjectDict.cxx
-//  - compiles demoProjectDict.cxx into demoProjectDict.o
-//  - generates a shared lib demo.so
-//  - dynamically links the shared lib demo.so to the executable
-//  If only the option "+" had been specified, one can still link the
-//  shared lib to the current executable module with:
-//     gSystem->load("demo/demo.so");
-//
+   // Generate code in directory dirname for all classes specified in argument classes
+   // If classes = "*" (default), the function generates an include file for each
+   // class in the StreamerInfo list for which a TClass object does not exist.
+   // One can restrict the list of classes to be generated by using expressions like:
+   //   classes = "Ali*" generate code only for classes starting with Ali
+   //   classes = "myClass" generate code for class MyClass only.
+   //
+   // If option = "new" (default) a new directory dirname is created.
+   //                   If dirname already exist, an error message is printed
+   //                   and the function returns.
+   // If option = "recreate", then;
+   //                   if dirname does not exist, it is created (like in "new")
+   //                   if dirname already exist, all existing files in dirname
+   //                   are deleted before creating the new files.
+   // If option = "update", then new classes are added to the existing directory.
+   //                   Existing classes with the same name are replaced by the
+   //                   new definition. If the directory dirname doest not exist,
+   //                   same effect as "new".
+   // If, in addition to one of the 3 above options, the option "+" is specified,
+   // the function will generate:
+   //   - a script called MAKE to build the shared lib
+   //   - a LinkDef.h file
+   //   - rootcint will be run to generate a dirnameProjectDict.cxx file
+   //   - dirnameProjectDict.cxx will be compiled with the current options in compiledata.h
+   //   - a shared lib dirname.so will be created.
+   // If the option "++" is specified, the generated shared lib is dynamically
+   // linked with the current executable module.
+   // Example:
+   //  file.MakeProject("demo","*","recreate++");
+   //  - creates a new directory demo unless it already exist
+   //  - clear the previous directory content
+   //  - generate the xxx.h files for all classes xxx found in this file
+   //    and not yet known to the CINT dictionary.
+   //  - creates the build script MAKE
+   //  - creates a LinkDef.h file
+   //  - runs rootcint generating demoProjectDict.cxx
+   //  - compiles demoProjectDict.cxx into demoProjectDict.o
+   //  - generates a shared lib demo.so
+   //  - dynamically links the shared lib demo.so to the executable
+   //  If only the option "+" had been specified, one can still link the
+   //  shared lib to the current executable module with:
+   //     gSystem->load("demo/demo.so");
 
    TString opt = option;
    opt.ToLower();
@@ -2095,9 +2064,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 //______________________________________________________________________________
 void TFile::ReadStreamerInfo()
 {
-// Read the list of StreamerInfo from this file
-// The key with name holding the list of TStreamerInfo objects is read.
-// The corresponding TClass objects are updated.
+   // Read the list of StreamerInfo from this file.
+   // The key with name holding the list of TStreamerInfo objects is read.
+   // The corresponding TClass objects are updated.
 
    TList *list = GetStreamerInfoList();
    if (!list) {
@@ -2135,7 +2104,7 @@ void TFile::ReadStreamerInfo()
 //______________________________________________________________________________
 void TFile::ShowStreamerInfo()
 {
-// Show the StreamerInfo of all classes written to this file.
+   // Show the StreamerInfo of all classes written to this file.
 
    TList *list = GetStreamerInfoList();
 
@@ -2148,10 +2117,9 @@ void TFile::ShowStreamerInfo()
 //______________________________________________________________________________
 void TFile::WriteStreamerInfo()
 {
-//  Write the list of TStreamerInfo as a single object in this file
-//  The class Streamer description for all classes written to this file
-//  is saved.
-//  see class TStreamerInfo
+   // Write the list of TStreamerInfo as a single object in this file
+   // The class Streamer description for all classes written to this file
+   // is saved. See class TStreamerInfo.
 
    //if (!gFile) return;
    if (!fWritable) return;
