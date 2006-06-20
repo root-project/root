@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.83 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.84 2006/04/25 09:28:42 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -118,16 +118,25 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname,
    }
    fBufferSize  = 0;
    fWritable    = kTRUE;
-   fSeekParent  = f->GetSeekDir();
-   Int_t nbytes = TDirectory::Sizeof();
-   TKey *key    = new TKey(fName,fTitle,cl,nbytes,motherdir);
-   fNbytesName  = key->GetKeylen();
-   fSeekDir     = key->GetSeekKey();
-   if (fSeekDir == 0) return;
-   char *buffer = key->GetBuffer();
-   TDirectory::FillBuffer(buffer);
-   Int_t cycle = motherdir->AppendKey(key);
-   key->WriteFile(cycle);
+   
+   if (f->IsBinary()) {
+      fSeekParent  = f->GetSeekDir();
+      Int_t nbytes = TDirectory::Sizeof();
+      TKey *key    = new TKey(fName,fTitle,cl,nbytes,motherdir);
+      fNbytesName  = key->GetKeylen();
+      fSeekDir     = key->GetSeekKey();
+      if (fSeekDir == 0) return;
+      char *buffer = key->GetBuffer();
+      TDirectory::FillBuffer(buffer);
+      Int_t cycle = motherdir->AppendKey(key);
+      key->WriteFile(cycle);
+   } else {
+      fSeekParent  = 0;
+      fNbytesName  = 0;
+      fSeekDir     = f->DirCreateEntry(this);
+      if (fSeekDir == 0) return;
+   }
+   
    fModified = kFALSE;
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetUUIDs()->AddUUID(fUUID,this);
@@ -558,6 +567,10 @@ void TDirectory::Delete(const char *namecycle)
 //    T*;*   : delete all objects from memory and file and all subdirectories
 //
 
+   if (gDebug)
+     Info("Delete","Call for this = %s namecycle = %s",
+               GetName(), (namecycle ? namecycle : "null"));
+
    TDirectory::TContext ctxt(gDirectory, this);
    Short_t  cycle;
    char     name[kMaxLen];
@@ -588,9 +601,22 @@ void TDirectory::Delete(const char *namecycle)
                if (!deletetree && deleteall) deleteOK = 0;
             }
          }
-         if (deleteOK != 0) idcur->Delete(name);
+         if (deleteOK != 0) {
+            fList->Remove(idcur);
+            if (deleteOK==2) {
+                // read subdirectories to correctly delete them
+                if (deletetree)
+                  ((TDirectory*) idcur)->ReadAll("dirs");
+               idcur->Delete(deletetree ? "T*;*" : "*");
+               delete idcur;
+            } else
+               idcur->Delete(name);
+         }
       }
-      if (deleteOK == 2) delete fList->FindObject(name); //deleting a TDirectory
+//      if (deleteOK == 2) {
+//         Info("Delete","Dir:%x %s", fList->FindObject(name), name);
+//         delete fList->FindObject(name); //deleting a TDirectory
+//      }
    }
 //*-*---------------------Case of Key---------------------
 //                        ===========
@@ -605,14 +631,26 @@ void TDirectory::Delete(const char *namecycle)
                if (cycle == key->GetCycle()) deleteOK = 1;
                if (cycle > 9999) deleteOK = 1;
                if (!strcmp(key->GetClassName(),"TDirectory")) {
+                  deleteOK = 2; 
                   if (!deletetree && deleteall) deleteOK = 0;
-                  if (cycle == key->GetCycle()) deleteOK = 1;
+                  if (cycle == key->GetCycle()) deleteOK = 2;
                }
             }
             if (deleteOK) {
+               if (deleteOK==2) {
+                  // read directory with subdirectories to correctly delete and free key structure 
+                  TDirectory* dir = GetDirectory(key->GetName(), kTRUE, "Delete");
+                  if (dir!=0) {
+                     dir->Delete("T*;*");
+                     fList->Remove(dir);
+                     delete dir;
+                  }
+               } 
+                
                key->Delete();
                fKeys->Remove(key);
                fModified = kTRUE;
+               delete key;
             }
          }
          TFile* f = GetFile();
@@ -1217,21 +1255,36 @@ void TDirectory::pwd() const
 }
 
 //______________________________________________________________________________
-void TDirectory::ReadAll(Option_t *)
+void TDirectory::ReadAll(Option_t* opt)
 {
    // Read objects from a ROOT db file directory into memory.
    // If an object is already in memory, the memory copy is deleted
    // and the object is again read from the file.
+   // If opt=="dirs", only subdirectories will be read
+   // If opt=="dirs*" complete directory tree will be read  
 
    TDirectory::TContext ctxt(this);
 
    TKey *key;
    TIter next(GetListOfKeys());
-   while ((key = (TKey *) next())) {
-      TObject *thing = GetList()->FindObject(key->GetName());
-      if (thing) { delete thing; }
-      key->ReadObj();
-   }
+   
+   Bool_t readdirs = ((opt!=0) && ((strcmp(opt,"dirs")==0) || (strcmp(opt,"dirs*")==0)));
+   
+   if (readdirs) 
+      while ((key = (TKey *) next())) {
+         
+         if (strcmp(key->GetClassName(),"TDirectory")!=0) continue;
+         
+         TDirectory *dir = GetDirectory(key->GetName(), kTRUE, "ReadAll");
+
+         if ((dir!=0) && (strcmp(opt,"dirs*")==0)) dir->ReadAll("dirs*");
+      }
+   else   
+      while ((key = (TKey *) next())) {
+         TObject *thing = GetList()->FindObject(key->GetName());
+         if (thing) { delete thing; }
+         thing = key->ReadObj();
+      }
 }
 
 //______________________________________________________________________________
@@ -1258,6 +1311,11 @@ Int_t TDirectory::ReadKeys()
 //  This is an efficient way (without opening/closing files) to view
 //  the latest updates of a file being modified by another process
 //  as it is typically the case in a data acquisition system.
+
+   if (fFile==0) return 0;
+   
+   if (!fFile->IsBinary()) 
+      return fFile->DirReadKeys(this);
 
    TDirectory::TContext ctxt(this);
 
@@ -1331,6 +1389,21 @@ void TDirectory::RecursiveRemove(TObject *obj)
 }
 
 //______________________________________________________________________________
+void TDirectory::rmdir(const char *name)
+{
+   // Removes subdirectory from the directory
+   // When diredctory is deleted, all keys in all subdirectories will be
+   // read first and deleted from file (if exists)
+   // Equivalent call is Delete("name;*");
+   
+   if ((name==0) || (*name==0)) return;
+   
+   TString mask(name);
+   mask+=";*";
+   Delete(mask);
+}
+
+//______________________________________________________________________________
 void TDirectory::Save()
 {
 //*-*-*-*-*-*-*-*-*-*Save recursively all directory keys and headers-*-*-*-*-*
@@ -1370,9 +1443,11 @@ void TDirectory::SaveSelf(Bool_t force)
 //    -Call this function
 //    -In process2, use TDirectory::ReadKeys to refresh the directory
 
-   if (IsWritable() && (fModified || force)) {
-      TFree *f1 = (TFree*) fFile->GetListOfFree()->First();
-      if (f1) {
+   if (IsWritable() && (fModified || force) && fFile) {
+      Bool_t dowrite = kTRUE;
+      if (fFile->GetListOfFree())
+        dowrite = fFile->GetListOfFree()->First() != 0; 
+      if (dowrite) {
          TDirectory *dirsav = gDirectory;
          if (dirsav != this) cd();
          WriteKeys();          //*-*- Write keys record
@@ -1391,6 +1466,18 @@ void TDirectory::SetBufferSize(Int_t bufsize)
    fBufferSize = bufsize;
 }
 
+//______________________________________________________________________________
+void TDirectory::SetName(const char* newname)
+{
+   // Set the name for directory
+   // If the directory name is changed after the directory was written once, 
+   // ROOT currently would NOT change the name of correspondent key in the 
+   // mother directory.
+   // DO NOT use this method to 'rename a directory'.
+   // Renaming a directory is currently NOT supported.
+   
+   TNamed::SetName(newname);
+}
 
 //______________________________________________________________________________
 void TDirectory::SetWritable(Bool_t writable)
@@ -1444,54 +1531,105 @@ void TDirectory::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
+
    Version_t v,version;
    if (b.IsReading()) {
       Build((TFile*)b.GetParent(), 0);
       if (fFile && fFile->IsWritable()) fWritable = kTRUE;
-      b >> version;
-      fDatimeC.Streamer(b);
-      fDatimeM.Streamer(b);
-      b >> fNbytesKeys;
-      b >> fNbytesName;
-      if (version > 1000) {
-         SetBit(kIsBigFile);
-         b >> fSeekDir;
-         b >> fSeekParent;
-         b >> fSeekKeys;
+      
+      if (fFile && !fFile->IsBinary()) {
+         Version_t R__v = b.ReadVersion(0, 0);
+         b.ClassBegin(TDirectory::Class(), R__v);
+
+         TString sbuf;
+         
+         b.ClassMember("CreateTime","TString");
+         sbuf.Streamer(b);
+         TDatime timeC(sbuf.Data());
+         fDatimeC = timeC;
+         
+         b.ClassMember("ModifyTime","TString");
+         sbuf.Streamer(b);
+         TDatime timeM(sbuf.Data());
+         fDatimeM = timeM;
+         
+         b.ClassMember("UUID","TString");
+         sbuf.Streamer(b);
+         TUUID id(sbuf.Data());
+         fUUID = id;
+         
+         b.ClassEnd(TDirectory::Class());
+         
+         fSeekKeys = 0; // read keys later in the TKeySQL class
       } else {
-         Int_t sdir,sparent,skeys;
-         b >> sdir;    fSeekDir    = (Long64_t)sdir;
-         b >> sparent; fSeekParent = (Long64_t)sparent;
-         b >> skeys;   fSeekKeys   = (Long64_t)skeys;
-      }
-      v = version%1000;
-      if (v == 2) {
-         fUUID.StreamerV1(b);
-      } else if (v > 2) {
-         fUUID.Streamer(b);
+         b >> version;
+         fDatimeC.Streamer(b);
+         fDatimeM.Streamer(b);
+         b >> fNbytesKeys;
+         b >> fNbytesName;
+         if (version > 1000) {
+            SetBit(kIsBigFile);
+            b >> fSeekDir;
+            b >> fSeekParent;
+            b >> fSeekKeys;
+         } else {
+            Int_t sdir,sparent,skeys;
+            b >> sdir;    fSeekDir    = (Long64_t)sdir;
+            b >> sparent; fSeekParent = (Long64_t)sparent;
+            b >> skeys;   fSeekKeys   = (Long64_t)skeys;
+         }
+         v = version%1000;
+         if (v == 2) {
+            fUUID.StreamerV1(b);
+         } else if (v > 2) {
+            fUUID.Streamer(b);
+         }
       }
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
       if (fSeekKeys) ReadKeys();
    } else {
-      version = TDirectory::Class_Version();
-      if (fFile && fFile->GetEND() > TFile::kStartBigFile) version += 1000;
-      b << version;
-      fDatimeC.Streamer(b);
-      fDatimeM.Streamer(b);
-      b << fNbytesKeys;
-      b << fNbytesName;
-      if (version > 1000) {
-         b << fSeekDir;
-         b << fSeekParent;
-         b << fSeekKeys;
+      if (fFile && !fFile->IsBinary()) {
+         b.WriteVersion(TDirectory::Class());
+         
+         TString sbuf;
+         
+         b.ClassBegin(TDirectory::Class());
+
+         b.ClassMember("CreateTime","TString");
+         sbuf = fDatimeC.AsSQLString();
+         sbuf.Streamer(b);
+         
+         b.ClassMember("ModifyTime","TString");
+         fDatimeM.Set();
+         sbuf = fDatimeM.AsSQLString();
+         sbuf.Streamer(b);
+         
+         b.ClassMember("UUID","TString");
+         sbuf = fUUID.AsString();
+         sbuf.Streamer(b);
+         
+         b.ClassEnd(TDirectory::Class());
       } else {
-         b << (Int_t)fSeekDir;
-         b << (Int_t)fSeekParent;
-         b << (Int_t)fSeekKeys;
+         version = TDirectory::Class_Version();
+         if (fFile && fFile->GetEND() > TFile::kStartBigFile) version += 1000;
+         b << version;
+         fDatimeC.Streamer(b);
+         fDatimeM.Streamer(b);
+         b << fNbytesKeys;
+         b << fNbytesName;
+         if (version > 1000) {
+            b << fSeekDir;
+            b << fSeekParent;
+            b << fSeekKeys;
+         } else {
+            b << (Int_t)fSeekDir;
+            b << (Int_t)fSeekParent;
+            b << (Int_t)fSeekKeys;
+         }
+         fUUID.Streamer(b);
+         if (version <=1000) for (Int_t i=0;i<3;i++) b << Int_t(0);
       }
-      fUUID.Streamer(b);
-      if (version <=1000) for (Int_t i=0;i<3;i++) b << Int_t(0);
    }
 }
 
@@ -1764,6 +1902,12 @@ void TDirectory::WriteDirHeader()
 //*-*                  =====================================
    TFile* f = GetFile();
    if (f==0) return;
+   
+   if (!f->IsBinary()) {
+      fDatimeM.Set();
+      f->DirWriteHeader(this);
+      return;
+   }
 
    Int_t nbytes  = TDirectory::Sizeof();  //Warning ! TFile has a Sizeof()
    char * header = new char[nbytes];
@@ -1786,9 +1930,13 @@ void TDirectory::WriteKeys()
 //  The linked list of keys (fKeys) is written as a single data record
 //
 
-
    TFile* f = GetFile();
    if (f==0) return;
+   
+   if (!f->IsBinary()) {
+      f->DirWriteKeys(this);
+      return;
+   }
 
 //*-* Delete the old keys structure if it exists
    if (fSeekKeys != 0) {

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.167 2006/06/20 13:09:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.168 2006/06/20 16:38:01 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -89,6 +89,7 @@ TFile::TFile() : TDirectory(), fInfoCache(0)
    fMustFlush     = kTRUE;
    fAsyncHandle   = 0;
    fAsyncOpenStatus = kAOSNotAsync;
+   SetBit(kBinaryFile, kTRUE);
 
    if (gDebug)
       Info("TFile", "default ctor");
@@ -267,6 +268,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fNProcessIDs  = 0;
    fOffset       = 0;
    fFilePrefetch = 0;
+   SetBit(kBinaryFile, kTRUE);
 
    fOption.ToUpper();
 

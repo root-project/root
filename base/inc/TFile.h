@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.48 2006/05/22 11:13:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.49 2006/05/26 16:55:04 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -39,6 +39,7 @@ class TFilePrefetch;
 
 class TFile : public TDirectory {
   friend class TAlienFile;
+  friend class TDirectory;
 
 public:
    // Asynchronous open request status
@@ -103,6 +104,12 @@ protected:
    virtual Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
    virtual Int_t    SysSync(Int_t fd);
 
+   // Interface for text-based TDirectory I/O 
+   virtual Long64_t DirCreateEntry(TDirectory*) { return 0; }
+   virtual Int_t    DirReadKeys(TDirectory*) { return 0; }
+   virtual void     DirWriteKeys(TDirectory*) {}
+   virtual void     DirWriteHeader(TDirectory*) {}
+
 private:
    TFile(const TFile &);            //Files cannot be copied
    void operator=(const TFile &);
@@ -117,7 +124,8 @@ public:
       kRecovered     = BIT(10),
       kHasReferences = BIT(11),
       kDevNull       = BIT(12),
-      kWriteError    = BIT(14) // BIT(13) is taken up by TObject
+      kWriteError    = BIT(14), // BIT(13) is taken up by TObject
+      kBinaryFile    = BIT(15)
    };
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
    enum { kStartBigFile  = 2000000000 };
@@ -163,6 +171,7 @@ public:
    const   TList      *GetStreamerInfoCache();
    virtual void        IncrementProcessIDs() { fNProcessIDs++; }
    virtual Bool_t      IsArchive() const { return fIsArchive; }
+           Bool_t      IsBinary() const { return TestBit(kBinaryFile); }
    virtual Bool_t      IsOpen() const;
    virtual void        ls(Option_t *option="") const;
    virtual void        MakeFree(Long64_t first, Long64_t last);
