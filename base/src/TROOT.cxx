@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.181 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.182 2006/05/26 09:01:58 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1525,7 +1525,7 @@ void TROOT::InitSystem()
 
       gDebug = gEnv->GetValue("Root.Debug", 0);
 
-      Int_t zipmode = gEnv->GetValue("Root.ZipMode",0);
+      Int_t zipmode = gEnv->GetValue("Root.ZipMode",1);
       R__SetZipMode(zipmode);
 
       const char *sdeb;

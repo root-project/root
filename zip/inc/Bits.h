@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.7 2004/12/09 16:22:32 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.8 2004/12/09 16:29:04 brun Exp $ */
 /* Author: */
 /*
 
@@ -139,10 +139,10 @@ ulg R__bits_sent;   /* bit length of the compressed data */
 
 
 /* ===========================================================================
-   By default R__ZipMode = 0 (old zip compression algorithm.
-   If R__ZipMode is set to 1 (via R__SetZipMode) the new zlib is used
+   By default R__ZipMode = 1 (new zip compression algorithm.
+   If R__ZipMode is set to 0 (via R__SetZipMode) the old zlib is used
  */
-int R__ZipMode = 0;
+int R__ZipMode = 1;
 
 /* ===========================================================================
  *  Prototypes for local functions
