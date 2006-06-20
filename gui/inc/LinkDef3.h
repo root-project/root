@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.10 2005/10/11 12:39:36 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.11 2005/10/14 10:56:07 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -70,5 +70,6 @@
 #pragma link C++ class TGuiBldAction;
 #pragma link C++ class TGRedirectOutputGuard;
 #pragma link C++ class TGPasswdDialog;
+#pragma link C++ class TGTextEditor;
 
 #endif
