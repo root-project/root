@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.1 2006/06/20 07:58:33 antcheva Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -46,14 +46,14 @@
 //  - with a TMacro* as argument:                                       //
 //    TMacro *macro = new TMacro("hsimple.C");                          //
 //    new TGTextEditor(macro);                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 //Begin_Html
 /*
 <img src="gif/TGTextEditor.gif">
 */
 //End_Html
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 
 #include "TROOT.h"
 #include "TSystem.h"
