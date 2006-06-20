@@ -1,0 +1,7 @@
+Warning in <TEnvRec::ChangeValue>: duplicate entry <Library.TMCParticle=libEGPythia6.so libEG.so libGraf.so libVMC.so> for level 0; ignored
+
+Processing rundirdelete.C...
+After rename
+   Error: subdirectory dir_0/dir_1/dir_2_newname/dir_3/dir_4 not found
+After 20 dir create/delete
+  Error: File size 74196 too big. Expected not more than 30000
