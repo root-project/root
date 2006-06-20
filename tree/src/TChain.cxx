@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.134 2006/06/16 11:01:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.135 2006/06/19 09:34:41 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -889,7 +889,9 @@ Long64_t TChain::LoadTree(Long64_t entry)
          TFriendElement *fetree;
          Bool_t needUpdate = kFALSE;
          while ((fe = (TFriendElement*)next())) {
-            TObjLink *lnk = fTree->GetListOfFriends()->FirstLink();
+            TObjLink *lnk = 0;
+            if (fTree->GetListOfFriends()) 
+               lnk = fTree->GetListOfFriends()->FirstLink();
             fetree = 0;
             while (lnk) {
                TObject *obj = lnk->GetObject();
