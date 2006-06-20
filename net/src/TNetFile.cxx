@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.76 2006/06/09 01:21:43 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.77 2006/06/18 17:51:33 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -50,7 +50,7 @@
 // Begin_Html <a href=http://root.cern.ch/root/NetFile.html>NetFile</a> //
 // End_Html                                                             //
 // If the protocol is specified as "rootk" kerberos5 will be used for   //
-// authentication.
+// authentication.                                                      //
 //                                                                      //
 // The rootd daemon lives in the directory $ROOTSYS/bin. It can be      //
 // started either via inetd or by hand from the command line (no need   //
