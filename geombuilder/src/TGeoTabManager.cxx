@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -404,7 +404,7 @@ TObject *TGeoTreeDialog::fgSelectedObj = 0;
 TGeoTreeDialog::TGeoTreeDialog(TGFrame *caller, const TGWindow *main, UInt_t w, UInt_t h)
                :TGTransientFrame(main, main, w, h)
 {
-// Ctor
+// Constructor
    fgSelectedObj = 0;
    TGCanvas *tgcv = new TGCanvas(this, 100, 200,  kSunkenFrame | kDoubleBorder);
    fLT = new TGListTree(tgcv->GetViewPort(), 100, 200);
@@ -435,7 +435,7 @@ TGeoTreeDialog::TGeoTreeDialog(TGFrame *caller, const TGWindow *main, UInt_t w, 
 //______________________________________________________________________________
 TGeoTreeDialog::~TGeoTreeDialog()
 {
-// Dtor
+// Destructor
 }
 
 //______________________________________________________________________________

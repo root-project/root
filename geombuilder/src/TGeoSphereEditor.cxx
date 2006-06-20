@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoSphereEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoSphereEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -463,8 +463,8 @@ void TGeoSphereEditor::DoTheta2()
 //______________________________________________________________________________
 void TGeoSphereEditor::DoTheta()
 {
- // Slot for theta slider.
-  if (!fLock) {
+   // Slot for theta slider.
+   if (!fLock) {
       DoModified();
       fLock = kTRUE;
       fETheta1->SetNumber(fSTheta->GetMinPosition());

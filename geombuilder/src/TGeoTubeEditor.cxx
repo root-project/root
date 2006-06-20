@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -441,7 +441,7 @@ void TGeoTubeSegEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 void TGeoTubeSegEditor::DoPhi1()
 {
 // Slot for phi1.
-  Double_t phi1 = fEPhi1->GetNumber();
+   Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi1 > 360-1.e-10) {
       phi1 = 0.;

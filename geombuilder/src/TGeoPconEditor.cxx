@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoPconEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoPconEditor.cxx,v 1.1 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -291,8 +291,8 @@ void TGeoPconEditor::UpdateSections()
 //______________________________________________________________________________
 void TGeoPconEditor::DoName()
 {
- // Perform name change
-  DoModified();
+   // Perform name change
+   DoModified();
 }
 
 //______________________________________________________________________________
