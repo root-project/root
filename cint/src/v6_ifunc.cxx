@@ -3013,7 +3013,9 @@ void G__rate_parameter_match(G__param *libp,G__ifunc_table *p_ifunc
             -1!=formal_tagnum&&'e'==G__struct.type[formal_tagnum]) {
       funclist->p_rate[i] = G__EXACTMATCH;
     }
-    else if(isupper(formal_type)&&'i'==param_type&&0==libp->para[i].obj.i) {
+    else if(isupper(formal_type)&&
+            ('i'==param_type || 'l'==param_type)
+            &&0==libp->para[i].obj.i) {
       funclist->p_rate[i] = G__STDCONVMATCH + G__I02PCONVMATCH;
     }
     
