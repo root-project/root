@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.166 2006/06/20 10:15:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.167 2006/06/20 13:09:50 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1557,14 +1557,13 @@ void TFile::Seek(Long64_t offset, ERelativeTo pos)
             Error("Seek", "seeking from end in archive is not (yet) supported");
          break;
    }
-   if (Long64_t retpos = SysSeek(fD, offset, whence) < 0)
+   Long64_t retpos;
+   if ((retpos = SysSeek(fD, offset, whence)) < 0)
       SysError("Seek", "cannot seek to position %lld in file %s, retpos=%lld",
                offset, GetName(), retpos);
-   //we must set fOffset after the real SysSeek. This is required when 
-   //reading from the cache. fOffset may be changed behind your back by 
-   //TDCacheFile or other overloads of this function.
-   
-   fOffset = offset;
+
+   // used by TFilePrefetch::ReadBuffer()
+   fOffset = retpos;
 }
 
 //______________________________________________________________________________
