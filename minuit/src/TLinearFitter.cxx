@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.26 2006/05/24 15:10:46 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.27 2006/05/26 15:13:02 rdm Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -1444,12 +1444,12 @@ void TLinearFitter::PrintResults(Int_t level, Double_t /*amin*/) const
       if (!fRobust){
          printf("Fitting results:\nParameters:\nNO.\t\tVALUE\t\tERROR\n");
          for (Int_t i=0; i<fNfunctions; i++){
-            printf("%d\t%f\t%f\n", i, fParams(i), TMath::Sqrt(fParCovar(i, i)));
+            printf("%d\t%e\t%e\n", i, fParams(i), TMath::Sqrt(fParCovar(i, i)));
          }
       } else {
          printf("Fitting results:\nParameters:\nNO.\t\tVALUE\n");
          for (Int_t i=0; i<fNfunctions; i++){
-            printf("%d\t%f\n", i, fParams(i));
+            printf("%d\t%e\n", i, fParams(i));
          }
       }
    }
