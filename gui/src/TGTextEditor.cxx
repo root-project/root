@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.1 2006/06/20 07:58:33 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.2 2006/06/20 08:32:07 brun Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -199,19 +199,19 @@ void TGTextEditor::Build()
    fMenuFile->AddEntry("E&xit", kM_FILE_EXIT);
 
    fMenuEdit = new TGPopupMenu(fClient->GetRoot());
-   fMenuEdit->AddEntry("Cu&t     Ctrl+X", kM_EDIT_CUT);
-   fMenuEdit->AddEntry("&Copy    Ctrl+C", kM_EDIT_COPY);
-   fMenuEdit->AddEntry("&Paste   Ctrl+V", kM_EDIT_PASTE);
-   fMenuEdit->AddEntry("De&lete  Del", kM_EDIT_DELETE);
+   fMenuEdit->AddEntry("Cu&t             Ctrl+X", kM_EDIT_CUT);
+   fMenuEdit->AddEntry("&Copy          Ctrl+C", kM_EDIT_COPY);
+   fMenuEdit->AddEntry("&Paste         Ctrl+V", kM_EDIT_PASTE);
+   fMenuEdit->AddEntry("De&lete        Del", kM_EDIT_DELETE);
    fMenuEdit->AddSeparator();
-   fMenuEdit->AddEntry("Select &all", kM_EDIT_SELECTALL);
+   fMenuEdit->AddEntry("Select &All   Ctrl+A", kM_EDIT_SELECTALL);
    fMenuEdit->AddSeparator();
    fMenuEdit->AddEntry("Set &Font", kM_EDIT_SELFONT);
 
    fMenuTools = new TGPopupMenu(fClient->GetRoot());
-   fMenuTools->AddEntry("&Compile Macro", kM_TOOLS_COMPILE);
-   fMenuTools->AddEntry("&Execute Macro", kM_TOOLS_EXECUTE);
-   fMenuTools->AddEntry("&Interrupt", kM_TOOLS_INTERRUPT);
+   fMenuTools->AddEntry("&Compile Macro  Ctrl+F7", kM_TOOLS_COMPILE);
+   fMenuTools->AddEntry("&Execute Macro   Ctrl+F5", kM_TOOLS_EXECUTE);
+   fMenuTools->AddEntry("&Interrupt              Shift+F5", kM_TOOLS_INTERRUPT);
 
    fMenuEdit->DisableEntry(kM_EDIT_CUT);
    fMenuEdit->DisableEntry(kM_EDIT_COPY);
@@ -219,10 +219,10 @@ void TGTextEditor::Build()
    fMenuEdit->DisableEntry(kM_EDIT_PASTE);
 
    fMenuSearch = new TGPopupMenu(fClient->GetRoot());
-   fMenuSearch->AddEntry("&Find...", kM_SEARCH_FIND);
+   fMenuSearch->AddEntry("&Find...         Ctrl+F", kM_SEARCH_FIND);
    fMenuSearch->AddEntry("Find &next    F3", kM_SEARCH_FINDNEXT);
    fMenuSearch->AddSeparator();
-   fMenuSearch->AddEntry("&Goto line...", kM_SEARCH_GOTO);
+   fMenuSearch->AddEntry("&Goto line... Ctrl+L", kM_SEARCH_GOTO);
 
    fMenuHelp = new TGPopupMenu(fClient->GetRoot());
    fMenuHelp->AddEntry("&Help topics    F1", kM_HELP_CONTENTS);
@@ -311,6 +311,9 @@ void TGTextEditor::Build()
 
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_F3), 0, kTRUE);
 
+   AddInput(kKeyPressMask | kEnterWindowMask | kLeaveWindowMask |
+            kFocusChangeMask | kStructureNotifyMask);
+
    fTimer = new TTimer(this, 250);
    fTimer->Reset();
    fTimer->TurnOn();
@@ -368,7 +371,7 @@ void TGTextEditor::SaveFile(const char *fname)
                    tmp, kMBIconExclamation, kMBOk);
       return;
    }
-   if ((p = strrchr(fname, '/')) == 0) {
+   if ((p = (char *)strrchr(fname, '/')) == 0) {
       p = (char *)fname;
    } else {
       ++p;
@@ -497,6 +500,27 @@ Bool_t TGTextEditor::HandleKey(Event_t *event)
             return kTRUE;
          default:
             break;
+      }
+      if (event->fState & kKeyControlMask) {   // Ctrl key modifier pressed
+         switch((EKeySym)keysym) {
+            case kKey_F5:
+               ExecuteMacro();
+               return kTRUE;
+            case kKey_F7:
+               CompileMacro();
+               return kTRUE;
+            default:
+               break;
+         }
+      }
+      if (event->fState & kKeyShiftMask) {   // Shift key modifier pressed
+         switch((EKeySym)keysym) {
+            case kKey_F5:
+               InterruptMacro();
+               return kTRUE;
+            default:
+               break;
+         }
       }
    }
    return TGMainFrame::HandleKey(event);

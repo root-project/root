@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.36 2006/05/30 06:40:10 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.37 2006/06/16 10:06:30 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -801,6 +801,8 @@ Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
    if (event->fCode != kButton1) {
       return kFALSE;
    } 
+   if (!fText->GetCurrentLine()->GetText()) // empty line
+      return kFALSE;
 
    SetFocus();
    TGLongPosition pos;
@@ -1005,6 +1007,25 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
                }
                return kTRUE;
             }
+            case kKey_Home:
+               {
+                  TGLongPosition pos;
+                  pos.fY = 0;
+                  pos.fX = 0;
+                  SetHsbPosition(0);
+                  SetVsbPosition(0);
+                  SetCurrent(pos);
+               }
+               break;
+            case kKey_End:
+               {
+                  TGLongPosition pos;
+                  pos.fY = fText->RowCount()-1;
+                  pos.fX = fText->GetLineLength(pos.fY);
+                  SetVsbPosition(ToScrYCoord(pos.fY));
+                  SetCurrent(pos);
+               }
+               break;
             default:
                return kTRUE;
          }
