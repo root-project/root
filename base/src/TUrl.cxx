@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.30 2006/05/24 12:21:52 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.31 2006/06/07 09:10:53 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -129,7 +129,7 @@ tryfile:
             u += l;
          fPort = 0;
 
-         FindFile(u);
+         FindFile(u, kFALSE);
 
          delete [] u0;
          return;
@@ -240,7 +240,7 @@ cleanup:
 }
 
 //______________________________________________________________________________
-void TUrl::FindFile(char *u)
+void TUrl::FindFile(char *u, Bool_t stripDoubleSlash)
 {
    // Find file and optionally anchor and options.
 
@@ -260,7 +260,8 @@ void TUrl::FindFile(char *u)
       sav = *s;
       *s = 0;
       fFile = u;
-      fFile.ReplaceAll("//", "/");
+      if (stripDoubleSlash)
+         fFile.ReplaceAll("//", "/");
       *s = sav;
       s++;
       if (sav == '?') {
@@ -287,7 +288,8 @@ void TUrl::FindFile(char *u)
       }
    } else {
       fFile = u;
-      fFile.ReplaceAll("//", "/");
+      if (stripDoubleSlash)
+         fFile.ReplaceAll("//", "/");
       return;
    }
 
