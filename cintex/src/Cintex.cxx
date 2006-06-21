@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.7 2006/04/13 14:42:48 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.8 2006/04/28 06:40:18 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -90,6 +90,7 @@ namespace ROOT {
     fRootcreator = 0;
     fDbglevel = 0;
     fPropagateClassTypedefs = true;
+    fPropagateClassEnums = true;
     fEnabled = false;
   }
 
@@ -136,13 +137,21 @@ namespace ROOT {
   }
 
 
-    bool Cintex::PropagateClassTypedefs() {
-      return Instance().fPropagateClassTypedefs;
-    }
+  bool Cintex::PropagateClassTypedefs() {
+    return Instance().fPropagateClassTypedefs;
+  }
 
-    void Cintex::SetPropagateClassTypedefs(bool val) {
-      Instance().fPropagateClassTypedefs = val;
-    }
+  void Cintex::SetPropagateClassTypedefs(bool val) {
+    Instance().fPropagateClassTypedefs = val;
+  }
+
+  bool Cintex::PropagateClassEnums() {
+    return Instance().fPropagateClassEnums;
+  }
+
+  void Cintex::SetPropagateClassEnums(bool val) {
+    Instance().fPropagateClassEnums = val;
+  }
   
   void Callback::operator () ( const Type& t ) {
     int autoload = G__set_class_autoloading(0); // To avoid recursive loads

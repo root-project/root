@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.13 2006/05/30 08:14:13 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.14 2006/05/30 12:29:24 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -18,6 +18,7 @@
 #include "CINTFunctionBuilder.h"
 #include "CINTVariableBuilder.h"
 #include "CINTTypedefBuilder.h"
+#include "CINTEnumBuilder.h"
 #include "CINTFunctional.h"
 #include "Api.h"
 #include <list>
@@ -309,11 +310,12 @@ namespace ROOT { namespace Cintex {
   void CINTClassBuilder::Setup_typetable() {
 
     for (Type_Iterator ti = fClass.SubType_Begin(); ti != fClass.SubType_End(); ++ti) {
-      if (Cintex::PropagateClassTypedefs()) {
-        if ( ti->IsTypedef()) {
-          CINTTypedefBuilder::Setup(*ti);
-          CINTScopeBuilder::Setup(ti->ToType());
-        }
+      if (Cintex::PropagateClassTypedefs() && ti->IsTypedef() ) {
+        CINTTypedefBuilder::Setup(*ti);
+        CINTScopeBuilder::Setup(ti->ToType());
+      }
+      else if (Cintex::PropagateClassEnums() && ti->IsEnum() ) {
+        CINTEnumBuilder::Setup(*ti);
       }
     }
 

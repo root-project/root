@@ -513,14 +513,14 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def genInstantiateDict( self, selclasses, selfunctions, selenums, selvariables) :
     c = 'namespace {\n  struct Dictionaries {\n    Dictionaries() {\n'
-    c += self.genFunctions(selfunctions)
-    c += self.genEnums(selenums)
-    c += self.genVariables(selvariables)
     for attrs in selclasses :
       if 'incomplete' not in attrs : 
         clf = self.genTypeName(attrs['id'], colon=True)
         clt = string.translate(str(clf), self.transtable)
         c += '      %s_dict(); \n' % (clt)
+    c += self.genFunctions(selfunctions)
+    c += self.genEnums(selenums)
+    c += self.genVariables(selvariables)
     c += '    }\n    ~Dictionaries() {\n'
     for attrs in selclasses :
       if 'incomplete' not in attrs : 

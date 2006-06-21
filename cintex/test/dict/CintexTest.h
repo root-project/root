@@ -625,19 +625,29 @@ namespace {
   };
 }
 
-//-----Enumeration test--------------------------------------------------------------
-namespace A {
-  enum E1 {
-    one = 1,
-    two = 2,
-    hundred = 100
-  };
+//-----Enumeration tests--------------------------------------------------------------
+enum MyEnum { one=1, two=2, hundred=100 };
+
+namespace MyNS {
+  enum MyEnum { one=1, two=2, hundred=100 };
 }
 
-enum E2 {
-  E2_one = 1,
-  E2_two = 2,
-  E2_hundred = 100
+struct MyClass1 {
+  enum MyEnum1 { one=1, two=2, hundred=100 };
+};
+
+struct MyClass2 {
+  enum MyEnum2 { one=1, two=2, hundred=100 };
+  inline void f (MyEnum2){}
+};
+
+struct MyClass3 {
+  enum MyEnum3 { one=1, two=2, hundred=100 };
+};
+
+struct MyClass4 {
+  enum MyEnum4 { one=1, two=2, hundred=100 };
+  inline void f (MyEnum4){}
 };
 
 //----Variable test------------------------------------------------------------------

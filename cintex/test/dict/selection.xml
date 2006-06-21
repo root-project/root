@@ -40,8 +40,15 @@
 
   <class pattern="std::list<*>"/>
   <class name="N::WithPrivateTypes"/>
-  <enum name="E2"/>
-  <enum name="A::E1"/>
+  
+  <enum name="MyEnum" />
+  <enum name="MyNS::MyEnum" />
+  <enum name="MyClass1::MyEnum1" />
+  <enum name="MyClass2::MyEnum2" />
+  <class name="MyClass1" />
+  <class name="MyClass2" />
+  <class name="MyClass3" />
+  <class name="MyClass4" />
 
   <variable name="gMyInt"/>
   <variable pattern="A::g*"/>

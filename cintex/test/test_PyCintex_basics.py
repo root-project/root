@@ -396,7 +396,19 @@ class BasicsTestCase(unittest.TestCase):
   def test26TypedefRet(self):
     self.failUnlessEqual( self.gbl.MyNS.theFunction(), 1)
     self.failUnlessEqual( self.gbl.theFunction(), 1 )  
-    
+   
+  def test27Enums(self):
+    self.failUnlessEqual( self.gbl.one, 1)
+    self.failUnlessEqual( self.gbl.MyNS.one, 1)
+    self.failUnlessEqual( self.gbl.MyClass1.one, 1)
+    self.failUnlessEqual( self.gbl.MyClass2.one, 1)
+    self.failUnlessEqual( self.gbl.MyClass3.one, 1)
+    self.failUnlessEqual( self.gbl.MyClass4.one, 1)
+    self.failUnless('unknown' not in str(self.gbl.MyClass1()) )
+    self.failUnless('unknown' not in str(self.gbl.MyClass2()) )
+    self.failUnless('unknown' not in str(self.gbl.MyClass3()) )
+    self.failUnless('unknown' not in str(self.gbl.MyClass4()) )
+
 
 suite = unittest.makeSuite(BasicsTestCase,'test')
 if __name__ == '__main__':

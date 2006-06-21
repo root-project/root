@@ -306,10 +306,10 @@ bool test_ObjectArrays() {
 }
 
 bool test_Enums() {
-  failUnlessEqual( A::one, 1,  "Enums: value one");
-  failUnlessEqual( A::two, 2,  "Enums: value two");
-  failUnlessEqual( E2_one, 1,  "Enums: global value one");
-  failUnlessEqual( E2_two, 2,  "Enums: global value two");
+  failUnlessEqual( MyNS::one, 1,  "Enums: value one");
+  failUnlessEqual( MyNS::two, 2,  "Enums: value two");
+  failUnlessEqual( one, 1,  "Enums: global value one");
+  failUnlessEqual( two, 2,  "Enums: global value two");
   return true;
 }
 
