@@ -346,7 +346,7 @@ endif
 
 ALLCINTDLLS = $(CINTDLLS) $(CINTDICTDLLS)
 
-cintdlls_new: $(ALLCINTDLLS)
+cintdlls: $(ALLCINTDLLS)
 
 $(CINTDIRDLLSTL)/G__cpp_vector.cxx:	$(CINTDIRL)/dll_stl/vec.h
 $(CINTDIRDLLSTL)/G__cpp_list.cxx:	$(CINTDIRL)/dll_stl/lst.h

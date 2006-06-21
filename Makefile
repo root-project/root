@@ -347,7 +347,6 @@ MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
 MAKECINTDLL   = build/unix/makecintdll.sh
-MAKECINTDLLS  = build/unix/makecintdlls.sh
 MAKESTATIC    = build/unix/makestatic.sh
 RECONFIGURE   = build/unix/reconfigure.sh
 ifeq ($(PLATFORM),win32)
@@ -704,7 +703,6 @@ endif
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
 	@rm -f $(CINTDIR)/lib/posix/a.out $(CINTDIR)/include/*.so*
-	@$(MAKECINTDLLS) clean
 	@rm -f etc/daemons/rootd.rc.d etc/daemons/rootd.xinetd
 	@rm -f etc/daemons/proofd.rc.d etc/daemons/proofd.xinetd
 	@rm -f etc/daemons/olbd.rc.d etc/daemons/xrootd.rc.d
@@ -721,12 +719,6 @@ maintainer-clean:: distclean
 
 version: $(CINTTMP)
 	@$(MAKEVERSION)
-
-cintdlls: $(CINTTMP) $(ROOTCINTTMPEXE)
-	@$(MAKECINTDLLS) $(PLATFORM) "$(CINTTMP)" "$(ROOTCINTTMP)" \
-	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
-	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)" \
-           "$(CXXOUT)"
 
 static: rootlibs
 	@$(MAKESTATIC) $(PLATFORM) "$(CXX)" "$(CC)" "$(LD)" "$(LDFLAGS)" \
