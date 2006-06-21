@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.84 2006/04/25 09:28:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.85 2006/06/20 18:17:34 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -604,8 +604,8 @@ void TDirectory::Delete(const char *namecycle)
          if (deleteOK != 0) {
             fList->Remove(idcur);
             if (deleteOK==2) {
-                // read subdirectories to correctly delete them
-                if (deletetree)
+               // read subdirectories to correctly delete them
+               if (deletetree)
                   ((TDirectory*) idcur)->ReadAll("dirs");
                idcur->Delete(deletetree ? "T*;*" : "*");
                delete idcur;
