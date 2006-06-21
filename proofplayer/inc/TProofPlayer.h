@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.34 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.35 2006/05/23 07:43:55 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -50,7 +50,9 @@ class TMessage;
 class TSlave;
 class TEventIter;
 class TProofStats;
+class TMutex;
 class TStatus;
+class TTimer;
 
 
 //------------------------------------------------------------------------
@@ -81,7 +83,10 @@ protected:
    Int_t         fDrawQueries;     //Number of Draw queries in the list
    Int_t         fMaxDrawQueries;  //Max number of Draw queries kept
 
-   void       *GetSender() { return this; }  //used to set gTQSender
+   TTimer       *fStopTimer;       //Timer associated with a stop request
+   TMutex       *fStopTimerMtx;    //To protect the stop timer
+
+   void         *GetSender() { return this; }  //used to set gTQSender
 
    virtual void SetupFeedback();  // specialized setup
 
@@ -111,7 +116,7 @@ public:
                                 const char *selection, Option_t *option = "",
                                 Long64_t nentries = -1, Long64_t firstentry = 0);
 
-   virtual void      StopProcess(Bool_t abort);
+   virtual void      StopProcess(Bool_t abort, Int_t timeout = -1);
    virtual void      AddInput(TObject *inp);
    virtual void      ClearInput();
    virtual TObject  *GetOutput(const char *name) const;
@@ -145,6 +150,10 @@ public:
    virtual EExitStatus GetExitStatus() const { return fExitStatus; }
    virtual Long64_t    GetEventsProcessed() const { return fEventsProcessed; }
    virtual void        AddEventsProcessed(Long64_t ev) { fEventsProcessed += ev; }
+
+   virtual void      HandleAbortTimer();
+   virtual void      HandleStopTimer();
+   virtual void      SetStopTimer(Bool_t on = kTRUE, Bool_t abort = kFALSE, Int_t timeout = 0);
 
    ClassDef(TProofPlayer,0)  // Abstract PROOF player
 };
@@ -196,7 +205,7 @@ public:
                              const char *selection, Option_t *option = "",
                              Long64_t nentries = -1, Long64_t firstentry = 0);
 
-   void           StopProcess(Bool_t abort);
+   void           StopProcess(Bool_t abort, Int_t timeout = -1);
    void           StoreOutput(TList *out);   // Adopts the list
    void           StoreFeedback(TObject *slave, TList *out); // Adopts the list
    void           MergeOutput();

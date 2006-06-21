@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.2 2006/03/01 15:46:12 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.3 2006/04/19 10:57:44 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -108,12 +108,16 @@ public:
    ~XrdProofServProxy();
 
    inline const char  *Alias() const { return (const char *)fAlias; }
+   inline const char  *Client() const { return (const char *)fClient; }
    inline bool         Match(short int id) const { return (id == fID); }
    inline XrdOucMutex *Mutex() { return &fMutex; }
    inline int          SrvID() const { return fSrvID; }
+   inline int          SrvType() const { return fSrvType; }
+   inline void         SetClient(const char *c) { if (c) memcpy(fClient, c, 8); }
    inline void         SetID(short int id) { fID = id;}
    inline void         SetSrv(int id) { fSrvID = id; }
    inline void         SetSrvType(int id) { fSrvType = id; }
+   inline void         SetStatus(int st) { fStatus = st; }
    inline void         SetValid(bool valid = 1) { fIsValid = valid; }
    inline int          Status() const { return fStatus;}
    inline const char  *Tag() const { return (const char *)fTag; }
@@ -126,12 +130,13 @@ public:
    void                RemoveWorker(XrdProofWorker *w) { fWorkers.remove(w); }
 
    bool                IsValid() const { return fIsValid; }
+   const char         *StatusAsString() const;
 
    void                Reset();
 
  private:
 
-   XrdOucMutex               fMutex;
+   XrdOucRecMutex            fMutex;
    XrdLink                  *fLink;      // Link to proofsrv
    XrdProofdResponse         fProofSrv;  // Utility to talk to proofsrv
 
@@ -153,6 +158,7 @@ public:
 
    bool                      fIsValid; // Validity flag
 
+   char                      fClient[9]; // Client name
    char                      fTag[kXPROOFSRVTAGMAX];
    char                      fAlias[kXPROOFSRVALIASMAX];
 

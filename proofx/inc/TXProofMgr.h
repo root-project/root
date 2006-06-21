@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.4 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.5 2006/06/05 22:51:14 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -62,6 +62,7 @@ public:
    void        DetachSession(Int_t, Option_t * = "");
    Bool_t      MatchUrl(const char *url);
    TList      *QuerySessions(Option_t *opt = "S");
+   Int_t       Reset(const char *usr = 0);
    void        ShowWorkers();
 
    ClassDef(TXProofMgr,0)  // XrdProofd PROOF manager interface

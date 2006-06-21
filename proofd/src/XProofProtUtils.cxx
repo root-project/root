@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.3 2006/03/01 15:46:33 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.4 2006/06/02 15:14:35 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -54,36 +54,12 @@ void clientMarshall(XPClientRequest* str)
    case kXP_detach:
       str->proof.sid = host2net(str->proof.sid);
       break;
-   case kXP_stop:
-      // no swap on ASCII fields
-      break;
-   case kXP_pause:
-      // no swap on ASCII fields
-      break;
-   case kXP_resume:
-      // no swap on ASCII fields
-      break;
-   case kXP_retrieve:
-      str->proof.sid = host2net(str->proof.sid);
-      str->proof.int1 = host2net(str->proof.int1);
-      str->proof.int2 = host2net(str->proof.int2);
-      break;
-   case kXP_archive:
-      str->proof.sid = host2net(str->proof.sid);
-      str->proof.int1 = host2net(str->proof.int1);
-      str->proof.int2 = host2net(str->proof.int2);
-      break;
    case kXP_cleanup:
       str->proof.sid = host2net(str->proof.sid);
       str->proof.int1 = host2net(str->proof.int1);
       str->proof.int2 = host2net(str->proof.int2);
       break;
    case kXP_sendmsg:
-      str->sendrcv.sid = host2net(str->sendrcv.sid);
-      str->sendrcv.opt = host2net(str->sendrcv.opt);
-      str->sendrcv.cid = host2net(str->sendrcv.cid);
-      break;
-   case kXP_submit:
       str->sendrcv.sid = host2net(str->sendrcv.sid);
       str->sendrcv.opt = host2net(str->sendrcv.opt);
       str->sendrcv.cid = host2net(str->sendrcv.cid);
@@ -101,6 +77,12 @@ void clientMarshall(XPClientRequest* str)
    case kXP_ping:
       str->sendrcv.sid = host2net(str->sendrcv.sid);
       str->sendrcv.opt = host2net(str->sendrcv.opt);
+      break;
+   case kXP_urgent:
+      str->proof.sid = host2net(str->proof.sid);
+      str->proof.int1 = host2net(str->proof.int1);
+      str->proof.int2 = host2net(str->proof.int2);
+      str->proof.int3 = host2net(str->proof.int3);
       break;
    }
 
@@ -150,16 +132,6 @@ char *convertRequestIdToChar(kXR_int16 requestid)
       return (char *)"kXP_attach";
    case kXP_detach:
       return (char *)"kXP_detach";
-   case kXP_stop:
-      return (char *)"kXP_stop";
-   case kXP_pause:
-      return (char *)"kXP_pause";
-   case kXP_resume:
-      return (char *)"kXP_resume";
-   case kXP_retrieve:
-      return (char *)"kXP_retrieve";
-   case kXP_archive:
-      return (char *)"kXP_archive";
    case kXP_sendmsg:
       return (char *)"kXP_sendmsg";
    case kXP_admin:
@@ -168,10 +140,10 @@ char *convertRequestIdToChar(kXR_int16 requestid)
       return (char *)"kXP_interrupt";
    case kXP_ping:
       return (char *)"kXP_ping";
-   case kXP_submit:
-      return (char *)"kXP_submit";
    case kXP_cleanup:
       return (char *)"kXP_cleanup";
+   case kXP_urgent:
+      return (char *)"kXP_urgent";
    default:
       return (char *)"kXP_UNKNOWN";
    }
@@ -264,28 +236,6 @@ void smartPrintClientHeader(XPClientRequest* hdr)
       printf("%40s%d \n",
              "ClientHeader.proof.sid = ", hdr->proof.sid);
       break;
-   case kXP_stop:
-      break;
-   case kXP_pause:
-      break;
-   case kXP_resume:
-      break;
-   case kXP_retrieve:
-      printf("%40s%d \n",
-             "ClientHeader.proof.sid = ", hdr->proof.sid);
-      printf("%40s%d \n",
-             "ClientHeader.proof.int1 = ", hdr->proof.int1);
-      printf("%40s%d \n",
-             "ClientHeader.proof.int2 = ", hdr->proof.int2);
-      break;
-   case kXP_archive:
-      printf("%40s%d \n",
-             "ClientHeader.proof.sid = ", hdr->proof.sid);
-      printf("%40s%d \n",
-             "ClientHeader.proof.int1 = ", hdr->proof.int1);
-      printf("%40s%d \n",
-             "ClientHeader.proof.int2 = ", hdr->proof.int2);
-      break;
    case kXP_cleanup:
       printf("%40s%d \n",
              "ClientHeader.proof.sid = ", hdr->proof.sid);
@@ -302,12 +252,6 @@ void smartPrintClientHeader(XPClientRequest* hdr)
       printf("%40s%d \n",
              "ClientHeader.sendrcv.cid = ", hdr->sendrcv.cid);
       break;
-   case kXP_submit:
-      printf("%40s%d \n",
-             "ClientHeader.sendrcv.sid = ", hdr->sendrcv.sid);
-      printf("%40s%d \n",
-             "ClientHeader.sendrcv.opt = ", hdr->sendrcv.opt);
-      break;
    case kXP_interrupt:
       printf("%40s%d \n",
              "ClientHeader.interrupt.sid = ", hdr->interrupt.sid);
@@ -321,10 +265,15 @@ void smartPrintClientHeader(XPClientRequest* hdr)
              "ClientHeader.sendrcv.opt = ", hdr->sendrcv.opt);
       break;
    case kXP_admin:
+   case kXP_urgent:
       printf("%40s%d \n",
              "ClientHeader.proof.sid = ", hdr->proof.sid);
       printf("%40s%d \n",
              "ClientHeader.proof.int1 = ", hdr->proof.int1);
+      printf("%40s%d \n",
+             "ClientHeader.proof.int2 = ", hdr->proof.int2);
+      printf("%40s%d \n",
+             "ClientHeader.proof.int3 = ", hdr->proof.int3);
       break;
    }
 

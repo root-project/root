@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.4 2006/03/03 15:42:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.5 2006/04/19 10:57:44 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -138,6 +138,57 @@ TVirtualProof *TVirtualProof::Open(const char *cluster, const char *conffile,
       }
       return proof;
    }
+}
+
+//_____________________________________________________________________________
+Int_t TVirtualProof::Reset(const char *url, const char *usr)
+{
+   // Reset the entry associated with the entity defined by 'url', which is
+   // in the form
+   //                "[proof://][user@]master.url[:port]"
+   // If 'user' has the privileges it can also ask to reset the entry of a
+   // different user specified by 'usr'; use 'usr'=='*' to reset all the 
+   // sessions know remotely.
+   // 'Reset' means that all the PROOF sessions owned by the user at this
+   // master are terminated or killed, any other client connections (from other
+   // shells) closed, and the protocol instance reset and given back to the stack.
+   // After this call the user will be asked to login again and will start
+   // from scratch.
+   // To be used when the cluster is not behaving.
+   // Return 0 on success, -1 if somethign wrng happened.
+
+   if (!url)
+      return -1;
+
+   const char *pn = "TVirtualProof::Reset";
+
+   // If the master was specified as "", try to get the localhost FQDN
+   if (!strlen(url))
+      url = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
+
+   TUrl u(url);
+   // in case user gave as url: "machine.dom.ain", replace
+   // "http" by "proof" and "80" by "1093"
+   if (!strcmp(u.GetProtocol(), TUrl("a").GetProtocol()))
+      u.SetProtocol("proof");
+   if (u.GetPort() == TUrl("a").GetPort())
+      u.SetPort(1093);
+
+   // Attach-to or create the appropriate manager
+   TVirtualProofMgr *mgr = TVirtualProofMgr::Create(u.GetUrl());
+
+   if (mgr && mgr->IsValid())
+      if (!(mgr->IsProofd()))
+         // Ask the manager to reset the entry
+         return mgr->Reset(usr);
+      else
+         ::Info(pn,"proofd: functionality not supported by server");
+
+   else
+      ::Info(pn,"could not open a valid connection to %s", u.GetUrl());
+
+   // Done
+   return -1;
 }
 
 //_____________________________________________________________________________

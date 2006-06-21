@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.123 2006/06/05 22:51:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.124 2006/06/06 09:50:53 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -82,6 +82,8 @@
 #include "TProofResourcesStatic.h"
 #include "TProofNodeInfo.h"
 #include "TFileInfo.h"
+#include "TTimer.h"
+#include "TMutex.h"
 
 #ifndef R__WIN32
 const char* const kCP     = "/bin/cp -f";
@@ -260,7 +262,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    // overloading.
 
    // Wait (loop) to allow debugger to connect
-   Bool_t test = (*argc >= 5 && !strcmp(argv[4], "test")) ? kTRUE : kFALSE;
+   Bool_t test = (*argc >= 4 && !strcmp(argv[3], "test")) ? kTRUE : kFALSE;
    if ((gEnv->GetValue("Proof.GdbHook",0) == 3 && !test) ||
        (gEnv->GetValue("Proof.GdbHook",0) == 4 && test)) {
       while (gProofServDebug)
@@ -316,6 +318,10 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fWaitingQueries  = new TList;
    fPreviousQueries = 0;
    fIdle            = kTRUE;
+
+   fShutdownWhenIdle = kTRUE;
+   fShutdownTimer   = 0;
+   fShutdownTimerMtx = 0;
 
    if (gErrorIgnoreLevel == kUnset) {
       gErrorIgnoreLevel = 0;
@@ -505,6 +511,8 @@ void TProofServ::CreateServer()
          SendLogFile(-99);
          Terminate(0);
       }
+      // Find out if we are a master in direct contact only with workers
+      fEndMaster = fProof->IsEndMaster();
 
       SendLogFile();
    }
@@ -696,9 +704,11 @@ void TProofServ::GetOptions(Int_t *argc, char **argv)
    if (!strcmp(argv[1], "proofserv")) {
       fService = argv[1];
       fMasterServ = kTRUE;
+      fEndMaster = kTRUE;
    } else if (!strcmp(argv[1], "proofslave")) {
       fMasterServ = kFALSE;
       fService = argv[1];
+      fEndMaster = kFALSE;
    } else {
       Fatal("GetOptions", "Must be started as proofmaster or proofslave");
       exit(1);
@@ -979,6 +989,18 @@ void TProofServ::HandleSocketInput()
 
             // Notify
             SendLogFile(status);
+         }
+         break;
+
+      case kPROOF_WORKERLISTS:
+         {
+            if (IsMaster())
+               HandleWorkerLists(mess);
+            else
+               Warning("HandleSocketInput:kPROOF_WORKERLISTS",
+                       "Action meaning-less on worker nodes: protocol error?");
+            // Notify
+            SendLogFile();
          }
          break;
 
@@ -1318,6 +1340,10 @@ void TProofServ::HandleSocketInput()
    fRealTime += (Float_t)timer.RealTime();
    fCpuTime  += (Float_t)timer.CpuTime();
 
+   // Check if we have been asked to shutdown
+   // (we will do nothing if not set)
+   SetShutdownTimer(kTRUE, -1);
+
    delete mess;
 }
 
@@ -1402,14 +1428,19 @@ void TProofServ::HandleSocketInputDuringProcess()
          break;
 
       case kPROOF_STOPPROCESS:
-         (*mess) >> aborted;
-         PDB(kGlobal, 1)
-            Info("HandleSocketInputDuringProcess:kPROOF_STOPPROCESS", "enter %d", aborted);
-         if (fProof)
-            fProof->StopProcess(aborted);
-         else
-            if(fPlayer)
-               fPlayer->StopProcess(aborted);
+         {  Long_t timeout = -1;
+            (*mess) >> aborted;
+            if (fProtocol > 9)
+               (*mess) >> timeout;
+            PDB(kGlobal, 1)
+               Info("HandleSocketInputDuringProcess:kPROOF_STOPPROCESS",
+                    "enter %d, %d", aborted, timeout);
+            if (fProof)
+               fProof->StopProcess(aborted, timeout);
+            else
+               if(fPlayer)
+                  fPlayer->StopProcess(aborted, timeout);
+         }
          break;
 
       case kPROOF_CACHE:
@@ -3107,6 +3138,12 @@ void TProofServ::HandleProcess(TMessage *mess)
          if (p->GetExitStatus() == TProofPlayer::kAborted)
             RemoveQuery(pq);
 
+         // Player cleanup
+         if (fProof != 0)
+            // ensure player is no longer referenced
+            fProof->SetPlayer(0);
+         SafeDelete(p);
+
       } // Loop on submitted queries
 
       // Signal the client that we are idle
@@ -3158,21 +3195,16 @@ void TProofServ::HandleProcess(TMessage *mess)
          fSocket->SendObject(0,kPROOF_OUTPUTLIST);
       }
 
-      if (dset)
-         delete dset;
-      if (input)
-         delete input;
+      // Cleanup
+      SafeDelete(dset);
+      SafeDelete(input)
+      SafeDelete(p);
    }
+
+   fPlayer = 0;
 
    // Set idle
    fIdle = kTRUE;
-
-   // Cleanup
-   if (fProof != 0)
-      // ensure player is no longer referenced
-      fProof->SetPlayer(0);
-   delete p;
-   fPlayer = 0;
 
    PDB(kGlobal, 1) Info("HandleProcess", "Done");
 
@@ -3878,6 +3910,49 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
    // We are done
    return status;
+}
+
+//______________________________________________________________________________
+void TProofServ::HandleWorkerLists(TMessage *mess)
+{
+   // Handle here all requests to modify worker lists
+
+   PDB(kGlobal, 1)
+      Info("HandleWorkerLists", "Enter");
+
+   Int_t type = 0;
+   TString ord;
+
+   (*mess) >> type;
+
+   switch (type) {
+      case TProof::kActivateWorker:
+         (*mess) >> ord;
+         if (fProof) {
+            fProof->ActivateWorker(ord);
+            if (ord == "*")
+               Info("HandleWorkerList","all workers (re-)activated");
+            else
+               Info("HandleWorkerList","worker %s (re-)activated", ord.Data());
+         } else {
+            Warning("HandleWorkerList","undefined PROOF session: protocol error?");
+         }
+         break;
+      case TProof::kDeactivateWorker:
+         (*mess) >> ord;
+         if (fProof) {
+            fProof->DeactivateWorker(ord);
+            if (ord == "*")
+               Info("HandleWorkerList","all workers deactivated");
+            else
+               Info("HandleWorkerList","worker %s deactivated", ord.Data());
+         } else {
+            Warning("HandleWorkerList","undefined PROOF session: protocol error?");
+         }
+         break;
+      default:
+         Warning("HandleWorkerList","unknown action type (%d)", type);
+   }
 }
 
 //______________________________________________________________________________

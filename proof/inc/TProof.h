@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.80 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.81 2006/06/05 22:51:13 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -90,9 +90,11 @@ class TVirtualMutex;
 // 5 -> 6: drop TFTP, support for asynchronous queries
 // 6 -> 7: support for multisessions, archieve, retrieve, ...
 // 7 -> 8: return number of entries in GetNextPacket
+// 8 -> 9: support for stateless connection via xproofd
+// 9 -> 10: new features requested, tested at CAF
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol = 9;             // protocol version number
+const Int_t       kPROOF_Protocol = 10;            // protocol version number
 const Int_t       kPROOF_Port     = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
@@ -249,6 +251,10 @@ private:
       kForce         = 0x2,
       kForward       = 0x4
    };
+   enum EProofWrkListAction {
+      kActivateWorker      = 1,
+      kDeactivateWorker    = 2
+   };
 
    Bool_t          fValid;          //is this a valid proof object
    TString         fMaster;         //master server ("" if a master); used in the browser
@@ -259,6 +265,7 @@ private:
    Bool_t          fMasterServ;     //true if we are a master server
    Bool_t          fSendGroupView;  //if true send new group view
    TList          *fActiveSlaves;   //list of active slaves (subset of all slaves)
+   TList          *fInactiveSlaves; //list of inactive slaves (good but not used for processing)
    TList          *fUniqueSlaves;   //list of all active slaves with unique file systems
    TList          *fNonUniqueMasters; //list of all active masters with a nonunique file system
    TMonitor       *fActiveMonitor;  //monitor activity on all active slave sockets
@@ -298,6 +305,8 @@ private:
    Int_t           fSeqNum;         //Remote sequential # of the last query submitted
 
    Int_t           fSessionID;      //Remote ID of the session
+
+   Bool_t          fEndMaster;      //true for a master in direct contact only with workers
 
 protected:
    enum ESlaves { kAll, kActive, kUnique };
@@ -358,19 +367,24 @@ private:
    Int_t    BroadcastObject(const TObject *obj, Int_t kind = kMESS_OBJECT, ESlaves list = kActive);
    Int_t    BroadcastRaw(const void *buffer, Int_t length, TList *slaves);
    Int_t    BroadcastRaw(const void *buffer, Int_t length, ESlaves list = kActive);
-   Int_t    Collect(const TSlave *sl);
-   Int_t    Collect(TMonitor *mon);
+   Int_t    Collect(const TSlave *sl, Long_t timeout = -1);
+   Int_t    Collect(TMonitor *mon, Long_t timeout = -1);
    Int_t    CollectInputFrom(TSocket *s);
 
    void     FindUniqueSlaves();
    TSlave  *FindSlave(TSocket *s) const;
    TList   *GetListOfSlaves() const { return fSlaves; }
+   TList   *GetListOfInactiveSlaves() const { return fInactiveSlaves; }
    TList   *GetListOfUniqueSlaves() const { return fUniqueSlaves; }
    TList   *GetListOfBadSlaves() const { return fBadSlaves; }
    Int_t    GetNumberOfSlaves() const;
    Int_t    GetNumberOfActiveSlaves() const;
+   Int_t    GetNumberOfInactiveSlaves() const;
    Int_t    GetNumberOfUniqueSlaves() const;
    Int_t    GetNumberOfBadSlaves() const;
+
+   Bool_t   IsEndMaster() const { return fEndMaster; }
+   void     ModifyWorkerLists(const char *ord, Bool_t add);
 
    Bool_t   IsSync() const { return fSync; }
    void     InterruptCurrentMonitor();
@@ -399,8 +413,8 @@ protected:
    TSlave *CreateSubmaster(const char *url, const char *ord,
                            const char *image, const char *msd);
 
-   Int_t    Collect(ESlaves list = kActive);
-   Int_t    Collect(TList *slaves);
+   Int_t    Collect(ESlaves list = kActive, Long_t timeout = -1);
+   Int_t    Collect(TList *slaves, Long_t timeout = -1);
 
    void         SetDSet(TDSet *dset) { fDSet = dset; }
    virtual void ValidateDSet(TDSet *dset);
@@ -435,7 +449,7 @@ public:
    Int_t       Retrieve(Int_t query, const char *path = 0);
    Int_t       Retrieve(const char *queryref, const char *path = 0);
 
-   void        StopProcess(Bool_t abort);
+   void        StopProcess(Bool_t abort, Int_t timeout = -1);
    void        AddInput(TObject *obj);
    void        Browse(TBrowser *b);
    void        ClearInput();
@@ -468,12 +482,12 @@ public:
    //-- dataset management
    Int_t       UploadDataSet(const char *dataset,
                              const char *files,
-                             const char *dest,
+                             const char *dest = 0,
                              Int_t opt = kAskUser,
                              TList *skippedFiles = 0);
-   Int_t       UploadDataSetFromFile(const char *file,
-                                     const char *dest,
-                                     const char *dataset,
+   Int_t       UploadDataSetFromFile(const char *dataset,
+                                     const char *file,
+                                     const char *dest = 0,
                                      Int_t opt = kAskUser);
    TList      *GetDataSets();
    void        ShowDataSets();
@@ -557,15 +571,19 @@ public:
    void        RemoveChain(TChain *chain);
 
    TDrawFeedback *CreateDrawFeedback();
-   void           SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt);
-   void           DeleteDrawFeedback(TDrawFeedback *f);
+   void        SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt);
+   void        DeleteDrawFeedback(TDrawFeedback *f);
 
-   void           Detach(Option_t *opt = "");
+   void        Detach(Option_t *opt = "");
 
-   void           SetAlias(const char *alias="");
+   void        SetAlias(const char *alias="");
 
-   static TVirtualProof *Open(const char *cluster = 0, const char *conffile = 0,
+   void        ActivateWorker(const char *ord);
+   void        DeactivateWorker(const char *ord);
+
+   static TVirtualProof *Open(const char *url = 0, const char *conffile = 0,
                               const char *confdir = 0, Int_t loglevel = 0);
+   static Int_t          Reset(const char *url, const char *usr = 0);
 
    ClassDef(TProof,0)  //PROOF control class
 };

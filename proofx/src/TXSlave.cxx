@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.7 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.8 2006/06/05 22:51:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -221,6 +221,11 @@ void TXSlave::Init(const char *host, Int_t stype)
    // Set remote session ID
    fProof->fSessionID = ((TXSocket *)fSocket)->GetSessionID();
 
+   // Set URL entry point for the default data pool
+   TString dpu(((TXSocket *)fSocket)->fBuffer);
+   if (dpu.Length() > 0)
+      fProof->SetDataPoolUrl(dpu);
+
    // Remove socket from global TROOT socket list. Only the TProof object,
    // representing all slave sockets, will be added to this list. This will
    // ensure the correct termination of all proof servers in case the
@@ -333,6 +338,18 @@ void TXSlave::Interrupt(Int_t type)
 
    ((TXSocket *)fSocket)->SendInterrupt(type);
    Info("Interrupt","Interrupt of type %d sent", type);
+}
+
+//______________________________________________________________________________
+void TXSlave::StopProcess(Bool_t abort, Int_t timeout)
+{
+   // Sent stop/abort request to PROOF server. It will be
+   // processed asynchronously by a separate thread.
+   if (!IsValid()) return;
+
+   ((TXSocket *)fSocket)->SendUrgent(TXSocket::kStopProcess, (Int_t)abort, timeout);
+   if (gDebug > 0)
+      Info("StopProcess", "Request of type %d sent over", abort);
 }
 
 //_____________________________________________________________________________

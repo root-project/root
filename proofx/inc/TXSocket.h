@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.5 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.6 2006/06/05 22:51:14 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -55,6 +55,13 @@ class TXHandler;
 class TXSocketHandler;
 class XrdClientMessage;
 
+// To transmit info to Handlers
+typedef struct {
+   Int_t   fInt1;
+   Int_t   fInt2;
+   Int_t   fInt3;
+   Int_t   fInt4;
+} XHandleIn_t;
 
 class TXSocket  : public TSocket, public XrdClientAbsUnsolMsgHandler {
 
@@ -71,10 +78,10 @@ private:
    TString             fUser;          // Username used for login
    TString             fHost;          // Remote host
    Int_t               fPort;          // Remote port
-   TString             fAlias;         // An alias name for this connection
 
    Int_t               fLogLevel;      // Log level to be transmitted to servers
 
+   TString             fBuffer;        // Container for exchanging information
    TObject            *fReference;     // Generic object reference of this socket
    TXHandler          *fHandler;       // Handler of asynchronous events (input, error)
 
@@ -127,12 +134,15 @@ private:
    static void         DumpReadySock(); // Dump content of the ready-socket list
 
 public:
-   // Should be the same as in proofd/src/XrdProofdProtocol::Admin
+   // Should be the same as in proofd/src/XrdProofdProtocol.cxx (local definitions)
    enum ECoordMsgType { kQuerySessions = 1000,
-                        kSessionTag, kSessionAlias, kGetWorkers, kQueryWorkers };
+                        kSessionTag, kSessionAlias, kGetWorkers, kQueryWorkers,
+                        kCleanupSessions };
+   // Should be the same as in proofd/src/XrdProofdProtocol::Urgent
+   enum EUrgentMsgType { kStopProcess = 2000 };
 
    TXSocket(const char *url, Char_t mode = 'M',
-            Int_t psid = -1, Char_t ver = -1, const char *alias = 0, Int_t loglevel = -1);
+            Int_t psid = -1, Char_t ver = -1, const char *logbuf = 0, Int_t loglevel = -1);
    TXSocket(const TXSocket &xs);
    TXSocket& operator=(const TXSocket& xs);
    virtual ~TXSocket();
@@ -187,6 +197,9 @@ public:
    // Interrupts
    Int_t               SendInterrupt(Int_t type);
    Int_t               GetInterrupt();
+
+   // Urgent message
+   void                SendUrgent(Int_t type, Int_t int1, Int_t int2);
 
    // Interrupt the low level socket
    void                SetInterrupt() { if (fConn) fConn->SetInterrupt(); }

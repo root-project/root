@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.32 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.33 2006/06/05 22:51:13 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -79,6 +79,7 @@ private:
    static TProof_t              fgProofHook; // Hook to TProof constructor
 
 protected:
+   TString                      fDataPoolUrl; // Default data pool entry point URL
    TVirtualProofMgr::EServType  fServType;  // Type of server: proofd, XrdProofd
    TVirtualProofMgr            *fManager;   // Manager to which this session belongs (if any)
    EQueryMode                   fQueryMode; // default query mode
@@ -117,7 +118,7 @@ public:
    virtual Int_t       Retrieve(Int_t query, const char *path = 0) = 0;
    virtual Int_t       Retrieve(const char *queryref, const char *path = 0) = 0;
 
-   virtual void        StopProcess(Bool_t abort) = 0;
+   virtual void        StopProcess(Bool_t abort, Int_t timeout = -1) = 0;
    virtual void        AddInput(TObject *obj) = 0;
    virtual void        ClearInput() = 0;
    virtual TObject    *GetOutput(const char *name) = 0;
@@ -248,11 +249,18 @@ public:
    virtual TVirtualProofMgr *GetManager() { return fManager; }
    virtual void        SetManager(TVirtualProofMgr *mgr) { fManager = mgr; }
 
+   virtual void        ActivateWorker(const char *ord) = 0;
+   virtual void        DeactivateWorker(const char *ord) = 0;
+
+   virtual const char *GetDataPoolUrl() const { return fDataPoolUrl; }
+   virtual void        SetDataPoolUrl(const char *url) { fDataPoolUrl = url; }
+
    static void         SetTProofHook(TProof_t proofhook);
    static TProof_t     GetTProofHook();
 
-   static TVirtualProof *Open(const char *cluster = 0, const char *conffile = 0,
+   static TVirtualProof *Open(const char *url = 0, const char *conffile = 0,
                               const char *confdir = 0, Int_t loglevel = 0);
+   static Int_t        Reset(const char *url, const char *usr = 0);
 
    ClassDef(TVirtualProof,0)  // Abstract PROOF interface
 };

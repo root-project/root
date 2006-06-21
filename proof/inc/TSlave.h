@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.21 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.22 2006/06/05 22:51:13 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -57,6 +57,7 @@ friend class TXSlave;
 public:
 
    enum ESlaveType { kMaster, kSlave };
+   enum ESlaveStatus { kInvalid, kActive, kInactive };
 
 private:
 
@@ -103,6 +104,8 @@ protected:
    virtual Int_t Ping();
    virtual TObjString *SendCoordinator(Int_t kind, const char *msg = 0);
    virtual void  SetAlias(const char *alias);
+   virtual void  SetStatus(Int_t st) { fStatus = st; }
+   virtual void  StopProcess(Bool_t abort, Int_t timeout);
 
 public:
    virtual ~TSlave();

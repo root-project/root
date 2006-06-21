@@ -33,11 +33,10 @@ prog="olbd"
 
 start() {
         echo -n $"Starting $prog: "
-        # Options '-b -l /tmp/olbd.log' run the daemon into the background
-        # with a default log file; any log file specification in $OLBDOPTS
-        # (via /etc/sysconfig/olbd) will superseed the default; a second
-        # '-b' is ignored. 
-        daemon $OLBD -b -l /tmp/olbd.log $OLBDOPTS
+        # Options are specified in /etc/sysconfig/olbd .
+        # See $ROOTSYS/etc/daemons/olbd.sysconfig for an example.
+        # $OLBDUSER *must* be the name of an existing non-privileged user.
+        daemon $OLBD -b -l $OLBDLOG -R $OLBDUSER -c $OLBDCF $OLBDDEBUG
         RETVAL=$?
         echo
         [ $RETVAL -eq 0 ] && touch /var/lock/subsys/olbd

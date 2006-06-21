@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.5 2006/05/01 20:13:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.6 2006/05/15 09:45:03 brun Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -124,9 +124,11 @@ TList *TProofMgr::QuerySessions(Option_t *opt)
          // Only those belonginh to this server
          if (MatchUrl(p->GetUrl())) {
             if (!(fSessions->FindObject(p->GetSessionTag()))) {
+               Int_t st = (p->IsIdle()) ? TVirtualProofDesc::kIdle
+                                        : TVirtualProofDesc::kRunning;
                TVirtualProofDesc *d =
                    new TVirtualProofDesc(p->GetName(), p->GetTitle(), p->GetUrl(),
-                                         ++ns, p->GetSessionID(), p->IsIdle(), p);
+                                         ++ns, p->GetSessionID(), st, p);
                fSessions->Add(d);
             }
          }
@@ -152,4 +154,16 @@ TList *TProofMgr::QuerySessions(Option_t *opt)
 
    // We are done
    return fSessions;
+}
+
+//______________________________________________________________________________
+Int_t TProofMgr::Reset(const char *)
+{
+   // Send a cleanup request for the sessions associated with the current
+   // user.
+   // Not supported.
+
+   Warning("Reset","functionality not supported");
+
+   return -1;
 }

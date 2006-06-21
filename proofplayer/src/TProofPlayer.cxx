@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.79 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.80 2006/06/06 09:50:53 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -54,9 +54,14 @@
 #include "TMD5.h"
 #include "TMethodCall.h"
 #include "TObjArray.h"
+#include "TMutex.h"
 #ifndef R__TH1MERGEFIXED
 #include "TH1.h"
 #endif
+
+// Timeout exception
+#define kPEX_STOPPED  1001
+#define kPEX_ABORTED  1002
 
 class TAutoBinVal : public TNamed {
 private:
@@ -91,7 +96,7 @@ TProofPlayer::TProofPlayer()
    : fAutoBins(0), fOutput(0), fSelector(0), fSelectorClass(0),
      fFeedbackTimer(0), fEvIter(0), fSelStatus(0), fEventsProcessed(0),
      fTotalEvents(0), fQueryResults(0), fQuery(0), fDrawQueries(0),
-     fMaxDrawQueries(1)
+     fMaxDrawQueries(1), fStopTimer(0), fStopTimerMtx(0)
 {
    // Default ctor.
 
@@ -112,16 +117,107 @@ TProofPlayer::~TProofPlayer()
 }
 
 //______________________________________________________________________________
-void TProofPlayer::StopProcess(Bool_t abort)
+void TProofPlayer::StopProcess(Bool_t abort, Int_t timeout)
 {
-   // Stop the process after this event.
+   // Stop the process after this event. If timeout is positive, start
+   // a timer firing after timeout seconds to hard-stop time-expensive
+   // events.
+
+   if (gDebug > 0)
+      Info ("StopProcess","abort: %d, timeout: %d", abort, timeout);
 
    if (fEvIter != 0)
       fEvIter->StopProcess(abort);
-   if (abort == kTRUE)
+   Long_t to = 1;
+   if (abort == kTRUE) {
       fExitStatus = kAborted;
-   else
+   } else {
       fExitStatus = kStopped;
+      to = timeout;
+   }
+   // Start countdown, if needed
+   if (to > 0)
+      SetStopTimer(kTRUE, abort, to);
+}
+
+//______________________________________________________________________________
+void TProofPlayer::SetStopTimer(Bool_t on, Bool_t abort, Int_t timeout)
+{
+   // Enable/disable the timer to stop/abort processing.
+   // The 'timeout' is in seconds.
+
+   fStopTimerMtx = (fStopTimerMtx) ? fStopTimerMtx : new TMutex(kTRUE);
+   R__LOCKGUARD(fStopTimerMtx);
+
+   if (on) {
+
+      if (gDebug > 0)
+         Info ("SetStopTimer","START: %d, timeout: %d", abort, timeout);
+
+      // Make sure that 'timeout' make sense, i.e. not larger than 10 days
+      if (timeout > 864000) {
+         Warning("SetStopTimer",
+                 "Abnormous timeout value (%d): corruption? setting to 0", timeout);
+         timeout = 0;
+      }
+      // Set a minimum value (0 does not seem to start the timer ...)
+      timeout = (timeout <= 0) ? 1 : timeout;
+      // create timer
+      fStopTimer = new TTimer((timeout * 1000), kFALSE);
+      // Connect it to the HandleTermination
+      if (abort)
+         fStopTimer->Connect("Timeout()", "TProofPlayer", this, "HandleAbortTimer()");
+      else
+         fStopTimer->Connect("Timeout()", "TProofPlayer", this, "HandleStopTimer()");
+      // Start the countdown
+      fStopTimer->Start(-1, kTRUE);
+   } else {
+
+      if (gDebug > 0)
+         Info ("SetStopTimer",
+               "STOP: %d, timeout: %d, timer: %p", abort, timeout, fStopTimer);
+
+      if (fStopTimer) {
+         // Stop timer
+         fStopTimer->Stop();
+         // Disconnect from HandleTermination
+         if (abort)
+            fStopTimer->Disconnect("Timeout()", this, "HandleAbortTimer()");
+         else
+            fStopTimer->Disconnect("Timeout()", this, "HandleStopTimer()");
+         // Clean-up the timer
+         SafeDelete(fStopTimer);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TProofPlayer::HandleStopTimer()
+{
+   // Handle the signal coming from the expiration of the timer
+   // associated with a stop request; this is set when receiving a STOP
+   // process request to hard stop long time-expensive events.
+   // We raise an exception which will be processed in the
+   // event loop.
+
+   if (gDebug > 0)
+      Info ("HandleAbortTimer","called!");
+
+   Throw(kPEX_STOPPED);
+}
+
+//______________________________________________________________________________
+void TProofPlayer::HandleAbortTimer()
+{
+   // Handle the signal coming from the expiration of the timer
+   // associated with an abort request.
+   // We raise an exception which will be processed in the
+   // event loop.
+
+   if (gDebug > 0)
+      Info ("HandleAbortTimer","called!");
+
+   Throw(kPEX_ABORTED);
 }
 
 //______________________________________________________________________________
@@ -546,11 +642,13 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    PDB(kLoop,1) Info("Process","Looping over Process()");
 
    // Loop over range
+   Bool_t abort = kFALSE;
    Long64_t entry;
    fEventsProcessed = 0;
    while (fSelStatus->IsOk() &&
          (entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
 
+      Bool_t ok = kTRUE;
       if (version == 0) {
          PDB(kLoop,3)Info("Process","Call ProcessCut(%lld)", entry);
          if (fSelector->ProcessCut(entry)) {
@@ -563,22 +661,35 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          TRY {
             fSelector->Process(entry);
          } CATCH(excode) {
-            Error("Process","exception %d caught", excode);
-            // Set interrupt
-            gROOT->SetInterrupt();
-            // Perhaps we need a dedicated status code here ...
-            fExitStatus = kAborted;
+            ok = kFALSE;
+            if (excode == kPEX_STOPPED) {
+               Info("Process","received stop-process signal");
+            } else if (excode == kPEX_ABORTED) {
+               abort = kTRUE;
+               Info("Process","received abort-process signal");
+            } else {
+               Error("Process","exception %d caught", excode);
+               // Perhaps we need a dedicated status code here ...
+               fExitStatus = kAborted;
+            }
+            // Break this loop
+            break;
          } ENDTRY;
       }
 
-      fEventsProcessed++;
+      if (ok)
+         fEventsProcessed++;
 
       gSystem->DispatchOneEvent(kTRUE);
-      if (gROOT->IsInterrupted()) break;
+      if (!ok || gROOT->IsInterrupted()) break;
    }
    PDB(kGlobal,2) Info("Process","%lld events processed",fEventsProcessed);
 
-   if (fFeedbackTimer != 0) HandleTimer(0);
+   // Stop active timers
+   if (fStopTimer != 0)
+      SetStopTimer(kFALSE, abort);
+   if (fFeedbackTimer != 0)
+      HandleTimer(0);
 
    StopFeedback();
 
@@ -1036,28 +1147,64 @@ Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
 //______________________________________________________________________________
 Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
 {
-   // Send the selector file to the slave nodes.
+   // Send the selector file(s) to master or worker nodes.
 
-   // If the filename does not contain "." assume class is compiled in
-   if ( strchr(selector_file,'.') != 0 ) {
-      TString filename = selector_file;
-      TString aclicMode;
-      TString arguments;
-      TString io;
-      filename = gSystem->SplitAclicMode(filename, aclicMode, arguments, io);
+   // Check input
+   if (!selector_file) {
+      Info("SendSelector", "Invalid input: selector (file) name undefined");
+      return kFALSE;
+   }
+   if (!strchr(selector_file, '.')) {
+      if (gDebug > 1)
+         Info("SendSelector", "selector name '%s' does not contain a '.':"
+              " nothing to send, it will be loaded from a library", selector_file);
+      return kTRUE;
+   }
 
-      PDB(kSelector,1) Info("SendSelector", "Sendfile: %s", filename.Data() );
-      if ( fProof->SendFile(filename) == -1 ) return kFALSE;
+   // Extract the fine name first
+   TString selec = selector_file;
+   TString aclicMode;
+   TString arguments;
+   TString io;
+   selec = gSystem->SplitAclicMode(selec, aclicMode, arguments, io);
 
-      // NOTE: should we allow more extension?
-      if ( filename.EndsWith(".C") ) {
-         filename.Replace(filename.Length()-1,1,"h");
-         if (!gSystem->AccessPathName(filename,kReadPermission)) {
-            PDB(kSelector,1) Info("SendSelector", "SendFile: %s", filename.Data() );
-            if ( fProof->SendFile(filename) == -1 ) return kFALSE;
-         }
+   // Supported extensions for the implementation file
+   const char *cext[3] = { ".C", ".cxx", ".cc" };
+   Int_t e = 0;
+   for ( ; e < 3; e++)
+      if (selec.EndsWith(cext[e]))
+         break;
+   if (e >= 3) {
+      Info("SendSelector",
+           "Invalid extension: %s (supportd extensions: .C, .cxx, .cc", selec.Data());
+      return kFALSE;
+   }
+   Int_t l = strlen(cext[e]);
+
+   // Header file
+   TString header = selec;
+   header.Replace(header.Length()-l, l,".h");
+   if (gSystem->AccessPathName(header, kReadPermission)) {
+      TString h = header;
+      header = selec;
+      header.Replace(header.Length()-l, l,".hh");
+      if (gSystem->AccessPathName(header, kReadPermission)) {
+         Info("SendSelector",
+              "header file not found: tried: %s %s", h.Data(), header.Data());
+         return kFALSE;
       }
    }
+
+   // Send files now
+   if ( fProof->SendFile(selec) == -1 ) {
+      Info("SendSelector", "problems sending implementation file %s", selec.Data());
+      return kFALSE;
+   }
+   if ( fProof->SendFile(header) == -1 ) {
+      Info("SendSelector", "problems sending header file %s", header.Data());
+      return kFALSE;
+   }
+
    return kTRUE;
 }
 
@@ -1138,11 +1285,12 @@ void TProofPlayerRemote::Feedback(TList *objs)
 }
 
 //______________________________________________________________________________
-void TProofPlayerRemote::StopProcess(Bool_t abort)
+void TProofPlayerRemote::StopProcess(Bool_t abort, Int_t)
 {
    // Stop process after this event.
 
-   if (fPacketizer != 0) fPacketizer->StopProcess(abort);
+   if (fPacketizer != 0)
+      fPacketizer->StopProcess(abort);
    if (abort == kTRUE)
       fExitStatus = kAborted;
    else
@@ -1659,7 +1807,10 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
 
    TPerfStats::Start(fInput, fOutput);
 
-   if (!SendSelector(selector_file)) return -1;
+   if (!SendSelector(selector_file)) {
+      Error("Process", "sending selector %s", selector_file);
+      return -1;
+   }
 
    TCleanup clean(this);
    SetupFeedback();

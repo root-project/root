@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.8 2006/04/03 14:24:01 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.9 2006/04/27 15:14:11 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include "TROOT.h"
 
 #include "XrdClient/XrdClientAdmin.hh"
+#include "XrdClient/XrdClientConn.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XProtocol/XProtocol.hh"
 
@@ -334,6 +335,13 @@ Bool_t TXNetSystem::ConsistentWith(const char *path, void *dirptr)
 
    if (gDebug > 1)
       Info("ConsistenWith","Calling TNetSystem::ConsistenWith");
+
+   // Make sure we are checking the end-point user, host, port
+   if (fClientAdmin && fClientAdmin->GetClientConn()) {
+      XrdClientUrlInfo eurl = fClientAdmin->GetClientConn()->GetCurrentUrl();
+      TNetSystem::InitRemoteEntity(eurl.GetUrl().c_str());
+   }
+
    return TNetSystem::ConsistentWith(path,dirptr);    // for a rootd
 }
 

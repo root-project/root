@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.147 2006/06/02 23:41:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.148 2006/06/05 22:51:13 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -319,6 +319,7 @@ TProof::~TProof()
    SafeDelete(fIntHandler);
    SafeDelete(fSlaves);
    SafeDelete(fActiveSlaves);
+   SafeDelete(fInactiveSlaves);
    SafeDelete(fUniqueSlaves);
    SafeDelete(fNonUniqueMasters);
    SafeDelete(fBadSlaves);
@@ -415,6 +416,13 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fChains         = new TList;
    fAvailablePackages = 0;
    fEnabledPackages = 0;
+   fEndMaster      = IsMaster() ? kTRUE : kFALSE;
+
+   // Default entry point for the data pool is the master
+   if (!IsMaster())
+      fDataPoolUrl.Form("root://%s", fMaster.Data());
+   else
+      fDataPoolUrl = "";
 
    fProgressDialog        = 0;
    fProgressDialogStarted = kFALSE;
@@ -462,6 +470,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    // sort slaves by descending performance index
    fSlaves           = new TSortedList(kSortDescending);
    fActiveSlaves     = new TList;
+   fInactiveSlaves   = new TList;
    fUniqueSlaves     = new TList;
    fNonUniqueMasters = new TList;
    fBadSlaves        = new TList;
@@ -1032,6 +1041,15 @@ Int_t TProof::GetNumberOfActiveSlaves() const
 }
 
 //______________________________________________________________________________
+Int_t TProof::GetNumberOfInactiveSlaves() const
+{
+   // Return number of inactive slaves, i.e. slaves that are valid but not in
+   // the current computing group.
+
+   return fInactiveSlaves->GetSize();
+}
+
+//______________________________________________________________________________
 Int_t TProof::GetNumberOfUniqueSlaves() const
 {
    // Return number of unique slaves, i.e. active slaves that have each a
@@ -1516,10 +1534,12 @@ Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, ESlaves list)
 }
 
 //______________________________________________________________________________
-Int_t TProof::Collect(const TSlave *sl)
+Int_t TProof::Collect(const TSlave *sl, Long_t timeout)
 {
    // Collect responses from slave sl. Returns the number of slaves that
    // responded (=1).
+   // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
+   // which means wait forever).
 
    if (!sl->IsValid()) return 0;
 
@@ -1528,14 +1548,16 @@ Int_t TProof::Collect(const TSlave *sl)
    mon->DeActivateAll();
    mon->Activate(sl->GetSocket());
 
-   return Collect(mon);
+   return Collect(mon, timeout);
 }
 
 //______________________________________________________________________________
-Int_t TProof::Collect(TList *slaves)
+Int_t TProof::Collect(TList *slaves, Long_t timeout)
 {
    // Collect responses from the slave servers. Returns the number of slaves
    // that responded.
+   // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
+   // which means wait forever).
 
    TMonitor *mon = fAllMonitor;
    mon->DeActivateAll();
@@ -1547,14 +1569,16 @@ Int_t TProof::Collect(TList *slaves)
          mon->Activate(sl->GetSocket());
    }
 
-   return Collect(mon);
+   return Collect(mon, timeout);
 }
 
 //______________________________________________________________________________
-Int_t TProof::Collect(ESlaves list)
+Int_t TProof::Collect(ESlaves list, Long_t timeout)
 {
    // Collect responses from the slave servers. Returns the number of slaves
    // that responded.
+   // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
+   // which means wait forever).
 
    TMonitor *mon = 0;
    if (list == kAll)    mon = fAllMonitor;
@@ -1563,14 +1587,16 @@ Int_t TProof::Collect(ESlaves list)
 
    mon->ActivateAll();
 
-   return Collect(mon);
+   return Collect(mon, timeout);
 }
 
 //______________________________________________________________________________
-Int_t TProof::Collect(TMonitor *mon)
+Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
 {
    // Collect responses from the slave servers. Returns the number of messages
    // received. Can be 0 if there are no active slaves.
+   // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
+   // which means wait forever).
 
    fStatus = 0;
    if (!mon->GetActive()) return 0;
@@ -1595,10 +1621,10 @@ Int_t TProof::Collect(TMonitor *mon)
    while (mon->GetActive()) {
 
       // Wait for a ready socket
-      TSocket *s = mon->Select();
+      TSocket *s = mon->Select(timeout*1000);
 
       // Treat interrupt condition
-      if (!s) {
+      if (!s || s == (TSocket *)(-1)) {
          mon->DeActivateAll();
          break;
       }
@@ -2276,6 +2302,7 @@ void TProof::Print(Option_t *option) const
       Printf("Remote protocol version:  %d", GetRemoteProtocol());
       Printf("Log level:                %d", GetLogLevel());
       Printf("Session unique tag:       %s", IsValid() ? GetSessionTag() : "");
+      Printf("Default data pool:        %s", IsValid() ? GetDataPoolUrl() : "");
       if (IsValid())
          const_cast<TProof*>(this)->SendPrint(option);
    } else {
@@ -2287,24 +2314,25 @@ void TProof::Print(Option_t *option) const
          Printf("*** Master server %s (sequential mode):",
                 gProofServ->GetOrdinal());
 
-      Printf("Master host name:         %s", gSystem->HostName());
-      Printf("Port number:              %d", GetPort());
-      Printf("User:                     %s", GetUser());
-      Printf("Protocol version:         %d", GetClientProtocol());
-      Printf("Image name:               %s", GetImage());
-      Printf("Working directory:        %s", gSystem->WorkingDirectory());
-      Printf("Config directory:         %s", GetConfDir());
-      Printf("Config file:              %s", GetConfFile());
-      Printf("Log level:                %d", GetLogLevel());
-      Printf("Number of slaves:         %d", GetNumberOfSlaves());
-      Printf("Number of active slaves:  %d", GetNumberOfActiveSlaves());
-      Printf("Number of unique slaves:  %d", GetNumberOfUniqueSlaves());
-      Printf("Number of bad slaves:     %d", GetNumberOfBadSlaves());
-      Printf("Total MB's processed:     %.2f", float(GetBytesRead())/(1024*1024));
-      Printf("Total real time used (s): %.3f", GetRealTime());
-      Printf("Total CPU time used (s):  %.3f", GetCpuTime());
+      Printf("Master host name:           %s", gSystem->HostName());
+      Printf("Port number:                %d", GetPort());
+      Printf("User:                       %s", GetUser());
+      Printf("Protocol version:           %d", GetClientProtocol());
+      Printf("Image name:                 %s", GetImage());
+      Printf("Working directory:          %s", gSystem->WorkingDirectory());
+      Printf("Config directory:           %s", GetConfDir());
+      Printf("Config file:                %s", GetConfFile());
+      Printf("Log level:                  %d", GetLogLevel());
+      Printf("Number of workers:          %d", GetNumberOfSlaves());
+      Printf("Number of active workers:   %d", GetNumberOfActiveSlaves());
+      Printf("Number of unique workers:   %d", GetNumberOfUniqueSlaves());
+      Printf("Number of inactive workers: %d", GetNumberOfInactiveSlaves());
+      Printf("Number of bad workers:      %d", GetNumberOfBadSlaves());
+      Printf("Total MB's processed:       %.2f", float(GetBytesRead())/(1024*1024));
+      Printf("Total real time used (s):   %.3f", GetRealTime());
+      Printf("Total CPU time used (s):    %.3f", GetCpuTime());
       if (TString(option).Contains("a", TString::kIgnoreCase) && GetNumberOfSlaves()) {
-         Printf("List of slaves:");
+         Printf("List of workers:");
          TList masters;
          TIter nextslave(fSlaves);
          while (TSlave* sl = dynamic_cast<TSlave*>(nextslave())) {
@@ -2320,7 +2348,7 @@ void TProof::Print(Option_t *option) const
                else
                   masters.Add(sl);
             } else {
-               Error("Print", "TSlave is neither Master nor Slave");
+               Error("Print", "TSlave is neither Master nor Worker");
                R__ASSERT(0);
             }
          }
@@ -2677,7 +2705,7 @@ Int_t TProof::DrawSelect(TDSet *dset, const char *varexp, const char *selection,
 }
 
 //______________________________________________________________________________
-void TProof::StopProcess(Bool_t abort)
+void TProof::StopProcess(Bool_t abort, Int_t timeout)
 {
    // Send STOPPROCESS message to master and workers.
 
@@ -2687,18 +2715,22 @@ void TProof::StopProcess(Bool_t abort)
    if (!IsValid())
       return;
 
-   fPlayer->StopProcess(abort);
+   fPlayer->StopProcess(abort, timeout);
 
    // Stop any blocking 'Collect' request
-   InterruptCurrentMonitor();
+   if (!IsMaster())
+      InterruptCurrentMonitor();
 
    if (fSlaves->GetSize() == 0)
       return;
 
    // Notify the remote counterpart
-   TMessage msg(kPROOF_STOPPROCESS);
-   msg << abort;
-   Broadcast(msg, fSlaves);
+   TSlave *sl;
+   TIter   next(fSlaves);
+   while ((sl = (TSlave *)next()))
+      if (sl->IsValid())
+         // Ask slave to progate the stop/abort request
+         sl->StopProcess(abort, timeout);
 }
 
 //______________________________________________________________________________
@@ -3279,6 +3311,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach)
    //Simple algorithm for going parallel - fill up first nodes
    int cnt = 0;
    TSlave *sl;
+   fEndMaster = IsMaster() ? kTRUE : kFALSE;
    while (cnt < nodes && (sl = (TSlave *)next())) {
       if (sl->IsValid()) {
          if (strcmp("IGNORE", sl->GetImage()) == 0) continue;
@@ -3288,6 +3321,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach)
             fActiveMonitor->Add(sl->GetSocket());
             slavenodes = 1;
          } else if (sl->GetSlaveType() == TSlave::kMaster) {
+            fEndMaster = kFALSE;
             TMessage mess(kPROOF_PARALLEL);
             if (!attach) {
                mess << nodes-cnt;
@@ -4705,12 +4739,13 @@ void TProof::Detach(Option_t *opt)
    if (shutdown && !IsIdle()) {
       // Remove pending requests
       Remove("cleanupqueue");
+      // Do not wait for ever, but al least 20 seconds
+      Long_t timeout = gEnv->GetValue("Proof.ShutdownTimeout", 60);
+      timeout = (timeout > 20) ? timeout : 20;
       // Send stop signal
-      StopProcess(kFALSE);
-      // Receive end-of-processing messages
-      while (CollectInputFrom(s) == 0) {  }
-      if (!IsIdle())
-         Warning("Detach","opt: %s: processing could not be stopped", opt);
+      StopProcess(kFALSE, (Long_t) (timeout / 2));
+      // Receive results
+      Collect(kActive, timeout);
    }
 
    // Avoid spurious messages: deactivate new inputs ...
@@ -4882,9 +4917,14 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
    if (goodName == 1) {  //must be == 1 as -1 was used for a bad name!
       // preparing destination url
       const char* dest;
-      TUrl destUrl(desiredDest);
-      destUrl.SetProtocol("root");
-      destUrl.SetPort(1094);
+      TUrl destUrl;
+      if (desiredDest) {
+         destUrl.SetUrl(desiredDest);
+         // This is dangerous!!!
+         destUrl.SetProtocol("root");
+         destUrl.SetPort(1094);
+      } else
+         destUrl.SetUrl(GetDataPoolUrl());
 #if 0
       //Code for enforcing writing in user "home dir" only
       const char* userName = gSystem->GetUserInfo()->fUser.Data();
@@ -4996,8 +5036,8 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadDataSetFromFile(const char *file, const char *dest,
-                                    const char *dataset, Int_t opt)
+Int_t TProof::UploadDataSetFromFile(const char *dataset, const char *file,
+                                    const char *dest, Int_t opt)
 {
    // Upload files listed in "file" to PROOF cluster.
    // Where file = name of file containing list of files and
@@ -5013,10 +5053,10 @@ Int_t TProof::UploadDataSetFromFile(const char *file, const char *dest,
          line.ReadToDelim(f);
          if (fileCount == 0) {
             // when uploading the first file user may have to decide
-            fileCount += UploadDataSet(line.Data(), dest, dataset, opt);
+            fileCount += UploadDataSet(dataset, line.Data(), dest, opt);
          } else // later - just append
-            fileCount += UploadDataSet(line.Data(), dest,
-                                       dataset, opt | kAppend);
+            fileCount += UploadDataSet(dataset, line.Data(), dest,
+                                       opt | kAppend);
       }
       f.close();
    } else {
@@ -5204,13 +5244,22 @@ Int_t TProof::VerifyDataSet(const char *dataSet)
 }
 
 //_____________________________________________________________________________
-TVirtualProof *TProof::Open(const char *cluster, const char *conffile,
+TVirtualProof *TProof::Open(const char *url, const char *conffile,
                             const char *confdir, Int_t loglevel)
 {
    // Start a PROOF session on a specific cluster. Wrapper around
    // TVirtualProof::Open().
 
-   return TVirtualProof::Open(cluster, conffile, confdir, loglevel);
+   return TVirtualProof::Open(url, conffile, confdir, loglevel);
+}
+
+//_____________________________________________________________________________
+Int_t TProof::Reset(const char *url, const char *usr)
+{
+   // Start a PROOF session on a specific cluster. Wrapper around
+   // TVirtualProof::Reset().
+
+   return TVirtualProof::Reset(url, usr);
 }
 
 //_____________________________________________________________________________
@@ -5219,4 +5268,102 @@ void TProof::InterruptCurrentMonitor()
    // If in active in a monitor set ready state
    if (fCurrentMonitor)
       fCurrentMonitor->Interrupt();
+}
+
+//_____________________________________________________________________________
+void TProof::ActivateWorker(const char *ord)
+{
+   // Make sure that the worker identified by the ordinal number 'ord' is
+   // in the active list. The request will be forwarded to the master
+   // in direct contact with the worker. If needed, this master will move
+   // the worker from the inactive to the active list and rebuild the list
+   // of unique workers.
+   // Use ord = "*" to activate all inactive workers.
+
+   ModifyWorkerLists(ord, kTRUE);
+}
+
+//_____________________________________________________________________________
+void TProof::DeactivateWorker(const char *ord)
+{
+   // Remove the worker identified by the ordinal number 'ord' from the
+   // the active list. The request will be forwarded to the master
+   // in direct contact with the worker. If needed, this master will move
+   // the worker from the active to the inactive list and rebuild the list
+   // of unique workers.
+   // Use ord = "*" to deactivate all active workers.
+
+   ModifyWorkerLists(ord, kFALSE);
+}
+
+//_____________________________________________________________________________
+void TProof::ModifyWorkerLists(const char *ord, Bool_t add)
+{
+   // Modify the worker active/inactive list by making the worker identified by
+   // the ordinal number 'ord' active (add == TRUE) or inactive (add == FALSE).
+   // If needed, the request will be forwarded to the master in direct contact
+   // with the worker. The end-master will move the worker from one list to the
+   // other active and rebuild the list of unique active workers.
+   // Use ord = "*" to deactivate all active workers.
+
+   // Make sure the input make sense
+   if (!ord || strlen(ord) <= 0) {
+      Info("ModifyWorkerLists",
+           "An ordinal number - e.g. \"0.4\" or \"*\" for all - is required as input");
+      return;
+   }
+
+   Bool_t fw = kTRUE;    // Whether to forward one step down
+   Bool_t rs = kFALSE;   // Whether to rescan for unique workers
+
+   // Appropriate list pointing
+   TList *in = (add) ? fInactiveSlaves : fActiveSlaves;
+   TList *out = (add) ? fActiveSlaves : fInactiveSlaves;
+
+   if (IsMaster()) {
+      fw = IsEndMaster() ? kFALSE : kTRUE;
+      // Look for the worker in the inactive list
+      if (in->GetSize() > 0) {
+         TIter nxw(in);
+         TSlave *wrk = 0;
+         while ((wrk = (TSlave *) nxw())) {
+            if (ord[0] == '*' || !strncmp(wrk->GetOrdinal(), ord, strlen(ord))) {
+               // Add it to the inactive list
+               if (!out->FindObject(wrk)) {
+                  out->Add(wrk);
+                  if (add)
+                     fActiveMonitor->Add(wrk->GetSocket());
+               }
+               // Remove it from the active list
+               in->Remove(wrk);
+               if (!add) {
+                  fActiveMonitor->Remove(wrk->GetSocket());
+                  wrk->SetStatus(TSlave::kInactive);
+               } else
+                  wrk->SetStatus(TSlave::kActive);
+
+               // Nothing to forward (ord is unique)
+               fw = kFALSE;
+               // Rescan for unique workers (active list modified)
+               rs = kTRUE;
+               // We are done, if not option 'all'
+               if (ord[0] != '*')
+                  break;
+            }
+         }
+      }
+   }
+
+   // Rescan for unique workers
+   if (rs)
+      FindUniqueSlaves();
+
+   // Forward the request one step down, if needed
+   Int_t action = (add) ? (Int_t) kActivateWorker : (Int_t) kDeactivateWorker;
+   if (fw) {
+      TMessage mess(kPROOF_WORKERLISTS);
+      mess << action << TString(ord);
+      Broadcast(mess);
+      Collect();
+   }
 }

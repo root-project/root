@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.38 2006/06/02 23:38:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.39 2006/06/05 22:51:13 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -46,6 +46,8 @@ class TSocket;
 class TList;
 class TDSetElement;
 class TMessage;
+class TTimer;
+class TMutex;
 
 // Hook to external function setting up authentication related stuff
 // for old versions.
@@ -92,6 +94,7 @@ private:
    Int_t         fGroupSize;        //size of the active slave group
    Int_t         fLogLevel;         //debug logging level
    Int_t         fNcmd;             //command history number
+   Bool_t        fEndMaster;        //true for a master in direct contact only with workers
    Bool_t        fMasterServ;       //true if we are a master server
    Bool_t        fInterrupt;        //if true macro execution will be stopped
    Float_t       fRealTime;         //real time spent executing commands
@@ -106,6 +109,10 @@ private:
    TList        *fPreviousQueries;  //list of TProofQueryResult objects from previous sections
    TList        *fWaitingQueries;   //list of TProofQueryResult wating to be processed
    Bool_t        fIdle;             //TRUE if idle
+
+   Bool_t        fShutdownWhenIdle; // If TRUE, start shutdown delay countdown when idle
+   TTimer       *fShutdownTimer;    // Timer used for delayed session shutdown
+   TMutex       *fShutdownTimerMtx; // Actions on the timer must be atomic
 
    static Int_t  fgMaxQueries;      //Max number of queries fully kept
 
@@ -142,9 +149,12 @@ protected:
    virtual void  HandleQueryList(TMessage *mess);
    virtual void  HandleRemove(TMessage *mess);
    virtual void  HandleRetrieve(TMessage *mess);
+   virtual void  HandleWorkerLists(TMessage *mess);
 
    virtual void  HandleSocketInputDuringProcess();
    virtual void  Setup();
+
+   virtual void  SetShutdownTimer(Bool_t, Int_t) { }
 
 public:
    TProofServ(Int_t *argc, char **argv, FILE *flog = 0);
@@ -176,6 +186,7 @@ public:
    virtual void   HandleUrgentData();
    virtual void   HandleSigPipe();
    void           Interrupt() { fInterrupt = kTRUE; }
+   Bool_t         IsEndMaster() const { return fEndMaster; }
    Bool_t         IsMaster() const { return fMasterServ; }
    Bool_t         IsParallel() const;
    Bool_t         IsTopMaster() const { return fOrdinal == "0"; }

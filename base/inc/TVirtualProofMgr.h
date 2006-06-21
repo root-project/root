@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.h,v 1.2 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.h,v 1.3 2006/06/02 15:14:35 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -75,6 +75,7 @@ public:
    virtual const char *GetUrl() { return fUrl.GetUrl(); }
    virtual Bool_t      MatchUrl(const char *url);
    virtual TList      *QuerySessions(Option_t *opt = "S") = 0;
+   virtual Int_t       Reset(const char *usr = 0) = 0;
    virtual void        ShowWorkers();
    virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }
    virtual void        ShutdownSession(Int_t id) { DetachSession(id,"S"); }
@@ -95,36 +96,43 @@ public:
 // Metaclass describing the essentials of a PROOF session
 //
 class TVirtualProofDesc : public TNamed {
+public:
+   enum EStatus { kUnknown = -1, kIdle = 0, kRunning =1, kShutdown = 2};
+
 private:
    Int_t          fLocalId;  // ID in the local list
-   Bool_t         fIdle;     // True if idle
+   Int_t          fStatus;   // Session status (see EStatus)
    TVirtualProof *fProof;    // Related instance of TVirtualProof
    Int_t          fRemoteId; // Remote ID assigned by the coordinator to the proofserv
    TString        fUrl;      // Url of the connection
 
 public:
    TVirtualProofDesc(const char *tag = 0, const char *alias = 0, const char *url = 0,
-                     Int_t id = -1, Int_t remid = -1, Bool_t idle = kTRUE, TVirtualProof *p = 0)
+                     Int_t id = -1, Int_t remid = -1, Int_t status = kIdle, TVirtualProof *p = 0)
                     : TNamed(tag, alias),
-                      fLocalId(id), fIdle(idle), fProof(p), fRemoteId(remid), fUrl(url) { }
+                      fLocalId(id), fProof(p), fRemoteId(remid), fUrl(url) { SetStatus(status); }
    virtual ~TVirtualProofDesc() { }
 
    Int_t          GetLocalId() const { return fLocalId; }
    TVirtualProof *GetProof() const { return fProof; }
    Int_t          GetRemoteId() const { return fRemoteId; }
+   Int_t          GetStatus() const { return fStatus; }
    const char    *GetUrl() const { return fUrl; }
 
-   Bool_t         IsIdle() const { return fIdle; }
+   Bool_t         IsIdle() const { return (fStatus == kIdle) ? kTRUE : kFALSE; }
+   Bool_t         IsRunning() const { return (fStatus == kRunning) ? kTRUE : kFALSE; }
+   Bool_t         IsShuttingDown() const { return (fStatus == kShutdown) ? kTRUE : kFALSE; }
 
    Bool_t         MatchId(Int_t id) const { return (fLocalId == id); }
 
    void           Print(Option_t *opt = "") const;
 
-   void           SetIdle(Bool_t idle) { fIdle = idle; }
+   void           SetStatus(Int_t st) { fStatus = (st < kIdle || st > kShutdown) ? -1 : st; }
+
    void           SetProof(TVirtualProof *p) { fProof = p; }
    void           SetRemoteId(Int_t id) { fRemoteId = id; }
 
-   ClassDef(TVirtualProofDesc,1)  // Abstract description of a proof session
+   ClassDef(TVirtualProofDesc,2)  // Abstract description of a proof session
 };
 
 #endif

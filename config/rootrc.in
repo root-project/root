@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.143 2006/06/13 15:27:11 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.144 2006/06/20 13:21:24 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -352,6 +352,12 @@ RSA.KeyType:  1
 Url.Special:         file: rfio: hpss: castor: gfal: dcache:
 +Url.Special:        /alien/- /castor/
 
+# PROOF XRD client variables
+# Debug level (<=0 : none, 1 : low, 2 : medium, 3 : high)
+XProof.Debug:  0
+# Socket read timeout [in secs: default 10 secs]
+# XProof.ReadTimeout: 10
+
 # The following env vars are handled by TXNetFile and related classes
 # (module netx, libNetx.so).
 #
@@ -488,7 +494,7 @@ Plugin.TGPasswdDialog: *       TGPasswdDialog Gui         "TGPasswdDialog(const 
 Plugin.TVirtualProof:  ^condor: TProofCondor Proof        "TProofCondor(const char*,const char*,const char*,Int_t)"
 +Plugin.TVirtualProof: ^sm:    TProofSuperMaster Proof    "TProofSuperMaster(const char*,const char*,const char*,Int_t)"
 +Plugin.TVirtualProof: ^peac:  TProofPEAC    Peac         "TProofPEAC(const char*,const char*,const char*,Int_t)"
-+Plugin.TVirtualProof:       * TProof        Proof        "TProof(const char*,const char*,const char*,Int_t)"
++Plugin.TVirtualProof:       * TProof        Proof        "TProof(const char*,const char*,const char*,Int_t,const char *)"
 Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
 Plugin.TDataProgressDialog:  * TDataProgressDialog  peacGui   "TDataProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t)"
 Plugin.TProofServ:    ^xpd     TXProofServ   Proofx       "TXProofServ(Int_t *,char **)"

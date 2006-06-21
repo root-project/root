@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.9 2006/04/19 10:50:01 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.10 2006/05/19 07:40:18 brun Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -306,6 +306,9 @@ TSocket *TMonitor::Select(Long_t timeout)
    // Wait a maximum of timeout milliseconds.
    // If return is due to timeout it returns (TSocket *)-1.
    // Return 0 in case of any other error situation.
+
+   if (timeout < 0)
+      return TMonitor::Select();
 
    fInterrupt = kFALSE;
    fReady = 0;

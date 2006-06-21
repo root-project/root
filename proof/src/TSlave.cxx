@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.51 2006/04/21 16:29:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.52 2006/06/02 15:14:35 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -51,7 +51,7 @@ TSlave::TSlave(const char *url, const char *ord, Int_t perf,
     fOrdinal(ord), fPerfIdx(perf),
     fProtocol(0), fSocket(0), fProof(proof),
     fInput(0), fBytesRead(0), fRealTime(0),
-    fCpuTime(0), fSlaveType((ESlaveType)stype), fStatus(0),
+    fCpuTime(0), fSlaveType((ESlaveType)stype), fStatus(TSlave::kInvalid),
     fParallel(0), fMsd(msd)
 {
    // Create a PROOF slave object. Called via the TProof ctor.
@@ -77,7 +77,7 @@ TSlave::TSlave()
    fBytesRead = 0;
    fRealTime  = 0;
    fCpuTime   = 0;
-   fStatus    = 0;
+   fStatus    = kInvalid;
    fParallel  = 0;
 }
 
@@ -228,6 +228,9 @@ Int_t TSlave::SetupServ(Int_t stype, const char *conffile)
    // set some socket options
    fSocket->SetOption(kNoDelay, 1);
 
+   // Set active state
+   fStatus = kActive;
+
    // We are done
    return 0;
 }
@@ -316,7 +319,10 @@ void TSlave::Print(Option_t *) const
 
    TString sc;
 
-   Printf("*** Slave %s  (%s)", fOrdinal.Data(), fSocket ? "valid" : "invalid");
+   const char *sst[] = { "invalid" , "valid", "inactive" };
+   Int_t st = fSocket ? ((fStatus == kInactive) ? 2 : 1) : 0;
+
+   Printf("*** Slave %s  (%s)", fOrdinal.Data(), sst[st]);
    Printf("    Host name:               %s", GetName());
    Printf("    Port number:             %d", GetPort());
    if (fSocket) {
@@ -576,6 +582,19 @@ void TSlave::Interrupt(Int_t type)
       // Unexpected message, just receive log file
       fProof->Collect(this);
    }
+}
+
+//______________________________________________________________________________
+void TSlave::StopProcess(Bool_t abort, Int_t timeout)
+{
+   // Sent stop/abort request to PROOF server.
+
+   // Notify the remote counterpart
+   TMessage msg(kPROOF_STOPPROCESS);
+   msg << abort;
+   if (fProof->fProtocol > 9)
+      msg << timeout;
+   fSocket->Send(msg);
 }
 
 //______________________________________________________________________________

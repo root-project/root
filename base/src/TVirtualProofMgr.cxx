@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.6 2006/05/01 20:13:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.7 2006/06/02 15:14:35 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -168,9 +168,10 @@ TVirtualProof *TVirtualProofMgr::CreateSession(const char *cfg,
       }
 
       // Create the description class
+      Int_t st = (p->IsIdle()) ? TVirtualProofDesc::kIdle : TVirtualProofDesc::kRunning ;
       TVirtualProofDesc *d =
          new TVirtualProofDesc(p->GetName(), p->GetTitle(), p->GetUrl(),
-                               ns, p->GetSessionID(), p->IsIdle(), p);
+                               ns, p->GetSessionID(), st, p);
       fSessions->Add(d);
 
    } else {
@@ -363,10 +364,11 @@ ClassImp(TVirtualProofDesc)
 void TVirtualProofDesc::Print(Option_t *) const
 {
    // Dump the content to the screen.
+   const char *st[] = { "unknown", "idle", "processsing", "shutting down"};
 
    Printf("// # %d", fLocalId);
    Printf("// alias: %s, url: \"%s\"", GetTitle(), GetUrl());
    Printf("// tag: %s", GetName());
    Printf("// status: %s, attached: %s (remote ID: %d)",
-         (fIdle ? "idle" : "processing"), (fProof ? "YES" : "NO"), fRemoteId);
+          st[fStatus+1], (fProof ? "YES" : "NO"), fRemoteId);
 }

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.13 2006/06/05 22:51:14 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.14 2006/06/09 13:39:33 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -102,9 +102,9 @@ TString      TXSocket::fgLoc = "undef";     // Location string
 
 //_____________________________________________________________________________
 TXSocket::TXSocket(const char *url, Char_t m, Int_t psid,
-                   Char_t capver, const char *alias, Int_t loglevel)
-         : TSocket(), fMode(m), fAlias(alias),
-           fLogLevel(loglevel), fASem(0), fDontTimeout(kFALSE)
+                   Char_t capver, const char *logbuf, Int_t loglevel)
+         : TSocket(), fMode(m), fLogLevel(loglevel),
+           fBuffer(logbuf), fASem(0), fDontTimeout(kFALSE)
 {
    // Constructor
    // Open the connection to a remote XrdProofd instance and start a PROOF
@@ -118,6 +118,8 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid,
    //     'A'      Client attaching to top master
    //     'm'      Top master creating a submaster
    //     's'      Master creating a slave
+   // The buffer 'logbuf' is a null terminated string to be sent over at
+   // login.
 
    // Enable tracing in the XrdProof client. if not done already
    eDest.logger(&eLogger);
@@ -179,7 +181,7 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid,
       // Create connection (for managers the type of the connection is the same
       // as for top masters)
       char md = (m != 'A' && m != 'C') ? m : 'M';
-      fConn = new XrdProofConn(url, md, psid, capver, this, fAlias.Data());
+      fConn = new XrdProofConn(url, md, psid, capver, this, fBuffer.Data());
       if (!fConn || !(fConn->IsValid())) {
          if (fConn->GetServType() != XrdProofConn::kSTProofd)
              Error("TXSocket", "severe error occurred while opening a connection"
@@ -417,7 +419,85 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
 
             // Handle this input in this thread to avoid queuing on the
             // main thread
-            fHandler->HandleInput((const void *)&acod);
+            XHandleIn_t hin = {acod, 0, 0, 0};
+            fHandler->HandleInput((const void *)&hin);
+         }
+         break;
+      case kXPD_timer:
+         //
+         // Set shutdown timer
+         {
+            kXR_int32 opt = 1;
+            kXR_int32 delay = 0;
+            // The next 4 bytes contain the shutdown option
+            if (len > 0) {
+               memcpy(&opt, pdata, sizeof(kXR_int32));
+               opt = net2host(opt);
+               if (gDebug > 1)
+                  Info("ProcessUnsolicitedMsg","kXPD_timer: found opt: %d", opt);
+               // Update pointer to data
+               pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+               len -= sizeof(kXR_int32);
+            }
+            // The next 4 bytes contain the delay
+            if (len > 0) {
+               memcpy(&delay, pdata, sizeof(kXR_int32));
+               delay = net2host(delay);
+               if (gDebug > 1)
+                  Info("ProcessUnsolicitedMsg","kXPD_timer: found delay: %d", delay);
+               // Update pointer to data
+               pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+               len -= sizeof(kXR_int32);
+            }
+
+            // Handle this input in this thread to avoid queuing on the 
+            // main thread
+            XHandleIn_t hin = {acod, opt, delay, 0};
+            fHandler->HandleInput((const void *)&hin);
+         }
+         break;
+      case kXPD_urgent:
+         //
+         // Set shutdown timer
+         {
+            // The next 4 bytes contain the urgent msg type
+            kXR_int32 type = -1;
+            if (len > 0) {
+               memcpy(&type, pdata, sizeof(kXR_int32));
+               type = net2host(type);
+               if (gDebug > 1)
+                  Info("ProcessUnsolicitedMsg","kXPD_urgent: found type: %d", type);
+               // Update pointer to data
+               pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+               len -= sizeof(kXR_int32);
+            }
+            // The next 4 bytes contain the first info container
+            kXR_int32 int1 = -1;
+            if (len > 0) {
+               memcpy(&int1, pdata, sizeof(kXR_int32));
+               int1 = net2host(int1);
+               if (gDebug > 1)
+                  Info("ProcessUnsolicitedMsg","kXPD_urgent: found int1: %d", int1);
+               // Update pointer to data
+               pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+               len -= sizeof(kXR_int32);
+            }
+            // The next 4 bytes contain the second info container
+            kXR_int32 int2 = -1;
+            if (len > 0) {
+               memcpy(&int2, pdata, sizeof(kXR_int32));
+               int2 = net2host(int2);
+               if (gDebug > 1)
+                  Info("ProcessUnsolicitedMsg","kXPD_urgent: found int2: %d", int2);
+               // Update pointer to data
+               pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+               len -= sizeof(kXR_int32);
+            }
+
+            // Handle this input in this thread to avoid queuing on the 
+            // main thread
+            XHandleIn_t hin = {acod, type, int1, int2};
+            fHandler->HandleInput((const void *)&hin);
          }
          break;
       case kXPD_msg:
@@ -727,8 +807,8 @@ Bool_t TXSocket::Create()
    reqhdr.proof.int1 = fLogLevel;
 
    // Send also the chosen alias
-   const void *buf = (const void *)(fAlias.Data());
-   reqhdr.header.dlen = fAlias.Length();
+   const void *buf = (const void *)(fBuffer.Data());
+   reqhdr.header.dlen = fBuffer.Length();
    if (gDebug >= 2)
       Info("Create", "sending %d bytes to server", reqhdr.header.dlen);
 
@@ -740,6 +820,9 @@ Bool_t TXSocket::Create()
    struct ServerResponseBody_Protocol *srvresp = 0;
    XrdClientMessage *xrsp = fConn->SendReq(&reqhdr, buf,
                                           (void **)&srvresp, "TXSocket::Create");
+
+   // In any, the URL the data pool entry point will be stored here
+   fBuffer = "";
    if (xrsp) {
 
       //
@@ -769,6 +852,15 @@ Bool_t TXSocket::Create()
          Warning("Create","protocol version of the remote daemon undefined!");
       }
 
+      if (len > 0) {
+         // From top masters, the url of the data pool
+         char *url = new char[len+1];
+         memcpy(url, pdata, len);
+         url[len] = 0;
+         fBuffer = url;
+         delete[] url;
+      }
+
       // Cleanup
       SafeDelete(xrsp);
       if (srvresp)
@@ -780,8 +872,8 @@ Bool_t TXSocket::Create()
    }
 
    // Notify failure
-   Error("Create",
-         "creating or attaching to a remote server (%s)", fConn->fLastErrMsg.c_str());
+   Printf("TXSocket::Create:"
+          "creating or attaching to a remote server (%s)", fConn->fLastErrMsg.c_str());
    return kFALSE;
 }
 
@@ -833,8 +925,9 @@ Int_t TXSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
       return nsent;
    }
 
-   // Failure
-   Error("SendRaw", "problems sending data to server");
+   // Failure notification (avoid using the handler: we may be exiting)
+   Printf("TXSocket::SendRaw: problems sending data to server");
+
    return -1;
 }
 
@@ -882,7 +975,9 @@ Bool_t TXSocket::Ping(Bool_t)
    // Cleanup
    SafeDelete(xrsp);
 
-   // Failure
+   // Failure notification (avoid using the handler: we may be exiting)
+   Printf("TXSocket::Ping: problems sending ping to server");
+
    return res;
 }
 
@@ -1092,8 +1187,8 @@ Int_t TXSocket::SendInterrupt(Int_t type)
       return 0;
    }
 
-   // Failure
-   Error("SendInterrupt", "problems sending interrupt to server");
+   // Failure notification (avoid using the handler: we may be exiting)
+   Printf("TXSocket::SendInterrupt: problems sending interrupt to server");
    return -1;
 }
 
@@ -1234,11 +1329,13 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg)
          reqhdr.header.dlen = 0;
          vout = (void **)&bout;
          break;
+      case kCleanupSessions:
+         reqhdr.proof.int2 = (kXR_int32) kXPD_TopMaster;
       case kSessionTag:
       case kSessionAlias:
          reqhdr.proof.sid = fSessionID;
-         reqhdr.header.dlen = strlen(msg);
-         buf = (const void *)msg;
+         reqhdr.header.dlen = (msg) ? strlen(msg) : 0;
+         buf = (msg) ? (const void *)msg : buf;
          break;
       case kGetWorkers:
          reqhdr.proof.sid = fSessionID;
@@ -1271,7 +1368,46 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg)
       SafeDelete(xrsp);
    }
 
+
+   // Failure notification (avoid using the handler: we may be exiting)
    return sout;
+}
+
+//______________________________________________________________________________
+void TXSocket::SendUrgent(Int_t type, Int_t int1, Int_t int2)
+{
+   // Send urgent message to counterpart; 'type' specifies the type of
+   // the message (see TXSocket::EUrgentMsgType), and 'int1', 'int2'
+   // two containers for additional information.
+
+   TSystem::ResetErrno();
+
+   // Make sure we are connected
+   if (!IsValid()) {
+      Error("SendUrgent","not connected: nothing to do");
+      return;
+   }
+
+   // Prepare request
+   XPClientRequest Request;
+   memset(&Request, 0, sizeof(Request) );
+   fConn->SetSID(Request.header.streamid);
+   Request.proof.requestid = kXP_urgent;
+   Request.proof.sid = fSessionID;
+   Request.proof.int1 = type;    // type of urgent msg (see TXSocket::EUrgentMsgType)
+   Request.proof.int2 = int1;    // 4-byte container info 1
+   Request.proof.int3 = int2;    // 4-byte container info 2
+   Request.proof.dlen = 0;
+
+   // Send request
+   XrdClientMessage *xrsp =
+      fConn->SendReq(&Request, (const void *)0, 0, "SendUrgent");
+   if (xrsp)
+      // Cleanup
+      SafeDelete(xrsp);
+
+   // Done
+   return;
 }
 
 //______________________________________________________________________________

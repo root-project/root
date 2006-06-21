@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtocol.h,v 1.3 2006/04/19 10:52:46 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtocol.h,v 1.4 2006/06/02 15:14:35 rdm Exp $
 // Author: G. Ganis  June 2005
 
 #ifndef ROOT_XProofProtocol
@@ -25,24 +25,18 @@
 //______________________________________________
 //
 enum XProofRequestTypes {
-   kXP_version      = 3100,   // protocol version
-   kXP_login,      // 3101    // request to start session-context
-   kXP_auth,       // 3102    // credentials to login
-   kXP_create,     // 3103    // create a new session-ctx
-   kXP_destroy,    // 3104    // destroy a session-ctx
-   kXP_attach,     // 3105    // attach to an existing session-ctx
-   kXP_detach,     // 3106    // detach from an existing session-ctx
-   kXP_stop,       // 3107    // stop (reset) a running query (hard interrupt)
-   kXP_pause,      // 3108    // suspend processing on a query
-   kXP_resume,     // 3109    // resume processing on a query
-   kXP_retrieve,   // 3110    // retrieve (partial) results of a query
-   kXP_archive,    // 3111    // archive instructions for query results
-   kXP_sendmsg,    // 3112    // send a msg to a session-ctx
-   kXP_admin,      // 3113    // admin request handled by the coordinator (not forwarded)
-   kXP_interrupt,  // 3114    // urgent message
-   kXP_ping,       // 3115    // ping request
-   kXP_submit,     // 3116    // query submission (record query entry)
-   kXP_cleanup     // 3117    // cleanup query field
+   kXP_login        = 3101,    // client login
+   kXP_auth         = 3102,    // credentials to login
+   kXP_create       = 3103,    // create a new session-ctx
+   kXP_destroy      = 3104,    // destroy a session-ctx
+   kXP_attach       = 3105,    // attach to an existing session-ctx
+   kXP_detach       = 3106,    // detach from an existing session-ctx
+   kXP_urgent       = 3111,    // urgent msg for a processing session (e.g. stop/abort)
+   kXP_sendmsg      = 3112,    // send a msg to a session-ctx
+   kXP_admin        = 3113,    // admin request handled by the coordinator (not forwarded)
+   kXP_interrupt    = 3114,    // urgent message
+   kXP_ping         = 3115,    // ping request
+   kXP_cleanup      = 3116     // clean-up a session-ctx or a client section
 };
 
 // XPROOFD VERSION  (0xMMmnpp : MM major, mm minor, pp patch)
@@ -56,13 +50,14 @@ enum XProofRequestTypes {
 #define kXPD_WorkerServer 0
 #define kXPD_AnyServer   -1
 
-// XPROOFD SERVER STATUS
-#define kXPD_idle    0
-#define kXPD_running 1
 
-// XPROOFD EXEC STATUS
-#define kXPD_terminated 0
-#define kXPD_killed     1
+// XPROOFD SERVER STATUS
+enum XProofSessionStatus {
+   kXPD_idle            = 0,
+   kXPD_running         = 1,
+   kXPD_shutdown        = 2,
+   kXPD_unknown         = 3
+};
 
 // XPROOFD MESSAGE TYPE
 #define kXPD_internal     0x1
@@ -90,13 +85,15 @@ enum XProofResponseType {
 // PROTOCOL DEFINITION: SERVER"S ATTN CODES
 //_______________________________________________
 enum XProofActionCode {
-   kXPD_msg         = 5100,
-   kXPD_ping,      // 5101,
-   kXPD_interrupt, // 5102,
-   kXPD_feedback,  // 5103
-   kXPD_srvmsg,    // 5104
-   kXPD_msgsid,    // 5105
-   kXPD_errmsg     // 5106
+   kXPD_msg         = 5100,    // Generic message from server
+   kXPD_ping,      // 5101     // Ping request
+   kXPD_interrupt, // 5102     // Interrupt request
+   kXPD_feedback,  // 5103     // Feedback message
+   kXPD_srvmsg,    // 5104     // Log string from server
+   kXPD_msgsid,    // 5105     // Generic message from server with ID
+   kXPD_errmsg,    // 5106     // Error message from server with log string
+   kXPD_timer,     // 5107     // Server request to start a timer for delayed termination
+   kXPD_urgent     // 5108     // Urgent message to be processed in the reader thread
 };
 
 //_______________________________________________

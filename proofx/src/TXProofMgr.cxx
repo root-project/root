@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.10 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.11 2006/06/05 22:51:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -63,7 +63,7 @@ TXProofMgr::TXProofMgr(const char *url, Int_t dbg, const char *alias)
          if (gDebug > 0)
             Info("TXProofMgr","service 'proofd' not found by GetServiceByName"
                               ": using default IANA assigned tcp port 1093");
-         port = 1094;
+         port = 1093;
       } else {
          if (gDebug > 1)
             Info("TXProofMgr","port from GetServiceByName: %d", port);
@@ -165,7 +165,9 @@ TVirtualProof *TXProofMgr::AttachSession(Int_t id, Bool_t gui)
          p->SetManager(this);
 
          // Save record about this session
-         d->SetIdle(p->IsIdle());
+         Int_t st = (p->IsIdle()) ? TVirtualProofDesc::kIdle
+                                  : TVirtualProofDesc::kRunning;
+         d->SetStatus(st);
          d->SetProof(p);
 
          // Set session tag
@@ -237,9 +239,9 @@ Bool_t TXProofMgr::MatchUrl(const char *url)
 
    if (u.GetPort() == TUrl("a").GetPort()) {
       // Set default port
-      Int_t port = gSystem->GetServiceByName("rootd");
+      Int_t port = gSystem->GetServiceByName("proofd");
       if (port < 0)
-         port = 1094;
+         port = 1093;
       u.SetPort(port);
    }
 
@@ -317,7 +319,7 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
                fSessions->Add(d);
             } else {
                // Set missing / update info
-               d->SetIdle(st);
+               d->SetStatus(st);
                d->SetRemoteId(id);
                d->SetTitle(al);
             }
@@ -370,4 +372,18 @@ Bool_t TXProofMgr::HandleError(const void *)
 
    // We are done
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TXProofMgr::Reset(const char *usr)
+{
+   // Send a cleanup request for the sessions associated with the current
+   // user.
+   // A user with superuser privileges can also asks cleaning for an different
+   // user, specified by 'usr', or for all users (usr = *)
+   // Return 0 on success, -1 in case of error.
+
+   fSocket->SendCoordinator(TXSocket::kCleanupSessions, usr);
+
+   return 0;
 }

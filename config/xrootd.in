@@ -34,11 +34,10 @@ prog="xrootd"
 
 start() {
         echo -n $"Starting $prog: "
-        # Options '-b -l /tmp/xrootd.log' run the daemon into the background
-        # with a default log file; any log file specification in $XROOTDOPTS
-        # (via /etc/sysconfig/xrootd) will superseed the default; a second
-        # '-b' is ignored. 
-        daemon $XROOTD -b -l /tmp/xrootd.log $XROOTDOPTS
+        # Options are specified in /etc/sysconfig/xrootd .
+        # See $ROOTSYS/etc/daemons/xrootd.sysconfig for an example.
+        # $XRDUSER *must* be the name of an existing non-privileged user.
+        daemon $XROOTD -b -l $XRDLOG -R $XRDUSER -c $XRDCF $XRDDEBUG
         RETVAL=$?
         echo
         [ $RETVAL -eq 0 ] && touch /var/lock/subsys/xrootd

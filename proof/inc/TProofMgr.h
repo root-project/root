@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.71 2005/10/27 23:28:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.h,v 1.1 2005/12/10 16:51:57 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -42,6 +42,7 @@ public:
    TVirtualProof *AttachSession(Int_t id, Bool_t gui = kFALSE);
    void           DetachSession(Int_t, Option_t * = "");
    TList         *QuerySessions(Option_t *opt = "S");
+   Int_t          Reset(const char *usr = 0);
 
    ClassDef(TProofMgr,0)  // PROOF session manager
 };

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.4 2006/03/20 21:24:59 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.5 2006/04/19 10:57:44 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -45,6 +45,7 @@ XrdProofServProxy::XrdProofServProxy()
    fIsValid = true;  // It is created for a valid server ...
    fProtVer = -1;
    strcpy(fFileout,"none");
+   memset(fClient, 0, 9);
    strcpy(fTag,"");
    strcpy(fAlias,"");
    fClients.reserve(10);
@@ -86,6 +87,7 @@ void XrdProofServProxy::ClearWorkers()
 void XrdProofServProxy::Reset()
 {
    // Reset this instance
+   XrdOucMutexHelper mtxh(&fMutex);
 
    fLink = 0;
    fParent = 0;
@@ -96,7 +98,7 @@ void XrdProofServProxy::Reset()
    fSrvID = -1;
    fSrvType = kXPD_TopMaster;
    fID = -1;
-   fIsValid = false;
+   fIsValid = 0;
    fProtVer = -1;
    strcpy(fFileout,"none");
    strcpy(fTag,"");
@@ -183,4 +185,20 @@ int XrdProofServProxy::GetNClients()
 
    // We are done
    return nc;
+}
+
+//__________________________________________________________________________
+const char *XrdProofServProxy::StatusAsString() const
+{
+   // Return a string describing the status
+
+   const char *sst[] = { "idle", "running", "shutting-down", "unknown" };
+
+   // Check status range
+   int ist = fStatus;
+   ist = (ist > kXPD_unknown) ? kXPD_unknown : ist;
+   ist = (ist < kXPD_idle) ? kXPD_unknown : ist;
+
+   // Done
+   return sst[ist];
 }

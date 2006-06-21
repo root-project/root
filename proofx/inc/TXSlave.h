@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.h,v 1.4 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.h,v 1.5 2006/06/05 22:51:14 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -54,6 +54,7 @@ protected:
    TObjString *SendCoordinator(Int_t kind, const char *msg = 0);
    void     SetAlias(const char *alias);
    void     SetReady();
+   void     StopProcess(Bool_t abort, Int_t timeout);
 
 public:
    TXSlave(const char *url, const char *ord, Int_t perf,

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.5 2006/06/02 23:38:20 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.6 2006/06/05 22:51:14 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -42,6 +42,7 @@ private:
    Int_t         LockSession(const char *sessiontag, TProofLockPath **lck);
 
    void          SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
+   void          SetShutdownTimer(Bool_t on = kTRUE, Int_t delay = 0);
    void          Setup();
 
 public:

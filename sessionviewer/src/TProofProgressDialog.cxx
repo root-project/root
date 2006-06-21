@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.21 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.22 2006/06/05 22:51:13 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 
 #include "TProofProgressDialog.h"
 #include "TProofProgressLog.h"
+#include "TEnv.h"
 #include "TError.h"
 #include "TGLabel.h"
 #include "TGButton.h"
@@ -522,7 +523,10 @@ void TProofProgressDialog::DoStop()
 {
    // Handle Stop button.
 
-   fProof->StopProcess(kFALSE);
+   // Do not wait for ever, but al least 10 seconds
+   Long_t timeout = gEnv->GetValue("Proof.ShutdownTimeout", 60) / 2;
+   timeout = (timeout > 10) ? timeout : 10;
+   fProof->StopProcess(kFALSE, timeout);
    fStatus = kStopped;
 
    // Set buttons states

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.7 2006/06/02 23:38:20 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.8 2006/06/05 22:51:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -82,6 +82,8 @@
 #include "compiledata.h"
 #include "TProofResourcesStatic.h"
 #include "TProofNodeInfo.h"
+#include "TTimer.h"
+#include "TMutex.h"
 
 #include "XProofProtocol.h"
 
@@ -155,6 +157,8 @@ public:
 //______________________________________________________________________________
 Bool_t TXProofServTerminationHandler::Notify()
 {
+   Printf("TXProofServTerminationHandler::Notify: wake up!");
+
    fServ->HandleTermination();
    return kTRUE;
 }
@@ -240,7 +244,7 @@ void TXProofServ::CreateServer()
    }
 
    // If test session, just send the protocol version and exit
-   if (Argc() > 3) {
+   if (Argc() > 3 && !strcmp(Argv(3), "test")) {
       Int_t fpw = (Int_t) strtol(sockpath, 0, 10);
       int proto = htonl(kPROOF_Protocol);
       if (write(fpw, &proto, sizeof(proto)) != sizeof(proto)) {
@@ -418,6 +422,8 @@ void TXProofServ::CreateServer()
          SendLogFile(-99);
          Terminate(0);
       }
+      // Find out if we are a master in direct contact only with workers
+      fEndMaster = fProof->IsEndMaster();
 
    }
    SendLogFile();
@@ -539,10 +545,13 @@ void TXProofServ::HandleTermination()
       if (!fIdle) {
          // Remove pending requests
          fWaitingQueries->Delete();
+         // Do not wait for ever, but al least 20 seconds
+         Long_t timeout = gEnv->GetValue("Proof.ShutdownTimeout", 60);
+         timeout = (timeout > 20) ? timeout : 20;
          // Processing will be aborted
-         fProof->StopProcess(kTRUE);
-         // Receive end-of-processing messages
-         fProof->Collect();
+         fProof->StopProcess(kTRUE, (Long_t) (timeout / 2));
+         // Receive end-of-processing messages, but do not wait for ever
+         fProof->Collect(TProof::kActive, timeout);
          // Still not idle
          if (!fIdle)
             Warning("HandleTermination","processing could not be stopped");
@@ -940,18 +949,46 @@ Bool_t TXProofServ::HandleInput(const void *in)
    if (gDebug > 2)
       Printf("TXProofServ::HandleInput %p, in: %p", this, in);
 
-   // Check the type of input
-   Bool_t interrupt = kFALSE;
-   if (in) {
-      Int_t acod = *((kXR_int32 *)in);
-      if (acod == kXPD_ping || acod == kXPD_interrupt)
-         interrupt = kTRUE;
-   }
+   XHandleIn_t *hin = (XHandleIn_t *) in;
+   Int_t acod = (hin) ? hin->fInt1 : kXPD_msg;
 
    // Act accordingly
-   if (interrupt) { 
+   if (acod == kXPD_ping || acod == kXPD_interrupt) {
       // Interrupt or Ping
       HandleUrgentData();
+
+   } else if (acod == kXPD_timer) {
+      // Shutdown option
+      fShutdownWhenIdle = (hin->fInt2 == 2) ? kFALSE : kTRUE;
+      if (hin->fInt2 > 0)
+         // Setup Shutdown timer 
+         SetShutdownTimer(kTRUE, hin->fInt3);
+      else
+         // Stop Shutdown timer, if any
+         SetShutdownTimer(kFALSE);
+
+   } else if (acod == kXPD_urgent) {
+      // Get type
+      Int_t type = hin->fInt2;
+      switch (type) {
+      case TXSocket::kStopProcess:
+         {
+            // Abort or Stop ?
+            Bool_t abort = (hin->fInt3 != 0) ? kTRUE : kFALSE;
+            // Timeout
+            Int_t timeout = hin->fInt4;
+            // Act now
+            if (fProof)
+               fProof->StopProcess(abort, timeout);
+            else
+               if(fPlayer)
+                  fPlayer->StopProcess(abort, timeout);
+         }
+         break;
+      default:
+         Info("HandleInput","kXPD_urgent: unknown type: %d", type);
+      }
+
    } else {
       // Standard socket input
       HandleSocketInput();
@@ -1081,4 +1118,52 @@ Int_t TXProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
 
    // We are done
    return 0;
+}
+
+//______________________________________________________________________________
+void TXProofServ::SetShutdownTimer(Bool_t on, Int_t delay)
+{
+   // Enable/disable the timer for delayed shutdown; the delay will be 'delay'
+   // seconds; depending on fShutdownWhenIdle, the countdown will start
+   // immediately or when the session is idle.
+
+   fShutdownTimerMtx = (fShutdownTimerMtx) ? fShutdownTimerMtx : new TMutex(kTRUE);
+   R__LOCKGUARD(fShutdownTimerMtx);
+
+   if (delay < 0 && !fShutdownTimer)
+      // No shutdown request, nothing to do
+      return;
+
+   // Make sure that 'delay' make sense, i.e. not larger than 10 days
+   if (delay > 864000) {
+      Warning("SetShutdownTimer",
+              "Abnormous delay value (%d): corruption? setting to 0", delay);
+      delay = 1;
+   }
+   // Set a minimum value (0 does not seem to start the timer ...)
+   delay = (delay <= 0) ? 1 : delay;
+
+   if (on) {
+      if (!fShutdownTimer) {
+         // First setup call: create timer
+         fShutdownTimer = new TTimer((delay * 1000), kFALSE);
+         // Connect it to the HandleTermination
+         fShutdownTimer->Connect("Timeout()", "TXProofServ", this, "HandleTermination()");
+         // Start the countdown if requested
+         if (!fShutdownWhenIdle || fIdle)
+            fShutdownTimer->Start(-1, kTRUE);
+      } else {
+         // Start the countdown
+         fShutdownTimer->Start(-1, kTRUE);
+      }
+   } else {
+      if (fShutdownTimer) {
+         // Stop timer (client has reattached)
+         fShutdownTimer->Stop();
+         // Disconnect from HandleTermination
+         fShutdownTimer->Disconnect("Timeout()", this, "HandleTermination()");
+         // Clean-up the timer
+         SafeDelete(fShutdownTimer);
+      }
+   }
 }

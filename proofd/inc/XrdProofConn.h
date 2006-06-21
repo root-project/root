@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.h,v 1.4 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.h,v 1.5 2006/06/05 22:51:13 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -105,7 +105,6 @@ private:
    XrdClientMessage   *SendRecv(XPClientRequest *req,
                                 const void *reqData, void **answData);
    virtual void        SetAsync(XrdClientAbsUnsolMsgHandler *uh);
-   void                SetSID(kXR_char *sid);
 
    void                SetInterrupt();
 
@@ -131,6 +130,7 @@ public:
    virtual XrdClientMessage *ReadMsg();
    XrdClientMessage   *SendReq(XPClientRequest *req, const void *reqData,
                                void **answData, const char *CmdName);
+   void                SetSID(kXR_char *sid);
    virtual int         WriteRaw(const void *buf, int len);
 
    virtual UnsolRespProcResult ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *s,
