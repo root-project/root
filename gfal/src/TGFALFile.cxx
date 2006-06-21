@@ -1,4 +1,4 @@
-// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.4 2006/04/18 14:23:20 rdm Exp $
+// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.5 2006/05/01 16:36:40 rdm Exp $
 // Author: Fons Rademakers   8/12/2005
 
 /*************************************************************************
@@ -133,6 +133,7 @@ TGFALFile::TGFALFile(const char *url, Option_t *option, const char *ftitle,
       }
    }
    if (read) {
+#ifdef GFAL_ACCESS_FIXED
       if (::gfal_access(fname, kFileExists) != 0) {
          Error("TGFALFile", "file %s does not exist", fname);
          goto zombie;
@@ -141,6 +142,7 @@ TGFALFile::TGFALFile(const char *url, Option_t *option, const char *ftitle,
          Error("TGFALFile", "no read permission, could not open file %s", fname);
          goto zombie;
       }
+#endif
    }
 
    // Connect to file system stream
