@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.2 2006/06/20 08:32:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.3 2006/06/20 13:17:48 antcheva Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -46,6 +46,120 @@
 //  - with a TMacro* as argument:                                       //
 //    TMacro *macro = new TMacro("hsimple.C");                          //
 //    new TGTextEditor(macro);                                          //
+//                                                                      //
+//  Basic Features:                                                     //
+//                                                                      //
+//  New Document                                                        //
+//                                                                      //
+//  To create a new blank document, select File menu / New, or click    //
+//  the New toolbar button. It will create a new instance of            //
+//  TGTextEditor.                                                       //
+//                                                                      //
+//  Open/Save File                                                      //
+//                                                                      //
+//  To open a file, select File menu / Open or click on the Open        //
+//  toolbar button. This will bring up the standard File Dialog for     //
+//  opening files.                                                      //
+//  If the current document has not been saved yet, you will be asked   //
+//  either to save or abandon the changes.                              //
+//  To save the file using the same name, select File menu / Save or    //
+//  the toolbar Save button. To change the file name use File menu /    //
+//  Save As... or corresponding SaveAs button on the toolbar.           //
+//                                                                      //
+//  Text Selection                                                      //
+//                                                                      //
+//  You can move the cursor by simply clicking on the desired location  //
+//  with the left mouse button. To highlight some text, press the mouse //
+//  and drag the mouse while holding the left button pressed.           //
+//  To select a word, double-click on it;                               //
+//  to select the text line - triple-click on it;                       //
+//  to select all  do quadruple-click.                                  //
+//                                                                      //
+//  Cut, Copy, Paste                                                    //
+//                                                                      //
+//  After selecting some text, you can cut or copy it to the clipboard. //
+//  A subsequent paste operation will insert the contents of the        //
+//  clipboard at the current cursor location.                           //
+//                                                                      //
+//  Text Search                                                         //
+//                                                                      //
+//  The editor uses a standard Search dialog. You can specify a forward //
+//  or backward search direction starting from the current cursor       //
+//  location according to the selection made of a case sensitive mode   //
+//  or not. The last search can be repeated by pressing F3.             //
+//                                                                      //
+//  Text Font                                                           //
+//                                                                      //
+//  You can change the text font by selecting Edit menu / Set Font.     //
+//  The Font Dialog pops up and shows the Name, Style, and Size of any  //
+//  available font. The selected font sample is shown in the preview    //
+//  area.                                                               //
+//                                                                      //
+//  Executing Macros                                                    //
+//                                                                      //
+//  You can execute the currently loaded macro in the editor by         //
+//  selecting Tools menu / Execute Macro; by clicking on the            //
+//  corresponding toolbar button, or by using Ctrl+F5 accelerator keys. //
+//  This is identical to the command ".x macro.C" in the root prompt    //
+//  command line.                                                       //
+//                                                                      //
+//  Compiling Macros                                                    //
+//                                                                      //
+//  The currently loaded macro can be compiled with ACLiC if you select //
+//  Tools menu / Compile Macro; by clicking on the corresponding        //
+//  toolbar button, or by using Ctrl+F7 accelerator keys.               //
+//  This is identical to the command ".L macro.C++" in the root prompt  //
+//  command line.                                                       //
+//                                                                      //
+//  Interrupting a Running Macro                                        //
+//                                                                      //
+//  You can interrupt a running macro by selecting the Tools menu /     //
+//  Interrupt; by clicking on the corresponding toolbar button, or by   //
+//  using Shift+F5 accelerator keys.                                    //
+//                                                                      //
+//  Interface to CINT Interpreter                                       //
+//                                                                      //
+//  Any command entered in the Command combo box will be passed to      //
+//  the CINT interpreter. This combo box will keep the commands history //
+//  and will allow you to re-execute the same commands during an editor //
+//  session.                                                            //
+//                                                                      //
+//  Keyboard Bindings                                                   //
+//                                                                      //
+//  The following table lists the keyboard shortcuts and accelerator    //
+//  keys.                                                               //
+//                                                                      //
+//  Key:              Action:                                           //
+//  ====              =======                                           //
+//                                                                      //
+//  Up                Move cursor up.                                   //
+//  Shift+Up          Move cursor up and extend selection.              //
+//  Down              Move cursor down.                                 //
+//  Shift+Down        Move cursor down and extend selection.            //
+//  Left              Move cursor left.                                 //
+//  Shift+Left        Move cursor left and extend selection.            //
+//  Right             Move cursor right.                                //
+//  Shift+Right       Move cursor right and extend selection.           //
+//  Home              Move cursor to begin of line.                     //
+//  Shift+Home        Move cursor to begin of line and extend selection.//
+//  Ctrl+Home         Move cursor to top of page.                       //
+//  End               Move cursor to end of line.                       //
+//  Shift+End         Move cursor to end of line and extend selection.  //
+//  Ctrl+End          Move cursor to end of page.                       //
+//  PgUp              Move cursor up one page.                          //
+//  Shift+PgUp        Move cursor up one page and extend selection.     //
+//  PgDn              Move cursor down one page.                        //
+//  Shift+PgDn        Move cursor down one page and extend selection.   //
+//  Delete            Delete character after cursor, or text selection. //
+//  BackSpace         Delete character before cursor, or text selection.//
+//  Ctrl+B            Move cursor left.                                 //
+//  Ctrl+D            Delete character after cursor, or text selection. //
+//  Ctrl+E            Move cursor to end of line.                       //
+//  Ctrl+H            Delete character before cursor, or text selection.//
+//  Ctrl+K            Delete characters from current position to the    //
+//                    end of line.                                      //
+//  Ctrl+U            Delete current line.                              //
+//                                                                      //
 //Begin_Html
 /*
 <img src="gif/TGTextEditor.gif">
@@ -73,6 +187,8 @@
 #include "TGTextEditDialogs.h"
 #include "TGTextEditor.h"
 #include "TGComboBox.h"
+#include "TRootHelpDialog.h"
+#include "HelpText.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
@@ -85,11 +201,11 @@ const char *ed_filetypes[] = {
    0, 0
 };
 
-enum {
-   kM_FILE_NEW, kM_FILE_OPEN, kM_FILE_SAVE, kM_FILE_SAVEAS, kM_FILE_PRINT, 
-   kM_FILE_EXIT, kM_EDIT_CUT, kM_EDIT_COPY, kM_EDIT_PASTE, kM_EDIT_DELETE, 
+enum ETextEditorCommands {
+   kM_FILE_NEW, kM_FILE_OPEN, kM_FILE_SAVE, kM_FILE_SAVEAS, kM_FILE_PRINT,
+   kM_FILE_EXIT, kM_EDIT_CUT, kM_EDIT_COPY, kM_EDIT_PASTE, kM_EDIT_DELETE,
    kM_EDIT_SELECTALL, kM_SEARCH_FIND, kM_SEARCH_FINDNEXT, kM_SEARCH_GOTO,
-   kM_TOOLS_COMPILE, kM_TOOLS_EXECUTE, kM_TOOLS_INTERRUPT, kM_HELP_CONTENTS, 
+   kM_TOOLS_COMPILE, kM_TOOLS_EXECUTE, kM_TOOLS_INTERRUPT, kM_HELP_CONTENTS,
    kM_HELP_ABOUT, kM_EDIT_SELFONT
 };
 
@@ -192,7 +308,7 @@ void TGTextEditor::Build()
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry("&Open...", kM_FILE_OPEN);
    fMenuFile->AddEntry("&Save", kM_FILE_SAVE);
-   fMenuFile->AddEntry("Save &as...", kM_FILE_SAVEAS);
+   fMenuFile->AddEntry("Save &As...", kM_FILE_SAVEAS);
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry("&Print...", kM_FILE_PRINT);
    fMenuFile->AddSeparator();
@@ -220,16 +336,14 @@ void TGTextEditor::Build()
 
    fMenuSearch = new TGPopupMenu(fClient->GetRoot());
    fMenuSearch->AddEntry("&Find...         Ctrl+F", kM_SEARCH_FIND);
-   fMenuSearch->AddEntry("Find &next    F3", kM_SEARCH_FINDNEXT);
+   fMenuSearch->AddEntry("Find &Next    F3", kM_SEARCH_FINDNEXT);
    fMenuSearch->AddSeparator();
-   fMenuSearch->AddEntry("&Goto line... Ctrl+L", kM_SEARCH_GOTO);
+   fMenuSearch->AddEntry("&Goto Line... Ctrl+L", kM_SEARCH_GOTO);
 
    fMenuHelp = new TGPopupMenu(fClient->GetRoot());
-   fMenuHelp->AddEntry("&Help topics    F1", kM_HELP_CONTENTS);
+   fMenuHelp->AddEntry("&Help Topics    F1", kM_HELP_CONTENTS);
    fMenuHelp->AddSeparator();
    fMenuHelp->AddEntry("&About...", kM_HELP_ABOUT);
-
-   fMenuHelp->DisableEntry(kM_HELP_CONTENTS);
 
    fMenuFile->Associate(this);
    fMenuEdit->Associate(this);
@@ -251,10 +365,10 @@ void TGTextEditor::Build()
 
    AddFrame(new TGHorizontal3DLine(this), 
             new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,2,2));
-   int spacing = 8;
+   Int_t i,spacing = 8;
    fToolBar = new TGToolBar(this, 60, 20, kHorizontalFrame);
    fToolBar->SetCleanup(kDeepCleanup);
-   for (int i = 0; fTbData[i].fPixmap; i++) {
+   for (i = 0; fTbData[i].fPixmap; i++) {
       if (strlen(fTbData[i].fPixmap) == 0) {
          spacing = 8;
          continue;
@@ -282,13 +396,12 @@ void TGTextEditor::Build()
    fToolBar->GetButton(kM_EDIT_COPY)->SetState(kButtonDisabled);
    fToolBar->GetButton(kM_EDIT_DELETE)->SetState(kButtonDisabled);
    fToolBar->GetButton(kM_EDIT_PASTE)->SetState(kButtonDisabled);
-   fToolBar->GetButton(kM_HELP_CONTENTS)->SetState(kButtonDisabled);
    
    fTextEdit = new TGTextEdit(this, 10, 10, 1);
    fTextEdit->Associate(this);
    AddFrame(fTextEdit, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
-   int parts[] = { 75, 25 };
+   Int_t parts[] = { 75, 25 };
    fStatusBar = new TGStatusBar(this);
    fStatusBar->SetCleanup(kDeepCleanup);
    fStatusBar->SetParts(parts, 2);
@@ -407,11 +520,11 @@ Bool_t TGTextEditor::SaveFileAs()
 }
 
 //______________________________________________________________________________
-Int_t TGTextEditor::IsSaved() 
+Int_t TGTextEditor::IsSaved()
 {
    // Check if file has to be saved in case of modifications.
 
-   int ret;
+   Int_t ret;
    char tmp[1024];
 
    sprintf(tmp, "The text has been modified. Do you want to save the changes?");
@@ -446,7 +559,7 @@ void TGTextEditor::PrintText()
 }
 
 //______________________________________________________________________________
-void TGTextEditor::CloseWindow() 
+void TGTextEditor::CloseWindow()
 {
    // Close TGTextEditor window.
 
@@ -462,7 +575,8 @@ void TGTextEditor::CloseWindow()
             SaveFileAs();
          else
             SaveFile(fFilename.Data());
-          if (fTextChanged) break;
+         if (fTextChanged)
+            break;
       case kMBNo:
          TGMainFrame::CloseWindow();
    }
@@ -493,7 +607,7 @@ Bool_t TGTextEditor::HandleKey(Event_t *event)
             return kTRUE;
          case kKey_F1:
             SendMessage(this, MK_MSG(kC_COMMAND, kCM_MENU),
-                        kM_HELP_ABOUT, 0);
+                        kM_HELP_CONTENTS, 0);
             return kTRUE;
          case kKey_F3:
             Search(kTRUE);
@@ -554,11 +668,11 @@ void TGTextEditor::Search(Bool_t again)
 }
 
 //______________________________________________________________________________
-void TGTextEditor::Goto() 
+void TGTextEditor::Goto()
 {
    // Invokes goto dialog, and go to the specified line.
 
-   long ret;
+   Long_t ret;
 
    new TGGotoDialog(fClient->GetDefaultRoot(), this, 400, 150, &ret);
 
@@ -598,7 +712,7 @@ void TGTextEditor::ExecuteMacro()
       return;
    }
    if (fTextChanged) {
-      int ret;
+      Int_t ret;
       new TGMsgBox(fClient->GetRoot(), this, "TGTextEditor",
             "The text has been modified. Do you want to save the changes?",
             kMBIconExclamation, kMBYes | kMBNo | kMBCancel, &ret);
@@ -714,7 +828,7 @@ Bool_t TGTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
    // Handle menu and other command generated by the user.
 
-   gVirtualX->Update();
+   TRootHelpDialog *hd;
 
    switch(GET_MSG(msg)) {
       case kC_COMMAND:
@@ -834,6 +948,11 @@ Bool_t TGTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
 
                   // "Help" menu related events
+                  case kM_HELP_CONTENTS:
+                     hd = new TRootHelpDialog(this, "Help on Editor...", 600, 400);
+                     hd->SetText(gHelpTextEditor);
+                     hd->Popup();
+                     break;
                   case kM_HELP_ABOUT:
                      About();
                      break;
@@ -855,8 +974,8 @@ Bool_t TGTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                break;
             default:
                break;
-          }
-          break;
+         }
+         break;
 
       default:
          break;

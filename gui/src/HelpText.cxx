@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.10 2004/07/09 12:34:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.11 2005/12/06 17:32:28 rdm Exp $
 // Author: Fons Rademakers   28/07/97
 
 #include "HelpText.h"
@@ -308,3 +308,98 @@ All objects context menus contain the following items:\n\
  -Dump. Same as Inspect, except that the output is on stdout.\n\n\
 ";
 
+const char gHelpTextEditor[] = "\n\
+ ____________________________________________________________________\n\
+|                                                                    |\n\
+|                          TGTextEditor                              |\n\
+|____________________________________________________________________|\n\n\
+                           Introduction\n\n\
+TGTextEditor is a simple text editor that uses the TGTextEdit widget.\n\
+It provides all functionalities of TGTextEdit as copy, paste, cut,\n\
+search, go to a given line number. In addition, it provides the\n\
+possibilities for compiling, executing or interrupting a running\n\
+macro.\n\n\
+                          Basic Features\n\n\
+      New Document\n\n\
+To create a new blank document, select File menu / New, or click the\n\
+New toolbar button. It will create a new instance of TGTextEditor.\n\n\
+      Open/Save File\n\n\
+To open a file, select File menu / Open or click on the Open toolbar\n\
+button. This will bring up the standard File Dialog for opening files.\n\
+If the current document has not been saved yet, you will be asked either\n\
+to save or abandon the changes.\n\
+To save the file using the same name, select File menu / Save or the\n\
+toolbar Save button. To change the file name use File menu / Save As...\n\
+or corresponding SaveAs button on the toolbar.\n\n\
+      Text Selection\n\n\
+You can move the cursor by simply clicking on the desired location\n\
+with the left mouse button. To highlight some text, press the mouse\n\
+and drag the mouse while holding the left button pressed.\n\
+To select a word, double-click on it;\n\
+to select the text line - triple-click on it;\n\
+to select all - do quadruple-click.\n\n\
+      Cut, Copy, Paste\n\n\
+After selecting some text, you can cut or copy it to the clipboard.\n\
+A subsequent paste operation will insert the contents of the clipboard\n\
+at the current cursor location.\n\n"
+"      Text Search\n\n\
+The editor uses a standard Search dialog. You can specify a forward or\n\
+backward search direction starting from the current cursor location\n\
+according to the selection made of a case sensitive mode or not.\n\
+The last search can be repeated by pressing F3.\n\n\
+      Text Font\n\n\
+You can change the text font by selecting Edit menu / Set Font.\n\
+The Font Dialog pops up and shows the Name, Style and Size of any\n\
+available font. The selected font sample is shown in the preview area.\n\n\
+      Executing Macros\n\n\
+You can execute the currently loaded macro in the editor by selecting\n\
+Tools menu / Execute Macro; by clicking on the corresponding toolbar\n\
+button, or by using Ctrl+F5 accelerator keys.\n\
+This is identical to the command \".x macro.C\" in the root prompt\n\
+command line.\n\n\
+      Compiling Macros\n\n\
+The currently loaded macro can be compiled with ACLiC if you select\n\
+Tools menu / Compile Macro; by clicking on the corresponding toolbar\n\
+button, or by using Ctrl+F7 accelerator keys.\n\
+This is identical to the command \".L macro.C++\" in the root prompt\n\
+command line.\n\n\
+      Interrupting a Running Macro\n\n\
+You can interrupt a running macro by selecting the Tools menu / \n\
+Interrupt; by clicking on the corresponding toolbar button, or by \n\
+using Shift+F5 accelerator keys.\n\n\
+      Interface to CINT Interpreter\n\n\
+Any command entered in the 'Command' combo box will be passed to the\n\
+CINT interpreter. This combo box will keep the commands history and \n\
+will allow you to re-execute the same commands during an editor session.\n\n"
+"      Keyboard Bindings\n\n\
+The following table lists the keyboard shortcuts and accelerator keys.\n\n\
+Key:              Action:\n\
+====              =======\n\n\
+Up                Move cursor up.\n\
+Shift+Up          Move cursor up and extend selection.\n\
+Down              Move cursor down.\n\
+Shift+Down        Move cursor down and extend selection.\n\
+Left              Move cursor left.\n\
+Shift+Left        Move cursor left and extend selection.\n\
+Right             Move cursor right.\n\
+Shift+Right       Move cursor right and extend selection.\n\
+Home              Move cursor to begin of line.\n\
+Shift+Home        Move cursor to begin of line and extend selection.\n\
+Ctrl+Home         Move cursor to top of page.\n\
+End               Move cursor to end of line.\n\
+Shift+End         Move cursor to end of line and extend selection.\n\
+Ctrl+End          Move cursor to end of page.\n\
+PgUp              Move cursor up one page.\n\
+Shift+PgUp        Move cursor up one page and extend selection.\n\
+PgDn              Move cursor down one page.\n\
+Shift+PgDn        Move cursor down one page and extend selection.\n\
+Delete            Delete character after cursor, or text selection.\n\
+BackSpace         Delete character before cursor, or text selection.\n\
+Ctrl+B            Move cursor left.\n\
+Ctrl+D            Delete character after cursor, or text selection.\n\
+Ctrl+E            Move cursor to end of line.\n\
+Ctrl+H            Delete character before cursor, or text selection.\n\
+Ctrl+K            Delete characters from current position to the end of\n\
+                  line.\n\
+Ctrl+U            Delete current line.\n\
+";

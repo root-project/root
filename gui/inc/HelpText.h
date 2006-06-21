@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: HelpText.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   28/07/97
 
 /*************************************************************************
@@ -22,3 +22,4 @@ R__EXTERN const char gHelpGraphicsEditor[];
 R__EXTERN const char gHelpPullDownMenus[];
 R__EXTERN const char gHelpCanvas[];
 R__EXTERN const char gHelpObjects[];
+R__EXTERN const char gHelpTextEditor[];
