@@ -578,5 +578,5 @@ distclean-cintdlls: clean-cintdlls
 	  $(CINTDIRDLLSTL)/G__cpp_$${cintdll}.* \
 	  metautils/src/stlLoader_$${cintdll}.*; done
 	rm -f $(ALLCINTDLLS) \
-	  $(CINTDIRL)/posix/G__c_posix.*
+	  $(CINTDIRL)/posix/G__c_posix.* $(CINTDIRL)/posix/mktypes$(EXEEXT)
 ##### clean - END
