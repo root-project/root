@@ -158,7 +158,7 @@ void TFrameEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    par = fFrame->GetBorderSize();
    if (par < 1) par = 1;
    if (par > 16) par = 16;
-   fBsize->Select(par);
+   fBsize->Select(par, kFALSE);
    
    if (fInit) ConnectSignals2Slots();
    SetActive();

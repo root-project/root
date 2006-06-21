@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.8 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.9 2006/04/07 15:13:14 antcheva Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -124,17 +124,17 @@ void TAttLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    
    fAttLine = dynamic_cast<TAttLine *>(fModel);
 
-   fStyleCombo->Select(fAttLine->GetLineStyle());
+   fStyleCombo->Select(fAttLine->GetLineStyle(), kFALSE);
 
    if (fModel->InheritsFrom(TGraph::Class())) {
-      fWidthCombo->Select(TMath::Abs(fAttLine->GetLineWidth()%100));
+      fWidthCombo->Select(TMath::Abs(fAttLine->GetLineWidth()%100), kFALSE);
    } else {
-      fWidthCombo->Select(fAttLine->GetLineWidth());
+      fWidthCombo->Select(fAttLine->GetLineWidth(), kFALSE);
    }
 
    Color_t c = fAttLine->GetLineColor();
    Pixel_t p = TColor::Number2Pixel(c);
-   fColorSelect->SetColor(p);
+   fColorSelect->SetColor(p, kFALSE);
 
    if (fInit) ConnectSignals2Slots();
    SetActive();

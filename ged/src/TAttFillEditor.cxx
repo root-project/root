@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.9 2005/11/25 09:56:35 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.10 2006/03/20 21:43:41 pcanal Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -113,10 +113,10 @@ void TAttFillEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    Color_t c = fAttFill->GetFillColor();
    Pixel_t p = TColor::Number2Pixel(c);
-   fColorSelect->SetColor(p);
+   fColorSelect->SetColor(p, kFALSE);
 
    Style_t s = fAttFill->GetFillStyle();
-   fPatternSelect->SetPattern(s);
+   fPatternSelect->SetPattern(s, kFALSE);
 
    if (fInit) ConnectSignals2Slots();
    SetActive();
