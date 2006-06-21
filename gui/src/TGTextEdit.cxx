@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.37 2006/06/16 10:06:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.38 2006/06/20 13:17:48 antcheva Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 #include "TGMenu.h"
 #include "TGMsgBox.h"
 #include "TGFileDialog.h"
+#include "TGScrollBar.h"
 #include "KeySymbols.h"
 #include "Riostream.h"
 
@@ -1022,7 +1023,8 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
                   TGLongPosition pos;
                   pos.fY = fText->RowCount()-1;
                   pos.fX = fText->GetLineLength(pos.fY);
-                  SetVsbPosition(ToScrYCoord(pos.fY));
+                  if (fVsb && fVsb->IsMapped())
+                     SetVsbPosition((ToScrYCoord(pos.fY)+fVisible.fY)/fScrollVal.fY);
                   SetCurrent(pos);
                }
                break;
