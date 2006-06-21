@@ -25,7 +25,7 @@ void Run_Node_Tests(Int_t fps, Int_t niter, const Char_t *basedir,
    }
 
    if (fps<1) {
-      cout << "Must be testing atleast 1 file per slave" << endl;
+      cout << "Must be testing at least 1 file per slave" << endl;
       return;
    }
 
@@ -141,7 +141,7 @@ void run_selector_tests(TString selector_name, Int_t fps, Int_t niter,
       ns_holder = nactive;
       for (Int_t j=0; j<niter; j++) {
          run_holder=j;
-         dset = make_tdset("/tmp",fps);
+         dset = make_tdset(basedir,fps);
          TTime starttime = gSystem->Now();
          dset->Process(selector_name);
          TTime endtime = gSystem->Now();
@@ -235,3 +235,4 @@ void run_selector_tests(TString selector_name, Int_t fps, Int_t niter,
       dirsav->cd();
    }
 }
+

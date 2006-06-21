@@ -1,4 +1,4 @@
-// $Id: make_event_trees.C,v 1.6 2005/02/08 22:38:23 rdm Exp $
+// $Id: make_event_trees.C,v 1.7 2005/09/22 09:57:25 rdm Exp $
 //
 //
 
@@ -77,15 +77,15 @@ Bool_t make_event_trees(const char *basedir, Int_t events_per_file,
    slavemacro << "         filename += seed;"                                             << endl;
    slavemacro << "         filename += \".root\";"                                        << endl;
    slavemacro << "         TDirectory* savedir = gDirectory;"                             << endl;
-   slavemacro << "         TFile f(filename, \"RECREATE\");"                              << endl;
+   slavemacro << "         TFile *f = TFile::Open(filename, \"RECREATE\");"               << endl;
    slavemacro << "         savedir->cd();"                                                << endl;
    slavemacro <<                                                                             endl;
-   slavemacro << "         if (f.IsZombie()) break;"                                      << endl;
+   slavemacro << "         if (f->IsZombie()) break;"                                     << endl;
    slavemacro << "         Event event;"                                                  << endl;
    slavemacro << "         Event *ep = &event;"                                           << endl;
    slavemacro << "         TTree eventtree(\"EventTree\", \"Event Tree\");"               << endl;
    slavemacro << "         eventtree.Bronch(\"event\", \"Event\", &ep, 32000, 1);"        << endl;
-   slavemacro << "         eventtree.SetDirectory(&f);"                                   << endl;
+   slavemacro << "         eventtree.SetDirectory(f);"                                    << endl;
    slavemacro << "         eventtree.AutoSave();"                                         << endl;
    slavemacro <<                                                                             endl;
    slavemacro << "         for(Int_t j=0; j<nevents; j++) {"                              << endl;
@@ -94,10 +94,12 @@ Bool_t make_event_trees(const char *basedir, Int_t events_per_file,
    slavemacro << "         }"                                                             << endl;
    slavemacro <<                                                                             endl;
    slavemacro << "         savedir = gDirectory;"                                         << endl;
-   slavemacro << "         f.cd();"                                                       << endl;
+   slavemacro << "         f->cd();"                                                      << endl;
    slavemacro << "         eventtree.Write();"                                            << endl;
    slavemacro << "         eventtree.SetDirectory(0);"                                    << endl;
-   slavemacro << "         f.Close();"                                                    << endl;
+   slavemacro << "         f->Close();"                                                   << endl;
+   slavemacro << "         delete f;"                                                     << endl;
+   slavemacro << "         f = 0;"                                                        << endl;
    slavemacro << "         savedir->cd();"                                                << endl;
    slavemacro <<                                                                             endl;
    slavemacro << "      }"                                                                << endl;
