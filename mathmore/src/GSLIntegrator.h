@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.h,v 1.3 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.h,v 1.4 2006/06/19 08:44:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -89,7 +89,7 @@ namespace Math {
    
    class GSLIntegrator {
       
-    public:
+   public:
       
       
       
@@ -141,12 +141,12 @@ namespace Math {
       //~GSLIntegrator();
       
       // disable copy ctrs
-    private:
+   private:
          
       GSLIntegrator(const GSLIntegrator &);
       GSLIntegrator & operator=(const GSLIntegrator &);
       
-    public:
+   public:
          
          
          // template methods for generic functors
@@ -324,13 +324,13 @@ namespace Math {
       
       
       
-    protected:
+   protected:
          
       // internal method to create GSL function adapter
       void FillGSLFunction( GSLFuncPointer fp, void *);
       void FillGSLFunction(const IGenFunction & f);
       
-    private:
+   private:
          
       Integration::Type fType;
       Integration::GKRule fRule;
