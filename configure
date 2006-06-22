@@ -2490,7 +2490,7 @@ else
    if test "x$enable_thread" = "xyes"; then
        # Ok, now check the architecture
        case $arch in
-       # The server builds on Linux and Solaris only (for the time being)
+       # xrootd does not build on all platforms yet
        linux*)
            if test "x$enable_xrootd" = "x"; then
                enable_xrootd="yes"
@@ -2502,9 +2502,14 @@ else
            fi
            ;;
        solaris*)
-              if test "x$enable_xrootd" = "x"; then
-                 enable_xrootd="yes"
-              fi
+           if test "x$enable_xrootd" = "x"; then
+               enable_xrootd="yes"
+           fi
+           ;;
+       win32)
+           if test "x$enable_xrootd" = "x"; then
+               enable_xrootd="yes"
+           fi
            ;;
        *)
            if test "x$enable_xrootd" = "xyes"; then
