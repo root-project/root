@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.cxx,v 1.2 2005/12/08 21:56:39 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.cxx,v 1.3 2006/06/19 09:02:24 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   06/2005 
 
 
@@ -17,11 +17,11 @@ namespace Math {
   
 
 
-  double breitwigner_prob(double x, double gamma, double x0) {
-     
-     return 0.5 - std::atan(2.0 * (x-x0) / gamma) / M_PI;
-     
-  }
+   double breitwigner_prob(double x, double gamma, double x0) {
+      
+      return 0.5 - std::atan(2.0 * (x-x0) / gamma) / M_PI;
+      
+   }
    
    
    

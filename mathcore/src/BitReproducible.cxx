@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.cxx,v 1.4 2006/06/16 09:26:01 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.cxx,v 1.5 2006/06/19 09:02:24 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #include "Math/GenVector/BitReproducible.h"
@@ -8,8 +8,8 @@
 #include <exception>
 
 namespace ROOT { 
- namespace Math { 
-  namespace GenVector_detail {
+namespace Math { 
+namespace GenVector_detail {
 
 bool BitReproducible::fgByte_order_known = false;
 int  BitReproducible::fgByte_order[8];

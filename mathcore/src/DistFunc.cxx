@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DistFunc.cxx,v 1.6 2005/12/08 21:56:39 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DistFunc.cxx,v 1.7 2006/06/19 09:02:24 moneta Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -23,17 +23,17 @@ namespace Math {
 
 
 
-
-  double binomial_pdf(unsigned int k, double p, unsigned int n) {
-     
-     if (k > n) {
-        return 0.0;
-     } else {
-        
-        double coeff = ROOT::Math::lgamma(n+1) - ROOT::Math::lgamma(k+1) - ROOT::Math::lgamma(n-k+1);
-        return std::exp(coeff + k * std::log(p) + (n - k) * std::log(1 - p));
-     }
-  }
+   
+   double binomial_pdf(unsigned int k, double p, unsigned int n) {
+      
+      if (k > n) {
+         return 0.0;
+      } else {
+         
+         double coeff = ROOT::Math::lgamma(n+1) - ROOT::Math::lgamma(k+1) - ROOT::Math::lgamma(n-k+1);
+         return std::exp(coeff + k * std::log(p) + (n - k) * std::log(1 - p));
+      }
+   }
    
    
    double breitwigner_pdf(double x, double gamma, double x0) {

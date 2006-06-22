@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BoostZ.cxx,v 1.4 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BoostZ.cxx,v 1.5 2006/06/19 09:02:24 moneta Exp $
 // Authors:  M. Fischler  2005  
 
  /**********************************************************************
@@ -25,7 +25,7 @@
 
 namespace ROOT {
 
-  namespace Math {
+namespace Math {
 
 BoostZ::BoostZ() : fBeta(0.0), fGamma(1.0) {}
 

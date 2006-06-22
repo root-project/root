@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.5 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.6 2006/06/19 09:02:24 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -31,7 +31,7 @@
 
 namespace ROOT {
 
-  namespace Math {
+namespace Math {
 
 LorentzRotation::LorentzRotation() {
    // constructor of an identity LR

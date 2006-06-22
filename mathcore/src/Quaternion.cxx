@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.cxx,v 1.2 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Quaternion.cxx,v 1.3 2006/06/19 09:02:24 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.cxx,v 1.2 2006/06/15 16:23:44 moneta Exp $
+// Last update: $Id: Quaternion.cxx,v 1.3 2006/06/19 09:02:24 moneta Exp $
 //
 #include "Math/GenVector/Quaternion.h"
 
@@ -28,7 +28,7 @@
 
 namespace ROOT {
 
-  namespace Math {
+namespace Math {
 
 // ========== Constructors and Assignment =====================
 
