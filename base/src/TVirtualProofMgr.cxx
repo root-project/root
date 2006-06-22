@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.7 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.8 2006/06/21 16:18:26 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -369,6 +369,5 @@ void TVirtualProofDesc::Print(Option_t *) const
    Printf("// # %d", fLocalId);
    Printf("// alias: %s, url: \"%s\"", GetTitle(), GetUrl());
    Printf("// tag: %s", GetName());
-   Printf("// status: %s, attached: %s (remote ID: %d)",
-          st[fStatus+1], (fProof ? "YES" : "NO"), fRemoteId);
+   Printf("// status: %s, attached: %s (remote ID: %d)",st[fStatus+1], (fProof ? "YES" : "NO"), fRemoteId);
 }
