@@ -38,40 +38,50 @@ syslibs="kernel32.lib advapi32.lib \
          $extralibs"
 
 name=`basename $R__LIB .dll`
+targetdir=`dirname $R__LIB`
 
 bindexp=bin/bindexplib
 
 rm -f $R__LIB
 
+if [ "$targetdir" = "lib" ]; then
+	libdir=lib
+	dlldir=bin
+	relocated=x
+else 
+	libdir=$targetdir
+	dlldir=$targetdir
+fi
+
 if [ "$R__PLATFORM" = "win32" ]; then
    if [ "$R__LD" = "build/win/ld.sh" ]; then
-      echo "$bindexp $name $R__OBJS > lib/${name}.def"
-      $bindexp $name $R__OBJS > lib/${name}.def
+      echo "$bindexp $name $R__OBJS > $libdir/${name}.def"
+      $bindexp $name $R__OBJS > $libdir/${name}.def
       cmd="lib -ignore:4049,4206,4217,4221 \
-           -nologo -MACHINE:IX86 -out:lib/${name}.lib $R__OBJS \
-           -def:lib/${name}.def $R__LEXTRA"
+           -nologo -MACHINE:IX86 -out:$libdir/${name}.lib $R__OBJS \
+           -def:$libdir/${name}.def $R__LEXTRA"
       echo $cmd
       $cmd
       if [ "$R__LIB" = "lib/libCint.dll" ]; then
-         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp $syslibs"
+         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
+              $libdir/${name}.exp $syslibs"
       elif [ "$R__LIB" = "lib/libReflex.dll" ]; then
-         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp $R__EXTRA $syslibs"
+         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
+              $libdir/${name}.exp $R__EXTRA $syslibs"
       elif [ "$R__LIB" = "lib/libCintex.dll" ]; then
-         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp lib/libCore.lib lib/libReflex.lib \
+         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
+              $libdir/${name}.exp lib/libCore.lib lib/libReflex.lib \
               lib/libCint.lib $R__EXTRA $syslibs"
       elif [ "$R__LIB" = "lib/libCore.dll" ]; then
-         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp lib/libCint.lib \
+         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
+              $libdir/${name}.exp lib/libCint.lib \
               $R__EXTRA $syslibs WSock32.lib Oleaut32.lib Iphlpapi.lib"
       else
          if [ "$(bin/root-config --dicttype)" != "cint" ]; then
              needReflex="lib/libCintex.lib lib/libReflex.lib"
          fi
-         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp $R__EXTRA \
+         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
+              $libdir/${name}.exp $R__EXTRA \
               $needReflex lib/libCore.lib lib/libCint.lib \
               $syslibs"
       fi
@@ -85,8 +95,10 @@ if [ $linkstat -ne 0 ]; then
    exit $linkstat
 fi
 
-# dummy dll (real one in in bin/) to prevent rebuilds of the dll
-touch $R__LIB
+if [ "$relocated" = "x" ]; then 
+   # dummy dll (real one in in bin/) to prevent rebuilds of the dll
+   touch $R__LIB
+fi
 
 echo "==> $R__LIB done"
 
