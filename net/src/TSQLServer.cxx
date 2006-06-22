@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.11 2006/06/02 14:02:03 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.12 2006/06/02 15:00:18 rdm Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -71,7 +71,7 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
 Bool_t TSQLServer::Exec(const char* sql)
 {
    // Execute sql query. 
-   // Usefull for command like DROP TABLE or INSERT, where result set
+   // Usefull for commands like DROP TABLE or INSERT, where result set
    // is not interested. Return kTRUE if no error
    
    TSQLResult* res = Query(sql);
@@ -96,7 +96,7 @@ Int_t TSQLServer::GetErrorCode() const
 //______________________________________________________________________________
 const char* TSQLServer::GetErrorMsg() const
 {
-   //  returns error message of last operation
+   // returns error message of last operation
    // if no errors, return 0
    // Each specific implementation of TSQLServer provides its own error messages
    
@@ -130,9 +130,7 @@ Bool_t TSQLServer::StartTransaction()
    // submit "START TRANSACTION" query to database
    // return kTRUE, if succesfull
    
-   TSQLResult* res = Query("START TRANSACTION");
-   if (res!=0) delete res;
-   return !IsError();
+   return Exec("START TRANSACTION");
 }
 
 //______________________________________________________________________________
@@ -141,9 +139,7 @@ Bool_t TSQLServer::Commit()
    // submit "COMMIT" query to database
    // return kTRUE, if succesfull
 
-   TSQLResult* res = Query("COMMIT");
-   if (res!=0) delete res;
-   return !IsError();
+   return Exec("COMMIT");
 }
 
 //______________________________________________________________________________
@@ -152,9 +148,7 @@ Bool_t TSQLServer::Rollback()
    // submit "ROLLBACK" query to database
    // return kTRUE, if succesfull
 
-   TSQLResult* res = Query("ROLLBACK");
-   if (res!=0) delete res;
-   return !IsError();
+   return Exec("ROLLBACK");
 }
 
 //______________________________________________________________________________

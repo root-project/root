@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.10 2006/05/22 08:55:30 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.11 2006/06/02 14:02:03 brun Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -19,6 +19,20 @@
 #include "TObjString.h"
 
 ClassImp(TOracleServer)
+
+// Reset error and check that server connected
+#define CheckConnect(method, res)                       \
+      ClearError();                                     \
+      if (!IsConnected()) {                             \
+         SetError(-1,"Oracle database is not connected",method); \
+         return res;                                    \
+      }                                                 
+
+// catch Oracle exception after try block
+#define CatchError(method)                           \
+   catch (SQLException &oraex) {                     \
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), method); \
+   }                                                 
 
 //______________________________________________________________________________
 TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
@@ -60,10 +74,11 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
       fDB   = conn_str;
       fPort = url.GetPort();
       fPort = (fPort) ? fPort : 1521;
-   } catch (SQLException &oraex) {
-      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "TOracleServer");
-      MakeZombie();
-   }
+      return;
+      
+   } CatchError("TOracleServer")
+
+   MakeZombie();
 }
 
 //______________________________________________________________________________
@@ -88,23 +103,15 @@ void TOracleServer::Close(Option_t *)
          fEnv->terminateConnection(fConn);
       if (fEnv)
          Environment::terminateEnvironment(fEnv);
-   } catch (SQLException &oraex)  {
-      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "Close");
-      //MakeZombie();
-   }
+   } CatchError("Close")
 
    fPort = -1;
 }
-
+  
 //______________________________________________________________________________
 TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
 {
-   ClearError();
-
-   if (!IsConnected()) {
-      SetError(-1, "Database is not connected","Statement");
-      return 0;
-   }
+   CheckConnect("Statement",0);
 
    if (!sql || !*sql) {
       SetError(-1, "no query string specified","Statement");
@@ -116,9 +123,7 @@ TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
 
       return new TOracleStatement(fConn, stmt, niter);
 
-   } catch (SQLException &oraex)  {
-      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "Statement");
-   }
+   } CatchError("Statement")
 
    return 0;
 }
@@ -129,12 +134,7 @@ TSQLResult *TOracleServer::Query(const char *sql)
    // Execute SQL command. Result object must be deleted by the user.
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
 
-   ClearError();
-
-   if (!IsConnected()) {
-      SetError(-1, "Database is not connected","Query");
-      return 0;
-   }
+   CheckConnect("Query",0);
 
    if (!sql || !*sql) {
       SetError(-1, "no query string specified","Query");
@@ -157,9 +157,7 @@ TSQLResult *TOracleServer::Query(const char *sql)
 
       TOracleResult *res = new TOracleResult(fConn, stmt);
       return res;
-   } catch (SQLException &oraex)  {
-      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "Query");
-   }
+   } CatchError("Query")
 
    return 0;
 }
@@ -170,28 +168,28 @@ Bool_t TOracleServer::Exec(const char* sql)
    // Execute sql command wich does not produce any result set.
    // Return kTRUE if succesfull
 
-   ClearError();
-
-   if (!IsConnected()) {
-      SetError(-1, "Database is not connected","Exec");
-      return 0;
-   }
-
+   CheckConnect("Exec", kFALSE);
+   
    if (!sql || !*sql) {
       SetError(-1, "no query string specified","Exec");
-      return 0;
+      return kFALSE;
    }
+
+   oracle::occi::Statement *stmt = 0;
+   
+   Bool_t res = kFALSE;
 
    try {
-      oracle::occi::Statement *stmt = fConn->createStatement(sql);
+      stmt = fConn->createStatement(sql);
       stmt->execute();
-      delete stmt;
-      return kTRUE;
-   } catch (SQLException &oraex)  {
-      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "Exec");
-   }
-
-   return kFALSE;
+      res = kTRUE;
+   } CatchError("Exec")
+ 
+   try {
+      fConn->terminateStatement(stmt);
+   } CatchError("Exec")
+  
+   return res;
 }
 
 //______________________________________________________________________________
@@ -209,12 +207,7 @@ TSQLResult *TOracleServer::GetTables(const char *dbname, const char * /*wild*/)
    // "dbname": if specified, return table list of this schema, or return all tables
    // "wild" is not used in this implementation
 
-   ClearError();
-
-   if (!IsConnected()) {
-      SetError(-1, "Database is not connected","GetTables");
-      return 0;
-   }
+   CheckConnect("GetTables",0);
 
    TString sqlstr("SELECT owner, object_name FROM ALL_OBJECTS WHERE object_type='TABLE'");
    if (dbname)
@@ -226,12 +219,7 @@ TSQLResult *TOracleServer::GetTables(const char *dbname, const char * /*wild*/)
 //______________________________________________________________________________
 TList* TOracleServer::GetTablesList(const char* wild)
 {
-   ClearError();
-
-   if (!IsConnected()) {
-      SetError(-1, "Database is not connected","GetTablesList");
-      return 0;
-   }
+   CheckConnect("GetTablesList",0);
    
    TString cmd("SELECT table_name FROM user_tables");
    if ((wild!=0) && (*wild!=0)) 
@@ -266,17 +254,12 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
    // Produces SQL table info
    // Object must be deleted by user
 
-   ClearError();
+   CheckConnect("GetTableInfo",0);
 
-   if (!IsConnected()) {
-      SetError(-1, "Database is not connected","GetTableInfo");
-      return 0;
-   }
-   
    if ((tablename==0) || (*tablename==0)) return 0;
 
    TString sql;
-   sql.Form("SELECT COLUMN_NAME, DATA_TYPE, DATA_LENGTH, DATA_PRECISION, DATA_SCALE, NULLABLE, CHAR_COL_DECL_LENGTH FROM user_tab_columns WHERE table_name = '%s'", tablename);
+   sql.Form("SELECT COLUMN_NAME, DATA_TYPE, DATA_LENGTH, DATA_PRECISION, DATA_SCALE, NULLABLE, CHAR_COL_DECL_LENGTH FROM user_tab_columns WHERE table_name = '%s' ORDER BY COLUMN_ID", tablename);
    
    TSQLStatement* stmt = Statement(sql.Data(), 10);
    if (stmt==0) return 0;
@@ -332,6 +315,20 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
          data_sign = 1;
       } else 
 
+      if (data_type=="BINARY_FLOAT") {
+         sqltype = kSQL_FLOAT;
+         data_scale = -1;
+         data_precision = -1;
+         data_sign = 1;
+      } else 
+
+      if (data_type=="BINARY_DOUBLE") {
+         sqltype = kSQL_DOUBLE;
+         data_scale = -1;
+         data_precision = -1;
+         data_sign = 1;
+      } else 
+
       if (data_type=="LONG") {
          sqltype = kSQL_VARCHAR;
          data_length = 0x7fffffff; // size of LONG 2^31-1
@@ -376,13 +373,8 @@ TSQLResult *TOracleServer::GetColumns(const char * /*dbname*/, const char *table
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
 
-   ClearError();
-
-   if (!IsConnected()) {
-      SetError(-1, "Database is not connected","GetColumns");
-      return 0;
-   }
-
+   CheckConnect("GetColumns",0);
+   
 //  make no sense, while method is not implemented
 //   if (SelectDataBase(dbname) != 0) {
 //      SetError(-1, "Database is not connected","GetColumns");
@@ -398,13 +390,8 @@ Int_t TOracleServer::SelectDataBase(const char * /*dbname*/)
    // Select a database. Returns 0 if successful, non-zero otherwise.
    // NOT IMPLEMENTED.
 
-   ClearError();
-
-   if (!IsConnected()) {
-      SetError(-1, "Database is not connected","SelectDataBases");
-      return -1;
-   }
-
+   CheckConnect("SelectDataBase", -1);
+   
    // do nothing and return success code
    return 0;
 }
@@ -418,11 +405,8 @@ TSQLResult *TOracleServer::GetDataBases(const char * /*wild*/)
    // The result object must be deleted by the user.
    // NOT IMPLEMENTED.
 
-   ClearError();
-
-   if (!IsConnected()) 
-      SetError(-1, "Database is not connected","GetDataBases");
-
+   CheckConnect("GetDataBases",0);
+   
    return 0;
 }
 
@@ -432,10 +416,7 @@ Int_t TOracleServer::CreateDataBase(const char * /*dbname*/)
    // Create a database. Returns 0 if successful, non-zero otherwise.
    // NOT IMPLEMENTED.
 
-   ClearError();
-
-   if (!IsConnected()) 
-      SetError(-1, "Database is not connected","CreateDataBase");
+   CheckConnect("CreateDataBase",-1);
       
    return -1;
 }
@@ -447,10 +428,7 @@ Int_t TOracleServer::DropDataBase(const char * /*dbname*/)
    // otherwise.
    // NOT IMPLEMENTED.
 
-   ClearError();
-
-   if (!IsConnected()) 
-      SetError(-1, "Database is not connected","DropDataBase");
+   CheckConnect("DropDataBase",-1);
 
    return -1;
 }
@@ -462,10 +440,8 @@ Int_t TOracleServer::Reload()
    // otherwise. User must have reload permissions.
    // NOT IMPLEMENTED.
 
-   ClearError();
+   CheckConnect("Reload", -1);
 
-   if (!IsConnected()) 
-      SetError(-1, "Database is not connected","Reload");
    return -1;
 }
 
@@ -476,11 +452,8 @@ Int_t TOracleServer::Shutdown()
    // otherwise. User must have shutdown permissions.
    // NOT IMPLEMENTED.
 
-   ClearError();
+   CheckConnect("Shutdown", -1);
 
-   if (!IsConnected()) 
-      SetError(-1, "Database is not connected","Shutdown");
-   
    return -1;
 }
 
@@ -489,14 +462,9 @@ const char *TOracleServer::ServerInfo()
 {
    // Return server info.
    // NOT IMPLEMENTED.
-
-   ClearError();
-
-   if (!IsConnected()) {
-      SetError(-1, "Database is not connected","ServerInfo");
-      return 0;
-   }
    
+   CheckConnect("ServerInfo", 0);
+
    return "Oracle";
 }
 
@@ -515,19 +483,12 @@ Bool_t TOracleServer::Commit()
    // Commits all changes made since the previous Commit() or Rollback()
    // Return kTRUE if OK
    
-   ClearError();
-
-   if (!IsConnected()) {
-      SetError(-1, "Database is not connected","Commit");
-      return kFALSE;
-   }
+   CheckConnect("Commit", kFALSE);
 
    try {
       fConn->commit();
       return kTRUE;
-   } catch (SQLException &oraex) {
-      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "Commit");
-   }
+   } CatchError("Commit")
 
    return kFALSE;
 }
@@ -538,19 +499,12 @@ Bool_t TOracleServer::Rollback()
    // Drops all changes made since the previous Commit() or Rollback()
    // Return kTRUE if OK
 
-   ClearError();
+   CheckConnect("Rollback", kFALSE);
 
-   if (!IsConnected()) {
-      SetError(-1, "Database is not connected","Rollback");
-      return kFALSE;
-   }
-   
    try {
       fConn->rollback();
       return kTRUE;
-   } catch (SQLException &oraex) {
-      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "Rollback");
-   }
-
+   } CatchError("Rollback")
+   
    return kFALSE;
 }
