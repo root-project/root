@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.h,v 1.7 2006/02/01 18:57:41 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.h,v 1.8 2006/05/22 08:55:57 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -41,7 +41,10 @@ class TSQLFile : public TFile {
    friend class TBufferSQL2;
    friend class TKeySQL;
    friend class TSQLStructure;
+   friend class TSQLTableData;
    friend class TSqlRegistry; 
+   friend class TSqlRawBuffer;
+   friend class TSqlCmdsBuffer;
     
 protected:
    enum ELockingKinds {
@@ -58,6 +61,12 @@ protected:
    virtual Int_t     SysStat(Int_t, Long_t*, Long64_t*, Long_t*, Long_t*) { return 0; }
    virtual Int_t     SysSync(Int_t) { return 0; }
 
+   // Overwrite methods for directory I/O
+   virtual Long64_t DirCreateEntry(TDirectory*);
+   virtual Int_t    DirReadKeys(TDirectory*);
+   virtual void     DirWriteKeys(TDirectory*);
+   virtual void     DirWriteHeader(TDirectory*);
+
    // functions to manipulate basic tables (Configurations, Objects, Keys) in database
    void              SaveToDatabase();
    Bool_t            ReadConfigurations();
@@ -68,21 +77,23 @@ protected:
    void              SetLocking(Int_t mode);
    Int_t             GetLocking();
   
-   // function for read/write access infos, not implemented
+   // function for read/write access infos
    Bool_t            IsWriteAccess();
    Bool_t            IsReadAccess();
   
    // generic sql functions
    TSQLResult*       SQLQuery(const char* cmd, Int_t flag = 0, Bool_t* res = 0);
+   Bool_t            SQLCanStatement();
+   TSQLStatement*    SQLStatement(const char* cmd, Int_t bufsize = 1000);
+   void              SQLDeleteStatement(TSQLStatement* stmt);
    Bool_t            SQLApplyCommands(TObjArray* cmds);
-   TObjArray*        SQLTablesList(const char* searchtable = 0);
    Bool_t            SQLTestTable(const char* tablename);
-   TObjArray*        SQLTableColumns(const char* tablename);
    Long64_t          SQLMaximumValue(const char* tablename, const char* columnname);
    void              SQLDeleteAllTables();
    Bool_t            SQLStartTransaction();
    Bool_t            SQLCommit();
    Bool_t            SQLRollback();
+   Int_t             SQLMaxIdentifierLength();
 
    // operation with keys structures in database
    void              DeleteKeyFromDB(Long64_t keyid);
@@ -94,11 +105,18 @@ protected:
 
    // handling SQL class info structures
    TSQLClassInfo*    FindSQLClassInfo(const char* clname, Int_t version);
-   TSQLClassInfo*    RequestSQLClassInfo(const char* clname, Int_t version, Bool_t force = kFALSE);
-   TSQLClassInfo*    RequestSQLClassInfo(const TClass* cl, Bool_t force = kFALSE);
-   Bool_t            SyncSQLClassInfoRawTables(TSQLClassInfo* sqlinfo, Bool_t hasrawdata);
-   Bool_t            SyncSQLClassInfo(TSQLClassInfo* sqlinfo, TObjArray* columns, Bool_t hasrawdata);
+   TSQLClassInfo*    FindSQLClassInfo(const TClass* cl);
+   TSQLClassInfo*    RequestSQLClassInfo(const char* clname, Int_t version);
+   TSQLClassInfo*    RequestSQLClassInfo(const TClass* cl);
+   Bool_t            CreateClassTable(TSQLClassInfo* sqlinfo, TObjArray* colinfos);
+   Bool_t            CreateRawTable(TSQLClassInfo* sqlinfo);
+   
    Bool_t            ProduceClassSelectQuery(TStreamerInfo* info, TSQLClassInfo* sqlinfo, TString& columns, TString& tables, Int_t& tablecnt);
+   void              AddIdEntry(Long64_t tableid, Int_t subid, Int_t type,
+                                const char* name, const char* sqlname, const char* info);
+   void              ReadSQLClassInfos();
+   TString           DefineTableName(const char* clname, Int_t version, Bool_t rawtable);
+   Bool_t            HasTable(const char* name);
 
    // operations with long string table
    TString           CodeLongString(Long64_t objid, Int_t strid);
@@ -155,6 +173,9 @@ protected:
    TString           fUserName;       //! user name, used to access objects from database
   
    std::ofstream*    fLogFile;        //! log file with SQL statements
+   
+   Bool_t            fIdsTableExists; //! indicate if IdsTable exists
+   Int_t             fStmtCounter;    //! count numbers of active statements
 
 private:
    //let the compiler do the job. gcc complains when the following line is activated

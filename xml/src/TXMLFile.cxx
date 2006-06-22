@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.18 2006/02/01 18:57:41 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.19 2006/03/20 21:43:44 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -96,9 +96,12 @@ TXMLFile::TXMLFile() :
    TXMLSetup(),
    fDoc(0),
    fStreamerInfoNode(0),
-   fXML(0)
+   fXML(0),
+   fKeyCounter(0)
 {
    // default TXMLFile constructor
+   
+   SetBit(kBinaryFile, kFALSE);
 }
 
 
@@ -107,7 +110,9 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    TFile(),
    TXMLSetup(),
    fDoc(0),
-   fStreamerInfoNode(0)
+   fStreamerInfoNode(0),
+   fXML(0),
+   fKeyCounter(0)
 {
    // Open or creates local XML file with name filename.
    // It is recommended to specify filename as "<file>.xml". The suffix ".xml"
@@ -162,6 +167,7 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    fProcessIDs = 0;
    fNProcessIDs= 0;
    fIOVersion  = TXMLFile::Class_Version();
+   SetBit(kBinaryFile, kFALSE);
 
    fOption = option;
    fOption.ToUpper();
@@ -327,7 +333,6 @@ void TXMLFile::Close(Option_t *option)
       fClassIndex = 0;
    }
 
-
    if (fStreamerInfoNode) {
       fXML->FreeNode(fStreamerInfoNode);
       fStreamerInfoNode = 0;
@@ -436,7 +441,7 @@ TKey* TXMLFile::CreateKey(TDirectory* mother, const TObject* obj, const char* na
 {
    // create XML key, which will store object in xml structures
 
-   return new TKeyXML(mother, obj, name);
+   return new TKeyXML(mother, ++fKeyCounter, obj, name);
 }
 
 //______________________________________________________________________________
@@ -444,7 +449,7 @@ TKey* TXMLFile::CreateKey(TDirectory* mother, const void* obj, const TClass* cl,
 {
    // create XML key, which will store object in xml structures
 
-   return new TKeyXML(mother, obj, cl, name);
+   return new TKeyXML(mother, ++fKeyCounter, obj, cl, name);
 }
 
 //______________________________________________________________________________
@@ -517,11 +522,14 @@ void TXMLFile::SaveToFile()
    TString fname, dtdname;
    ProduceFileNames(fRealName, fname, dtdname);
 
+/*
    TIter iter(GetListOfKeys());
    TKeyXML* key = 0;
-
    while ((key=(TKeyXML*)iter()) !=0)
       fXML->AddChild(fRootNode, key->KeyNode());
+*/      
+
+   CombineNodesTree(this, fRootNode, kTRUE);
 
    WriteStreamerInfo();
 
@@ -532,13 +540,36 @@ void TXMLFile::SaveToFile()
 
    fXML->SaveDoc(fDoc, fname, layout);
 
-   iter.Reset();
+/*   iter.Reset();
    while ((key=(TKeyXML*)iter()) !=0)
       fXML->UnlinkNode(key->KeyNode());
+*/
+   CombineNodesTree(this, fRootNode, kFALSE);
 
    if (fStreamerInfoNode)
       fXML->UnlinkNode(fStreamerInfoNode);
 }
+
+//______________________________________________________________________________
+void TXMLFile::CombineNodesTree(TDirectory* dir, XMLNodePointer_t topnode, Bool_t dolink)
+{
+   // Connect/disconnect all file nodes to single tree before/after saving
+   
+   if (dir==0) return;
+   
+   TIter iter(dir->GetListOfKeys());
+   TKeyXML* key = 0;
+
+   while ((key=(TKeyXML*)iter()) !=0) {
+      if (dolink)
+         fXML->AddChild(topnode, key->KeyNode());
+      else 
+         fXML->UnlinkNode(key->KeyNode());   
+      if (key->IsSubdir()) 
+         CombineNodesTree(FindKeyDir(dir, key->GetKeyId()), key->KeyNode(), dolink);
+   }
+}
+
 
 //______________________________________________________________________________
 Bool_t TXMLFile::ReadFromFile()
@@ -602,6 +633,9 @@ Bool_t TXMLFile::ReadFromFile()
          return kFALSE;
       }
 
+   ReadKeysList(this, fRootNode);
+
+/*
    XMLNodePointer_t keynode = fXML->GetChild(fRootNode);
    fXML->SkipEmpty(keynode);
    while (keynode!=0) {
@@ -610,7 +644,7 @@ Bool_t TXMLFile::ReadFromFile()
       if (strcmp(xmlio::Xmlkey, fXML->GetNodeName(keynode))==0) {
          fXML->UnlinkNode(keynode);
 
-         TKeyXML* key = new TKeyXML(this, keynode);
+         TKeyXML* key = new TKeyXML(this, ++fKeyCounter, keynode);
          AppendKey(key);
 
          if (gDebug>2)
@@ -620,10 +654,44 @@ Bool_t TXMLFile::ReadFromFile()
       keynode = next;
       fXML->SkipEmpty(keynode);
    }
+*/
 
    fXML->CleanNode(fRootNode);
    
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TXMLFile::ReadKeysList(TDirectory* dir, XMLNodePointer_t topnode)
+{
+   // Read list of keys for directory
+   
+   if ((dir==0) || (topnode==0)) return 0;
+   
+   Int_t nkeys = 0;
+   
+   XMLNodePointer_t keynode = fXML->GetChild(topnode);
+   fXML->SkipEmpty(keynode);
+   while (keynode!=0) {
+      XMLNodePointer_t next = fXML->GetNext(keynode);
+
+      if (strcmp(xmlio::Xmlkey, fXML->GetNodeName(keynode))==0) {
+         fXML->UnlinkNode(keynode);
+
+         TKeyXML* key = new TKeyXML(dir, ++fKeyCounter, keynode);
+         dir->AppendKey(key);
+
+         if (gDebug>2)
+            Info("ReadKeysList","Add key %s from node %s",key->GetName(), fXML->GetNodeName(keynode));
+            
+         nkeys++;
+      }
+
+      keynode = next;
+      fXML->SkipEmpty(keynode);
+   }
+   
+   return nkeys;
 }
 
 //______________________________________________________________________________
@@ -916,4 +984,93 @@ void TXMLFile::SetUseNamespaces(Bool_t iUseNamespaces)
 
    if (IsWritable() && (GetListOfKeys()->GetSize()==0))
       TXMLSetup::SetUseNamespaces(iUseNamespaces);
+}
+
+//______________________________________________________________________________
+Long64_t TXMLFile::DirCreateEntry(TDirectory* dir)
+{
+   // Create key for directory entry in the key
+
+   TDirectory* mother = dir->GetMotherDir();
+   if (mother==0) mother = this;
+
+   TKeyXML* key = new TKeyXML(mother, ++fKeyCounter, dir, dir->GetName(), dir->GetTitle());
+   
+   key->SetSubir();
+   
+   return key->GetKeyId();
+}
+
+//______________________________________________________________________________
+TKeyXML* TXMLFile::FindDirKey(TDirectory* dir)
+{
+   // Serach for key which correspond to direcory dir
+   
+   TDirectory* motherdir = dir->GetMotherDir();
+   if (motherdir==0) motherdir = this;
+
+   TIter next(motherdir->GetListOfKeys());
+   TObject* obj = 0;
+   
+   while ((obj = next())!=0) {
+      TKeyXML* key = dynamic_cast<TKeyXML*> (obj);
+      
+      if (key!=0)
+         if (key->GetKeyId()==dir->GetSeekDir()) return key;
+   }
+   
+   return 0;
+}
+
+
+//______________________________________________________________________________
+TDirectory* TXMLFile::FindKeyDir(TDirectory* motherdir, Long64_t keyid)
+{
+   if (motherdir==0) motherdir = this;
+   
+   TIter next(motherdir->GetList());
+   TObject* obj = 0;
+   
+   while ((obj = next())!=0) {
+      TDirectory* dir = dynamic_cast<TDirectory*> (obj);
+      if (dir!=0)
+         if (dir->GetSeekDir()==keyid) return dir;
+   }
+   
+   return 0;
+   
+}
+
+//______________________________________________________________________________
+Int_t TXMLFile::DirReadKeys(TDirectory* dir)
+{
+   // Read keys for directory
+   // Make sence only once, while next time no new subnodes will be created
+   
+   TKeyXML* key = FindDirKey(dir);
+   if (key==0) return 0;
+   
+   return ReadKeysList(dir, key->KeyNode());
+}
+
+//______________________________________________________________________________
+void TXMLFile::DirWriteKeys(TDirectory*)
+{
+   // Update key attributes
+
+   TIter next(GetListOfKeys());
+   TObject* obj = 0;
+   
+   while ((obj = next())!=0) {
+      TKeyXML* key = dynamic_cast<TKeyXML*> (obj);
+      if (key!=0) key->UpdateAttributes();
+   }
+}
+
+//______________________________________________________________________________
+void TXMLFile::DirWriteHeader(TDirectory* dir)
+{
+   TKeyXML* key = FindDirKey(dir);
+   if (key!=0)
+      key->UpdateObject(dir);
 }

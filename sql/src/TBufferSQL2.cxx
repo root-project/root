@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.11 2006/05/11 10:29:45 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.12 2006/05/22 08:55:58 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -287,11 +287,11 @@ TSQLObjectData* TBufferSQL2::SqlObjectData(Long64_t objid, TSQLClassInfo* sqlinf
    }   
    
    TSQLResult *blobdata = 0;
-   TSQLStatement* stmt = fSQL->GetBlobClassDataStmt(objid, sqlinfo);
+   TSQLStatement* blobstmt = fSQL->GetBlobClassDataStmt(objid, sqlinfo);
 
-   if (stmt==0) blobdata = fSQL->GetBlobClassData(objid, sqlinfo);
+   if (blobstmt==0) blobdata = fSQL->GetBlobClassData(objid, sqlinfo);
    
-   return new TSQLObjectData(sqlinfo, objid, classdata, classrow, blobdata, stmt);
+   return new TSQLObjectData(sqlinfo, objid, classdata, classrow, blobdata, blobstmt);
 }
 
 //______________________________________________________________________________
@@ -330,6 +330,9 @@ Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl, TMemberStre
       if (value>0)
          objid = fFirstObjId + value - 1;
    }
+
+   if (gDebug>1)
+      cout << "    Find objectid = " << objid << endl;
    
    if (objid>=0) {
       Stack()->SetObjectPointer(objid);
@@ -381,7 +384,7 @@ void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *stream
    sscanf(refid, FLong64, &objid);
 
    if (gDebug>2) 
-      Info("SqlReadObject","Starting objid = %lld column=%s", objid, fCurrentData->GetColumnName());
+      Info("SqlReadObject","Starting objid = %lld column=%s", objid, fCurrentData->GetLocatedField());
 
    if (!fCurrentData->IsBlobData() ||
        fCurrentData->VerifyDataType(sqlio::ObjectPtr,kFALSE))
@@ -442,7 +445,7 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, T
    if (gDebug>2) 
       Info("SqlReadObjectDirect","objid = %lld clname = %s ver = %d",objid, clname.Data(), version);
 
-   TSQLClassInfo* sqlinfo = fSQL->RequestSQLClassInfo(clname.Data(), version);
+   TSQLClassInfo* sqlinfo = fSQL->FindSQLClassInfo(clname.Data(), version);
 
    TClass* objClass = gROOT->GetClass(clname);
    if ((objClass==0) || (sqlinfo==0)) {
@@ -802,7 +805,7 @@ void TBufferSQL2::WorkWithClass(const char* classname, Version_t classversion)
          return;
       }
 
-      TSQLClassInfo* sqlinfo = fSQL->RequestSQLClassInfo(classname, classversion);
+      TSQLClassInfo* sqlinfo = fSQL->FindSQLClassInfo(classname, classversion);
       if (sqlinfo==0) {
          Error("WorkWithClass","Can not find table for class %s version %d", classname, classversion);
          fErrorFlag = 1;

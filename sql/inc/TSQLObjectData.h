@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.h,v 1.7 2006/05/12 08:17:02 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.h,v 1.8 2006/05/22 08:55:58 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -48,7 +48,6 @@ public:
    const char*       GetObjClassName() const { return fClassName.Data(); }
    Version_t         GetObjVersion() const { return fVersion; }
 
-
 protected:
    Long64_t          fObjId;
    TString           fClassName;
@@ -85,7 +84,7 @@ public:
    void              AddUnpackInt(const char* tname, Int_t value);
    
    const char*       GetValue() const { return fLocatedValue; }
-   const char*       GetColumnName() const { return fLocatedField; }
+   const char*       GetLocatedField() const { return fLocatedField; }
    const char*       GetBlobPrefixName() const { return fBlobPrefixName; }
    const char*       GetBlobTypeName() const { return fBlobTypeName; }
    

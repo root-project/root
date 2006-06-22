@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.6 2006/01/25 16:00:11 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.7 2006/02/01 18:57:41 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -30,15 +30,19 @@ ClassImp(TKeyXML);
 //______________________________________________________________________________
 TKeyXML::TKeyXML() :
    TKey(),
-   fKeyNode(0)
+   fKeyNode(0),
+   fKeyId(0),
+   fSubdir(kFALSE)
 {
    // default constructor
 }
 
 //______________________________________________________________________________
-TKeyXML::TKeyXML(TDirectory* mother, const TObject* obj, const char* name) :
+TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, const TObject* obj, const char* name, const char* title) :
     TKey(mother),
-    fKeyNode(0)
+    fKeyNode(0),
+    fKeyId(keyid),
+    fSubdir(kFALSE)
 {
    // Creates TKeyXML and convert obj data to xml structures
 
@@ -51,26 +55,50 @@ TKeyXML::TKeyXML(TDirectory* mother, const TObject* obj, const char* name) :
       } else
          SetName("Noname");
 
+   if (title) SetTitle(title);
+
+   fCycle  = GetMotherDir()->AppendKey(this);
+
+   TXMLEngine* xml = XMLEngine();
+   if (xml!=0)
+      fKeyNode = xml->NewChild(0, 0, xmlio::Xmlkey, 0);
+
+   fDatime.Set();
+
    StoreObject((void*)obj, obj ? obj->IsA() : 0);
 }
 
 //______________________________________________________________________________
-TKeyXML::TKeyXML(TDirectory* mother, const void* obj, const TClass* cl, const char* name) :
+TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, const void* obj, const TClass* cl, const char* name, const char* title) :
    TKey(mother),
-   fKeyNode(0)
+   fKeyNode(0),
+   fKeyId(keyid),
+   fSubdir(kFALSE)
 {
    // Creates TKeyXML and convert obj data to xml structures
 
    if (name && *name) SetName(name);
    else SetName(cl ? cl->GetName() : "Noname");
 
+   if (title) SetTitle(title);
+
+   fCycle  = GetMotherDir()->AppendKey(this);
+
+   TXMLEngine* xml = XMLEngine();
+   if (xml!=0)
+      fKeyNode = xml->NewChild(0, 0, xmlio::Xmlkey, 0);
+
+   fDatime.Set();
+
    StoreObject(obj, cl);
 }
 
 //______________________________________________________________________________
-TKeyXML::TKeyXML(TDirectory* mother, XMLNodePointer_t keynode) :
+TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, XMLNodePointer_t keynode) :
    TKey(mother),
-   fKeyNode(keynode)
+   fKeyNode(keynode),
+   fKeyId(keyid),
+   fSubdir(kFALSE)
 {
    // Creates TKeyXML and takes ownership over xml node, from which object can be restored
 
@@ -119,17 +147,14 @@ void TKeyXML::Delete(Option_t * /*option*/)
 }
 
 //______________________________________________________________________________
-void TKeyXML::StoreObject(const void* obj, const TClass* cl)
+void TKeyXML::StoreKeyAttributes()
 {
-   //  convert object to xml structure and keep this structure in key
+   // Stores keys attributes in key node
    
-   TXMLFile* f = (TXMLFile*) GetFile();
    TXMLEngine* xml = XMLEngine();
-   if ((f==0) || (xml==0)) return;
+   TXMLFile* f = (TXMLFile*) GetFile();
+   if ((f==0) || (xml==0) || (fKeyNode==0)) return;
 
-   fCycle  = GetMotherDir()->AppendKey(this);
-
-   fKeyNode = xml->NewChild(0, 0, xmlio::Xmlkey, 0);
    xml->NewAttr(fKeyNode, 0, xmlio::Name, GetName());
    
    xml->NewIntAttr(fKeyNode, xmlio::Cycle, fCycle);
@@ -137,10 +162,21 @@ void TKeyXML::StoreObject(const void* obj, const TClass* cl)
    if (f->GetIOVersion()>1) {
       if (strlen(GetTitle())>0)
          xml->NewAttr(fKeyNode, 0, xmlio::Title, GetTitle());
-      fDatime.Set();
       xml->NewAttr(fKeyNode, 0, xmlio::CreateTm, fDatime.AsSQLString());
    }
+}
+
+//______________________________________________________________________________
+void TKeyXML::StoreObject(const void* obj, const TClass* cl)
+{
+   //  convert object to xml structure and keep this structure in key
    
+   TXMLFile* f = (TXMLFile*) GetFile();
+   TXMLEngine* xml = XMLEngine();
+   if ((f==0) || (xml==0) || (fKeyNode==0)) return;
+
+   StoreKeyAttributes();
+
    TBufferXML buffer(TBuffer::kWrite, f);
    if (f->GetIOVersion()==1)
       buffer.SetBit(TBuffer::kCannotHandleMemberWiseStreaming, kFALSE);
@@ -148,11 +184,47 @@ void TKeyXML::StoreObject(const void* obj, const TClass* cl)
    XMLNodePointer_t node = buffer.XmlWriteAny(obj, cl);
 
    if (node!=0)
-      xml->AddChild(fKeyNode, node);
-
+      xml->AddChildFirst(fKeyNode, node);
+      
    buffer.XmlWriteBlock(fKeyNode);
 
    if (cl) fClassName = cl->GetName();
+}
+
+//______________________________________________________________________________
+void TKeyXML::UpdateAttributes()
+{
+   // update key attributes in key node
+   
+   TXMLEngine* xml = XMLEngine();
+   if ((xml==0) || (fKeyNode==0)) return;
+
+   xml->FreeAllAttr(fKeyNode);
+   
+   StoreKeyAttributes();
+}
+
+//______________________________________________________________________________
+void TKeyXML::UpdateObject(TObject* obj)
+{
+   // updates object, stored in the node
+   // Used for TDirectory data update
+
+   TXMLFile* f = (TXMLFile*) GetFile();
+   TXMLEngine* xml = XMLEngine();
+   if ((f==0) || (xml==0) || (obj==0) || (fKeyNode==0)) return;
+   
+   XMLNodePointer_t objnode = xml->GetChild(fKeyNode);
+   xml->SkipEmpty(objnode);
+
+   if (objnode==0) return;
+
+   xml->UnlinkNode(objnode);
+   xml->FreeNode(objnode);
+   
+   xml->FreeAllAttr(fKeyNode);
+   
+   StoreObject(obj, obj->IsA());
 }
 
 //______________________________________________________________________________
@@ -184,9 +256,12 @@ TObject* TKeyXML::ReadObj()
          TDirectory *dir = (TDirectory*) tobj;
          dir->SetName(GetName());
          dir->SetTitle(GetTitle());
-         dir->ReadKeys();
+         dir->SetSeekDir(GetKeyId());
+         // set mother before reading keys
          dir->SetMother(fMotherDir);
+         dir->ReadKeys();
          fMotherDir->Append(dir);
+         fSubdir = kTRUE;
       }
    }
        

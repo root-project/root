@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.cxx,v 1.6 2006/05/11 10:29:45 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.cxx,v 1.7 2006/05/22 08:55:58 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 // It contains data, request from database table for one specifc
 // object for one specific class. For instance, when data for
 // class TH1 required, requests will be done to
-// TH1_ver4 and TH1_streamer_ver4 tables and result of these reuests
+// TH1_ver4 and TH1_raw4 tables and result of these requests
 // will be kept in single TSQLObjectData instance.
 //
 //________________________________________________________________________
@@ -164,9 +164,17 @@ Bool_t TSQLObjectData::LocateColumn(const char* colname, Bool_t isblob)
 
    if ((fClassData==0) || (fClassRow==0)) return kFALSE;
 
-   Int_t numfields = GetNumClassFields();
+//   Int_t numfields = GetNumClassFields();
 
-   for (Int_t ncol=1;ncol<numfields;ncol++) {
+   Int_t ncol = fInfo->FindColumn(colname, kFALSE);
+   if (ncol>0) {
+      fLocatedColumn = ncol;
+      fLocatedField = GetClassFieldName(ncol);
+      fLocatedValue = fClassRow->GetField(ncol);
+   }
+  
+
+/*   for (Int_t ncol=1;ncol<numfields;ncol++) {
       const char* fieldname = GetClassFieldName(ncol);
       if (strcmp(colname, fieldname)==0) {
          fLocatedColumn = ncol;
@@ -175,6 +183,7 @@ Bool_t TSQLObjectData::LocateColumn(const char* colname, Bool_t isblob)
          break;
       }
    }
+*/
 
    if (fLocatedField==0) return kFALSE;
 

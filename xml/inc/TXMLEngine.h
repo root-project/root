@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.10 2006/01/20 01:12:13 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.11 2006/05/30 12:59:30 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -37,6 +37,7 @@ class TXMLEngine : public TObject {
                                 const char* name, const char* value);
       XMLAttrPointer_t  NewIntAttr(XMLNodePointer_t xmlnode, const char* name, Int_t value);
       void              FreeAttr(XMLNodePointer_t xmlnode, const char* name);
+      void              FreeAllAttr(XMLNodePointer_t xmlnode);
       XMLAttrPointer_t  GetFirstAttr(XMLNodePointer_t xmlnode);
       XMLAttrPointer_t  GetNextAttr(XMLAttrPointer_t xmlattr);
       const char*       GetAttrName(XMLAttrPointer_t xmlattr);
@@ -48,6 +49,7 @@ class TXMLEngine : public TObject {
       const char*       GetNSName(XMLNsPointer_t ns);
       const char*       GetNSReference(XMLNsPointer_t ns);
       void              AddChild(XMLNodePointer_t parent, XMLNodePointer_t child);
+      void              AddChildFirst(XMLNodePointer_t parent, XMLNodePointer_t child);
       void              UnlinkNode(XMLNodePointer_t node);
       void              FreeNode(XMLNodePointer_t xmlnode);
       void              UnlinkFreeNode(XMLNodePointer_t xmlnode);

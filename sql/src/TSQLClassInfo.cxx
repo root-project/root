@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLClassInfo.cxx,v 1.2 2005/11/22 20:42:36 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLClassInfo.cxx,v 1.3 2005/12/07 14:59:57 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 // TSQLClassInfo class containes info about tables specific to one class and
 // version. It provides names of table for that class. For each version of 
 // class not more than two tables can exists. Normal table has typically
-// name like TH1_ver4 and additional table has name like TH1_streamer_ver4
+// name like TH1_ver4 and additional table has name like TH1_raw4
 // List of this objects are kept by TSQLFile class
 //
 //________________________________________________________________________
@@ -23,6 +23,38 @@
 
 #include "TObjArray.h"
 
+
+ClassImp(TSQLClassColumnInfo)
+
+//______________________________________________________________________________
+TSQLClassColumnInfo::TSQLClassColumnInfo() :
+   TObject(),
+   fName(),
+   fSQLName(),
+   fSQLType()
+{
+   // default constructor 
+}
+
+//______________________________________________________________________________
+TSQLClassColumnInfo::TSQLClassColumnInfo(const char* name,
+                                         const char* sqlname,
+                                         const char* sqltype) :
+   TObject(),
+   fName(name),
+   fSQLName(sqlname),
+   fSQLType(sqltype)
+{
+   // normal constructor 
+}
+                     
+//______________________________________________________________________________
+TSQLClassColumnInfo::~TSQLClassColumnInfo()
+{
+   // destructor
+}
+
+
 ClassImp(TSQLClassInfo)
 
 //______________________________________________________________________________
@@ -30,6 +62,7 @@ TSQLClassInfo::TSQLClassInfo() :
    TObject(),
    fClassName(),
    fClassVersion(0),
+   fClassId(0),
    fClassTable(),
    fRawTable(),
    fColumns(0),
@@ -37,21 +70,24 @@ TSQLClassInfo::TSQLClassInfo() :
 {
 // default constructor
 }
-  
+
 //______________________________________________________________________________
-TSQLClassInfo::TSQLClassInfo(const char* classname, Int_t version) : 
+TSQLClassInfo::TSQLClassInfo(Long64_t classid,
+                             const char* classname, 
+                             Int_t version) : 
    TObject(),
    fClassName(classname),
    fClassVersion(version),
+   fClassId(classid),
    fClassTable(),
    fRawTable(),
    fColumns(0),
    fRawtableExist(kFALSE)
 {
-// normal constructor of TSQLClassInfo class
-// Sets names of tables, which are used for that version of class    
+   // normal constructor of TSQLClassInfo class
+   // Sets names of tables, which are used for that version of class    
    fClassTable.Form("%s_ver%d", classname, version);
-   fRawTable.Form("%s_streamer_ver%d", classname, version);
+   fRawTable.Form("%s_raw%d", classname, version);
 }
    
 //______________________________________________________________________________
@@ -63,7 +99,6 @@ TSQLClassInfo::~TSQLClassInfo()
       fColumns->Delete();  
       delete fColumns; 
    }
-   
 }
 
 //______________________________________________________________________________
@@ -85,4 +120,29 @@ void TSQLClassInfo::SetTableStatus(TObjArray* columns, Bool_t israwtable)
     
    SetColumns(columns); 
    fRawtableExist = israwtable;
+}
+
+//______________________________________________________________________________
+Int_t TSQLClassInfo::FindColumn(const char* name, Bool_t sqlname)
+{
+   // Search for column of that name
+   // Can search either for full column name (sqlname = kFALSE, default)
+   // or for name, used as column name (sqlname = kTRUE)
+   // Return index of column in list (-1 if not found)
+
+   if ((name==0) || (fColumns==0)) return -1;
+   
+   TIter next(fColumns);
+
+   TSQLClassColumnInfo* col = 0;
+   
+   Int_t indx = 0;
+   
+   while ((col = (TSQLClassColumnInfo*) next()) != 0) {
+      const char* colname = sqlname ? col->GetSQLName() : col->GetName();
+      if (strcmp(colname, name)==0) return indx;
+      indx++;
+   }
+   
+   return -1;
 }

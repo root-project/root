@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.18 2006/05/09 10:24:27 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.19 2006/05/30 12:59:30 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -476,6 +476,23 @@ void TXMLEngine::FreeAttr(XMLNodePointer_t xmlnode, const char* name)
 }
 
 //______________________________________________________________________________
+void TXMLEngine::FreeAllAttr(XMLNodePointer_t xmlnode)
+{
+   // Free all attributes of the node
+   if (xmlnode==0) return;
+   
+   SXmlNode_t* node = (SXmlNode_t*) xmlnode;
+   SXmlAttr_t* attr = node->fAttr;
+   while (attr!=0) {
+      SXmlAttr_t* next = attr->fNext;
+      free(attr);
+      attr = next;
+   }
+   node->fAttr = 0;
+}
+
+
+//______________________________________________________________________________
 XMLAttrPointer_t TXMLEngine::GetFirstAttr(XMLNodePointer_t xmlnode)
 {
    // return first attribute in the list, namespace (if exists) will be skiped
@@ -622,6 +639,23 @@ void TXMLEngine::AddChild(XMLNodePointer_t parent, XMLNodePointer_t child)
       pnode->fLastChild = cnode;
    }
 }
+
+//______________________________________________________________________________
+void TXMLEngine::AddChildFirst(XMLNodePointer_t parent, XMLNodePointer_t child)
+{
+   // add node as first child 
+   
+   if ((parent==0) || (child==0)) return;
+   SXmlNode_t* pnode = (SXmlNode_t*) parent;
+   SXmlNode_t* cnode = (SXmlNode_t*) child;
+   cnode->fParent = pnode;
+   
+   cnode->fNext = pnode->fChild;
+   pnode->fChild = cnode;
+   
+   if (pnode->fLastChild==0) pnode->fLastChild = cnode;
+}
+
 
 //______________________________________________________________________________
 void TXMLEngine::UnlinkNode(XMLNodePointer_t xmlnode)

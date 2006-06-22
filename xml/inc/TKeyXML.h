@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.h,v 1.4 2006/01/25 16:00:11 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.h,v 1.5 2006/02/01 18:57:41 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -26,9 +26,9 @@ class TKeyXML : public TKey {
       TKeyXML();
     
    public:
-      TKeyXML(TDirectory* mother, const TObject* obj, const char* name = 0);
-      TKeyXML(TDirectory* mother, const void* obj, const TClass* cl, const char* name);
-      TKeyXML(TDirectory* mother, XMLNodePointer_t keynode);
+      TKeyXML(TDirectory* mother, Long64_t keyid, const TObject* obj, const char* name = 0, const char* title = 0);
+      TKeyXML(TDirectory* mother, Long64_t keyid, const void* obj, const TClass* cl, const char* name, const char* title = 0);
+      TKeyXML(TDirectory* mother, Long64_t keyid, XMLNodePointer_t keynode);
       virtual ~TKeyXML();
 
       // redefined TKey Methods
@@ -55,15 +55,23 @@ class TKeyXML : public TKey {
       // TKeyXML specific methods
 
       XMLNodePointer_t  KeyNode() const { return fKeyNode; }
-
+      Long64_t          GetKeyId() const { return fKeyId; }
+      Bool_t            IsSubdir() const { return fSubdir; }
+      void              SetSubir() { fSubdir = kTRUE; }
+      void              UpdateObject(TObject* obj);
+      void              UpdateAttributes();
+      
    protected:
       virtual Int_t     Read(const char *name) { return TKey::Read(name); }
       void              StoreObject(const void* obj, const TClass* cl);
+      void              StoreKeyAttributes();
       TXMLEngine*       XMLEngine();
       
       void*             XmlReadAny(void* obj, const TClass* expectedClass);
       
-      XMLNodePointer_t  fKeyNode;  //!
+      XMLNodePointer_t  fKeyNode;  //! node with stored object
+      Long64_t          fKeyId;    //! unique identifier of key for search methods
+      Bool_t            fSubdir;   //! indicates that key contains subdirectory
 
    ClassDef(TKeyXML,1) // a special TKey for XML files      
 };

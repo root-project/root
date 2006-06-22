@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLStructure.h,v 1.6 2005/12/07 14:59:57 rdm Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLStructure.h,v 1.7 2006/02/01 18:57:41 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -38,7 +38,9 @@ class TStreamerInfo;
 class TStreamerElement;
 class TSQLFile;
 class TSqlRegistry;
+class TSqlRawBuffer;
 class TSQLObjectData;
+class TSQLClassInfo;
 class TBufferSQL2;
 
 class TSQLColumnData : public TObject {
@@ -50,7 +52,7 @@ protected:
    Bool_t      fNumeric;          //!  for numeric quotes (double quotes) are not required
 public:
    TSQLColumnData();
-   TSQLColumnData(const char* name,            
+   TSQLColumnData(const char* name,   
                   const char* sqltype, 
                   const char* value, 
                   Bool_t numeric);
@@ -68,24 +70,54 @@ public:
 
 //______________________________________________________________________
 
+class TSQLTableData : public TObject {
+  
+protected:
+   TSQLFile*      fFile;           //!
+   TSQLClassInfo* fInfo;           //!
+   TObjArray      fColumns;        //! collection of columns
+   TObjArray*     fColInfos;       //! array with TSQLClassColumnInfo, used later for TSQLClassInfo
+   
+   TString DefineSQLName(const char* fullname);
+   Bool_t HasSQLName(const char* sqlname);
+   
+public:
+   TSQLTableData(TSQLFile* f = 0, TSQLClassInfo* info = 0);
+   virtual ~TSQLTableData();
+
+   void AddColumn(const char* name, Long64_t value);
+   void AddColumn(const char* name, 
+                  const char* sqltype, 
+                  const char* value, 
+                  Bool_t numeric);
+   
+   TObjArray* TakeColInfos();
+   
+   Int_t GetNumColumns();
+   const char* GetColumn(Int_t n);
+   Bool_t IsNumeric(Int_t n);
+   
+   ClassDef(TSQLTableData, 1); // Collection of columns data for single SQL table
+};
+
+//______________________________________________________________________
+
 class TSQLStructure : public TObject {
 protected:   
 
    Bool_t           CheckNormalClassPair(TSQLStructure* vers, TSQLStructure* info);
 
    Long64_t         FindMaxObjectId();
-   void             PerformConversion(TSqlRegistry* reg, TObjArray* blobs, const char* topname, Bool_t useblob = kFALSE);
+   void             PerformConversion(TSqlRegistry* reg, TSqlRawBuffer* blobs, const char* topname, Bool_t useblob = kFALSE);
    Bool_t           StoreObject(TSqlRegistry* reg, Long64_t objid, TClass* cl, Bool_t registerobj = kTRUE);
    Bool_t           StoreObjectInNormalForm(TSqlRegistry* reg);
    Bool_t           StoreClassInNormalForm(TSqlRegistry* reg);
-   Bool_t           StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* columns);
-   Bool_t           TryConvertObjectArray(TSqlRegistry* reg, TObjArray* blobs);
+   Bool_t           StoreElementInNormalForm(TSqlRegistry* reg, TSQLTableData* columns);
+   Bool_t           TryConvertObjectArray(TSqlRegistry* reg, TSqlRawBuffer* blobs);
 
    Bool_t           StoreTObject(TSqlRegistry* reg);
    Bool_t           StoreTString(TSqlRegistry* reg);
    Bool_t           RecognizeTString(const char* &value);
-
-   void             AddCmd(TObjArray* cmds, const char* name, const char* value, const char* topname = 0, const char* ns = 0);
 
    TSQLStructure*   fParent;     //!
    Int_t            fType;       //!
@@ -164,32 +196,39 @@ public:
    static void      AddStrBrackets(TString &s, const char* quote);
   
    enum ESQLTypes {
-     kSqlObject       = 10001,
-     kSqlPointer      = 10002,
-     kSqlVersion      = 10003,
-     kSqlStreamerInfo = 10004,
-     kSqlClassStreamer= 10005,
-     kSqlElement      = 10006,
-     kSqlValue        = 10007,
-     kSqlArray        = 10008,
-     kSqlObjectData   = 10009,
-     kSqlCustomClass  = 10010,
-     kSqlCustomElement= 10011
+      kSqlObject       = 10001,
+      kSqlPointer      = 10002,
+      kSqlVersion      = 10003,
+      kSqlStreamerInfo = 10004,
+      kSqlClassStreamer= 10005,
+      kSqlElement      = 10006,
+      kSqlValue        = 10007,
+      kSqlArray        = 10008,
+      kSqlObjectData   = 10009,
+      kSqlCustomClass  = 10010,
+      kSqlCustomElement= 10011
    };
    
    enum ESQLColumns {
-     kColUnknown      = 0,
-     kColSimple       = 1,
-     kColSimpleArray  = 2,
-     kColParent       = 3,
-     kColObject       = 4,
-     kColObjectArray  = 5,
-     kColNormObject   = 6,
-     kColNormObjectArray = 7,
-     kColObjectPtr    = 8,
-     kColTString      = 9,
-     kColRawData      = 10
-   };   
+      kColUnknown      = 0,
+      kColSimple       = 1,
+      kColSimpleArray  = 2,
+      kColParent       = 3,
+      kColObject       = 4,
+      kColObjectArray  = 5,
+      kColNormObject   = 6,
+      kColNormObjectArray = 7,
+      kColObjectPtr    = 8,
+      kColTString      = 9,
+      kColRawData      = 10
+   };
+   
+   enum ESQLIdType {
+      kIdTable    = 0,
+      kIdRawTable = 1,
+      kIdColumn   = 2
+   }; 
+       
   
    ClassDef(TSQLStructure, 1); // Table/structure description used internally by YBufferSQL.
 };
@@ -258,6 +297,15 @@ namespace sqlio {
    extern const char* ObjectsTableIndex;
    extern const char* OT_Class;
    extern const char* OT_Version;
+   
+   extern const char* IdsTable;
+   extern const char* IdsTableIndex;
+   extern const char* IT_TableID;
+   extern const char* IT_SubID;
+   extern const char* IT_Type;
+   extern const char* IT_FullName;
+   extern const char* IT_SQLName;
+   extern const char* IT_Info;
     
    extern const char* BT_Field;
    extern const char* BT_Value;

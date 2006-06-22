@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.8 2006/05/11 10:29:45 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.9 2006/05/22 08:55:58 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -214,9 +214,9 @@ TObject* TKeySQL::ReadObj()
          TDirectory *dir = (TDirectory*) tobj;
          dir->SetName(GetName());
          dir->SetTitle(GetTitle());
-         //dir->SetSeekDir(GetDBKeyId());
-         dir->ReadKeys();
+         dir->SetSeekDir(GetDBKeyId());
          dir->SetMother(fMotherDir);
+         dir->ReadKeys();
          fMotherDir->Append(dir);
       }
    }

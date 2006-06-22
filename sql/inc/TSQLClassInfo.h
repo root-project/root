@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLClassInfo.h,v 1.3 2005/12/07 14:59:57 rdm Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLClassInfo.h,v 1.4 2006/05/22 08:55:57 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -31,14 +31,45 @@
 
 class TObjArray;
 
+class TSQLClassColumnInfo : public TObject {
+
+public:
+   TSQLClassColumnInfo();
+   TSQLClassColumnInfo(const char* name,
+                       const char* sqlname,
+                       const char* sqltype);
+   virtual ~TSQLClassColumnInfo();
+   
+   virtual const char* GetName() const { return fName.Data(); }   
+   const char* GetSQLName() const { return fSQLName.Data(); }   
+   const char* GetSQLType() const { return fSQLType.Data(); }   
+
+protected:    
+   TString   fName;
+   TString   fSQLName;
+   TString   fSQLType; 
+
+   ClassDef(TSQLClassColumnInfo, 1); //  Keeps information about single column in class table
+};
+
+//_________________________________________________________________________________
+
 class TSQLClassInfo : public TObject {
 public:
    TSQLClassInfo();
-   TSQLClassInfo(const char* classname, Int_t version);
+   TSQLClassInfo(Long64_t classid,
+                 const char* classname, 
+                 Int_t version);
    virtual ~TSQLClassInfo();
+   
+
+   Long64_t GetClassId() const { return fClassId; }
    
    virtual const char* GetName() const { return fClassName.Data(); }
    Int_t GetClassVersion() const { return fClassVersion; }
+   
+   void SetClassTableName(const char* name) { fClassTable = name; }
+   void SetRawTableName(const char* name) { fRawTable = name; }
    
    const char* GetClassTableName() const { return fClassTable.Data(); }
    const char* GetRawTableName() const { return fRawTable.Data(); }
@@ -51,11 +82,13 @@ public:
    Bool_t IsRawTableExist() const { return fRawtableExist; }
    
    TObjArray* GetColumns() const { return fColumns; }
+   Int_t FindColumn(const char* name, Bool_t sqlname = kFALSE);
    
 protected:
    
    TString    fClassName;            //! class name 
    Int_t      fClassVersion;         //! class version 
+   Long64_t      fClassId;              //! sql class id
    TString    fClassTable;           //! name of table with class data
    TString    fRawTable;             //! name of table with raw data
    TObjArray* fColumns;              //! name and type of columns - array of TNamed
