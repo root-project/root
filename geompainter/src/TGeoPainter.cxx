@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.89 2006/06/11 12:56:48 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.90 2006/06/13 12:28:44 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -483,12 +483,11 @@ Int_t TGeoPainter::CountNodes(TGeoVolume *volume, Int_t rlevel) const
    Int_t count = 0;
    Bool_t vis = vol->IsVisible();
    // Do I need to look for the top volume ?
-   if (fTopVisible && vis) count++;
+   if ((fTopVisible && vis) || !vol->GetNdaughters() || !vol->IsVisDaughters() || vol->IsVisOnly()) 
+      count++;
    // Is this the only volume?
-   if (volume->IsVisOnly()) {
-      if (!fTopVisible) count++;
-      return count;
-   }   
+   if (volume->IsVisOnly()) return count;
+
    // Do we need to check a branch only?
    if (volume->IsVisBranch()) {
       fGeoManager->PushPath();
@@ -1089,14 +1088,14 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
+void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option, TGeoMatrix* global)
 {
 // Paint recursively a node and its content accordind to visualization options.
-   PaintVolume(node->GetVolume(), option);
+   PaintVolume(node->GetVolume(), option, global);
 } 
 
 //______________________________________________________________________________
-void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option)
+void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* global)
 {
 // Paint recursively a node and its content accordind to visualization options.
    if (fTopVolume != top) {
@@ -1106,7 +1105,10 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option)
    fTopVolume = top;
    if (!fVisLevel) return;
    TGeoVolume *vol = top;
-   fGlobal->Clear();
+   if(global)
+      *fGlobal = *global;
+   else
+      fGlobal->Clear();
    TGeoShape::SetTransform(fGlobal);
    Bool_t drawDaughters = kTRUE;
    Bool_t vis = (top->IsVisible() && !top->IsAssembly());
@@ -1120,7 +1122,6 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option)
       fGeoManager->cd(fVisBranch.Data());
       Int_t transparency;
       while (fGeoManager->GetLevel()) {
-         fGeoManager->SetMatrixReflection(fGeoManager->GetCurrentMatrix()->IsReflection());
          vol = fGeoManager->GetCurrentVolume();
          if (!fVisLock) {
             fVisVolumes->Add(vol);
@@ -1130,7 +1131,13 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option)
          transparency = vol->GetTransparency();
          vol->SetTransparency(40);
          if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-         *fGlobal = fGeoManager->GetCurrentMatrix();
+         if (global) {
+            *fGlobal  = *global;
+            *fGlobal *= *fGeoManager->GetCurrentMatrix();
+         } else {
+            *fGlobal = fGeoManager->GetCurrentMatrix();
+         }
+         fGeoManager->SetMatrixReflection(fGlobal->IsReflection());
          PaintShape(*(vol->GetShape()),option);
          vol->SetTransparency(transparency);
          fGeoManager->CdUp();
@@ -1144,7 +1151,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option)
    // Do I need to draw the top volume ?
    if ((fTopVisible && vis) || !top->GetNdaughters() || !top->IsVisDaughters() || top->IsVisOnly()) {
       fGeoManager->SetPaintVolume(vol);
-      fGeoManager->SetMatrixReflection(kFALSE);
+      fGeoManager->SetMatrixReflection(fGlobal->IsReflection());
       drawDaughters = PaintShape(*(vol->GetShape()),option);
       if (!fVisLock && !vol->TestAttBit(TGeoAtt::kVisOnScreen)) {
          fVisVolumes->Add(vol);
@@ -1173,7 +1180,12 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option)
       if (top->IsVisContainers()) {
          if (vis && level<=fVisLevel) {
             if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-            *fGlobal = next.GetCurrentMatrix();
+            if (global) {
+               *fGlobal  = *global;
+               *fGlobal *= *next.GetCurrentMatrix();
+            } else {
+               *fGlobal = next.GetCurrentMatrix();
+            }
             fGeoManager->SetMatrixReflection(fGlobal->IsReflection());
             drawDaughters = PaintShape(*(vol->GetShape()),option);
             if (!fVisLock && !daughter->IsOnScreen()) {
@@ -1190,7 +1202,12 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option)
          last = ((nd==0) || (level==fVisLevel) || (!daughter->IsVisDaughters()))?kTRUE:kFALSE;
          if (vis && last) {
             if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-            *fGlobal = next.GetCurrentMatrix();
+            if (global) {
+               *fGlobal  = *global;
+               *fGlobal *= *next.GetCurrentMatrix();
+            } else {
+               *fGlobal = next.GetCurrentMatrix();
+            }
             fGeoManager->SetMatrixReflection(fGlobal->IsReflection());
             drawDaughters = PaintShape(*(vol->GetShape()),option);
             if (!fVisLock && !daughter->IsOnScreen()) {

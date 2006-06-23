@@ -130,11 +130,11 @@ public:
    void               Lock(Bool_t flag = kTRUE) {fVisLock = flag;}
    virtual void       ModifiedPad() const;
    virtual void       Paint(Option_t *option="");
-   virtual void       PaintNode(TGeoNode *node, Option_t *option="");
+   virtual void       PaintNode(TGeoNode *node, Option_t *option="", TGeoMatrix* global=0);
    Bool_t             PaintShape(const TGeoShape & shape, Option_t * option) const;
    virtual void       PaintShape(TGeoShape *shape, Option_t *option="");
    virtual void       PaintOverlap(void *ovlp, Option_t *option="");
-   virtual void       PaintVolume(TGeoVolume *vol, Option_t *option="");
+   virtual void       PaintVolume(TGeoVolume *vol, Option_t *option="", TGeoMatrix* global=0);
    virtual void       PrintOverlaps() const;
    void               PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option="");
    virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="");
