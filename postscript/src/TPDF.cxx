@@ -1102,6 +1102,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    fGreen     = -1;
    fBlue      = -1;
    fType      = abs(wtype);
+   SetLineScale(gStyle->GetLineScalePS());
    gStyle->GetPaperSize(fXsize, fYsize);
    Float_t xrange, yrange;
    if (gPad) {
@@ -1896,7 +1897,7 @@ void TPDF::SetLineWidth(Width_t linewidth)
 
    if (linewidth == fLineWidth) return;
    fLineWidth = linewidth;
-   WriteReal(fLineWidth);
+   WriteReal(fLineScale*fLineWidth);
    PrintFast(2," w");
 }
 

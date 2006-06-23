@@ -36,9 +36,10 @@ protected:
    Float_t  fXsize;           //Page size along X
    Float_t  fYsize;           //Page size along Y
    Int_t    fType;            //Workstation type used to know if the PDF is open
-   Int_t    fPageFormat;      // Page format (A4, Letter etc ...)
-   Int_t    fPageOrientation; // Page orientation (Portrait, Landscape)
+   Int_t    fPageFormat;      //Page format (A4, Letter etc ...)
+   Int_t    fPageOrientation; //Page orientation (Portrait, Landscape)
    Int_t    fStartStream;     //
+   Float_t  fLineScale;       //Line width scale factor
    Int_t   *fObjPos;          //Objets position
    Int_t    fObjPosSize;      //Real size of fObjPos
    Int_t    fNbObj;           //Number of objects
@@ -84,6 +85,7 @@ public:
    void     SetFillColor( Color_t cindex=1);
    void     SetFillPatterns(Int_t ipat, Int_t color);
    void     SetLineColor( Color_t cindex=1);
+   void     SetLineScale(Float_t scale=1) {fLineScale = scale;}
    void     SetLineStyle(Style_t linestyle = 1);
    void     SetLineWidth(Width_t linewidth = 1);
    void     SetMarkerColor( Color_t cindex=1);
