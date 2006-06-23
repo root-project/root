@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.39 2006/06/05 22:51:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.40 2006/06/21 16:18:26 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -155,6 +155,9 @@ protected:
    virtual void  Setup();
 
    virtual void  SetShutdownTimer(Bool_t, Int_t) { }
+
+   static void  ErrorHandler(Int_t level, Bool_t abort, const char *location,
+                             const char *msg);
 
 public:
    TProofServ(Int_t *argc, char **argv, FILE *flog = 0);

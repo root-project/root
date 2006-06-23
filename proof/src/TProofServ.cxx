@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.124 2006/06/06 09:50:53 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.125 2006/06/21 16:18:26 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -109,79 +109,6 @@ static volatile Int_t gProofServDebug = 1;
 Int_t TProofServ::fgMaxQueries = -1;
 
 
-//______________________________________________________________________________
-static void ProofServErrorHandler(Int_t level, Bool_t abort, const char *location,
-                                  const char *msg)
-{
-   // The PROOF error handler function. It prints the message on stderr and
-   // if abort is set it aborts the application.
-
-   if (!gProofServ)
-      return;
-
-   if (level < gErrorIgnoreLevel)
-      return;
-
-   const char *type   = 0;
-   ELogLevel loglevel = kLogInfo;
-
-   if (level >= kInfo) {
-      loglevel = kLogInfo;
-      type = "Info";
-   }
-   if (level >= kWarning) {
-      loglevel = kLogWarning;
-      type = "Warning";
-   }
-   if (level >= kError) {
-      loglevel = kLogErr;
-      type = "Error";
-   }
-   if (level >= kBreak) {
-      loglevel = kLogErr;
-      type = "*** Break ***";
-   }
-   if (level >= kSysError) {
-      loglevel = kLogErr;
-      type = "SysError";
-   }
-   if (level >= kFatal) {
-      loglevel = kLogErr;
-      type = "Fatal";
-   }
-
-   TString node = gProofServ->IsMaster() ? "master" : "slave ";
-   node += gProofServ->GetOrdinal();
-   char *bp;
-
-   if (!location || strlen(location) == 0 ||
-       (level >= kBreak && level < kSysError)) {
-      fprintf(stderr, "%s on %s: %s\n", type, node.Data(), msg);
-      bp = Form("%s:%s:%s:%s", gProofServ->GetUser(), node.Data(), type, msg);
-   } else {
-      fprintf(stderr, "%s in <%s> on %s: %s\n", type, location, node.Data(), msg);
-      bp = Form("%s:%s:%s:<%s>:%s", gProofServ->GetUser(), node.Data(), type, location, msg);
-   }
-   fflush(stderr);
-   gSystem->Syslog(loglevel, bp);
-
-   if (abort) {
-
-      static Bool_t recursive = kFALSE;
-
-      if (!recursive) {
-         recursive = kTRUE;
-         gProofServ->GetSocket()->Send(kPROOF_FATAL);
-         recursive = kFALSE;
-      }
-
-      fprintf(stderr, "aborting\n");
-      fflush(stderr);
-      gSystem->StackTrace();
-      gSystem->Abort();
-   }
-}
-
 //----- Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
 class TProofServInterruptHandler : public TSignalHandler {
@@ -282,7 +209,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    // abort on higher than kSysError's and set error handler
    gErrorAbortLevel = kSysError + 1;
-   SetErrorHandler(ProofServErrorHandler);
+   SetErrorHandler(ErrorHandler);
 
    fNcmd            = 0;
    fInterrupt       = kFALSE;
@@ -394,7 +321,7 @@ void TProofServ::CreateServer()
 
    if (gProofDebugLevel > 0)
       Info("CreateServer", "Service %s ConfDir %s IsMaster %d\n",
-           fService.Data(), fConfDir.Data(), (Int_t)fMasterServ);
+           GetService(), GetConfDir(), (Int_t)fMasterServ);
 
    Setup();
    if (!fLogFile) {
@@ -502,7 +429,7 @@ void TProofServ::CreateServer()
       // make instance of TProof
       fProof = reinterpret_cast<TProof*>(h->ExecPlugin(4, master.Data(),
                                                           fConfFile.Data(),
-                                                          fConfDir.Data(),
+                                                          GetConfDir(),
                                                           fLogLevel));
       if (!fProof || !fProof->IsValid()) {
          Error("CreateServer", "plugin for TVirtualProof could not be executed");
@@ -543,12 +470,12 @@ Int_t TProofServ::CatMotd()
    // is not shown more than once a dat. If the file fConfDir/etc/proof/noproof
    // exists, show its contents and close the connection.
 
-   TString motdname;
    TString lastname;
    FILE   *motd;
    Bool_t  show = kFALSE;
 
-   motdname = fConfDir + "/etc/proof/noproof";
+   TString motdname(GetConfDir());
+   motdname += "/etc/proof/noproof";
    if ((motd = fopen(motdname, "r"))) {
       Int_t c;
       printf("\n");
@@ -572,7 +499,8 @@ Int_t TProofServ::CatMotd()
    if (time(0) - lasttime > (time_t)86400)
       show = kTRUE;
 
-   motdname = fConfDir + "/etc/proof/motd";
+   motdname = GetConfDir();
+   motdname += "/etc/proof/motd";
    if (gSystem->GetPathInfo(motdname, &id, &size, &flags, &modtime) == 0) {
       if (modtime > lasttime || show) {
          if ((motd = fopen(motdname, "r"))) {
@@ -702,17 +630,17 @@ void TProofServ::GetOptions(Int_t *argc, char **argv)
    }
 
    if (!strcmp(argv[1], "proofserv")) {
-      fService = argv[1];
       fMasterServ = kTRUE;
       fEndMaster = kTRUE;
    } else if (!strcmp(argv[1], "proofslave")) {
       fMasterServ = kFALSE;
-      fService = argv[1];
       fEndMaster = kFALSE;
    } else {
       Fatal("GetOptions", "Must be started as proofmaster or proofslave");
       exit(1);
    }
+
+   fService = argv[1];
 
    // Confdir
    if (!(gSystem->Getenv("ROOTCONFDIR"))) {
@@ -2078,11 +2006,6 @@ void TProofServ::Setup()
 
    // deny write access for group and world
    gSystem->Umask(022);
-
-   if (IsMaster())
-      gSystem->Openlog("proofserv", kLogPid | kLogCons, kLogLocal5);
-   else
-      gSystem->Openlog("proofslave", kLogPid | kLogCons, kLogLocal6);
 
    // Set $HOME and $PATH. The HOME directory was already set to the
    // user's home directory by proofd.
@@ -4077,4 +4000,94 @@ Int_t TProofLockPath::Unlock()
    fLockId = -1;
 
    return 0;
+}
+
+//______________________________________________________________________________
+void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
+                              const char *msg)
+{
+   // The PROOF error handler function. It prints the message on stderr and
+   // if abort is set it aborts the application.
+
+   if (level < gErrorIgnoreLevel)
+      return;
+
+   static TString syslogService;
+
+   if (syslogService.IsNull()) {
+      syslogService = gProofServ != 0 ? gProofServ->GetService() : "proof";
+      gSystem->Openlog(syslogService, kLogPid | kLogCons, kLogLocal5);
+
+   } else if (gProofServ != 0 && syslogService != gProofServ->GetService()) {
+      // re-initialize if proper service is now know
+      syslogService = gProofServ->GetService();
+      gSystem->Openlog(syslogService, kLogPid | kLogCons, kLogLocal5);
+   }
+
+   const char *type   = 0;
+   ELogLevel loglevel = kLogInfo;
+
+   if (level >= kInfo) {
+      loglevel = kLogInfo;
+      type = "Info";
+   }
+   if (level >= kWarning) {
+      loglevel = kLogWarning;
+      type = "Warning";
+   }
+   if (level >= kError) {
+      loglevel = kLogErr;
+      type = "Error";
+   }
+   if (level >= kBreak) {
+      loglevel = kLogErr;
+      type = "*** Break ***";
+   }
+   if (level >= kSysError) {
+      loglevel = kLogErr;
+      type = "SysError";
+   }
+   if (level >= kFatal) {
+      loglevel = kLogErr;
+      type = "Fatal";
+   }
+
+   TString node = "proof";
+   TString user = "unknown";
+
+   if (gProofServ) {
+      node = gProofServ->IsMaster() ? "master" : "slave";
+      node += gProofServ->GetOrdinal();
+      user = gProofServ->GetUser();
+   }
+
+   TString buf;
+
+   if (!location || strlen(location) == 0 ||
+       (level >= kBreak && level < kSysError)) {
+      fprintf(stderr, "%s on %s: %s\n", type, node.Data(), msg);
+      buf.Form("%s:%s:%s:%s", user.Data(), node.Data(), type, msg);
+   } else {
+      fprintf(stderr, "%s in <%s> on %s: %s\n", type, location, node.Data(), msg);
+      buf.Form("%s:%s:%s:<%s>:%s", user.Data(), node.Data(), type, location, msg);
+   }
+   fflush(stderr);
+
+   gSystem->Syslog(loglevel, buf);
+
+   if (abort) {
+
+      static Bool_t recursive = kFALSE;
+
+      if (gProofServ != 0 && !recursive) {
+         recursive = kTRUE;
+         gProofServ->GetSocket()->Send(kPROOF_FATAL);
+         recursive = kFALSE;
+      }
+
+      fprintf(stderr, "aborting\n");
+      fflush(stderr);
+      gSystem->StackTrace();
+      gSystem->Abort();
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.8 2006/06/05 22:51:14 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.9 2006/06/21 16:18:26 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -620,11 +620,6 @@ void TXProofServ::Setup()
    // deny write access for group and world
    gSystem->Umask(022);
 
-   if (IsMaster())
-      gSystem->Openlog("proofserv", kLogPid | kLogCons, kLogLocal5);
-   else
-      gSystem->Openlog("proofslave", kLogPid | kLogCons, kLogLocal6);
-
    // Set $HOME and $PATH. The HOME directory was already set to the
    // user's home directory by proofd.
    gSystem->Setenv("HOME", gSystem->HomeDirectory());
@@ -961,7 +956,7 @@ Bool_t TXProofServ::HandleInput(const void *in)
       // Shutdown option
       fShutdownWhenIdle = (hin->fInt2 == 2) ? kFALSE : kTRUE;
       if (hin->fInt2 > 0)
-         // Setup Shutdown timer 
+         // Setup Shutdown timer
          SetShutdownTimer(kTRUE, hin->fInt3);
       else
          // Stop Shutdown timer, if any
