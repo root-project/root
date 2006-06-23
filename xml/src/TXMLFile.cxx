@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.19 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.20 2006/06/22 08:21:23 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -1026,6 +1026,7 @@ TKeyXML* TXMLFile::FindDirKey(TDirectory* dir)
 //______________________________________________________________________________
 TDirectory* TXMLFile::FindKeyDir(TDirectory* motherdir, Long64_t keyid)
 {
+   //Find a directory in motherdir with a seek equal to keyid
    if (motherdir==0) motherdir = this;
    
    TIter next(motherdir->GetList());
@@ -1070,6 +1071,7 @@ void TXMLFile::DirWriteKeys(TDirectory*)
 //______________________________________________________________________________
 void TXMLFile::DirWriteHeader(TDirectory* dir)
 {
+   //Write the directory header
    TKeyXML* key = FindDirKey(dir);
    if (key!=0)
       key->UpdateObject(dir);
