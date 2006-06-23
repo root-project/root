@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.12 2006/05/20 14:06:09 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.13 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 static const char *gCoPyRiGhT[] = {
      "Dataset C++ base class library:",
@@ -19,7 +19,7 @@ static const char *gCoPyRiGhT[] = {
 };
 
 static const char *gId = {
-   "$Id: TDataSet.cxx,v 1.12 2006/05/20 14:06:09 brun Exp $"
+   "$Id: TDataSet.cxx,v 1.13 2006/05/21 18:05:26 brun Exp $"
 };
 #include "Riostream.h"
 #include "TSystem.h"
@@ -212,7 +212,7 @@ fParent(0),fList(0)
 //______________________________________________________________________________
 TDataSet::TDataSet(TNode &)
 {
-   //to be documented
+   // This copy ctor has been depricated (left for thwe sake of the backweard compatibility)
    assert(0);
 }
 //______________________________________________________________________________
@@ -225,7 +225,7 @@ TDataSet::~TDataSet()
 //______________________________________________________________________________
 void  TDataSet::MakeCollection()
 {
-   //to be documented
+   // Create the internal container at once if any
    if (!fList)
       fList = TestBit(kArray) ? (TSeqCollection *)new TObjArray : (TSeqCollection *) new TList;
 }
@@ -306,7 +306,7 @@ void TDataSet::Browse(TBrowser *b)
 //______________________________________________________________________________
 TObject *TDataSet::Clone(const char*) const 
 {
-   //to be documented
+   // the custom implementation fo the TObject::Clone
    return new TDataSet(*this);
 }
 
@@ -403,7 +403,7 @@ TDataSet *TDataSet::First() const
 //______________________________________________________________________________
 TObject *TDataSet::GetObject() const 
 {
-   //to be documented
+   // The depricated method (left here for the sake of the backward compatibility)
    printf("***DUMMY GetObject***\n");
    return 0;
 }
@@ -451,7 +451,7 @@ TDataSet *TDataSet::Prev() const
 //______________________________________________________________________________
 void TDataSet::SetObject(TObject * /*obj*/)
 {
-   //to be documented
+   // The depricated method (left here for the sake of the backward compatibility)
    printf("***DUMMY PutObject***\n");
 }
 
@@ -522,7 +522,9 @@ TDataSet *TDataSet::Instance() const
 //______________________________________________________________________________
 Bool_t TDataSet::IsThisDir(const Char_t *dirname,int len,int ignorecase) const
 {
-   //to be documented
+   // Compare the name of the TDataSet with "dirname"
+   // ignorercase flags indicates whether the comparision is case sensitive
+   
    if (!ignorecase) {
       if (len<0) {return !strcmp (GetName(),dirname);
       } else     {return !strncmp(GetName(),dirname,len);}
@@ -601,7 +603,7 @@ TString TDataSet::Path() const
 //______________________________________________________________________________
 void TDataSet::Remove(TDataSet *set)
 {
-   //to be documented
+   // Remiove the "set" from this TDataSet
    if (fList && set) {
       if (set->GetParent() == this) set->SetParent(0);
       fList->Remove(set);
@@ -828,7 +830,7 @@ void TDataSet::Update()
 //______________________________________________________________________________
 void TDataSet::Sort()
 {
-   //to be documented
+   // Sort recursively all members of the TDataSet with TList::Sort method
    TDataSetIter next(this,0);
    TDataSet *ds;
    TList *list;

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.13 2006/05/20 14:06:09 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.14 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -161,10 +161,10 @@
 
 static TH1 *gCurrentTableHist = 0;
 
-static const char *dtorName = "dtor";
-static   Int_t         fNbins[4] = {100,100,100,100};     //Number of bins per dimension
-static   Float_t       fVmin[4]  = {0,0,0,0};             //Minima of varexp columns
-static   Float_t       fVmax[4]  = {20,20,20,20};         //Maxima of varexp columns
+static const char *gDtorName = "dtor";
+static   Int_t         gNbins[4] = {100,100,100,100};     //Number of bins per dimension
+static   Float_t       gVmin[4]  = {0,0,0,0};             //Minima of varexp columns
+static   Float_t       gVmax[4]  = {20,20,20,20};         //Maxima of varexp columns
 
 const char *TTable::fgTypeName[] = {
    "NAN", "float", "int", "long", "short", "double",
@@ -558,25 +558,20 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
       if (!gROOT->GetMakeDefCanvas()) return 0;
       (gROOT->GetMakeDefCanvas())();
    }
-#if 0
-   Int_t         fNbins[4] = {100,100,100,100};     //Number of bins per dimension
-   Float_t       fVmin[4]  = {0,0,0,0};             //Minima of varexp columns
-   Float_t       fVmax[4]  = {20,20,20,20};         //Maxima of varexp columns
-#endif
 //*-*- 1-D distribution
    if (dimension == 1) {
       action = 1;
       if (!oldh1) {
-         fNbins[0] = 100;
+         gNbins[0] = 100;
          if (gPad && opt.Contains("same")) {
             TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
             if (oldhtemp) {
-               fNbins[0] = oldhtemp->GetXaxis()->GetNbins();
-               fVmin[0]  = oldhtemp->GetXaxis()->GetXmin();
-               fVmax[0]  = oldhtemp->GetXaxis()->GetXmax();
+               gNbins[0] = oldhtemp->GetXaxis()->GetNbins();
+               gVmin[0]  = oldhtemp->GetXaxis()->GetXmin();
+               gVmax[0]  = oldhtemp->GetXaxis()->GetXmax();
             } else {
-               fVmin[0]  = gPad->GetUxmin();
-               fVmax[0]  = gPad->GetUxmax();
+               gVmin[0]  = gPad->GetUxmin();
+               gVmax[0]  = gPad->GetUxmax();
             }
          } else {
             action = -1;
@@ -585,9 +580,9 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
       TH1F *h1;
       if (oldh1) {
          h1 = (TH1F*)oldh1;
-         fNbins[0] = h1->GetXaxis()->GetNbins();  // for proofserv
+         gNbins[0] = h1->GetXaxis()->GetNbins();  // for proofserv
       } else {
-         h1 = new TH1F(hname,htitle,fNbins[0],fVmin[0],fVmax[0]);
+         h1 = new TH1F(hname,htitle,gNbins[0],gVmin[0],gVmax[0]);
          if (!hkeep) {
             h1->SetBit(kCanDelete);
             h1->SetDirectory(0);
@@ -605,25 +600,25 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
       action = 2;
       if (!opt.Contains("same") && gPad)  gPad->Clear();
       if (!oldh1 || !opt.Contains("same")) {
-         fNbins[0] = 40;
-         fNbins[1] = 40;
-         if (opt.Contains("prof")) fNbins[1] = 100;
+         gNbins[0] = 40;
+         gNbins[1] = 40;
+         if (opt.Contains("prof")) gNbins[1] = 100;
          if (opt.Contains("same")) {
             TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
             if (oldhtemp) {
-               fNbins[1] = oldhtemp->GetXaxis()->GetNbins();
-               fVmin[1]  = oldhtemp->GetXaxis()->GetXmin();
-               fVmax[1]  = oldhtemp->GetXaxis()->GetXmax();
-               fNbins[0] = oldhtemp->GetYaxis()->GetNbins();
-               fVmin[0]  = oldhtemp->GetYaxis()->GetXmin();
-               fVmax[0]  = oldhtemp->GetYaxis()->GetXmax();
+               gNbins[1] = oldhtemp->GetXaxis()->GetNbins();
+               gVmin[1]  = oldhtemp->GetXaxis()->GetXmin();
+               gVmax[1]  = oldhtemp->GetXaxis()->GetXmax();
+               gNbins[0] = oldhtemp->GetYaxis()->GetNbins();
+               gVmin[0]  = oldhtemp->GetYaxis()->GetXmin();
+               gVmax[0]  = oldhtemp->GetYaxis()->GetXmax();
             } else {
-               fNbins[1] = 40;
-               fVmin[1]  = gPad->GetUxmin();
-               fVmax[1]  = gPad->GetUxmax();
-               fNbins[0] = 40;
-               fVmin[0]  = gPad->GetUymin();
-               fVmax[0]  = gPad->GetUymax();
+               gNbins[1] = 40;
+               gVmin[1]  = gPad->GetUxmin();
+               gVmax[1]  = gPad->GetUxmax();
+               gNbins[0] = 40;
+               gVmin[0]  = gPad->GetUymin();
+               gVmax[0]  = gPad->GetUymax();
             }
          } else {
             action = -2;
@@ -637,9 +632,9 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
          } else {
             if (action < 0) action = -4;
             if (opt.Contains("profs"))
-               hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"s");
+               hp = new TProfile(hname,htitle,gNbins[1],gVmin[1], gVmax[1],"s");
             else
-               hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"");
+               hp = new TProfile(hname,htitle,gNbins[1],gVmin[1], gVmax[1],"");
             if (!hkeep) {
                hp->SetBit(kCanDelete);
                hp->SetDirectory(0);
@@ -654,7 +649,7 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
          if (oldh1) {
             h2 = (TH2F*)oldh1;
          } else {
-            h2 = new TH2F(hname,htitle,fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            h2 = new TH2F(hname,htitle,gNbins[1],gVmin[1], gVmax[1], gNbins[0], gVmin[0], gVmax[0]);
             if (!hkeep) {
                const Int_t kNoStats = BIT(9);
                h2->SetBit(kCanDelete);
@@ -830,23 +825,23 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
       Char_t *addressEntry = thisTable + rSize*firstentry;
       Int_t lastEntry = TMath::Min(UInt_t(firstentry+nentries),UInt_t(nRows));
       if (action < 0) {
-         fVmin[0] = fVmin[1] = fVmin[2] = 1e30;
-         fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
+         gVmin[0] = gVmin[1] = gVmin[2] = 1e30;
+         gVmax[0] = gVmax[1] = gVmax[2] = -gVmin[0];
       }
       Int_t nchans = 0;
       switch ( action ) {
          case -1: {
             TAKEACTION_BEGIN
             if (results[1]) {
-               if (fVmin[0] > results[0]) fVmin[0] = results[0];
-               if (fVmax[0] < results[0]) fVmax[0] = results[0];
+               if (gVmin[0] > results[0]) gVmin[0] = results[0];
+               if (gVmax[0] < results[0]) gVmax[0] = results[0];
             }
             TAKEACTION_END
 
-            nchans = fNbins[0];
-            if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
-            FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0]);
-            ((TH1 *)obj)->SetBins(fNbins[0],fVmin[0],fVmax[0]);
+            nchans = gNbins[0];
+            if (gVmin[0] >= gVmax[0]) { gVmin[0] -= 1; gVmax[0] += 1;}
+            FindGoodLimits(nchans,gNbins[0],gVmin[0],gVmax[0]);
+            ((TH1 *)obj)->SetBins(gNbins[0],gVmin[0],gVmax[0]);
          }
          case  1:
             TAKEACTION_BEGIN
@@ -857,18 +852,18 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
          case  -2:
             TAKEACTION_BEGIN
             if (results[2]) {
-               if (fVmin[0] > results[1]) fVmin[0] = results[1];
-               if (fVmax[0] < results[1]) fVmax[0] = results[1];
-               if (fVmin[1] > results[0]) fVmin[1] = results[0];
-               if (fVmax[1] < results[0]) fVmax[1] = results[0];
+               if (gVmin[0] > results[1]) gVmin[0] = results[1];
+               if (gVmax[0] < results[1]) gVmax[0] = results[1];
+               if (gVmin[1] > results[0]) gVmin[1] = results[0];
+               if (gVmax[1] < results[0]) gVmax[1] = results[0];
             }
             TAKEACTION_END
-            nchans = fNbins[0];
-            if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
-            FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0]);
-            if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-            FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1]);
-            ((TH1*)obj)->SetBins(fNbins[1],fVmin[1],fVmax[1],fNbins[0],fVmin[0],fVmax[0]);
+            nchans = gNbins[0];
+            if (gVmin[0] >= gVmax[0]) { gVmin[0] -= 1; gVmax[0] += 1;}
+            FindGoodLimits(nchans,gNbins[0],gVmin[0],gVmax[0]);
+            if (gVmin[1] >= gVmax[1]) { gVmin[1] -= 1; gVmax[1] += 1;}
+            FindGoodLimits(nchans,gNbins[1],gVmin[1],gVmax[1]);
+            ((TH1*)obj)->SetBins(gNbins[1],gVmin[1],gVmax[1],gNbins[0],gVmin[0],gVmax[0]);
          case   2:
             if (obj->IsA() == TH2F::Class()) {
                TAKEACTION_BEGIN
@@ -892,16 +887,16 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
          case -4:
             TAKEACTION_BEGIN
             if (results[2]) {
-               if (fVmin[0] > results[1]) fVmin[0] = results[1];
-               if (fVmax[0] < results[1]) fVmax[0] = results[1];
-               if (fVmin[1] > results[0]) fVmin[1] = results[0];
-               if (fVmax[1] < results[0]) fVmax[1] = results[0];
+               if (gVmin[0] > results[1]) gVmin[0] = results[1];
+               if (gVmax[0] < results[1]) gVmax[0] = results[1];
+               if (gVmin[1] > results[0]) gVmin[1] = results[0];
+               if (gVmax[1] < results[0]) gVmax[1] = results[0];
             }
             TAKEACTION_END
-            nchans = fNbins[1];
-            if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-            FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1]);
-            ((TProfile*)obj)->SetBins(fNbins[1],fVmin[1],fVmax[1]);
+            nchans = gNbins[1];
+            if (gVmin[1] >= gVmax[1]) { gVmin[1] -= 1; gVmax[1] += 1;}
+            FindGoodLimits(nchans,gNbins[1],gVmin[1],gVmax[1]);
+            ((TProfile*)obj)->SetBins(gNbins[1],gVmin[1],gVmax[1]);
          case  4:
             TAKEACTION_BEGIN
             if (results[2]) ((TProfile*)obj)->Fill(Axis_t(results[0]),Axis_t(results[1]),Stat_t(results[2]));
@@ -910,18 +905,18 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
          case -12:
             TAKEACTION_BEGIN
             if (results[2]) {
-               if (fVmin[0] > results[1]) fVmin[0] = results[1];
-               if (fVmax[0] < results[1]) fVmax[0] = results[1];
-               if (fVmin[1] > results[0]) fVmin[1] = results[0];
-               if (fVmax[1] < results[0]) fVmax[1] = results[0];
+               if (gVmin[0] > results[1]) gVmin[0] = results[1];
+               if (gVmax[0] < results[1]) gVmax[0] = results[1];
+               if (gVmin[1] > results[0]) gVmin[1] = results[0];
+               if (gVmax[1] < results[0]) gVmax[1] = results[0];
             }
             TAKEACTION_END
-            nchans = fNbins[0];
-            if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
-            FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0]);
-            if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-            FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1]);
-            ((TH2F*)obj)->SetBins(fNbins[1],fVmin[1],fVmax[1],fNbins[0],fVmin[0],fVmax[0]);
+            nchans = gNbins[0];
+            if (gVmin[0] >= gVmax[0]) { gVmin[0] -= 1; gVmax[0] += 1;}
+            FindGoodLimits(nchans,gNbins[0],gVmin[0],gVmax[0]);
+            if (gVmin[1] >= gVmax[1]) { gVmin[1] -= 1; gVmax[1] += 1;}
+            FindGoodLimits(nchans,gNbins[1],gVmin[1],gVmax[1]);
+            ((TH2F*)obj)->SetBins(gNbins[1],gVmin[1],gVmax[1],gNbins[0],gVmin[0],gVmax[0]);
          case  12: {
             if (!strstr(option,"same") && !strstr(option,"goff")) {
                ((TH2F*)obj)->DrawCopy(option);
@@ -966,16 +961,16 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
          case -13:
             TAKEACTION_BEGIN
             if (results[3]) {
-               if (fVmin[0] > results[2]) fVmin[0] = results[2];
-               if (fVmax[0] < results[2]) fVmax[0] = results[2];
-               if (fVmin[1] > results[1]) fVmin[1] = results[1];
-               if (fVmax[1] < results[1]) fVmax[1] = results[1];
-               if (fVmin[2] > results[0]) fVmin[2] = results[0];
-               if (fVmax[2] < results[0]) fVmax[2] = results[0];
+               if (gVmin[0] > results[2]) gVmin[0] = results[2];
+               if (gVmax[0] < results[2]) gVmax[0] = results[2];
+               if (gVmin[1] > results[1]) gVmin[1] = results[1];
+               if (gVmax[1] < results[1]) gVmax[1] = results[1];
+               if (gVmin[2] > results[0]) gVmin[2] = results[0];
+               if (gVmax[2] < results[0]) gVmax[2] = results[0];
             }
             TAKEACTION_END
-            rmin[0] = fVmin[2]; rmin[1] = fVmin[1]; rmin[2] = fVmin[0];
-            rmax[0] = fVmax[2]; rmax[1] = fVmax[1]; rmax[2] = fVmax[0];
+            rmin[0] = gVmin[2]; rmin[1] = gVmin[1]; rmin[2] = gVmin[0];
+            rmax[0] = gVmax[2]; rmax[1] = gVmax[1]; rmax[2] = gVmax[0];
             gPad->Clear();
             gPad->Range(-1,-1,1,1);
             new TView(rmin,rmax,1);
@@ -1309,7 +1304,7 @@ void TTable::Clear(Option_t *opt)
 
    if (!fTable) return;
    Bool_t dtor = kFALSE;
-   dtor = opt && (strcmp(opt,dtorName)==0);
+   dtor = opt && (strcmp(opt,gDtorName)==0);
    if (!opt || !opt[0] || dtor ) {
       if (! TestBit(kIsNotOwn)) {
          if (!dtor) ResetMap();
@@ -1330,7 +1325,7 @@ void TTable::Delete(Option_t *opt)
    // if this object did own this array
    //
    // Then perform TDataSet::Delete(opt)
-   Clear(dtorName);
+   Clear(gDtorName);
    TDataSet::Delete(opt);
 }
 
