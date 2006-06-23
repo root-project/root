@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpResidual.cxx,v 1.4 2005/09/04 10:02:30 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpResidual.cxx,v 1.5 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -57,6 +57,8 @@ ClassImp(TQpResidual)
 //______________________________________________________________________________
 TQpResidual::TQpResidual()
 {
+// Constructor
+
    fNx   = 0;
    fMy   = 0;
    fMz   = 0;
@@ -70,8 +72,10 @@ TQpResidual::TQpResidual()
 
 //______________________________________________________________________________
 TQpResidual::TQpResidual(Int_t nx,Int_t my,Int_t mz,TVectorD &ixlo,TVectorD &ixup,
-TVectorD &iclo,TVectorD &icup)
+                         TVectorD &iclo,TVectorD &icup)
 {
+// Constructor
+
    fNx = nx;
    fMy = my;
    fMz = mz;
@@ -112,6 +116,8 @@ TVectorD &iclo,TVectorD &icup)
 //______________________________________________________________________________
 TQpResidual::TQpResidual(const TQpResidual &another) : TObject(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -336,6 +342,8 @@ void TQpResidual::GondzioProjection(TVectorD &v,Double_t rmin,Double_t rmax)
 //______________________________________________________________________________
 TQpResidual &TQpResidual::operator=(const TQpResidual &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TObject::operator=(source);
 

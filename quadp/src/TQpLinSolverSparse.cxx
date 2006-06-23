@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverSparse.cxx,v 1.4 2004/06/09 12:23:16 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverSparse.cxx,v 1.5 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -56,8 +56,10 @@ ClassImp(TQpLinSolverSparse)
 
 //______________________________________________________________________________
 TQpLinSolverSparse::TQpLinSolverSparse(TQpProbSparse *factory,TQpDataSparse *data) :
-TQpLinSolverBase(factory,data)
+                    TQpLinSolverBase(factory,data)
 {
+// Constructor
+
    const Int_t n = factory->fNx+factory->fMy+factory->fMz;
    fKkt.ResizeTo(n,n);
 
@@ -86,6 +88,8 @@ void TQpLinSolverSparse::Factor(TQpDataBase *prob,TQpVar *vars)
 TQpLinSolverSparse::TQpLinSolverSparse(const TQpLinSolverSparse &another) :
 TQpLinSolverBase(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -118,6 +122,8 @@ void TQpLinSolverSparse::SolveCompressed(TVectorD &compressedRhs)
 //______________________________________________________________________________
 TQpLinSolverSparse &TQpLinSolverSparse::operator=(const TQpLinSolverSparse &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TQpLinSolverBase::operator=(source);
       fKkt.ResizeTo(source.fKkt); fKkt = source.fKkt;

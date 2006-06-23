@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TMehrotraSolver.cxx,v 1.3 2004/06/09 12:23:16 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TMehrotraSolver.cxx,v 1.4 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -54,6 +54,8 @@ ClassImp(TMehrotraSolver)
 //______________________________________________________________________________
 TMehrotraSolver::TMehrotraSolver()
 {
+// Default constructor
+
    fPrintlevel = 0;
    fTsig       = 0.0;
    fStep       = 0;
@@ -64,6 +66,8 @@ TMehrotraSolver::TMehrotraSolver()
 //______________________________________________________________________________
 TMehrotraSolver::TMehrotraSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose)
 {
+// Constructor
+
    fFactory = of;
    fStep = fFactory->MakeVariables(prob);
 
@@ -75,6 +79,8 @@ TMehrotraSolver::TMehrotraSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose
 //______________________________________________________________________________
 TMehrotraSolver::TMehrotraSolver(const TMehrotraSolver &another) : TQpSolverBase(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -152,9 +158,9 @@ Int_t TMehrotraSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resi
 
 //______________________________________________________________________________
 void TMehrotraSolver::DefMonitor(TQpDataBase * /* data */,TQpVar * /* vars */,
-TQpResidual *resids,
-Double_t alpha,Double_t /* sigma */,Int_t i,Double_t mu,
-Int_t status_code,Int_t level)
+                                 TQpResidual *resids,
+                                 Double_t alpha,Double_t /* sigma */,Int_t i,Double_t mu,
+                                 Int_t status_code,Int_t level)
 {
    switch (level) {
       case 0 : case 1:
@@ -193,6 +199,8 @@ Int_t status_code,Int_t level)
 //______________________________________________________________________________
 TMehrotraSolver::~TMehrotraSolver()
 {
+// Deconstructor
+
    delete fStep;
 }
 
@@ -200,6 +208,8 @@ TMehrotraSolver::~TMehrotraSolver()
 //______________________________________________________________________________
 TMehrotraSolver &TMehrotraSolver::operator=(const TMehrotraSolver &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TQpSolverBase::operator=(source);
 

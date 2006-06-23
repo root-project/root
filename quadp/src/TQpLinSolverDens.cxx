@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverDens.cxx,v 1.4 2004/06/09 12:23:16 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverDens.cxx,v 1.5 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -56,8 +56,10 @@ ClassImp(TQpLinSolverDens)
 
 //______________________________________________________________________________
 TQpLinSolverDens::TQpLinSolverDens(TQpProbDens *factory,TQpDataDens *data) :
-TQpLinSolverBase(factory,data)
+                  TQpLinSolverBase(factory,data)
 {
+// Constructor
+
    const Int_t n = factory->fNx+factory->fMy+factory->fMz;
    fKkt.ResizeTo(n,n);
 
@@ -116,6 +118,8 @@ void TQpLinSolverDens::SolveCompressed(TVectorD &compressedRhs)
 //______________________________________________________________________________
 TQpLinSolverDens &TQpLinSolverDens::operator=(const TQpLinSolverDens &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TQpLinSolverBase::operator=(source);
       fKkt.ResizeTo(source.fKkt); fKkt = source.fKkt;

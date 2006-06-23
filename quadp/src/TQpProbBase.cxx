@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.cxx,v 1.3 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -60,6 +60,8 @@ ClassImp(TQpProbBase)
 //______________________________________________________________________________
 TQpProbBase::TQpProbBase()
 {
+// Default constructor
+
    fNx = 0;
    fMy = 0;
    fMz = 0;
@@ -69,6 +71,8 @@ TQpProbBase::TQpProbBase()
 //______________________________________________________________________________
 TQpProbBase::TQpProbBase(Int_t nx,Int_t my,Int_t mz)
 {
+// Constructor
+
    fNx = nx;
    fMy = my;
    fMz = mz;
@@ -78,6 +82,8 @@ TQpProbBase::TQpProbBase(Int_t nx,Int_t my,Int_t mz)
 //______________________________________________________________________________
 TQpProbBase::TQpProbBase(const TQpProbBase &another) : TObject(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -85,6 +91,8 @@ TQpProbBase::TQpProbBase(const TQpProbBase &another) : TObject(another)
 //______________________________________________________________________________
 TQpProbBase &TQpProbBase::operator=(const TQpProbBase &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TObject::operator=(source);
       fNx = source.fNx;

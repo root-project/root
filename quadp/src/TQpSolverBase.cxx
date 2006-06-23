@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpSolverBase.cxx,v 1.4 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpSolverBase.cxx,v 1.5 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -53,6 +53,8 @@ ClassImp(TQpSolverBase)
 //______________________________________________________________________________
 TQpSolverBase::TQpSolverBase()
 {
+// Default constructor
+
    fSys = 0;
 
    fDnorm = 0.;
@@ -79,6 +81,8 @@ TQpSolverBase::TQpSolverBase()
 //______________________________________________________________________________
 TQpSolverBase::TQpSolverBase(const TQpSolverBase &another) : TObject(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -86,6 +90,8 @@ TQpSolverBase::TQpSolverBase(const TQpSolverBase &another) : TObject(another)
 //______________________________________________________________________________
 TQpSolverBase::~TQpSolverBase()
 {
+// Deconstructor
+
    if (fSys) { delete fSys; fSys = 0; }
 
    if (fMu_history) { delete [] fMu_history;      fMu_history      = 0; }
@@ -97,7 +103,7 @@ TQpSolverBase::~TQpSolverBase()
 
 //______________________________________________________________________________
 void TQpSolverBase::Start(TQpProbBase *formulation,TQpVar *iterate,TQpDataBase *prob,
-TQpResidual *resid,TQpVar *step)
+                          TQpResidual *resid,TQpVar *step)
 {
    this->DefStart(formulation,iterate,prob,resid,step);
 }
@@ -105,7 +111,7 @@ TQpResidual *resid,TQpVar *step)
 
 //______________________________________________________________________________
 void TQpSolverBase::DefStart(TQpProbBase * /* formulation */,TQpVar *iterate,
-TQpDataBase *prob,TQpResidual *resid,TQpVar *step)
+                             TQpDataBase *prob,TQpResidual *resid,TQpVar *step)
 {
    Double_t sdatanorm = TMath::Sqrt(fDnorm);
    Double_t a         = sdatanorm;
@@ -129,8 +135,8 @@ TQpDataBase *prob,TQpResidual *resid,TQpVar *step)
 
 //______________________________________________________________________________
 void TQpSolverBase::SteveStart(TQpProbBase * /* formulation */,
-TQpVar *iterate,TQpDataBase *prob,
-TQpResidual *resid,TQpVar *step)
+                               TQpVar *iterate,TQpDataBase *prob,
+                               TQpResidual *resid,TQpVar *step)
 {
    Double_t sdatanorm = TMath::Sqrt(fDnorm);
    Double_t a = 0.0;
@@ -173,8 +179,8 @@ TQpResidual *resid,TQpVar *step)
 
 //______________________________________________________________________________
 void TQpSolverBase::DumbStart(TQpProbBase * /* formulation */,
-TQpVar *iterate,TQpDataBase * /* prob */,
-TQpResidual * /* resid */,TQpVar * /* step */)
+                              TQpVar *iterate,TQpDataBase * /* prob */,
+                              TQpResidual * /* resid */,TQpVar * /* step */)
 {
    const Double_t sdatanorm = fDnorm;
    const Double_t a = 1.e3;
@@ -221,8 +227,8 @@ Double_t TQpSolverBase::FinalStepLength(TQpVar *iterate,TQpVar *step)
 
 //______________________________________________________________________________
 void TQpSolverBase::DoMonitor(TQpDataBase *data,TQpVar *vars,TQpResidual *resids,
-Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
-Int_t stop_code,Int_t level)
+                              Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
+                              Int_t stop_code,Int_t level)
 {
    this->DefMonitor(data,vars,resids,alpha,sigma,i,mu,stop_code,level);
 }
@@ -230,7 +236,7 @@ Int_t stop_code,Int_t level)
 
 //______________________________________________________________________________
 Int_t TQpSolverBase::DoStatus(TQpDataBase *data,TQpVar *vars,TQpResidual *resids,
-Int_t i,Double_t mu,Int_t level)
+                              Int_t i,Double_t mu,Int_t level)
 {
    return this->DefStatus(data,vars,resids,i,mu,level);
 }
@@ -238,7 +244,7 @@ Int_t i,Double_t mu,Int_t level)
 
 //______________________________________________________________________________
 Int_t TQpSolverBase::DefStatus(TQpDataBase * /* data */,TQpVar * /* vars */,
-TQpResidual *resids,Int_t iterate,Double_t mu,Int_t /* level */)
+                               TQpResidual *resids,Int_t iterate,Double_t mu,Int_t /* level */)
 {
    Int_t stop_code = kNOT_FINISHED;
 
@@ -289,6 +295,8 @@ TQpResidual *resids,Int_t iterate,Double_t mu,Int_t /* level */)
 //______________________________________________________________________________
 TQpSolverBase &TQpSolverBase::operator=(const TQpSolverBase &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TObject::operator=(source);
 

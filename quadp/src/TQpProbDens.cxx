@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TQpProbDens.cxx,v 1.5 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TQpProbDens.cxx,v 1.6 2006/06/02 12:48:21 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Mar 2004
 
 /*************************************************************************
@@ -54,10 +54,12 @@
 ClassImp(TQpProbDens)
 
 //______________________________________________________________________________
-TQpProbDens::TQpProbDens(Int_t nx,Int_t my,Int_t mz)
-: TQpProbBase(nx,my,mz)
+TQpProbDens::TQpProbDens(Int_t nx,Int_t my,Int_t mz) :
+             TQpProbBase(nx,my,mz)
 {
-   // We do not wanr more constrains than variables
+// Constructor
+
+   // We do not want more constrains than variables
    R__ASSERT(nx-my-mz > 0);
 }
 
@@ -65,19 +67,21 @@ TQpProbDens::TQpProbDens(Int_t nx,Int_t my,Int_t mz)
 //______________________________________________________________________________
 TQpProbDens::TQpProbDens(const TQpProbDens &another) : TQpProbBase(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
 
 //______________________________________________________________________________
 TQpDataBase *TQpProbDens::MakeData(Double_t *c,
-Double_t *Q,
-Double_t *xlo,Bool_t   *ixlo,
-Double_t *xup,Bool_t   *ixup,
-Double_t *A,  Double_t *bA,
-Double_t *C,
-Double_t *clo,Bool_t   *iclo,
-Double_t *cup,Bool_t   *icup)
+                                   Double_t *Q,
+                                   Double_t *xlo,Bool_t   *ixlo,
+                                   Double_t *xup,Bool_t   *ixup,
+                                   Double_t *A,  Double_t *bA,
+                                   Double_t *C,
+                                   Double_t *clo,Bool_t   *iclo,
+                                   Double_t *cup,Bool_t   *icup)
 {
    TVectorD    vc  ; vc  .Use(fNx,c);
    TMatrixDSym mQ  ; mQ  .Use(fNx,Q);
@@ -121,13 +125,13 @@ Double_t *cup,Bool_t   *icup)
 
 //______________________________________________________________________________
 TQpDataBase *TQpProbDens::MakeData(TVectorD     &c,
-TMatrixDBase &Q_in,
-TVectorD     &xlo, TVectorD &ixlo,
-TVectorD     &xup, TVectorD &ixup,
-TMatrixDBase &A_in,TVectorD &bA,
-TMatrixDBase &C_in,
-TVectorD     &clo, TVectorD &iclo,
-TVectorD     &cup, TVectorD &icup)
+                                   TMatrixDBase &Q_in,
+                                   TVectorD     &xlo, TVectorD &ixlo,
+                                   TVectorD     &xup, TVectorD &ixup,
+                                   TMatrixDBase &A_in,TVectorD &bA,
+                                   TMatrixDBase &C_in,
+                                   TVectorD     &clo, TVectorD &iclo,
+                                   TVectorD     &cup, TVectorD &icup)
 {
    TMatrixDSym &mQ = (TMatrixDSym &) Q_in;
    TMatrixD    &mA = (TMatrixD    &) A_in;
@@ -212,6 +216,8 @@ void TQpProbDens::MakeRandomData(TQpDataDens *&data,TQpVar *&soln,Int_t /*nnzQ*/
 //______________________________________________________________________________
 TQpProbDens &TQpProbDens::operator=(const TQpProbDens &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TQpProbBase::operator=(source);
    }

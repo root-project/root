@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbSparse.cxx,v 1.5 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbSparse.cxx,v 1.6 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -54,10 +54,12 @@
 ClassImp(TQpProbSparse)
 
 //______________________________________________________________________________
-TQpProbSparse::TQpProbSparse(Int_t nx,Int_t my,Int_t mz)
-: TQpProbBase(nx,my,mz)
+TQpProbSparse::TQpProbSparse(Int_t nx,Int_t my,Int_t mz) :
+               TQpProbBase(nx,my,mz)
 {
-   // We do not wanr more constrains than variables
+// Constructor
+
+   // We do not want more constrains than variables
    R__ASSERT(nx-my-mz > 0);
 }
 
@@ -65,20 +67,22 @@ TQpProbSparse::TQpProbSparse(Int_t nx,Int_t my,Int_t mz)
 //______________________________________________________________________________
 TQpProbSparse::TQpProbSparse(const TQpProbSparse &another) : TQpProbBase(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
 
 //______________________________________________________________________________
 TQpDataBase *TQpProbSparse::MakeData(Double_t *c,
-Int_t nnzQ,Int_t *irowQ,Int_t *icolQ,Double_t *Q,
-Double_t *xlo,Bool_t *ixlo,
-Double_t *xup,Bool_t *ixup,
-Int_t nnzA,Int_t *irowA,Int_t *icolA,Double_t *A,
-Double_t *bA,
-Int_t nnzC,Int_t *irowC,Int_t *icolC,Double_t *C,
-Double_t *clo,Bool_t *iclo,
-Double_t *cup,Bool_t *icup)
+                                     Int_t nnzQ,Int_t *irowQ,Int_t *icolQ,Double_t *Q,
+                                     Double_t *xlo,Bool_t *ixlo,
+                                     Double_t *xup,Bool_t *ixup,
+                                     Int_t nnzA,Int_t *irowA,Int_t *icolA,Double_t *A,
+                                     Double_t *bA,
+                                     Int_t nnzC,Int_t *irowC,Int_t *icolC,Double_t *C,
+                                     Double_t *clo,Bool_t *iclo,
+                                     Double_t *cup,Bool_t *icup)
 {
    TVectorD       vc  ; vc  .Use(fNx,c);
    TMatrixDSparse mQ  ; mQ  .Use(fNx,fNx,nnzQ,irowQ,icolQ,Q);
@@ -122,13 +126,13 @@ Double_t *cup,Bool_t *icup)
 
 //______________________________________________________________________________
 TQpDataBase *TQpProbSparse::MakeData(TVectorD     &c,
-TMatrixDBase &Q_in,
-TVectorD     &xlo, TVectorD &ixlo,
-TVectorD     &xup, TVectorD &ixup,
-TMatrixDBase &A_in,TVectorD &bA,
-TMatrixDBase &C_in,
-TVectorD     &clo, TVectorD &iclo,
-TVectorD     &cup, TVectorD &icup)
+                                     TMatrixDBase &Q_in,
+                                     TVectorD     &xlo, TVectorD &ixlo,
+                                     TVectorD     &xup, TVectorD &ixup,
+                                     TMatrixDBase &A_in,TVectorD &bA,
+                                     TMatrixDBase &C_in,
+                                     TVectorD     &clo, TVectorD &iclo,
+                                     TVectorD     &cup, TVectorD &icup)
 {
    TMatrixDSparse &mQ = (TMatrixDSparse &) Q_in;
    TMatrixDSparse &mA = (TMatrixDSparse &) A_in;
@@ -214,6 +218,8 @@ void TQpProbSparse::MakeRandomData(TQpDataSparse *&data,TQpVar *&soln,Int_t nnzQ
 //______________________________________________________________________________
 TQpProbSparse &TQpProbSparse::operator=(const TQpProbSparse &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TQpProbBase::operator=(source);
    }

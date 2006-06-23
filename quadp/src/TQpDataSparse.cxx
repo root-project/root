@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.5 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.6 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -57,6 +57,8 @@ ClassImp(TQpDataSparse)
 TQpDataSparse::TQpDataSparse(Int_t nx,Int_t my,Int_t mz)
 : TQpDataBase(nx,my,mz)
 {
+// Constructor
+
    fQ.ResizeTo(fNx,fNx);
    fA.ResizeTo(fMy,fNx);
    fC.ResizeTo(fMz,fNx);
@@ -65,13 +67,15 @@ TQpDataSparse::TQpDataSparse(Int_t nx,Int_t my,Int_t mz)
 
 //______________________________________________________________________________
 TQpDataSparse::TQpDataSparse(TVectorD       &c_in,   TMatrixDSparse &Q_in,
-TVectorD       &xlow_in,TVectorD       &ixlow_in,
-TVectorD       &xupp_in,TVectorD       &ixupp_in,
-TMatrixDSparse &A_in,   TVectorD       &bA_in,
-TMatrixDSparse &C_in,
-TVectorD       &clow_in,TVectorD       &iclow_in,
-TVectorD       &cupp_in,TVectorD       &icupp_in)
+                             TVectorD       &xlow_in,TVectorD       &ixlow_in,
+                             TVectorD       &xupp_in,TVectorD       &ixupp_in,
+                             TMatrixDSparse &A_in,   TVectorD       &bA_in,
+                             TMatrixDSparse &C_in,
+                             TVectorD       &clow_in,TVectorD       &iclow_in,
+                             TVectorD       &cupp_in,TVectorD       &icupp_in)
 {
+// Constructor
+
    fG       .ResizeTo(c_in)    ; fG        = c_in;
    fBa      .ResizeTo(bA_in)   ; fBa       = bA_in;
    fXloBound.ResizeTo(xlow_in) ; fXloBound = xlow_in;
@@ -109,6 +113,8 @@ TVectorD       &cupp_in,TVectorD       &icupp_in)
 //______________________________________________________________________________
 TQpDataSparse::TQpDataSparse(const TQpDataSparse &another) : TQpDataBase(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -213,6 +219,8 @@ Double_t TQpDataSparse::DataNorm()
 //______________________________________________________________________________
 void TQpDataSparse::Print(Option_t * /*opt*/) const
 {
+// Print class members
+
    fQ.Print("Q");
    fG.Print("c");
 
@@ -316,6 +324,8 @@ void TQpDataSparse::DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s)
 //______________________________________________________________________________
 TQpDataSparse &TQpDataSparse::operator=(const TQpDataSparse &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TQpDataBase::operator=(source);
       fQ.ResizeTo(source.fQ); fQ = source.fQ;

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.7 2005/09/04 09:41:03 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.8 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -52,9 +52,18 @@
 
 ClassImp(TGondzioSolver)
 
+///////////////////////////////////////////////////////////////////////////
+//                                                                       //
+// Derived class of TQpSolverBase implementing Gondzio-correction        //
+// version of Mehrotra's original predictor-corrector algorithm.         //
+//                                                                       //
+///////////////////////////////////////////////////////////////////////////
+
 //______________________________________________________________________________
 TGondzioSolver::TGondzioSolver()
 {
+// Default constructor
+
    fPrintlevel               = 0;
    fTsig                     = 0.0;
    fMaximum_correctors       = 0;
@@ -76,6 +85,8 @@ TGondzioSolver::TGondzioSolver()
 //______________________________________________________________________________
 TGondzioSolver::TGondzioSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose)
 {
+// Constructor
+
    fFactory = of;
    fStep            = fFactory->MakeVariables(prob);
    fCorrector_step  = fFactory->MakeVariables(prob);
@@ -106,6 +117,8 @@ TGondzioSolver::TGondzioSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose)
 //______________________________________________________________________________
 TGondzioSolver::TGondzioSolver(const TGondzioSolver &another) : TQpSolverBase(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -256,9 +269,9 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
 
 //______________________________________________________________________________
 void TGondzioSolver::DefMonitor(TQpDataBase* /* data */,TQpVar* /* vars */,
-TQpResidual *resid,
-Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
-Int_t status_code,Int_t level)
+                                TQpResidual *resid,
+                                Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
+                                Int_t status_code,Int_t level)
 {
    switch (level) {
       case 0 : case 1:
@@ -305,6 +318,8 @@ Int_t status_code,Int_t level)
 //______________________________________________________________________________
 TGondzioSolver::~TGondzioSolver()
 {
+// Deconstructor
+
    if (fCorrector_step)  { delete fCorrector_step;  fCorrector_step  = 0; }
    if (fStep)            { delete fStep;            fStep            = 0; }
    if (fCorrector_resid) { delete fCorrector_resid; fCorrector_resid = 0; }
@@ -314,6 +329,8 @@ TGondzioSolver::~TGondzioSolver()
 //______________________________________________________________________________
 TGondzioSolver &TGondzioSolver::operator=(const TGondzioSolver &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TQpSolverBase::operator=(source);
 

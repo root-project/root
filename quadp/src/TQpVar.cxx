@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.6 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.7 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -55,6 +55,8 @@ ClassImp(TQpVar)
 //______________________________________________________________________________
 TQpVar::TQpVar()
 {
+// Default constructor
+
    fNx   = 0;
    fMy   = 0;
    fMz   = 0;
@@ -67,10 +69,12 @@ TQpVar::TQpVar()
 
 //______________________________________________________________________________
 TQpVar::TQpVar(TVectorD &x_in,TVectorD &s_in,TVectorD &y_in,TVectorD &z_in,
-TVectorD &v_in,TVectorD &gamma_in,TVectorD &w_in,TVectorD &phi_in,
-TVectorD &t_in,TVectorD &lambda_in,TVectorD &u_in,TVectorD &pi_in,
-TVectorD &ixlow_in,TVectorD &ixupp_in,TVectorD &iclow_in,TVectorD &icupp_in)
+               TVectorD &v_in,TVectorD &gamma_in,TVectorD &w_in,TVectorD &phi_in,
+               TVectorD &t_in,TVectorD &lambda_in,TVectorD &u_in,TVectorD &pi_in,
+               TVectorD &ixlow_in,TVectorD &ixupp_in,TVectorD &iclow_in,TVectorD &icupp_in)
 {
+// Constructor
+
    if (x_in     .GetNrows() > 0) fX.       Use(x_in     .GetNrows(),x_in     .GetMatrixArray());
    if (s_in     .GetNrows() > 0) fS.       Use(s_in     .GetNrows(),s_in     .GetMatrixArray());
    if (y_in     .GetNrows() > 0) fY.       Use(y_in     .GetNrows(),y_in     .GetMatrixArray());
@@ -120,8 +124,10 @@ TVectorD &ixlow_in,TVectorD &ixupp_in,TVectorD &iclow_in,TVectorD &icupp_in)
 
 //______________________________________________________________________________
 TQpVar::TQpVar(Int_t nx,Int_t my,Int_t mz,TVectorD &ixlow,TVectorD &ixupp,
-TVectorD &iclow,TVectorD &icupp)
+               TVectorD &iclow,TVectorD &icupp)
 {
+// Constructor
+
    R__ASSERT(nx == ixlow.GetNrows() || 0 == ixlow.GetNrows());
    R__ASSERT(nx == ixlow.GetNrows() || 0 == ixlow.GetNrows());
    R__ASSERT(mz == iclow.GetNrows() || 0 == iclow.GetNrows());
@@ -170,6 +176,8 @@ TVectorD &iclow,TVectorD &icupp)
 //______________________________________________________________________________
 TQpVar::TQpVar(const TQpVar &another) : TObject(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -366,11 +374,11 @@ Bool_t TQpVar::IsInteriorPoint()
 
 //______________________________________________________________________________
 Double_t TQpVar::FindBlocking(TQpVar   *step,
-Double_t &primalValue,
-Double_t &primalStep,
-Double_t &dualValue,
-Double_t &dualStep,
-Int_t    &fIrstOrSecond)
+                              Double_t &primalValue,
+                              Double_t &primalStep,
+                              Double_t &dualValue,
+                              Double_t &dualStep,
+                              Int_t    &fIrstOrSecond)
 {
    fIrstOrSecond = 0;
    Double_t alpha = 1.0;
@@ -396,8 +404,8 @@ Int_t    &fIrstOrSecond)
 
 //______________________________________________________________________________
 Double_t TQpVar::FindBlocking(TVectorD &w,TVectorD &wstep,TVectorD &u,TVectorD &ustep,
-Double_t maxStep,Double_t &w_elt,Double_t &wstep_elt,Double_t &u_elt,
-Double_t &ustep_elt,int& fIrst_or_second)
+                              Double_t maxStep,Double_t &w_elt,Double_t &wstep_elt,Double_t &u_elt,
+                              Double_t &ustep_elt,int& fIrst_or_second)
 {
    return FindBlockingSub(w.GetNrows(),
       w.GetMatrixArray(),    1,
@@ -413,14 +421,14 @@ Double_t &ustep_elt,int& fIrst_or_second)
 
 //______________________________________________________________________________
 Double_t TQpVar::FindBlockingSub(Int_t n,
-Double_t *w,    Int_t incw,
-Double_t *wstep,Int_t incwstep,
-Double_t *u,    Int_t incu,
-Double_t *ustep,Int_t incustep,
-Double_t maxStep,
-Double_t &w_elt,Double_t &wstep_elt,
-Double_t &u_elt,Double_t &ustep_elt,
-Int_t &fIrst_or_second)
+                                 Double_t *w,    Int_t incw,
+                                 Double_t *wstep,Int_t incwstep,
+                                 Double_t *u,    Int_t incu,
+                                 Double_t *ustep,Int_t incustep,
+                                 Double_t maxStep,
+                                 Double_t &w_elt,Double_t &wstep_elt,
+                                 Double_t &u_elt,Double_t &ustep_elt,
+                                 Int_t &fIrst_or_second)
 {
    Double_t bound = maxStep;
 
@@ -580,6 +588,8 @@ void TQpVar::ShiftBoundVariables(Double_t alpha,Double_t beta)
 //______________________________________________________________________________
 void TQpVar::Print(Option_t * /*option*/) const
 {
+// Print class members
+
    cout << "fNx  : " << fNx   << endl;
    cout << "fMy  : " << fMy   << endl;
    cout << "fMz  : " << fMz   << endl;
@@ -705,6 +715,8 @@ Bool_t TQpVar::ValidNonZeroPattern()
 //______________________________________________________________________________
 TQpVar &TQpVar::operator=(const TQpVar &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TObject::operator=(source);
       fNx       = source.fNx;

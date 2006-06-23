@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataBase.cxx,v 1.3 2005/09/04 10:02:30 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataBase.cxx,v 1.4 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -55,6 +55,8 @@ ClassImp(TQpDataBase)
 //______________________________________________________________________________
 TQpDataBase::TQpDataBase()
 {
+// Default constructor
+
    fNx = 0;
    fMy = 0;
    fMz = 0;
@@ -64,6 +66,8 @@ TQpDataBase::TQpDataBase()
 //______________________________________________________________________________
 TQpDataBase::TQpDataBase(Int_t nx,Int_t my,Int_t mz)
 {
+// Constructor
+
    fNx = nx;
    fMy = my;
    fMz = mz;
@@ -87,15 +91,17 @@ TQpDataBase::TQpDataBase(Int_t nx,Int_t my,Int_t mz)
 //______________________________________________________________________________
 TQpDataBase::TQpDataBase(const TQpDataBase &another) : TObject(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
 
 //______________________________________________________________________________
 void TQpDataBase::RandomlyChooseBoundedVariables(
-TVectorD &x,TVectorD &dualx,TVectorD &xlow,TVectorD &ixlow,
-TVectorD &xupp,TVectorD &ixupp,Double_t &ix,Double_t percentLowerOnly,
-Double_t percentUpperOnly,Double_t percentBound)
+                           TVectorD &x,TVectorD &dualx,TVectorD &xlow,TVectorD &ixlow,
+                           TVectorD &xupp,TVectorD &ixupp,Double_t &ix,Double_t percentLowerOnly,
+                           Double_t percentUpperOnly,Double_t percentBound)
 {
    // Initialize the upper and lower bounds on x
    const Int_t n = x.GetNrows();

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.cxx,v 1.4 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.cxx,v 1.5 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -57,6 +57,8 @@ ClassImp(TQpLinSolverBase)
 //______________________________________________________________________________
 TQpLinSolverBase::TQpLinSolverBase()
 {
+// Default constructor
+
    fNx   = 0;
    fMy   = 0;
    fMz   = 0;
@@ -70,6 +72,8 @@ TQpLinSolverBase::TQpLinSolverBase()
 //______________________________________________________________________________
 TQpLinSolverBase::TQpLinSolverBase(TQpProbBase *factory,TQpDataBase *data)
 {
+// Constructor
+
    fFactory = factory;
 
    fNx = data->fNx;
@@ -99,6 +103,8 @@ TQpLinSolverBase::TQpLinSolverBase(TQpProbBase *factory,TQpDataBase *data)
 //______________________________________________________________________________
 TQpLinSolverBase::TQpLinSolverBase(const TQpLinSolverBase &another) : TObject(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -126,10 +132,10 @@ void TQpLinSolverBase::Factor(TQpDataBase * /* prob */,TQpVar *vars)
 
 //______________________________________________________________________________
 void TQpLinSolverBase::ComputeDiagonals(TVectorD &dd,TVectorD &omega,
-TVectorD &t, TVectorD &lambda,
-TVectorD &u, TVectorD &pi,
-TVectorD &v, TVectorD &gamma,
-TVectorD &w, TVectorD &phi)
+                                        TVectorD &t, TVectorD &lambda,
+                                        TVectorD &u, TVectorD &pi,
+                                        TVectorD &v, TVectorD &gamma,
+                                        TVectorD &w, TVectorD &phi)
 {
    if (fNxup+fNxlo > 0) {
       if (fNxlo > 0) AddElemDiv(dd,1.0,gamma,v,fXloIndex);
@@ -240,8 +246,8 @@ void TQpLinSolverBase::Solve(TQpDataBase *prob,TQpVar *vars,TQpResidual *res,TQp
 
 //______________________________________________________________________________
 void TQpLinSolverBase::SolveXYZS(TVectorD &stepx,TVectorD &stepy,
-TVectorD &stepz,TVectorD &steps,
-TVectorD & /* ztemp */, TQpDataBase * /* prob */ )
+                                 TVectorD &stepz,TVectorD &steps,
+                                 TVectorD & /* ztemp */, TQpDataBase * /* prob */ )
 {
    AddElemMult(stepz,-1.0,fNomegaInv,steps);
    this->JoinRHS(fRhs,stepx,stepy,stepz);
@@ -261,7 +267,7 @@ TVectorD & /* ztemp */, TQpDataBase * /* prob */ )
 
 //______________________________________________________________________________
 void TQpLinSolverBase::JoinRHS(TVectorD &rhs_in, TVectorD &rhs1_in,
-TVectorD &rhs2_in,TVectorD &rhs3_in)
+                               TVectorD &rhs2_in,TVectorD &rhs3_in)
 {
    // joinRHS has to be delegated to the factory. This is true because
    // the rhs may be distributed across processors, so the factory is the
@@ -272,7 +278,7 @@ TVectorD &rhs2_in,TVectorD &rhs3_in)
 
 //______________________________________________________________________________
 void TQpLinSolverBase::SeparateVars(TVectorD &x_in,TVectorD &y_in,
-TVectorD &z_in,TVectorD &vars_in)
+                                    TVectorD &z_in,TVectorD &vars_in)
 {
    // separateVars has to be delegated to the factory. This is true because
    // the rhs may be distributed across processors, so the factory is the
@@ -284,6 +290,8 @@ TVectorD &z_in,TVectorD &vars_in)
 //______________________________________________________________________________
 TQpLinSolverBase &TQpLinSolverBase::operator=(const TQpLinSolverBase &source)
 {
+// Assignment opeartor
+
    if (this != &source) {
       TObject::operator=(source);
 

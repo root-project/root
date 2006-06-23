@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.cxx,v 1.5 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.cxx,v 1.6 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -57,6 +57,8 @@ ClassImp(TQpDataDens)
 TQpDataDens::TQpDataDens(Int_t nx,Int_t my,Int_t mz)
 : TQpDataBase(nx,my,mz)
 {
+// Constructor
+
    fQ.ResizeTo(fNx,fNx);
    fA.ResizeTo(fMy,fNx);
    fC.ResizeTo(fMz,fNx);
@@ -65,13 +67,15 @@ TQpDataDens::TQpDataDens(Int_t nx,Int_t my,Int_t mz)
 
 //______________________________________________________________________________
 TQpDataDens::TQpDataDens(TVectorD &c_in,   TMatrixDSym &Q_in,
-TVectorD &xlow_in,TVectorD    &ixlow_in,
-TVectorD &xupp_in,TVectorD    &ixupp_in,
-TMatrixD &A_in,   TVectorD    &bA_in,
-TMatrixD &C_in,
-TVectorD &clow_in,TVectorD    &iclow_in,
-TVectorD &cupp_in,TVectorD    &icupp_in)
+                         TVectorD &xlow_in,TVectorD    &ixlow_in,
+                         TVectorD &xupp_in,TVectorD    &ixupp_in,
+                         TMatrixD &A_in,   TVectorD    &bA_in,
+                         TMatrixD &C_in,
+                         TVectorD &clow_in,TVectorD    &iclow_in,
+                         TVectorD &cupp_in,TVectorD    &icupp_in)
 {
+// Constructor
+
    fG       .ResizeTo(c_in)    ; fG        = c_in;
    fBa      .ResizeTo(bA_in)   ; fBa       = bA_in;
    fXloBound.ResizeTo(xlow_in) ; fXloBound = xlow_in;
@@ -103,6 +107,8 @@ TVectorD &cupp_in,TVectorD    &icupp_in)
 //______________________________________________________________________________
 TQpDataDens::TQpDataDens(const TQpDataDens &another) : TQpDataBase(another)
 {
+// Copy constructor
+
    *this = another;
 }
 
@@ -198,6 +204,8 @@ Double_t TQpDataDens::DataNorm()
 //______________________________________________________________________________
 void TQpDataDens::Print(Option_t * /*opt*/) const
 {
+// Print all class members
+
    fQ.Print("Q");
    fG.Print("c");
 
@@ -298,6 +306,8 @@ void TQpDataDens::DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s)
 //______________________________________________________________________________
 TQpDataDens &TQpDataDens::operator=(const TQpDataDens &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TQpDataBase::operator=(source);
       fQ.ResizeTo(source.fQ); fQ = source.fQ;
