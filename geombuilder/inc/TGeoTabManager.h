@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.h,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -34,6 +34,7 @@ class TGTab;
 class TGComboBox;
 class TGListTree;
 class TGListTreeItem;
+class TGCanvas;
 
 class TGeoShape;
 class TGeoVolume;
@@ -45,41 +46,17 @@ class TGeoTreeDialog;
 class TGeoTransientPanel;
 
 class TGeoTabManager : public TObject {
-public:
-   enum EGeoTabType {
-//      kTabShape, 
-      kTabVolume
-//      kTabMatrix,
-//      kTabMedium,
-//      kTabMaterial
-   };   
+
 private:
    TVirtualPad         *fPad;               // Pad to which this applies
    TGTab               *fTab;               // Parent tab
-//   TGeoShape           *fShape;             // Edited shape
    TGeoVolume          *fVolume;            // Edited volume
-//   TGeoMedium          *fMedium;            // Edited medium
-//   TGeoMaterial        *fMaterial;          // Edited material
-//   TGeoMatrix          *fMatrix;            // Edited matrix
-//   TGCompositeFrame    *fShapeTab;          // Shape tab
-//   TGCompositeFrame    *fShapeCont;         // Shape tab container
    TGeoTransientPanel  *fShapePanel;        // Panel for editing shapes
    TGeoTransientPanel  *fMediumPanel;       // Panel for editing media
    TGeoTransientPanel  *fMaterialPanel;     // Panel for editing materials
    TGeoTransientPanel  *fMatrixPanel;       // Panel for editing matrices
    TGCompositeFrame    *fVolumeTab;         // Volume tab
    TGCompositeFrame    *fVolumeCont;        // Volume tab container
-//   TGCompositeFrame    *fMatrixTab;         // Matrix tab
-//   TGCompositeFrame    *fMatrixCont;        // Matrix tab container
-//   TGCompositeFrame    *fMediumTab;         // Medium tab
-//   TGCompositeFrame    *fMediumCont;        // Medium tab container
-//   TGCompositeFrame    *fMaterialTab;       // Material tab
-//   TGCompositeFrame    *fMaterialCont;      // Material tab container
-   TList               *fShapeCombos;       // List of combo boxes refering to shapes
-//   TList               *fVolumeCombos;      // List of combo boxes refering to volumes
-   TList               *fMatrixCombos;      // List of combo boxes refering to matrices
-   TList               *fMediumCombos;      // List of combo boxes refering to media
-   TList               *fMaterialCombos;    // List of combo boxes refering to materials
 
    void                CreateTabs();
    void                GetEditors(TClass *cl, TGCompositeFrame *style);
@@ -87,30 +64,15 @@ public:
    TGeoTabManager(TVirtualPad *pad, TGTab *tab);
    virtual ~TGeoTabManager();
 
-   static TGeoTabManager *GetMakeTabManager(TVirtualPad *pad, TGTab *tab);   
+   static TGeoTabManager *GetMakeTabManager(TVirtualPad *pad, TGTab *tab); 
+   static void         Cleanup(TGCompositeFrame *frame);  
    TVirtualPad        *GetPad() const {return fPad;}
    TGTab              *GetTab() const {return fTab;}
-   Int_t               GetTabIndex(EGeoTabType type) const;
-   void                SetEnabled(EGeoTabType type, Bool_t flag=kTRUE);
-   void                SetModel(EGeoTabType type, TObject *model, Int_t event=0);
-   void                SetTab(EGeoTabType type);
+   Int_t               GetTabIndex() const;
+   void                SetVolTabEnabled(Bool_t flag=kTRUE);
+   void                SetModel(TObject *model, Int_t event=0);
+   void                SetTab();
    
-   void                AddComboShape(TGComboBox *combo);
-   void                AddShape(const char *name, Int_t id);
-   void                UpdateShape(Int_t id);
-//   void                AddComboVolume(TGComboBox *combo);
-//   void                AddVolume(const char *name, Int_t id);
-//   void                UpdateVolume(Int_t id);
-   void                AddComboMatrix(TGComboBox *combo);
-   void                AddMatrix(const char *name, Int_t id);
-   void                UpdateMatrix(Int_t id);
-   void                AddComboMedium(TGComboBox *combo);
-   void                AddMedium(const char *name, Int_t id);
-   void                UpdateMedium(Int_t id);
-   void                AddComboMaterial(TGComboBox *combo);
-   void                AddMaterial(const char *name, Int_t id);
-   void                UpdateMaterial(Int_t id);
-
    void                GetShapeEditor(TGeoShape *shape);
    void                GetVolumeEditor(TGeoVolume *vol);
    void                GetMatrixEditor(TGeoMatrix *matrix);
@@ -118,21 +80,9 @@ public:
    void                GetMaterialEditor(TGeoMaterial *material);
 
 
-//   TGCompositeFrame   *GetShapeTab()     const {return fShapeTab;}
-//   TGCompositeFrame   *GetShapeCont()    const {return fShapeCont;}
    TGCompositeFrame   *GetVolumeTab()    const {return fVolumeTab;}
    TGCompositeFrame   *GetVolumeCont()   const {return fVolumeCont;}
-//   TGCompositeFrame   *GetMatrixTab()    const {return fMatrixTab;}
-//   TGCompositeFrame   *GetMatrixCont()   const {return fMatrixCont;}
-//   TGCompositeFrame   *GetMediumTab()    const {return fMediumTab;}
-//   TGCompositeFrame   *GetMediumCont()   const {return fMediumCont;}
-//   TGCompositeFrame   *GetMaterialTab()  const {return fMaterialTab;}
-//   TGCompositeFrame   *GetMaterialCont() const {return fMaterialCont;}
-//   TGeoShape          *GetShape() const    {return fShape;}
    TGeoVolume         *GetVolume() const   {return fVolume;}
-//   TGeoMedium         *GetMedium() const   {return fMedium;}
-//   TGeoMaterial       *GetMaterial() const {return fMaterial;}
-//   TGeoMatrix         *GetMatrix() const   {return fMatrix;}
 
    ClassDef(TGeoTabManager, 0)   // Tab manager for geometry editors
 };
@@ -141,8 +91,10 @@ class TGeoTreeDialog : public TGTransientFrame {
 
 protected:
    static TObject     *fgSelectedObj;       // Selected object
+   TGCanvas           *fCanvas;             // TGCanvas containing the list tree
    TGLabel            *fObjLabel;           // Label for selected object
    TGListTree         *fLT;                 // List tree for selecting
+   TGCompositeFrame   *f1;                  // Composite frame containing the selection
    TGTextButton       *fClose;              // Close button
 
    virtual void        BuildListTree() = 0;
@@ -246,6 +198,7 @@ public:
 };
 
 class TGeoTransientPanel : public TGMainFrame {
+   TGCanvas         *fCan;              // TGCanvas containing a TGTab
    TGTab            *fTab;              //tab widget holding the editor
    TGCompositeFrame *fTabContainer;     //main tab container
    TGCompositeFrame *fStyle;            //style tab container frame

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTrd2Editor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTrd2Editor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -33,7 +33,7 @@ ClassImp(TGeoTrd2Editor)
 
 enum ETGeoTrd2Wid {
    kTRD2_NAME, kTRD2_X1, kTRD2_X2,  kTRD2_Y1, kTRD2_Y2, kTRD2_Z,
-   kTRD2_APPLY, kTRD2_CANCEL, kTRD2_UNDO
+   kTRD2_APPLY, kTRD2_UNDO
 };
 
 //______________________________________________________________________________
@@ -125,20 +125,22 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t id, Int_t width,
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
       
+   // Delayed draw
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
+   fDelayed = new TGCheckButton(f1, "Delayed draw");
+   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+
    // Buttons
-   TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame | kDoubleBorder);
-   fApply = new TGTextButton(f23, "&Apply");
-   f23->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
+   fApply = new TGTextButton(f1, "Apply");
+   f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
-   fCancel = new TGTextButton(f23, "&Cancel");
-   f23->AddFrame(fCancel, new TGLayoutHints(kLHintsCenterX, 2, 2, 4, 4));
-   fCancel->Associate(this);
-   fUndo = new TGTextButton(f23, " &Undo ");
-   f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   fUndo = new TGTextButton(f1, "Undo");
+   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
-   fUndo->SetSize(fCancel->GetSize());
-   fApply->SetSize(fCancel->GetSize());
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   fUndo->SetSize(fApply->GetSize());
 
    // Initialize layout
    MapSubwindows();
@@ -158,10 +160,9 @@ TGeoTrd2Editor::~TGeoTrd2Editor()
 // Destructor.
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
    TClass *cl = TGeoTrd2::Class();
@@ -181,7 +182,6 @@ void TGeoTrd2Editor::ConnectSignals2Slots()
 {
    // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoTrd2Editor", this, "DoApply()");
-   fCancel->Connect("Clicked()", "TGeoTrd2Editor", this, "DoCancel()");
    fUndo->Connect("Clicked()", "TGeoTrd2Editor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoTrd2Editor", this, "DoModified()");
    fEDx1->Connect("ValueSet(Long_t)", "TGeoTrd2Editor", this, "DoDx1()");
@@ -227,10 +227,16 @@ void TGeoTrd2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fEDz->SetNumber(fDzi);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
    
    if (fInit) ConnectSignals2Slots();
    SetActive();
+}
+
+//______________________________________________________________________________
+Bool_t TGeoTrd2Editor::IsDelayed() const
+{
+// Check if shape drawing is delayed.
+   return (fDelayed->GetState() == kButtonDown);
 }
 
 //______________________________________________________________________________
@@ -245,11 +251,7 @@ void TGeoTrd2Editor::DoApply()
 {
 // Slot for applying modifications.
    const char *name = fShapeName->GetText();
-   if (strcmp(name,fShape->GetName())) {
-      fShape->SetName(name);
-      Int_t id = gGeoManager->GetListOfShapes()->IndexOf(fShape);
-      fTabMgr->UpdateShape(id);
-   }   
+   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t dx1 = fEDx1->GetNumber();
    Double_t dx2 = fEDx2->GetNumber();
    Double_t dy1 = fEDy1->GetNumber(); 
@@ -264,7 +266,6 @@ void TGeoTrd2Editor::DoApply()
    fShape->SetDimensions(param);
    fShape->ComputeBBox();
    fUndo->SetEnabled();
-   fCancel->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
    if (fPad) {
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
@@ -278,35 +279,22 @@ void TGeoTrd2Editor::DoApply()
 }
 
 //______________________________________________________________________________
-void TGeoTrd2Editor::DoCancel()
-{
-// Slot for cancelling current modifications.
-   fShapeName->SetText(fNamei.Data());
-   fEDx1->SetNumber(fDxi1);
-   fEDx2->SetNumber(fDxi2);
-   fEDy1->SetNumber(fDyi1);
-   fEDy2->SetNumber(fDyi2);
-   fEDz->SetNumber(fDzi);
-   fApply->SetEnabled(kFALSE);
-   fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
-}
-
-//______________________________________________________________________________
 void TGeoTrd2Editor::DoModified()
 {
 // Slot for signaling modifications.
    fApply->SetEnabled();
-   if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
 
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoUndo()
 {
 // Slot for undoing last operation.
-   DoCancel();
+   fEDx1->SetNumber(fDxi1);
+   fEDx2->SetNumber(fDxi2);
+   fEDy1->SetNumber(fDyi1);
+   fEDy2->SetNumber(fDyi2);
+   fEDz->SetNumber(fDzi);
    DoApply();
-   fCancel->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
@@ -315,35 +303,85 @@ void TGeoTrd2Editor::DoUndo()
 void TGeoTrd2Editor::DoDx1()
 {
 // Slot for dx1.
+   Double_t dx1 = fEDx1->GetNumber();
+   Double_t dx2 = fEDx2->GetNumber();
+   if (dx1<0) {
+      dx1 = 0;
+      fEDx1->SetNumber(dx1);
+   }
+   if (dx1<1.e-6 && dx2<1.e-6) {
+      dx1 = 0.1;
+      fEDx1->SetNumber(dx1);
+   }      
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoDx2()
 {
 // Slot for dx2.
+   Double_t dx1 = fEDx1->GetNumber();
+   Double_t dx2 = fEDx2->GetNumber();
+   if (dx2<0) {
+      dx2 = 0;
+      fEDx2->SetNumber(dx2);
+   }
+   if (dx1<1.e-6 && dx2<1.e-6) {
+      dx2 = 0.1;
+      fEDx2->SetNumber(dx2);
+   }      
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoDy1()
 {
 // Slot for dy1.
+   Double_t dy1 = fEDy1->GetNumber();
+   Double_t dy2 = fEDy2->GetNumber();
+   if (dy1<0) {
+      dy1 = 0;
+      fEDy1->SetNumber(dy1);
+   }
+   if (dy1<1.e-6 && dy2<1.e-6) {
+      dy1 = 0.1;
+      fEDy1->SetNumber(dy1);
+   }      
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoDy2()
 {
 // Slot for dy2.
+   Double_t dy1 = fEDy1->GetNumber();
+   Double_t dy2 = fEDy2->GetNumber();
+   if (dy2<0) {
+      dy2 = 0;
+      fEDy2->SetNumber(dy2);
+   }
+   if (dy1<1.e-6 && dy2<1.e-6) {
+      dy2 = 0.1;
+      fEDy2->SetNumber(dy2);
+   }      
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
 void TGeoTrd2Editor::DoDz()
 {
 // Slot for dz.
+   Double_t dz = fEDz->GetNumber();
+   if (dz<=0) {
+      dz = 0.1;
+      fEDz->SetNumber(dz);
+   }
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 

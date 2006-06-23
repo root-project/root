@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoSphereEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoSphereEditor.cxx,v 1.3 2006/06/20 06:33:20 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -35,7 +35,7 @@ ClassImp(TGeoSphereEditor)
 enum ETGeoSphereWid {
    kSPHERE_NAME, kSPHERE_RMIN, kSPHERE_RMAX, kSPHERE_THETA1,
    kSPHERE_THETA2, kSPHERE_PHI1, kSPHERE_PHI2, kSPHERE_PHI, kSPHERE_THETA, 
-   kSPHERE_APPLY, kSPHERE_CANCEL, kSPHERE_UNDO
+   kSPHERE_APPLY, kSPHERE_UNDO
 };
 
 //______________________________________________________________________________
@@ -152,20 +152,22 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t id, Int_t width,
 
    AddFrame(f11, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
    
+   // Delayed draw
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
+   fDelayed = new TGCheckButton(f1, "Delayed draw");
+   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+
    // Buttons
-   TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame);
-   fApply = new TGTextButton(f23, "Apply");
-   f23->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
+   fApply = new TGTextButton(f1, "Apply");
+   f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
-   fCancel = new TGTextButton(f23, "Cancel");
-   f23->AddFrame(fCancel, new TGLayoutHints(kLHintsCenterX, 2, 2, 4, 4));
-   fCancel->Associate(this);
-   fUndo = new TGTextButton(f23, " Undo ");
-   f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   fUndo = new TGTextButton(f1, "Undo");
+   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
-   fUndo->SetSize(fCancel->GetSize());
-   fApply->SetSize(fCancel->GetSize());
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   fUndo->SetSize(fApply->GetSize());
 
    // Initialize layout
    MapSubwindows();
@@ -185,12 +187,12 @@ TGeoSphereEditor::~TGeoSphereEditor()
 // Destructor.
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoSphere::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
@@ -208,7 +210,6 @@ void TGeoSphereEditor::ConnectSignals2Slots()
 {
    // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoSphereEditor", this, "DoApply()");
-   fCancel->Connect("Clicked()", "TGeoSphereEditor", this, "DoCancel()");
    fUndo->Connect("Clicked()", "TGeoSphereEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoSphereEditor", this, "DoModified()");
    fERmin->Connect("ValueSet(Long_t)", "TGeoSphereEditor", this, "DoRmin()");
@@ -253,10 +254,16 @@ void TGeoSphereEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
    
    if (fInit) ConnectSignals2Slots();
    SetActive();
+}
+
+//______________________________________________________________________________
+Bool_t TGeoSphereEditor::IsDelayed() const
+{
+// Check if shape drawing is delayed.
+   return (fDelayed->GetState() == kButtonDown);
 }
 
 //______________________________________________________________________________
@@ -271,16 +278,12 @@ void TGeoSphereEditor::DoApply()
 {
 // Slot for applying modifications.
    const char *name = fShapeName->GetText();
-   if (strcmp(name,fShape->GetName())) {
-      fShape->SetName(name);
-//      Int_t id = gGeoManager->GetListOfShapes()->IndexOf(fShape);
-//      fTabMgr->UpdateShape(id);
-   }   
+   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
-   if ((phi2-phi1) > 360.) {
+   if ((phi2-phi1) > 360.001) {
       phi1 = 0.;
       phi2 = 360.;
       fEPhi1->SetNumber(phi1);
@@ -294,7 +297,6 @@ void TGeoSphereEditor::DoApply()
    fShape->SetSphDimensions(rmin, rmax, theta1,theta2,phi1,phi2);
    fShape->ComputeBBox();
    fUndo->SetEnabled();
-   fCancel->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
    if (fPad) {
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
@@ -308,10 +310,16 @@ void TGeoSphereEditor::DoApply()
 }
 
 //______________________________________________________________________________
-void TGeoSphereEditor::DoCancel()
+void TGeoSphereEditor::DoModified()
 {
-// Slot for cancelling current modifications.
-   fShapeName->SetText(fNamei.Data());
+// Slot for signaling modifications.
+   fApply->SetEnabled();
+}
+
+//______________________________________________________________________________
+void TGeoSphereEditor::DoUndo()
+{
+// Slot for undoing last operation.
    fERmin->SetNumber(fRmini);
    fERmax->SetNumber(fRmaxi);
    fEPhi1->SetNumber(fPhi1i);
@@ -320,26 +328,7 @@ void TGeoSphereEditor::DoCancel()
    fETheta1->SetNumber(fTheta1i);
    fETheta2->SetNumber(fTheta2i);
    fSTheta->SetPosition(fTheta1i,fTheta2i);
-   fApply->SetEnabled(kFALSE);
-   fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
-}
-
-//______________________________________________________________________________
-void TGeoSphereEditor::DoModified()
-{
-// Slot for signaling modifications.
-   fApply->SetEnabled();
-   if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
-}
-
-//______________________________________________________________________________
-void TGeoSphereEditor::DoUndo()
-{
-// Slot for undoing last operation.
-   DoCancel();
    DoApply();
-   fCancel->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
@@ -350,11 +339,16 @@ void TGeoSphereEditor::DoRmin()
 // Slot for Rmin.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
-   if (rmax<rmin+1.e-10) {
-      rmax = rmin + 0.1;
-      fERmax->SetNumber(rmax);
+   if (rmin <= 0.) {
+       rmin = 0.;
+       fERmin->SetNumber(rmin);
+   }   
+   if (rmin >= rmax) {
+      rmin = rmax - 0.1;
+      fERmin->SetNumber(rmin);
    }   
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -363,12 +357,17 @@ void TGeoSphereEditor::DoRmax()
 // Slot for Rmax.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
-   if (rmax<rmin+1.e-10) {
-      rmin = rmax - 0.1;
+   if (rmax <= 0.) {
+       rmax = 0.1;
+       fERmax->SetNumber(rmax);
+   }   
+   if (rmax < rmin+1.e-10) {
+      rmax = rmin + 0.1;
       if (rmin < 0.) rmin = 0.;
-      fERmin->SetNumber(rmin);
+      fERmax->SetNumber(rmax);
    }   
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -390,6 +389,7 @@ void TGeoSphereEditor::DoPhi1()
       fLock = kTRUE;
       fSPhi->SetPosition(phi1,phi2);
    } else fLock = kFALSE;
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -411,6 +411,7 @@ void TGeoSphereEditor::DoPhi2()
       fLock = kTRUE;
       fSPhi->SetPosition(phi1,phi2);
    } else fLock = kFALSE;
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -424,6 +425,7 @@ void TGeoSphereEditor::DoPhi()
       fLock = kTRUE;
       fEPhi2->SetNumber(fSPhi->GetMaxPosition());
    } else fLock = kFALSE;   
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -441,6 +443,7 @@ void TGeoSphereEditor::DoTheta1()
       fLock = kTRUE;
       fSTheta->SetPosition(theta1,theta2);
    } else fLock = kFALSE;
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -458,6 +461,7 @@ void TGeoSphereEditor::DoTheta2()
       fLock = kTRUE;
       fSTheta->SetPosition(theta1,theta2);
    } else fLock = kFALSE;
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -471,4 +475,5 @@ void TGeoSphereEditor::DoTheta()
       fLock = kTRUE;
       fETheta2->SetNumber(fSTheta->GetMaxPosition());
    } else fLock = kFALSE;   
+   if (!IsDelayed()) DoApply();
 }

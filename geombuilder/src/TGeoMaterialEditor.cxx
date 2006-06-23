@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoMaterialEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoMaterialEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -150,12 +150,12 @@ TGeoMaterialEditor::~TGeoMaterialEditor()
 // Destructor
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoMaterial::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
@@ -261,8 +261,6 @@ void TGeoMaterialEditor::DoApply()
 // Slot for applying modifications.
    const char *name = fMaterialName->GetText();
    fMaterial->SetName(name);
-   Int_t id = gGeoManager->GetListOfMaterials()->IndexOf(fMaterial);
-   fTabMgr->UpdateMaterial(id);
    fMatA->SetNumber(fAi);
    fMatZ->SetNumber(fZi);
    fMatDensity->SetNumber(fDensityi);

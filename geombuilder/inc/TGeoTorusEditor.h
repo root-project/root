@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTrd1Editor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -8,14 +8,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGeoTrd1Editor
-#define ROOT_TGeoTrd1Editor
+#ifndef ROOT_TGeoTorusEditor
+#define ROOT_TGeoTorusEditor
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  TGeoTrd1Editor                                                      //
+//  TGeoTorusEditor                                                      //
 //                                                                      //
-//  Editor for a TGeoTrd1.                                              //
+//  Editor for a TGeoTorus.                                              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -26,7 +26,7 @@
 #include "TGedFrame.h"
 #endif
 
-class TGeoTrd1;
+class TGeoTorus;
 class TGeoTabManager;
 class TGTextEntry;
 class TGNumberEntry;
@@ -36,24 +36,26 @@ class TGTextButton;
 class TGCheckButton;
 class TString;
 
-class TGeoTrd1Editor : public TGedFrame {
+class TGeoTorusEditor : public TGedFrame {
 
 protected:
 
-   Double_t             fDxi1;              // Initial  dx1
-   Double_t             fDxi2;              // Initial  dx2
-   Double_t             fDyi;               // Initial  dy
-   Double_t             fDzi;               // Initial  dz
+   Double_t             fRi;                // Initial  axial radius
+   Double_t             fRmini;             // Initial  inner radius
+   Double_t             fRmaxi;             // Initial  outer radius
+   Double_t             fPhi1i;             // Initial  starting phi1
+   Double_t             fDphii;             // Initial  phi extent
    TString              fNamei;             // Initial name
-   TGeoTrd1            *fShape;             // Shape object
+   TGeoTorus           *fShape;             // Shape object
    Bool_t               fIsModified;        // Flag that volume was modified
    Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
    TGeoTabManager      *fTabMgr;            // Tab manager
    TGTextEntry         *fShapeName;         // Shape name text entry
-   TGNumberEntry       *fEDx1;              // Number entry for  DX1
-   TGNumberEntry       *fEDx2;              // Number entry for  DX2 
-   TGNumberEntry       *fEDy;               // Number entry for  DY
-   TGNumberEntry       *fEDz;               // Number entry for  DZ
+   TGNumberEntry       *fER;                // Number entry for  R
+   TGNumberEntry       *fERmin;             // Number entry for  Rmin
+   TGNumberEntry       *fERmax;             // Number entry for  Rmax
+   TGNumberEntry       *fEPhi1;             // Number entry for  phi1
+   TGNumberEntry       *fEDphi;             // Number entry for  Dphi 
    TGTextButton        *fApply;             // Apply-Button to accept changes
    TGTextButton        *fUndo;              // Undo-Button
    TGCheckButton       *fDelayed;           // Check button for delayed draw
@@ -62,23 +64,24 @@ protected:
    Bool_t       IsDelayed() const;   
 
 public:
-   TGeoTrd1Editor(const TGWindow *p, Int_t id,               
+   TGeoTorusEditor(const TGWindow *p, Int_t id,               
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoTrd1Editor();
+   virtual ~TGeoTorusEditor();
    virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
 
-   void           DoDx1();
-   void           DoDx2();
-   void           DoDy();
-   void           DoDz();
+   void           DoR();
+   void           DoRmin();
+   void           DoRmax();
+   void           DoPhi1();
+   void           DoDphi();
    void           DoModified();
    void           DoName();
    void           DoApply();
    void           DoUndo();
    
-   ClassDef(TGeoTrd1Editor,0)   // TGeoTrd1 editor
+   ClassDef(TGeoTorusEditor,0)   // TGeoTorus editor
 };   
   
 #endif                    

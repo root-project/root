@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoConeEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoConeEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -34,7 +34,7 @@ ClassImp(TGeoConeEditor)
 
 enum ETGeoConeWid {
    kCONE_NAME, kCONE_RMIN1, kCONE_RMIN2, kCONE_RMAX1, kCONE_RMAX2, kCONE_Z,
-   kCONE_APPLY, kCONE_CANCEL, kCONE_UNDO
+   kCONE_APPLY, kCONE_UNDO
 };
 
 //______________________________________________________________________________
@@ -131,20 +131,22 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t id, Int_t width,
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
       
+   // Delayed draw
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
+   fDelayed = new TGCheckButton(f1, "Delayed draw");
+   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+
    // Buttons
-   TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame);
-   fApply = new TGTextButton(f23, "Apply");
-   f23->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
+   fApply = new TGTextButton(f1, "Apply");
+   f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
-   fCancel = new TGTextButton(f23, "Cancel");
-   f23->AddFrame(fCancel, new TGLayoutHints(kLHintsCenterX, 2, 2, 4, 4));
-   fCancel->Associate(this);
-   fUndo = new TGTextButton(f23, " Undo ");
-   f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   fUndo = new TGTextButton(f1, "Undo");
+   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
-   fUndo->SetSize(fCancel->GetSize());
-   fApply->SetSize(fCancel->GetSize());
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   fUndo->SetSize(fApply->GetSize());
 
    // Initialize layout
    MapSubwindows();
@@ -164,12 +166,12 @@ TGeoConeEditor::~TGeoConeEditor()
 // Destructor
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoCone::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
@@ -187,7 +189,6 @@ void TGeoConeEditor::ConnectSignals2Slots()
 {
    // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoConeEditor", this, "DoApply()");
-   fCancel->Connect("Clicked()", "TGeoConeEditor", this, "DoCancel()");
    fUndo->Connect("Clicked()", "TGeoConeEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoConeEditor", this, "DoModified()");
    fERmin1->Connect("ValueSet(Long_t)", "TGeoConeEditor", this, "DoRmin1()");
@@ -229,10 +230,16 @@ void TGeoConeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fEDz->SetNumber(fDzi);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
    
    if (fInit) ConnectSignals2Slots();
    SetActive();
+}
+
+//______________________________________________________________________________
+Bool_t TGeoConeEditor::IsDelayed() const
+{
+// Check if shape drawing is delayed.
+   return (fDelayed->GetState() == kButtonDown);
 }
 
 //______________________________________________________________________________
@@ -246,22 +253,21 @@ void TGeoConeEditor::DoName()
 void TGeoConeEditor::DoApply()
 {
    //Slot for applying current parameters.
+   fApply->SetEnabled(kFALSE);
    const char *name = fShapeName->GetText();
-   if (strcmp(name,fShape->GetName())) {
-      fShape->SetName(name);
-      Int_t id = gGeoManager->GetListOfShapes()->IndexOf(fShape);
-      fTabMgr->UpdateShape(id);
-   }   
+   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t rmin1 = fERmin1->GetNumber();
    Double_t rmin2 = fERmin2->GetNumber();
    Double_t rmax1 = fERmax1->GetNumber();
    Double_t rmax2 = fERmax2->GetNumber();
    Double_t dz = fEDz->GetNumber();
+   if (rmin1<0 || rmin1>rmax1) return; 
+   if (rmin2<0 || rmin2>rmax2) return;
+   if (dz<=0) return;
+   if (rmin1==rmax1 && rmin2==rmax2) return; 
    fShape->SetConeDimensions(dz, rmin1, rmax1, rmin2, rmax2);
    fShape->ComputeBBox();
    fUndo->SetEnabled();
-   fCancel->SetEnabled(kFALSE);
-   fApply->SetEnabled(kFALSE);
    if (fPad) {
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
          fShape->Draw();
@@ -274,35 +280,22 @@ void TGeoConeEditor::DoApply()
 }
 
 //______________________________________________________________________________
-void TGeoConeEditor::DoCancel()
-{
-   //Slot for changing current parameters.
-   fShapeName->SetText(fNamei.Data());
-   fERmin1->SetNumber(fRmini1);
-   fERmin2->SetNumber(fRmini2);
-   fERmax1->SetNumber(fRmaxi1);
-   fERmax2->SetNumber(fRmaxi2);
-   fEDz->SetNumber(fDzi);
-   fApply->SetEnabled(kFALSE);
-   fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
-}
-
-//______________________________________________________________________________
 void TGeoConeEditor::DoModified()
 {
    //Slot for modifing current parameters.
    fApply->SetEnabled();
-   if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
 
 //______________________________________________________________________________
 void TGeoConeEditor::DoUndo()
 {
    // Slot for undoing current operation.
-   DoCancel();
+   fERmin1->SetNumber(fRmini1);
+   fERmin2->SetNumber(fRmini2);
+   fERmax1->SetNumber(fRmaxi1);
+   fERmax2->SetNumber(fRmaxi2);
+   fEDz->SetNumber(fDzi);
    DoApply();
-   fCancel->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
@@ -313,11 +306,16 @@ void TGeoConeEditor::DoRmin1()
    // Slot for Rmin1
    Double_t rmin1 = fERmin1->GetNumber();
    Double_t rmax1 = fERmax1->GetNumber();
-   if (rmax1<rmin1+1.e-10) {
-      rmax1 = rmin1 + 0.1;
-      fERmax1->SetNumber(rmax1);
+   if (rmin1<0) {
+      rmin1 = 0;
+      fERmin1->SetNumber(rmin1);
+   }   
+   if (rmin1>rmax1) {
+      rmin1 = rmax1;
+      fERmin1->SetNumber(rmin1);
    }   
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -326,12 +324,12 @@ void TGeoConeEditor::DoRmax1()
    // Slot for Rmax1
    Double_t rmin1 = fERmin1->GetNumber();
    Double_t rmax1 = fERmax1->GetNumber();
-   if (rmax1<rmin1+1.e-10) {
-      rmin1 = rmax1 - 0.1;
-      if (rmin1 < 0.) rmin1 = 0.;
-      fERmin1->SetNumber(rmin1);
+   if (rmax1<rmin1) {
+      rmax1 = rmin1;
+      fERmax1->SetNumber(rmax1);
    }   
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -340,11 +338,16 @@ void TGeoConeEditor::DoRmin2()
    // Slot for Rmin2
    Double_t rmin2 = fERmin2->GetNumber();
    Double_t rmax2 = fERmax2->GetNumber();
-   if (rmax2<rmin2+1.e-10) {
-      rmax2 = rmin2 + 0.1;
-      fERmax2->SetNumber(rmax2);
+   if (rmin2<0) {
+      rmin2 = 0;
+      fERmin2->SetNumber(rmin2);
+   }   
+   if (rmin2>rmax2) {
+      rmin2 = rmax2;
+      fERmin2->SetNumber(rmin2);
    }   
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -353,19 +356,25 @@ void TGeoConeEditor::DoRmax2()
    // Slot for  Rmax2
    Double_t rmin2 = fERmin2->GetNumber();
    Double_t rmax2 = fERmax2->GetNumber();
-   if (rmax2<rmin2+1.e-10) {
-      rmin2 = rmax2 - 0.1;
-      if (rmin2 < 0.) rmin2 = 0.;
-      fERmin2->SetNumber(rmin2);
+   if (rmax2<rmin2) {
+      rmax2 = rmin2;
+      fERmax2->SetNumber(rmax2);
    }   
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
 void TGeoConeEditor::DoDz()
 {
    // Slot for Dz
+   Double_t dz = fEDz->GetNumber();
+   if (dz<=0) {
+      dz = 0.1;
+      fEDz->SetNumber(dz);
+   }   
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -435,12 +444,12 @@ TGeoConeSegEditor::~TGeoConeSegEditor()
 // Destructor
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoConeSeg::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
@@ -460,10 +469,8 @@ void TGeoConeSegEditor::ConnectSignals2Slots()
    TGeoConeEditor::ConnectSignals2Slots();
    Disconnect(fApply, "Clicked()",(TGeoConeEditor*)this, "DoApply()");
    Disconnect(fUndo, "Clicked()",(TGeoConeEditor*)this, "DoUndo()");
-   Disconnect(fCancel, "Clicked()",(TGeoConeEditor*)this, "DoCancel()");
    fApply->Connect("Clicked()", "TGeoConeSegEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoConeSegEditor", this, "DoUndo()");
-   fCancel->Connect("Clicked()", "TGeoConeSegEditor", this, "DoCancel()");
    fEPhi1->Connect("ValueSet(Long_t)", "TGeoConeSegEditor", this, "DoPhi1()");
    fEPhi2->Connect("ValueSet(Long_t)", "TGeoConeSegEditor", this, "DoPhi2()");
 //   fEPhi1->GetNumberEntry()->Connect("TextChanged(const char *)","TGeoConeSegEditor", this, "DoPhi1()");
@@ -501,7 +508,6 @@ void TGeoConeSegEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fEDz->SetNumber(fDzi);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
    
    if (fInit) ConnectSignals2Slots();
    SetActive();
@@ -526,6 +532,7 @@ void TGeoConeSegEditor::DoPhi1()
       fLock = kTRUE;
       fSPhi->SetPosition(phi1,phi2);
    } else fLock = kFALSE;
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -547,6 +554,7 @@ void TGeoConeSegEditor::DoPhi2()
       fLock = kTRUE;
       fSPhi->SetPosition(phi1,phi2);
    } else fLock = kFALSE;
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -560,26 +568,26 @@ void TGeoConeSegEditor::DoPhi()
       fLock = kTRUE;
       fEPhi2->SetNumber(fSPhi->GetMaxPosition());
    } else fLock = kFALSE;   
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
 void TGeoConeSegEditor::DoApply()
 {
    // Slot for applying current parameters.
+   fApply->SetEnabled(kFALSE);
    const char *name = fShapeName->GetText();
-   if (strcmp(name,fShape->GetName())) {
-      fShape->SetName(name);
-      Int_t id = gGeoManager->GetListOfShapes()->IndexOf(fShape);
-      fTabMgr->UpdateShape(id);
-   }   
+   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t rmin1 = fERmin1->GetNumber();
    Double_t rmax1 = fERmax1->GetNumber();
+   if (rmin1<0 || rmax1<rmin1) return;
    Double_t rmin2 = fERmin2->GetNumber();
    Double_t rmax2 = fERmax2->GetNumber();
+   if (rmin2<0 || rmax2<rmin2) return;
    Double_t dz = fEDz->GetNumber();
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
-   if ((phi2-phi1) > 360.) {
+   if ((phi2-phi1) > 360.001) {
       phi1 = 0.;
       phi2 = 360.;
       fEPhi1->SetNumber(phi1);
@@ -591,8 +599,6 @@ void TGeoConeSegEditor::DoApply()
    ((TGeoConeSeg*)fShape)->SetConsDimensions(dz, rmin1, rmax1, rmin2,rmax2, phi1, phi2);
    fShape->ComputeBBox();
    fUndo->SetEnabled();
-   fCancel->SetEnabled(kFALSE);
-   fApply->SetEnabled(kFALSE);
    if (fPad) {
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
          fShape->Draw();
@@ -608,22 +614,14 @@ void TGeoConeSegEditor::DoApply()
 void TGeoConeSegEditor::DoUndo()
 {
    // Slot for undoing last operation.
-   DoCancel();
+   fEPhi1->SetNumber(fPmini);
+   fEPhi2->SetNumber(fPmaxi);
+   fSPhi->SetPosition(fPmini,fPmaxi);
    DoApply();
-   fCancel->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
 
-//______________________________________________________________________________
-void TGeoConeSegEditor::DoCancel()
-{
-   // Slot for cancel last operation.
-   fEPhi1->SetNumber(fPmini);
-   fEPhi2->SetNumber(fPmaxi);
-   fSPhi->SetPosition(fPmini,fPmaxi);
-   TGeoConeEditor::DoCancel();
-}
 
 
    

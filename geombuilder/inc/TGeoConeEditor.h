@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoConeEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -34,6 +34,7 @@ class TGNumberEntry;
 class TGTab;
 class TGComboBox;
 class TGTextButton;
+class TGCheckButton;
 class TString;
 
 class TGeoConeEditor : public TGedFrame {
@@ -57,10 +58,11 @@ protected:
    TGNumberEntry  *fERmax2;            // Number entry for rmax2
    TGNumberEntry  *fEDz;               // Number entry for DZ
    TGTextButton   *fApply;             // Apply-Button to accept changes
-   TGTextButton   *fCancel;            // Cancel-Button
    TGTextButton   *fUndo;              // Undo-Button
+   TGCheckButton  *fDelayed;           // Check button for delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
+   Bool_t       IsDelayed() const;   
 
 public:
    TGeoConeEditor(const TGWindow *p, Int_t id,               
@@ -78,7 +80,6 @@ public:
    void           DoModified();
    void           DoName();
    virtual void   DoApply();
-   virtual void   DoCancel();
    virtual void   DoUndo();
    
    ClassDef(TGeoConeEditor,0)   // TGeoCone editor
@@ -120,7 +121,6 @@ public:
    void           DoPhi2();
    virtual void   DoApply();
    virtual void   DoUndo();
-   virtual void   DoCancel();
    
    ClassDef(TGeoConeSegEditor,0)   // TGeoConeSeg editor
 };   

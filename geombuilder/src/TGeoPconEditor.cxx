@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoPconEditor.cxx,v 1.1 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -117,17 +117,22 @@ TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t id, Int_t width,
 
    AddFrame(fCan, new TGLayoutHints(kLHintsLeft, 0, 0, 4, 4));
       
+   // Delayed draw
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
+   fDelayed = new TGCheckButton(f1, "Delayed draw");
+   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+
    // Buttons
-   TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame | kDoubleBorder);
-   fApply = new TGTextButton(f23, "Apply");
-   f23->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
+   fApply = new TGTextButton(f1, "Apply");
+   f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
-   fUndo = new TGTextButton(f23, " Undo ");
-   f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   fUndo = new TGTextButton(f1, "Undo");
+   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
-//   fUndo->SetSize(fCancel->GetSize());
-//   fApply->SetSize(fCancel->GetSize());
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   fUndo->SetSize(fApply->GetSize());
 
    // Initialize layout
    MapSubwindows();
@@ -151,12 +156,12 @@ TGeoPconEditor::~TGeoPconEditor()
    if (fRmaxi) delete [] fRmaxi;
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoPcon::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
@@ -228,7 +233,7 @@ void TGeoPconEditor::CreateSections(Int_t inew)
    if (inew>fNsections) {
       for (isect=fNsections; isect<inew; isect++) {
          sect = new TGeoPconSection(cont, 150, 10, isect);
-         fSections->AddAt(sect, isect);
+         fSections->Add(sect);
          cont->AddFrame(sect, fLHsect);
          sect->Connect("Changed(Int_t)", "TGeoPconEditor", this, "DoSectionChange(Int_t)");
       }   
@@ -252,16 +257,27 @@ void TGeoPconEditor::CreateSections(Int_t inew)
 }         
 
 //______________________________________________________________________________
-Bool_t TGeoPconEditor::CheckSections()
+Bool_t TGeoPconEditor::CheckSections(Bool_t change)
 {
 // Check validity of sections
    TGeoPconSection *sect;
    Double_t zmin = 0;
+   Double_t rmin = 0, rmax = 1.;
    for (Int_t isect=0; isect<fNsections; isect++) {
       sect = (TGeoPconSection*)fSections->At(isect);
-      if (isect && (sect->GetZ()<zmin)) return kFALSE;
+      if (isect && (sect->GetZ()<zmin)) {
+         if (!change) return kFALSE;
+         sect->SetZ(zmin+1.);
+      }   
       zmin = sect->GetZ();
-      if (sect->GetRmin()<0 || sect->GetRmin()>sect->GetRmax()) return kFALSE;
+      if (sect->GetRmin()<0 || sect->GetRmin()>sect->GetRmax() ||
+          (change && sect->GetRmin()*sect->GetRmax()==0)) {
+         if (!change) return kFALSE;
+         sect->SetRmin(rmin);
+         sect->SetRmax(rmax);
+      }   
+      rmin = sect->GetRmin();
+      rmax = sect->GetRmax();
    }
    return kTRUE;   
 }
@@ -289,10 +305,17 @@ void TGeoPconEditor::UpdateSections()
 }      
       
 //______________________________________________________________________________
+Bool_t TGeoPconEditor::IsDelayed() const
+{
+// Check if shape drawing is delayed.
+   return (fDelayed->GetState() == kButtonDown);
+}
+
+//______________________________________________________________________________
 void TGeoPconEditor::DoName()
 {
-   // Perform name change
-   DoModified();
+ // Perform name change
+  DoModified();
 }
 
 //______________________________________________________________________________
@@ -300,11 +323,7 @@ void TGeoPconEditor::DoApply()
 {
 // Slot for applying modifications.
    const char *name = fShapeName->GetText();
-   if (strcmp(name,fShape->GetName())) {
-      fShape->SetName(name);
-      Int_t id = gGeoManager->GetListOfShapes()->IndexOf(fShape);
-      fTabMgr->UpdateShape(id);
-   }   
+   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled();
    if (!CheckSections()) return;
@@ -330,13 +349,22 @@ void TGeoPconEditor::DoApply()
       fShape->SetDimensions(array);
       if (fPad) {
          if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
-            fShape->Draw();
-            fPad->GetView()->ShowAxis();
+            TView *view = fPad->GetView();
+            if (!view) {
+               fShape->Draw();
+               fPad->GetView()->ShowAxis();
+            } else {
+               const Double_t *orig = fShape->GetOrigin();
+               view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
+                              orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
+               fPad->Modified();               
+               fPad->Update();
+            }                  
          } else {   
             fPad->Modified();
             fPad->Update();
          }   
-      }
+      }   
       return;
    }           
    // No need to call SetDimensions   
@@ -351,8 +379,17 @@ void TGeoPconEditor::DoApply()
    fShape->ComputeBBox();
    if (fPad) {
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
-         fShape->Draw();
-         fPad->GetView()->ShowAxis();
+         TView *view = fPad->GetView();
+         if (!view) {
+            fShape->Draw();
+            fPad->GetView()->ShowAxis();
+         } else {
+           const Double_t *orig = fShape->GetOrigin();
+           view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
+                           orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
+            fPad->Modified();               
+            fPad->Update();
+         }                  
       } else {   
          fPad->Modified();
          fPad->Update();
@@ -378,6 +415,7 @@ void TGeoPconEditor::DoSectionChange(Int_t isect)
       sect->SetZ(z);
    } 
    DoModified();
+   if (!IsDelayed()) DoApply();
 }   
 
 //______________________________________________________________________________
@@ -390,7 +428,9 @@ void TGeoPconEditor::DoNz()
       fENz->SetNumber(nz);
    }   
    CreateSections(nz);
-   if (CheckSections()) DoModified();
+   CheckSections(kTRUE);
+   DoModified();
+   if (!IsDelayed()) DoApply();
 }   
 
 //______________________________________________________________________________
@@ -402,6 +442,7 @@ void TGeoPconEditor::DoPhi()
    if (TMath::Abs(phi1)>360) fEPhi1->SetNumber(0);
    if (dphi>360) fEDPhi->SetNumber(360);
    DoModified();
+   if (!IsDelayed()) DoApply();
 }   
 
 //______________________________________________________________________________

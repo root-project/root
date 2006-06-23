@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoVolumeEditor.cxx,v 1.1 2006/06/13 15:27:12 brun Exp $
+// @(#):$Name:  $:$Id: TGeoVolumeEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -382,13 +382,17 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t id, Int_t width,
 TGeoVolumeEditor::~TGeoVolumeEditor()
 {
 // Destructor
-   TGFrameElement *el;
-   TIter next(GetList());
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-   }
+   TGCompositeFrame *cont;
+   cont = (TGCompositeFrame*)fCategories->GetItem("Properties")->GetContainer();
+   TGeoTabManager::Cleanup(cont);
+   cont = (TGCompositeFrame*)fCategories->GetItem("Daughters")->GetContainer();
+   TGeoTabManager::Cleanup(cont);
+   cont = (TGCompositeFrame*)fCategories->GetItem("Visualization")->GetContainer();
+   TGeoTabManager::Cleanup(cont);
+   cont = (TGCompositeFrame*)fCategories->GetItem("Division")->GetContainer();
+   TGeoTabManager::Cleanup(cont);
    Cleanup();   
+
    TClass *cl = TGeoVolume::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoMatrixEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoMatrixEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGeoMatrixEditor.h"
-#include "TGeoNodeEditor.h"
+#include "TGeoTabManager.h"
 #include "TGeoMatrix.h"
 #include "TPad.h"
 #include "TGTab.h"
@@ -127,12 +127,12 @@ TGeoTranslationEditor::~TGeoTranslationEditor()
 // Destructor.
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoTranslation::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
@@ -425,12 +425,12 @@ TGeoRotationEditor::~TGeoRotationEditor()
 // Destructor
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoRotation::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
@@ -786,12 +786,12 @@ TGeoCombiTransEditor::~TGeoCombiTransEditor()
 // Destructor
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoCombiTrans::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoNodeEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -28,11 +28,14 @@
 #endif
 
 class TGeoNode;
+class TGeoVolume;
+class TGeoMatrix;
 class TGTextEntry;
 class TGNumberEntry;
 class TGTab;
 class TGComboBox;
 class TGTextButton;
+class TGPictureButton;
 class TGCheckButton;
 class TGeoTabManager;
 
@@ -45,9 +48,15 @@ protected:
    Bool_t               fIsEditable;        // Flag that the medium can be changed
    TGTextEntry         *fNodeName;          // Node name text entry
    TGNumberEntry       *fNodeNumber;        // Copy number 
-   TGComboBox          *fVolList;           // Combo box for all volumes
-   TGComboBox          *fMotherVolList;     // Combo box for all volumes
-   TGComboBox          *fMatrixList;        // Combo box for all matrices
+   TGeoVolume          *fSelectedVolume;    // Selected volume
+   TGLabel             *fLSelVolume;        // Selected volume label
+   TGPictureButton     *fBSelVolume;        // Button for selecting a volume
+   TGeoVolume          *fSelectedMother;    // Selected mother
+   TGLabel             *fLSelMother;        // Selected mother label
+   TGPictureButton     *fBSelMother;        // Button for selecting a mother volume
+   TGeoMatrix          *fSelectedMatrix;    // Selected matrix
+   TGLabel             *fLSelMatrix;        // Selected matrix label
+   TGPictureButton     *fBSelMatrix;        // Button for selecting a matrix
    TGTextButton        *fEditMother;        // Check button for editing mother volume
    TGTextButton        *fEditVolume;        // Check button for volume editing
    TGTextButton        *fEditMatrix;        // Check button for matrix editing
@@ -68,13 +77,12 @@ public:
    void           DoEditMother();
    void           DoEditVolume();
    void           DoEditMatrix();
-   void           DoVolumeSelect();
-   void           DoMotherVolumeSelect();
-   void           DoMatrixSelect();
+   void           DoSelectMother();
+   void           DoSelectVolume();
+   void           DoSelectMatrix();
    void           DoNodeName();
    void           DoNodeNumber();
    void           DoApply();
-   void           DoCancel();
    void           DoUndo();
    
    ClassDef(TGeoNodeEditor,0)   // TGeoNode editor

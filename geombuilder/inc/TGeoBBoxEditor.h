@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoBBoxEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -33,6 +33,7 @@ class TGNumberEntry;
 class TGTab;
 class TGComboBox;
 class TGTextButton;
+class TGCheckButton;
 class TString;
 
 class TGeoBBoxEditor : public TGedFrame {
@@ -56,10 +57,11 @@ protected:
    TGNumberEntry       *fBoxOy;             // Number entry for box OY
    TGNumberEntry       *fBoxOz;             // Number entry for box OZ
    TGTextButton        *fApply;             // Apply-Button to accept changes
-   TGTextButton        *fCancel;            // Cancel-Button
    TGTextButton        *fUndo;              // Undo-Button
+   TGCheckButton       *fDelayed;           // Check button for delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
+   Bool_t       IsDelayed() const;   
 
 public:
    TGeoBBoxEditor(const TGWindow *p, Int_t id,               
@@ -72,11 +74,12 @@ public:
    void           DoDx();
    void           DoDy();
    void           DoDz();
+   void           DoOx();
+   void           DoOy();
+   void           DoOz();
    void           DoModified();
    void           DoName();
-   Bool_t         DoBoxParameters();
    void           DoApply();
-   void           DoCancel();
    void           DoUndo();
    
    ClassDef(TGeoBBoxEditor,0)   // TGeoBBox editor

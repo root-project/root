@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBBoxEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBBoxEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -140,20 +140,22 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t id, Int_t width,
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
+   // Delayed draw
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
+   fDelayed = new TGCheckButton(f1, "Delayed draw");
+   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+
    // Buttons
-   TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame | kDoubleBorder);
-   fApply = new TGTextButton(f23, "&Apply");
-   f23->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
+   fApply = new TGTextButton(f1, "Apply");
+   f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
-   fCancel = new TGTextButton(f23, "&Cancel");
-   f23->AddFrame(fCancel, new TGLayoutHints(kLHintsCenterX, 2, 2, 4, 4));
-   fCancel->Associate(this);
-   fUndo = new TGTextButton(f23, " &Undo ");
-   f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   fUndo = new TGTextButton(f1, "Undo");
+   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
-   fUndo->SetSize(fCancel->GetSize());
-   fApply->SetSize(fCancel->GetSize());
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   fUndo->SetSize(fApply->GetSize());
 
    // Initialize layout
    MapSubwindows();
@@ -173,12 +175,12 @@ TGeoBBoxEditor::~TGeoBBoxEditor()
 // Destructor
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoBBox::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
@@ -196,7 +198,6 @@ void TGeoBBoxEditor::ConnectSignals2Slots()
 {
    // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoBBoxEditor", this, "DoApply()");
-   fCancel->Connect("Clicked()", "TGeoBBoxEditor", this, "DoCancel()");
    fUndo->Connect("Clicked()", "TGeoBBoxEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoBBoxEditor", this, "DoModified()");
    fBoxDx->Connect("ValueSet(Long_t)", "TGeoBBoxEditor", this, "DoDx()");
@@ -205,9 +206,12 @@ void TGeoBBoxEditor::ConnectSignals2Slots()
    fBoxDx->GetNumberEntry()->Connect("TextChanged(const char *)", "TGeoBBoxEditor", this, "DoModified()");
    fBoxDy->GetNumberEntry()->Connect("TextChanged(const char *)", "TGeoBBoxEditor", this, "DoModified()");
    fBoxDz->GetNumberEntry()->Connect("TextChanged(const char *)", "TGeoBBoxEditor", this, "DoModified()");
-   fBoxOx->Connect("ValueSet(Long_t)", "TGeoBBoxEditor", this, "DoModified()");
-   fBoxOy->Connect("ValueSet(Long_t)", "TGeoBBoxEditor", this, "DoModified()");
-   fBoxOz->Connect("ValueSet(Long_t)", "TGeoBBoxEditor", this, "DoModified()");
+   fBoxOx->Connect("ValueSet(Long_t)", "TGeoBBoxEditor", this, "DoOx()");
+   fBoxOy->Connect("ValueSet(Long_t)", "TGeoBBoxEditor", this, "DoOy()");
+   fBoxOz->Connect("ValueSet(Long_t)", "TGeoBBoxEditor", this, "DoOz()");
+   fBoxOx->GetNumberEntry()->Connect("TextChanged(const char *)", "TGeoBBoxEditor", this, "DoModified()");
+   fBoxOy->GetNumberEntry()->Connect("TextChanged(const char *)", "TGeoBBoxEditor", this, "DoModified()");
+   fBoxOz->GetNumberEntry()->Connect("TextChanged(const char *)", "TGeoBBoxEditor", this, "DoModified()");
    fInit = kFALSE;
 }
 
@@ -241,30 +245,31 @@ void TGeoBBoxEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fBoxOz->SetNumber(fOrigi[2]);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
    
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
 //______________________________________________________________________________
-void TGeoBBoxEditor::DoName()
+Bool_t TGeoBBoxEditor::IsDelayed() const
 {
-   //Slot for name.
-   const char *name = fShapeName->GetText();
-   if (!strcmp(name, "-no_name") || !strcmp(name, fShape->GetName())) return;
-   fShape->SetName(name);
-   Int_t id = gGeoManager->GetListOfShapes()->IndexOf(fShape);
-   fTabMgr->UpdateShape(id);
-   fUndo->SetEnabled();
-   fCancel->SetEnabled(kFALSE);
-   fApply->SetEnabled(kFALSE);
+// Check if shape drawing is delayed.
+   return (fDelayed->GetState() == kButtonDown);
 }
 
 //______________________________________________________________________________
-Bool_t TGeoBBoxEditor::DoBoxParameters()
+void TGeoBBoxEditor::DoName()
 {
-   //Check current box parameters.
+   //Slot for name.
+   DoModified();
+}
+
+//______________________________________________________________________________
+void TGeoBBoxEditor::DoApply()
+{
+   //Slot for applying current parameters.
+   const char *name = fShapeName->GetText();
+   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t dx = fBoxDx->GetNumber();
    Double_t dy = fBoxDy->GetNumber();
    Double_t dz = fBoxDz->GetNumber();
@@ -272,55 +277,27 @@ Bool_t TGeoBBoxEditor::DoBoxParameters()
    orig[0] = fBoxOx->GetNumber();
    orig[1] = fBoxOy->GetNumber();
    orig[2] = fBoxOz->GetNumber();
-   Bool_t changed = kFALSE;
-   if (dx != fShape->GetDX() || dy != fShape->GetDY() || dz != fShape->GetDZ()) changed = kTRUE;
-   if (!changed) {
-      if (orig[0] != fShape->GetOrigin()[0] || 
-          orig[1] != fShape->GetOrigin()[1] || 
-          orig[2] != fShape->GetOrigin()[2]) changed = kTRUE;
-   }       
-   if (!changed) return kFALSE;
-   fUndo->SetEnabled();
    fShape->SetBoxDimensions(dx, dy, dz, orig);
+   fUndo->SetEnabled();
+   fApply->SetEnabled(kFALSE);
    if (fPad) {
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
-         fShape->Draw();
-         fPad->GetView()->ShowAxis();
+         TView *view = fPad->GetView();
+         if (!view) {
+            fShape->Draw();
+            fPad->GetView()->ShowAxis();
+         } else {
+            const Double_t *orig = fShape->GetOrigin();
+            view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
+                           orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
+            fPad->Modified();               
+            fPad->Update();
+         }                  
       } else {   
          fPad->Modified();
          fPad->Update();
       }   
    }   
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-void TGeoBBoxEditor::DoApply()
-{
-   //Slot for applying current parameters.
-   DoName();
-   if (DoBoxParameters()) {
-      fUndo->SetEnabled();
-      fCancel->SetEnabled(kFALSE);
-      fApply->SetEnabled(kFALSE);
-   }   
-}
-
-//______________________________________________________________________________
-void TGeoBBoxEditor::DoCancel()
-{
-   // Slot for canceling current parameters.
-   if (!fNamei.Length()) fShapeName->SetText("-no_name");
-   else fShapeName->SetText(fNamei.Data());
-   fBoxDx->SetNumber(fDxi);
-   fBoxDy->SetNumber(fDyi);
-   fBoxDz->SetNumber(fDzi);
-   fBoxOx->SetNumber(fOrigi[0]);
-   fBoxOy->SetNumber(fOrigi[1]);
-   fBoxOz->SetNumber(fOrigi[2]);
-   fApply->SetEnabled(kFALSE);
-   fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
 }
 
 //______________________________________________________________________________
@@ -328,16 +305,19 @@ void TGeoBBoxEditor::DoModified()
 {
    //Slot for modifying current parameters.
    fApply->SetEnabled();
-   if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
 
 //______________________________________________________________________________
 void TGeoBBoxEditor::DoUndo()
 {
    // Slot for undoing last operation.
-   DoCancel();
-   DoBoxParameters();
-   fCancel->SetEnabled(kFALSE);
+   fBoxDx->SetNumber(fDxi);
+   fBoxDy->SetNumber(fDyi);
+   fBoxDz->SetNumber(fDzi);
+   fBoxOx->SetNumber(fOrigi[0]);
+   fBoxOy->SetNumber(fOrigi[1]);
+   fBoxOz->SetNumber(fOrigi[2]);
+   DoApply();
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
@@ -346,21 +326,63 @@ void TGeoBBoxEditor::DoUndo()
 void TGeoBBoxEditor::DoDx()
 {
    //Slot for Dx modification.
+   Double_t dx = fBoxDx->GetNumber();
+   if (dx<=0) {
+      dx=0.1;
+      fBoxDx->SetNumber(dx);
+   }   
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
 void TGeoBBoxEditor::DoDy()
 {
    //Slot for Dy modification.
+   Double_t dy = fBoxDy->GetNumber();
+   if (dy<=0) {
+      dy=0.1;
+      fBoxDy->SetNumber(dy);
+   }   
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
 void TGeoBBoxEditor::DoDz()
 {
    //Slot for Dz modification.
+   Double_t dz = fBoxDz->GetNumber();
+   if (dz<=0) {
+      dz=0.1;
+      fBoxDz->SetNumber(dz);
+   }   
    DoModified();
+   if (!IsDelayed()) DoApply();
+}
+
+//______________________________________________________________________________
+void TGeoBBoxEditor::DoOx()
+{
+   //Slot for Ox modification.
+   DoModified();
+   if (!IsDelayed()) DoApply();
+}
+
+//______________________________________________________________________________
+void TGeoBBoxEditor::DoOy()
+{
+   //Slot for Oy modification.
+   DoModified();
+   if (!IsDelayed()) DoApply();
+}
+
+//______________________________________________________________________________
+void TGeoBBoxEditor::DoOz()
+{
+   //Slot for Oz modification.
+   DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 

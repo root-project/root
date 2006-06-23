@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTrd1Editor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -8,14 +8,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGeoTrd1Editor
-#define ROOT_TGeoTrd1Editor
+#ifndef ROOT_TGeoEltuEditor
+#define ROOT_TGeoEltuEditor
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  TGeoTrd1Editor                                                      //
+//  TGeoEltuEditor                                                      //
 //                                                                      //
-//  Editor for a TGeoTrd1.                                              //
+//  Editor for a TGeoEltu.                                              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -26,7 +26,7 @@
 #include "TGedFrame.h"
 #endif
 
-class TGeoTrd1;
+class TGeoEltu;
 class TGeoTabManager;
 class TGTextEntry;
 class TGNumberEntry;
@@ -36,49 +36,46 @@ class TGTextButton;
 class TGCheckButton;
 class TString;
 
-class TGeoTrd1Editor : public TGedFrame {
+class TGeoEltuEditor : public TGedFrame {
 
 protected:
 
-   Double_t             fDxi1;              // Initial  dx1
-   Double_t             fDxi2;              // Initial  dx2
-   Double_t             fDyi;               // Initial  dy
-   Double_t             fDzi;               // Initial  dz
+   Double_t             fAi;                // Initial  semi-axis of the ellipse along x
+   Double_t             fBi;                // Initial  semi-axis of the ellipse along y
+   Double_t             fDzi;               // Initial  half length in z
    TString              fNamei;             // Initial name
-   TGeoTrd1            *fShape;             // Shape object
+   TGeoEltu            *fShape;             // Shape object
    Bool_t               fIsModified;        // Flag that volume was modified
    Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
    TGeoTabManager      *fTabMgr;            // Tab manager
    TGTextEntry         *fShapeName;         // Shape name text entry
-   TGNumberEntry       *fEDx1;              // Number entry for  DX1
-   TGNumberEntry       *fEDx2;              // Number entry for  DX2 
-   TGNumberEntry       *fEDy;               // Number entry for  DY
+   TGNumberEntry       *fEA;                // Number entry for  A
+   TGNumberEntry       *fEB;                // Number entry for  B
    TGNumberEntry       *fEDz;               // Number entry for  DZ
    TGTextButton        *fApply;             // Apply-Button to accept changes
    TGTextButton        *fUndo;              // Undo-Button
    TGCheckButton       *fDelayed;           // Check button for delayed draw
-
+  
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
-   Bool_t       IsDelayed() const;   
+   Bool_t       IsDelayed() const; 
 
 public:
-   TGeoTrd1Editor(const TGWindow *p, Int_t id,               
+   TGeoEltuEditor(const TGWindow *p, Int_t id,               
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoTrd1Editor();
+   virtual ~TGeoEltuEditor();
    virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
 
-   void           DoDx1();
-   void           DoDx2();
-   void           DoDy();
+   void           DoA();
+   void           DoB();
    void           DoDz();
    void           DoModified();
    void           DoName();
    void           DoApply();
    void           DoUndo();
    
-   ClassDef(TGeoTrd1Editor,0)   // TGeoTrd1 editor
+   ClassDef(TGeoEltuEditor,0)   // TGeoEltu editor
 };   
   
 #endif                    

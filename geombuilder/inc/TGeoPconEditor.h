@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoPconEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -34,6 +34,7 @@ class TGNumberEntry;
 class TGTab;
 class TGComboBox;
 class TGTextButton;
+class TGCheckButton;
 class TGCanvas;
 class TString;
 
@@ -60,9 +61,11 @@ protected:
    TGNumberEntry       *fEDPhi;             // Number entry for dphi  
    TGTextButton        *fApply;             // Apply-Button to accept changes
    TGTextButton        *fUndo;              // Undo-Button
+   TGCheckButton       *fDelayed;           // Check button for delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
-   Bool_t       CheckSections();
+   Bool_t       CheckSections(Bool_t change=kFALSE);
+   Bool_t       IsDelayed() const;   
    void         CreateSections(Int_t inew);
    void         UpdateSections();
 

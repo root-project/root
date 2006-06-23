@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoNodeEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoNodeEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -32,8 +32,7 @@ ClassImp(TGeoNodeEditor)
 
 enum ETGeoNodeWid {
    kNODE_NAME, kNODE_ID, kNODE_VOLSEL, kNODE_MVOLSEL,
-   kNODE_MATRIX, kNODE_EDIT_VOL, kNODE_EDIT_MATRIX,
-   kNODE_APPLY, kNODE_CANCEL, kNODE_UNDO
+   kNODE_MATRIX, kNODE_EDIT_VOL, kNODE_EDIT_MATRIX
 };
 
 //______________________________________________________________________________
@@ -46,6 +45,7 @@ TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t id, Int_t width,
    fNode   = 0;
    fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
    fIsEditable = kTRUE;
+   Pixel_t color;
       
    // TextEntry for medium name
    TGTextEntry *nef;
@@ -65,59 +65,70 @@ TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 3, 3, 2, 5));
 
 
-// Combo box for mother volume selection
+// Mother volume selection
    MakeTitle("Mother volume");
-   f1 = new TGCompositeFrame(this, 140, 30, kHorizontalFrame | kRaisedFrame);
-   fMotherVolList = new TGComboBox(f1, kNODE_MVOLSEL);
-//   fTabMgr->AddComboVolume(fMotherVolList);
-   fMotherVolList->Resize(100, fNodeName->GetDefaultHeight());
-   fMotherVolList->Associate(this);
-   f1->AddFrame(fMotherVolList, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 5));
+   f1 = new TGCompositeFrame(this, 155, 30, kHorizontalFrame | kFixedWidth);
+   fSelectedMother = 0;
+   fLSelMother = new TGLabel(f1, "Select mother");
+   gClient->GetColorByName("#0000ff", color);
+   fLSelMother->SetTextColor(color);
+   fLSelMother->ChangeOptions(kSunkenFrame | kDoubleBorder);
+   f1->AddFrame(fLSelMother, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 1, 1, 2, 2));
+   fBSelMother = new TGPictureButton(f1, fClient->GetPicture("rootdb_t.xpm"), kNODE_MVOLSEL);
+   fBSelMother->SetToolTipText("Select one of the existing volumes");
+   fBSelMother->Associate(this);
+   f1->AddFrame(fBSelMother, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
    fEditMother = new TGTextButton(f1, "Edit");
+   f1->AddFrame(fEditMother, new TGLayoutHints(kLHintsRight, 1, 1, 1, 1));
    fEditMother->Associate(this);
-   f1->AddFrame(fEditMother, new TGLayoutHints(kLHintsRight, 2, 2, 2, 5));
-   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 5));
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 2));
    
-// Combo box for volume selection
+// Volume selection
    MakeTitle("Volume");
-   f1 = new TGCompositeFrame(this, 140, 30, kHorizontalFrame | kRaisedFrame);
-   fVolList = new TGComboBox(f1, kNODE_VOLSEL);
-//   fTabMgr->AddComboVolume(fVolList);
-   fVolList->Resize(100, fNodeName->GetDefaultHeight());
-   fVolList->Associate(this);
-   f1->AddFrame(fVolList, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
+   f1 = new TGCompositeFrame(this, 155, 30, kHorizontalFrame | kFixedWidth);
+   fSelectedVolume = 0;
+   fLSelVolume = new TGLabel(f1, "Select volume");
+   gClient->GetColorByName("#0000ff", color);
+   fLSelVolume->SetTextColor(color);
+   fLSelVolume->ChangeOptions(kSunkenFrame | kDoubleBorder);
+   f1->AddFrame(fLSelVolume, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 1, 1, 2, 2));
+   fBSelVolume = new TGPictureButton(f1, fClient->GetPicture("rootdb_t.xpm"), kNODE_VOLSEL);
+   fBSelVolume->SetToolTipText("Select one of the existing volumes");
+   fBSelVolume->Associate(this);
+   f1->AddFrame(fBSelVolume, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
    fEditVolume = new TGTextButton(f1, "Edit");
+   f1->AddFrame(fEditVolume, new TGLayoutHints(kLHintsRight, 1, 1, 1, 1));
    fEditVolume->Associate(this);
-   f1->AddFrame(fEditVolume, new TGLayoutHints(kLHintsRight, 2, 2, 2, 5));
-   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 5));
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 2));
 
-// Combo box for matrix selection
+// Matrix selection
    MakeTitle("Matrix");
-   f1 = new TGCompositeFrame(this, 140, 30, kHorizontalFrame | kRaisedFrame);
-   fMatrixList = new TGComboBox(f1, kNODE_MATRIX);
-   fTabMgr->AddComboMatrix(fMatrixList);
-   fMatrixList->Resize(100, fNodeName->GetDefaultHeight());
-   fMatrixList->Associate(this);
-   f1->AddFrame(fMatrixList, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
+   f1 = new TGCompositeFrame(this, 155, 30, kHorizontalFrame | kFixedWidth);
+   fSelectedMatrix = 0;
+   fLSelMatrix = new TGLabel(f1, "Select matrix");
+   gClient->GetColorByName("#0000ff", color);
+   fLSelMatrix->SetTextColor(color);
+   fLSelMatrix->ChangeOptions(kSunkenFrame | kDoubleBorder);
+   f1->AddFrame(fLSelMatrix, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 1, 1, 2, 2));
+   fBSelMatrix = new TGPictureButton(f1, fClient->GetPicture("rootdb_t.xpm"), kNODE_MATRIX);
+   fBSelMatrix->SetToolTipText("Select one of the existing matrices");
+   fBSelMatrix->Associate(this);
+   f1->AddFrame(fBSelMatrix, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
    fEditMatrix = new TGTextButton(f1, "Edit");
+   f1->AddFrame(fEditMatrix, new TGLayoutHints(kLHintsRight, 1, 1, 1, 1));
    fEditMatrix->Associate(this);
-   f1->AddFrame(fEditMatrix, new TGLayoutHints(kLHintsRight, 2, 2, 2, 5));
-   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 5));
-   
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 2));
+  
    // Buttons
-   TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame | kDoubleBorder);
-   fApply = new TGTextButton(f23, "&Apply");
-   f23->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
+   fApply = new TGTextButton(f1, "Apply");
+   f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
-   fCancel = new TGTextButton(f23, "&Cancel");
-   f23->AddFrame(fCancel, new TGLayoutHints(kLHintsCenterX, 2, 2, 4, 4));
-   fCancel->Associate(this);
-   fUndo = new TGTextButton(f23, " &Undo ");
-   f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   fUndo = new TGTextButton(f1, "Undo");
+   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 2, 2, 6, 6));  
-   fUndo->SetSize(fCancel->GetSize());
-   fApply->SetSize(fCancel->GetSize());
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   fUndo->SetSize(fApply->GetSize());
 
    // Initialize layout
    MapSubwindows();
@@ -137,12 +148,12 @@ TGeoNodeEditor::~TGeoNodeEditor()
 // Destructor
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoNode::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
@@ -159,8 +170,10 @@ TGeoNodeEditor::~TGeoNodeEditor()
 void TGeoNodeEditor::ConnectSignals2Slots()
 {
    // Connect signals to slots.
+   fBSelMother->Connect("Clicked()", "TGeoNodeEditor", this, "DoSelectMother()");
+   fBSelVolume->Connect("Clicked()", "TGeoNodeEditor", this, "DoSelectVolume()");
+   fBSelMatrix->Connect("Clicked()", "TGeoNodeEditor", this, "DoSelectMatrix()");
    fApply->Connect("Clicked()", "TGeoNodeEditor", this, "DoApply()");
-   fCancel->Connect("Clicked()", "TGeoNodeEditor", this, "DoCancel()");
    fUndo->Connect("Clicked()", "TGeoNodeEditor", this, "DoUndo()");
    fEditMother->Connect("Clicked()", "TGeoNodeEditor", this, "DoEditMother()");
    fEditVolume->Connect("Clicked()", "TGeoNodeEditor", this, "DoEditVolume()");
@@ -186,61 +199,87 @@ void TGeoNodeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t /*event*/)
 
    fNodeNumber->SetNumber(fNode->GetNumber());
 
-   TGeoVolume *vol;
-   TObjArray *list = gGeoManager->GetListOfVolumes();
-   Int_t nobj = list->GetEntriesFast();
-   Int_t i, icrt1=0, icrt2=0;
-   for (i=0; i<nobj; i++) {
-      vol = (TGeoVolume*)list->At(i);
-      if (fNode->GetMotherVolume() == vol) icrt1 = i;
-      if (fNode->GetVolume() == vol) icrt2 = i;
-   }
-   fMotherVolList->Select(icrt1);   
-   fVolList->Select(icrt2); 
-        
-   list = gGeoManager->GetListOfMatrices();
-   nobj = list->GetEntriesFast();
-   TGeoMatrix *matrix;
-   icrt1 = 1;
-   for (i=0; i<nobj; i++) {
-      matrix = (TGeoMatrix*)list->At(i);
-      if (fNode->GetMatrix() == matrix) icrt1 = i;
-   }   
-   fMatrixList->Select(icrt1);   
+   fSelectedMother = fNode->GetMotherVolume();
+   if (fSelectedMother) fLSelMother->SetText(fSelectedMother->GetName());
+   fSelectedVolume = fNode->GetVolume();
+   if (fSelectedVolume) fLSelVolume->SetText(fSelectedVolume->GetName());
+   fSelectedMatrix = fNode->GetMatrix();
+   if (fSelectedMatrix) fLSelMatrix->SetText(fSelectedMatrix->GetName());
 
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
    
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
 //______________________________________________________________________________
+void TGeoNodeEditor::DoSelectMother()
+{
+// Select the mother volume.
+   TGeoVolume *vol = fSelectedMother;
+   new TGeoVolumeDialog(fBSelMother, gClient->GetRoot(), 200,300);  
+   fSelectedMother = (TGeoVolume*)TGeoVolumeDialog::GetSelected();
+   if (fSelectedMother) fLSelMother->SetText(fSelectedMother->GetName());
+   else fSelectedMother = vol;
+}
+
+//______________________________________________________________________________
+void TGeoNodeEditor::DoSelectVolume()
+{
+// Select the volume.
+   TGeoVolume *vol = fSelectedVolume;
+   new TGeoVolumeDialog(fBSelVolume, gClient->GetRoot(), 200,300);  
+   fSelectedVolume = (TGeoVolume*)TGeoVolumeDialog::GetSelected();
+   if (fSelectedVolume) fLSelVolume->SetText(fSelectedVolume->GetName());
+   else fSelectedVolume = vol;
+}
+
+//______________________________________________________________________________
+void TGeoNodeEditor::DoSelectMatrix()
+{
+// Select the matrix.
+   TGeoMatrix *matrix = fSelectedMatrix;
+   new TGeoMatrixDialog(fBSelMatrix, gClient->GetRoot(), 200,300);  
+   fSelectedMatrix = (TGeoMatrix*)TGeoMatrixDialog::GetSelected();
+   if (fSelectedMatrix) fLSelMatrix->SetText(fSelectedMatrix->GetName());
+   else fSelectedMatrix = matrix;
+}
+
+//______________________________________________________________________________
 void TGeoNodeEditor::DoEditMother()
 {
 // Edit the mother volume.
-   fTabMgr->SetEnabled(TGeoTabManager::kTabVolume);
-   fTabMgr->GetVolumeEditor(fNode->GetMotherVolume());
-   fTabMgr->SetTab(TGeoTabManager::kTabVolume);
+   if (!fSelectedMother) {
+      fTabMgr->SetVolTabEnabled(kFALSE);
+      return;
+   }   
+   fTabMgr->SetVolTabEnabled();
+   fTabMgr->GetVolumeEditor(fSelectedMother);
+   fTabMgr->SetTab();
+   fSelectedMother->Draw();
 }
 
 //______________________________________________________________________________
 void TGeoNodeEditor::DoEditVolume()
 {
 // Edit selected volume.
-   fTabMgr->SetEnabled(TGeoTabManager::kTabVolume);
-   fTabMgr->GetVolumeEditor(fNode->GetVolume());
-   fTabMgr->SetTab(TGeoTabManager::kTabVolume);
+   if (!fSelectedVolume) {
+      fTabMgr->SetVolTabEnabled(kFALSE);
+      return;
+   }   
+   fTabMgr->SetVolTabEnabled();
+   fTabMgr->GetVolumeEditor(fSelectedVolume);
+   fTabMgr->SetTab();
+   fSelectedVolume->Draw();
 }
 
 //______________________________________________________________________________
 void TGeoNodeEditor::DoEditMatrix()
 {
 // Edit selected material.
-//   fTabMgr->SetEnabled(TGeoTabManager::kTabMatrix);
-   fTabMgr->GetMatrixEditor(fNode->GetMatrix());
-//   fTabMgr->SetTab(TGeoTabManager::kTabMatrix);
+   if (!fSelectedMatrix) return;
+   fTabMgr->GetMatrixEditor(fSelectedMatrix);
 }
 
 //______________________________________________________________________________
@@ -260,33 +299,9 @@ void TGeoNodeEditor::DoNodeNumber()
 }
 
 //______________________________________________________________________________
-void TGeoNodeEditor::DoVolumeSelect()
-{
-// Select the volume for the node.
-}
-
-//______________________________________________________________________________
-void TGeoNodeEditor::DoMotherVolumeSelect()
-{
-// Select the mother volume for the node.
-}
-
-//______________________________________________________________________________
-void TGeoNodeEditor::DoMatrixSelect()
-{
-// Select the matrix for the node.
-}
-
-//______________________________________________________________________________
 void TGeoNodeEditor::DoApply()
 {
 // Slot for applying modifications.
-}
-
-//______________________________________________________________________________
-void TGeoNodeEditor::DoCancel()
-{
-// Slot for cancelling current modifications.
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.3 2006/06/20 06:33:20 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -43,25 +43,15 @@ TGeoTabManager::TGeoTabManager(TVirtualPad *pad, TGTab *tab)
 // Ctor.
    fPad = pad;
    fTab = tab;
-//   fShape = 0;
    fVolume = 0;
-//   fMedium = 0;
-//   fMaterial = 0;
-//   fMatrix = 0;
-   fShapeCombos = new TList();
    fShapePanel = 0;
    fMediumPanel = 0;
    fMaterialPanel = 0;
    fMatrixPanel = 0;
-//   fVolumeCombos = new TList();
-   fMatrixCombos = new TList();
-   fMediumCombos = new TList();
-   fMaterialCombos = new TList();
    CreateTabs();
    fTab->MapSubwindows();
    fTab->Layout();
    fTab->MapWindow();
-//   AppendPad();
    TClass *cl = TGeoTabManager::Class();
    cl->GetEditorList()->Add(this);
 }   
@@ -70,144 +60,28 @@ TGeoTabManager::TGeoTabManager(TVirtualPad *pad, TGTab *tab)
 TGeoTabManager::~TGeoTabManager()
 {
 // Dtor.
-   printf("deleting TGeoTabManager\n");
    if (fShapePanel) delete fShapePanel;
    if (fMaterialPanel) delete fMaterialPanel;
    if (fMatrixPanel) delete fMatrixPanel;
    if (fMediumPanel) delete fMediumPanel;
-   delete fShapeCombos;
-//   delete fVolumeCombos;
-   delete fMatrixCombos;
-   delete fMediumCombos;
-   delete fMaterialCombos;
 }   
 
 //______________________________________________________________________________
-void TGeoTabManager::AddComboShape(TGComboBox *combo)
+void TGeoTabManager::Cleanup(TGCompositeFrame *frame)
 {
-// Add an element to the list.
-   fShapeCombos->Add(combo);
-   TIter next(gGeoManager->GetListOfShapes());
-   TNamed *obj;
-   Int_t id = 0;
-   while ((obj=(TNamed*)next())) combo->AddEntry(obj->GetName(), id++);
-}   
-
-//______________________________________________________________________________
-void TGeoTabManager::AddShape(const char *name, Int_t id)
-{
-// Add an element to the list.
-   TIter next(fShapeCombos);
-   TGComboBox *combo;
-   while ((combo=(TGComboBox*)next())) combo->AddEntry(name, id);
-}   
-
-//______________________________________________________________________________
-void TGeoTabManager::UpdateShape(Int_t id)
-{
-// Update an element from the list.
-   TIter next(fShapeCombos);
-   TGComboBox *combo;
-   TNamed *obj = (TNamed*)gGeoManager->GetListOfShapes()->At(id); 
-   while ((combo=(TGComboBox*)next())) {
-      ((TGTextLBEntry*)combo->GetListBox()->GetEntry(id))->SetText(new TGString(obj->GetName()));
+// Static method to cleanup hirarchically all daughters of a composite frame.
+// Does not remove the frame itself.
+   TGFrameElement *el;
+   TList *list = frame->GetList();
+   Int_t nframes = list->GetSize();
+   TClass *cl;
+   for (Int_t i=0; i<nframes; i++) {
+      el = (TGFrameElement *)list->At(i);
+      cl = el->fFrame->IsA();
+      if (cl==TGCompositeFrame::Class() || cl==TGHorizontalFrame::Class() || cl==TGVerticalFrame::Class())
+         Cleanup((TGCompositeFrame*)el->fFrame);
    }
-}   
-
-//______________________________________________________________________________
-void TGeoTabManager::AddComboMatrix(TGComboBox *combo)
-{
-// Add an element to the list.
-   fMatrixCombos->Add(combo);
-   TIter next(gGeoManager->GetListOfMatrices());
-   TNamed *obj;
-   Int_t id = 0;
-   while ((obj=(TNamed*)next())) combo->AddEntry(obj->GetName(), id++);
-}   
-
-//______________________________________________________________________________
-void TGeoTabManager::AddMatrix(const char *name, Int_t id)
-{
-// Add an element to the list.
-   TIter next(fMatrixCombos);
-   TGComboBox *combo;
-   while ((combo=(TGComboBox*)next())) combo->AddEntry(name, id);
-}   
-
-//______________________________________________________________________________
-void TGeoTabManager::UpdateMatrix(Int_t id)
-{
-// Update an element from the list.
-   TIter next(fMatrixCombos);
-   TGComboBox *combo;
-   TNamed *obj = (TNamed*)gGeoManager->GetListOfMatrices()->At(id); 
-   while ((combo=(TGComboBox*)next())) {
-      ((TGTextLBEntry*)combo->GetListBox()->GetEntry(id))->SetText(new TGString(obj->GetName()));
-   }
-}   
-
-//______________________________________________________________________________
-void TGeoTabManager::AddComboMedium(TGComboBox *combo)
-{
-// Add an element to the list.
-   fMediumCombos->Add(combo);
-   TIter next(gGeoManager->GetListOfMedia());
-   TNamed *obj;
-   Int_t id = 0;
-   while ((obj=(TNamed*)next())) combo->AddEntry(obj->GetName(), id++);
-}   
-
-//______________________________________________________________________________
-void TGeoTabManager::AddMedium(const char *name, Int_t id)
-{
-// Add an element to the list.
-   TIter next(fMediumCombos);
-   TGComboBox *combo;
-   while ((combo=(TGComboBox*)next())) combo->AddEntry(name, id);
-}   
-
-//______________________________________________________________________________
-void TGeoTabManager::UpdateMedium(Int_t id)
-{
-// Update an element from the list.
-   TIter next(fMediumCombos);
-   TGComboBox *combo;
-   TNamed *obj = (TNamed*)gGeoManager->GetListOfMedia()->At(id); 
-   while ((combo=(TGComboBox*)next())) {
-      ((TGTextLBEntry*)combo->GetListBox()->GetEntry(id))->SetText(new TGString(obj->GetName()));
-   }
-}   
-
-//______________________________________________________________________________
-void TGeoTabManager::AddComboMaterial(TGComboBox *combo)
-{
-// Add an element to the list.
-   fMaterialCombos->Add(combo);
-   TIter next(gGeoManager->GetListOfMaterials());
-   TNamed *obj;
-   Int_t id = 0;
-   while ((obj=(TNamed*)next())) combo->AddEntry(obj->GetName(), id++);
-}   
-
-//______________________________________________________________________________
-void TGeoTabManager::AddMaterial(const char *name, Int_t id)
-{
-// Add an element to the list.
-   TIter next(fMaterialCombos);
-   TGComboBox *combo;
-   while ((combo=(TGComboBox*)next())) combo->AddEntry(name, id);
-}   
-
-//______________________________________________________________________________
-void TGeoTabManager::UpdateMaterial(Int_t id)
-{
-// Update an element from the list.
-   TIter next(fMaterialCombos);
-   TGComboBox *combo;
-   TNamed *obj = (TNamed*)gGeoManager->GetListOfMaterials()->At(id); 
-   while ((combo=(TGComboBox*)next())) {
-      ((TGTextLBEntry*)combo->GetListBox()->GetEntry(id))->SetText(new TGString(obj->GetName()));
-   }
+   frame->Cleanup();
 }   
 
 //______________________________________________________________________________
@@ -217,7 +91,7 @@ void TGeoTabManager::CreateTabs()
    fVolumeCont = fTab->AddTab("Volume");   
    fVolumeTab = new TGCompositeFrame(fVolumeCont, 110, 30, kVerticalFrame);
    fVolumeCont->AddFrame(fVolumeTab, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
-   fTab->SetEnabled(GetTabIndex(kTabVolume), kFALSE);
+   fTab->SetEnabled(kFALSE);
 }
 
 //______________________________________________________________________________
@@ -239,7 +113,7 @@ void TGeoTabManager::GetVolumeEditor(TGeoVolume *volume)
    if (!volume || !fVolumeTab) return;
    GetEditors(TAttLine::Class(), fVolumeTab);
    GetEditors(TGeoVolume::Class(), fVolumeTab);
-   SetModel(kTabVolume, volume, 0);
+   SetModel(volume, 0);
 }
    
 //______________________________________________________________________________
@@ -338,18 +212,11 @@ TGeoTabManager *TGeoTabManager::GetMakeTabManager(TVirtualPad *pad, TGTab *tab)
 }   
 
 //______________________________________________________________________________
-Int_t TGeoTabManager::GetTabIndex(EGeoTabType type) const
+Int_t TGeoTabManager::GetTabIndex() const
 {
 // Get index for a given tab element.
    Int_t ntabs = fTab->GetNumberOfTabs();
-   TString tabname;
-   switch (type) {
-      case kTabVolume:
-         tabname = "Volume";
-         break;
-      default:
-         return 0;
-   }
+   TString tabname = "Volume";
                      
    TGTabElement *tel;
    for (Int_t i=0; i<ntabs; i++) {
@@ -360,25 +227,18 @@ Int_t TGeoTabManager::GetTabIndex(EGeoTabType type) const
 }
 
 //______________________________________________________________________________
-void TGeoTabManager::SetEnabled(EGeoTabType type, Bool_t flag)
+void TGeoTabManager::SetVolTabEnabled(Bool_t flag)
 {
 // Enable/disable tabs
-   fTab->SetEnabled(GetTabIndex(type), flag);
+   fTab->SetEnabled(GetTabIndex(), flag);
 }
 
 //______________________________________________________________________________
-void TGeoTabManager::SetModel(EGeoTabType type, TObject *model, Int_t event)
+void TGeoTabManager::SetModel(TObject *model, Int_t event)
 {
 // Send the SetModel signal to all editors in the tab TYPE.
-   TGCompositeFrame *tab;
-   switch (type) {
-      case kTabVolume:
-         tab = fVolumeTab;
-         fVolume = (TGeoVolume*)model;
-         break;
-      default:
-         tab = (TGCompositeFrame*)((TGFrameElement*)fTab->GetTabContainer(0)->GetList()->At(0))->fFrame;
-   }
+   TGCompositeFrame *tab = fVolumeTab;
+   fVolume = (TGeoVolume*)model;
    TGFrameElement *el;
    TIter next(tab->GetList());
    while ((el = (TGFrameElement *) next())) {
@@ -390,10 +250,10 @@ void TGeoTabManager::SetModel(EGeoTabType type, TObject *model, Int_t event)
 }      
 
 //______________________________________________________________________________
-void TGeoTabManager::SetTab(EGeoTabType type)
+void TGeoTabManager::SetTab()
 {
 // Set a given tab element as active one.
-   fTab->SetTab(GetTabIndex(type));
+   fTab->SetTab(GetTabIndex());
 }
    
 ClassImp(TGeoTreeDialog)
@@ -406,12 +266,12 @@ TGeoTreeDialog::TGeoTreeDialog(TGFrame *caller, const TGWindow *main, UInt_t w, 
 {
 // Constructor
    fgSelectedObj = 0;
-   TGCanvas *tgcv = new TGCanvas(this, 100, 200,  kSunkenFrame | kDoubleBorder);
-   fLT = new TGListTree(tgcv->GetViewPort(), 100, 200);
+   fCanvas = new TGCanvas(this, 100, 200,  kSunkenFrame | kDoubleBorder);
+   fLT = new TGListTree(fCanvas->GetViewPort(), 100, 200);
    fLT->Associate(this);
-   tgcv->SetContainer(fLT);
-   AddFrame(tgcv, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 2,2,2,2));
-   TGCompositeFrame *f1 = new TGCompositeFrame(this, 100, 10, kHorizontalFrame | kLHintsExpandX);
+   fCanvas->SetContainer(fLT);
+   AddFrame(fCanvas, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 2,2,2,2));
+   f1 = new TGCompositeFrame(this, 100, 10, kHorizontalFrame | kLHintsExpandX);
    fObjLabel = new TGLabel(f1, "Selected: -none-");
    Pixel_t color;
    gClient->GetColorByName("#0000ff", color);
@@ -436,6 +296,11 @@ TGeoTreeDialog::TGeoTreeDialog(TGFrame *caller, const TGWindow *main, UInt_t w, 
 TGeoTreeDialog::~TGeoTreeDialog()
 {
 // Destructor
+   delete fClose;
+   delete fObjLabel;
+   delete f1;
+   delete fLT;
+   delete fCanvas;
 }
 
 //______________________________________________________________________________
@@ -463,7 +328,6 @@ TGeoVolumeDialog::TGeoVolumeDialog(TGFrame *caller, const TGWindow *main, UInt_t
                  :TGeoTreeDialog(caller, main, w, h)
 {
 // Ctor.
-   SetCleanup(kDeepCleanup);
    BuildListTree();   
    ConnectSignalsToSlots();
    MapSubwindows();
@@ -572,7 +436,6 @@ TGeoShapeDialog::TGeoShapeDialog(TGFrame *caller, const TGWindow *main, UInt_t w
                  :TGeoTreeDialog(caller, main, w, h)
 {
 // Ctor.
-   SetCleanup(kDeepCleanup);
    BuildListTree();   
    ConnectSignalsToSlots();
    MapSubwindows();
@@ -627,7 +490,6 @@ void TGeoShapeDialog::DoItemClick(TGListTreeItem *item, Int_t btn)
    if (btn!=kButton1) return;
    DoSelect(item);   
    if (!item || !item->GetUserData()) return;
-   //gClient->NeedRedraw(fLT);
 }   
 
 //______________________________________________________________________________
@@ -646,7 +508,6 @@ TGeoMediumDialog::TGeoMediumDialog(TGFrame *caller, const TGWindow *main, UInt_t
                  :TGeoTreeDialog(caller, main, w, h)
 {
 // Ctor.
-   SetCleanup(kDeepCleanup);
    BuildListTree();   
    ConnectSignalsToSlots();
    MapSubwindows();
@@ -705,7 +566,6 @@ TGeoMaterialDialog::TGeoMaterialDialog(TGFrame *caller, const TGWindow *main, UI
                  :TGeoTreeDialog(caller, main, w, h)
 {
 // Ctor.
-   SetCleanup(kDeepCleanup);
    BuildListTree();   
    ConnectSignalsToSlots();
    MapSubwindows();
@@ -764,7 +624,6 @@ TGeoMatrixDialog::TGeoMatrixDialog(TGFrame *caller, const TGWindow *main, UInt_t
                  :TGeoTreeDialog(caller, main, w, h)
 {
 // Ctor.
-   SetCleanup(kDeepCleanup);
    BuildListTree();   
    ConnectSignalsToSlots();
    MapSubwindows();
@@ -852,11 +711,11 @@ TGeoTransientPanel::TGeoTransientPanel(const char *name, TObject *obj)
 {
 // Transient panel ctor.
    fModel = obj;
-   TGCanvas *can = new TGCanvas(this, 170, 100);
-   fTab = new TGTab(can->GetViewPort(), 10, 10);
-   can->SetContainer(fTab);
-   AddFrame(can, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
-   fTab->Associate(can);
+   fCan = new TGCanvas(this, 170, 100);
+   fTab = new TGTab(fCan->GetViewPort(), 10, 10);
+   fCan->SetContainer(fTab);
+   AddFrame(fCan, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
+   fTab->Associate(fCan);
    fTabContainer = fTab->AddTab(name);
    fStyle = new TGCompositeFrame(fTabContainer, 110, 30, kVerticalFrame);
    fTabContainer->AddFrame(fStyle, new TGLayoutHints(kLHintsTop | kLHintsExpandX,\
@@ -879,8 +738,10 @@ TGeoTransientPanel::TGeoTransientPanel(const char *name, TObject *obj)
 TGeoTransientPanel::~TGeoTransientPanel()
 {
 // Destructor.
+   DeleteEditors();
+   delete fTab;
+   delete fCan;
    gROOT->GetListOfCleanups()->Remove(this);
-   Cleanup(); 
 }
 
 //______________________________________________________________________________
@@ -967,6 +828,7 @@ void TGeoTransientPanel::Show()
 void TGeoTransientPanel::DeleteEditors()
 {
 // Delete editors.
+   fStyle->Cleanup();
 }
 
    

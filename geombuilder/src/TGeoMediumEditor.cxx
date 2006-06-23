@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoMediumEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoMediumEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -223,12 +223,14 @@ TGeoMediumEditor::~TGeoMediumEditor()
 // Destructor
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsA() == TGCompositeFrame::Class()  ||
+          el->fFrame->IsA() == TGHorizontalFrame::Class() ||
+          el->fFrame->IsA() == TGVerticalFrame::Class()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoMedium::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;

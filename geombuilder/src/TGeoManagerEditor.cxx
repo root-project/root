@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -65,7 +65,11 @@
 #include "TGeoVolume.h"
 #include "TGeoManager.h"
 #include "TGeoBBox.h"
+#include "TGeoPara.h"
 #include "TGeoTube.h"
+#include "TGeoEltu.h"
+#include "TGeoHype.h"
+#include "TGeoTorus.h"
 #include "TGeoTrd1.h"
 #include "TGeoTrd2.h"
 #include "TGeoCone.h"
@@ -121,6 +125,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t id, Int_t width,
    TGShutterItem *si = new TGShutterItem(fCategories, new TGHotString("General"),kCAT_GENERAL);
    container = (TGCompositeFrame*)si->GetContainer();
    container->SetBackgroundColor(GetDefaultFrameBackground());
+   fCategories->AddItem(si);
    // TextEntry for manager name
    f1 = new TGCompositeFrame(container, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(label = new TGLabel(f1, "Name/Title"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
@@ -180,7 +185,6 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t id, Int_t width,
    f7->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
    container->AddFrame(f7, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
    
-   fCategories->AddItem(si);
 
    si = new TGShutterItem(fCategories, new TGHotString("Shapes"),kCAT_SHAPES);
    container = (TGCompositeFrame*)si->GetContainer();
@@ -607,15 +611,26 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t id, Int_t width,
 TGeoManagerEditor::~TGeoManagerEditor()
 {
 // Destructor.
-   TGFrameElement *el;
-   TIter next(GetList());
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-   }
-   Cleanup(); 
-   if (fTabMgr) delete fTabMgr;
-   TClass *cl = TGeoVolume::Class();
+   TGCompositeFrame *cont;
+   cont = (TGCompositeFrame*)fCategories->GetItem("General")->GetContainer();
+   TGeoTabManager::Cleanup(cont);
+   cont = (TGCompositeFrame*)fCategories->GetItem("Shapes")->GetContainer();
+   TGeoTabManager::Cleanup(cont);
+   cont = (TGCompositeFrame*)fCategories->GetItem("Volumes")->GetContainer();
+   TGeoTabManager::Cleanup(cont);
+   cont = (TGCompositeFrame*)fCategories->GetItem("Materials")->GetContainer();
+   TGeoTabManager::Cleanup(cont);
+   cont = (TGCompositeFrame*)fCategories->GetItem("Media")->GetContainer();
+   TGeoTabManager::Cleanup(cont);
+   cont = (TGCompositeFrame*)fCategories->GetItem("Matrices")->GetContainer();
+   TGeoTabManager::Cleanup(cont);
+   Cleanup();   
+
+   if (fTabMgr) {
+      fTabMgr->GetVolumeTab()->Cleanup();
+      delete fTabMgr;
+   }   
+   TClass *cl = TGeoManager::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
    while ((ge=(TGedElement*)next1())) {
@@ -766,7 +781,6 @@ void TGeoManagerEditor::DoCreateBox()
 // Create a box.
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
    fSelectedShape = new TGeoBBox(Form("box_%i",id), 1., 1., 1.);
-   fTabMgr->AddShape(fSelectedShape->GetName(), id);
    ShowSelectShape();
    // Check if volumes category can be activated
    if (fGeometry->GetListOfMedia()->GetSize())
@@ -778,6 +792,12 @@ void TGeoManagerEditor::DoCreateBox()
 void TGeoManagerEditor::DoCreatePara()
 {
 // Create a parallelipiped.
+   Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
+   fSelectedShape = new TGeoPara(Form("para_%i",id), 1., 1., 1., 30., 20., 45.);
+   ShowSelectShape();
+   if (fGeometry->GetListOfMedia()->GetSize())
+      fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
+   DoEditShape();
 }
 
 //______________________________________________________________________________
@@ -786,7 +806,6 @@ void TGeoManagerEditor::DoCreateTrd1()
 // Create a Trd1.
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
    fSelectedShape = new TGeoTrd1(Form("trd1_%i",id), 0.5, 1., 1., 1.);
-   fTabMgr->AddShape(fSelectedShape->GetName(), id);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -799,7 +818,6 @@ void TGeoManagerEditor::DoCreateTrd2()
 // Create a Trd2.
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
    fSelectedShape = new TGeoTrd2(Form("trd2_%i",id), 0.5, 1., 0.5, 1., 1.);
-   fTabMgr->AddShape(fSelectedShape->GetName(), id);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -837,7 +855,6 @@ void TGeoManagerEditor::DoCreateTube()
 // Create a tube.
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
    fSelectedShape = new TGeoTube(Form("tube_%i",id), 0.5, 1., 1.);
-   fTabMgr->AddShape(fSelectedShape->GetName(), id);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -850,7 +867,6 @@ void TGeoManagerEditor::DoCreateTubs()
 // Create a tube segment.
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
    fSelectedShape = new TGeoTubeSeg(Form("tubs_%i",id), 0.5, 1., 1.,0.,45.);
-   fTabMgr->AddShape(fSelectedShape->GetName(), id);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -863,7 +879,6 @@ void TGeoManagerEditor::DoCreateCone()
 // Create a cone.
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
    fSelectedShape = new TGeoCone(Form("cone_%i",id), 0.5, 0.5, 1., 1.5, 2.);
-   fTabMgr->AddShape(fSelectedShape->GetName(), id);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -876,7 +891,6 @@ void TGeoManagerEditor::DoCreateCons()
 // Create a cone segment.
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
    fSelectedShape = new TGeoConeSeg(Form("cons_%i",id), 0.5, 0.5, 1., 1.5, 2.,0.,45.);
-   fTabMgr->AddShape(fSelectedShape->GetName(), id);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -889,7 +903,6 @@ void TGeoManagerEditor::DoCreateSphe()
 // Create a sphere.
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
    fSelectedShape = new TGeoSphere(Form("sphere_%i",id), 0.5, 1., 0., 180., 0.,360.);
-   fTabMgr->AddShape(fSelectedShape->GetName(), id);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -906,12 +919,25 @@ void TGeoManagerEditor::DoCreateCtub()
 void TGeoManagerEditor::DoCreateEltu()
 {
 // Create an eliptical tube.
+   Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
+   fSelectedShape = new TGeoEltu(Form("para_%i",id), 1., 2., 1.5 );
+   ShowSelectShape();
+   if (fGeometry->GetListOfMedia()->GetSize())
+      fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
+   DoEditShape();
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateTorus()
 {
-// Create a torus phi segment with rmin and rmax.
+// Create a torus shape.
+   Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
+   fSelectedShape = new TGeoTorus(Form("torus_%i",id), 10., 1., 1.5, 0, 360.);
+   ShowSelectShape();
+   if (fGeometry->GetListOfMedia()->GetSize())
+      fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
+   DoEditShape();
+
 }
 
 //______________________________________________________________________________
@@ -922,7 +948,6 @@ void TGeoManagerEditor::DoCreatePcon()
    fSelectedShape = new TGeoPcon(Form("pcon_%i",id), 0., 360., 2);
    ((TGeoPcon*)fSelectedShape)->DefineSection(0, -1, 0.5, 1.);
    ((TGeoPcon*)fSelectedShape)->DefineSection(1, 1, 0.2, 0.5);
-   fTabMgr->AddShape(fSelectedShape->GetName(), id);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -939,6 +964,12 @@ void TGeoManagerEditor::DoCreatePgon()
 void TGeoManagerEditor::DoCreateHype()
 {
 // Create a hyperboloid.
+   Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
+   fSelectedShape = new TGeoHype(Form("hype_%i",id), 1., 15., 2., 30., 5.);
+   ShowSelectShape();
+   if (fGeometry->GetListOfMedia()->GetSize())
+      fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
+   DoEditShape();
 }
 
 //______________________________________________________________________________
@@ -1078,16 +1109,12 @@ void TGeoManagerEditor::DoEditVolume()
 {
 // Slot for editing selected volume.
    if (!fSelectedVolume) {
-      fTabMgr->SetEnabled(TGeoTabManager::kTabVolume, kFALSE);
+      fTabMgr->SetVolTabEnabled(kFALSE);
       return;
    }   
-   fTabMgr->SetEnabled(TGeoTabManager::kTabVolume);
+   fTabMgr->SetVolTabEnabled();
    fTabMgr->GetVolumeEditor(fSelectedVolume);
-   fTabMgr->SetTab(TGeoTabManager::kTabVolume);
-//   fGeometry->SetTopVisible();
-//   fGeometry->SetVisLevel(1);
-//   volume->SetVisContainers();
-//   volume->SetVisibility(kTRUE);
+   fTabMgr->SetTab();
    fSelectedVolume->Draw();
 }
 

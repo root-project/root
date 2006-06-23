@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.3 2006/06/20 06:33:20 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -34,7 +34,7 @@ ClassImp(TGeoTubeEditor)
 
 enum ETGeoTubeWid {
    kTUBE_NAME, kTUBE_RMIN, kTUBE_RMAX, kTUBE_Z,
-   kTUBE_APPLY, kTUBE_CANCEL, kTUBE_UNDO
+   kTUBE_APPLY, kTUBE_UNDO
 };
 
 //______________________________________________________________________________
@@ -104,21 +104,23 @@ TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t id, Int_t width,
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
       
-   // Buttons
-   TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame);
-   fApply = new TGTextButton(f23, "Apply");
-   f23->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-   fApply->Associate(this);
-   fCancel = new TGTextButton(f23, "Cancel");
-   f23->AddFrame(fCancel, new TGLayoutHints(kLHintsCenterX, 2, 2, 4, 4));
-   fCancel->Associate(this);
-   fUndo = new TGTextButton(f23, " Undo ");
-   f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
-   fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
-   fUndo->SetSize(fCancel->GetSize());
-   fApply->SetSize(fCancel->GetSize());
+   // Delayed draw
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
+   fDelayed = new TGCheckButton(f1, "Delayed draw");
+   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
 
+   // Buttons
+   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
+   fApply = new TGTextButton(f1, "Apply");
+   f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   fApply->Associate(this);
+   fUndo = new TGTextButton(f1, "Undo");
+   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   fUndo->Associate(this);
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   fUndo->SetSize(fApply->GetSize());
+   
    // Initialize layout
    MapSubwindows();
    Layout();
@@ -137,12 +139,12 @@ TGeoTubeEditor::~TGeoTubeEditor()
 // Destructor
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoTube::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
@@ -160,7 +162,6 @@ void TGeoTubeEditor::ConnectSignals2Slots()
 {
    // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoTubeEditor", this, "DoApply()");
-   fCancel->Connect("Clicked()", "TGeoTubeEditor", this, "DoCancel()");
    fUndo->Connect("Clicked()", "TGeoTubeEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoTubeEditor", this, "DoModified()");
    fERmin->Connect("ValueSet(Long_t)", "TGeoTubeEditor", this, "DoRmin()");
@@ -194,10 +195,16 @@ void TGeoTubeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fEDz->SetNumber(fDzi);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
    
    if (fInit) ConnectSignals2Slots();
    SetActive();
+}
+
+//______________________________________________________________________________
+Bool_t TGeoTubeEditor::IsDelayed() const
+{
+// Check if shape drawing is delayed.
+   return (fDelayed->GetState() == kButtonDown);
 }
 
 //______________________________________________________________________________
@@ -212,18 +219,13 @@ void TGeoTubeEditor::DoApply()
 {
 // Slot for applying modifications.
    const char *name = fShapeName->GetText();
-   if (strcmp(name,fShape->GetName())) {
-      fShape->SetName(name);
-      Int_t id = gGeoManager->GetListOfShapes()->IndexOf(fShape);
-      fTabMgr->UpdateShape(id);
-   }   
+   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    Double_t dz = fEDz->GetNumber();
    fShape->SetTubeDimensions(rmin, rmax, dz);
    fShape->ComputeBBox();
    fUndo->SetEnabled();
-   fCancel->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
    if (fPad) {
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
@@ -237,33 +239,20 @@ void TGeoTubeEditor::DoApply()
 }
 
 //______________________________________________________________________________
-void TGeoTubeEditor::DoCancel()
-{
-// Slot for cancelling current modifications.
-   fShapeName->SetText(fNamei.Data());
-   fERmin->SetNumber(fRmini);
-   fERmax->SetNumber(fRmaxi);
-   fEDz->SetNumber(fDzi);
-   fApply->SetEnabled(kFALSE);
-   fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
-}
-
-//______________________________________________________________________________
 void TGeoTubeEditor::DoModified()
 {
 // Slot for signaling modifications.
    fApply->SetEnabled();
-   if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
 
 //______________________________________________________________________________
 void TGeoTubeEditor::DoUndo()
 {
 // Slot for undoing last operation.
-   DoCancel();
+   fERmin->SetNumber(fRmini);
+   fERmax->SetNumber(fRmaxi);
+   fEDz->SetNumber(fDzi);
    DoApply();
-   fCancel->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
@@ -275,10 +264,11 @@ void TGeoTubeEditor::DoRmin()
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmax<rmin+1.e-10) {
-      rmax = rmin + 0.1;
-      fERmax->SetNumber(rmax);
+      rmin = rmax - 0.1;
+      fERmin->SetNumber(rmin);
    }   
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -287,19 +277,29 @@ void TGeoTubeEditor::DoRmax()
 // Slot for rmax.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
+   if (rmax <= 0.) {
+       rmax = 0.1;
+       fERmax->SetNumber(rmax);
+   }     
    if (rmax<rmin+1.e-10) {
-      rmin = rmax - 0.1;
-      if (rmin < 0.) rmin = 0.;
-      fERmin->SetNumber(rmin);
+      rmax = rmin + 0.1;
+      fERmax->SetNumber(rmax);
    }   
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
 void TGeoTubeEditor::DoDz()
 {
 // Slot for dz.
+   Double_t dz = fEDz->GetNumber();
+   if (dz<=0) {
+      dz = 0.1;
+      fEDz->SetNumber(dz);
+   }   
    DoModified();
+   if (!IsDelayed()) DoApply();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -369,12 +369,12 @@ TGeoTubeSegEditor::~TGeoTubeSegEditor()
 // Destructor
    TGFrameElement *el;
    TIter next(GetList());
-   
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
+
    TClass *cl = TGeoTubeSeg::Class();
    TIter next1(cl->GetEditorList()); 
    TGedElement *ge;
@@ -394,10 +394,8 @@ void TGeoTubeSegEditor::ConnectSignals2Slots()
    TGeoTubeEditor::ConnectSignals2Slots();
    Disconnect(fApply, "Clicked()",(TGeoTubeEditor*)this, "DoApply()");
    Disconnect(fUndo, "Clicked()",(TGeoTubeEditor*)this, "DoUndo()");
-   Disconnect(fCancel, "Clicked()",(TGeoTubeEditor*)this, "DoCancel()");
    fApply->Connect("Clicked()", "TGeoTubeSegEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoTubeSegEditor", this, "DoUndo()");
-   fCancel->Connect("Clicked()", "TGeoTubeSegEditor", this, "DoCancel()");
    fEPhi1->Connect("ValueSet(Long_t)", "TGeoTubeSegEditor", this, "DoPhi1()");
    fEPhi2->Connect("ValueSet(Long_t)", "TGeoTubeSegEditor", this, "DoPhi2()");
 //   fEPhi1->GetNumberEntry()->Connect("TextChanged(const char *)","TGeoTubeSegEditor", this, "DoPhi1()");
@@ -431,7 +429,6 @@ void TGeoTubeSegEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fEDz->SetNumber(fDzi);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   fCancel->SetEnabled(kFALSE);
    
    if (fInit) ConnectSignals2Slots();
    SetActive();
@@ -456,6 +453,7 @@ void TGeoTubeSegEditor::DoPhi1()
       fLock = kTRUE;
       fSPhi->SetPosition(phi1,phi2);
    } else fLock = kFALSE;
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -477,6 +475,7 @@ void TGeoTubeSegEditor::DoPhi2()
       fLock = kTRUE;
       fSPhi->SetPosition(phi1,phi2);
    } else fLock = kFALSE;
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
@@ -490,24 +489,23 @@ void TGeoTubeSegEditor::DoPhi()
       fLock = kTRUE;
       fEPhi2->SetNumber(fSPhi->GetMaxPosition());
    } else fLock = kFALSE;   
+   if (!IsDelayed()) DoApply();
 }
 
 //______________________________________________________________________________
 void TGeoTubeSegEditor::DoApply()
 {
 // Slot for applying modifications.
+   fApply->SetEnabled(kFALSE);
    const char *name = fShapeName->GetText();
-   if (strcmp(name,fShape->GetName())) {
-      fShape->SetName(name);
-      Int_t id = gGeoManager->GetListOfShapes()->IndexOf(fShape);
-      fTabMgr->UpdateShape(id);
-   }   
+   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
+   if (rmin<0 || rmax<rmin) return;
    Double_t dz = fEDz->GetNumber();
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
-   if ((phi2-phi1) > 360.) {
+   if ((phi2-phi1) > 360.001) {
       phi1 = 0.;
       phi2 = 360.;
       fEPhi1->SetNumber(phi1);
@@ -519,8 +517,6 @@ void TGeoTubeSegEditor::DoApply()
    ((TGeoTubeSeg*)fShape)->SetTubsDimensions(rmin, rmax, dz, phi1, phi2);
    fShape->ComputeBBox();
    fUndo->SetEnabled();
-   fCancel->SetEnabled(kFALSE);
-   fApply->SetEnabled(kFALSE);
    if (fPad) {
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
          fShape->Draw();
@@ -536,22 +532,14 @@ void TGeoTubeSegEditor::DoApply()
 void TGeoTubeSegEditor::DoUndo()
 {
 // Slot for undoing last operation.
-   DoCancel();
+   fEPhi1->SetNumber(fPmini);
+   fEPhi2->SetNumber(fPmaxi);
+   fSPhi->SetPosition(fPmini,fPmaxi);
    DoApply();
-   fCancel->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
 
-//______________________________________________________________________________
-void TGeoTubeSegEditor::DoCancel()
-{
-// Slot for cancelling current modifications.
-   fEPhi1->SetNumber(fPmini);
-   fEPhi2->SetNumber(fPmaxi);
-   fSPhi->SetPosition(fPmini,fPmaxi);
-   TGeoTubeEditor::DoCancel();
-}
 
 
    

@@ -1,4 +1,4 @@
-// @(#)$Name:  $:$Id: LinkDef.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#)$Name:  $:$Id: LinkDef.h,v 1.2 2006/06/19 14:58:48 brun Exp $
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -17,9 +17,13 @@
 #pragma link C++ class TGeoBBoxEditor;
 #pragma link C++ class TGeoTubeEditor;
 #pragma link C++ class TGeoTubeSegEditor;
+#pragma link C++ class TGeoEltuEditor;
+#pragma link C++ class TGeoHypeEditor;
 #pragma link C++ class TGeoConeEditor;
 #pragma link C++ class TGeoConeSegEditor;
 #pragma link C++ class TGeoTrd1Editor;
+#pragma link C++ class TGeoParaEditor;
+#pragma link C++ class TGeoTorusEditor;
 #pragma link C++ class TGeoPconEditor;
 #pragma link C++ class TGeoPconSection;
 #pragma link C++ class TGeoTrd2Editor;
