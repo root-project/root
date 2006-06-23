@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.11 2006/05/23 06:16:27 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.12 2006/06/22 08:21:22 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -2159,6 +2159,7 @@ Bool_t TSQLFile::CreateClassTable(TSQLClassInfo* sqlinfo, TObjArray* colinfos)
 //______________________________________________________________________________
 Bool_t TSQLFile::CreateRawTable(TSQLClassInfo* sqlinfo)
 {
+   //create the raw table
    if (sqlinfo==0) return kFALSE;
    
    if (sqlinfo->IsRawTableExist()) return kTRUE;
