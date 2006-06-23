@@ -343,7 +343,7 @@ class genDictionary(object) :
     f_buffer += self.genFunctionsStubs( selfunctions )
     f_buffer += self.genInstantiateDict(selclasses, selfunctions, selenums, selvariables)
     f.write('namespace {\n')
-    f.write(self.genNamespaces(selclasses))
+    f.write(self.genNamespaces(selclasses + selfunctions + selenums + selvariables))
     f.write(self.genAllTypes())
     f.write('} // unnamed namespace\n')
     f.write(f_shadow)
@@ -848,10 +848,10 @@ class genDictionary(object) :
          c += 'TypeBuilder("'+name+'");\n'
     return c 
 #----------------------------------------------------------------------------------
-  def genNamespaces(self, selclasses ) :
+  def genNamespaces(self, selected ) :
     used_context = []
     s = ''
-    for c in selclasses :
+    for c in selected :
       if 'incomplete' not in c : used_context.append(c['context'])
     idx = 0
     for ns in self.namespaces :
