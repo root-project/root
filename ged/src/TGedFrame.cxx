@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.10 2006/05/23 04:47:36 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.11 2006/05/24 14:49:21 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -39,6 +39,7 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t id, Int_t width,
    fPad    = 0;
    fModel  = 0;
    fInit   = kTRUE;
+   fAvoidSignal = kFALSE;
 
    Associate(p);
    fTab = (TGTab*)p->GetParent()->GetParent();
@@ -53,21 +54,24 @@ TGedFrame::TGedFrame(const TGedFrame& gf) :
   fModel(gf.fModel),
   fPad(gf.fPad),
   fInit(gf.fInit),
+  fAvoidSignal(gf.fAvoidSignal),
   fTab(gf.fTab)
 { 
-   //copy constructor
+   // Copy constructor.
 }
 
 //______________________________________________________________________________
 TGedFrame& TGedFrame::operator=(const TGedFrame& gf)
 {
-   //assignement operator
+   // Assignement operator.
+
    if(this!=&gf) {
       TGCompositeFrame::operator=(gf);
       TGWidget::operator=(gf);
       fModel=gf.fModel;
       fPad=gf.fPad;
       fInit=gf.fInit;
+      fAvoidSignal=gf.fAvoidSignal;
       fTab=gf.fTab;
    } 
    return *this;
@@ -122,8 +126,9 @@ void TGedFrame::SetActive(Bool_t active)
       ((TGCompositeFrame*)GetParent())->ShowFrame(this);
    else
       ((TGCompositeFrame*)GetParent())->HideFrame(this);
-
-   ((TGMainFrame*)GetMainFrame())->Layout();
+   
+// no need to call for every single editor Layout of TGMainFrame
+//   ((TGMainFrame*)GetMainFrame())->Layout();
 
    // to avoid that the user changes options on a deactivated Tab
    if (fTab->IsEnabled(fTab->GetCurrent()))
@@ -217,13 +222,14 @@ TGedNameFrame::TGedNameFrame(const TGedNameFrame& nf) :
   f1(nf.f1),
   f2(nf.f2)
 { 
-   //copy constructor
+   // Copy constructor.
 }
 
 //______________________________________________________________________________
 TGedNameFrame& TGedNameFrame::operator=(const TGedNameFrame& nf)
 {
-   //assignement operator
+   // Assignement operator.
+
    if(this!=&nf) {
       TGedFrame::operator=(nf);
       fLabel=nf.fLabel;

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TLineEditor.cxx,v 1.1 2006/04/25 08:14:20 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TLineEditor.cxx,v 1.2 2006/04/25 16:15:07 antcheva Exp $
 // Author: Ilka  Antcheva 24/04/06
 
 /*************************************************************************
@@ -171,6 +171,7 @@ void TLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fPad = pad;
 
    fLine = (TLine *)fModel;
+   fAvoidSignal = kTRUE;
 
    Float_t val = fLine->GetX1();
    fStartPointX->SetNumber(val);
@@ -192,6 +193,7 @@ void TLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    if (fInit) ConnectSignals2Slots();
    SetActive();
+   fAvoidSignal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -199,6 +201,7 @@ void TLineEditor::DoStartPoint()
 {
    // Slot connected to the line start point.
 
+   if (fAvoidSignal) return;
    fLine->SetX1((Double_t)fStartPointX->GetNumber());
    fLine->SetY1((Double_t)fStartPointY->GetNumber());
    fLine->Paint(fLine->GetDrawOption());
@@ -209,6 +212,7 @@ void TLineEditor::DoEndPoint()
 {
    // Slot connected to the line EndPoint.
 
+   if (fAvoidSignal) return;
    fLine->SetX2((Double_t)fEndPointX->GetNumber());
    fLine->SetY2((Double_t)fEndPointY->GetNumber());
    fLine->Paint(fLine->GetDrawOption());
@@ -220,6 +224,7 @@ void TLineEditor::DoLineVertical()
 {
    // Slot so set the line vertical
 
+   if (fAvoidSignal) return;
    if (fVertical->GetState() == kButtonDown) {
       fLine->SetVertical();
       fHorizontal->SetState(kButtonUp, kFALSE);
@@ -234,6 +239,7 @@ void TLineEditor::DoLineHorizontal()
 {
    // Slot so set the line horizontal
 
+   if (fAvoidSignal) return;
    if (fHorizontal->GetState() == kButtonDown) {
       fLine->SetHorizontal();
       fVertical->SetState(kButtonUp, kFALSE);

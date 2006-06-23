@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.h,v 1.6 2006/04/05 08:30:26 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.h,v 1.7 2006/04/13 13:22:31 antcheva Exp $
 // Author: Carsten Hof 28/07/04
 
 /*************************************************************************
@@ -64,7 +64,7 @@ public:
    virtual void SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
 
    // slots related to graph attributes
-   virtual void DoShape(Int_t s);
+   virtual void DoShape();
    virtual void DoMarkerOnOff(Bool_t on);
    virtual void DoTitle(const char *text);
    virtual void DoGraphLineWidth();

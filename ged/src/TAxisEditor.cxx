@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.11 2005/11/25 09:56:35 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.12 2006/03/20 21:43:41 pcanal Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -319,6 +319,7 @@ void TAxisEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fPad = pad;
 
    fAxis = (TAxis *)fModel;
+   fAvoidSignal = kTRUE;
 
    Color_t c = fAxis->GetAxisColor();
    Pixel_t p = TColor::Number2Pixel(c);
@@ -405,6 +406,7 @@ void TAxisEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    
    if (fInit) ConnectSignals2Slots();
    SetActive();
+   fAvoidSignal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -412,6 +414,7 @@ void TAxisEditor::DoAxisColor(Pixel_t color)
 {
    // Slot connected to the axis color.
    
+   if (fAvoidSignal) return;
    fAxis->SetAxisColor(TColor::GetColor(color));
    Update();
 }
@@ -421,6 +424,7 @@ void TAxisEditor::DoTickLength()
 {
    // Slot connected to the tick length settings.
 
+   if (fAvoidSignal) return;
    Float_t ticks = fTickLength->GetNumber();
    fAxis->SetTickLength(ticks);
    Update();
@@ -433,6 +437,7 @@ void TAxisEditor::DoTicks()
 {
    // Slot connected to the ticks draw settings.
 
+   if (fAvoidSignal) return;
    if (fTicksBoth->GetState() == kButtonDown) {
       fAxis->SetTicks("+-");
    } else {
@@ -448,6 +453,7 @@ void TAxisEditor::DoDivisions()
    // Slot connected to the number of divisions.
 
    // the number of divisions are used 3 number entry widgets
+   if (fAvoidSignal) return;
    Int_t div = (Int_t)(fDiv1->GetNumber() + fDiv2->GetNumber()  * 100 
                                           + fDiv3->GetNumber() * 10000);
    fAxis->SetNdivisions(div, fOptimize->GetState());
@@ -458,6 +464,8 @@ void TAxisEditor::DoDivisions()
 void TAxisEditor::DoLogAxis()
 {
    // Slot for Log scale setting.
+
+   if (fAvoidSignal) return;
 
    gPad = fPad;
       
@@ -487,6 +495,7 @@ void TAxisEditor::DoMoreLog()
 {
    // Slot connected to more Log labels flag
 
+   if (fAvoidSignal) return;
    Int_t flag = 0;
    if (fMoreLog->GetState() == kButtonDown)    flag = 1;
    else if (fMoreLog->GetState() == kButtonUp) flag = 0;
@@ -499,6 +508,7 @@ void TAxisEditor::DoTitle(const char *text)
 {
    // Slot connected to the axis color.
    
+   if (fAvoidSignal) return;
    fAxis->SetTitle(text);
    Update();
 }
@@ -508,6 +518,7 @@ void TAxisEditor::DoTitleColor(Pixel_t color)
 {
    // Slot connected to the title color.
    
+   if (fAvoidSignal) return;
    fAxis->SetTitleColor(TColor::GetColor(color));
    Update();
 }
@@ -517,6 +528,7 @@ void TAxisEditor::DoTitleSize()
 {
    // Slot connected to the title font size.
 
+   if (fAvoidSignal) return;
    Float_t size = fTitleSize->GetNumber();
    fAxis->SetTitleSize(size);
    Update();
@@ -527,6 +539,7 @@ void TAxisEditor::DoTitleFont(Int_t font)
 {
    // Slot connected to the title font.
 
+   if (fAvoidSignal) return;
    Int_t f = font * 10 + fTitlePrec;
    fAxis->SetTitleFont(f);
    Update();
@@ -537,6 +550,7 @@ void TAxisEditor::DoTitleOffset()
 {
    // Slot connected to the title offset.
 
+   if (fAvoidSignal) return;
    Float_t offset = fTitleOffset->GetNumber();
    fAxis->SetTitleOffset(offset);
    Update();
@@ -547,6 +561,7 @@ void TAxisEditor::DoTitleCentered()
 {
    // Slot connected to centered title option.
 
+   if (fAvoidSignal) return;
    Int_t ctr = fCentered->GetState();
    fAxis->CenterTitle(ctr);
    Update();
@@ -557,6 +572,7 @@ void TAxisEditor::DoTitleRotated()
 {
    // Slot connected to the title rotation.
 
+   if (fAvoidSignal) return;
    Int_t rot = fRotated->GetState();
    fAxis->RotateTitle(rot);
    Update();
@@ -567,6 +583,7 @@ void TAxisEditor::DoLabelColor(Pixel_t color)
 {
    // Slot connected to the label color.
 
+   if (fAvoidSignal) return;
    fAxis->SetLabelColor(TColor::GetColor(color));
    Update();
 }
@@ -576,6 +593,7 @@ void TAxisEditor::DoLabelSize()
 {
    // Slot connected to the label size.
 
+   if (fAvoidSignal) return;
    Float_t size = fLabelSize->GetNumber();
    fAxis->SetLabelSize(size);
    Update();
@@ -586,6 +604,7 @@ void TAxisEditor::DoLabelFont(Int_t font)
 {
    // Slot connected to the label font.
 
+   if (fAvoidSignal) return;
    Int_t f = font * 10 + fLabelPrec;
    fAxis->SetLabelFont(f);
    Update();
@@ -596,6 +615,7 @@ void TAxisEditor::DoLabelOffset()
 {
    // Slot connected to the label offset.
 
+   if (fAvoidSignal) return;
    Float_t offset = fLabelOffset->GetNumber();
    fAxis->SetLabelOffset(offset);
    Update();
@@ -606,6 +626,7 @@ void TAxisEditor::DoNoExponent()
 {
    // Slot connected to the labels' exponent flag.
 
+   if (fAvoidSignal) return;
    Int_t exp = fNoExponent->GetState();
    fAxis->SetNoExponent(exp);
    Update();
@@ -616,6 +637,7 @@ void TAxisEditor::DoDecimal(Bool_t on)
 {
    // Slot connected to the decimal part setting.
 
+   if (fAvoidSignal) return;
    fAxis->SetDecimals(on);
    gStyle->SetStripDecimals(!on);
    Update();

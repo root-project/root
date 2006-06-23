@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.7 2005/11/25 09:56:35 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.8 2006/03/20 21:43:41 pcanal Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -111,6 +111,7 @@ void TAttTextEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fPad = pad;
 
    fAttText = dynamic_cast<TAttText *>(fModel);
+   fAvoidSignal = kTRUE;
 
    fTypeCombo->Select(fAttText->GetTextFont() / 10);
 
@@ -127,15 +128,16 @@ void TAttTextEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    Int_t size = fPad->YtoPixel(0.0) - fPad->YtoPixel(dy);
    if (size > 50) size = 50;
    if (size < 0)  size = 0;
-   fSizeCombo->Select(size);
+   fSizeCombo->Select(size, kFALSE);
 
-   fAlignCombo->Select(fAttText->GetTextAlign());
+   fAlignCombo->Select(fAttText->GetTextAlign(), kFALSE);
 
    Color_t c = fAttText->GetTextColor();
    Pixel_t p = TColor::Number2Pixel(c);
-   fColorSelect->SetColor(p);
+   fColorSelect->SetColor(p, kFALSE);
 
    SetActive();
+   fAvoidSignal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -180,7 +182,7 @@ Bool_t TAttTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       }
    }
 
-   if (b) Update();
+   if (b && !fAvoidSignal) Update();
 
    return kTRUE;
 }

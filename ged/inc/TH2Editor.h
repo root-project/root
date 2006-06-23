@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH2Editor.h $
+// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,v 1.11 2006/01/30 17:42:05 rdm Exp $
 // Author: Carsten Hof 08/08/04
 
 /*************************************************************************
@@ -167,6 +167,7 @@ public:
    virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
 
    virtual void DoTitle(const char *text);
+   virtual void DoHistView();
    virtual void DoHistSimple();
    virtual void DoHistComplex();
    virtual void DoHistChanges();

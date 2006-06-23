@@ -117,34 +117,28 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    TGCompositeFrame *f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGButtonGroup *bgr = new TGButtonGroup(f6,3,1,3,0, "Border Mode");
-   bgr->SetRadioButtonExclusive(kTRUE);
-   fBmode = new TGRadioButton(bgr, " Sunken border", 77);
+   fBgroup = new TGButtonGroup(f6,3,1,3,0, "Border Mode");
+   fBgroup->SetRadioButtonExclusive(kTRUE);
+   fBmode = new TGRadioButton(fBgroup, " Sunken border", 77);
    fBmode->SetToolTipText("Set a sinken border of the pad/canvas");
-   fBmode0 = new TGRadioButton(bgr, " No border", 78);
+   fBmode0 = new TGRadioButton(fBgroup, " No border", 78);
    fBmode0->SetToolTipText("Set no border of the pad/canvas");
-   fBmode1 = new TGRadioButton(bgr, " Raised border", 79);
+   fBmode1 = new TGRadioButton(fBgroup, " Raised border", 79);
    fBmode1->SetToolTipText("Set a raised border of the pad/canvas");
-   bgr->SetButton(79, kTRUE);
-   bgr->SetLayoutHints(new TGLayoutHints(kLHintsLeft, 0,0,3,0), fBmode);
-   bgr->Show();
-   bgr->ChangeOptions(kFitWidth|kChildFrame|kVerticalFrame);
-   f6->AddFrame(bgr, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 1, 0, 0));
+   fBgroup->SetLayoutHints(new TGLayoutHints(kLHintsLeft, 0,0,3,0), fBmode);
+   fBgroup->Show();
+   fBgroup->ChangeOptions(kFitWidth|kChildFrame|kVerticalFrame);
+   f6->AddFrame(fBgroup, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 1, 0, 0));
    AddFrame(f6, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
    
-   f7 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f7 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGLabel *fSizeLbl = new TGLabel(f7, "Size:");                              
    f7->AddFrame(fSizeLbl, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 6, 1, 0, 0));
    fBsize = new TGLineWidthComboBox(f7, kPAD_BSIZE);
-   fBsize->Connect("Selected(Int_t)", "TPadEditor", this, "DoBorderSize(Int_t)"); 
    fBsize->Resize(92, 20);
    f7->AddFrame(fBsize, new TGLayoutHints(kLHintsLeft, 13, 1, 0, 0));
    fBsize->Associate(this);
    AddFrame(f7, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-
-   MapSubwindows();
-   Layout();
-   MapWindow();
 
    TClass *cl = TPad::Class();
    TGedElement *ge = new TGedElement;
@@ -198,9 +192,7 @@ void TPadEditor::ConnectSignals2Slots()
    fLogX->Connect("Toggled(Bool_t)","TPadEditor",this,"DoLogX(Bool_t)");
    fLogY->Connect("Toggled(Bool_t)","TPadEditor",this,"DoLogY(Bool_t)");
    fLogZ->Connect("Toggled(Bool_t)","TPadEditor",this,"DoLogZ(Bool_t)");
-   fBmode->Connect("Toggled(Bool_t)","TPadEditor",this,"DoBorderMode()");
-   fBmode0->Connect("Toggled(Bool_t)","TPadEditor",this,"DoBorderMode()");
-   fBmode1->Connect("Toggled(Bool_t)","TPadEditor",this,"DoBorderMode()");
+   fBgroup->Connect("Released(Int_t)","TPadEditor",this,"DoBorderMode()");
    
    fInit = kFALSE;
 }
@@ -222,7 +214,7 @@ void TPadEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fPad = pad;
 
    fPadPointer = (TPad *)fModel;
-   
+   fAvoidSignal = kTRUE;
    Bool_t on;
 
    on = fPadPointer->HasFixedAspectRatio();
@@ -267,10 +259,16 @@ void TPadEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    else fTickY->SetState(kButtonUp);
 
    par = fPadPointer->GetBorderMode();
-   if (par == -1) fBmode->SetState(kButtonDown);
-   else if (par == 1) fBmode1->SetState(kButtonDown);
-   else fBmode0->SetState(kButtonDown);
-
+   if (par == -1) {
+      fBgroup->SetButton(77, kTRUE);
+      fBsize->SetEnabled(kTRUE);
+   } else if (par == 1) {
+      fBgroup->SetButton(79, kTRUE);
+      fBsize->SetEnabled(kTRUE);
+   } else {
+      fBgroup->SetButton(78, kTRUE);
+      fBsize->SetEnabled(kFALSE);
+   }
    par = fPadPointer->GetBorderSize();
    if (par < 1) par = 1;
    if (par > 16) par = 16;
@@ -278,6 +276,7 @@ void TPadEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    
    if (fInit) ConnectSignals2Slots();
    SetActive();
+   fAvoidSignal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -285,6 +284,7 @@ void TPadEditor::DoEditable(Bool_t on)
 {
    // Slot connected to the check box 'Editable'.
 
+   if (fAvoidSignal) return;
    fPadPointer->SetEditable(on);
    Update();
 }
@@ -294,6 +294,7 @@ void TPadEditor::DoCrosshair(Bool_t on)
 {
    // Slot connected to the check box 'Crosshair'.
 
+   if (fAvoidSignal) return;
    fPadPointer->SetCrosshair(on);
    Update();
 }
@@ -303,6 +304,7 @@ void TPadEditor::DoFixedAspectRatio(Bool_t on)
 {
    // Slot connected to the check box 'Fixed aspect ratio'.
 
+   if (fAvoidSignal) return;
    fPadPointer->SetFixedAspectRatio(on);
    Update();
 }
@@ -312,6 +314,7 @@ void TPadEditor::DoGridX(Bool_t on)
 {
    // Slot connected to the check box 'GridX'.
 
+   if (fAvoidSignal) return;
    fPadPointer->SetGridx(on);
    Update();
 }
@@ -321,6 +324,7 @@ void TPadEditor::DoGridY(Bool_t on)
 {
    // Slot connected to the check box 'GridY'.
 
+   if (fAvoidSignal) return;
    fPadPointer->SetGridy(on);
    Update();
 }
@@ -330,6 +334,7 @@ void TPadEditor::DoLogX(Bool_t on)
 {
    // Slot connected to the check box 'LogX'.
 
+   if (fAvoidSignal) return;
    fPadPointer->SetLogx(on);
    Update();
 }
@@ -339,6 +344,7 @@ void TPadEditor::DoLogY(Bool_t on)
 {
    // Slot connected to the check box 'LogY'.
 
+   if (fAvoidSignal) return;
    fPadPointer->SetLogy(on);
    Update();
 }
@@ -348,6 +354,7 @@ void TPadEditor::DoLogZ(Bool_t on)
 {
    // Slot connected to the check box 'LogZ'.
 
+   if (fAvoidSignal) return;
    fPadPointer->SetLogz(on);
    Update();
 }
@@ -357,6 +364,7 @@ void TPadEditor::DoTickX(Bool_t on)
 {
    // Slot connected to the check box 'TickX'.
 
+   if (fAvoidSignal) return;
    fPadPointer->SetTickx(on);
    Update();
 }
@@ -366,6 +374,7 @@ void TPadEditor::DoTickY(Bool_t on)
 {
    // Slot connected to the check box 'TickY'.
 
+   if (fAvoidSignal) return;
    fPadPointer->SetTicky(on);
    Update();
 }
@@ -374,27 +383,28 @@ void TPadEditor::DoTickY(Bool_t on)
 void TPadEditor::DoBorderMode()
 {
    // Slot connected to the border mode settings.
-   
+
+   if (fAvoidSignal) return;
    Int_t mode = 0;
    if (fBmode->GetState() == kButtonDown) mode = -1;
    else if (fBmode0->GetState() == kButtonDown) mode = 0;
    else mode = 1;
 
-   if (!mode) HideFrame(f7);
-   else ShowFrame(f7);
-   Layout();
-   
+   if (!mode) {
+      fBsize->SetEnabled(kFALSE);
+   } else {
+      fBsize->SetEnabled(kTRUE);
+   }
    fPadPointer->SetBorderMode(mode);
    Update();
-   gPad->Modified();
-   gPad->Update();
 }
 
 //______________________________________________________________________________
 void TPadEditor::DoBorderSize(Int_t size)
 {
    // Slot connected to the border size settings.
-   
+
+   if (fAvoidSignal) return;
    fPadPointer->SetBorderSize(size);
    Update();
 }

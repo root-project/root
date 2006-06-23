@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.17 2006/04/13 13:22:31 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.18 2006/05/30 11:46:35 antcheva Exp $
 // Author: Carsten Hof   16/08/04
 
 /*************************************************************************
@@ -165,7 +165,7 @@ void TGraphEditor::ConnectSignals2Slots()
    // Connect signals to slots.
 
    fTitle->Connect("TextChanged(const char *)","TGraphEditor",this,"DoTitle(const char *)");
-   fgr->Connect("Pressed(Int_t)","TGraphEditor",this,"DoShape(Int_t)");
+   fgr->Connect("Released(Int_t)","TGraphEditor",this,"DoShape()");
    fMarkerOnOff->Connect("Toggled(Bool_t)","TGraphEditor",this,"DoMarkerOnOff(Bool_t)");
    fWidthCombo->Connect("Selected(Int_t)", "TGraphEditor", this, "DoGraphLineWidth()");
    fExSide->Connect("Clicked()","TGraphEditor",this,"DoGraphLineWidth()");
@@ -190,6 +190,7 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = obj;
    fPad = pad;
    fGraph = (TGraph *)fModel;
+   fAvoidSignal = kTRUE;
 
    // set the Title TextEntry
    const char *text = fGraph->GetTitle();
@@ -248,6 +249,7 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    if (fInit) ConnectSignals2Slots();
    SetActive();  // activates this Editor
+   fAvoidSignal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -256,25 +258,32 @@ void TGraphEditor::DoTitle(const char *text)
 {
    // Slot for setting the graph title.
 
+   if (fAvoidSignal) return;
    fGraph->SetTitle(text);
    Update();
 }
 
 //______________________________________________________________________________
 
-void TGraphEditor::DoShape(Int_t s)
+void TGraphEditor::DoShape()
 {
    // Slot connected to the draw options.
 
+   if (fAvoidSignal) return;
    TString opt;
-
    if (fGraph->InheritsFrom("TGraphErrors"))
       opt = fGraph->GetDrawOption();
    else
       opt = GetDrawOption();
 
    opt.ToUpper();
-
+   Int_t s = 0;
+   if (fShape->GetState() == kButtonDown) s = kSHAPE_NOLINE;
+   else if (fShape0->GetState() == kButtonDown) s = kSHAPE_SMOOTH;
+   else if (fShape1->GetState() == kButtonDown) s = kSHAPE_SIMPLE;
+   else if (fShape2->GetState() == kButtonDown) s = kSHAPE_BAR;
+   else s = kSHAPE_FILL;
+   
    switch (s) {
 
       // change draw option to No Line:
@@ -362,6 +371,7 @@ void TGraphEditor::DoMarkerOnOff(Bool_t on)
 {
    // Slot for setting markers as visible/invisible.
 
+   if (fAvoidSignal) return;
    TString t = GetDrawOption();
    t.ToUpper();
 
@@ -383,6 +393,7 @@ void TGraphEditor::DoGraphLineWidth()
 {
    // Slot connected to the graph line width.
 
+   if (fAvoidSignal) return;
    Int_t width = fWidthCombo->GetSelected();
    Int_t lineWidth = TMath::Abs(fGraph->GetLineWidth()%100);
    Int_t side = 1;

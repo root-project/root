@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH1Editor.h $
+// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,v 1.13 2006/01/30 17:42:05 rdm Exp $
 // Author: Carsten Hof 16/08/04
 
 /*************************************************************************
@@ -155,6 +155,7 @@ public:
    virtual void DoHistSimple();
    virtual void DoHistComplex();
    virtual void DoHistChanges();
+   virtual void DoHistView();
    virtual void DoBarOffset();
    virtual void DoBarWidth();
    virtual void DoPercent();

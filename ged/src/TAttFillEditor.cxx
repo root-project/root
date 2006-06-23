@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.10 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.11 2006/06/21 15:40:23 antcheva Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -108,9 +108,10 @@ void TAttFillEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fModel = obj;
    fPad = pad;
-
+   
    fAttFill = dynamic_cast<TAttFill *>(fModel);
-
+   fAvoidSignal = kTRUE;
+   
    Color_t c = fAttFill->GetFillColor();
    Pixel_t p = TColor::Number2Pixel(c);
    fColorSelect->SetColor(p, kFALSE);
@@ -120,6 +121,7 @@ void TAttFillEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    if (fInit) ConnectSignals2Slots();
    SetActive();
+   fAvoidSignal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -127,6 +129,7 @@ void TAttFillEditor::DoFillColor(Pixel_t color)
 {
    // Slot connected to the fill area color.
 
+   if (fAvoidSignal) return;
    fAttFill->SetFillColor(TColor::GetColor(color));
    Update();
 }
@@ -136,6 +139,7 @@ void TAttFillEditor::DoFillPattern(Style_t pattern)
 {
    // Slot connected to the fill area pattern.
 
+   if (fAvoidSignal) return;
    fAttFill->SetFillStyle(pattern);
    Update();
 }

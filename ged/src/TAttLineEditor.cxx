@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.9 2006/04/07 15:13:14 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.10 2006/06/21 15:40:23 antcheva Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -123,21 +123,23 @@ void TAttLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fPad = pad;
    
    fAttLine = dynamic_cast<TAttLine *>(fModel);
+   fAvoidSignal = kTRUE;
 
-   fStyleCombo->Select(fAttLine->GetLineStyle(), kFALSE);
+   fStyleCombo->Select(fAttLine->GetLineStyle());
 
    if (fModel->InheritsFrom(TGraph::Class())) {
-      fWidthCombo->Select(TMath::Abs(fAttLine->GetLineWidth()%100), kFALSE);
+      fWidthCombo->Select(TMath::Abs(fAttLine->GetLineWidth()%100));
    } else {
-      fWidthCombo->Select(fAttLine->GetLineWidth(), kFALSE);
+      fWidthCombo->Select(fAttLine->GetLineWidth());
    }
 
    Color_t c = fAttLine->GetLineColor();
    Pixel_t p = TColor::Number2Pixel(c);
-   fColorSelect->SetColor(p, kFALSE);
+   fColorSelect->SetColor(p);
 
    if (fInit) ConnectSignals2Slots();
    SetActive();
+   fAvoidSignal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -145,6 +147,7 @@ void TAttLineEditor::DoLineColor(Pixel_t color)
 {
    // Slot connected to the line color.
 
+   if (fAvoidSignal) return;
    fAttLine->SetLineColor(TColor::GetColor(color));
    Update();
 }
@@ -155,6 +158,7 @@ void TAttLineEditor::DoLineStyle(Int_t style)
 {
    // Slot connected to the line style.
 
+   if (fAvoidSignal) return;
    fAttLine->SetLineStyle(style);
    Update();
 }
@@ -165,6 +169,7 @@ void TAttLineEditor::DoLineWidth(Int_t width)
 {
    // Slot connected to the line width.
 
+   if (fAvoidSignal) return;
    if (fModel->InheritsFrom(TGraph::Class())) {
       Int_t graphLineWidth = 100*Int_t(fAttLine->GetLineWidth()/100);
       if (graphLineWidth >= 0) {

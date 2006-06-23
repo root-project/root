@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.cxx,v 1.9 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.cxx,v 1.10 2006/03/20 21:43:41 pcanal Exp $
 // Author: Ilka Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -84,7 +84,6 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
    fIsWavy->SetToolTipText("Toggle between wavy line (Gluon) if selected; curly line (Gamma) otherwise.");
    AddFrame(fIsWavy, new TGLayoutHints(kLHintsLeft, 5, 1, 5, 8));
 
-//
    fStartXFrame = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(fStartXFrame, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
 
@@ -96,7 +95,7 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
                                     TGNumberFormat::kNELNoLimits);
    fStartXEntry->GetNumberEntry()->SetToolTipText("Set start point X ccordinate of curly line.");
    fStartXFrame->AddFrame(fStartXEntry, new TGLayoutHints(kLHintsLeft, 5, 1, 1, 1));
-//
+
    fStartYFrame = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(fStartYFrame, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
 
@@ -108,7 +107,7 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
                                     TGNumberFormat::kNELNoLimits);
    fStartYEntry->GetNumberEntry()->SetToolTipText("Set start point Y coordinate of curly line.");
    fStartYFrame->AddFrame(fStartYEntry, new TGLayoutHints(kLHintsLeft, 5, 1, 1, 1));
-//
+
    fEndXFrame = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(fEndXFrame, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
 
@@ -120,7 +119,7 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
                                   TGNumberFormat::kNELNoLimits);
    fEndXEntry->GetNumberEntry()->SetToolTipText("Set end point X coordinate of curly line.");
    fEndXFrame->AddFrame(fEndXEntry, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 1));
-//
+
    fEndYFrame = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(fEndYFrame, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
 
@@ -201,6 +200,7 @@ void TCurlyLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    }
 
    fCurlyLine = (TCurlyLine *)fModel;
+   fAvoidSignal = kTRUE;
 
    Double_t val = fCurlyLine->GetAmplitude();
    fAmplitudeEntry->SetNumber(val);
@@ -227,6 +227,7 @@ void TCurlyLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    if (fInit) ConnectSignals2Slots();
    SetActive();
+   fAvoidSignal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -234,6 +235,7 @@ void TCurlyLineEditor::DoStartXY()
 {
    // Slot connected to the CurlyLine StartPoint.
 
+   if (fAvoidSignal) return;
    fCurlyLine->SetStartPoint(fStartXEntry->GetNumber(), fStartYEntry->GetNumber());
    fCurlyLine->Paint(fCurlyLine->GetDrawOption());
    Update();
@@ -243,6 +245,7 @@ void TCurlyLineEditor::DoEndXY()
 {
    // Slot connected to the CurlyLine End.
 
+   if (fAvoidSignal) return;
    fCurlyLine->SetEndPoint(fEndXEntry->GetNumber(), fEndYEntry->GetNumber());
    fCurlyLine->Paint(fCurlyLine->GetDrawOption());
    Update();
@@ -253,6 +256,7 @@ void TCurlyLineEditor::DoAmplitude()
 {
    // Slot connected to the amplitude setting.
 
+   if (fAvoidSignal) return;
    fCurlyLine->SetAmplitude((Double_t)fAmplitudeEntry->GetNumber());
    fCurlyLine->Paint(fCurlyLine->GetDrawOption());
    Update();
@@ -263,6 +267,7 @@ void TCurlyLineEditor::DoWaveLength()
 {
    // Slot connected to the wavelength setting.
 
+   if (fAvoidSignal) return;
    fCurlyLine->SetWaveLength((Double_t)fWaveLengthEntry->GetNumber());
    fCurlyLine->Paint(fCurlyLine->GetDrawOption());
    HideFrame(fWaveLengthEntry);
@@ -274,10 +279,11 @@ void TCurlyLineEditor::DoWavy()
 {
    // Slot connected to the wavy / curly setting.
 
-   if (fIsWavy->GetState() == kButtonDown) fCurlyLine->SetCurly();
-   else                                    fCurlyLine->SetWavy();
+   if (fAvoidSignal) return;
+   if (fIsWavy->GetState() == kButtonDown) 
+      fCurlyLine->SetCurly();
+   else
+      fCurlyLine->SetWavy();
    fCurlyLine->Paint(fCurlyLine->GetDrawOption());
    Update();
 }
-
-//______________________________________________________________________________

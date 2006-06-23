@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TArrowEditor.cxx,v 1.9 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Name:  $:$Id: TArrowEditor.cxx,v 1.10 2006/04/25 08:14:20 antcheva Exp $
 // Author: Ilka Antcheva   20/10/04
 
 /*************************************************************************
@@ -141,6 +141,7 @@ void TArrowEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fPad = pad;
 
    fArrow = (TArrow *)fModel;
+   fAvoidSignal = kTRUE;
 
    Int_t id = GetShapeEntry(fArrow->GetDrawOption());
    if (id != fOptionCombo->GetSelected())
@@ -154,6 +155,7 @@ void TArrowEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    if (fInit) ConnectSignals2Slots();
    SetActive();
+   fAvoidSignal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -161,6 +163,7 @@ void TArrowEditor::DoAngle()
 {
    // Slot connected to the arrow opening angle setting.
 
+   if (fAvoidSignal) return;
    fArrow->SetAngle((Float_t)fAngleEntry->GetNumber());
    fArrow->Paint(fArrow->GetDrawOption());
    Update();
@@ -171,6 +174,7 @@ void TArrowEditor::DoOption(Int_t id)
 {
    // Slot connected to the arrow shape setting.
 
+   if (fAvoidSignal) return;
    const char* opt=0;
    switch (id) {
       case 1:
@@ -215,6 +219,7 @@ void TArrowEditor::DoSize()
 {
    // Slot connected to the arrow size.
 
+   if (fAvoidSignal) return;
    fArrow->SetArrowSize(fSizeEntry->GetNumber());
    fArrow->Paint(fArrow->GetDrawOption());
    Update();

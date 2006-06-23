@@ -206,6 +206,7 @@ void TPaveStatsEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fPad = pad;
 
    fPaveStats = (TPaveStats *)fModel;
+   fAvoidSignal = kTRUE;
    
    Int_t stat = fPaveStats->GetOptStat();
 
@@ -255,6 +256,7 @@ void TPaveStatsEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    if (fInit) ConnectSignals2Slots();
    SetActive();
+   fAvoidSignal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -262,6 +264,7 @@ void TPaveStatsEditor::DoStatOptions()
 {
    // Slot connected to the stat options.
 
+   if (fAvoidSignal) return;
    Int_t stat = 0;
    if (fHistoName->GetState()   == kButtonDown) stat +=1;
    if (fEntries->GetState()     == kButtonDown) stat +=10;
@@ -293,6 +296,7 @@ void TPaveStatsEditor::DoFitOptions()
 {
    // Slot connected to the fit options.
 
+   if (fAvoidSignal) return;
    Int_t fit = 0;
    if (fNameValues->GetState()  == kButtonDown) fit +=1;
    if (fErrors->GetState()      == kButtonDown) fit +=10;
@@ -310,5 +314,6 @@ void TPaveStatsEditor::SetValuesON(Bool_t on)
    // Slot connected to the selection of the button 'Errors':
    // check button Values should be selected if Errors is selected.
    
+   if (fAvoidSignal) return;
    if (on == kTRUE) fNameValues->SetState(kButtonDown);
 }

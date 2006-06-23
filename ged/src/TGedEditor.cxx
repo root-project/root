@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.27 2006/05/23 04:47:36 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.28 2006/05/24 14:49:21 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -187,13 +187,13 @@ void TGedEditor::GetEditors()
       }
    } else {
 
-      //search for a class editor = classname + 'Editor'
-      GetClassEditor(fModel->IsA());
-
-      //now scan all base classes
+      // scan list of base classes
       list = fModel->IsA()->GetListOfBases();
       if (list->First() != 0) 
          GetBaseClassEditor(fModel->IsA());
+
+      //search for a class editor = classname + 'Editor'
+      GetClassEditor(fModel->IsA());
    }
 
    fStyle->Layout();
@@ -323,6 +323,8 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
          return;
       }
    }
+   if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
+   gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
 
    TGFrameElement *el;
    TIter next(fStyle->GetList());
@@ -330,6 +332,13 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
       if ((el->fFrame)->InheritsFrom(TGedFrame::Class()))
          ((TGedFrame *)(el->fFrame))->SetModel(fPad, fModel, event);
    }
+   if (fGlobal) 
+      Layout();
+   else
+      ((TGMainFrame*)GetMainFrame())->Layout();
+
+   if (gPad) gPad->GetVirtCanvas()->SetCursor(kPointer);
+   gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
 }
 
 //______________________________________________________________________________

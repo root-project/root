@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.6 2006/05/23 04:47:36 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.7 2006/05/26 15:13:01 rdm Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -37,10 +37,11 @@ class TGTab;
 class TGedFrame : public TGCompositeFrame, public TGWidget {
 
 protected:
-   TObject      *fModel;    //selected object, if exists
-   TVirtualPad  *fPad;      //selected pad, if exists
-   Bool_t        fInit;     //init flag for setting signals/slots
-   TGTab        *fTab;      //pointer to the parent tab
+   TObject      *fModel;         //selected object, if exists
+   TVirtualPad  *fPad;           //selected pad, if exists
+   Bool_t        fInit;          //init flag for setting signals/slots
+   Bool_t        fAvoidSignal;   //flag for executing slots
+   TGTab        *fTab;           //pointer to the parent tab
 
    TGedFrame(const TGedFrame&);
    TGedFrame& operator=(const TGedFrame&);

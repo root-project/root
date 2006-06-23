@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.cxx,v 1.8 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.cxx,v 1.9 2006/03/20 21:43:41 pcanal Exp $
 // Author: Ilka Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -170,6 +170,7 @@ void TCurlyArcEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fPad = pad;
 
    fCurlyArc = (TCurlyArc *)fModel;
+   fAvoidSignal = kTRUE;
 
    Double_t val = fCurlyArc->GetRadius();
    fRadiusEntry->SetNumber(val);
@@ -188,6 +189,7 @@ void TCurlyArcEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    if (fInit) ConnectSignals2Slots();
    SetActive();
+   fAvoidSignal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -195,6 +197,7 @@ void TCurlyArcEditor::DoCenterXY()
 {
    // Slot connected to set center .
 
+   if (fAvoidSignal) return;
    fCurlyArc->SetCenter((Double_t)fCenterXEntry->GetNumber(), (Double_t)fCenterYEntry->GetNumber());
    fCurlyArc->Paint(fCurlyArc->GetDrawOption());
    Update();
@@ -205,6 +208,7 @@ void TCurlyArcEditor::DoRadius()
 {
    // Slot connected to the radius setting.
 
+   if (fAvoidSignal) return;
    fCurlyArc->SetRadius((Double_t)fRadiusEntry->GetNumber());
    fCurlyArc->Paint(fCurlyArc->GetDrawOption());
    Update();
@@ -215,6 +219,7 @@ void TCurlyArcEditor::DoPhimin()
 {
    // Slot connected to the phimin setting.
 
+   if (fAvoidSignal) return;
    fCurlyArc->SetPhimin((Double_t)fPhiminEntry->GetNumber());
    fCurlyArc->Paint(fCurlyArc->GetDrawOption());
    Update();
@@ -224,10 +229,9 @@ void TCurlyArcEditor::DoPhimin()
 void TCurlyArcEditor::DoPhimax()
 {
    // Slot connected to the phimax setting.
+
+   if (fAvoidSignal) return;
    fCurlyArc->SetPhimax((Double_t)fPhimaxEntry->GetNumber());
    fCurlyArc->Paint(fCurlyArc->GetDrawOption());
    Update();
 }
-
-
-//______________________________________________________________________________

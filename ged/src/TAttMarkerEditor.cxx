@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.8 2005/11/25 09:56:35 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.9 2006/03/20 21:43:41 pcanal Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -122,6 +122,7 @@ void TAttMarkerEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fModel = obj;
    fPad = pad;
+   fAvoidSignal = kTRUE;
 
    fAttMarker = dynamic_cast<TAttMarker *>(fModel);
 
@@ -142,6 +143,7 @@ void TAttMarkerEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    if (fInit) ConnectSignals2Slots();
    SetActive();
+   fAvoidSignal = kFALSE;
 }
 
 
@@ -150,6 +152,7 @@ void TAttMarkerEditor::DoMarkerColor(Pixel_t color)
 {
    // Slot connected to the marker color.
 
+   if (fAvoidSignal) return;
    fAttMarker->SetMarkerColor(TColor::GetColor(color));
    Update();
 }
@@ -159,6 +162,7 @@ void TAttMarkerEditor::DoMarkerStyle(Style_t marker)
 {
    // Slot connected to the marker type.
 
+   if (fAvoidSignal) return;
    if (marker==1 || marker==6 || marker==7) {
       fMarkerSize->SetNumber(1.);
       fMarkerSize->SetState(kFALSE);
@@ -174,6 +178,7 @@ void TAttMarkerEditor::DoMarkerSize()
 {
    // Slot connected to the marker size.
 
+   if (fAvoidSignal) return;
    Float_t size = fMarkerSize->GetNumber();
    fAttMarker->SetMarkerSize(size);
    Update();
