@@ -99,7 +99,8 @@ HBOOKLIBEXTRA       = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
 GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
 GEOMPAINTERLIBEXTRA = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
                       lib/libHist.lib
-GEOMBUILDERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
+GEOMBUILDERLIBDEP   = $(GEOMLIB) $(G3DLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) \
+		      $(GEDLIB)
 GEOMBUILDERLIBEXTRA = lib/libGeom.lib  lib/libGraf3d.lib lib/libGpad.lib \
                       lib/libGraf.lib lib/libGui.lib lib/libGed.lib
 QTROOTLIBDEP        = $(GUILIB) $(GQTLIB)
