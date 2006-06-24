@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -1113,8 +1113,8 @@ void TGeoManagerEditor::DoEditVolume()
       return;
    }   
    fTabMgr->SetVolTabEnabled();
-   fTabMgr->GetVolumeEditor(fSelectedVolume);
    fTabMgr->SetTab();
+   fTabMgr->GetVolumeEditor(fSelectedVolume);
    fSelectedVolume->Draw();
 }
 

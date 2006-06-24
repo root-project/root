@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.h,v 1.2 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -59,7 +59,7 @@ private:
    TGCompositeFrame    *fVolumeCont;        // Volume tab container
 
    void                CreateTabs();
-   void                GetEditors(TClass *cl, TGCompositeFrame *style);
+   void                GetEditors(TClass *cl);
 public:
    TGeoTabManager(TVirtualPad *pad, TGTab *tab);
    virtual ~TGeoTabManager();

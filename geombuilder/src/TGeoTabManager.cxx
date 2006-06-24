@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.3 2006/06/20 06:33:20 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.4 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -91,7 +91,7 @@ void TGeoTabManager::CreateTabs()
    fVolumeCont = fTab->AddTab("Volume");   
    fVolumeTab = new TGCompositeFrame(fVolumeCont, 110, 30, kVerticalFrame);
    fVolumeCont->AddFrame(fVolumeTab, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
-   fTab->SetEnabled(kFALSE);
+   fTab->SetEnabled(GetTabIndex(),kFALSE);
 }
 
 //______________________________________________________________________________
@@ -111,8 +111,8 @@ void TGeoTabManager::GetVolumeEditor(TGeoVolume *volume)
 {
 // Get editor for a volume.
    if (!volume || !fVolumeTab) return;
-   GetEditors(TAttLine::Class(), fVolumeTab);
-   GetEditors(TGeoVolume::Class(), fVolumeTab);
+   GetEditors(TAttLine::Class());
+   GetEditors(TGeoVolume::Class());
    SetModel(volume, 0);
 }
    
@@ -153,11 +153,12 @@ void TGeoTabManager::GetMaterialEditor(TGeoMaterial *material)
 }
 
 //______________________________________________________________________________
-void TGeoTabManager::GetEditors(TClass *cl, TGCompositeFrame *style)
+void TGeoTabManager::GetEditors(TClass *cl)
 {
 // Get editor for a class.
    // Look in TClass::GetEditorList() for any object deriving from TGedFrame,
    static Int_t icount = 0;
+   TGCompositeFrame *style = fVolumeTab;   
    TGedElement *ge;
    TList *list = cl->GetEditorList();
    TIter next1(list);

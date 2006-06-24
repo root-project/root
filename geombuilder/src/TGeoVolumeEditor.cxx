@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoVolumeEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoVolumeEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -72,7 +72,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t id, Int_t width,
    : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
 {
    // Constructor for volume editor.
-   fGeometry = 0;
+    fGeometry = 0;
    fVolume   = 0;
    
    fIsModified = kFALSE;
@@ -513,6 +513,7 @@ void TGeoVolumeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t /*event*/)
    
    if (fInit) ConnectSignals2Slots();
    SetActive();
+   if (GetParent()==fTabMgr->GetVolumeTab()) fTab->Layout();
 }
 
 //______________________________________________________________________________
