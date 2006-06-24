@@ -2,11 +2,17 @@
 // This script generates a random number of gaussian peaks
 // on top of a linear background.
 // The position of the peaks is found via TSpectrum and injected
-// as initial values of parameters to make a global fit
+// as initial values of parameters to make a global fit.
+// The background is computed and drawn on top of the original histogram.
+//
 // To execute this example, do
 //  root > .x peaks.C  (generate 10 peaks by default)
 //  root > .x peaks.C++ (use the compiler)
 //  root > .x peaks.C++(30) (generates 30 peaks)
+//
+// To execute only the first part of teh script (without fitting)
+// specify a negative value for the number of peaks, eg
+//  root > .x peaks.C(-20)
 //
 // Author: Rene Brun
 
@@ -29,7 +35,7 @@ Double_t fpeaks(Double_t *x, Double_t *par) {
    return result;
 }
 void peaks(Int_t np=10) {
-   npeaks = np;
+   npeaks = TMath::Abs(np);
    TH1F *h = new TH1F("h","test",500,0,1000);
    //generate n peaks at random
    Double_t par[3000];
@@ -54,10 +60,13 @@ void peaks(Int_t np=10) {
    TSpectrum *s = new TSpectrum(2*npeaks);
    Int_t nfound = s->Search(h,2,"");
    printf("Found %d candidate peaks to fit\n",nfound);
+   //Estimate background using TSpectrum::Background
+   TH1 *hb = s->Background(h,4,"same");
    c1->Update();
-   c1->cd(2);
+   if (np <0) return;
 
-   //estimate linear background
+   //estimate linear background using a fitting method
+   c1->cd(2);
    TF1 *fline = new TF1("fline","pol1",0,1000);
    h->Fit("fline","qn");
    //Loop on all found peaks. Eliminate peaks at the background level
