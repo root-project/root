@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.43 2006/05/26 09:27:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.44 2006/06/08 12:15:32 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -50,6 +50,7 @@
     
 #include "TSpectrum.h"
 #include "TPolyMarker.h"
+#include "TVirtualPad.h"
 #include "TMath.h"
 
 Int_t TSpectrum::fgIterations    = 3;
@@ -127,23 +128,93 @@ void TSpectrum::SetDeconIterations(Int_t n)
 }
 
 //______________________________________________________________________________
-const char *TSpectrum::Background(const TH1 * h, int numberIterations,
-                                  Option_t * option) 
+TH1 *TSpectrum::Background(const TH1 * h, int numberIterations, Option_t * option) 
 {   
-/////////////////////////////////////////////////////////////////////////////
-//   ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
-//   This function calculates background spectrum from source in h.        //
-//   The result is placed in the vector pointed by spectrum pointer.       //
-//                                                                         //
-//   Function parameters:                                                  //
-//   spectrum:  pointer to the vector of source spectrum                   //
-//   size:      length of spectrum and working space vectors               //
-//   numberIterations, for details we refer to manual                      //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-   Error("Background","function not yet implemented: h=%s, iter=%d, option=%sn"
-        , h->GetName(), numberIterations, option);
-   return 0;
+//   ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION 
+//   This function calculates the background spectrum in the input histogram h.
+//   The background is returned as a histogram. 
+//                
+//   Function parameters:
+//   -h: input 1-d histogram
+//   -numberIterations, (default value = 2)
+//      Increasing numberIterations make the result smoother and lower.
+//   -option: may contain one of the following options
+//      - to set the direction parameter
+//        "BackDecreasingWindow". By default the direction is BackIncreasingWindow
+//      - filterOrder-order of clipping filter,  (default "BackOrder2"                         
+//                  -possible values= "BackOrder4"                          
+//                                    "BackOrder6"                          
+//                                    "BackOrder8"                           
+//      - "nosmoothing"- if selected, the background is not smoothed
+//           By default the background is smoothed.
+//      - smoothWindow-width of smoothing window, (default is "BackSmoothing3")         
+//                  -possible values= "BackSmoothing5"                        
+//                                    "BackSmoothing7"                       
+//                                    "BackSmoothing9"                        
+//                                    "BackSmoothing11"                       
+//                                    "BackSmoothing13"                       
+//                                    "BackSmoothing15"                        
+//      - "nocompton"- if selected the estimation of Compton edge
+//                  will be not be included   (by default the compton estimation is set)
+//      - "same" : if this option is specified, the resulting background
+//                 histogram is superimposed on the picture in the current pad.
+
+   if (h == 0) return 0;
+   Int_t dimension = h->GetDimension();
+   if (dimension > 1) {
+      Error("Search", "Only implemented for 1-d histograms");
+      return 0;
+   }
+   TString opt = option;
+   opt.ToLower();
+   
+   //set options
+   Int_t direction = kBackIncreasingWindow;
+   if (opt.Contains("backdecreasingwindow")) direction = kBackDecreasingWindow;
+   Int_t filterOrder = kBackOrder2;
+   if (opt.Contains("backorder4")) filterOrder = kBackOrder4;
+   if (opt.Contains("backorder6")) filterOrder = kBackOrder6;
+   if (opt.Contains("backorder8")) filterOrder = kBackOrder8;
+   Bool_t smoothing = kTRUE;
+   if (opt.Contains("nosmoothing")) smoothing = kFALSE;
+   Int_t smoothWindow = kBackSmoothing3;
+   if (opt.Contains("backsmoothing5"))  smoothWindow = kBackSmoothing5;
+   if (opt.Contains("backsmoothing7"))  smoothWindow = kBackSmoothing7;
+   if (opt.Contains("backsmoothing9"))  smoothWindow = kBackSmoothing9;
+   if (opt.Contains("backsmoothing11")) smoothWindow = kBackSmoothing11;
+   if (opt.Contains("backsmoothing13")) smoothWindow = kBackSmoothing13;
+   if (opt.Contains("backsmoothing15")) smoothWindow = kBackSmoothing15;
+   Bool_t compton = kTRUE;
+   if (opt.Contains("nocompton")) compton = kFALSE;
+
+   Int_t first = h->GetXaxis()->GetFirst();
+   Int_t last  = h->GetXaxis()->GetLast();
+   Int_t size = last-first+1;
+   Int_t i;
+   Float_t * source = new float[size];
+   for (i = 0; i < size; i++) source[i] = h->GetBinContent(i + first);
+   
+   //find background (source is input and in output contains the background
+   Background(source,size,numberIterations, direction, filterOrder,smoothing,smoothWindow,compton);
+   
+   //create output histogram containing backgound
+   //only bins in the range of the input histogram are filled
+   Int_t nch = strlen(h->GetName());
+   char *hbname = new char[nch+20];
+   sprintf(hbname,"%s_background",h->GetName());
+   TH1 *hb = (TH1*)h->Clone(hbname);
+   hb->Reset();
+   for (i=0; i< size; i++) hb->SetBinContent(i+first,source[i]);
+   hb->SetEntries(size);
+   
+   //if option "same is specified, draw the result in the pad
+   if (opt.Contains("same")) {
+      if (gPad) delete gPad->GetPrimitive(hbname);
+      hb->Draw("same");
+   }
+   delete [] source;
+   delete [] hbname;
+   return hb;
 }
 
 //______________________________________________________________________________
@@ -287,7 +358,7 @@ const char *TSpectrum::Background(float *spectrum, int ssize,
 //                                   kBackOrder6                           
 //                                   kBackOrder8                           
 //        smoothing- logical variable whether the smoothing operation      
-//               in the estimation of background will be incuded           
+//               in the estimation of background will be included           
 //             - possible values=kFALSE                      
 //                               kTRUE                      
 //        smoothWindow-width of smoothing window,          
@@ -299,7 +370,7 @@ const char *TSpectrum::Background(float *spectrum, int ssize,
 //                                   kBackSmoothing13                       
 //                                   kBackSmoothing15                        
 //         compton- logical variable whether the estimation of Compton edge
-//                  will be incuded                                         
+//                  will be included                                         
 //             - possible values=kFALSE                        
 //                               kTRUE                        
 //                                                                        
@@ -430,7 +501,7 @@ values=kBackOrder2                              </p>
 <p class=MsoNormal>        <b><span style='font-size:14.0pt'>smoothing</span></b>-
 logical variable whether the smoothing operation in the estimation of </p>
 
-<p class=MsoNormal>               background will be incuded              </p>
+<p class=MsoNormal>               background will be included              </p>
 
 <p class=MsoNormal>             - possible
 values=kFALSE                        </p>
@@ -464,7 +535,7 @@ values=kBackSmoothing3                          </p>
 
 <p class=MsoNormal>        <b><span style='font-size:14.0pt'>compton</span></b>-
 logical variable whether the estimation of Compton edge   will be
-incuded                                           </p>
+included                                           </p>
 
 <p class=MsoNormal>             - possible
 values=kFALSE                          </p>

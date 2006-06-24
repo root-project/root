@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.17 2006/01/25 08:21:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.18 2006/05/17 09:37:20 couet Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
    TSpectrum();
    TSpectrum(Int_t maxpositions, Float_t resolution=1);
    virtual ~TSpectrum();
-   virtual const char *Background(const TH1 *hist,Int_t niter, Option_t *option="goff");
+   virtual TH1        *Background(const TH1 *hist,Int_t niter=2, Option_t *option="goff");
    TH1                *GetHistogram() const {return fHistogram;}
    Int_t               GetNPeaks() const {return fNPeaks;}
    Float_t            *GetPositionX() const {return fPositionX;}
