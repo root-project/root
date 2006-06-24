@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoPconEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -314,8 +314,8 @@ Bool_t TGeoPconEditor::IsDelayed() const
 //______________________________________________________________________________
 void TGeoPconEditor::DoName()
 {
- // Perform name change
-  DoModified();
+   // Perform name change
+   DoModified();
 }
 
 //______________________________________________________________________________
@@ -384,8 +384,8 @@ void TGeoPconEditor::DoApply()
             fShape->Draw();
             fPad->GetView()->ShowAxis();
          } else {
-           const Double_t *orig = fShape->GetOrigin();
-           view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
+            const Double_t *orig = fShape->GetOrigin();
+            view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
                            orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
             fPad->Modified();               
             fPad->Update();

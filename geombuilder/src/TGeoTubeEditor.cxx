@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.3 2006/06/20 06:33:20 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.4 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -278,8 +278,8 @@ void TGeoTubeEditor::DoRmax()
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmax <= 0.) {
-       rmax = 0.1;
-       fERmax->SetNumber(rmax);
+      rmax = 0.1;
+      fERmax->SetNumber(rmax);
    }     
    if (rmax<rmin+1.e-10) {
       rmax = rmin + 0.1;
