@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStatement.h,v 1.3 2006/05/24 15:10:46 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStatement.h,v 1.4 2006/06/02 14:02:03 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -22,10 +22,12 @@
 class TSQLStatement : public TObject {
 
 protected:
-   TSQLStatement() : TObject() { ClearError(); }
+   TSQLStatement(Bool_t errout = kTRUE) : TObject(), fErrorCode(0),
+     fErrorMsg(), fErrorOut(errout) { ClearError(); }
 
    Int_t     fErrorCode;  // error code of last operation
    TString   fErrorMsg;   // error message of last operation
+   Bool_t    fErrorOut;   // enable error output 
 
    void                ClearError();
    void                SetError(Int_t code, const char* msg, const char* method = 0);
@@ -67,6 +69,7 @@ public:
    virtual Bool_t      IsError() const { return GetErrorCode()!=0; }
    virtual Int_t       GetErrorCode() const;
    virtual const char* GetErrorMsg() const;
+   virtual void        EnableErrorOutput(Bool_t on = kTRUE) { fErrorOut = on; }
 
    ClassDef(TSQLStatement, 0) //SQL statement
 };

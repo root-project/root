@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.cxx,v 1.3 2006/06/02 14:02:03 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.cxx,v 1.4 2006/06/22 08:18:57 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 
@@ -24,8 +24,8 @@
 ClassImp(TOracleStatement)
 
 //______________________________________________________________________________
-TOracleStatement::TOracleStatement(Connection* conn, Statement* stmt, Int_t niter) :
-   TSQLStatement(),
+TOracleStatement::TOracleStatement(Connection* conn, Statement* stmt, Int_t niter, Bool_t errout) :
+   TSQLStatement(errout),
    fConn(conn),
    fStmt(stmt),
    fResult(0),

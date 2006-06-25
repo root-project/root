@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.10 2006/05/22 08:55:30 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.11 2006/06/02 14:02:03 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -306,6 +306,8 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
       data_length = fields[nfield].length;
       if (data_length==0) data_length = -1;
 
+#if MYSQL_VERSION_ID >= 40100
+
       switch (fields[nfield].type) {
          case MYSQL_TYPE_TINY:
          case MYSQL_TYPE_SHORT:
@@ -364,6 +366,8 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
             if (IS_NUM(fields[nfield].type))
                sqltype = kSQL_NUMERIC; 
       }
+
+#endif
       
       if (lst==0) lst = new TList;
       lst->Add(new TSQLColumnInfo(column_name, 
@@ -578,11 +582,30 @@ const char *TMySQLServer::ServerInfo()
    return res;
 }
 
+//______________________________________________________________________________
+Bool_t TMySQLServer::IsSupportStatement() const
+{
+   // return kTRUE if TSQLStatement class is supported.
+   // Starts from MySQL 4.1 
+
+#if MYSQL_VERSION_ID < 40100
+   return kFALSE;
+#else
+   return kTRUE;
+#endif   
+}
+
 
 //______________________________________________________________________________
 TSQLStatement* TMySQLServer::Statement(const char *sql, Int_t)
 {
    // Produce TMySQLStatement 
+
+#if MYSQL_VERSION_ID < 40100
+   ClearError();
+   SetError(-1, "Statement class does not supported by MySQL version < 4.1", "Statement");
+   return 0;
+#else
     
    CheckConnect("Statement", 0);
 
@@ -596,11 +619,14 @@ TSQLStatement* TMySQLServer::Statement(const char *sql, Int_t)
       CheckErrNo("Statement", kTRUE, 0); 
     
    if (mysql_stmt_prepare(stmt, sql, strlen(sql))) {
+      SetError(mysql_errno(fMySQL), mysql_error(fMySQL), "Statement");
       mysql_stmt_close(stmt);
-      CheckErrNo("Statement", kTRUE, 0); 
+      return 0;
    }
 
-   return new TMySQLStatement(stmt);
+   return new TMySQLStatement(stmt, fErrorOut);
+   
+#endif   
 }
 
 //______________________________________________________________________________
@@ -611,8 +637,6 @@ Bool_t TMySQLServer::StartTransaction()
    CheckConnect("StartTransaction", kFALSE);
    
    return TSQLServer::StartTransaction();
-   
-//   return Commit();
 }
 
 //______________________________________________________________________________
@@ -621,11 +645,19 @@ Bool_t TMySQLServer::Commit()
    // Commit changes
 
    CheckConnect("Commit", kFALSE);
+
+#if MYSQL_VERSION_ID >= 40100
    
    if (mysql_commit(fMySQL))
       CheckErrNo("Commit", kTRUE, kFALSE); 
      
    return kTRUE;
+
+#else
+   
+   return TSQLServer::Commit();
+   
+#endif      
    
 }
 
@@ -636,8 +668,17 @@ Bool_t TMySQLServer::Rollback()
 
    CheckConnect("Rollback", kFALSE);
    
+#if MYSQL_VERSION_ID >= 40100
+
    if (mysql_rollback(fMySQL))
       CheckErrNo("Rollback", kTRUE, kFALSE); 
       
    return kTRUE;
+
+#else
+   
+   return TSQLServer::Rollback();
+
+#endif
+
 }

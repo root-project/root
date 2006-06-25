@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.12 2006/06/22 08:21:22 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.13 2006/06/23 11:52:30 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -1471,9 +1471,11 @@ Bool_t TSQLFile::SQLCanStatement()
 //______________________________________________________________________________
 TSQLStatement* TSQLFile::SQLStatement(const char* cmd, Int_t bufsize)
 {
-   // Produces statement for 
+   // Produces SQL statement for currently conected DB server
    
    if (fSQL==0) return 0;
+   
+   if (!fSQL->IsSupportStatement()) return 0;
    
    if (gDebug>1)
       Info("SQLStatement",cmd);
@@ -2406,7 +2408,7 @@ TObjArray* TSQLFile::SQLObjectsInfo(Long64_t keyid)
    if (gDebug>2) Info("SQLObjectsInfo",sqlcmd);
    fQuerisCounter++;
 
-   TSQLStatement* stmt = fSQL->Statement(sqlcmd.Data(), 1000);
+   TSQLStatement* stmt = SQLStatement(sqlcmd.Data(), 1000);
    
    if (stmt!=0) {
       stmt->Process();
@@ -2511,7 +2513,7 @@ TSQLStatement* TSQLFile::GetBlobClassDataStmt(Long64_t objid, TSQLClassInfo* sql
    if (gDebug>2) Info("BuildStatement",sqlcmd);
    fQuerisCounter++;
                
-   TSQLStatement* stmt = fSQL->Statement(sqlcmd.Data(), 1000);
+   TSQLStatement* stmt = SQLStatement(sqlcmd.Data(), 1000);
    if (stmt==0) return 0;
    
    stmt->Process();

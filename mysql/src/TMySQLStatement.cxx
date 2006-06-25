@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.2 2006/05/22 08:55:30 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.3 2006/06/02 14:02:03 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -23,9 +23,12 @@
 
 ClassImp(TMySQLStatement)
 
+
+#if MYSQL_VERSION_ID >= 40100
+
 //______________________________________________________________________________
-TMySQLStatement::TMySQLStatement(MYSQL_STMT* stmt) :
-   TSQLStatement(),
+TMySQLStatement::TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout) :
+   TSQLStatement(errout),
    fStmt(stmt),
    fNumBuffers(0),
    fBind(0),
@@ -34,7 +37,7 @@ TMySQLStatement::TMySQLStatement(MYSQL_STMT* stmt) :
 {
    // Normal constructor 
    // Checks if statement contains parameters tags 
-    
+   
    unsigned long paramcount = mysql_stmt_param_count(fStmt);
 
    if (paramcount>0) {
@@ -56,7 +59,7 @@ TMySQLStatement::~TMySQLStatement()
 //______________________________________________________________________________
 void TMySQLStatement::Close(Option_t *)
 {
-   // Close query result.
+   // Close statement
 
    if (fStmt)
       mysql_stmt_close(fStmt);
@@ -720,3 +723,277 @@ Bool_t TMySQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 
    return kTRUE;
 }
+
+
+#else
+
+//______________________________________________________________________________
+TMySQLStatement::TMySQLStatement(MYSQL_STMT*, Bool_t)
+{
+   // Normal constructor 
+   // For MySQL version < 4.1 no statement is supported
+}
+
+//______________________________________________________________________________
+TMySQLStatement::~TMySQLStatement()
+{
+   // destructor
+}
+
+//______________________________________________________________________________
+void TMySQLStatement::Close(Option_t *)
+{
+   // Close statement
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::Process()
+{
+   // Process statement 
+   
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Int_t TMySQLStatement::GetNumAffectedRows()
+{
+   // Return number of affected rows after statement is processed 
+   
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TMySQLStatement::GetNumParameters()
+{
+   // Return number of statement parameters 
+    
+   return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::StoreResult()
+{
+   // Store result of statement processing to access them 
+   // via GetInt(), GetDouble() and so on methods.
+    
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Int_t TMySQLStatement::GetNumFields()
+{
+   // Return number of fields in result set 
+    
+   return 0;
+}
+
+//______________________________________________________________________________
+const char* TMySQLStatement::GetFieldName(Int_t)
+{
+   // Returns field name in result set 
+    
+   return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::NextResultRow()
+{
+   // Shift cursor to nect row in result set
+    
+   return kFALSE;
+}
+
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::NextIteration()
+{
+   // Increment iteration counter for statement, where parameter can be set.
+   // Statement with parameters of previous iteration 
+   // automatically will be applied to database
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TMySQLStatement::FreeBuffers()
+{
+   // Release all buffers, used by statement 
+}
+
+//______________________________________________________________________________
+void TMySQLStatement::SetBuffersNumber(Int_t)
+{
+   // Allocate buffers for statement parameters/ result fields 
+}
+
+//______________________________________________________________________________
+const char* TMySQLStatement::ConvertToString(Int_t)
+{
+   // Convert field value to string 
+   
+   return 0;
+}
+
+//______________________________________________________________________________
+long double TMySQLStatement::ConvertToNumeric(Int_t)
+{
+   // Convert field to numeric value
+    
+   return 0; 
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::IsNull(Int_t)
+{
+   // Checks if field value is null 
+   
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TMySQLStatement::GetInt(Int_t)
+{
+   // Return field value as integer 
+
+   return 0;    
+}
+
+//______________________________________________________________________________
+UInt_t TMySQLStatement::GetUInt(Int_t)
+{
+   // Return field value as unsigned integer 
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Long_t TMySQLStatement::GetLong(Int_t)
+{
+   // Return field value as long integer 
+   
+   return 0;
+}
+
+//______________________________________________________________________________
+Long64_t TMySQLStatement::GetLong64(Int_t)
+{
+   // Return field value as 64-bit integer 
+
+   return 0;
+}
+
+//______________________________________________________________________________
+ULong64_t TMySQLStatement::GetULong64(Int_t)
+{
+   // Return field value as unsigned 64-bit integer 
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Double_t TMySQLStatement::GetDouble(Int_t)
+{
+   // Return field value as double 
+   
+   return 0.;
+}
+
+//______________________________________________________________________________
+const char *TMySQLStatement::GetString(Int_t)
+{
+   // Return field value as string 
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::SetSQLParamType(Int_t, int, bool, int)
+{
+   // Set parameter type to be used as buffer
+   // Used in both setting data to database and retriving data from data base
+   // Initialize proper MYSQL_BIND structure and allocate required buffers
+   
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void *TMySQLStatement::BeforeSet(Int_t, Int_t, Bool_t, Int_t)
+{
+   // Check boundary condition before setting value of parameter
+   // Return address of parameter buffer
+   
+   return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::SetNull(Int_t)
+{
+   // Set NULL as parameter value
+   // If NULL should be set for statement parameter during first iteration,
+   // one should call before proper Set... method to identify type of argument for
+   // the future. For instance, if one suppose to have double as type of parameter,
+   // code should look like:
+   //    stmt->SetDouble(2, 0.);
+   //    stmt->SetNull(2);
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::SetInt(Int_t, Int_t)
+{
+   // Set parameter value as integer 
+
+   return kFALSE;    
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::SetUInt(Int_t, UInt_t)
+{
+   // Set parameter value as unsigned integer 
+   
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::SetLong(Int_t, Long_t)
+{
+   // Set parameter value as long integer 
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::SetLong64(Int_t, Long64_t)
+{
+   // Set parameter value as 64-bit integer 
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::SetULong64(Int_t, ULong64_t)
+{
+   // Set parameter value as unsigned 64-bit integer 
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::SetDouble(Int_t, Double_t)
+{
+   // Set parameter value as double
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TMySQLStatement::SetString(Int_t, const char*, Int_t)
+{
+   // Set parameter value as string
+
+   return kFALSE;
+}
+
+
+#endif // MYSQL_VERSION_ID > 40100

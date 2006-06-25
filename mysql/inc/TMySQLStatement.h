@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.h,v 1.2 2006/04/12 21:42:37 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.h,v 1.3 2006/06/02 14:02:03 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -21,6 +21,12 @@
 #include <sys/time.h>
 #endif
 #include <mysql.h>
+
+#if MYSQL_VERSION_ID < 40100
+typedef struct { int dummy; } MYSQL_STMT;
+typedef struct { int dummy; } MYSQL_BIND;
+#endif
+
 #else
 struct MYSQL_STMT;
 struct MYSQL_BIND;
@@ -64,7 +70,7 @@ private:
    void       *BeforeSet(Int_t npar, Int_t sqltype, Bool_t sig = kTRUE, Int_t size = 0);
 
 public:
-   TMySQLStatement(MYSQL_STMT* stmt);
+   TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout = kTRUE);
    virtual ~TMySQLStatement();
 
    virtual void        Close(Option_t * = "");

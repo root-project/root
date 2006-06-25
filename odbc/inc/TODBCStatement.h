@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.h,v 1.5 2006/05/18 06:57:22 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.h,v 1.6 2006/06/02 14:02:03 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -67,7 +67,6 @@ protected:
    Bool_t      BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER size);
    Bool_t      BindParam(Int_t n, Int_t type, Int_t size = 1024);
 
-
    Bool_t      ExtractErrors(SQLRETURN retcode, const char* method);
 
    void        SetNumBuffers(Int_t isize, Int_t ilen);
@@ -77,7 +76,7 @@ protected:
    Bool_t      IsResultSet() const { return fWorkingMode==2; }
 
 public:
-   TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize);
+   TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize, Bool_t errout = kTRUE);
    virtual ~TODBCStatement();
 
    virtual void        Close(Option_t * = "");

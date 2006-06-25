@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.12 2006/06/02 15:00:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.13 2006/06/22 08:18:57 brun Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -121,7 +121,7 @@ void TSQLServer::SetError(Int_t code, const char* msg, const char* method)
    fErrorCode = code;
    fErrorMsg = msg;
    if ((method!=0) && fErrorOut)
-      Error(method,"Code: %d  Msg: %s", code, msg);
+      Error(method,"Code: %d  Msg: %s", code, (msg ? msg : "No message"));
 }
 
 //______________________________________________________________________________

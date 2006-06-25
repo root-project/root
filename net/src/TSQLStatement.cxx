@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStatement.cxx,v 1.2 2006/05/22 08:55:30 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStatement.cxx,v 1.3 2006/06/02 14:02:03 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -206,6 +206,6 @@ void TSQLStatement::SetError(Int_t code, const char* msg, const char* method)
    
    fErrorCode = code;
    fErrorMsg = msg;
-   if (method!=0)
-      Error(method,"Code: %d  Msg: %s", code, msg);
+   if ((method!=0) && fErrorOut)
+      Error(method,"Code: %d  Msg: %s", code, (msg ? msg : "No message"));
 }

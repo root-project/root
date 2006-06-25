@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.10 2006/06/02 14:27:25 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.11 2006/06/06 09:14:54 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -646,7 +646,7 @@ TSQLStatement *TODBCServer::Statement(const char *sql, Int_t bufsize)
       return 0;
    }
 
-   return new TODBCStatement(hstmt, bufsize);
+   return new TODBCStatement(hstmt, bufsize, fErrorOut);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.7 2006/05/23 06:20:36 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.8 2006/06/02 14:02:03 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -30,8 +30,8 @@
 ClassImp(TODBCStatement)
 
 //______________________________________________________________________________
-TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize) :
-   TSQLStatement()
+TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize, Bool_t errout) :
+   TSQLStatement(errout)
 {
    //constructor
    

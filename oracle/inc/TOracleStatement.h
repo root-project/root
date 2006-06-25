@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.h,v 1.2 2006/05/22 08:55:30 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.h,v 1.3 2006/06/02 14:02:03 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -52,7 +52,7 @@ protected:
    void        CloseBuffer();
    
 public:
-   TOracleStatement(Connection* conn, Statement* stmt, Int_t niter);
+   TOracleStatement(Connection* conn, Statement* stmt, Int_t niter, Bool_t errout = kTRUE);
    virtual ~TOracleStatement();
 
    virtual void        Close(Option_t * = "");
