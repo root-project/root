@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog dict*.* dummy*.C
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += template32 mytest
+TEST_TARGETS += template32 twoInOneLib
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -55,6 +55,17 @@ endif
 #  files should be renamed according to the test being run.
 # By default the TestDiff variable is set to compare the .log and .ref files
 # To run a diff and ignore whitespacing use $(TestDiffW)
+
+dict.cxx: runtemplate32.h linkdef.h $(ROOTSYS)/bin/rootcint
+	$(CMDECHO) rootcint -f dict.cxx -c runtemplate32.h linkdef.h
+
+dict32.cxx: runtemplate32.h linkdef32.h $(ROOTSYS)/bin/rootcint
+	$(CMDECHO) rootcint -f dict32.cxx -c runtemplate32.h linkdef32.h
+
+twoInOneLib.$(DllSuf): dict.$(ObjSuf) dict32.$(ObjSuf)
+	$(BuildFromObjs)
+
+twoInOneLib: twoInOneLib.$(DllSuf)
 
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
