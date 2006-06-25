@@ -34,7 +34,7 @@ WILDCARDS="LICENSE README bin \
    test/RootShower/*.rc test/RootShower/*.ico \
    test/RootShower/*.png test/RootShower/Makefile \
    test/RootShower/anim test/RootShower/icons test/ProofBench \
-   tmva/test/Makefile tmva/test/*.gif tmva/test/*.C tmva/test/*.cxx \
+   tmva/test/*.gif tmva/test/*.C \
    macros icons fonts etc include/rmain.cxx"
 
 # expand wildcards, recursively add directories
