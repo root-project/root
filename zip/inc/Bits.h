@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.9 2006/06/20 13:21:24 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.10 2006/06/25 10:23:51 brun Exp $ */
 /* Author: */
 /*
 
@@ -438,9 +438,10 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
     err = deflate(&stream, Z_FINISH);
     if (err != Z_STREAM_END) {
        deflateEnd(&stream);
-       //no need to print an error message. We simply abandon the compression
-       //the buffer cannot be compressed or compressed buffer would be larger than original buffer
-       //printf("error %d in deflate (zlib) is not = %d\n",err,Z_STREAM_END);
+       /* No need to print an error message. We simply abandon the compression
+          the buffer cannot be compressed or compressed buffer would be larger than original buffer
+          printf("error %d in deflate (zlib) is not = %d\n",err,Z_STREAM_END);
+       */
        return;
     }
 
