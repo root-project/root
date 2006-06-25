@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.246 2006/05/15 11:01:14 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.247 2006/05/19 07:30:04 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1238,6 +1238,65 @@ bool NeedDestructor(G__ClassInfo& cl)
 }
 
 //______________________________________________________________________________
+bool IsTemplateDouble32(G__ClassInfo &cl)
+{
+   // Return true if any of the argument is or contains a double32.
+   if (!cl.IsTmplt()) return false;
+
+   static G__TypeInfo ti;
+   char arg[2048], *current, *next;
+
+   strcpy(arg, cl.Name());
+   // arg is now is the name of class template instantiation.
+   // We first need to find the start of the list of its template arguments
+   // then we have a comma separated list of type names.  We want to return
+   // the 'count+1'-th element in the list.
+   int len = strlen(arg);
+   int nesting = 0;
+   current = 0;
+   next = &(arg[0]);
+   for (int c = 0; c<len; c++) {
+      switch (arg[c]) {
+      case '<':
+         if (nesting==0) {
+            arg[c]=0;
+            current = next;
+            next = &(arg[c+1]);
+         }
+         nesting++;
+         break;
+      case '>':
+         nesting--;
+         if (nesting==0) {
+            arg[c]=0;
+            current = next;
+            next = &(arg[c+1]);
+            if (current) {
+               if (strcmp(current,"Double32_t")==0) return true;
+               G__ClassInfo subcl(current);
+               if (IsTemplateDouble32(subcl)) return true;
+            }
+         }
+         break;
+      case ',':
+         if (nesting==1) {
+            arg[c]=0;
+            current = next;
+            next = &(arg[c+1]);
+            if (current) {
+               if (strcmp(current,"Double32_t")==0) return true;
+               G__ClassInfo subcl(current);
+               if (IsTemplateDouble32(subcl)) return true;
+            }
+         }
+         break;
+      }
+   }
+
+   return false;
+}
+
+//______________________________________________________________________________
 int IsSTLContainer(G__DataMemberInfo &m)
 {
    // Is this an STL container?
@@ -2401,7 +2460,7 @@ void WriteClassInit(G__ClassInfo &cl)
    (*dictSrcOut) << "      return &instance;"  << std::endl
                  << "   }" << std::endl;
 
-   if (!stl) {
+   if (!stl && !IsTemplateDouble32(cl)) {
       // The GenerateInitInstance for STL are not unique and should not be externally accessible
       (*dictSrcOut) << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol.c_str() << "*)" << std::endl
                     << "   {\n      return GenerateInitInstanceLocal((" <<  csymbol.c_str() << "*)0);\n   }"
