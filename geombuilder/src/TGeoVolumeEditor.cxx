@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoVolumeEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoVolumeEditor.cxx,v 1.4 2006/06/24 08:26:42 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -72,7 +72,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t id, Int_t width,
    : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
 {
    // Constructor for volume editor.
-    fGeometry = 0;
+   fGeometry = 0;
    fVolume   = 0;
    
    fIsModified = kFALSE;
