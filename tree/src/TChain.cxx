@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.135 2006/06/19 09:34:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.136 2006/06/20 06:46:04 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1076,6 +1076,8 @@ Long64_t TChain::LoadTree(Long64_t entry)
       void *add = element->GetBaddress();
       if (add) {
          TBranch *br = fTree->GetBranch(element->GetName());
+         TBranch **ptr = element->GetBranchPtr();
+         if (ptr) { *ptr = br; }
          if (br) {
             br->SetAddress(add);
             if (TestBit(kAutoDelete)) br->SetAutoDelete(kTRUE);
@@ -1471,7 +1473,7 @@ void TChain::ResetBranchAddresses()
 }
 
 //_______________________________________________________________________
-void TChain::SetBranchAddress(const char *bname, void *add)
+void TChain::SetBranchAddress(const char *bname, void *add, TBranch **ptr)
 {
    // Set branch address
    //
@@ -1491,10 +1493,12 @@ void TChain::SetBranchAddress(const char *bname, void *add)
    }
 
    element->SetBaddress(add);
-
+   element->SetBranchPtr(ptr);
+ 
    // Set also address in current Tree
    if (fTreeNumber >= 0) {
       TBranch *branch = fTree->GetBranch(bname);
+      if (ptr) { *ptr = branch; }
       if (branch) {
          CheckBranchAddressType(branch,
                                 gROOT->GetClass(element->GetBaddressClassName()),
@@ -1514,13 +1518,27 @@ void TChain::SetBranchAddress(const char *bname, void *add)
          } // if (fClones)
          branch->SetAddress(add);
       }
+   } else {
+      if (ptr) *ptr = 0;
    }
 }
 
 //_______________________________________________________________________
 void TChain::SetBranchAddress(const char *bname,void *add,
                               TClass *realClass, EDataType datatype,
-                              Bool_t ptr)
+                              Bool_t isptr)
+{
+   //Check if bname is already in the Status list
+   //Otherwise create a TChainElement object and set its address
+
+   return SetBranchAddress(bname,add,0,realClass,datatype,isptr);
+}
+
+//_______________________________________________________________________
+void TChain::SetBranchAddress(const char *bname,void *add,
+                              TBranch **ptr,
+                              TClass *realClass, EDataType datatype,
+                              Bool_t isptr)
 {
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its address
@@ -1531,8 +1549,9 @@ void TChain::SetBranchAddress(const char *bname,void *add,
    }
    if (realClass) element->SetBaddressClassName(realClass->GetName());
    element->SetBaddressType((UInt_t)datatype);
-   element->SetBaddressIsPtr(ptr);
-   SetBranchAddress(bname,add);
+   element->SetBaddressIsPtr(isptr);
+   element->SetBranchPtr(ptr);
+   SetBranchAddress(bname,add,ptr);
 }
 
 //_______________________________________________________________________

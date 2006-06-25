@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.cxx,v 1.4 2005/01/12 18:02:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainElement.cxx,v 1.5 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -22,7 +22,7 @@ ClassImp(TChainElement)
 
 //______________________________________________________________________________
    TChainElement::TChainElement(): TNamed(),fBaddress(0),fBaddressType(0),
-                                   fBaddressIsPtr(kFALSE)
+                                   fBaddressIsPtr(kFALSE), fBranchPtr(0)
 {
    // Default constructor for a chain element.
 
@@ -36,7 +36,7 @@ ClassImp(TChainElement)
 //______________________________________________________________________________
 TChainElement::TChainElement(const char *name, const char *title)
    :TNamed(name,title),fBaddress(0),fBaddressType(0),
-    fBaddressIsPtr(kFALSE)
+    fBaddressIsPtr(kFALSE), fBranchPtr(0)
 {
    // Create a chain element.
 

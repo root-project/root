@@ -1,4 +1,4 @@
-static int G__ManualTree2_165_6_17(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+static int G__ManualTree2_169_2_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
 {
   // We need to emulate
   // return BranchImp(name,classname,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
@@ -62,7 +62,7 @@ static int G__ManualTree2_165_6_17(G__value *result7,G__CONST char *funcname,str
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__ManualTree2_165_7_17(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+static int G__ManualTree2_169_3_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
 {
    // We need to emulate 
    // return BranchImp(name,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
@@ -114,7 +114,7 @@ static int G__ManualTree2_165_7_17(G__value *result7,G__CONST char *funcname,str
 
 #include "TDataType.h"
 
-static int G__ManualTree2_165_9_17(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+static int G__ManualTree2_169_5_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
 {
    G__setnull(result7);
 
@@ -123,7 +123,16 @@ static int G__ManualTree2_165_9_17(G__value *result7,G__CONST char *funcname,str
    TClass *ptrClass = gROOT->GetClass(type.c_str());
    TDataType *data = gROOT->GetType(type.c_str());
    EDataType datatype = data ? (EDataType)data->GetType() : kOther_t;
+   TBranch **branchPtr = 0;
 
-   ((TTree*)(G__getstructoffset()))->SetBranchAddress((const char*)G__int(libp->para[0]),(void*)G__int(libp->para[1]),ptrClass,datatype,ti.Reftype()==G__PARAP2P);
+   switch (libp->paran) {
+   case 3:
+      branchPtr = (TBranch**) G__int(libp->para[2]);
+      break;
+   case 2:
+      break;
+   }
+   ((TTree*)(G__getstructoffset()))->SetBranchAddress((const char*)G__int(libp->para[0]),(void*)G__int(libp->para[1]),branchPtr,ptrClass,datatype,ti.Reftype()==G__PARAP2P);
+
    return(1 || funcname || hash || result7 || libp) ;
 }

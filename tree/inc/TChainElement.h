@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.7 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.8 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -25,6 +25,8 @@
 #include "TNamed.h"
 #endif
 
+class TBranch;
+
 class TChainElement : public TNamed {
 
 protected:
@@ -37,6 +39,7 @@ protected:
    UInt_t        fBaddressType;     //!Type of the value pointed to by fBaddress
    Bool_t        fBaddressIsPtr;    //!True if the address is a pointer to an address
    char         *fPackets;          //!Packet descriptor string
+   TBranch     **fBranchPtr;        //!Address of user branch pointer (to updated upon loading a file)
 
 public:
    TChainElement();
@@ -47,6 +50,7 @@ public:
    virtual const char*GetBaddressClassName() const { return fBaddressClassName; }
    virtual Bool_t   GetBaddressIsPtr() const { return fBaddressIsPtr; }
    virtual UInt_t   GetBaddressType() const { return fBaddressType; }
+   virtual TBranch**GetBranchPtr() const { return fBranchPtr; }
    virtual Int_t    GetEntries() const {return fEntries;}
    virtual char    *GetPackets() const {return fPackets;}
    virtual Int_t    GetPacketSize() const {return fPacketSize;}
@@ -56,6 +60,7 @@ public:
    virtual void     SetBaddressClassName(const char* clname) { fBaddressClassName = clname; }
    virtual void     SetBaddressIsPtr(Bool_t isptr) { fBaddressIsPtr = isptr; }
    virtual void     SetBaddressType(UInt_t type) { fBaddressType = type; }
+   virtual void     SetBranchPtr(TBranch **ptr) { fBranchPtr = ptr; }
    virtual void     SetNumberEntries(Int_t n) {fEntries=n;}
    virtual void     SetPacketSize(Int_t size = 100);
    virtual void     SetStatus(Int_t status) {fStatus = status;}

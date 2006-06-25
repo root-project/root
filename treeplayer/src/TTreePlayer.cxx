@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.214 2006/06/14 13:15:55 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.215 2006/06/16 11:01:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1704,8 +1704,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          if (((TBranchElement*)branch)->GetType() == 4) len =1;
       }
       if (leafcount) len = leafcount->GetMaximum()+1;
-      if (len > 1) fprintf(fp,"   fChain->SetBranchAddress(\"%s\",%s);\n",branch->GetName(),branchname);
-      else         fprintf(fp,"   fChain->SetBranchAddress(\"%s\",&%s);\n",branch->GetName(),branchname);
+      if (len > 1) fprintf(fp,"   fChain->SetBranchAddress(\"%s\",%s,&(b_%s) );\n",
+                           branch->GetName(),branchname,branchname);
+      else         fprintf(fp,"   fChain->SetBranchAddress(\"%s\",&%s,&(b_%s) );\n",
+                           branch->GetName(),branchname,branchname);
+
    }
    //must call Notify in case of MakeClass
    if (!opt.Contains("selector")) {
@@ -1720,57 +1723,10 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"{\n");
    fprintf(fp,"   // The Notify() function is called when a new file is opened. This\n"
               "   // can be either for a new TTree in a TChain or when when a new TTree\n"
-              "   // is started when using PROOF. Typically here the branch pointers\n"
-              "   // will be retrieved. It is normaly not necessary to make changes\n"
+              "   // is started when using PROOF. It is normaly not necessary to make changes\n"
               "   // to the generated code, but the routine can be extended by the\n"
               "   // user if needed.\n\n");
-   fprintf(fp,"   // Get branch pointers\n");
-   for (l=0;l<nleaves;l++) {
-      if (leafStatus[l]) continue;
-      TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
-      len = leaf->GetLen();
-      leafcount = leaf->GetLeafCount();
-      TBranch *branch = leaf->GetBranch();
-      strcpy(branchname,branch->GetName());
-      if ( branch->GetNleaves() <= 1 ) {
-         // Code duplicated around line 1120
-         if (branch->IsA() != TBranchObject::Class()) {
-            if (!leafcount) {
-               TBranch *mother = branch->GetMother();
-               const char* ltitle = leaf->GetTitle();
-               if (mother && mother!=branch) {
-                  strcpy(branchname,mother->GetName());
-                  if (branchname[strlen(branchname)-1]!='.') {
-                     strcat(branchname,".");
-                  }
-                  if (strncmp(branchname,ltitle,strlen(branchname))==0) {
-                     branchname[0] = 0;
-                  }
-               } else {
-                  branchname[0] = 0;
-               }
-               strcat(branchname,ltitle);
-            }
-         }
-      }
-      bname = branchname;
-      char *twodim = (char*)strstr(bname,"["); if (twodim) *twodim = 0;
-      while (*bname) {
-         if (*bname == '.') *bname='_';
-         if (*bname == ':') *bname='_';
-         if (*bname == '<') *bname='_';
-         if (*bname == '>') *bname='_';
-         bname++;
-      }
-      if (branch->IsA() == TBranchObject::Class()) {
-         if (branch->GetListOfBranches()->GetEntriesFast()) {
-            fprintf(fp,"   b_%s = fChain->GetBranch(\"%s\");\n",branchname,branch->GetName());
-            continue;
-         }
-         strcpy(branchname,branch->GetName());
-      }
-      fprintf(fp,"   b_%s = fChain->GetBranch(\"%s\");\n",branchname,branch->GetName());
-   }
+
    fprintf(fp,"\n   return kTRUE;\n");
    fprintf(fp,"}\n");
    fprintf(fp,"\n");

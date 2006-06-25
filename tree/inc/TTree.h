@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.87 2006/05/23 04:47:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.88 2006/06/05 20:30:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -350,17 +350,18 @@ public:
    virtual void         SetAutoSave(Long64_t autos=10000000) {fAutoSave=autos;}
    virtual void         SetBasketSize(const char *bname,Int_t buffsize=16000);
 #if !defined(__CINT__)
-   virtual void         SetBranchAddress(const char *bname,void *add);
+   virtual void         SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
 #endif
-   virtual void         SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t ptr);
-   template <class T> void SetBranchAddress(const char *bname, T **add) {
-      SetBranchAddress(bname,add,gROOT->GetClass(typeid(T)),TDataType::GetType(typeid(T)),true);
+   virtual void         SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
+   virtual void         SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
+   template <class T> void SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {
+      SetBranchAddress(bname,add,ptr,gROOT->GetClass(typeid(T)),TDataType::GetType(typeid(T)),true);
    }
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    // This can only be used when the template overload resolution can distringuish between
    // T* and T**
-   template <class T> void SetBranchAddress(const char *bname, T *add) {
-      SetBranchAddress(bname,add,gROOT->GetClass(typeid(T)),TDataType::GetType(typeid(T)),false);
+   template <class T> void SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
+      SetBranchAddress(bname,add,ptr,gROOT->GetClass(typeid(T)),TDataType::GetType(typeid(T)),false);
    }
 #endif
    virtual void         SetBranchStatus(const char *bname,Bool_t status=1,UInt_t *found=0);

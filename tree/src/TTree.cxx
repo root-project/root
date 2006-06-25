@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.287 2006/06/13 06:53:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.288 2006/06/16 11:01:16 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1860,7 +1860,7 @@ TFile *TTree::ChangeFile(TFile *file)
 
 //______________________________________________________________________________
 Bool_t TTree::CheckBranchAddressType(TBranch *branch, TClass *ptrClass,
-                                     EDataType datatype, Bool_t ptr)
+                                     EDataType datatype, Bool_t isptr)
 {
    // Check whether the address described by the last 3 parameters match the
    // content of the branch.
@@ -1895,7 +1895,7 @@ Bool_t TTree::CheckBranchAddressType(TBranch *branch, TClass *ptrClass,
       }
       if (ptrClass && branch->GetMother()==branch) {
          // Top Level branch
-         if (!ptr) {
+         if (!isptr) {
             Error("SetBranchAddress",
                   "The address for \"%s\" should be the address of a pointer!",branch->GetName());
          }
@@ -4591,7 +4591,7 @@ void TTree::SetBasketSize(const char *bname, Int_t buffsize)
 }
 
 //_______________________________________________________________________
-void TTree::SetBranchAddress(const char *bname, void *add)
+void TTree::SetBranchAddress(const char *bname, void *add, TBranch **ptr)
 {
    //*-*-*-*-*-*-*-*-*Set branch address*-*-*-*-*-*-*-*
    //*-*              ==================
@@ -4600,6 +4600,7 @@ void TTree::SetBranchAddress(const char *bname, void *add)
    //      Function overloaded by TChain.
 
    TBranch *branch = GetBranch(bname);
+   if (ptr) *ptr = branch;
    if (branch) {
       if (fClones) {
          void *oldAdd = branch->GetAddress();
@@ -4621,14 +4622,25 @@ void TTree::SetBranchAddress(const char *bname, void *add)
 //_______________________________________________________________________
 void TTree::SetBranchAddress(const char *bname, void *add,
                              TClass *ptrClass, EDataType datatype,
-                             Bool_t ptr)
+                             Bool_t isptr)
+{
+   //  Verify the validity of the type of add before calling SetBranchAddress.
+   
+   SetBranchAddress(bname,add,0,ptrClass,datatype,isptr);
+}
+
+//_______________________________________________________________________
+void TTree::SetBranchAddress(const char *bname, void *add, TBranch **ptr,
+                             TClass *ptrClass, EDataType datatype,
+                             Bool_t isptr)
 {
    //  Verify the validity of the type of add before calling SetBranchAddress.
 
    TBranch *branch = GetBranch(bname);
+   if (ptr) *ptr = branch;
    if (branch) {
 
-      CheckBranchAddressType(branch,ptrClass,datatype,ptr);
+      CheckBranchAddressType(branch,ptrClass,datatype,isptr);
       SetBranchAddress(bname,add);
 
    } else {
