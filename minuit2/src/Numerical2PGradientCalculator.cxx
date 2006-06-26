@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: Numerical2PGradientCalculator.cpp,v 1.8.4.4 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: Numerical2PGradientCalculator.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -68,25 +68,30 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
   double fcnmin = par.Fval();
 //   std::cout<<"fval: "<<fcnmin<<std::endl;
 
-  double dfmin = 8.*Precision().Eps2()*(fabs(fcnmin)+Fcn().Up());
-  double vrysml = 8.*Precision().Eps()*Precision().Eps();
-//   double vrysml = std::max(1.e-4, Precision().Eps2());
+  double eps2 = Precision().Eps2(); 
+  double eps = Precision().Eps();
+
+  double dfmin = 8.*eps2*(fabs(fcnmin)+Fcn().Up());
+  double vrysml = 8.*eps*eps;
+//   double vrysml = std::max(1.e-4, eps2);
 //    std::cout<<"dfmin= "<<dfmin<<std::endl;
 //    std::cout<<"vrysml= "<<vrysml<<std::endl;
 //    std::cout << " ncycle " << Ncycle() << std::endl;
   
   unsigned int n = x.size();
+  unsigned int ncycle = Ncycle();
 //   MnAlgebraicVector vgrd(n), vgrd2(n), vgstp(n);
   MnAlgebraicVector grd = Gradient.Grad();
   MnAlgebraicVector g2 = Gradient.G2();
   MnAlgebraicVector gstep = Gradient.Gstep();
   for(unsigned int i = 0; i < n; i++) {
     double xtf = x(i);
-    double epspri = Precision().Eps2() + fabs(grd(i)*Precision().Eps2());
+    double epspri = eps2 + fabs(grd(i)*eps2);
     double stepb4 = 0.;
-    for(unsigned int j = 0; j < Ncycle(); j++)  {
+    for(unsigned int j = 0; j < ncycle; j++)  {
       double optstp = sqrt(dfmin/(fabs(g2(i))+epspri));
       double step = std::max(optstp, fabs(0.1*gstep(i)));
+      double wstep = 1./step; 
 //       std::cout<<"step: "<<step;
       if(Trafo().Parameter(Trafo().ExtOfInt(i)).HasLimits()) {
 	if(step > 0.5) step = 0.5;
@@ -94,11 +99,11 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
       double stpmax = 10.*fabs(gstep(i));
       if(step > stpmax) step = stpmax;
 //       std::cout<<" "<<step;
-      double stpmin = std::max(vrysml, 8.*fabs(Precision().Eps2()*x(i)));
+      double stpmin = std::max(vrysml, 8.*fabs(eps2*x(i)));
       if(step < stpmin) step = stpmin;
 //       std::cout<<" "<<step<<std::endl;
 //       std::cout<<"step: "<<step<<std::endl;
-      if(fabs((step-stepb4)/step) < StepTolerance()) {
+      if(fabs((step-stepb4)*wstep) < StepTolerance()) {
 //  	std::cout<<"(step-stepb4)/step"<<std::endl;
 //  	std::cout<<"j= "<<j<<std::endl;
 //  	std::cout<<"step= "<<step<<std::endl;
@@ -119,10 +124,10 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 
       double grdb4 = grd(i);
       
-      grd(i) = 0.5*(fs1 - fs2)/step;
-      g2(i) = (fs1 + fs2 - 2.*fcnmin)/step/step;
+      grd(i) = 0.5*(fs1 - fs2)*wstep;
+      g2(i) = (fs1 + fs2 - 2.*fcnmin)*wstep*wstep;
       
-      if(fabs(grdb4-grd(i))/(fabs(grd(i))+dfmin/step) < GradTolerance())  {
+      if(fabs(grdb4-grd(i))/(fabs(grd(i))+dfmin*wstep) < GradTolerance())  {
 //  	std::cout<<"j= "<<j<<std::endl;
 //  	std::cout<<"step= "<<step<<std::endl;
 //  	std::cout<<"fs1, fs2: "<<fs1<<" "<<fs2<<std::endl;
