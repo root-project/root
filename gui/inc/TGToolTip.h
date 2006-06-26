@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.h,v 1.6 2004/09/20 19:07:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.h,v 1.7 2006/04/06 10:49:28 antcheva Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -44,6 +44,10 @@ private:
    const TBox        *fBox;     // box in pad to which tooltip is associated
    Int_t              fX;       // X position in fWindow where to popup
    Int_t              fY;       // Y position in fWindow where to popup
+
+protected:
+   TGToolTip(const TGToolTip& gtt);
+   TGToolTip& operator=(const TGToolTip& gtt);
 
 public:
    TGToolTip(const TGWindow *p = 0, const TGFrame *f = 0, const char *text = 0, Long_t delayms = 350);

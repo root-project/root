@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.12 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.13 2006/04/06 10:49:28 antcheva Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -158,6 +158,40 @@ TGToolTip::TGToolTip(const TBox *box, const char *text,Long_t delayms)
    fBox    = box;
    fDelay = new TTipDelayTimer(this, delayms);
 }
+ 
+//______________________________________________________________________________
+TGToolTip::TGToolTip(const TGToolTip& gtt) :
+   TGCompositeFrame(gtt),
+   fLabel(gtt.fLabel),
+   fL1(gtt.fL1),
+   fDelay(gtt.fDelay),
+   fWindow(gtt.fWindow),
+   fPad(gtt.fPad),
+   fBox(gtt.fBox),
+   fX(gtt.fX),
+   fY(gtt.fY)
+{
+   // Copy constructor
+}
+
+//______________________________________________________________________________
+TGToolTip& TGToolTip::operator=(const TGToolTip& gtt) 
+{
+   // Assignment operator
+
+   if(this!=&gtt) {
+      TGCompositeFrame::operator=(gtt);
+      fLabel=gtt.fLabel;
+      fL1=gtt.fL1;
+      fDelay=gtt.fDelay;
+      fWindow=gtt.fWindow;
+      fPad=gtt.fPad;
+      fBox=gtt.fBox;
+      fX=gtt.fX;
+      fY=gtt.fY;
+   } 
+   return *this;
+}
 
 //______________________________________________________________________________
 TGToolTip::~TGToolTip()
@@ -168,6 +202,7 @@ TGToolTip::~TGToolTip()
    delete fLabel;
    delete fL1;
 }
+
 
 //______________________________________________________________________________
 void TGToolTip::DrawBorder()

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.cxx,v 1.6 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.cxx,v 1.7 2006/05/10 14:06:06 rdm Exp $
 // Author: Fons Rademakers   18/01/98
 
 /*************************************************************************
@@ -150,6 +150,33 @@ TGMimeTypes::~TGMimeTypes()
    fList->Delete();
    delete fList;
 }
+ 
+//______________________________________________________________________________
+TGMimeTypes::TGMimeTypes(const TGMimeTypes& gmt) :
+   TObject(gmt),
+   fClient(gmt.fClient),
+   fFilename(gmt.fFilename),
+   fChanged(gmt.fChanged),
+   fList(gmt.fList)
+{
+   // Copy constructor
+}
+
+//______________________________________________________________________________
+TGMimeTypes& TGMimeTypes::operator=(const TGMimeTypes& gmt)
+{
+   // Assignment operator
+
+   if(this!=&gmt) {
+      TObject::operator=(gmt);
+      fClient=gmt.fClient;
+      fFilename=gmt.fFilename;
+      fChanged=gmt.fChanged;
+      fList=gmt.fList;
+   } 
+   return *this;
+}
+
 
 //______________________________________________________________________________
 TGMime *TGMimeTypes::Find(const char *filename)
