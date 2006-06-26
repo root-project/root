@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.45 2006/06/24 22:15:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.46 2006/06/26 07:14:31 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -210,6 +210,8 @@ TH1 *TSpectrum::Background(const TH1 * h, int numberIterations, Option_t * optio
    sprintf(hbname,"%s_background",h->GetName());
    TH1 *hb = (TH1*)h->Clone(hbname);
    hb->Reset();
+   hb->GetListOfFunctions()->Delete();
+   hb->SetLineColor(2);
    for (i=0; i< size; i++) hb->SetBinContent(i+first,source[i]);
    hb->SetEntries(size);
    
