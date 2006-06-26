@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.h,v 1.7.2.4 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -21,7 +21,9 @@ namespace ROOT {
 
    namespace Minuit2 {
 
-
+/**
+   Build (find) function minimum using the Variable Metric method (MIGRAD) 
+ */
 class VariableMetricBuilder : public MinimumBuilder {
 
 public:

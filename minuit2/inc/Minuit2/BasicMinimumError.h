@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: BasicMinimumError.h,v 1.6.2.3 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: BasicMinimumError.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -10,16 +10,30 @@
 #ifndef ROOT_Minuit2_BasicMinimumError
 #define ROOT_Minuit2_BasicMinimumError
 
+#ifndef  ROOT_Minuit2_MnConfig
 #include "Minuit2/MnConfig.h"
+#endif
+#ifndef ROOT_Minuit2_MnMatrix
 #include "Minuit2/MnMatrix.h"
+#endif
+#ifndef ROOT_Minuit2_LaSum
 #include "Minuit2/LaSum.h"
+#endif
+#ifndef ROOT_Minuit2_StackAllocator
 #include "Minuit2/StackAllocator.h"
+#endif
 
 namespace ROOT {
 
    namespace Minuit2 {
 
 //extern StackAllocator gStackAllocator;
+
+/**
+   Internal Class containing the error information on the 
+   estimated minimum : 
+   Error matrix + dcovar + additional flags for quality and validity checks
+ */
 
 class BasicMinimumError {
 

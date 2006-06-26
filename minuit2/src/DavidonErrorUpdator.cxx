@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: DavidonErrorUpdator.cpp,v 1.5.6.3 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: DavidonErrorUpdator.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -22,31 +22,36 @@ double similarity(const LAVector&, const LASymMatrix&);
 double sum_of_elements(const LASymMatrix&);
 
 MinimumError DavidonErrorUpdator::Update(const MinimumState& s0, 
-					 const MinimumParameters& p1,
-					 const FunctionGradient& g1) const {
+                                         const MinimumParameters& p1,
+                                         const FunctionGradient& g1) const {
 
-  const MnAlgebraicSymMatrix& V0 = s0.Error().InvHessian();
-  MnAlgebraicVector dx = p1.Vec() - s0.Vec();
-  MnAlgebraicVector dg = g1.Vec() - s0.Gradient().Vec();
+   // update of the covarianze matrix (Davidon formula, see Tutorial, par. 4.8 pag 26)
+   // in case of delgam > gvg (PHI > 1) use rank one formula 
+   // see  par 4.10 pag 30
+
+   const MnAlgebraicSymMatrix& V0 = s0.Error().InvHessian();
+   MnAlgebraicVector dx = p1.Vec() - s0.Vec();
+   MnAlgebraicVector dg = g1.Vec() - s0.Gradient().Vec();
   
-  double delgam = inner_product(dx, dg);
-  double gvg = similarity(dg, V0);
+   double delgam = inner_product(dx, dg);
+   double gvg = similarity(dg, V0);
 
-//   std::cout<<"delgam= "<<delgam<<" gvg= "<<gvg<<std::endl;
-  MnAlgebraicVector vg = V0*dg;
+   //   std::cout<<"delgam= "<<delgam<<" gvg= "<<gvg<<std::endl;
+   MnAlgebraicVector vg = V0*dg;
 
-  MnAlgebraicSymMatrix Vupd = Outer_product(dx)/delgam - Outer_product(vg)/gvg;
+   MnAlgebraicSymMatrix Vupd = Outer_product(dx)/delgam - Outer_product(vg)/gvg;
 
-  if(delgam > gvg) {
-    Vupd += gvg*Outer_product(MnAlgebraicVector(dx/delgam - vg/gvg));
-  }
+   if(delgam > gvg) {
+      // use rank 1 formula
+      Vupd += gvg*Outer_product(MnAlgebraicVector(dx/delgam - vg/gvg));
+   }
 
-  double sum_upd = sum_of_elements(Vupd);
-  Vupd += V0;
+   double sum_upd = sum_of_elements(Vupd);
+   Vupd += V0;
   
-  double dcov = 0.5*(s0.Error().Dcovar() + sum_upd/sum_of_elements(Vupd));
+   double dcov = 0.5*(s0.Error().Dcovar() + sum_upd/sum_of_elements(Vupd));
   
-  return MinimumError(Vupd, dcov);
+   return MinimumError(Vupd, dcov);
 }
 
 /*
