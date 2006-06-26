@@ -379,7 +379,12 @@ int  TFitterMinuit::ExamineMinimum(const FunctionMinimum & min) {
     return 0;
   }
   else { 
-    if (fDebug >= 1)  std::cout << "TFitterMinuit::Minimization DID not converge !" << std::endl; 
+    if (fDebug >= 1)  {
+      std::cout << "TFitterMinuit::Minimization DID not converge !" << std::endl; 
+      std::cout << "FVAL  = " << State().Fval() << std::endl;
+      std::cout << "Edm   = " << State().Edm() << std::endl;
+      std::cout << "Nfcn  = " << State().NFcn() << std::endl;
+    }
     if (min.HasMadePosDefCovar() ) { 
       if (fDebug >= 1) std::cout << "      Covar was made pos def" << std::endl;
       return -11; 
