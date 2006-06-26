@@ -63,6 +63,10 @@ STRESSLO      = stressLinear.$(ObjSuf)
 STRESSLS      = stressLinear.$(SrcSuf)
 STRESSL       = stressLinear$(ExeSuf)
 
+STRESSGO      = stressGraphics.$(ObjSuf)
+STRESSGS      = stressGraphics.$(SrcSuf)
+STRESSG       = stressGraphics$(ExeSuf)
+
 ifeq ($(shell $(ROOTCONFIG) --has-mathcore),yes)
 STRESSVECO   = stressVector.$(ObjSuf)
 STRESSVECS   = stressVector.$(SrcSuf)
@@ -132,13 +136,13 @@ THREADS       = threads$(ExeSuf)
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
-                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO)  $(STRESSSPO) $(TESTBITSO) \
+                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO) $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO) $(STRESSFITO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
-                $(STRESSGEOM) $(STRESSL) $(TESTBITS) $(CTORTURE) $(QPRANDOM) \
+                $(STRESSGEOM) $(STRESSL) $(STRESSG) $(TESTBITS) $(CTORTURE) $(QPRANDOM) \
                 $(THREADS) $(STRESSSP) $(STRESSVEC) $(STRESSFIT)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
@@ -228,6 +232,10 @@ $(VLAZY):       $(VLAZYO)
 		@echo "$@ done"
 
 $(STRESSL):     $(STRESSLO)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(STRESSG):     $(STRESSGO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
