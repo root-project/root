@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphQQ.cxx,v 1.4 2006/05/09 14:03:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphQQ.cxx,v 1.5 2006/05/09 15:41:37 brun Exp $
 // Author: Anna Kreshuk 18/11/2005
 
 /*************************************************************************
@@ -90,6 +90,16 @@ ClassImp(TGraphQQ)
 // http://www.itl.nist.gov/div898/handbook/eda/section3/probplot.htm
 //   
  
+
+
+//______________________________________________________________________________
+TGraphQQ::TGraphQQ()
+{
+   //default constructor
+   
+   fF=0;
+   fY0=0;
+}
 
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphQQ.h,v 1.1 2005/11/18 20:40:52 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphQQ.h,v 1.2 2005/11/21 08:49:48 couet Exp $
 // Author: Anna Kreshuk 18/11/2005
 
 /*************************************************************************
@@ -32,7 +32,7 @@ protected:
    Double_t  fXq2;    //x2 coordinate of the interquartile line
    Double_t  fYq1;    //y1 coordinate of the interquartile line
    Double_t  fYq2;    //y2 coordinate of the interquartile line
-   Double_t *fY0;     //second dataset, if specified
+   Double_t *fY0;     //!second dataset, if specified
    TF1      *fF;      //theoretical density function, if specified
    
    void      Quartiles();
@@ -40,7 +40,7 @@ protected:
    void      MakeFunctionQuantiles();
 
 public:
-   TGraphQQ(){;}
+   TGraphQQ();
    TGraphQQ(Int_t n, Double_t *x);
    TGraphQQ(Int_t n, Double_t *x, TF1 *f);
    TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y);
