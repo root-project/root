@@ -51,10 +51,10 @@ namespace ROOT {
 extern "C" void G__cpp_reset_tagtableManualTree2();
 
 extern "C" void G__set_cpp_environmentManualTree2() {
-  G__add_compiledheader("base/inc/TROOT.h");
-  G__add_compiledheader("base/inc/TMemberInspector.h");
-  G__add_compiledheader("TTree.h");
-  G__cpp_reset_tagtableManualTree2();
+   G__add_compiledheader("base/inc/TROOT.h");
+   G__add_compiledheader("base/inc/TMemberInspector.h");
+   G__add_compiledheader("TTree.h");
+   G__cpp_reset_tagtableManualTree2();
 }
 #include <new>
 extern "C" int G__cpp_dllrevManualTree2() { return(30051515); }
@@ -80,18 +80,18 @@ extern "C" int G__cpp_dllrevManualTree2() { return(30051515); }
 * Get size of pointer to member function
 *********************************************************/
 class G__Sizep2memfuncManualTree2 {
- public:
-  G__Sizep2memfuncManualTree2() {p=&G__Sizep2memfuncManualTree2::sizep2memfunc;}
-    size_t sizep2memfunc() { return(sizeof(p)); }
-  private:
-    size_t (G__Sizep2memfuncManualTree2::*p)();
+public:
+   G__Sizep2memfuncManualTree2() {p=&G__Sizep2memfuncManualTree2::sizep2memfunc;}
+   size_t sizep2memfunc() { return(sizeof(p)); }
+private:
+   size_t (G__Sizep2memfuncManualTree2::*p)();
 };
 
 size_t G__get_sizep2memfuncManualTree2()
 {
-  G__Sizep2memfuncManualTree2 a;
-  G__setsizep2memfunc((int)a.sizep2memfunc());
-  return((size_t)a.sizep2memfunc());
+   G__Sizep2memfuncManualTree2 a;
+   G__setsizep2memfunc((int)a.sizep2memfunc());
+   return((size_t)a.sizep2memfunc());
 }
 
 
@@ -210,10 +210,10 @@ static void G__cpp_setup_global3() {
    G__resetglobalenv();
 }
 extern "C" void G__cpp_setup_globalManualTree2() {
-  G__cpp_setup_global0();
-  G__cpp_setup_global1();
-  G__cpp_setup_global2();
-  G__cpp_setup_global3();
+   G__cpp_setup_global0();
+   G__cpp_setup_global1();
+   G__cpp_setup_global2();
+   G__cpp_setup_global3();
 }
 
 /*********************************************************
@@ -233,36 +233,36 @@ static void G__cpp_setup_func2() {
 }
 
 extern "C" void G__cpp_setup_funcManualTree2() {
-  G__cpp_setup_func0();
-  G__cpp_setup_func1();
-  G__cpp_setup_func2();
+   G__cpp_setup_func0();
+   G__cpp_setup_func1();
+   G__cpp_setup_func2();
 }
 
 /*********************************************************
 * Class,struct,union,enum tag information setup
 *********************************************************/
 /* Setup class/struct taginfo */
-G__linked_taginfo G__ManualTree2LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR = { "vector<TStreamerInfo*,allocator<TStreamerInfo*> >" , 99 , -1 };
-G__linked_taginfo G__ManualTree2LN__RanitlETStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR = { "_Ranit<TStreamerInfo*,long,TStreamerInfo**,TStreamerInfo*&>" , 115 , -1 };
-G__linked_taginfo G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR = { "iterator<random_access_iterator_tag,TStreamerInfo*,long,TStreamerInfo**,TStreamerInfo*&>" , 115 , -1 };
-G__linked_taginfo G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorgR = { "reverse_iterator<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator>" , 99 , -1 };
-G__linked_taginfo G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR = { "iterator<random_access_iterator_tag,TStreamerInfo*,vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator::difference_type,TStreamerInfo**,TStreamerInfo*&>" , 115 , -1 };
-G__linked_taginfo G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLconst_iteratorgR = { "reverse_iterator<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::const_iterator>" , 99 , -1 };
-G__linked_taginfo G__ManualTree2LN_TTree = { "TTree" , 99 , -1 };
-G__linked_taginfo G__ManualTree2LN_TBranch = { "TBranch" , 99 , -1 };
-G__linked_taginfo G__ManualTree2LN_maplEvoidmUcOshortcOlesslEvoidmUgRcOallocatorlEpairlEvoidmUsPconstcOshortgRsPgRsPgR = { "map<void*,short,less<void*>,allocator<pair<void* const,short> > >" , 99 , -1 };
+   G__linked_taginfo G__ManualTree2LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR = { "vector<TStreamerInfo*,allocator<TStreamerInfo*> >" , 99 , -1 };
+   G__linked_taginfo G__ManualTree2LN__RanitlETStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR = { "_Ranit<TStreamerInfo*,long,TStreamerInfo**,TStreamerInfo*&>" , 115 , -1 };
+   G__linked_taginfo G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR = { "iterator<random_access_iterator_tag,TStreamerInfo*,long,TStreamerInfo**,TStreamerInfo*&>" , 115 , -1 };
+   G__linked_taginfo G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorgR = { "reverse_iterator<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator>" , 99 , -1 };
+   G__linked_taginfo G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR = { "iterator<random_access_iterator_tag,TStreamerInfo*,vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator::difference_type,TStreamerInfo**,TStreamerInfo*&>" , 115 , -1 };
+   G__linked_taginfo G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLconst_iteratorgR = { "reverse_iterator<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::const_iterator>" , 99 , -1 };
+   G__linked_taginfo G__ManualTree2LN_TTree = { "TTree" , 99 , -1 };
+   G__linked_taginfo G__ManualTree2LN_TBranch = { "TBranch" , 99 , -1 };
+   G__linked_taginfo G__ManualTree2LN_maplEvoidmUcOshortcOlesslEvoidmUgRcOallocatorlEpairlEvoidmUsPconstcOshortgRsPgRsPgR = { "map<void*,short,less<void*>,allocator<pair<void* const,short> > >" , 99 , -1 };
 
 /* Reset class/struct taginfo */
 extern "C" void G__cpp_reset_tagtableManualTree2() {
-  G__ManualTree2LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR.tagnum = -1 ;
-  G__ManualTree2LN__RanitlETStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR.tagnum = -1 ;
-  G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR.tagnum = -1 ;
-  G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorgR.tagnum = -1 ;
-  G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR.tagnum = -1 ;
-  G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLconst_iteratorgR.tagnum = -1 ;
-  G__ManualTree2LN_TTree.tagnum = -1 ;
-  G__ManualTree2LN_TBranch.tagnum = -1 ;
-  G__ManualTree2LN_maplEvoidmUcOshortcOlesslEvoidmUgRcOallocatorlEpairlEvoidmUsPconstcOshortgRsPgRsPgR.tagnum = -1 ;
+   G__ManualTree2LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR.tagnum = -1 ;
+   G__ManualTree2LN__RanitlETStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR.tagnum = -1 ;
+   G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR.tagnum = -1 ;
+   G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorgR.tagnum = -1 ;
+   G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR.tagnum = -1 ;
+   G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLconst_iteratorgR.tagnum = -1 ;
+   G__ManualTree2LN_TTree.tagnum = -1 ;
+   G__ManualTree2LN_TBranch.tagnum = -1 ;
+   G__ManualTree2LN_maplEvoidmUcOshortcOlesslEvoidmUgRcOallocatorlEpairlEvoidmUsPconstcOshortgRsPgRsPgR.tagnum = -1 ;
 }
 
 
@@ -280,26 +280,26 @@ extern "C" void G__cpp_setup_tagtableManualTree2() {
    G__get_linked_tagnum(&G__ManualTree2LN_maplEvoidmUcOshortcOlesslEvoidmUgRcOallocatorlEpairlEvoidmUsPconstcOshortgRsPgRsPgR);
 }
 extern "C" void G__cpp_setupManualTree2(void) {
-  G__check_setup_version(30051515,"G__cpp_setupManualTree2()");
-  G__set_cpp_environmentManualTree2();
-  G__cpp_setup_tagtableManualTree2();
+   G__check_setup_version(30051515,"G__cpp_setupManualTree2()");
+   G__set_cpp_environmentManualTree2();
+   G__cpp_setup_tagtableManualTree2();
 
-  G__cpp_setup_inheritanceManualTree2();
+   G__cpp_setup_inheritanceManualTree2();
 
-  G__cpp_setup_typetableManualTree2();
+   G__cpp_setup_typetableManualTree2();
 
-  G__cpp_setup_memvarManualTree2();
+   G__cpp_setup_memvarManualTree2();
 
-  G__cpp_setup_memfuncManualTree2();
-  G__cpp_setup_globalManualTree2();
-  G__cpp_setup_funcManualTree2();
+   G__cpp_setup_memfuncManualTree2();
+   G__cpp_setup_globalManualTree2();
+   G__cpp_setup_funcManualTree2();
 
    if(0==G__getsizep2memfunc()) G__get_sizep2memfuncManualTree2();
-  return;
+   return;
 }
 class G__cpp_setup_initManualTree2 {
-  public:
-    G__cpp_setup_initManualTree2() { G__add_setup_func("ManualTree2",(G__incsetup)(&G__cpp_setupManualTree2)); G__call_setup_funcs(); }
+public:
+   G__cpp_setup_initManualTree2() { G__add_setup_func("ManualTree2",(G__incsetup)(&G__cpp_setupManualTree2)); G__call_setup_funcs(); }
    ~G__cpp_setup_initManualTree2() { G__remove_setup_func("ManualTree2"); }
 };
 G__cpp_setup_initManualTree2 G__cpp_setup_initializerManualTree2;
