@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.2 2005/05/02 10:57:32 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.3 2005/11/16 20:24:02 pcanal Exp $
 // Author: Marek Biskup   10/3/2005
 
 /*************************************************************************
@@ -719,12 +719,19 @@ void TChainProof::SetBasketSize(const char *, Int_t)
 }
 
 //_______________________________________________________________________
-void TChainProof::SetBranchAddress(const char *, void *)
+void TChainProof::SetBranchAddress(const char *, void *, TBranch **)
 {
    // Not implemented in TChainProof. Shouldn't be used.
 }
 //_______________________________________________________________________
 void TChainProof::SetBranchAddress(const char *, void *,
+                                   TClass *, EDataType, Bool_t)
+{
+   // Not implemented in TChainProof. Shouldn't be used.
+}
+
+//_______________________________________________________________________
+void TChainProof::SetBranchAddress(const char *, void *, TBranch **,
                                    TClass *, EDataType, Bool_t)
 {
    // Not implemented in TChainProof. Shouldn't be used.

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.3 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.4 2005/11/16 20:21:34 pcanal Exp $
 // Author: Marek Biskup   10/12/2004
 
 /*************************************************************************
@@ -199,10 +199,10 @@ public:
    virtual void         SetAutoSave(Long64_t autos=10000000) {fAutoSave=autos;}
    virtual void         SetBasketSize(const char *bname,Int_t buffsize=16000);
 #if !defined(__CINT__)
-   virtual void         SetBranchAddress(const char *bname,void *add);
+   virtual void         SetBranchAddress(const char *bname,void *add, TBranch **ptr);
+   virtual void         SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
 #endif
    virtual void         SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t ptr);
-   
    virtual void         SetBranchStatus(const char *bname,Bool_t status=1,UInt_t *found=0);
    static  void         SetBranchStyle(Int_t style=1);  //style=0 for old branch, =1 for new branch style
    virtual void         SetChainOffset(Int_t offset=0) {fChainOffset=offset;}
