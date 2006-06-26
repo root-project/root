@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.44 2006/06/08 12:15:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.45 2006/06/24 22:15:10 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -158,6 +158,12 @@ TH1 *TSpectrum::Background(const TH1 * h, int numberIterations, Option_t * optio
 //                  will be not be included   (by default the compton estimation is set)
 //      - "same" : if this option is specified, the resulting background
 //                 histogram is superimposed on the picture in the current pad.
+//
+//  NOTE that the background is only evaluated in the current range of h.
+//  ie, if h has a bin range (set via h->GetXaxis()->SetRange(binmin,binmax),
+//  the returned histogram will be created with the same number of bins
+//  as the input histogram h, but only bins from binmin to binmax will be filled
+//  with the estimated background.
 
    if (h == 0) return 0;
    Int_t dimension = h->GetDimension();
