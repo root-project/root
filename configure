@@ -3333,9 +3333,9 @@ if test ! "x$enable_mathmore" = "xno"; then
 	if `which gsl-config > /dev/null 2>&1` ; then
 	    which gsl-config
             # we found gsl-config - now check the version number
-            message "Checking for GSL version >= 1.8"
+            message "Checking for GSL version >= 1.5"
             gsl_version=`gsl-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
-            if test $gsl_version -lt 1008 ; then
+            if test $gsl_version -lt 1005 ; then
                 result "no (`gsl-config --version`)"
                 enable_mathmore="no"
             else
