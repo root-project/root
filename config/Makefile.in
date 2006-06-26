@@ -226,8 +226,8 @@ SHADOWLIBDIR   :=
 BUILDMATHCORE  := @buildmathcore@
 
 BUILDMATHMORE  := @buildmathmore@
-BUILDGSL       := @builtingsl@
 GSLFLAGS       := $(filter-out -I/usr/include, @gslflags@)
+GSLLIBDIR      := @gsllibdir@
 GSLLIBS        := @gsllibs@
 
 BUILDCINTEX    := @buildcintex@

@@ -30,7 +30,6 @@ options="                    \
    enable_builtin_afterimage \
    enable_builtin_freetype   \
    enable_builtin_pcre       \
-   enable_builtin_gsl        \
    enable_builtin_zlib       \
    enable_cern               \
    enable_chirp              \
@@ -87,13 +86,9 @@ for c in $options ; do eval $c="yes" ; done
 
 enable_afs=no
 enable_explicitlink=no
-enable_cintex=no
-enable_mathcore=no
-enable_mathmore=no
 enable_pythia=no
 enable_qt=no
 enable_qtgsi=no
-enable_reflex=no
 enable_roofit=no
 enable_minuit2=no
 enable_rpath=no
@@ -115,7 +110,6 @@ envvars="
 THREAD           \
 OPENGL           \
 MATHCORE         \
-MATHMORE         \
 MYSQL            \
 ORACLE           \
 PGSQL            \
@@ -123,6 +117,7 @@ QTDIR            \
 SAPDB            \
 RFIO             \
 GFAL             \
+GSL              \
 CERNLIB          \
 PYTHIA           \
 PYTHIA6          \
@@ -809,7 +804,6 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-afterimage Built included libAfterImage, or use system libAfterImage
   builtin-freetype   Built included libfreetype, or use system libfreetype
   builtin-pcre       Built included libpcre, or use system libpcre
-  builtin-gsl        Built included libgsl, or use system libgsl
   builtin-zlib       Built included libz, or use system libz
   cern               CERNLIB usage, build h2root and g2root
   chirp              Chirp support (Condor remote I/O), requires libchirp_client
@@ -824,7 +818,7 @@ enable/disable options, prefix with either --enable- or --disable-
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
   mathcore           Build the new libMathCore math library
-  mathmore           Build the new libMathMore extended math library
+  mathmore           Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)
   minuit2            Build the new libMinuit2 minimizer library
   monalisa           Monalisa monitoring support, requires libapmoncpp
   mysql              MySQL support, requires libmysqlclient
@@ -873,6 +867,8 @@ with options, prefix with --with-, enables corresponding support
   fftw3-libdir       FFTW3 support, location of libfftw3 (libfftw3-3 for windows)
   gfal-incdir        GFAL support, location of gfal_api.h
   gfal-libdir        GFAL support, location of libgfal
+  gsl-incdir         GSL support, location of gsl/gsl_version.h
+  gsl-libdir         GSL support, location of libgsl
   gccxml             Gccxml support, directory of the gccxml installation
   globus             Globus support, path to what should be GLOBUS_LOCATION
   krb5               Kerberos5 support, location of Kerberos distribution
@@ -1044,6 +1040,8 @@ if test $# -gt 0 ; then
       --with-fftw3-libdir=*)   fftw3libdir=$optarg   ; enable_fftw3="yes"   ;;
       --with-gfal-incdir=*)    gfalincdir=$optarg    ; enable_gfal="yes"    ;;
       --with-gfal-libdir=*)    gfallibdir=$optarg    ; enable_gfal="yes"    ;;
+      --with-gsl-incdir=*)     gslincdir=$optarg     ; enable_gsl="yes"     ;;
+      --with-gsl-libdir=*)     gsllibdir=$optarg     ; enable_gsl="yes"     ;;
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
       --with-gccxml=*)         gccxml=$optarg        ;;
       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
@@ -1489,9 +1487,9 @@ if test ! "x$enable_mysql" = "xno"; then
        test ! "x$platform" = "xwin32" ; then
        which mysql_config
        # we found mysql_config - now check the version number
-       message "Checking for libmysqlclient version >= 4.1.x"
+       message "Checking for libmysqlclient version >= 3.23.*"
        mysql_version=`mysql_config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
-       if test $mysql_version -lt 4001 ; then
+       if test $mysql_version -lt 3023 ; then
           result "no (`mysql_config --version`)"
           enable_mysql="no"
           mysqllibdir=""
@@ -3305,6 +3303,64 @@ result $enable_shadowpw
 
 ######################################################################
 #
+### echo %%% MathMore Library - Contributed library
+#
+if test ! "x$enable_mathmore" = "xno"; then
+    # Check for GSL include and library
+    hasmathmore="define"
+    check_header "gsl/gsl_version.h" "$gslincdir" $GSL $GSL/include \
+	$GSL/api /usr/local/include /usr/include /opt/gsl/include \
+	$finkdir/include
+    gslinc=$found_hdr
+    gslincdir=$found_dir
+    gslflags=-I$gslincdir
+
+    check_library "libgsl gsl" "$enable_shared" "$gsllibdir" \
+	$GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
+	$finkdir/lib
+
+    if test ! "x$found_lib" = "x"; then
+	gsllibs="$found_lib -lgslcblas"
+	gsllibdir=$found_dir
+	case $platform in
+	    win32) gsllibs="$found_lib gslcblas.lib"
+	esac
+    fi
+
+    # if gslincdir not specified look for gsl-config
+    if test "x$gslincdir" = "x" || test "x$gsllibs" = "x"; then
+	checking_msg "gsl-config"
+	if `which gsl-config > /dev/null 2>&1` ; then
+	    which gsl-config
+            # we found gsl-config - now check the version number
+            message "Checking for GSL version >= 1.8"
+            gsl_version=`gsl-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
+            if test $gsl_version -lt 1008 ; then
+                result "no (`gsl-config --version`)"
+                enable_mathmore="no"
+            else
+	        # We've found `gsl-config' - use that to get the compiler
+	        # and linker flags
+	        gslflags=`gsl-config --cflags`
+	        gsllibs=`gsl-config --libs`
+            fi
+        else
+	    enable_mathmore="no"
+	    result "not found"
+	fi
+    fi
+fi
+message "Checking whether to build libMathmore"
+if test "x$enable_mathmore" = "xyes"; then
+    result "yes"
+    hasmathmore="define"
+else
+    result "no"
+    hasmathmore="undef"
+fi
+
+######################################################################
+#
 ### echo %%% MathCore Library - Contributed library
 #
 message "Checking whether to build libMathCore"
@@ -3313,38 +3369,6 @@ if test "x$enable_mathcore" = "xyes" || test ! "x$MATHCORE" = "x"; then
     result "yes"
 else
     enable_mathcore=""
-    result "no"
-fi
-
-######################################################################
-#
-### echo %%% MathMore Library - Contributed library
-#
-message "Checking whether to build libMathMore"
-if test "x$enable_mathmore" = "xyes" || test ! "x$MATHMORE" = "x"; then
-    enable_mathmore="yes"
-    hasmathmore="define"
-    result "yes"
-    if test "x$enable_builtin_gsl" = "x" || \
-       test "x$enable_builtin_gsl" = "xno" ; then
-	checking_msg "gsl-config"
-	if `which gsl-config > /dev/null 2>&1` ; then
-	    which gsl-config
-	    # We've found `gsl-config' - use that to get the compiler
-	    # and linker flags
-	    gslflags=`gsl-config --cflags`
-	    gsllibs=`gsl-config --libs`
-	    enable_builtin_gsl="no"
-	else
-	    result "not found"
-	    enable_builtin_gsl="yes"
-	fi
-    fi
-    message "Checking whether to build included libgsl"
-    result "$enable_builtin_gsl"
-else
-    enable_mathmore=""
-    hasmathmore="undef"
     result "no"
 fi
 
@@ -3804,8 +3828,8 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@elispdir@|$elispdir|"                \
     -e "s|@buildmathcore@|$enable_mathcore|"    \
     -e "s|@buildmathmore@|$enable_mathmore|"    \
-    -e "s|@builtingsl@|$enable_builtin_gsl|"    \
     -e "s|@gslflags@|$gslflags|"                \
+    -e "s|@gsllibdir@|$gsllibdir|"              \
     -e "s|@gsllibs@|$gsllibs|"                  \
     -e "s|@builtinzlib@|$enable_builtin_zlib|"  \
     -e "s|@zlibincdir@|$zlibincdir|"            \
@@ -3995,7 +4019,7 @@ sed \
     -e "s|@ttffontdir@|$fontdir|"          \
     -e "s|@setresuid@|$setresuid|"         \
     -e "s|@configoptions@|$configoptions|" \
-    -e "s|@hasmathmore@|$hasmathmore|" \
+    -e "s|@hasmathmore@|$hasmathmore|"     \
     < config.tmp > $CONFOUT
 rm -f config.tmp
 result "done"

@@ -11,37 +11,10 @@ MATHMOREDIR  := $(MODDIR)
 MATHMOREDIRS := $(MATHMOREDIR)/src
 MATHMOREDIRI := $(MATHMOREDIR)/inc
 
-GSLVERS      := gsl-1.5
-GSLSRCS      := $(MODDIRS)/$(GSLVERS).tar.gz
-GSLDIRS      := $(MODDIRS)/$(GSLVERS)
 
-##### libgsl #####
-ifeq ($(BUILDGSL),yes)
-GSLDIRI      := -I$(MODDIRS)/$(GSLVERS)
+###pre-compiled GSL DLL require Mathmore to be compiled with -DGSL_DLL 
 ifeq ($(PLATFORM),win32)
-GSLLIBA      := $(GSLDIRS)/libgsl.lib
-#GSLLIB       := $(LPATH)/libgsl.lib
-ifeq (yes,$(WINRTDEBUG))
-GSLBLD        = "libgsl - Win32 Debug"
-else
-GSLBLD        = "libgsl - Win32 Release"
-endif
-else
-GSLLIBA      := $(GSLDIRS)/.libs/libgsl.a
-#GSLLIB       := $(LPATH)/libgsl.a
-GSLOPT       := $(OPT)
-endif
-GSLDEP       := $(GSLLIBA)
-ifeq (debug,$(findstring debug,$(ROOTBUILD)))
-GSLDBG        = "--enable-gdb"
-else
-GSLDBG        =
-endif
-else
-GSLDIRI      := $(GSLFLAGS)
-GSLLIBA      := $(GSLLIBS)
-GSLDEP       :=
-GSLDBG       :=
+GSLFLAGS += "-DGSL_DLL"
 endif
 
 ##### libMathMore #####
@@ -95,70 +68,13 @@ include/Math/%.h: $(MATHMOREDIRI)/Math/%.h
 		fi)
 		cp $< $@
 
-#$(GSLLIB):      $(GSLLIBA)
-#		cp $< $@
 
-ifeq ($(BUILDGSL),yes)
-$(GSLLIBA):     $(GSLSRCS)
-ifeq ($(PLATFORM),win32)
-		@(if [ -d $(GSLDIRS) ]; then \
-			rm -rf $(GSLDIRS); \
-		fi; \
-		echo "*** Building $@..."; \
-		cd $(MATHMOREDIRS); \
-		if [ ! -d $(GSLVERS) ]; then \
-			gunzip -c $(GSLVERS).tar.gz | tar xf -; \
-		fi; \
-		cd $(GSLVERS); \
-		cp ./*.h ./gsl; \
-		cp ./gsl_version.h.win32 ./gsl_version.h; \
-		cp ./config.h.win32 ./config.h; \
-		cp ./*/*.h ./gsl; \
-		unset MAKEFLAGS; \
-		nmake -f Makefile.msc CFG=$(GSLBLD))
-else
-		@(if [ -d $(GSLDIRS) ]; then \
-			rm -rf $(GSLDIRS); \
-		fi; \
-		echo "*** Building $@..."; \
-		cd $(MATHMOREDIRS); \
-		if [ ! -d $(GSLVERS) ]; then \
-			gunzip -c $(GSLVERS).tar.gz | tar xf -; \
-		fi; \
-		cd $(GSLVERS); \
-		ACC=$(CC); \
-		if [ "$(CC)" = "icc" ]; then \
-			ACC="icc"; \
-		fi; \
-		if [ "$(ARCH)" = "sgicc64" ]; then \
-			ACC="gcc -mabi=64"; \
-		fi; \
-		if [ "$(ARCH)" = "hpuxia64acc" ]; then \
-			ACC="cc +DD64 -Ae"; \
-		fi; \
-		if [ "$(ARCH)" = "linuxppc64gcc" ]; then \
-			ACC="gcc -m64"; \
-		fi; \
-		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
-			ACC="gcc"; \
-			ACFLAGS="-m64"; \
-		fi; \
-		GNUMAKE=$(MAKE) ./configure CC="$$ACC" \
-		CFLAGS="$$ACFLAGS $(GSLOPT)" $(GSLDBG); \
-		if [ "$(MACOSX_CPU)" = "i386" ]; then \
-			sed '/DARWIN_IEEE_INTERFACE/d' config.status > _c.s; \
-			rm -f config.status config.h; \
-			cp _c.s config.status; \
-		fi; \
-		$(MAKE))
-endif
-endif
 
-$(MATHMORELIB): $(GSLDEP) $(MATHMOREO) $(MATHMOREDO) $(ORDER_) $(MAINLIBS)
+$(MATHMORELIB): $(MATHMOREO) $(MATHMOREDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libMathMore.$(SOEXT) $@     \
 		   "$(MATHMOREO) $(MATHMOREDO)"             \
-		   "$(MATHMORELIBEXTRA) $(GSLLIBA)"
+		   "$(MATHMORELIBEXTRA) $(GSLLIBDIR) $(GSLLIBS)"
 
 $(MATHMOREDS):  $(MATHMOREDH1) $(MATHMOREL) $(MATHMORELINC) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
@@ -174,33 +90,14 @@ map::           map-mathmore
 
 clean-mathmore:
 		@rm -f $(MATHMOREO) $(MATHMOREDO)
-ifeq ($(BUILDGSL),yes)
-ifeq ($(PLATFORM),win32)
-		-@(if [ -d $(GSLDIRS) ]; then \
-			cd $(GSLDIRS); \
-			unset MAKEFLAGS; \
-			nmake -nologo -f gsl.mak clean \
-			CFG=$(GSLBLD); \
-		fi)
-else
-		-@(if [ -d $(GSLDIRS) ]; then \
-			cd $(GSLDIRS); \
-			$(MAKE) clean; \
-		fi)
-endif
-endif
 
 clean::         clean-mathmore
 
 distclean-mathmore: clean-mathmore
 		@rm -f $(MATHMOREDEP) $(MATHMOREDS) $(MATHMOREDH) $(MATHMORELIB)
-		@mv $(GSLSRCS) $(MATHMOREDIRS)/-$(GSLVERS).tar.gz
-		@rm -rf $(MATHMOREDIRS)/gsl-*
-		@mv $(MATHMOREDIRS)/-$(GSLVERS).tar.gz $(GSLSRCS)
 		@rm -rf include/Math
 
 distclean::     distclean-mathmore
 
 ##### extra rules ######
-$(MATHMOREO): $(GSLDEP)
-$(MATHMOREO): CXXFLAGS += $(GSLDIRI)
+$(MATHMOREO): CXXFLAGS += $(GSLFLAGS)
