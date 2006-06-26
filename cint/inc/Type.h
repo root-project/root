@@ -39,8 +39,9 @@ G__TypeInfo : public G__ClassInfo  {
   friend class G__MethodArgInfo;
  public:
   ~G__TypeInfo() {}
-  G__TypeInfo(const char *typenamein) : G__ClassInfo() { Init(typenamein); }
-  G__TypeInfo() : G__ClassInfo() { type=0; typenum= -1; reftype=0; isconst=0; }
+  G__TypeInfo(const char *typenamein) : G__ClassInfo(),
+    type(0), typenum(-1), reftype(0), isconst(0) { Init(typenamein); }
+  G__TypeInfo() : G__ClassInfo(), type(0), typenum(-1), reftype(0), isconst(0) {}
   void Init(const char *typenamein);
 #ifndef __MAKECINT__
   G__TypeInfo(G__value buf) : G__ClassInfo() { Init(buf); }

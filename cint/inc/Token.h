@@ -48,7 +48,11 @@ G__TokenInfo {
   enum G__TokenProperty {p_invalid , p_type , p_data, p_func};
 
   ~G__TokenInfo() {}
-  G__TokenInfo() { Init(); }
+  G__TokenInfo() :
+    tokentype(t_invalid), tokenproperty(p_invalid), methodscope(),
+    bytecode(NULL), localvar(NULL), glob(), nextscope(), tinfo() { Init(); }
+  G__TokenInfo(const G__TokenInfo& tki);
+  G__TokenInfo& operator=(const G__TokenInfo& tki);
   void Init();
 
   // MakeLocalTable has to be used when entering to a new function

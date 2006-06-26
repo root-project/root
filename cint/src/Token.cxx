@@ -44,6 +44,40 @@ void G__TokenInfo::Init()
   bytecode=(struct G__bytecodefunc*)NULL;
   localvar=(struct G__var_array*)NULL;
 }
+
+///////////////////////////////////////////////////////////////////////////
+G__TokenInfo::G__TokenInfo(const G__TokenInfo& tki) :
+  tokentype(tki.tokentype), 
+  tokenproperty(tki.tokenproperty), 
+  methodscope(tki.methodscope),
+  bytecode(tki.bytecode),
+  localvar(tki.localvar),
+  glob(tki.glob),
+  nextscope(tki.nextscope),
+  tinfo(tki.tinfo)
+{
+  // Copy constructor
+}
+
+///////////////////////////////////////////////////////////////////////////
+G__TokenInfo& G__TokenInfo::operator=(const G__TokenInfo& tki)
+{
+
+  // Assignment operator
+
+  if(this!=&tki) {
+    tokentype=tki.tokentype; 
+    tokenproperty=tki.tokenproperty; 
+    methodscope=tki.methodscope;
+    bytecode=tki.bytecode;
+    localvar=tki.localvar;
+    glob=tki.glob;
+    nextscope=tki.nextscope;
+    tinfo=tki.tinfo;
+  }
+  return *this;
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // MakeLocalTable has to be used when entering to a new function
 G__MethodInfo G__TokenInfo::MakeLocalTable(G__ClassInfo& tag_scope
