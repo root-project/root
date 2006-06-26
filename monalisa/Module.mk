@@ -39,7 +39,8 @@ include/%.h:    $(MONALISADIRI)/%.h
 $(MONALISALIB): $(MONALISAO) $(MONALISADO) $(ORDER_) $(MAINLIBS) $(MONALISALIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libMonaLisa.$(SOEXT) $@ "$(MONALISAO) $(MONALISADO)" \
-		   "$(MONALISALIBEXTRA) $(MONALISALIBDIR) $(MONALISACLILIB)"
+		   "$(MONALISALIBEXTRA) $(MONALISALIBDIR) $(MONALISACLILIB) \
+		   $(MONALISAWSLIBDIR) $(MONALISAWSCLILIB)"
 
 $(MONALISADS):  $(MONALISAH) $(MONALISAL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
@@ -64,4 +65,4 @@ distclean-monalisa: clean-monalisa
 distclean::     distclean-monalisa
 
 ##### extra rules ######
-$(MONALISAO) $(MONALISADO): CXXFLAGS += $(MONALISAINCDIR:%=-I%)
+$(MONALISAO) $(MONALISADO): CXXFLAGS += $(MONALISAINCDIR:%=-I%) $(MONALISAWSINCDIR:%=-I%)

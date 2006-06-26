@@ -4,9 +4,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ global gMonaLisa;
-
-#pragma link C++ class TMonaLisa;
+#pragma link C++ class TMonaLisaWriter;
+#pragma link C++ class TMonaLisaReader;
 #pragma link C++ class TMonaLisaText+;
 #pragma link C++ class TMonaLisaValue+;
 
