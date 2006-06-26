@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.6 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.7 2006/06/09 11:58:22 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -109,6 +109,24 @@ TMacro::~TMacro()
 
    if (fLines) fLines->Delete();
    delete fLines;
+}
+ 
+//______________________________________________________________________________
+TMacro& TMacro::operator=(const TMacro &macro)
+{
+   // Copy constructor.
+  
+   if(this!=&macro) {
+      TNamed::operator=(macro);
+      if(fLines) delete fLines;
+      fLines = new TList();
+      TIter next(macro.GetListOfLines());
+      TObjString *obj;
+      while ((obj = (TObjString*) next())) {
+         fLines->Add(new TObjString(obj->GetName()));
+      }
+   }
+   return *this;
 }
 
 //______________________________________________________________________________

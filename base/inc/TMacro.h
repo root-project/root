@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.3 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.4 2006/06/09 11:58:22 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -45,6 +45,7 @@ public:
    TMacro(const TMacro&);
    TMacro(const char *name, const char *title="");
    virtual ~TMacro();
+   TMacro& operator=(const TMacro&);
    virtual TObjString  *AddLine(const char *text);
    virtual void         Browse(TBrowser *b);
    virtual TMD5        *Checksum();
