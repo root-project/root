@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.292 2006/05/16 16:50:02 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.293 2006/05/17 16:37:26 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TObjString.h"
 #include "TError.h"
 #include "TVirtualFFT.h"
+#include "TSpectrum.h"
 
 //______________________________________________________________________________
 //                     The H I S T O G R A M   Classes
@@ -6596,6 +6597,63 @@ void TH1::SetBinContent(Int_t, Double_t)
    // see convention for numbering bins in TH1::GetBin
    AbstractMethod("SetBinContent");
 }
+
+//______________________________________________________________________________
+TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
+{
+//   This function calculates the background spectrum in this histogram.
+//   The background is returned as a histogram. 
+//                
+//   Function parameters:
+//   -niter, number of iterations (default value = 2)
+//      Increasing niter make the result smoother and lower.
+//   -option: may contain one of the following options
+//      - to set the direction parameter
+//        "BackDecreasingWindow". By default the direction is BackIncreasingWindow
+//      - filterOrder-order of clipping filter,  (default "BackOrder2"                         
+//                  -possible values= "BackOrder4"                          
+//                                    "BackOrder6"                          
+//                                    "BackOrder8"                           
+//      - "nosmoothing"- if selected, the background is not smoothed
+//           By default the background is smoothed.
+//      - smoothWindow-width of smoothing window, (default is "BackSmoothing3")         
+//                  -possible values= "BackSmoothing5"                        
+//                                    "BackSmoothing7"                       
+//                                    "BackSmoothing9"                        
+//                                    "BackSmoothing11"                       
+//                                    "BackSmoothing13"                       
+//                                    "BackSmoothing15"                        
+//      - "nocompton"- if selected the estimation of Compton edge
+//                  will be not be included   (by default the compton estimation is set)
+//      - "same" : if this option is specified, the resulting background
+//                 histogram is superimposed on the picture in the current pad.
+//                 This option is given by default.
+//
+//  NOTE that the background is only evaluated in the current range of this histogram.
+//  ie, if this has a bin range (set via h->GetXaxis()->SetRange(binmin,binmax),
+//  the returned histogram will be created with the same number of bins
+//  as this input histogram, but only bins from binmin to binmax will be filled
+//  with the estimated background.
+//
+
+   TSpectrum s;
+   return s.Background(this,niter,option);
+}
+
+//______________________________________________________________________________
+Int_t TH1::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
+{
+   //Interface to TSpectrum::Search
+   //the function finds peaks in this histogram where the width is > sigma
+   //and the peak maximum greater than threshold*maximum bin content of this.
+   //for more detauils see TSpectrum::Search.
+   //note the difference in the default value for option compared to TSpectrum::Search
+   //option="" by default (instead of "goff")
+   
+   TSpectrum s;
+   return s.Search(this,sigma,option,threshold);
+}
+   
 
 //______________________________________________________________________________
 TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)

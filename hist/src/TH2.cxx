@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.94 2006/06/15 16:47:10 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.95 2006/06/16 08:36:35 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "THLimitsFinder.h"
 #include "TError.h"
 #include "TObjString.h"
+#include "TSpectrum2.h"
 
 
 ClassImp(TH2)
@@ -2260,6 +2261,32 @@ void TH2::SetShowProjectionY(Int_t nbins)
 
    if (fPainter) fPainter->SetShowProjection("y",nbins);
 }
+
+//______________________________________________________________________________
+TH1 *TH2::ShowBackground(Int_t niter, Option_t *option)
+{
+//   This function calculates the background spectrum in this histogram.
+//   The background is returned as a histogram. 
+//   to be implemented (may be)
+   
+   Warning("ShowBackground","Function not implemented for 2-d and 3-d histograms");
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TH2::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
+{
+   //Interface to TSpectrum2::Search
+   //the function finds peaks in this histogram where the width is > sigma
+   //and the peak maximum greater than threshold*maximum bin content of this.
+   //for more detauils see TSpectrum::Search.
+   //note the difference in the default value for option compared to TSpectrum::Search
+   //option="" by default (instead of "goff")
+   
+   TSpectrum2 s;
+   return s.Search(this,sigma,option,threshold);
+}
+   
 
 //______________________________________________________________________________
 void TH2::Streamer(TBuffer &R__b)
