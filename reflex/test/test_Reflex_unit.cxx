@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.4 2006/04/26 09:16:04 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.5 2006/05/31 21:00:39 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -214,6 +214,15 @@ void ReflexUnitTest::exception() {
   }
 }
 
+
+struct AnyStruct {
+   AnyStruct() : i(1), d(1.0), b(true) {}
+   int i;
+   double d;
+   bool b;
+};
+
+
 void ReflexUnitTest::property_list()
 {
   PropertyList pl = PropertyList(new PropertyListImpl());
@@ -247,6 +256,19 @@ void ReflexUnitTest::property_list()
   CPPUNIT_ASSERT(!pl.HasKey("char*"));
   CPPUNIT_ASSERT_EQUAL((size_t)3, pl.PropertySize());
 
+  AnyStruct strct;
+  pl.AddProperty("struct", strct);
+  CPPUNIT_ASSERT(pl.HasKey("struct"));
+  CPPUNIT_ASSERT_EQUAL(1, any_cast<AnyStruct>(pl.PropertyValue("struct")).i);
+  CPPUNIT_ASSERT_EQUAL(1.0, any_cast<AnyStruct>(pl.PropertyValue("struct")).d);
+  CPPUNIT_ASSERT_EQUAL(true, any_cast<AnyStruct>(pl.PropertyValue("struct")).b);
+  AnyStruct & strct2 = *any_cast<AnyStruct>(&pl.PropertyValue("struct"));
+  strct2.i = 2;
+  strct2.d = 2.0;
+  strct2.b = false;
+  CPPUNIT_ASSERT_EQUAL(2, any_cast<AnyStruct>(pl.PropertyValue("struct")).i);
+  CPPUNIT_ASSERT_EQUAL(2.0, any_cast<AnyStruct>(pl.PropertyValue("struct")).d);
+  CPPUNIT_ASSERT_EQUAL(false, any_cast<AnyStruct>(pl.PropertyValue("struct")).b);
 }
 
 struct myInt { int m;};
