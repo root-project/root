@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.cxx,v 1.5 2006/03/13 15:49:51 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.cxx,v 1.6 2006/03/20 09:46:18 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -14,8 +14,18 @@
 #endif
 
 #include "Reflex/PropertyListImpl.h"
+#include "Reflex/Any.h"
 
 #include <sstream>
+
+
+//-------------------------------------------------------------------------------
+static ROOT::Reflex::Any & sEmptyAny() {
+//-------------------------------------------------------------------------------
+   static ROOT::Reflex::Any a;
+   return a;
+}
+
 
 //-------------------------------------------------------------------------------
 std::ostream & ROOT::Reflex::operator<<( std::ostream & s,
@@ -66,4 +76,12 @@ ROOT::Reflex::PropertyListImpl::PropertyAsString( const std::string & key ) cons
    return "";
 }
 
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Any &
+ROOT::Reflex::PropertyListImpl::PropertyValue( const std::string & key ) const {
+//-------------------------------------------------------------------------------
+   if ( fProperties ) return (*fProperties)[ key ];
+   return sEmptyAny();
+}
 

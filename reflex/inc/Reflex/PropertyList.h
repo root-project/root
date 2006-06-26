@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyList.h,v 1.5 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyList.h,v 1.6 2006/03/13 15:49:50 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -122,7 +122,7 @@ namespace ROOT {
           * @param  key the property key
           * @return nth property value
           */
-         Any PropertyValue(const std::string & key) const;
+         Any & PropertyValue(const std::string & key) const;
 
       private:
 
@@ -225,15 +225,6 @@ inline std::string ROOT::Reflex::PropertyList::PropertyKeys() const {
 //-------------------------------------------------------------------------------
    if ( fPropertyListImpl ) return fPropertyListImpl->PropertyKeys();
    return "";
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Any
-ROOT::Reflex::PropertyList::PropertyValue(const std::string & key) const {
-//-------------------------------------------------------------------------------
-   if ( fPropertyListImpl ) return fPropertyListImpl->PropertyValue( key );
-   return Any();
 }
 
 
