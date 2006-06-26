@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.40 2006/06/05 19:45:50 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.41 2006/06/05 20:37:03 pcanal Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -606,15 +606,23 @@ Int_t TBasket::WriteBuffer()
       for (Int_t i=0;i<=nbuffers;i++) {
          if (i == nbuffers) bufmax = fObjlen -nzip;
          else               bufmax = kMAXBUF;
+         //compress the buffer
          R__zip(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout);
-         if (nout == 0 || nout == fObjlen) { //this happens when the buffer cannot be compressed
+         
+         // test if buffer has really been compressed. In case of small buffers 
+         // when the buffer contains random data, it may happen that the compressed
+         // buffer is larger than the input. In this case, we write the original uncompressed buffer
+         if (nout == 0 || nout >= fObjlen) {
             nout = fObjlen;
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
             fBufferRef->SetBufferOffset(0);
 
             Streamer(*fBufferRef);         //write key itself again
-            //Warning("WriteBuffer","Found pathological case where buffer cannot be compressed. Result is OK. fNbytes=%d, fObjLen=%d, fKeylen=%d",fNbytes,fObjlen,fKeylen);
+            if ((nout+fKeylen)>buflen) {
+               Warning("WriteBuffer","Possible memory corruption due to compression algorithm, wrote %d bytes past the end of a block of %d bytes. fNbytes=%d, fObjLen=%d, fKeylen=%d",
+                  (nout+fKeylen-buflen),buflen,fNbytes,fObjlen,fKeylen);
+            }
             goto WriteFile;
          }
          bufcur += nout;
