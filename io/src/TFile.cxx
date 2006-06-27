@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.169 2006/06/20 18:17:34 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.170 2006/06/27 14:36:27 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1299,6 +1299,7 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
          Seek(off + len);
          return 1;
       }
+      return 2;  //failure in reading
    }
    return 0;
 }
@@ -1620,7 +1621,7 @@ void TFile::SumBuffer(Int_t bufsize)
 }
 
 //_______________________________________________________________________
-void TFile::UseCache(Int_t maxCacheSize, Int_t pageSize)
+void TFile::UseCache(Int_t /*maxCacheSize*/, Int_t /*pageSize*/)
 {
    // Dummy function kept for backward compatibility.
    // The read  cache is now managed by TFileCacheRead

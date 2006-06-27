@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.5 2006/06/09 11:53:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.1 2006/06/27 14:36:27 brun Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -135,10 +135,10 @@ Int_t TFileCacheWrite::WriteBuffer(const char *buf, Long64_t pos, Int_t len)
    Bool_t status;
    if (fSeekStart +fNtot != pos) {
       //we must flush the current cache
-      status = Flush();
+      if (Flush()) return -1; //failure
    }
    if (fNtot + len >= fBufferSize) {
-      Flush();
+      if (Flush()) return -1; //failure
       if (len >= fBufferSize) {
          //buffer larger than the cache itself: direct write to file
          fRecursive = kTRUE;
