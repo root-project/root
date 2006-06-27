@@ -7,13 +7,16 @@
 # Author: Fons Rademakers, 29/2/2000
 
 include ../../test/Makefile.arch
+include ../../config/Makefile.config
 
 #------------------------------------------------------------------------------
 
 ifeq ($(PLATFORM),macosx) 
 #unroll loop better on gcc > 4
-#CXXFLAGS+= -O3 -g  -funroll-loops 
+CXXFLAGS+= -O3 -g  -funroll-loops 
 endif
+
+
 
 # if have clhep
 #CLHEPBASE=/Users/moneta/mathlibs/CLHEP-1.9.2.2
@@ -26,6 +29,11 @@ ifneq ($(PLATFORM),win32)
 LIBM = -lm
 endif
 
+
+ifneq ($(GCCXML),)
+CXXFLAGS+=-DUSE_REFLEX -g
+EXTRALIBS+= -lReflex -lCintex
+endif
 
 
 TESTSMATRIXOBJ     = testSMatrix.$(ObjSuf)
@@ -40,9 +48,9 @@ TESTKALMANOBJ     = testKalman.$(ObjSuf)
 TESTKALMANSRC     = testKalman.$(SrcSuf)
 TESTKALMAN        = testKalman$(ExeSuf)
 
-TESTIOOBJ     = testIO.$(ObjSuf)
-TESTIOSRC     = testIO.$(SrcSuf)
-TESTIO        = testIO$(ExeSuf)
+TESTIOOBJ     = testIO.$(ObjSuf) 
+TESTIOSRC     = testIO.$(SrcSuf) 
+TESTIO        = testIO$(ExeSuf) 
 
 
 STRESSOPERATIONSOBJ     = stressOperations.$(ObjSuf)
@@ -55,7 +63,7 @@ STRESSKALMANSRC     = stressKalman.$(SrcSuf)
 STRESSKALMAN        = stressKalman$(ExeSuf)
 
 
-OBJS          = $(TESTSMATRIXOBJ) $(TESTOPERATIONSOBJ) $(TESTKALMANOBJ) $(TESTIOOBJ) $(STRESSOPERATIONSOBJ) $(STRESSKALMANOBJ)
+OBJS          = $(TESTSMATRIXOBJ) $(TESTOPERATIONSOBJ) $(TESTKALMANOBJ) $(TESTIOOBJ) $(STRESSOPERATIONSOBJ) $(STRESSKALMANOBJ) 
 
 
 PROGRAMS      = $(TESTSMATRIX)  $(TESTOPERATIONS) $(TESTKALMAN) $(TESTIO) $(STRESSOPERATIONS) $(STRESSKALMAN) 
@@ -64,7 +72,7 @@ PROGRAMS      = $(TESTSMATRIX)  $(TESTOPERATIONS) $(TESTKALMAN) $(TESTIO) $(STRE
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
 
-all:            $(PROGRAMS)
+all:            $(PROGRAMS) libTrackDict.$(DllSuf)
 
 testOperations.$(ObjSuf): matrix_op.h matrix_util.h TestTimer.h
 
@@ -85,9 +93,42 @@ $(TESTKALMAN):    $(TESTKALMANOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(TESTIO):        $(TESTIOOBJ)
+$(TESTIO):        $(TESTIOOBJ) 
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
+
+TrackDict.$(SrcSuf): 	Track.h TrackLinkDef.h
+			@echo "Generating dictionary $@..."
+ifneq ($(GCCXML),)
+			@echo "use gcc xml"
+			@rootcint -gccxml -f $@ -c $^	
+else
+			@rootcint -f $@ -c $^	
+endif
+
+
+libTrackDict.$(DllSuf): 	TrackDict.$(ObjSuf) 
+ifeq ($(ARCH),aix)
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(GLIBS) -p 0 $^
+else
+ifeq ($(ARCH),aix5)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(GLIBS) -p 0 $^
+else
+ifeq ($(PLATFORM),macosx)
+# We need to make both the .dylib and the .so
+		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
+ifeq ($(MACOSX_MINOR),4)
+		ln -sf $@ $(subst .$(DllSuf),.so,$@)
+else
+		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
+	 	   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+endif
+else
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^  $(OutPutOpt)$@
+endif
+endif
+endif
+
 
 $(STRESSKALMAN):  $(STRESSKALMANOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@

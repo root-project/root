@@ -23,6 +23,8 @@
 #include "Reflex/Reflex.h"
 #endif
 
+#include "Track.h"
+
 TRandom3 R; 
 TStopwatch timer;
 
@@ -51,6 +53,14 @@ void FillMatrix(Matrix & m) {
   }
 }
 
+void FillCArray(double * m) { 
+  for (int i = 0; i < 5; ++i) { 
+    for (int j = 0; j < 5; ++j) { 
+      m[i*5+j] = R.Rndm() + 1;
+    }
+  }
+}
+
 template<class Matrix> 
 void FillMatrixSym(Matrix & m) { 
   for (int i = 0; i < 5; ++i) { 
@@ -66,6 +76,14 @@ double SumSMatrix(ROOT::Math::SMatrix<double,5,5,R>  & m) {
   double sum = 0;
   for (int i = 0; i < 5*5; ++i) { 
     sum += m.apply(i);
+  }
+  return sum;
+}
+
+double SumCArray(double *  m) { 
+  double sum = 0;
+  for (int i = 0; i < 5*5; ++i) { 
+    sum += m[i];
   }
   return sum;
 }
@@ -125,6 +143,41 @@ void initMatrix(int n) {
 }
 
 
+
+double writeCArray(int n) { 
+
+  std::cout << "\n";
+  std::cout << "**************************************************\n";
+  std::cout << "  Test writing a C Array ........\n";
+  std::cout << "**************************************************\n";
+
+  TFile f1("smatrix.root","RECREATE");
+
+  // create tree
+  TTree t1("t1","Tree with C Array");
+
+  double m1[25];
+  t1.Branch("C Array branch",m1,"m1[25]/D");
+
+  timer.Start();
+  double etot = 0;
+  R.SetSeed(1);   // use same seed 
+  for (int i = 0; i < n; ++i) { 
+    FillCArray(m1);
+    etot += SumCArray(m1);
+    t1.Fill(); 
+  }
+
+  f1.Write();
+  timer.Stop();
+
+  t1.Print();
+  std::cout << " Time to Write CArray " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+  std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+
+  return etot/double(n);
+}
+
 double writeSMatrix(int n) { 
 
   std::cout << "\n";
@@ -138,8 +191,9 @@ double writeSMatrix(int n) {
   TTree t1("t1","Tree with SMatrix");
 
   SMatrix5 * m1 = new  SMatrix5;
+  //ROOT::Math::SMatrix<Double32_t,5,5> * m1 = new ROOT::Math::SMatrix<Double32_t,5,5>; 
   //t1.Branch("SMatrix branch","ROOT::Math::SMatrix<Double32_t,5,5>",&m1);
-  t1.Branch("SMatrix branch",&m1);
+  t1.Branch("SMatrix branch",&m1,16000,0);
 
   timer.Start();
   double etot = 0;
@@ -176,7 +230,7 @@ double writeSMatrixSym(int n) {
 
   SMatrixSym5 * m1 = new  SMatrixSym5;
   // t1.Branch("SMatrixSym branch","ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >",&m1);
-  t1.Branch("SMatrixSym branch",&m1);
+  t1.Branch("SMatrixSym branch",&m1,16000,0);
 
   timer.Start();
   double etot = 0;
@@ -196,6 +250,7 @@ double writeSMatrixSym(int n) {
 
   return etot/double(n);
 }
+
 
 
 
@@ -421,6 +476,77 @@ double readSMatrixSym() {
 }
 
 
+double writeTrackD(int n) { 
+
+  std::cout << "\n";
+  std::cout << "**************************************************\n";
+  std::cout << "  Test writing Track class........\n";
+  std::cout << "**************************************************\n";
+
+  TFile f1("track.root","RECREATE");
+
+  // create tree
+  TTree t1("t1","Tree with Track based on SMatrix");
+
+  TrackD * m1 = new TrackD();
+
+  t1.Branch("Track branch",&m1,16000,0);
+
+  timer.Start();
+  double etot = 0;
+  R.SetSeed(1);   // use same seed 
+  for (int i = 0; i < n; ++i) { 
+    FillMatrix(m1->CovMatrix());
+    etot += SumSMatrix(m1->CovMatrix() );
+    t1.Fill(); 
+  }
+
+  f1.Write();
+  timer.Stop();
+
+  t1.Print();
+  std::cout << " Time to Write TrackD of SMatrix " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+  std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+
+  return etot/double(n);
+}
+
+
+double writeTrackD32(int n) { 
+
+  std::cout << "\n";
+  std::cout << "**************************************************\n";
+  std::cout << "  Test writing Track class........\n";
+  std::cout << "**************************************************\n";
+
+  TFile f1("track.root","RECREATE");
+
+  // create tree
+  TTree t1("t1","Tree with Track based on SMatrix");
+
+  TrackD32 * m1 = new TrackD32();
+  t1.Branch("Track branch",&m1,16000,0);
+
+  timer.Start();
+  double etot = 0;
+  R.SetSeed(1);   // use same seed 
+  for (int i = 0; i < n; ++i) { 
+    FillMatrix(m1->CovMatrix());
+    etot += SumSMatrix(m1->CovMatrix() );
+    t1.Fill(); 
+  }
+
+  f1.Write();
+  timer.Stop();
+
+  t1.Print();
+  std::cout << " Time to Write TrackD of SMatrix " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+  std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+
+  return etot/double(n);
+}
+
+
 int testIO() { 
 
 #ifdef USE_REFLEX
@@ -429,7 +555,6 @@ int testIO() {
    gSystem->Load("libCintex");  
    ROOT::Cintex::Cintex::SetDebug(1);
    ROOT::Cintex::Cintex::Enable();
-   gSystem->Load("libSmatrixReflex");  
 #endif
 
   gSystem->Load("libSmatrix");  
@@ -437,13 +562,19 @@ int testIO() {
 
 
   int iret = 0;
-  int nEvents = 100000;
+  int nEvents = 10000;
 
   initMatrix(nEvents);
+
+  double w0 = writeCArray(nEvents);
 
   double w1 = writeTMatrix(nEvents);
   double w2 = writeSMatrix(nEvents);
   if ( fabs(w1-w2) > tol) { 
+    std::cout << "ERROR: Differeces found  when writing \n" << std::endl;
+    iret = 1;
+  }
+  if ( fabs(w1-w0) > tol) { 
     std::cout << "ERROR: Differeces found  when writing \n" << std::endl;
     iret = 1;
   }
@@ -494,6 +625,21 @@ int testIO() {
     iret = 14;
   }
 
+  std::cout << "\n*****************************************************\n";
+  std::cout << "    Test Track class"; 
+  std::cout << "\n*****************************************************\n\n";
+  // load track dictionary 
+  gSystem->Load("libTrackDict");  
+ 
+
+  double wt1 = writeTrackD(nEvents);
+
+  double wt2 = writeTrackD32(nEvents);
+
+  if ( fabs(wt2-wt1)  > tol) { 
+    std::cout << "ERROR: Differeces found  when writing Track\n" << std::endl;
+    iret = 13;
+  }
 
   return iret;
   
