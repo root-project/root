@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.8 2006/06/02 12:48:21 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.9 2006/06/23 05:02:55 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -44,20 +44,17 @@
 //                                                                      //
 // TGondzioSolver                                                       //
 //                                                                      //
+// Derived class of TQpSolverBase implementing Gondzio-correction       //
+// version of Mehrotra's original predictor-corrector algorithm.        //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 
 #include "Riostream.h"
 #include "TGondzioSolver.h"
 #include "TQpLinSolverDens.h"
 
 ClassImp(TGondzioSolver)
-
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// Derived class of TQpSolverBase implementing Gondzio-correction        //
-// version of Mehrotra's original predictor-corrector algorithm.         //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
 TGondzioSolver::TGondzioSolver()
@@ -126,6 +123,10 @@ TGondzioSolver::TGondzioSolver(const TGondzioSolver &another) : TQpSolverBase(an
 //______________________________________________________________________________
 Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid)
 {
+// Solve the quadratic programming problem as formulated through prob, store
+// the final solution in iterate->fX . Monitor the residuals during the iterations
+// through resid . The status is returned as defined in TQpSolverBase::ETerminationCode .
+
    Int_t status_code;
    Double_t alpha = 1;
    Double_t sigma = 1;
@@ -273,6 +274,9 @@ void TGondzioSolver::DefMonitor(TQpDataBase* /* data */,TQpVar* /* vars */,
                                 Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
                                 Int_t status_code,Int_t level)
 {
+// Print information about the optimization process and monitor the convergence
+// status of thye algorithm
+
    switch (level) {
       case 0 : case 1:
       {

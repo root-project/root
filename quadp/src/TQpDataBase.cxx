@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataBase.cxx,v 1.4 2006/06/02 12:48:21 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataBase.cxx,v 1.5 2006/06/23 05:02:55 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -47,6 +47,14 @@
 // TQpDataBase                                                          //
 //                                                                      //
 // Data for the general QP formulation                                  //
+//                                                                      //
+// The Data class stores the data defining the problem and provides     //
+// methods for performing the operations with this data required by     //
+// the interior-point algorithms. These operations include assembling   //
+// the linear systems (5) or (7), performing matrix-vector operations   //
+// with the data, calculating norms of the data, reading input into the //
+// data structure from various sources, generating random problem       //
+// instances, and printing the data.                                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -103,8 +111,11 @@ void TQpDataBase::RandomlyChooseBoundedVariables(
                            TVectorD &xupp,TVectorD &ixupp,Double_t &ix,Double_t percentLowerOnly,
                            Double_t percentUpperOnly,Double_t percentBound)
 {
-   // Initialize the upper and lower bounds on x
+// Randomly choose  x and its boundaries 
+
    const Int_t n = x.GetNrows();
+
+   // Initialize the upper and lower bounds on x
 
    Int_t i;
    for (i = 0; i < n; i++) {
@@ -195,6 +206,8 @@ void TQpDataBase::RandomlyChooseBoundedVariables(
 //______________________________________________________________________________
 TQpDataBase &TQpDataBase::operator=(const TQpDataBase &source)
 {
+// Assignment operator
+
    if (this != &source) {
       TObject::operator=(source);
       fNx = source.fNx;

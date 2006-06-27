@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.7 2006/06/02 12:48:21 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.8 2006/06/23 05:02:55 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -185,6 +185,8 @@ TQpVar::TQpVar(const TQpVar &another) : TObject(another)
 //______________________________________________________________________________
 Double_t TQpVar::GetMu()
 {
+// Return the complementarity gap mu
+
    Double_t mu = 0.0;
    if (fNComplementaryVariables > 0 ) {
       if (fMclo > 0) mu += fT*fLambda;
@@ -193,7 +195,6 @@ Double_t TQpVar::GetMu()
       if (fNxup > 0) mu += fW*fPhi;
 
       mu /= fNComplementaryVariables;
-
    }
    return mu;
 }
@@ -202,6 +203,8 @@ Double_t TQpVar::GetMu()
 //______________________________________________________________________________
 Double_t TQpVar::MuStep(TQpVar *step,Double_t alpha)
 {
+// Return the complementarity gap mu
+
    Double_t mu = 0.0;
    if (fNComplementaryVariables > 0) {
       if (fMclo > 0)
@@ -221,6 +224,8 @@ Double_t TQpVar::MuStep(TQpVar *step,Double_t alpha)
 //______________________________________________________________________________
 void TQpVar::Saxpy(TQpVar *b,Double_t alpha)
 {
+// Perform a "saxpy" operation on all data vectors : x += alpha*y
+
    Add(fX,alpha,b->fX);
    Add(fY,alpha,b->fY);
    Add(fZ,alpha,b->fZ);
@@ -259,6 +264,8 @@ void TQpVar::Saxpy(TQpVar *b,Double_t alpha)
 //______________________________________________________________________________
 void TQpVar::Negate()
 {
+// Perform a "negate" operation on all data vectors : x =  -x
+
    fS *= -1.;
    fX *= -1.;
    fY *= -1.;
@@ -285,6 +292,8 @@ void TQpVar::Negate()
 //______________________________________________________________________________
 Double_t TQpVar::StepBound(TQpVar *b)
 {
+// Find the maximum stepsize before violating the nonnegativity constraints
+
    Double_t maxStep = 1.0;
 
    if (fMclo > 0 ) {
@@ -326,6 +335,9 @@ Double_t TQpVar::StepBound(TQpVar *b)
 //______________________________________________________________________________
 Double_t TQpVar::StepBound(TVectorD &v,TVectorD &dir,Double_t maxStep)
 {
+// Find the maximum stepsize of v in direction dir
+// before violating the nonnegativity constraints
+
    if (!AreCompatible(v,dir)) {
       ::Error("StepBound(TVectorD &,TVectorD &,Double_t)","vector's not compatible");
       return kFALSE;
@@ -338,7 +350,7 @@ Double_t TQpVar::StepBound(TVectorD &v,TVectorD &dir,Double_t maxStep)
    Double_t bound = maxStep;
    for (Int_t i = 0; i < n; i++) {
       Double_t tmp = pD[i];
-      if( pV[i] >= 0 && tmp < 0 ) {
+      if ( pV[i] >= 0 && tmp < 0 ) {
          tmp = -pV[i]/tmp;
          if (tmp < bound)
             bound = tmp;
@@ -351,6 +363,8 @@ Double_t TQpVar::StepBound(TVectorD &v,TVectorD &dir,Double_t maxStep)
 //______________________________________________________________________________
 Bool_t TQpVar::IsInteriorPoint()
 {
+// Is the current position an interior point 
+
    Bool_t interior = kTRUE;
    if (fMclo > 0)
       interior = interior &&
@@ -380,6 +394,8 @@ Double_t TQpVar::FindBlocking(TQpVar   *step,
                               Double_t &dualStep,
                               Int_t    &fIrstOrSecond)
 {
+//
+
    fIrstOrSecond = 0;
    Double_t alpha = 1.0;
    if (fMclo > 0)
@@ -430,6 +446,8 @@ Double_t TQpVar::FindBlockingSub(Int_t n,
                                  Double_t &u_elt,Double_t &ustep_elt,
                                  Int_t &fIrst_or_second)
 {
+//
+
    Double_t bound = maxStep;
 
    Int_t i = n-1;
@@ -489,6 +507,8 @@ Double_t TQpVar::FindBlockingSub(Int_t n,
 //______________________________________________________________________________
 void TQpVar::InteriorPoint(Double_t alpha,Double_t beta)
 {
+// Set variables to an interior position
+
    fS.Zero();
    fX.Zero();
    fY.Zero();
@@ -527,6 +547,9 @@ void TQpVar::InteriorPoint(Double_t alpha,Double_t beta)
 //______________________________________________________________________________
 Double_t TQpVar::Violation()
 {
+// Return a measure for how much the current position
+// violates the interior-point condition
+
    Double_t viol = 0.0;
    Double_t cmin;
 
@@ -566,6 +589,8 @@ Double_t TQpVar::Violation()
 //______________________________________________________________________________
 void TQpVar::ShiftBoundVariables(Double_t alpha,Double_t beta)
 {
+// Shift bound variables
+
    if (fNxlo > 0) {
       fV    .AddSomeConstant(alpha,fXloIndex);
       fGamma.AddSomeConstant(beta, fXloIndex);
@@ -625,6 +650,8 @@ void TQpVar::Print(Option_t * /*option*/) const
 //______________________________________________________________________________
 Double_t TQpVar::Norm1()
 {
+// Return the sum of the vector-norm1's
+
    Double_t norm = 0.0;
    norm += fX.Norm1();
    norm += fS.Norm1();
@@ -647,6 +674,8 @@ Double_t TQpVar::Norm1()
 //______________________________________________________________________________
 Double_t TQpVar::NormInf()
 {
+// Return the sum of the vector-normInf's
+
    Double_t norm = 0.0;
 
    Double_t tmp = fX.NormInf();
@@ -685,26 +714,28 @@ Double_t TQpVar::NormInf()
 //______________________________________________________________________________
 Bool_t TQpVar::ValidNonZeroPattern()
 {
+// Check that the variables conform to the non-zero indices
+
    if (fNxlo > 0 &&
       ( !fV    .MatchesNonZeroPattern(fXloIndex) ||
-   !fGamma.MatchesNonZeroPattern(fXloIndex) ) ) {
+        !fGamma.MatchesNonZeroPattern(fXloIndex) ) ) {
       return kFALSE;
    }
 
    if (fNxup > 0 &&
       ( !fW  .MatchesNonZeroPattern(fXupIndex) ||
-   !fPhi.MatchesNonZeroPattern(fXupIndex) ) ) {
+        !fPhi.MatchesNonZeroPattern(fXupIndex) ) ) {
       return kFALSE;
    }
    if (fMclo > 0 &&
       ( !fT     .MatchesNonZeroPattern(fCloIndex) ||
-   !fLambda.MatchesNonZeroPattern(fCloIndex) ) ) {
+        !fLambda.MatchesNonZeroPattern(fCloIndex) ) ) {
       return kFALSE;
    }
 
    if (fMcup > 0 &&
       ( !fU .MatchesNonZeroPattern(fCupIndex) ||
-   !fPi.MatchesNonZeroPattern(fCupIndex) ) ) {
+        !fPi.MatchesNonZeroPattern(fCupIndex) ) ) {
       return kFALSE;
    }
 

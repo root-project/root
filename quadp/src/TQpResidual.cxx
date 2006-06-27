@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpResidual.cxx,v 1.5 2006/06/02 12:48:21 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpResidual.cxx,v 1.6 2006/06/23 05:02:55 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -45,6 +45,12 @@
 // TQpResidual                                                          //
 //                                                                      //
 // Residuals for the general QP formulation                             //
+// The Residuals class calculates and stores the quantities that appear //
+// on the right-hand side of the linear systems that arise at each      // 
+// interior-point iteration. These residuals can be partitioned into two//
+// fundamental categories: the components arising from the linear       //
+// equations in the KKT conditions, and the components arising from the //
+// complementarity conditions.                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -125,6 +131,8 @@ TQpResidual::TQpResidual(const TQpResidual &another) : TObject(another)
 //______________________________________________________________________________
 void TQpResidual::CalcResids(TQpDataBase *prob_in,TQpVar *vars)
 {
+// Calculate the different residuals
+
    TQpDataDens *prob = (TQpDataDens *) prob_in;
 
    fRQ.ResizeTo(prob->fG); fRQ = prob->fG;
@@ -247,6 +255,8 @@ void TQpResidual::Set_r3_xz_alpha(TQpVar *vars,Double_t alpha)
 //______________________________________________________________________________
 void TQpResidual::Clear_r3()
 {
+// Zero some residuals
+
    if (fMclo > 0) fRlambda.Zero();
    if (fMcup > 0) fRpi    .Zero();
    if (fNxlo > 0) fRgamma .Zero();
@@ -257,6 +267,8 @@ void TQpResidual::Clear_r3()
 //______________________________________________________________________________
 void TQpResidual::Clear_r1r2()
 {
+// Zero some residuals
+
    fRQ.Zero();
    fRA.Zero();
    fRC.Zero();
@@ -323,7 +335,7 @@ Bool_t TQpResidual::ValidNonZeroPattern()
 //______________________________________________________________________________
 void TQpResidual::GondzioProjection(TVectorD &v,Double_t rmin,Double_t rmax)
 {
-   Double_t *        ep = v.GetMatrixArray();
+         Double_t *        ep = v.GetMatrixArray();
    const Double_t * const fep = ep+v.GetNrows();
 
    while (ep < fep) {

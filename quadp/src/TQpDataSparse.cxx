@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.6 2006/06/02 12:48:21 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.7 2006/06/23 05:02:55 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -122,6 +122,8 @@ TQpDataSparse::TQpDataSparse(const TQpDataSparse &another) : TQpDataBase(another
 //______________________________________________________________________________
 void TQpDataSparse::SetNonZeros(Int_t nnzQ,Int_t nnzA,Int_t nnzC)
 {
+// Allocate space for the appropriate number of non-zeros in the matrices
+ 
    fQ.SetSparseIndex(nnzQ);
    fA.SetSparseIndex(nnzA);
    fC.SetSparseIndex(nnzC);
@@ -131,6 +133,8 @@ void TQpDataSparse::SetNonZeros(Int_t nnzQ,Int_t nnzA,Int_t nnzC)
 //______________________________________________________________________________
 void TQpDataSparse::Qmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x )
 {
+// calculate y = beta*y + alpha*(fQ*x)
+
    y *= beta;
    if (fQ.GetNoElements() > 0)
       y += alpha*(fQ*x);
@@ -140,6 +144,8 @@ void TQpDataSparse::Qmult(Double_t beta,TVectorD &y,Double_t alpha,const TVector
 //______________________________________________________________________________
 void TQpDataSparse::Amult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
+// calculate y = beta*y + alpha*(fA*x)
+
    y *= beta;
    if (fA.GetNoElements() > 0)
       y += alpha*(fA*x);
@@ -149,6 +155,8 @@ void TQpDataSparse::Amult(Double_t beta,TVectorD &y,Double_t alpha,const TVector
 //______________________________________________________________________________
 void TQpDataSparse::Cmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
+// calculate y = beta*y + alpha*(fC*x)
+
    y *= beta;
    if (fC.GetNoElements() > 0)
       y += alpha*(fC*x);
@@ -158,6 +166,8 @@ void TQpDataSparse::Cmult(Double_t beta,TVectorD &y,Double_t alpha,const TVector
 //______________________________________________________________________________
 void TQpDataSparse::ATransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
+// calculate y = beta*y + alpha*(fA^T*x)
+
    y *= beta;
    if (fA.GetNoElements() > 0)
       y += alpha*(TMatrixDSparse(TMatrixDSparse::kTransposed,fA)*x);
@@ -167,6 +177,8 @@ void TQpDataSparse::ATransmult(Double_t beta,TVectorD &y,Double_t alpha,const TV
 //______________________________________________________________________________
 void TQpDataSparse::CTransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
+// calculate y = beta*y + alpha*(fC^T*x)
+
    y *= beta;
    if (fC.GetNoElements() > 0)
       y += alpha*(TMatrixDSparse(TMatrixDSparse::kTransposed,fC)*x);
@@ -176,6 +188,8 @@ void TQpDataSparse::CTransmult(Double_t beta,TVectorD &y,Double_t alpha,const TV
 //______________________________________________________________________________
 Double_t TQpDataSparse::DataNorm()
 {
+// Return the largest component of several vectors in the data class
+
    Double_t norm = 0.0;
 
    Double_t componentNorm = fG.NormInf();
@@ -245,6 +259,8 @@ void TQpDataSparse::Print(Option_t * /*opt*/) const
 //______________________________________________________________________________
 void TQpDataSparse::PutQIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
+// Assign to a sub-matrix of m starting at index (row,col), matrix fQ
+
    m.SetSub(row,col,fQ);
 }
 
@@ -252,6 +268,8 @@ void TQpDataSparse::PutQIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 //______________________________________________________________________________
 void TQpDataSparse::PutAIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
+// Assign to a sub-matrix of m starting at index (row,col), matrix fA
+
    m.SetSub(row,col,fA);
 }
 
@@ -259,6 +277,8 @@ void TQpDataSparse::PutAIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 //______________________________________________________________________________
 void TQpDataSparse::PutCIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
+// Assign to a sub-matrix of m starting at index (row,col), matrix fC
+
    m.SetSub(row,col,fC);
 }
 
@@ -266,6 +286,8 @@ void TQpDataSparse::PutCIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 //______________________________________________________________________________
 void TQpDataSparse::GetDiagonalOfQ(TVectorD &dq)
 {
+// Return in vector dq the diagonal of matrix fQ
+
    const Int_t n = TMath::Min(fQ.GetNrows(),fQ.GetNcols());
    dq.ResizeTo(n);
    dq = TMatrixDSparseDiag(fQ);
@@ -275,6 +297,8 @@ void TQpDataSparse::GetDiagonalOfQ(TVectorD &dq)
 //______________________________________________________________________________
 Double_t TQpDataSparse::ObjectiveValue(TQpVar *vars)
 {
+//
+
    TVectorD tmp(fG);
    this->Qmult(1.0,tmp,0.5,vars->fX);
 
@@ -285,6 +309,8 @@ Double_t TQpDataSparse::ObjectiveValue(TQpVar *vars)
 //______________________________________________________________________________
 void TQpDataSparse::DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s)
 {
+// Choose randomly a QP problem
+
    Double_t ix = 3074.20374;
 
    TVectorD xdual(fNx);

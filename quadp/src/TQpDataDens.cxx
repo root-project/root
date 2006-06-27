@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.cxx,v 1.6 2006/06/02 12:48:21 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.cxx,v 1.7 2006/06/23 05:02:55 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -116,6 +116,8 @@ TQpDataDens::TQpDataDens(const TQpDataDens &another) : TQpDataBase(another)
 //______________________________________________________________________________
 void TQpDataDens::Qmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x )
 {
+// calculate y = beta*y + alpha*(fQ*x)
+
    y *= beta;
    if (fQ.GetNoElements() > 0)
       y += alpha*(fQ*x);
@@ -125,6 +127,8 @@ void TQpDataDens::Qmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD 
 //______________________________________________________________________________
 void TQpDataDens::Amult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
+// calculate y = beta*y + alpha*(fA*x)
+
    y *= beta;
    if (fA.GetNoElements() > 0)
       y += alpha*(fA*x);
@@ -134,6 +138,8 @@ void TQpDataDens::Amult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD 
 //______________________________________________________________________________
 void TQpDataDens::Cmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
+// calculate y = beta*y + alpha*(fC*x)
+
    y *= beta;
    if (fC.GetNoElements() > 0)
       y += alpha*(fC*x);
@@ -143,6 +149,8 @@ void TQpDataDens::Cmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD 
 //______________________________________________________________________________
 void TQpDataDens::ATransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
+// calculate y = beta*y + alpha*(fA^T*x)
+
    y *= beta;
    if (fA.GetNoElements() > 0)
       y += alpha*(TMatrixD(TMatrixD::kTransposed,fA)*x);
@@ -152,6 +160,8 @@ void TQpDataDens::ATransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVec
 //______________________________________________________________________________
 void TQpDataDens::CTransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
+// calculate y = beta*y + alpha*(fC^T*x)
+
    y *= beta;
    if (fC.GetNoElements() > 0)
       y += alpha*(TMatrixD(TMatrixD::kTransposed,fC)*x);
@@ -161,6 +171,8 @@ void TQpDataDens::CTransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVec
 //______________________________________________________________________________
 Double_t TQpDataDens::DataNorm()
 {
+// Return the largest component of several vectors in the data class
+
    Double_t norm = 0.0;
 
    Double_t componentNorm = fG.NormInf();
@@ -230,6 +242,8 @@ void TQpDataDens::Print(Option_t * /*opt*/) const
 //______________________________________________________________________________
 void TQpDataDens::PutQIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
+// Assign to a sub-matrix of m starting at index (row,col), matrix fQ
+
    m.SetSub(row,col,fQ);
 }
 
@@ -237,6 +251,8 @@ void TQpDataDens::PutQIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 //______________________________________________________________________________
 void TQpDataDens::PutAIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
+// Assign to a sub-matrix of m starting at index (row,col), matrix fA
+
    m.SetSub(row,col,fA);
 }
 
@@ -244,6 +260,8 @@ void TQpDataDens::PutAIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 //______________________________________________________________________________
 void TQpDataDens::PutCIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
+// Assign to a sub-matrix of m starting at index (row,col), matrix fC
+
    m.SetSub(row,col,fC);
 }
 
@@ -251,6 +269,8 @@ void TQpDataDens::PutCIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 //______________________________________________________________________________
 void TQpDataDens::GetDiagonalOfQ(TVectorD &dq)
 {
+// Return in vector dq the diagonal of matrix fQ
+
    const Int_t n = TMath::Min(fQ.GetNrows(),fQ.GetNcols());
    dq.ResizeTo(n);
    dq = TMatrixDDiag(fQ);
@@ -260,6 +280,8 @@ void TQpDataDens::GetDiagonalOfQ(TVectorD &dq)
 //______________________________________________________________________________
 Double_t TQpDataDens::ObjectiveValue(TQpVar *vars)
 {
+//
+
    TVectorD tmp(fG);
    this->Qmult(1.0,tmp,0.5,vars->fX);
 
@@ -270,6 +292,8 @@ Double_t TQpDataDens::ObjectiveValue(TQpVar *vars)
 //______________________________________________________________________________
 void TQpDataDens::DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s)
 {
+// Choose randomly a QP problem
+
    Double_t ix = 3074.20374;
 
    TVectorD xdual(fNx);
