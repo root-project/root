@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.105 2006/06/14 13:15:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.106 2006/06/27 14:36:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -864,7 +864,7 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
             return 0;
          }
       }
-      Error("GetBasket","File: %s at byte:%d, branch:%s, entry:%d",file->GetName(),basket->GetSeekKey(),GetName(),fReadEntry);
+      Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%d, badread=%d",file->GetName(),basket->GetSeekKey(),GetName(),fReadEntry,badread);
       return 0;
    }
 
