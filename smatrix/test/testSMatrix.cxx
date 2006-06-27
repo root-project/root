@@ -22,7 +22,7 @@ template<class T>
 int compare( T a, T b, const std::string & s="",double tol = 1) { 
   if (a == b) return 0; 
   double eps = tol*8.*std::numeric_limits<T>::epsilon();
-  if (fabs(a-b) < a*eps) return 0; 
+  if (std::fabs(a-b) < a*eps) return 0; 
   if ( s =="" ) 
     std::cout << "\nFailure " << a << " diffent than " << b << std::endl;
   else 
@@ -30,6 +30,17 @@ int compare( T a, T b, const std::string & s="",double tol = 1) {
   return 1;
 }
 
+int compare( int a, int b, const std::string & s="") { 
+  if (a == b) return 0; 
+  if ( s =="" ) 
+    std::cout << "\nFailure " << a << " diffent than " << b << std::endl;
+  else 
+    std::cout << "\n" << s << " : Failure " << a << " diffent than " << b << std::endl;
+  return 1;
+}
+int compare( bool a, bool b, const std::string & s="") { 
+  return compare(static_cast<int>(a), static_cast<int>(b),s); 
+}
 
 int test1() { 
 
@@ -390,7 +401,7 @@ int test10() {
   std::cout << " C =  " << C << std::endl;
   std::cout << " D =  " << D << std::endl;
 
-  iret |= compare( C==D, true ); 
+  iret |= compare( static_cast<int>(C==D), 1 ); 
 
  
   return iret;

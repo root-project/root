@@ -124,7 +124,15 @@ else
 	 	   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 endif
 else
+ifeq ($(PLATFORM),win32)
+		bindexplib libTrackDict $^ > libTrackDict.def
+		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
+		   $(OutPutOpt)libTrackDict.lib
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ libTrackDict.exp $(LIBS) \
+		   $(OutPutOpt)$@
+else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^  $(OutPutOpt)$@
+endif
 endif
 endif
 endif
