@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.9 2006/04/12 10:21:11 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.10 2006/05/31 22:07:43 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -305,7 +305,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBase::TemplateArgumentAt( size_t /* nth */ 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::TypeBase::ToType( unsigned int /* mod */ ) const {
 //-------------------------------------------------------------------------------
-   return Type();
+   return ThisType();
 }
 
 
