@@ -42,14 +42,10 @@ ifneq ($(BUILDPYTHON),no)
 RFLX_GRFLXPYC := $(subst .py,.pyc,$(RFLX_GRFLXPY))
 endif
 
-ifeq ($(ROOTSYS)/lib,$(LIBDIR))
 ifeq ($(PLATFORM),win32)
 RFLX_LIBDIR = %~d0%~p0\..\lib
 else
 RFLX_LIBDIR = `dirname $$0`/../lib
-endif
-else
-RFLX_LIBDIR = $(LIBDIR)
 endif
 
 ifeq ($(PLATFORM),win32)
