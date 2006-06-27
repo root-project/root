@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.171 2006/06/27 15:21:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.172 2006/06/27 15:23:49 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -680,7 +680,8 @@ void TFile::Close(Option_t *option)
    if (!IsOpen()) return;
 
 
-   if (gMonitoringWriter && (!fWritable)) gMonitoringWriter->SendFileReadProgress(this,true);
+   if (gMonitoringWriter && (!fWritable))
+      gMonitoringWriter->SendFileReadProgress(this,true);
 
    if (fIsArchive || !fIsRootFile) {
       SysClose(fD);
@@ -1236,10 +1237,8 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
       Double_t start = 0;
       if (gPerfStats != 0) start = TTimeStamp();
 
-      if (gMonitoringWriter) {
+      if (gMonitoringWriter)
          gMonitoringWriter->SendFileReadProgress(this);
-         printf("Sending Stats\n");
-      }
 
       while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
          ResetErrno();
@@ -2237,8 +2236,10 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    if (type != kLocal && f && f->IsWritable()) {
       new TFileCacheWrite(f,1);
    }
-   
-   if (gMonitoringWriter && (!f->IsWritable())) gMonitoringWriter->SendFileReadProgress(f,true);
+
+   if (gMonitoringWriter && (!f->IsWritable()))
+      gMonitoringWriter->SendFileReadProgress(f,true);
+
    return f;
 }
 
