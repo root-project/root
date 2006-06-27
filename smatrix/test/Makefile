@@ -97,13 +97,15 @@ $(TESTIO):        $(TESTIOOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-TrackDict.$(SrcSuf): 	Track.h TrackLinkDef.h
-			@echo "Generating dictionary $@..."
 ifneq ($(GCCXML),)
-			@echo "use gcc xml"
-			@rootcint -gccxml -f $@ -c $^	
+TrackDict.$(SrcSuf): 	Track.h TrackDict.xml
+			@echo "Generating dictionary $@ using gccxml ...
+			#rootcint -gccxml -f $@ -c $^	
+			genreflex Track.h --selection_file=TrackDict.xml -o TrackDict.cxx -I$(ROOTSYS)/include
 else
-			@rootcint -f $@ -c $^	
+TrackDict.$(SrcSuf): 	Track.h TrackLinkDef.h
+			@echo "Generating dictionary $@ using rootcint ..."
+			rootcint -f $@ -c $^	
 endif
 
 
