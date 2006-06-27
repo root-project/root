@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.cxx,v 1.6 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.cxx,v 1.7 2006/06/26 17:21:04 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -78,7 +78,7 @@ ROOT::Reflex::PropertyListImpl::PropertyAsString( const std::string & key ) cons
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Any &
+ROOT::Reflex::Any &
 ROOT::Reflex::PropertyListImpl::PropertyValue( const std::string & key ) const {
 //-------------------------------------------------------------------------------
    if ( fProperties ) return (*fProperties)[ key ];
