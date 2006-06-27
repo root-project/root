@@ -99,7 +99,7 @@ $(TESTIO):        $(TESTIOOBJ)
 
 ifneq ($(GCCXML),)
 TrackDict.$(SrcSuf): 	Track.h TrackDict.xml
-			@echo "Generating dictionary $@ using gccxml ...
+			@echo "Generating dictionary $@ using gccxml ..."
 			#rootcint -gccxml -f $@ -c $^	
 			genreflex Track.h --selection_file=TrackDict.xml -o TrackDict.cxx -I$(ROOTSYS)/include
 else
