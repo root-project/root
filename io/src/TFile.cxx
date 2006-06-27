@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.170 2006/06/27 14:36:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.171 2006/06/27 15:21:21 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1586,7 +1586,7 @@ void TFile::SetCacheWrite(TFileCacheWrite *file)
    // Set a pointer to the write cache.
    // if file is null the existing write cache is deleted
 
-   if (!file and fCacheWrite) delete fCacheWrite;
+   if (!file && fCacheWrite) delete fCacheWrite;
    fCacheWrite = file;
 }
 
