@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.6 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.7 2006/04/12 10:21:11 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -366,13 +366,24 @@ namespace ROOT {
       private:
 
          /**
-          * pointer to the At of the typedef
-          * @label typedef At
+          * pointer to the type of the typedef
+          * @label typedef Type
           * @link aggregationByValue
           * @supplierCardinality 1
           * @clientCardinality 1
           */
          Type fTypedefType;
+
+
+         /**
+          * the final type of the typedef (initialised at first lookup if possible)
+          * @label final typedef type
+          * @link aggrgationByValue
+          * @supplierCardinality 0..1
+          * @clientCardinality 1
+          */
+         mutable
+         Type fFinalType;
 
       }; // class Typedef
    } //namespace Reflex
@@ -960,7 +971,9 @@ inline ROOT::Reflex::Type ROOT::Reflex::Typedef::ToType( unsigned int mod ) cons
 //-------------------------------------------------------------------------------
   Type finalType = fTypedefType;
   if ( 0 != ( mod & ( FINAL | F ))) {
-    while (finalType.TypeType() == TYPEDEF) finalType = finalType.ToType();
+     if ( fFinalType ) return fFinalType;
+     while (finalType.TypeType() == TYPEDEF) finalType = finalType.ToType();
+     if ( fFinalType.TypeType() != UNRESOLVED ) fFinalType = finalType;
   }
   return finalType;
 }
