@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.172 2006/06/27 15:23:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.173 2006/06/27 15:30:09 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1298,7 +1298,7 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
          Seek(off + len);
          return 1;
       }
-      return 2;  //failure in reading
+      //return 2;  //failure in reading
    }
    return 0;
 }
