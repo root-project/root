@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.31 2006/06/01 15:58:41 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.32 2006/06/03 05:49:00 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -62,6 +62,7 @@
 #include "TChain.h"
 #include "TChainElement.h"
 #include "TSystem.h"
+#include "THashList.h"
 #include <set>
 #include <queue>
 
