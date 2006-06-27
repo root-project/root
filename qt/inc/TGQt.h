@@ -1,5 +1,5 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.15 2006/04/07 09:29:06 rdm Exp $
- // Author: Valeri Fine   21/01/2002
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.16 2006/05/30 07:06:50 antcheva Exp $
+// Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -204,6 +204,7 @@ public:
 
     virtual void      SetTextDecoder(const char * /*textDeocerName*/){;}  // for the future
     virtual const QTextCodec *GetTextDecoder();
+#endif
 // obsolete methods
         virtual void      PutByte(Byte_t b);
 // ---------------------------------------------
@@ -216,6 +217,7 @@ public:
    static Int_t          iwid(QPaintDevice *wid);
    static QPaintDevice  *iwid(Int_t wid);
    static QPaintDevice  *iwid(Window_t wid);
+#ifndef __CINT__
    static QPixmap       *MakeIcon(Int_t indx);
    static TVirtualX     *GetVirtualX();
    static QWidget       *winid(Window_t id);
@@ -223,7 +225,7 @@ public:
    static Window_t       wid(TQtClientWidget *widget);
    static Window_t       rootwid(QPaintDevice *dev);
    static void           PrintEvent(Event_t &);
-
+   
    void SetQClientFilter(TQtClientFilter *filter) {fQClientFilter = filter;}
    TQtClientFilter  *QClientFilter() const {return fQClientFilter;}
    QColor &QtColor(ULong_t pixel);

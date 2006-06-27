@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.8 2006/03/24 15:31:10 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.9 2006/05/03 09:55:49 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -27,7 +27,6 @@
 
 #include "TROOT.h"
 #include "TEnv.h"
-#include "TGClient.h"
 
 #include "qmessagebox.h"
 
