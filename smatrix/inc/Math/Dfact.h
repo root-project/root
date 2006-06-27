@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dfact.h,v 1.4 2006/06/02 15:04:54 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dfact.h,v 1.5 2006/06/08 15:23:34 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Dfact
@@ -29,6 +29,10 @@
 // ********************************************************************
 
 #include <cmath>
+
+#ifndef ROOT_Math_MatrixRepresentationsStatic
+#include "Math/MatrixRepresentationsStatic.h"
+#endif
 
 namespace ROOT { 
 

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: LinkDef.h,v 1.7 2006/04/25 13:55:43 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: LinkDef.h,v 1.9 2006/06/02 15:04:54 moneta Exp $
 // Authors: L. Moneta    2005  
 
 
@@ -63,6 +63,9 @@
 // #pragma link C++ class ROOT::Math::SMatrix<double,4,4>+;
 // #pragma link C++ class ROOT::Math::SMatrix<double,5,5>+;
 
+// typedef's 
+#pragma link C++ typedef ROOT::Math::SMatrix5D;
+#pragma link C++ typedef ROOT::Math::SMatrixSym5D;
 
 
 #endif
