@@ -13,12 +13,19 @@ SMATRIXDIRI := $(SMATRIXDIR)/inc/Math
 
 ##### libSmatrix #####
 SMATRIXL    := $(MODDIRI)/LinkDef.h
+SMATRIXL32  := $(MODDIRI)/LinkDefD32.h
 #SMATRIXLINC :=
 SMATRIXDS   := $(MODDIRS)/G__Smatrix.cxx
+SMATRIXDS32 := $(MODDIRS)/G__Smatrix32.cxx
 SMATRIXDO   := $(SMATRIXDS:.cxx=.o)
+SMATRIXDO32 := $(SMATRIXDS32:.cxx=.o)
 SMATRIXDH   := $(SMATRIXDS:.cxx=.h)
 
-SMATRIXDH1  :=  $(MODDIRI)/Math/SMatrix.h $(MODDIRI)/Math/SVector.h
+SMATRIXDH1  :=  $(MODDIRI)/Math/SMatrix.h \
+		$(MODDIRI)/Math/SVector.h \
+		$(MODDIRI)/Math/SMatrixDfwd.h \
+		$(MODDIRI)/Math/SMatrixFfwd.h \
+		$(MODDIRI)/Math/SMatrixD32fwd.h 
 
 
 
@@ -53,10 +60,10 @@ include/Math/%.icc: $(SMATRIXDIRI)/%.icc
 		fi)
 		cp $< $@
 
-$(SMATRIXLIB): $(SMATRIXO) $(SMATRIXDO) $(ORDER_) $(MAINLIBS)
+$(SMATRIXLIB): $(SMATRIXO) $(SMATRIXDO) $(SMATRIXDO32) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libSmatrix.$(SOEXT) $@     \
-		   "$(SMATRIXO) $(SMATRIXDO)"             \
+		   "$(SMATRIXO) $(SMATRIXDO) $(SMATRIXDO32)"             \
 		   "$(SMATRIXLIBEXTRA)"
 
 $(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPEXE)
@@ -64,6 +71,12 @@ $(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPEXE)
 		@echo "for files $(SMATRIXDH1)"
 		$(ROOTCINTTMP) -f $@ -c $(SMATRIXDH1) $(SMATRIXL)
 #		python reflex/python/genreflex/genreflex.py $(SMATRIXDIRS)/Dict.h -I$(SMATRIXDIRI) --selection_file=$(SMATRIXDIRS)/Selection.xml -o $(SMATRIXDIRS)/G__Smatrix.cxx
+
+$(SMATRIXDS32): $(SMATRIXDH1) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCINTTMPEXE)
+		@echo "Generating dictionary $@..."
+		@echo "for files $(SMATRIXDH1)"
+		$(ROOTCINTTMP) -f $@ -c $(SMATRIXDH1) $(SMATRIXL32)
+
 
 ifneq ($(ICC_MAJOR),)
 # silence warning messages about subscripts being out of range
