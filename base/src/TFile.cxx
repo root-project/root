@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.168 2006/06/20 16:38:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.169 2006/06/20 18:17:34 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -31,7 +31,8 @@
 #include "TDatime.h"
 #include "TError.h"
 #include "TFile.h"
-#include "TFilePrefetch.h"
+#include "TFileCacheRead.h"
+#include "TFileCacheWrite.h"
 #include "TFree.h"
 #include "TInterpreter.h"
 #include "TKey.h"
@@ -76,12 +77,12 @@ TFile::TFile() : TDirectory(), fInfoCache(0)
    fSumBuffer     = 0;
    fSum2Buffer    = 0;
    fClassIndex    = 0;
-   fCache         = 0;
    fProcessIDs    = 0;
    fNProcessIDs   = 0;
    fOffset        = 0;
    fArchive       = 0;
-   fFilePrefetch  = 0;
+   fCacheRead     = 0;
+   fCacheWrite    = 0;
    fArchiveOffset = 0;
    fIsRootFile    = kTRUE;
    fIsArchive     = kFALSE;
@@ -263,11 +264,11 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fClassIndex   = 0;
    fSeekInfo     = 0;
    fNbytesInfo   = 0;
-   fCache        = 0;
    fProcessIDs   = 0;
    fNProcessIDs  = 0;
    fOffset       = 0;
-   fFilePrefetch = 0;
+   fCacheRead    = 0;
+   fCacheWrite   = 0;
    SetBit(kBinaryFile, kTRUE);
 
    fOption.ToUpper();
@@ -418,11 +419,11 @@ TFile::~TFile()
 
    SafeDelete(fProcessIDs);
    SafeDelete(fFree);
-   SafeDelete(fCache);
    SafeDelete(fArchive);
    SafeDelete(fInfoCache);
    SafeDelete(fAsyncHandle);
-   SafeDelete(fFilePrefetch);
+   SafeDelete(fCacheRead);
+   SafeDelete(fCacheWrite);
 
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfFiles()->Remove(this);
@@ -713,7 +714,7 @@ void TFile::Close(Option_t *option)
          WriteFree();       //*-*- Write free segments linked list
          WriteHeader();     //*-*- Now write file header
       }
-      if (fCache) fCache->Flush();
+      if (fCacheWrite) fCacheWrite->Flush();
    }
 
    // Delete free segments from free list (but don't delete list header)
@@ -914,11 +915,19 @@ void TFile::ResetErrno() const
 }
 
 //______________________________________________________________________________
-TFilePrefetch *TFile::GetFilePrefetch() const
+TFileCacheRead *TFile::GetCacheRead() const
 {
-   // Return a pointer to the current TFilePrefetch.
+   // Return a pointer to the current read cache.
 
-   return fFilePrefetch;
+   return fCacheRead;
+}
+
+//______________________________________________________________________________
+TFileCacheWrite *TFile::GetCacheWrite() const
+{
+   // Return a pointer to the current write cache.
+
+   return fCacheWrite;
 }
 
 //______________________________________________________________________________
@@ -1200,20 +1209,6 @@ void TFile::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TFile::Prefetch(Long64_t pos, Int_t len)
-{
-   // Create a new block of length len at position pos in a TPrefetchFile.
-   // Creates the TPreferFile object if it does not exist yet
-   // if pos=0 and len = 0 the TPrefetchFile is reset.
-
-   if (!fFilePrefetch) {
-      Error("Prefetch","You must create a TFilePrefetch object first");
-      return;
-   }
-   fFilePrefetch->Prefetch(pos,len);
-}
-
-//______________________________________________________________________________
 void TFile::Print(Option_t *option) const
 {
    // Print all objects in the file.
@@ -1279,15 +1274,15 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 
    Int_t k = 0;
    Bool_t result = kTRUE;
-   TFilePrefetch *old = fFilePrefetch;
-   fFilePrefetch = 0;
+   TFileCacheRead *old = fCacheRead;
+   fCacheRead = 0;
    for (Int_t i = 0; i < nbuf; i++) {
       Seek(pos[i]);
       result = ReadBuffer(&buf[k], len[i]);
       if (result) break;
       k += len[i];
    }
-   fFilePrefetch = old;
+   fCacheRead = old;
    return result;
 }
 
@@ -1298,25 +1293,12 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
    // read via cache was successful, 2 in case read via cache failed.
 
    Long64_t off = GetRelOffset();
-   if (fFilePrefetch) {
-      if (!fFilePrefetch->ReadBuffer(buf, off, len)) {
-         // fOffset might have been changed via TFilePrefetch::ReadBuffer(), reset it
+   if (fCacheRead) {
+      if (!fCacheRead->ReadBuffer(buf, off, len)) {
+         // fOffset might have been changed via TFileCacheRead::ReadBuffer(), reset it
          Seek(off + len);
          return 1;
       }
-   }
-
-   if (!fCache) return 0;
-
-   Int_t st;
-   if ((st = fCache->ReadBuffer(off, buf, len)) < 0) {
-      Error("ReadBuffer", "error reading from cache");
-      return 2;
-   }
-   if (st > 0) {
-      // fOffset might have been changed via TCache::ReadBuffer(), reset it
-      Seek(off + len);
-      return 1;
    }
    return 0;
 }
@@ -1479,7 +1461,7 @@ Int_t TFile::ReOpen(Option_t *mode)
             WriteFree();       // write free segments linked list
             WriteHeader();     // now write file header
          }
-         if (fCache) fCache->Flush();
+         if (fCacheWrite) fCacheWrite->Flush();
 
          // delete free segments from free list
          if (fFree) {
@@ -1564,7 +1546,7 @@ void TFile::Seek(Long64_t offset, ERelativeTo pos)
       SysError("Seek", "cannot seek to position %lld in file %s, retpos=%lld",
                offset, GetName(), retpos);
 
-   // used by TFilePrefetch::ReadBuffer()
+   // used by TFileCacheRead::ReadBuffer()
    fOffset = retpos;
 }
 
@@ -1590,11 +1572,21 @@ void TFile::SetCompressionLevel(Int_t level)
 }
 
 //______________________________________________________________________________
-void TFile::SetFilePrefetch(TFilePrefetch *file)
+void TFile::SetCacheRead(TFileCacheRead *file)
 {
-   // Set a TFilePrefetch.
+   // Set a pointer to the read cache.
 
-   fFilePrefetch = file;
+   fCacheRead = file;
+}
+
+//______________________________________________________________________________
+void TFile::SetCacheWrite(TFileCacheWrite *file)
+{
+   // Set a pointer to the write cache.
+   // if file is null the existing write cache is deleted
+
+   if (!file and fCacheWrite) delete fCacheWrite;
+   fCacheWrite = file;
 }
 
 //______________________________________________________________________________
@@ -1630,38 +1622,11 @@ void TFile::SumBuffer(Int_t bufsize)
 //_______________________________________________________________________
 void TFile::UseCache(Int_t maxCacheSize, Int_t pageSize)
 {
-   // Activate caching. Use maxCacheSize to specify the maximum cache size
-   // in MB's (default is 10 MB) and pageSize to specify the page size
-   // (default is 512 KB). To turn off the cache use maxCacheSize=0.
-   // Not needed for normal disk files since the operating system will
-   // do proper caching (via the "buffer cache"). Use it for TNetFile,
-   // TWebFile, TRFIOFile, TDCacheFile, etc.
+   // Dummy function kept for backward compatibility.
+   // The read  cache is now managed by TFileCacheRead
+   // The write cache is now managed by TFileCacheRead
+   // Both caches are created automatically by the system.
 
-   if (IsA() == TFile::Class())
-      return;
-
-   if (maxCacheSize == 0) {
-      if (fCache) {
-         if (IsWritable())
-            fCache->Flush();
-         delete fCache;
-         fCache = 0;
-      }
-      return;
-   }
-
-   if (fCache) {
-      // if pageSize is changed, we need to delete the cache and recreate it
-      if (pageSize != fCache->GetPageSize()) {
-         if (IsWritable())
-            fCache->Flush();
-         delete fCache;
-      } else if (maxCacheSize != fCache->GetMaxCacheSize()) {
-         fCache->Resize(maxCacheSize);
-         return;
-      }
-   }
-   fCache = new TCache(maxCacheSize, this, pageSize);
 }
 
 //______________________________________________________________________________
@@ -1753,17 +1718,17 @@ Int_t TFile::WriteBufferViaCache(const char *buf, Int_t len)
    // Write buffer via cache. Returns 0 if cache is not active, 1 in case
    // write via cache was successful, 2 in case write via cache failed.
 
-   if (!fCache) return 0;
+   if (!fCacheWrite) return 0;
 
    Int_t st;
    Long64_t off = GetRelOffset();
-   if ((st = fCache->WriteBuffer(off, buf, len)) < 0) {
+   if ((st = fCacheWrite->WriteBuffer(buf, off, len)) < 0) {
       SetBit(kWriteError);
       Error("WriteBuffer", "error writing to cache");
       return 2;
    }
    if (st > 0) {
-      // fOffset might have been changed via TCache::WriteBuffer(), reset it
+      // fOffset might have been changed via TFileCacheWrite::WriteBuffer(), reset it
       Seek(off + len);
       return 1;
    }
@@ -2267,6 +2232,11 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
       delete f;
       f = 0;
    }
+   //if the file is writable and non local, we create a default write cache(512 KBytes)
+   if (type != kLocal && f && f->IsWritable()) {
+      new TFileCacheWrite(f,1);
+   }
+   
    if (gMonitoringWriter && (!f->IsWritable())) gMonitoringWriter->SendFileReadProgress(f,true);
    return f;
 }

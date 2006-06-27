@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.77 2006/06/18 17:51:33 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.78 2006/06/20 10:15:23 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -67,7 +67,6 @@
 #include "TApplication.h"
 #include "TEnv.h"
 #include "TNetFile.h"
-#include "TFilePrefetch.h"
 #include "TPSocket.h"
 #include "TROOT.h"
 #include "TSysEvtHandler.h"

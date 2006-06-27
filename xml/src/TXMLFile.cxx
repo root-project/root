@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.20 2006/06/22 08:21:23 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.21 2006/06/23 06:25:59 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -163,7 +163,6 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    fClassIndex = 0;
    fSeekInfo   = 0;
    fNbytesInfo = 0;
-   fCache      = 0;
    fProcessIDs = 0;
    fNProcessIDs= 0;
    fIOVersion  = TXMLFile::Class_Version();

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.31 2006/06/09 13:38:46 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.32 2006/06/18 17:51:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -48,7 +48,6 @@
 #include "TXNetFile.h"
 #include "TROOT.h"
 #include "TVirtualMonitoring.h"
-#include "TFilePrefetch.h"
 
 #include <XrdClient/XrdClient.hh>
 #include <XrdClient/XrdClientConst.hh>

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFilePrefetch.cxx,v 1.4 2006/06/08 12:46:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.5 2006/06/09 11:53:20 brun Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -9,13 +9,31 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TFile.h"
-#include "TFilePrefetch.h"
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TFileCacheRead : a cache when reading files on the network           //
+//                                                                      //
+// A caching system to speed up network I/O, i.e. when there is         //
+// no operating system caching support (like the buffer cache for       //
+// local disk I/O). The cache makes sure that every I/O is done with    //
+// a (large) fixed length buffer thereby avoiding many small I/O's.     //
+// Currently the read cache system is used by the classes TNetFile,     //
+// TRFIOFile and TWebFile.                                              //
+// One creates a read cache via  TFile::SetCacheRead.                   //
+//                                                                      //
+// When processing TTree, TChain, a specialized class TTreeCache that   //
+// derives from this class is automatically created.                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
-ClassImp(TFilePrefetch)
+#include "TFile.h"
+#include "TFileCacheRead.h"
+#include "TFileCacheWrite.h"
+
+ClassImp(TFileCacheRead)
 
 //______________________________________________________________________________
-TFilePrefetch::TFilePrefetch() : TObject()
+TFileCacheRead::TFileCacheRead() : TObject()
 {
    // Default Constructor.
 
@@ -39,10 +57,10 @@ TFilePrefetch::TFilePrefetch() : TObject()
 }
 
 //_____________________________________________________________________________
-TFilePrefetch::TFilePrefetch(TFile *file, Int_t buffersize)
+TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
            : TObject()
 {
-   // Creates a TFilePrefetch data structure.
+   // Creates a TFileCacheRead data structure.
 
    if (buffersize <=10000) fBufferSize = 100000;
    fBufferSize  = buffersize;
@@ -62,17 +80,17 @@ TFilePrefetch::TFilePrefetch(TFile *file, Int_t buffersize)
    fFile        = file;
    fBuffer      = new char[fBufferSize];
    fIsSorted    = kFALSE;
-   if (file) file->SetFilePrefetch(this);
+   if (file) file->SetCacheRead(this);
 }
 
 //______________________________________________________________________________
-TFilePrefetch::TFilePrefetch(const TFilePrefetch &pf) : TObject(pf)
+TFileCacheRead::TFileCacheRead(const TFileCacheRead &pf) : TObject(pf)
 {
    // Copy Constructor.
 }
 
 //______________________________________________________________________________
-TFilePrefetch& TFilePrefetch::operator=(const TFilePrefetch& pf)
+TFileCacheRead& TFileCacheRead::operator=(const TFileCacheRead& pf)
 {
    // Assignment.
 
@@ -81,7 +99,7 @@ TFilePrefetch& TFilePrefetch::operator=(const TFilePrefetch& pf)
 }         
 
 //_____________________________________________________________________________
-TFilePrefetch::~TFilePrefetch()
+TFileCacheRead::~TFileCacheRead()
 {
    // Destructor.
 
@@ -95,7 +113,7 @@ TFilePrefetch::~TFilePrefetch()
 }
 
 //_____________________________________________________________________________
-void TFilePrefetch::Prefetch(Long64_t pos, Int_t len)
+void TFileCacheRead::Prefetch(Long64_t pos, Int_t len)
 {
    // Add block of length len at position pos in the list of blocks to
    // be prefetched. If pos <= 0 the current blocks (if any) are reset.
@@ -152,7 +170,7 @@ void TFilePrefetch::Prefetch(Long64_t pos, Int_t len)
 }
 
 //_____________________________________________________________________________
-void TFilePrefetch::Print(Option_t *option) const
+void TFileCacheRead::Print(Option_t *option) const
 {
    // Print class internal structure.
 
@@ -174,7 +192,7 @@ void TFilePrefetch::Print(Option_t *option) const
 }
 
 //_____________________________________________________________________________
-Bool_t TFilePrefetch::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+Bool_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    // Read buffer at position pos.
    // If pos is in the list of prefetched blocks read from fBuffer,
@@ -189,14 +207,20 @@ Bool_t TFilePrefetch::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    if (loc >= 0 && loc <fNseek && pos == fSeekSort[loc]) {
       memcpy(buf,&fBuffer[fSeekPos[loc]],len);
       fFile->Seek(pos+len);
-      //printf("TFilePrefetch::ReadBuffer, pos=%lld, len=%d, slen=%d, loc=%d\n",pos,len,fSeekSortLen[loc],loc);
+      //printf("TFileCacheRead::ReadBuffer, pos=%lld, len=%d, slen=%d, loc=%d\n",pos,len,fSeekSortLen[loc],loc);
       return kFALSE;
+   }
+   
+   //just in case we are writing and reading to/from this file, me much check
+   //if this buffer is in the write cache (not yet written to the file)
+   if (TFileCacheWrite *cachew = fFile->GetCacheWrite()) {
+      return cachew->ReadBuffer(buf,pos,len);
    }
    return kTRUE;
 }
 
 //_____________________________________________________________________________
-void TFilePrefetch::SetFile(TFile *file)
+void TFileCacheRead::SetFile(TFile *file)
 {
    //set the file using this cache
    
@@ -204,7 +228,7 @@ void TFilePrefetch::SetFile(TFile *file)
 }
 
 //_____________________________________________________________________________
-void TFilePrefetch::Sort()
+void TFileCacheRead::Sort()
 {
    // Sort buffers to be prefetched in increasing order of positions.
    // Merge consecutive blocks if necessary.

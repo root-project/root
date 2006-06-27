@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.13 2006/04/18 14:23:19 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.14 2006/05/26 16:55:04 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -91,7 +91,7 @@ public:
 
    TFile::EAsyncOpenStatus GetAsyncOpenStatus() { return (fSubFileHandle) ? TFile::GetAsyncOpenStatus(fSubFileHandle):TFile::kAOSNotAsync; }
 
-   void         UseCache(Int_t maxCacheSize = 10, Int_t pageSize = TCache::kDfltPageSize)
+   void         UseCache(Int_t maxCacheSize = 10, Int_t pageSize = 0)
                   { if (fSubFile) fSubFile->UseCache(maxCacheSize, pageSize); }
 
    const TUrl  *GetEndpointUrl() const { return (fSubFile) ? fSubFile->GetEndpointUrl() : 0; }

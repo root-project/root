@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.288 2006/06/16 11:01:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.289 2006/06/25 14:14:11 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -301,7 +301,7 @@
 #include "TVirtualFitter.h"
 #include "TVirtualIndex.h"
 #include "TCut.h"
-#include "TTreeFilePrefetch.h"
+#include "TTreeCache.h"
 #include "Api.h"
 
 Int_t    TTree::fgBranchStyle = 1;  //use new TBranch style with TBranchElement
@@ -584,12 +584,12 @@ TTree::~TTree()
       //delete the file cache if it points to this Tree
       TFile *file = fDirectory->GetFile();
       if (file) {
-         TFilePrefetch *pf = file->GetFilePrefetch();
-         if (pf && pf->InheritsFrom(TTreeFilePrefetch::Class())) {
-            TTreeFilePrefetch *tpf = (TTreeFilePrefetch*)pf;
+         TFileCacheRead *pf = file->GetCacheRead();
+         if (pf && pf->InheritsFrom(TTreeCache::Class())) {
+            TTreeCache *tpf = (TTreeCache*)pf;
             if (tpf->GetTree() == this) {
                delete tpf;
-               file->SetFilePrefetch(0);
+               file->SetCacheRead(0);
             }
          }
       }
@@ -4801,15 +4801,15 @@ void TTree::SetCacheSize(Long64_t cacheSize)
    
    TFile *file = GetCurrentFile();
    if (!file) {fCacheSize = cacheSize; return;}
-   TFilePrefetch *pf = file->GetFilePrefetch();
+   TFileCacheRead *pf = file->GetCacheRead();
    if (pf) {
       if (cacheSize == fCacheSize) return;
       delete pf;
-      if (cacheSize <= 0) file->SetFilePrefetch(0); 
+      if (cacheSize <= 0) file->SetCacheRead(0); 
    }
    fCacheSize = cacheSize;
    if (cacheSize <= 0) return;
-   new TTreeFilePrefetch(this,cacheSize);
+   new TTreeCache(this,cacheSize);
 }
 
 //______________________________________________________________________________

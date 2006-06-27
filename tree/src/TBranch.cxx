@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.104 2006/05/24 15:10:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.105 2006/06/14 13:15:55 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -35,7 +35,7 @@
 #include "TSystem.h"
 #include "TStreamerInfo.h"
 #include "TBranchBrowsable.h"
-#include "TTreeFilePrefetch.h"
+#include "TTreeCache.h"
 
 TBranch *gBranch;
 
@@ -844,7 +844,7 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
    }
    //add branch to cache (if any)
-   TTreeFilePrefetch *tpf = (TTreeFilePrefetch*)file->GetFilePrefetch();
+   TTreeCache *tpf = (TTreeCache*)file->GetCacheRead();
    if (tpf) tpf->AddBranch(this);
    //now read basket
    Int_t badread = basket->ReadBasketBuffers(fBasketSeek[basketnumber],fBasketBytes[basketnumber],file);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFilePrefetch.h,v 1.2 2006/06/05 20:16:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheRead.h,v 1.3 2006/06/08 12:46:45 brun Exp $
 // Author: Rene Brun   19/05/2006
 
 /*************************************************************************
@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TFilePrefetch
-#define ROOT_TFilePrefetch
+#ifndef ROOT_TFileCacheRead
+#define ROOT_TFileCacheRead
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TFilePrefetch                                                        //
+// TFileCacheRead                                                       //
 //                                                                      //
-// ROOT file prefetch manager                                           //
+// TFile cache when reading                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -25,7 +25,7 @@
 #include "TFile.h"
 #endif
 
-class TFilePrefetch : public TObject {
+class TFileCacheRead : public TObject {
 
 protected:
    Int_t         fBufferSize;     //Allocated size of fBuffer
@@ -47,20 +47,20 @@ protected:
    Bool_t        fIsSorted;       //True if fSeek array is sorted
 
 protected:
-   TFilePrefetch(const TFilePrefetch &);            //FilePrefetch cannot be copied
-   TFilePrefetch& operator=(const TFilePrefetch &);
+   TFileCacheRead(const TFileCacheRead &);            //cannot be copied
+   TFileCacheRead& operator=(const TFileCacheRead &);
 
 public:
-   TFilePrefetch();
-   TFilePrefetch(TFile *file, Int_t buffersize);
-   virtual ~TFilePrefetch();
+   TFileCacheRead();
+   TFileCacheRead(TFile *file, Int_t buffersize);
+   virtual ~TFileCacheRead();
    virtual void        Prefetch(Long64_t pos, Int_t len);
    virtual void        Print(Option_t *option="") const;
    virtual Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
    virtual void        SetFile(TFile *file);
    virtual void        Sort();
 
-   ClassDef(TFilePrefetch,1)  //ROOT file prefetch manager
+   ClassDef(TFileCacheRead,1)  //TFile cache when reading
 };
 
 #endif

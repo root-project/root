@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.19 2006/04/12 20:53:45 rdm Exp $ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.20 2006/06/02 14:02:03 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -30,7 +30,6 @@
 #pragma link C++ class TNetFile;
 #pragma link C++ class TNetSystem;
 #pragma link C++ class TWebFile;
-#pragma link C++ class TCache;
 #pragma link C++ class TFTP;
 #pragma link C++ class TSQLServer;
 #pragma link C++ class TSQLResult;

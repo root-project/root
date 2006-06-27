@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.13 2006/02/01 18:57:41 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.14 2006/06/22 08:21:22 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -95,7 +95,7 @@ public:
    virtual void      SetEND(Long64_t) {}
    virtual Int_t     Sizeof() const { return 0; }
 
-   virtual void      UseCache(Int_t = 10, Int_t = TCache::kDfltPageSize) {}
+   virtual void      UseCache(Int_t = 10, Int_t = 0) {}
    virtual Bool_t    WriteBuffer(const char*, Int_t) { return kFALSE; }
    virtual Int_t     Write(const char* =0, Int_t=0, Int_t=0) { return 0; }
    virtual Int_t     Write(const char* =0, Int_t=0, Int_t=0) const { return 0; }

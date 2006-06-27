@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.136 2006/06/20 06:46:04 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.137 2006/06/25 14:14:11 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -50,7 +50,7 @@
 #include "TFileInfo.h"
 #include "TUrl.h"
 #include "TTreeCloner.h"
-#include "TTreeFilePrefetch.h"
+#include "TTreeCache.h"
 
 #include <queue>
 #include <map>
@@ -71,8 +71,6 @@ TChain::TChain(): TTree()
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
    fStatus         = new TList();
-   fMaxCacheSize   = 0;
-   fPageSize       = 0;
    fCanDeleteRefs  = kFALSE;
    fChainProof     = 0;
 
@@ -116,8 +114,6 @@ TChain::TChain(const char *name, const char *title)
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
    fStatus         = new TList();
-   fMaxCacheSize   = 0;
-   fPageSize       = 0;
    fTreeOffset[0]  = 0;
    fCanDeleteRefs  = kFALSE;
    gDirectory->GetList()->Remove(this);
@@ -136,8 +132,6 @@ TChain::TChain(const TChain& tc) :
   fNtrees(tc.fNtrees),
   fTreeNumber(tc.fTreeNumber),
   fTreeOffset(tc.fTreeOffset), 
-  fMaxCacheSize(tc.fMaxCacheSize),
-  fPageSize(tc.fPageSize),
   fCanDeleteRefs(tc.fCanDeleteRefs),
   fTree(tc.fTree),
   fFile(tc.fFile),
@@ -158,8 +152,6 @@ TChain& TChain::operator=(const TChain& tc)
       fNtrees=tc.fNtrees;
       fTreeNumber=tc.fTreeNumber;
       fTreeOffset=tc.fTreeOffset; 
-      fMaxCacheSize=tc.fMaxCacheSize;
-      fPageSize=tc.fPageSize;
       fCanDeleteRefs=tc.fCanDeleteRefs;
       fTree=tc.fTree;
       fFile=tc.fFile;
@@ -957,15 +949,15 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    //Delete current tree and connect new tree
    TDirectory *cursav = gDirectory;
-   TTreeFilePrefetch *tpf = 0;
+   TTreeCache *tpf = 0;
    //delete file unless the file owns this chain !!
    if (fFile) {
       if (!fDirectory->GetList()->FindObject(this)) {
          if (cursav && cursav->GetFile()==fFile) {
             cursav = gROOT;
          }
-         tpf = (TTreeFilePrefetch*)fFile->GetFilePrefetch();
-         fFile->SetFilePrefetch(0);
+         tpf = (TTreeCache*)fFile->GetCacheRead();
+         fFile->SetCacheRead(0);
          if (fCanDeleteRefs) fFile->Close("R");
          delete fFile; fFile = 0; fTree = 0;
       }
@@ -986,9 +978,6 @@ Long64_t TChain::LoadTree(Long64_t entry)
       fTree=0;
       returnCode=-3;
    } else {
-      if (fMaxCacheSize > 0)
-         fFile->UseCache(fMaxCacheSize, fPageSize);
-
       fTree = (TTree*)fFile->Get(element->GetName());
 
       if (fTree==0) {
@@ -1008,7 +997,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    //reuse cache from previous file (if any)
    
    if (tpf) {
-      fFile->SetFilePrefetch(tpf);
+      fFile->SetCacheRead(tpf);
       tpf->SetFile(fFile);
       tpf->UpdateBranches(fTree);
    } else {
@@ -1675,17 +1664,10 @@ void TChain::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TChain::UseCache(Int_t maxCacheSize, Int_t pageSize)
+void TChain::UseCache(Int_t /* maxCacheSize */, Int_t /* pageSize */)
 {
-   // Activate file caching. Use maxCacheSize to specify the maximum cache size
-   // in MB's (default is 10 MB) and pageSize to specify the page size
-   // (default is 512 KB). To turn off the cache use maxCacheSize=0.
-   // Not needed for normal disk files since the operating system will
-   // do proper caching (via the "buffer cache"). Use it for TNetFile,
-   // TWebFile, TRFIOFile, TDCacheFile, etc.
-
-   fMaxCacheSize = maxCacheSize;
-   fPageSize     = pageSize;
+   // Dummy function kept for back compatibility.
+   // The cache is now activated automatically when processing TTrees/TChain.
 }
 
 //______________________________________________________________________________

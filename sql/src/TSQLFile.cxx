@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.13 2006/06/23 11:52:30 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.14 2006/06/25 18:43:24 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -374,7 +374,6 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
    fClassIndex = 0;
    fSeekInfo   = 0;
    fNbytesInfo = 0;
-   fCache      = 0;
    fProcessIDs = 0;
    fNProcessIDs= 0;
    fSeekDir    = sqlio::Ids_RootDir;

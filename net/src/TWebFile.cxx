@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.18 2006/06/09 07:14:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.19 2006/06/18 17:51:33 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -20,7 +20,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TWebFile.h"
-#include "TFilePrefetch.h"
 #include "TROOT.h"
 #include "TSocket.h"
 #include "Bytes.h"

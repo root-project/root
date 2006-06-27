@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.36 2006/04/10 15:30:16 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.37 2006/05/22 11:13:31 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -141,7 +141,8 @@
 #pragma link C++ class TEnv+;
 #pragma link C++ class TEnvRec+;
 #pragma link C++ class TFile-;
-#pragma link C++ class TFilePrefetch+;
+#pragma link C++ class TFileCacheRead+;
+#pragma link C++ class TFileCacheWrite+;
 #pragma link C++ class TFileHandler+;
 #pragma link C++ class TGuiFactory;
 #pragma link C++ class TStyle+;

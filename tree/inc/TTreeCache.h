@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.h,v 1.6 2006/06/15 10:02:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.h,v 1.7 2006/06/16 11:01:16 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -9,26 +9,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TTreeFilePrefetch
-#define ROOT_TTreeFilePrefetch
+#ifndef ROOT_TTreeCache
+#define ROOT_TTreeCache
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TTreeFilePrefetch                                                    //
+// TTreeCache                                                           //
 //                                                                      //
-// Specialization of TFilePrefetch for a TTree                          //
+// Specialization of TFileCacheRead for a TTree                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFilePrefetch
-#include "TFilePrefetch.h"
+#ifndef ROOT_TFileCacheRead
+#include "TFileCacheRead.h"
 #endif
 
 class TTree;
 class TBranch;
 
-class TTreeFilePrefetch : public TFilePrefetch {
+class TTreeCache : public TFileCacheRead {
 
 protected:
    Long64_t        fEntryMin;    //! first entry in the cache
@@ -44,13 +44,13 @@ protected:
    static  Int_t fgLearnEntries; //Number of entries used for learning mode
 
 protected:
-   TTreeFilePrefetch(const TTreeFilePrefetch &);            //this class cannot be copied
-   TTreeFilePrefetch& operator=(const TTreeFilePrefetch &);
+   TTreeCache(const TTreeCache &);            //this class cannot be copied
+   TTreeCache& operator=(const TTreeCache &);
 
 public:
-   TTreeFilePrefetch();
-   TTreeFilePrefetch(TTree *tree, Int_t buffersize=0);
-   virtual ~TTreeFilePrefetch();
+   TTreeCache();
+   TTreeCache(TTree *tree, Int_t buffersize=0);
+   virtual ~TTreeCache();
    void                AddBranch(TBranch *b);
    static Int_t        GetLearnEntries();
    Bool_t              FillBuffer();
@@ -61,7 +61,7 @@ public:
    static void         SetLearnEntries(Int_t n = 100);
    void                UpdateBranches(TTree *tree);
            
-   ClassDef(TTreeFilePrefetch,1)  //Specialization of TFilePrefetch for a TTree 
+   ClassDef(TTreeCache,1)  //Specialization of TFileCacheRead for a TTree 
 };
 
 #endif

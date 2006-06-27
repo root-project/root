@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeFilePrefetch.cxx,v 1.11 2006/06/16 11:01:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.12 2006/06/19 09:35:45 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -11,24 +11,24 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TTreeFilePrefetch                                                    //
+// TTreeCache                                                           //
 //                                                                      //
-//  A specialized TFilePrefetch object for a TTree                      //
+//  A specialized TFileCacheRead object for a TTree                     //
 //  This class acts as a file cache, registering automatically the      //
 //  baskets from the branches being processed (TTree::Draw or           //
 //  TTree::Process and TSelectors) when in the learning phase.          //
 //  The learning phase is by default 100 entries.                       //
-//  It can be changed via TTreeFileFrefetch::SetLearnEntries.           //
+//  It can be changed via TTreeCache::SetLearnEntries.                  //
 //                                                                      //
 //  This cache speeds-up considerably the performance, in particular    //
 //  when the Tree is accessed remotely via a high latency network.      //
 //                                                                      //
 //  The default cache size (10 Mbytes) may be changed via the function  //
-//      TTreeFilePrefetch::SetCacheSize                                 //
+//      TTreeCache::SetCacheSize                                        //
 //                                                                      //
 //  Only the baskets for the requested entry range are put in the cache //
 //                                                                      //
-//  For each Tree being processed a TTreeFilePrefetch object is created.//
+//  For each Tree being processed a TTreeCache object is created.       //
 //  This object is automatically deleted when the Tree is deleted or    //
 //  when the file is deleted.                                           //
 //                                                                      //
@@ -42,18 +42,18 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TTreeFilePrefetch.h"
+#include "TTreeCache.h"
 #include "TChain.h"
 #include "TBranch.h"
 #include "TEventList.h"
 #include "TObjString.h"
 
-Int_t TTreeFilePrefetch::fgLearnEntries = 100;
+Int_t TTreeCache::fgLearnEntries = 100;
 
-ClassImp(TTreeFilePrefetch)
+ClassImp(TTreeCache)
 
 //______________________________________________________________________________
-TTreeFilePrefetch::TTreeFilePrefetch() : TFilePrefetch(),
+TTreeCache::TTreeCache() : TFileCacheRead(),
    fEntryMin(0),
    fEntryMax(1),
    fEntryNext(1),
@@ -69,7 +69,7 @@ TTreeFilePrefetch::TTreeFilePrefetch() : TFilePrefetch(),
 }
 
 //______________________________________________________________________________
-TTreeFilePrefetch::TTreeFilePrefetch(TTree *tree, Int_t buffersize) : TFilePrefetch(tree->GetCurrentFile(),buffersize),
+TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->GetCurrentFile(),buffersize),
    fEntryMin(0),
    fEntryMax(tree->GetEntriesFast()),
    fEntryNext(0),
@@ -89,13 +89,13 @@ TTreeFilePrefetch::TTreeFilePrefetch(TTree *tree, Int_t buffersize) : TFilePrefe
 }
 
 //______________________________________________________________________________
-TTreeFilePrefetch::TTreeFilePrefetch(const TTreeFilePrefetch &pf) : TFilePrefetch(pf)
+TTreeCache::TTreeCache(const TTreeCache &pf) : TFileCacheRead(pf)
 {
    // Copy Constructor.
 }
 
 //______________________________________________________________________________
-TTreeFilePrefetch::~TTreeFilePrefetch()
+TTreeCache::~TTreeCache()
 {
    // destructor. (in general called by the TFile destructor
    
@@ -104,16 +104,16 @@ TTreeFilePrefetch::~TTreeFilePrefetch()
 }
 
 //______________________________________________________________________________
-TTreeFilePrefetch& TTreeFilePrefetch::operator=(const TTreeFilePrefetch& pf)
+TTreeCache& TTreeCache::operator=(const TTreeCache& pf)
 {
    // Assignment.
 
-   if (this != &pf) TFilePrefetch::operator=(pf);
+   if (this != &pf) TFileCacheRead::operator=(pf);
    return *this;
 }         
 
 //_____________________________________________________________________________
-void TTreeFilePrefetch::AddBranch(TBranch *b)
+void TTreeCache::AddBranch(TBranch *b)
 {
    //add a branch to the list of branches to be stored in the cache
    //this function is called by TBranch::GetBasket
@@ -136,7 +136,7 @@ void TTreeFilePrefetch::AddBranch(TBranch *b)
 }
 
 //_____________________________________________________________________________
-Bool_t TTreeFilePrefetch::FillBuffer()
+Bool_t TTreeCache::FillBuffer()
 {
    //Fill the cache buffer with the branchse in the cache
    
@@ -163,7 +163,7 @@ Bool_t TTreeFilePrefetch::FillBuffer()
    }
            
    //clear cache buffer
-   TFilePrefetch::Prefetch(0,0);
+   TFileCacheRead::Prefetch(0,0);
    //store baskets
    for (Int_t i=0;i<fNbranches;i++) {
       TBranch *b = fBranches[i];
@@ -184,7 +184,7 @@ Bool_t TTreeFilePrefetch::FillBuffer()
             if (j<nb-1) emax = entries[j+1]-1;
             if (!elist->ContainsRange(entries[j]+chainOffset,emax+chainOffset)) continue;
          }
-         TFilePrefetch::Prefetch(pos,len);
+         TFileCacheRead::Prefetch(pos,len);
       }
       if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,fBranches[i]->GetName(),fEntryNext,fNseek,fNtot);
    }
@@ -194,7 +194,7 @@ Bool_t TTreeFilePrefetch::FillBuffer()
 
 
 //_____________________________________________________________________________
-Int_t TTreeFilePrefetch::GetLearnEntries()
+Int_t TTreeCache::GetLearnEntries()
 {
    //static function returning the number of entries used to train the cache
    //see SetLearnEntries
@@ -203,7 +203,7 @@ Int_t TTreeFilePrefetch::GetLearnEntries()
 }
 
 //_____________________________________________________________________________
-TTree *TTreeFilePrefetch::GetTree() const
+TTree *TTreeCache::GetTree() const
 {
    //return Tree in the cache
    if (fNbranches <= 0) return 0;
@@ -211,27 +211,27 @@ TTree *TTreeFilePrefetch::GetTree() const
 }
 
 //_____________________________________________________________________________
-Bool_t TTreeFilePrefetch::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+Bool_t TTreeCache::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    // Read buffer at position pos.
    // If pos is in the list of prefetched blocks read from fBuffer,
    // then try to fill the cache from the list of selected branches,
    // otherwise normal read from file. Returns kTRUE in case of failure.
-   // This function overloads TFilePrefetch::ReadBuffer.
+   // This function overloads TFileCacheRead::ReadBuffer.
    // It returns kFALSE if the requested block is in the cache
    
    //Is request already in the cache?
-   Bool_t inCache = !TFilePrefetch::ReadBuffer(buf,pos,len);
+   Bool_t inCache = !TFileCacheRead::ReadBuffer(buf,pos,len);
    if (inCache) return kFALSE;
    
    //not found in cache. Do we need to fill the cache?
    Bool_t bufferFilled = FillBuffer();
-   if (bufferFilled) return TFilePrefetch::ReadBuffer(buf,pos,len);
+   if (bufferFilled) return TFileCacheRead::ReadBuffer(buf,pos,len);
    return kTRUE;
 }
 
 //_____________________________________________________________________________
-void TTreeFilePrefetch::SetEntryRange(Long64_t emin, Long64_t emax)
+void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
 {
    // Set the minimum and maximum entry number to be processed
    // this information helps to optimize the number of baskets to read
@@ -249,7 +249,7 @@ void TTreeFilePrefetch::SetEntryRange(Long64_t emin, Long64_t emax)
 }
 
 //_____________________________________________________________________________
-void TTreeFilePrefetch::SetLearnEntries(Int_t n)
+void TTreeCache::SetLearnEntries(Int_t n)
 {
    // Static function to set the number of entries to be used in learning mode
    // The default value for n is 10. n must be >= 1
@@ -259,7 +259,7 @@ void TTreeFilePrefetch::SetLearnEntries(Int_t n)
 }
 
 //_____________________________________________________________________________
-void TTreeFilePrefetch::UpdateBranches(TTree *tree)
+void TTreeCache::UpdateBranches(TTree *tree)
 {
    //update pointer to current Tree and recompute pointers to the branches in the cache
    

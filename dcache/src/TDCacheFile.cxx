@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.28 2006/04/07 15:35:29 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.29 2006/04/10 13:48:39 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004
@@ -173,8 +173,9 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
 
    // Disable dCache read-ahead buffer, as it doesn't cooperate well
    // with usually non-sequential file access pattern typical for
-   // TFile. TCache performs much better, so UseCache() should be used
-   // instead.
+   // TFile. The ROOT caches (TFileCacheRead and TFileCacheWrite) perform 
+   // much better.
+
    dc_noBuffering(fD);
 
    Init(create);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.52 2006/06/08 16:59:02 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.53 2006/06/25 14:14:10 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -24,9 +24,6 @@
 #ifndef ROOT_TTree
 #include "TTree.h"
 #endif
-#ifndef ROOT_TCache
-#include "TCache.h"
-#endif
 
 class TFile;
 class TBrowser;
@@ -38,12 +35,10 @@ class TVirtualProof;
 class TChain : public TTree {
 
 protected:
-   Int_t       fTreeOffsetLen;     //  Current size of fTreeOffset array
-   Int_t       fNtrees;            //  Number of Trees
-   Int_t       fTreeNumber;        //! Current Tree number in fTreeOffset table
+   Int_t        fTreeOffsetLen;    //  Current size of fTreeOffset array
+   Int_t        fNtrees;           //  Number of Trees
+   Int_t        fTreeNumber;       //! Current Tree number in fTreeOffset table
    Long64_t    *fTreeOffset;       //[fTreeOffsetLen]Array of variables
-   Int_t        fMaxCacheSize;     //! Max cache size passed to TFile's
-   Int_t        fPageSize;         //! Cache page size passed to TFile's
    Bool_t       fCanDeleteRefs;    //! if true, TProcessIDs are deleted when closing a file
    TTree       *fTree;             //! Pointer to current tree
    TFile       *fFile;             //! Pointer to current file
@@ -135,7 +130,7 @@ public:
    virtual void      SetPacketSize(Int_t size = 100);
    virtual void      SetProof(TVirtualProof* proof = (TVirtualProof*) -1);
    virtual void      SetWeight(Double_t w=1, Option_t *option="");
-   virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = TCache::kDfltPageSize);
+   virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = 0);
 
    ClassDef(TChain,5)  //A chain of TTrees
 };

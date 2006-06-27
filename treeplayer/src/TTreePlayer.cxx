@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.215 2006/06/16 11:01:17 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.216 2006/06/25 14:14:11 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -263,7 +263,7 @@
 #include "TTreeIndex.h"
 #include "TChainIndex.h"
 #include "TVirtualMonitoring.h"
-#include "TTreeFilePrefetch.h"
+#include "TTreeCache.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
@@ -2542,14 +2542,14 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
    readbytesatstart = TFile::GetFileBytesRead();
    
    //set the file cache
-   TTreeFilePrefetch *tpf = 0;
+   TTreeCache *tpf = 0;
    TFile *curfile = fTree->GetCurrentFile();
    if (curfile && fTree->GetCacheSize() > 0) {
-      tpf = (TTreeFilePrefetch*)curfile->GetFilePrefetch();
+      tpf = (TTreeCache*)curfile->GetCacheRead();
       if (tpf) tpf->SetEntryRange(firstentry,firstentry+nentries);
       else {
          fTree->SetCacheSize(fTree->GetCacheSize());
-         tpf = (TTreeFilePrefetch*)curfile->GetFilePrefetch();
+         tpf = (TTreeCache*)curfile->GetCacheRead();
          if (tpf) tpf->SetEntryRange(firstentry,firstentry+nentries);
       }
    }
