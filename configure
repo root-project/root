@@ -109,7 +109,6 @@ rm -f $logfile
 envvars="
 THREAD           \
 OPENGL           \
-MATHCORE         \
 MYSQL            \
 ORACLE           \
 PGSQL            \
@@ -134,8 +133,6 @@ MONALISA         \
 SRP              \
 SSL              \
 AFS              \
-CINTEX           \
-REFLEX           \
 ROOFIT           \
 MINUIT2          \
 TABLE            \
@@ -3307,28 +3304,58 @@ result $enable_shadowpw
 #
 if test ! "x$enable_mathmore" = "xno"; then
     # Check for GSL include and library
+    gslskip=
     hasmathmore="define"
     check_header "gsl/gsl_version.h" "$gslincdir" $GSL $GSL/include \
 	$GSL/api /usr/local/include /usr/include /opt/gsl/include \
 	$finkdir/include
-    gslinc=$found_hdr
-    gslincdir=$found_dir
-    gslflags=-I$gslincdir
 
-    check_library "libgsl gsl" "$enable_shared" "$gsllibdir" \
-	$GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
-	$finkdir/lib
-
-    if test ! "x$found_lib" = "x"; then
-	gsllibs="$found_lib -lgslcblas"
-	gsllibdir=$found_dir
-	case $platform in
-	    win32) gsllibs="$found_lib gslcblas.lib"
-	esac
+    # check for gsl version >= 1.5
+    if test ! "x$found_dir" = "x"; then
+	message "Checking for GSL version >= 1.5"
+	gsl_version=`grep -o "[0123456789].[0123456789]" $found_dir/gsl/gsl_version.h | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
+	if test $gsl_version -lt 1005; then
+	    gslskip="skip"
+	    result "no"
+            enable_mathmore="no"
+	else
+	    result "ok"
+	    gslinc=$found_hdr
+	    gslincdir=$found_dir
+	    gslflags=-I$gslincdir
+	fi
     fi
 
+    if test ! "x$gslflags" = "x"; then
+	#check for the library now
+	gsllibdir0=$gsllibdir
+	check_library "libgsl gslML gsl" "no" "$gsllibdir" \
+	    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
+	    $finkdir/lib
+
+	if test ! "x$found_lib" = "x"; then
+	    gsllibs=$found_lib
+	    gsllibdir=$found_dir
+	    # in case of shared libs (gsllibdir is not empty) need gslcblas
+	    # assume libgslcblas is in same dir as libgsl
+	    if test ! "x$gsllibdir" = "x"; then
+		check_library "libgslcblas gslcblas" "$enable_shared" "$gsllibdir0" \
+		    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
+		    $finkdir/lib
+		if test ! "x$found_lib" = "x"; then
+		    gsllibs="$gsllibs $found_lib"
+		    gsllibdir=$found_dir
+		else
+		    #cblas not found
+		    gsllibs=""
+		fi
+	    fi
+	fi
+
+    fi
     # if gslincdir not specified look for gsl-config
-    if test "x$gslincdir" = "x" || test "x$gsllibs" = "x"; then
+    if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x") && \
+        test ! "x$gslskip" = "xskip"; then
 	checking_msg "gsl-config"
 	if `which gsl-config > /dev/null 2>&1` ; then
 	    which gsl-config
@@ -3341,8 +3368,10 @@ if test ! "x$enable_mathmore" = "xno"; then
             else
 	        # We've found `gsl-config' - use that to get the compiler
 	        # and linker flags
+		result "ok"
 	        gslflags=`gsl-config --cflags`
 	        gsllibs=`gsl-config --libs`
+		gsllibdir=""
             fi
         else
 	    enable_mathmore="no"
@@ -3364,7 +3393,7 @@ fi
 ### echo %%% MathCore Library - Contributed library
 #
 message "Checking whether to build libMathCore"
-if test "x$enable_mathcore" = "xyes" || test ! "x$MATHCORE" = "x"; then
+if test ! "x$enable_mathcore" = "xno"; then
     enable_mathcore="yes"
     result "yes"
 else
@@ -3377,7 +3406,7 @@ fi
 ### echo %%% Cintex Library - Contributed library
 #
 message "Checking whether to build libCintex"
-if test "x$enable_cintex" = "xyes" || test ! "x$CINTEX" = "x"; then
+if test ! "x$enable_cintex" = "xno"; then
     enable_cintex="yes"
     result "yes"
 else
@@ -3390,7 +3419,7 @@ fi
 ### echo %%% Reflex Library - Contributed library
 #
 message "Checking whether to build libReflex"
-if test "x$enable_reflex" = "xyes" || test ! "x$REFLEX" = "x"; then
+if test ! "x$enable_reflex" = "xno"; then
     enable_reflex="yes"
     result "yes"
 else
