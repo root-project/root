@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.9 2006/04/20 17:18:23 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.10 2006/06/08 16:05:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -219,7 +219,7 @@ ROOT::Reflex::Member
 ROOT::Reflex::ScopeBase::LookupMember( const std::string & nam,
                                        const Scope & current ) const {
 //------------------------------------------------------------------------------- 
-  return NameLookup::LookupMember( nam, current );
+   return NameLookup::LookupMember( nam, current );
 }
 
 
