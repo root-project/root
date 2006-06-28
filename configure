@@ -3313,7 +3313,7 @@ if test ! "x$enable_mathmore" = "xno"; then
     # check for gsl version >= 1.5
     if test ! "x$found_dir" = "x"; then
 	message "Checking for GSL version >= 1.5"
-	gsl_version=`grep -o "[0123456789].[0123456789]" $found_dir/gsl/gsl_version.h | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
+	gsl_version=`grep "define GSL" $found_dir/gsl/gsl_version.h | sed 's/^.*"\([0-9]\.[0-9]\)"/\1/' |  awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
 	if test $gsl_version -lt 1005; then
 	    gslskip="skip"
 	    result "no"
