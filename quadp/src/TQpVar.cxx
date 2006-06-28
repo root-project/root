@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.8 2006/06/23 05:02:55 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.9 2006/06/27 04:38:29 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -185,7 +185,9 @@ TQpVar::TQpVar(const TQpVar &another) : TObject(another)
 //______________________________________________________________________________
 Double_t TQpVar::GetMu()
 {
-// Return the complementarity gap mu
+// compute complementarity gap, obtained by taking the inner product of the
+// complementary vectors and dividing by the total number of components
+// computes mu = (t'lambda +u'pi + v'gamma + w'phi)/(mclow+mcupp+nxlow+nxupp)
 
    Double_t mu = 0.0;
    if (fNComplementaryVariables > 0 ) {
@@ -203,7 +205,8 @@ Double_t TQpVar::GetMu()
 //______________________________________________________________________________
 Double_t TQpVar::MuStep(TQpVar *step,Double_t alpha)
 {
-// Return the complementarity gap mu
+// Compute the complementarity gap resulting from a step of length "alpha" along
+// direction "step"
 
    Double_t mu = 0.0;
    if (fNComplementaryVariables > 0) {
@@ -292,7 +295,11 @@ void TQpVar::Negate()
 //______________________________________________________________________________
 Double_t TQpVar::StepBound(TQpVar *b)
 {
-// Find the maximum stepsize before violating the nonnegativity constraints
+// calculate the largest alpha in (0,1] such that the/ nonnegative variables stay
+// nonnegative in the given search direction. In the general QP problem formulation
+// this is the largest value of alpha such that
+//     (t,u,v,w,lambda,pi,phi,gamma) + alpha * (b->t,b->u,b->v,b->w,b->lambda,b->pi,
+//                                                b->phi,b->gamma) >= 0.
 
    Double_t maxStep = 1.0;
 
@@ -363,7 +370,7 @@ Double_t TQpVar::StepBound(TVectorD &v,TVectorD &dir,Double_t maxStep)
 //______________________________________________________________________________
 Bool_t TQpVar::IsInteriorPoint()
 {
-// Is the current position an interior point 
+// Is the current position an interior point  ?
 
    Bool_t interior = kTRUE;
    if (fMclo > 0)
@@ -394,7 +401,20 @@ Double_t TQpVar::FindBlocking(TQpVar   *step,
                               Double_t &dualStep,
                               Int_t    &fIrstOrSecond)
 {
+// Performs the same function as StepBound, and supplies additional information about
+// which component of the nonnegative variables is responsible for restricting alpha.
+// In terms of the abstract formulation, the components have the following meanings :
 //
+//  primalValue   : the value of the blocking component of the primal variables (u,t,v,w).
+//  primalStep    : the corresponding value of the blocking component of the primal step
+//                  variables (b->u,b->t,b->v,b->w)
+//  dualValue     : the value of the blocking component of the dual variables/
+//                  (lambda,pi,phi,gamma).
+//  dualStep      : the corresponding value of the blocking component of the dual step
+//                   variables (b->lambda,b->pi,b->phi,b->gamma)
+//  firstOrSecond : 1 if the primal step is blocking,
+//                  2 if the dual step is block,
+//                  0 if no step is blocking.
 
    fIrstOrSecond = 0;
    Double_t alpha = 1.0;
@@ -423,6 +443,8 @@ Double_t TQpVar::FindBlocking(TVectorD &w,TVectorD &wstep,TVectorD &u,TVectorD &
                               Double_t maxStep,Double_t &w_elt,Double_t &wstep_elt,Double_t &u_elt,
                               Double_t &ustep_elt,int& fIrst_or_second)
 {
+//
+
    return FindBlockingSub(w.GetNrows(),
       w.GetMatrixArray(),    1,
       wstep.GetMatrixArray(),1,
@@ -507,7 +529,7 @@ Double_t TQpVar::FindBlockingSub(Int_t n,
 //______________________________________________________________________________
 void TQpVar::InteriorPoint(Double_t alpha,Double_t beta)
 {
-// Set variables to an interior position
+// Sets components of (u,t,v,w) to alpha and of (lambda,pi,phi,gamma) to beta
 
    fS.Zero();
    fX.Zero();
@@ -547,8 +569,7 @@ void TQpVar::InteriorPoint(Double_t alpha,Double_t beta)
 //______________________________________________________________________________
 Double_t TQpVar::Violation()
 {
-// Return a measure for how much the current position
-// violates the interior-point condition
+// The amount by which the current variables violate the  non-negativity constraints.
 
    Double_t viol = 0.0;
    Double_t cmin;
@@ -589,7 +610,7 @@ Double_t TQpVar::Violation()
 //______________________________________________________________________________
 void TQpVar::ShiftBoundVariables(Double_t alpha,Double_t beta)
 {
-// Shift bound variables
+// Add alpha to components of (u,t,v,w) and beta to components of (lambda,pi,phi,gamma)
 
    if (fNxlo > 0) {
       fV    .AddSomeConstant(alpha,fXloIndex);

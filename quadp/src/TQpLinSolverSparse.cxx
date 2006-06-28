@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverSparse.cxx,v 1.5 2006/06/02 12:48:21 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverSparse.cxx,v 1.6 2006/06/23 05:02:55 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -77,14 +77,6 @@ TQpLinSolverSparse::TQpLinSolverSparse(TQpProbSparse *factory,TQpDataSparse *dat
 
 
 //______________________________________________________________________________
-void TQpLinSolverSparse::Factor(TQpDataBase *prob,TQpVar *vars)
-{
-   TQpLinSolverBase::Factor(prob,vars);
-   fSolveSparse.SetMatrix(fKkt);
-}
-
-
-//______________________________________________________________________________
 TQpLinSolverSparse::TQpLinSolverSparse(const TQpLinSolverSparse &another) :
 TQpLinSolverBase(another)
 {
@@ -95,8 +87,20 @@ TQpLinSolverBase(another)
 
 
 //______________________________________________________________________________
+void TQpLinSolverSparse::Factor(TQpDataBase *prob,TQpVar *vars)
+{
+// Sets up the matrix for the main linear system in "augmented system" form.
+
+   TQpLinSolverBase::Factor(prob,vars);
+   fSolveSparse.SetMatrix(fKkt);
+}
+
+
+//______________________________________________________________________________
 void TQpLinSolverSparse::PutXDiagonal(TVectorD &xdiag)
 {
+// Places the diagonal resulting from the bounds on x into the augmented system matrix
+
    TMatrixDSparseDiag diag(fKkt);
    for (Int_t i = 0; i < xdiag.GetNrows(); i++)
       diag[i] = xdiag[i];
@@ -106,6 +110,8 @@ void TQpLinSolverSparse::PutXDiagonal(TVectorD &xdiag)
 //______________________________________________________________________________
 void TQpLinSolverSparse::PutZDiagonal(TVectorD &zdiag)
 {
+// Places the diagonal resulting from the bounds on Cx into the augmented system matrix
+
    TMatrixDSparseDiag diag(fKkt);
    for (Int_t i = 0; i < zdiag.GetNrows(); i++)
       diag[i+fNx+fMy] = zdiag[i];
@@ -115,6 +121,10 @@ void TQpLinSolverSparse::PutZDiagonal(TVectorD &zdiag)
 //______________________________________________________________________________
 void TQpLinSolverSparse::SolveCompressed(TVectorD &compressedRhs)
 {
+// Perform the actual solve using the factors produced in factor.
+// rhs on input contains the aggregated right-hand side of the augmented system;
+//  on output contains the solution in aggregated form .
+
    fSolveSparse.Solve(compressedRhs);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.h,v 1.3 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.h,v 1.4 2006/06/03 05:42:19 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -88,33 +88,33 @@ public:
 
    void SetNonZeros(Int_t nnzQ,Int_t nnzA,Int_t nnzC);
 
-                                               // insert the Hessian Q into the matrix M for the fundamental
    virtual void PutQIntoAt(TMatrixDBase &M,Int_t row,Int_t col);
+                                               // insert the Hessian Q into the matrix M for the fundamental
                                                // linear system, where M is stored as a TMatrixDSparse
-                                               // insert the constraint matrix A into the matrix M for the
    virtual void PutAIntoAt(TMatrixDBase &M,Int_t row,Int_t col);
-                                               // fundamental linear system, where M is stored as a TMatrixD
-                                               // insert the constraint matrix C into the matrix M for the
+                                               // insert the constraint matrix A into the matrix M for the
+                                               // fundamental linear system, where M is stored as a TMatrixDSparse
    virtual void PutCIntoAt(TMatrixDBase &M,Int_t row,Int_t col);
+                                               // insert the constraint matrix C into the matrix M for the
                                                // fundamental linear system, where M is stored as a
                                                // TMatrixDSparse
 
-                                               // y = beta * y + alpha * Q * x
    virtual void Qmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
-                                               // y = beta * y + alpha * A * x
+                                               // y = beta * y + alpha * Q * x
    virtual void Amult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
-                                               // y = beta * y + alpha * C * x
+                                               // y = beta * y + alpha * A * x
    virtual void Cmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
-                                               // y = beta * y + alpha * A^T * x
+                                               // y = beta * y + alpha * C * x
    virtual void ATransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
-                                               // y = beta * y + alpha * C^T * x
+                                               // y = beta * y + alpha * A^T * x
    virtual void CTransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+                                               // y = beta * y + alpha * C^T * x
 
    virtual void GetDiagonalOfQ(TVectorD &dQ);  // extract the diagonal of Q and put it in the vector dQ
 
    virtual Double_t DataNorm();
-                                               // Create a random problem (x,y,z,s)
    virtual void DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s);
+                                               // Create a random problem (x,y,z,s)
                                                // the solution to the random problem
    virtual void Print(Option_t *opt="") const;
 

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.7 2006/06/23 05:02:55 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.8 2006/06/27 04:38:29 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -259,7 +259,8 @@ void TQpDataSparse::Print(Option_t * /*opt*/) const
 //______________________________________________________________________________
 void TQpDataSparse::PutQIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
-// Assign to a sub-matrix of m starting at index (row,col), matrix fQ
+// Insert the Hessian Q into the matrix M at index (row,col) for the fundamental
+// linear system
 
    m.SetSub(row,col,fQ);
 }
@@ -268,7 +269,8 @@ void TQpDataSparse::PutQIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 //______________________________________________________________________________
 void TQpDataSparse::PutAIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
-// Assign to a sub-matrix of m starting at index (row,col), matrix fA
+// Insert the constraint matrix A into the matrix M at index (row,col) for the fundamental
+// linear system
 
    m.SetSub(row,col,fA);
 }
@@ -277,7 +279,8 @@ void TQpDataSparse::PutAIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 //______________________________________________________________________________
 void TQpDataSparse::PutCIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
-// Assign to a sub-matrix of m starting at index (row,col), matrix fC
+// Insert the constraint matrix C into the matrix M at index (row,col) for the fundamental
+// linear system
 
    m.SetSub(row,col,fC);
 }

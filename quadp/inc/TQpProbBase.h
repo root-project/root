@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.h,v 1.5 2006/03/21 05:20:33 pcanal Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.h,v 1.6 2006/06/03 05:42:19 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -90,7 +90,7 @@
 //  However, for many (possibly most) QP's, the matrices in the          //
 //  formulation have structure that may be exploited to solve the        //
 //  problem more efficiently. This abstract problem formulation contains //
-//  a set up such that one can derive and add special formulations .     //
+//  a setup such that one can derive and add special formulations .      //
 //  The optimality conditions of the simple QP defined above are         //
 //  follows:                                                             //
 //                                                                       //

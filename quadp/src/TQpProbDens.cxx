@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TQpProbDens.cxx,v 1.6 2006/06/02 12:48:21 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TQpProbDens.cxx,v 1.7 2006/06/23 05:02:55 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Mar 2004
 
 /*************************************************************************
@@ -83,6 +83,8 @@ TQpDataBase *TQpProbDens::MakeData(Double_t *c,
                                    Double_t *clo,Bool_t   *iclo,
                                    Double_t *cup,Bool_t   *icup)
 {
+// Setup the data
+
    TVectorD    vc  ; vc  .Use(fNx,c);
    TMatrixDSym mQ  ; mQ  .Use(fNx,Q);
    TVectorD    vxlo; vxlo.Use(fNx,xlo);
@@ -133,6 +135,8 @@ TQpDataBase *TQpProbDens::MakeData(TVectorD     &c,
                                    TVectorD     &clo, TVectorD &iclo,
                                    TVectorD     &cup, TVectorD &icup)
 {
+// Setup the data
+
    TMatrixDSym &mQ = (TMatrixDSym &) Q_in;
    TMatrixD    &mA = (TMatrixD    &) A_in;
    TMatrixD    &mC = (TMatrixD    &) C_in;
@@ -164,6 +168,8 @@ TQpDataBase *TQpProbDens::MakeData(TVectorD     &c,
 //______________________________________________________________________________
 TQpResidual* TQpProbDens::MakeResiduals(const TQpDataBase *data_in)
 {
+// Setup the residuals
+
    TQpDataDens *data = (TQpDataDens *) data_in;
    return new TQpResidual(fNx,fMy,fMz,data->fXloIndex,data->fXupIndex,data->fCloIndex,data->fCupIndex);
 }
@@ -172,6 +178,8 @@ TQpResidual* TQpProbDens::MakeResiduals(const TQpDataBase *data_in)
 //______________________________________________________________________________
 TQpVar* TQpProbDens::MakeVariables(const TQpDataBase *data_in)
 {
+// Setup the variables
+
    TQpDataDens *data = (TQpDataDens *) data_in;
 
    return new TQpVar(fNx,fMy,fMz,data->fXloIndex,data->fXupIndex,data->fCloIndex,data->fCupIndex);
@@ -181,6 +189,8 @@ TQpVar* TQpProbDens::MakeVariables(const TQpDataBase *data_in)
 //______________________________________________________________________________
 TQpLinSolverBase* TQpProbDens::MakeLinSys(const TQpDataBase *data_in)
 {
+// Setup the linear solver
+
    TQpDataDens *data = (TQpDataDens *) data_in;
    return new TQpLinSolverDens(this,data);
 }
@@ -189,6 +199,12 @@ TQpLinSolverBase* TQpProbDens::MakeLinSys(const TQpDataBase *data_in)
 //______________________________________________________________________________
 void TQpProbDens::JoinRHS(TVectorD &rhs,TVectorD &rhs1_in,TVectorD &rhs2_in,TVectorD &rhs3_in)
 {
+// Assembles a single vector object from three given vectors .
+//     rhs_out (output) final joined vector
+//     rhs1_in (input) first part of rhs
+//     rhs2_in (input) middle part of rhs
+//     rhs3_in (input) last part of rhs .
+
    rhs.SetSub(0,rhs1_in);
    if (fMy > 0) rhs.SetSub(fNx,    rhs2_in);
    if (fMz > 0) rhs.SetSub(fNx+fMy,rhs3_in);
@@ -198,6 +214,12 @@ void TQpProbDens::JoinRHS(TVectorD &rhs,TVectorD &rhs1_in,TVectorD &rhs2_in,TVec
 //______________________________________________________________________________
 void TQpProbDens::SeparateVars(TVectorD &x_in,TVectorD &y_in,TVectorD &z_in,TVectorD &vars_in)
 {
+// Extracts three component vectors from a given aggregated vector.
+//     vars_in  (input) aggregated vector
+//     x_in (output) first part of vars
+//     y_in (output) middle part of vars
+//     z_in (output) last part of vars
+
    x_in = vars_in.GetSub(0,fNx-1);
    if (fMy > 0) y_in = vars_in.GetSub(fNx,    fNx+fMy-1);
    if (fMz > 0) z_in = vars_in.GetSub(fNx+fMy,fNx+fMy+fMz-1);
@@ -207,6 +229,8 @@ void TQpProbDens::SeparateVars(TVectorD &x_in,TVectorD &y_in,TVectorD &z_in,TVec
 //______________________________________________________________________________
 void TQpProbDens::MakeRandomData(TQpDataDens *&data,TQpVar *&soln,Int_t /*nnzQ*/,Int_t /*nnzA*/,Int_t /*nnzC*/)
 {
+// Create a random QP problem
+
    data = new TQpDataDens(fNx,fMy,fMz);
    soln = this->MakeVariables(data);
    data->DataRandom(soln->fX,soln->fY,soln->fZ,soln->fS);

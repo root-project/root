@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpVar.h,v 1.5 2006/03/21 05:20:33 pcanal Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpVar.h,v 1.6 2006/06/03 05:42:19 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -172,7 +172,7 @@ public:
                                                // components have the following meanings.
                                                //
                                                // primalValue: the value of the blocking component of the
-                                               // primal variables variables (u,t,v,w).
+                                               // primal variables (u,t,v,w).
                                                // primalStep: the corresponding value of the blocking
                                                // component of the primal step variables (b->u,b->t,
                                                // b->v,b->w)

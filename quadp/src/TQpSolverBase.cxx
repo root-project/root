@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpSolverBase.cxx,v 1.6 2006/06/23 05:02:55 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpSolverBase.cxx,v 1.7 2006/06/27 04:38:29 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -196,7 +196,9 @@ void TQpSolverBase::DumbStart(TQpProbBase * /* formulation */,
                               TQpVar *iterate,TQpDataBase * /* prob */,
                               TQpResidual * /* resid */,TQpVar * /* step */)
 {
-// Simple minded starting point choice
+// Alternative starting point heuristic: sets the "complementary" variables to a large
+// positive value (based on the norm of the problem data) and the remaining variables
+// to zero .
 
    const Double_t sdatanorm = fDnorm;
    const Double_t a = 1.e3;
@@ -209,7 +211,7 @@ void TQpSolverBase::DumbStart(TQpProbBase * /* formulation */,
 //______________________________________________________________________________
 Double_t TQpSolverBase::FinalStepLength(TQpVar *iterate,TQpVar *step)
 {
-// Implements a version of Mehrotra’s starting point heuristic,
+// Implements a version of Mehrotra starting point heuristic,
 //  modified to ensure identical steps in the primal and dual variables.
 
    Int_t firstOrSecond;
@@ -249,7 +251,7 @@ void TQpSolverBase::DoMonitor(TQpDataBase *data,TQpVar *vars,TQpResidual *resids
                               Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
                               Int_t stop_code,Int_t level)
 {
-// Monitor progress / convergence of the optimization
+// Monitor progress / convergence aat each interior-point iteration
 
    this->DefMonitor(data,vars,resids,alpha,sigma,i,mu,stop_code,level);
 }

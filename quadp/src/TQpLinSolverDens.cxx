@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverDens.cxx,v 1.5 2006/06/02 12:48:21 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverDens.cxx,v 1.6 2006/06/23 05:02:55 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -76,23 +76,29 @@ TQpLinSolverDens::TQpLinSolverDens(TQpProbDens *factory,TQpDataDens *data) :
 
 
 //______________________________________________________________________________
+TQpLinSolverDens::TQpLinSolverDens(const TQpLinSolverDens &another) : TQpLinSolverBase(another)
+{
+// Copy constructor
+
+   *this = another;
+}
+
+
+//______________________________________________________________________________
 void TQpLinSolverDens::Factor(TQpDataBase *prob,TQpVar *vars)
 {
+// Sets up the matrix for the main linear system in "augmented system" form.
+
    TQpLinSolverBase::Factor(prob,vars);
    fSolveLU.SetMatrix(fKkt);
 }
 
 
 //______________________________________________________________________________
-TQpLinSolverDens::TQpLinSolverDens(const TQpLinSolverDens &another) : TQpLinSolverBase(another)
-{
-   *this = another;
-}
-
-
-//______________________________________________________________________________
 void TQpLinSolverDens::PutXDiagonal(TVectorD &xdiag)
 {
+// Places the diagonal resulting from the bounds on x into the augmented system matrix
+
    TMatrixDDiag diag(fKkt);
    for (Int_t i = 0; i < xdiag.GetNrows(); i++)
       diag[i] = xdiag[i];
@@ -102,6 +108,8 @@ void TQpLinSolverDens::PutXDiagonal(TVectorD &xdiag)
 //______________________________________________________________________________
 void TQpLinSolverDens::PutZDiagonal(TVectorD &zdiag)
 {
+// Places the diagonal resulting from the bounds on Cx into the augmented system matrix
+
    TMatrixDDiag diag(fKkt);
    for (Int_t i = 0; i < zdiag.GetNrows(); i++)
       diag[i+fNx+fMy] = zdiag[i];
@@ -111,6 +119,10 @@ void TQpLinSolverDens::PutZDiagonal(TVectorD &zdiag)
 //______________________________________________________________________________
 void TQpLinSolverDens::SolveCompressed(TVectorD &compressedRhs)
 {
+// Perform the actual solve using the factors produced in factor. 
+// rhs on input contains the aggregated right-hand side of the augmented system;
+//  on output contains the solution in aggregated form .
+
    fSolveLU.Solve(compressedRhs);
 }
 

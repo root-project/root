@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbSparse.cxx,v 1.6 2006/06/02 12:48:21 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbSparse.cxx,v 1.7 2006/06/23 05:02:55 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -84,6 +84,8 @@ TQpDataBase *TQpProbSparse::MakeData(Double_t *c,
                                      Double_t *clo,Bool_t *iclo,
                                      Double_t *cup,Bool_t *icup)
 {
+// Setup the data
+
    TVectorD       vc  ; vc  .Use(fNx,c);
    TMatrixDSparse mQ  ; mQ  .Use(fNx,fNx,nnzQ,irowQ,icolQ,Q);
    TVectorD       vxlo; vxlo.Use(fNx,xlo);
@@ -134,6 +136,8 @@ TQpDataBase *TQpProbSparse::MakeData(TVectorD     &c,
                                      TVectorD     &clo, TVectorD &iclo,
                                      TVectorD     &cup, TVectorD &icup)
 {
+// Setup the data
+
    TMatrixDSparse &mQ = (TMatrixDSparse &) Q_in;
    TMatrixDSparse &mA = (TMatrixDSparse &) A_in;
    TMatrixDSparse &mC = (TMatrixDSparse &) C_in;
@@ -165,6 +169,8 @@ TQpDataBase *TQpProbSparse::MakeData(TVectorD     &c,
 //______________________________________________________________________________
 TQpResidual* TQpProbSparse::MakeResiduals(const TQpDataBase *data_in)
 {
+// Setup the residuals
+
    TQpDataSparse *data = (TQpDataSparse *) data_in;
    return new TQpResidual(fNx,fMy,fMz,data->fXloIndex,data->fXupIndex,data->fCloIndex,data->fCupIndex);
 }
@@ -173,6 +179,8 @@ TQpResidual* TQpProbSparse::MakeResiduals(const TQpDataBase *data_in)
 //______________________________________________________________________________
 TQpVar* TQpProbSparse::MakeVariables(const TQpDataBase *data_in)
 {
+// Setup the variables
+
    TQpDataSparse *data = (TQpDataSparse *) data_in;
 
    return new TQpVar(fNx,fMy,fMz,data->fXloIndex,data->fXupIndex,data->fCloIndex,data->fCupIndex);
@@ -182,6 +190,8 @@ TQpVar* TQpProbSparse::MakeVariables(const TQpDataBase *data_in)
 //______________________________________________________________________________
 TQpLinSolverBase* TQpProbSparse::MakeLinSys(const TQpDataBase *data_in)
 {
+// Setup the linear solver
+
    TQpDataSparse *data = (TQpDataSparse *) data_in;
    return new TQpLinSolverSparse(this,data);
 }
@@ -190,6 +200,12 @@ TQpLinSolverBase* TQpProbSparse::MakeLinSys(const TQpDataBase *data_in)
 //______________________________________________________________________________
 void TQpProbSparse::JoinRHS(TVectorD &rhs,TVectorD &rhs1_in,TVectorD &rhs2_in,TVectorD &rhs3_in)
 {
+// Assembles a single vector object from three given vectors .
+//     rhs_out (output) final joined vector
+//     rhs1_in (input) first part of rhs
+//     rhs2_in (input) middle part of rhs
+//     rhs3_in (input) last part of rhs .
+
    rhs.SetSub(0,rhs1_in);
    if (fMy > 0) rhs.SetSub(fNx,    rhs2_in);
    if (fMz > 0) rhs.SetSub(fNx+fMy,rhs3_in);
@@ -199,6 +215,12 @@ void TQpProbSparse::JoinRHS(TVectorD &rhs,TVectorD &rhs1_in,TVectorD &rhs2_in,TV
 //______________________________________________________________________________
 void TQpProbSparse::SeparateVars(TVectorD &x_in,TVectorD &y_in,TVectorD &z_in,TVectorD &vars_in)
 {
+// Extracts three component vectors from a given aggregated vector.
+//     vars_in  (input) aggregated vector
+//     x_in (output) first part of vars
+//     y_in (output) middle part of vars
+//     z_in (output) last part of vars
+
    x_in = vars_in.GetSub(0,fNx-1);
    if (fMy > 0) y_in = vars_in.GetSub(fNx,    fNx+fMy-1);
    if (fMz > 0) z_in = vars_in.GetSub(fNx+fMy,fNx+fMy+fMz-1);
@@ -208,6 +230,8 @@ void TQpProbSparse::SeparateVars(TVectorD &x_in,TVectorD &y_in,TVectorD &z_in,TV
 //______________________________________________________________________________
 void TQpProbSparse::MakeRandomData(TQpDataSparse *&data,TQpVar *&soln,Int_t nnzQ,Int_t nnzA,Int_t nnzC)
 {
+// Create a random QP problem
+
    data = new TQpDataSparse(fNx,fMy,fMz);
    soln = this->MakeVariables(data);
    data->SetNonZeros(nnzQ,nnzA,nnzC);

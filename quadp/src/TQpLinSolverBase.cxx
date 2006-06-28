@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.cxx,v 1.5 2006/06/02 12:48:21 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.cxx,v 1.6 2006/06/23 05:02:55 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -112,6 +112,10 @@ TQpLinSolverBase::TQpLinSolverBase(const TQpLinSolverBase &another) : TObject(an
 //______________________________________________________________________________
 void TQpLinSolverBase::Factor(TQpDataBase * /* prob */,TQpVar *vars)
 {
+// sets up the matrix for the main linear system in "augmented system" form. The
+//  actual factorization is performed by a routine specific to either the sparse
+// or dense case
+
    R__ASSERT(vars->ValidNonZeroPattern());
 
    if (fNxlo+fNxup > 0) {
@@ -150,6 +154,11 @@ void TQpLinSolverBase::ComputeDiagonals(TVectorD &dd,TVectorD &omega,
 //______________________________________________________________________________
 void TQpLinSolverBase::Solve(TQpDataBase *prob,TQpVar *vars,TQpResidual *res,TQpVar *step)
 {
+// Solves the system for a given set of residuals. Assembles the right-hand side appropriate
+// to the matrix factored in factor, solves the system using the factorization produced there,
+// partitions the solution vector into step components, then recovers the step components
+// eliminated during the block elimination that produced the augmented system form .
+
    R__ASSERT(vars->ValidNonZeroPattern());
    R__ASSERT(res ->ValidNonZeroPattern());
 
@@ -249,6 +258,8 @@ void TQpLinSolverBase::SolveXYZS(TVectorD &stepx,TVectorD &stepy,
                                  TVectorD &stepz,TVectorD &steps,
                                  TVectorD & /* ztemp */, TQpDataBase * /* prob */ )
 {
+// Assemble right-hand side of augmented system and call SolveCompressed to solve it
+
    AddElemMult(stepz,-1.0,fNomegaInv,steps);
    this->JoinRHS(fRhs,stepx,stepy,stepz);
 
@@ -266,13 +277,16 @@ void TQpLinSolverBase::SolveXYZS(TVectorD &stepx,TVectorD &stepy,
 
 
 //______________________________________________________________________________
-void TQpLinSolverBase::JoinRHS(TVectorD &rhs_in, TVectorD &rhs1_in,
+void TQpLinSolverBase::JoinRHS(TVectorD &rhs_out, TVectorD &rhs1_in,
                                TVectorD &rhs2_in,TVectorD &rhs3_in)
 {
-   // joinRHS has to be delegated to the factory. This is true because
-   // the rhs may be distributed across processors, so the factory is the
-   // only object that knows with certainly how to scatter the elements.
-   fFactory->JoinRHS(rhs_in,rhs1_in,rhs2_in,rhs3_in);
+// Assembles a single vector object from three given vectors .
+//     rhs_out (output) final joined vector
+//     rhs1_in (input) first part of rhs
+//     rhs2_in (input) middle part of rhs
+//     rhs3_in (input) last part of rhs .
+
+   fFactory->JoinRHS(rhs_out,rhs1_in,rhs2_in,rhs3_in);
 }
 
 
@@ -280,9 +294,12 @@ void TQpLinSolverBase::JoinRHS(TVectorD &rhs_in, TVectorD &rhs1_in,
 void TQpLinSolverBase::SeparateVars(TVectorD &x_in,TVectorD &y_in,
                                     TVectorD &z_in,TVectorD &vars_in)
 {
-   // separateVars has to be delegated to the factory. This is true because
-   // the rhs may be distributed across processors, so the factory is the
-   // only object that knows with certainly how to scatter the elements.
+// Extracts three component vectors from a given aggregated vector.
+//     vars_in  (input) aggregated vector
+//     x_in (output) first part of vars
+//     y_in (output) middle part of vars
+//     z_in (output) last part of vars
+
    fFactory->SeparateVars(x_in,y_in,z_in,vars_in);
 }
 
