@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name: $: $Id: $
+// @(#)root/meta:$Name:  $: $Id: TVirtualRefProxy.h,v 1.1 2006/06/28 10:06:50 pcanal Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -37,6 +37,9 @@ class TFormLeafInfoReference;
 //______________________________________________________________________________
 class TVirtualRefProxy  {
 public:
+   // Virtual Destructor
+   virtual ~TVirtualRefProxy() {};
+
    // Release the reference proxy (virtual destructor)
    virtual void Release() = 0;
 
