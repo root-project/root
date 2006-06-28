@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.46 2006/06/26 07:14:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.47 2006/06/26 10:51:00 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -85,7 +85,7 @@ TSpectrum::TSpectrum(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum",
 //                 (smaller distance between peaks.
 //                 May be set later through SetResolution.
    
-   Int_t n = TMath::Min(maxpositions, 100);
+   Int_t n = maxpositions;
    if (n <= 0) n = 1;
    fMaxPeaks  = n;
    fPosition  = new Float_t[n];
