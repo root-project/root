@@ -13,9 +13,9 @@ MATHMOREDIRI := $(MATHMOREDIR)/inc
 
 
 ###pre-compiled GSL DLL require Mathmore to be compiled with -DGSL_DLL 
-ifeq ($(PLATFORM),win32)
-GSLFLAGS += "-DGSL_DLL"
-endif
+#ifeq ($(PLATFORM),win32)
+#GSLFLAGS += "-DGSL_DLL"
+#endif
 
 ##### libMathMore #####
 MATHMOREL    := $(MODDIRI)/Math/LinkDef.h
