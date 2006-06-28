@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.24 2006/05/08 13:16:56 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.25 2006/05/30 07:06:50 antcheva Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -861,8 +861,9 @@ void TGQt::NextEvent(Event_t &event)
    // and removes event from queue. Not all of the event fields are valid
    // for each event type, except fType and fWindow.
 
-   // Set to default event. This method however, should never be called.
- //--
+   // Map the accumulated Qt events to the ROOT one tp process:
+   if (qApp->hasPendingEvents ()) qApp->processEvents ();
+
    memset(&event,0,sizeof(Event_t));
    event.fType   = kOtherEvent;
 #ifndef R__QTGUITHREAD
@@ -1619,9 +1620,7 @@ void         TGQt::SetDashes(GContext_t /*gc*/, Int_t /*offset*/, const char * /
 Int_t  TGQt::EventsPending() {
 #ifndef R__QTGUITHREAD
     Int_t retCode = fQClientFilterBuffer ? fQClientFilterBuffer->count(): 0;
-    if (!retCode) retCode = qApp->hasPendingEvents ();
-    if (qApp->hasPendingEvents ()) qApp->processEvents ();
-    return retCode;
+    return  retCode ? retCode : qApp->hasPendingEvents ();
 #endif
 
    if (fQClientFilterBuffer && fQClientFilterBuffer->isEmpty())
