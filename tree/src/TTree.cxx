@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.289 2006/06/25 14:14:11 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.290 2006/06/27 14:36:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2753,6 +2753,15 @@ Int_t TTree::Fill()
       nbytes += (nwrite = branch->Fill());
       if ( nwrite < 0 )  {
          Error("Fill","Failed filling branch:%s.%s, nbytes=%d",GetName(),branch->GetName(),nwrite);
+         if (nerror < 2) {
+            printf(" This error is symptomatic of a Tree created as a memory-resident Tree\n");
+            printf(" Instead of doing:\n");
+            printf("    TTree *T = new TTree(...)\n");
+            printf("    TFile *f = new TFile(...)\n");
+            printf(" you should do:\n");
+            printf("    TFile *f = new TFile(...)\n");
+            printf("    TTree *T = new TTree(...)\n");
+         }
          nerror++;
       }
    }
