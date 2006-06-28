@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.10 2006/06/08 16:05:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.11 2006/06/27 07:44:37 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -98,6 +98,7 @@ ROOT::Reflex::ScopeBase::ScopeBase()
 //-------------------------------------------------------------------------------
    fScopeName = new ScopeName("", this);
    fPropertyList.AddProperty("Description", "global namespace");
+   Scope::fg__GLOBALSCOPE__ = ThisScope();
 }
 
 

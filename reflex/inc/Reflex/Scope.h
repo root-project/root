@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.7 2006/06/08 16:05:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -248,6 +248,14 @@ namespace ROOT {
           * @return reverse begin of container of function members
           */
          Reverse_Member_Iterator FunctionMember_REnd() const;
+
+
+
+         /**
+          * GlobalScope will return the global scope representation\
+          * @return global scope
+          */
+         static Scope GlobalScope();
 
 
          /**
@@ -866,6 +874,13 @@ namespace ROOT {
           * @link association 
           */
          static Scope fg__NIRVANA__;
+
+
+         /** 
+          * @label __GLOBALSCOPE__
+          * @link association
+          */
+         static Scope fg__GLOBALSCOPE__;
 
       private:
 

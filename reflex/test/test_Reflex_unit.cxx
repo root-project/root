@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.6 2006/06/26 17:21:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.7 2006/06/28 10:43:29 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -55,6 +55,7 @@ class ReflexUnitTest : public CppUnit::TestFixture {
   CPPUNIT_TEST( type_template );
   CPPUNIT_TEST( member );
   CPPUNIT_TEST( tools );
+  CPPUNIT_TEST( global_scope );
   CPPUNIT_TEST_SUITE_END();
 public:
   void setUp () {}
@@ -79,6 +80,7 @@ public:
   void type_template();
   void member();
   void tools();
+  void global_scope();
   void tearDown() {}
 };
 
@@ -589,6 +591,20 @@ void ReflexUnitTest::tools() {
   CPPUNIT_ASSERT_EQUAL(size_t(29), Tools::GetBasePosition(t6));
   CPPUNIT_ASSERT_EQUAL(std::string("std::vector<void (*) (int)>"), Tools::GetScopeName(t6));
   CPPUNIT_ASSERT_EQUAL(std::string("iterator"), Tools::GetBaseName(t6));
+
+}
+
+
+void ReflexUnitTest::global_scope() {
+
+   Scope g = Scope::ByName("");
+   CPPUNIT_ASSERT(g);
+   
+   Scope g2 = Scope::GlobalScope();
+   CPPUNIT_ASSERT(g2);
+
+   CPPUNIT_ASSERT_EQUAL(g.Id(), g2.Id());
+   CPPUNIT_ASSERT_EQUAL(g.Name(), g2.Name());
 
 }
 
