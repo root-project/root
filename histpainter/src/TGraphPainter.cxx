@@ -442,6 +442,10 @@ void TGraphPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
    Double_t x1 = x[i1];
    Double_t y1 = y[i1];
    Double_t z1 = fZ[t[i1]-1];
+   if (z0>fZmax) z0 = fZmax;
+   if (z2>fZmax) z2 = fZmax;
+   if (z0<fZmin) z0 = fZmin;
+   if (z2<fZmin) z2 = fZmin;
 
    // zi  = Z values of the stripe number i
    // zip = Previous zi 
