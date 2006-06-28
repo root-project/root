@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.9 2006/06/13 08:19:01 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.10 2006/06/15 12:07:18 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -58,7 +58,7 @@ namespace ROOT {
         CintType(rt, rtypenum, rtagnum );
 		
         int stagnum = -1;
-	    if ( !scope.IsTopScope() ) stagnum = ::G__defined_tagname(scope.Name(SCOPED).c_str(), 1);
+        if ( !scope.IsTopScope() ) stagnum = ::G__defined_tagname(CintName(scope.Name(SCOPED)).c_str(), 1);
 		
         int r = ::G__search_typename2( t.Name().c_str(), rtypenum, rtagnum, 0, stagnum);
         ::G__setnewtype(-1,NULL,0);
