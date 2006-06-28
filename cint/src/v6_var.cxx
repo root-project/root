@@ -6948,6 +6948,9 @@ int G__parse_friend(int *piout,int *pspaceflag,int mparen)
   int c;
   int def_tagnum,tagdefining;
 
+  // We do not need to autoload friend declaration.
+  int autoload_old = G__set_class_autoloading(0);
+
 #ifndef G__FRIEND
   if(G__NOLINK==G__store_globalcomp&&G__NOLINK==G__globalcomp) {
     if(state) {
@@ -7112,6 +7115,8 @@ int G__parse_friend(int *piout,int *pspaceflag,int mparen)
     
   *pspaceflag = -1;
   *piout=0;
+  // We do not need to autoload friend declaration.
+  G__set_class_autoloading(autoload_old);
   return(!mparen);
 }
 #endif

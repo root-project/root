@@ -1328,6 +1328,7 @@ void G__declare_template()
   int ismemvar=0;
   int isforwarddecl = 0;
   int isfrienddecl = 0;
+  int autoload_old = 0;
 
   if(G__ifile.filenum>G__gettempfilenum()) {
     G__fprinterr(G__serr,"Limitation: template can not be defined in a command line or a tempfile\n");
@@ -1353,28 +1354,35 @@ void G__declare_template()
   /* if(G__dispsource) G__disp_mask=1000; */
 
   do {
-    c=G__fgetname_template(temp,"(<");
-    if (strcmp(temp,"friend")==0) {
-       isfrienddecl = 1;
-       c=G__fgetname_template(temp,"(<");
-    }
+     c=G__fgetname_template(temp,"(<");
+     if (strcmp(temp,"friend")==0) {
+        isfrienddecl = 1;
+        // We do not need to autoload friend declaration.
+        autoload_old = G__set_class_autoloading(0);
+        c=G__fgetname_template(temp,"(<");
+     }
   } while(strcmp(temp,"inline")==0||strcmp(temp,"const")==0
-          || strcmp(temp,"typename")==0
-          ) ;
+     || strcmp(temp,"typename")==0
+     ) ;
 
   /* template class */
   if(strcmp(temp,"class")==0 || strcmp(temp,"struct")==0) {
-    c = G__fgetstream_template(temp,":{;"); /* read template name */
-    if(';'==c) {
-      isforwarddecl = 1;
-    }
-    // Friend declaration are NOT forward declaration.
-    if (isforwarddecl && isfrienddecl) return;
-    fsetpos(G__ifile.fp,&pos);
-    if(G__dispsource) G__disp_mask=0;
-    G__ifile.line_number = store_line_number;
-    G__createtemplateclass(temp,targ,isforwarddecl);
-    return;
+     c = G__fgetstream_template(temp,":{;"); /* read template name */
+     if(';'==c) {
+        isforwarddecl = 1;
+     }
+     // Friend declaration are NOT forward declaration.
+     if (isforwarddecl && isfrienddecl) {
+        // We do not need to autoload friend declaration.
+        if (isfrienddecl) G__set_class_autoloading(autoload_old);
+        return;
+     }
+     fsetpos(G__ifile.fp,&pos);
+     if(G__dispsource) G__disp_mask=0;
+     G__ifile.line_number = store_line_number;
+     G__createtemplateclass(temp,targ,isforwarddecl);
+     if (isfrienddecl) G__set_class_autoloading(autoload_old);
+     return;
   }
 
   /* Judge between template class member and global function */
@@ -1444,6 +1452,7 @@ void G__declare_template()
       c = G__fignorestream("{;");
       if(';'!=c) c = G__fignorestream("}");
       G__freetemplatearg(targ);
+      if (isfrienddecl) G__set_class_autoloading(autoload_old);
       return;
     }
 #endif
@@ -1576,12 +1585,15 @@ void G__declare_template()
         }
         else {
           G__genericerror("Error: operator() overloading syntax error");
+          if (isfrienddecl) G__set_class_autoloading(autoload_old);
           return;
         }
       }
     }
     G__createtemplatefunc(temp,targ,store_line_number,&pos);
   }
+  if (isfrienddecl) G__set_class_autoloading(autoload_old);
+
 }
 
 /**************************************************************************
