@@ -14,6 +14,17 @@ namespace xmlTypedefSelection {
 
 namespace testclasses {
 
+
+   class DataMembers {
+
+      int i;
+      int* pi;
+      int** ppi;
+      int pa[5];
+      int paa[5][5];
+
+   };
+
   typedef int MyInt;
   typedef std::vector<MyInt> MyVector;
   

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.16 2006/04/26 09:45:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.17 2006/05/03 07:45:10 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -580,6 +580,52 @@ void ReflexSimple2Test::testDataMembers() {
   m1.Set(o1, (void*)&(ii=(int)val));
   val = (char)*(int*)m1.Get(o1).Address();
   CPPUNIT_ASSERT_EQUAL('d',val);
+
+  Type t2 = Type::ByName("testclasses::DataMembers");
+  CPPUNIT_ASSERT( t2 );
+  CPPUNIT_ASSERT( t2.IsClass());
+
+  Member m20 = t2.MemberByName("i");
+  CPPUNIT_ASSERT(m20);
+  Type m20t = m20.TypeOf();
+  CPPUNIT_ASSERT(m20t);
+  CPPUNIT_ASSERT_EQUAL(std::string(""), m20t.ToType().Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m20t.ToType(FINAL).Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m20t.ToType(RAW).Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m20t.ToType(FINAL|RAW).Name());
+
+  Member m21 = t2.MemberByName("pi");
+  CPPUNIT_ASSERT(m21);
+  Type m21t = m21.TypeOf();
+  CPPUNIT_ASSERT(m21t);
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m21t.ToType(FINAL).Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m21t.ToType(RAW).Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m21t.ToType(FINAL|RAW).Name());
+
+  Member m22 = t2.MemberByName("ppi");
+  CPPUNIT_ASSERT(m22);
+  Type m22t = m22.TypeOf();
+  CPPUNIT_ASSERT(m22t);
+  CPPUNIT_ASSERT_EQUAL(m21t.Name(), m22t.ToType(FINAL).Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m22t.ToType(RAW).Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m22t.ToType(FINAL|RAW).Name());
+
+  Member m23 = t2.MemberByName("pa");
+  CPPUNIT_ASSERT(m23);
+  Type m23t = m23.TypeOf();
+  CPPUNIT_ASSERT(m23t);
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m23t.ToType(FINAL).Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m23t.ToType(RAW).Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m23t.ToType(FINAL|RAW).Name());
+
+  Member m24 = t2.MemberByName("paa");
+  CPPUNIT_ASSERT(m24);
+  Type m24t = m24.TypeOf();
+  CPPUNIT_ASSERT(m24t);
+  CPPUNIT_ASSERT_EQUAL(m23t.Name(), m24t.ToType(FINAL).Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m24t.ToType(RAW).Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m24t.ToType(FINAL|RAW).Name());
+
 }
 
 void ReflexSimple2Test::testFunctionMembers() {
@@ -826,6 +872,9 @@ void ReflexSimple2Test::testTypedefSelection() {
   CPPUNIT_ASSERT(t3);
   CPPUNIT_ASSERT(t3.IsClass());
   CPPUNIT_ASSERT_EQUAL(std::string("RealXmlSelClass"), t3.Name());
+
+  CPPUNIT_ASSERT_EQUAL(t3.Name(), t2.ToType(FINAL).Name());
+  CPPUNIT_ASSERT_EQUAL(t3.Name(), t.ToType(FINAL).Name());
 
 }
 
