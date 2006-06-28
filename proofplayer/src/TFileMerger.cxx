@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.6 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.7 2006/05/30 12:00:41 brun Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -131,6 +131,7 @@ Bool_t TFileMerger::Cp(const char *src, const char *dst, Bool_t progressbar,
       goto copyout;
    }
 
+   dfile->SetCacheWrite(0);
    sfile->Seek(0);
    dfile->Seek(0);
 
