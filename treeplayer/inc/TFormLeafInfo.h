@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.7 2005/11/14 15:17:34 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.8 2006/02/22 06:59:15 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -77,6 +77,7 @@ public:
    virtual Bool_t    IsString() const;
 
    virtual Bool_t    IsInteger() const;
+   virtual Bool_t    IsReference() const  {  return kFALSE; }
 
    // Method for multiple variable dimensions.
    virtual Int_t GetPrimaryIndex();
@@ -87,6 +88,7 @@ public:
    virtual void  LoadSizes(TBranch* branch);
    virtual void  SetPrimaryIndex(Int_t index);
    virtual void  SetSize(Int_t index, Int_t val);
+   virtual void  SetBranch(TBranch* br)  { if ( fNext ) fNext->SetBranch(br); }
    virtual void  UpdateSizes(TArrayI *garr);
 
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);

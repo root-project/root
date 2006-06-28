@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.195 2006/04/19 08:22:26 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.196 2006/06/06 16:42:17 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -32,8 +32,12 @@
 #include "TError.h"
 #include "TVirtualCollectionProxy.h"
 
+#include "TVirtualRefProxy.h"
 #include "TTreeFormulaManager.h"
 #include "TFormLeafInfo.h"
+#include "TMethod.h"
+#include "TBaseClass.h"
+#include "TFormLeafInfoReference.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -271,7 +275,6 @@ TTreeFormula::~TTreeFormula()
 {
 //*-*-*-*-*-*-*-*-*-*-*Tree Formula default destructor*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================
-
    if (fManager) {
       fManager->Remove(this);
       if (fManager->fFormulas.GetLast()<0) {
@@ -407,6 +410,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
    vardim = 0;
 
    const TStreamerElement * elem = leafinfo->fElement;
+   TClass* c = elem ? elem->GetClassPointer() : 0;
 
    TFormLeafInfoMultiVarDim * multi = dynamic_cast<TFormLeafInfoMultiVarDim * >(leafinfo);
    if (multi) {
@@ -462,6 +466,9 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
          size = 1;
       }
 
+   } else if ( c && c->GetReferenceProxy() && c->GetReferenceProxy()->HasCounter() ) {
+      ndim = 1;
+      size = -1;
    } else if (elem->GetArrayDim()>0) {
 
       ndim = elem->GetArrayDim();
@@ -688,6 +695,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
    Long64_t readentry = fTree->GetReadEntry();
    if (readentry==-1) readentry=0;
 
+   Bool_t useLeafReferenceObject = false;
    Int_t code = fNcodes-1;
 
    // Make a check to prevent problem with some corrupted files (missing TStreamerInfo).
@@ -892,7 +900,6 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
             maininfo->fNext = previnfo;
             unwindCollection = kTRUE;
          }
-
       } else if ( branchEl->GetType()==3) {
          TFormLeafInfo* clonesinfo;
          if (useLeafCollectionObject) {
@@ -1028,6 +1035,27 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
          }
 
       }
+      else if ( cl && cl->GetReferenceProxy() )  {
+         if ( fullExpression[0] == '@' || fullExpression[strlen(scratch)] == '@' ) {
+            useLeafReferenceObject = true;
+         }
+         else  {
+            if ( !maininfo )  {
+               maininfo = previnfo = new TFormLeafInfoReference(cl, element, 0);
+               numberOfVarDim += RegisterDimensions(code,maininfo,maininfo,kFALSE);
+            }
+            cl = 0;
+            for(int i=0; i<leaf->GetBranch()->GetEntries()-readentry; ++i)  {
+               R__LoadBranch(leaf->GetBranch(), readentry+i, fQuickLoad);
+               cl = ((TFormLeafInfoReference*)maininfo)->GetValueClass(leaf);
+               if ( cl ) break;
+            }
+            if ( !cl )  {
+               Error("DefinedVariable","Failed to access class type of reference target (%s)",element->GetName());
+               return -1;
+            }
+         }
+      }
    }
 
    // Treat the dimension information in the leaf name, title and 2nd branch count
@@ -1103,10 +1131,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
          cl = casted;
          castqueue.AddAt(0,paran_level);
       }
-
       Int_t i;
       Bool_t prevUseCollectionObject = useLeafCollectionObject;
       Bool_t useCollectionObject = useLeafCollectionObject;
+      Bool_t useReferenceObject = useLeafReferenceObject;
+      Bool_t prevUseReferenceObject = useLeafReferenceObject;
       for (i=0, current = &(work[0]); i<=nchname;i++ ) {
          // We will treated the terminator as a token.
          if (right[i] == '(') {
@@ -1160,7 +1189,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                TClass * inside_cl = clones->GetClass();
                if (1 || inside_cl) cl = inside_cl;
 
-            } else if (!useCollectionObject && cl && cl->GetCollectionProxy() ) {
+            } 
+            else if (!useCollectionObject && cl && cl->GetCollectionProxy() ) {
 
                // We are NEVER (for now!) interested in the ClonesArray object but only
                // in its contents.
@@ -1196,7 +1226,6 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                            cl->GetName(),name.Data());
                }
             }
-
             TMethodCall *method  = 0;
             if (cl==0) {
                Error("DefinedVariable",
@@ -1248,15 +1277,12 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                      break;
                   case TMethodCall::kOther:
                      {
-                        TString return_type =
-                           gInterpreter->TypeName(method->GetMethod()->GetReturnTypeName());
+                        TString return_type = 
+                          gInterpreter->TypeName(method->GetMethod()->GetReturnTypeName());
                         leafinfo = new TFormLeafInfoMethod(cl,method);
-                        if (return_type != "void") {
-                           cl = gROOT->GetClass(return_type.Data());
-                        } else {
-                           cl = 0;
-                        }
-                     };    break;
+                        cl = (return_type == "void") ? 0 : gROOT->GetClass(return_type.Data());
+                     }
+                     break;
                   default:
                      Error("DefineVariable","Method %s from %s has an impossible return type %d",
                         work,cl->GetName(),method->ReturnType());
@@ -1276,12 +1302,13 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
             current = &(work[0]);
             *current = 0;
             prevUseCollectionObject = kFALSE;
+            prevUseReferenceObject = kFALSE;
             useCollectionObject = kFALSE;
             continue;
          } else if (right[i] == ')') {
             // We should have the end of a cast operator.  Let's introduce a TFormLeafCast
             // in the chain.
-            TClass * casted = (TClass*) castqueue.At(--paran_level);
+            TClass * casted = (TClass*) ((int(--paran_level)>=0) ? castqueue.At(paran_level) : 0);
             if (casted) {
                leafinfo = new TFormLeafInfoCast(cl,casted);
                fHasCast = kTRUE;
@@ -1306,26 +1333,43 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
          } else if (i > 0 && (right[i] == '.' || right[i] == '[' || right[i] == '\0') ) {
             // A delimiter happened let's see if what we have seen
             // so far does point to a data member.
+            Bool_t needClass = kTRUE;
             *current = '\0';
 
             // skip it all if there is nothing to look at
             if (strlen(work)==0) continue;
 
             prevUseCollectionObject = useCollectionObject;
+            prevUseReferenceObject = useReferenceObject;
             if (work[0]=='@') {
+               useReferenceObject = kTRUE;
                useCollectionObject = kTRUE;
                Int_t l = 0;
                for(l=0;work[l+1]!=0;++l) work[l] = work[l+1];
                work[l] = '\0';
             } else if (work[strlen(work)-1]=='@') {
+               useReferenceObject = kTRUE;
                useCollectionObject = kTRUE;
                work[strlen(work)-1] = '\0';
             } else {
+               useReferenceObject = kFALSE;
                useCollectionObject = kFALSE;
             }
 
             Bool_t mustderef = kFALSE;
-            if (!prevUseCollectionObject && cl == TClonesArray::Class()) {
+            if ( !prevUseReferenceObject && cl && cl->GetReferenceProxy() )  {
+               R__LoadBranch(leaf->GetBranch(), readentry, fQuickLoad);
+               if ( !maininfo )  {
+                  maininfo = previnfo = new TFormLeafInfoReference(cl, element, offset);
+                  if ( cl->GetReferenceProxy()->HasCounter() )  {
+                     numberOfVarDim += RegisterDimensions(code,-1);
+                  }
+                  prevUseReferenceObject = kFALSE;
+               }
+               needClass = kFALSE;
+               mustderef = kTRUE;
+            }
+            else if (!prevUseCollectionObject && cl == TClonesArray::Class()) {
                // We are not interested in the ClonesArray object but only
                // in its contents.
                // We need to retrieve the class of its content.
@@ -1655,6 +1699,22 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                               else leafinfo->fNext = info;
                            }
                         }
+                     } else if ( (object || pointer) && !useReferenceObject && element->GetClassPointer()->GetReferenceProxy() ) {
+                        TClass* c = element->GetClassPointer();
+                        R__LoadBranch(leaf->GetBranch(),readentry,fQuickLoad);
+                        if ( object )  {
+                           leafinfo = new TFormLeafInfoReference(c, element, offset);
+                        }
+                        else  {
+                           leafinfo = new TFormLeafInfoPointer(cl,offset,element);
+                           leafinfo->fNext = new TFormLeafInfoReference(c, element, 0);
+                        }
+                        //if ( c->GetReferenceProxy()->HasCounter() )  {
+                        //   numberOfVarDim += RegisterDimensions(code,-1);
+                        //}
+                        prevUseReferenceObject = kFALSE;
+                        needClass = kFALSE;
+                        mustderef = kTRUE;
                      } else if (pointer) {
                         // this is a pointer to be followed.
                         leafinfo = new TFormLeafInfoPointer(cl,offset,element);
@@ -1683,10 +1743,39 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
             }
             while (previnfo->fNext) previnfo = previnfo->fNext;
 
-            if (mustderef) leafinfo = 0;
-            if (right[i]!='\0') {
-               cl = element->GetClassPointer();
+            if ( right[i] != '\0' )  {
+               if ( !needClass && mustderef )   {
+                  maininfo->SetBranch(leaf->GetBranch());
+                  char *ptr = (char*)maininfo->GetValuePointer(leaf,0);
+                  TFormLeafInfoReference* refInfo = 0; 
+                  if ( !maininfo->IsReference() )  {
+                     for( TFormLeafInfo* inf = maininfo->fNext; inf; inf = inf->fNext )  {
+                        if ( inf->IsReference() )  {
+                           refInfo = (TFormLeafInfoReference*)inf;
+                        }
+                     }
+                  }
+                  else {
+                     refInfo = (TFormLeafInfoReference*)maininfo;
+                  }
+                  if ( refInfo )  {
+                     cl = refInfo->GetValueClass(ptr);
+                     if ( !cl )  {
+                        Error("DefinedVariable","Failed to access class type of reference target (%s)",element->GetName());
+                        return -1;
+                     }
+                     element = cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+                  }
+                  else  {
+                     Error("DefinedVariable","Failed to access class type of reference target (%s)",element->GetName());
+                     return -1;
+                  }
+               }
+               else if ( needClass )  {
+                  cl = element->GetClassPointer();
+               }
             }
+            if (mustderef) leafinfo = 0;
             current = &(work[0]);
             *current = 0;
 
@@ -1757,7 +1846,6 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
    }
    return action;
 }
-
 //______________________________________________________________________________
 Int_t TTreeFormula::FindLeafForExpression(const char* expression,
                                           TLeaf *&leaf,
@@ -1780,9 +1868,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
    // it is a real entry.
    Long64_t readentry = fTree->GetReadEntry();
    if (readentry==-1) readentry=0;
-
    const char *cname = expression;
-
    char    first[kMaxLen];  first[0] = '\0';
    char   second[kMaxLen]; second[0] = '\0';
    char    right[kMaxLen];  right[0] = '\0';
@@ -1791,11 +1877,8 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
    char  scratch[kMaxLen];
    char scratch2[kMaxLen];
    char *current;
-
    TLeaf *tmp_leaf=0;
    TBranch *branch=0, *tmp_branch=0;
-
-
    Int_t nchname = strlen(cname);
    Int_t i;
    Bool_t foundAtSign = kFALSE;
@@ -1955,8 +2038,22 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
             if (cname[i]) first[strlen(first)-1]='\0';
             if (!branch) branch = fTree->FindBranch(first);
             if (!leaf) leaf = fTree->FindLeaf(first);
-
-            if (branch && (foundAtSign || cname[i] != 0)  ) {
+            TClass* cl = 0;
+            if ( branch && branch->InheritsFrom(TBranchElement::Class()) ) {
+               int offset=0;
+               TBranchElement* bElt = (TBranchElement*)branch;
+               TStreamerInfo* info  = bElt->GetInfo();
+               TStreamerElement* element = info ? info->GetStreamerElement(first,offset) : 0;
+               if (element) cl = element->GetClassPointer();
+               if ( cl && !cl->GetReferenceProxy() ) cl = 0;
+            }
+            if ( cl )  {  // We have a reference class here....
+               final = kTRUE;
+               // we reset work
+               current = &(work[0]);
+               *current = 0;
+            }
+            else if (branch && (foundAtSign || cname[i] != 0)  ) {
                // Since we found a branch and there is more information in the name,
                // we do NOT look at the 'IsOnTerminalBranch' status of the leaf
                // we found ... yet!
@@ -3200,8 +3297,16 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             Double_t result = leaf->GetValue(real_instance);
             return result;
          }
-         case kMethod:     { TT_EVAL_INIT; return GetValueFromMethod(0,leaf);  }
-         case kDataMember: { TT_EVAL_INIT; return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValue(leaf,real_instance); }
+         case kMethod:     { 
+            TT_EVAL_INIT; 
+            ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->SetBranch(leaf->GetBranch());
+            return GetValueFromMethod(0,leaf);
+         }
+         case kDataMember: { 
+            TT_EVAL_INIT; 
+            ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->SetBranch(leaf->GetBranch());
+            return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValue(leaf,real_instance); 
+         }
          case kIndexOfEntry: return fTree->GetReadEntry();
          case kEntries:      return fTree->GetEntries();
          case kLength:       return fManager->fNdata;

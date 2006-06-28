@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.197 2006/05/24 15:10:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.198 2006/06/01 22:28:07 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -1297,6 +1297,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
          case TClassEdit::kMultiSet:
          case TClassEdit::kMap:
          case TClassEdit::kMultiMap:
+            fReadEntry = entry;
             break;
          default:
             for (i=0;i<nbranches;i++)  {
@@ -1305,6 +1306,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
                if (nb < 0) return nb;
                nbytes += nb;
             }
+            fReadEntry = entry;
             break;
       }
    } else {

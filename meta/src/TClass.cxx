@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.191 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.192 2006/05/24 15:09:22 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -59,6 +59,7 @@
 #include "TCollectionProxy.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualIsAProxy.h"
+#include "TVirtualRefProxy.h"
 #include "TVirtualMutex.h"
 #include "Riostream.h"
 
@@ -404,7 +405,7 @@ ClassImp(TClass)
 TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
                    fDeleteArray(0), fDestructor(0), fSizeof(-1),
                    fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
-                   fCurrentInfo(0), fRefStart(0)
+                   fCurrentInfo(0), fRefStart(0), fRefProxy(0)
 {
    // Default ctor.
 
@@ -441,7 +442,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
                                    fDelete(0), fDeleteArray(0), fDestructor(0),
                                    fSizeof(-1), fVersionUsed(kFALSE),
                                    fOffsetStreamer(0), fStreamerType(kNone),
-                                   fCurrentInfo(0), fRefStart(0)
+                                   fCurrentInfo(0), fRefStart(0), fRefProxy(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -507,7 +508,7 @@ TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
    : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
      fDestructor(0), fSizeof(-1), fVersionUsed(kFALSE), fOffsetStreamer(0),
-     fStreamerType(kNone), fCurrentInfo(0), fRefStart(0)
+     fStreamerType(kNone), fCurrentInfo(0), fRefStart(0), fRefProxy(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -523,7 +524,7 @@ TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
    : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
      fDestructor(0), fSizeof(-1), fVersionUsed(kFALSE), fOffsetStreamer(0),
-     fStreamerType(kNone), fCurrentInfo(0), fRefStart(0)
+     fStreamerType(kNone), fCurrentInfo(0), fRefStart(0), fRefProxy(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -540,7 +541,6 @@ void TClass::Init(const char *name, Version_t cversion,
 {
    // Initialize a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
-
    if (!gROOT)
       ::Fatal("TClass::TClass", "ROOT system not initialized");
 
@@ -865,6 +865,10 @@ TClass::~TClass()
    fInterStreamer=0;
 
    if ( fIsA ) delete fIsA;
+
+   if ( fRefProxy ) fRefProxy->Release();
+   fRefProxy = 0;
+
    delete fStreamer;
    delete fCollectionProxy;
    delete fIsAMethod;
@@ -1126,7 +1130,7 @@ Bool_t TClass::CanSplit() const
    // Note: add the possibility to set it for the class and the derived class.
    // save the info in TStreamerInfo
    // deal with the info in MakeProject
-
+   if (fRefProxy)                 return kFALSE;
    if (InheritsFrom("TRef"))      return kFALSE;
    if (InheritsFrom("TRefArray")) return kFALSE;
    if (InheritsFrom("TArray"))    return kFALSE;
@@ -3488,6 +3492,22 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
 }
 
 //______________________________________________________________________________
+void TClass::AdoptReferenceProxy(TVirtualRefProxy* proxy)  
+{
+   // Adopt the Reference proxy pointer to indicate that this class
+   // represents a reference.
+   // When a new proxy is adopted, the old one is deleted.
+
+   if ( fRefProxy )  {
+      fRefProxy->Release();
+   }
+   fRefProxy = proxy;
+   if ( fRefProxy )  {
+      fRefProxy->SetClass(this);
+   }
+}
+
+//______________________________________________________________________________
 void TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
 {
    // Adopt the TMemberStreamer pointer to by p and use it to Stream non basic
@@ -3660,8 +3680,6 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char *info)
 //______________________________________________________________________________
 void TClass::Streamer(void *object, TBuffer &b)
 {
-   // Stream the object.
-
    switch (fStreamerType) {
 
       case kExternal:

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.216 2006/06/25 14:14:11 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.217 2006/06/27 14:36:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -262,6 +262,8 @@
 #include "TTreeProxyGenerator.h"
 #include "TTreeIndex.h"
 #include "TChainIndex.h"
+#include "TRefProxy.h"
+#include "TRefArrayProxy.h"
 #include "TVirtualMonitoring.h"
 #include "TTreeCache.h"
 
@@ -295,6 +297,8 @@ TTreePlayer::TTreePlayer()
    fInput->Add(new TNamed("selection",""));
    fSelector->SetInputList(fInput);
    gROOT->GetListOfCleanups()->Add(this);
+   gROOT->GetClass("TRef")->AdoptReferenceProxy(new TRefProxy());
+   gROOT->GetClass("TRefArray")->AdoptReferenceProxy(new TRefArrayProxy());
 }
 
 //______________________________________________________________________________

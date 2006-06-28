@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.29 2006/04/19 08:22:26 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.30 2006/05/26 09:23:46 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -701,7 +701,10 @@ Double_t TFormLeafInfo::GetValue(TLeaf *leaf, Int_t instance)
 Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
 {
    // Read the value at the given memory location
-   if (thisobj==0) return 0;
+   if ( !thisobj )  {
+      Error("ReadValue","Invalid data address: result will be wrong");
+      return 0.0;  // Or should throw exception/print error ?
+   }
    if (fNext) {
       char *nextobj = thisobj+fOffset;
       Int_t sub_instance = instance;

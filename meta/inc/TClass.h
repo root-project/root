@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.62 2006/05/12 12:25:45 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.63 2006/05/23 04:47:40 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -54,6 +54,7 @@ class TStreamerInfo;
 class TVirtualCollectionProxy;
 class TMethodCall;
 class TVirtualIsAProxy;
+class TVirtualRefProxy;
 
 namespace ROOT { class TGenericClassInfo; }
 
@@ -118,7 +119,7 @@ private:
    Int_t              fStreamerType;    //!cached of the streaming method to use
    TStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
    TClassRef         *fRefStart;        //!List of references to this object
-
+   TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *GetClassMethod(const char *name, const char *signature);
    TStreamerInfo     *GetCurrentStreamerInfo() {
@@ -215,6 +216,7 @@ public:
    ROOT::NewArrFunc_t GetNewArray() const;
    Int_t              GetNmethods();
    TRealData         *GetRealData(const char *name) const;
+   TVirtualRefProxy  *GetReferenceProxy()  const   {  return fRefProxy; }
    const char        *GetSharedLibs();
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
    TClassStreamer    *GetStreamer() const; 
@@ -256,6 +258,7 @@ public:
    void               SetUnloaded();
    Int_t              WriteBuffer(TBuffer &b, void *pointer, const char *info="");
 
+   void               AdoptReferenceProxy(TVirtualRefProxy* proxy);
    void               AdoptStreamer(TClassStreamer *strm);
    void               AdoptMemberStreamer(const char *name, TMemberStreamer *strm);
    void               SetMemberStreamer(const char *name, MemberStreamerFunc_t strm);
