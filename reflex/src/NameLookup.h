@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.h,v 1.1 2006/06/08 16:05:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.h,v 1.2 2006/06/08 17:05:51 pcanal Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -75,13 +75,6 @@ namespace ROOT {
          bool AccessControl( const Type & typ,
                              const Scope & current );
 
-
-         bool AccessControl( const Scope & scop,
-                             const Scope & current );
-         
-         
-         bool AccessControl( const Member & mem,
-                             const Scope & current );
 
       } // namespace NameLookup
    } //namespace Reflex

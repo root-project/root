@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.1 2006/06/08 16:05:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.2 2006/06/08 17:05:51 pcanal Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -29,6 +29,8 @@ ROOT::Reflex::NameLookup::LookupType( const std::string & nam,
    if ( Tools::GetBasePosition(nam)) t = LookupTypeQualified( nam );
    else                              t = LookupTypeUnqualified( nam, current );
 
+   //if ( t && AccessControl(t, current)) return t;
+   //else                                 return Type();
    return t;
 }
 
@@ -89,6 +91,8 @@ ROOT::Reflex::NameLookup::LookupMember( const std::string & nam,
    if ( Tools::GetBasePosition(nam)) m = LookupMemberQualified( nam );
    else                              m = LookupMemberUnqualified( nam, current );
 
+   //if ( m && AccessControl(m.TypeOf(), current)) return m;
+   //else                                          return Member();
    return m;
 }
 
@@ -134,5 +138,21 @@ ROOT::Reflex::NameLookup::LookupMemberUnqualified( const std::string & nam,
    if ( ! current.IsTopScope() ) m = LookupMember( nam, current.DeclaringScope() );
 
    return m;
+
+}
+
+
+
+//-------------------------------------------------------------------------------
+bool ROOT::Reflex::NameLookup::AccessControl( const Type & /* typ */,
+                                              const Scope & /* current */ ) {
+//-------------------------------------------------------------------------------
+
+   
+   //if ( typ.IsPublic()) return true;
+
+   //else if ( typ.IsProtected() && current.HasBase(typ.DeclaringScope()) ) return true;
+
+   return false;
 
 }
