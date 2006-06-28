@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.6 2006/06/27 06:52:12 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.7 2006/06/28 10:43:29 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -54,7 +54,11 @@ public:
 
 }; // class ReflesSimple1Test
 
+#if defined (_WIN32) 
+static HMODULE s_libInstance = 0;
+#else
 static void * s_libInstance = 0;
+#endif 
 
 void ReflexSimple1Test::loadLibrary() {
 #if defined (_WIN32)

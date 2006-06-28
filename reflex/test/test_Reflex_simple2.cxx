@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.17 2006/05/03 07:45:10 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.18 2006/06/28 10:43:29 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -203,7 +203,11 @@ public:
 
 }; // class ReflexSimple2Test
 
+#if defined (_WIN32) 
+static HMODULE s_libInstance = 0;
+#else
 static void * s_libInstance = 0;
+#endif 
 
 // loading the dictionary library
 void ReflexSimple2Test::loadLibrary() {
