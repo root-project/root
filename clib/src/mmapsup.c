@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: mmapsup.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: mmapsup.c,v 1.2 2005/04/18 16:05:48 rdm Exp $ */
 /* Author: */
 
 /* Support for an sbrk-like function that uses mmap.
@@ -25,7 +25,7 @@ Boston, MA 02111-1307, USA.  */
 
 #include "mmprivate.h"
 
-#if defined(HAVE_MMAP)
+#if defined(R__HAVE_MMAP)
 
 #include <stdio.h>
 #include <errno.h>
@@ -343,7 +343,7 @@ mmalloc_update_mapping(md)
   return (result);
 }
 
-#else   /* defined(HAVE_MMAP) */
+#else   /* defined(R__HAVE_MMAP) */
 
 int
 mmalloc_update_mapping(md)
@@ -352,4 +352,4 @@ mmalloc_update_mapping(md)
    return 0;
 }
 
-#endif  /* defined(HAVE_MMAP) */
+#endif  /* defined(R__HAVE_MMAP) */

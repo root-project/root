@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: mmconfig.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: mmconfig.h,v 1.2 2004/08/02 08:52:53 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -22,21 +22,21 @@
 #endif
 
 #if defined(R__UNIX)
-#   define HAVE_UNISTD_H
-#   define HAVE_STDLIB_H
-#   define HAVE_STDDEF_H
-#   define HAVE_LIMITS_H
-#   define HAVE_MMAP
+#   define R__HAVE_UNISTD_H
+#   define R__HAVE_STDLIB_H
+#   define R__HAVE_STDDEF_H
+#   define R__HAVE_LIMITS_H
+#   define R__HAVE_MMAP
 #   define NO_SBRK_MALLOC
 #elif defined (R__VMS)
-#   define HAVE_UNISTD_H
-#   define HAVE_STDLIB_H
-#   define HAVE_STDDEF_H
+#   define R__HAVE_UNISTD_H
+#   define R__HAVE_STDLIB_H
+#   define R__HAVE_STDDEF_H
 #   define NO_SBRK_MALLOC
 #else
-#   define HAVE_STDDEF_H
-#   define HAVE_LIMITS_H
-#   define HAVE_MMAP
+#   define R__HAVE_STDDEF_H
+#   define R__HAVE_LIMITS_H
+#   define R__HAVE_MMAP
 #   define NO_SBRK_MALLOC
 #endif
 

@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Name:  $:$Id: mmprivate.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -38,7 +38,7 @@ Boston, MA 02111-1307, USA.
 
 #include "mmalloc.h"
 
-#ifdef HAVE_LIMITS_H
+#ifdef R__HAVE_LIMITS_H
 #  include <limits.h>
 #else
 #  ifndef CHAR_BIT
@@ -46,16 +46,16 @@ Boston, MA 02111-1307, USA.
 #  endif
 #endif
 
-#ifdef HAVE_STDDEF_H
+#ifdef R__HAVE_STDDEF_H
 #  include <stddef.h>
 #else
 #  include <sys/types.h>   /* hope for the best -- ANSI C is your friend */
 #endif
 
-#ifdef HAVE_UNISTD_H
+#ifdef R__HAVE_UNISTD_H
 #   include <unistd.h>
 #endif
-#ifdef HAVE_STDLIB_H
+#ifdef R__HAVE_STDLIB_H
 #   include <stdlib.h>
 #endif
 
@@ -345,7 +345,7 @@ extern struct mdesc *__mmalloc_default_mdp;
 /* Grow or shrink a contiguous mapped region using mmap().
    Works much like sbrk() */
 
-#if defined(HAVE_MMAP)
+#if defined(R__HAVE_MMAP)
 
 extern PTR __mmalloc_mmap_morecore PARAMS ((struct mdesc *, int));
 

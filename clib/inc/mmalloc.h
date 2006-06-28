@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: mmalloc.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: mmalloc.h,v 1.2 2005/12/09 10:55:53 rdm Exp $ */
 /* Author: */
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 #  include <windows.h>
 #endif
 
-#ifdef HAVE_STDDEF_H
+#ifdef R__HAVE_STDDEF_H
 #  include <stddef.h>
 #endif
 

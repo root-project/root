@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: attach.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: attach.c,v 1.2 2002/01/22 18:17:01 rdm Exp $ */
 /* Author: */
 
 /* Initialization for access to a mmap'd malloc managed region.
@@ -41,7 +41,7 @@ Boston, MA 02111-1307, USA.  */
 #endif
 
 
-#if defined(HAVE_MMAP)
+#if defined(R__HAVE_MMAP)
 
 /* Forward declarations/prototypes for local functions */
 
@@ -314,7 +314,7 @@ end:
   return (mdp);
 }
 
-#else   /* !defined (HAVE_MMAP) */
+#else   /* !defined (R__HAVE_MMAP) */
 
 /* For systems without mmap, the library still supplies an entry point
    to link to, but trying to initialize access to an mmap'd managed region
@@ -339,5 +339,5 @@ end:
    return (NULL);
 }
 
-#endif  /* defined (HAVE_MMAP) */
+#endif  /* defined (R__HAVE_MMAP) */
 
