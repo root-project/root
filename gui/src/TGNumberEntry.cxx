@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.24 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.25 2006/05/24 18:20:12 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -2236,6 +2236,118 @@ void TGNumberEntry::SavePrimitive(ofstream &out, Option_t *)
    if (tip) {
       out << "   ";
       out << GetName() << "->GetNumberEntry()->SetToolTipText(" << quote
+          << tip->GetText()->GetString() << quote << ");"  << endl;
+   }   
+}
+
+//______________________________________________________________________________
+void TGNumberEntryField::SavePrimitive(ofstream &out, Option_t *)
+{
+   // Save a number entry widget as a C++ statement(s) on output stream out.
+
+   char quote = '"';
+
+   // for time format
+   Int_t hour, min, sec;
+   GetTime(hour, min, sec);
+
+   // for date format
+   Int_t yy, mm, dd;
+   GetDate(yy, mm, dd);
+
+   out << "   TGNumberEntryField *";
+   out << GetName() << " = new TGNumberEntryField(" << fParent->GetName() 
+       << ", " << WidgetId() << ", (Double_t) ";
+   switch (GetNumStyle()){
+      case kNESInteger:
+         out << GetIntNumber()  
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESRealOne:
+         out << GetNumber()  
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESRealTwo:
+         out << GetNumber()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESRealThree:
+         out << GetNumber()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESRealFour:
+         out << GetNumber()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESReal:
+         out << GetNumber() 
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESDegree:
+         out << GetIntNumber()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESMinSec:
+         out << min*60 + sec
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESHourMin:
+         out << hour*60 + min
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESHourMinSec:
+         out << hour*3600 + min*60 + sec
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESDayMYear:
+         out << yy << mm << dd
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESMDayYear:
+         out << yy << mm << dd
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESHex:
+      {  char hex[150];
+         ULong_t l = GetHexNumber();
+         IntToHexStr(hex, l);
+         out << "0x" << hex << "U" 
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      }
+   }
+   if (GetNumMax() ==1) {
+      if (GetNumMin() == 0) {
+         if (GetNumLimits() == kNELNoLimits) {
+            if (GetNumAttr() == kNEAAnyNumber) {
+               out << ");" << endl;
+            } else {
+               out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ");" << endl;
+            }
+         } else {
+            out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
+                << ",(TGNumberFormat::ELimit) " << GetNumLimits() << ");" << endl;
+         }
+      } else {
+         out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
+             << ",(TGNumberFormat::ELimit) " << GetNumLimits()
+             << "," << GetNumMin() << ");" << endl;
+      }
+   } else {
+         out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
+             << ",(TGNumberFormat::ELimit) " << GetNumLimits()
+             << "," << GetNumMin() << "," << GetNumMax() << ");" << endl;
+   }
+   if (!IsEnabled())
+      out << "   " << GetName() << "->SetState(kFALSE);" << endl;
+
+   out << "   " << GetName() << "->Resize("<< GetWidth() << "," << GetName()
+       << "->GetDefaultHeight());" << endl;
+
+   TGToolTip *tip = GetToolTip();
+   if (tip) {
+      out << "   ";
+      out << GetName() << "->SetToolTipText(" << quote
           << tip->GetText()->GetString() << quote << ");"  << endl;
    }   
 }
