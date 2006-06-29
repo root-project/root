@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.7 2006/06/08 16:05:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -666,34 +666,6 @@ inline size_t ROOT::Reflex::ScopeBase::BaseSize() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Base_Iterator ROOT::Reflex::ScopeBase::Base_Begin() const {
-//-------------------------------------------------------------------------------
-   return Base_Iterator();
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Base_Iterator ROOT::Reflex::ScopeBase::Base_End() const {
-//-------------------------------------------------------------------------------
-   return Base_Iterator();
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::ScopeBase::Base_RBegin() const {
-//-------------------------------------------------------------------------------
-   return Reverse_Base_Iterator();
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::ScopeBase::Base_REnd() const {
-//-------------------------------------------------------------------------------
-   return Reverse_Base_Iterator();
-}
-
-
-//-------------------------------------------------------------------------------
 inline ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::DeclaringScope() const {
 //-------------------------------------------------------------------------------
    return fDeclaringScope;
@@ -865,34 +837,6 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::SubType_RBeg
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::SubType_REnd() const {
 //-------------------------------------------------------------------------------
    return fSubTypes.rend();
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_Begin() const {
-//-------------------------------------------------------------------------------
-   return Type_Iterator();
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_End() const {
-//-------------------------------------------------------------------------------
-   return Type_Iterator();
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_RBegin() const {
-//-------------------------------------------------------------------------------
-   return Reverse_Type_Iterator();
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_REnd() const {
-//-------------------------------------------------------------------------------
-   return Reverse_Type_Iterator();
 }
 
 
