@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.1 2006/06/27 14:36:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.2 2006/06/27 15:21:21 brun Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -144,7 +144,7 @@ Int_t TFileCacheWrite::WriteBuffer(const char *buf, Long64_t pos, Int_t len)
          fRecursive = kTRUE;
          status = fFile->WriteBuffer(buf,len);
          fRecursive = kFALSE;
-         return 0;
+         return 1;
       }
    }
    if (!fNtot) fSeekStart = pos;
