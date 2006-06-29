@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.7 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.8 2006/06/28 12:48:07 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -30,12 +30,6 @@
 #include "Class.h"
 #include <typeinfo>
 
-
-ROOT::Reflex::Scope ROOT::Reflex::Scope::fg__NIRVANA__ = 
-ROOT::Reflex::Scope( new ScopeName( "@N@I@R@V@A@N@A@", 0 ));
-
-ROOT::Reflex::Scope ROOT::Reflex::Scope::fg__GLOBALSCOPE__ = 
-ROOT::Reflex::Scope();
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reflex::Reflex() {
@@ -175,6 +169,71 @@ ROOT::Reflex::Reflex::Reflex() {
    new Typedef( "long long unsigned int", t, FUNDAMENTAL );
 }
 
+
+/*
+//-------------------------------------------------------------------------------
+ROOT::Reflex::StdString_Cont_Type_t & ROOT::Reflex::Dummy::sStdStringCont() {
+//-------------------------------------------------------------------------------
+   static StdString_Cont_Type_t c;
+   return c;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type_Cont_Type_t & ROOT::Reflex::Dummy::sTypeCont() {
+//-------------------------------------------------------------------------------
+   static Type_Cont_Type_t c;
+   return c;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Base_Cont_Type_t & ROOT::Reflex::Dummy::sBaseCont() {
+//-------------------------------------------------------------------------------
+   static Base_Cont_Type_t c;
+   return c;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Scope_Cont_Type_t & ROOT::Reflex::Dummy::sScopeCont() {
+//-------------------------------------------------------------------------------
+   static Scope_Cont_Type_t c;
+   return c;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Object_Cont_Type_t & ROOT::Reflex::Dummy::sObjectCont() {
+//-------------------------------------------------------------------------------
+   static Object_Cont_Type_t c;
+   return c;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member_Cont_Type_t & ROOT::Reflex::Dummy::sMemberCont() {
+//-------------------------------------------------------------------------------
+   static Member_Cont_Type_t c;
+   return c;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::TypeTemplate_Cont_Type_t & ROOT::Reflex::Dummy::sTypeTemplateCont() {
+//-------------------------------------------------------------------------------
+   static TypeTemplate_Cont_Type_t c;
+   return c;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::MemberTemplate_Cont_Type_t & ROOT::Reflex::Dummy::sMemberTemplateCont() {
+//-------------------------------------------------------------------------------
+   static MemberTemplate_Cont_Type_t c;
+   return c;
+}
+*/
 
 //-------------------------------------------------------------------------------
 const std::string & ROOT::Reflex::Reflex::Argv0() {
