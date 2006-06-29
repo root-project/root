@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.h,v 1.3 2006/06/02 14:02:03 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.h,v 1.4 2006/06/25 18:43:24 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -38,11 +38,11 @@ class TMySQLStatement : public TSQLStatement {
 private:
 
    struct TParamData {
-      void*         buffer;     //! allocated data buffer
+      void*         fMem;        //! allocated data buffer
       Int_t         fSize;       //! size of allocated data
-      Int_t         sqltype;     //! sqltype of parameter
-      Bool_t        sign;        //! signed - not signed type
-      unsigned long fResLength;  //! length argument
+      Int_t         fSqlType;     //! sqltype of parameter
+      Bool_t        fSign;        //! signed - not signed type
+      ULong_t       fResLength;  //! length argument
       my_bool       fResNull;    //! indicates if argument is null
       char*         fStrBuffer;  //! special buffer to be used for string conversions
       char*         fFieldName;  //! buffer for field name
@@ -106,7 +106,7 @@ public:
    virtual Double_t    GetDouble(Int_t npar);
    virtual const char *GetString(Int_t npar);
 
-   ClassDef(TMySQLStatement, 0);
+   ClassDef(TMySQLStatement, 0);  // SQL statement class for MySQL DB
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.3 2006/06/02 14:02:03 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.4 2006/06/25 18:43:24 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -41,10 +41,10 @@ TMySQLStatement::TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout) :
    unsigned long paramcount = mysql_stmt_param_count(fStmt);
 
    if (paramcount>0) {
-       fWorkingMode = 1;
-       SetBuffersNumber(paramcount);
-       fNeedParBind = kTRUE;
-       fIterationCount = -1;
+      fWorkingMode = 1;
+      SetBuffersNumber(paramcount);
+      fNeedParBind = kTRUE;
+      fIterationCount = -1;
    }
 }
 
@@ -116,12 +116,12 @@ Bool_t TMySQLStatement::Process()
 
    // if parameters was set, processing just means of closing parameters and variables
    if (IsSetParsMode()) {
-       if (fIterationCount>=0)
+      if (fIterationCount>=0)
          if (!NextIteration()) return kFALSE;
-       fWorkingMode = 0;
-       fIterationCount = -1;
-       FreeBuffers();
-       return kTRUE;
+      fWorkingMode = 0;
+      fIterationCount = -1;
+      FreeBuffers();
+      return kTRUE;
    }
 
 
@@ -278,18 +278,18 @@ void TMySQLStatement::FreeBuffers()
    // Release all buffers, used by statement 
     
    if (fBuffer) {
-     for (Int_t n=0; n<fNumBuffers;n++) {
-       free(fBuffer[n].buffer);
-       if (fBuffer[n].fStrBuffer)
-          delete[] fBuffer[n].fStrBuffer;
-       if (fBuffer[n].fFieldName)
-          delete[] fBuffer[n].fFieldName;
-     }
-     delete[] fBuffer;
+      for (Int_t n=0; n<fNumBuffers;n++) {
+         free(fBuffer[n].fMem);
+         if (fBuffer[n].fStrBuffer)
+            delete[] fBuffer[n].fStrBuffer;
+         if (fBuffer[n].fFieldName)
+            delete[] fBuffer[n].fFieldName;
+      }
+      delete[] fBuffer;
    }
 
    if (fBind)
-     delete[] fBind;
+      delete[] fBind;
 
    fBuffer = 0;
    fBind = 0;
@@ -320,17 +320,17 @@ const char* TMySQLStatement::ConvertToString(Int_t npar)
     
    if (fBuffer[npar].fResNull) return 0;
 
-   void* addr = fBuffer[npar].buffer;
-   bool sig = fBuffer[npar].sign;
+   void* addr = fBuffer[npar].fMem;
+   bool sig = fBuffer[npar].fSign;
 
    if (addr==0) return 0;
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
       (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING))
-     return (const char*) addr;
+      return (const char*) addr;
 
    if (fBuffer[npar].fStrBuffer==0)
-     fBuffer[npar].fStrBuffer = new char[100];
+      fBuffer[npar].fStrBuffer = new char[100];
 
    char* buf = fBuffer[npar].fStrBuffer;
 
@@ -370,8 +370,8 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
     
    if (fBuffer[npar].fResNull) return 0;
 
-   void* addr = fBuffer[npar].buffer;
-   bool sig = fBuffer[npar].sign;
+   void* addr = fBuffer[npar].fMem;
+   bool sig = fBuffer[npar].fSign;
 
    if (addr==0) return 0;
 
@@ -431,8 +431,8 @@ Int_t TMySQLStatement::GetInt(Int_t npar)
     
    CheckGetField("GetInt", 0);
 
-   if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONG) && fBuffer[npar].sign)
-     return (Int_t) *((long*) fBuffer[npar].buffer);
+   if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONG) && fBuffer[npar].fSign)
+     return (Int_t) *((long*) fBuffer[npar].fMem);
 
    return (Int_t) ConvertToNumeric(npar);
 }
@@ -444,8 +444,8 @@ UInt_t TMySQLStatement::GetUInt(Int_t npar)
 
    CheckGetField("GetUInt", 0);
 
-   if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONG) && !fBuffer[npar].sign)
-     return (UInt_t) *((unsigned long*) fBuffer[npar].buffer);
+   if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONG) && !fBuffer[npar].fSign)
+     return (UInt_t) *((unsigned long*) fBuffer[npar].fMem);
 
    return (UInt_t) ConvertToNumeric(npar);
 }
@@ -457,8 +457,8 @@ Long_t TMySQLStatement::GetLong(Int_t npar)
 
    CheckGetField("GetLong", 0);
 
-   if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONG) && fBuffer[npar].sign)
-     return (Long_t) *((long*) fBuffer[npar].buffer);
+   if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONG) && fBuffer[npar].fSign)
+     return (Long_t) *((long*) fBuffer[npar].fMem);
 
    return (Long_t) ConvertToNumeric(npar);
 }
@@ -470,8 +470,8 @@ Long64_t TMySQLStatement::GetLong64(Int_t npar)
 
    CheckGetField("GetLong64", 0);
 
-   if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONGLONG) && fBuffer[npar].sign)
-     return (Long64_t) *((long long*) fBuffer[npar].buffer);
+   if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONGLONG) && fBuffer[npar].fSign)
+     return (Long64_t) *((long long*) fBuffer[npar].fMem);
 
    return (Long64_t) ConvertToNumeric(npar);
 }
@@ -483,8 +483,8 @@ ULong64_t TMySQLStatement::GetULong64(Int_t npar)
 
    CheckGetField("GetULong64", 0);
 
-   if ((fBuffer[npar].sqltype==MYSQL_TYPE_LONGLONG) && !fBuffer[npar].sign)
-     return (ULong64_t) *((unsigned long long*) fBuffer[npar].buffer);
+   if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONGLONG) && !fBuffer[npar].fSign)
+     return (ULong64_t) *((unsigned long long*) fBuffer[npar].fMem);
 
    return (ULong64_t) ConvertToNumeric(npar);
 }
@@ -496,8 +496,8 @@ Double_t TMySQLStatement::GetDouble(Int_t npar)
 
    CheckGetField("GetDouble", 0);
 
-   if (fBuffer[npar].sqltype==MYSQL_TYPE_DOUBLE)
-     return (Double_t) *((double*) fBuffer[npar].buffer);
+   if (fBuffer[npar].fSqlType==MYSQL_TYPE_DOUBLE)
+     return (Double_t) *((double*) fBuffer[npar].fMem);
 
    return (Double_t) ConvertToNumeric(npar);
 }
@@ -511,7 +511,7 @@ const char *TMySQLStatement::GetString(Int_t npar)
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
       (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING))
-     return (const char*) fBuffer[npar].buffer;
+     return (const char*) fBuffer[npar].fMem;
 
    return ConvertToString(npar);
 }
@@ -525,7 +525,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
 
    if ((npar<0) || (npar>=fNumBuffers)) return kFALSE;
 
-   fBuffer[npar].buffer = 0;
+   fBuffer[npar].fMem = 0;
    fBuffer[npar].fSize = 0;
    fBuffer[npar].fResLength = 0;
    fBuffer[npar].fResNull = false;
@@ -545,13 +545,13 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
       default: SetError(-1,"Nonsupported SQL type","SetSQLParamType"); return kFALSE;
    }
 
-   fBuffer[npar].buffer = malloc(allocsize);
+   fBuffer[npar].fMem = malloc(allocsize);
    fBuffer[npar].fSize = allocsize;
-   fBuffer[npar].sqltype = sqltype;
-   fBuffer[npar].sign = sig;
+   fBuffer[npar].fSqlType = sqltype;
+   fBuffer[npar].fSign = sig;
 
    fBind[npar].buffer_type = enum_field_types(sqltype);
-   fBind[npar].buffer = fBuffer[npar].buffer;
+   fBind[npar].buffer = fBuffer[npar].fMem;
    fBind[npar].buffer_length = allocsize;
    fBind[npar].is_null= &(fBuffer[npar].fResNull);
    fBind[npar].length = &(fBuffer[npar].fResLength);
@@ -578,18 +578,18 @@ void *TMySQLStatement::BeforeSet(Int_t npar, Int_t sqltype, Bool_t sig, Int_t si
       return 0;
    }
 
-   if ((fIterationCount==0) && (fBuffer[npar].sqltype==0))
+   if ((fIterationCount==0) && (fBuffer[npar].fSqlType==0))
       if (!SetSQLParamType(npar, sqltype, sig, size)) {
-          SetError(-1,"Cannot initialize parameter buffer","BeforeSet");
-          return 0;
+         SetError(-1,"Cannot initialize parameter buffer","BeforeSet");
+         return 0;
       }
 
-   if ((fBuffer[npar].sqltype!=sqltype) ||
-      (fBuffer[npar].sign != sig)) return 0;
+   if ((fBuffer[npar].fSqlType!=sqltype) ||
+      (fBuffer[npar].fSign != sig)) return 0;
       
    fBuffer[npar].fResNull = false;
 
-   return fBuffer[npar].buffer;
+   return fBuffer[npar].fMem;
 }
 
 //______________________________________________________________________________
@@ -704,17 +704,16 @@ Bool_t TMySQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
    if (addr==0) return kFALSE;
 
    if (len >= fBuffer[npar].fSize) {
-       free(fBuffer[npar].buffer);
+      free(fBuffer[npar].fMem);
 
-       fBuffer[npar].buffer = malloc(len+1);
-       fBuffer[npar].fSize = len + 1;
+      fBuffer[npar].fMem = malloc(len+1);
+      fBuffer[npar].fSize = len + 1;
 
-       fBind[npar].buffer = fBuffer[npar].buffer;
-       fBind[npar].buffer_length = fBuffer[npar].fSize;
+      fBind[npar].buffer = fBuffer[npar].fMem;
+      fBind[npar].buffer_length = fBuffer[npar].fSize;
 
-       addr = fBuffer[npar].buffer;
-
-       fNeedParBind = kTRUE;
+      addr = fBuffer[npar].fMem;
+      fNeedParBind = kTRUE;
    }
 
    strcpy((char*) addr, value);

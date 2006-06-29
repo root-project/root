@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.11 2006/06/02 14:02:03 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.12 2006/06/25 18:43:24 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -283,7 +283,7 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
       
       if ((nfield>=numfields) ||
           (strcmp(column_name, fields[nfield].name)!=0))
-       {
+      {
          SetError(-1,"missmatch in column names","GetTableInfo");
          break;
       }
@@ -301,7 +301,7 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
          else
             data_sign = 1;    
 
-      Bool_t Nullable = (fields[nfield].flags & NOT_NULL_FLAG) == 0;
+      Bool_t nullable = (fields[nfield].flags & NOT_NULL_FLAG) == 0;
 
       data_length = fields[nfield].length;
       if (data_length==0) data_length = -1;
@@ -372,7 +372,7 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
       if (lst==0) lst = new TList;
       lst->Add(new TSQLColumnInfo(column_name, 
                                   type_name, 
-                                  Nullable,
+                                  nullable,
                                   sqltype,
                                   data_size,
                                   data_length,
