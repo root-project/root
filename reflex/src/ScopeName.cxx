@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.12 2006/06/29 14:43:36 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.13 2006/06/29 15:50:48 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -20,6 +20,7 @@
 #include "Reflex/Type.h"
 
 #include "Reflex/Tools.h"
+#include "Reflex/Member.h"
 
 #include "stl_hash.h"
 #include <vector>

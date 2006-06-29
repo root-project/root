@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.6 2006/03/13 15:49:51 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.7 2006/03/20 09:46:18 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -16,6 +16,7 @@
 #include "Reflex/TypeTemplateImpl.h"
 
 #include "Reflex/Type.h"
+#include "Reflex/Member.h"
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::TypeTemplateImpl::TypeTemplateImpl( const std::string & templateName,

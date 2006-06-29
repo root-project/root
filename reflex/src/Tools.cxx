@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.11 2006/05/31 21:00:39 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.12 2006/05/31 22:03:52 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -17,6 +17,7 @@
 
 #include "Reflex/Kernel.h"
 #include "Reflex/Type.h"
+#include "Reflex/Member.h"
 
 #if defined(__GNUC__)
 #include <cxxabi.h>
