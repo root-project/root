@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.9 2006/03/13 15:49:51 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.10 2006/03/20 09:46:18 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -72,7 +72,15 @@ ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ByName( const std::string & name ) 
    size_t pos =  name.substr(0,2) == "::" ?  2 : 0;
    Name2Scope_t::iterator it = sScopes().find(name.substr(pos).c_str());
    if (it != sScopes().end() ) return Scope( it->second );
-   else                        return Scope();
+   //else                        return Scope();
+   // HERE STARTS AN UGLY HACK WHICH HAS TO BE UNDONE ASAP
+   Type t = Type::ByName("name");
+   if ( t && t.IsTypedef()) {
+      while ( t.IsTypedef()) t = t.ToType();
+      if ( t.IsClass() || t.IsEnum() || t.IsUnion() ) return (Scope)t;
+   }
+   return Scope();
+   // END OF UGLY HACK
 }
 
 
