@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.23 2006/06/08 15:23:34 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrixD32fwd.h,v 1.1 2006/06/27 14:02:26 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrixD32fwd
@@ -12,6 +12,9 @@ namespace Math{
 
    template <class T, unsigned int D1, unsigned int D2> class MatRepStd; 
    template <class T, unsigned int D> class MatRepSym; 
+
+   // redefine Double32_t in case we are not using ROOT 
+   typedef double Double32_t; 
 
    typedef SMatrix<Double32_t,2,2,MatRepStd<Double32_t,2,2> > SMatrix2D32; 
    typedef SMatrix<Double32_t,3,3,MatRepStd<Double32_t,3,3> > SMatrix3D32; 
