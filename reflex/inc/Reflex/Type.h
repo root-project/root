@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.11 2006/04/20 17:18:23 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.12 2006/06/29 17:59:47 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -1190,7 +1190,7 @@ inline ROOT::Reflex::Base_Iterator ROOT::Reflex::Type::Base_Begin() const {
 inline ROOT::Reflex::Base_Iterator ROOT::Reflex::Type::Base_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeName->fTypeBase->Base_End();
-   return Dummy:sBaseCont().end();
+   return Dummy::sBaseCont().end();
 }
 
 

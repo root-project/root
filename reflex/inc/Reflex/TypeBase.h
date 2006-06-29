@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.10 2006/06/08 16:05:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.11 2006/06/29 17:59:47 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -988,7 +988,7 @@ inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::TypeBase::Mem
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::FunctionParameter_Begin() const {
 //-------------------------------------------------------------------------------
-   return Dummy::TypeCont().begin();
+   return Dummy::sTypeCont().begin();
 }
 
 
