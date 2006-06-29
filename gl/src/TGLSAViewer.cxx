@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.17 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.18 2006/04/07 08:43:59 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -8,10 +8,11 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#include <iostream>
+#include <memory>
 
 #include "TRootHelpDialog.h"
 #include "TPluginManager.h"
+#include "TApplication.h"
 #include "TGClient.h"
 #include "TGCanvas.h"
 #include "HelpText.h"
@@ -23,6 +24,9 @@
 #include "TGTab.h"
 #include "TGSplitter.h"
 #include "TColor.h"
+#include "TString.h"
+#include "TGFileDialog.h"
+#include "TImage.h"
 
 #include "TGLEditor.h"
 #include "TGLOutput.h"
@@ -128,18 +132,33 @@ const Int_t TGLSAViewer::fgInitH = 670;
 //A lot of raw pointers/naked new-expressions - good way to discredit C++ (or C++ programmer :) ) :(
 //ROOT has system to cleanup - I'll try to use it
 
+const char *gGLSaveAsTypes[] = {
+                                "Encapsulated PostScript", "*.eps",
+                                "PDF",                     "*.pdf",
+                                "GIF",                     "*.gif",
+                                "JPEG",                    "*.jpg",
+                                "PNG",                     "*.png",
+                                0, 0
+                               };
+
 //______________________________________________________________________________
 TGLSAViewer::TGLSAViewer(TVirtualPad * pad) 
                : TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
                  fFrame(0), 
-                 fFileMenu(0), 
+                 fFileMenu(0),
+                 fFileSaveMenu(0),
                  fCameraMenu(0), 
                  fHelpMenu(0), 
                  fGLArea(0),
                  fLeftVerticalFrame(0),
                  fEditorTab(0),
                  fGLEd(0),
-                 fObjEdTab(0)
+                 fObjEdTab(0),
+                 fColorEd(0),
+                 fGeomEd(0),
+                 fDirName("."),
+                 fTypeIdx(0),
+                 fOverwrite(kFALSE)
 {
    // Construct a standalone viewer, bound to supplied 'pad'.
    // First create gVirtualGL/kernel - to be replaced with TGLManager
@@ -181,11 +200,18 @@ void TGLSAViewer::CreateMenus()
 {
    //File/Camera/Help menus
    fFileMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
-   fFileMenu->AddEntry("Print &EPS", kGLPrintEPS_SIMPLE);
-   fFileMenu->AddEntry("Print EP&S (High quality)", kGLPrintEPS_BSP);
-   fFileMenu->AddEntry("Print &PDF", kGLPrintPDF_SIMPLE);
-   fFileMenu->AddEntry("Print P&DF (High quality)", kGLPrintPDF_BSP);
-   fFileMenu->AddEntry("E&xit", kGLExit);
+   fFileMenu->AddEntry("&Close Viewer", kGLCloseViewer);
+   fFileMenu->AddSeparator();
+   fFileSaveMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
+   fFileSaveMenu->AddEntry("viewer.&eps", kGLSaveEPS);
+   fFileSaveMenu->AddEntry("viewer.&pdf", kGLSavePDF);
+   fFileSaveMenu->AddEntry("viewer.&gif", kGLSaveGIF);
+   fFileSaveMenu->AddEntry("viewer.&jpg", kGLSaveJPG);
+   fFileSaveMenu->AddEntry("viewer.p&ng", kGLSavePNG);
+   fFileMenu->AddPopup("&Save", fFileSaveMenu);
+   fFileMenu->AddEntry("Save &As...", kGLSaveAS);
+   fFileMenu->AddSeparator();
+   fFileMenu->AddEntry("&Quit ROOT", kGLQuitROOT);
    fFileMenu->Associate(fFrame);
 
    fCameraMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
@@ -338,6 +364,7 @@ TGLSAViewer::~TGLSAViewer()
    delete fGLArea;
    delete fHelpMenu;
    delete fCameraMenu;
+   delete fFileSaveMenu;
    delete fFileMenu;
    delete fFrame;
 }
@@ -399,17 +426,11 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
             hd->Popup();
             break;
          }
-         case kGLPrintEPS_SIMPLE:
-            gVirtualGL->CaptureViewer(this, TGLOutput::kEPS_SIMPLE);
+         case kGLSaveEPS:
+            gVirtualGL->CaptureViewer(this, TGLOutput::kEPS_BSP, "viewer.eps");
             break;
-         case kGLPrintEPS_BSP:
-            gVirtualGL->CaptureViewer(this, TGLOutput::kEPS_BSP);
-            break;
-         case kGLPrintPDF_SIMPLE:
-            gVirtualGL->CaptureViewer(this, TGLOutput::kPDF_SIMPLE);
-            break;
-         case kGLPrintPDF_BSP:
-            gVirtualGL->CaptureViewer(this, TGLOutput::kPDF_BSP);
+         case kGLSavePDF:
+            gVirtualGL->CaptureViewer(this, TGLOutput::kPDF_BSP, "viewer.pdf");
             break;
          case kGLXOY:
             SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
@@ -429,11 +450,52 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
          case kGLPerspXOY:
             SetCurrentCamera(TGLViewer::kCameraPerspXOY);
             break;
-         case kGLExit:
+         case kGLSaveGIF:
+            SavePicture("viewer.gif");
+            break;
+         case kGLSaveJPG:
+            SavePicture("viewer.jpg");
+         case kGLSavePNG:
+            SavePicture("viewer.png");
+            break;
+         case kGLSaveAS:
+            {
+               TGFileInfo fi;
+               fi.fFileTypes   = gGLSaveAsTypes;
+               fi.fIniDir      = StrDup(fDirName);
+               fi.fFileTypeIdx = fTypeIdx;
+               fi.fOverwrite   = fOverwrite;
+               new TGFileDialog(gClient->GetDefaultRoot(), fFrame, kFDSave, &fi);
+               if (!fi.fFilename) return kTRUE;
+               TString fileName(fi.fFilename);
+               TString ft(fi.fFileTypes[fi.fFileTypeIdx+1]);
+               fDirName   = fi.fIniDir;
+               fTypeIdx   = fi.fFileTypeIdx;
+               fOverwrite = fi.fOverwrite;
+
+               if (!fileName.EndsWith(".eps")  && !fileName.EndsWith(".pdf")  && 
+                   !fileName.EndsWith(".jpg")  && !fileName.EndsWith(".gif")  && 
+                   !fileName.EndsWith(".png"))
+                  if (ft.Index(".") != kNPOS)
+                     fileName += ft(ft.Index("."), ft.Length());
+                  else {
+                     Warning("ProcessMessage", "file %s cannot be saved with this extension", fi.fFilename);
+                     return kTRUE;
+                  }
+
+               SavePicture(fileName);      
+            }
+
+            break;
+         case kGLCloseViewer:
             // Exit needs to be delayed to avoid bad drawable X ids - GUI
             // will all be changed in future anyway
             TTimer::SingleShot(50, "TGLSAFrame", fFrame, "SendCloseMessage()");
             break;
+         case kGLQuitROOT:
+            if (!gApplication->ReturnFromRun())
+               delete this;
+            gApplication->Terminate(0);
             default:
             break;
             }
@@ -505,4 +567,18 @@ void TGLSAViewer::PostSceneBuildSetup()
    TGLViewer::PostSceneBuildSetup();
 
    // Now synconise the GUI-removed
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::SavePicture(const TString &fileName)
+{
+   if (fileName.EndsWith(".eps"))
+      gVirtualGL->CaptureViewer(this, TGLOutput::kEPS_BSP, fileName.Data());
+   else if (fileName.EndsWith(".pdf"))
+      gVirtualGL->CaptureViewer(this, TGLOutput::kPDF_BSP, fileName.Data());
+   else if (fileName.EndsWith(".gif") || fileName.EndsWith(".jpg") || fileName.EndsWith(".png")) {
+      std::auto_ptr<TImage>gif(TImage::Create());
+      gif->FromWindow(fGLArea->GetGLWindow()->GetId());
+      gif->WriteImage(fileName.Data());
+   }
 }

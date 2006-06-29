@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.11 2006/03/13 09:33:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.12 2006/04/07 08:43:59 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -14,6 +14,10 @@
 
 #ifndef ROOT_TGLViewer
 #include "TGLViewer.h"
+#endif
+
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
 class TGFrame;
@@ -42,14 +46,15 @@ class TGLRenderArea; // Remove - replace with TGLManager
 class TGLSAViewer : public TGLViewer {
 public:
    enum EGLSACommands { kGLHelpAbout, kGLHelpViewer, kGLXOY,
-      kGLXOZ, kGLZOY, kGLPerspYOZ, kGLPerspXOZ, kGLPerspXOY, kGLPrintEPS_SIMPLE,
-      kGLPrintEPS_BSP, kGLPrintPDF_SIMPLE, kGLPrintPDF_BSP,
-      kGLExit };
+      kGLXOZ, kGLZOY, kGLPerspYOZ, kGLPerspXOZ, kGLPerspXOY, 
+      kGLSaveEPS, kGLSavePDF, kGLSavePNG, kGLSaveGIF, 
+      kGLSaveJPG, kGLSaveAS, kGLCloseViewer, kGLQuitROOT};
 
 private:
    // GUI components
    TGLSAFrame        *fFrame;
    TGPopupMenu       *fFileMenu;
+   TGPopupMenu       *fFileSaveMenu;
    TGPopupMenu       *fCameraMenu;
    TGPopupMenu       *fHelpMenu;
    TGLRenderArea     *fGLArea;
@@ -61,6 +66,9 @@ private:
    TGLColorEditor    *fColorEd;
    TGLGeometryEditor *fGeomEd;
    
+   TString            fDirName;
+   Int_t              fTypeIdx;
+   Bool_t             fOverwrite;
 
    // Initial window positioning
    static const Int_t fgInitX;
@@ -76,6 +84,8 @@ private:
    // non-copyable class
    TGLSAViewer(const TGLSAViewer &);
    TGLSAViewer & operator = (const TGLSAViewer &);
+
+   void SavePicture(const TString &fileName);
 
 protected:
    // Overloadable 
