@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.14 2006/06/28 10:43:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.15 2006/06/29 17:59:47 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -168,7 +168,7 @@ namespace ROOT {
       typedef MemberTemplate_Cont_Type_t::reverse_iterator Reverse_MemberTemplate_Iterator;
 
 
-      struct Dummy {
+      struct RFLX_API Dummy {
          static StdString_Cont_Type_t & sStdStringCont();
          static Type_Cont_Type_t & sTypeCont();        
          static Base_Cont_Type_t & sBaseCont();
