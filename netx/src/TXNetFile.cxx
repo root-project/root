@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.32 2006/06/18 17:51:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.33 2006/06/27 14:36:27 brun Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -740,6 +740,8 @@ void TXNetFile::Flush()
       Error("Flush","The remote file is not open");
       return;
    }
+
+   FlushWriteCache();
 
    //
    // Flush via the remote xrootd

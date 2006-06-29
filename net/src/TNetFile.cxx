@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.78 2006/06/20 10:15:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.79 2006/06/27 14:36:27 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -213,6 +213,8 @@ void TNetFile::Close(Option_t *opt)
 void TNetFile::Flush()
 {
    // Flush file to disk.
+
+   FlushWriteCache();
 
    if (fSocket && fWritable)
       fSocket->Send(kROOTD_FLUSH);

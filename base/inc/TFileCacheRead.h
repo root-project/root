@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheRead.h,v 1.3 2006/06/08 12:46:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheRead.h,v 1.1 2006/06/27 14:36:27 brun Exp $
 // Author: Rene Brun   19/05/2006
 
 /*************************************************************************
@@ -56,7 +56,7 @@ public:
    virtual ~TFileCacheRead();
    virtual void        Prefetch(Long64_t pos, Int_t len);
    virtual void        Print(Option_t *option="") const;
-   virtual Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
+   virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
    virtual void        SetFile(TFile *file);
    virtual void        Sort();
 

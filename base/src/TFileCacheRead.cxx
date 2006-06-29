@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.5 2006/06/09 11:53:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.1 2006/06/27 14:36:27 brun Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -96,7 +96,7 @@ TFileCacheRead& TFileCacheRead::operator=(const TFileCacheRead& pf)
 
    if (this != &pf) TObject::operator=(pf);
    return *this;
-}         
+}
 
 //_____________________________________________________________________________
 TFileCacheRead::~TFileCacheRead()
@@ -162,7 +162,7 @@ void TFileCacheRead::Prefetch(Long64_t pos, Int_t len)
       fSeekPos     = aSeekPos;
       fLen         = aLen;
    }
-   
+
    fSeek[fNseek] = pos;
    fSeekLen[fNseek] = len;
    fNseek++;
@@ -192,38 +192,44 @@ void TFileCacheRead::Print(Option_t *option) const
 }
 
 //_____________________________________________________________________________
-Bool_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    // Read buffer at position pos.
    // If pos is in the list of prefetched blocks read from fBuffer,
-   // otherwise normal read from file. Returns kTRUE in case of failure.
+   // otherwise need to make a normal read from file. Returns -1 in case of
+   // read error, 0 in case not in cache, 1 in case read from cache.
 
    if (fNseek > 0 && !fIsSorted) {
       Sort();
       if (fFile->ReadBuffers(fBuffer,fPos,fLen,fNb))
-         return kTRUE;
+         return -1;
    }
+
+   // in case we are writing and reading to/from this file, we much check
+   // if this buffer is in the write cache (not yet written to the file)
+   if (TFileCacheWrite *cachew = fFile->GetCacheWrite()) {
+      if (cachew->ReadBuffer(buf,pos,len) == 0) {
+         fFile->Seek(pos+len);
+         return 1;
+      }
+   }
+
    Int_t loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
    if (loc >= 0 && loc <fNseek && pos == fSeekSort[loc]) {
       memcpy(buf,&fBuffer[fSeekPos[loc]],len);
       fFile->Seek(pos+len);
       //printf("TFileCacheRead::ReadBuffer, pos=%lld, len=%d, slen=%d, loc=%d\n",pos,len,fSeekSortLen[loc],loc);
-      return kFALSE;
+      return 1;
    }
-   
-   //just in case we are writing and reading to/from this file, me much check
-   //if this buffer is in the write cache (not yet written to the file)
-   if (TFileCacheWrite *cachew = fFile->GetCacheWrite()) {
-      return cachew->ReadBuffer(buf,pos,len);
-   }
-   return kTRUE;
+
+   return 0;
 }
 
 //_____________________________________________________________________________
 void TFileCacheRead::SetFile(TFile *file)
 {
    //set the file using this cache
-   
+
    fFile = file;
 }
 

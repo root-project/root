@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.h,v 1.3 2006/06/08 12:46:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.h,v 1.1 2006/06/27 14:36:27 brun Exp $
 // Author: Rene Brun   19/05/2006
 
 /*************************************************************************
@@ -34,7 +34,7 @@ protected:
    TFile        *fFile;           //Pointer to file
    char         *fBuffer;         //[fBufferSize] buffer of contiguous prefetched blocks
    Bool_t        fRecursive;      //flag to avoid recursive calls
-   
+
 protected:
    TFileCacheWrite(const TFileCacheWrite &);            //cannot be copied
    TFileCacheWrite& operator=(const TFileCacheWrite &);
@@ -44,8 +44,9 @@ public:
    TFileCacheWrite(TFile *file, Int_t buffersize);
    virtual ~TFileCacheWrite();
    virtual Bool_t      Flush();
+   virtual Int_t       GetBytesInCache() const { return fNtot; }
    virtual void        Print(Option_t *option="") const;
-   virtual Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
+   virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
    virtual Int_t       WriteBuffer(const char *buf, Long64_t pos, Int_t len);
    virtual void        SetFile(TFile *file);
 

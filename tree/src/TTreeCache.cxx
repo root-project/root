@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.12 2006/06/19 09:35:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.1 2006/06/27 14:36:28 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -82,7 +82,7 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->Get
    fIsLearning(kTRUE)
 {
    // Constructor.
-   
+
    fEntryNext = fEntryMin + fgLearnEntries;
    Int_t nleaves = tree->GetListOfLeaves()->GetEntries();
    fBranches = new TBranch*[nleaves+10]; //add a margin just in case in a TChain?
@@ -98,7 +98,7 @@ TTreeCache::TTreeCache(const TTreeCache &pf) : TFileCacheRead(pf)
 TTreeCache::~TTreeCache()
 {
    // destructor. (in general called by the TFile destructor
-   
+
    delete [] fBranches;
    if (fBrNames) {fBrNames->Delete(); delete fBrNames;}
 }
@@ -110,14 +110,14 @@ TTreeCache& TTreeCache::operator=(const TTreeCache& pf)
 
    if (this != &pf) TFileCacheRead::operator=(pf);
    return *this;
-}         
+}
 
 //_____________________________________________________________________________
 void TTreeCache::AddBranch(TBranch *b)
 {
    //add a branch to the list of branches to be stored in the cache
    //this function is called by TBranch::GetBasket
-      
+
    if (!fIsLearning) return;
 
    //Is branch already in the cache?
@@ -139,12 +139,12 @@ void TTreeCache::AddBranch(TBranch *b)
 Bool_t TTreeCache::FillBuffer()
 {
    //Fill the cache buffer with the branchse in the cache
-   
+
    if (fNbranches <= 0) return kFALSE;
    TTree *tree = fBranches[0]->GetTree();
    Long64_t entry = tree->GetReadEntry();
    if (entry < fEntryNext) return kFALSE;
-   
+
    //estimate number of entries that can fit in the cache
    fEntryNext = entry + tree->GetEntries()*fBufferSize/fZipBytes;
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
@@ -161,7 +161,7 @@ Bool_t TTreeCache::FillBuffer()
          chainOffset = chain->GetTreeOffset()[t];
       }
    }
-           
+
    //clear cache buffer
    TFileCacheRead::Prefetch(0,0);
    //store baskets
@@ -198,7 +198,7 @@ Int_t TTreeCache::GetLearnEntries()
 {
    //static function returning the number of entries used to train the cache
    //see SetLearnEntries
-   
+
    return fgLearnEntries;
 }
 
@@ -211,23 +211,24 @@ TTree *TTreeCache::GetTree() const
 }
 
 //_____________________________________________________________________________
-Bool_t TTreeCache::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+Int_t TTreeCache::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    // Read buffer at position pos.
    // If pos is in the list of prefetched blocks read from fBuffer,
    // then try to fill the cache from the list of selected branches,
-   // otherwise normal read from file. Returns kTRUE in case of failure.
+   // otherwise normal read from file. Returns -1 in case of read
+   // failure, 0 in case not in cache and 1 in case read from cache.
    // This function overloads TFileCacheRead::ReadBuffer.
-   // It returns kFALSE if the requested block is in the cache
-   
+
    //Is request already in the cache?
-   Bool_t inCache = !TFileCacheRead::ReadBuffer(buf,pos,len);
-   if (inCache) return kFALSE;
-   
+   if (TFileCacheRead::ReadBuffer(buf,pos,len) == 1)
+      return 1;
+
    //not found in cache. Do we need to fill the cache?
    Bool_t bufferFilled = FillBuffer();
-   if (bufferFilled) return TFileCacheRead::ReadBuffer(buf,pos,len);
-   return kTRUE;
+   if (bufferFilled)
+      return TFileCacheRead::ReadBuffer(buf,pos,len);
+   return 0;
 }
 
 //_____________________________________________________________________________
@@ -236,7 +237,7 @@ void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
    // Set the minimum and maximum entry number to be processed
    // this information helps to optimize the number of baskets to read
    // when prefetching the branch buffers.
-   
+
    fEntryMin  = emin;
    fEntryMax  = emax;
    fEntryNext  = fEntryMin + fgLearnEntries;
@@ -245,7 +246,7 @@ void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
    fZipBytes   = 0;
    if (fBrNames) fBrNames->Delete();
    if (gDebug > 0) printf("SetEntryRange: fEntryMin=%lld, fEntryMax=%lld, fEntryNext=%lld\n",fEntryMin,fEntryMax,fEntryNext);
-   
+
 }
 
 //_____________________________________________________________________________
@@ -253,7 +254,7 @@ void TTreeCache::SetLearnEntries(Int_t n)
 {
    // Static function to set the number of entries to be used in learning mode
    // The default value for n is 10. n must be >= 1
-   
+
    if (n < 1) n = 1;
    fgLearnEntries = n;
 }
@@ -262,7 +263,7 @@ void TTreeCache::SetLearnEntries(Int_t n)
 void TTreeCache::UpdateBranches(TTree *tree)
 {
    //update pointer to current Tree and recompute pointers to the branches in the cache
-   
+
    fTree = tree;
    Prefetch(0,0);
 

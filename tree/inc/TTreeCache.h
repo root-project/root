@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.h,v 1.7 2006/06/16 11:01:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.h,v 1.1 2006/06/27 14:36:27 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -56,12 +56,12 @@ public:
    Bool_t              FillBuffer();
    TTree              *GetTree() const;
    Bool_t              IsLearning() const {return fIsLearning;}
-   virtual Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
+   virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
    void                SetEntryRange(Long64_t emin,   Long64_t emax);
    static void         SetLearnEntries(Int_t n = 100);
    void                UpdateBranches(TTree *tree);
-           
-   ClassDef(TTreeCache,1)  //Specialization of TFileCacheRead for a TTree 
+
+   ClassDef(TTreeCache,1)  //Specialization of TFileCacheRead for a TTree
 };
 
 #endif

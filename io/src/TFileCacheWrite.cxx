@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.2 2006/06/27 15:21:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.3 2006/06/29 09:04:23 brun Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -74,7 +74,7 @@ TFileCacheWrite& TFileCacheWrite::operator=(const TFileCacheWrite& pf)
 
    if (this != &pf) TObject::operator=(pf);
    return *this;
-}         
+}
 
 //_____________________________________________________________________________
 TFileCacheWrite::~TFileCacheWrite()
@@ -87,8 +87,8 @@ TFileCacheWrite::~TFileCacheWrite()
 //_____________________________________________________________________________
 Bool_t TFileCacheWrite::Flush()
 {
-   // Flush the current write buffer to the file
-   // returns kTRUE in case of error
+   // Flush the current write buffer to the file.
+   // Returns kTRUE in case of error.
 
    if (!fNtot) return kFALSE;
    fFile->Seek(fSeekStart);
@@ -112,27 +112,29 @@ void TFileCacheWrite::Print(Option_t *option) const
 }
 
 //_____________________________________________________________________________
-Bool_t TFileCacheWrite::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+Int_t TFileCacheWrite::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
-   //called by the read cache to check if the requested data is not
-   //in the write cache buffer
-   
-   if (pos < fSeekStart || pos+len >= fSeekStart+fNtot) return kTRUE;
+   // Called by the read cache to check if the requested data is not
+   // in the write cache buffer. Returns -1 if data not in write cache,
+   // 0 otherwise.
+
+   if (pos < fSeekStart || pos+len >= fSeekStart+fNtot) return -1;
    memcpy(buf,fBuffer+pos-fSeekStart,len);
-   return kFALSE;
+   return 0;
 }
 
 //_____________________________________________________________________________
 Int_t TFileCacheWrite::WriteBuffer(const char *buf, Long64_t pos, Int_t len)
 {
    // Write buffer at position pos in the write buffer.
-   // The function returns 1 if the buffer has been successfully entered into the write buffer
-   // The function returns 0 in case the buffer is larger than the write cache.
-   //    In this case the buffer is directly written to the file.
-   
+   // The function returns 1 if the buffer has been successfully entered into the write buffer.
+   // The function returns 0 in case WriteBuffer() was recusively called via Flush().
+   // The function returns -1 in case of error.
+
    if (fRecursive) return 0;
+
    //printf("TFileCacheWrite::WriteBuffer, pos=%lld, len=%d, fSeekStart=%lld, fNtot=%d\n",pos,len,fSeekStart,fNtot);
-   Bool_t status;
+
    if (fSeekStart +fNtot != pos) {
       //we must flush the current cache
       if (Flush()) return -1; //failure
@@ -142,14 +144,14 @@ Int_t TFileCacheWrite::WriteBuffer(const char *buf, Long64_t pos, Int_t len)
       if (len >= fBufferSize) {
          //buffer larger than the cache itself: direct write to file
          fRecursive = kTRUE;
-         status = fFile->WriteBuffer(buf,len);
+         if (fFile->WriteBuffer(buf,len)) return -1;  // failure
          fRecursive = kFALSE;
          return 1;
       }
    }
    if (!fNtot) fSeekStart = pos;
    memcpy(fBuffer+fNtot,buf,len);
-   fNtot += len;   
+   fNtot += len;
 
    return 1;
 }
@@ -157,7 +159,7 @@ Int_t TFileCacheWrite::WriteBuffer(const char *buf, Long64_t pos, Int_t len)
 //_____________________________________________________________________________
 void TFileCacheWrite::SetFile(TFile *file)
 {
-   //set the file using this cache
-   
+   // Set the file using this cache.
+
    fFile = file;
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.173 2006/06/27 15:30:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.174 2006/06/27 17:28:42 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -684,6 +684,7 @@ void TFile::Close(Option_t *option)
       gMonitoringWriter->SendFileReadProgress(this,true);
 
    if (fIsArchive || !fIsRootFile) {
+      FlushWriteCache();
       SysClose(fD);
       fD = -1;
       return;
@@ -715,8 +716,9 @@ void TFile::Close(Option_t *option)
          WriteFree();       //*-*- Write free segments linked list
          WriteHeader();     //*-*- Now write file header
       }
-      if (fCacheWrite) fCacheWrite->Flush();
    }
+
+   FlushWriteCache();
 
    // Delete free segments from free list (but don't delete list header)
    if (fFree) {
@@ -826,12 +828,22 @@ void TFile::Flush()
    // Synchronize a file's in-core and on-disk states.
 
    if (IsOpen() && fWritable) {
+      FlushWriteCache();
       if (SysSync(fD) < 0) {
          // Write the system error only once for this file
          SetBit(kWriteError); SetWritable(kFALSE);
          SysError("Flush", "error flushing file %s", GetName());
       }
    }
+}
+
+//______________________________________________________________________________
+Bool_t TFile::FlushWriteCache()
+{
+   // Flush the write cache if active.
+
+   if (fCacheWrite && IsOpen() && fWritable)
+      fCacheWrite->Flush();
 }
 
 //______________________________________________________________________________
@@ -1293,12 +1305,14 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
 
    Long64_t off = GetRelOffset();
    if (fCacheRead) {
-      if (!fCacheRead->ReadBuffer(buf, off, len)) {
+      Int_t st = fCacheRead->ReadBuffer(buf, off, len);
+      if (st < 0)
+         return 2;  // failure reading
+      else if (st == 1) {
          // fOffset might have been changed via TFileCacheRead::ReadBuffer(), reset it
          Seek(off + len);
          return 1;
       }
-      //return 2;  //failure in reading
    }
    return 0;
 }
@@ -1461,7 +1475,8 @@ Int_t TFile::ReOpen(Option_t *mode)
             WriteFree();       // write free segments linked list
             WriteHeader();     // now write file header
          }
-         if (fCacheWrite) fCacheWrite->Flush();
+
+         FlushWriteCache();
 
          // delete free segments from free list
          if (fFree) {
@@ -2232,6 +2247,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
       delete f;
       f = 0;
    }
+
    //if the file is writable and non local, we create a default write cache(512 KBytes)
    if (type != kLocal && f && f->IsWritable()) {
       new TFileCacheWrite(f,1);
@@ -2437,10 +2453,19 @@ Int_t TFile::SysSync(Int_t fd)
 }
 
 //______________________________________________________________________________
+Long64_t TFile::GetBytesWritten() const
+{
+   return fCacheWrite ? fCacheWrite->GetBytesInCache() + fBytesWrite : fBytesWrite;
+}
+
+//______________________________________________________________________________
 Long64_t TFile::GetFileBytesRead() { return fgBytesRead; }
 
 //______________________________________________________________________________
-Long64_t TFile::GetFileBytesWritten() { return fgBytesWrite; }
+Long64_t TFile::GetFileBytesWritten()
+{
+   return fgBytesWrite;  // minus the bytes still in the write caches
+}
 
 //______________________________________________________________________________
 void TFile::SetFileBytesRead(Long64_t bytes) { fgBytesRead = bytes; }

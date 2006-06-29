@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.50 2006/06/20 18:17:34 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.51 2006/06/27 14:36:27 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -88,10 +88,11 @@ protected:
    static Long64_t  fgFileCounter; //Counter for all opened files
 
    virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
-   Long64_t GetRelOffset() const { return fOffset - fArchiveOffset; }
+   Long64_t      GetRelOffset() const { return fOffset - fArchiveOffset; }
    virtual void  Init(Bool_t create);
-   Int_t    ReadBufferViaCache(char *buf, Int_t len);
-   Int_t    WriteBufferViaCache(const char *buf, Int_t len);
+   Bool_t        FlushWriteCache();
+   Int_t         ReadBufferViaCache(char *buf, Int_t len);
+   Int_t         WriteBufferViaCache(const char *buf, Int_t len);
 
    // Interface to basic system I/O routines
    virtual Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
@@ -102,7 +103,7 @@ protected:
    virtual Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
    virtual Int_t    SysSync(Int_t fd);
 
-   // Interface for text-based TDirectory I/O 
+   // Interface for text-based TDirectory I/O
    virtual Long64_t DirCreateEntry(TDirectory*) { return 0; }
    virtual Int_t    DirReadKeys(TDirectory*) { return 0; }
    virtual void     DirWriteKeys(TDirectory*) {}
@@ -158,7 +159,7 @@ public:
    virtual Int_t       GetNProcessIDs() const { return fNProcessIDs; }
    Option_t           *GetOption() const { return fOption.Data(); }
    virtual Long64_t    GetBytesRead() const { return fBytesRead; }
-   virtual Long64_t    GetBytesWritten() const { return fBytesWrite; }
+   virtual Long64_t    GetBytesWritten() const;
    Int_t               GetVersion() const { return fVersion; }
    Int_t               GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual Int_t       GetNbytesInfo() const {return fNbytesInfo;}
