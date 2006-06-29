@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.8 2006/06/08 16:05:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.9 2006/06/28 12:48:07 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,6 +24,22 @@
 
 #include "Reflex/Tools.h"
 #include "Class.h"
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Scope & ROOT::Reflex::Scope::__NIRVANA__() {
+//-------------------------------------------------------------------------------
+   static Scope s = Scope( new ScopeName( "@N@I@R@V@A@N@A@", 0 ));
+   return s;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Scope & ROOT::Reflex::Scope::__GLOBALSCOPE__() {
+//-------------------------------------------------------------------------------
+   static Scope s = Scope::ByName("");
+   return s;
+}
+
 
 
 //-------------------------------------------------------------------------------
@@ -119,7 +135,7 @@ size_t ROOT::Reflex::Scope::FunctionMemberSize() const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope ROOT::Reflex::Scope::GlobalScope() {
 //-------------------------------------------------------------------------------
-   return fg__GLOBALSCOPE__;
+   return Scope::__GLOBALSCOPE__();
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.7 2006/06/08 16:05:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.8 2006/06/28 12:48:07 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -873,14 +873,14 @@ namespace ROOT {
           * @label __NIRVANA__
           * @link association 
           */
-         static Scope fg__NIRVANA__;
+         static Scope & __NIRVANA__();
 
 
          /** 
           * @label __GLOBALSCOPE__
           * @link association
           */
-         static Scope fg__GLOBALSCOPE__;
+         static Scope & __GLOBALSCOPE__();
 
       private:
 

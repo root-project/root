@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.11 2006/06/27 06:51:36 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.12 2006/06/28 10:43:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -43,7 +43,7 @@ ROOT::Reflex::TypeBase::TypeBase( const char * nam,
                                   size_t size,
                                   TYPE typeTyp, 
                                   const std::type_info & ti ) 
-   : fScope( Scope::fg__NIRVANA__ ),
+   : fScope( Scope::__NIRVANA__() ),
      fSize( size ),
      fTypeInfo( ti ), 
      fTypeType( typeTyp ),

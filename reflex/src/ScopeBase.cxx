@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.12 2006/06/28 12:48:07 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.13 2006/06/29 14:20:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -107,7 +107,7 @@ ROOT::Reflex::ScopeBase::ScopeBase()
      fFunctionMembers( Members()),
      fScopeName( 0 ),
      fScopeType( NAMESPACE ),
-     fDeclaringScope( Scope::fg__NIRVANA__ ),
+     fDeclaringScope( Scope::__NIRVANA__() ),
      fSubScopes( std::vector<Scope>()),
      fSubTypes( std::vector<Type>()),
      fPropertyList( PropertyList() ),
@@ -115,7 +115,6 @@ ROOT::Reflex::ScopeBase::ScopeBase()
 //-------------------------------------------------------------------------------
    fScopeName = new ScopeName("", this);
    fPropertyList.AddProperty("Description", "global namespace");
-   Scope::fg__GLOBALSCOPE__ = ThisScope();
 }
 
 
@@ -255,7 +254,7 @@ size_t ROOT::Reflex::ScopeBase::FunctionMemberSize() const {
 //-------------------------------------------------------------------------------
 bool ROOT::Reflex::ScopeBase::IsTopScope() const {
 //-------------------------------------------------------------------------------
-   if ( fDeclaringScope == Scope::fg__NIRVANA__ ) return true;
+   if ( fDeclaringScope == Scope::__NIRVANA__() ) return true;
    return false;
 }
 
