@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.7 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.8 2006/04/20 17:18:23 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -571,28 +571,28 @@ inline std::string ROOT::Reflex::MemberBase::FunctionParameterDefaultAt( size_t 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterDefault_Begin() const {
 //-------------------------------------------------------------------------------
-   return StdString_Iterator();
+   return Dummy::sStdStringCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterDefault_End() const {
 //-------------------------------------------------------------------------------
-   return StdString_Iterator();
+   return Dummy::sStdStringCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterDefault_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_StdString_Iterator();
+   return Dummy::sStdStringCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterDefault_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_StdString_Iterator();
+   return Dummy::sStdStringCont().rend();
 }
 
 
@@ -606,28 +606,28 @@ inline std::string ROOT::Reflex::MemberBase::FunctionParameterNameAt( size_t /* 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterName_Begin() const {
 //-------------------------------------------------------------------------------
-   return StdString_Iterator();
+   return Dummy::sStdStringCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterName_End() const {
 //-------------------------------------------------------------------------------
-   return StdString_Iterator();
+   return Dummy::sStdStringCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterName_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_StdString_Iterator();
+   return Dummy::sStdStringCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterName_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_StdString_Iterator();
+   return Dummy::sStdStringCont().rend();
 }
 
 
@@ -675,28 +675,28 @@ inline size_t ROOT::Reflex::MemberBase::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::MemberBase::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
-   return Type_Iterator();
+   return Dummy::sTypeCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::MemberBase::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
-   return Type_Iterator();
+   return Dummy::sTypeCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::MemberBase::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Type_Iterator();
+   return Dummy::sTypeCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::MemberBase::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Type_Iterator();
+   return Dummy::sTypeCont().rend();
 }
 
 

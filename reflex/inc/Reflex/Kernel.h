@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.13 2006/05/31 21:00:39 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.14 2006/06/28 10:43:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -166,6 +166,19 @@ namespace ROOT {
       typedef std::vector< MemberTemplate > MemberTemplate_Cont_Type_t;
       typedef MemberTemplate_Cont_Type_t::iterator MemberTemplate_Iterator;
       typedef MemberTemplate_Cont_Type_t::reverse_iterator Reverse_MemberTemplate_Iterator;
+
+
+      struct Dummy {
+         static StdString_Cont_Type_t & sStdStringCont();
+         static Type_Cont_Type_t & sTypeCont();        
+         static Base_Cont_Type_t & sBaseCont();
+         static Scope_Cont_Type_t & sScopeCont();
+         static Object_Cont_Type_t & sObjectCont();
+         static Member_Cont_Type_t & sMemberCont();
+         static TypeTemplate_Cont_Type_t & sTypeTemplateCont();
+         static MemberTemplate_Cont_Type_t & sMemberTemplateCont();
+      };
+
 
       /** some general information about the Reflex package */
       class RFLX_API Reflex {

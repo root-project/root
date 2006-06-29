@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.8 2006/06/28 12:48:07 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.9 2006/06/29 16:50:27 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -170,7 +170,6 @@ ROOT::Reflex::Reflex::Reflex() {
 }
 
 
-/*
 //-------------------------------------------------------------------------------
 ROOT::Reflex::StdString_Cont_Type_t & ROOT::Reflex::Dummy::sStdStringCont() {
 //-------------------------------------------------------------------------------
@@ -233,7 +232,7 @@ ROOT::Reflex::MemberTemplate_Cont_Type_t & ROOT::Reflex::Dummy::sMemberTemplateC
    static MemberTemplate_Cont_Type_t c;
    return c;
 }
-*/
+
 
 //-------------------------------------------------------------------------------
 const std::string & ROOT::Reflex::Reflex::Argv0() {

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.7 2006/06/08 16:05:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.8 2006/06/29 14:20:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -666,6 +666,34 @@ inline size_t ROOT::Reflex::ScopeBase::BaseSize() const {
 
 
 //-------------------------------------------------------------------------------
+inline ROOT::Reflex::Base_Iterator ROOT::Reflex::ScopeBase::Base_Begin() const {
+//-------------------------------------------------------------------------------
+   return Dummy::sBaseCont().begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Base_Iterator ROOT::Reflex::ScopeBase::Base_End() const {
+//-------------------------------------------------------------------------------
+   return Dummy::sBaseCont().end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::ScopeBase::Base_RBegin() const {
+//-------------------------------------------------------------------------------
+   return Dummy::sBaseCont().rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::ScopeBase::Base_REnd() const {
+//-------------------------------------------------------------------------------
+   return Dummy::sBaseCont().rend();
+}
+
+
+//-------------------------------------------------------------------------------
 inline ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::DeclaringScope() const {
 //-------------------------------------------------------------------------------
    return fDeclaringScope;
@@ -929,6 +957,34 @@ inline size_t ROOT::Reflex::ScopeBase::SubScopeSize() const {
 inline size_t ROOT::Reflex::ScopeBase::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
    return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_Begin() const {
+//-------------------------------------------------------------------------------
+   return Dummy::sTypeCont().begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_End() const {
+//-------------------------------------------------------------------------------
+   return Dummy::sTypeCont().end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_RBegin() const {
+//-------------------------------------------------------------------------------
+   return Dummy::sTypeCont().rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_REnd() const {
+//-------------------------------------------------------------------------------
+   return Dummy::sTypeCont().rend();
 }
 
 

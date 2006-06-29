@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.9 2006/05/31 22:23:12 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.10 2006/06/08 16:05:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -712,28 +712,28 @@ namespace ROOT {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Base_Iterator ROOT::Reflex::TypeBase::Base_Begin() const {
 //-------------------------------------------------------------------------------
-   return Base_Iterator();
+   return Dummy::sBaseCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Base_Iterator ROOT::Reflex::TypeBase::Base_End() const {
 //-------------------------------------------------------------------------------
-   return Base_Iterator();
+   return Dummy::sBaseCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::TypeBase::Base_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Base_Iterator();
+   return Dummy::sBaseCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::TypeBase::Base_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Base_Iterator();
+   return Dummy::sBaseCont().rend();
 }
 
 
@@ -747,28 +747,28 @@ inline size_t ROOT::Reflex::TypeBase::DataMemberSize() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::DataMember_Begin() const {
 //-------------------------------------------------------------------------------
-   return Member_Iterator();
+   return Dummy::sMemberCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::DataMember_End() const {
 //-------------------------------------------------------------------------------
-   return Member_Iterator();
+   return Dummy::sMemberCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::DataMember_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Member_Iterator();
+   return Dummy::sMemberCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::DataMember_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Member_Iterator();
+   return Dummy::sMemberCont().rend();
 }
 
 
@@ -782,28 +782,28 @@ inline size_t ROOT::Reflex::TypeBase::FunctionMemberSize() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::FunctionMember_Begin() const {
 //-------------------------------------------------------------------------------
-   return Member_Iterator();
+   return Dummy::sMemberCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::FunctionMember_End() const {
 //-------------------------------------------------------------------------------
-   return Member_Iterator();
+   return Dummy::sMemberCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::FunctionMember_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Member_Iterator();
+   return Dummy::sMemberCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::FunctionMember_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Member_Iterator();
+   return Dummy::sMemberCont().rend();
 }
 
 
@@ -925,28 +925,28 @@ inline size_t ROOT::Reflex::TypeBase::MemberSize() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::Member_Begin() const {
 //-------------------------------------------------------------------------------
-   return Member_Iterator();
+   return Dummy::sMemberCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::Member_End() const {
 //-------------------------------------------------------------------------------
-   return Member_Iterator();
+   return Dummy::sMemberCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::Member_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Member_Iterator();
+   return Dummy::sMemberCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::Member_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Member_Iterator();  
+   return Dummy::sMemberCont().rend();  
 }
 
 
@@ -960,56 +960,56 @@ inline size_t ROOT::Reflex::TypeBase::MemberTemplateSize() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::TypeBase::MemberTemplate_Begin() const {
 //-------------------------------------------------------------------------------
-   return MemberTemplate_Iterator();
+   return Dummy::sMemberTemplateCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::TypeBase::MemberTemplate_End() const {
 //-------------------------------------------------------------------------------
-   return MemberTemplate_Iterator();
+   return Dummy::sMemberTemplateCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::TypeBase::MemberTemplate_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_MemberTemplate_Iterator();
+   return Dummy::sMemberTemplateCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::TypeBase::MemberTemplate_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_MemberTemplate_Iterator();
+   return Dummy::sMemberTemplateCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::FunctionParameter_Begin() const {
 //-------------------------------------------------------------------------------
-   return Type_Iterator();
+   return Dummy::TypeCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::FunctionParameter_End() const {
 //-------------------------------------------------------------------------------
-   return Type_Iterator();
+   return Dummy::sTypeCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::FunctionParameter_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Type_Iterator();
+   return Dummy::sTypeCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::FunctionParameter_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Type_Iterator();
+   return Dummy::sTypeCont().rend();
 }
 
 
@@ -1030,28 +1030,28 @@ inline size_t ROOT::Reflex::TypeBase::SubScopeSize() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::TypeBase::SubScope_Begin() const {
 //-------------------------------------------------------------------------------
-   return Scope_Iterator();
+   return Dummy::sScopeCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::TypeBase::SubScope_End() const {
 //-------------------------------------------------------------------------------
-   return Scope_Iterator();
+   return Dummy::sScopeCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::TypeBase::SubScope_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Scope_Iterator();
+   return Dummy::sScopeCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::TypeBase::SubScope_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Scope_Iterator();
+   return Dummy::sScopeCont().rend();
 }
 
 
@@ -1065,28 +1065,28 @@ inline size_t ROOT::Reflex::TypeBase::SubTypeSize() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::SubType_Begin() const {
 //-------------------------------------------------------------------------------
-   return Type_Iterator();
+   return Dummy::sTypeCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::SubType_End() const {
 //-------------------------------------------------------------------------------
-   return Type_Iterator();
+   return Dummy::sTypeCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::SubType_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Type_Iterator();
+   return Dummy::sTypeCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::SubType_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Type_Iterator();
+   return Dummy::sTypeCont().rend();
 }
 
 
@@ -1100,28 +1100,28 @@ inline size_t ROOT::Reflex::TypeBase::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
-   return Type_Iterator();
+   return Dummy::sTypeCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
-   return Type_Iterator();
+   return Dummy::sTypeCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Type_Iterator();
+   return Dummy::sTypeCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_Type_Iterator();
+   return Dummy::sTypeCont().rend();
 }
 
 
@@ -1149,28 +1149,28 @@ inline size_t ROOT::Reflex::TypeBase::SubTypeTemplateSize() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::TypeBase::SubTypeTemplate_Begin() const {
 //-------------------------------------------------------------------------------
-   return TypeTemplate_Iterator();
+   return Dummy::sTypeTemplateCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::TypeBase::SubTypeTemplate_End() const {
 //-------------------------------------------------------------------------------
-   return TypeTemplate_Iterator();
+   return Dummy::sTypeTemplateCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::TypeBase::SubTypeTemplate_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Reverse_TypeTemplate_Iterator();
+   return Dummy::sTypeTemplateCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::TypeBase::SubTypeTemplate_REnd() const {
 //-------------------------------------------------------------------------------
-   return Reverse_TypeTemplate_Iterator();
+   return Dummy::sTypeTemplateCont().rend();
 }
 
 
