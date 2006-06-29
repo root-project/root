@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTVariableBuilder.cxx,v 1.1 2005/12/12 09:12:27 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -157,7 +157,7 @@ namespace ROOT { namespace Cintex {
 
     if ( type.first == 'u' )  {
       //dependencies.push_back(indir.second);
-      member_tagnum = CintTag(type.second);
+      member_tagnum = dm.Properties().HasKey("iotype") ? CintTag(dm.Properties().PropertyAsString("iotype")) : CintTag(type.second);
       if ( typeid(longlong) == indir.second.TypeInfo() )
         ::G__loadlonglong(&member_tagnum, &member_typnum, G__LONGLONG);
       else if ( typeid(ulonglong) == indir.second.TypeInfo() )
@@ -187,7 +187,7 @@ namespace ROOT { namespace Cintex {
         << std::endl
         << std::setw(16) << std::left << "declareField>"
         << "  Type:" 
-        << std::left << std::setw(24) << "["+t.Name(SCOPED)+"]"
+        << std::left << std::setw(24) << ("[" + dm.Properties().HasKey("iotype") ? dm.Properties().PropertyAsString("iotype") : t.Name(SCOPED) + "]")
         << " DeclBy:" << fClass.Name(SCOPED)
         << std::endl;
     }
