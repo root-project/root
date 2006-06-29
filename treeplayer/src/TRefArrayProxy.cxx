@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name: $:$Id: $
+// @(#)root/meta:$Name:  $:$Id: TRefArrayProxy.cxx,v 1.1 2006/06/28 10:03:14 pcanal Exp $
 // Author: Markus Frank  10/02/2006
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 // in a TRefArray from TTree::Draw
 
 //______________________________________________________________________________
-void* TRefArrayProxy::GetObject(TFormLeafInfoReference* info, void* data, Int_t instance)  {
+void* TRefArrayProxy::GetObject(TFormLeafInfoReference* /*info*/, void* data, Int_t instance)  {
    // Access referenced object(-data)
 
    TRefArray* ref = (TRefArray*)data;//((char*)data + info->GetOffset());
@@ -27,7 +27,7 @@ void* TRefArrayProxy::GetObject(TFormLeafInfoReference* info, void* data, Int_t 
 }
 
 //______________________________________________________________________________
-Int_t  TRefArrayProxy::GetCounterValue(TFormLeafInfoReference* info, void* data)   {
+Int_t  TRefArrayProxy::GetCounterValue(TFormLeafInfoReference* /*info*/, void* data)   {
    // TVirtualRefProxy overload: Access to container size (if container reference (ie TRefArray) etc)
 
    TRefArray* ref = (TRefArray*)data;

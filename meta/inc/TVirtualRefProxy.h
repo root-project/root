@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $: $Id: TVirtualRefProxy.h,v 1.1 2006/06/28 10:06:50 pcanal Exp $
+// @(#)root/meta:$Name:  $: $Id: TVirtualRefProxy.h,v 1.2 2006/06/28 10:39:46 pcanal Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -23,16 +23,61 @@ class TFormLeafInfoReference;
 //______________________________________________________________________________
 //  
 //   Abstract proxy definition to follow reference objects.
+//   
+//   
+//   Generic Mechanism for Object References
+//   =======================================
+//   
+//   References are a well known mechanism to support persistency
+//   of entities, which in C++ typically are represented as 
+//   pointers. The generic mechansim allows clients to supply 
+//   hooks to the ROOT framework in interactive mode in order to 
+//   dereference these objects and access the objects pointed to by 
+//   the reference objects.
+//   
+//   Implementations are supplied for ROOT owns reference mechanism
+//   based on instances of the TRef and the TRefArray class.
+//   
+//   To support generality this mechanism was implemented using a
+//   proxy mechanism, which shields the concrete implementation of the
+//   reference classes from ROOT. Hence, this mechanism also works for
+//   references as they are suppotred by the POOL persistent framework
+//   and by frameworks like Gaudi.
+//   
+//   To enable reference support a concrete sub-classed instance of 
+//   the TVirtualRefProxy base class must be attached to the TClass
+//   instance representing the reference itself. Please see the 
+//   header- and implementation file TRefProxy.h/cxx for details.
+//   For ROOT's own references this is done simply by a call like:
+//
+//        #include "TROOT.h"
+//        #include "TClass.h"
+//        #include "TRefProxy.h"
+//
+//        ...
+//        gROOT->GetClass("TRef")->AdoptReferenceProxy(new TRefProxy());
+//
+//      - GetObject() must return the pointer to the referenced
+//        object. TTreeFormula then figures out how to access the
+//        value to be plotted. 
+//        Hence, the actual work is done inside a call to:
+// 
+//        void* TRefProxy::GetObject(TFormLeafInfoReference* info, void* data, int)  
+//        {
+//          if ( data )  {
+//            TRef*      ref    = (TRef*)((char*)data + info->GetOffset());
+//            // Dereference TRef and return pointer to object
+//            void* obj = ref->GetObject();
+//            if ( obj )  {         return obj;      }
+//
+//            ... else handle error or implement failover ....
+//
+//
 //   The type of the referenced object must either be known at compilation
 //      time or it must be possible to guess it reading the first TTree entry.
 //      In this case the following condiitons must be met:
 //      - GetValueClass() must return the TClass to the referenced
 //        objects (or a base class)
-//      - GetObject() must return the pointer to the referenced
-//        object. TTreeFormula then figures out how to access the
-//        value to be plotted. 
-//      This is typically the case for generic references like 
-//      they are used in POOL or Gaudi.
 // 
 //______________________________________________________________________________
 class TVirtualRefProxy  {
