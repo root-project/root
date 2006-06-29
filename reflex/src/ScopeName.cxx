@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.11 2006/06/29 14:35:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.12 2006/06/29 14:43:36 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -76,7 +76,7 @@ ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ByName( const std::string & name ) 
    //else                        return Scope();
    // HERE STARTS AN UGLY HACK WHICH HAS TO BE UNDONE ASAP
    // (also remove inlcude Reflex/Type.h)
-   Type t = Type::ByName("name");
+   Type t = Type::ByName(name);
    if ( t && t.IsTypedef()) {
       while ( t.IsTypedef()) t = t.ToType();
       if ( t.IsClass() || t.IsEnum() || t.IsUnion() ) return (Scope)t;
