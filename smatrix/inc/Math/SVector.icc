@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.icc,v 1.8 2006/05/12 08:12:16 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.icc,v 1.9 2006/06/08 15:23:34 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector_icc
@@ -39,7 +39,7 @@
 
 namespace ROOT { 
 
-  namespace Math { 
+namespace Math { 
 
 
 //==============================================================================
@@ -47,47 +47,22 @@ namespace ROOT {
 //==============================================================================
 template <class T, unsigned int D>
 SVector<T,D>::SVector() {
-  operator=(0);
+   for(unsigned int i=0; i<D; ++i)
+      fArray[i] = 0;
 }
 
 template <class T, unsigned int D>
 template <class A>
 SVector<T,D>::SVector(const VecExpr<A,T,D>& rhs) {
-  operator=(rhs);
+   operator=(rhs);
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const SVector<T,D>& rhs) {
-  for(unsigned int i=0; i<D; ++i)
-    fArray[i] = rhs.fArray[i];
+   for(unsigned int i=0; i<D; ++i)
+      fArray[i] = rhs.fArray[i];
 }
 
-#ifdef OLD_IMPL
-template <class T, unsigned int D>
-template <unsigned int D1>
-SVector<T,D>::SVector(const SVector<T,D1>& rhs) {
-  STATIC_CHECK( D >= D1,SVector_dimension_too_small); 
-  for(unsigned int i=0; i<D1; ++i)
-    fArray[i] = rhs.fArray[i];
-  for(unsigned int i=D1; i<D; ++i)
-    fArray[i] = 0;
-}
-
-template <class T, unsigned int D>
-template <unsigned int D1>
-SVector<T,D>::SVector(const T& a1, const SVector<T,D1>& rhs) {
-  fArray[0] = a1;
-  STATIC_CHECK( D >= D1+1,SVector_dimension_too_small); 
-  for(unsigned int i=0; i<D1; ++i)
-    fArray[i+1] = rhs[i];
-}
-#endif
-
-template <class T, unsigned int D>
-SVector<T,D>::SVector(const T& rhs) {
-  for(unsigned int i=0; i<D; ++i)
-    fArray[i] = rhs;
-}
 
 
 //==============================================================================
@@ -98,123 +73,130 @@ SVector<T,D>::SVector(const T& rhs) {
 template <class T, unsigned int D>
 template <class InputIterator>
 SVector<T,D>::SVector(InputIterator begin, InputIterator end) {
-  assert( begin + D == end);
-  std::copy(begin, end, fArray);
+   assert( begin + D == end);
+   std::copy(begin, end, fArray);
 }
 
 template <class T, unsigned int D>
 template <class InputIterator>
 SVector<T,D>::SVector(InputIterator begin, unsigned int size) {
-  assert( size <= D);
-  std::copy(begin, begin+size, fArray);
+   assert( size <= D);
+   std::copy(begin, begin+size, fArray);
 }
 
 #else
-   
+
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T* a, unsigned int len) {
-  assert(len == D);
-  for(unsigned int i=0; i<D; ++i)
-    fArray[i] = a[i];
+   assert(len == D);
+   for(unsigned int i=0; i<D; ++i)
+      fArray[i] = a[i];
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const_iterator begin, const_iterator end) {
-  assert( begin + D == end);
-  std::copy(begin, end, fArray);
+   assert( begin + D == end);
+   std::copy(begin, end, fArray);
 }
 
 
 #endif
 
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const T& a1) {
+   STATIC_CHECK( D == 1,SVector_dimension_not_right); 
+   fArray[0] = a1;
+}
+
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2) {
-  STATIC_CHECK( D >= 2,SVector_dimension_too_small); 
-  fArray[0] = a1; fArray[1] = a2;
+   STATIC_CHECK( D == 2,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2;
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3) {
-  STATIC_CHECK( D >= 3,SVector_dimension_too_small); 
-  fArray[0] = a1; fArray[1] = a2; fArray[2] = a3;
+   STATIC_CHECK( D == 3,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3;
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4) {
-  STATIC_CHECK( D >= 4,SVector_dimension_too_small); 
-  fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   STATIC_CHECK( D == 4,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
-		      const T& a5) {
-  STATIC_CHECK( D >= 5,SVector_dimension_too_small); 
-  fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
-  fArray[4] = a5;
+                      const T& a5) {
+   STATIC_CHECK( D == 5,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   fArray[4] = a5;
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
-		      const T& a5, const T& a6) {
-  STATIC_CHECK( D >= 6,SVector_dimension_too_small); 
-  fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
-  fArray[4] = a5; fArray[5] = a6;
+                      const T& a5, const T& a6) {
+   STATIC_CHECK( D == 6,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   fArray[4] = a5; fArray[5] = a6;
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
-		      const T& a5, const T& a6, const T& a7) {
-  STATIC_CHECK( D >= 7,SVector_dimension_too_small); 
-  fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
-  fArray[4] = a5; fArray[5] = a6; fArray[6] = a7;
+                      const T& a5, const T& a6, const T& a7) {
+   STATIC_CHECK( D == 7,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   fArray[4] = a5; fArray[5] = a6; fArray[6] = a7;
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
-		      const T& a5, const T& a6, const T& a7, const T& a8) {
-  STATIC_CHECK( D >= 8,SVector_dimension_too_small); 
-  fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
-  fArray[4] = a5; fArray[5] = a6; fArray[6] = a7; fArray[7] = a8;
+                      const T& a5, const T& a6, const T& a7, const T& a8) {
+   STATIC_CHECK( D == 8,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   fArray[4] = a5; fArray[5] = a6; fArray[6] = a7; fArray[7] = a8;
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
-		      const T& a5, const T& a6, const T& a7, const T& a8,
-		      const T& a9) {
-  STATIC_CHECK( D >= 9,SVector_dimension_too_small); 
-  fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
-  fArray[4] = a5; fArray[5] = a6; fArray[6] = a7; fArray[7] = a8;
-  fArray[8] = a9;
+                      const T& a5, const T& a6, const T& a7, const T& a8,
+                      const T& a9) {
+   STATIC_CHECK( D == 9,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   fArray[4] = a5; fArray[5] = a6; fArray[6] = a7; fArray[7] = a8;
+   fArray[8] = a9;
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
-		      const T& a5, const T& a6, const T& a7, const T& a8,
-		      const T& a9, const T& a10) {
-  STATIC_CHECK( D >= 10,SVector_dimension_too_small); 
-  fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
-  fArray[4] = a5; fArray[5] = a6; fArray[6] = a7; fArray[7] = a8;
-  fArray[8] = a9; fArray[9] = a10;
+                      const T& a5, const T& a6, const T& a7, const T& a8,
+                      const T& a9, const T& a10) {
+   STATIC_CHECK( D == 10,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   fArray[4] = a5; fArray[5] = a6; fArray[6] = a7; fArray[7] = a8;
+   fArray[8] = a9; fArray[9] = a10;
 }
 
 //==============================================================================
 // operator=
 //==============================================================================
 template <class T, unsigned int D>
-SVector<T,D>& SVector<T,D>::operator=(const T& rhs) {
-  for(unsigned int i=0; i<D; ++i) {
-    fArray[i] = rhs;
-  }
-    return *this;
+SVector<T,D>& SVector<T,D>::operator=(const T& a1) {
+   // operator = for size 1 vectors
+   STATIC_CHECK( D == 1,SVector_dimension_not_right); 
+   fArray[0] = a1;
+   return *this;
 }
 
 template <class T, unsigned int D>
 template <class A>
 SVector<T,D>& SVector<T,D>::operator=(const VecExpr<A,T,D>& rhs) {
-  for(unsigned int i=0; i<D; ++i) {
-    fArray[i] = rhs.apply(i);
-  }
-  return *this;
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] = rhs.apply(i);
+   }
+   return *this;
 }
 
 //==============================================================================
@@ -222,30 +204,30 @@ SVector<T,D>& SVector<T,D>::operator=(const VecExpr<A,T,D>& rhs) {
 //==============================================================================
 template <class T, unsigned int D>
 bool SVector<T,D>::operator==(const T& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D; ++i) {
-    rc = rc && (fArray[i] == rhs);
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] == rhs);
+   }
+   return rc;
 }
 
 template <class T, unsigned int D>
 bool SVector<T,D>::operator==(const SVector<T,D>& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D; ++i) {
-    rc = rc && (fArray[i] == rhs.apply(i));
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] == rhs.apply(i));
+   }
+   return rc;
 }
 
 template <class T, unsigned int D>
 template <class A>
 bool SVector<T,D>::operator==(const VecExpr<A,T,D>& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D; ++i) {
-    rc = rc && (fArray[i] == rhs.apply(i));
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] == rhs.apply(i));
+   }
+   return rc;
 }
 
 //==============================================================================
@@ -253,18 +235,18 @@ bool SVector<T,D>::operator==(const VecExpr<A,T,D>& rhs) const {
 //==============================================================================
 template <class T, unsigned int D>
 inline bool SVector<T,D>::operator!=(const T& rhs) const {
-  return !operator==(rhs);
+   return !operator==(rhs);
 }
 
 template <class T, unsigned int D>
 inline bool SVector<T,D>::operator!=(const SVector<T,D>& rhs) const {
-  return !operator==(rhs);
+   return !operator==(rhs);
 }
 
 template <class T, unsigned int D>
 template <class A>
 inline bool SVector<T,D>::operator!=(const VecExpr<A,T,D>& rhs) const {
-  return !operator==(rhs);
+   return !operator==(rhs);
 }
 
 //==============================================================================
@@ -272,30 +254,30 @@ inline bool SVector<T,D>::operator!=(const VecExpr<A,T,D>& rhs) const {
 //==============================================================================
 template <class T, unsigned int D>
 bool SVector<T,D>::operator>(const T& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D; ++i) {
-    rc = rc && (fArray[i] > rhs);
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] > rhs);
+   }
+   return rc;
 }
 
 template <class T, unsigned int D>
 bool SVector<T,D>::operator>(const SVector<T,D>& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D; ++i) {
-    rc = rc && (fArray[i] > rhs.apply(i));
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] > rhs.apply(i));
+   }
+   return rc;
 }
 
 template <class T, unsigned int D>
 template <class A>
 bool SVector<T,D>::operator>(const VecExpr<A,T,D>& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D; ++i) {
-    rc = rc && (fArray[i] > rhs.apply(i));
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] > rhs.apply(i));
+   }
+   return rc;
 }
 
 //==============================================================================
@@ -303,90 +285,136 @@ bool SVector<T,D>::operator>(const VecExpr<A,T,D>& rhs) const {
 //==============================================================================
 template <class T, unsigned int D>
 bool SVector<T,D>::operator<(const T& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D; ++i) {
-    rc = rc && (fArray[i] < rhs);
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] < rhs);
+   }
+   return rc;
 }
 
 template <class T, unsigned int D>
 bool SVector<T,D>::operator<(const SVector<T,D>& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D; ++i) {
-    rc = rc && (fArray[i] < rhs.apply(i));
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] < rhs.apply(i));
+   }
+   return rc;
 }
 
 template <class T, unsigned int D>
 template <class A>
 bool SVector<T,D>::operator<(const VecExpr<A,T,D>& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D; ++i) {
-    rc = rc && (fArray[i] < rhs.apply(i));
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] < rhs.apply(i));
+   }
+   return rc;
 }
 
 //==============================================================================
 // operator+=
 //==============================================================================
+#ifdef NEW_IMPL
 template <class T, unsigned int D>
-SVector<T,D>& SVector<T,D>::operator+=(const SVector<T,D>& rhs) {
-  for(unsigned int i=0; i<D; ++i) {
-    fArray[i] += rhs.apply(i);
-  }
-  return *this;
+template<class A> 
+SVector<T,D>& SVector<T,D>::operator+=(const  A& rhs) {
+   return operator=(*this + rhs);
 }
+
+template <class T, unsigned int D>
+template<class A> 
+SVector<T,D>& SVector<T,D>::operator-=(const  A& rhs) {
+   // self subtraction
+   return operator=(*this - rhs);
+}
+
+template <class T, unsigned int D>
+template<class A> 
+SVector<T,D>& SVector<T,D>::operator*=(const  A& rhs) {
+   // self multiplication
+   return operator=(*this * rhs);
+}
+
+template <class T, unsigned int D>
+template<class A> 
+SVector<T,D>& SVector<T,D>::operator/=(const  A& rhs) {
+   // self division
+   return operator=(*this / rhs);
+}
+#endif
+
+template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator+=(const  T& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] += rhs;
+   }
+   return *this;
+}
+
+template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator+=(const  SVector<T,D>& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] += rhs.apply(i);
+   }
+   return *this;
+}
+
 
 template <class T, unsigned int D>
 template <class A>
 SVector<T,D>& SVector<T,D>::operator+=(const VecExpr<A,T,D>& rhs) {
-  for(unsigned int i=0; i<D; ++i) {
-    fArray[i] += rhs.apply(i);
-  }
-  return *this;
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] += rhs.apply(i);
+   }
+   return *this;
 }
 
 //==============================================================================
 // operator-=
 //==============================================================================
 template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator-=(const  T& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] -= rhs;
+   }
+   return *this;
+}
+
+template <class T, unsigned int D>
 SVector<T,D>& SVector<T,D>::operator-=(const SVector<T,D>& rhs) {
-  for(unsigned int i=0; i<D; ++i) {
-    fArray[i] -= rhs.apply(i);
-  }
-  return *this;
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] -= rhs.apply(i);
+   }
+   return *this;
 }
 
 template <class T, unsigned int D>
 template <class A>
 SVector<T,D>& SVector<T,D>::operator-=(const VecExpr<A,T,D>& rhs) {
-  for(unsigned int i=0; i<D; ++i) {
-    fArray[i] -= rhs.apply(i);
-  }
-  return *this;
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] -= rhs.apply(i);
+   }
+   return *this;
 }
 
 //==============================================================================
-// operator*=
+// operator*= (only scalar values) 
 //==============================================================================
 template <class T, unsigned int D>
-SVector<T,D>& SVector<T,D>::operator*=(const SVector<T,D>& rhs) {
-  for(unsigned int i=0; i<D; ++i) {
-    fArray[i] *= rhs.apply(i);
-  }
-  return *this;
+SVector<T,D>& SVector<T,D>::operator*=(const T& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] *= rhs;
+   }
+   return *this;
 }
-
+#ifdef OLD_IMPL
 template <class T, unsigned int D>
 template <class A>
 SVector<T,D>& SVector<T,D>::operator*=(const VecExpr<A,T,D>& rhs) {
-  for(unsigned int i=0; i<D; ++i) {
-    fArray[i] *= rhs.apply(i);
-  }
-  return *this;
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] *= rhs.apply(i);
+   }
+   return *this;
 }
 
 //==============================================================================
@@ -394,19 +422,27 @@ SVector<T,D>& SVector<T,D>::operator*=(const VecExpr<A,T,D>& rhs) {
 //==============================================================================
 template <class T, unsigned int D>
 SVector<T,D>& SVector<T,D>::operator/=(const SVector<T,D>& rhs) {
-  for(unsigned int i=0; i<D; ++i) {
-    fArray[i] /= rhs.apply(i);
-  }
-  return *this;
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] /= rhs.apply(i);
+   }
+   return *this;
 }
 
 template <class T, unsigned int D>
 template <class A>
 SVector<T,D>& SVector<T,D>::operator/=(const VecExpr<A,T,D>& rhs) {
-  for(unsigned int i=0; i<D; ++i) {
-    fArray[i] /= rhs.apply(i);
-  }
-  return *this;
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] /= rhs.apply(i);
+   }
+   return *this;
+}
+#endif
+template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator/=(const T& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] /= rhs;
+   }
+   return *this;
 }
 
 
@@ -415,11 +451,11 @@ SVector<T,D>& SVector<T,D>::operator/=(const VecExpr<A,T,D>& rhs) {
 //==============================================================================
 template <class T, unsigned int D>
 SVector<T,D>& SVector<T,D>::Unit() {
-  const double len = Mag(*this);
-  for(unsigned int i=0; i<D; ++i) {
-    fArray[i] /= len;
-  }
-  return *this;
+   const double len = Mag(*this);
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] /= len;
+   }
+   return *this;
 }
 
 //==============================================================================
@@ -428,14 +464,14 @@ SVector<T,D>& SVector<T,D>::Unit() {
 template <class T, unsigned int D>
 template <unsigned int D2>
 SVector<T,D>& SVector<T,D>::Place_at(const SVector<T,D2>& rhs, unsigned int row) {
-
-  assert(row+D2 <= D);
-  //  Sassert(end <= D);
-
-  for(unsigned int i=row, j=0; j<D2; ++i,++j)
-    fArray[i] = rhs.apply(j);
- 
-  return *this;
+   
+   assert(row+D2 <= D);
+   //  Sassert(end <= D);
+   
+   for(unsigned int i=row, j=0; j<D2; ++i,++j)
+      fArray[i] = rhs.apply(j);
+   
+   return *this;
 }
 
 
@@ -445,13 +481,13 @@ SVector<T,D>& SVector<T,D>::Place_at(const SVector<T,D2>& rhs, unsigned int row)
 template <class T, unsigned int D>
 template <class A, unsigned int D2>
 SVector<T,D>& SVector<T,D>::Place_at(const VecExpr<A,T,D2>& rhs, unsigned int row) {
-
-  assert(row+D2 <= D);
-
-  for(unsigned int i=row, j=0; j<D2; ++i,++j)
-    fArray[i] = rhs.apply(j);
- 
-  return *this;
+   
+   assert(row+D2 <= D);
+   
+   for(unsigned int i=row, j=0; j<D2; ++i,++j)
+      fArray[i] = rhs.apply(j);
+   
+   return *this;
 }
 
 //==============================================================================
@@ -459,14 +495,14 @@ SVector<T,D>& SVector<T,D>::Place_at(const VecExpr<A,T,D2>& rhs, unsigned int ro
 //==============================================================================
 template <class T, unsigned int D>
 std::ostream& SVector<T,D>::Print(std::ostream& os) const {
-  os.setf(std::ios::right,std::ios::adjustfield);
-  //  os.setf(ios::fixed);
-
-  unsigned int i=0;
-  for(; i<D-1; ++i)
-    os << fArray[i] << ", ";
-  os << fArray[i];
-  return os;
+   os.setf(std::ios::right,std::ios::adjustfield);
+   //  os.setf(ios::fixed);
+   
+   unsigned int i=0;
+   for(; i<D-1; ++i)
+      os << fArray[i] << ", ";
+   os << fArray[i];
+   return os;
 }
 
 //==============================================================================
@@ -519,17 +555,17 @@ inline T& SVector<T,D>::operator()(unsigned int i) { return fArray[i]; }
 template <class T, unsigned int D>
 template <class SubVector>  
 SubVector SVector<T,D>::Sub(unsigned int row) const { 
-
-  STATIC_CHECK( SubVector::kSize <= D,SVector_dimension_too_small); 
-
-  assert(row + SubVector::kSize <= D);
-
-  SubVector tmp;
-  // need to use std::copy ??
-  for(unsigned int i=0; i < SubVector::kSize; ++i) {
+   
+   STATIC_CHECK( SubVector::kSize <= D,SVector_dimension_too_small); 
+   
+   assert(row + SubVector::kSize <= D);
+   
+   SubVector tmp;
+   // need to use std::copy ??
+   for(unsigned int i=0; i < SubVector::kSize; ++i) {
       tmp[i] = fArray[i+row];
-  }
-  return tmp;
+   }
+   return tmp;
 }
 
 //==============================================================================
@@ -537,13 +573,13 @@ SubVector SVector<T,D>::Sub(unsigned int row) const {
 //==============================================================================
 template <class T, unsigned int D>
 inline std::ostream& operator<<(std::ostream& os, const SVector<T,D>& rhs) {
-  return rhs.Print(os);
+   return rhs.Print(os);
 }
 
 
 
 
-  }  // namespace Math
+}  // namespace Math
 
 }  // namespace ROOT
           

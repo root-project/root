@@ -73,6 +73,8 @@ void testMad(const M & m1, const M & m2, double & time, M & result) {
     {
       mtmp(0,0) = gV[l]; 
       result = m1; result += mtmp;  
+      //M tmp = m1 + mtmp;
+      //result = tmp;  
     }
 }
 
@@ -97,7 +99,8 @@ void testMscale(const M & m1, double a, double & time, M & result) {
   for (int l = 0; l < NLOOP; l++) 	
     {
       mtmp(0,0) = gV[l];
-      result = mtmp * a;  
+      //result = mtmp * a;  
+      result = mtmp; result *= a;
     }
 }
 

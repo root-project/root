@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: BinaryOperators.h,v 1.5 2006/06/02 15:04:54 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: BinaryOperators.h,v 1.6 2006/06/08 15:23:33 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_BinaryOperators
@@ -889,11 +889,11 @@ inline VecExpr<BinaryOpCopyL<DivOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
    @ingroup MatrixFunctions
 */
 //==============================================================================
-// operator/ (SMatrix, binary)
+// Div (SMatrix, binary)
 //==============================================================================
 template <  class T, unsigned int D, unsigned int D2, class R1, class R2>
 inline Expr<BinaryOp<DivOp<T>, SMatrix<T,D,D2,R1>, SMatrix<T,D,D2,R2>, T>, T, D, D2, typename AddPolicy<T,D,D2,R1,R2>::RepType>
- operator/(const SMatrix<T,D,D2,R1>& lhs, const SMatrix<T,D,D2,R2>& rhs) {
+ Div(const SMatrix<T,D,D2,R1>& lhs, const SMatrix<T,D,D2,R2>& rhs) {
   typedef BinaryOp<DivOp<T>, SMatrix<T,D,D2,R1>, SMatrix<T,D,D2,R2>, T> DivOpBinOp;
 
   return Expr<DivOpBinOp,T,D,D2,typename AddPolicy<T,D,D2,R1,R2>::RepType>(DivOpBinOp(DivOp<T>(),lhs,rhs));
@@ -901,11 +901,11 @@ inline Expr<BinaryOp<DivOp<T>, SMatrix<T,D,D2,R1>, SMatrix<T,D,D2,R2>, T>, T, D,
 
 
 //==============================================================================
-// operator/ (SMatrix, binary)
+// Div (SMatrix, binary)
 //==============================================================================
 template <class A,  class T, unsigned int D, unsigned int D2, class R1, class R2>
 inline Expr<BinaryOp<DivOp<T>, Expr<A,T,D,D2,R1>, SMatrix<T,D,D2,R2>, T>, T, D, D2, typename AddPolicy<T,D,D2,R1,R2>::RepType>
- operator/(const Expr<A,T,D,D2,R1>& lhs, const SMatrix<T,D,D2,R2>& rhs) {
+ Div(const Expr<A,T,D,D2,R1>& lhs, const SMatrix<T,D,D2,R2>& rhs) {
   typedef BinaryOp<DivOp<T>, Expr<A,T,D,D2,R1>, SMatrix<T,D,D2,R2>, T> DivOpBinOp;
 
   return Expr<DivOpBinOp,T,D,D2,typename AddPolicy<T,D,D2,R1,R2>::RepType>(DivOpBinOp(DivOp<T>(),lhs,rhs));
@@ -913,11 +913,11 @@ inline Expr<BinaryOp<DivOp<T>, Expr<A,T,D,D2,R1>, SMatrix<T,D,D2,R2>, T>, T, D, 
 
 
 //==============================================================================
-// operator/ (SMatrix, binary)
+// Div (SMatrix, binary)
 //==============================================================================
 template < class A, class T, unsigned int D, unsigned int D2, class R1, class R2>
 inline Expr<BinaryOp<DivOp<T>, SMatrix<T,D,D2,R1>, Expr<A,T,D,D2,R2>, T>, T, D, D2, typename AddPolicy<T,D,D2,R1,R2>::RepType>
- operator/(const SMatrix<T,D,D2,R1>& lhs, const Expr<A,T,D,D2,R2>& rhs) {
+ Div(const SMatrix<T,D,D2,R1>& lhs, const Expr<A,T,D,D2,R2>& rhs) {
   typedef BinaryOp<DivOp<T>, SMatrix<T,D,D2,R1>, Expr<A,T,D,D2,R2>, T> DivOpBinOp;
 
   return Expr<DivOpBinOp,T,D,D2,typename AddPolicy<T,D,D2,R1,R2>::RepType>(DivOpBinOp(DivOp<T>(),lhs,rhs));
@@ -925,11 +925,11 @@ inline Expr<BinaryOp<DivOp<T>, SMatrix<T,D,D2,R1>, Expr<A,T,D,D2,R2>, T>, T, D, 
 
 
 //==============================================================================
-// operator/ (SMatrix, binary)
+// Div (SMatrix, binary)
 //==============================================================================
 template <class A, class B, class T, unsigned int D, unsigned int D2, class R1, class R2>
 inline Expr<BinaryOp<DivOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T>, T, D, D2,typename AddPolicy<T,D,D2,R1,R2>::RepType>
- operator/(const Expr<A,T,D,D2,R1>& lhs, const Expr<B,T,D,D2,R2>& rhs) {
+ Div(const Expr<A,T,D,D2,R1>& lhs, const Expr<B,T,D,D2,R2>& rhs) {
   typedef BinaryOp<DivOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T> DivOpBinOp;
 
   return Expr<DivOpBinOp,T,D,D2,typename AddPolicy<T,D,D2,R1,R2>::RepType>(DivOpBinOp(DivOp<T>(),lhs,rhs));

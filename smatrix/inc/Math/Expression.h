@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.10 2006/04/25 13:54:01 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.11 2006/06/08 15:23:34 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Expression
@@ -71,8 +71,12 @@ public:
   ///
   ~VecExpr() {}
 
-  ///
+   /// 
   inline T apply(unsigned int i) const {
+    return rhs_.apply(i);
+  }
+
+  inline T operator() (unsigned int i) const {
     return rhs_.apply(i);
   }
 

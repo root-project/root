@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.22 2006/06/02 15:04:54 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.23 2006/06/08 15:23:34 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -65,7 +65,7 @@
 
 namespace ROOT { 
 
-  namespace Math { 
+namespace Math { 
 
 
 
@@ -74,42 +74,42 @@ namespace ROOT {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 SMatrix<T,D1,D2,R>::SMatrix() {
-  // operator=(0);   // if operator=(T ) is defined
-    for(unsigned int i=0; i<R::kSize; ++i) fRep.Array()[i] = 0;
+   // operator=(0);   // if operator=(T ) is defined
+   for(unsigned int i=0; i<R::kSize; ++i) fRep.Array()[i] = 0;
 }
 
-    //identity
+//identity
 template <class T, unsigned int D1, unsigned int D2, class R>
 SMatrix<T,D1,D2,R>::SMatrix( SMatrixIdentity ) {
-  for(unsigned int i=0; i<R::kSize; ++i)
-    fRep.Array()[i] = 0;
-  if (D1 <= D2) { 
-    for(unsigned int i=0; i<D1; ++i)
-      fRep[i*D2+i] = 1;
-  }
-  else { 
-    for(unsigned int i=0; i<D2; ++i)
-      fRep[i*D2+i] = 1;
-  }
+   for(unsigned int i=0; i<R::kSize; ++i)
+      fRep.Array()[i] = 0;
+   if (D1 <= D2) { 
+      for(unsigned int i=0; i<D1; ++i)
+         fRep[i*D2+i] = 1;
+   }
+   else { 
+      for(unsigned int i=0; i<D2; ++i)
+         fRep[i*D2+i] = 1;
+   }
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 SMatrix<T,D1,D2,R>::SMatrix(const SMatrix<T,D1,D2,R>& rhs) {
-    fRep = rhs.fRep;
+   fRep = rhs.fRep;
 }
 
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class R2>
 SMatrix<T,D1,D2,R>::SMatrix(const SMatrix<T,D1,D2,R2>& rhs) {
-  operator=(rhs);
+   operator=(rhs);
 }
 
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
 SMatrix<T,D1,D2,R>::SMatrix(const Expr<A,T,D1,D2,R2>& rhs) {
-  operator=(rhs);
+   operator=(rhs);
 }
 
 
@@ -119,159 +119,100 @@ SMatrix<T,D1,D2,R>::SMatrix(const Expr<A,T,D1,D2,R2>& rhs) {
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class InputIterator>
 SMatrix<T,D1,D2,R>::SMatrix(InputIterator begin, InputIterator end, bool triang, bool lower) {
-  for(unsigned int i=0; i<R::kSize; ++i) fRep.Array()[i] = 0;
-  AssignItr<T,D1,D2,R>::Evaluate(*this,begin,end,triang,lower); 
+   for(unsigned int i=0; i<R::kSize; ++i) fRep.Array()[i] = 0;
+   AssignItr<T,D1,D2,R>::Evaluate(*this,begin,end,triang,lower); 
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class InputIterator>
 SMatrix<T,D1,D2,R>::SMatrix(InputIterator begin, unsigned int size, bool triang, bool lower) {
-  for(unsigned int i=0; i<R::kSize; ++i) fRep.Array()[i] = 0;
-  AssignItr<T,D1,D2,R>::Evaluate(*this,begin,begin+size,triang,lower); 
-}
-
-
-#ifdef OLD_IMPL
-//=============================================================================
-// old constructors (disabled)
-//============================================================================
-   
-template <class T, unsigned int D1, unsigned int D2, class R>
-SMatrix<T,D1,D2,R>::SMatrix(const T& rhs, bool diagonal) {
-  if(diagonal) {
-    // symmetric matrix!
-    assert(D1==D2);
-    // 50% faster than with nested loops
-    for(unsigned int i=0; i<D1*D2; ++i)
-      fRep[i] = 0;
-    for(unsigned int i=0; i<D1; ++i)
-      fRep[i*D1+i] = rhs;
-  } else {
-    for(unsigned int i=0; i<D1*D2; ++i) {
-      fRep[i] = rhs;
-    }
-  }
-}
-
-template <class T, unsigned int D1, unsigned int D2, class R>
-SMatrix<T,D1,D2,R>::SMatrix(const SVector<T,D1>& rhs) {
-  for(unsigned int i=0; i<D1; ++i) {
-    const unsigned int row = i*D1;
-    for(unsigned int j=0; j<D1; ++j) {
-      fRep[row+j] = rhs[i]*rhs[j];
-    }
-  }
-}
-
-template <class T, unsigned int D1, unsigned int D2, class R>
-template <class A>
-SMatrix<T,D1,D2,R>::SMatrix(const Expr<A,T,D1>& rhs) {
-  for(unsigned int i=0; i<D1; ++i) {
-    const unsigned int row = i*D1;
-    for(unsigned int j=0; j<D1; ++j) {
-      fRep[row+j] = rhs.apply(i)*rhs.apply(j);
-    }
-  }
-}
-
-template <class T, unsigned int D1, unsigned int D2, class R>
-template <class T1>
-SMatrix<T,D1,D2,R>::SMatrix(const T1* a, bool triang, unsigned int len) {
-  // fill from array with lower triangular matrix?
-  if(triang==false) {
-    for(unsigned int i=0; i<len; ++i) {
-      fRep[i] = a[i];
-    }
-    if(len<D1*D2)
-      for(unsigned int i=len; i<D1*D2; ++i)
-	fRep[i] = 0.;
-  } else {
-    // symmetric matrix required!
-    assert(D1==D2);
-
-    unsigned int k=0;
-    if(len == (Square(D1)+D1)/2) {
-      for(unsigned int i=0; i<D1; ++i) {
-	const unsigned int row = i*D1;
-	for(unsigned int j=0; j<=i && k<len; ++j) {
-	  fRep[row+j] = fRep[j*D1+i] = a[k++];
-	}
-      }
-    } else {
-      unsigned int k=0;
-      for(unsigned int i=0; i<D1; ++i) {
-	const unsigned int row = i*D1;
-	for(unsigned int j=0; j<=i; ++j) {
-	  if(k<len)
-	    fRep[row+j] = fRep[j*D1+i] = a[k++];
-	  else
-	    fRep[row+j] = fRep[j*D1+i] = 0.;
-	} // for j
-      } // for i
-    } // if len == 
-  } // if triang
+   for(unsigned int i=0; i<R::kSize; ++i) fRep.Array()[i] = 0;
+   AssignItr<T,D1,D2,R>::Evaluate(*this,begin,begin+size,triang,lower); 
 }
 
 
 //==============================================================================
-// operator=
+// Assignment and operator= for scalar types for matrices of size 1 
+// compiles only for matrices of size 1
 //==============================================================================
+template <class T, unsigned int D1, unsigned int D2, class R>
+SMatrix<T,D1,D2,R>::SMatrix(const T&  rhs) {
+   STATIC_CHECK( kSize == 1,SMatrix_NOT_of_size_1 );
+   fRep[0] = rhs;
+}
+
 template <class T, unsigned int D1, unsigned int D2, class R>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator=(const T&  rhs) {
-  fRep = rhs.fRep;
-  return *this;
+   STATIC_CHECK( kSize == 1,SMatrix_NOT_of_size_1 );
+   fRep[0] = rhs;
+   return *this;
 }
 
-#endif
 //=============================================================================
 //=============================================================================
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class M>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator=(const M&  rhs) {
-  fRep = rhs.fRep;
-  return *this;
+   fRep = rhs.fRep;
+   return *this;
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator=(const Expr<A,T,D1,D2,R2>&  rhs) {
-
-  Assign<T,D1,D2,A,R,R2>::Evaluate(*this, rhs);
-  return *this;
+   
+   Assign<T,D1,D2,A,R,R2>::Evaluate(*this, rhs);
+   return *this;
 }
 
+//=============================================================================
 // assign from an identity
 template <class T, unsigned int D1, unsigned int D2, class R>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator= ( SMatrixIdentity ) {
-  for(unsigned int i=0; i<R::kSize; ++i)
-    fRep.Array()[i] = 0;
-  if (D1 <= D2) { 
-    for(unsigned int i=0; i<D1; ++i)
-      fRep[i*D2+i] = 1;
-  }
-  else { 
-    for(unsigned int i=0; i<D2; ++i)
-      fRep[i*D2+i] = 1;
-  }
-  return *this;
+   for(unsigned int i=0; i<R::kSize; ++i)
+      fRep.Array()[i] = 0;
+   if (D1 <= D2) { 
+      for(unsigned int i=0; i<D1; ++i)
+         fRep[i*D2+i] = 1;
+   }
+   else { 
+      for(unsigned int i=0; i<D2; ++i)
+         fRep[i*D2+i] = 1;
+   }
+   return *this;
 }
+
+
 
 //=============================================================================
 // operator+=
 //=============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
-template <class M>
-SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator+=(const M&  rhs) {
-  fRep += rhs.fRep;
-  return *this;
+SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator+=(const T&  rhs) {
+   // self-addition with a scalar value
+   for(unsigned int i=0; i<R::kSize; ++i) {
+      fRep.Array()[i] += rhs;
+   }
+   return *this;
 }
+
+template <class T, unsigned int D1, unsigned int D2, class R>
+template <class R2>
+SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator+=(const SMatrix<T,D1,D2,R2>&  rhs) {
+   // self-addition with another matrix (any representation) 
+   // use operator+= of the representation object
+   fRep += rhs.fRep;
+   return *this;
+}
+
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator+=(const Expr<A,T,D1,D2,R2>&  rhs) {
-  PlusEquals<T,D1,D2,A,R,R2>::Evaluate(*this, rhs);
-  return *this;
+   // self-addition with an expression
+   PlusEquals<T,D1,D2,A,R,R2>::Evaluate(*this, rhs);
+   return *this;
 }
 
 
@@ -279,89 +220,99 @@ SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator+=(const Expr<A,T,D1,D2,R2>&  rh
 // operator-=
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
-template <class M>
-SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator-=(const M&  rhs) {
-  fRep -= rhs.fRep;
-  return *this;
+SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator-=(const T&  rhs) {
+   // self-subtraction with a scalar value
+   for(unsigned int i=0; i<R::kSize; ++i) {
+      fRep.Array()[i] -= rhs;
+   }
+   return *this;
 }
+
+template <class T, unsigned int D1, unsigned int D2, class R>
+template <class R2>
+SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator-=(const SMatrix<T,D1,D2,R2>&  rhs) {
+   // self-subtraction with another matrix (any representation) 
+   // use operator-= of the representation object
+   fRep -= rhs.fRep;
+   return *this;
+}
+
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator-=(const Expr<A,T,D1,D2,R2>&  rhs) {
-  MinusEquals<T,D1,D2,A,R,R2>::Evaluate(*this, rhs);
-  return *this;
+   // self-subtraction with an expression
+   MinusEquals<T,D1,D2,A,R,R2>::Evaluate(*this, rhs);
+   return *this;
 }
 
-
-#ifdef OLD_IMPL
 //==============================================================================
 // operator*=
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
-SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator*=(const SMatrix<T,D1,D2,R>&  rhs) {
-  for(unsigned int i=0; i<R::kSize; ++i) {
-    fRep.Array()[i] *= rhs.apply(i);
-  }
-  return *this;
-}
+SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator*=(const T&  rhs) {
+   // case of multiplication with a scalar 
+   for(unsigned int i=0; i<R::kSize; ++i) {
+      fRep.Array()[i] *= rhs;
+   }
+   return  *this;
+} 
 
 template <class T, unsigned int D1, unsigned int D2, class R>
-template <class A, class R2>
+template <class R2> 
+SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator*=(const SMatrix<T,D1,D2,R2>&  rhs) {
+   // self-multiplication with another matrix (will work only for square matrices)
+   // a temporary is needed and will be created automatically to store intermediate result
+   return operator=(*this * rhs);
+} 
+
+template <class T, unsigned int D1, unsigned int D2, class R>
+template <class A, class R2> 
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator*=(const Expr<A,T,D1,D2,R2>&  rhs) {
-  for(unsigned int i=0; i<D1*D2; ++i) {
-    fArray[i] *= rhs.apply(i);
-  }
-  return *this;
-}
+   // self-multiplication with an expression (will work only for square matrices)
+   // a temporary is needed and will be created automatically to store intermediate result
+   return operator=(*this * rhs);
+} 
 
 
 //==============================================================================
-// operator/=
+// operator/= (only for scalar values)
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
-SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator/=(const SMatrix<T,D1,D2,R>&  rhs) {
-  for(unsigned int i=0; i<D1*D2; ++i) {
-    fArray[i] /= rhs.apply(i);
-  }
-  return *this;
-}
-
-template <class T, unsigned int D1, unsigned int D2, class R>
-template <class A, class R2>
-SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator/=(const Expr<A,T,D1,D2,R2>&  rhs) {
-  for(unsigned int i=0; i<D1*D2; ++i) {
-    fArray[i] /= rhs.apply(i);
-  }
-  return *this;
-}
-#endif
+SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator/=(const T&  rhs) {
+   // division with a scalar 
+   for(unsigned int i=0; i<R::kSize; ++i) {
+      fRep.Array()[i] /= rhs;
+   }
+   return  *this;
+} 
 
 //==============================================================================
 // operator== (element wise comparison)
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 bool SMatrix<T,D1,D2,R>::operator==(const T& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<R::kSize; ++i) {
-    rc = rc && (fRep.Array()[i] == rhs);
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<R::kSize; ++i) {
+      rc = rc && (fRep.Array()[i] == rhs);
+   }
+   return rc;
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class R2>
 bool SMatrix<T,D1,D2,R>::operator==(const SMatrix<T,D1,D2,R2>& rhs) const {
-  return fRep == rhs.fRep;
+   return fRep == rhs.fRep;
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
 bool SMatrix<T,D1,D2,R>::operator==(const Expr<A,T,D1,D2,R2>& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D1*D2; ++i) {
-    rc = rc && (fRep[i] == rhs.apply(i));
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D1*D2; ++i) {
+      rc = rc && (fRep[i] == rhs.apply(i));
+   }
+   return rc;
 }
 
 //==============================================================================
@@ -369,18 +320,18 @@ bool SMatrix<T,D1,D2,R>::operator==(const Expr<A,T,D1,D2,R2>& rhs) const {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline bool SMatrix<T,D1,D2,R>::operator!=(const T& rhs) const {
-  return !operator==(rhs);
+   return !operator==(rhs);
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline bool SMatrix<T,D1,D2,R>::operator!=(const SMatrix<T,D1,D2,R>& rhs) const {
-  return !operator==(rhs);
+   return !operator==(rhs);
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
 inline bool SMatrix<T,D1,D2,R>::operator!=(const Expr<A,T,D1,D2,R2>& rhs) const {
-  return !operator==(rhs);
+   return !operator==(rhs);
 }
 
 
@@ -389,31 +340,31 @@ inline bool SMatrix<T,D1,D2,R>::operator!=(const Expr<A,T,D1,D2,R2>& rhs) const 
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 bool SMatrix<T,D1,D2,R>::operator>(const T& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D1*D2; ++i) {
-    rc = rc && (fRep[i] > rhs);
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D1*D2; ++i) {
+      rc = rc && (fRep[i] > rhs);
+   }
+   return rc;
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class R2>
 bool SMatrix<T,D1,D2,R>::operator>(const SMatrix<T,D1,D2,R2>& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D1*D2; ++i) {
-    rc = rc && (fRep[i] > rhs.fRep[i]);
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D1*D2; ++i) {
+      rc = rc && (fRep[i] > rhs.fRep[i]);
+   }
+   return rc;
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
 bool SMatrix<T,D1,D2,R>::operator>(const Expr<A,T,D1,D2,R2>& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D1*D2; ++i) {
-    rc = rc && (fRep[i] > rhs.apply(i));
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D1*D2; ++i) {
+      rc = rc && (fRep[i] > rhs.apply(i));
+   }
+   return rc;
 }
 
 //==============================================================================
@@ -421,89 +372,50 @@ bool SMatrix<T,D1,D2,R>::operator>(const Expr<A,T,D1,D2,R2>& rhs) const {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 bool SMatrix<T,D1,D2,R>::operator<(const T& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D1*D2; ++i) {
-    rc = rc && (fRep[i] < rhs);
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D1*D2; ++i) {
+      rc = rc && (fRep[i] < rhs);
+   }
+   return rc;
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class R2>
 bool SMatrix<T,D1,D2,R>::operator<(const SMatrix<T,D1,D2,R2>& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D1*D2; ++i) {
-    rc = rc && (fRep[i] < rhs.fRep[i]);
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D1*D2; ++i) {
+      rc = rc && (fRep[i] < rhs.fRep[i]);
+   }
+   return rc;
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
 bool SMatrix<T,D1,D2,R>::operator<(const Expr<A,T,D1,D2,R2>& rhs) const {
-  bool rc = true;
-  for(unsigned int i=0; i<D1*D2; ++i) {
-    rc = rc && (fRep[i] < rhs.apply(i));
-  }
-  return rc;
+   bool rc = true;
+   for(unsigned int i=0; i<D1*D2; ++i) {
+      rc = rc && (fRep[i] < rhs.apply(i));
+   }
+   return rc;
 }
 
-#ifdef OLD_IMPL
-//==============================================================================
-// sinvert
-//==============================================================================
-template <class T, unsigned int D1, unsigned int D2, class R>
-inline bool SMatrix<T,D1,D2,R>::Sinvert() {
-  STATIC_CHECK( D1 == D2,SMatrix_not_square); 
-  return SInverter<T,D1,D1>::Dsinv( fRep );
-  //return Dsinv<T,D1,D1>( fRep.Array() );
-}
-
-template <class T, unsigned int D1, unsigned int D2, class R>
-inline SMatrix<T,D1,D2,R> SMatrix<T,D1,D2,R>::Sinverse(int &  ifail) const {
-  SMatrix<T,D1,D2,R> tmp(*this);
-  bool ok = tmp.Sinvert();
-  ifail = 0; 
-  if (!ok) ifail = 1;  
-  return tmp;
-}
-
-
-//==============================================================================
-// sdet
-//==============================================================================
-template <class T, unsigned int D1, unsigned int D2, class R>
-inline bool SMatrix<T,D1,D2,R>::Sdet(T& det) {
-  STATIC_CHECK( D1 == D2,SMatrix_not_square); 
-  //  return Dsfact<SMatrix<T,D1,D1>, D1, D1>(*this,det);
-  //return Dsfact<R, D1, D1>(fRep, det);
-  return SDeterminant<D1,D2>::Dsfact(fRep, det);
-}
-
-template <class T, unsigned int D1, unsigned int D2, class R>
-inline bool SMatrix<T,D1,D2,R>::Sdet2(T& det) const {
-  SMatrix<T,D1,D2,R> tmp(*this);
-  return tmp.Sdet(det);
-}
-
-#endif
 
 //==============================================================================
 // invert
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline bool SMatrix<T,D1,D2,R>::Invert() {
-  STATIC_CHECK( D1 == D2,SMatrix_not_square); 
-  return Inverter<D1,D2>::Dinv((*this).fRep);
+   STATIC_CHECK( D1 == D2,SMatrix_not_square); 
+   return Inverter<D1,D2>::Dinv((*this).fRep);
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D1,D2,R> SMatrix<T,D1,D2,R>::Inverse(int & ifail) const {
-  SMatrix<T,D1,D2,R> tmp(*this);
-  bool ok = tmp.Invert();
-  ifail = 0; 
-  if (!ok) ifail = 1;  
-  return tmp;
+   SMatrix<T,D1,D2,R> tmp(*this);
+   bool ok = tmp.Invert();
+   ifail = 0; 
+   if (!ok) ifail = 1;  
+   return tmp;
 }
 
 //==============================================================================
@@ -511,15 +423,15 @@ inline SMatrix<T,D1,D2,R> SMatrix<T,D1,D2,R>::Inverse(int & ifail) const {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline bool SMatrix<T,D1,D2,R>::Det(T& det) {
-  STATIC_CHECK( D1 == D2,SMatrix_not_square); 
-  //  return Dfact<SMatrix<T,D1,D1>, D1, D1>(*this,det);
-  //return Dfact<R, D1, D1>(fRep, det);
-  return Determinant<D1,D2>::Dfact(fRep, det);
+   STATIC_CHECK( D1 == D2,SMatrix_not_square); 
+   //  return Dfact<SMatrix<T,D1,D1>, D1, D1>(*this,det);
+   //return Dfact<R, D1, D1>(fRep, det);
+   return Determinant<D1,D2>::Dfact(fRep, det);
 }
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline bool SMatrix<T,D1,D2,R>::Det2(T& det) const {
-  SMatrix<T,D1,D2,R> tmp(*this);
-  return tmp.Det(det);
+   SMatrix<T,D1,D2,R> tmp(*this);
+   return tmp.Det(det);
 }
 
 
@@ -529,15 +441,15 @@ inline bool SMatrix<T,D1,D2,R>::Det2(T& det) const {
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <unsigned int D>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_in_row(const SVector<T,D>& rhs,
-						 unsigned int row,
-						 unsigned int col) {
-
-  assert(col+D <= D2);
-
-  for(unsigned int i=row*D2+col, j=0; j<D; ++i, ++j) {
-    fRep[i] = rhs.apply(j);
-  }
-  return *this;
+                                                     unsigned int row,
+                                                     unsigned int col) {
+   
+   assert(col+D <= D2);
+   
+   for(unsigned int i=row*D2+col, j=0; j<D; ++i, ++j) {
+      fRep[i] = rhs.apply(j);
+   }
+   return *this;
 }
 
 //==============================================================================
@@ -546,15 +458,15 @@ SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_in_row(const SVector<T,D>& rhs,
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, unsigned int D>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_in_row(const VecExpr<A,T,D>& rhs,
-						 unsigned int row,
-						 unsigned int col) {
-
-  assert(col+D <= D2);
-
-  for(unsigned int i=row*D2+col, j=0; j<D; ++i, ++j) {
-    fRep[i] = rhs.apply(j);
-  }
-  return *this;
+                                                     unsigned int row,
+                                                     unsigned int col) {
+   
+   assert(col+D <= D2);
+   
+   for(unsigned int i=row*D2+col, j=0; j<D; ++i, ++j) {
+      fRep[i] = rhs.apply(j);
+   }
+   return *this;
 }
 
 //==============================================================================
@@ -563,15 +475,15 @@ SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_in_row(const VecExpr<A,T,D>& rhs,
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <unsigned int D>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_in_col(const SVector<T,D>& rhs,
-						 unsigned int row,
-						 unsigned int col) {
-
-  assert(row+D <= D1);
-
-  for(unsigned int i=row*D2+col, j=0; j<D; i+=D2, ++j) {
-    fRep[i] = rhs.apply(j);
-  }
-  return *this;
+                                                     unsigned int row,
+                                                     unsigned int col) {
+   
+   assert(row+D <= D1);
+   
+   for(unsigned int i=row*D2+col, j=0; j<D; i+=D2, ++j) {
+      fRep[i] = rhs.apply(j);
+   }
+   return *this;
 }
 
 //==============================================================================
@@ -580,15 +492,15 @@ SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_in_col(const SVector<T,D>& rhs,
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, unsigned int D>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_in_col(const VecExpr<A,T,D>& rhs,
-						 unsigned int row,
-						 unsigned int col) {
-
-  assert(row+D <= D1);
-
-  for(unsigned int i=row*D2+col, j=0; j<D; i+=D2, ++j) {
-    fRep[i] = rhs.apply(j);
-  }
-  return *this;
+                                                     unsigned int row,
+                                                     unsigned int col) {
+   
+   assert(row+D <= D1);
+   
+   for(unsigned int i=row*D2+col, j=0; j<D; i+=D2, ++j) {
+      fRep[i] = rhs.apply(j);
+   }
+   return *this;
 }
 
 //==============================================================================
@@ -597,10 +509,10 @@ SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_in_col(const VecExpr<A,T,D>& rhs,
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <unsigned int D3, unsigned int D4, class R2>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_at(const SMatrix<T,D3,D4,R2>& rhs,
-					     unsigned int row,
-					     unsigned int col) {
-  PlaceMatrix<T,D1,D2,D3,D4,R,R2>::Evaluate(*this,rhs,row,col);
-  return *this;
+                                                 unsigned int row,
+                                                 unsigned int col) {
+   PlaceMatrix<T,D1,D2,D3,D4,R,R2>::Evaluate(*this,rhs,row,col);
+   return *this;
 }
 
 //==============================================================================
@@ -609,10 +521,10 @@ SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_at(const SMatrix<T,D3,D4,R2>& rhs,
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, unsigned int D3, unsigned int D4, class R2>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_at(const Expr<A,T,D3,D4,R2>& rhs,
-					     unsigned int row,
-					     unsigned int col) {
-  PlaceExpr<T,D1,D2,D3,D4,A,R,R2>::Evaluate(*this,rhs,row,col);
-  return *this; 
+                                                 unsigned int row,
+                                                 unsigned int col) {
+   PlaceExpr<T,D1,D2,D3,D4,A,R,R2>::Evaluate(*this,rhs,row,col);
+   return *this; 
 }
 
 //==============================================================================
@@ -620,14 +532,14 @@ SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_at(const Expr<A,T,D3,D4,R2>& rhs,
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 SVector<T,D2> SMatrix<T,D1,D2,R>::Row(unsigned int therow) const {
-
-  const unsigned int offset = therow*D2;
-
-  /*static*/  SVector<T,D2> tmp;
-  for(unsigned int i=0; i<D2; ++i) {
-    tmp[i] = fRep[offset+i];
-  }
-  return tmp;
+   
+   const unsigned int offset = therow*D2;
+   
+   /*static*/  SVector<T,D2> tmp;
+   for(unsigned int i=0; i<D2; ++i) {
+      tmp[i] = fRep[offset+i];
+   }
+   return tmp;
 }
 
 //==============================================================================
@@ -635,12 +547,12 @@ SVector<T,D2> SMatrix<T,D1,D2,R>::Row(unsigned int therow) const {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 SVector<T,D1> SMatrix<T,D1,D2,R>::Col(unsigned int thecol) const {
-
-  /*static */ SVector<T,D1> tmp;
-  for(unsigned int i=0; i<D1; ++i) {
-    tmp[i] = fRep[thecol+i*D2];
-  }
-  return tmp;
+   
+   /*static */ SVector<T,D1> tmp;
+   for(unsigned int i=0; i<D1; ++i) {
+      tmp[i] = fRep[thecol+i*D2];
+   }
+   return tmp;
 }
 
 //==============================================================================
@@ -648,22 +560,22 @@ SVector<T,D1> SMatrix<T,D1,D2,R>::Col(unsigned int thecol) const {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 std::ostream& SMatrix<T,D1,D2,R>::Print(std::ostream& os) const {
-  os.setf(std::ios::right,std::ios::adjustfield);
-  //  os.setf(ios::fixed);
-
-  os << "[ ";
-  for (unsigned int i=0; i < D1; ++i) {
-    for (unsigned int j=0; j < D2; ++j) {
-      os << std::setw(12) << fRep[i*D2+j];
-      if ((!((j+1)%12)) && (j < D2-1))
-	os << std::endl << "         ...";
-    }
-    if (i != D1 - 1)
-      os << std::endl  << "  ";
-  }
-  os << " ]";
-  
-  return os;
+   os.setf(std::ios::right,std::ios::adjustfield);
+   //  os.setf(ios::fixed);
+   
+   os << "[ ";
+   for (unsigned int i=0; i < D1; ++i) {
+      for (unsigned int j=0; j < D2; ++j) {
+         os << std::setw(12) << fRep[i*D2+j];
+         if ((!((j+1)%12)) && (j < D2-1))
+            os << std::endl << "         ...";
+      }
+      if (i != D1 - 1)
+         os << std::endl  << "  ";
+   }
+   os << " ]";
+   
+   return os;
 }
 
 //==============================================================================
@@ -683,12 +595,12 @@ inline T* SMatrix<T,D1,D2,R>::Array() { return fRep.Array(); }
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline const T& SMatrix<T,D1,D2,R>::operator()(unsigned int i, unsigned int j) const {
-  return fRep(i,j);
+   return fRep(i,j);
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline T& SMatrix<T,D1,D2,R>::operator()(unsigned int i, unsigned int j) {
-  return fRep(i,j);
+   return fRep(i,j);
 }
 
 //==============================================================================
@@ -696,22 +608,22 @@ inline T& SMatrix<T,D1,D2,R>::operator()(unsigned int i, unsigned int j) {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline T * SMatrix<T,D1,D2,R>::begin() {
-  return fRep.Array();
+   return fRep.Array();
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline T * SMatrix<T,D1,D2,R>::end() {
-  return fRep.Array() + R::kSize;
+   return fRep.Array() + R::kSize;
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline const T * SMatrix<T,D1,D2,R>::begin() const {
-  return fRep.Array();
+   return fRep.Array();
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline const T * SMatrix<T,D1,D2,R>::end() const {
-  return fRep.Array() + R::kSize;
+   return fRep.Array() + R::kSize;
 }
 
 
@@ -722,73 +634,73 @@ inline const T * SMatrix<T,D1,D2,R>::end() const {
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class SubVector>  
 SubVector SMatrix<T,D1,D2,R>::SubRow(unsigned int therow, unsigned int col0 ) const { 
-
-  const unsigned int offset = therow*D2 + col0;
-
-  STATIC_CHECK( SubVector::kSize <= D2,SVector_dimension_too_small); 
-  assert(col0 + SubVector::kSize <= D2);
-
-  SubVector tmp;
-  for(unsigned int i=0; i<SubVector::kSize; ++i) {
-    tmp[i] = fRep[offset+i];
-  }
-  return tmp;
+   
+   const unsigned int offset = therow*D2 + col0;
+   
+   STATIC_CHECK( SubVector::kSize <= D2,SVector_dimension_too_small); 
+   assert(col0 + SubVector::kSize <= D2);
+   
+   SubVector tmp;
+   for(unsigned int i=0; i<SubVector::kSize; ++i) {
+      tmp[i] = fRep[offset+i];
+   }
+   return tmp;
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class SubVector>  
 SubVector SMatrix<T,D1,D2,R>::SubCol(unsigned int thecol, unsigned int row0 ) const { 
-
-  const unsigned int offset = thecol + row0*D1;
-
-  STATIC_CHECK( SubVector::kSize <= D1,SVector_dimension_too_small); 
-  assert(row0 + SubVector::kSize <= D1);
-
-  SubVector tmp;
-  for(unsigned int i=0; i<SubVector::kSize; ++i) {
-    tmp[i] = fRep[offset+i*D1];
-  }
-  return tmp;
+   
+   const unsigned int offset = thecol + row0*D1;
+   
+   STATIC_CHECK( SubVector::kSize <= D1,SVector_dimension_too_small); 
+   assert(row0 + SubVector::kSize <= D1);
+   
+   SubVector tmp;
+   for(unsigned int i=0; i<SubVector::kSize; ++i) {
+      tmp[i] = fRep[offset+i*D1];
+   }
+   return tmp;
 }
 
 // submatrix
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class SubMatrix>  
 SubMatrix SMatrix<T,D1,D2,R>::Sub(unsigned int row0, unsigned int col0) const { 
-
-  SubMatrix tmp;
-  RetrieveMatrix<T,SubMatrix::kRows, SubMatrix::kCols, D1, D2, typename SubMatrix::rep_type, R>::Evaluate
-    (tmp,*this,row0,col0);
-  return tmp;
+   
+   SubMatrix tmp;
+   RetrieveMatrix<T,SubMatrix::kRows, SubMatrix::kCols, D1, D2, typename SubMatrix::rep_type, R>::Evaluate
+      (tmp,*this,row0,col0);
+   return tmp;
 }
 
 //diagonal
 template <class T, unsigned int D1, unsigned int D2, class R>
 SVector<T,D1> SMatrix<T,D1,D2,R>::Diagonal( ) const { 
-
-  // only for squared matrices
-  STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
-
-  SVector<T,D1> tmp;
-  for(unsigned int i=0; i<D1; ++i) {
-    tmp[i] = fRep[ i*D2 + i];
-  }
-  return tmp;
+   
+   // only for squared matrices
+   STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
+   
+   SVector<T,D1> tmp;
+   for(unsigned int i=0; i<D1; ++i) {
+      tmp[i] = fRep[ i*D2 + i];
+   }
+   return tmp;
 }
 
 //set diagonal
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class Vector> 
 void SMatrix<T,D1,D2,R>::SetDiagonal( const Vector & v) { 
-
-  // check size that size of vector is correct
-  STATIC_CHECK( ( ( D1 <= D2) && Vector::kSize == D1 ) || 
-		( ( D2 < D1 ) && Vector::kSize == D2 ), SVector_size_NOT_correct );
-
-
-  for(unsigned int i=0; i<Vector::kSize; ++i) {
-    fRep[ i*D2 + i] = v[i];
-  }
+   
+   // check size that size of vector is correct
+   STATIC_CHECK( ( ( D1 <= D2) && Vector::kSize == D1 ) || 
+                 ( ( D2 < D1 ) && Vector::kSize == D2 ), SVector_size_NOT_correct );
+   
+   
+   for(unsigned int i=0; i<Vector::kSize; ++i) {
+      fRep[ i*D2 + i] = v[i];
+   }
 }
 
 
@@ -800,25 +712,25 @@ SVector<T, D1 * (D2 +1)/2 >  SMatrix<T,D1,D2,R>::UpperBlock( ) const {
 template <class SubVector>  
 SubVector SMatrix<T,D1,D2,R>::UpperBlock( ) const { 
 #endif
-  // only for squared matrices
-  STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
-
+   // only for squared matrices
+   STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
+   
 #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
-  SVector<T, D1 * (D2 +1)/2 >  tmp;
+   SVector<T, D1 * (D2 +1)/2 >  tmp;
 #else
-  // N must be equal D1 *(D1 +1)/2
-  STATIC_CHECK( SubVector::kSize == D1*(D1+1)/2,SVector_Wrong_Size );
-  SubVector tmp;
+   // N must be equal D1 *(D1 +1)/2
+   STATIC_CHECK( SubVector::kSize == D1*(D1+1)/2,SVector_Wrong_Size );
+   SubVector tmp;
 #endif
-
-  int k = 0;
-  for(unsigned int i=0; i<D1; ++i) {
-    for(unsigned int j=i; j<D2; ++j) {
-      tmp[k] = fRep[ i*D2 + j];
-      k++;
-    }
-  }
-  return tmp;
+   
+   int k = 0;
+   for(unsigned int i=0; i<D1; ++i) {
+      for(unsigned int j=i; j<D2; ++j) {
+         tmp[k] = fRep[ i*D2 + j];
+         k++;
+      }
+   }
+   return tmp;
 }
 
 //lower block
@@ -829,26 +741,26 @@ SVector<T, D1 * (D2 +1)/2 >  SMatrix<T,D1,D2,R>::LowerBlock( ) const {
 template <class SubVector>  
 SubVector SMatrix<T,D1,D2,R>::LowerBlock( ) const { 
 #endif
-
-  // only for squared matrices
-  STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
-
+   
+   // only for squared matrices
+   STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
+   
 #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
-  SVector<T, D1 * (D2 +1)/2 >  tmp;
+   SVector<T, D1 * (D2 +1)/2 >  tmp;
 #else
-  // N must be equal D1 *(D1 +1)/2
-  STATIC_CHECK( SubVector::kSize == D1*(D1+1)/2,SVector_Wrong_Size );
-  SubVector tmp;
+   // N must be equal D1 *(D1 +1)/2
+   STATIC_CHECK( SubVector::kSize == D1*(D1+1)/2,SVector_Wrong_Size );
+   SubVector tmp;
 #endif
-
-  int k = 0;
-  for(unsigned int i=0; i<D1; ++i) {
-    for(unsigned int j=0; j<=i; ++j) {
-      tmp[k] = fRep[ i*D2 + j];
-      k++;
-    }
-  }
-  return tmp;
+   
+   int k = 0;
+   for(unsigned int i=0; i<D1; ++i) {
+      for(unsigned int j=0; j<=i; ++j) {
+         tmp[k] = fRep[ i*D2 + j];
+         k++;
+      }
+   }
+   return tmp;
 }
 
 /// construct from upper/lower block
@@ -861,40 +773,40 @@ SMatrix<T,D1,D2,R>::SMatrix(const SVector<T, D1*(D2+1)/2 >  & v, bool lower ) {
 template <unsigned int N>  
 SMatrix<T,D1,D2,R>::SMatrix(const SVector<T, N >  & v, bool lower ) {
 #endif
-
-  // only for squared matrices
-  STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
-
+   
+   // only for squared matrices
+   STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
+   
 #ifdef UNSUPPORTED_TEMPLATE_EXPRESSION
-  STATIC_CHECK( N == D1*(D1+1)/2,SVector_Wrong_Size );
+   STATIC_CHECK( N == D1*(D1+1)/2,SVector_Wrong_Size );
 #endif
-
-  int k = 0;
-  if (lower) { 
-    // case of lower block 
-    for(unsigned int i=0; i<D1; ++i) {
-      for(unsigned int j=0; j<=i; ++j) {
-	fRep[ i*D2 + j] = v[k];
-	if ( i != j) fRep[ j*D2 + i] = v[k];
-	k++;
+   
+   int k = 0;
+   if (lower) { 
+      // case of lower block 
+      for(unsigned int i=0; i<D1; ++i) {
+         for(unsigned int j=0; j<=i; ++j) {
+            fRep[ i*D2 + j] = v[k];
+            if ( i != j) fRep[ j*D2 + i] = v[k];
+            k++;
+         }
       }
-    }
-  } else {
-    // case of upper block 
-    for(unsigned int i=0; i<D1; ++i) {
-      for(unsigned int j=i; j<D2; ++j) {
-	fRep[ i*D2 + j] = v[k];
-	if ( i != j) fRep[ j*D2 + i] = v[k];
-	k++;
+   } else {
+      // case of upper block 
+      for(unsigned int i=0; i<D1; ++i) {
+         for(unsigned int j=i; j<D2; ++j) {
+            fRep[ i*D2 + j] = v[k];
+            if ( i != j) fRep[ j*D2 + i] = v[k];
+            k++;
+         }
       }
-    }
-  }
+   }
 }
 
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 bool SMatrix<T,D1,D2,R>::IsInUse( const T * p) const { 
-  return p == fRep.Array(); 
+   return p == fRep.Array(); 
 } 
 
 

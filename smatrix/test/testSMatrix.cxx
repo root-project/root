@@ -292,6 +292,8 @@ int test8() {
   SVector<float,3>    z(4,16,64);
   cout << "x + y: " << x+y << endl;
 
+  cout << "x + y(0) " << (x+y)(0) << endl;
+
   cout << "x * -y: " << x * -y << endl;
   x += z - y;
   cout << "x += z - y: " << x << endl;
@@ -912,7 +914,11 @@ int test16() {
   iret |= compare( Z==Y,true,"complex mult");
 
 
-
+  // test of assign sym
+//   AssignSym::Evaluate(A,  W * A * Transpose(W)  );
+//   AssignSym::Evaluate(B,  W * A * Transpose(W)  );
+//   iret |= compare( A==B,true,"assignsym");
+  
 
   return iret; 
 }
@@ -925,6 +931,9 @@ int test17() {
   SVector<double,3> v2(1,2,3); 
 
   SMatrix<double,2,3> m = TensorProd(v1,v2); 
+  for (int i = 0; i < m.kRows ; ++i) 
+     for (int j = 0; j < m.kCols ; ++j) 
+        iret |= compare(m(i,j),v1(i)*v2(j) );
   //std::cout << "Tensor Product \n" << m << std::endl;
 
   SVector<double,4> a1(2,-1,3,4); 
@@ -1070,6 +1079,150 @@ int test19() {
   return iret; 
 }
 
+
+int test20() { 
+// test operator += , -= 
+  int iret =0;
+
+  double d1[6]={1,2,3,4,5,6};
+  double d2[6]={1,2,5,3,4,6};
+
+  SMatrix<double,2>    m1(d1,4);
+  SMatrix<double,2 >   m2(d2,4);
+  SMatrix<double,2>    m3;
+  
+
+  m3 = m1+m2; 
+  m1+= m2; 
+  //std::cout << "m1+= m2" << m1  << std::endl;
+
+  iret |= compare(m1==m3,true); 
+
+  m3 = m1 + 3;
+  m1+= 3;
+  iret |= compare(m1==m3,true); 
+  //std::cout << "m1 + 3" << m1 << "  " << m3  << std::endl;
+
+  m3 = m1 - m2; 
+  m1-= m2; 
+  iret |= compare(m1==m3,true); 
+  
+  m3 = m1 - 3; 
+  m1-= 3; 
+  iret |= compare(m1==m3,true); 
+
+
+  m3 = m1*2;
+  m1*= 2; 
+  iret |= compare(m1==m3,true); 
+
+  // matrix multiplication (*= works only for squared matrix mult.) 
+  m3 = m1*m2; 
+  m1*= m2; 
+  iret |= compare(m1==m3,true); 
+
+  m3 = m1/2;
+  m1/= 2; 
+  iret |= compare(m1==m3,true); 
+
+  // more complex op (passing expressions)
+
+  m3 = m1 + (m1 * m2);
+  m1 += m1 * m2;
+  iret |= compare(m1==m3,true); 
+
+  m3 = m1 - (m1 * m2);
+  m1 -= m1 * m2;
+  iret |= compare(m1==m3,true); 
+
+  m3 = m1 * (m1 * m2);
+  m1 *= m1 * m2;
+  iret |= compare(m1==m3,true); 
+
+  // test with vectors 
+  SVector<double,4>    v1(d1,4);
+  SVector<double,4 >   v2(d2,4);
+  SVector<double,4 >   v3;
+
+  v3 = v1+v2;
+  v1 += v2; 
+  iret |= compare(v1==v3,true); 
+
+  v3 = v1 + 2; 
+  v1 += 2;
+  iret |= compare(v1==v3,true); 
+
+  v3 = v1+ (v1 + v2);
+  v1 +=  v1 + v2;
+  iret |= compare(v1==v3,true); 
+
+  v3 = v1 - v2;
+  v1 -= v2; 
+  iret |= compare(v1==v3,true); 
+
+  v3 = v1 - 2; 
+  v1 -= 2;
+  iret |= compare(v1==v3,true); 
+
+  v3 = v1 - (v1 + v2);
+  v1 -=  v1 + v2;
+  iret |= compare(v1==v3,true); 
+
+  v3 = v1 * 2;
+  v1 *= 2;
+  iret |= compare(v1==v3,true); 
+
+  v3 = v1 / 2;
+  v1 /= 2;
+  iret |= compare(v1==v3,true); 
+
+
+  return iret; 
+}
+
+int test21() { 
+
+   // test global matrix function (element-wise operations)
+
+  int iret =0;
+
+  double d1[4]={4,6,3,4};
+  double d2[4]={2,3,1,4};
+
+  SMatrix<double,2>    m1(d1,4);
+  SMatrix<double,2 >   m2(d2,4);
+  SMatrix<double,2>    m3;
+
+  // test element-wise multiplication
+  m3 = Times(m1,m2);
+  for (int i = 0; i < 4; ++i)
+     iret |= compare(m3.apply(i),m1.apply(i)*m2.apply(i)); 
+
+  // matrix division is element-wise division
+  m3 = Div(m1,m2);
+  for (int i = 0; i < 4; ++i)
+     iret |= compare(m3.apply(i),m1.apply(i)/m2.apply(i)); 
+
+
+  return iret; 
+
+}
+
+int test22() { 
+
+   // test conversion to scalar for size 1 matrix and vectors 
+
+  int iret =0;
+  SMatrix<double,1> m1(2); 
+  iret |= compare(m1(0,0),2.); 
+
+  SVector<double,1> v1;
+  v1 = 2; 
+  iret |= compare(m1(0,0),2.); 
+
+  return iret; 
+}
+
 #define TEST(N)                                                                 \
   itest = N;                                                                    \
   if (test##N() == 0) std::cout << " Test " << itest << "  OK " << std::endl;   \
@@ -1100,6 +1253,9 @@ int main() {
   TEST(17);
   TEST(18);
   TEST(19);
+  TEST(20);
+  TEST(21);
+  TEST(22);
 
 
   return 0;
