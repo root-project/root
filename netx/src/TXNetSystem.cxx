@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.10 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.11 2006/06/30 14:35:03 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -162,8 +162,11 @@ TXNetSystem::~TXNetSystem()
 {
    // Destructor
 
+#ifndef WIN32 
+   // pthread locking problem on windows at exit time...
    if (fIsXRootd && fClientAdmin)
       delete fClientAdmin;
+#endif
 }
 
 
