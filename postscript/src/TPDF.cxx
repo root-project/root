@@ -1102,7 +1102,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    fGreen     = -1;
    fBlue      = -1;
    fType      = abs(wtype);
-   SetLineScale(gStyle->GetLineScalePS());
+   SetLineScale(gStyle->GetLineScalePS()/4.);
    gStyle->GetPaperSize(fXsize, fYsize);
    Float_t xrange, yrange;
    if (gPad) {
