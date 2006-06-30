@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.16 2006/05/29 12:04:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.17 2006/06/01 09:08:03 antcheva Exp $
 // Author: Bertrand Bellenot + Fons Rademakers + Valeriy Onuchin  23/04/03
 
 /*************************************************************************
@@ -519,7 +519,7 @@ Bool_t TGFontDialog::Build(char **fontList, Int_t cnt)
       n2 = font.Index("-", n1+1);
       family = font(n1+1, n2-n1-1);
 
-      if (family.BeginsWith("@")) {
+      if ((family.Length() == 0) || (family.BeginsWith("@"))) {
          continue;
       }
 
@@ -529,7 +529,7 @@ Bool_t TGFontDialog::Build(char **fontList, Int_t cnt)
    }
 
    fFontNames->SortByName();
-   
+
    TGTextLBEntry *le = (TGTextLBEntry*)fFontNames->FindEntry(fName.Data());
 
    if (le) {
