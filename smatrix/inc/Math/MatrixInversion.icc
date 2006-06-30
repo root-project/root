@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixInversion.icc,v 1.3 2006/06/06 09:30:40 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixInversion.icc,v 1.4 2006/06/08 15:23:34 moneta Exp $
 // Authors: CLHEP authors, L. Moneta    2006  
 
 #include "Math/SVector.h"
@@ -37,7 +37,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
   int i, j, k, s;
   int pivrow;
 
-  const int nrow = N; 
+  const int nrow = MatRepSym<T,idim>::kRows;
 
   // Establish the two working-space arrays needed:  x and piv are
   // used as pointers to arrays of doubles and ints respectively, each
@@ -46,8 +46,8 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
   // by having a new without a delete that is only done once.
   
 
-  static SVector<T, N> xvec; 
-  static SVector<int, N> pivv; 
+  static SVector<T, MatRepSym<T,idim>::kRows> xvec; 
+  static SVector<int, MatRepSym<T,idim>::kRows> pivv; 
   
   typedef int* pivIter; 
   typedef T* mIter; 
