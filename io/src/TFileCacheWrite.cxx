@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.4 2006/06/29 22:15:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.5 2006/06/30 07:34:25 brun Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -47,11 +47,11 @@ TFileCacheWrite::TFileCacheWrite(TFile *file, Int_t buffersize)
            : TObject()
 {
    // Creates a TFileCacheWrite data structure.
-   // the write cache will be connected to file
-   // the size of the cache will be buffersize.
-   // if (buffersize < 10000 a default size of 512 Kbytes is used
+   // The write cache will be connected to file.
+   // The size of the cache will be buffersize,
+   // if buffersize < 10000 a default size of 512 Kbytes is used
 
-   if (buffersize <=10000) buffersize = 512000;
+   if (buffersize < 10000) buffersize = 512000;
    fBufferSize  = buffersize;
    fSeekStart   = 0;
    fNtot        = 0;
@@ -59,7 +59,7 @@ TFileCacheWrite::TFileCacheWrite(TFile *file, Int_t buffersize)
    fRecursive   = kFALSE;
    fBuffer      = new char[fBufferSize];
    if (file) file->SetCacheWrite(this);
-   if (gDebug > 0) Info("TFileCacheWrite","Creating a write cache with buffersize=%d bytes",buffersize);   
+   if (gDebug > 0) Info("TFileCacheWrite","Creating a write cache with buffersize=%d bytes",buffersize);
 }
 
 //______________________________________________________________________________
@@ -119,7 +119,7 @@ Int_t TFileCacheWrite::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    // in the write cache buffer. Returns -1 if data not in write cache,
    // 0 otherwise.
 
-   if (pos < fSeekStart || pos+len >= fSeekStart+fNtot) return -1;
+   if (pos < fSeekStart || pos+len > fSeekStart+fNtot) return -1;
    memcpy(buf,fBuffer+pos-fSeekStart,len);
    return 0;
 }
@@ -136,7 +136,7 @@ Int_t TFileCacheWrite::WriteBuffer(const char *buf, Long64_t pos, Int_t len)
 
    //printf("TFileCacheWrite::WriteBuffer, pos=%lld, len=%d, fSeekStart=%lld, fNtot=%d\n",pos,len,fSeekStart,fNtot);
 
-   if (fSeekStart +fNtot != pos) {
+   if (fSeekStart + fNtot != pos) {
       //we must flush the current cache
       if (Flush()) return -1; //failure
    }
