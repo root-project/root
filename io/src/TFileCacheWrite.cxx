@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.3 2006/06/29 09:04:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.4 2006/06/29 22:15:36 rdm Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -59,6 +59,7 @@ TFileCacheWrite::TFileCacheWrite(TFile *file, Int_t buffersize)
    fRecursive   = kFALSE;
    fBuffer      = new char[fBufferSize];
    if (file) file->SetCacheWrite(this);
+   if (gDebug > 0) Info("TFileCacheWrite","Creating a write cache with buffersize=%d bytes",buffersize);   
 }
 
 //______________________________________________________________________________
