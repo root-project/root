@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.9 2006/04/27 15:14:11 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.10 2006/06/21 16:18:26 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -185,6 +185,17 @@ void TXNetSystem::InitXrdClient()
 }
 
 //_____________________________________________________________________________
+void TXNetSystem::SaveEndPointUrl()
+{
+   // Save the end-point user, host, port
+
+   if (fClientAdmin->GetClientConn()) {
+      XrdClientUrlInfo eurl = fClientAdmin->GetClientConn()->GetCurrentUrl();
+      TNetSystem::InitRemoteEntity(eurl.GetUrl().c_str());
+   }
+}
+
+//_____________________________________________________________________________
 void* TXNetSystem::OpenDirectory(const char* dir)
 {
    // Open a directory. Returns a non-zero pointer (with no special
@@ -201,6 +212,8 @@ void* TXNetSystem::OpenDirectory(const char* dir)
       dirs.Push_back(s);
       // Check if the directory exists
       fClientAdmin->ExistDirs(dirs,existDirs);
+      // Save the end-point user, host, port
+      SaveEndPointUrl();
       if (existDirs.GetSize()>0 && existDirs[0])
          return fDirp;
       return 0;
@@ -218,8 +231,8 @@ void TXNetSystem::FreeDirectory(void *dirp)
 
    if (fIsXRootd) {
       if (dirp != fDirp) {
-	      Error("FreeDirectory","invalid directory pointer (%p, %p)", dirp, fDirp);
-	      return;
+         Error("FreeDirectory","invalid directory pointer (%p, %p)", dirp, fDirp);
+         return;
       }
       fDir = "";
       fDirp = 0;
@@ -240,6 +253,8 @@ Int_t TXNetSystem::MakeDirectory(const char* dir)
    if (fIsXRootd) {
       // use default permissions 755 to create directory
       Bool_t ok = fClientAdmin->Mkdir(TUrl(dir).GetFile(),7,5,5);
+      // Save the end-point user, host, port
+      SaveEndPointUrl();
       return (ok ? 0 : -1);
    }
 
@@ -255,16 +270,18 @@ const char* TXNetSystem::GetDirEntry(void *dirp)
 
    if (fIsXRootd) {
       if (dirp != fDirp) {
-	      Error("GetDirEntry","invalid directory pointer");
-	      return 0;
+         Error("GetDirEntry","invalid directory pointer");
+         return 0;
       }
 
       // Only request new directory listing the first time called
       if (!fDirListValid) {
-	      Bool_t ok = fClientAdmin->DirList(fDir,fDirList);
-	      if (ok)
+         Bool_t ok = fClientAdmin->DirList(fDir,fDirList);
+         // Save the end-point user, host, port
+         SaveEndPointUrl();
+         if (ok)
             fDirListValid = kTRUE;
-	      else
+         else
             return 0;
       }
 
@@ -297,6 +314,9 @@ Int_t TXNetSystem::GetPathInfo(const char* path, FileStat_t &buf)
       // Extract the directory name
       TString edir = TUrl(path).GetFile();
       Bool_t ok = fClientAdmin->Stat(edir,id,size,flags,modtime);
+
+      // Save the end-point user, host, port
+      SaveEndPointUrl();
 
       // Count offline files as inexistent 
       ok &= !(flags & kXR_offline);
@@ -334,13 +354,11 @@ Bool_t TXNetSystem::ConsistentWith(const char *path, void *dirptr)
    // by 'path' or 'dirptr'.
 
    if (gDebug > 1)
-      Info("ConsistenWith","Calling TNetSystem::ConsistenWith");
+      Info("ConsistenWith",
+           "Calling TNetSystem::ConsistenWith for path: %s, dir: %p", path, dirptr);
 
-   // Make sure we are checking the end-point user, host, port
-   if (fClientAdmin && fClientAdmin->GetClientConn()) {
-      XrdClientUrlInfo eurl = fClientAdmin->GetClientConn()->GetCurrentUrl();
-      TNetSystem::InitRemoteEntity(eurl.GetUrl().c_str());
-   }
+   // Save the end-point user, host, port
+   SaveEndPointUrl();
 
    return TNetSystem::ConsistentWith(path,dirptr);    // for a rootd
 }
@@ -358,7 +376,7 @@ Bool_t TXNetSystem::AccessPathName(const char *path, EAccessMode mode)
       // Check only if the file or directory exists and
       FileStat_t buf;
       if (GetPathInfo(path, buf) == 0)
-	      if (buf.fMode != kS_IFSOCK)
+         if (buf.fMode != kS_IFSOCK)
             return kFALSE;
       // The file could not be stated
       return kTRUE;

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.2 2006/02/21 16:57:12 brun Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.3 2006/03/16 09:08:08 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -58,6 +58,7 @@ private:
 
    void           *GetDirPtr() const { return fDirp; }
    void            InitXrdClient();
+   void            SaveEndPointUrl();
 
 public:
    TXNetSystem(Bool_t owner = kTRUE);
