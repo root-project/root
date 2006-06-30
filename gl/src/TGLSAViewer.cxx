@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.18 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.19 2006/06/29 12:16:26 couet Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -132,14 +132,12 @@ const Int_t TGLSAViewer::fgInitH = 670;
 //A lot of raw pointers/naked new-expressions - good way to discredit C++ (or C++ programmer :) ) :(
 //ROOT has system to cleanup - I'll try to use it
 
-const char *gGLSaveAsTypes[] = {
-                                "Encapsulated PostScript", "*.eps",
+const char *gGLSaveAsTypes[] = {"Encapsulated PostScript", "*.eps",
                                 "PDF",                     "*.pdf",
                                 "GIF",                     "*.gif",
                                 "JPEG",                    "*.jpg",
                                 "PNG",                     "*.png",
-                                0, 0
-                               };
+                                0, 0};
 
 //______________________________________________________________________________
 TGLSAViewer::TGLSAViewer(TVirtualPad * pad) 
@@ -572,6 +570,7 @@ void TGLSAViewer::PostSceneBuildSetup()
 //______________________________________________________________________________
 void TGLSAViewer::SavePicture(const TString &fileName)
 {
+   // Save the current GL structure in various formats (eps,pdf, gif, jpg, png).
    if (fileName.EndsWith(".eps"))
       gVirtualGL->CaptureViewer(this, TGLOutput::kEPS_BSP, fileName.Data());
    else if (fileName.EndsWith(".pdf"))
