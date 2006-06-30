@@ -1,6 +1,5 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.7 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.8 2006/04/11 15:41:07 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
-
 
 
 
@@ -19,6 +18,8 @@
 #pragma link C++ class ROOT::Math::CylindricalEta3D<double>+;
 
 #pragma link C++ class ROOT::Math::DefaultCoordinateSystemTag+; 
+#pragma link C++ class ROOT::Math::LocalCoordinateSystemTag+; 
+#pragma link C++ class ROOT::Math::GlobalCoordinateSystemTag+; 
 
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> >+;
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> >+;
@@ -127,13 +128,14 @@
 #pragma link C++ class vector<ROOT::Math::XYZTVector >+;
 #endif
 // problem on Windows: CINT cannot deal with  too long class name
+#ifdef TEST_LATER
+
 #ifndef _WIN32   
 #pragma link C++ class vector<ROOT::Math::XYZVector >+;
 #pragma link C++ class vector<ROOT::Math::XYZPoint >+;
 #endif
 
 // exclude this (they make loibrary  too big and are not used in tests in CVS)
-#ifdef TEST_LATER
 
 #pragma link C++ class vector<ROOT::Math::Polar3DVector >+;
 #pragma link C++ class vector<ROOT::Math::Polar3DPoint >+;
