@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.6 2006/05/15 07:43:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.7 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -55,7 +55,11 @@ enum EMsgBoxButton {
    kMBIgnore  = BIT(5),
    kMBCancel  = BIT(6),
    kMBClose   = BIT(7),
-   kMBDismiss = BIT(8)
+   kMBDismiss = BIT(8),
+   kMBYesAll  = BIT(9),
+   kMBNoAll   = BIT(10),
+   kMBAppend  = BIT(11),
+   kMBNewer   = BIT(12)
 };
 
 
@@ -69,7 +73,8 @@ class TGMsgBox : public TGTransientFrame {
 protected:
    TGButton            *fYes, *fNo, *fOK, *fApply;   // buttons in dialog box
    TGButton            *fRetry, *fIgnore, *fCancel;  // buttons in dialog box
-   TGButton            *fClose, *fDismiss;           // buttons in dialog box
+   TGButton            *fClose, *fYesAll, *fNoAll;   // buttons in dialog box
+   TGButton            *fNewer, *fAppend, *fDismiss; // buttons in dialog box
    TGIcon              *fIcon;                       // icon
    TGHorizontalFrame   *fButtonFrame;                // frame containing buttons
    TGHorizontalFrame   *fIconFrame;                  // frame containing icon and text

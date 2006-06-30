@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.12 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.13 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -120,6 +120,10 @@ TGMsgBox::TGMsgBox(const TGMsgBox& mb) :
   fIgnore(mb.fIgnore),
   fCancel(mb.fCancel),
   fClose(mb.fClose),
+  fYesAll(mb.fYesAll),
+  fNoAll(mb.fNoAll),
+  fNewer(mb.fNewer),
+  fAppend(mb.fAppend),
   fDismiss(mb.fDismiss),
   fIcon(mb.fIcon),
   fButtonFrame(mb.fButtonFrame),
@@ -150,6 +154,10 @@ TGMsgBox& TGMsgBox::operator=(const TGMsgBox& mb)
       fIgnore=mb.fIgnore;
       fCancel=mb.fCancel;
       fClose=mb.fClose;
+      fYesAll=mb.fYesAll;
+      fNoAll=mb.fNoAll;
+      fNewer=mb.fNewer;
+      fAppend=mb.fAppend;
       fDismiss=mb.fDismiss;
       fIcon=mb.fIcon;
       fButtonFrame=mb.fButtonFrame;
@@ -176,7 +184,7 @@ void TGMsgBox::PMsgBox(const char *title, const char *msg,
    UInt_t nb, width, height;
 
    fYes = fNo = fOK = fApply = fRetry = fIgnore = fCancel = fClose =
-   fDismiss   = 0;
+   fYesAll = fNoAll = fNewer = fAppend = fDismiss   = 0;
    fIcon      = 0;
    fMsgList   = new TList;
    fRetCode   = ret_code;
@@ -188,7 +196,8 @@ void TGMsgBox::PMsgBox(const char *title, const char *msg,
    fL1 = new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 3, 3, 0, 0);
 
    buttons &= (kMBYes | kMBNo | kMBOk | kMBApply |
-               kMBRetry | kMBIgnore | kMBCancel | kMBClose | kMBDismiss);
+               kMBRetry | kMBIgnore | kMBCancel | kMBClose | kMBDismiss |
+               kMBYesAll | kMBNoAll | kMBAppend | kMBNewer);
    if (buttons == 0) buttons = kMBDismiss;
 
    if (buttons & kMBYes) {
@@ -245,6 +254,34 @@ void TGMsgBox::PMsgBox(const char *title, const char *msg,
       fClose->Associate(this);
       fButtonFrame->AddFrame(fClose, fL1);
       width = TMath::Max(width, fClose->GetDefaultWidth()); ++nb;
+   }
+
+   if (buttons & kMBYesAll) {
+      fYesAll = new TGTextButton(fButtonFrame, new TGHotString("Y&es to All"), kMBYesAll);
+      fYesAll->Associate(this);
+      fButtonFrame->AddFrame(fYesAll, fL1);
+      width = TMath::Max(width, fYesAll->GetDefaultWidth()); ++nb;
+   }
+
+   if (buttons & kMBNoAll) {
+      fNoAll = new TGTextButton(fButtonFrame, new TGHotString("No &to All"), kMBNoAll);
+      fNoAll->Associate(this);
+      fButtonFrame->AddFrame(fNoAll, fL1);
+      width = TMath::Max(width, fNoAll->GetDefaultWidth()); ++nb;
+   }
+
+   if (buttons & kMBNewer) {
+      fNewer = new TGTextButton(fButtonFrame, new TGHotString("Ne&wer Only"), kMBNewer);
+      fNewer->Associate(this);
+      fButtonFrame->AddFrame(fNewer, fL1);
+      width = TMath::Max(width, fNewer->GetDefaultWidth()); ++nb;
+   }
+
+   if (buttons & kMBAppend) {
+      fAppend = new TGTextButton(fButtonFrame, new TGHotString("A&ppend"), kMBAppend);
+      fAppend->Associate(this);
+      fButtonFrame->AddFrame(fAppend, fL1);
+      width = TMath::Max(width, fAppend->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBDismiss) {
@@ -354,6 +391,10 @@ TGMsgBox::~TGMsgBox()
    if (fCancel)  delete fCancel;
    if (fClose)   delete fClose;
    if (fDismiss) delete fDismiss;
+   if (fYesAll)  delete fYesAll;
+   if (fNoAll)   delete fNoAll;
+   if (fNewer)   delete fNewer;
+   if (fAppend)  delete fAppend;
 
    if (fIcon) delete fIcon;
    delete fButtonFrame;

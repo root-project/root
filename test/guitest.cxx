@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.57 2005/07/24 09:58:18 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.58 2005/08/11 15:12:09 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -99,9 +99,10 @@ enum ETestCommandIdentifiers {
 };
 
 
-Int_t mb_button_id[9] = { kMBYes, kMBNo, kMBOk, kMBApply,
-                          kMBRetry, kMBIgnore, kMBCancel,
-                          kMBClose, kMBDismiss };
+Int_t mb_button_id[13] = { kMBYes, kMBNo, kMBOk, kMBApply,
+                           kMBRetry, kMBIgnore, kMBCancel,
+                           kMBClose, kMBDismiss, kMBYesAll,
+                           kMBNoAll, kMBAppend, kMBNewer };
 
 EMsgBoxIcon mb_icon[4] = { kMBIconStop, kMBIconQuestion,
                            kMBIconExclamation, kMBIconAsterisk };
@@ -286,7 +287,7 @@ private:
    TGButton             *fTestButton, *fCloseButton;
    TGPictureButton      *fPictButton;
    TGRadioButton        *fR[4];
-   TGCheckButton        *fC[9];
+   TGCheckButton        *fC[13];
    TGGroupFrame         *fG1, *fG2;
    TGLayoutHints        *fL1, *fL2, *fL3, *fL4, *fL5, *fL6, *fL21;
    TGTextEntry          *fTitle, *fMsg;
@@ -1322,17 +1323,21 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    fL4 = new TGLayoutHints(kLHintsTop | kLHintsLeft,
                            0, 0, 5, 0);
 
-   fC[0] = new TGCheckButton(fG1, new TGHotString("Yes"),     -1);
-   fC[1] = new TGCheckButton(fG1, new TGHotString("No"),      -1);
-   fC[2] = new TGCheckButton(fG1, new TGHotString("OK"),      -1);
-   fC[3] = new TGCheckButton(fG1, new TGHotString("Apply"),   -1);
-   fC[4] = new TGCheckButton(fG1, new TGHotString("Retry"),   -1);
-   fC[5] = new TGCheckButton(fG1, new TGHotString("Ignore"),  -1);
-   fC[6] = new TGCheckButton(fG1, new TGHotString("Cancel"),  -1);
-   fC[7] = new TGCheckButton(fG1, new TGHotString("Close"),   -1);
-   fC[8] = new TGCheckButton(fG1, new TGHotString("Dismiss"), -1);
+   fC[0]  = new TGCheckButton(fG1, new TGHotString("Yes"),        -1);
+   fC[1]  = new TGCheckButton(fG1, new TGHotString("No"),         -1);
+   fC[2]  = new TGCheckButton(fG1, new TGHotString("OK"),         -1);
+   fC[3]  = new TGCheckButton(fG1, new TGHotString("Apply"),      -1);
+   fC[4]  = new TGCheckButton(fG1, new TGHotString("Retry"),      -1);
+   fC[5]  = new TGCheckButton(fG1, new TGHotString("Ignore"),     -1);
+   fC[6]  = new TGCheckButton(fG1, new TGHotString("Cancel"),     -1);
+   fC[7]  = new TGCheckButton(fG1, new TGHotString("Close"),      -1);
+   fC[8]  = new TGCheckButton(fG1, new TGHotString("Yes to All"), -1);
+   fC[9]  = new TGCheckButton(fG1, new TGHotString("No to All"),  -1);
+   fC[10] = new TGCheckButton(fG1, new TGHotString("Newer Only"), -1);
+   fC[11] = new TGCheckButton(fG1, new TGHotString("Append"),     -1);
+   fC[12] = new TGCheckButton(fG1, new TGHotString("Dismiss"),    -1);
 
-   for (i=0; i<9; ++i) fG1->AddFrame(fC[i], fL4);
+   for (i=0; i<13; ++i) fG1->AddFrame(fC[i], fL4);
 
    fR[0] = new TGRadioButton(fG2, new TGHotString("Stop"),        21);
    fR[1] = new TGRadioButton(fG2, new TGHotString("Question"),    22);
@@ -1421,7 +1426,7 @@ Bool_t TestMsgBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                switch(parm1) {
                   case 1:
                      buttons = 0;
-                     for (i=0; i<9; ++i)
+                     for (i=0; i<13; ++i)
                         if (fC[i]->GetState() == kButtonDown)
                            buttons |= mb_button_id[i];
 
