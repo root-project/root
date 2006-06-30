@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.cxx,v 1.8 2006/06/27 04:38:29 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.cxx,v 1.9 2006/06/28 05:17:13 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -272,7 +272,7 @@ void TQpDataDens::PutCIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 //______________________________________________________________________________
 void TQpDataDens::GetDiagonalOfQ(TVectorD &dq)
 {
-// Return in vector dq the diagonal of matrix fQ
+// Return in vector dq the diagonal of matrix fQ (Quadratic part of Objective function)
 
    const Int_t n = TMath::Min(fQ.GetNrows(),fQ.GetNcols());
    dq.ResizeTo(n);
@@ -283,7 +283,7 @@ void TQpDataDens::GetDiagonalOfQ(TVectorD &dq)
 //______________________________________________________________________________
 Double_t TQpDataDens::ObjectiveValue(TQpVar *vars)
 {
-//
+// Return value of the objective function
 
    TVectorD tmp(fG);
    this->Qmult(1.0,tmp,0.5,vars->fX);

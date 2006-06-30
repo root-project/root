@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.9 2006/06/27 04:38:29 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.10 2006/06/28 05:17:13 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -443,7 +443,7 @@ Double_t TQpVar::FindBlocking(TVectorD &w,TVectorD &wstep,TVectorD &u,TVectorD &
                               Double_t maxStep,Double_t &w_elt,Double_t &wstep_elt,Double_t &u_elt,
                               Double_t &ustep_elt,int& fIrst_or_second)
 {
-//
+// See other FindBlocking function
 
    return FindBlockingSub(w.GetNrows(),
       w.GetMatrixArray(),    1,
@@ -468,7 +468,7 @@ Double_t TQpVar::FindBlockingSub(Int_t n,
                                  Double_t &u_elt,Double_t &ustep_elt,
                                  Int_t &fIrst_or_second)
 {
-//
+// See FindBlocking function
 
    Double_t bound = maxStep;
 

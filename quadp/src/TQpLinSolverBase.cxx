@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.cxx,v 1.6 2006/06/23 05:02:55 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.cxx,v 1.7 2006/06/28 05:17:13 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -112,8 +112,8 @@ TQpLinSolverBase::TQpLinSolverBase(const TQpLinSolverBase &another) : TObject(an
 //______________________________________________________________________________
 void TQpLinSolverBase::Factor(TQpDataBase * /* prob */,TQpVar *vars)
 {
-// sets up the matrix for the main linear system in "augmented system" form. The
-//  actual factorization is performed by a routine specific to either the sparse
+// Sets up the matrix for the main linear system in "augmented system" form. The
+// actual factorization is performed by a routine specific to either the sparse
 // or dense case
 
    R__ASSERT(vars->ValidNonZeroPattern());
@@ -141,6 +141,8 @@ void TQpLinSolverBase::ComputeDiagonals(TVectorD &dd,TVectorD &omega,
                                         TVectorD &v, TVectorD &gamma,
                                         TVectorD &w, TVectorD &phi)
 {
+// Computes the diagonal matrices in the augmented system from the current set of variables
+
    if (fNxup+fNxlo > 0) {
       if (fNxlo > 0) AddElemDiv(dd,1.0,gamma,v,fXloIndex);
       if (fNxup > 0) AddElemDiv(dd,1.0,phi  ,w,fXupIndex);

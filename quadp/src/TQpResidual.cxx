@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpResidual.cxx,v 1.7 2006/06/27 04:38:29 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpResidual.cxx,v 1.8 2006/06/28 05:17:13 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -349,7 +349,9 @@ Bool_t TQpResidual::ValidNonZeroPattern()
 //______________________________________________________________________________
 void TQpResidual::GondzioProjection(TVectorD &v,Double_t rmin,Double_t rmax)
 {
-//
+// Replace each component r3_i of the complementarity component of the residuals
+// by r3p_i-r3_i, where r3p_i is the projection of r3_i onto the box [rmin, rmax].
+// Then if the resulting value is less than -rmax, replace it by -rmax.
 
          Double_t *        ep = v.GetMatrixArray();
    const Double_t * const fep = ep+v.GetNrows();

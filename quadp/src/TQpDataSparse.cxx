@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.8 2006/06/27 04:38:29 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.9 2006/06/28 05:17:13 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -300,7 +300,7 @@ void TQpDataSparse::GetDiagonalOfQ(TVectorD &dq)
 //______________________________________________________________________________
 Double_t TQpDataSparse::ObjectiveValue(TQpVar *vars)
 {
-//
+// Return value of the objective function
 
    TVectorD tmp(fG);
    this->Qmult(1.0,tmp,0.5,vars->fX);
