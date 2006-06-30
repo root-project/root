@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.51 2006/06/27 14:36:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.52 2006/06/29 22:15:36 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -72,7 +72,7 @@ protected:
    TFileCacheWrite *fCacheWrite;     //!Pointer to the write cache (if any)
    Long64_t         fArchiveOffset;  //!Offset at which file starts in archive
    Bool_t           fIsArchive;      //!True if this is a pure archive file
-   Bool_t           fIsRootFile;     //!True is this is a ROOT file
+   Bool_t           fIsRootFile;     //!True is this is a ROOT file, raw file otherwise
    Bool_t           fInitDone;       //!True if the file has been initialized
    Bool_t           fMustFlush;      //!True if the file buffers must be flushed
    TFileOpenHandle *fAsyncHandle;    //!For proper automatic cleanup
@@ -172,6 +172,7 @@ public:
    virtual void        IncrementProcessIDs() { fNProcessIDs++; }
    virtual Bool_t      IsArchive() const { return fIsArchive; }
            Bool_t      IsBinary() const { return TestBit(kBinaryFile); }
+           Bool_t      IsRaw() const { return !fIsRootFile; }
    virtual Bool_t      IsOpen() const;
    virtual void        ls(Option_t *option="") const;
    virtual void        MakeFree(Long64_t first, Long64_t last);

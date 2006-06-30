@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.176 2006/06/30 04:48:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.177 2006/06/30 06:31:27 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1238,14 +1238,15 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
    // Read a buffer from the file. This is the basic low level read operation.
    // Returns kTRUE in case of failure.
 
-   Int_t st;
-   if ((st = ReadBufferViaCache(buf, len))) {
-      if (st == 2)
-         return kTRUE;
-      return kFALSE;
-   }
-
    if (IsOpen()) {
+
+      Int_t st;
+      if ((st = ReadBufferViaCache(buf, len))) {
+         if (st == 2)
+            return kTRUE;
+         return kFALSE;
+      }
+
       ssize_t siz;
 
       Double_t start = 0;
@@ -1315,7 +1316,16 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
          Seek(off + len);
          return 1;
       }
+   } else {
+      // if write cache is active check if data still in write cache
+      if (fWritable && fCacheWrite) {
+         if (fCacheWrite->ReadBuffer(buf, off, len) == 0) {
+            Seek(off + len);
+            return 1;
+         }
+      }
    }
+
    return 0;
 }
 
@@ -1589,21 +1599,21 @@ void TFile::SetCompressionLevel(Int_t level)
 }
 
 //______________________________________________________________________________
-void TFile::SetCacheRead(TFileCacheRead *file)
+void TFile::SetCacheRead(TFileCacheRead *cache)
 {
    // Set a pointer to the read cache.
 
-   fCacheRead = file;
+   fCacheRead = cache;
 }
 
 //______________________________________________________________________________
-void TFile::SetCacheWrite(TFileCacheWrite *file)
+void TFile::SetCacheWrite(TFileCacheWrite *cache)
 {
    // Set a pointer to the write cache.
-   // if file is null the existing write cache is deleted
+   // If file is null the existing write cache is deleted.
 
-   if (!file && fCacheWrite) delete fCacheWrite;
-   fCacheWrite = file;
+   if (!cache && fCacheWrite) delete fCacheWrite;
+   fCacheWrite = cache;
 }
 
 //______________________________________________________________________________
@@ -1704,6 +1714,14 @@ Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
    // Returns kTRUE in case of failure.
 
    if (IsOpen() && fWritable) {
+
+      Int_t st;
+      if ((st = WriteBufferViaCache(buf, len))) {
+         if (st == 2)
+            return kTRUE;
+         return kFALSE;
+      }
+
       ssize_t siz;
       gSystem->IgnoreInterrupt();
       while ((siz = SysWrite(fD, buf, len)) < 0 && GetErrno() == EINTR)
@@ -2250,9 +2268,11 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
       f = 0;
    }
 
-   //if the file is writable and non local, we create a default write cache(512 KBytes)
-   if (type != kLocal && f && f->IsWritable()) {
-      new TFileCacheWrite(f,1);
+   // if the file is writable, non local, and not opened in raw mode
+   // we create a default write cache of 512 KBytes
+   if (type != kLocal && type != kFile &&
+       f && f->IsWritable() && !f->IsRaw()) {
+      new TFileCacheWrite(f, 1);
    }
 
    if (gMonitoringWriter && (!f->IsWritable()))
@@ -2457,22 +2477,26 @@ Int_t TFile::SysSync(Int_t fd)
 //______________________________________________________________________________
 Long64_t TFile::GetBytesWritten() const
 {
-   // Return the total number of bytes written so far to the file.  
+   // Return the total number of bytes written so far to the file.
+
    return fCacheWrite ? fCacheWrite->GetBytesInCache() + fBytesWrite : fBytesWrite;
 }
 
 //______________________________________________________________________________
-Long64_t TFile::GetFileBytesRead() {
+Long64_t TFile::GetFileBytesRead()
+{
    // Static function returning the total number of bytes read from all files.
-   return fgBytesRead; 
+
+   return fgBytesRead;
 }
 
 //______________________________________________________________________________
 Long64_t TFile::GetFileBytesWritten()
 {
-   // Static function returning the total number of bytes written to all files
-   // minus the bytes still in the write caches.
-   return fgBytesWrite;  
+   // Static function returning the total number of bytes written to all files.
+   // Does not take into account what might still be in the write caches.
+
+   return fgBytesWrite;
 }
 
 //______________________________________________________________________________
