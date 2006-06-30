@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.4 2006/06/25 18:43:24 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.5 2006/06/29 20:36:43 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -510,8 +510,8 @@ const char *TMySQLStatement::GetString(Int_t npar)
    CheckGetField("GetString", 0);
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
-      (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING))
-     return (const char*) fBuffer[npar].fMem;
+       (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING))
+      return (const char*) fBuffer[npar].fMem;
 
    return ConvertToString(npar);
 }
