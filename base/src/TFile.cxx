@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.174 2006/06/27 17:28:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.175 2006/06/29 22:15:36 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -841,9 +841,11 @@ void TFile::Flush()
 Bool_t TFile::FlushWriteCache()
 {
    // Flush the write cache if active.
+   // Return kTRUE in case of error
 
    if (fCacheWrite && IsOpen() && fWritable)
-      fCacheWrite->Flush();
+      return fCacheWrite->Flush();
+   return kFALSE;
 }
 
 //______________________________________________________________________________
