@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.175 2006/06/29 22:15:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.176 2006/06/30 04:48:47 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -2457,16 +2457,22 @@ Int_t TFile::SysSync(Int_t fd)
 //______________________________________________________________________________
 Long64_t TFile::GetBytesWritten() const
 {
+   // Return the total number of bytes written so far to the file.  
    return fCacheWrite ? fCacheWrite->GetBytesInCache() + fBytesWrite : fBytesWrite;
 }
 
 //______________________________________________________________________________
-Long64_t TFile::GetFileBytesRead() { return fgBytesRead; }
+Long64_t TFile::GetFileBytesRead() {
+   // Static function returning the total number of bytes read from all files.
+   return fgBytesRead; 
+}
 
 //______________________________________________________________________________
 Long64_t TFile::GetFileBytesWritten()
 {
-   return fgBytesWrite;  // minus the bytes still in the write caches
+   // Static function returning the total number of bytes written to all files
+   // minus the bytes still in the write caches.
+   return fgBytesWrite;  
 }
 
 //______________________________________________________________________________
