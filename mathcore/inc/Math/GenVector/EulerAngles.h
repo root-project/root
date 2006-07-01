@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.7 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.8 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -170,7 +170,7 @@ public:
   /**
       Set Phi Euler angle		// JMM 30 Jan. 2006
   */
-  void SetPhi(const Scalar phi) { fPhi=phi; Rectify(); }
+  void SetPhi(Scalar phi) { fPhi=phi; Rectify(); }
 
   /**
       Return Phi Euler angle
@@ -180,7 +180,7 @@ public:
   /**
       Set Theta Euler angle		// JMM 30 Jan. 2006
   */
-  void SetTheta(const Scalar theta) { fTheta=theta; Rectify(); }
+  void SetTheta(Scalar theta) { fTheta=theta; Rectify(); }
 
   /**
       Return Theta Euler angle
@@ -190,7 +190,7 @@ public:
   /**
       Set Psi Euler angle		// JMM 30 Jan. 2006
   */
-  void SetPsi(const Scalar psi) { fPsi=psi; Rectify(); }
+  void SetPsi(Scalar psi) { fPsi=psi; Rectify(); }
 
   /**
       Return Psi Euler angle
