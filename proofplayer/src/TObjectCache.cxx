@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TObjectCache.cxx,v 1.1 2006/04/03 14:19:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TObjectCache.cxx,v 1.2 2006/06/01 16:25:12 rdm Exp $
 // Author: M. Biskup, G. Ganis  2/4/06
 
 /*************************************************************************
@@ -133,7 +133,7 @@ TDirectoryCache* TDirectoryCache::Instance()
 }
 
 //______________________________________________________________________________
-void TTreeCache::Unload(TTree* &tree)
+void TTreeFileCache::Unload(TTree* &tree)
 {
    // Deleted the tree. Releases the file in which it was stored.
 
@@ -143,7 +143,7 @@ void TTreeCache::Unload(TTree* &tree)
 }
 
 //______________________________________________________________________________
-TTreeCache::ObjectAndBool_t TTreeCache::Load(const TCacheKey &k)
+TTreeFileCache::ObjectAndBool_t TTreeFileCache::Load(const TCacheKey &k)
 {
    // Loads a tree given the file name where it's stored, the directory name in the file
    // and the tree name. See TObjectCache::Acquire().
@@ -185,13 +185,13 @@ TTreeCache::ObjectAndBool_t TTreeCache::Load(const TCacheKey &k)
    TKey *key = dir->GetKey(on);
 
    if (key == 0) {
-      ::Error("TTreeCache::Load","Cannot find tree \"%s\" in %s",
+      ::Error("TTreeFileCache::Load","Cannot find tree \"%s\" in %s",
             treeName.Data(), fileName.Data());
       TDirectoryCache::Instance()->Release(dir);
       return make_pair((TTree*)0, kFALSE);
    }
 
-   PDB(kLoop,2) ::Info("TTreeCache::Load","Reading: %s", treeName.Data() );
+   PDB(kLoop,2) ::Info("TTreeFileCache::Load","Reading: %s", treeName.Data() );
    TDirectory *dirsave = gDirectory;
    dir->cd();
    TTree *tree = dynamic_cast<TTree*> (key->ReadObj());

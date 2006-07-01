@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TObjectCache.h,v 1.1 2006/04/03 14:19:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TObjectCache.h,v 1.2 2006/04/11 17:51:08 rdm Exp $
 // Author: M. Biskup 2/4/06
 
 /*************************************************************************
@@ -238,7 +238,7 @@ public:
 // A Directory Cache. Uses TFileCache for opening files.
 class TDirectoryCache : public TObjectCache<std::pair<TString, TString>, TDirectory*> {
 private:
-   std::map<TDirectory*, TFile*> fDirectoryFiles; // an assotiation Directory <-> its File
+   std::map<TDirectory*, TFile*> fDirectoryFiles; // an association Directory <-> its File
    static TDirectoryCache *fgInstance;
    TDirectoryCache() {}
 public:
@@ -249,9 +249,9 @@ public:
 
 
 // A Tree Cache. Uses TFileCache for opening files.
-class TTreeCache : public TObjectCache<std::pair<TString, std::pair<TString, TString> >, TTree*> {
+class TTreeFileCache : public TObjectCache<std::pair<TString, std::pair<TString, TString> >, TTree*> {
 private:
-   std::map<TTree*, TDirectory*> fTreeDirectories; // an assotiation Tree <-> its File
+   std::map<TTree*, TDirectory*> fTreeDirectories; // an association Tree <-> its File
 public:
    ObjectAndBool_t Load(const TCacheKey &k);
    virtual void Unload(TTree* &tree);
