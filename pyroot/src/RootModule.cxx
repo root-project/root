@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.24 2006/03/23 06:20:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.25 2006/05/28 19:05:24 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -293,7 +293,7 @@ namespace {
 
       PyErr_Format( PyExc_ValueError, "Unknown policy %ld", l );
       return 0;
-  }
+   }
 
 //____________________________________________________________________________
    PyObject* SetSignalPolicy( PyObject*, PyObject* args )
@@ -310,7 +310,7 @@ namespace {
 
       PyErr_Format( PyExc_ValueError, "Unknown policy %ld", l );
       return 0;
-  }
+   }
 
 //____________________________________________________________________________
    PyObject* SetOwnership( PyObject*, PyObject* args )

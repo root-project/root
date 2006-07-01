@@ -80,13 +80,12 @@ node15 = ROOT.TNode( 'NODE15', 'NODE15', 'SPHE2',   10,  -100,  -200 )
 
 # Draw this geometry in the current canvas
 node1.cd()
-node1.Draw()
+node1.Draw( 'gl' )
 c1.Update()
 #
 #  Draw the geometry using the x3d viewver.
 #  Note that this viewver may also be invoked from the "View" menu in
 #  the canvas tool bar
-c1.GetViewer3D( 'ogl' )
 #
 # once in x3d viewer, type m to see the menu.
 # For example typing r will show a solid model of this geometry.

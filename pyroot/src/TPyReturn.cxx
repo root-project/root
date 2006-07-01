@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.cxx,v 1.5 2005/04/28 07:33:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.cxx,v 1.6 2005/06/25 04:25:46 brun Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
@@ -89,6 +89,7 @@ TPyReturn::~TPyReturn()
 //- public members -----------------------------------------------------------
 TPyReturn::operator const char*() const
 {
+// Cast python return value to C-style string (may fail).
    const char* s = PyString_AsString( fPyObject );
 
    if ( PyErr_Occurred() ) {
@@ -102,6 +103,7 @@ TPyReturn::operator const char*() const
 //____________________________________________________________________________
 TPyReturn::operator Char_t() const
 {
+// Cast python return value to C++ char (may fail).
    std::string s = operator const char*();
    if ( s.size() )
       return s[0];
@@ -112,6 +114,7 @@ TPyReturn::operator Char_t() const
 //____________________________________________________________________________
 TPyReturn::operator Long_t() const
 {
+// Cast python return value to C++ long (may fail).
    Long_t l = PyLong_AsLong( fPyObject );
 
    if ( PyErr_Occurred() )
@@ -123,6 +126,7 @@ TPyReturn::operator Long_t() const
 //____________________________________________________________________________
 TPyReturn::operator ULong_t() const
 {
+// Cast python return value to C++ unsigned long (may fail).
    ULong_t ul = PyLong_AsUnsignedLong( fPyObject );
 
    if ( PyErr_Occurred() )
@@ -135,6 +139,7 @@ TPyReturn::operator ULong_t() const
 //____________________________________________________________________________
 TPyReturn::operator Double_t() const
 {
+// Cast python return value to to C++ double (may fail).
    Double_t d = PyFloat_AsDouble( fPyObject );
 
    if ( PyErr_Occurred() )
@@ -146,6 +151,8 @@ TPyReturn::operator Double_t() const
 //____________________________________________________________________________
 TPyReturn::operator void*() const
 {
+// Cast python return value to ROOT object with dictionary (may fail; note that
+// you have to use the void* converter, as CINT will not call any other).
    if ( fPyObject == Py_None )
       return 0;
 

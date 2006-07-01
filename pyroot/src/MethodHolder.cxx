@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.47 2006/03/24 06:04:09 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.48 2006/06/13 06:39:05 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -160,6 +160,7 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_( std::string& callString )
 //____________________________________________________________________________
 Bool_t PyROOT::TMethodHolder::InitExecutor_( TExecutor*& executor )
 {
+// install executor conform to the return type
    executor = CreateExecutor( fMethod ? fMethod->GetReturnTypeName() : fClass->GetName() );
    if ( ! executor )
       return kFALSE;
@@ -201,6 +202,7 @@ void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
 PyROOT::TMethodHolder::TMethodHolder( TClass* klass, TFunction* method ) :
       fClass( klass ), fMethod( method )
 {
+// constructor; initialization is deferred
    fMethodCall    =  0;
    fExecutor      =  0;
    fArgsRequired  = -1;
@@ -212,12 +214,14 @@ PyROOT::TMethodHolder::TMethodHolder( TClass* klass, TFunction* method ) :
 //____________________________________________________________________________
 PyROOT::TMethodHolder::TMethodHolder( const TMethodHolder& other ) : PyCallable( other )
 {
+// copy constructor
    Copy_( other );
 }
 
 //____________________________________________________________________________
 PyROOT::TMethodHolder& PyROOT::TMethodHolder::operator=( const TMethodHolder& other )
 {
+// assignment operator
    if ( this != &other ) {
       Destroy_();
       Copy_( other );
@@ -229,6 +233,7 @@ PyROOT::TMethodHolder& PyROOT::TMethodHolder::operator=( const TMethodHolder& ot
 //____________________________________________________________________________
 PyROOT::TMethodHolder::~TMethodHolder()
 {
+// destructor
    Destroy_();
 }
 
@@ -236,12 +241,14 @@ PyROOT::TMethodHolder::~TMethodHolder()
 //- public members -----------------------------------------------------------
 PyObject* PyROOT::TMethodHolder::GetSignature()
 {
+// construct python string from the method's signature
    return PyString_FromFormat( "%s", fMethod->GetSignature() );
 }
 
 //____________________________________________________________________________
 PyObject* PyROOT::TMethodHolder::GetPrototype()
 {
+// construct python string from the method's prototype
    return PyString_FromFormat( "%s%s",
       ( fMethod->Property() & G__BIT_ISSTATIC ) ? "static " : "", fMethod->GetPrototype() );
 }
@@ -375,6 +382,7 @@ Bool_t PyROOT::TMethodHolder::SetMethodArgs( PyObject* args )
 //____________________________________________________________________________
 PyObject* PyROOT::TMethodHolder::Execute( void* self )
 {
+// call the interface method
    R__LOCKGUARD2( gCINTMutex );
    TempLevelGuard_t g;
 

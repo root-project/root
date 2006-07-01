@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.8 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.9 2006/04/19 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -150,6 +150,7 @@ PyTypeObject PropertyProxy_Type = {
 //- public members -----------------------------------------------------------
 void PyROOT::PropertyProxy::Set( TDataMember* dm )
 {
+// initialize from <dm> info
    G__ClassInfo* clInfo = dm->GetClass()->GetClassInfo();
    if ( clInfo ) {
       Long_t offset = 0;
@@ -168,6 +169,7 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
 //____________________________________________________________________________
 void PyROOT::PropertyProxy::Set( TGlobal* gbl )
 {
+// initialize from <gbl> info
    TClass* klass = gROOT->GetClass( gbl->GetTypeName() );
    G__ClassInfo* clInfo = klass ? klass->GetClassInfo() : 0;
    if ( clInfo ) {

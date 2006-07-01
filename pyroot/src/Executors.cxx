@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.17 2006/04/06 05:38:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.18 2006/04/19 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -29,48 +29,56 @@ PyROOT::ExecFactories_t PyROOT::gExecFactories;
 //- executors for built-ins ---------------------------------------------------
 PyObject* PyROOT::TLongExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, construct python long return value
    return PyLong_FromLong( (Long_t)func->ExecInt( self ) );
 }
 
 //____________________________________________________________________________
 PyObject* PyROOT::TCharExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, construct python string return value
    return PyString_FromFormat( "%c", (int)func->ExecInt( self ) );
 }
 
 //____________________________________________________________________________
 PyObject* PyROOT::TIntExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, construct python int return value
    return PyInt_FromLong( (Long_t)func->ExecInt( self ) );
 }
 
 //____________________________________________________________________________
 PyObject* PyROOT::TULongExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, construct python unsigned long return value
    return PyLong_FromUnsignedLong( (ULong_t)func->ExecInt( self ) );
 }
 
 //____________________________________________________________________________
 PyObject* PyROOT::TLongLongExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, construct python long long return value
    return PyLong_FromLongLong( (Long64_t)G__Longlong( func->Execute( self ) ) );
 }
 
 //____________________________________________________________________________
 PyObject* PyROOT::TULongLongExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, construct python unsigned long long return value
    return PyLong_FromUnsignedLongLong( (ULong64_t)G__ULonglong( func->Execute( self ) ) );
 }
 
 //____________________________________________________________________________
 PyObject* PyROOT::TDoubleExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, construct python float return value
    return PyFloat_FromDouble( (double)func->ExecDouble( self ) );
 }
 
 //____________________________________________________________________________
 Bool_t PyROOT::TRefExecutor::SetAssignable( PyObject* pyobject )
 {
+// prepare "buffer" for by-ref returns, used with __setitem__
    if ( pyobject != 0 ) {
       Py_INCREF( pyobject );
       fAssignable = pyobject;
@@ -105,6 +113,7 @@ PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Double, Double_t, Double_t, PyFloat_FromDoub
 //____________________________________________________________________________
 PyObject* PyROOT::TSTLStringRefExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, return python string return value
    if ( ! fAssignable ) {
       return PyString_FromString( ((std::string*)func->ExecInt( self ))->c_str() );
    } else {
@@ -122,6 +131,7 @@ PyObject* PyROOT::TSTLStringRefExecutor::Execute( G__CallFunc* func, void* self 
 //____________________________________________________________________________
 PyObject* PyROOT::TVoidExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, return None
    func->Exec( self );
    Py_INCREF( Py_None );
    return Py_None;
@@ -130,6 +140,7 @@ PyObject* PyROOT::TVoidExecutor::Execute( G__CallFunc* func, void* self )
 //____________________________________________________________________________
 PyObject* PyROOT::TCStringExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, construct python string return value
    char* result = (char*)func->ExecInt( self );
    if ( ! result )
       return PyString_FromString( "" );
@@ -141,6 +152,7 @@ PyObject* PyROOT::TCStringExecutor::Execute( G__CallFunc* func, void* self )
 //- pointer/array executors ---------------------------------------------------
 PyObject* PyROOT::TVoidArrayExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, construct python long return value
    return PyLong_FromVoidPtr( (void*)func->ExecInt( self ) );
 }
 
@@ -164,6 +176,7 @@ PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Double, Double_t )
 //- special cases ------------------------------------------------------------
 PyObject* PyROOT::TSTLStringExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, construct python string return value
    std::string* result = (std::string*)func->ExecInt( self );
    if ( ! result )
       return PyString_FromString( "" );
@@ -174,12 +187,14 @@ PyObject* PyROOT::TSTLStringExecutor::Execute( G__CallFunc* func, void* self )
 //____________________________________________________________________________
 PyObject* PyROOT::TTGlobalExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, construct python ROOT object return value
    return BindRootGlobal( (TGlobal*)func->ExecInt( self ) );
 }
 
 //____________________________________________________________________________
 PyObject* PyROOT::TRootObjectExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, construct python ROOT object return value
    return BindRootObject( (void*)func->ExecInt( self ), fClass );
 }
 
@@ -222,6 +237,7 @@ PyObject* PyROOT::TConstructorExecutor::Execute( G__CallFunc* func, void* klass 
 //____________________________________________________________________________
 PyObject* PyROOT::TPyObjectExecutor::Execute( G__CallFunc* func, void* self )
 {
+// execute <func> with argument <self>, return python object
    return (PyObject*)func->ExecInt( self );
 }
 

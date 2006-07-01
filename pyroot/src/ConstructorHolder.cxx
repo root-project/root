@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.7 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.8 2006/03/09 09:07:02 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -19,6 +19,7 @@
 //- protected members --------------------------------------------------------
 Bool_t PyROOT::TConstructorHolder::InitExecutor_( TExecutor*& executor )
 {
+// pick up special case new object executor
    executor = (gExecFactories[ "__init__" ])();
    return kTRUE;
 }

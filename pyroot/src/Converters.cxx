@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.28 2006/03/16 06:07:32 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.29 2006/04/19 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -29,6 +29,7 @@ PyROOT::ConvFactories_t PyROOT::gConvFactories;
 //- base converter implementation ---------------------------------------------
 PyObject* PyROOT::TConverter::FromMemory( void* )
 {
+// could happen if no derived class override
    PyErr_SetString( PyExc_TypeError, "unknown type can not be converted from memory" );
    return 0;
 }
@@ -36,6 +37,7 @@ PyObject* PyROOT::TConverter::FromMemory( void* )
 //_____________________________________________________________________________
 Bool_t PyROOT::TConverter::ToMemory( PyObject*, void* )
 {
+// could happen if no derived class override
    PyErr_SetString( PyExc_TypeError, "unknown type can not be converted to memory" );
    return kFALSE;
 }
@@ -73,6 +75,7 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject*, void* )               \
 #define PYROOT_IMPLEMENT_BASIC_CHAR_CONVERTER( name, type, low, high )        \
 Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, G__CallFunc* func )\
 {                                                                             \
+/* convert <pyobject> to C++ <<type>>, set arg for call, allow int -> char */ \
    if ( PyString_Check( pyobject ) ) {                                        \
       if ( PyString_GET_SIZE( pyobject ) == 1 )                               \
          func->SetArg( (Long_t)PyString_AS_STRING( pyobject )[0] );           \
@@ -128,6 +131,7 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 //- converters for built-ins --------------------------------------------------
 Bool_t PyROOT::TLongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ long, set arg for call
    func->SetArg( PyLong_AsLong( pyobject ) );
    if ( PyErr_Occurred() )
       return kFALSE;
@@ -139,6 +143,7 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Long, Long_t, Long_t, PyLong_FromLong, PyLong_
 //____________________________________________________________________________
 Bool_t PyROOT::TLongRefConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ long&, set arg for call
    if ( ! PyInt_CheckExact( pyobject ) )
       return kFALSE;
 
@@ -151,6 +156,7 @@ PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 //____________________________________________________________________________
 Bool_t PyROOT::TBoolConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ bool, allow int/long -> bool, set arg for call
    Long_t l = PyLong_AsLong( pyobject );
    if ( PyErr_Occurred() )
       return kFALSE;
@@ -180,6 +186,7 @@ namespace {
 
    ULong_t ConvertULong( PyObject* pyobject )
    {
+   // convert <pybject> to C++ unsigned long, with bounds checking, allow int -> ulong
       ULong_t ul = PyLong_AsUnsignedLong( pyobject );
       if ( PyErr_Occurred() && PyInt_Check( pyobject ) ) {
          PyErr_Clear();
@@ -199,6 +206,7 @@ namespace {
 
 Bool_t PyROOT::TULongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ unsigned long, set arg for call
    func->SetArg( ConvertULong( pyobject ) );
    if ( PyErr_Occurred() )
       return kFALSE;
@@ -207,11 +215,13 @@ Bool_t PyROOT::TULongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 
 PyObject* PyROOT::TULongConverter::FromMemory( void* address )
 {
+// construct python object from C++ unsigned long read at <address>
    return PyLong_FromUnsignedLong( *((ULong_t*)address) );
 }
 
 Bool_t PyROOT::TULongConverter::ToMemory( PyObject* value, void* address )
 {
+// convert <value> to C++ unsigned long, write it at <address>
    ULong_t u = ConvertULong( value );
    if ( PyErr_Occurred() )
       return kFALSE;
@@ -222,11 +232,13 @@ Bool_t PyROOT::TULongConverter::ToMemory( PyObject* value, void* address )
 //____________________________________________________________________________
 PyObject* PyROOT::TUIntConverter::FromMemory( void* address )
 {
+// construct python object from C++ unsigned int read at <address>
    return PyLong_FromUnsignedLong( *((UInt_t*)address) );
 }
 
 Bool_t PyROOT::TUIntConverter::ToMemory( PyObject* value, void* address )
 {
+// convert <value> to C++ unsigned int, write it at <address>
    ULong_t u = ConvertULong( value );
    if ( PyErr_Occurred() )
       return kFALSE;
@@ -243,6 +255,7 @@ Bool_t PyROOT::TUIntConverter::ToMemory( PyObject* value, void* address )
 //____________________________________________________________________________
 Bool_t PyROOT::TDoubleConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ double, set arg for call
    func->SetArg( PyFloat_AsDouble( pyobject ) );
    if ( PyErr_Occurred() )
       return kFALSE;
@@ -255,6 +268,7 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,  Float_t,  Double_t, PyFloat_FromDouble
 //____________________________________________________________________________
 Bool_t PyROOT::TDoubleRefConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ double&, set arg for call
    if ( ! PyFloat_CheckExact( pyobject ) )
       return kFALSE;
 
@@ -267,6 +281,7 @@ PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( DoubleRef )
 //____________________________________________________________________________
 Bool_t PyROOT::TVoidConverter::SetArg( PyObject*, G__CallFunc* )
 {
+// can't happen (unless a type is mapped wrongly), but implemented for completeness
    PyErr_SetString( PyExc_SystemError, "void/unknown arguments can\'t be set" );
    return kFALSE;
 }
@@ -274,6 +289,7 @@ Bool_t PyROOT::TVoidConverter::SetArg( PyObject*, G__CallFunc* )
 //____________________________________________________________________________
 Bool_t PyROOT::TMacroConverter::SetArg( PyObject*, G__CallFunc* )
 {
+// C++ macro's are not acceptable function args (but their values could be)
    PyErr_SetString( PyExc_SystemError, "macro arguments can\'t be set" );
    return kFALSE;
 }
@@ -309,6 +325,7 @@ PyObject* PyROOT::TMacroConverter::FromMemory( void* address )
 //____________________________________________________________________________
 Bool_t PyROOT::TLongLongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ long long, set arg for call
    func->SetArg( PyLong_AsLongLong( pyobject ) );
    if ( PyErr_Occurred() )
       return kFALSE;
@@ -317,11 +334,13 @@ Bool_t PyROOT::TLongLongConverter::SetArg( PyObject* pyobject, G__CallFunc* func
 
 PyObject* PyROOT::TLongLongConverter::FromMemory( void* address )
 {
+// construct python object from C++ long long read at <address>
    return PyLong_FromLongLong( *(Long64_t*)address );
 }
 
 Bool_t PyROOT::TLongLongConverter::ToMemory( PyObject* value, void* address )
 {
+// convert <value> to C++ long long, write it at <address>
    Long64_t ll = PyLong_AsLongLong( value );
    if ( PyErr_Occurred() )
       return kFALSE;
@@ -334,6 +353,7 @@ namespace {
 
    ULong64_t ConvertULongLong( PyObject* pyobject )
    {
+   // convert <pyobject> to C++ unsigned long long, with bounds checking
       ULong64_t ull = PyLong_AsUnsignedLongLong( pyobject );
       if ( PyErr_Occurred() && PyInt_Check( pyobject ) ) {
          PyErr_Clear();
@@ -353,6 +373,7 @@ namespace {
 
 Bool_t PyROOT::TULongLongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ unsigned long long, set arg for call
    func->SetArg( ConvertULongLong( pyobject ) );
    if ( PyErr_Occurred() )
       return kFALSE;
@@ -361,11 +382,13 @@ Bool_t PyROOT::TULongLongConverter::SetArg( PyObject* pyobject, G__CallFunc* fun
 
 PyObject* PyROOT::TULongLongConverter::FromMemory( void* address )
 {
+// construct python object from C++ unsigned long long read at <address>
    return PyLong_FromUnsignedLongLong( *(ULong64_t*)address );
 }
 
 Bool_t PyROOT::TULongLongConverter::ToMemory( PyObject* value, void* address )
 {
+// convert <value> to C++ unsigned long long, write it at <address>
    Long64_t ull = ConvertULongLong( value );
    if ( PyErr_Occurred() )
       return kFALSE;
@@ -396,6 +419,7 @@ Bool_t PyROOT::TCStringConverter::SetArg( PyObject* pyobject, G__CallFunc* func 
 
 PyObject* PyROOT::TCStringConverter::FromMemory( void* address )
 {
+// construct python object from C++ const char* read at <address>
    if ( address && *(char**)address ) {
       if ( fMaxSize != UINT_MAX ) {          // need to prevent reading beyond boundary
          std::string buf( *(char**)address, fMaxSize );
@@ -411,6 +435,7 @@ PyObject* PyROOT::TCStringConverter::FromMemory( void* address )
 
 Bool_t PyROOT::TCStringConverter::ToMemory( PyObject* value, void* address )
 {
+// convert <value> to C++ const char*, write it at <address>
    const char* s = PyString_AsString( value );
    if ( PyErr_Occurred() )
       return kFALSE;
@@ -455,7 +480,7 @@ Bool_t PyROOT::TVoidArrayConverter::GetAddressSpecialCase( PyObject* pyobject, v
 
 // (2): allow integer zero to act as a null pointer, no deriveds
    if ( PyInt_CheckExact( pyobject ) || PyLong_CheckExact( pyobject ) ) {
-      long val = PyLong_AsLong( pyobject );
+      Long_t val = (Long_t)PyLong_AsLong( pyobject );
       if ( val == 0l ) {
          address = (void*)val;
          return kTRUE;
@@ -479,7 +504,7 @@ Bool_t PyROOT::TVoidArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* fun
 // just convert pointer if it is a ROOT object
    if ( ObjectProxy_Check( pyobject ) ) {
    // depending on memory policy, some objects are no longer owned when passed to C++
-      if ( ! fKeepControl )
+      if ( ! fKeepControl && Utility::gMemoryPolicy != Utility::kStrict )
          ((ObjectProxy*)pyobject)->Release();
 
    // set pointer (may be null) and declare success
@@ -511,6 +536,7 @@ Bool_t PyROOT::TVoidArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* fun
 //____________________________________________________________________________
 PyObject* PyROOT::TVoidArrayConverter::FromMemory( void* address )
 {
+// nothing sensible can be done, just return <address> as pylong
    return PyLong_FromLong( (Long_t)address );
 }
 
@@ -520,7 +546,7 @@ Bool_t PyROOT::TVoidArrayConverter::ToMemory( PyObject* value, void* address )
 // just convert pointer if it is a ROOT object
    if ( ObjectProxy_Check( value ) ) {
    // depending on memory policy, some objects are no longer owned when passed to C++
-      if ( ! fKeepControl )
+      if ( ! fKeepControl && Utility::gMemoryPolicy != Utility::kStrict )
          ((ObjectProxy*)value)->Release();
 
    // set pointer (may be null) and declare success
@@ -587,6 +613,7 @@ PYROOT_IMPLEMENT_ARRAY_CONVERTER( Double, Double_t, 'd' )
 //____________________________________________________________________________
 Bool_t PyROOT::TLongLongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ long long*, set arg for call
    PyObject* pytc = PyObject_GetAttrString( pyobject, const_cast< char* >( "typecode" ) );
    if ( pytc != 0 ) {              // iow, this array has a known type, but there's no
       Py_DECREF( pytc );           // such thing for long long in module array
@@ -632,6 +659,7 @@ PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string, c_str )
 //____________________________________________________________________________
 Bool_t PyROOT::TRootObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ instance*, set arg for call
    if ( ! ObjectProxy_Check( pyobject ) ) {
       void* ptr = 0;
       if ( GetAddressSpecialCase( pyobject, ptr ) ) {
@@ -646,7 +674,7 @@ Bool_t PyROOT::TRootObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* fu
    ObjectProxy* pyobj = (ObjectProxy*)pyobject;
    if ( pyobj->ObjectIsA() && pyobj->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
    // depending on memory policy, some objects need releasing when passed into functions
-      if ( ! KeepControl() )
+      if ( ! KeepControl() && Utility::gMemoryPolicy != Utility::kStrict )
          ((ObjectProxy*)pyobject)->Release();
 
    // calculate offset between formal and actual arguments
@@ -673,12 +701,14 @@ Bool_t PyROOT::TRootObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* fu
 //____________________________________________________________________________
 PyObject* PyROOT::TRootObjectConverter::FromMemory( void* address )
 {
+// construct python object from C++ instance read at <address>
    return BindRootObject( address, fClass, kFALSE );
 }
 
 //____________________________________________________________________________
 Bool_t PyROOT::TRootObjectConverter::ToMemory( PyObject* value, void* address )
 {
+// convert <value> to C++ instance, write it at <address>
    if ( ! ObjectProxy_Check( value ) ) {
       void* ptr = 0;
       if ( GetAddressSpecialCase( value, ptr ) ) {
@@ -692,7 +722,7 @@ Bool_t PyROOT::TRootObjectConverter::ToMemory( PyObject* value, void* address )
 
    if ( ((ObjectProxy*)value)->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
    // depending on memory policy, some objects need releasing when passed into functions
-      if ( ! KeepControl() )
+      if ( ! KeepControl() && Utility::gMemoryPolicy != Utility::kStrict )
          ((ObjectProxy*)value)->Release();
 
    // TODO: fix this, as this is sooo wrong ...
@@ -706,12 +736,13 @@ Bool_t PyROOT::TRootObjectConverter::ToMemory( PyObject* value, void* address )
 //____________________________________________________________________________
 Bool_t PyROOT::TRootObjectPtrConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ instance**, set arg for call
    if ( ! ObjectProxy_Check( pyobject ) )
       return kFALSE;              // not a PyROOT object (TODO: handle SWIG etc.)
 
    if ( ((ObjectProxy*)pyobject)->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
    // depending on memory policy, some objects need releasing when passed into functions
-      if ( ! KeepControl() )
+      if ( ! KeepControl() && Utility::gMemoryPolicy != Utility::kStrict )
          ((ObjectProxy*)pyobject)->Release();
 
    // set pointer (may be null) and declare success
@@ -725,18 +756,20 @@ Bool_t PyROOT::TRootObjectPtrConverter::SetArg( PyObject* pyobject, G__CallFunc*
 //____________________________________________________________________________
 PyObject* PyROOT::TRootObjectPtrConverter::FromMemory( void* address )
 {
+// construct python object from C++ instance* read at <address>
    return BindRootObject( address, fClass, kTRUE );
 }
 
 //____________________________________________________________________________
 Bool_t PyROOT::TRootObjectPtrConverter::ToMemory( PyObject* value, void* address )
 {
+// convert <value> to C++ instance*, write it at <address>
    if ( ! ObjectProxy_Check( value ) )
       return kFALSE;              // not a PyROOT object (TODO: handle SWIG etc.)
 
    if ( ((ObjectProxy*)value)->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
    // depending on memory policy, some objects need releasing when passed into functions
-      if ( ! KeepControl() )
+      if ( ! KeepControl() && Utility::gMemoryPolicy != Utility::kStrict )
          ((ObjectProxy*)value)->Release();
 
    // set pointer (may be null) and declare success
@@ -750,6 +783,7 @@ Bool_t PyROOT::TRootObjectPtrConverter::ToMemory( PyObject* value, void* address
 //____________________________________________________________________________
 Bool_t PyROOT::TVoidPtrRefConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ void*&, set arg for call
    if ( ObjectProxy_Check( pyobject ) ) {
       func->SetArgRef( reinterpret_cast< Long_t& >( ((ObjectProxy*)pyobject)->fObject ) );
       return kTRUE;
@@ -761,6 +795,7 @@ Bool_t PyROOT::TVoidPtrRefConverter::SetArg( PyObject* pyobject, G__CallFunc* fu
 //____________________________________________________________________________
 Bool_t PyROOT::TVoidPtrPtrConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
+// convert <pyobject> to C++ void**, set arg for call
    if ( ObjectProxy_Check( pyobject ) ) {
    // this is a ROOT object, take and set its address
       func->SetArg( reinterpret_cast< Long_t >( &((ObjectProxy*)pyobject)->fObject ) );
@@ -790,6 +825,7 @@ Bool_t PyROOT::TPyObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* func
 
 PyObject* PyROOT::TPyObjectConverter::FromMemory( void* address )
 {
+// construct python object from C++ PyObject* read at <address>
    PyObject* pyobject = *((PyObject**)address);
 
    if ( ! pyobject ) {
@@ -803,6 +839,7 @@ PyObject* PyROOT::TPyObjectConverter::FromMemory( void* address )
 
 Bool_t PyROOT::TPyObjectConverter::ToMemory( PyObject* value, void* address )
 {
+// no conversion needed, write <value> at <address>
    Py_INCREF( value );
    *((PyObject**)address) = value;
    return kTRUE;

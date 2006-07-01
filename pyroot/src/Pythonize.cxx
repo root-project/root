@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.38 2006/05/28 19:05:24 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.39 2006/06/13 06:39:05 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -934,6 +934,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 //- TTree behaviour ----------------------------------------------------------
    PyObject* TTreeGetAttr( PyObject*, PyObject* args )
    {
+   // allow access to branches/leaves as if they are data members
       ObjectProxy* self = 0; const char* name = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!s:__getattr__" ),
                 &ObjectProxy_Type, &self, &name ) )
@@ -943,18 +944,21 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTree* tree =
          (TTree*)self->ObjectIsA()->DynamicCast( TTree::Class(), self->GetObject() );
 
-   // allow access to leaves as if they are data members
+   // search for branch first (typical for objects)
+      TBranch* branch = tree->GetBranch( name );
+      if ( branch ) {
+      // found a branched object, wrap its address for the object it represents
+         TClass* klass = gROOT->GetClass( branch->GetClassName() );
+         if ( klass && branch->GetAddress() )
+            return BindRootObjectNoCast( *(char**)branch->GetAddress(), klass );
+      }
+
+   // if not, try leaf
       TLeaf* leaf = tree->GetLeaf( name );
-      if ( leaf && leaf->IsOnTerminalBranch() ) {
+      if ( leaf ) {
       // found a leaf, extract value and wrap
-         if ( ! leaf->GetLeafCount() && leaf->GetLenStatic() <= 1 ) {
-            TConverter* pcnv = CreateConverter( leaf->GetTypeName() );
-            PyObject* value = pcnv->FromMemory( (void*)leaf->GetValuePointer() );
-            delete pcnv;
-
-            return value;
-
-         } else {
+         if ( ! leaf->IsRange() ) {
+         // array types
             std::string typeName = leaf->GetTypeName();
             TConverter* pcnv = CreateConverter( typeName + '*', leaf->GetNdata() );
             void* address = (void*)leaf->GetValuePointer();
@@ -962,15 +966,14 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             delete pcnv;
 
             return value;
+         } else {
+         // value types
+            TConverter* pcnv = CreateConverter( leaf->GetTypeName() );
+            PyObject* value = pcnv->FromMemory( (void*)leaf->GetValuePointer() );
+            delete pcnv;
+
+            return value;
          }
-      } else {
-      // maybe there's a branch; extract object if possible
-         TBranch* branch = tree->GetBranch( name );
-         if ( branch ) {
-            TClass* klass = gROOT->GetClass( branch->GetClassName() );
-            if ( klass && branch->GetAddress() )
-               return BindRootObjectNoCast( *(char**)branch->GetAddress(), klass );
-          }
       }
 
    // confused

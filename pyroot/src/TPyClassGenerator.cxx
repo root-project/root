@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.6 2005/04/28 07:33:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.7 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
@@ -140,6 +140,7 @@ namespace {
 //- public members -----------------------------------------------------------
 TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
 {
+// called if all other class generators failed, attempt to build from python class
    if ( PyROOT::gDictLookupActive == kTRUE )
       return 0;                              // call originated from python
 
@@ -265,5 +266,6 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
 //____________________________________________________________________________
 TClass* TPyClassGenerator::GetClass( const type_info& typeinfo, Bool_t load )
 {
+// just forward, based on name only
    return GetClass( typeinfo.name(), load );
 }

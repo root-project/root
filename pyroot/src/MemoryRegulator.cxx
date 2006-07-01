@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.11 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.12 2006/01/05 08:09:09 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -95,6 +95,7 @@ namespace {
 //- ctor/dtor ----------------------------------------------------------------
 PyROOT::TMemoryRegulator::TMemoryRegulator()
 {
+// setup NoneType for referencing and create weakref cache
    static InitPyROOT_NoneType_t initPyROOT_NoneType;
 
    assert( fgObjectTable == 0 );
@@ -104,6 +105,7 @@ PyROOT::TMemoryRegulator::TMemoryRegulator()
 //____________________________________________________________________________
 PyROOT::TMemoryRegulator::~TMemoryRegulator()
 {
+// cleanup weakref cache
    delete fgObjectTable;
    fgObjectTable = 0;
 }
@@ -112,6 +114,7 @@ PyROOT::TMemoryRegulator::~TMemoryRegulator()
 //- public members -----------------------------------------------------------
 void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
 {
+// called whenever a TObject gets destroyed
    if ( ! object || ! fgObjectTable )   // table can be deleted before libCore is done
       return;
 
@@ -169,6 +172,7 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
 //____________________________________________________________________________
 void PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* object )
 {
+// start tracking <object> proxied by <pyobj>
    if ( ! ( pyobj && object ) )
       return;
 
@@ -182,6 +186,7 @@ void PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* obje
 //____________________________________________________________________________
 PyObject* PyROOT::TMemoryRegulator::RetrieveObject( TObject* object )
 {
+// lookup <object>, return old proxy if tracked
    if ( ! object )
       return 0;
 

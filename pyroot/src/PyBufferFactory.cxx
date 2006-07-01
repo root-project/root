@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.9 2005/08/10 05:25:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.10 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -33,7 +33,7 @@ namespace {
    PYROOT_PREPARE_PYBUFFER_TYPE( Float )
    PYROOT_PREPARE_PYBUFFER_TYPE( Double )
 
-// implement 'length' and 'get' functions (use explicit funcs: vc++ can't handle templates)
+// implement get, str, and length functions (use explicit funcs: vc++ can't handle templates)
    int buffer_length( PyObject* self, const int tsize )
    {
       std::map< PyObject*, PyObject* >::iterator iscbp = gSizeCallbacks.find( self );
@@ -50,7 +50,7 @@ namespace {
    }
 
 //____________________________________________________________________________
-   const char* get_buffer( PyObject* self, int idx, const int tsize )
+   const char* buffer_get( PyObject* self, int idx, const int tsize )
    {
       if ( idx < 0 || idx >= buffer_length( self, tsize ) ) {
          PyErr_SetString( PyExc_IndexError, "buffer index out of range" );
@@ -64,14 +64,20 @@ namespace {
    }
 
 //____________________________________________________________________________
-#define PYROOT_IMPLEMENT_PYBUFFER_LENGTH( name, type, stype, F1 )            \
+#define PYROOT_IMPLEMENT_PYBUFFER_METHODS( name, type, stype, F1 )           \
+   PyObject* name##_buffer_str( PyObject* self )                             \
+   {                                                                         \
+      int l = buffer_length( self, sizeof( type ) );                         \
+      return PyString_FromFormat( "<"#type" buffer of length %d>", l );      \
+   }                                                                         \
+                                                                             \
    type name##_buffer_length( PyObject* self )                               \
    {                                                                         \
       return buffer_length( self, sizeof( type ) );                          \
    }                                                                         \
                                                                              \
    PyObject* name##_buffer_item( PyObject* self, int idx ) {                 \
-      const char* buf = get_buffer( self, idx, sizeof( type ) );             \
+      const char* buf = buffer_get( self, idx, sizeof( type ) );             \
       if ( ! buf ) {                                                         \
          PyErr_SetString( PyExc_IndexError, "attempt to index a null-buffer" );\
          return 0;                                                           \
@@ -80,14 +86,14 @@ namespace {
       return F1( (stype)*((type*)buf + idx) );                               \
    }
 
-   PYROOT_IMPLEMENT_PYBUFFER_LENGTH( Short,  Short_t,  Long_t,   PyInt_FromLong )
-   PYROOT_IMPLEMENT_PYBUFFER_LENGTH( UShort, UShort_t, Long_t,   PyInt_FromLong )
-   PYROOT_IMPLEMENT_PYBUFFER_LENGTH( Int,    Int_t,    Long_t,   PyInt_FromLong )
-   PYROOT_IMPLEMENT_PYBUFFER_LENGTH( UInt,   UInt_t,   Long_t,   PyInt_FromLong )
-   PYROOT_IMPLEMENT_PYBUFFER_LENGTH( Long,   Long_t,   Long_t,   PyLong_FromLong )
-   PYROOT_IMPLEMENT_PYBUFFER_LENGTH( ULong,  ULong_t,  ULong_t,  PyLong_FromUnsignedLong )
-   PYROOT_IMPLEMENT_PYBUFFER_LENGTH( Float,  Float_t,  Double_t, PyFloat_FromDouble )
-   PYROOT_IMPLEMENT_PYBUFFER_LENGTH( Double, Double_t, Double_t, PyFloat_FromDouble )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Short,  Short_t,  Long_t,   PyInt_FromLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( UShort, UShort_t, Long_t,   PyInt_FromLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Int,    Int_t,    Long_t,   PyInt_FromLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( UInt,   UInt_t,   Long_t,   PyInt_FromLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Long,   Long_t,   Long_t,   PyLong_FromLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( ULong,  ULong_t,  ULong_t,  PyLong_FromUnsignedLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Float,  Float_t,  Double_t, PyFloat_FromDouble )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Double, Double_t, Double_t, PyFloat_FromDouble )
 
 } // unnamed namespace
 
@@ -95,6 +101,7 @@ namespace {
 //- instance handler ------------------------------------------------------------
 PyROOT::TPyBufferFactory* PyROOT::TPyBufferFactory::Instance()
 {
+// singleton factory
    static TPyBufferFactory* fac = new TPyBufferFactory;
    return fac;
 }
@@ -104,10 +111,12 @@ PyROOT::TPyBufferFactory* PyROOT::TPyBufferFactory::Instance()
 #define PYROOT_INSTALL_PYBUFFER_METHODS( name, type )                           \
    Py##name##Buffer_SeqMethods.sq_item      = (intargfunc) name##_buffer_item;  \
    Py##name##Buffer_SeqMethods.sq_length    = (inquiry) &name##_buffer_length;  \
-   Py##name##Buffer_Type.tp_as_sequence     = &Py##name##Buffer_SeqMethods;
+   Py##name##Buffer_Type.tp_as_sequence     = &Py##name##Buffer_SeqMethods;     \
+   Py##name##Buffer_Type.tp_str             = (reprfunc) name##_buffer_str;
 
 PyROOT::TPyBufferFactory::TPyBufferFactory()
 {
+// construct python buffer types
    PYROOT_INSTALL_PYBUFFER_METHODS( Short,  Short_t )
    PYROOT_INSTALL_PYBUFFER_METHODS( UShort, UShort_t )
    PYROOT_INSTALL_PYBUFFER_METHODS( Int,    Int_t )
