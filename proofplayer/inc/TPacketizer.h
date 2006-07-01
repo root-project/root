@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.15 2005/07/09 04:03:23 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.12 2005/07/09 04:03:23 brun Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -35,6 +35,7 @@ class TMessage;
 class TTimer;
 class TTree;
 class TMap;
+class TProofStats;
 
 
 class TPacketizer : public TVirtualPacketizer {
@@ -52,18 +53,18 @@ private:
 
    TList         *fFileNodes;    // nodes with files
    TList         *fUnAllocated;  // nodes with unallocated files
-   TObject       *fUnAllocNext;  // cursor in fUnAllocated
    TList         *fActive;       // nodes with unfinished files
-   TObject       *fActiveNext;   // cursor in fActive
    TMap          *fSlaveStats;   // slave status, keyed by correspondig TSlave
    TTimer        *fProgress;     // progress updates timer
 
    Long64_t       fPacketSize;   // global base packet size
    Int_t          fMaxPerfIdx;   // maximum of our slaves' performance index
 
+   Int_t          fMaxSlaveCnt;  // maximum number of slaves per filenode
+
    TPacketizer();
-   TPacketizer(const TPacketizer &);    // no implementation, will generate
-   void operator=(const TPacketizer &);  // error on accidental usage
+   TPacketizer(const TPacketizer&);    // no implementation, will generate
+   void operator=(const TPacketizer&);  // error on accidental usage
 
    virtual Bool_t HandleTimer(TTimer *timer);
 
@@ -84,7 +85,7 @@ private:
 
 public:
    TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
-               TList *input);
+                TList *input);
    virtual ~TPacketizer();
 
    Long64_t      GetEntriesProcessed() const { return fProcessed; }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.33 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.46 2006/06/01 16:26:30 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TMessage.h"
 #include "TMonitor.h"
 #include "TObject.h"
+#include "TParameter.h"
 #include "TPerfStats.h"
 #include "TProofDebug.h"
 #include "TProof.h"
@@ -94,14 +95,17 @@ private:
    TObject       *fUnAllocFileNext; // cursor in fFiles
    TList         *fActFiles;        // files with work remaining
    TObject       *fActFileNext;     // cursor in fActFiles
-   Int_t          fSlaveCnt;        // number of slaves processing files on this node
+   Int_t          fMySlaveCnt;      // number of slaves running on this node
+   Int_t          fSlaveCnt;        // number of external slaves processing files on this node
 
 public:
    TFileNode(const char *name);
    ~TFileNode() { delete fFiles; delete fActFiles; }
 
-   void        IncSlaveCnt() { fSlaveCnt++; }
-   void        DecSlaveCnt() { fSlaveCnt--; }
+   void        IncMySlaveCnt() { fMySlaveCnt++; }
+   void        IncSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt++; }
+   void        DecSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt--; R__ASSERT(fSlaveCnt >= 0); }
+   Int_t       GetSlaveCnt() const {return fMySlaveCnt + fSlaveCnt;}
    Int_t       GetNumberOfActiveFiles() const { return fActFiles->GetSize(); }
    Bool_t      IsSortable() const { return kTRUE; }
 
@@ -156,9 +160,11 @@ public:
       const TFileNode *obj = dynamic_cast<const TFileNode*>(other);
       R__ASSERT(obj != 0);
 
-      if (fSlaveCnt < obj->fSlaveCnt) {
+      Int_t myVal = GetSlaveCnt();
+      Int_t otherVal = obj->GetSlaveCnt();
+      if (myVal < otherVal) {
          return -1;
-      } else if (fSlaveCnt > obj->fSlaveCnt) {
+      } else if (myVal > otherVal) {
          return 1;
       } else {
          return 0;
@@ -167,8 +173,9 @@ public:
 
    void Print(Option_t *) const
    {
-      cout << "OBJ: " << IsA()->GetName() << "\t" << fNodeName << "\t"
-           << fSlaveCnt << endl;
+      cout << "OBJ: " << IsA()->GetName() << "\t" << fNodeName
+           << "\tMySlaveCount " << fMySlaveCnt
+           << "\tSlaveCount " << fSlaveCnt << endl;
    }
 
    void Reset()
@@ -176,13 +183,15 @@ public:
       fUnAllocFileNext = fFiles->First();
       fActFiles->Clear();
       fActFileNext = 0;
+      fSlaveCnt = 0;
+      fMySlaveCnt = 0;
    }
 };
 
 
 TPacketizer::TFileNode::TFileNode(const char *name)
    : fNodeName(name), fFiles(new TList), fUnAllocFileNext(0),fActFiles(new TList),
-     fActFileNext(0), fSlaveCnt(0)
+     fActFileNext(0), fMySlaveCnt(0), fSlaveCnt(0)
 {
    // Constructor
 
@@ -228,11 +237,11 @@ ClassImp(TPacketizer)
 
 //______________________________________________________________________________
 TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
-                         Long64_t num, TList * /*input*/ )
+                         Long64_t num, TList *input)
 {
    // Constructor
 
-   PDB(kPacketizer,1) Info("TPacketizer", "enter (first %lld, num %lld)", first, num);
+   PDB(kPacketizer,1) Info("TPacketizer", "Enter (first %lld, num %lld)", first, num);
 
    // Init pointer members
    fSlaveStats = 0;
@@ -245,6 +254,10 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 
    fProcessed = 0;
    fMaxPerfIdx = 1;
+
+   TObject *obj = input->FindObject("PROOF_MaxSlavesPerNode");
+   TParameter<Long_t> *par = (obj == 0) ? 0 : dynamic_cast<TParameter<Long_t>*>(obj);
+   fMaxSlaveCnt = (par == 0) ? 4 : par->GetVal();
 
    fPackets = new TList;
    fPackets->SetOwner();
@@ -413,7 +426,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 //______________________________________________________________________________
 TPacketizer::~TPacketizer()
 {
-   // Destructor
+   // Destructor.
 
    if (fSlaveStats) {
       fSlaveStats->DeleteValues();
@@ -430,7 +443,7 @@ TPacketizer::~TPacketizer()
 //______________________________________________________________________________
 TPacketizer::TFileStat *TPacketizer::GetNextUnAlloc(TFileNode *node)
 {
-   // Get next unallocated file
+   // Get next unallocated file.
 
    TFileStat *file = 0;
 
@@ -448,7 +461,6 @@ TPacketizer::TFileStat *TPacketizer::GetNextUnAlloc(TFileNode *node)
       // if needed make node active
       if (fActive->FindObject(node) == 0) {
          fActive->Add(node);
-         if (fActiveNext == 0) fActiveNext = fActive->First();
       }
    }
 
@@ -459,34 +471,38 @@ TPacketizer::TFileStat *TPacketizer::GetNextUnAlloc(TFileNode *node)
 //______________________________________________________________________________
 TPacketizer::TFileNode *TPacketizer::NextUnAllocNode()
 {
-   // Get next node not yet allocated
+   // Get next unallocated node.
 
-   TFileNode *node = (TFileNode *)fUnAllocNext;
-
-   if (node != 0) {
-      fUnAllocNext = fUnAllocated->After(node);
-      if (fUnAllocNext == 0) fUnAllocNext = fUnAllocated->First();
+   fUnAllocated->Sort();
+   PDB(kPacketizer,2) {
+      cout << "TPacketizer::NextUnAllocNode()" << endl;
+      fUnAllocated->Print();
    }
 
-   return node;
+   TFileNode *fn = (TFileNode*) fUnAllocated->First();
+   if (fn != 0 && fn->GetSlaveCnt() >= fMaxSlaveCnt) {
+      PDB(kPacketizer,1) Info("NextUnAllocNode","Reached Slaves per Node Limit (%d)",
+                              fMaxSlaveCnt);
+      fn = 0;
+   }
+
+   return fn;
 }
 
 
 //______________________________________________________________________________
 void TPacketizer::RemoveUnAllocNode(TFileNode * node)
 {
-   // Remove unallocated node
+   // Remove unallocated node.
 
-   if ( fUnAllocNext == node ) fUnAllocNext = fUnAllocated->After(node);
    fUnAllocated->Remove(node);
-   if ( fUnAllocNext == 0 ) fUnAllocNext = fUnAllocated->First();
 }
 
 
 //______________________________________________________________________________
 TPacketizer::TFileStat *TPacketizer::GetNextActive()
 {
-   // Get next active file
+   // Get next active file.
 
    TFileNode *node;
    TFileStat *file = 0;
@@ -503,22 +519,28 @@ TPacketizer::TFileStat *TPacketizer::GetNextActive()
 //______________________________________________________________________________
 TPacketizer::TFileNode *TPacketizer::NextActiveNode()
 {
-   // Get next active node
+   // Get next active node.
 
-   TFileNode *node = (TFileNode *)fActiveNext;
-
-   if (node != 0) {
-      fActiveNext = fActive->After(node);
-      if ( fActiveNext == 0 ) fActiveNext = fActive->First();
+   fActive->Sort();
+   PDB(kPacketizer,2) {
+      cout << "TPacketizer::NextActiveNode()" << endl;
+      fActive->Print();
    }
 
-   return node;
+   TFileNode *fn = (TFileNode*) fActive->First();
+   if (fn != 0 && fn->GetSlaveCnt() >= fMaxSlaveCnt) {
+      PDB(kPacketizer,1) Info("NextActiveNode","Reached Slaves per Node Limit (%d)", fMaxSlaveCnt);
+      fn = 0;
+   }
+
+   return fn;
 }
+
 
 //______________________________________________________________________________
 void TPacketizer::RemoveActive(TFileStat *file)
 {
-   // Remove file from list of actives
+   // Remove file from the list of actives.
 
    TFileNode *node = file->GetNode();
 
@@ -527,27 +549,23 @@ void TPacketizer::RemoveActive(TFileStat *file)
 }
 
 //______________________________________________________________________________
-void TPacketizer::RemoveActiveNode(TPacketizer::TFileNode *node)
+void TPacketizer::RemoveActiveNode(TFileNode *node)
 {
-   // Remove node from the list of atives
+   // Remove node from the list of actives.
 
-   if ( fActiveNext == node ) fActiveNext = (TFileNode *)fActive->After(node);
    fActive->Remove(node);
-   if ( fActiveNext == 0 ) fActiveNext = (TFileNode *)fActive->First();
 }
 
 
 //______________________________________________________________________________
 void TPacketizer::Reset()
 {
-   // Reset the internal datastructure for packet distribution
+   // Reset the internal datastructure for packet distribution.
 
    fUnAllocated->Clear();
    fUnAllocated->AddAll(fFileNodes);
-   fUnAllocNext = fUnAllocated->First();
 
    fActive->Clear();
-   fActiveNext = fActive->First();
 
    TIter files(fFileNodes);
    TFileNode *fn;
@@ -559,7 +577,11 @@ void TPacketizer::Reset()
    TObject *key;
    while ((key = slaves.Next()) != 0) {
       TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue(key);
-      slstat->SetFileNode((TFileNode*) fFileNodes->FindObject(slstat->GetName()));
+      TFileNode *fn = (TFileNode*) fFileNodes->FindObject(slstat->GetName());
+      if (fn != 0 ) {
+         slstat->SetFileNode(fn);
+         fn->IncMySlaveCnt();
+      }
       slstat->fCurFile = 0;
    }
 }
@@ -568,14 +590,13 @@ void TPacketizer::Reset()
 //______________________________________________________________________________
 void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 {
-   // Check existence of file/dir/tree an get number of entries
-   // Assumes the files have been setup
-   PDB(kPacketizer, 2)
-      Info("ValidateFiles", "Validating %s", dset->GetObjName());
+   // Check existence of file/dir/tree an get number of entries.
+   // Assumes the files have been setup.
 
    TMap     slaves_by_sock;
    TMonitor mon;
    TList    workers;
+
 
    // Setup the communication infrastructure
 
@@ -596,7 +617,6 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
    // Some monitoring systems (TXSocketHandler) need to know this
    ((TProof*)gProof)->fCurrentMonitor = &mon;
 
-   Bool_t done = kFALSE;
    while (kTRUE) {
 
       // send work
@@ -628,28 +648,19 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
             RemoveActive(file);
 
             slstat->fCurFile = file;
-            file->GetNode()->IncSlaveCnt();
+            file->GetNode()->IncSlaveCnt(slstat->GetName());
             TMessage m(kPROOF_GETENTRIES);
             TDSetElement *elem = file->GetElement();
             m << dset->IsTree()
               << TString(elem->GetFileName())
               << TString(elem->GetDirectory())
               << TString(elem->GetObjName());
-            PDB(kPacketizer,3)
-               Info("ValidateFiles", "Send %s, %s, %s\n",
-                    elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
 
             s->GetSocket()->Send( m );
             mon.Activate(s->GetSocket());
-            PDB(kPacketizer,2) Info("ValidateFiles",
-                "sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
-                s->GetOrdinal(), s->GetName(), s->GetSocket(),
-                dset->IsTree() ? "tree" : "objects",
+            PDB(kPacketizer,2) Info("TPacketizer","sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
+                s->GetOrdinal(), s->GetName(), s->GetSocket(), dset->IsTree() ? "tree" : "objects",
                 elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
-         } else {
-            // Done
-            done = kTRUE;
-            workers.Clear();
          }
       }
 
@@ -683,7 +694,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          Error("ValidateFiles", "Recv failed! for slave-%s (%s)",
                slave->GetOrdinal(), slave->GetName());
          continue;
-      }
+         }
 
       if ( reply->What() == kPROOF_FATAL ) {
          Error("ValidateFiles", "kPROOF_FATAL from slave-%s (%s)",
@@ -713,7 +724,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
       TSlaveStat *slavestat = (TSlaveStat*) fSlaveStats->GetValue( slave );
       TDSetElement *e = slavestat->fCurFile->GetElement();
-      slavestat->fCurFile->GetNode()->DecSlaveCnt();
+      slavestat->fCurFile->GetNode()->DecSlaveCnt(slavestat->GetName());
       Long64_t entries;
 
       (*reply) >> entries;
@@ -723,7 +734,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
          if (!e->GetEventList()) {
             if ( e->GetFirst() > entries ) {
-               Error("TPacketizer","first (%d) higher then number of entries (%d) in %d",
+               Error("ValidateFiles", "first (%d) higher then number of entries (%d) in %d",
                      e->GetFirst(), entries, e->GetFileName() );
 
                // disable element
@@ -746,7 +757,10 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
          // disable element
          slavestat->fCurFile->SetDone();
-         // fValid = kFALSE; // all element must be readable!
+         //
+         // Need to fix this with a user option to allow incomplete file sets (rdm)
+         //
+         //fValid = kFALSE; // all element must be readable!
          if (gProofServ) {
             TMessage m(kPROOF_MESSAGE);
             m << TString(Form("Cannot get entries for file: %s - skipping", e->GetFileName()));
@@ -754,9 +768,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          }
       }
 
-      if ( !done ) {
-         workers.Add(slave); // Ready for the next job
-      }
+      workers.Add(slave); // Ready for the next job
    }
 
    // report std. output from slaves??
@@ -765,11 +777,6 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
    // This needs to be reset
    ((TProof*)gProof)->fCurrentMonitor = 0;
-
-   if (!done) {
-      // we ran out of slaves ...
-      fValid = kFALSE;
-   }
 
    // No reason to continue if invalid
    if (!fValid)
@@ -789,6 +796,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       SplitEventList(dset);
    }
 }
+
 
 //______________________________________________________________________________
 void TPacketizer::SplitEventList(TDSet *dset)
@@ -834,10 +842,11 @@ void TPacketizer::SplitEventList(TDSet *dset)
    } while (el);
 }
 
+
 //______________________________________________________________________________
 Long64_t TPacketizer::GetEntriesProcessed(TSlave *slave) const
 {
-   // Get number of entries to be processed
+   // Get entries processed by the specified slave.
 
    if ( fSlaveStats == 0 ) return 0;
 
@@ -847,6 +856,7 @@ Long64_t TPacketizer::GetEntriesProcessed(TSlave *slave) const
 
    return slstat->GetEntriesProcessed();
 }
+
 
 //______________________________________________________________________________
 TDSetElement* TPacketizer::CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num)
@@ -924,10 +934,10 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
    TFileStat *file = slstat->fCurFile;
 
    if ( file != 0 && file->IsDone() ) {
-      file->GetNode()->DecSlaveCnt();
+      file->GetNode()->DecSlaveCnt(slstat->GetName());
       if (gPerfStats != 0) {
          gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(), file->GetNode()->GetName(),
-                          file->GetElement()->GetFileName(), kFALSE);
+                               file->GetElement()->GetFileName(), kFALSE);
       }
       file = 0;
    }
@@ -947,7 +957,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
          file = GetNextUnAlloc();
       }
 
-      // then round-robin over the active filenodes
+      // then look at the active filenodes
       if(file == 0) {
          file = GetNextActive();
       }
@@ -955,11 +965,11 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       if ( file == 0 ) return 0;
 
       slstat->fCurFile = file;
-      file->GetNode()->IncSlaveCnt();
+      file->GetNode()->IncSlaveCnt(slstat->GetName());
       if (gPerfStats != 0) {
          gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(),
-                          file->GetNode()->GetName(),
-                          file->GetElement()->GetFileName(), kTRUE);
+                               file->GetNode()->GetName(),
+                               file->GetElement()->GetFileName(), kTRUE);
       }
    }
 
@@ -983,7 +993,9 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       file->MoveNextEntry(num);
    }
 
+
    slstat->fCurElem = CreateNewPacket(base, first, num);
+
    if (base->GetEventList()) {
       // take a part of the event list.
       TEventList *evl = new TEventList();

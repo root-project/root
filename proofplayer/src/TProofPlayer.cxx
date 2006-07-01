@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.80 2006/06/06 09:50:53 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.81 2006/06/21 16:18:26 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -21,7 +21,6 @@
 #include "TEventIter.h"
 #include "TVirtualPacketizer.h"
 #include "TPacketizer.h"
-#include "TPacketizer2.h"
 #include "TPacketizerProgressive.h"
 #include "TSelector.h"
 #include "TSocket.h"
@@ -876,14 +875,44 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                             dset->GetDirectory() );
 
       delete fPacketizer;
-      if (fInput->FindObject("PROOF_NewPacketizer") != 0) {
-         Info("Process","!!! Using TPacketizer2 !!!");
-         fPacketizer = new TPacketizer2(dset, fProof->GetListOfActiveSlaves(),
-                                        first, nentries, fInput);
-      } else if (fInput->FindObject("PROOF_ProgressivePacketizer") != 0) {
-         Info("Process","!!! Using TPacketizerProgressive !!!");
-         fPacketizer = new TPacketizerProgressive(dset, fProof->GetListOfActiveSlaves(),
-                                                  first, nentries, fInput);
+      TNamed *packetizer;
+      if ((packetizer = (TNamed*)fInput->FindObject("PROOF_Packetizer")) != 0) {
+         Info("Process","Using Alternate Packetizer: %s", packetizer->GetTitle());
+         TClass *cl = gROOT->GetClass(packetizer->GetTitle());
+         if (cl == 0) {
+            Error("Process","Class '%s' not found", packetizer->GetTitle());
+            fExitStatus = kAborted;
+            return -1;
+         }
+         
+         TMethodCall callEnv;
+         
+         callEnv.InitWithPrototype(cl, cl->GetName(),"TDSet*,TList*,Long64_t,Long64_t,TList*");
+         
+         if (!callEnv.IsValid()) {
+            Error("Process","Cannot find correct constructor for '%s'", cl->GetName());
+            fExitStatus = kAborted;
+            return -1;
+         }
+         
+         callEnv.ResetParam();
+         callEnv.SetParam((Long_t) dset);
+         callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
+         callEnv.SetParam((Long64_t) first);
+         callEnv.SetParam((Long64_t) nentries);
+         callEnv.SetParam((Long_t) fInput);
+         
+         Long_t ret = 0;
+         callEnv.Execute(ret);
+         
+         fPacketizer = (TVirtualPacketizer*) ret;
+         
+         if (fPacketizer == 0) {
+            Error("Process","Cannot construct '%s'", cl->GetName());
+            fExitStatus = kAborted;
+            return -1;
+         }
+         
       } else {
          PDB(kGlobal,1) Info("Process","Using Standard TPacketizer");
          fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),

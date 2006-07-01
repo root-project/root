@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.81 2006/06/05 22:51:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.82 2006/06/21 16:18:26 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -201,7 +201,7 @@ public:
 class TProof : public TVirtualProof {
 
 friend class TPacketizer;
-friend class TPacketizer2;
+friend class TPacketizerDev;
 friend class TProofServ;
 friend class TProofInputHandler;
 friend class TProofInterruptHandler;

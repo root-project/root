@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.125 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.126 2006/06/23 13:26:56 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3940,69 +3940,6 @@ TList *TProofServ::GetDataSet(const char *name)
 }
 
 //______________________________________________________________________________
-Int_t TProofLockPath::Lock()
-{
-   // Locks the directory. Waits if lock is hold by an other process.
-   // Returns 0 on success, -1 in case of error.
-
-   const char *pname = GetName();
-
-   if (gSystem->AccessPathName(pname))
-      fLockId = open(pname, O_CREAT|O_RDWR, 0644);
-   else
-      fLockId = open(pname, O_RDWR);
-
-   if (fLockId == -1) {
-      SysError("Lock", "cannot open lock file %s", pname);
-      return -1;
-   }
-
-   // lock the file
-#if !defined(R__WIN32) && !defined(R__WINGCC)
-   if (lockf(fLockId, F_LOCK, (off_t) 1) == -1) {
-      SysError("Lock", "error locking %s", pname);
-      close(fLockId);
-      fLockId = -1;
-      return -1;
-   }
-#endif
-
-   PDB(kPackage, 2)
-      Info("Lock", "file %s locked", pname);
-
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TProofLockPath::Unlock()
-{
-   // Unlock the directory. Returns 0 in case of success,
-   // -1 in case of error.
-
-   if (!IsLocked())
-      return 0;
-
-   // unlock the file
-   lseek(fLockId, 0, SEEK_SET);
-#if !defined(R__WIN32) && !defined(R__WINGCC)
-   if (lockf(fLockId, F_ULOCK, (off_t)1) == -1) {
-      SysError("Unlock", "error unlocking %s", GetName());
-      close(fLockId);
-      fLockId = -1;
-      return -1;
-   }
-#endif
-
-   PDB(kPackage, 2)
-      Info("Unlock", "file %s unlocked", GetName());
-
-   close(fLockId);
-   fLockId = -1;
-
-   return 0;
-}
-
-//______________________________________________________________________________
 void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
                               const char *msg)
 {
@@ -4090,4 +4027,68 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
       gSystem->StackTrace();
       gSystem->Abort();
    }
+}
+
+
+//______________________________________________________________________________
+Int_t TProofLockPath::Lock()
+{
+   // Locks the directory. Waits if lock is hold by an other process.
+   // Returns 0 on success, -1 in case of error.
+
+   const char *pname = GetName();
+
+   if (gSystem->AccessPathName(pname))
+      fLockId = open(pname, O_CREAT|O_RDWR, 0644);
+   else
+      fLockId = open(pname, O_RDWR);
+
+   if (fLockId == -1) {
+      SysError("Lock", "cannot open lock file %s", pname);
+      return -1;
+   }
+
+   // lock the file
+#if !defined(R__WIN32) && !defined(R__WINGCC)
+   if (lockf(fLockId, F_LOCK, (off_t) 1) == -1) {
+      SysError("Lock", "error locking %s", pname);
+      close(fLockId);
+      fLockId = -1;
+      return -1;
+   }
+#endif
+
+   PDB(kPackage, 2)
+      Info("Lock", "file %s locked", pname);
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProofLockPath::Unlock()
+{
+   // Unlock the directory. Returns 0 in case of success,
+   // -1 in case of error.
+
+   if (!IsLocked())
+      return 0;
+
+   // unlock the file
+   lseek(fLockId, 0, SEEK_SET);
+#if !defined(R__WIN32) && !defined(R__WINGCC)
+   if (lockf(fLockId, F_ULOCK, (off_t)1) == -1) {
+      SysError("Unlock", "error unlocking %s", GetName());
+      close(fLockId);
+      fLockId = -1;
+      return -1;
+   }
+#endif
+
+   PDB(kPackage, 2)
+      Info("Unlock", "file %s unlocked", GetName());
+
+   close(fLockId);
+   fLockId = -1;
+
+   return 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.3 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.4 2006/05/15 09:45:03 brun Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -324,7 +324,7 @@ TDSetElement *TPacketizerProgressive::BuildPacket(TSlaveStat* stat,
    TDSetElement* packet = new TDSetElement(base->GetFileName(), base->GetObjName(),
                                            base->GetDirectory(), fs->GetNextEntry(), num);
    // NOTE: I have no idea whether the following friends code works.  It was more or less
-   // lifted directly from TPacketizer2
+   // lifted directly from TPacketizer
 
    // begin friends code
    // create TDSetElements for all the friends of elem.

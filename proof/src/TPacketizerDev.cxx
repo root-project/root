@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.45 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizerDev.cxx,v 1.46 2006/06/01 16:26:30 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TPacketizer2                                                         //
+// TPacketizerDev                                                       //
 //                                                                      //
 // This class generates packets to be processed on PROOF slave servers. //
 // A packet is an event range (begin entry and number of entries) or    //
@@ -24,7 +24,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#include "TPacketizer2.h"
+#include "TPacketizerDev.h"
 
 #include "Riostream.h"
 #include "TDSet.h"
@@ -59,7 +59,7 @@
 
 //------------------------------------------------------------------------------
 
-class TPacketizer2::TFileStat : public TObject {
+class TPacketizerDev::TFileStat : public TObject {
 
 private:
    Bool_t         fIsDone;       // is this element processed
@@ -79,7 +79,7 @@ public:
 };
 
 
-TPacketizer2::TFileStat::TFileStat(TFileNode *node, TDSetElement *elem)
+TPacketizerDev::TFileStat::TFileStat(TFileNode *node, TDSetElement *elem)
    : fIsDone(kFALSE), fNode(node), fElement(elem), fNextEntry(elem->GetFirst())
 {
 }
@@ -87,7 +87,7 @@ TPacketizer2::TFileStat::TFileStat(TFileNode *node, TDSetElement *elem)
 
 //------------------------------------------------------------------------------
 
-class TPacketizer2::TFileNode : public TObject {
+class TPacketizerDev::TFileNode : public TObject {
 
 private:
    TString        fNodeName;        // FQDN of the node
@@ -189,7 +189,7 @@ public:
 };
 
 
-TPacketizer2::TFileNode::TFileNode(const char *name)
+TPacketizerDev::TFileNode::TFileNode(const char *name)
    : fNodeName(name), fFiles(new TList), fUnAllocFileNext(0),fActFiles(new TList),
      fActFileNext(0), fMySlaveCnt(0), fSlaveCnt(0)
 {
@@ -202,9 +202,9 @@ TPacketizer2::TFileNode::TFileNode(const char *name)
 
 //------------------------------------------------------------------------------
 
-class TPacketizer2::TSlaveStat : public TObject {
+class TPacketizerDev::TSlaveStat : public TObject {
 
-friend class TPacketizer2;
+friend class TPacketizerDev;
 
 private:
    TSlave        *fSlave;        // corresponding TSlave record
@@ -224,7 +224,7 @@ public:
 };
 
 
-TPacketizer2::TSlaveStat::TSlaveStat(TSlave *slave)
+TPacketizerDev::TSlaveStat::TSlaveStat(TSlave *slave)
    : fSlave(slave), fFileNode(0), fCurFile(0), fCurElem(0), fProcessed(0)
 {
 }
@@ -232,16 +232,16 @@ TPacketizer2::TSlaveStat::TSlaveStat(TSlave *slave)
 
 //------------------------------------------------------------------------------
 
-ClassImp(TPacketizer2)
+ClassImp(TPacketizerDev)
 
 
 //______________________________________________________________________________
-TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
+TPacketizerDev::TPacketizerDev(TDSet *dset, TList *slaves, Long64_t first,
                            Long64_t num, TList *input)
 {
    // Constructor
 
-   PDB(kPacketizer,1) Info("TPacketizer2", "Enter (first %lld, num %lld)", first, num);
+   PDB(kPacketizer,1) Info("TPacketizerDev", "Enter (first %lld, num %lld)", first, num);
 
    // Init pointer members
    fSlaveStats = 0;
@@ -397,7 +397,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
    if (dset->GetEventList())
       fTotalEntries = dset->GetEventList()->GetN();
 
-   PDB(kGlobal,1) Info("TPacketizer2","Processing %lld entries in %d files on %d hosts",
+   PDB(kGlobal,1) Info("TPacketizerDev","Processing %lld entries in %d files on %d hosts",
                        fTotalEntries, files, fFileNodes->GetSize());
 
    Reset();
@@ -411,7 +411,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
       fPacketSize = 1;
    }
 
-   PDB(kPacketizer,1) Info("TPacketizer2", "Base Packetsize = %lld", fPacketSize);
+   PDB(kPacketizer,1) Info("TPacketizerDev", "Base Packetsize = %lld", fPacketSize);
 
    if ( fValid ) {
       fProgress = new TTimer;
@@ -419,12 +419,12 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
       fProgress->Start(500,kFALSE);
    }
 
-   PDB(kPacketizer,1) Info("TPacketizer2", "Return");
+   PDB(kPacketizer,1) Info("TPacketizerDev", "Return");
 }
 
 
 //______________________________________________________________________________
-TPacketizer2::~TPacketizer2()
+TPacketizerDev::~TPacketizerDev()
 {
    // Destructor
 
@@ -441,7 +441,7 @@ TPacketizer2::~TPacketizer2()
 }
 
 //______________________________________________________________________________
-TPacketizer2::TFileStat *TPacketizer2::GetNextUnAlloc(TFileNode *node)
+TPacketizerDev::TFileStat *TPacketizerDev::GetNextUnAlloc(TFileNode *node)
 {
    // Get next unallocated file
 
@@ -469,13 +469,13 @@ TPacketizer2::TFileStat *TPacketizer2::GetNextUnAlloc(TFileNode *node)
 
 
 //______________________________________________________________________________
-TPacketizer2::TFileNode *TPacketizer2::NextUnAllocNode()
+TPacketizerDev::TFileNode *TPacketizerDev::NextUnAllocNode()
 {
    // Get next unallocated node
 
    fUnAllocated->Sort();
    PDB(kPacketizer,2) {
-      cout << "TPacketizer2::NextUnAllocNode()" << endl;
+      cout << "TPacketizerDev::NextUnAllocNode()" << endl;
       fUnAllocated->Print();
    }
 
@@ -491,7 +491,7 @@ TPacketizer2::TFileNode *TPacketizer2::NextUnAllocNode()
 
 
 //______________________________________________________________________________
-void TPacketizer2::RemoveUnAllocNode(TFileNode * node)
+void TPacketizerDev::RemoveUnAllocNode(TFileNode * node)
 {
    // Remove unallocated node
 
@@ -500,7 +500,7 @@ void TPacketizer2::RemoveUnAllocNode(TFileNode * node)
 
 
 //______________________________________________________________________________
-TPacketizer2::TFileStat *TPacketizer2::GetNextActive()
+TPacketizerDev::TFileStat *TPacketizerDev::GetNextActive()
 {
    // Get next active file
 
@@ -517,13 +517,13 @@ TPacketizer2::TFileStat *TPacketizer2::GetNextActive()
 
 
 //______________________________________________________________________________
-TPacketizer2::TFileNode *TPacketizer2::NextActiveNode()
+TPacketizerDev::TFileNode *TPacketizerDev::NextActiveNode()
 {
    // Get next active node
 
    fActive->Sort();
    PDB(kPacketizer,2) {
-      cout << "TPacketizer2::NextActiveNode()" << endl;
+      cout << "TPacketizerDev::NextActiveNode()" << endl;
       fActive->Print();
    }
 
@@ -538,7 +538,7 @@ TPacketizer2::TFileNode *TPacketizer2::NextActiveNode()
 
 
 //______________________________________________________________________________
-void TPacketizer2::RemoveActive(TFileStat *file)
+void TPacketizerDev::RemoveActive(TFileStat *file)
 {
    // Remove file form the list of actives
 
@@ -549,7 +549,7 @@ void TPacketizer2::RemoveActive(TFileStat *file)
 }
 
 //______________________________________________________________________________
-void TPacketizer2::RemoveActiveNode(TFileNode *node)
+void TPacketizerDev::RemoveActiveNode(TFileNode *node)
 {
    // Remove node form the list of actives
 
@@ -558,7 +558,7 @@ void TPacketizer2::RemoveActiveNode(TFileNode *node)
 
 
 //______________________________________________________________________________
-void TPacketizer2::Reset()
+void TPacketizerDev::Reset()
 {
    // Reset the internal datastructure for packet distribution
 
@@ -588,7 +588,7 @@ void TPacketizer2::Reset()
 
 
 //______________________________________________________________________________
-void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
+void TPacketizerDev::ValidateFiles(TDSet *dset, TList *slaves)
 {
    // Check existence of file/dir/tree an get number of entries
    // Assumes the files have been setup
@@ -658,7 +658,7 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
 
             s->GetSocket()->Send( m );
             mon.Activate(s->GetSocket());
-            PDB(kPacketizer,2) Info("TPacketizer2","sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
+            PDB(kPacketizer,2) Info("TPacketizerDev","sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
                 s->GetOrdinal(), s->GetName(), s->GetSocket(), dset->IsTree() ? "tree" : "objects",
                 elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
          }
@@ -796,7 +796,7 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
 
 
 //______________________________________________________________________________
-void TPacketizer2::SplitEventList(TDSet *dset)
+void TPacketizerDev::SplitEventList(TDSet *dset)
 {
    // Splits the eventlist into parts for each file.
    // Each part is assigned to the apropriate TDSetElement.
@@ -841,7 +841,7 @@ void TPacketizer2::SplitEventList(TDSet *dset)
 
 
 //______________________________________________________________________________
-Long64_t TPacketizer2::GetEntriesProcessed(TSlave *slave) const
+Long64_t TPacketizerDev::GetEntriesProcessed(TSlave *slave) const
 {
    // Get entries to be processed
 
@@ -856,7 +856,7 @@ Long64_t TPacketizer2::GetEntriesProcessed(TSlave *slave) const
 
 
 //______________________________________________________________________________
-TDSetElement* TPacketizer2::CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num)
+TDSetElement* TPacketizerDev::CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num)
 {
    // Creates a new TDSetElement from from base packet starting from first entry with num entries.
    // The function returns a new created objects which have to be deleted.
@@ -876,7 +876,7 @@ TDSetElement* TPacketizer2::CreateNewPacket(TDSetElement* base, Long64_t first, 
 
 
 //______________________________________________________________________________
-TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
+TDSetElement *TPacketizerDev::GetNextPacket(TSlave *sl, TMessage *r)
 {
    // Get next packet
 
@@ -1006,7 +1006,7 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
 
 
 //______________________________________________________________________________
-Bool_t TPacketizer2::HandleTimer(TTimer *)
+Bool_t TPacketizerDev::HandleTimer(TTimer *)
 {
    // Send progress message to client.
 
