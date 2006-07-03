@@ -3353,7 +3353,17 @@ if test ! "x$enable_mathmore" = "xno"; then
 	fi
 
     fi
+    #
     # if gslincdir not specified look for gsl-config
+    #
+    # gsl-config check does not work on Solaris so lets skip it
+    if test "x$platform" = "xsolaris"; then
+	if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
+	    gslskip="skip"
+	    enable_mathmore="no"
+	fi
+    fi
+    
     if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x") && \
         test ! "x$gslskip" = "xskip"; then
 	checking_msg "gsl-config"
