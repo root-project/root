@@ -11,8 +11,8 @@
 #include "Event.h"
 #endif
 
-TH1 *RefClone(TH1* orig) {
-   TH1 *cloned = (TH1*)orig->Clone(); 
+TH1F *RefClone(TH1F* orig) {
+   TH1F *cloned = (TH1F*)orig->Clone(); 
    TString name = orig->GetName();
    name.Prepend("ref");
    cloned->SetName(name);
@@ -20,8 +20,8 @@ TH1 *RefClone(TH1* orig) {
    return cloned;
 };
 
-TH1* RefClone(TDirectory* from, const char* name) {
-  TH1 * orig = (TH1*)from->Get(name);
+TH1F* RefClone(TDirectory* from, const char* name) {
+  TH1F * orig = (TH1F*)from->Get(name);
   if (!orig) {
     cerr << "Missing " << name << " from " << from->GetName() << endl;
     return 0;
@@ -288,8 +288,9 @@ void MakeHisto(TTree *tree, TDirectory* To) {
       refSumPx->Fill(sumPx);
    }
 
+   tree->SetBranchAddress("event", 0);
    delete event;
-   Event::Reset();
+   event = 0;
 
 }
 

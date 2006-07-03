@@ -24,7 +24,7 @@ $(REFFILE) : Event.new.split9.root copiedEvent$(ExeSuf)
 	$(CMDECHO) root.exe -q -b -l 'ctrans.C("Event.new.split9.root")' > event.new.split9.root.clone.log 2>&1 && touch $@
 
 #dt_MakeRef.C dt_DrawTest.C libEvent.$(DllSuf) Event.h Event.new.split9.root
-#        @root -b -q 'dt_MakeRef.C("Event.new.split9.root",0);' $(OUTPUT) && \
+#        @root.exe -l -b -q 'dt_MakeRef.C("Event.new.split9.root",0);' $(OUTPUT) && \
 #        echo "$@ made"
 
 export EVENTBUFSIZE = 20
@@ -94,7 +94,7 @@ $(TWOFILES): %: two/copiedEvent$(ExeSuf) two/libEvent.$(DllSuf)
 	$(CMDECHO) (cd two; $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $(@F)) > $@.create.log 2>&1
 
 merged/$(REFFILE) : merged/Event.new.split9.root copiedEvent$(ExeSuf) merged/libEvent.$(DllSuf)
-	$(CMDECHO) (cd merged; root -l -b -q '../dt_MakeRef.C("Event.new.split9.root",0);' > /dev/null)
+	$(CMDECHO) (cd merged; root.exe -l -b -q '../dt_MakeRef.C("Event.new.split9.root",0);' > /dev/null)
 #	$(CMDECHO) root.exe -q -b -l 'mtrans.C("Event.new.split9.root")' && touch $@
 
 merged:
