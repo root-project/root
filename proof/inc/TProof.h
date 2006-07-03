@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.83 2006/07/01 12:05:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.84 2006/07/03 09:33:50 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -71,7 +71,6 @@ class TProofInterruptHandler;
 class TProofPlayer;
 class TProofPlayerRemote;
 class TProofProgressDialog;
-class TPacketizer2;
 class TCondor;
 class TTree;
 class TDrawFeedback;
