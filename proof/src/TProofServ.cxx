@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.127 2006/07/01 12:05:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.128 2006/07/03 09:33:50 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3261,11 +3261,12 @@ void TProofServ::HandleCheckFile(TMessage *mess)
 
    TString filenam;
    TMD5    md5;
-   UInt_t  opt;
-   if (fProtocol > 8)
-      (*mess) >> filenam >> md5 >> opt;
-   else
-      (*mess) >> filenam >> md5;
+   UInt_t  opt = TVirtualProof::kUntar;
+   // Parse message
+   (*mess) >> filenam >> md5;
+   if ((mess->BufferSize() > mess->Length()) && (fProtocol > 8))
+      (*mess) >> opt;
+
    if (filenam.BeginsWith("-")) {
       // install package:
       // compare md5's, untar, store md5 in PROOF-INF, remove par file
