@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTEnumBuilder.cxx,v 1.8 2006/06/13 08:19:01 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTEnumBuilder.cxx,v 1.9 2006/07/03 09:22:46 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -26,7 +26,7 @@ using namespace std;
 namespace ROOT { namespace Cintex {
 
    void CINTEnumBuilder::Setup(const Type& e) {
-      // setup enum info
+      // Setup enum info.
       if ( e.IsEnum() )  {
          string name = CintName(e.Name(SCOPED));
          int tagnum = ::G__defined_tagname(name.c_str(), 2);

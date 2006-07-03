@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.15 2006/02/23 18:29:26 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.16 2006/07/03 09:22:46 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -42,17 +42,17 @@ namespace ROOT { namespace Cintex {
    StubContext_t::StubContext_t(const Member& mem, const Type& cl )
       :  fMethodCode(0), fMember(mem), fClass(cl), fNewdelfuncs(0), fInitialized(false)
    {
-      // push back a context
+      // Push back a context.
       StubContexts::Instance().push_back(this);
    }
 
    StubContext_t::~StubContext_t() {
-      // destructor
+      // Destructor.
       if ( fMethodCode ) Free_function( (void*)fMethodCode );
    }
 
    void StubContext_t::Initialize() {
-      // initialise a context
+      // Initialise a context.
       fFunction = fMember.TypeOf();
       fNpar    = fFunction.FunctionParameterSize();
       fStub    = fMember.Stubfunction();
@@ -103,7 +103,7 @@ namespace ROOT { namespace Cintex {
    }
 
    void StubContext_t::ProcessParam(G__param* libp) {
-      // process param type
+      // Process param type.
       fParam.resize(libp->paran);
       for (int i = 0; i < libp->paran; i++ ) {
          switch(fTreat[i]) {
@@ -121,7 +121,7 @@ namespace ROOT { namespace Cintex {
    }
 
    void StubContext_t::ProcessResult(G__value* result, void* obj) { 
-      // process ctx result
+      // Process ctx result.
       char t = fRet_desc.first;
       result->type = t;
       switch( t ) {
@@ -180,7 +180,7 @@ namespace ROOT { namespace Cintex {
                                 G__param* libp,
                                 int /*hash*/ ) 
    {
-      // process method, catch exceptions
+      // Process method, catch exceptions.
       if ( !context->fInitialized ) context->Initialize();
       context->ProcessParam(libp);
   
@@ -212,7 +212,7 @@ namespace ROOT { namespace Cintex {
                                      G__param *libp,
                                      int /*indx*/ ) 
    {
-      // process constructor, catch exceptions
+      // Process constructor, catch exceptions.
       if ( !context->fInitialized ) context->Initialize();
       context->ProcessParam(libp);
   
@@ -267,7 +267,7 @@ namespace ROOT { namespace Cintex {
                                      G__param* /*libp*/,
                                      int /*indx*/ ) 
    {
-      // process destructor
+      // Process destructor.
       void* obj = (void*)G__getstructoffset();
       if( 0 == obj ) return 1;
       if ( !context->fInitialized ) context->Initialize();
@@ -371,7 +371,7 @@ namespace ROOT { namespace Cintex {
    G__InterfaceMethod Allocate_stub_function( StubContext_t* obj, 
                                               int (*fun)(StubContext_t*, G__value*, G__CONST char*, G__param*, int ) )
    {
-      // allocate a stub function
+      // Allocate a stub function.
       static FunctionCode_t s_func4arg(4);
       char* code = Allocate_code(s_func4arg.fCode, s_func4arg.fSize );
       *(void**)&code[s_func4arg.fa_offset] = (void*)obj;
@@ -383,7 +383,7 @@ namespace ROOT { namespace Cintex {
 
    FuncVoidPtr_t Allocate_void_function( void* obj, void (*fun)(void*) )
    {
-      // allocate a stub function
+      // Allocate a stub function.
       static FunctionCode_t s_func0arg(0);
       char* code = Allocate_code(s_func0arg.fCode, s_func0arg.fSize);
       *(void**)&code[s_func0arg.fa_offset] = (void*)obj;
@@ -393,7 +393,7 @@ namespace ROOT { namespace Cintex {
 
    FuncArg1Ptr_t Allocate_1arg_function( void* obj, void* (*fun)(void*, void*) )
    {
-      // allocate a stub function
+      // Allocate a stub function.
       static FunctionCode_t s_func1arg(1);
       char* code = Allocate_code(s_func1arg.fCode, s_func1arg.fSize);
       *(void**)&code[s_func1arg.fa_offset] = (void*)obj;
@@ -403,7 +403,7 @@ namespace ROOT { namespace Cintex {
 
    void Free_function( void* code )
    {
-      // free a function code
+      // Free function code.
       char* scode = (char*)code;
       delete [] scode;
    }

@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.15 2006/06/21 18:39:30 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.16 2006/07/03 09:22:46 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -48,7 +48,7 @@ namespace ROOT { namespace Cintex {
    //   }  
 
    CINTClassBuilder& CINTClassBuilder::Get(const Type& cl) {
-      // run all builders
+      // Run all builders.
       CINTClassBuilders& builders = CINTClassBuilders::Instance();
       CINTClassBuilders::iterator it = builders.find(cl);
       if( it != builders.end() )  return *(*it).second;
@@ -61,7 +61,7 @@ namespace ROOT { namespace Cintex {
       : fClass(cl), fName(CintName(cl)), fPending(true), 
         fSetup_memvar(0), fSetup_memfunc(0), fBases(0)
    {
-      // CINTClassBuilder constructor
+      // CINTClassBuilder constructor.
       fTaginfo = new G__linked_taginfo;
       fTaginfo->tagnum  = -1;   // >> need to be pre-initialized to be understood by CINT
       fTaginfo->tagtype = 'c';
@@ -91,14 +91,14 @@ namespace ROOT { namespace Cintex {
    }
 
    CINTClassBuilder::~CINTClassBuilder() {
-      // CINTClassBuilder destructor
+      // CINTClassBuilder destructor.
       delete fTaginfo;
       Free_function((void*)fSetup_memfunc);
       Free_function((void*)fSetup_memvar);
    }
 
    void CINTClassBuilder::Setup() {
-      // setup a Cint class
+      // Setup a Cint class.
       if ( fPending ) {
          if ( Cintex::Debug() ) std::cout << "Building class " << fName << std::endl;
          fPending = false;
@@ -112,8 +112,7 @@ namespace ROOT { namespace Cintex {
    }
 
    void CINTClassBuilder::Setup_tagtable() {
-
-      // Setup scope
+      // Setup scope.
       Scope scope = fClass.DeclaringScope();
       if ( scope ) CINTScopeBuilder::Setup(scope);
       else {
@@ -165,20 +164,20 @@ namespace ROOT { namespace Cintex {
    }
 
    void CINTClassBuilder::Setup_memfunc_with_context(void* ctx) {
-      // setup a CINT member function
+      // Setup a CINT member function.
       int autoload = G__set_class_autoloading(0); // To avoid recursive loads
       ((CINTClassBuilder*)ctx)->Setup_memfunc();
       G__set_class_autoloading(autoload);
    }
    void CINTClassBuilder::Setup_memvar_with_context(void* ctx) {
-      // setup a CINT data member
+      // Setup a CINT data member.
       int autoload = G__set_class_autoloading(0); // To avoid recursive loads
       ((CINTClassBuilder*)ctx)->Setup_memvar();
       G__set_class_autoloading(autoload);
    }
 
    void CINTClassBuilder::Setup_memfunc() {
-      // setup a CINT member function
+      // Setup a CINT member function.
       for ( size_t i = 0; i < fClass.FunctionMemberSize(); i++ ) 
          CINTScopeBuilder::Setup(fClass.FunctionMemberAt(i).TypeOf());
 
@@ -193,7 +192,7 @@ namespace ROOT { namespace Cintex {
    }
 
    void CINTClassBuilder::Setup_memvar() {
-      // setup a CINT data member
+      // Setup a CINT data member.
       for ( size_t i = 0; i < fClass.DataMemberSize(); i++ ) 
          CINTScopeBuilder::Setup(fClass.DataMemberAt(i).TypeOf());
 
@@ -216,7 +215,7 @@ namespace ROOT { namespace Cintex {
    }
 
    CINTClassBuilder::Bases* CINTClassBuilder::GetBases() {
-      // get base classes
+      // Get base class info.
       if ( fBases ) return fBases;
       Member getbases = fClass.MemberByName("__getBasesTable");
       if ( !getbases ) getbases = fClass.MemberByName("getBasesTable");
@@ -231,7 +230,7 @@ namespace ROOT { namespace Cintex {
    }
 
    void CINTClassBuilder::Setup_inheritance() {
-      // setup inheritance info
+      // Setup inheritance info.
       if ( 0 == ::G__getnumbaseclass(fTaginfo->tagnum) )  {     
          bool isVirtual = false; 
          for ( Bases::iterator it = GetBases()->begin(); it != GetBases()->end(); it++ )
@@ -280,7 +279,7 @@ namespace ROOT { namespace Cintex {
       }
    }
    void CINTClassBuilder::Setup_inheritance(Object& obj) {
-      // setup inheritance info
+      // Setup inheritance info.
       if ( ! IsSTL(fClass.Name(SCOPED)) )    {
          if ( 0 == ::G__getnumbaseclass(fTaginfo->tagnum) )  {
             for ( Bases::iterator it = GetBases()->begin(); it != GetBases()->end(); it++ ) {
@@ -317,7 +316,7 @@ namespace ROOT { namespace Cintex {
    }
 
    void CINTClassBuilder::Setup_typetable() {
-      // setup types
+      // Setup types.
       for (Type_Iterator ti = fClass.SubType_Begin(); ti != fClass.SubType_End(); ++ti) {
          if (Cintex::PropagateClassTypedefs() && ti->IsTypedef() ) {
             CINTTypedefBuilder::Setup(*ti);

@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.9 2006/06/14 18:15:30 pcanal Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.10 2006/07/03 09:22:46 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -25,15 +25,15 @@ namespace ROOT { namespace Cintex {
   
    CINTFunctionBuilder::CINTFunctionBuilder(const ROOT::Reflex::Member& m)
       : fFunction(m) { 
-      // CINTFunctionBuilder constructor
+      // CINTFunctionBuilder constructor.
    }
 
    CINTFunctionBuilder::~CINTFunctionBuilder() {
-      // CINTFunctionBuilder destructor
+      // CINTFunctionBuilder destructor.
    }
 
    void CINTFunctionBuilder::Setup() {
-      // setup a CINT function
+      // Setup a CINT function.
       Scope scope = fFunction.DeclaringScope();
       bool global = scope.IsTopScope();
 
@@ -60,7 +60,7 @@ namespace ROOT { namespace Cintex {
    }
 
    void CINTFunctionBuilder::Setup(const Member& function) {
-      // setup a CINT function
+      // Setup a CINT function.
       Type cl = Type::ByName(function.DeclaringScope().Name(SCOPED));
       int access        = G__PUBLIC;
       int const_ness    = 0;

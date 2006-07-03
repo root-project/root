@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.9 2006/06/29 15:30:49 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.10 2006/07/03 09:22:46 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -118,24 +118,24 @@ namespace ROOT { namespace Cintex {
    }
 
    ROOTClassEnhancer::ROOTClassEnhancer(const ROOT::Reflex::Type& cl)  {
-      // constructor
+      // Constructor.
       fClass = CleanType(cl);
       fName  = CintName(fClass);
    }
 
    ROOTClassEnhancer::~ROOTClassEnhancer() {
-      // destructor
+      // Destructor.
    }
 
    void ROOTClassEnhancer::Setup() {
-      // enhance root class info
+      // Enhance root class info.
       ROOTClassEnhancerInfo* p = new ROOTClassEnhancerInfo(fClass);
       fEnhancerinfo = p;
       p->Setup();
    }
 
    void ROOTClassEnhancer::CreateInfo() {
-      // enhance root class info
+      // Enhance root class info.
       if ( fEnhancerinfo ) {
          ROOTClassEnhancerInfo* p = (ROOTClassEnhancerInfo*)fEnhancerinfo;
          p->CreateInfo();
@@ -151,7 +151,7 @@ namespace ROOT { namespace Cintex {
    ROOTClassEnhancerInfo::ROOTClassEnhancerInfo(Type& t) : 
       fTclass(0), fLastClass(0), fLastType(0)
    {
-      // constructor
+      // Constructor.
       fType = CleanType(t);
       fName = CintName(fType);
       rootEnhancerInfos().push_back(this);
@@ -163,7 +163,7 @@ namespace ROOT { namespace Cintex {
    }
 
    ROOTClassEnhancerInfo::~ROOTClassEnhancerInfo() {
-      // destructor
+      // Destructor.
       fSub_types.clear();
       if ( fClassInfo ) delete fClassInfo;
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
@@ -175,7 +175,7 @@ namespace ROOT { namespace Cintex {
    }
 
    void ROOTClassEnhancerInfo::Setup() {
-      // setup root class enhance
+      // Setup root class enhance.
       std::string nam = TypeGet().Name(SCOPED);
       if ( Cintex::Debug() > 1 )  {
          std::cout << "Enhancing:" << nam << std::endl;
@@ -251,7 +251,7 @@ namespace ROOT { namespace Cintex {
 
    struct Fornamespace_t {};
    void ROOTClassEnhancer::CreateClassForNamespace(const std::string& Name ) {
-      // create root class
+      // Create root class.
       ROOT::CreateClass(Name.c_str(),         // Name
                         0,                    // version
                         typeid(Fornamespace_t), // typeid
@@ -269,7 +269,7 @@ namespace ROOT { namespace Cintex {
                                             void*  stubCtx,
                                             int mods)
    {
-      // add function info
+      // Add function info.
       fType.AddFunctionMember( Name.c_str(), sig, stubFP, stubCtx, 0, PUBLIC | mods );
    }
 
@@ -282,18 +282,18 @@ namespace ROOT { namespace Cintex {
 
 
    void* ROOTClassEnhancerInfo::Stub_IsA(void* obj, const vector<void*>&, void* ctx) {
-      // root IsA
+      // Root IsA.
       return context(ctx).IsA(obj);
    }
    void* ROOTClassEnhancerInfo::Stub_IsA2(void* ctx, void* obj) {
-      // root AsA
+      // Root IsA.
       return context(ctx).IsA(obj);
    }
 
    struct DynamicStruct_t  {    virtual ~DynamicStruct_t() {}  };
 
    TClass* ROOTClassEnhancerInfo::IsA(const void* obj)  {
-      // root IsA
+      // Root IsA.
       if ( ! obj || ! fIsVirtual )  {
          return Tclass();
       }
@@ -329,7 +329,7 @@ namespace ROOT { namespace Cintex {
    }
   
    TClass* ROOTClassEnhancerInfo::Default_CreateClass( Type typ, ROOT::TGenericClassInfo* info)  {
-      // create root class
+      // Create root class.
       TClass* root_class = 0;
       std::string Name = typ.Name(SCOPED);
       int kind = TClassEdit::IsSTLCont(Name.c_str());
@@ -437,7 +437,7 @@ namespace ROOT { namespace Cintex {
 
          void ROOTClassEnhancerInfo::Stub_Dictionary(void* ctx )
          {
-            // create class info
+            // Create class info.
             if( Cintex::GetROOTCreator() ) {
                (*Cintex::GetROOTCreator())( context(ctx).TypeGet(), context(ctx).Info() );
             }
@@ -449,7 +449,7 @@ namespace ROOT { namespace Cintex {
 
 
          void* ROOTClassEnhancerInfo::Stub_Streamer(void* obj, const vector<void*>& args, void* ctx) {
-            //  create streamer info
+            //  Create streamer info.
             TBuffer& b = *(TBuffer*)args[0];
             TClass* cl = context(ctx).Tclass();
             TClassStreamer* s = cl->GetStreamer();
@@ -468,7 +468,7 @@ namespace ROOT { namespace Cintex {
          }
 
          void* ROOTClassEnhancerInfo::Stub_StreamerNVirtual(void* obj, const vector<void*>& args, void* ctx) {
-            // create streamer info
+            // Create streamer info.
             TBuffer& b = *(TBuffer*)args[0];
             TClass* cl = context(ctx).Tclass();
             TClassStreamer* s = cl->GetStreamer();
@@ -487,7 +487,7 @@ namespace ROOT { namespace Cintex {
          }
 
          void* ROOTClassEnhancerInfo::Stub_ShowMembers(void* obj, const vector<void*>& args, void* ctx) {
-            // create show members
+            // Create show members.
             const Type& TypeNth = context(ctx).TypeGet();
             TClass* tcl = context(ctx).Tclass();
             TMemberInspector& insp = *(TMemberInspector*)args[0];
@@ -497,7 +497,7 @@ namespace ROOT { namespace Cintex {
          }
 
          void ROOTClassEnhancerInfo::Stub_ShowMembers(TClass* tcl, const Type& cl, void* obj, TMemberInspector& insp, char* par) {
-            // create show members
+            // Create show members.
             int ncp = ::strlen(par);
             // Loop over data members
             if ( IsSTL(cl.Name(SCOPED)) || cl.IsArray() ) return;

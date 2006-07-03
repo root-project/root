@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.11 2006/06/28 08:21:31 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.12 2006/07/03 09:22:46 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -27,7 +27,7 @@ namespace ROOT {
    namespace Cintex {
 
       int CINTTypedefBuilder::Setup(const Type& t) {
-         // setup typedef info
+         // Setup typedef info.
          if ( t.IsTypedef() )  {
 
             std::string nam = CintName(t.Name(SCOPED));

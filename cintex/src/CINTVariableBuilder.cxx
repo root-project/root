@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTVariableBuilder.cxx,v 1.2 2006/06/29 15:30:49 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTVariableBuilder.cxx,v 1.3 2006/07/03 09:22:46 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -29,15 +29,15 @@ namespace ROOT { namespace Cintex {
 
    CINTVariableBuilder::CINTVariableBuilder(const ROOT::Reflex::Member& m)
       : fVariable(m) { 
-      // default constructor
+      // Default constructor.
    }
    
    CINTVariableBuilder::~CINTVariableBuilder() {
-      // destructor
+      // Destructor.
    }
 
    void CINTVariableBuilder::Setup() {
-      // setup variable info
+      // Setup variable info.
       CINTScopeBuilder::Setup(fVariable.TypeOf());
 
       Scope scope = fVariable.DeclaringScope();
