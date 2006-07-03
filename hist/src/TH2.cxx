@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.95 2006/06/16 08:36:35 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.96 2006/06/26 09:46:38 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -938,7 +938,7 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
       nentries = Int_t(hpy->GetEntries());
       if (nentries == 0 || nentries < cut) {delete hpy; continue;}
       f1->SetParameters(parsave);
-      hpy->Fit(f1,option);
+      hpy->Fit(f1,opt.Data());
       Int_t npfits = f1->GetNumberFitPoints();
       if (npfits > npar && npfits >= cut) {
          Int_t biny = bin + ngroup/2;
@@ -2263,7 +2263,7 @@ void TH2::SetShowProjectionY(Int_t nbins)
 }
 
 //______________________________________________________________________________
-TH1 *TH2::ShowBackground(Int_t niter, Option_t *option)
+TH1 *TH2::ShowBackground(Int_t /*niter*/, Option_t * /*option*/)
 {
 //   This function calculates the background spectrum in this histogram.
 //   The background is returned as a histogram. 
