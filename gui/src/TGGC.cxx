@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.12 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.13 2006/05/18 16:32:01 antcheva Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -618,7 +618,7 @@ TString TGGC::GetMaskString() const
 }
 
 //______________________________________________________________________________
-void TGGC::SavePrimitive(ofstream &out, Option_t *option)
+void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save graphics context info as a C++ statement(s) on output stream out
 

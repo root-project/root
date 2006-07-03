@@ -120,7 +120,7 @@ public:
    void             Paint(Option_t *option="");
    TH1             *Project(Option_t *option="x") const; // *MENU*
    Int_t            RemovePoint(Int_t ipoint); // *MENU*
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetDirectory(TDirectory *dir);
    virtual void     SetHistogram(TH2 *h);
    void             SetMargin(Double_t m=0.1); // *MENU*

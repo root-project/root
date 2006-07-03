@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.27 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.28 2006/05/17 16:37:25 couet Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -569,7 +569,7 @@ void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 }
 
 //______________________________________________________________________________
-void TF3::SavePrimitive(ofstream &out, Option_t *option)
+void TF3::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 

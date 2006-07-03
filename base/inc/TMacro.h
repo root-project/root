@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.4 2006/06/09 11:58:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.5 2006/06/26 09:29:12 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -56,7 +56,7 @@ public:
    virtual void         Print(Option_t *option="") const;  //*MENU*
    virtual Int_t        ReadFile(const char *filename);
    virtual void         SaveSource(const char *filename);  //*MENU*
-   virtual void         SavePrimitive(ofstream &out, Option_t *option);
+   virtual void         SavePrimitive(ostream &out, Option_t *option = "");
    virtual void         SetParams(const char *params=0); //*MENU*
 
    ClassDef(TMacro,1)  // Class supporting a collection of lines with C++ code.

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF12.h,v 1.1 2003/04/05 16:53:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF12.h,v 1.2 2005/04/29 20:34:51 brun Exp $
 // Author: Rene Brun   05/04/2003
 
 /*************************************************************************
@@ -45,7 +45,7 @@ public:
    virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);
    virtual Double_t GetXY() const {return fXY;}
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetXY(Double_t xy);  // *MENU*
    
    ClassDef(TF12,1)  //Projection of a TF2 along x or y

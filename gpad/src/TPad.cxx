@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.230 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.231 2006/06/14 14:21:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4606,7 +4606,7 @@ void TPad::SaveAs(const char *filename)
 
 
 //______________________________________________________________________________
-void TPad::SavePrimitive(ofstream &out, Option_t *)
+void TPad::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitives in this pad on the C++ source file out.
 

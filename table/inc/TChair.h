@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.3 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.4 2005/04/25 17:23:29 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TChair.h,v 1.3 2003/01/27 20:41:36 brun Exp $
+// $Id: TChair.h,v 1.4 2005/04/25 17:23:29 brun Exp $
 #ifndef ROOT_TChair
 #define ROOT_TChair
 
@@ -87,7 +87,7 @@ public:
 
                void      *ReAllocate(Int_t newsize) { return GetThisTable()->ReAllocate(newsize); }
                void      *ReAllocate()              { return GetThisTable()->ReAllocate(); }
-   virtual     void       SavePrimitive(ofstream &out, Option_t *option) {GetThisTable()->SavePrimitive(out,option);}
+   virtual     void       SavePrimitive(ostream &out, Option_t *option) {GetThisTable()->SavePrimitive(out,option = "");}
 
    virtual     void       Set(Int_t n)                                   {GetThisTable()->Set(n);}
    virtual     void       Set(Int_t n, Char_t *array)                    {GetThisTable()->Set(n,array);}
@@ -120,6 +120,20 @@ inline const void *TChair::operator[](Int_t i) const
 }
 
 // $Log: TChair.h,v $
+// Revision 1.4  2005/04/25 17:23:29  brun
+// From Valeri Fine:
+//
+//   TChair.h:
+//      - Make the "fTable" data-member to be "protected" (it was "private")
+//        to facilitate the class reuse (thanks Y.Fisyak)
+//
+//   TColumnView.cxx:
+//      - extra protection against of zero gPad
+//
+//   TPad.cxx
+//     - initialize the "fPadView3D" data-member
+//      (causes the crash within "table" package occasionally)
+//
 // Revision 1.3  2003/01/27 20:41:36  brun
 // New version of the Table package by Valeri Fine.
 // New classes TIndexTable TResponseIterator TResponseTable TTableMap

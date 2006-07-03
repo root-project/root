@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.7 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TVolumePosition.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
+// $Id: TVolumePosition.cxx,v 1.7 2006/05/21 18:05:26 brun Exp $
 
 #include "Riostream.h"
 
@@ -462,7 +462,7 @@ TVolumePosition *TVolumePosition::Reset(TVolume *node,Double_t x, Double_t y, Do
 }
 
 //_______________________________________________________________________
-void TVolumePosition::SavePrimitive(ofstream &, Option_t *)
+void TVolumePosition::SavePrimitive(ostream &, Option_t * /*= ""*/)
 {
    //to be documented
 #if 0

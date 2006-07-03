@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.44 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.45 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -2231,7 +2231,7 @@ void TGCanvas::SetScrolling(Int_t scrolling)
 }
 
 //______________________________________________________________________________
-void TGCanvas::SavePrimitive(ofstream &out, Option_t *option)
+void TGCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a canvas widget as a C++ statement(s) on output stream out.
 
@@ -2287,7 +2287,7 @@ void TGCanvas::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGContainer::SavePrimitive(ofstream &out, Option_t *option)
+void TGContainer::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a canvas container as a C++ statement(s) on output stream out.
 

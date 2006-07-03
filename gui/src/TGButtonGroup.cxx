@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.24 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.25 2005/11/17 19:09:28 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -464,7 +464,7 @@ void TGButtonGroup::SetLayoutHints(TGLayoutHints *l, TGButton *button)
 }
 
 //______________________________________________________________________________
-void TGButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
+void TGButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a button group widget as a C++ statement(s) on output stream out
 
@@ -550,7 +550,7 @@ void TGButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGHButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
+void TGHButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a button group widget as a C++ statement(s) on output stream out
 
@@ -627,7 +627,7 @@ void TGHButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGVButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
+void TGVButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a button group widget as a C++ statement(s) on output stream out
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.25 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.26 2006/06/28 17:24:34 antcheva Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -2127,7 +2127,7 @@ void TGNumberEntry::ValueSet(Long_t val)
 }
 
 //______________________________________________________________________________
-void TGNumberEntry::SavePrimitive(ofstream &out, Option_t *)
+void TGNumberEntry::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save a number entry widget as a C++ statement(s) on output stream out.
 
@@ -2241,7 +2241,7 @@ void TGNumberEntry::SavePrimitive(ofstream &out, Option_t *)
 }
 
 //______________________________________________________________________________
-void TGNumberEntryField::SavePrimitive(ofstream &out, Option_t *)
+void TGNumberEntryField::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save a number entry widget as a C++ statement(s) on output stream out.
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.74 2006/04/28 08:43:05 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.75 2006/05/17 16:37:25 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -735,7 +735,7 @@ void TAxis::RotateTitle(Bool_t rotate)
 }
 
 //______________________________________________________________________________
-void TAxis::SaveAttributes(ofstream &out, const char *name, const char *subname)
+void TAxis::SaveAttributes(ostream &out, const char *name, const char *subname)
 {
     // Save axis attributes as C++ statement(s) on output stream out
 

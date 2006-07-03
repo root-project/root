@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.54 2006/06/19 14:02:27 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.55 2006/06/19 14:08:33 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -2159,7 +2159,7 @@ const TGGC &TGListTree::GetColorGC()
 }
 
 //______________________________________________________________________________
-void TGListTree::SavePrimitive(ofstream &out, Option_t *option)
+void TGListTree::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a list tree widget as a C++ statements on output stream out.
 
@@ -2220,7 +2220,7 @@ void TGListTree::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGListTree::SaveChildren(ofstream &out, TGListTreeItem *item, Int_t &n)
+void TGListTree::SaveChildren(ostream &out, TGListTreeItem *item, Int_t &n)
 {
    // Save child items as a C++ statements on output stream out.
    
@@ -2237,7 +2237,7 @@ void TGListTree::SaveChildren(ofstream &out, TGListTreeItem *item, Int_t &n)
 }
 
 //______________________________________________________________________________
-void TGListTreeItem::SavePrimitive(ofstream &out, Option_t *option, Int_t n)
+void TGListTreeItem::SavePrimitive(ostream &out, Option_t *option, Int_t n)
 {
    // Save a list tree item attributes as a C++ statements on output stream.
 

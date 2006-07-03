@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.11 2005/11/24 23:30:05 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.12 2006/03/17 09:08:48 couet Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -249,7 +249,7 @@ void TButton::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 
 //______________________________________________________________________________
-void TButton::SavePrimitive(ofstream &out, Option_t *)
+void TButton::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

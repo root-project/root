@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.36 2006/06/06 14:44:59 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.37 2006/06/09 15:01:10 antcheva Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -1036,7 +1036,7 @@ const TGGC &TGListView::GetDefaultGC()
 }
 
 //______________________________________________________________________________
-void TGListView::SavePrimitive(ofstream &out, Option_t *option)
+void TGListView::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a list view widget as a C++ statement(s) on output stream out.
 
@@ -1093,7 +1093,7 @@ void TGListView::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGLVContainer::SavePrimitive(ofstream &out, Option_t *option)
+void TGLVContainer::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a list view container as a C++ statement(s) on output stream out.
 

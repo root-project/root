@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.27 2005/05/25 16:20:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.28 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -618,7 +618,7 @@ void TGFileContainer::StartRefreshTimer(ULong_t msec)
 }
 
 //______________________________________________________________________________
-void TGFileContainer::SavePrimitive(ofstream &out, Option_t *option)
+void TGFileContainer::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a file container widget as a C++ statement(s) on output stream out.
 

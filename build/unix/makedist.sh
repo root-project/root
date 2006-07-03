@@ -30,17 +30,25 @@ if [ "x${COMPILER}" != "x" ]; then
 fi
 
 TARFILE=root_v${ROOTVERS}.${TYPE}${COMPILER}${DEBUG}
-# figure out what tar to use
+# figure out which tar to use
 if [ "x$MSI" = "x1" ]; then
-   TAR=build/package/msi/makemsi.sh
    TARFILE=../${TARFILE}.msi
+   TARCMD="build/package/msi/makemsi.sh ${TARFILE} -T ${TARFILE}.filelist"
 else
    TARFILE=${TARFILE}.tar
-   if [ "x`which gtar 2>/dev/null | awk '{if ($1~/gtar/) print $1;}'`" != "x" ]; then
-      TAR="gtar zcvf"
-      TARFILE=${TARFILE}".gz"
+   ISGNUTAR="`tar --version 2>&1 | grep GNU`"
+   if [ "x${ISGNUTAR}" != "x" ]; then
+      TAR=tar
    else
-      TAR="tar cvf"
+      if [ "x`which gtar 2>/dev/null | awk '{if ($1~/gtar/) print $1;}'`" != "x" ]; then
+	 TAR=gtar
+      fi
+   fi
+   if [ "x${TAR}" != "x" ]; then
+      TARFILE=${TARFILE}".gz"
+      TARCMD="${TAR} zcvf ${TARFILE} -T ${TARFILE}.filelist"
+   else
+      TARCMD="tar cvf ${TARFILE} `cat ${TARFILE}.filelist`"
       DOGZIP="y"
    fi
 fi
@@ -54,7 +62,7 @@ fi
 
 ${pwd}/build/unix/distfilelist.sh $dir > ${TARFILE}.filelist
 rm -f ${TARFILE}
-$TAR ${TARFILE} -T ${TARFILE}.filelist || exit 1
+$TARCMD || exit 1
 rm ${TARFILE}.filelist 
 
 if [ "x$DOGZIP" = "xy" ]; then

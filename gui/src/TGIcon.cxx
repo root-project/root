@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.16 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.17 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -219,7 +219,7 @@ void TGIcon::SetImagePath(const char *path)
 }
 
 //______________________________________________________________________________
-void TGIcon::SavePrimitive(ofstream &out, Option_t *option)
+void TGIcon::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an icon widget as a C++ statement(s) on output stream out.
 

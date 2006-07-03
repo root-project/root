@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.11 2005/11/11 15:38:30 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.12 2006/03/21 10:41:36 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -215,7 +215,7 @@ void TGedMarkerSelect::SetMarkerStyle(Style_t markerStyle)
 }
 
 //______________________________________________________________________________
-void TGedMarkerSelect::SavePrimitive(ofstream &out, Option_t *)
+void TGedMarkerSelect::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save the pattern select widget as a C++ statement(s) on output stream out
 

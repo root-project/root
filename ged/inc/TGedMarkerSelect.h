@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.h,v 1.5 2004/06/16 08:58:34 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.h,v 1.6 2005/11/11 15:38:30 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   24/07/03
 
 /*************************************************************************
@@ -72,7 +72,7 @@ public:
    Style_t        GetMarkerStyle() const { return fMarkerStyle; }
    void           SetMarkerStyle(Style_t pattern);
    virtual void   MarkerSelected(Style_t marker = 0) { Emit("MarkerSelected(Style_t)", marker ? marker : GetMarkerStyle()); }  // *SIGNAL*
-   virtual void   SavePrimitive(ofstream &out, Option_t *);
+   virtual void   SavePrimitive(ostream &out, Option_t * = "");
    virtual TGDimension GetDefaultSize() const { return TGDimension(38, 21); }
 
    ClassDef(TGedMarkerSelect,0)  // Marker selection button

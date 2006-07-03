@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.h,v 1.7 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.h,v 1.8 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -70,7 +70,7 @@ public:
    virtual void      Paint(Option_t *chopt="");
    virtual void      Print(Option_t *chopt="") const;
    virtual void      RecursiveRemove(TObject *obj);
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      SetMaximum(Double_t maximum=-1111);
    virtual void      SetMinimum(Double_t minimum=-1111);
   

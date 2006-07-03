@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.13 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.14 2006/01/25 10:34:42 antcheva Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -483,7 +483,7 @@ Bool_t TGDoubleHSlider::HandleMotion(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TGDoubleHSlider::SavePrimitive(ofstream &out, Option_t *option)
+void TGDoubleHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
 
@@ -523,7 +523,7 @@ void TGDoubleHSlider::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGDoubleVSlider::SavePrimitive(ofstream &out, Option_t *option)
+void TGDoubleVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
    

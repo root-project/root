@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.6 2005/09/05 10:01:46 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.7 2006/05/26 15:13:01 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 17/07/2003
 
 /*************************************************************************
@@ -183,7 +183,7 @@ Bool_t TGedToolBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 }
 
 //______________________________________________________________________________
-void TGedToolBox::SavePrimitive(ofstream &out, Option_t *option)
+void TGedToolBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save the tool box widget as a C++ statement(s) on output stream out
 

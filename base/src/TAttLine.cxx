@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.11 2005/08/29 08:24:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.12 2006/04/06 13:35:07 couet Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -185,7 +185,7 @@ void TAttLine::ResetAttLine(Option_t *)
 }
 
 //______________________________________________________________________________
-void TAttLine::SaveLineAttributes(ofstream &out, const char *name, Int_t coldef, Int_t stydef, Int_t widdef)
+void TAttLine::SaveLineAttributes(ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t widdef)
 {
     // Save line attributes as C++ statement(s) on output stream out
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.44 2006/05/30 11:45:59 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.45 2006/06/01 09:13:17 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -561,7 +561,7 @@ void TGComboBox::RemoveAll()
 }
 
 //______________________________________________________________________________
-void TGComboBox::SavePrimitive(ofstream &out, Option_t *option)
+void TGComboBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a combo box widget as a C++ statement(s) on output stream out.
 
@@ -626,7 +626,7 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
 }
 
 //______________________________________________________________________________
-void TGLineStyleComboBox::SavePrimitive(ofstream &out, Option_t *)
+void TGLineStyleComboBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save a line style combo box widget as a C++ statement(s).
 
@@ -665,7 +665,7 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
 }
 
 //______________________________________________________________________________
-void TGLineWidthComboBox::SavePrimitive(ofstream &out, Option_t *)
+void TGLineWidthComboBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save a line width combo box widget as a C++ statement(s).
 

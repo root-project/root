@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.16 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.17 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -131,7 +131,7 @@ public:
    virtual void   Saved() { Emit("Saved()"); }          //*SIGNAL*
    virtual void   SavedAs() { Emit("SavedAs()"); }      //*SIGNAL*
 
-   virtual void   SavePrimitive(ofstream &out, Option_t *);
+   virtual void   SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGTextEdit,0)  // Text edit widget
 };

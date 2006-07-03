@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.24 2005/11/17 13:17:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.25 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -88,7 +88,7 @@ public:
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                                  Double_t rmin2, Double_t rmax2, Int_t skipz=0);
-   virtual void          SavePrimitive(ofstream &out, Option_t *option);
+   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    void                  SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                                        Double_t rmin2, Double_t rmax2);
    virtual void          SetDimensions(Double_t *param);
@@ -162,7 +162,7 @@ public:
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                                  Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2, Int_t skipz=0);
-   virtual void          SavePrimitive(ofstream &out, Option_t *option);
+   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    void                  SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                                        Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param);

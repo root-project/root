@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.5 2006/03/14 15:16:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.6 2006/04/10 08:38:43 brun Exp $
 // Author: Andrei Gheata   02/06/05
 
 /*************************************************************************
@@ -317,7 +317,7 @@ Double_t TGeoShapeAssembly::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoShapeAssembly::SavePrimitive(ofstream & /*out*/, Option_t * /*option*/)
+void TGeoShapeAssembly::SavePrimitive(ostream & /*out*/, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
 }

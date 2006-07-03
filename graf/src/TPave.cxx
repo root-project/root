@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.20 2006/04/12 13:45:28 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.21 2006/05/23 10:49:44 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -610,7 +610,7 @@ void TPave::Print(Option_t *option) const
 
 
 //______________________________________________________________________________
-void TPave::SavePrimitive(ofstream &out, Option_t *)
+void TPave::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

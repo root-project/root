@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.9 2006/05/17 09:37:20 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.10 2006/05/23 04:47:39 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -63,7 +63,7 @@ public:
    virtual void     Paint(Option_t *option="");
    virtual void     PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    virtual void     Print(Option_t *option="") const;
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual Int_t    SetNextPoint(Double_t x, Double_t y); // *MENU*
    virtual void     SetPoint(Int_t point, Double_t x, Double_t y); // *MENU*
    virtual void     SetPolyMarker(Int_t n);

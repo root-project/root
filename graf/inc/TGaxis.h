@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.20 2006/01/16 09:06:06 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.21 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -105,7 +105,7 @@ public:
                                  Double_t gridlength = 0, Bool_t drawGridOnly = kFALSE);
    virtual void        Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
                              ,Double_t XT, Double_t YT, Double_t &U,   Double_t &V);
-   virtual void        SavePrimitive(ofstream &out, Option_t *option);
+   virtual void        SavePrimitive(ostream &out, Option_t *option = "");
    void                SetFunction(const char *funcname="");
    void                SetOption(Option_t *option="");
    void                SetLabelColor(Int_t labelcolor) {fLabelColor = labelcolor;} // *MENU*

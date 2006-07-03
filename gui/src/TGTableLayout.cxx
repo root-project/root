@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.9 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.10 2006/04/18 12:31:41 antcheva Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -612,7 +612,7 @@ TGDimension TGTableLayout::GetDefaultSize() const
 }
 
 // ________________________________________________________________________
-void TGTableLayoutHints::SavePrimitive(ofstream &out, Option_t *)
+void TGTableLayoutHints::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 
    // Save table layout hints as a C++ statement(s) on output stream out.
@@ -684,7 +684,7 @@ void TGTableLayoutHints::SavePrimitive(ofstream &out, Option_t *)
 }
 
 // __________________________________________________________________________
-void TGTableLayout::SavePrimitive(ofstream &out, Option_t *)
+void TGTableLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 
    // Save table layout as a C++ statement(s) on output stream.

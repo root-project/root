@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.27 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.28 2006/06/06 14:44:59 antcheva Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -161,7 +161,7 @@ public:
    virtual void   SetViewMode(EListViewMode viewMode);
    EListViewMode  GetViewMode() const { return fViewMode; }
    virtual const char *GetHeader(Int_t idx) const;
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    virtual void SelectionChanged() { Emit("SelectionChanged()"); }  //*SIGNAL*
    virtual void Clicked(TGLVEntry *entry, Int_t btn);  //*SIGNAL*
@@ -217,7 +217,7 @@ public:
                               { fListView->SetHeader(s,hmode,cmode,idx); }
    void   SetDefaultHeaders() { fListView->SetDefaultHeaders(); }
    const char *GetHeader(Int_t idx) const { return fListView->GetHeader(idx); }
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGLVContainer,0)  // Listview container
 };

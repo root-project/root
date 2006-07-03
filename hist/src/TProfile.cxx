@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.78 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.79 2006/05/17 16:37:26 couet Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1637,7 +1637,7 @@ void TProfile::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TProfile::SavePrimitive(ofstream &out, Option_t *option)
+void TProfile::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 

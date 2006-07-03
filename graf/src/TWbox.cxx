@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TWbox.cxx,v 1.7 2002/10/31 07:27:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TWbox.cxx,v 1.8 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -213,7 +213,7 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 
 
 //______________________________________________________________________________
-void TWbox::SavePrimitive(ofstream &out, Option_t *)
+void TWbox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

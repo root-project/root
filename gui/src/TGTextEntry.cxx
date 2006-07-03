@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.42 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.43 2006/05/28 20:08:00 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1775,7 +1775,7 @@ const TGGC &TGTextEntry::GetDefaultSelectedBackgroundGC()
 }
 
 //______________________________________________________________________________
-void TGTextEntry::SavePrimitive(ofstream &out, Option_t *option)
+void TGTextEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a text entry widget as a C++ statement(s) on output stream out.
 

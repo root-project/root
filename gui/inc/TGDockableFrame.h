@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.6 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.7 2006/05/28 20:07:59 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -143,7 +143,7 @@ public:
    TGCompositeFrame *GetContainer() const { return fContainer; }
    TGUndockedFrame  *GetUndocked() const { return fFrame; }
 
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGDockableFrame,0)  // Dockable widget
 };

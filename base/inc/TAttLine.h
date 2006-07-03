@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.h,v 1.5 2003/08/06 20:25:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.h,v 1.6 2005/11/16 20:02:34 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -45,7 +45,7 @@ public:
    virtual Width_t  GetLineWidth() const {return fLineWidth;}
    virtual void     Modify();
    virtual void     ResetAttLine(Option_t *option="");
-   virtual void     SaveLineAttributes(ofstream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t widdef=1);
+   virtual void     SaveLineAttributes(ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t widdef=1);
    virtual void     SetLineAttributes(); // *MENU*
    virtual void     SetLineColor(Color_t lcolor) { fLineColor = lcolor;}
    virtual void     SetLineStyle(Style_t lstyle) { fLineStyle = lstyle;}

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.18 2005/01/13 10:24:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.19 2006/03/20 21:43:42 pcanal Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -523,7 +523,7 @@ void TText::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TText::SavePrimitive(ofstream &out, Option_t *)
+void TText::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 

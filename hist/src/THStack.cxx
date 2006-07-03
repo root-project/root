@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.45 2006/05/24 14:55:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.46 2006/05/26 15:13:02 rdm Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -753,7 +753,7 @@ void THStack::RecursiveRemove(TObject *obj)
 }
 
 //______________________________________________________________________________
-void THStack::SavePrimitive(ofstream &out, Option_t *option)
+void THStack::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

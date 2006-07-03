@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.12 2005/11/25 15:58:16 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.13 2006/05/18 16:32:01 antcheva Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -448,7 +448,7 @@ void TGDockableFrame::SetWindowName(const char *name)
 }
 
 //______________________________________________________________________________
-void TGDockableFrame::SavePrimitive(ofstream &out, Option_t *option)
+void TGDockableFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a dockable frame widget as a C++ statement(s) on output stream out.
 

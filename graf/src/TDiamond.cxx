@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.9 2005/11/15 14:04:51 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.10 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -419,7 +419,7 @@ void TDiamond::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TDiamond::SavePrimitive(ofstream &out, Option_t *)
+void TDiamond::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out.
 

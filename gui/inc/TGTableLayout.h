@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.h,v 1.3 2003/11/10 15:44:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.h,v 1.4 2005/09/05 07:33:37 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -59,7 +59,7 @@ public:
    UInt_t GetAttachRight() const { return fAttachRight; }
    UInt_t GetAttachTop() const { return fAttachTop; }
    UInt_t GetAttachBottom() const { return fAttachBottom; }
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGTableLayoutHints,0)  // Class describing GUI table layout hints
 };
@@ -125,7 +125,7 @@ public:
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const; // return sum of all child sizes
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGTableLayout,0)  // Table layout manager
 };

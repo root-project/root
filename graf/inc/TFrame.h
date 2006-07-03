@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TFrame.h,v 1.4 2005/11/15 14:04:51 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TFrame.h,v 1.5 2006/01/09 08:34:58 brun Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -39,7 +39,7 @@ public:
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void  Paint(Option_t *option="");
    virtual void  Pop();
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    virtual void  UseCurrentStyle();  // *MENU*
 
    ClassDef(TFrame,1)  //Pad graphics frame

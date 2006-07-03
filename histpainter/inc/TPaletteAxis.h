@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.h,v 1.5 2005/05/24 09:41:18 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.h,v 1.6 2005/11/10 10:36:59 couet Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
    Option_t   *GetName() const {return fName.Data();}
    virtual char *GetObjectInfo(Int_t px, Int_t py) const;
    virtual void  Paint(Option_t *option="");
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    virtual void  SetName(const char *name="") {fName = name;} // *MENU*
    virtual void  SetLabelColor(Int_t labelcolor) {fAxis.SetLabelColor(labelcolor);} // *MENU*
    virtual void  SetLabelFont(Int_t labelfont) {fAxis.SetLabelFont(labelfont);} // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.8 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.9 2006/05/17 16:37:26 couet Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -149,7 +149,7 @@ void   TH1K::Reset(Option_t *option)
 
 
 //______________________________________________________________________________
-void TH1K::SavePrimitive(ofstream &out, Option_t *option)
+void TH1K::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
    // Note the following restrictions in the code generated:

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanel.h,v 1.4 2004/07/20 07:23:34 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanel.h,v 1.5 2005/11/23 11:03:12 couet Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************
@@ -49,7 +49,7 @@ public:
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    TObject       *GetObjectFit() const {return fObjectFit;}
    virtual void  RecursiveRemove(TObject *obj);
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    virtual void  SetDefaults();
    virtual void  SetFunction(const char *function);
    virtual void  SetSame();

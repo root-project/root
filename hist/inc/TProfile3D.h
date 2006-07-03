@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile3D.h,v 1.2 2006/05/17 09:37:20 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile3D.h,v 1.3 2006/05/17 10:01:04 brun Exp $
 // Author: Rene Brun   17/05/2006
 
 /*************************************************************************
@@ -104,7 +104,7 @@ public:
    virtual void      PutStats(Double_t *stats);
    virtual void      Reset(Option_t *option="");
    virtual void      RebinAxis(Double_t x, const char *ax);
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      Scale(Double_t c1=1);
    virtual void      SetBinEntries(Int_t bin, Double_t w);
    void              SetBins(Int_t, Double_t, Double_t)

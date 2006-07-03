@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.h,v 1.7 2005/11/24 17:28:06 couet Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.h,v 1.8 2006/05/23 04:47:36 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -73,7 +73,7 @@ public:
    virtual void    Draw(Option_t *option="");
    Option_t       *GetOption() const {return fOption.Data();}
    virtual void    Print(Option_t *option="") const;
-   virtual void    SavePrimitive(ofstream &out, Option_t *option);
+   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
    virtual void    SetOption(Option_t *option="") {fOption = option;}
    virtual void    SetAxis(Double_t * axis);       //Define new axis
    virtual void    SetAxis(Double_t x, Double_t y, Double_t z);

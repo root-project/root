@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.24 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.25 2006/06/06 07:44:28 antcheva Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -844,7 +844,7 @@ const TGGC &TGTextView::GetDefaultSelectedBackgroundGC()
 }
 
 //______________________________________________________________________________
-void TGTextView::SavePrimitive(ofstream &out, Option_t *)
+void TGTextView::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save a text edit widget as a C++ statement(s) on output stream out
 

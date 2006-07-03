@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.65 2006/05/18 07:34:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.66 2006/05/19 07:03:36 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1570,7 +1570,7 @@ void TStyle::SaveSource(const char *filename, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TStyle::SavePrimitive(ofstream &out, Option_t *)
+void TStyle::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 // Save a main frame widget as a C++ statement(s) on output stream out.
 

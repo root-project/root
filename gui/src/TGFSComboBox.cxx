@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.17 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.18 2006/05/10 14:06:06 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -356,7 +356,7 @@ void TGFSComboBox::Update(const char *path)
 }
 
 //______________________________________________________________________________
-void TGFSComboBox::SavePrimitive(ofstream &out, Option_t *option)
+void TGFSComboBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a file system combo box as a C++ statement(s) on output stream out.
 

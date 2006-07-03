@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.9 2005/08/30 09:11:39 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.10 2005/11/24 17:28:06 couet Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TAxis3D
 #define ROOT_TAxis3D
-// $Id: TAxis3D.h,v 1.9 2005/08/30 09:11:39 brun Exp $
+// $Id: TAxis3D.h,v 1.10 2005/11/24 17:28:06 couet Exp $
 // ***********************************************************************
 // * C++ class library to paint axis "arround" TView object
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -105,7 +105,7 @@ public:
    virtual void     Paint(Option_t *option="");
    void             PaintAxis(TGaxis *axis, Float_t ang);
    static Double_t *PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView *view =0);
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
 
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="*"); // *MENU*
    virtual void     SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis="*");

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.20 2006/03/23 09:40:01 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.21 2006/05/11 12:50:07 antcheva Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -1191,7 +1191,7 @@ Bool_t TGMdiContainer::HandleConfigureNotify(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TGMdiMainFrame::SavePrimitive(ofstream &out, Option_t *option)
+void TGMdiMainFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a MDI main frame as a C++ statement(s) on output stream out
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.7 2002/08/05 21:12:12 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.8 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************
@@ -113,7 +113,7 @@ void TPavesText::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TPavesText::SavePrimitive(ofstream &out, Option_t *)
+void TPavesText::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

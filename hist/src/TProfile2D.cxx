@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.50 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.51 2006/05/17 16:37:26 couet Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1625,7 +1625,7 @@ void TProfile2D::RebinAxis(Double_t x, const char* ax)
 }
 
 //______________________________________________________________________________
-void TProfile2D::SavePrimitive(ofstream &out, Option_t *option)
+void TProfile2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

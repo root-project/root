@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.17 2004/09/13 16:39:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.18 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -285,7 +285,7 @@ void TAttText::ResetAttText(Option_t *)
 }
 
 //______________________________________________________________________________
-void TAttText::SaveTextAttributes(ofstream &out, const char *name, Int_t alidef, Float_t angdef, Int_t coldef, Int_t fondef, Float_t sizdef)
+void TAttText::SaveTextAttributes(ostream &out, const char *name, Int_t alidef, Float_t angdef, Int_t coldef, Int_t fondef, Float_t sizdef)
 {
     // Save text attributes as C++ statement(s) on output stream out
 

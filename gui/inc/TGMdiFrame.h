@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.h,v 1.5 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.h,v 1.6 2005/11/21 00:25:37 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -82,7 +82,7 @@ public:
    const char       *GetWindowName();
    const TGPicture  *GetWindowIcon();
 
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGMdiFrame, 0) // MDI Frame
 };

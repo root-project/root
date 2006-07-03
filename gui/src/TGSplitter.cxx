@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.11 2006/04/12 11:11:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.12 2006/06/13 14:50:35 antcheva Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -337,7 +337,7 @@ void TGHSplitter::DrawBorder()
 }
 
 //______________________________________________________________________________
-void TGVSplitter::SavePrimitive(ofstream &out, Option_t *option)
+void TGVSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save a splitter widget as a C++ statement(s) on output stream out.
 
@@ -363,7 +363,7 @@ void TGVSplitter::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGHSplitter::SavePrimitive(ofstream &out, Option_t *option)
+void TGHSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save a splitter widget as a C++ statement(s) on output stream out.
 

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.12 2005/11/11 15:38:30 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.13 2006/06/14 13:57:28 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -641,7 +641,7 @@ void TGedPatternSelect::SetPattern(Style_t pattern, Bool_t emit)
 }
 
 //______________________________________________________________________________
-void TGedPatternSelect::SavePrimitive(ofstream &out, Option_t *)
+void TGedPatternSelect::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save the pattern select widget as a C++ statement(s) on output stream out
 

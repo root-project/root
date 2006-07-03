@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.25 2006/01/25 10:17:30 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.26 2006/03/24 15:11:23 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -204,7 +204,7 @@ void TGeoBoolNode::RegisterMatrices()
    if (fRight->IsComposite()) ((TGeoCompositeShape*)fRight)->GetBoolNode()->RegisterMatrices();
 }
 //_____________________________________________________________________________
-void TGeoBoolNode::SavePrimitive(ofstream &out, Option_t *option)
+void TGeoBoolNode::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    fLeft->SavePrimitive(out,option);
@@ -526,7 +526,7 @@ Double_t TGeoUnion::Safety(Double_t *point, Bool_t) const
 }   
 
 //_____________________________________________________________________________
-void TGeoUnion::SavePrimitive(ofstream &out, Option_t *option)
+void TGeoUnion::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    TGeoBoolNode::SavePrimitive(out,option);
@@ -806,7 +806,7 @@ Double_t TGeoSubtraction::Safety(Double_t *point, Bool_t) const
    return saf1;
 }   
 //_____________________________________________________________________________
-void TGeoSubtraction::SavePrimitive(ofstream &out, Option_t *option)
+void TGeoSubtraction::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    TGeoBoolNode::SavePrimitive(out,option);
@@ -1168,7 +1168,7 @@ Double_t TGeoIntersection::Safety(Double_t *point, Bool_t) const
    return TMath::Max(saf1,saf2);
 }   
 //_____________________________________________________________________________
-void TGeoIntersection::SavePrimitive(ofstream &out, Option_t *option)
+void TGeoIntersection::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    TGeoBoolNode::SavePrimitive(out,option);

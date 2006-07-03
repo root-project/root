@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSlider.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TSlider.h,v 1.4 2001/01/23 21:09:08 brun Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -49,7 +49,7 @@ public:
    Double_t      GetMaximum() const {return fMaximum;}
    virtual const char *GetMethod() const { return fMethod.Data(); }
    virtual void  Paint(Option_t *option="");
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    virtual void  SetMethod(const char *method) { fMethod=method; } // *MENU*
    void          SetObject(TObject *obj=0) {fObject=obj;}
    virtual void  SetMinimum(Double_t min=0) {fMinimum=min;}

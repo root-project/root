@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.11 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.12 2006/04/06 09:38:58 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -151,7 +151,7 @@ void TAttFill::ResetAttFill(Option_t *)
 }
 
 //______________________________________________________________________________
-void TAttFill::SaveFillAttributes(ofstream &out, const char *name, Int_t coldef, Int_t stydef)
+void TAttFill::SaveFillAttributes(ostream &out, const char *name, Int_t coldef, Int_t stydef)
 {
     // Save fill attributes as C++ statement(s) on output stream out
 

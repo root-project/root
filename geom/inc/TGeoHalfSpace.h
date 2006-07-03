@@ -1,4 +1,4 @@
-// @(#) :$Name:  $:$Id: TGeoHalfSpace.h,v 1.6 2005/11/17 13:17:54 brun Exp $
+// @(#) :$Name:  $:$Id: TGeoHalfSpace.h,v 1.7 2005/11/18 16:07:58 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -59,7 +59,7 @@ public:
    virtual Bool_t        IsCylType() const {return kFALSE;}
    //virtual void          Paint(Option_t * /*option*/) {;}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ofstream &out, Option_t *option);
+   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t * /*points*/) const {;}
    virtual void          SetPoints(Float_t * /*points*/) const {;}

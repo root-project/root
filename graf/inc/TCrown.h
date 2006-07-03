@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCrown.h,v 1.2 2002/10/31 07:27:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCrown.h,v 1.3 2005/11/15 14:04:51 couet Exp $
 // Author: Rene Brun   08/08/2002
 
 /*************************************************************************
@@ -41,7 +41,7 @@ public:
                             Double_t  phimin=0, Double_t  phimax=360, Option_t *option="");
    virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void   Paint(Option_t *option="");
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TCrown,1)  //A crown or segment of crown
 };

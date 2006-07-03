@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.10 2005/10/31 21:49:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.11 2005/11/15 14:04:51 couet Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -268,7 +268,7 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TCurlyLine::SavePrimitive(ofstream &out, Option_t *)
+void TCurlyLine::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

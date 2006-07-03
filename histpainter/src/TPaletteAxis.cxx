@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.16 2006/04/27 09:26:38 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.17 2006/04/28 08:43:05 couet Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -301,7 +301,7 @@ void TPaletteAxis::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TPaletteAxis::SavePrimitive(ofstream &out, Option_t *)
+void TPaletteAxis::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out.
 

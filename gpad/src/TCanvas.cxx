@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.111 2006/05/15 11:01:13 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.112 2006/05/30 07:30:41 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1515,7 +1515,7 @@ void TCanvas::RunAutoExec()
 
 
 //______________________________________________________________________________
-void TCanvas::SavePrimitive(ofstream &out, Option_t *option)
+void TCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitives in this canvas in C++ macro file with GUI
 

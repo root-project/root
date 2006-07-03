@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.17 2005/09/08 14:22:16 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.18 2005/11/24 17:28:07 couet Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 // ***********************************************************************
@@ -486,7 +486,7 @@ Double_t *TAxis3D::PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView
 
 
 //______________________________________________________________________________
-void TAxis3D::SavePrimitive(ofstream &out, Option_t *)
+void TAxis3D::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

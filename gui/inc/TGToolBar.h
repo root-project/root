@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v5-11-02 $:$Id: TGToolBar.h,v 1.14 2006/04/06 11:15:38 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.15 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -79,7 +79,7 @@ public:
    virtual void Released(Int_t id) { Emit("Released(Int_t)",id);}   //*SIGNAL*
    virtual void Clicked(Int_t id)  { Emit("Clicked(Int_t)",id); }   //*SIGNAL*
 
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGToolBar,0)  //A bar containing picture buttons
 };

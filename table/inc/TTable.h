@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.11 2005/11/24 17:08:36 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.12 2006/04/20 14:36:48 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -145,7 +145,7 @@ public:
 
                void      *ReAllocate(Int_t newsize);
                void      *ReAllocate();
-   virtual     void       SavePrimitive(ofstream &out, Option_t *option);
+   virtual     void       SavePrimitive(ostream &out, Option_t *option = "");
    virtual     void       Set(Int_t n);
    virtual     void       Set(Int_t n, Char_t *array);
    virtual     void       SetNRows(Int_t n);

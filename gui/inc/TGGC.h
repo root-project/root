@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.9 2006/05/15 11:01:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.10 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -107,7 +107,7 @@ public:
    Int_t             GetArcMode() const { return fValues.fArcMode; }
 
    void Print(Option_t *option="") const;
-   void SavePrimitive(ofstream &out, Option_t *option);
+   void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGGC,0)  // Graphics context
 };

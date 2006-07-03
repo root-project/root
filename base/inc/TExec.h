@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TExec.h,v 1.2 2001/11/23 18:01:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TExec.h,v 1.3 2005/11/16 20:02:34 pcanal Exp $
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
@@ -37,7 +37,7 @@ public:
    virtual ~TExec();
    virtual void     Exec(const char *command="");
    virtual void     Paint(Option_t *option="");
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetAction(const char *action) {SetTitle(action);}
    
    ClassDef(TExec,1);  //To execute a CINT command

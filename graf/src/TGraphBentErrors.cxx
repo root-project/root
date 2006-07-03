@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.17 2005/11/16 17:38:38 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.18 2005/11/17 09:38:55 couet Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -655,7 +655,7 @@ void TGraphBentErrors::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TGraphBentErrors::SavePrimitive(ofstream &out, Option_t *option)
+void TGraphBentErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

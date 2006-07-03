@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.17 2006/05/23 04:47:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.18 2006/05/24 15:31:40 brun Exp $
 // Author: Rene Brun , Olivier Couet 31/10/97
 
 
@@ -352,7 +352,7 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
 
 
 //______________________________________________________________________________
-void TMarker3DBox::SavePrimitive(ofstream &out, Option_t *)
+void TMarker3DBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

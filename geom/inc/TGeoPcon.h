@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.22 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.23 2006/05/23 04:47:37 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -92,7 +92,7 @@ public:
    Double_t             &Z(Int_t ipl) {return fZ[ipl];}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    Double_t              SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in=kTRUE, Double_t safmin=TGeoShape::Big()) const;
-   virtual void          SavePrimitive(ofstream &out, Option_t *option);
+   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.12 2005/11/17 13:17:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.13 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -82,7 +82,7 @@ public:
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ofstream &out, Option_t *option);
+   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    void                  SetTorusDimensions(Double_t r, Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *points) const;

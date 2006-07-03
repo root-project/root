@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TGroupButton.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TGroupButton.h,v 1.2 2000/06/13 11:27:03 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
    virtual void  DisplayColorTable(const char *action, Double_t x0, Double_t y0, Double_t wc, Double_t hc);
    virtual void  ExecuteAction();
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    ClassDef(TGroupButton,0)  //A user interface button in a group of buttons.
 };
 

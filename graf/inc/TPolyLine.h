@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.h,v 1.6 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.h,v 1.7 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -72,7 +72,7 @@ public:
    virtual void    PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    virtual void    PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    virtual void    Print(Option_t *option="") const;
-   virtual void    SavePrimitive(ofstream &out, Option_t *option);
+   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
    virtual Int_t   SetNextPoint(Double_t x, Double_t y); // *MENU*
    virtual void    SetOption(Option_t *option="") {fOption = option;}
    virtual void    SetPoint(Int_t point, Double_t x, Double_t y); // *MENU*

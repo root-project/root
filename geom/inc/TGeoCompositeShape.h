@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.22 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.23 2006/05/23 04:47:36 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
    void                  MakeNode(const char *expression);
    virtual Bool_t        PaintComposite(Option_t *option = "") const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ofstream &out, Option_t *option);
+   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    virtual void          SetDimensions(Double_t * /*param*/) {;}
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;

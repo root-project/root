@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.10 2006/05/14 10:23:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.11 2006/05/23 04:47:38 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -157,7 +157,7 @@ public:
    void SetEnabled(Bool_t e = kTRUE) {TGButton::SetEnabled(e); }
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(43, 21); }
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    virtual void ColorSelected(Pixel_t color = 0)
             { Emit("ColorSelected(Pixel_t)", color ? color : GetColor()); }  //*SIGNAL*

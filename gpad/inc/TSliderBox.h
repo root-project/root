@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSliderBox.h,v 1.2 2000/06/13 12:14:34 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TSliderBox.h,v 1.3 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -45,7 +45,7 @@ public:
               Color_t color=18, Short_t bordersize=2 ,Short_t bordermode=-1);
    virtual ~TSliderBox();
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    void          SetSlider(TSlider*slider) {fSlider=slider;}
 
    ClassDef(TSliderBox,1)  //The moving box of a TSlider

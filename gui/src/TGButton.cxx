@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.68 2006/05/26 09:16:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.69 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -1415,7 +1415,7 @@ const TGGC &TGRadioButton::GetDefaultGC()
 }
 
 //______________________________________________________________________________
-void TGButton::SavePrimitive(ofstream &out, Option_t *option)
+void TGButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a button widget as a C++ statement(s) on output stream out
 
@@ -1447,7 +1447,7 @@ void TGButton::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGTextButton::SavePrimitive(ofstream &out, Option_t *option)
+void TGTextButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a text button widget as a C++ statement(s) on output stream out
 
@@ -1524,7 +1524,7 @@ void TGTextButton::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGPictureButton::SavePrimitive(ofstream &out, Option_t *option)
+void TGPictureButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a picture button widget as a C++ statement(s) on output stream out
 
@@ -1574,7 +1574,7 @@ void TGPictureButton::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGCheckButton::SavePrimitive(ofstream &out, Option_t *option)
+void TGCheckButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a check button widget as a C++ statement(s) on output stream out
 
@@ -1647,7 +1647,7 @@ void TGCheckButton::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGRadioButton::SavePrimitive(ofstream &out, Option_t *option)
+void TGRadioButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a radio button widget as a C++ statement(s) on output stream out
 

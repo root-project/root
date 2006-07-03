@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.36 2005/11/17 14:43:17 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.37 2006/03/28 16:43:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -195,7 +195,7 @@ public:
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1);
    void              SaveSource(const char *filename="", Option_t *option="");
-   void              SavePrimitive(ofstream &out, Option_t *option);
+   void              SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      SetCursor(ECursor cursor);
    virtual void      SetDoubleBuffer(Int_t mode=1);
    virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*

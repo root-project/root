@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.h,v 1.8 2005/09/05 07:25:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.h,v 1.9 2005/11/16 17:38:38 couet Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -80,7 +80,7 @@ public:
    Double_t       *GetEYhigh() const {return fEYhigh;}
    virtual void    Paint(Option_t *chopt="");
    virtual void    Print(Option_t *chopt="") const;
-   virtual void    SavePrimitive(ofstream &out, Option_t *option);
+   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
    virtual void    SetPointError(Double_t exl, Double_t exh,
                                  Double_t eyl, Double_t eyh); // *MENU*
    virtual void    SetPointError(Int_t i,

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.30 2006/05/26 09:09:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.31 2006/06/11 12:56:48 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -227,7 +227,7 @@ void TGeoMaterial::Print(const Option_t * /*option*/) const
 }
 
 //_____________________________________________________________________________
-void TGeoMaterial::SavePrimitive(ofstream &out, Option_t * /*option*/)
+void TGeoMaterial::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(TGeoMaterial::kMatSavePrimitive)) return;
@@ -605,7 +605,7 @@ void TGeoMixture::Print(const Option_t * /*option*/) const
 }
 
 //_____________________________________________________________________________
-void TGeoMixture::SavePrimitive(ofstream &out, Option_t * /*option*/)
+void TGeoMixture::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(TGeoMaterial::kMatSavePrimitive)) return;

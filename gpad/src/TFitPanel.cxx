@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.6 2001/09/28 12:34:50 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.7 2004/07/20 07:23:34 brun Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************
@@ -335,7 +335,7 @@ void TFitPanel::RecursiveRemove(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TFitPanel::SavePrimitive(ofstream &, Option_t *)
+void TFitPanel::SavePrimitive(ostream &, Option_t * /*= ""*/)
 {
 //*-*-*-*-*-*-*-*-*-*-*Save this fitpanel in a macro*-*-*-*-*-*-*
 //*-*                  =============================

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.36 2006/05/17 17:44:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.37 2006/05/23 04:47:39 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -119,7 +119,7 @@ public:
                       }
    virtual void       LabelsOption(Option_t *option="h");  // *MENU*
    virtual void       RotateTitle(Bool_t rotate=kTRUE); // *TOGGLE* *GETTER=GetRotateTitle
-   virtual void       SaveAttributes(ofstream &out, const char *name, const char *subname);
+   virtual void       SaveAttributes(ostream &out, const char *name, const char *subname);
    virtual void       Set(Int_t nbins, Double_t xmin, Double_t xmax);
    virtual void       Set(Int_t nbins, const Float_t *xbins);
    virtual void       Set(Int_t nbins, const Double_t *xbins);

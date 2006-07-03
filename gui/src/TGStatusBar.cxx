@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.18 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.19 2006/05/31 09:02:00 antcheva Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -386,7 +386,7 @@ TGDimension TGStatusBar::GetDefaultSize() const
 }
 
 //______________________________________________________________________________
-void TGStatusBar::SavePrimitive(ofstream &out, Option_t *option)
+void TGStatusBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save a status bar widget as a C++ statement(s) on output stream out.
 

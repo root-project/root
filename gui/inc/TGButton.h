@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.41 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.42 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -122,7 +122,7 @@ public:
    virtual void         Toggle(Bool_t emit = kFALSE) { SetDown(IsDown() ? kFALSE : kTRUE, emit); }
    virtual void         SetEnabled(Bool_t e = kTRUE); //*TOGGLE* *GETTER=IsEnabled
 
-   virtual void         SavePrimitive(ofstream &out, Option_t *option);
+   virtual void         SavePrimitive(ostream &out, Option_t *option = "");
 
    GContext_t GetNormGC() const { return fNormGC; }
 
@@ -191,7 +191,7 @@ public:
 
    FontStruct_t GetFontStruct() const { return fFontStruct; }
 
-   virtual void       SavePrimitive(ofstream &out, Option_t *option);
+   virtual void       SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGTextButton,0)  // A text button widget
 };
@@ -228,7 +228,7 @@ public:
    virtual void     SetDisabledPicture(const TGPicture *pic);
    const TGPicture *GetPicture() const { return fPic; };
    const TGPicture *GetDisabledPicture() const { return fPicD; };
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGPictureButton,0)  // A picture button widget
 };
@@ -275,7 +275,7 @@ public:
    virtual Bool_t IsOn() const { return fState == kButtonDown; }
    virtual Bool_t IsDown() const { return fState == kButtonDown; }
    virtual void   SetState(EButtonState state, Bool_t emit = kFALSE);
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGCheckButton,0)  // A check button widget
 };
@@ -329,7 +329,7 @@ public:
    virtual Bool_t IsExclusiveToggle() const { return kTRUE; }
    virtual Bool_t IsOn() const { return fState == kButtonDown; }
    virtual Bool_t IsDown() const { return fState == kButtonDown; }
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGRadioButton,0)  // A radio button widget
 };

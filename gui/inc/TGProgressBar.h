@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.11 2006/04/24 13:52:12 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.12 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -99,7 +99,7 @@ public:
    virtual void Reset();                                 //*MENU*
    virtual void SetForegroundColor(Pixel_t pixel);
 
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGProgressBar,0)  // Progress bar abstract base class
 };
@@ -127,7 +127,7 @@ public:
    void ShowPosition(Bool_t set = kTRUE, Bool_t percent = kTRUE,
                      const char *format = "%.2f");
 
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGHProgressBar,0)  // Horizontal progress bar widget
 };
@@ -151,7 +151,7 @@ public:
 
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(fBarWidth, fHeight); }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
    void ShowPos(Bool_t) { }
    void Percent(Bool_t) { }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.18 2006/03/28 17:04:31 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.19 2006/04/06 11:15:38 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -262,7 +262,7 @@ void TGToolBar::ButtonClicked()
 }
 
 //______________________________________________________________________________
-void TGToolBar::SavePrimitive(ofstream &out, Option_t *option)
+void TGToolBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save an horizontal slider as a C++ statement(s) on output stream out.
 

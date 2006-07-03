@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.17 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.18 2006/05/23 10:49:44 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -187,7 +187,7 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
 
 
 //______________________________________________________________________________
-void TPaveLabel::SavePrimitive(ofstream &out, Option_t *)
+void TPaveLabel::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

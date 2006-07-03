@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.cxx,v 1.5 2005/09/18 13:19:22 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.cxx,v 1.6 2006/05/13 19:34:41 brun Exp $
 // Author: Rene Brun   08/12/98
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -330,7 +330,7 @@ void TPaveVar::Merge(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPaveVar::SavePrimitive(ofstream &out, Option_t *)
+void TPaveVar::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 

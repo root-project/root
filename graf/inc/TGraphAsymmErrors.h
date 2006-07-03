@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.25 2006/05/03 13:33:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.26 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -82,7 +82,7 @@ public:
 
    virtual void    Paint(Option_t *chopt="");
    virtual void    Print(Option_t *chopt="") const;
-   virtual void    SavePrimitive(ofstream &out, Option_t *option);
+   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
    virtual void    SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh); // *MENU*
    virtual void    SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh);
    virtual void    SetPointEXlow(Int_t i, Double_t exl);

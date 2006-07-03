@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.10 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.11 2004/09/15 17:37:29 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -91,7 +91,7 @@ public:
    virtual void      Hide();
    virtual void      DrawBorder() { if (fDrawBorder) TGGroupFrame::DrawBorder(); }
    virtual void      SetLayoutHints(TGLayoutHints *l, TGButton *button = 0);
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGButtonGroup,0)  // Organizes TGButtons in a group
 };
@@ -109,7 +109,7 @@ public:
                     norm, font, back) { }
 
    virtual ~TGVButtonGroup() { }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGVButtonGroup,0)  // A button group with one vertical column
 };
@@ -127,7 +127,7 @@ public:
                     norm, font, back) { }
 
    virtual ~TGHButtonGroup() { }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGHButtonGroup,0)  // A button group with one horizontal row
 };

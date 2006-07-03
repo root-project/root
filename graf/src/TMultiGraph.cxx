@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.30 2006/05/23 04:47:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.31 2006/05/24 16:44:33 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1162,7 +1162,7 @@ void TMultiGraph::RecursiveRemove(TObject *obj)
 
 
 //______________________________________________________________________________
-void TMultiGraph::SavePrimitive(ofstream &out, Option_t *option)
+void TMultiGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

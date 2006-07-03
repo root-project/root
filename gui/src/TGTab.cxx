@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.34 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.35 2006/05/30 06:40:10 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -714,7 +714,7 @@ TGLayoutManager *TGTab::GetLayoutManager() const
 }
 
 //______________________________________________________________________________
-void TGTab::SavePrimitive(ofstream &out, Option_t *option)
+void TGTab::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a tab widget as a C++ statement(s) on output stream out.
 
@@ -806,7 +806,7 @@ void TGTab::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 // __________________________________________________________________________
-void TGTabLayout::SavePrimitive(ofstream &out, Option_t *)
+void TGTabLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 
    // Save tab layout manager as a C++ statement(s) on out stream

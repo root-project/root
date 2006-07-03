@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.21 2006/04/18 12:32:43 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.22 2006/05/31 09:02:00 antcheva Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -950,7 +950,7 @@ TGDimension TGListDetailsLayout::GetDefaultSize() const
 }
 
 // ________________________________________________________________________
-void TGLayoutHints::SavePrimitive(ofstream &out, Option_t *)
+void TGLayoutHints::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 
    // Save layout hints as a C++ statement(s) on output stream out
@@ -1007,7 +1007,7 @@ void TGLayoutHints::SavePrimitive(ofstream &out, Option_t *)
 }
 
 // __________________________________________________________________________
-void TGVerticalLayout::SavePrimitive(ofstream &out, Option_t *)
+void TGVerticalLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 
    // Save vertical layout manager as a C++ statement(s) on output stream
@@ -1017,7 +1017,7 @@ void TGVerticalLayout::SavePrimitive(ofstream &out, Option_t *)
 }
 
 // __________________________________________________________________________
-void TGHorizontalLayout::SavePrimitive(ofstream &out, Option_t *)
+void TGHorizontalLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 
    // Save horizontal layout manager as a C++ statement(s) on output stream
@@ -1026,7 +1026,7 @@ void TGHorizontalLayout::SavePrimitive(ofstream &out, Option_t *)
 }
 
 // __________________________________________________________________________
-void TGRowLayout::SavePrimitive(ofstream &out, Option_t *)
+void TGRowLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 
    // Save row layout manager as a C++ statement(s) on output stream
@@ -1036,7 +1036,7 @@ void TGRowLayout::SavePrimitive(ofstream &out, Option_t *)
 }
 
 // __________________________________________________________________________
-void TGColumnLayout::SavePrimitive(ofstream &out, Option_t *)
+void TGColumnLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 
    // Save column layout manager as a C++ statement(s) on output stream
@@ -1047,7 +1047,7 @@ void TGColumnLayout::SavePrimitive(ofstream &out, Option_t *)
 }
 
 // __________________________________________________________________________
-void TGMatrixLayout::SavePrimitive(ofstream &out, Option_t *)
+void TGMatrixLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 
    // Save matrix layout manager as a C++ statement(s) on output stream
@@ -1061,7 +1061,7 @@ void TGMatrixLayout::SavePrimitive(ofstream &out, Option_t *)
 }
 
 // __________________________________________________________________________
-void TGTileLayout::SavePrimitive(ofstream &out, Option_t *)
+void TGTileLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 
    // Save tile layout manager as a C++ statement(s) on output stream
@@ -1072,7 +1072,7 @@ void TGTileLayout::SavePrimitive(ofstream &out, Option_t *)
 }
 
 // __________________________________________________________________________
-void TGListLayout::SavePrimitive(ofstream &out, Option_t *)
+void TGListLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 
    // Save list layout manager as a C++ statement(s) on output stream
@@ -1083,7 +1083,7 @@ void TGListLayout::SavePrimitive(ofstream &out, Option_t *)
 }
 
 // __________________________________________________________________________
-void TGListDetailsLayout::SavePrimitive(ofstream &out, Option_t *)
+void TGListDetailsLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 
    // Save list details layout manager as a C++ statement(s) on out stream

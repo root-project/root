@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TDiamond.h,v 1.2 2000/06/13 10:52:53 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TDiamond.h,v 1.3 2002/08/05 21:12:12 brun Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
    virtual void  Draw(Option_t *option="");
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void  Paint(Option_t *option="");
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TDiamond,1)  //Diamond class
 };

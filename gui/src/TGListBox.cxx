@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.55 2006/05/30 06:40:10 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.56 2006/05/30 11:29:42 antcheva Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -1568,7 +1568,7 @@ TGLBEntry *TGListBox::FindEntry(const char *name) const
 }
 
 //______________________________________________________________________________
-void TGListBox::SavePrimitive(ofstream &out, Option_t *option)
+void TGListBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save a list box widget as a C++ statement(s) on output stream out.
 
@@ -1608,7 +1608,7 @@ void TGListBox::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGTextLBEntry::SavePrimitive(ofstream &out, Option_t *)
+void TGTextLBEntry::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save a list box entry widget as a C++ statement(s) on output stream out.
 

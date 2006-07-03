@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.66 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.67 2006/05/26 09:09:59 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -841,7 +841,7 @@ Double_t TGeoTube::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t r
 }
 
 //_____________________________________________________________________________
-void TGeoTube::SavePrimitive(ofstream &out, Option_t * /*option*/)
+void TGeoTube::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
@@ -1926,7 +1926,7 @@ Double_t TGeoTubeSeg::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_
 }
 
 //_____________________________________________________________________________
-void TGeoTubeSeg::SavePrimitive(ofstream &out, Option_t * /*option*/)
+void TGeoTubeSeg::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
@@ -2706,7 +2706,7 @@ void TGeoCtub::SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz, Doub
 }
 
 //_____________________________________________________________________________
-void TGeoCtub::SavePrimitive(ofstream &out, Option_t * /*option*/)
+void TGeoCtub::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.h,v 1.5 2005/11/21 08:49:48 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.h,v 1.6 2006/04/25 09:11:35 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
    virtual void   PaintLine(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
    virtual void   PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t  v2);
    virtual void   Print(Option_t *option="") const;
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
    void           SetHorizontal(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsHorizontal
    void           SetVertical(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsVertical
    virtual void   SetX1(Double_t x1) {fX1=x1;}

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.4 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.5 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -70,7 +70,7 @@ public:
    virtual void     Paint(Option_t *option="");
    virtual TString  PathP() const;
    virtual void     SetLineAttributes(); // *MENU*
-   virtual void     SavePrimitive(ofstream &out, Option_t *option="");
+   virtual void     SavePrimitive(ostream &out, Option_t *option="");
    virtual void     SetVisibility(Int_t vis=1); // *MENU*
    virtual void     Sizeof3D() const;
    ClassDef(TVolumeView,1)  // Special kind of TDataSet

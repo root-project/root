@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.84 2006/05/26 16:26:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.85 2006/06/11 12:56:48 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1085,7 +1085,7 @@ void TGeoVolume::SaveAs(const char *filename)
 }   
 
 //______________________________________________________________________________
-void TGeoVolume::SavePrimitive(ofstream &out, Option_t *option)
+void TGeoVolume::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    out.precision(6);

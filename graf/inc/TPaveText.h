@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.5 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.6 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -70,8 +70,8 @@ public:
    virtual void     PaintPrimitives(Int_t mode);
    virtual void     Print(Option_t *option="") const;
    virtual void     ReadFile(const char *filename, Option_t *option="", Int_t nlines=50, Int_t fromline=0); // *MENU*
-   virtual void     SaveLines(ofstream &out, const char *name);
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SaveLines(ostream &out, const char *name);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetAllWith(const char *text, Option_t *option, Double_t value); // *MENU*
    virtual void     SetLabel(const char *label) {fLabel = label;} // *MENU*
    virtual void     SetMargin(Float_t margin=0.05) {fMargin=margin;} // *MENU*

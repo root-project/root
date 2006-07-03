@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.11 2004/05/13 19:39:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.12 2005/09/16 17:19:40 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -51,7 +51,7 @@ public:
    virtual void     InsertText(const char *) { }
    virtual void     InsertLine() { }
    virtual void     ReadFile(const char *, Option_t *, Int_t, Int_t) { }
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SaveStyle(); // *MENU*
    virtual void     SetAllWith(const char *, Option_t *, Double_t) { }
    virtual void     SetMargin(Float_t) { }

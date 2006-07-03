@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.13 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.14 2006/05/26 15:13:01 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -107,7 +107,7 @@ public:
    void Print(Option_t* option = "") const;
    void ls(Option_t* option = "") const { Print(option); }
 
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGLayoutHints,0)  // Class describing GUI layout hints
 };
@@ -179,7 +179,7 @@ public:
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGVerticalLayout,0)  // Vertical layout manager
 };
@@ -190,7 +190,7 @@ public:
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGHorizontalLayout,0)  // Horizontal layout manager
 };
@@ -213,7 +213,7 @@ public:
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGRowLayout,0)  // Row layout manager
 };
@@ -224,7 +224,7 @@ public:
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGColumnLayout,0)  // Column layout manager
 };
@@ -258,7 +258,7 @@ public:
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGMatrixLayout,0)  // Matrix layout manager
 };
@@ -288,7 +288,7 @@ public:
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGTileLayout,0)  // Tile layout manager
 };
@@ -300,7 +300,7 @@ public:
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGListLayout,0)  // Layout manager for TGListView widget
 };
@@ -316,7 +316,7 @@ public:
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
    virtual void SetDefaultWidth(UInt_t w) { fWidth = w; }
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGListDetailsLayout,0)  // Layout manager for TGListView details
 };

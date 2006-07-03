@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.13 2006/05/23 04:47:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.14 2006/05/24 16:44:33 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -122,7 +122,7 @@ public:
       virtual void     Paint(Option_t *option="");
       virtual void     PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
 
-      virtual void     SavePrimitive(ofstream &out, Option_t *option);
+      virtual void     SavePrimitive(ostream &out, Option_t *option = "");
       virtual void     SetIndiceSize(Double_t factorSize);
       virtual void     SetLimitIndiceSize(Int_t limitFactorSize);
 

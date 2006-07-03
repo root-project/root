@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.20 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.21 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -96,7 +96,7 @@ public:
    GContext_t GetNormGC() const { return fNormGC; }
    FontStruct_t GetFontStruct() const { return fFontStruct; }
 
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGLabel,0)  // A label GUI element
 };

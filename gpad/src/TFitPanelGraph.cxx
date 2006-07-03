@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanelGraph.cxx,v 1.2 2000/06/13 12:16:22 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanelGraph.cxx,v 1.3 2004/07/20 07:23:34 brun Exp $
 // Author: Rene Brun   28/11/96
 
 /*************************************************************************
@@ -119,7 +119,7 @@ void TFitPanelGraph::Apply(const char *action)
 }
 
 //______________________________________________________________________________
-void TFitPanelGraph::SavePrimitive(ofstream &, Option_t *)
+void TFitPanelGraph::SavePrimitive(ostream &, Option_t * /*= ""*/)
 {
 //*-*-*-*-*-*-*-*-*-*-*Save this fitpanelgraph in a macro*-*-*-*-*-*-*
 //*-*                  ==================================

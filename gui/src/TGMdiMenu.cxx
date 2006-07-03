@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.6 2005/11/21 00:25:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.7 2006/03/20 13:34:03 antcheva Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -167,7 +167,7 @@ void TGMdiMenuBar::HideFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
 }
 
 //______________________________________________________________________________
-void TGMdiMenuBar::SavePrimitive(ofstream &out, Option_t *option)
+void TGMdiMenuBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a MDI menu as a C++ statement(s) on output stream out
 

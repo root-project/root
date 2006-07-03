@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.76 2006/05/23 04:47:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.77 2006/06/26 09:46:38 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -120,7 +120,7 @@ protected:
    virtual void     Copy(TObject &hnew) const;
    virtual Int_t    BufferFill(Double_t x, Double_t w);
    virtual Bool_t   FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t& newMin, Double_t &newMax);
-   virtual void     SavePrimitiveHelp(ofstream &out, Option_t *option);
+   virtual void     SavePrimitiveHelp(ostream &out, Option_t *option = "");
    static Bool_t    RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis);
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
 public:
@@ -269,7 +269,7 @@ public:
    virtual void     Rebuild(Option_t *option="");
    virtual void     RecursiveRemove(TObject *obj);
    virtual void     Reset(Option_t *option="");
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     Scale(Double_t c1=1);
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="X");
    virtual void     SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis="X");

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.75 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.76 2006/05/30 16:35:00 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -298,8 +298,8 @@ public:
 
    // Printing and saving
    virtual void Print(Option_t *option="") const;
-   void SaveUserColor(ofstream &out, Option_t *);
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   void SaveUserColor(ostream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    // dummy to remove from context menu
    virtual void        Delete(Option_t * /*option*/ ="") { }
@@ -402,8 +402,8 @@ public:
 
    virtual void   Print(Option_t *option="") const;
    virtual void   ChangeSubframesBackground(Pixel_t back);
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
-   virtual void   SavePrimitiveSubframes(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitiveSubframes(ostream &out, Option_t *option = "");
 
    ClassDef(TGCompositeFrame,0)  // Base class for composite widgets (menubars, etc.)
 };
@@ -415,7 +415,7 @@ public:
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground()) :
       TGCompositeFrame(p, w, h, options | kVerticalFrame, back) { SetWindowName(); }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGVerticalFrame,0)  // Composite frame with vertical child layout
 };
@@ -426,7 +426,7 @@ public:
                      UInt_t options = kChildFrame,
                      Pixel_t back = GetDefaultFrameBackground()) :
       TGCompositeFrame(p, w, h, options | kHorizontalFrame, back) { SetWindowName(); }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGHorizontalFrame,0)  // Composite frame with horizontal child layout
 };
@@ -527,7 +527,7 @@ public:
         hmax = fWMMaxHeight; winc = fWMWidthInc; hinc = fWMHeightInc; }
    EInitialState GetWMState() const { return fWMInitState; }
 
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
    virtual void SaveSource(const char *filename = "Rootappl.C", Option_t *option = ""); // *MENU*icon=bld_save.png*
 
    ClassDef(TGMainFrame,0)  // Top level window frame
@@ -562,7 +562,7 @@ public:
                      kBottomLeft, kBottomRight };
    virtual void    CenterOnParent(Bool_t croot = kTRUE, EPlacement pos = kCenter);
    const TGWindow *GetMain() const { return fMain; }
-   virtual void    SavePrimitive(ofstream &out, Option_t *option);
+   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
    virtual void    SaveSource(const char *filename = "Rootdlog.C", Option_t *option = ""); // *MENU*icon=bld_save.png*
 
    ClassDef(TGTransientFrame,0)  // Frame for dialog (transient) windows
@@ -634,7 +634,7 @@ public:
    virtual const char *GetTitle() const { return fText->GetString(); }
    Bool_t HasOwnFont() const;
 
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGGroupFrame,0)  // A composite frame with border and title
 };

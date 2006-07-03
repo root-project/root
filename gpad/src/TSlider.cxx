@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSlider.cxx,v 1.4 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TSlider.cxx,v 1.5 2005/11/23 11:03:12 couet Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -160,7 +160,7 @@ void TSlider::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TSlider::SavePrimitive(ofstream &out, Option_t *)
+void TSlider::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

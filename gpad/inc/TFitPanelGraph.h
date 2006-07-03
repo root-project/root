@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanelGraph.h,v 1.2 2004/07/20 07:23:34 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanelGraph.h,v 1.3 2005/11/23 11:03:12 couet Exp $
 // Author: Rene Brun   28/11/96
 
 /*************************************************************************
@@ -37,7 +37,7 @@ public:
    TFitPanelGraph(const char *name, const char *title, UInt_t ww, UInt_t wh, const TVirtualPad *pad, const TObject *obj);
    virtual ~TFitPanelGraph();
    virtual void  Apply(const char *action="");
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TFitPanelGraph,1)  //Class used to control graphs fit panel
 };

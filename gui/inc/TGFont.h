@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.6 2006/05/15 11:01:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.7 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -75,7 +75,7 @@ public:
 
    void         Print(Option_t *option="") const;
 
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGFont,0)   // GUI font description
 };

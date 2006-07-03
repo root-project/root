@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.15 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.16 2006/06/14 10:22:36 antcheva Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -395,7 +395,7 @@ void TGVProgressBar::DoRedraw()
 }
 
 //______________________________________________________________________________
-void TGProgressBar::SavePrimitive(ofstream &out, Option_t *option)
+void TGProgressBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save progress bar parameters as a C++ statement(s) on output stream out.
 
@@ -437,7 +437,7 @@ void TGProgressBar::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGVProgressBar::SavePrimitive(ofstream &out, Option_t *option)
+void TGVProgressBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a vertical progress bar as a C++ statement(s) on output stream out.
 
@@ -460,7 +460,7 @@ void TGVProgressBar::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGHProgressBar::SavePrimitive(ofstream &out, Option_t *option)
+void TGHProgressBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save a horizontal progress bar as a C++ statement(s) on output stream out
 

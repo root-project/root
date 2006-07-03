@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.20 2006/05/23 04:47:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.21 2006/05/24 14:55:26 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -311,7 +311,7 @@ void TPolyMarker::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TPolyMarker::SavePrimitive(ofstream &out, Option_t *option)
+void TPolyMarker::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out.
 

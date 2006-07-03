@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.14 2006/05/21 18:05:26 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.15 2006/06/23 04:59:33 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -1773,7 +1773,7 @@ Int_t TTable::Purge(Option_t *opt)
 }
 
 //______________________________________________________________________________
-void TTable::SavePrimitive(ofstream &out, Option_t *)
+void TTable::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
 //   Save a primitive as a C++ statement(s) on output stream "out".
    UInt_t arrayLayout[10],arraySize[10];

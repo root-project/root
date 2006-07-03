@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TWbox.h,v 1.4 2002/10/31 07:27:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TWbox.h,v 1.5 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -55,7 +55,7 @@ public:
                             Bool_t tops);
    virtual void  PaintWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                  Color_t color=33, Short_t bordersize=5, Short_t bordermode=-1);
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    virtual void  SetBorderMode(Short_t bordermode) {fBorderMode = bordermode;} // *MENU*
    virtual void  SetBorderSize(Short_t bordersize) {fBorderSize = bordersize;} // *MENU*
 

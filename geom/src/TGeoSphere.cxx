@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.48 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.49 2005/11/21 09:31:47 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -1336,7 +1336,7 @@ Double_t TGeoSphere::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoSphere::SavePrimitive(ofstream &out, Option_t * /*option*/)
+void TGeoSphere::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;

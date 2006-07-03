@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.4 2005/01/13 21:39:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.5 2005/11/15 14:04:51 couet Exp $
 // Author: Rene Brun   108/08/2002
 
 /*************************************************************************
@@ -201,7 +201,7 @@ void TCrown::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TCrown::SavePrimitive(ofstream &out, Option_t *)
+void TCrown::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

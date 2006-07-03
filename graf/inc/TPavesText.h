@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPavesText.h,v 1.3 2002/08/05 21:12:12 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPavesText.h,v 1.4 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************
@@ -39,7 +39,7 @@ public:
    virtual void  Draw(Option_t *option="");
    virtual Int_t GetNpaves() {return fNpaves;}
    virtual void  Paint(Option_t *option="");
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    virtual void  SetNpaves(Int_t npaves=5) {fNpaves=npaves;} // *MENU*
 
    ClassDef(TPavesText,1)  //Stacked Paves with text strings

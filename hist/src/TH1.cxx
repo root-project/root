@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.293 2006/05/17 16:37:26 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.294 2006/06/26 09:46:38 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5139,7 +5139,7 @@ void TH1::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH1::SavePrimitive(ofstream &out, Option_t *option)
+void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
@@ -5242,7 +5242,7 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH1::SavePrimitiveHelp(ofstream &out, Option_t *option)
+void TH1::SavePrimitiveHelp(ostream &out, Option_t *option /*= ""*/)
 {
    // helper function for the SavePrimitive functions from TH1
    // or classes derived from TH1, eg TProfile, TProfile2D.

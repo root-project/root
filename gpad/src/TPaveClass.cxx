@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPaveClass.cxx,v 1.6 2002/10/31 07:27:34 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPaveClass.cxx,v 1.7 2005/11/23 11:03:12 couet Exp $
 // Author: Rene Brun   06/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -143,7 +143,7 @@ void TPaveClass::ShowClassesUsing(const char *classes)
 
 
 //______________________________________________________________________________
-void TPaveClass::SavePrimitive(ofstream &out, Option_t *)
+void TPaveClass::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

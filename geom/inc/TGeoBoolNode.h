@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.12 2005/05/13 16:20:37 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.13 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -72,7 +72,7 @@ public:
    virtual void      Paint(Option_t *option);
    void              RegisterMatrices();
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      SetPoints(Double_t *points) const = 0;
    virtual void      SetPoints(Float_t *points)  const = 0;
    void              SetSelected(Int_t sel) {fSelected = sel;}
@@ -109,7 +109,7 @@ public:
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoUnion;}
    virtual Int_t     GetNpoints() const;
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      SetPoints(Double_t *points) const;
    virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
@@ -149,7 +149,7 @@ public:
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoIntersection;}
    virtual Int_t     GetNpoints() const;
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      SetPoints(Double_t *points) const;
    virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
@@ -190,7 +190,7 @@ public:
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoSubtraction;}
    virtual Int_t     GetNpoints() const;
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      SetPoints(Double_t *points) const;
    virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;

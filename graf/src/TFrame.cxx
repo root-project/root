@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.11 2005/11/15 14:04:51 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.12 2006/01/09 08:34:58 brun Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -133,7 +133,7 @@ void TFrame::Pop()
 }
 
 //______________________________________________________________________________
-void TFrame::SavePrimitive(ofstream &, Option_t *)
+void TFrame::SavePrimitive(ostream &, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 

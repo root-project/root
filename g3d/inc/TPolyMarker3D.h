@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.12 2005/05/20 13:27:16 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.13 2006/05/23 04:47:36 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -69,7 +69,7 @@ public:
    virtual Int_t     Merge(TCollection *list);
    virtual void      Paint(Option_t *option="");
    virtual void      Print(Option_t *option="") const;
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      SetName(const char *name); // *MENU*
    void              SetPoint(Int_t n, Double_t x, Double_t y, Double_t z); // *MENU*
    virtual void      SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");

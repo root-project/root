@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.8 2004/12/08 11:41:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.9 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -82,7 +82,7 @@ public:
                 kDoubleBorder, Pixel_t back = GetWhitePixel());
 
    virtual void Update(const char *path);
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGFSComboBox,0)  // Combo box widget for file system path
 };

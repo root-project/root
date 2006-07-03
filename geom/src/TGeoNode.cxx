@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.35 2006/05/24 17:11:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.36 2006/06/02 16:00:43 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -375,7 +375,7 @@ Int_t TGeoNode::FindNode(const TGeoNode *node, Int_t level)
 }
 
 //_____________________________________________________________________________
-void TGeoNode::SaveAttributes(ofstream &out)
+void TGeoNode::SaveAttributes(ostream &out)
 {
 // save attributes for this node
    if (IsVisStreamed()) return;

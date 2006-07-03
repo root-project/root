@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.h,v 1.5 2005/11/17 13:17:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.h,v 1.6 2005/11/18 16:07:58 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -100,7 +100,7 @@ public:
    //virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    Double_t              SafetyToHype(Double_t *point, Bool_t inner, Bool_t in) const;
-   virtual void          SavePrimitive(ofstream &out, Option_t *option);
+   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    void                  SetHypeDimensions(Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *points) const;

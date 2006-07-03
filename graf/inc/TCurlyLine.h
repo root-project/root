@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.h,v 1.8 2005/04/20 14:59:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.h,v 1.9 2005/04/20 15:15:13 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -64,7 +64,7 @@ public:
    virtual void SetAmplitude(Double_t x);               // *MENU* *ARGS={x=>fAmplitude}
    virtual void SetStartPoint(Double_t x1, Double_t y1);
    virtual void SetEndPoint  (Double_t x2, Double_t y2);
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    static void     SetDefaultWaveLength(Double_t WaveLength); 
    static void     SetDefaultAmplitude (Double_t Amplitude );    

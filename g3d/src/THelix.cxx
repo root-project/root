@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.14 2006/05/23 04:47:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.15 2006/05/24 15:31:40 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -289,7 +289,7 @@ void THelix::Print(Option_t *option) const
 
 
 //______________________________________________________________________________
-void THelix::SavePrimitive(ofstream &out, Option_t *)
+void THelix::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out.
 

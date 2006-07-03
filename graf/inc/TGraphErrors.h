@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.24 2006/05/03 13:33:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.25 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
    Double_t       *GetEY() const {return fEY;}
    virtual void    Paint(Option_t *chopt="");
    virtual void    Print(Option_t *chopt="") const;
-   virtual void    SavePrimitive(ofstream &out, Option_t *option);
+   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
    virtual void    SetPointError(Double_t ex, Double_t ey);  // *MENU
    virtual void    SetPointError(Int_t i, Double_t ex, Double_t ey);
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyArc.h,v 1.6 2005/04/20 14:59:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyArc.h,v 1.7 2005/04/20 15:15:13 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -45,7 +45,7 @@ public:
    virtual void SetRadius(Double_t radius);          // *MENU* *ARGS={radius=>fR1}
    virtual void SetPhimin(Double_t phimin);          // *MENU* *ARGS={phimin=>fPhimin}
    virtual void SetPhimax(Double_t phimax);          // *MENU* *ARGS={phimax=>fPhimax}
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    static void     SetDefaultWaveLength(Double_t WaveLength); 
    static void     SetDefaultAmplitude (Double_t Amplitude );    

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.25 2006/04/27 09:26:38 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.26 2006/04/28 08:43:05 couet Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -519,7 +519,7 @@ void TEllipse::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TEllipse::SavePrimitive(ofstream &out, Option_t *)
+void TEllipse::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.h,v 1.3 2002/05/03 10:48:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.h,v 1.4 2003/08/06 20:25:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -42,7 +42,7 @@ public:
    virtual Bool_t   IsTransparent() const;
    virtual void     Modify();
    virtual void     ResetAttFill(Option_t *option="");
-   virtual void     SaveFillAttributes(ofstream &out, const char *name, Int_t coldef=1, Int_t stydef=1001);
+   virtual void     SaveFillAttributes(ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1001);
    virtual void     SetFillAttributes(); // *MENU*
    virtual void     SetFillColor(Color_t fcolor) { fFillColor = fcolor; }
    virtual void     SetFillStyle(Style_t fstyle) { fFillStyle = fstyle; }

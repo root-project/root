@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.11 2006/01/06 12:56:28 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.12 2006/03/20 21:43:41 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -93,7 +93,7 @@ void TAttAxis::ResetAttAxis(Option_t *option)
 
 
 //______________________________________________________________________________
-void TAttAxis::SaveAttributes(ofstream &out, const char *name, const char *subname)
+void TAttAxis::SaveAttributes(ostream &out, const char *name, const char *subname)
 {
     // Save axis attributes as C++ statement(s) on output stream out
 

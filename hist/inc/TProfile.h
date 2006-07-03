@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.32 2005/12/04 10:51:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.33 2006/05/17 09:37:20 couet Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -106,7 +106,7 @@ public:
            TH1     *Rebin(Int_t ngroup=2, const char*newname="");
    virtual void     RebinAxis(Double_t x, const char *ax);
    virtual void     Reset(Option_t *option="");
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     Scale(Double_t c1=1);
    virtual void     SetBinEntries(Int_t bin, Double_t w);
    virtual void     SetBins(Int_t nbins, Double_t xmin, Double_t xmax);

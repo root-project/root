@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.23 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.24 2006/05/31 09:02:00 antcheva Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -307,7 +307,7 @@ Bool_t TRootEmbeddedCanvas::HandleContainerCrossing(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TRootEmbeddedCanvas::SavePrimitive(ofstream &out, Option_t *option)
+void TRootEmbeddedCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save an embedded canvas as a C++ statement(s) on output stream out.
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.24 2005/09/19 14:31:31 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.25 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -338,7 +338,7 @@ void TPaveStats::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TPaveStats::SavePrimitive(ofstream &out, Option_t *)
+void TPaveStats::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

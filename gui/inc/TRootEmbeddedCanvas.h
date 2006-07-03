@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.10 2005/08/10 14:00:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.11 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -64,7 +64,7 @@ public:
    Int_t      GetCanvasWindowId() const { return fCWinId; }
    Bool_t     GetAutoFit() const { return fAutoFit; }
    void       SetAutoFit(Bool_t fit = kTRUE) { fAutoFit = fit; }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TRootEmbeddedCanvas,0)  //A ROOT TCanvas that can be embedded in a TGFrame
 };

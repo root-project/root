@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.5 2001/09/28 12:34:50 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.6 2004/07/20 07:23:34 brun Exp $
 // Author: Rene Brun   26/11/96
 
 /*************************************************************************
@@ -378,7 +378,7 @@ void TDrawPanelHist::RecursiveRemove(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TDrawPanelHist::SavePrimitive(ofstream &, Option_t *)
+void TDrawPanelHist::SavePrimitive(ostream &, Option_t * /*= ""*/)
 {
    // Save this drawpanel in a macro.
 

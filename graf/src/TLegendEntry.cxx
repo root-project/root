@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.9 2002/10/31 07:27:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.10 2005/11/21 08:49:48 couet Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -112,7 +112,7 @@ void TLegendEntry::Print( Option_t *) const
 
 
 //____________________________________________________________________________
-void TLegendEntry::SaveEntry( ofstream &out, const char* name )
+void TLegendEntry::SaveEntry(ostream &out, const char* name )
 {
    // Save this TLegendEntry as C++ statements on output stream out
    //  to be used with the SaveAs .C option

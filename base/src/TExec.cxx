@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.6 2002/05/18 08:43:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.7 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
@@ -155,7 +155,7 @@ void TExec::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TExec::SavePrimitive(ofstream &out, Option_t *)
+void TExec::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.189 2006/05/23 04:47:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.190 2006/05/24 16:44:33 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3696,7 +3696,7 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
 
 
 //______________________________________________________________________________
-void TGraph::SavePrimitive(ofstream &out, Option_t *option)
+void TGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 

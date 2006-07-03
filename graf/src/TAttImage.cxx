@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.8 2005/06/21 17:09:26 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.9 2005/09/02 10:20:45 brun Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -466,7 +466,7 @@ void TAttImage::ResetAttImage(Option_t *)
 }
 
 //______________________________________________________________________________
-void TAttImage::SaveImageAttributes(ofstream &out, const char *name,
+void TAttImage::SaveImageAttributes(ostream &out, const char *name,
                                     EImageQuality qualdef,
                                     UInt_t comprdef, Bool_t constRatiodef)
 {

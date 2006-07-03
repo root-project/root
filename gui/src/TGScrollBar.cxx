@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.17 2006/05/29 12:04:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.18 2006/06/14 07:52:55 antcheva Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -766,7 +766,7 @@ void TGVScrollBar::SetPosition(Int_t pos)
 }
 
 //______________________________________________________________________________
-void TGHScrollBar::SavePrimitive(ofstream &out, Option_t *option)
+void TGHScrollBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal scrollbar as a C++ statement(s) on output stream out.
 
@@ -791,7 +791,7 @@ void TGHScrollBar::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGVScrollBar::SavePrimitive(ofstream &out, Option_t *option)
+void TGVScrollBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an vertical scrollbar as a C++ statement(s) on output stream out.
 

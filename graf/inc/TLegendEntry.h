@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegendEntry.h,v 1.3 2002/10/31 07:27:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegendEntry.h,v 1.4 2005/11/18 16:55:07 couet Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -50,7 +50,7 @@ public:
    virtual TObject      *GetObject() const { return fObject; }
    virtual Option_t     *GetOption() const { return fOption.Data(); }
    virtual void          Print( Option_t *option = "" ) const;
-   virtual void          SaveEntry( ofstream &out, const char *name );
+   virtual void          SaveEntry( ostream &out, const char *name );
    virtual void          SetLabel( const char *label = "" ) { fLabel = label; } // *MENU*
    virtual void          SetObject(TObject* obj );
    virtual void          SetObject( const char *objectName );  // *MENU*

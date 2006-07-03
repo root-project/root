@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.7 2006/05/12 12:25:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.8 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -69,7 +69,7 @@ public:
    virtual void  Paint(Option_t *option="");
    virtual void  PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option="");
    virtual void  Print(Option_t *option="") const;
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    virtual void  SetX1(Double_t x1) {fX1=x1;}
    virtual void  SetX2(Double_t x2) {fX2=x2;}
    virtual void  SetY1(Double_t y1) {fY1=y1;}

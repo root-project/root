@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF12.cxx,v 1.5 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF12.cxx,v 1.6 2006/05/17 16:37:25 couet Exp $
 // Author: Rene Brun   05/04/2003
 
 /*************************************************************************
@@ -159,7 +159,7 @@ Double_t TF12::EvalPar(const Double_t *x, const Double_t *params)
 
 
 //______________________________________________________________________________
-void TF12::SavePrimitive(ofstream & /*out*/, Option_t * /*option*/)
+void TF12::SavePrimitive(ostream & /*out*/, Option_t * /*option*/ /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

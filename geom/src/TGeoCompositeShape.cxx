@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.34 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.35 2006/06/04 09:35:24 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -386,7 +386,7 @@ Double_t TGeoCompositeShape::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoCompositeShape::SavePrimitive(ofstream &out, Option_t *option)
+void TGeoCompositeShape::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v5-11-02 $:$Id: TGStatusBar.h,v 1.13 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.14 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -70,7 +70,7 @@ public:
    TGCompositeFrame *GetBarPart(Int_t npart) const;
    TGDimension GetDefaultSize() const;
 
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGStatusBar,0)  // Status bar widget
 };

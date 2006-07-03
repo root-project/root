@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.8 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.9 2006/05/24 17:11:54 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -112,7 +112,7 @@ char *TGeoMedium::GetPointerName() const
 }    
 
 //_____________________________________________________________________________
-void TGeoMedium::SavePrimitive(ofstream &out, Option_t *option)
+void TGeoMedium::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(TGeoMedium::kMedSavePrimitive)) return;

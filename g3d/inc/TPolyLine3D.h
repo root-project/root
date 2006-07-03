@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.8 2005/11/24 17:28:06 couet Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.9 2006/05/23 04:47:36 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -71,7 +71,7 @@ public:
    virtual Int_t     Merge(TCollection *list);
    virtual void      Paint(Option_t *option="");
    virtual void      Print(Option_t *option="") const;
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual Int_t     SetNextPoint(Double_t x, Double_t y, Double_t z); // *MENU*
    virtual void      SetOption(Option_t *option="") {fOption = option;}
    virtual void      SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*

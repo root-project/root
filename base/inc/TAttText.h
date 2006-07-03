@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.h,v 1.4 2002/05/03 10:48:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.h,v 1.5 2003/08/06 20:25:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -50,7 +50,7 @@ public:
    virtual Float_t  GetTextSize()  const {return fTextSize;}
    virtual void     Modify();
    virtual void     ResetAttText(Option_t *toption="");
-   virtual void     SaveTextAttributes(ofstream &out, const char *name, Int_t alidef=12, Float_t angdef=0, Int_t coldef=1, Int_t fondef=61, Float_t sizdef=1);
+   virtual void     SaveTextAttributes(ostream &out, const char *name, Int_t alidef=12, Float_t angdef=0, Int_t coldef=1, Int_t fondef=61, Float_t sizdef=1);
    virtual void     SetTextAttributes();  // *MENU*
    virtual void     SetTextAlign(Short_t align=11) { fTextAlign = align;}
    virtual void     SetTextAngle(Float_t tangle=0) { fTextAngle = tangle;}  // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.31 2006/02/13 12:12:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.32 2006/03/03 14:26:15 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -724,7 +724,7 @@ Double_t TGeoTorus::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoTorus::SavePrimitive(ofstream &out, Option_t * /*option*/)
+void TGeoTorus::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;  

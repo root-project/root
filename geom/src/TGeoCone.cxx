@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.54 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.55 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -839,7 +839,7 @@ Double_t TGeoCone::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmi
 }
 
 //_____________________________________________________________________________
-void TGeoCone::SavePrimitive(ofstream &out, Option_t * /*option*/)
+void TGeoCone::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
@@ -2072,7 +2072,7 @@ Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t 
 }
 
 //_____________________________________________________________________________
-void TGeoConeSeg::SavePrimitive(ofstream &out, Option_t * /*option*/)
+void TGeoConeSeg::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.h,v 1.6 2004/02/22 11:31:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.h,v 1.7 2004/06/26 13:38:57 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
    const char    *GetVarY() const {return fVarY.Data();}
    Double_t       Integral(TH2 *h, Option_t *option="") const;
    virtual Int_t  IsInside(Double_t x, Double_t y) const;
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
    virtual void   SetObjectX(TObject *obj) {fObjectX = obj;}
    virtual void   SetObjectY(TObject *obj) {fObjectY = obj;}
    virtual void   SetVarX(const char *varx); // *MENU*

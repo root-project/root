@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.18 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.19 2006/05/28 20:07:59 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -683,7 +683,7 @@ void TGColorSelect::SetColor(ULong_t color, Bool_t emit)
 }
 
 //______________________________________________________________________________
-void TGColorSelect::SavePrimitive(ofstream &out, Option_t *)
+void TGColorSelect::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
     // Save a color select widget as a C++ statement(s) on output stream out
 

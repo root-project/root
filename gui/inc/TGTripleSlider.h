@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.h,v 1.2 2006/02/23 15:40:30 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.h,v 1.3 2006/03/06 12:43:04 antcheva Exp $
 // Author: Bertrand Bellenot   20/01/06
 
 /*************************************************************************
@@ -97,7 +97,7 @@ public:
    virtual void      SetConstrained(Bool_t on = kTRUE);
    virtual void      SetPointerPosition(Float_t pos);
    virtual void      SetRelative(Bool_t rel = kTRUE) { fRelative = rel; }
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGTripleVSlider,0)  // Vertical triple slider widget
 };
@@ -137,7 +137,7 @@ public:
    virtual void      SetConstrained(Bool_t on = kTRUE);
    virtual void      SetPointerPosition(Float_t pos);
    virtual void      SetRelative(Bool_t rel = kTRUE) { fRelative = rel; }
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGTripleHSlider,0)  // Horizontal triple slider widget
 };

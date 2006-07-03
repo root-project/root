@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.28 2006/05/23 04:47:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.29 2006/05/24 15:31:40 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -489,7 +489,7 @@ void TPolyMarker3D::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TPolyMarker3D::SavePrimitive(ofstream &out, Option_t *)
+void TPolyMarker3D::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream.
 

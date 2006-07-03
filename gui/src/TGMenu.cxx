@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.64 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.65 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1954,7 +1954,7 @@ const TGGC &TGMenuTitle::GetDefaultSelectedGC()
 }
 
 //______________________________________________________________________________
-void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
+void TGPopupMenu::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a popup menu widget as a C++ statement(s) on output stream out.
 
@@ -2084,7 +2084,7 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGMenuTitle::SavePrimitive(ofstream &out, Option_t *option)
+void TGMenuTitle::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save a title menu widget as a C++ statement(s) on output stream out.
 
@@ -2116,7 +2116,7 @@ void TGMenuTitle::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGMenuBar::SavePrimitive(ofstream &out, Option_t *option)
+void TGMenuBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save a menu bar widget as a C++ statement(s) on output stream out.
 

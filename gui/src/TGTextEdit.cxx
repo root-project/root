@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.38 2006/06/20 13:17:48 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.39 2006/06/21 12:20:22 antcheva Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -1785,7 +1785,7 @@ const TGGC &TGTextEdit::GetCursor1GC()
 }
 
 //______________________________________________________________________________
-void TGTextEdit::SavePrimitive(ofstream &out, Option_t *)
+void TGTextEdit::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save a text edit widget as a C++ statement(s) on output stream out
 

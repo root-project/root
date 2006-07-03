@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.16 2005/08/03 17:40:34 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.17 2005/11/21 09:47:20 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -71,7 +71,7 @@ public:
    virtual Bool_t   IsInside(const Double_t *x) const;
    virtual void     Paint(Option_t *option="");
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetClippingBoxOff(); // *MENU*
    virtual void     SetClippingBoxOn(Double_t xclip=0, Double_t yclip=0, Double_t zclip=0); // *MENU*
    virtual void     SetNpz(Int_t npz=30);

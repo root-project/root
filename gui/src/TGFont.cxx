@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.5 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.6 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -229,7 +229,7 @@ void TGFontPool::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TGFont::SavePrimitive(ofstream &out, Option_t *)
+void TGFont::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
     // Save the used font as a C++ statement(s) on output stream out
 

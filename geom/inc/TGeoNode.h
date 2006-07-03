@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.24 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.25 2006/06/02 16:00:43 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -115,7 +115,7 @@ public:
 
    virtual TGeoNode *MakeCopyNode() const {return 0;}
    Double_t          Safety(Double_t *point, Bool_t in=kTRUE) const;
-   void              SaveAttributes(ofstream &out);
+   void              SaveAttributes(ostream &out);
    void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}// *MENU*
    void              SetVolume(const TGeoVolume *volume) {fVolume = (TGeoVolume*)volume;}
    void              SetNumber(Int_t number)             {fNumber=number;}

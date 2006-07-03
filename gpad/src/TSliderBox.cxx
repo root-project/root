@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSliderBox.cxx,v 1.5 2005/08/29 15:54:55 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TSliderBox.cxx,v 1.6 2005/11/23 11:03:12 couet Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -290,7 +290,7 @@ again:
 
 
 //______________________________________________________________________________
-void TSliderBox::SavePrimitive(ofstream &, Option_t *)
+void TSliderBox::SavePrimitive(ostream &, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 }

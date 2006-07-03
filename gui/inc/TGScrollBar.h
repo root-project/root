@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.13 2006/04/24 13:53:04 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.14 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -155,7 +155,7 @@ public:
 
    virtual void SetRange(Int_t range, Int_t page_size);  //*MENU*
    virtual void SetPosition(Int_t pos);                  //*MENU* *GETTER=GetPosition
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGHScrollBar,0)  // Horizontal scrollbar widget
 };
@@ -178,7 +178,7 @@ public:
 
    virtual void SetRange(Int_t range, Int_t page_size);  //*MENU*
    virtual void SetPosition(Int_t pos);                  //*MENU*  *GETTER=GetPosition
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGVScrollBar,0)  // Vertical scrollbar widget
 };

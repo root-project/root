@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile3D.cxx,v 1.2 2006/05/17 10:01:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile3D.cxx,v 1.3 2006/05/18 06:21:38 brun Exp $
 // Author: Rene Brun   17/05/2006
 
 /*************************************************************************
@@ -1336,7 +1336,7 @@ void TProfile3D::RebinAxis(Double_t x, const char* ax)
 }
 
 //______________________________________________________________________________
-void TProfile3D::SavePrimitive(ofstream &out, Option_t *option)
+void TProfile3D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

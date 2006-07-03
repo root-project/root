@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.102 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.103 2006/05/29 14:00:36 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -235,7 +235,7 @@ public:
                { return fCanvas->HandleContainerExpose(ev); }
    Bool_t  HandleCrossing(Event_t *ev)
                { return fCanvas->HandleContainerCrossing(ev); }
-   void    SavePrimitive(ofstream &out, Option_t *);
+   void    SavePrimitive(ostream &out, Option_t * = "");
    void    SetEditable(Bool_t) { }
 };
 
@@ -1647,7 +1647,7 @@ Bool_t TRootCanvas::HandleContainerCrossing(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TRootContainer::SavePrimitive(ofstream &out, Option_t *)
+void TRootContainer::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save a canvas container as a C++ statement(s) on output stream out.
 

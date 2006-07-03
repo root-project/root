@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.55 2006/02/22 14:57:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.56 2006/05/20 15:31:16 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -153,7 +153,7 @@ public:
    virtual void     Print(Option_t *option="") const;
    virtual void     ReleaseParameter(Int_t ipar);
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetChisquare(Double_t chi2) {fChisquare = chi2;}
    virtual void     SetFunction(Double_t (*fcn)(Double_t *, Double_t *)) { fFunction = fcn;}
    virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*

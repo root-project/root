@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.11 2006/05/15 07:43:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.12 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -132,7 +132,7 @@ public:
                      { return TGDimension(kSliderWidth, fHeight); }
    virtual void   Resize(UInt_t w, UInt_t h) { TGFrame::Resize(w, h ? h+16 : fHeight + 16); }
    virtual void   Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGVSlider,0)  // Vertical slider widget
 };
@@ -158,7 +158,7 @@ public:
                      { return TGDimension(fWidth, kSliderHeight); }
    virtual void   Resize(UInt_t w, UInt_t h) { TGFrame::Resize(w ? w+16 : fWidth + 16, h); }
    virtual void   Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGHSlider,0)  // Horizontal slider widget
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.8 2005/11/24 17:08:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.9 2006/03/29 08:09:43 antcheva Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -185,7 +185,7 @@ TString TGMdiFrame::GetMdiHintsString() const
 }
 
 //______________________________________________________________________________
-void TGMdiFrame::SavePrimitive(ofstream &out, Option_t *option)
+void TGMdiFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a MDIframe as a C++ statement(s) on output stream out
 

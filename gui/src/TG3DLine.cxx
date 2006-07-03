@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TG3DLine.cxx,v 1.5 2006/05/26 09:16:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TG3DLine.cxx,v 1.6 2006/06/01 11:38:15 antcheva Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TGVertical3DLine::TGVertical3DLine(const TGWindow *p, UInt_t w, UInt_t h,
 }
 
 //______________________________________________________________________________
-void TGHorizontal3DLine::SavePrimitive(ofstream &out, Option_t *option)
+void TGHorizontal3DLine::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an vertical 3D line as a C++ statement(s) on output stream out.
 
@@ -72,7 +72,7 @@ void TGHorizontal3DLine::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGVertical3DLine::SavePrimitive(ofstream &out, Option_t *option)
+void TGVertical3DLine::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an vertical 3D line as a C++ statement(s) on output stream out.
 

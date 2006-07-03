@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.9 2004/08/25 13:31:16 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.10 2004/09/08 08:13:11 brun Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -166,7 +166,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(kDoubleSliderWidth, fHeight); }
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGDoubleVSlider,0)  // Vertical double slider widget
 };
@@ -192,7 +192,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(fWidth, kDoubleSliderHeight); }
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGDoubleHSlider,0)  // Horizontal double slider widget
 };

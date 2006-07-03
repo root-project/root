@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.27 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.28 2006/06/19 14:02:27 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -108,7 +108,7 @@ public:
    void            SetColor(Color_t color) { fHasColor = true;fColor = color; }
    void            ClearColor() { fHasColor = false; }
 
-   void            SavePrimitive(ofstream &out, Option_t *option, Int_t n);
+   void            SavePrimitive(ostream &out, Option_t *option, Int_t n);
 
    ClassDef(TGListTreeItem,0)  //Item that goes into a TGListTree container
 };
@@ -176,7 +176,7 @@ protected:
    void  DrawNode(TGListTreeItem *item, Int_t x, Int_t y);
    void  UpdateChecked(TGListTreeItem *item, Bool_t redraw = kFALSE);
 
-   void  SaveChildren(ofstream &out, TGListTreeItem *item, Int_t &n);
+   void  SaveChildren(ostream &out, TGListTreeItem *item, Int_t &n);
    void  RemoveReference(TGListTreeItem *item);
    void  PDeleteChildren(TGListTreeItem *item);
    void  InsertChild(TGListTreeItem *parent, TGListTreeItem *item);
@@ -295,7 +295,7 @@ public:
    EColorMarkupMode GetColorMode() const { return fColorMode; }
    void SetColorMode(EColorMarkupMode colorMode) { fColorMode = colorMode; }
 
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGListTree,0)  //Show items in a tree structured list
 };

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.28 2006/05/23 04:47:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.29 2006/05/24 16:44:33 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -556,7 +556,7 @@ void TLegend::RecursiveRemove(TObject *obj)
 
 
 //____________________________________________________________________________
-void TLegend::SavePrimitive( ofstream &out, Option_t* )
+void TLegend::SavePrimitive(ostream &out, Option_t* )
 {
    // Save this legend as C++ statements on output stream out
    //  to be used with the SaveAs .C option

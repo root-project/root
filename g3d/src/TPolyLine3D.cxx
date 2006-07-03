@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.26 2006/05/23 04:47:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.27 2006/05/24 15:31:40 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -593,7 +593,7 @@ void TPolyLine3D::Print(Option_t *option) const
 
 
 //______________________________________________________________________________
-void TPolyLine3D::SavePrimitive(ofstream &out, Option_t *)
+void TPolyLine3D::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream.
 

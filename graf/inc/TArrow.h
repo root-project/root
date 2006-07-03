@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.8 2005/04/20 15:15:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.9 2005/11/11 17:31:48 couet Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -60,7 +60,7 @@ public:
    virtual void   Paint(Option_t *option="");
    virtual void   PaintArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2
                                  ,Float_t arrowsize=0.05 ,Option_t *option=">");
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
    virtual void   SetAngle(Float_t angle=60) {fAngle=angle;} // *MENU*
    virtual void   SetArrowSize(Float_t arrowsize=0.05) {fArrowSize=arrowsize;} // *MENU*
    virtual void   SetOption(Option_t *option=">"){ fOption = option;}

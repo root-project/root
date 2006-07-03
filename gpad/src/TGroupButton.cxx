@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.9 2004/12/13 11:21:14 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.10 2005/11/23 11:03:12 couet Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -212,7 +212,7 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TGroupButton::SavePrimitive(ofstream &out, Option_t *)
+void TGroupButton::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

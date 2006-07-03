@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.26 2006/05/23 04:47:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.27 2006/05/24 16:44:33 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -532,7 +532,7 @@ void TPolyLine::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TPolyLine::SavePrimitive(ofstream &out, Option_t *option)
+void TPolyLine::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

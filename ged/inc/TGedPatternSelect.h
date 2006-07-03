@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGedPatternSelect.h,v 1.5 2004/06/16 08:58:34 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGedPatternSelect.h,v 1.6 2006/06/14 13:57:28 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva   24/07/03
 
 /*************************************************************************
@@ -165,7 +165,7 @@ public:
    virtual void   PatternSelected(Style_t pattern = 0) 
                   { Emit("PatternSelected(Style_t)", pattern ? pattern : GetPattern()); }  // *SIGNAL*
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   virtual void   SavePrimitive(ofstream &out, Option_t *);
+   virtual void   SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGedPatternSelect,0)  //pattern selection check-button
 };

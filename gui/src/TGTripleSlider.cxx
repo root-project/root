@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.cxx,v 1.2 2006/02/23 15:40:30 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.cxx,v 1.3 2006/03/06 09:10:44 antcheva Exp $
 // Author: Bertrand Bellenot   20/01/06
 
 /*************************************************************************
@@ -557,7 +557,7 @@ void TGTripleHSlider::SetPointerPosition(Float_t pos)
 }
 
 //______________________________________________________________________________
-void TGTripleHSlider::SavePrimitive(ofstream &out, Option_t *option)
+void TGTripleHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
 
@@ -614,7 +614,7 @@ void TGTripleHSlider::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGTripleVSlider::SavePrimitive(ofstream &out, Option_t *option)
+void TGTripleVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
    

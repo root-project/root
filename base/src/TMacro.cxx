@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.7 2006/06/09 11:58:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.8 2006/06/26 09:29:13 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -336,7 +336,7 @@ void TMacro::SaveSource(const char *filename)
 }
 
 //______________________________________________________________________________
-void TMacro::SavePrimitive(ofstream &out, Option_t *option)
+void TMacro::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save macro source on stream out.
 

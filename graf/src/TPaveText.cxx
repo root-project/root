@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.24 2006/05/23 04:47:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.25 2006/05/24 16:44:33 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -664,7 +664,7 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
 
 
 //______________________________________________________________________________
-void TPaveText::SaveLines(ofstream &out, const char *name)
+void TPaveText::SaveLines(ostream &out, const char *name)
 {
    // Save lines of this pavetext as C++ statements on output stream out
 
@@ -820,7 +820,7 @@ void TPaveText::SaveLines(ofstream &out, const char *name)
 
 
 //______________________________________________________________________________
-void TPaveText::SavePrimitive(ofstream &out, Option_t *)
+void TPaveText::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.19 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.20 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGTabLayout,0)  // Layout manager for TGTab widget
 };
@@ -112,7 +112,7 @@ public:
    virtual void      SetText(const char *text = "tab");              //*MENU*icon=bld_rename.png*
    Bool_t            IsEnabled(Int_t tabIndex) const;
 
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
 
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  //*SIGNAL*
    virtual TGLayoutManager *GetLayoutManager() const;

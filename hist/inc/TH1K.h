@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.h,v 1.4 2005/12/04 10:51:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.h,v 1.5 2006/05/16 16:50:02 couet Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -51,7 +51,7 @@ public:
     
     
    virtual void      Reset(Option_t *option="");
-   virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
 
    void    SetKOrd(Int_t k){fKOrd=k;}
    

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.15 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.16 2006/05/30 06:40:10 antcheva Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -390,7 +390,7 @@ TGShutterItem::~TGShutterItem()
 }
 
 //______________________________________________________________________________
-void TGShutterItem::SavePrimitive(ofstream &out, Option_t *option)
+void TGShutterItem::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a shutter item widget as a C++ statement(s) on output stream out
 
@@ -442,7 +442,7 @@ void TGShutterItem::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGShutter::SavePrimitive(ofstream &out, Option_t *option)
+void TGShutter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a shutter widget as a C++ statement(s) on output stream out.
 

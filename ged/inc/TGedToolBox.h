@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGedToolBox.h,v 1.1 2004/02/18 20:13:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGedToolBox.h,v 1.2 2004/02/22 11:50:29 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   21/07/2003
 
 /*************************************************************************
@@ -37,7 +37,7 @@ public:
                Pixel_t back = GetDefaultFrameBackground());
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);
 
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
         
    ClassDef(TGedToolBox,0)  //a bar with picture buttons
 };

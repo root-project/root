@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.25 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.26 2006/06/01 11:38:15 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -331,7 +331,7 @@ Bool_t TGLabel::HasOwnFont() const
 }
 
 //______________________________________________________________________________
-void TGLabel::SavePrimitive(ofstream &out, Option_t *option)
+void TGLabel::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a label widget as a C++ statement(s) on output stream out.
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.19 2005/10/18 20:45:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.20 2005/11/11 17:31:48 couet Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -337,7 +337,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 }
 
 //______________________________________________________________________________
-void TArrow::SavePrimitive(ofstream &out, Option_t *)
+void TArrow::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 

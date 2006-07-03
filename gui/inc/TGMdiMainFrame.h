@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.8 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.9 2005/11/21 00:25:37 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -236,7 +236,7 @@ public:
    virtual void     FrameRestored(Int_t id) { Emit("FrameRestored(Int_t)", id); } //*SIGNAL*
    virtual void     FramesArranged(Int_t mode) { Emit("FramesArranged(Int_t)", mode); } //*SIGNAL*
 
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGMdiMainFrame, 0) // MDI main frame
 };

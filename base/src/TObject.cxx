@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.75 2006/04/20 16:54:41 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.76 2006/05/18 07:34:25 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -642,7 +642,7 @@ void TObject::RecursiveRemove(TObject *)
 }
 
 //______________________________________________________________________________
-void TObject::SavePrimitive(ofstream &out, Option_t *)
+void TObject::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
 

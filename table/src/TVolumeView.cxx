@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.15 2006/05/20 14:06:09 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.16 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -853,7 +853,7 @@ TString TVolumeView::PathP() const
 }
 
 //_______________________________________________________________________
-void TVolumeView::SavePrimitive(ofstream &out, Option_t *)
+void TVolumeView::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    //to be documented
    const Char_t *sceleton[] = {

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.134 2006/05/31 09:02:00 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.135 2006/06/01 11:38:15 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2214,7 +2214,7 @@ const TGGC &TGGroupFrame::GetDefaultGC()
 }
 
 //______________________________________________________________________________
-void TGFrame::SaveUserColor(ofstream &out, Option_t *)
+void TGFrame::SaveUserColor(ostream &out, Option_t *)
 {
    // Save a user color in a C++ macro file - used in SavePrimitive().
 
@@ -2398,7 +2398,7 @@ TString TGMainFrame::GetMWMinpString() const
 }
 
 //______________________________________________________________________________
-void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
+void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*= ""*/)
 {
    // Auxilary protected method  used to save subframes.
 
@@ -2460,7 +2460,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
+void TGCompositeFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a composite frame widget as a C++ statement(s) on output stream out.
 
@@ -2759,7 +2759,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
+void TGMainFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a main frame widget as a C++ statement(s) on output stream out.
 
@@ -2807,7 +2807,7 @@ void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGHorizontalFrame::SavePrimitive(ofstream &out, Option_t *option)
+void TGHorizontalFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a horizontal frame widget as a C++ statement(s) on output stream out.
 
@@ -2846,7 +2846,7 @@ void TGHorizontalFrame::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGVerticalFrame::SavePrimitive(ofstream &out, Option_t *option)
+void TGVerticalFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save a vertical frame widget as a C++ statement(s) on output stream out.
 
@@ -2885,7 +2885,7 @@ void TGVerticalFrame::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGFrame::SavePrimitive(ofstream &out, Option_t *option)
+void TGFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a frame widget as a C++ statement(s) on output stream out.
 
@@ -2907,7 +2907,7 @@ void TGFrame::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
+void TGGroupFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a group frame widget as a C++ statement(s) on output stream out.
 
@@ -3238,7 +3238,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGTransientFrame::SavePrimitive(ofstream &out, Option_t *option)
+void TGTransientFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a transient frame widget as a C++ statement(s) on output stream out.
 

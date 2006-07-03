@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.17 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.18 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -432,7 +432,7 @@ TString TGSlider::GetTypeString() const
 }
 
 //______________________________________________________________________________
-void TGHSlider::SavePrimitive(ofstream &out, Option_t *option)
+void TGHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
 
@@ -464,7 +464,7 @@ void TGHSlider::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGVSlider::SavePrimitive(ofstream &out, Option_t *option)
+void TGVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
 

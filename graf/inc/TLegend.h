@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.9 2005/11/21 08:49:48 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.10 2006/05/23 04:47:37 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -65,7 +65,7 @@ public:
    virtual void    PaintPrimitives();
    virtual void    Print( Option_t* option = "" ) const;
    virtual void    RecursiveRemove(TObject *obj);
-   virtual void    SavePrimitive(ofstream &out, Option_t *option );
+   virtual void    SavePrimitive(ostream &out, Option_t *option  = "");
    void            SetDefaults() { fEntrySeparation = 0.1f; fMargin = 0.25f; }
    virtual void    SetEntryLabel( const char* label ); // *MENU*
    virtual void    SetEntryOption( Option_t* option ); // *MENU*

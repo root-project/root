@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.h,v 1.2 2000/06/13 11:25:02 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.h,v 1.3 2000/11/21 20:19:45 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -52,7 +52,7 @@ public:
    virtual void  Paint(Option_t *option="");
    virtual void  PaintModified();
    virtual void  Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    virtual void  SetBorderMode(Short_t bordermode) { fBorderMode = bordermode; }
    virtual void  SetFraming(Bool_t f=1);
    virtual Bool_t GetFraming() { return fFraming; };

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.23 2006/05/23 04:47:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.24 2006/05/24 16:44:33 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -578,7 +578,7 @@ void TBox::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TBox::SavePrimitive(ofstream &out, Option_t *)
+void TBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

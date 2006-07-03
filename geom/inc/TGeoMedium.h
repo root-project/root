@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.9 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.10 2006/06/02 07:21:20 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -51,7 +51,7 @@ public:
    void                     SetParam(Int_t i, Double_t val)   {fParams[i] = val;}
    char                    *GetPointerName() const;
    TGeoMaterial            *GetMaterial() const {return fMaterial;}
-   virtual void             SavePrimitive(ofstream &out, Option_t *option);
+   virtual void             SavePrimitive(ostream &out, Option_t *option = "");
    void                     SetId(Int_t id)     {fId = id;}
    void                     SetMaterial(TGeoMaterial *mat) {fMaterial = mat;}
    virtual void             SetCerenkovProperties(TObject* cerenkov) {fMaterial->SetCerenkovProperties(cerenkov);}   

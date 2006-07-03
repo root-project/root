@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.49 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.50 2006/05/24 17:11:54 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -865,7 +865,7 @@ Double_t TGeoArb8::SafetyToFace(Double_t *point, Int_t iseg, Bool_t in) const
 }
    
 //_____________________________________________________________________________
-void TGeoArb8::SavePrimitive(ofstream &out, Option_t * /*option*/)
+void TGeoArb8::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
@@ -1376,7 +1376,7 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoTrap::SavePrimitive(ofstream &out, Option_t * /*option*/)
+void TGeoTrap::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
@@ -1593,7 +1593,7 @@ TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 }
 
 //_____________________________________________________________________________
-void TGeoGtra::SavePrimitive(ofstream &out, Option_t * /*option*/)
+void TGeoGtra::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;  

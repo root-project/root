@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.90 2006/05/30 09:13:24 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.91 2006/05/31 09:13:43 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1928,7 +1928,7 @@ void TGaxis::Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
 }
 
 //______________________________________________________________________________
-void TGaxis::SavePrimitive(ofstream &out, Option_t *)
+void TGaxis::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 

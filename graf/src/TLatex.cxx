@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.58 2006/05/23 04:47:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.59 2006/05/24 16:44:33 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -2031,7 +2031,7 @@ void TLatex::Savefs(TLatexFormSize *fs)
 
 
 //______________________________________________________________________________
-void TLatex::SavePrimitive(ofstream &out, Option_t *)
+void TLatex::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.9 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.10 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
    virtual void ChangeBackgroundColor() { }
 
    virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(ofstream &out, Option_t *option); 
+   virtual void SavePrimitive(ostream &out, Option_t *option = ""); 
 
    ClassDef(TGIcon,0)  // Icon GUI class
 };

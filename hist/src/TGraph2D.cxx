@@ -1335,7 +1335,7 @@ Int_t TGraph2D::RemovePoint(Int_t ipoint)
 
 
 //______________________________________________________________________________
-void TGraph2D::SavePrimitive(ofstream &out, Option_t *option)
+void TGraph2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Saves primitive as a C++ statement(s) on output stream out
 

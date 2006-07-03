@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.h,v 1.3 2000/11/23 10:09:16 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.h,v 1.4 2006/05/13 19:34:41 brun Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
    virtual       ~TPaveVar();
    void           Copy(TObject &PaveVar);
    TTreeViewer   *GetViewer() {return fViewer;}
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
    virtual void   Merge(Option_t *option="AND");  // *MENU*
    virtual void   SetViewer(TTreeViewer *viewer) {fViewer = viewer;}
 

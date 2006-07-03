@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.44 2006/04/07 09:37:14 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.45 2006/06/14 14:21:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -126,7 +126,7 @@ protected:
    void          PaintBorder(Color_t color, Bool_t tops);
    virtual void  PaintBorderPS(Double_t xl,Double_t yl,Double_t xt,Double_t yt,Int_t bmode,Int_t bsize,Int_t dark,Int_t light);
    void          PaintDate();
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    virtual void  SetBatch(Bool_t batch=kTRUE);
 
 private:

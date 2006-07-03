@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.13 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.14 2006/05/23 04:47:37 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -94,7 +94,7 @@ public:
    virtual TBuffer3D    *MakeBuffer3D() const;
    Double_t             &Z(Int_t ipl) {return fZ[ipl];}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ofstream &out, Option_t *option);
+   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    void                  SetCurrentZ(Double_t z, Int_t iz);
    void                  SetCurrentVertices(Double_t x0, Double_t y0, Double_t scale);
    virtual void          SetDimensions(Double_t *param);

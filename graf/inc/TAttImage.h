@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.7 2005/06/21 17:09:26 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.8 2005/11/15 14:04:51 couet Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -136,7 +136,7 @@ public:
    virtual const TImagePalette &GetPalette() const { return fPalette; }
 
    virtual void     ResetAttImage(Option_t *option="");
-   virtual void     SaveImageAttributes(ofstream &out, const char *name,
+   virtual void     SaveImageAttributes(ostream &out, const char *name,
                                         EImageQuality qualdef = kImgDefault,
                                         UInt_t comprdef = 0,
                                         Bool_t constRatiodef = kTRUE);

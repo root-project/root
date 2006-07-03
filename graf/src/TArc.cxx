@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.8 2005/01/13 21:39:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.9 2005/11/11 17:31:48 couet Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -87,7 +87,7 @@ void TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t
 
 
 //______________________________________________________________________________
-void TArc::SavePrimitive(ofstream &out, Option_t *)
+void TArc::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

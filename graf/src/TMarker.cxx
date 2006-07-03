@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.13 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.14 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -275,7 +275,7 @@ void TMarker::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TMarker::SavePrimitive(ofstream &out, Option_t *)
+void TMarker::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

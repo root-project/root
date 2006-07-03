@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.6 2005/09/08 05:33:41 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.7 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -85,7 +85,7 @@ public:
    virtual void        Print(Option_t *option="") const;
    virtual void        UpdatePosition(Option_t *option="");
    virtual TVolumePosition *Reset(TVolume *node=0,Double_t x=0, Double_t y=0, Double_t z=0, TRotMatrix *matrix=0);
-   virtual void        SavePrimitive(ofstream &out, Option_t *option);
+   virtual void        SavePrimitive(ostream &out, Option_t *option = "");
    virtual void        SetLineAttributes(); // *MENU*
    virtual void        SetMatrix(TRotMatrix *matrix=0);
    virtual void        SetNode(TVolume *node){ fNode = node;}

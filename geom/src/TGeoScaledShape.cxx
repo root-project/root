@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.cxx,v 1.2 2005/10/03 07:02:51 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.cxx,v 1.3 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   26/09/05
 
 /*************************************************************************
@@ -248,7 +248,7 @@ Double_t TGeoScaledShape::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoScaledShape::SavePrimitive(ofstream & /*out*/, Option_t * /*option*/)
+void TGeoScaledShape::SavePrimitive(ostream & /*out*/, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
 }

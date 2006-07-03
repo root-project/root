@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.8 2004/02/18 20:13:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.9 2004/09/13 16:39:12 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -148,7 +148,7 @@ void TAttMarker::ResetAttMarker(Option_t *)
 }
 
 //______________________________________________________________________________
-void TAttMarker::SaveMarkerAttributes(ofstream &out, const char *name, Int_t coldef, Int_t stydef, Int_t sizdef)
+void TAttMarker::SaveMarkerAttributes(ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t sizdef)
 {
     // Save line attributes as C++ statement(s) on output stream out
 

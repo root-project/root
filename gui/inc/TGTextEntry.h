@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.29 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.30 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -172,7 +172,7 @@ public:
    Pixel_t              GetForeground() const { return fNormGC.GetForeground(); }
    Bool_t               HasOwnFont() const { return fHasOwnFont; }
 
-   virtual  void        SavePrimitive(ofstream &out, Option_t *option);
+   virtual  void        SavePrimitive(ostream &out, Option_t *option = "");
 
    virtual  Bool_t      HandleButton(Event_t *event);
    virtual  Bool_t      HandleDoubleClick(Event_t *event);

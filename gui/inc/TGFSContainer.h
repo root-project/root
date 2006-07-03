@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.13 2005/05/24 20:05:10 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.14 2005/05/25 16:20:54 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -133,7 +133,7 @@ public:
                                 Int_t file_type, Bool_t is_link, const char *ext,
                                 Bool_t small);
 
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGFileContainer,0)  // Container containing file system objects
 };

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.57 2006/05/23 04:47:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.58 2006/05/24 16:44:33 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -995,7 +995,7 @@ void TGraphAsymmErrors::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TGraphAsymmErrors::SavePrimitive(ofstream &out, Option_t *option)
+void TGraphAsymmErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
