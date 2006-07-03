@@ -4,6 +4,7 @@
 #include "TROOT.h"
 #include "TColor.h"
 #include "TAttImage.h"
+#include "TEnv.h"
 
 TCanvas *c1;
 

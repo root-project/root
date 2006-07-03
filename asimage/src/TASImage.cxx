@@ -2466,7 +2466,10 @@ void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
 
    int reverse = 0, npoints1 = 0, npoints2 = 0;
    char *p;
-   char *pb, ch;
+   char *pb;
+   char ch;
+   TString str = colors;
+   TString col;
 
    if ((angle > 2 * 180 * 15 / 16) || (angle < 2 * 180 * 1 / 16)) {
       gradient.type = GRADIENT_Left2Right;
@@ -2528,13 +2531,13 @@ void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
          }
          for ( ; isspace((int)*p); p++);
 
-        ch = *p; *p = '\0';
-         if (parse_argb_color(pb, gradient.color + npoints1) != pb) {
-         npoints1++;
+         col = str(pb - colors, p - pb);
+
+         if (parse_argb_color(col.Data(), gradient.color + npoints1) != col) {
+            npoints1++;
          } else {
             Warning("Gradient", "Failed to parse color [%s] - defaulting to black", pb);
          }
-         *p = ch;
       }
 
       if (offsets) {
