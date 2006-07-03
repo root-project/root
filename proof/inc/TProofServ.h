@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.40 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.41 2006/06/23 13:26:56 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -143,6 +143,7 @@ private:
 protected:
    virtual void  HandleArchive(TMessage *mess);
    virtual Int_t HandleCache(TMessage *mess);
+   virtual Int_t HandleDataSets(TMessage *mess);
    virtual void  HandleCheckFile(TMessage *mess);
    virtual void  HandleLibIncPath(TMessage *mess);
    virtual void  HandleProcess(TMessage *mess);

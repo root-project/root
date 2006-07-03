@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.33 2006/06/05 22:51:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.34 2006/06/21 16:18:26 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -150,16 +150,27 @@ public:
    //-- dataset management
    virtual Int_t       UploadDataSet(const char *dataset,
                                      const char *files,
-                                     const char *dest,
+                                     const char *dest = 0,
                                      Int_t opt = kAskUser,
                                      TList *skippedFiles = 0) = 0;
-
-   virtual Int_t       UploadDataSetFromFile(const char *file,
-                                             const char *dest,
-                                             const char *dataset,
+                                     
+   virtual Int_t       UploadDataSet(const char *dataset,
+                                     TList *files,
+                                     const char *dest = 0,
+                                     Int_t opt = kAskUser,
+                                     TList *skippedFiles = 0) = 0;
+                                     
+   virtual Int_t       UploadDataSetFromFile(const char *dataset,
+                                             const char *file,
+                                             const char *dest = 0,
                                              Int_t opt = kAskUser) = 0;
-   virtual TList      *GetDataSets() = 0;
-   virtual void        ShowDataSets() = 0;
+
+   virtual Int_t       CreateDataSet(const char *dataset,
+                                     TList *files, 
+                                     Int_t opt = kAskUser) = 0;
+                                             
+   virtual TList      *GetDataSets(const char *dir = 0) = 0;
+   virtual void        ShowDataSets(const char * dir = 0) = 0;
    virtual void        ShowDataSet(const char *dataset) = 0;
    virtual Int_t       RemoveDataSet(const char *dateset) = 0;
    virtual Int_t       VerifyDataSet(const char *dataset) = 0;

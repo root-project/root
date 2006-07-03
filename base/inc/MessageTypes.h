@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.30 2006/06/01 16:26:30 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.31 2006/06/21 16:18:26 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -71,23 +71,18 @@ enum EMessageTypes {
    kPROOF_RETRIEVE,                      //asynchronous retrieve of query results
    kPROOF_ARCHIVE,                       //archive query results
    kPROOF_REMOVE,                        //remove query results from the lists
-   kPROOF_STARTPROCESS,                  //Signals the start of query processing
-   kPROOF_SETIDLE,                       //Signals idle state of session
-   kPROOF_QUERYSUBMITTED,                //Signals querysubmission
-   kPROOF_SESSIONTAG,                    //Message with unique session tag
-   kPROOF_MAXQUERIES,                    //Message with max number of queries
-   kPROOF_CLEANUPSESSION,                //Cleanup session query area
-   kPROOF_SERVERSTARTED,                 //Signal completion of a server startup
-   kPROOF_UPLOAD_DATASET,                //Get content of uploaded dataset (TList)
-   kPROOF_QUERY_DATASETS,                //List datasets saved on master node
-   kPROOF_GET_DATASET,	                 //Get a TList of TFileInfo objects
-   kPROOF_VERIFY_DATASET,                //Try open all files from a dataset and report results
-   kPROOF_RM_DATASET,                    //Remove a dataset but leave files belonging to it
-   kPROOF_APPEND_DATASET,                //Add new files to an existing dataset
-   kPROOF_PACKAGE_LIST,                  //A list of package names (TObjString's) follows
-   kPROOF_MESSAGE,                       //A message for the client follows
-   kPROOF_LIB_INC_PATH,                  //A list of lib/inc paths follows
-   kPROOF_WORKERLISTS,                   //An action on any of the worker list follows
+   kPROOF_STARTPROCESS,                  //signals the start of query processing
+   kPROOF_SETIDLE,                       //signals idle state of session
+   kPROOF_QUERYSUBMITTED,                //signals querysubmission
+   kPROOF_SESSIONTAG,                    //message with unique session tag
+   kPROOF_MAXQUERIES,                    //message with max number of queries
+   kPROOF_CLEANUPSESSION,                //cleanup session query area
+   kPROOF_SERVERSTARTED,                 //signal completion of a server startup
+   kPROOF_DATASETS,                      //dataset management
+   kPROOF_PACKAGE_LIST,                  //a list of package names (TObjString's) follows
+   kPROOF_MESSAGE,                       //a message for the client follows
+   kPROOF_LIB_INC_PATH,                  //a list of lib/inc paths follows
+   kPROOF_WORKERLISTS,                   //an action on any of the worker list follows
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows
@@ -124,17 +119,17 @@ enum EMessageTypes {
    kROOTD_PROTOCOL2,                     //client proto follows, returns rootd proto
    kROOTD_BYE,                           //terminate rootd
    kROOTD_GLOBUS,                        //Globus authetication follows
-   kROOTD_CLEANUP,                       //Cleanup things
+   kROOTD_CLEANUP,                       //cleanup things
    kROOTD_SSH,                           //SSH-like authentication follows
    kROOTD_RFIO,                          //RFIO-like authentication follows
-   kROOTD_NEGOTIA,                       //Negotiation follows
+   kROOTD_NEGOTIA,                       //negotiation follows
    kROOTD_RSAKEY,                        //RSA public key exchange
-   kROOTD_ENCRYPT,                       //An encrypted message follows
-   kROOTD_OPENDIR,                       //Open directory
-   kROOTD_FREEDIR,                       //Free directory
-   kROOTD_DIRENTRY,                      //Get directory entry
-   kROOTD_ACCESS,                        //Test Access
-   kROOTD_GETS                           //Multiple offset, number of byte pairs
+   kROOTD_ENCRYPT,                       //an encrypted message follows
+   kROOTD_OPENDIR,                       //open directory
+   kROOTD_FREEDIR,                       //free directory
+   kROOTD_DIRENTRY,                      //get directory entry
+   kROOTD_ACCESS,                        //test Access
+   kROOTD_GETS                           //multiple offset, number of byte pairs
 };
 
 #endif

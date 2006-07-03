@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.82 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.83 2006/07/01 12:05:49 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -217,9 +217,9 @@ friend class TXProofServ;  // to access EUrgent
 
 private:
    enum EUrgent {
-      kLocalInterrupt = -1,
-      kPing           = 0,
-      kHardInterrupt  = 1,
+      kLocalInterrupt      = -1,
+      kPing                = 0,
+      kHardInterrupt       = 1,
       kSoftInterrupt,
       kShutdownInterrupt
    };
@@ -245,11 +245,21 @@ private:
       kListPackages        = 19,
       kListEnabledPackages = 20
    };
+   enum EProofDataSetCommands {
+      kUploadDataSet       = 1,     //Upload a dataset
+      kCheckDataSetName,            //Check wheter dataset of this name exists
+      kGetDataSets,                 //List datasets saved on  the master node
+      kCreateDataSet,               //Save a TList object as a dataset
+      kGetDataSet,                  //Get a TList of TFileInfo objects
+      kVerifyDataSet,               //Try open all files from a dataset and report results
+      kRemoveDataSet,               //Remove a dataset but leave files belonging to it
+      kAppendDataSet                //Add new files to an existing dataset
+   };
    enum ESendFileOpt {
-      kAscii         = 0x0,
-      kBinary        = 0x1,
-      kForce         = 0x2,
-      kForward       = 0x4
+      kAscii               = 0x0,
+      kBinary              = 0x1,
+      kForce               = 0x2,
+      kForward             = 0x4
    };
    enum EProofWrkListAction {
       kActivateWorker      = 1,
@@ -481,6 +491,11 @@ public:
 
    //-- dataset management
    Int_t       UploadDataSet(const char *dataset,
+                             TList *files,
+                             const char *dest = 0,
+                             Int_t opt = kAskUser,
+                             TList *skippedFiles = 0);
+   Int_t       UploadDataSet(const char *dataset,
                              const char *files,
                              const char *dest = 0,
                              Int_t opt = kAskUser,
@@ -489,8 +504,12 @@ public:
                                      const char *file,
                                      const char *dest = 0,
                                      Int_t opt = kAskUser);
-   TList      *GetDataSets();
-   void        ShowDataSets();
+   Int_t       CreateDataSet(const char *dataset,
+                             TList *files,
+                             Int_t opt = kAskUser);
+   TList      *GetDataSets(const char *dir = 0);
+   void        ShowDataSets(const char *dir = 0);
+
    void        ShowDataSet(const char *dataset);
    Int_t       RemoveDataSet(const char *dateset);
    Int_t       VerifyDataSet(const char *dataset);
