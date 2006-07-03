@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.128 2006/07/03 09:33:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.129 2006/07/03 12:33:29 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3840,7 +3840,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
                dataSetDirPath = Form("%s/%s",
                                      gSystem->ExpandPathName(kPROOF_WorkDir),
                                      kPROOF_DataSetDir);
-            if (dataSetDir = gSystem->OpenDirectory(dataSetDirPath)) {
+            if ((dataSetDir = gSystem->OpenDirectory(dataSetDirPath))) {
                TRegexp rg(".*.root"); //check that it is a root file
                TList *fileList = new TList();
                const char *ent;
