@@ -1,43 +1,83 @@
+#include "TApplication.h"
+#include "TBranch.h"
+#include "TChain.h"
+#include "TTree.h"
+
+#include <iostream>
+
+void runEvent()
 {
-bool result = true;
+   bool result = true;
 
-TChain *chain = new TChain("T");
-chain->Add("event1.root");
-chain->Add("event2.root");
+   TChain* chain = new TChain("T");
+   chain->Add("event1.root");
+   chain->Add("event2.root");
 
-// f = new TFile("output.root","RECREATE");
-TTree *clone1 = chain->CopyTree("");
+   // Get a clone of the first tree in the chain
+   // filled with all the entries from the chain.
+   TTree* clone1 = chain->CopyTree("");
 
-TBranch *br = clone1->GetBranch("event");
+   // Make sure the clone got the branches.
+   TBranch* br = clone1->GetBranch("event");
 
-chain->GetEntry(0);
-TTree *clone2 = chain->CopyTree("");
+   // Reset the chain to the first tree (it was
+   // on the second tree after the copy above).
+   chain->GetEntry(0);
 
-chain->LoadTree(0);
-Long64_t n = chain->GetTree()->GetEntries();
+   // Create a second clone of the first tree
+   // in the chain, also filled with all the
+   // entries from the chain.
+   TTree* clone2 = chain->CopyTree("");
 
-TTree *clone3 = chain->CloneTree(0);
+   // Switch to the first tree in the chain.
+   chain->LoadTree(0);
 
-void *chainadd = chain->GetBranch("event")->GetAddress();
-void *clone3add = clone3->GetBranch("event")->GetAddress();
+   // Remember the number of entries in the
+   // first tree in the chain.
+   Long64_t n = chain->GetTree()->GetEntries();
 
-if (chainadd != clone3add) {
-   cerr << "clone3 is not connected to the chain\n";
-   result = false;
+   // Create a clone of the first tree
+   // in the chain, with no entries.
+   // Note: The chain considers this tree to be
+   //       a clone of the chain itself.
+   TTree* clone3 = chain->CloneTree(0);
+
+   // Make sure the clone has the same branch
+   // addresses as the chain.
+   void* chainadd = chain->GetBranch("event")->GetAddress();
+   void* clone3add = clone3->GetBranch("event")->GetAddress();
+   if (chainadd != clone3add) {
+      cerr << "clone3 is not connected to the chain\n";
+      result = false;
+   }
+
+   // Switch to the second tree in the chain.
+   // Note: This should force the branch addresses to
+   //       be changed in clone3.
+   chain->LoadTree(n+1);
+
+   // Make sure the clone has the same branch
+   // addresses as the chain.
+   chainadd = chain->GetBranch("event")->GetAddress();
+   clone3add = clone3->GetBranch("event")->GetAddress();
+   if (chainadd != clone3add) {
+      cerr << "clone3 is not well connected to the chain\n";
+      result = false;
+   }
+
+   // We are deleting a clone of a chain, it should not
+   // attempt to delete any allocated objects.
+   delete clone3;
+   clone3 = 0;
+
+   // Create a clone of the first tree in the chain,
+   // and fill it with all the entries from the first tree.
+   // Note: The chain considers this tree to be
+   //       a clone of the chain itself.
+   TTree* clone4 = chain->CloneTree();
+
+   if (!result) {
+      gApplication->Terminate(1);
+   }
 }
-chain->LoadTree(n+1);
 
-void *chainadd = chain->GetBranch("event")->GetAddress();
-void *clone3add = clone3->GetBranch("event")->GetAddress();
-if (chainadd != clone3add) {
-   cerr << "clone3 is not well connected to the chain\n";
-   result = false;
-}
-
-// f->Write();
-delete clone3;
-
-TTree *clone4 = chain->CloneTree();
-if (!result) gApplication->Terminate(1);
-
-}

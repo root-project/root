@@ -32,6 +32,7 @@ Use $ROOTSYS/bin/hadd to merge many histogram files
 #include "TH1.h"
 #include "TTree.h"
 #include "TKey.h"
+#include "TSystem.h"
 #include "Riostream.h"
 
 TList *FileList;
@@ -57,7 +58,7 @@ void runtreeCloneTest2(const char* outFile = "pion_merged.root", //here's where 
     void *pDir = gSystem->OpenDirectory(inputDir.Data());
 
     char* cFileName;
-    while( cFileName = gSystem->GetDirEntry(pDir) ) {
+    while( cFileName = (char*) gSystem->GetDirEntry(pDir) ) {
 
 	TString fileName(cFileName);
 	if(fileName.Contains( fileString.Data() )) {
