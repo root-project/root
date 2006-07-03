@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.28 2005/01/19 07:52:45 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.2 2006/06/05 17:15:28 pcanal Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -72,11 +72,14 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
-#include "TRandom.h"
-#include "TDirectory.h"
-#include "TProcessID.h"
-
 #include "Event.h"
+
+#include "TClonesArray.h"
+#include "TDirectory.h"
+#include "TH1.h"
+#include "TProcessID.h"
+#include "TRandom.h"
+#include "TRefArray.h"
 
 
 ClassImp(EventHeader)
@@ -84,100 +87,123 @@ ClassImp(Event)
 ClassImp(Track)
 ClassImp(HistogramManager)
 
-TClonesArray *Event::fgTracks = 0;
-TH1F *Event::fgHist = 0;
-
 //______________________________________________________________________________
-Event::Event() : fEventName(0), fNtrack(0), fNseg(0), 
-                 fNvertex(0), fFlag(0), fTemperature(0), fClosestDistance(0), 
-                 fTracks(0), fHighPt(0), fMuons(0), fH(0), fIsValid(kFALSE)
+Event::Event()
+: fEventName(0)
+, fNtrack(0)
+, fNseg(0)
+, fNvertex(0)
+, fFlag(0)
+, fTemperature(0.0)
+, fClosestDistance(0)
+, fEvtHdr()
+, fTracks(0)
+, fHighPt(0)
+, fMuons(0)
+, fLastTrack()
+, fWebHistogram()
+, fH(0)
+, fTriggerBits()
+, fIsValid(kFALSE)
 {
-   // Create an Event object.
-   // When the constructor is invoked for the first time, the class static
-   // variable fgTracks is 0 and the TClonesArray fgTracks is created.
+   // -- Create an Event object.
 
-
-   if (!fgTracks) fgTracks = new TClonesArray("Track", 1000);
-   fTracks = fgTracks;
+   fTracks = new TClonesArray("Track", 1000);
    fHighPt = new TRefArray;
-   fMuons  = new TRefArray;
-   Int_t i0,i1;
-   for (i0 = 0; i0 < 4; i0++) {
-      for (i1 = 0; i1 < 4; i1++) {
+   fMuons = new TRefArray;
+   for (Int_t i0 = 0; i0 < 4; i0++) {
+      for (Int_t i1 = 0; i1 < 4; i1++) {
          fMatrix[i0][i1] = 0.0;
       }
    }
-   for (i0 = 0; i0 <20; i0++) fType[i0] = 0;
-   for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
+   for (Int_t i0 = 0; i0 < 20; i0++) {
+      fType[i0] = 0;
+   }
+   for (Int_t i0 = 0; i0 < 10; i0++) {
+      fMeasures[i0] = 0;
+   }
    fWebHistogram.SetAction(this);
 }
 
 //______________________________________________________________________________
 Event::~Event()
 {
-   Clear();
-   if (fH == fgHist) fgHist = 0;
-   delete fH; fH = 0;
-   delete fHighPt; fHighPt = 0;
-   delete fMuons;  fMuons = 0;
-   delete [] fClosestDistance;
-   if (fEventName) delete [] fEventName;
+   delete fH;
+   fH = 0;
+   fMuons->Delete();
+   delete fMuons;
+   fMuons = 0;
+   fHighPt->Delete();
+   delete fHighPt;
+   fHighPt = 0;
+   delete fHighPt;
+   fHighPt = 0;
+   if (fTracks) {
+      fTracks->Clear("C");
+   }
+   delete fTracks;
+   fTracks = 0;
+   delete[] fClosestDistance;
+   fClosestDistance = 0;
+   delete[] fEventName;
+   fEventName = 0;
 }
 
 //______________________________________________________________________________
-void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
-  fIsValid = kTRUE;
-  char etype[20];
-  Float_t sigmat, sigmas;
-  gRandom->Rannor(sigmat,sigmas);
-  Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
-  Float_t random = gRandom->Rndm(1);
-
-  //Save current Object count
-  Int_t ObjectNumber = TProcessID::GetObjectCount();
-  Clear();
-  fHighPt->Delete();
-  fMuons->Delete();
-  
-  Int_t nch = 15;
-  if (ev >= 100)   nch += 3;
-  if (ev >= 10000) nch += 3;
-  if (fEventName) delete [] fEventName;
-  fEventName = new char[nch];
-  sprintf(fEventName,"Event%d_Run%d",ev,200);
-  sprintf(etype,"type%d",ev%5);
-  SetType(etype);
-  SetHeader(ev, 200, 960312, random);
-  SetNseg(Int_t(10*ntrack+20*sigmas));
-  SetNvertex(Int_t(1+20*gRandom->Rndm()));
-  SetFlag(UInt_t(random+0.5));
-  SetTemperature(random+20.);
-
-  for(UChar_t m = 0; m < 10; m++) {
-     SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
-  }
-  for(UChar_t i0 = 0; i0 < 4; i0++) {
-    for(UChar_t i1 = 0; i1 < 4; i1++) {
-       SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
-    }
-  }
-
-  fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
-  fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
-  fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
-
-  //  Create and Fill the Track objects
-  for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
-  
-  //Restore Object count 
-  //To save space in the table keeping track of all referenced objects
-  //we assume that our events do not address each other. We reset the 
-  //object count to what it was at the beginning of the event.
-  TProcessID::SetObjectCount(ObjectNumber);
+void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin)
+{
+   fIsValid = kTRUE;
+   char etype[20];
+   Float_t sigmat, sigmas;
+   gRandom->Rannor(sigmat,sigmas);
+   Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
+   Float_t random = gRandom->Rndm(1);
+ 
+   //Save current Object count
+   Int_t ObjectNumber = TProcessID::GetObjectCount();
+   Clear();
+   fHighPt->Delete();
+   fMuons->Delete();
+   
+   Int_t nch = 15;
+   if (ev >= 100)   nch += 3;
+   if (ev >= 10000) nch += 3;
+   if (fEventName) delete [] fEventName;
+   fEventName = new char[nch];
+   sprintf(fEventName,"Event%d_Run%d",ev,200);
+   sprintf(etype,"type%d",ev%5);
+   SetType(etype);
+   SetHeader(ev, 200, 960312, random);
+   SetNseg(Int_t(10*ntrack+20*sigmas));
+   SetNvertex(Int_t(1+20*gRandom->Rndm()));
+   SetFlag(UInt_t(random+0.5));
+   SetTemperature(random+20.);
+ 
+   for(UChar_t m = 0; m < 10; m++) {
+      SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
+   }
+   for(UChar_t i0 = 0; i0 < 4; i0++) {
+     for(UChar_t i1 = 0; i1 < 4; i1++) {
+        SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
+     }
+   }
+ 
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+ 
+   //  Create and Fill the Track objects
+   for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
+   
+   //Restore Object count 
+   //To save space in the table keeping track of all referenced objects
+   //we assume that our events do not address each other. We reset the 
+   //object count to what it was at the beginning of the event.
+   TProcessID::SetObjectCount(ObjectNumber);
 }  
 
 //______________________________________________________________________________
-Track *Event::AddTrack(Float_t random, Float_t ptmin)
+Track* Event::AddTrack(Float_t random, Float_t ptmin)
 {
    // Add a new track to the list of tracks for this event.
    // To avoid calling the very time consuming operator new for each track,
@@ -197,21 +223,33 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
 }
 
 //______________________________________________________________________________
-void Event::Clear(Option_t * /*option*/)
+void Event::Clear(Option_t* /*option*/)
 {
-   fTracks->Clear("C"); //will also call Track::Clear
-   fHighPt->Delete();
-   fMuons->Delete();
+   // -- FIXME: Describe this function.
+
+   // will also call Track::Clear
+   if (fTracks) {
+      fTracks->Clear("C");
+   }
+   if (fHighPt) {
+      fHighPt->Delete();
+   }
+   if (fMuons) {
+      fMuons->Delete();
+   }
 }
 
 //______________________________________________________________________________
-void Event::Reset(Option_t * /*option*/)
+void Event::Reset(Option_t* /*option*/)
 {
-// Static function to reset all static objects for this event
-//   fgTracks->Delete(option);
-
-   delete fgTracks; fgTracks = 0;
-   fgHist   = 0;
+   // -- Delete tracks and histograms.
+   delete fH;
+   fH = 0;
+   if (fTracks) {
+      fTracks->Clear();
+   }
+   delete fTracks;
+   fTracks = 0;
 }
 
 //______________________________________________________________________________
@@ -219,18 +257,22 @@ void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
 {
    fNtrack = 0;
    fEvtHdr.Set(i, run, date);
-   if (!fgHist) fgHist = new TH1F("hstat","Event Histogram",100,0,1);
-   fH = fgHist;
+   fH = new TH1F("hstat", "Event Histogram", 100, 0, 1);
+   fH->SetDirectory(0);
    fH->Fill(random);
 }
 
 //______________________________________________________________________________
-void Event::SetMeasure(UChar_t which, Int_t what) {
-   if (which<10) fMeasures[which] = what;
+void Event::SetMeasure(UChar_t which, Int_t what)
+{
+   if (which < 10) {
+      fMeasures[which] = what;
+   }
 }
 
 //______________________________________________________________________________
-void Event::SetRandomVertex() {
+void Event::SetRandomVertex()
+{
    // This delete is to test the relocation of variable length array
    if (fClosestDistance) delete [] fClosestDistance;
    if (!fNvertex) {
@@ -244,7 +286,8 @@ void Event::SetRandomVertex() {
 }
 
 //______________________________________________________________________________
-Track::Track(const Track &orig) : TObject(orig)
+Track::Track(const Track& orig)
+: TObject(orig)
 {
    // Copy a track object
 
@@ -280,11 +323,12 @@ Track::Track(const Track &orig) : TObject(orig)
    fValid  = orig.fValid;
 
    fTriggerBits = orig.fTriggerBits;
-
 }
 
 //______________________________________________________________________________
-Track::Track(Float_t random) : TObject(),fTriggerBits(64)
+Track::Track(Float_t random)
+: TObject()
+, fTriggerBits(64)
 {
    // Create a track object.
    // Note that in this example, data members do not have any physical meaning.
@@ -336,7 +380,7 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
 }
 
 //______________________________________________________________________________
-void Track::Clear(Option_t * /*option*/)
+void Track::Clear(Option_t* /*option*/)
 {
    fTriggerBits.Clear(); 
    delete [] fPointValue; 
@@ -344,7 +388,7 @@ void Track::Clear(Option_t * /*option*/)
 }
 
 //______________________________________________________________________________
-HistogramManager::HistogramManager(TDirectory *dir)
+HistogramManager::HistogramManager(TDirectory* dir)
 {
    // Create histogram manager object. Histograms will be created
    // in the "dir" directory.
@@ -388,7 +432,7 @@ HistogramManager::~HistogramManager()
 }
 
 //______________________________________________________________________________
-void HistogramManager::Hfill(Event *event)
+void HistogramManager::Hfill(Event* event)
 {
    // Fill histograms.
 
@@ -417,3 +461,4 @@ void HistogramManager::Hfill(Event *event)
       fValid->Fill(track->GetValid());
    }
 }
+
