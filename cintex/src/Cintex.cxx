@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.9 2006/06/21 18:39:30 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.10 2006/07/03 09:22:46 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -120,11 +120,11 @@ namespace ROOT {
          Instance().fEnabled = true;
       } 
 
-      void Cintex::SetROOTCreator(ROOTCreator c) {
+      void Cintex::SetROOTCreator(ROOTCreator_t c) {
          Instance().fRootcreator = c;
       }
 
-      ROOTCreator Cintex::GetROOTCreator() {
+      ROOTCreator_t Cintex::GetROOTCreator() {
          return Instance().fRootcreator;
       }
 

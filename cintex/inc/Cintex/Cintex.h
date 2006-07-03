@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: Cintex.h,v 1.5 2006/06/21 18:39:30 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: Cintex.h,v 1.6 2006/07/03 09:22:46 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -30,15 +30,15 @@ namespace ROOT {
       virtual void operator () ( const ROOT::Reflex::Member& m );
     };
 
-    typedef TClass* (*ROOTCreator)( ROOT::Reflex::Type, ROOT::TGenericClassInfo* );
+    typedef TClass* (*ROOTCreator_t)( ROOT::Reflex::Type, ROOT::TGenericClassInfo* );
  
     class Cintex {
     public:
       Cintex();
       ~Cintex();
       static void Enable();
-      static void SetROOTCreator(ROOTCreator);
-      static ROOTCreator GetROOTCreator();
+      static void SetROOTCreator(ROOTCreator_t);
+      static ROOTCreator_t GetROOTCreator();
       static int  Debug();
       static void SetDebug(int);
       static bool PropagateClassTypedefs();
@@ -48,7 +48,7 @@ namespace ROOT {
     private:
       static Cintex& Instance();
       Callback*     fCallback;
-      ROOTCreator   fRootcreator;
+      ROOTCreator_t fRootcreator;
       int           fDbglevel;
       bool          fPropagateClassTypedefs;
       bool          fPropagateClassEnums;
