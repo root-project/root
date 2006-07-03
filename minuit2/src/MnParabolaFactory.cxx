@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnParabolaFactory.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnParabolaFactory.cxx,v 1.2 2006/06/26 11:03:55 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -69,7 +69,7 @@ MnParabola MnParabolaFactory::operator()(const MnParabolaPoint& p1,
    double c = y1 - a*xx1 - b*x1;
    
    return MnParabola(a, b, c);
-                                         }
+}
 
 
   }  // namespace Minuit2

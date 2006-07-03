@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnTiny.cpp,v 1.1.6.3 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnTiny.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -17,10 +17,11 @@ namespace ROOT {
 double MnTiny::One() const {return fOne;}
 
 double MnTiny::operator()(double epsp1) const {
-  double result = epsp1 - One();
-  return result;
+   // evaluate minimal diference between two floating points
+   double result = epsp1 - One();
+   return result;
 }
 
-  }  // namespace Minuit2
+   }  // namespace Minuit2
 
 }  // namespace ROOT

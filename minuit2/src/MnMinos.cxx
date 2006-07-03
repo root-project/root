@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnMinos.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnMinos.cxx,v 1.2 2006/04/12 16:30:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -21,151 +21,155 @@ namespace ROOT {
 
 
 std::pair<double,double> MnMinos::operator()(unsigned int par, unsigned int maxcalls) const {
-  MinosError mnerr = Minos(par, maxcalls);
-  return mnerr();
+   // do Minos analysis given the parameter index returning a pair for (lower,upper) errors
+   MinosError mnerr = Minos(par, maxcalls);
+   return mnerr();
 }
 
 double MnMinos::Lower(unsigned int par, unsigned int maxcalls) const {
-
-  MnUserParameterState upar = fMinimum.UserState();
-  double err = fMinimum.UserState().Error(par);
-
-  MnCross aopt = Loval(par, maxcalls);
-
-  double Lower = aopt.IsValid() ? -1.*err*(1.+ aopt.Value()) : (aopt.AtLimit() ? upar.Parameter(par).LowerLimit() : upar.Value(par));
-  
-  return Lower;
+   // get lower error for parameter par
+   MnUserParameterState upar = fMinimum.UserState();
+   double err = fMinimum.UserState().Error(par);
+   
+   MnCross aopt = Loval(par, maxcalls);
+   
+   double Lower = aopt.IsValid() ? -1.*err*(1.+ aopt.Value()) : (aopt.AtLimit() ? upar.Parameter(par).LowerLimit() : upar.Value(par));
+   
+   return Lower;
 }
 
 double MnMinos::Upper(unsigned int par, unsigned int maxcalls) const {
-  MnCross aopt = Upval(par, maxcalls);
-  
-  MnUserParameterState upar = fMinimum.UserState();
-  double err = fMinimum.UserState().Error(par);
-
-  double Upper = aopt.IsValid() ? err*(1.+ aopt.Value()) : (aopt.AtLimit() ? upar.Parameter(par).UpperLimit() : upar.Value(par));
-  
-  return Upper;
+   // upper error for parameter par
+   MnCross aopt = Upval(par, maxcalls);
+   
+   MnUserParameterState upar = fMinimum.UserState();
+   double err = fMinimum.UserState().Error(par);
+   
+   double Upper = aopt.IsValid() ? err*(1.+ aopt.Value()) : (aopt.AtLimit() ? upar.Parameter(par).UpperLimit() : upar.Value(par));
+   
+   return Upper;
 }
 
 MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls) const {
-  assert(fMinimum.IsValid());  
-  assert(!fMinimum.UserState().Parameter(par).IsFixed());
-  assert(!fMinimum.UserState().Parameter(par).IsConst());
-
-  MnCross up = Upval(par, maxcalls);
-  MnCross lo = Loval(par, maxcalls);
-
-  return MinosError(par, fMinimum.UserState().Value(par), lo, up);
+   assert(fMinimum.IsValid());  
+   assert(!fMinimum.UserState().Parameter(par).IsFixed());
+   assert(!fMinimum.UserState().Parameter(par).IsConst());
+   
+   MnCross up = Upval(par, maxcalls);
+   MnCross lo = Loval(par, maxcalls);
+   
+   return MinosError(par, fMinimum.UserState().Value(par), lo, up);
 }
 
 MnCross MnMinos::Upval(unsigned int par, unsigned int maxcalls) const {
-  assert(fMinimum.IsValid());  
-  assert(!fMinimum.UserState().Parameter(par).IsFixed());
-  assert(!fMinimum.UserState().Parameter(par).IsConst());
-  if(maxcalls == 0) {
-    unsigned int nvar = fMinimum.UserState().VariableParameters();
-    maxcalls = 2*(nvar+1)*(200 + 100*nvar + 5*nvar*nvar);
-  }
-
-  std::vector<unsigned int> para(1, par);
-
-  MnUserParameterState upar = fMinimum.UserState();
-  double err = upar.Error(par);
-  double val = upar.Value(par) + err;
-  std::vector<double> xmid(1, val);
-  std::vector<double> xdir(1, err);
-  
-  double up = fFCN.Up();
-  unsigned int ind = upar.IntOfExt(par);
-  MnAlgebraicSymMatrix m = fMinimum.Error().Matrix();
-  double xunit = sqrt(up/err);
-  for(unsigned int i = 0; i < m.Nrow(); i++) {
-    if(i == ind) continue;
-    double xdev = xunit*m(ind,i);
-    unsigned int ext = upar.ExtOfInt(i);
-    upar.SetValue(ext, upar.Value(ext) + xdev);
-  }
-
-  upar.Fix(par);
-  upar.SetValue(par, val);
-
-//   double edmmax = 0.5*0.1*fFCN.Up()*1.e-3;
-  double toler = 0.1;
-  MnFunctionCross cross(fFCN, upar, fMinimum.Fval(), fStrategy);
-
-  MnCross aopt = cross(para, xmid, xdir, toler, maxcalls);
-
-//   std::cout<<"aopt= "<<aopt.Value()<<std::endl;
-
+   // get crossing value in the upper parameter direction 
+   assert(fMinimum.IsValid());  
+   assert(!fMinimum.UserState().Parameter(par).IsFixed());
+   assert(!fMinimum.UserState().Parameter(par).IsConst());
+   if(maxcalls == 0) {
+      unsigned int nvar = fMinimum.UserState().VariableParameters();
+      maxcalls = 2*(nvar+1)*(200 + 100*nvar + 5*nvar*nvar);
+   }
+   
+   std::vector<unsigned int> para(1, par);
+   
+   MnUserParameterState upar = fMinimum.UserState();
+   double err = upar.Error(par);
+   double val = upar.Value(par) + err;
+   std::vector<double> xmid(1, val);
+   std::vector<double> xdir(1, err);
+   
+   double up = fFCN.Up();
+   unsigned int ind = upar.IntOfExt(par);
+   MnAlgebraicSymMatrix m = fMinimum.Error().Matrix();
+   double xunit = sqrt(up/err);
+   for(unsigned int i = 0; i < m.Nrow(); i++) {
+      if(i == ind) continue;
+      double xdev = xunit*m(ind,i);
+      unsigned int ext = upar.ExtOfInt(i);
+      upar.SetValue(ext, upar.Value(ext) + xdev);
+   }
+   
+   upar.Fix(par);
+   upar.SetValue(par, val);
+   
+   //   double edmmax = 0.5*0.1*fFCN.Up()*1.e-3;
+   double toler = 0.1;
+   MnFunctionCross cross(fFCN, upar, fMinimum.Fval(), fStrategy);
+   
+   MnCross aopt = cross(para, xmid, xdir, toler, maxcalls);
+   
+   //   std::cout<<"aopt= "<<aopt.Value()<<std::endl;
+   
 #ifdef WARNINGMSG
-  if(aopt.AtLimit()) 
-    std::cout<<"MnMinos Parameter "<<par<<" is at Upper limit."<<std::endl;
-  if(aopt.AtMaxFcn())
-    std::cout<<"MnMinos maximum number of function calls exceeded for Parameter "<<par<<std::endl;   
-  if(aopt.NewMinimum())
-    std::cout<<"MnMinos new Minimum found while looking for Parameter "<<par<<std::endl;     
-  if(!aopt.IsValid()) 
-    std::cout<<"MnMinos could not find Upper Value for Parameter "<<par<<"."<<std::endl;
+   if(aopt.AtLimit()) 
+      std::cout<<"MnMinos Parameter "<<par<<" is at Upper limit."<<std::endl;
+   if(aopt.AtMaxFcn())
+      std::cout<<"MnMinos maximum number of function calls exceeded for Parameter "<<par<<std::endl;   
+   if(aopt.NewMinimum())
+      std::cout<<"MnMinos new Minimum found while looking for Parameter "<<par<<std::endl;     
+   if(!aopt.IsValid()) 
+      std::cout<<"MnMinos could not find Upper Value for Parameter "<<par<<"."<<std::endl;
 #endif
-
-  return aopt;
+   
+   return aopt;
 }
 
 MnCross MnMinos::Loval(unsigned int par, unsigned int maxcalls) const {
-  assert(fMinimum.IsValid());  
-  assert(!fMinimum.UserState().Parameter(par).IsFixed());
-  assert(!fMinimum.UserState().Parameter(par).IsConst());
-  if(maxcalls == 0) {
-    unsigned int nvar = fMinimum.UserState().VariableParameters();
-    maxcalls = 2*(nvar+1)*(200 + 100*nvar + 5*nvar*nvar);
-  }
-  std::vector<unsigned int> para(1, par);
-
-  MnUserParameterState upar = fMinimum.UserState();
-  double err = upar.Error(par);
-  double val = upar.Value(par) - err;
-  std::vector<double> xmid(1, val);
-  std::vector<double> xdir(1, -err);
-  
-  double up = fFCN.Up();
-  unsigned int ind = upar.IntOfExt(par);
-  MnAlgebraicSymMatrix m = fMinimum.Error().Matrix();
-  double xunit = sqrt(up/err);
-  for(unsigned int i = 0; i < m.Nrow(); i++) {
-    if(i == ind) continue;
-    double xdev = xunit*m(ind,i);
-    unsigned int ext = upar.ExtOfInt(i);
-    upar.SetValue(ext, upar.Value(ext) - xdev);
-  }
-
-  upar.Fix(par);
-  upar.SetValue(par, val);
-
-//   double edmmax = 0.5*0.1*fFCN.Up()*1.e-3;
-  double toler = 0.1;
-  MnFunctionCross cross(fFCN, upar, fMinimum.Fval(), fStrategy);
-
-  MnCross aopt = cross(para, xmid, xdir, toler, maxcalls);
-
-//   std::cout<<"aopt= "<<aopt.Value()<<std::endl;
-
+   // return crossing in the lower parameter direction
+   assert(fMinimum.IsValid());  
+   assert(!fMinimum.UserState().Parameter(par).IsFixed());
+   assert(!fMinimum.UserState().Parameter(par).IsConst());
+   if(maxcalls == 0) {
+      unsigned int nvar = fMinimum.UserState().VariableParameters();
+      maxcalls = 2*(nvar+1)*(200 + 100*nvar + 5*nvar*nvar);
+   }
+   std::vector<unsigned int> para(1, par);
+   
+   MnUserParameterState upar = fMinimum.UserState();
+   double err = upar.Error(par);
+   double val = upar.Value(par) - err;
+   std::vector<double> xmid(1, val);
+   std::vector<double> xdir(1, -err);
+   
+   double up = fFCN.Up();
+   unsigned int ind = upar.IntOfExt(par);
+   MnAlgebraicSymMatrix m = fMinimum.Error().Matrix();
+   double xunit = sqrt(up/err);
+   for(unsigned int i = 0; i < m.Nrow(); i++) {
+      if(i == ind) continue;
+      double xdev = xunit*m(ind,i);
+      unsigned int ext = upar.ExtOfInt(i);
+      upar.SetValue(ext, upar.Value(ext) - xdev);
+   }
+   
+   upar.Fix(par);
+   upar.SetValue(par, val);
+   
+   //   double edmmax = 0.5*0.1*fFCN.Up()*1.e-3;
+   double toler = 0.1;
+   MnFunctionCross cross(fFCN, upar, fMinimum.Fval(), fStrategy);
+   
+   MnCross aopt = cross(para, xmid, xdir, toler, maxcalls);
+   
+   //   std::cout<<"aopt= "<<aopt.Value()<<std::endl;
+   
 #ifdef WARNINGMSG
-  if(aopt.AtLimit()) 
-    std::cout<<"MnMinos Parameter "<<par<<" is at Lower limit."<<std::endl;
-  if(aopt.AtMaxFcn())
-    std::cout<<"MnMinos maximum number of function calls exceeded for Parameter "<<par<<std::endl;   
-  if(aopt.NewMinimum())
-    std::cout<<"MnMinos new Minimum found while looking for Parameter "<<par<<std::endl;     
-  if(!aopt.IsValid()) 
-    std::cout<<"MnMinos could not find Lower Value for Parameter "<<par<<"."<<std::endl;
+   if(aopt.AtLimit()) 
+      std::cout<<"MnMinos Parameter "<<par<<" is at Lower limit."<<std::endl;
+   if(aopt.AtMaxFcn())
+      std::cout<<"MnMinos maximum number of function calls exceeded for Parameter "<<par<<std::endl;   
+   if(aopt.NewMinimum())
+      std::cout<<"MnMinos new Minimum found while looking for Parameter "<<par<<std::endl;     
+   if(!aopt.IsValid()) 
+      std::cout<<"MnMinos could not find Lower Value for Parameter "<<par<<"."<<std::endl;
 #endif
-
-  return aopt;
-
+   
+   return aopt;
+   
 }
 
 
-  }  // namespace Minuit2
+   }  // namespace Minuit2
 
 }  // namespace ROOT

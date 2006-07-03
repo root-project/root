@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.cxx,v 1.2 2006/06/26 11:03:55 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -238,6 +238,6 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
    return MnParabolaPoint(xvmin, fvmin);
    }
       
-  }  // namespace Minuit2
+}  // namespace Minuit2
 
 }  // namespace ROOT

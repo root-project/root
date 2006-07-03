@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnFumiliMinimize.cpp,v 1.1.4.4 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnFumiliMinimize.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -17,20 +17,22 @@ namespace ROOT {
 
 
 
-// need to reimplement otherwise base class method is done
+
 
 FunctionMinimum MnFumiliMinimize::operator()(unsigned int maxfcn, double toler) {
-
-  assert(fState.IsValid());
-  unsigned int npar = VariableParameters();
-//   assert(npar > 0);
-  if(maxfcn == 0) maxfcn = 200 + 100*npar + 5*npar*npar;
-  FunctionMinimum min = Minimizer().Minimize( Fcnbase(), fState, fStrategy, maxfcn, toler);
-  fNumCall += min.NFcn();
-  fState = min.UserState();
-  return min;
+   // minimize using Fumili
+   // need to reimplement otherwise base class method is done
+   
+   assert(fState.IsValid());
+   unsigned int npar = VariableParameters();
+   //   assert(npar > 0);
+   if(maxfcn == 0) maxfcn = 200 + 100*npar + 5*npar*npar;
+   FunctionMinimum min = Minimizer().Minimize( Fcnbase(), fState, fStrategy, maxfcn, toler);
+   fNumCall += min.NFcn();
+   fState = min.UserState();
+   return min;
 }
 
-  }  // namespace Minuit2
+   }  // namespace Minuit2
 
 }  // namespace ROOT

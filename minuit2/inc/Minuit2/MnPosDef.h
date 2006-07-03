@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnPosDef.h,v 1.5.6.2 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnPosDef.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -19,6 +19,10 @@ class MinimumState;
 class MinimumError;
 class MnMachinePrecision;
 
+/**
+   Force the covariance matrix to be positive defined
+   by adding extra terms in the diagonal
+ */
 class MnPosDef {
 
 public:
