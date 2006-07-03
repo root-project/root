@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooParametricStepFunction.rdl,v 1.2 2005/02/14 20:48:03 wverkerke Exp $
+ *    File: $Id: RooParametricStepFunction.rdl,v 1.3 2005/02/25 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *
@@ -38,6 +38,8 @@ public:
   Double_t* getLimits();
 
 protected:
+
+  Double_t lastBinValue() const ;
 
   RooRealProxy _x;
   RooListProxy _coefList ;

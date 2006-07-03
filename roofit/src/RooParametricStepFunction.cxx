@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitBabar                                                      *
- *    File: $Id: RooParametricStepFunction.cc,v 1.6 2005/06/16 09:37:28 wverkerke Exp $
+ *    File: $Id: RooParametricStepFunction.cc,v 1.7 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *
@@ -117,15 +117,57 @@ Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooAr
 
 
 
-Double_t RooParametricStepFunction::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
+Double_t RooParametricStepFunction::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   assert(code==1) ;
-
-  // WVE needs adaptation for integration over sub ranges
-
-  Double_t sum(1.0) ;
-  return sum;  
   
+  // Case without range is trivial: p.d.f is by construction normalized 
+  if (!rangeName) {
+    return 1.0 ;
+  }
+
+  // Case with ranges, calculate integral explicitly 
+  Double_t xmin = _x.min(rangeName) ;
+  Double_t xmax = _x.max(rangeName) ;
+
+  Double_t sum=0 ;
+  Int_t i ;
+  for (i=1 ; i<=_nBins ; i++) {
+    Double_t binVal = (i<_nBins) ? (static_cast<RooRealVar*>(_coefList.at(i-1))->getVal()) : lastBinValue() ;      
+    if (_limits[i-1]>=xmin && _limits[i]<=xmax) {
+      // Bin fully in the integration domain
+      sum += (_limits[i]-_limits[i-1])*binVal ;
+    } else if (_limits[i-1]<xmin && _limits[i]>xmax) {
+      // Domain is fully contained in this bin
+      sum += (xmax-xmin)*binVal ;
+      // Exit here, this is the last bin to be processed by construction
+      return sum ;
+    } else if (_limits[i-1]<xmin && _limits[i]<=xmax && _limits[i]>xmin) {
+      // Lower domain boundary is in bin
+      sum +=  (_limits[i]-xmin)*binVal ;
+    } else if (_limits[i-1]>=xmin && _limits[i]>xmax && _limits[i-1]<xmax) {
+      sum +=  (xmax-_limits[i-1])*binVal ;      
+      // Upper domain boundary is in bin
+      // Exit here, this is the last bin to be processed by construction
+      return sum ;
+    }
+  }
+
+  return sum;  
+}
+
+
+Double_t RooParametricStepFunction::lastBinValue() const
+{
+  Double_t sum(0.);
+  Double_t binSize(0.);
+  for (Int_t j=1;j<_nBins;j++){
+    RooRealVar* tmp = (RooRealVar*) _coefList.at(j-1);
+    binSize = _limits[j] - _limits[j-1];
+    sum = sum + tmp->getVal()*binSize;
+  }
+  binSize = _limits[_nBins] - _limits[_nBins-1];
+  return (1.0 - sum)/binSize;
 }
 
 
