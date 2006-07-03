@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.23 2006/06/08 15:23:34 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.24 2006/06/30 14:45:46 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -119,6 +119,7 @@ SMatrix<T,D1,D2,R>::SMatrix(const Expr<A,T,D1,D2,R2>& rhs) {
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class InputIterator>
 SMatrix<T,D1,D2,R>::SMatrix(InputIterator begin, InputIterator end, bool triang, bool lower) {
+   // assume iterator size == matrix size 
    for(unsigned int i=0; i<R::kSize; ++i) fRep.Array()[i] = 0;
    AssignItr<T,D1,D2,R>::Evaluate(*this,begin,end,triang,lower); 
 }
@@ -126,8 +127,10 @@ SMatrix<T,D1,D2,R>::SMatrix(InputIterator begin, InputIterator end, bool triang,
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class InputIterator>
 SMatrix<T,D1,D2,R>::SMatrix(InputIterator begin, unsigned int size, bool triang, bool lower) {
+   // assume iterator size <= matrix size (no check needed in AssignItr) 
+   assert( size <= R::kSize);
    for(unsigned int i=0; i<R::kSize; ++i) fRep.Array()[i] = 0;
-   AssignItr<T,D1,D2,R>::Evaluate(*this,begin,begin+size,triang,lower); 
+   AssignItr<T,D1,D2,R>::Evaluate(*this,begin,begin+size,triang,lower,false); 
 }
 
 
@@ -624,6 +627,22 @@ inline const T * SMatrix<T,D1,D2,R>::begin() const {
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline const T * SMatrix<T,D1,D2,R>::end() const {
    return fRep.Array() + R::kSize;
+}
+
+
+template <class T, unsigned int D1, unsigned int D2, class R>
+template <class InputIterator>
+void SMatrix<T,D1,D2,R>::SetElements(InputIterator begin, InputIterator end, bool triang, bool lower) {
+   // assume iterator size == matrix size when filling full matrix
+   AssignItr<T,D1,D2,R>::Evaluate(*this,begin,end,triang,lower); 
+}
+
+template <class T, unsigned int D1, unsigned int D2, class R>
+template <class InputIterator>
+void SMatrix<T,D1,D2,R>::SetElements(InputIterator begin, unsigned int size, bool triang, bool lower) {
+   // assume iterator size <= matrix size  (no check to be done in AssignItr)
+   assert( size <= R::kSize);
+   AssignItr<T,D1,D2,R>::Evaluate(*this,begin,begin+size,triang,lower,false); 
 }
 
 

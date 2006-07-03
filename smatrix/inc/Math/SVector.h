@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.11 2006/06/08 15:23:34 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.12 2006/06/30 14:45:46 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector
@@ -103,12 +103,14 @@ public:
 #ifdef LATER
    /**
        Constructor with STL iterator interface. The data will be copied into the vector
+       The iterator size must be equal to the vector size
     */
    template<class InputIterator>
    explicit SVector(InputIterator begin, InputIterator end); 
    
    /**
       Constructor with STL iterator interface. The data will be copied into the vector
+      The size must be <= vector size
     */
    template<class InputIterator>
    explicit SVector(InputIterator begin, unsigned int size); 
@@ -196,6 +198,16 @@ public:
    
    /** STL const_iterator interface. */
    const_iterator end() const;
+
+   /// set vector elements copying the values 
+   /// iterator size must match vector size
+   template<class InputIterator>
+   void SetElements(InputIterator begin, InputIterator end); 
+
+   /// set vector elements copying the values 
+   /// size must be <= vector size
+   template<class InputIterator>
+   void SetElements(InputIterator begin, unsigned int size); 
    
    
    /** @name --- Operators --- */

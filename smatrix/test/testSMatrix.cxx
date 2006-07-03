@@ -876,6 +876,36 @@ int test15() {
     iret |= compare( pS1[i],w[i] );
 
 
+  // check with SetElements
+  std::vector<double> vu(u,u+12);
+  std::vector<double> vw(w,w+6);
+  SMatrix<double,3,4> B1;
+  B1.SetElements(vu.begin(),10); 
+  iret |= compare( B1(0,0),u[0] );
+  iret |= compare( B1(1,2),u[6] );
+  iret |= compare( B1(2,3),0.0 );
+
+  B1.SetElements(vu.begin(),vu.end()); 
+  iret |= compare( B1(0,0),vu[0] );
+  iret |= compare( B1(1,2),vu[6] );
+  iret |= compare( B1(2,3),vu[11] );
+
+  B1.SetElements(vw.begin(),vw.end(),true,true); 
+  iret |= compare( B1(0,0),w[0] );
+  iret |= compare( B1(1,0),w[1] );
+  iret |= compare( B1(2,0),w[3] );
+  iret |= compare( B1(2,2),w[5] );
+
+  SVector<double,12> v1; 
+  v1.SetElements(vu.begin(),vu.end() ); 
+  for (unsigned int i = 0; i < v1.kSize; ++i) 
+     iret |= compare( v1[i],vu[i] );
+
+  // v1.SetElements(vw.begin(),vw.end() ); // this assert at run-time
+  v1.SetElements(vw.begin(), vw.size() );
+  for (unsigned int i = 0; i < vw.size(); ++i) 
+     iret |= compare( v1[i],vw[i] );
+
 
 
   return iret;
