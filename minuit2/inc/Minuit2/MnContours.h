@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnContours.h,v 1.6.2.4 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnContours.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -48,10 +48,11 @@ public:
 
   ~MnContours() {}
 
-  /// ask for one Contour (points only)
+  /// ask for one Contour (points only) from number of points (>=4) and parameter indeces
   std::vector<std::pair<double,double> > operator()(unsigned int, unsigned int, unsigned int npoints = 20) const;
 
   /// ask for one Contour ContoursError (MinosErrors + points)
+  /// from number of points (>=4) and parameter indeces
   /// can be printed via std::cout
   ContoursError Contour(unsigned int, unsigned int, unsigned int npoints = 20) const;
 

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.cxx,v 1.4 2006/04/26 10:40:09 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.cxx,v 1.5 2006/05/29 10:18:06 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -29,59 +29,64 @@ ClassImp(TFitterFumili);
 TFitterFumili* gFumili2 = 0;
 
 TFitterFumili::TFitterFumili() {
-    SetName("Fumili2");
-    gFumili2 = this;
-    gROOT->GetListOfSpecials()->Add(gFumili2);
+   // Constructor. Set Name and global pointer. 
+   SetName("Fumili2");
+   gFumili2 = this;
+   gROOT->GetListOfSpecials()->Add(gFumili2);
 }
 
 
-// needed this additional contructor ? 
+
 TFitterFumili::TFitterFumili(Int_t /* maxpar */) {
-    SetName("Fumili2");
-    gFumili2 = this;
-    gROOT->GetListOfSpecials()->Add(gFumili2);
+   // Constructor as default. Needed this for TVirtualFitter interface 
+   SetName("Fumili2");
+   gFumili2 = this;
+   gROOT->GetListOfSpecials()->Add(gFumili2);
 }
 
 
-// create the minimizer engine and register the plugin in ROOT
-// what ever we specify only Fumili is created  
+ 
 void TFitterFumili::CreateMinimizer(EMinimizerType ) { 
-  if (PrintLevel() >=1 ) 
-    std::cout<<"TFitterFumili: Minimize using new Fumili algorithm "<<std::endl;
-
-  const ModularFunctionMinimizer * minimizer = GetMinimizer();
-  if (!minimizer) delete minimizer;
-  SetMinimizer( new FumiliMinimizer() );
-
-  SetStrategy(1);
-  // Fumili cannot deal with tolerance too smalls (10-3 corrsponds to 10-7 in FumiliBuilder)
-  SetMinimumTolerance(0.001); 
-
+   // Create the minimizer engine and register the plugin in ROOT
+   // what ever we specify only Fumili is created 
+   if (PrintLevel() >=1 ) 
+      std::cout<<"TFitterFumili: Minimize using new Fumili algorithm "<<std::endl;
+   
+   const ModularFunctionMinimizer * minimizer = GetMinimizer();
+   if (!minimizer) delete minimizer;
+   SetMinimizer( new FumiliMinimizer() );
+   
+   SetStrategy(1);
+   // Fumili cannot deal with tolerance too smalls (10-3 corrsponds to 10-7 in FumiliBuilder)
+   SetMinimumTolerance(0.001); 
+   
 #ifdef DEBUG
-  SetPrintLevel(3);
+   SetPrintLevel(3);
 #endif
 }
 
 
 Double_t TFitterFumili::Chisquare(Int_t npar, Double_t *params) const {
-  // do chisquare calculations in case of likelihood fits 
-  const TFumiliBinLikelihoodFCN * fcn = dynamic_cast<const TFumiliBinLikelihoodFCN *> ( GetMinuitFCN() ); 
-  std::vector<double> p(npar);
-  for (int i = 0; i < npar; ++i) 
-    p[i] = params[i];
-  return fcn->Chi2(p);
+   // Do chisquare calculations in case of likelihood fits. 
+   const TFumiliBinLikelihoodFCN * fcn = dynamic_cast<const TFumiliBinLikelihoodFCN *> ( GetMinuitFCN() ); 
+   std::vector<double> p(npar);
+   for (int i = 0; i < npar; ++i) 
+      p[i] = params[i];
+   return fcn->Chi2(p);
 }
 
 
 void TFitterFumili::CreateChi2FCN() { 
-  SetMinuitFCN(new TFumiliChi2FCN( *this,GetStrategy()) );
+   // Create Chi2FCN Fumili function.
+   SetMinuitFCN(new TFumiliChi2FCN( *this,GetStrategy()) );
 }
 
 void TFitterFumili::CreateChi2ExtendedFCN() { 
-  //for Fumili use normal method 
-  SetMinuitFCN(new TFumiliChi2FCN(*this, GetStrategy()));
+   //ExtendedFCN: for Fumili use normal method. 
+   SetMinuitFCN(new TFumiliChi2FCN(*this, GetStrategy()));
 }
 
 void TFitterFumili::CreateBinLikelihoodFCN() { 
-  SetMinuitFCN( new TFumiliBinLikelihoodFCN( *this, GetStrategy()) );
+   // Create bin likelihood FCN for Fumili. 
+   SetMinuitFCN( new TFumiliBinLikelihoodFCN( *this, GetStrategy()) );
 }

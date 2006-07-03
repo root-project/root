@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnContours.cpp,v 1.6.2.4 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnContours.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -25,13 +25,14 @@ namespace ROOT {
 
 
 std::vector<std::pair<double,double> > MnContours::operator()(unsigned int px, unsigned int py, unsigned int npoints) const {
-
+  // get contour as a pair of (x,y) points passing the parameter index (px, py)  and the number of requested points (>=4)
   ContoursError cont = Contour(px, py, npoints);
   return cont();
 }
 
 ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int npoints) const {
-
+   // calculate the contour passing the parameter index (px, py)  and the number of requested points (>=4)
+   // the fcn.UP() has to be set to the rquired value (see Minuit document on errors)
   assert(npoints > 3);
   unsigned int maxcalls = 100*(npoints+5)*(fMinimum.UserState().VariableParameters()+1);
   unsigned int nfcn = 0;

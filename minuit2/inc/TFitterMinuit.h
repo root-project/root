@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.4 2005/12/09 09:49:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.5 2006/03/20 08:22:40 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -162,7 +162,7 @@ private:
   double fMinTolerance;
 
 
-  ClassDef(TFitterMinuit,1)
+  ClassDef(TFitterMinuit,1)  // The ROOT fitter based on new Minuit (Minuit2)
 };
 
 R__EXTERN TFitterMinuit* gMinuit2;

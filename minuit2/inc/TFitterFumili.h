@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.h,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.h,v 1.2 2006/04/26 10:40:09 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -59,7 +59,7 @@ private:
 
   
 
-  ClassDef(TFitterFumili,1)
+  ClassDef(TFitterFumili,1) // Fitter based on new Fumili method (Fumili2)
 };
 
 R__EXTERN TFitterFumili* gFumili2;

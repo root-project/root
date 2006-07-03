@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnUserCovariance.h,v 1.6.2.3 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnUserCovariance.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -19,6 +19,11 @@ namespace ROOT {
    namespace Minuit2 {
 
 
+/**
+   Class containing the covariance matrix data represented as a vector of 
+   size n*(n+1)/2
+   Used to hide internal matrix representation to user
+ */
 class MnUserCovariance {
 
 public:

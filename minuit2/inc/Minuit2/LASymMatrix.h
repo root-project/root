@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: LASymMatrix.h,v 1.13.2.3 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: LASymMatrix.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -38,6 +38,15 @@ int Mndscal(unsigned int, double, double*, int);
 class LAVector;
 
 int Invert ( LASymMatrix & );
+
+/**
+   Class describing a symmetric matrix of size n.  
+   The size is specified as a run-time argument passed in the 
+   constructor. 
+   The class uses expression templates for the operations and functions. 
+   Only the independent data are kept in the fdata array of size n*(n+1)/2
+   containing the lower triangular data   
+ */
 
 class LASymMatrix {
 

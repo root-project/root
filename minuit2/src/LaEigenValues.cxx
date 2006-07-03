@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: LaEigenValues.cpp,v 1.4.6.3 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: LaEigenValues.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -18,28 +18,28 @@ namespace ROOT {
 int mneigen(double*, unsigned int, unsigned int, unsigned int, double*,double);
 
 LAVector eigenvalues(const LASymMatrix& mat) {
-
-  unsigned int nrow = mat.Nrow();
-  
-  LAVector tmp(nrow*nrow);
-  LAVector work(2*nrow);
-  
-  for(unsigned int i = 0; i < nrow; i++)
-    for(unsigned int j = 0; j <= i; j++) {
-      tmp(i + j*nrow) = mat(i,j);
-      tmp(i*nrow + j) = mat(i,j);
-    }
-
-  int info = mneigen(tmp.Data(), nrow, nrow, work.size(), work.Data(), 1.e-6);
-
-  assert(info == 0);
-
-  LAVector result(nrow);
-  for(unsigned int i = 0; i < nrow; i++) result(i) = work(i);
-
-  return result;
+   // calculate eigenvalues of symmetric matrices using mneigen function (transalte from fortran Minuit)
+   unsigned int nrow = mat.Nrow();
+   
+   LAVector tmp(nrow*nrow);
+   LAVector work(2*nrow);
+   
+   for(unsigned int i = 0; i < nrow; i++)
+      for(unsigned int j = 0; j <= i; j++) {
+         tmp(i + j*nrow) = mat(i,j);
+         tmp(i*nrow + j) = mat(i,j);
+      }
+         
+         int info = mneigen(tmp.Data(), nrow, nrow, work.size(), work.Data(), 1.e-6);
+   
+   assert(info == 0);
+   
+   LAVector result(nrow);
+   for(unsigned int i = 0; i < nrow; i++) result(i) = work(i);
+   
+   return result;
 }
 
-  }  // namespace Minuit2
+   }  // namespace Minuit2
 
 }  // namespace ROOT

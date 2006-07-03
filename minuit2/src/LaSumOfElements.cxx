@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: LaSumOfElements.cpp,v 1.5.6.3 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: LaSumOfElements.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -18,15 +18,17 @@ namespace ROOT {
 double mndasum(unsigned int, const double*, int); 
 
 double sum_of_elements(const LAVector& v) {
-  
-  return mndasum(v.size(), v.Data(), 1);
+   // calculate the absolute sum of the vector elements using mndasum 
+   // which is a translation from dasum from BLAS
+   return mndasum(v.size(), v.Data(), 1);
 }
 
 double sum_of_elements(const LASymMatrix& m) {
-  
-  return mndasum(m.size(), m.Data(), 1);
+   // calculate the absolute sum of all the matrix elements using mndasum 
+   // which is a translation of dasum from BLAS
+   return mndasum(m.size(), m.Data(), 1);
 }
 
-  }  // namespace Minuit2
+   }  // namespace Minuit2
 
 }  // namespace ROOT

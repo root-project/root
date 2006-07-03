@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.2 2006/04/26 10:40:09 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.3 2006/06/26 11:03:55 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -228,9 +228,9 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       
 #ifdef DEBUG
       std::cout << "\n\n---> Iteration - " << result.size() 
-	      << "\nFval = " << s0.Fval() << " numOfCall = " << fcn.NumOfCalls() 
-	      << "\nInternal Parameter values " << s0.Vec() 
-	      << " Newton step " << step << std::endl; 
+      << "\nFval = " << s0.Fval() << " numOfCall = " << fcn.NumOfCalls() 
+      << "\nInternal Parameter values " << s0.Vec() 
+      << " Newton step " << step << std::endl; 
 #endif
       
       double gdel = inner_product(step, s0.Gradient().Grad());
@@ -302,10 +302,10 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 #ifdef DEBUG
       std::cout << "Updated new point: \n " 
          << " Parameter " << p.Vec()       
-	      << " Gradient " << g.Vec() 
-	      << " InvHessian " << e.Matrix() 
-	      << " Hessian " << e.Hessian() 
-	      << " edm = " << edm << std::endl << std::endl;
+         << " Gradient " << g.Vec() 
+         << " InvHessian " << e.Matrix() 
+         << " Hessian " << e.Hessian() 
+         << " edm = " << edm << std::endl << std::endl;
 #endif
       
       if(edm < 0.) {

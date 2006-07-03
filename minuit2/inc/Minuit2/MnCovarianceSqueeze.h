@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnCovarianceSqueeze.h,v 1.1.6.2 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnCovarianceSqueeze.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -20,6 +20,10 @@ namespace ROOT {
 class MnUserCovariance;
 class MinimumError;
 
+/**
+   class to reduce the covariance matrix when a parameter is fixed by 
+   removing the corresponding row and index
+ */
 class MnCovarianceSqueeze {
 
 public:
