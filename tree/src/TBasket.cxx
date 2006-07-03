@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.41 2006/06/05 20:37:03 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.42 2006/06/26 06:47:47 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -189,13 +189,17 @@ Int_t TBasket::GetEntryPointer(Int_t entry)
 //_______________________________________________________________________
 Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
 { 
-   //  Load basket buffers in memory without unziping.
+   // Load basket buffers in memory without unziping.
+   // This function is called by TTreeCloner.
+   // The function returns 0 in case of success, 1 in case of error.
 
    fBufferRef = new TBuffer(TBuffer::kRead, len);
    fBufferRef->SetParent(file);
    char *buffer = fBufferRef->Buffer();
    file->Seek(pos);
-   file->ReadBuffer(buffer,len);
+   if (file->ReadBuffer(buffer,len)) {
+      return 1; //error while reading
+   }
 
    fBufferRef->SetReadMode();
    fBufferRef->SetBufferOffset(0);
@@ -258,6 +262,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // Read a basket buffer. Check if buffers of previous ReadBasket
    // should not be dropped. Remember, we keep buffers in memory up to
    // fMaxVirtualSize.
+   // The function returns 0 in case of success, 1 in case of error
 
    Int_t badread= 0;
    TDirectory *cursav = gDirectory;
@@ -270,7 +275,10 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    
    char *buffer = fBufferRef->Buffer();
    file->Seek(pos);
-   file->ReadBuffer(buffer,len);
+   if (file->ReadBuffer(buffer,len)) {
+      badread = 1;
+      return badread;
+   }
 
    Streamer(*fBufferRef);
 
