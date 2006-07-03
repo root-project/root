@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.10 2006/07/03 09:22:46 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.11 2006/07/03 10:22:13 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -383,54 +383,54 @@ namespace ROOT { namespace Cintex {
                std::auto_ptr<CollFuncTable> m((CollFuncTable*)method.Invoke().Address());
                std::auto_ptr<TCollectionProxy::Proxy_t> proxy(
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,4,0)
-                                                              TCollectionProxy::GenExplicitProxy(tid,
+               TCollectionProxy::GenExplicitProxy(tid,
 #else
-                                                                                                 TCollectionProxy::genExplicitProxy(tid,
+               TCollectionProxy::genExplicitProxy(tid,
 #endif
-                                                                                                                                    m->iter_size,
-                                                                                                                                    m->value_diff,
-                                                                                                                                    m->value_offset,
-                                                                                                                                    m->size_func,
-                                                                                                                                    m->resize_func,
-                                                                                                                                    m->clear_func,
-                                                                                                                                    m->first_func,
-                                                                                                                                    m->next_func,
-                                                                                                                                    m->construct_func,
-                                                                                                                                    m->destruct_func,
-                                                                                                                                    m->feed_func,
-                                                                                                                                    m->collect_func
-                                                                                                                                    ));
-                                                              std::auto_ptr<TClassStreamer> str(
+                                                  m->iter_size,
+                                                  m->value_diff,
+                                                  m->value_offset,
+                                                  m->size_func,
+                                                  m->resize_func,
+                                                  m->clear_func,
+                                                  m->first_func,
+                                                  m->next_func,
+                                                  m->construct_func,
+                                                  m->destruct_func,
+                                                  m->feed_func,
+                                                  m->collect_func
+                                                  ));
+               std::auto_ptr<TClassStreamer> str(
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,4,0)
-                                                                                                TCollectionProxy::GenExplicitClassStreamer(tid,
+               TCollectionProxy::GenExplicitClassStreamer(tid,
 #else
-                                                                                                                                           TCollectionProxy::genExplicitClassStreamer(tid,
+               TCollectionProxy::genExplicitClassStreamer(tid,
 #endif
-                                                                                                                                                                                      m->iter_size,
-                                                                                                                                                                                      m->value_diff,
-                                                                                                                                                                                      m->value_offset,
-                                                                                                                                                                                      m->size_func,
-                                                                                                                                                                                      m->resize_func,
-                                                                                                                                                                                      m->clear_func,
-                                                                                                                                                                                      m->first_func,
-                                                                                                                                                                                      m->next_func,
-                                                                                                                                                                                      m->construct_func,
-                                                                                                                                                                                      m->destruct_func,
-                                                                                                                                                                                      m->feed_func,
-                                                                                                                                                                                      m->collect_func
-                                                                                                                                                                                      ));
-                                                                                                root_class->CopyCollectionProxy(*(proxy.get()));
-                                                                                                root_class->SetBit(TClass::kIsForeign);
-                                                                                                if ( str.get() )  {
-                                                                                                   root_class->AdoptStreamer(str.release());
-                                                                                                }
-                                                                                                }
-                                                              break;
-                                                              case TClassEdit::kNotSTL:
-                                                              case TClassEdit::kEnd:
-                                                              default:
-                                                              root_class->SetBit(TClass::kIsForeign);
-                                                              }
+                                                          m->iter_size,
+                                                          m->value_diff,
+                                                          m->value_offset,
+                                                          m->size_func,
+                                                          m->resize_func,
+                                                          m->clear_func,
+                                                          m->first_func,
+                                                          m->next_func,
+                                                          m->construct_func,
+                                                          m->destruct_func,
+                                                          m->feed_func,
+                                                          m->collect_func
+                                                          ));
+               root_class->CopyCollectionProxy(*(proxy.get()));
+               root_class->SetBit(TClass::kIsForeign);
+               if ( str.get() )  {
+                  root_class->AdoptStreamer(str.release());
+               }
+               }
+               break;
+               case TClassEdit::kNotSTL:
+               case TClassEdit::kEnd:
+               default:
+               root_class->SetBit(TClass::kIsForeign);
+               }
             }
             return root_class;
          }

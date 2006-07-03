@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTVariableBuilder.cxx,v 1.3 2006/07/03 09:22:46 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTVariableBuilder.cxx,v 1.4 2006/07/03 10:22:13 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -86,7 +86,7 @@ namespace ROOT { namespace Cintex {
    };
 
    void CINTVariableBuilder::Setup(const Member& dm ) {
-      // setup variable info
+      // Setup variable info.
       char* comment = NULL;
     
       const char* ref_t = "pool::Reference";
