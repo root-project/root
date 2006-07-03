@@ -1,7 +1,7 @@
 # File: roottest/python/function/PyROOT_functiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/24/04
-# Last: 05/10/06
+# Last: 07/03/06
 
 """Unit tests for PyROOT python/TF1 function interactions."""
 
@@ -26,19 +26,15 @@ class Linear:
 
 def pygaus( x, par ):
     arg1 = 0
-    arg2 =0
     scale1 =0
-    scale2 =0
     ddx = 0.01
 
     if (par[2] != 0.0):
         arg1 = (x[0]-par[1])/par[2]
-        arg2 = (x[0]-par[1]-0.045)/par[2]
         scale1 = (ddx*0.39894228)/par[2]
         h1 = par[0]/(1+par[3])
-        h2 = h1*par[3]
 
-        gauss = h1*scale1*exp(-0.5*arg1*arg1) + h2*scale1*exp(-0.5*arg2*arg2)
+        gauss = h1*scale1*exp(-0.5*arg1*arg1)
     else:
         gauss = 0.
     return gauss
@@ -84,7 +80,7 @@ class FitFunctionTestCase( unittest.TestCase ):
 
       self.assertEqual( f.GetNDF(), 96 )
       result = f.GetParameters()
-      self.assertEqual( round( result[1] - 0., 0), 0 )  # mean
+      self.assertEqual( round( result[1] - 0., 1), 0 )  # mean
       self.assertEqual( round( result[2] - 1., 1), 0 )  # s.d.
 
 
