@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: CINTScopeBuilder.h,v 1.3 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -16,13 +16,13 @@
 #include "CINTdefs.h"
 
 namespace ROOT {
-  namespace Cintex {
+   namespace Cintex {
 
-    namespace CINTScopeBuilder {
-      void Setup(const ROOT::Reflex::Scope&);
-      void Setup(const ROOT::Reflex::Type&);    
-    }
-  }
+      namespace CINTScopeBuilder {
+         void Setup(const ROOT::Reflex::Scope&);
+         void Setup(const ROOT::Reflex::Type&);    
+      }
+   }
 }
 
 #endif // ROOT_Cintex_CINTScopeBuilder

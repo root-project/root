@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.h,v 1.3 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -19,22 +19,22 @@ class TClass;
 class TMemberInspector;
 
 namespace ROOT {
-  namespace Cintex {
+   namespace Cintex {
 
-    class ROOTClassEnhancer {
-    public:
-      ROOTClassEnhancer(const ROOT::Reflex::Type& TypeNth);
-      ~ROOTClassEnhancer();
-      void Setup(void);
-      void CreateInfo(void);
-      static void CreateClassForNamespace(const std::string&);
-    private:
-      ROOT::Reflex::Type  fClass;
-      std::string         fName;
-      void*               fEnhancerinfo;
-    };
+      class ROOTClassEnhancer {
+      public:
+         ROOTClassEnhancer(const ROOT::Reflex::Type& TypeNth);
+         ~ROOTClassEnhancer();
+         void Setup(void);
+         void CreateInfo(void);
+         static void CreateClassForNamespace(const std::string&);
+      private:
+         ROOT::Reflex::Type  fClass;
+         std::string         fName;
+         void*               fEnhancerinfo;
+      };
     
-  }
+   }
 }
 
 #endif // ROOT_Cintex_ROOTClassEnhancer

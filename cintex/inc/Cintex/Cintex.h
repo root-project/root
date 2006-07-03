@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: Cintex.h,v 1.4 2006/04/28 06:40:18 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: Cintex.h,v 1.5 2006/06/21 18:39:30 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -24,7 +24,8 @@ class TClass;
 namespace ROOT {
   namespace Cintex {
     
-    struct Callback : public ROOT::Reflex::ICallback {
+    class Callback : public ROOT::Reflex::ICallback {
+     public:
       virtual void operator () ( const ROOT::Reflex::Type& t );
       virtual void operator () ( const ROOT::Reflex::Member& m );
     };

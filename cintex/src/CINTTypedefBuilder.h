@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.h,v 1.3 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.h,v 1.4 2006/05/04 19:31:31 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -19,17 +19,17 @@
  */
 namespace ROOT {  namespace Cintex {
 
-  /*  @class CINTTypedefBuilder CINTTypedefBuilder.h
-   *
-   *    @author  M.Frank
-   *    @version 1.0
-   *    @date    10/04/2005
-   */
-  class CINTTypedefBuilder {
-  public:
-    // Declare typedef to CINT
-    static int Setup(const ROOT::Reflex::Type& t);    
-  };
-}}
+      /*  @class CINTTypedefBuilder CINTTypedefBuilder.h
+       *
+       *    @author  M.Frank
+       *    @version 1.0
+       *    @date    10/04/2005
+       */
+      class CINTTypedefBuilder {
+      public:
+         // Declare typedef to CINT
+         static int Setup(const ROOT::Reflex::Type& t);    
+      };
+   }}
 
 #endif // ROOT_Cintex_CINTTypdefBuilder

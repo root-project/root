@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.h,v 1.3 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.h,v 1.4 2005/12/12 09:12:27 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -16,19 +16,19 @@
 #include "CINTdefs.h"
 
 namespace ROOT {
-  namespace Cintex {
+   namespace Cintex {
 
-    class CINTFunctionBuilder {
-    public:
-      CINTFunctionBuilder(const ROOT::Reflex::Member& m);
-      ~CINTFunctionBuilder();
-      void Setup(void);
-      static void Setup(const ROOT::Reflex::Member&);
-    private:
-      const ROOT::Reflex::Member&  fFunction;
-    };
+      class CINTFunctionBuilder {
+      public:
+         CINTFunctionBuilder(const ROOT::Reflex::Member& m);
+         ~CINTFunctionBuilder();
+         void Setup(void);
+         static void Setup(const ROOT::Reflex::Member&);
+      private:
+         const ROOT::Reflex::Member&  fFunction;
+      };
 
-  }
+   }
 }
 
 #endif // ROOT_Cintex_CINTFunctionBuilder

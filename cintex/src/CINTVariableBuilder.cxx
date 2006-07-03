@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTVariableBuilder.cxx,v 1.1 2005/12/12 09:12:27 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTVariableBuilder.cxx,v 1.2 2006/06/29 15:30:49 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -27,182 +27,186 @@ using namespace std;
 namespace ROOT { namespace Cintex {
   
 
-  CINTVariableBuilder::CINTVariableBuilder(const ROOT::Reflex::Member& m)
-  : fVariable(m) { }
+   CINTVariableBuilder::CINTVariableBuilder(const ROOT::Reflex::Member& m)
+      : fVariable(m) { 
+      // default constructor
+   }
+   
+   CINTVariableBuilder::~CINTVariableBuilder() {
+      // destructor
+   }
 
-  CINTVariableBuilder::~CINTVariableBuilder() {
-  }
+   void CINTVariableBuilder::Setup() {
+      // setup variable info
+      CINTScopeBuilder::Setup(fVariable.TypeOf());
 
-  void CINTVariableBuilder::Setup() {
- 
-    CINTScopeBuilder::Setup(fVariable.TypeOf());
-
-    Scope scope = fVariable.DeclaringScope();
-    CINTScopeBuilder::Setup(scope);
+      Scope scope = fVariable.DeclaringScope();
+      CINTScopeBuilder::Setup(scope);
     
-    bool global = scope.IsTopScope();
+      bool global = scope.IsTopScope();
 
-    if ( global ) {
-      ::G__resetplocal();
-    }    
-    else {
-      string sname = scope.Name(SCOPED);
-      int stagnum = ::G__defined_tagname(sname.c_str(), 2);
-      ::G__tag_memvar_setup(stagnum);      
-    }
-
-    Setup(fVariable);
-    
-    if ( global ) {
-      ::G__resetglobalenv();
-    }
-    else {
-      ::G__tag_memvar_reset();
-    }
-    return;
-  }
-
-  class CommentBuffer  {
-  private:
-    typedef std::vector<char*> VecC;
-    VecC fC;
-    CommentBuffer() {}
-    ~CommentBuffer()  {
-      for(VecC::iterator i=fC.begin(); i != fC.end(); ++i)
-        delete [] *i;
-      fC.clear();
-    }
-  public:
-    static CommentBuffer& Instance()  {     
-      static CommentBuffer inst;
-      return inst;
-    }
-    void add(char* cm)  {
-      fC.push_back(cm);
-    }
-  };
-
-  void CINTVariableBuilder::Setup(const Member& dm ) {
-    char* comment = NULL;
-    
-    const char* ref_t = "pool::Reference";
-    const char* tok_t = "pool::Token";
-
-    Type fClass = Type::ByName(dm.DeclaringScope().Name(SCOPED));
-    string fName(CintName(fClass));
-
-    std::string cm = dm.Properties().HasKey("comment") ? 
-      dm.Properties().PropertyAsString("comment") : std::string("");
-
-    Type t = dm.TypeOf();
-    while ( t.IsTypedef() ) t = t.ToType();
-    if ( !t && dm.IsTransient() )  {
-      if( Cintex::Debug() ) cout << "Ignore transient member: " 
-                                 << dm.Name(SCOPED) << " [No valid reflection class]" << endl;
-      return;
-    }
-    else if ( !t )  {
-      if( Cintex::Debug() > 0 )  {
-        cout << "WARNING: Member: " 
-             << dm.Name(SCOPED) << " [No valid reflection class]" << endl;
+      if ( global ) {
+         ::G__resetplocal();
+      }    
+      else {
+         string sname = scope.Name(SCOPED);
+         int stagnum = ::G__defined_tagname(sname.c_str(), 2);
+         ::G__tag_memvar_setup(stagnum);      
       }
-      //throw std::runtime_error("Member: "+fName+"::"+dm.Name()+" [No valid reflection class]");
-    }
-    //--- Add the necessary artificial comments ------ 
-    if ( dm.IsTransient() ||
-         IsSTL(fName) || 
-         IsTypeOf(fClass, ref_t) || 
-         IsTypeOf(fClass, tok_t) )  {
-      char* com = new char[cm.length()+4];
-      ::sprintf(com,"! %s",cm.c_str());
-      comment = com;
-      CommentBuffer::Instance().add(comment);
-    }
-    else if ( (t.IsClass() || t.IsStruct()) && 
-              (IsTypeOf(t,ref_t) || IsTypeOf(t,tok_t)) )  {
-      char* com = new char[cm.length()+4];
-      ::sprintf(com,"|| %s",cm.c_str());
-      comment = com;
-      CommentBuffer::Instance().add(comment);
-    }
-    else if ( !cm.empty() )  {
-      char* com = new char[cm.length()+4];
-      ::strcpy(com, cm.c_str());
-      comment = com;
-      CommentBuffer::Instance().add(comment);
-    }
-    Indirection  indir = IndirectionGet(dm.TypeOf());
-    CintTypeDesc type = CintType(indir.second);
-    string dname = dm.Properties().HasKey("ioname") ? dm.Properties().PropertyAsString("ioname") : dm.Name();
-    ostringstream ost;
-    if ( t.IsArray() ) ost << dname << "[" << t.ArrayLength() << "]=";
-    else               ost << dname << "=";
-    string expr = ost.str();
-    int member_type     = type.first;
-    int member_indir    = 0;
-    int member_tagnum   = -1;
-    int member_typnum   = -1;
-    int member_isstatic = dm.IsStatic() ? G__LOCALSTATIC : G__AUTO;
-    switch(indir.first)  {
+
+      Setup(fVariable);
+    
+      if ( global ) {
+         ::G__resetglobalenv();
+      }
+      else {
+         ::G__tag_memvar_reset();
+      }
+      return;
+   }
+
+   class CommentBuffer  {
+   private:
+      typedef std::vector<char*> VecC;
+      VecC fC;
+      CommentBuffer() {}
+      ~CommentBuffer()  {
+         for(VecC::iterator i=fC.begin(); i != fC.end(); ++i)
+            delete [] *i;
+         fC.clear();
+      }
+   public:
+      static CommentBuffer& Instance()  {     
+         static CommentBuffer inst;
+         return inst;
+      }
+      void Add(char* cm)  {
+         fC.push_back(cm);
+      }
+   };
+
+   void CINTVariableBuilder::Setup(const Member& dm ) {
+      // setup variable info
+      char* comment = NULL;
+    
+      const char* ref_t = "pool::Reference";
+      const char* tok_t = "pool::Token";
+
+      Type fClass = Type::ByName(dm.DeclaringScope().Name(SCOPED));
+      string fName(CintName(fClass));
+
+      std::string cm = dm.Properties().HasKey("comment") ? 
+         dm.Properties().PropertyAsString("comment") : std::string("");
+
+      Type t = dm.TypeOf();
+      while ( t.IsTypedef() ) t = t.ToType();
+      if ( !t && dm.IsTransient() )  {
+         if( Cintex::Debug() ) cout << "Ignore transient member: " 
+                                    << dm.Name(SCOPED) << " [No valid reflection class]" << endl;
+         return;
+      }
+      else if ( !t )  {
+         if( Cintex::Debug() > 0 )  {
+            cout << "WARNING: Member: " 
+                 << dm.Name(SCOPED) << " [No valid reflection class]" << endl;
+         }
+         //throw std::runtime_error("Member: "+fName+"::"+dm.Name()+" [No valid reflection class]");
+      }
+      //--- Add the necessary artificial comments ------ 
+      if ( dm.IsTransient() ||
+           IsSTL(fName) || 
+           IsTypeOf(fClass, ref_t) || 
+           IsTypeOf(fClass, tok_t) )  {
+         char* com = new char[cm.length()+4];
+         ::sprintf(com,"! %s",cm.c_str());
+         comment = com;
+         CommentBuffer::Instance().Add(comment);
+      }
+      else if ( (t.IsClass() || t.IsStruct()) && 
+                (IsTypeOf(t,ref_t) || IsTypeOf(t,tok_t)) )  {
+         char* com = new char[cm.length()+4];
+         ::sprintf(com,"|| %s",cm.c_str());
+         comment = com;
+         CommentBuffer::Instance().Add(comment);
+      }
+      else if ( !cm.empty() )  {
+         char* com = new char[cm.length()+4];
+         ::strcpy(com, cm.c_str());
+         comment = com;
+         CommentBuffer::Instance().Add(comment);
+      }
+      Indirection  indir = IndirectionGet(dm.TypeOf());
+      CintTypeDesc type = CintType(indir.second);
+      string dname = dm.Properties().HasKey("ioname") ? dm.Properties().PropertyAsString("ioname") : dm.Name();
+      ostringstream ost;
+      if ( t.IsArray() ) ost << dname << "[" << t.ArrayLength() << "]=";
+      else               ost << dname << "=";
+      string expr = ost.str();
+      int member_type     = type.first;
+      int member_indir    = 0;
+      int member_tagnum   = -1;
+      int member_typnum   = -1;
+      int member_isstatic = dm.IsStatic() ? G__LOCALSTATIC : G__AUTO;
+      switch(indir.first)  {
       case 0: 
-        break;
+         break;
       case 1:
-        member_type -= 'a'-'A';            // if pointer: 'f' -> 'F' etc.
-      break;
+         member_type -= 'a'-'A';            // if pointer: 'f' -> 'F' etc.
+         break;
       default:
-        member_type -= 'a'-'A';            // if pointer: 'f' -> 'F' etc.
-        member_indir = indir.first;
-        break;
-    }
+         member_type -= 'a'-'A';            // if pointer: 'f' -> 'F' etc.
+         member_indir = indir.first;
+         break;
+      }
 
-    if ( type.first == 'u' )  {
-      //dependencies.push_back(indir.second);
-      member_tagnum = dm.Properties().HasKey("iotype") ? CintTag(dm.Properties().PropertyAsString("iotype")) : CintTag(type.second);
-      if ( typeid(longlong) == indir.second.TypeInfo() )
-        ::G__loadlonglong(&member_tagnum, &member_typnum, G__LONGLONG);
-      else if ( typeid(ulonglong) == indir.second.TypeInfo() )
-        ::G__loadlonglong(&member_tagnum, &member_typnum, G__ULONGLONG);
-      else if ( typeid(long double) == indir.second.TypeInfo() )
-        ::G__loadlonglong(&member_tagnum, &member_typnum, G__LONGDOUBLE);
-    }
+      if ( type.first == 'u' )  {
+         //dependencies.push_back(indir.second);
+         member_tagnum = dm.Properties().HasKey("iotype") ? CintTag(dm.Properties().PropertyAsString("iotype")) : CintTag(type.second);
+         if ( typeid(longlong) == indir.second.TypeInfo() )
+            ::G__loadlonglong(&member_tagnum, &member_typnum, G__LONGLONG);
+         else if ( typeid(ulonglong) == indir.second.TypeInfo() )
+            ::G__loadlonglong(&member_tagnum, &member_typnum, G__ULONGLONG);
+         else if ( typeid(long double) == indir.second.TypeInfo() )
+            ::G__loadlonglong(&member_tagnum, &member_typnum, G__LONGDOUBLE);
+      }
 
-    int member_access = 0;
-    if ( dm.IsPrivate() )        member_access = G__PRIVATE;
-    else if ( dm.IsProtected() ) member_access = G__PROTECTED;
-    else if ( dm.IsPublic() )    member_access = G__PUBLIC;
+      int member_access = 0;
+      if ( dm.IsPrivate() )        member_access = G__PRIVATE;
+      else if ( dm.IsProtected() ) member_access = G__PROTECTED;
+      else if ( dm.IsPublic() )    member_access = G__PUBLIC;
 
-    if ( Cintex::Debug() > 2 )  {
-      std::cout
-        << std::setw(16) << std::left << "declareField>"
-        << "  [" << char(member_type) 
-        << "," << std::right << std::setw(3) << dm.Offset()
-        << "," << std::right << std::setw(2) << member_indir 
-        << "," << std::right << std::setw(3) << member_tagnum
-        << "] " 
-        << (dm.TypeOf().IsConst() ? "const " : "")
-        << std::left << std::setw(7)
-        << (G__AUTO==member_isstatic ? "auto " : "static ")
-        << std::left << std::setw(24) << dname
-        << " \"" << (char*)(comment ? comment : "(None)") << "\""
-        << std::endl
-        << std::setw(16) << std::left << "declareField>"
-        << "  Type:" 
-        << std::left << std::setw(24) << ("[" + dm.Properties().HasKey("iotype") ? dm.Properties().PropertyAsString("iotype") : t.Name(SCOPED) + "]")
-        << " DeclBy:" << fClass.Name(SCOPED)
-        << std::endl;
-    }
-    ::G__memvar_setup((void*)dm.Offset(),                         // p
-                      member_type,                                // type
-                      member_indir,                               // indirection
-                      dm.TypeOf().IsConst(),                        // const
-                      member_tagnum,                              // tagnum
-                      member_typnum,                              // typenum
-                      member_isstatic,                            // statictype
-                      member_access,                              // accessin
-                      expr.c_str(),                               // expression
-                      0,                                          // define macro
-                      comment                                     // comment
-                      ); 
-  }
+      if ( Cintex::Debug() > 2 )  {
+         std::cout
+            << std::setw(16) << std::left << "declareField>"
+            << "  [" << char(member_type) 
+            << "," << std::right << std::setw(3) << dm.Offset()
+            << "," << std::right << std::setw(2) << member_indir 
+            << "," << std::right << std::setw(3) << member_tagnum
+            << "] " 
+            << (dm.TypeOf().IsConst() ? "const " : "")
+            << std::left << std::setw(7)
+            << (G__AUTO==member_isstatic ? "auto " : "static ")
+            << std::left << std::setw(24) << dname
+            << " \"" << (char*)(comment ? comment : "(None)") << "\""
+            << std::endl
+            << std::setw(16) << std::left << "declareField>"
+            << "  Type:" 
+            << std::left << std::setw(24) << ("[" + dm.Properties().HasKey("iotype") ? dm.Properties().PropertyAsString("iotype") : t.Name(SCOPED) + "]")
+            << " DeclBy:" << fClass.Name(SCOPED)
+            << std::endl;
+      }
+      ::G__memvar_setup((void*)dm.Offset(),                         // p
+                        member_type,                                // type
+                        member_indir,                               // indirection
+                        dm.TypeOf().IsConst(),                        // const
+                        member_tagnum,                              // tagnum
+                        member_typnum,                              // typenum
+                        member_isstatic,                            // statictype
+                        member_access,                              // accessin
+                        expr.c_str(),                               // expression
+                        0,                                          // define macro
+                        comment                                     // comment
+                        ); 
+   }
 
 }}

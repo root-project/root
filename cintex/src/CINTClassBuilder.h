@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.h,v 1.3 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.h,v 1.4 2006/04/13 14:42:48 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -45,14 +45,14 @@ namespace ROOT {
       static void Setup_memfunc_with_context(void*);
       static void Setup_memvar_with_context(void*);
     private:
-      static void*               sFakeObject;
-      static void*               sFakeAddress;
+      static void*               fgFakeObject;
+      static void*               fgFakeAddress;
       ROOT::Reflex::Type         fClass;
       G__linked_taginfo*         fTaginfo;
       std::string                fName;
       bool                       fPending;
-      FuncVoidPtr                fSetup_memvar;
-      FuncVoidPtr                fSetup_memfunc;
+      FuncVoidPtr_t              fSetup_memvar;
+      FuncVoidPtr_t              fSetup_memfunc;
       Bases*                     fBases;
 
       class CINTClassBuilders : public std::map<ROOT::Reflex::Type, CINTClassBuilder*>  {
