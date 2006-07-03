@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.cc,v 1.60 2005/06/21 16:42:31 wverkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.61 2005/06/21 19:59:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -427,7 +427,7 @@ Bool_t RooArgSet::setStringValue(const char* name, const char* newVal, Bool_t ve
 
 
 
-void RooArgSet::writeToFile(const char* fileName) 
+void RooArgSet::writeToFile(const char* fileName) const
 {
   // Write contents of the argset to specified file.
   // See writeToStream() for details
@@ -456,7 +456,7 @@ Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt, co
 
 
 
-void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section*/) 
+void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section*/) const
 {
   // Write the contents of the argset in ASCII form to given stream.
   // 

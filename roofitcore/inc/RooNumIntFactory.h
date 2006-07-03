@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntFactory.rdl,v 1.3 2005/02/25 14:23:00 wverkerke Exp $
+ *    File: $Id: RooNumIntFactory.rdl,v 1.4 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,15 +37,12 @@ public:
   const char* getDepIntegratorName(const char* name) ;
 
   RooAbsIntegrator* createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0) ;
-  Bool_t registerInitializer(RooNumIntInitializerFunc fptr) ;
 
 
 protected:
 	 
   friend class RooNumIntConfig ;
-  void processInitializers() ;
 
-  list<RooNumIntInitializerFunc> _initFuncList ; //!
   RooLinkedList _integratorList ; // List of integrator prototypes
   RooLinkedList _nameList ;       // List of integrator names
   RooLinkedList _depList ;        // List of dependent integrator names

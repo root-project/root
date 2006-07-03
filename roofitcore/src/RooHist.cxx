@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.cc,v 1.32 2005/06/20 15:44:53 wverkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.33 2005/07/12 15:43:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -409,13 +409,13 @@ void RooHist::printToStream(ostream& os, PrintOption opt, TString indent) const 
 
 
 
-RooHist* RooHist::makePullHist(const RooCurve& curve) const {
-  // Make histogram of pulls w.r.t to given curve
+RooHist* RooHist::makeResidHist(const RooCurve& curve,bool normalize) const {
+  // Make histogram of (normalized) residuals w.r.t to given curve
 
   // Copy all non-content properties from hist1
-  RooHist* pullHist = new RooHist(_nominalBinWidth) ;
-  pullHist->SetName(Form("pull_%s_s",GetName(),curve.GetName())) ;
-  pullHist->SetTitle(Form("Pull of %s and %s",GetTitle(),curve.GetTitle())) ;  
+  RooHist* hist = new RooHist(_nominalBinWidth) ;
+  hist->SetName(Form(normalize?"pull_%s_s":"resid_%s_s",GetName(),curve.GetName())) ;
+  hist->SetTitle(Form(normalize?"Pull of %s and %s":"Residual of %s and %s",GetTitle(),curve.GetTitle())) ;  
 
   // Determine range of curve 
   Double_t xstart,xstop,y ;
@@ -428,35 +428,27 @@ RooHist* RooHist::makePullHist(const RooCurve& curve) const {
 #endif
   
   // Add histograms, calculate Poisson confidence interval on sum value
-  Int_t i,n=GetN() ;
-  for(i=0 ; i<n ; i++) {    
-
-    Double_t x,dyl,dyh,y,cy ;
+  for(Int_t i=0 ; i<GetN() ; i++) {    
+    Double_t x,point;
 #if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
-    GetPoint(i,x,y) ;
+    GetPoint(i,x,point) ;
 #else
-    const_cast<RooHist&>(*this).GetPoint(i,x,y) ;
+    const_cast<RooHist&>(*this).GetPoint(i,x,point) ;
 #endif
 
     // Only calculate pull for bins inside curve range
     if (x<xstart || x>xstop) continue ;
 
-    dyl = GetEYlow()[i] ;
-    dyh = GetEYhigh()[i] ;
-
-    cy = curve.interpolate(x) ;
-
-    Double_t pull = y-cy ;
-    if (pull>0) {
-      pull /= dyl ;
-    } else {
-      pull /= dyh ;
+    Double_t y = point - curve.interpolate(x) ;
+    Double_t dyl = GetErrorYlow(i) ;
+    Double_t dyh = GetErrorYhigh(i) ;
+    if (normalize) {
+        Double_t norm = (y>0?dyh:dyl);
+        y   /= norm;
+        dyh /= norm;
+        dyl /= norm;
     }
-
-    pullHist->addBinWithError(x,0,pull<0?-pull:0,pull>0?pull:0,0,0) ;
-  }    
-  
-  return pullHist ;
+    hist->addBinWithError(x,y,dyl,dyh);
+  }
+  return hist ;
 }
-
-

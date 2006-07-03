@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.rdl,v 1.31 2005/06/20 15:44:55 wverkerke Exp $
+ *    File: $Id: RooPlot.rdl,v 1.32 2005/06/21 16:42:31 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -102,7 +102,8 @@ public:
   Double_t chiSquare(int nFitParam=0) const { return chiSquare(0,0,nFitParam) ; } 
   Double_t chiSquare(const char* pdfname, const char* histname, int nFitParam=0) const ;
 
-  RooHist* pullHist(const char* histname=0, const char* pdfname=0) const ;
+  RooHist* residHist(const char* histname=0, const char* pdfname=0,bool normalize=false) const ;
+  RooHist* pullHist(const char* histname=0, const char* pdfname=0) const { return residHist(histname,pdfname,true); }
 
 protected:
 

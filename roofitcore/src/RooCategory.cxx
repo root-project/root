@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategory.cc,v 1.28 2005/06/23 15:08:56 wverkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.29 2005/12/08 13:19:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,6 +38,10 @@ ClassImp(RooCategory)
 RooSharedPropertiesList RooCategory::_sharedPropList ;
 
 
+RooCategory::RooCategory()
+{
+}
+
 RooCategory::RooCategory(const char *name, const char *title) : 
   RooAbsCategoryLValue(name,title)
 {
@@ -55,7 +59,7 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
 {
   // Copy constructor
   _sharedProp =  (RooCategorySharedProperties*) _sharedPropList.registerProperties(other._sharedProp) ;
-
+  
 }
 
 

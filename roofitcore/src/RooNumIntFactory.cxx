@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntFactory.cc,v 1.7 2005/06/20 15:44:55 wverkerke Exp $
+ *    File: $Id: RooNumIntFactory.cc,v 1.8 2005/12/08 13:19:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,17 +30,31 @@
 #include "RooFitCore/RooNumIntConfig.hh"
 #include "RooFitCore/RooNumber.hh"
 
+#include "RooFitCore/RooIntegrator1D.hh"
+#include "RooFitCore/RooIntegrator2D.hh"
+#include "RooFitCore/RooSegmentedIntegrator1D.hh"
+#include "RooFitCore/RooSegmentedIntegrator2D.hh"
+#include "RooFitCore/RooImproperIntegrator1D.hh"
+#include "RooFitCore/RooMCIntegrator.hh"
+#include "RooFitCore/RooGaussKronrodIntegrator1D.hh"
+#include "RooFitCore/RooAdaptiveGaussKronrodIntegrator1D.hh"
+
+
 ClassImp(RooNumIntFactory)
 ;
 
-Bool_t RooNumIntFactory::registerInitializer(RooNumIntInitializerFunc fptr) { 
-  _initFuncList.push_back(fptr) ; 
-  return kFALSE ; 
-}
-
 RooNumIntFactory::RooNumIntFactory()
 {
+  RooIntegrator1D::registerIntegrator(*this) ;
+  RooIntegrator2D::registerIntegrator(*this) ;
+  RooSegmentedIntegrator1D::registerIntegrator(*this) ;
+  RooSegmentedIntegrator2D::registerIntegrator(*this) ;
+  RooImproperIntegrator1D::registerIntegrator(*this) ;
+  RooMCIntegrator::registerIntegrator(*this) ;
+  RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(*this) ;
+  RooGaussKronrodIntegrator1D::registerIntegrator(*this) ;  
 }
+
 
 RooNumIntFactory::~RooNumIntFactory()
 {
@@ -59,25 +73,6 @@ RooNumIntFactory& RooNumIntFactory::instance()
   return *_instance ;
 }
 
-void RooNumIntFactory::processInitializers() 
-{
-  static Bool_t alreadyProcessing = kFALSE ;
-
-  if (alreadyProcessing) return ;
-  alreadyProcessing = kTRUE ;
-
-  list<RooNumIntInitializerFunc>::iterator iter;
-
-  // Call all registered initializer functions
-  for (iter= _initFuncList.begin() ; iter != _initFuncList.end() ; ++iter) {
-    (*iter)(*this) ;
-  }
-
-  // Clear list
-  _initFuncList.clear() ;
-
-  alreadyProcessing = kFALSE ;
-}
 
 Bool_t RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName) 
 {
@@ -102,8 +97,6 @@ Bool_t RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const Roo
 
 const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name) 
 {
-  processInitializers() ;
-
   TObject* theNameObj = _nameList.FindObject(name) ;
   if (!theNameObj) return 0 ;
   Int_t index = _nameList.IndexOf(theNameObj) ;
@@ -114,8 +107,6 @@ const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name)
 
 const char* RooNumIntFactory::getDepIntegratorName(const char* name) 
 {
-  processInitializers() ;
-
   TObject* theNameObj = _nameList.FindObject(name) ;
   if (!theNameObj) return 0 ;
   Int_t index = _nameList.IndexOf(theNameObj) ;
@@ -125,8 +116,6 @@ const char* RooNumIntFactory::getDepIntegratorName(const char* name)
 
 RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset) 
 {
-  processInitializers() ;
-
   // First determine dimensionality and domain of integrand  
   Int_t ndim = ndimPreset>0 ? ndimPreset : func.getDimension() ;
 

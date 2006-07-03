@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.49 2005/06/20 15:45:14 wverkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.50 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,13 +49,13 @@ public:
   virtual void setVal(Double_t value);
   inline Double_t getError() const { return _error>=0?_error:0. ; }
   inline Bool_t hasError() const { return (_error>=0) ; }
-  inline void setError(Double_t value) { _error= value ; removeAsymError() ; }
+  inline void setError(Double_t value) { _error= value ; }
   inline void removeError() { _error = -1 ; }
   inline Double_t getAsymErrorLo() const { return _asymErrLo<=0?_asymErrLo:0. ; }
   inline Double_t getAsymErrorHi() const { return _asymErrHi>=0?_asymErrHi:0. ; }
   inline Bool_t hasAsymError() const { return (_asymErrHi>=0 && _asymErrLo<=0) ; }
   inline void removeAsymError() { _asymErrLo = 1 ; _asymErrHi = -1 ; }
-  inline void setAsymError(Double_t lo, Double_t hi) { _asymErrLo = lo ; _asymErrHi = hi ; removeError() ; }
+  inline void setAsymError(Double_t lo, Double_t hi) { _asymErrLo = lo ; _asymErrHi = hi ; }
   RooErrorVar* errorVar() const ;
 
   // Set/get finite fit range limits

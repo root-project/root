@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGaussKronrodIntegrator1D.rdl,v 1.2 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooGaussKronrodIntegrator1D.rdl,v 1.3 2005/06/20 15:44:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,6 +43,9 @@ public:
   virtual Bool_t canIntegrateOpenEnded() const { return kTRUE ; }
 
 protected:
+
+  friend class RooNumIntFactory ;
+  static void registerIntegrator(RooNumIntFactory& fact) ;	
 
   friend double RooGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data) ;
 

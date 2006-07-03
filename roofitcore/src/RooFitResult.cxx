@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.33 2005/06/20 15:44:52 wverkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.34 2005/12/05 14:58:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -59,7 +59,7 @@ RooFitResult::RooFitResult(const char* name, const char* title) :
 RooFitResult::RooFitResult(const RooFitResult& other) : 
   TNamed(other),
   RooPrintable(other),
-  RooDirItem(),
+  RooDirItem(other),
   _status(other._status),
   _covQual(other._covQual),
   _numBadNLL(other._numBadNLL),

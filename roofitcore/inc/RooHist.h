@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.rdl,v 1.19 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooHist.rdl,v 1.20 2005/06/20 15:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -52,7 +52,8 @@ public:
 
   Bool_t hasIdenticalBinning(const RooHist& other) const ;
 
-  RooHist* makePullHist(const RooCurve& curve) const ;
+  RooHist* makeResidHist(const RooCurve& curve,bool normalize=false) const;
+  RooHist* makePullHist(const RooCurve& curve) const {return makeResidHist(curve,false); }
 
 protected:
   void initialize();

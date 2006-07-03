@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooSharedPropertiesList.cc,v 1.1 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -55,6 +55,11 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
   //
   // The caller should therefore not refer anymore to the input argument pointer as
   // as the object cannot be assumed to be live.
+
+  if (prop==0) {
+    cout << "RooSharedPropertiesList::ERROR null pointer!:" << endl ;
+    return 0 ;
+  }
 
   // Find property with identical uuid in list
   TIterator* iter = _propList.MakeIterator() ;

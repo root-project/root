@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.rdl,v 1.41 2005/06/20 15:44:48 wverkerke Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.42 2005/12/08 13:19:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -86,8 +86,8 @@ public:
     return readFromStream(is, compact, 0, 0, verbose) ;
   }
   Bool_t readFromStream(istream& is, Bool_t compact, const char* flagReadAtt, const char* section, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact, const char* section=0) ;  
-  void writeToFile(const char* fileName) ;
+  virtual void writeToStream(ostream& os, Bool_t compact, const char* section=0) const;  
+  void writeToFile(const char* fileName) const ;
   Bool_t readFromFile(const char* fileName, const char* flagReadAtt=0, const char* section=0, Bool_t verbose=kFALSE) ;
 
   // Utilities functions when used as configuration object

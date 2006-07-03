@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCIntegrator.cc,v 1.21 2005/06/16 09:31:28 wverkerke Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.22 2005/06/20 15:44:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,7 +38,7 @@ ClassImp(RooMCIntegrator)
 ;
 
 // Register this class with RooNumIntFactory
-static void registerMCIntegrator(RooNumIntFactory& fact)
+void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
 {
   // Construct default configuration
   RooCategory samplingMode("samplingMode","Sampling Mode") ;
@@ -71,7 +71,6 @@ static void registerMCIntegrator(RooNumIntFactory& fact)
   // Make this method the default for all N>2-dim integrals
   RooNumIntConfig::defaultConfig().methodND().setLabel(proto->IsA()->GetName()) ;
 }
-static Bool_t dummy = RooNumIntFactory::instance().registerInitializer(&registerMCIntegrator) ;
 
 
 RooMCIntegrator::RooMCIntegrator()

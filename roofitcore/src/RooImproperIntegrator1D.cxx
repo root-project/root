@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooImproperIntegrator1D.cc,v 1.16 2005/06/20 15:44:53 wverkerke Exp $
+ *    File: $Id: RooImproperIntegrator1D.cc,v 1.17 2005/12/08 13:19:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,13 +37,12 @@ ClassImp(RooImproperIntegrator1D)
 ;
 
 // Register this class with RooNumIntConfig
-static void registerImproperIntegrator1D(RooNumIntFactory& fact)
+void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
   RooImproperIntegrator1D* proto = new RooImproperIntegrator1D() ;
   fact.storeProtoIntegrator(proto,RooArgSet(),RooIntegrator1D::Class()->GetName()) ;
   RooNumIntConfig::defaultConfig().method1DOpen().setLabel(proto->IsA()->GetName()) ;
 }
-static Bool_t dummy = RooNumIntFactory::instance().registerInitializer(&registerImproperIntegrator1D) ;
 
 
 RooImproperIntegrator1D::RooImproperIntegrator1D()

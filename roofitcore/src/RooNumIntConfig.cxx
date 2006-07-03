@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntConfig.cc,v 1.9 2005/07/12 15:43:06 wverkerke Exp $
+ *    File: $Id: RooNumIntConfig.cc,v 1.10 2005/12/08 13:19:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,7 +40,7 @@ RooNumIntConfig& RooNumIntConfig::defaultConfig()
   // Instantiate object if it doesn't exist yet
   if (_default==0) {
     _default = new RooNumIntConfig ;    
-    RooNumIntFactory::instance().processInitializers() ;
+    RooNumIntFactory::instance() ;
   }
   return *_default ;
 }
@@ -49,7 +49,13 @@ RooNumIntConfig& RooNumIntConfig::defaultConfig()
 RooNumIntConfig::RooNumIntConfig() : 
   _epsAbs(1e-7),
   _epsRel(1e-7),
-  _printEvalCounter(kFALSE)
+  _printEvalCounter(kFALSE),
+  _method1D("method1D","1D integration method"),
+  _method2D("method2D","2D integration method"),
+  _methodND("methodND","ND integration method"),
+  _method1DOpen("method1DOpen","1D integration method in open domain"),
+  _method2DOpen("method2DOpen","2D integration method in open domain"),
+  _methodNDOpen("methodNDOpen","ND integration method in open domain")
 {
   // Constructor 
 

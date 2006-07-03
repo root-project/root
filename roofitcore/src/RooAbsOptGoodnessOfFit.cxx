@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.23 2005/06/16 09:31:23 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.24 2005/06/20 15:44:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -280,18 +280,18 @@ void RooAbsOptGoodnessOfFit::constOptimize(ConstOpCode opcode)
     _pdfClone->doConstOpt(*_dataClone,_normSet,_verbose) ;
     break ;
   case DeActivate:  
-    cout << "DeActivate" << endl ;
-    if (_verbose) _pdfClone->undoConstOpt(*_dataClone,_normSet,_verbose) ;
+    if (_verbose) cout << "DeActivate" << endl ;
+    _pdfClone->undoConstOpt(*_dataClone,_normSet,_verbose) ;
     break ;
   case ConfigChange: 
-    cout << "ConfigChange" << endl ;
-    if (_verbose) _pdfClone->undoConstOpt(*_dataClone,_normSet,_verbose) ;
-    if (_verbose) _pdfClone->doConstOpt(*_dataClone,_normSet,_verbose) ;
+    if (_verbose) cout << "ConfigChange" << endl ;
+    _pdfClone->undoConstOpt(*_dataClone,_normSet,_verbose) ;
+    _pdfClone->doConstOpt(*_dataClone,_normSet,_verbose) ;
     break ;
   case ValueChange: 
-    cout << "ValueChange" << endl ;
-    if (_verbose) _pdfClone->undoConstOpt(*_dataClone,_normSet,_verbose) ;
-    if (_verbose) _pdfClone->doConstOpt(*_dataClone,_normSet,_verbose) ;
+    if (_verbose) cout << "ValueChange" << endl ;
+    _pdfClone->undoConstOpt(*_dataClone,_normSet,_verbose) ;
+    _pdfClone->doConstOpt(*_dataClone,_normSet,_verbose) ;
     break ;
   }
 }

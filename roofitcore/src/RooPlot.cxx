@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.45 2005/06/21 16:42:31 wverkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.46 2005/07/12 11:29:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -631,23 +631,23 @@ Double_t RooPlot::chiSquare(const char* curvename, const char* histname, Int_t n
   return curve->chiSquare(*hist,nFitParam) ;
 }
 
-RooHist* RooPlot::pullHist(const char* histname, const char* curvename) const 
+RooHist* RooPlot::residHist(const char* histname, const char* curvename,bool normalize) const 
 {
   // Find curve object
   RooCurve* curve = (RooCurve*) findObject(curvename,RooCurve::Class()) ;
   if (!curve) {
-    cout << "RooPlot::pullHist(" << GetName() << ") cannot find curve" << endl ;
+    cout << "RooPlot::residHist(" << GetName() << ") cannot find curve" << endl ;
     return 0 ;
   }
 
   // Find histogram object
   RooHist* hist = (RooHist*) findObject(histname,RooHist::Class()) ;
   if (!hist) {
-    cout << "RooPlot::pullHist(" << GetName() << ") cannot find histogram" << endl ;
+    cout << "RooPlot::residHist(" << GetName() << ") cannot find histogram" << endl ;
     return 0 ;
   }  
 
-  return hist->makePullHist(*curve) ;
+  return hist->makeResidHist(*curve,normalize) ;
 }
 
 

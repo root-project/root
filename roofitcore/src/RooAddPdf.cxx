@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.70 2005/06/23 11:44:37 wverkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.71 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -190,6 +190,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfList) :
   RooAbsPdf(name,title),
   _refCoefNorm("refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  _refCoefRangeName(0),
   _projectCoefs(kFALSE),
   _projListMgr(10),
   _pdfProjList(0),
@@ -286,7 +287,6 @@ void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm)
 void RooAddPdf::fixCoefRange(const char* rangeName)
 {
   _refCoefRangeName = (TNamed*)RooNameReg::ptr(rangeName) ;
-
   if (_refCoefRangeName) _projectCoefs = kTRUE ;
 }
 
@@ -314,6 +314,8 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset, c
 
   // Check if requested transformation is not identity 
   if (!nset2->equals(_refCoefNorm) || _refCoefRangeName !=0 || rangeName !=0 ) {
+    
+    cout << "_refCoefRangeName = " << _refCoefRangeName << endl ;
 
     cout << "RooAddPdf::syncCoefProjList(" << GetName() << ") creating coefficient projection integrals" << endl ;
     cout << "  from current normalization: "  ; nset2->Print("1") ;

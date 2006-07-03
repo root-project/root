@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenContext.cc,v 1.45 2005/06/20 15:44:52 wverkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.46 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,8 +50,6 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   // of this dataset can be changed between calls to generate() as long as the
   // expected columns to be copied to the generated dataset are present.
 
-//   cout << "RooGenContext::ctor(" << model.GetName() << ")" << endl ;
-
   // Clone the model and all nodes that it depends on so that this context
   // is independent of any existing objects.
   RooArgSet nodes(model,model.GetName());
@@ -99,13 +97,14 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       const RooAbsArg *direct= arg ;
       if (forceDirect==0 || !forceDirect->find(direct->GetName())) {
 	if (!_pdfClone->isDirectGenSafe(*arg)) {
+	  //cout << "isDirectGenSafe on pdf " << _pdfClone->GetName() << " fails for arg " << arg->GetName() << endl ;
 	  direct=0 ;
 	}
       }
       
       // does the model depend indirectly on this variable through an lvalue chain?	
       // otherwise, this variable will have to be generated with accept/reject
-      if(direct) {
+      if(direct||1) { // WVE !!! MOD FROM DENISD, IS IT (ALWAYS) CORRECT?? SUSPECT SPECIAL CASE FOR CONVOLUTIONS...
 	_directVars.add(*arg);
       } else {
 	_otherVars.add(*arg);

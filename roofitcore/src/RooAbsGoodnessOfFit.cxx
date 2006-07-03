@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.19 2005/06/16 09:31:23 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.20 2005/06/20 15:44:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -98,6 +98,7 @@ RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const RooAbsGoodnessOfFit& other, const
   _rangeName(other._rangeName),
   _splitRange(other._splitRange),
   _simCount(other._simCount),
+  _verbose(other._verbose),
   _init(other._init),
   _gofOpMode(other._gofOpMode),
   _nEvents(other._nEvents),
@@ -344,10 +345,12 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 	     << " (" << dset->numEntries() << " dataset entries)" << endl ;
       }
       if (_splitRange) {
-	cout << "calling create with range " << Form("%s_%s",rangeName,type->GetName()) << endl ;
-	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,Form("%s_%s",rangeName,type->GetName()),_verbose) ;
+	if (_verbose) {
+	  cout << "calling create with range " << Form("%s_%s",rangeName,type->GetName()) << endl ;
+	}
+	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,Form("%s_%s",rangeName,type->GetName()),_nCPU,_verbose,_splitRange) ;
       } else {
-	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,rangeName,_verbose) ;
+	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,rangeName,_nCPU,_verbose,_splitRange) ;
       }
       _gofArray[n]->setSimCount(_nGof) ;
       

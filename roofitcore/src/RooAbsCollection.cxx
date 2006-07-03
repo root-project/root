@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.cc,v 1.36 2005/06/16 09:31:22 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.37 2005/06/20 15:44:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -837,10 +837,12 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
   if (option) {
     sibOption = option ;
     sibOption.ReplaceAll("N","") ;
+    sibOption.ReplaceAll("n","") ;
   } else {
     sibFormatCmd = *formatCmd ;
     TString tmp = formatCmd->_s[0] ;
     tmp.ReplaceAll("N","") ;    
+    tmp.ReplaceAll("n","") ;    
     static char buf[100] ;
     strcpy(buf,tmp.Data()) ;
     sibFormatCmd._s[0] = buf ;

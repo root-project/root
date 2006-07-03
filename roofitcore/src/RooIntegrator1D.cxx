@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator1D.cc,v 1.28 2005/06/16 09:31:28 wverkerke Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.29 2005/06/20 15:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,7 +36,7 @@ ClassImp(RooIntegrator1D)
 ;
 
 // Register this class with RooNumIntConfig
-static void registerSimpsonIntegrator1D(RooNumIntFactory& fact)
+void RooIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
   RooCategory sumRule("sumRule","Summation Rule") ;
   sumRule.defineType("Trapezoid",RooIntegrator1D::Trapezoid) ;
@@ -54,7 +54,6 @@ static void registerSimpsonIntegrator1D(RooNumIntFactory& fact)
   fact.storeProtoIntegrator(proto,RooArgSet(sumRule,extrap,maxSteps,minSteps,fixSteps)) ;
   RooNumIntConfig::defaultConfig().method1D().setLabel(proto->IsA()->GetName()) ;
 }
-static Bool_t dummy = RooNumIntFactory::instance().registerInitializer(&registerSimpsonIntegrator1D) ;
 
 
 RooIntegrator1D::RooIntegrator1D()

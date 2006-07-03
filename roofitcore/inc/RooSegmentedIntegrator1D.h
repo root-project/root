@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator1D.rdl,v 1.4 2004/11/29 20:24:25 wverkerke Exp $
+ *    File: $Id: RooSegmentedIntegrator1D.rdl,v 1.5 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,6 +42,9 @@ public:
   virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
 
 protected:
+
+  friend class RooNumIntFactory ;
+  static void registerIntegrator(RooNumIntFactory& fact) ;	
 
   mutable Double_t _xmin ;
   mutable Double_t _xmax ;

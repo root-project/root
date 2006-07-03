@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.cc,v 1.44 2005/06/20 15:44:46 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.45 2005/06/21 16:42:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -511,7 +511,6 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
       Double_t yhi = pc.getDouble("yhi") ;
       binning[1] = new RooUniformBinning((ylo==yhi)?yvar.getMin():ylo,(ylo==yhi)?yvar.getMax():yhi,pc.getInt("nybins")) ;
     } else {
-      yvar.Print() ;
       binning[1] = &yvar.getBinning() ;
     }
   }
