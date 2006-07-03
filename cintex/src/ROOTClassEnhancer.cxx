@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.11 2006/07/03 10:22:13 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.12 2006/07/03 10:27:23 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -387,7 +387,7 @@ namespace ROOT { namespace Cintex {
 #else
                TCollectionProxy::genExplicitProxy(tid,
 #endif
-                                                  m->iter_size,
+   m->iter_size,
                                                   m->value_diff,
                                                   m->value_offset,
                                                   m->size_func,
@@ -406,7 +406,7 @@ namespace ROOT { namespace Cintex {
 #else
                TCollectionProxy::genExplicitClassStreamer(tid,
 #endif
-                                                          m->iter_size,
+   m->iter_size,
                                                           m->value_diff,
                                                           m->value_offset,
                                                           m->size_func,
