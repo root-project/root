@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.14 2006/04/11 06:25:43 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.15 2006/05/28 20:08:00 brun Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -310,7 +310,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
 
    fF1 = new TGCompositeFrame(this, 60, 20, kVerticalFrame | kFixedWidth);
    fF5 = new TGCompositeFrame(this, 60, 20, kHorizontalFrame);
-   fF2 = new TGCompositeFrame(this, 60, 20, kVerticalFrame);
+   fF2 = new TGCompositeFrame(fF5,  60, 20, kVerticalFrame);
    fF3 = new TGCompositeFrame(fF2,  60, 20, kHorizontalFrame);
    fF4 = new TGCompositeFrame(fF2,  60, 20, kHorizontalFrame);
 
@@ -321,14 +321,19 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    fPrintButton->Associate(this);
    fCancelButton->Associate(this);
 
-   fL1 = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 0);
+   fL1 = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2);
    fL2 = new TGLayoutHints(kLHintsTop | kLHintsRight | kLHintsExpandX,
                            2, 5, 0, 2);
+   fL3 = new TGLayoutHints(kLHintsTop | kLHintsRight, 2, 2, 4, 4);
+   fL5 = new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 5, 0, 0);
+   fL6 = new TGLayoutHints(kLHintsRight | kLHintsCenterY, 0, 2, 0, 0);
+   fL7 = new TGLayoutHints(kLHintsLeft, 10, 10, 10, 10);
+
    fL21 = new TGLayoutHints(kLHintsTop | kLHintsRight, 2, 5, 10, 0);
 
    fF1->AddFrame(fPrintButton, fL1);
    fF1->AddFrame(fCancelButton, fL1);
-   AddFrame(fF1, fL21);
+   AddFrame(fF1, fL3);
 
 
    fLPrintCommand = new TGLabel(fF3, new TGHotString("Print command:"));
@@ -337,8 +342,6 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    fPrintCommandEntry = new TGTextEntry(fF3, fBPrintCommand);
    fPrintCommandEntry->Associate(this);
    fPrintCommandEntry->Resize(100, fPrintCommandEntry->GetDefaultHeight());
-   fL5 = new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 5, 0, 0);
-   fL6 = new TGLayoutHints(kLHintsRight | kLHintsCenterY, 0, 2, 0, 0);
 
    fF3->AddFrame(fLPrintCommand, fL5);
    fF3->AddFrame(fPrintCommandEntry, fL6);
@@ -352,9 +355,6 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    fF4->AddFrame(fLPrinter, fL5);
    fF4->AddFrame(fPrinterEntry, fL6);
 
-   fL3 = new TGLayoutHints(kLHintsTop | kLHintsRight, 2, 2, 2, 2);
-   fL7 = new TGLayoutHints(kLHintsLeft, 10, 10, 10, 10);
-
    fF2->AddFrame(fF3, fL1);
    fF2->AddFrame(fF4, fL1);
 
@@ -366,8 +366,8 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
       fPrinterIcon = new TGIcon(fF5, printerPicture, 32, 32);
       fF5->AddFrame(fPrinterIcon, fL7);
    }
-   fF5->AddFrame(fF2, fL21);
-   AddFrame(fF5, fL21);
+   fF5->AddFrame(fF2, fL1);
+   AddFrame(fF5, fL1);
 
    MapSubwindows();
    Resize(GetDefaultSize());
