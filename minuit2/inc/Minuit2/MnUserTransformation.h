@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnUserTransformation.h,v 1.12.2.4 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnUserTransformation.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -10,13 +10,27 @@
 #ifndef ROOT_Minuit2_MnUserTransformation
 #define ROOT_Minuit2_MnUserTransformation
 
+#ifndef ROOT_Minuit2_MnConfig
 #include "Minuit2/MnConfig.h"
+#endif
+#ifndef ROOT_Minuit2_MnMatrix
 #include "Minuit2/MnMatrix.h"
+#endif
+#ifndef ROOT_Minuit2_MinuitParameter
 #include "Minuit2/MinuitParameter.h"
+#endif
+#ifndef ROOT_Minuit2_MnMachinePrecision
 #include "Minuit2/MnMachinePrecision.h"
+#endif
+#ifndef ROOT_Minuit2_SinParameterTransformation
 #include "Minuit2/SinParameterTransformation.h"
+#endif
+#ifndef ROOT_Minuit2_SqrtLowParameterTransformation
 #include "Minuit2/SqrtLowParameterTransformation.h"
+#endif
+#ifndef ROOT_Minuit2_SqrtUpParameterTransformation
 #include "Minuit2/SqrtUpParameterTransformation.h"
+#endif
 
 #include <vector>
 

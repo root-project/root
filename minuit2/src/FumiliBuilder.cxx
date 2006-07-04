@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.3 2006/06/26 11:03:55 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.4 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -389,6 +389,6 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    return FunctionMinimum(seed, result, fcn.Up());
 }
 
-  }  // namespace Minuit2
+   }  // namespace Minuit2
 
 }  // namespace ROOT

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnUserCovariance.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnUserCovariance.h,v 1.2 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -10,7 +10,9 @@
 #ifndef ROOT_Minuit2_MnUserCovariance
 #define ROOT_Minuit2_MnUserCovariance
 
+#ifndef ROOT_Minuit2_MnConfig
 #include "Minuit2/MnConfig.h"
+#endif
 #include <vector>
 #include <cassert>
 

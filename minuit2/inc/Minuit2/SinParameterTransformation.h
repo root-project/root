@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: SinParameterTransformation.h,v 1.9.6.4 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: SinParameterTransformation.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -17,6 +17,11 @@ namespace ROOT {
 
 class MnMachinePrecision;
 
+/**
+   class for the transformation for double-limited parameter
+   Using a sin function one goes from a double-limited parameter range to 
+   an unlimited one 
+ */
 class SinParameterTransformation {
 
 public:

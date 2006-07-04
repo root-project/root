@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnUserParameterState.cxx,v 1.2 2006/04/13 08:39:23 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnUserParameterState.cxx,v 1.3 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -40,7 +40,7 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters& par) :
 // construct from user parameters + errors (befor minimization)
 //
 MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const std::vector<double>& cov, unsigned int nrow) : fValid(true), fCovarianceValid(true), fGCCValid(false), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(MnUserParameters()), fCovariance(MnUserCovariance(cov, nrow)), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(par), fIntCovariance(MnUserCovariance(cov, nrow)) {
-   // construct from user parameters + errors (before minimization) using std::vectors
+   // construct from user parameters + errors (before minimization) using std::vector for parameter error and    // an std::vector of size n*(n+1)/2 for the covariance matrix  and n (rank of cov matrix) 
 
    std::vector<double> err; err.reserve(par.size());
    for(unsigned int i = 0; i < par.size(); i++) {
@@ -67,7 +67,8 @@ MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const
 
 MnUserParameterState::MnUserParameterState(const MnUserParameters& par, const MnUserCovariance& cov) : 
    fValid(true), fCovarianceValid(true), fGCCValid(false), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(par), fCovariance(cov), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()), fIntCovariance(cov) {
-   //construct from user parameters + errors (befor minimization) using MnUserParameters and MnUserCovariance classes
+   //construct from user parameters + errors (befor minimization) using 
+   // MnUserParameters and MnUserCovariance objects
 
    fIntCovariance.Scale(0.5);
    for(std::vector<MinuitParameter>::const_iterator ipar = MinuitParameters().begin(); ipar != MinuitParameters().end(); ipar++) {
@@ -227,6 +228,7 @@ void MnUserParameterState::Release(unsigned int e) {
 }
 
 void MnUserParameterState::SetValue(unsigned int e, double val) {
+   // set value for parameter e ( external index )
    fParameters.SetValue(e, val);
    if(!Parameter(e).IsFixed() && !Parameter(e).IsConst()) {
       unsigned int i = IntOfExt(e);

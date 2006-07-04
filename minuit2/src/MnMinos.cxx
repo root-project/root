@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnMinos.cxx,v 1.2 2006/04/12 16:30:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnMinos.cxx,v 1.3 2006/07/03 22:06:42 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -33,9 +33,9 @@ double MnMinos::Lower(unsigned int par, unsigned int maxcalls) const {
    
    MnCross aopt = Loval(par, maxcalls);
    
-   double Lower = aopt.IsValid() ? -1.*err*(1.+ aopt.Value()) : (aopt.AtLimit() ? upar.Parameter(par).LowerLimit() : upar.Value(par));
+   double lower = aopt.IsValid() ? -1.*err*(1.+ aopt.Value()) : (aopt.AtLimit() ? upar.Parameter(par).LowerLimit() : upar.Value(par));
    
-   return Lower;
+   return lower;
 }
 
 double MnMinos::Upper(unsigned int par, unsigned int maxcalls) const {
@@ -45,12 +45,13 @@ double MnMinos::Upper(unsigned int par, unsigned int maxcalls) const {
    MnUserParameterState upar = fMinimum.UserState();
    double err = fMinimum.UserState().Error(par);
    
-   double Upper = aopt.IsValid() ? err*(1.+ aopt.Value()) : (aopt.AtLimit() ? upar.Parameter(par).UpperLimit() : upar.Value(par));
+   double upper = aopt.IsValid() ? err*(1.+ aopt.Value()) : (aopt.AtLimit() ? upar.Parameter(par).UpperLimit() : upar.Value(par));
    
-   return Upper;
+   return upper;
 }
 
 MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls) const {
+   // do full minos error anlysis (lower + upper) for parameter par 
    assert(fMinimum.IsValid());  
    assert(!fMinimum.UserState().Parameter(par).IsFixed());
    assert(!fMinimum.UserState().Parameter(par).IsConst());

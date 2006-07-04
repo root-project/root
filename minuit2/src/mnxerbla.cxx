@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: mnxerbla.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: mnxerbla.cxx,v 1.2 2005/12/12 13:46:02 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -59,15 +59,15 @@ int mnxerbla(const char* srname, int info) {
 /* ===================================================================== */
 
 /*     .. Executable Statements .. */
-
-  std::cout<<" ** On entry to "<<srname<<" Parameter number "<<info<<" had an illegal Value"<<std::endl;
-
-/*     End of XERBLA */
-
-    return 0;
+   
+   std::cout<<" ** On entry to "<<srname<<" Parameter number "<<info<<" had an illegal Value"<<std::endl;
+   
+   /*     End of XERBLA */
+   
+   return 0;
 } /* xerbla_ */
 
 
-  }  // namespace Minuit2
+   }  // namespace Minuit2
 
 }  // namespace ROOT

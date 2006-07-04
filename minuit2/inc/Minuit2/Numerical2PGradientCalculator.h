@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: Numerical2PGradientCalculator.h,v 1.6.2.3 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: Numerical2PGradientCalculator.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -10,8 +10,14 @@
 #ifndef ROOT_Minuit2_Numerical2PGradientCalculator
 #define ROOT_Minuit2_Numerical2PGradientCalculator
 
+#ifndef ROOT_Minuit2_MnConfig
 #include "Minuit2/MnConfig.h"
+#endif
+
+#ifndef ROOT_Minuit2_GradientCalculator
 #include "Minuit2/GradientCalculator.h"
+#endif
+
 #include <vector>
 
 namespace ROOT {
@@ -23,6 +29,10 @@ class MnFcn;
 class MnUserTransformation;
 class MnMachinePrecision;
 class MnStrategy;
+
+/**
+   class performing the numerical gradient calculation
+ */
 
 class Numerical2PGradientCalculator : public GradientCalculator {
   

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: VariableMetricEDMEstimator.cpp,v 1.3.6.3 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: VariableMetricEDMEstimator.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -19,14 +19,16 @@ namespace ROOT {
 double similarity(const LAVector&, const LASymMatrix&);
 
 double VariableMetricEDMEstimator::Estimate(const FunctionGradient& g, const MinimumError& e) const {
-
-  if(e.InvHessian().size()  == 1) 
-    return 0.5*g.Grad()(0)*g.Grad()(0)*e.InvHessian()(0,0);
-
-  double rho = similarity(g.Grad(), e.InvHessian());
-  return 0.5*rho;
+   // estimate the edm (expected distance to the minimum) =  0.5 * g^T V g  (where V is the error matrix, inverse of Hessian) 
+   // assuminigfirst derivatives if F are zero at the mminimum, 
+   
+   if(e.InvHessian().size()  == 1) 
+      return 0.5*g.Grad()(0)*g.Grad()(0)*e.InvHessian()(0,0);
+   
+   double rho = similarity(g.Grad(), e.InvHessian());
+   return 0.5*rho;
 }
 
-  }  // namespace Minuit2
+   }  // namespace Minuit2
 
 }  // namespace ROOT

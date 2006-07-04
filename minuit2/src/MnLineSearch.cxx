@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.cxx,v 1.2 2006/06/26 11:03:55 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.cxx,v 1.3 2006/07/03 22:06:42 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -61,41 +61,41 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
    if(fabs(slamin) < prec.Eps()) slamin = prec.Eps();
    slamin *= prec.Eps2();
    
-   double F0 = st.Fval();
-   double F1 = fcn(st.Vec()+step);
+   double f0 = st.Fval();
+   double f1 = fcn(st.Vec()+step);
    double fvmin = st.Fval();
    double xvmin = 0.;
    
-   if(F1 < F0) {
-      fvmin = F1;
+   if(f1 < f0) {
+      fvmin = f1;
       xvmin = 1.;
    }
    double toler8 = toler;
    double slamax = slambg;
-   double flast = F1;
+   double flast = f1;
    double slam = 1.;
    
    bool iterate = false;
-   MnParabolaPoint p0(0., F0);
+   MnParabolaPoint p0(0., f0);
    MnParabolaPoint p1(slam, flast);
-   double F2 = 0.;
+   double f2 = 0.;
    // quadratic interpolation using the two points p0,p1 and the slope at p0
    do {  
       // cut toler8 as function goes up 
       iterate = false;
       MnParabola pb = MnParabolaFactory()(p0, gdel, p1);
       //     std::cout<<"pb.Min() = "<<pb.Min()<<std::endl;
-      //     std::cout<<"flast, F0= "<<flast<<", "<<F0<<std::endl;
-      //     std::cout<<"flast-F0= "<<flast-F0<<std::endl;
+      //     std::cout<<"flast, f0= "<<flast<<", "<<f0<<std::endl;
+      //     std::cout<<"flast-f0= "<<flast-f0<<std::endl;
       //     std::cout<<"slam= "<<slam<<std::endl;
-      //     double df = flast-F0;
+      //     double df = flast-f0;
       //     if(fabs(df) < prec.Eps2()) {
-      //       if(flast-F0 < 0.) df = -prec.Eps2();
+      //       if(flast-f0 < 0.) df = -prec.Eps2();
       //       else df = prec.Eps2();
       //     }
       //     std::cout<<"df= "<<df<<std::endl;
       //     double denom = 2.*(df-gdel*slam)/(slam*slam);
-      double denom = 2.*(flast-F0-gdel*slam)/(slam*slam);
+      double denom = 2.*(flast-f0-gdel*slam)/(slam*slam);
       //     std::cout<<"denom= "<<denom<<std::endl;
       if(denom != 0) {
          slam =  - gdel/denom;
@@ -111,13 +111,13 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
       if(slam < toler8) slam = toler8;
       //     std::cout<<"slam= "<<slam<<std::endl;
       if(slam < slamin) {
-         //       std::cout<<"F1, F2= "<<p0.y()<<", "<<p1.y()<<std::endl;
+         //       std::cout<<"f1, f2= "<<p0.y()<<", "<<p1.y()<<std::endl;
          //       std::cout<<"x1, x2= "<<p0.x()<<", "<<p1.x()<<std::endl;
          //       std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
          return MnParabolaPoint(xvmin, fvmin);
       }
       if(fabs(slam - 1.) < toler8 && p1.y() < p0.y()) {
-         //       std::cout<<"F1, F2= "<<p0.y()<<", "<<p1.y()<<std::endl;
+         //       std::cout<<"f1, f2= "<<p0.y()<<", "<<p1.y()<<std::endl;
          //       std::cout<<"x1, x2= "<<p0.x()<<", "<<p1.x()<<std::endl;
          //       std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
          return MnParabolaPoint(xvmin, fvmin);
@@ -128,17 +128,17 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
       //       slam = 1000.;
       //     MnAlgebraicVector tmp = step;
       //     tmp *= slam;
-      //     F2 = fcn(st.Vec()+tmp);
-      F2 = fcn(st.Vec() + slam*step);
-      if(F2 < fvmin) {
-         fvmin = F2;
+      //     f2 = fcn(st.Vec()+tmp);
+      f2 = fcn(st.Vec() + slam*step);
+      if(f2 < fvmin) {
+         fvmin = f2;
          xvmin = slam;
       }
       // LM : correct a bug using precision
       if (fabs( p0.y() - fvmin) < fabs(fvmin)*prec.Eps() ) { 
          //   if(p0.y()-prec.Eps() < fvmin && fvmin < p0.y()+prec.Eps()) {
          iterate = true;
-         flast = F2;
+         flast = f2;
          toler8 = toler*slam;
          overal = slam - toler8;
          slamax = overal;
@@ -152,10 +152,10 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
    }
    
    //   std::cout<<"after initial 2-point iter: "<<std::endl;
-   //   std::cout<<"F0, F1, F2= "<<p0.y()<<", "<<p1.y()<<", "<<F2<<std::endl;
+   //   std::cout<<"f0, f1, f2= "<<p0.y()<<", "<<p1.y()<<", "<<f2<<std::endl;
    //   std::cout<<"x0, x1, x2= "<<p0.x()<<", "<<p1.x()<<", "<<slam<<std::endl;
    
-   MnParabolaPoint p2(slam, F2);
+   MnParabolaPoint p2(slam, f2);
    
    // do now the quadratic interpolation with 3 points
    do {
@@ -188,7 +188,7 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
          if(fabs(p0.x() - slam) < toler9 || 
             fabs(p1.x() - slam) < toler9 || 
             fabs(p2.x() - slam) < toler9) {
-            //   	std::cout<<"F1, F2, F3= "<<p0.y()<<", "<<p1.y()<<", "<<p2.y()<<std::endl;
+            //   	std::cout<<"f1, f2, F3= "<<p0.y()<<", "<<p1.y()<<", "<<p2.y()<<std::endl;
             //   	std::cout<<"x1, x2, x3= "<<p0.x()<<", "<<p1.x()<<", "<<p2.x()<<std::endl;
             //   	std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
             return MnParabolaPoint(xvmin, fvmin);
@@ -232,7 +232,7 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
       niter++;
    } while(niter < maxiter);
    
-   //   std::cout<<"F1, F2= "<<p0.y()<<", "<<p1.y()<<std::endl;
+   //   std::cout<<"f1, f2= "<<p0.y()<<", "<<p1.y()<<std::endl;
    //   std::cout<<"x1, x2= "<<p0.x()<<", "<<p1.x()<<std::endl;
    //   std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
    return MnParabolaPoint(xvmin, fvmin);

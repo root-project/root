@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: Numerical2PGradientCalculator.cxx,v 1.2 2006/06/26 07:56:43 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: Numerical2PGradientCalculator.cxx,v 1.3 2006/06/26 09:46:13 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -148,22 +148,26 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 }
 
 const MnMachinePrecision& Numerical2PGradientCalculator::Precision() const {
+   // return global precision (set in transformation)
    return fTransformation.Precision();
 }
 
 unsigned int Numerical2PGradientCalculator::Ncycle() const {
+   // return number of cycles for gradient calculation (set in strategy object)
    return Strategy().GradientNCycles();
 }
 
 double Numerical2PGradientCalculator::StepTolerance() const {
+   // return gradient step tolerance (set in strategy object)
    return Strategy().GradientStepTolerance();
 }
 
 double Numerical2PGradientCalculator::GradTolerance() const {
+   // return gradient tolerance (set in strategy object)
    return Strategy().GradientTolerance();
 }
 
 
-  }  // namespace Minuit2
+   }  // namespace Minuit2
 
 }  // namespace ROOT

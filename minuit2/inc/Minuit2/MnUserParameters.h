@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnUserParameters.h,v 1.8.2.4 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnUserParameters.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -25,8 +25,12 @@ class MnMachinePrecision;
     serves as input to the minimizer as well as output from it;
     users can interact: Fix/release parameters, set values and errors, etc.;
     parameters can be accessed via their Parameter number (determined 
-    internally by Minuit) or via their user-specified Name (10 character 
-    string); 
+    internally by Minuit and followed the order how the parameters are created) 
+    or via their user-specified Name (10 character string). 
+    Minuit has also an internal parameter number which is used during the minimization
+    (the fix parameter are skipped). The parameter number used in this class is the external 
+    one. The class ROOT::Minuit2::MnUserTransformation is used to keep the 
+    internal <-> external transformation
  */
 
 class MnUserParameters {

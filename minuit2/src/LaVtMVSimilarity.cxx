@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: LaVtMVSimilarity.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: LaVtMVSimilarity.cxx,v 1.2 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -24,8 +24,8 @@ double similarity(const LAVector& avec, const LASymMatrix& mat) {
    
    LAVector tmp = mat*avec;
    
-   double Value = mnddot(avec.size(), avec.Data(), 1, tmp.Data(), 1);
-   return Value;
+   double value = mnddot(avec.size(), avec.Data(), 1, tmp.Data(), 1);
+   return value;
 }
 
    }  // namespace Minuit2

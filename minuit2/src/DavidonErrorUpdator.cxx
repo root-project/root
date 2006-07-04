@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: DavidonErrorUpdator.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: DavidonErrorUpdator.cxx,v 1.2 2006/06/26 11:03:55 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -29,29 +29,29 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
    // in case of delgam > gvg (PHI > 1) use rank one formula 
    // see  par 4.10 pag 30
 
-   const MnAlgebraicSymMatrix& V0 = s0.Error().InvHessian();
+   const MnAlgebraicSymMatrix& v0 = s0.Error().InvHessian();
    MnAlgebraicVector dx = p1.Vec() - s0.Vec();
    MnAlgebraicVector dg = g1.Vec() - s0.Gradient().Vec();
   
    double delgam = inner_product(dx, dg);
-   double gvg = similarity(dg, V0);
+   double gvg = similarity(dg, v0);
 
    //   std::cout<<"delgam= "<<delgam<<" gvg= "<<gvg<<std::endl;
-   MnAlgebraicVector vg = V0*dg;
+   MnAlgebraicVector vg = v0*dg;
 
-   MnAlgebraicSymMatrix Vupd = Outer_product(dx)/delgam - Outer_product(vg)/gvg;
+   MnAlgebraicSymMatrix vUpd = Outer_product(dx)/delgam - Outer_product(vg)/gvg;
 
    if(delgam > gvg) {
       // use rank 1 formula
-      Vupd += gvg*Outer_product(MnAlgebraicVector(dx/delgam - vg/gvg));
+      vUpd += gvg*Outer_product(MnAlgebraicVector(dx/delgam - vg/gvg));
    }
 
-   double sum_upd = sum_of_elements(Vupd);
-   Vupd += V0;
+   double sum_upd = sum_of_elements(vUpd);
+   vUpd += v0;
   
-   double dcov = 0.5*(s0.Error().Dcovar() + sum_upd/sum_of_elements(Vupd));
+   double dcov = 0.5*(s0.Error().Dcovar() + sum_upd/sum_of_elements(vUpd));
   
-   return MinimumError(Vupd, dcov);
+   return MinimumError(vUpd, dcov);
 }
 
 /*
@@ -59,24 +59,24 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
 					 const MinimumParameters& p1,
 					 const FunctionGradient& g1) const {
 
-  const MnAlgebraicSymMatrix& V0 = s0.Error().InvHessian();
+  const MnAlgebraicSymMatrix& v0 = s0.Error().InvHessian();
   MnAlgebraicVector dx = p1.Vec() - s0.Vec();
   MnAlgebraicVector dg = g1.Vec() - s0.Gradient().Vec();
   
   double delgam = inner_product(dx, dg);
-  double gvg = similarity(dg, V0);
+  double gvg = similarity(dg, v0);
 
 //   std::cout<<"delgam= "<<delgam<<" gvg= "<<gvg<<std::endl;
-  MnAlgebraicVector vg = V0*dg;
-//   MnAlgebraicSymMatrix Vupd(V0.Nrow());
+  MnAlgebraicVector vg = v0*dg;
+//   MnAlgebraicSymMatrix vUpd(v0.Nrow());
 
 //   MnAlgebraicSymMatrix dd = ( 1./delgam )*outer_product(dx);
 //   dd *= ( 1./delgam );
 //   MnAlgebraicSymMatrix VggV = ( 1./gvg )*outer_product(vg);
 //   VggV *= ( 1./gvg );
-//   Vupd = dd - VggV;
-//   MnAlgebraicSymMatrix Vupd = ( 1./delgam )*outer_product(dx) - ( 1./gvg )*outer_product(vg);
-  MnAlgebraicSymMatrix Vupd = Outer_product(dx)/delgam - Outer_product(vg)/gvg;
+//   vUpd = dd - VggV;
+//   MnAlgebraicSymMatrix vUpd = ( 1./delgam )*outer_product(dx) - ( 1./gvg )*outer_product(vg);
+  MnAlgebraicSymMatrix vUpd = Outer_product(dx)/delgam - Outer_product(vg)/gvg;
   
   if(delgam > gvg) {
 //     dx *= ( 1./delgam );
@@ -84,8 +84,8 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
 //     MnAlgebraicVector flnu = dx - vg;
 //     MnAlgebraicSymMatrix tmp = Outer_product(flnu);
 //     tmp *= gvg;
-//     Vupd = Vupd + tmp;
-    Vupd += gvg*outer_product(dx/delgam - vg/gvg);
+//     vUpd = vUpd + tmp;
+    vUpd += gvg*outer_product(dx/delgam - vg/gvg);
   }
 
 //   
@@ -93,25 +93,25 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
 //     dd *= ( 1./delgam );
 //     MnAlgebraicSymMatrix VggV = Outer_product(vg);
 //     VggV *= ( 1./gvg );
-//     Vupd = dd - VggV;
+//     vUpd = dd - VggV;
 //   
 //     
 //   double phi = delgam/(delgam - gvg);
 
-//   MnAlgebraicSymMatrix Vupd(V0.Nrow());
+//   MnAlgebraicSymMatrix vUpd(v0.Nrow());
 //   if(phi < 0) {
 //     // rank-2 Update
 //     MnAlgebraicSymMatrix dd = Outer_product(dx);
 //     dd *= ( 1./delgam );
 //     MnAlgebraicSymMatrix VggV = Outer_product(vg);
 //     VggV *= ( 1./gvg );
-//     Vupd = dd - VggV;
+//     vUpd = dd - VggV;
 //   }
 //   if(phi > 1) {
 //     // rank-1 Update
 //     MnAlgebraicVector tmp = dx - vg;
-//     Vupd = Outer_product(tmp);
-//     Vupd *= ( 1./(delgam - gvg) );
+//     vUpd = Outer_product(tmp);
+//     vUpd *= ( 1./(delgam - gvg) );
 //   }
 //     
 
@@ -119,27 +119,27 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
 //   if(delgam > gvg) {
 //     // rank-1 Update
 //     MnAlgebraicVector tmp = dx - vg;
-//     Vupd = Outer_product(tmp);
-//     Vupd *= ( 1./(delgam - gvg) );
+//     vUpd = Outer_product(tmp);
+//     vUpd *= ( 1./(delgam - gvg) );
 //   } else { 
 //     // rank-2 Update
 //     MnAlgebraicSymMatrix dd = Outer_product(dx);
 //     dd *= ( 1./delgam );
 //     MnAlgebraicSymMatrix VggV = Outer_productn(vg);
 //     VggV *= ( 1./gvg );
-//     Vupd = dd - VggV;
+//     vUpd = dd - VggV;
 //   }
 //   
 
-  double sum_upd = sum_of_elements(Vupd);
-  Vupd += V0;
+  double sum_upd = sum_of_elements(vUpd);
+  vUpd += v0;
     
-//   MnAlgebraicSymMatrix V1 = V0 + Vupd;
+//   MnAlgebraicSymMatrix V1 = v0 + vUpd;
 
   double dcov = 
-    0.5*(s0.Error().Dcovar() + sum_upd/sum_of_elements(Vupd));
+    0.5*(s0.Error().Dcovar() + sum_upd/sum_of_elements(vUpd));
   
-  return MinimumError(Vupd, dcov);
+  return MinimumError(vUpd, dcov);
 }
 */
 

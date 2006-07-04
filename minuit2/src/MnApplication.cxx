@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnApplication.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnApplication.cxx,v 1.2 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -67,6 +67,7 @@ void MnApplication::Add(const char* Name, double val) {
 void MnApplication::Fix(unsigned int i) {fState.Fix(i);}
 void MnApplication::Release(unsigned int i) {fState.Release(i);}
 void MnApplication::SetValue(unsigned int i, double val) {
+   // set value for parameter i 
    fState.SetValue(i, val);
 }
 void MnApplication::SetError(unsigned int i, double val) {
@@ -128,6 +129,6 @@ unsigned int MnApplication::VariableParameters() const {
 }
 
 
-  }  // namespace Minuit2
+   }  // namespace Minuit2
 
 }  // namespace ROOT

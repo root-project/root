@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliErrorUpdator.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FumiliErrorUpdator.cxx,v 1.2 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -90,18 +90,18 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState& s0,
    }
    
    
-   const MnAlgebraicSymMatrix& V0 = s0.Error().InvHessian();
+   const MnAlgebraicSymMatrix& v0 = s0.Error().InvHessian();
    
    // calculate by how much did the covariance matrix changed
    // (if it changed a lot since the last step, probably we 
    // are not yet near the Minimum)
-   double dcov = 0.5*(s0.Error().Dcovar() + sum_of_elements(h-V0)/sum_of_elements(h)); 
+   double dcov = 0.5*(s0.Error().Dcovar() + sum_of_elements(h-v0)/sum_of_elements(h)); 
    
    
    
    return MinimumError(h, dcov);
    
-                                        }
+}
 
 
 }  // namespace Minuit2
