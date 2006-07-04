@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.50 2005/12/01 16:10:20 wverkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.51 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -127,7 +127,7 @@ protected:
   static RooSharedPropertiesList _sharedPropList; // List of properties shared among clone sets 
   RooRealVarSharedProperties* _sharedProp ; // Shared properties associated with this instance
 
-  ClassDef(RooRealVar,3) // Real-valued variable 
+  ClassDef(RooRealVar,4) // Real-valued variable 
 };
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.57 2005/06/20 15:44:57 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.58 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -467,23 +467,21 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
       os << "C " ;
     }      
 
-    // Append fit limits if not +Inf:-Inf
-    if (hasMin() || hasMax()) {
-      os << "L(" ;
-      if(hasMin()) {
-	os << getMin();
-      }
-      else {
-	os << "-INF";
-      }
-      if(hasMax()) {
-	os << " - " << getMax() ;
-      }
-      else {
-	os << " - +INF";
-      }
-      os << ") " ;
+    // Append fit limits
+    os << "L(" ;
+    if(hasMin()) {
+      os << getMin();
     }
+    else {
+      os << "-INF";
+    }
+    if(hasMax()) {
+      os << " - " << getMax() ;
+    }
+    else {
+      os << " - +INF";
+    }
+    os << ") " ;
 
     if (getBins()!=100) {
       os << "B(" << getBins() << ") " ;
@@ -837,10 +835,14 @@ void RooRealVar::Streamer(TBuffer &R__b)
       if (R__v>=2) {
 	R__b >> _binning;
       }
-      if (R__v>=3) {
-	R__b >> _sharedProp ;
-	// Handle possible creation of multiple instances of sharedProps with same UUID
+      if (R__v==3) {
+ 	R__b >> _sharedProp ;
 	_sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(_sharedProp) ;
+      }
+      if (R__v==4) {
+	RooRealVarSharedProperties* tmpSharedProp = new RooRealVarSharedProperties() ;
+	tmpSharedProp->Streamer(R__b) ;
+	_sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(tmpSharedProp) ;
       }
 
       R__b.CheckByteCount(R__s, R__c, RooRealVar::IsA());
@@ -852,8 +854,8 @@ void RooRealVar::Streamer(TBuffer &R__b)
       R__b << _error;
       R__b << _asymErrLo;
       R__b << _asymErrHi;
-      R__b << _binning;
-      R__b << _sharedProp ;
+      R__b << _binning;      
+      _sharedProp->Streamer(R__b) ;
       R__b.SetByteCount(R__c, kTRUE);      
 
    }

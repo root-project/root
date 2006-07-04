@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.rdl,v 1.9 2005/04/20 15:10:15 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.rdl,v 1.10 2005/06/20 15:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -126,7 +126,7 @@ RooCmdArg What(const char* str) ;
 RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet) ;
 
 // RooAbsPdf::generate arguments
-RooCmdArg ProtoData(const RooDataSet& protoData, Bool_t randomizeOrder=kFALSE) ;
+RooCmdArg ProtoData(const RooDataSet& protoData, Bool_t randomizeOrder=kFALSE, Bool_t resample=kFALSE) ;
 RooCmdArg NumEvents(Int_t numEvents) ;
 
 // RooAbsRealLValue::createHistogram arguments

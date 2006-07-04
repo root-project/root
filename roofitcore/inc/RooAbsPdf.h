@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.83 2005/07/12 11:29:37 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.84 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -56,7 +56,7 @@ public:
                        const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none) ;
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents = 0, Bool_t verbose=kFALSE) const;
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype, Int_t nEvents= 0,
-		       Bool_t verbose=kFALSE, Bool_t randProtoOrder=kFALSE) const;
+		       Bool_t verbose=kFALSE, Bool_t randProtoOrder=kFALSE, Bool_t resampleProto=kFALSE) const;
 
   virtual RooPlot* plotOn(RooPlot* frame, 
 			  const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
@@ -194,7 +194,7 @@ protected:
   friend class RooSimultaneous ;
   friend class RooMCStudy ;
 
-  Int_t* randomizeProtoOrder(Int_t nProto,Int_t nGen) const ;
+  Int_t* randomizeProtoOrder(Int_t nProto,Int_t nGen,Bool_t resample=kFALSE) const ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
 	                               const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
 

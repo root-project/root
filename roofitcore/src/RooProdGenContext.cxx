@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.22 2005/06/20 15:44:56 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.23 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,6 +36,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 				     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model)
 {
+
   // Constructor. Build an array of generator contexts for each product component PDF
 
   // Make full list of dependents (generated & proto)
@@ -57,6 +58,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   // First add terms that do not import observables
   
   Bool_t working = kTRUE ;
+  Int_t nSkip=0 ;
   while(working) {
     working = kFALSE ;
 
@@ -82,18 +84,29 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       RooArgSet neededDeps(*impDeps) ;
       neededDeps.remove(genDeps,kTRUE,kTRUE) ;
 
-//        cout << "needed imported dependents are " ; neededDeps.Print("1") ;
+//    cout << "needed imported dependents are " ; neededDeps.Print("1") ;
       if (neededDeps.getSize()>0) {
-//  	cout << "skipping this term for now because it needs imported dependents that are not generated yet" << endl ;
+//   	cout << "skipping this term for now because it needs imported dependents that are not generated yet" << endl ;
+	if (++nSkip<100) {
+	  working = kTRUE ;
+	} else {
+	  cout << "RooProdGenContext ERROR: Generations is requested of observables that are conditional observables of the entire product expression: " ; neededDeps.Print("1") ;
+	  _isValid = kFALSE ;
+	  return ;
+	}
 	continue ;
       }
 
       // Check if this component has any dependents that need to be generated
       // e.g. it can happen that there are none if all dependents of this component are prototyped
       if (termDeps->getSize()==0) {
-//  	cout << "no dependents to be generated for this term, removing it from list" << endl ;
+//   	cout << "no dependents to be generated for this term, removing it from list" << endl ;
 	termList.Remove(term) ;
+	depsList.Remove(termDeps) ;
+	impDepList.Remove(impDeps) ;
 	delete term ;
+	delete termDeps ;
+	delete impDeps ;
 	continue ;
       }
 
@@ -105,13 +118,13 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	pdf = (RooAbsPdf*) pdfIter->Next() ;
 	RooArgSet* pdfDep = pdf->getObservables(termDeps) ;
 	if (pdfDep->getSize()>0) {
-//  	  cout << "RooProdGenContext(" << model.GetName() << "): creating subcontext for " << pdf->GetName() << " with depSet " ; pdfDep->Print("1") ;
+// 	  cout << "RooProdGenContext(" << model.GetName() << "): creating subcontext for " << pdf->GetName() << " with depSet " ; pdfDep->Print("1") ;
 	  RooArgSet* auxProto = impDeps ? pdf->getObservables(impDeps) : 0 ;
 	  RooAbsGenContext* cx = pdf->genContext(*pdfDep,prototype,auxProto,verbose) ;
 	  _gcList.Add(cx) ;
 	} 
 
-//  	cout << "adding following dependents to list of generated observables: " ; pdfDep->Print("1") ;
+// 	cout << "adding following dependents to list of generated observables: " ; pdfDep->Print("1") ;
 	genDeps.add(*pdfDep) ;
 
 	delete pdfDep ;
@@ -137,7 +150,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	    if (pdfnset && pdfnset->getSize()>0) {
 	      // This PDF requires a Conditional() construction
 	      cmdList.Add(RooFit::Conditional(*pdfSet,*pdfnset).Clone()) ;
-//  	      cout << "Conditional " << pdf->GetName() << " " ; pdfnset->Print("1") ;
+//   	      cout << "Conditional " << pdf->GetName() << " " ; pdfnset->Print("1") ;
 	    } else {
 	      fullPdfSet.add(*pdfSet) ;
 	    }
@@ -150,11 +163,11 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	  multiPdf->useDefaultGen(kTRUE) ;
 	  _ownedMultiProds.addOwned(*multiPdf) ;
 	  
-//  	  cout << "RooProdGenContext(" << model.GetName() << "): creating subcontext for composite " << multiPdf->GetName() << " with depSet " ; termDeps->Print("1") ;
+//   	  cout << "RooProdGenContext(" << model.GetName() << "): creating subcontext for composite " << multiPdf->GetName() << " with depSet " ; termDeps->Print("1") ;
 	  RooAbsGenContext* cx = multiPdf->genContext(*termDeps,prototype,auxProto,verbose) ;
 	  _gcList.Add(cx) ;
 
-//  	  cout << "adding following dependents to list of generated observables: " ; termDeps->Print("1") ;
+//   	  cout << "adding following dependents to list of generated observables: " ; termDeps->Print("1") ;
 	  genDeps.add(*termDeps) ;
 
 	}
@@ -163,8 +176,14 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       delete pdfIter ;
 
 //        cout << "added generator for this term, removing from list" << endl ;
+
+
       termList.Remove(term) ;
+      depsList.Remove(termDeps) ;
+      impDepList.Remove(impDeps) ;
       delete term ;
+      delete termDeps ;
+      delete impDeps ;
       
     }
   }

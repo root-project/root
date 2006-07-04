@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.99 2005/06/21 16:42:28 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.100 2005/12/01 16:10:19 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -992,10 +992,13 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   // Extended()                         -- The actual number of events generated will be sampled from a Poisson distribution
   //                                       with mu=nevt. For use with extended maximum likelihood fits
   // ProtoData(const RooDataSet& data,  -- Use specified dataset as prototype dataset. If randOrder is set to true
-  //                 Bool_t randOrder)     the order of the events in the dataset will be read in a random order
-  //                                       if the requested number of events to be generated does not match the
-  //                                       number of events in the prototype dataset
-  //                                        
+  //                 Bool_t randOrder,     the order of the events in the dataset will be read in a random order
+  //                 Bool_t resample)      if the requested number of events to be generated does not match the
+  //                                       number of events in the prototype dataset. If resample is also set to 
+  //                                       true, the prototype dataset will be resampled rather than be strictly
+  //                                       reshuffled. In this mode events of the protodata may be used more than
+  //                                       once.
+  //
   // If ProtoData() is used, the specified existing dataset as a prototype: the new dataset will contain 
   // the same number of events as the prototype (unless otherwise specified), and any prototype variables not in
   // whatVars will be copied into the new dataset for each generated event and also used to set our PDF parameters. 
@@ -1007,6 +1010,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   RooCmdConfig pc(Form("RooAbsPdf::generate(%s)",GetName())) ;
   pc.defineObject("proto","PrototypeData",0,0) ;
   pc.defineInt("randProto","PrototypeData",0,0) ;
+  pc.defineInt("resampleProto","PrototypeData",1,0) ;
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("extended","Extended",0,0) ;
   pc.defineInt("nEvents","NumEvents",0,0) ;
@@ -1023,6 +1027,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   Int_t  nEvents = pc.getInt("nEvents") ;
   Bool_t verbose = pc.getInt("verbose") ;
   Bool_t randProto = pc.getInt("randProto") ;
+  Bool_t resampleProto = pc.getInt("resampleProto") ;
   Bool_t extended = pc.getInt("extended") ;
 
   if (extended) {
@@ -1039,7 +1044,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
 
   // Forward to appropiate implementation
   if (protoData) {
-    return generate(whatVars,*protoData,nEvents,verbose,randProto) ;
+    return generate(whatVars,*protoData,nEvents,verbose,randProto,resampleProto) ;
   } else {
     return generate(whatVars,nEvents,verbose) ;
   }
@@ -1070,7 +1075,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
 }
 
 RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &prototype,
-				Int_t nEvents, Bool_t verbose, Bool_t randProtoOrder) const {
+				Int_t nEvents, Bool_t verbose, Bool_t randProtoOrder, Bool_t resampleProto) const {
   // Generate a new dataset with values of the whatVars variables
   // sampled from our distribution. Use the specified existing dataset
   // as a prototype: the new dataset will contain the same number of
@@ -1087,9 +1092,14 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &pro
   RooDataSet *generated = 0;
   RooAbsGenContext *context= genContext(whatVars,&prototype,0,verbose);
 
+  // Resampling implies reshuffling in the implementation
+  if (resampleProto) {
+    randProtoOrder=kTRUE ;
+  }
+
   if (randProtoOrder && prototype.numEntries()!=nEvents) {
     cout << "RooAbsPdf::generate (Re)randomizing event order in prototype dataset (Nevt=" << nEvents << ")" << endl ;
-    Int_t* newOrder = randomizeProtoOrder(prototype.numEntries(),nEvents) ;
+    Int_t* newOrder = randomizeProtoOrder(prototype.numEntries(),nEvents,resampleProto) ;
     context->setProtoDataOrder(newOrder) ;
     delete[] newOrder ;
   }
@@ -1106,7 +1116,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &pro
 
 
 
-Int_t* RooAbsPdf::randomizeProtoOrder(Int_t nProto, Int_t) const
+Int_t* RooAbsPdf::randomizeProtoOrder(Int_t nProto, Int_t, Bool_t resampleProto) const
 {
   // Return lookup table with randomized access order for prototype events,
   // given nProto prototype data events and nGen events that will actually
@@ -1123,14 +1133,23 @@ Int_t* RooAbsPdf::randomizeProtoOrder(Int_t nProto, Int_t) const
   Int_t* lut = new Int_t[nProto] ;
 
   // Randomly samply input list into output list
-  for (i=0 ; i<nProto ; i++) {
-    Int_t iran = RooRandom::integer(nProto-i) ;
-    RooInt* sample = (RooInt*) l.At(iran) ;
-    lut[i] = *sample ;
-    l.Remove(sample) ;
-    delete sample ;
+  if (!resampleProto) {
+    // In this mode, randomization is a strict reshuffle of the order
+    for (i=0 ; i<nProto ; i++) {
+      Int_t iran = RooRandom::integer(nProto-i) ;
+      RooInt* sample = (RooInt*) l.At(iran) ;
+      lut[i] = *sample ;
+      l.Remove(sample) ;
+      delete sample ;
+    }
+  } else {
+    // In this mode, we resample, i.e. events can be used more than once
+    for (i=0 ; i<nProto ; i++) {
+      lut[i] = RooRandom::integer(nProto);
+    }
   }
-  
+
+
   return lut ;
 }
 

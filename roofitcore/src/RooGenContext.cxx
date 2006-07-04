@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenContext.cc,v 1.46 2005/12/01 16:10:20 wverkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.47 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -104,7 +104,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       
       // does the model depend indirectly on this variable through an lvalue chain?	
       // otherwise, this variable will have to be generated with accept/reject
-      if(direct||1) { // WVE !!! MOD FROM DENISD, IS IT (ALWAYS) CORRECT?? SUSPECT SPECIAL CASE FOR CONVOLUTIONS...
+      if(direct) { 
 	_directVars.add(*arg);
       } else {
 	_otherVars.add(*arg);
