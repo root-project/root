@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.h,v 1.9 2006/01/30 17:42:06 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.h,v 1.10 2006/07/04 10:16:52 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -154,6 +154,9 @@ public:
    void           ClearFiles();
    void           RemoveFile();
    void           UploadDataSet();
+   void           OnOverwriteDataset(Bool_t on);
+   void           OnOverwriteFiles(Bool_t on);
+   void           OnAppendFiles(Bool_t on);
 
    ClassDef(TUploadDataSetDlg, 0) // New query dialog
 };

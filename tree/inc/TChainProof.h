@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.5 2006/06/26 11:54:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.6 2006/07/04 10:23:52 rdm Exp $
 // Author: Marek Biskup   10/12/2004
 
 /*************************************************************************
@@ -48,7 +48,7 @@ protected:
    virtual TFile   *ChangeFile(TFile *file);
 
 public:
-   TChainProof(TDSet *set, TTree* tree);
+   TChainProof(TDSet *set, TTree* tree, TVirtualProof* proof);
    virtual ~TChainProof();
    
    virtual TFriendElement *AddFriend(const char *treename, const char *filename="");

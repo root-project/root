@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.4 2006/06/26 11:54:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.5 2006/07/04 10:23:53 rdm Exp $
 // Author: Marek Biskup   10/3/2005
 
 /*************************************************************************
@@ -27,15 +27,16 @@
 ClassImp(TChainProof)
 
 //______________________________________________________________________________
-TChainProof::TChainProof(TDSet *set, TTree *tree) : TTree()
+TChainProof::TChainProof(TDSet *set, TTree *tree, TVirtualProof* proof) : TTree()
 {
    // Crates a new TProof chain containing the files from the TDSet.
    // The tree is just a dummy containing descriptions of all the tree leaves.
 
-   fTree      = tree;
-   fSet       = set;
-   fDirectory = gDirectory;
-   fProof     = 0;
+   fTree         = tree;
+   fSet          = set;
+   fDirectory    = gDirectory;
+   fProof        = proof;
+   fDrawFeedback = 0;
 }
 
 //______________________________________________________________________________
@@ -271,7 +272,8 @@ Long64_t TChainProof::Draw(const char *varexp, const TCut &selection, Option_t *
    if (!fProof && gProof) {
       ConnectProof(gProof);
    }
-   fProof->SetDrawFeedbackOption(fDrawFeedback, option);
+   if (fDrawFeedback)
+      fProof->SetDrawFeedbackOption(fDrawFeedback, option);
    fReadEntry = firstentry;
    fSet->SetEventList(fEventList);
 
@@ -288,7 +290,8 @@ Long64_t TChainProof::Draw(const char *varexp, const char *selection, Option_t *
    if (!fProof && gProof) {
       ConnectProof(gProof);
    }
-   fProof->SetDrawFeedbackOption(fDrawFeedback, option);
+   if (fDrawFeedback)
+      fProof->SetDrawFeedbackOption(fDrawFeedback, option);
    fReadEntry = firstentry;
    fSet->SetEventList(fEventList);
    Long64_t rv = fSet->Draw(varexp, selection, option, nentries, firstentry);
@@ -491,9 +494,12 @@ TVirtualTreePlayer *TChainProof::GetPlayer()
    // Forwards the execution to the dummy tree header.
    // See TTree::GetPlayer().
 
-   if (!fTree)
-      if (fProof)
+   if (!fTree) {
+      if (fProof) {
          fTree = fProof->GetTreeHeader(fSet);
+         ConnectProof(fProof);
+      }
+   }
 
    return (fTree ? fTree->GetPlayer() : (TVirtualTreePlayer *)0);    // FIXME ??
 }
@@ -892,7 +898,8 @@ void TChainProof::ReleaseProof()
       return;
    fProof->Disconnect("Progress(Long64_t,Long64_t)",
                       this, "Progress(Long64_t,Long64_t)");
-   fProof->DeleteDrawFeedback(fDrawFeedback);
+   if (fDrawFeedback)
+      fProof->DeleteDrawFeedback(fDrawFeedback);
    fDrawFeedback = 0;
    fProof = 0;
 }
@@ -933,8 +940,7 @@ TChainProof *TChainProof::MakeChainProof(TDSet *set, TVirtualProof *proof, Bool_
          return 0;
       }
    }
-   TChainProof *w = new TChainProof(set, t);   // t will be deleted in w's destructor
-   w->ConnectProof(proof);
+   TChainProof *w = new TChainProof(set, t, proof);   // t will be deleted in w's destructor
    w->SetDirectory(0);
    if (t)
       w->SetName(TString(t->GetName())  + "_Wrapped");

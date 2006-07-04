@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.67 2006/06/16 11:03:37 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.68 2006/07/04 10:16:52 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -2694,24 +2694,18 @@ void TSessionQueryFrame::OnBtnSubmit()
       fViewer->GetActDesc()->fProof->cd();
       // check if parameter file has been specified
       if (newquery->fChain) {
-         // Quick FIX just for the demo. Creating a new TDSet causes a memory leak.
          if (newquery->fChain->IsA() == TChain::Class()) {
             // TChain case
             newquery->fStatus = TQueryDescription::kSessionQuerySubmitted;
-            TDSet* s = ((TChain *)newquery->fChain)->MakeTDSet();
-            gProof = fViewer->GetActDesc()->fProof;
-            id = s->Process(newquery->fSelectorString,
-                  newquery->fOptions,
-                  newquery->fNoEntries > 0 ? newquery->fNoEntries : 1234567890,
-                  newquery->fFirstEntry);
-//            ((TChain *)newquery->fChain)->SetProof(fViewer->GetActDesc()->fProof);
-//            id = ((TChain *)newquery->fChain)->Process(newquery->fSelectorString,
-//                    newquery->fOptions,
-//                    newquery->fNoEntries > 0 ? newquery->fNoEntries : 1234567890,
-//                    newquery->fFirstEntry);
+            ((TChain *)newquery->fChain)->SetProof(fViewer->GetActDesc()->fProof);
+            id = ((TChain *)newquery->fChain)->Process(newquery->fSelectorString,
+                    newquery->fOptions,
+                    newquery->fNoEntries > 0 ? newquery->fNoEntries : 1234567890,
+                    newquery->fFirstEntry);
          }
          else if (newquery->fChain->IsA() == TDSet::Class()) {
             // TDSet case
+            newquery->fStatus = TQueryDescription::kSessionQuerySubmitted;
             id = ((TDSet *)newquery->fChain)->Process(newquery->fSelectorString,
                   newquery->fOptions,
                   newquery->fNoEntries,
@@ -4339,20 +4333,25 @@ void TSessionViewer::CleanupSession()
    TGListTreeItem *item = fSessionHierarchy->GetSelected();
    if (!item) return;
    TObject *obj = (TObject *)item->GetUserData();
-   if (obj->IsA() != TQueryDescription::Class()) return;
+   if (obj->IsA() != TSessionDescription::Class()) return;
    if (!fActDesc->fProof || !fActDesc->fProof->IsValid()) return;
-   TQueryDescription *query = (TQueryDescription *)obj;
    TString m;
    m.Form("Are you sure to cleanup the session \"%s::%s\"",
-         fActDesc->fAddress.Data(), fActDesc->fName.Data());
+         fActDesc->fName.Data(), fActDesc->fTag.Data());
    Int_t result;
    new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), 0,
          kMBYes | kMBNo | kMBCancel, &result);
    if (result == kMBYes) {
-      // send cleanup request for the session specified by the query reference
-      fActDesc->fProof->CleanupSession(query->fReference.Data());
-      fSessionHierarchy->DeleteChildren(item->GetParent());
+      // send cleanup request for the session specified by the tag reference
+      TString sessiontag;
+      sessiontag.Form("session-%s",fActDesc->fTag.Data());
+      fActDesc->fProof->CleanupSession(sessiontag.Data());
+      // clear the list of queries
+      fActDesc->fQueries->Clear();
+      fSessionHierarchy->DeleteChildren(item);
       fSessionFrame->OnBtnGetQueriesClicked();
+      if (fAutoSave)
+         WriteConfiguration();
    }
    // update list tree
    fClient->NeedRedraw(fSessionHierarchy);
@@ -4361,7 +4360,7 @@ void TSessionViewer::CleanupSession()
 //______________________________________________________________________________
 void TSessionViewer::ResetSession()
 {
-   // Clean-up Proof session.
+   // Reset Proof session.
 
    TGListTreeItem *item = fSessionHierarchy->GetSelected();
    if (!item) return;
@@ -4370,14 +4369,27 @@ void TSessionViewer::ResetSession()
    if (!fActDesc->fProof || !fActDesc->fProof->IsValid()) return;
    TString m;
    m.Form("Do you really want to reset the session \"%s::%s\"",
-         fActDesc->fAddress.Data(), fActDesc->fName.Data());
+         fActDesc->fName.Data(), fActDesc->fAddress.Data());
    Int_t result;
    new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), 0,
          kMBYes | kMBNo | kMBCancel, &result);
    if (result == kMBYes) {
-      // send cleanup request for the session specified by the query reference
-      fActDesc->fProof->Reset(fActDesc->fAddress.Data(), 
-                              fActDesc->fUserName.Data());
+      // reset the session
+      TVirtualProof::Reset(fActDesc->fAddress.Data(), 
+                           fActDesc->fUserName.Data());
+      // reset connected flag
+      fActDesc->fAttached = kFALSE;
+      fActDesc->fProof = 0;
+      // disable animation timer
+      DisableTimer();
+      // change list tree item picture to disconnected pixmap
+      TGListTreeItem *item = fSessionHierarchy->FindChildByData(
+                             fSessionItem, fActDesc);
+      item->SetPictures(fProofDiscon, fProofDiscon);
+
+      OnListTreeClicked(fSessionHierarchy->GetSelected(), 1, 0, 0);
+      fClient->NeedRedraw(fSessionHierarchy);
+      fStatusBar->SetText("", 1);
    }
    // update list tree
    fClient->NeedRedraw(fSessionHierarchy);

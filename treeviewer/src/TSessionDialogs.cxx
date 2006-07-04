@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.24 2006/06/18 22:56:56 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.25 2006/07/04 10:16:52 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -847,6 +847,13 @@ TUploadDataSetDlg::TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h) :
    vFrame1->AddFrame(fAppendFiles, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
                      kLHintsExpandX, 15, 5, 5, 5));
 
+   fOverwriteDSet->Connect("Toggled(Bool_t)", "TUploadDataSetDlg", this,
+         "OnOverwriteDataset(Bool_t)");
+   fOverwriteFiles->Connect("Toggled(Bool_t)", "TUploadDataSetDlg", this,
+         "OnOverwriteFiles(Bool_t)");
+   fAppendFiles->Connect("Toggled(Bool_t)", "TUploadDataSetDlg", this,
+         "OnAppendFiles(Bool_t)");
+
    hFrame2->AddFrame(vFrame1, new TGLayoutHints(kLHintsRight | kLHintsTop | 
                      kLHintsExpandY, 2, 2, 2, 2));
    groupFrame1->AddFrame(hFrame2, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
@@ -1045,6 +1052,31 @@ void TUploadDataSetDlg::ClearFiles()
 }
 
 //______________________________________________________________________________
+void TUploadDataSetDlg::OnOverwriteDataset(Bool_t on)
+{
+   // Notification of Overwrite Dataset check button.
+
+   if (on && fAppendFiles->IsOn())
+      fAppendFiles->SetState(kButtonUp);
+}
+
+//______________________________________________________________________________
+void TUploadDataSetDlg::OnOverwriteFiles(Bool_t)
+{
+   // Notification of Overwrite Files check button.
+
+}
+
+//______________________________________________________________________________
+void TUploadDataSetDlg::OnAppendFiles(Bool_t on)
+{
+   // Notification of Append Files check button.
+
+   if (on && fOverwriteDSet->IsOn())
+      fOverwriteDSet->SetState(kButtonUp);
+}
+
+//______________________________________________________________________________
 void TUploadDataSetDlg::RemoveFile()
 {
    // Remove the selected entry from the list view.
@@ -1086,10 +1118,13 @@ void TUploadDataSetDlg::UploadDataSet()
       flags |= TVirtualProof::kOverwriteAllFiles;
    else
       flags |= TVirtualProof::kOverwriteNoFiles;
-   if (fAppendFiles->IsOn())
+   if (fAppendFiles->IsOn()) {
       flags |= TVirtualProof::kAppend;
-   Int_t ret = 0;
+      if (flags & TVirtualProof::kNoOverwriteDataSet)
+         flags &= ~TVirtualProof::kNoOverwriteDataSet;
+   }
 
+   Int_t ret = 0;
    TIter next(fLVContainer->GetList());
    TGFrameElement *el;
    TGLVEntry *entry;
@@ -1128,7 +1163,16 @@ void TUploadDataSetDlg::UploadDataSet()
                           skippedFiles);
       }
    }
-
+   if (ret == TVirtualProof::kError) {
+      // Inform user
+      new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
+                   "Failed uploading dataset/files to the cluster",
+                   kMBIconExclamation, kMBOk, &retval);
+      fUploading = kFALSE;
+      fUploadButton->SetState(kButtonUp);
+      fCloseDlgButton->SetState(kButtonUp);
+      return;
+   }
    // Here we cope with files that existed on the cluster and were skipped.
    if (skippedFiles->GetSize()) {
       TIter nexts(skippedFiles);
@@ -1144,6 +1188,18 @@ void TUploadDataSetDlg::UploadDataSet()
                            skippedFiles, destination, 
                            TVirtualProof::kAppend | 
                            TVirtualProof::kOverwriteAllFiles);
+            if (ret == TVirtualProof::kError) {
+               // Inform user
+               new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
+                            Form("Failed uploading \"%s\" to the cluster",
+                            obj->GetFirstUrl()->GetUrl()), kMBIconExclamation,
+                            kMBOk, &retval);
+            }
+            else {
+               new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
+                            "Files have been succesfully uploaded to the cluster",
+                            kMBIconAsterisk, kMBOk, &retval);
+            }
             fUploading = kFALSE;
             fUploadButton->SetState(kButtonUp);
             fCloseDlgButton->SetState(kButtonUp);
@@ -1164,9 +1220,19 @@ void TUploadDataSetDlg::UploadDataSet()
                             obj->GetFirstUrl()->GetUrl()), kMBIconExclamation,
                             kMBOk, &retval);
             }
+            else {
+               new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
+                            "Files have been succesfully uploaded to the cluster",
+                            kMBIconAsterisk, kMBOk, &retval);
+            }
          }
       }
       skippedFiles->Clear();
+   }
+   else {
+      new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
+                   "Files have been succesfully uploaded to the cluster",
+                   kMBIconAsterisk, kMBOk, &retval);
    }
    // finally, update list of datasets in session viewer
    fViewer->GetSessionFrame()->UpdateListOfDataSets();
