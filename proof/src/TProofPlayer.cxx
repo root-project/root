@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.81 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.82 2006/07/01 12:05:49 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -644,8 +644,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    Bool_t abort = kFALSE;
    Long64_t entry;
    fEventsProcessed = 0;
-   while (fSelStatus->IsOk() &&
-         (entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
+   while ((entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
 
       Bool_t ok = kTRUE;
       if (version == 0) {
@@ -674,6 +673,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             // Break this loop
             break;
          } ENDTRY;
+         if (fSelector->GetAbort() == TSelector::kAbortProcess) break;
       }
 
       if (ok)
@@ -884,35 +884,35 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
             fExitStatus = kAborted;
             return -1;
          }
-         
+
          TMethodCall callEnv;
-         
+
          callEnv.InitWithPrototype(cl, cl->GetName(),"TDSet*,TList*,Long64_t,Long64_t,TList*");
-         
+
          if (!callEnv.IsValid()) {
             Error("Process","Cannot find correct constructor for '%s'", cl->GetName());
             fExitStatus = kAborted;
             return -1;
          }
-         
+
          callEnv.ResetParam();
          callEnv.SetParam((Long_t) dset);
          callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
          callEnv.SetParam((Long64_t) first);
          callEnv.SetParam((Long64_t) nentries);
          callEnv.SetParam((Long_t) fInput);
-         
+
          Long_t ret = 0;
          callEnv.Execute(ret);
-         
+
          fPacketizer = (TVirtualPacketizer*) ret;
-         
+
          if (fPacketizer == 0) {
             Error("Process","Cannot construct '%s'", cl->GetName());
             fExitStatus = kAborted;
             return -1;
          }
-         
+
       } else {
          PDB(kGlobal,1) Info("Process","Using Standard TPacketizer");
          fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),

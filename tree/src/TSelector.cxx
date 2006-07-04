@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.24 2006/06/09 13:41:22 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.25 2006/06/13 21:12:20 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -82,6 +82,7 @@ TSelector::TSelector() : TObject()
    // Default selector ctor.
 
    fStatus = 0;
+   fAbort  = kContinue;
    fObject = 0;
    fInput  = 0;
    fOutput = new TSelectorList;
@@ -92,6 +93,7 @@ TSelector::TSelector() : TObject()
 TSelector::TSelector(const TSelector& sel) :
    TObject(sel),
    fStatus(sel.fStatus),
+   fAbort(sel.fAbort),
    fOption(sel.fOption),
    fObject(sel.fObject),
    fInput(sel.fInput),
@@ -107,11 +109,12 @@ TSelector& TSelector::operator=(const TSelector& sel)
 
    if (this != &sel) {
       TObject::operator=(sel);
-      fStatus=sel.fStatus;
-      fOption=sel.fOption;
-      fObject=sel.fObject;
-      fInput=sel.fInput;
-      fOutput=sel.fOutput;
+      fStatus = sel.fStatus;
+      fAbort  = sel.fAbort;
+      fOption = sel.fOption;
+      fObject = sel.fObject;
+      fInput  = sel.fInput;
+      fOutput = sel.fOutput;
    }
    return *this;
 }
@@ -122,6 +125,27 @@ TSelector::~TSelector()
    // Selector destructor.
 
    delete fOutput;
+}
+
+//______________________________________________________________________________
+void TSelector::Abort(const char *why, EAbort what)
+{
+   // Abort processing. If what = kAbortProcess, the Process() loop will be
+   // aborted. If what = kAbortFile, the current file in a chain will be
+   // aborted and the processing will continue with the next file, if there
+   // is no next file then Process() will be aborted. Abort() can also  be
+   // called from Begin(), SlaveBegin(), Init() and Notify(). After abort
+   // the SlaveTerminate() and Terminate() are always called. The abort flag
+   // can be checked in these methods using GetAbort().
+
+   fAbort = what;
+   TString mess = "Abort";
+   if (fAbort == kAbortProcess)
+      mess = "AbortProcess";
+   else if (fAbort == kAbortFile)
+      mess = "AbortFile";
+
+   Info(mess, why);
 }
 
 //______________________________________________________________________________

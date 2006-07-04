@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.20 2005/11/14 22:36:48 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.21 2006/04/19 08:22:25 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -30,22 +30,23 @@ TSelectorCint::TSelectorCint() : TSelector()
 {
    // Default constructor for a Selector.
 
-   fFuncVersion = 0;
-   fFuncInit    = 0;
-   fFuncBegin   = 0;
-   fFuncSlBegin = 0;
-   fFuncNotif   = 0;
-   fFuncSlTerm  = 0;
-   fFuncTerm    = 0;
-   fFuncCut     = 0;
-   fFuncFill    = 0;
-   fFuncProc    = 0;
-   fFuncOption  = 0;
-   fFuncObj     = 0;
-   fFuncInp     = 0;
-   fFuncOut     = 0;
-   fIntSelector = 0;
-
+   fFuncVersion  = 0;
+   fFuncInit     = 0;
+   fFuncBegin    = 0;
+   fFuncSlBegin  = 0;
+   fFuncNotif    = 0;
+   fFuncSlTerm   = 0;
+   fFuncTerm     = 0;
+   fFuncCut      = 0;
+   fFuncFill     = 0;
+   fFuncProc     = 0;
+   fFuncOption   = 0;
+   fFuncObj      = 0;
+   fFuncInp      = 0;
+   fFuncOut      = 0;
+   fIntSelector  = 0;
+   fFuncGetAbort = 0;
+   fFuncGetStat  = 0;
 }
 
 //______________________________________________________________________________
@@ -67,6 +68,8 @@ TSelectorCint::~TSelectorCint()
    delete fFuncObj;
    delete fFuncInp;
    delete fFuncOut;
+   delete fFuncGetAbort;
+   delete fFuncGetStat;
 
    if (fIntSelector) fClass->Delete(fIntSelector);
    delete fClass;
@@ -99,23 +102,25 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
 
    // The G__MethodInfo created by SetFuncProto will remember the address
    // of cl, so we need to keep it around.
-   fClass       = new G__ClassInfo(*cl);
+   fClass        = new G__ClassInfo(*cl);
 
-   fIntSelector = iselector;
-   fFuncVersion = new G__CallFunc();
-   fFuncInit    = new G__CallFunc();
-   fFuncBegin   = new G__CallFunc();
-   fFuncSlBegin = new G__CallFunc();
-   fFuncNotif   = new G__CallFunc();
-   fFuncSlTerm  = new G__CallFunc();
-   fFuncTerm    = new G__CallFunc();
-   fFuncCut     = new G__CallFunc();
-   fFuncFill    = new G__CallFunc();
-   fFuncProc    = new G__CallFunc();
-   fFuncOption  = new G__CallFunc();
-   fFuncObj     = new G__CallFunc();
-   fFuncInp     = new G__CallFunc();
-   fFuncOut     = new G__CallFunc();
+   fIntSelector  = iselector;
+   fFuncVersion  = new G__CallFunc();
+   fFuncInit     = new G__CallFunc();
+   fFuncBegin    = new G__CallFunc();
+   fFuncSlBegin  = new G__CallFunc();
+   fFuncNotif    = new G__CallFunc();
+   fFuncSlTerm   = new G__CallFunc();
+   fFuncTerm     = new G__CallFunc();
+   fFuncCut      = new G__CallFunc();
+   fFuncFill     = new G__CallFunc();
+   fFuncProc     = new G__CallFunc();
+   fFuncOption   = new G__CallFunc();
+   fFuncObj      = new G__CallFunc();
+   fFuncInp      = new G__CallFunc();
+   fFuncOut      = new G__CallFunc();
+   fFuncGetAbort = new G__CallFunc();
+   fFuncGetStat  = new G__CallFunc();
 
    SetFuncProto(fFuncVersion,fClass,"Version","",kFALSE);
    SetFuncProto(fFuncInit,fClass,"Init","TTree*");
@@ -131,6 +136,8 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
    SetFuncProto(fFuncObj,fClass,"SetObject","TObject*");
    SetFuncProto(fFuncInp,fClass,"SetInputList","TList*");
    SetFuncProto(fFuncOut,fClass,"GetOutputList","");
+   SetFuncProto(fFuncGetAbort,fClass,"GetAbort","",kFALSE);
+   SetFuncProto(fFuncGetStat,fClass,"GetStatus","");
 }
 
 //______________________________________________________________________________
@@ -154,7 +161,7 @@ void TSelectorCint::Init(TTree *tree)
 {
    // Invoke the Init function via the interpreter.
 
-   if ( gDebug > 2 )
+   if (gDebug > 2)
       Info("Init","Call Init tree = %p", tree);
 
    fFuncInit->ResetArg();
@@ -167,7 +174,7 @@ void TSelectorCint::Begin(TTree *tree)
 {
    // Invoke the Begin function via the interpreter.
 
-   if ( gDebug > 2 )
+   if (gDebug > 2)
       Info("Begin","Call Begin tree = %p", tree);
    fFuncBegin->ResetArg();
    fFuncBegin->SetArg((Long_t)tree);
@@ -197,7 +204,7 @@ Bool_t TSelectorCint::Notify()
 {
    // Invoke the Notify function via the interpreter.
 
-   if ( gDebug > 2 )
+   if (gDebug > 2)
       Info("Notify","Call Notify");
    Long64_t sel = fFuncNotif->ExecInt(fIntSelector);
    return (Bool_t)sel;
@@ -244,7 +251,7 @@ Bool_t TSelectorCint::Process(Long64_t entry)
 {
    // Invoke the ProcessCut function via the interpreter.
 
-   if ( gDebug > 3 )
+   if (gDebug > 3)
       Info("Process","Call Process entry = %d", entry);
 
    if(fFuncProc->IsValid()) {
@@ -263,7 +270,7 @@ void TSelectorCint::SetOption(const char *option)
 {
    // Set the selector option.
 
-   if ( gDebug > 2 )
+   if (gDebug > 2)
       Info("SetOption","Option = %s", option);
    fFuncOption->ResetArg();
    fFuncOption->SetArg((Long_t)option);
@@ -275,7 +282,7 @@ void TSelectorCint::SetObject(TObject *obj)
 {
    // Set the current object.
 
-   if ( gDebug > 3 )
+   if (gDebug > 3)
       Info("SetObject","Object = %p", obj);
    fFuncObj->ResetArg();
    fFuncObj->SetArg((Long_t)obj);
@@ -287,7 +294,7 @@ void TSelectorCint::SetInputList(TList *input)
 {
    // Set the selector list of input objects.
 
-   if ( gDebug > 2 )
+   if (gDebug > 2)
       Info("SetInputList","Object = %p", input);
    fFuncInp->ResetArg();
    fFuncInp->SetArg((Long_t)input);
@@ -301,7 +308,7 @@ TList *TSelectorCint::GetOutputList() const
 
    TList *out = (TList *) fFuncOut->ExecInt(fIntSelector);
 
-   if ( gDebug > 2 )
+   if (gDebug > 2)
       Info("GetOutputList","List = %p", out);
 
    return out;
@@ -312,7 +319,7 @@ void TSelectorCint::SlaveTerminate()
 {
    // Invoke the SlaveTerminate function via the interpreter if available.
 
-   if ( gDebug > 2 )
+   if (gDebug > 2)
       Info("SlaveTerminate","Call SlaveTerminate");
 
    if(fFuncSlTerm->IsValid()) {
@@ -328,7 +335,39 @@ void TSelectorCint::Terminate()
 {
    // Invoke the Terminate function via the interpreter.
 
-   if ( gDebug > 2 )
+   if (gDebug > 2)
       Info("Terminate","Call Terminate");
    fFuncTerm->Exec(fIntSelector);
+}
+
+//______________________________________________________________________________
+TSelector::EAbort TSelectorCint::GetAbort() const
+{
+   // Invoke the GetAbort function via the interpreter.
+
+   if (gDebug > 2)
+      Info("GetAbort","Call GetAbort");
+
+   if (fFuncGetAbort->IsValid()) {
+      fFuncGetAbort->ResetArg();
+      return (EAbort)fFuncGetAbort->ExecInt(fIntSelector);
+   } else {
+      return kContinue; // emulate for old version
+   }
+}
+
+//______________________________________________________________________________
+Int_t TSelectorCint::GetStatus() const
+{
+   // Invoke the GetStatus function via the interpreter.
+
+   if (gDebug > 2)
+      Info("GetStatus","Call GetStatus");
+
+   if (fFuncGetStat->IsValid()) {
+      fFuncGetStat->ResetArg();
+      return fFuncGetStat->ExecInt(fIntSelector);
+   } else {
+      return 0; // emulate for old version
+   }
 }

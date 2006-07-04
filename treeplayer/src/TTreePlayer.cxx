@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.217 2006/06/27 14:36:28 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.218 2006/06/28 10:03:14 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1098,7 +1098,7 @@ const char *TTreePlayer::GetNameByIndex(TString &varexp, Int_t *index,Int_t coli
 //______________________________________________________________________________
 Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 {
-// Generate skeleton analysis class for this Tree
+// Generate skeleton analysis class for this Tree.
 //
 // The following files are produced: classname.h and classname.C
 // If classname is 0, classname will be called "nameoftree.
@@ -1499,14 +1499,15 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 // generate class member functions prototypes
    if (opt.Contains("selector")) {
       fprintf(fp,"\n");
-      fprintf(fp,"   %s(TTree *tree=0) { }\n",classname) ;
+      fprintf(fp,"   %s(TTree * /*tree*/ =0) { }\n",classname) ;
       fprintf(fp,"   virtual ~%s() { }\n",classname);
-      fprintf(fp,"   virtual Int_t   Version() const { return 1; }\n");
+      fprintf(fp,"   virtual Int_t   Version() const { return 2; }\n");
       fprintf(fp,"   virtual void    Begin(TTree *tree);\n");
       fprintf(fp,"   virtual void    SlaveBegin(TTree *tree);\n");
       fprintf(fp,"   virtual void    Init(TTree *tree);\n");
       fprintf(fp,"   virtual Bool_t  Notify();\n");
       fprintf(fp,"   virtual Bool_t  Process(Long64_t entry);\n");
+      fprintf(fp,"   virtual Int_t   GetEntry(Long64_t entry, Int_t getall = 0) { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }\n");
       fprintf(fp,"   virtual void    SetOption(const char *option) { fOption = option; }\n");
       fprintf(fp,"   virtual void    SetObject(TObject *obj) { fObject = obj; }\n");
       fprintf(fp,"   virtual void    SetInputList(TList *input) { fInput = input; }\n");
@@ -1631,10 +1632,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"void %s::Init(TTree *tree)\n",classname);
    fprintf(fp,"{\n");
    fprintf(fp,"   // The Init() function is called when the selector needs to initialize\n"
-              "   // a new tree or chain. Typically here the branch addresses of the tree\n"
-              "   // will be set. It is normaly not necessary to make changes to the\n"
-              "   // generated code, but the routine can be extended by the user if needed.\n"
-              "   // Init() will be called many times when running with PROOF.\n\n");
+              "   // a new tree or chain. Typically here the branch addresses and branch\n"
+              "   // pointers of the tree will be set.\n"
+              "   // It is normaly not necessary to make changes to the generated\n"
+              "   // code, but the routine can be extended by the user if needed.\n"
+              "   // Init() will be called many times when running on PROOF\n"
+              "   // (once per file to be processed).\n\n");
    if (mustInit.Last()) {
       TIter next(&mustInit);
       TObject *obj;
@@ -1656,8 +1659,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          fprintf(fp,"   %s = 0;\n",branchname );
       }
    }
-   fprintf(fp,"   // Set branch addresses\n");
-   fprintf(fp,"   if (tree == 0) return;\n");
+   fprintf(fp,"   // Set branch addresses and branch pointers\n");
+   fprintf(fp,"   if (!tree) return;\n");
    fprintf(fp,"   fChain = tree;\n");
    if (!opt.Contains("selector")) fprintf(fp,"   fCurrent = -1;\n");
    fprintf(fp,"   fChain->SetMakeClass(1);\n");
@@ -1708,11 +1711,10 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          if (((TBranchElement*)branch)->GetType() == 4) len =1;
       }
       if (leafcount) len = leafcount->GetMaximum()+1;
-      if (len > 1) fprintf(fp,"   fChain->SetBranchAddress(\"%s\",%s,&(b_%s) );\n",
-                           branch->GetName(),branchname,branchname);
-      else         fprintf(fp,"   fChain->SetBranchAddress(\"%s\",&%s,&(b_%s) );\n",
-                           branch->GetName(),branchname,branchname);
-
+      if (len > 1) fprintf(fp,"   fChain->SetBranchAddress(\"%s\", %s, &b_%s);\n",
+                           branch->GetName(), branchname, branchname);
+      else         fprintf(fp,"   fChain->SetBranchAddress(\"%s\", &%s, &b_%s);\n",
+                           branch->GetName(), branchname, branchname);
    }
    //must call Notify in case of MakeClass
    if (!opt.Contains("selector")) {
@@ -1729,9 +1731,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
               "   // can be either for a new TTree in a TChain or when when a new TTree\n"
               "   // is started when using PROOF. It is normaly not necessary to make changes\n"
               "   // to the generated code, but the routine can be extended by the\n"
-              "   // user if needed.\n\n");
-
-   fprintf(fp,"\n   return kTRUE;\n");
+              "   // user if needed. The return value is currently not used.\n\n");
+   fprintf(fp,"   return kTRUE;\n");
    fprintf(fp,"}\n");
    fprintf(fp,"\n");
 
@@ -1834,7 +1835,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n");
       // generate code for class member function Begin
       fprintf(fpc,"\n");
-      fprintf(fpc,"void %s::Begin(TTree *tree)\n",classname);
+      fprintf(fpc,"void %s::Begin(TTree * /*tree*/)\n",classname);
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // The Begin() function is called at the start of the query.\n");
       fprintf(fpc,"   // When running with PROOF Begin() is only called on the client.\n");
@@ -1845,13 +1846,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"}\n");
       // generate code for class member function SlaveBegin
       fprintf(fpc,"\n");
-      fprintf(fpc,"void %s::SlaveBegin(TTree *tree)\n",classname);
+      fprintf(fpc,"void %s::SlaveBegin(TTree * /*tree*/)\n",classname);
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // The SlaveBegin() function is called after the Begin() function.\n");
       fprintf(fpc,"   // When running with PROOF SlaveBegin() is called on each slave server.\n");
       fprintf(fpc,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
-      fprintf(fpc,"\n");
-      fprintf(fpc,"   Init(tree);\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   TString option = GetOption();\n");
       fprintf(fpc,"\n");
@@ -1863,20 +1862,20 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"   // The Process() function is called for each entry in the tree (or possibly\n"
                   "   // keyed object in the case of PROOF) to be processed. The entry argument\n"
                   "   // specifies which entry in the currently loaded tree is to be processed.\n"
-                  "   // It can be passed to either TTree::GetEntry() or TBranch::GetEntry()\n"
+                  "   // It can be passed to either %s::GetEntry() or TBranch::GetEntry()\n"
                   "   // to read either all or the required parts of the data. When processing\n"
                   "   // keyed objects with PROOF, the object is already loaded and is available\n"
                   "   // via the fObject pointer.\n"
                   "   //\n"
                   "   // This function should contain the \"body\" of the analysis. It can contain\n"
                   "   // simple or elaborate selection criteria, run algorithms on the data\n"
-                  "   // of the event and typically fill histograms.\n\n");
-      fprintf(fpc,"   // WARNING when a selector is used with a TChain, you must use\n");
-      fprintf(fpc,"   //  the pointer to the current TTree to call GetEntry(entry).\n");
-      fprintf(fpc,"   //  The entry is always the local entry number in the current tree.\n");
-      fprintf(fpc,"   //  Assuming that fChain is the pointer to the TChain being processed,\n");
-      fprintf(fpc,"   //  use fChain->GetTree()->GetEntry(entry).\n");
-      fprintf(fpc,"\n");
+                  "   // of the event and typically fill histograms.\n"
+                  "   //\n"
+                  "   // The processing can be stopped by calling Abort().\n"
+                  "   //\n"
+                  "   // Use fStatus to set the return value of TTree::Process().\n"
+                  "   //\n"
+                  "   // The return value is currently not used.\n\n", classname);
       fprintf(fpc,"\n");
       fprintf(fpc,"   return kTRUE;\n");
       fprintf(fpc,"}\n");
@@ -2537,28 +2536,30 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
 
    selector->Begin(fTree);       //<===call user initialisation function
    selector->SlaveBegin(fTree);  //<===call user initialisation function
+   if (selector->Version() >= 2)
+      selector->Init(fTree);
    selector->Notify();
 
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingStatus("STARTED",kTRUE);
 
-   Long64_t readbytesatstart = 0;
-   readbytesatstart = TFile::GetFileBytesRead();
-   
-   //set the file cache
-   TTreeCache *tpf = 0;
-   TFile *curfile = fTree->GetCurrentFile();
-   if (curfile && fTree->GetCacheSize() > 0) {
-      tpf = (TTreeCache*)curfile->GetCacheRead();
-      if (tpf) tpf->SetEntryRange(firstentry,firstentry+nentries);
-      else {
-         fTree->SetCacheSize(fTree->GetCacheSize());
+   if (selector->GetAbort() != TSelector::kAbortProcess) {
+
+      Long64_t readbytesatstart = 0;
+      readbytesatstart = TFile::GetFileBytesRead();
+
+      //set the file cache
+      TTreeCache *tpf = 0;
+      TFile *curfile = fTree->GetCurrentFile();
+      if (curfile && fTree->GetCacheSize() > 0) {
          tpf = (TTreeCache*)curfile->GetCacheRead();
          if (tpf) tpf->SetEntryRange(firstentry,firstentry+nentries);
+         else {
+            fTree->SetCacheSize(fTree->GetCacheSize());
+            tpf = (TTreeCache*)curfile->GetCacheRead();
+            if (tpf) tpf->SetEntryRange(firstentry,firstentry+nentries);
+         }
       }
-   }
-   
-   if (selector->GetStatus()!=-1) {
 
       //Create a timer to get control in the entry loop(s)
       TProcessEventTimer *timer = 0;
@@ -2586,18 +2587,20 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
             if (selector->ProcessCut(localEntry))
                selector->ProcessFill(localEntry); //<==call user analysis function
          } else {
-            selector->Process(localEntry);
+            selector->Process(localEntry);        //<==call user analysis function
          }
          if (gMonitoringWriter)
             gMonitoringWriter->SendProcessingProgress((entry-firstentry),TFile::GetFileBytesRead()-readbytesatstart,kTRUE);
+         if (selector->GetAbort() == TSelector::kAbortProcess) break;
       }
       delete timer;
       //we must reset the cache
       if (tpf) tpf->SetEntryRange(0,fTree->GetEntries());
 
-      selector->SlaveTerminate();   //<==call user termination function
-      selector->Terminate();        //<==call user termination function
    }
+
+   selector->SlaveTerminate();   //<==call user termination function
+   selector->Terminate();        //<==call user termination function
 
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingStatus("DONE");

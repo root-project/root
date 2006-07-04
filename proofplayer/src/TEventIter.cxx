@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.25 2006/06/13 21:12:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.26 2006/07/01 11:39:37 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -389,13 +389,16 @@ Long64_t TEventIterTree::GetNextEvent()
       }
       ReleaseAllTrees();
 
-      fTree = GetTrees(fElem);
-      if (!fTree) {
+      TTree *newTree = GetTrees(fElem);
+      if (!newTree) {
          // Error has been reported
          fNum = 0;
          return -1;
       }
-      attach = kTRUE;
+      if (newTree != fTree) {
+         fTree = newTree;
+         attach = kTRUE;
+      }
 
       // Validate values for this element
       fElemFirst = fElem->GetFirst();
@@ -434,8 +437,9 @@ Long64_t TEventIterTree::GetNextEvent()
 
    if ( attach ) {
       PDB(kLoop,1) Info("GetNextEvent","Call Init(%p)",fTree);
-      fSel->Init( fTree );
-      if( !fSel->Notify()) {
+      fSel->Init(fTree);
+      fSel->Notify();
+      if (fSel->GetAbort() == TSelector::kAbortProcess) {
          // the error has been reported
          return -1;
       }

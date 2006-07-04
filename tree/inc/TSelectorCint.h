@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.h,v 1.11 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorCint.h,v 1.12 2005/02/21 09:41:39 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -51,6 +51,8 @@ protected:
    G__CallFunc   *fFuncObj;      //!
    G__CallFunc   *fFuncInp;      //!
    G__CallFunc   *fFuncOut;      //!
+   G__CallFunc   *fFuncGetAbort; //!
+   G__CallFunc   *fFuncGetStat;  //!
    TSelector     *fIntSelector;  //Pointer to interpreted selector (if interpreted)
 
 public:
@@ -71,6 +73,8 @@ public:
    virtual TList      *GetOutputList() const;
    virtual void        SlaveTerminate();
    virtual void        Terminate();
+   virtual EAbort      GetAbort() const;
+   virtual Int_t       GetStatus() const;
 
    ClassDef(TSelectorCint,0)  //A utility class for tree and object processing (interpreted version)
 };
