@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheRead.h,v 1.1 2006/06/27 14:36:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheRead.h,v 1.2 2006/06/29 22:15:36 rdm Exp $
 // Author: Rene Brun   19/05/2006
 
 /*************************************************************************
@@ -28,7 +28,8 @@
 class TFileCacheRead : public TObject {
 
 protected:
-   Int_t         fBufferSize;     //Allocated size of fBuffer
+   Int_t         fBufferSizeMin;  //Original size of fBuffer 
+   Int_t         fBufferSize;     //Allocated size of fBuffer (at a given time)
    Int_t         fBufferLen;      //Current buffer length (<= fBufferSize)
    Int_t         fNseek;          //Number of blocks to be prefetched
    Int_t         fNtot;           //Total size of prefetched blocks

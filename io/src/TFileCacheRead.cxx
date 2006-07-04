@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.1 2006/06/27 14:36:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.2 2006/06/29 22:15:36 rdm Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -37,6 +37,7 @@ TFileCacheRead::TFileCacheRead() : TObject()
 {
    // Default Constructor.
 
+   fBufferSizeMin = 0;
    fBufferSize  = 0;
    fBufferLen   = 0;
    fNseek       = 0;
@@ -63,6 +64,7 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
    // Creates a TFileCacheRead data structure.
 
    if (buffersize <=10000) fBufferSize = 100000;
+   fBufferSizeMin = buffersize;
    fBufferSize  = buffersize;
    fBufferLen   = 0;
    fNseek       = 0;
@@ -248,7 +250,7 @@ void TFileCacheRead::Sort()
       fSeekSort[i] = fSeek[ind];
       fSeekSortLen[i] = fSeekLen[ind];
    }
-   if (fNtot > fBufferSize) {
+   if (fNtot > fBufferSizeMin) {
       fBufferSize = fNtot + 100;
       delete [] fBuffer;
       fBuffer = new char[fBufferSize];

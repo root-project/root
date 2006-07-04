@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.1 2006/06/27 14:36:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.2 2006/06/29 22:15:37 rdm Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -145,8 +145,11 @@ Bool_t TTreeCache::FillBuffer()
    Long64_t entry = tree->GetReadEntry();
    if (entry < fEntryNext) return kFALSE;
 
-   //estimate number of entries that can fit in the cache
-   fEntryNext = entry + tree->GetEntries()*fBufferSize/fZipBytes;
+   // estimate number of entries that can fit in the cache
+   // compare it to the original value of fBufferSize not
+   // to the real one
+   fEntryNext = entry + tree->GetEntries()*fBufferSizeMin/fZipBytes;
+
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
 
    //check if owner has a TEventList set. If yes we optimize for this special case
