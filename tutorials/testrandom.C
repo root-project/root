@@ -41,8 +41,8 @@ void testrandom()
 }
 
 void testAll() {
-  int i, N = 1000000;
-  float cpn = 1000000./N;
+  int i, N = 10000000;
+  float cpn = 1000000000./N;
   float x;
 
   TRandom *r0 = new TRandom();

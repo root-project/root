@@ -25,14 +25,21 @@
 
 #include <iostream>
 
-// CINT does not understand some files included by LorentzVector
-#ifndef __CINT__
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
 
+#include <vector>
+
 using namespace ROOT::Math;
 
-#endif
+#ifdef __MAKECINT__ 
+// for generating dictionary of std::vector<XTZTVector> 
+// (does not work on solaris for conflict  between template class T from std::vector and T()
+#pragma extra_include "vector";
+// conflict on solaris between template class T from std::vector and T(). 
+#pragma link C++ typedef ROOT::Math::XYZTVector;
+#pragma link C++ class vector<ROOT::Math::LorentzVector<ROOT::Math::XYZTVector> >+;
+#endif 
 
 
 
@@ -51,7 +58,9 @@ double write(int n) {
 
   std::vector<ROOT::Math::XYZTVector>  tracks; 
   std::vector<ROOT::Math::XYZTVector> * pTracks = &tracks; 
-  t1.Branch("tracks","std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&pTracks);
+//  t1.Branch("tracks","std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&pTracks);
+  t1.Branch("tracks","std::vector<ROOT::Math::XYZTVector>",&pTracks);
+  t1.Branch("tracks",&pTracks);
 
   double M = 0.13957;  // set pi+ mass
 
