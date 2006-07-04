@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.43 2006/04/06 05:38:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.44 2006/05/28 19:05:24 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -459,21 +459,24 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
 
 // locate the scope, if necessary, for building the class if not specified
    if ( ! scope ) {
-   // cut template part, if present
-      std::string genName = name.substr( 0, name.find( "<" ) );
+   // need to deal with template paremeters that can have scopes themselves
+      Int_t tpl_open = 0;
+      std::string::size_type last = 0;
+      for ( std::string::size_type pos = 0; pos < name.size(); ++pos ) {
+         std::string::value_type c = name[ pos ];
 
-   // drop class name (i.e. only collect actual scopes here)
-      std::string::size_type last = genName.rfind( "::" );
-      if ( last != 0 && last != std::string::npos ) {
-         scName = genName.substr( 0, last );
-         name = name.substr( last + 2, std::string::npos );
-      }
+      // count '<' and '>' to be able to skip template contents
+         if ( c == '<' )
+            ++tpl_open;
+         else if ( c == '>' )
+            --tpl_open;
 
-      if ( scName != "" ) {
-         std::string::size_type pos = 0;
-         do {
-            last = scName.find( "::", pos );
-            std::string part = scName.substr( pos, last == std::string::npos ? last : last - pos );
+      // by only checking for "::" the last part (class name) is dropped
+         else if ( tpl_open == 0 &&\
+              c == ':' && pos+1 < name.size() && name[ pos+1 ] == ':' ) {
+         // found a new scope part
+            std::string part = name.substr( last, pos );
+
             PyObject* next = PyObject_GetAttrString(
                scope ? scope : gRootModule, const_cast< char* >( part.c_str() ) );
 
@@ -486,9 +489,13 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
             if ( ! next )             // create failed, give up
                return 0;
 
+         // found scope part
             scope = next;
-            pos = last + 2;
-         } while ( last != std::string::npos );
+
+         // done with part (note that pos is moved one ahead here)
+            last = pos+2; ++pos;
+         }
+
       }
    }
 
