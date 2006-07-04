@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.66 2006/06/06 09:55:36 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.67 2006/06/16 11:03:37 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 #include "TGIcon.h"
 #include "TChain.h"
 #include "TDSet.h"
+#include "TFileInfo.h"
 #include "TVirtualProof.h"
 #include "TRandom.h"
 #include "TSessionViewer.h"
@@ -134,6 +135,7 @@ enum ESessionViewerCommands {
    kSessionCleanup,
    kSessionBrowse,
    kSessionShowStatus,
+   kSessionReset,
 
    kQueryNew,
    kQueryEdit,
@@ -585,6 +587,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
       fViewer->GetStatusBar()->SetText(msg.Data(), 1);
       fViewer->GetSessionFrame()->ProofInfos();
       fViewer->UpdateListOfPackages();
+      fViewer->GetSessionFrame()->UpdateListOfDataSets();
       // Enable previously uploaded packages if in auto-enable mode
       if (fViewer->GetActDesc()->fAutoEnable) {
          TPackageDescription *package;
@@ -1011,6 +1014,48 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fChkEnable->SetToolTipText("Enable packages on the server at startup time");
    fFB->AddFrame(fChkEnable, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
 
+   // add "DataSets" tab element
+   tf = fTab->AddTab("DataSets");
+   fFE = new TGCompositeFrame(tf, 100, 100, kVerticalFrame);
+   tf->AddFrame(fFE, new TGLayoutHints(kLHintsTop | kLHintsLeft |
+         kLHintsExpandX | kLHintsExpandY));
+
+   // new frame containing datasets treeview and control buttons
+   TGCompositeFrame* frmdataset = new TGHorizontalFrame(fFE, 350, 100);
+
+   // datasets list tree
+   fDSetView = new TGCanvas(frmdataset, 200, 200, kSunkenFrame | kDoubleBorder);
+   frmdataset->AddFrame(fDSetView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
+         5, 5, 5, 5));
+   fDataSetTree = new TGListTree(fDSetView, kHorizontalFrame);
+   fDataSetTree->AddItem(0, "DataSets");
+
+   // control buttons frame
+   TGCompositeFrame* frmBut3 = new TGVerticalFrame(frmdataset, 150, 100);
+
+   fBtnUploadDSet = new TGTextButton(frmBut3, "     Upload...     ");
+   fBtnUploadDSet->SetToolTipText("Upload a dataset to the cluster");
+   frmBut3->AddFrame(fBtnUploadDSet, new TGLayoutHints(kLHintsTop | kLHintsLeft |
+         kLHintsExpandX, 5, 5, 5, 5));
+   fBtnRemoveDSet = new TGTextButton(frmBut3, "Remove");
+   fBtnRemoveDSet->SetToolTipText("Remove dataset from the cluster");
+   frmBut3->AddFrame(fBtnRemoveDSet,new TGLayoutHints(kLHintsTop | kLHintsLeft |
+         kLHintsExpandX, 5, 5, 5, 5));
+   fBtnVerifyDSet = new TGTextButton(frmBut3, "Verify");
+   fBtnVerifyDSet->SetToolTipText("Verify dataset on the cluster");
+   frmBut3->AddFrame(fBtnVerifyDSet,new TGLayoutHints(kLHintsTop | kLHintsLeft |
+         kLHintsExpandX, 5, 5, 5, 5));
+   fBtnRefresh = new TGTextButton(frmBut3, "Refresh List");
+   fBtnRefresh->SetToolTipText("Refresh List of DataSet/Files present on the cluster");
+   frmBut3->AddFrame(fBtnRefresh,new TGLayoutHints(kLHintsTop | kLHintsLeft |
+         kLHintsExpandX, 5, 5, 15, 5));
+
+   frmdataset->AddFrame(frmBut3, new TGLayoutHints(kLHintsLeft | kLHintsCenterY |
+         kLHintsExpandY, 5, 5, 5, 0));
+      
+   fFE->AddFrame(frmdataset, new TGLayoutHints(kLHintsLeft | kLHintsTop |
+         kLHintsExpandX | kLHintsExpandY));
+   
    // add "Options" tab element
    tf = fTab->AddTab("Options");
    fFD = new TGCompositeFrame(tf, 100, 100, kVerticalFrame);
@@ -1085,6 +1130,15 @@ void TSessionFrame::Build(TSessionViewer *gui)
          "ShowEnabledPackages()");
    fBtnShow->Connect("Clicked()", "TSessionViewer", fViewer,
          "ShowPackages()");
+
+   fBtnUploadDSet->Connect("Clicked()", "TSessionFrame", this,
+         "OnBtnUploadDSet()");
+   fBtnRemoveDSet->Connect("Clicked()", "TSessionFrame", this,
+         "OnBtnRemoveDSet()");
+   fBtnVerifyDSet->Connect("Clicked()", "TSessionFrame", this,
+         "OnBtnVerifyDSet()");
+   fBtnRefresh->Connect("Clicked()", "TSessionFrame", this,
+         "UpdateListOfDataSets()");
 }
 
 //______________________________________________________________________________
@@ -1208,6 +1262,112 @@ void TSessionFrame::ProofInfos()
    }
    Layout();
    Resize(GetDefaultSize());
+}
+
+//______________________________________________________________________________
+void TSessionFrame::OnBtnUploadDSet()
+{
+   
+   if (fViewer->IsBusy())
+      return;
+   if (fViewer->GetActDesc()->fLocal) return;
+   new TUploadDataSetDlg(fViewer, 450, 360);
+}
+
+//______________________________________________________________________________
+void TSessionFrame::UpdateListOfDataSets()
+{
+
+   TObjString *dsetname;
+   TFileInfo  *dsetfilename;
+   fDataSetTree->DeleteChildren(fDataSetTree->GetFirstItem());
+   if (fViewer->GetActDesc()->fConnected && fViewer->GetActDesc()->fAttached &&
+       fViewer->GetActDesc()->fProof && fViewer->GetActDesc()->fProof->IsValid() &&
+       fViewer->GetActDesc()->fProof->IsParallel()) {
+
+      const TGPicture *dseticon = fClient->GetPicture("rootdb_t.xpm");
+      TList *dsetlist = fViewer->GetActDesc()->fProof->GetDataSets();
+      if(dsetlist) {
+         TGListTreeItem *dsetitem;
+         fDataSetTree->OpenItem(fDataSetTree->GetFirstItem());
+         TIter nextdset(dsetlist);
+         while ((dsetname = (TObjString *)nextdset())) {
+            if (!fDataSetTree->FindItemByObj(fDataSetTree->GetFirstItem(), dsetname)) {
+               dsetitem = fDataSetTree->AddItem(fDataSetTree->GetFirstItem(), 
+                                        dsetname->GetName(), dsetname);
+               TList *dsetfilelist = fViewer->GetActDesc()->fProof->GetDataSet(
+                                                            dsetname->GetName());
+               if(dsetfilelist) {
+                  TIter nextdsetfile(dsetfilelist);
+                  while ((dsetfilename = (TFileInfo *)nextdsetfile())) {
+                     if (! fDataSetTree->FindItemByObj(dsetitem, dsetfilename)) {
+                        fDataSetTree->AddItem(dsetitem, 
+                           dsetfilename->GetFirstUrl()->GetUrl(),
+                           dsetfilename, dseticon, dseticon);
+                     }
+                  }
+                  fDataSetTree->OpenItem(dsetitem);
+               }
+            }
+         }
+      }
+   }
+   fClient->NeedRedraw(fDataSetTree);
+}
+
+//______________________________________________________________________________
+void TSessionFrame::OnBtnRemoveDSet()
+{
+
+   TGListTreeItem *item;
+   TObjString *obj;
+   if (fViewer->GetActDesc()->fLocal) return;
+
+   item = fDataSetTree->GetSelected();
+   if (!item) return;
+   if (item->GetParent() == 0) return;
+   if (item->GetParent() == fDataSetTree->GetFirstItem()) {
+      // Dataset itself
+      obj = (TObjString *)item->GetUserData();
+   }
+   else if (item->GetParent()->GetParent() == fDataSetTree->GetFirstItem()) { 
+      // One file of the dataset
+      obj = (TObjString *)item->GetParent()->GetUserData();
+   }
+
+   // if valid Proof session, set parallel slaves
+   if (fViewer->GetActDesc()->fProof &&
+      fViewer->GetActDesc()->fProof->IsValid()) {
+      fViewer->GetActDesc()->fProof->RemoveDataSet(obj->GetName());
+      UpdateListOfDataSets();
+   }
+}
+
+//______________________________________________________________________________
+void TSessionFrame::OnBtnVerifyDSet()
+{
+
+   TGListTreeItem *item;
+   TObjString *obj;
+   if (fViewer->GetActDesc()->fLocal) return;
+
+   item = fDataSetTree->GetSelected();
+   if (!item) return;
+   if (item->GetParent() == 0) return;
+   if (item->GetParent() == fDataSetTree->GetFirstItem()) {
+      // Dataset itself
+      obj = (TObjString *)item->GetUserData();
+   }
+   else if (item->GetParent()->GetParent() == fDataSetTree->GetFirstItem()) { 
+      // One file of the dataset
+      obj = (TObjString *)item->GetParent()->GetUserData();
+   }
+
+   // if valid Proof session, set parallel slaves
+   if (fViewer->GetActDesc()->fProof &&
+      fViewer->GetActDesc()->fProof->IsValid()) {
+      fViewer->GetActDesc()->fProof->VerifyDataSet(obj->GetName());
+   }
 }
 
 //______________________________________________________________________________
@@ -1837,14 +1997,6 @@ void TEditQueryFrame::Build(TSessionViewer *gui)
          new TGTableLayoutHints(2, 3, 2, 3, kLHintsCenterY, 5, 0, 0, 8));
    btnTmp->Connect("Clicked()", "TEditQueryFrame", this, "OnBrowseSelector()");
 
-   // add "Options" label and text entry
-   AddFrame(new TGLabel(this, "Options :"),
-         new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 5, 5, 0, 0));
-   AddFrame(fTxtOptions = new TGTextEntry(this,
-         (const char *)0, 4), new TGTableLayoutHints(1, 2, 3, 4,
-         kLHintsCenterY, 5, 0, 0, 8));
-   fTxtOptions->SetText("\"ASYN\"");
-
    // add "Less <<" ("More >>") button
    AddFrame(fBtnMore = new TGTextButton(this, " Less << "),
          new TGTableLayoutHints(2, 3, 4, 5, kLHintsCenterY, 5, 5, 4, 0));
@@ -1858,27 +2010,35 @@ void TEditQueryFrame::Build(TSessionViewer *gui)
          kLHintsExpandX | kLHintsExpandY));
    fFrmMore->SetLayoutManager(new TGTableLayout(fFrmMore, 4, 3));
 
+   // add "Options" label and text entry
+   fFrmMore->AddFrame(new TGLabel(fFrmMore, "Options :"),
+         new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 5, 5, 0, 0));
+   fFrmMore->AddFrame(fTxtOptions = new TGTextEntry(fFrmMore,
+         (const char *)0, 4), new TGTableLayoutHints(1, 2, 0, 1, 0, 17,
+         0, 0, 8));
+   fTxtOptions->SetText("ASYN");
+
    // add "Nb Entries" label and number entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Nb Entries :"),
-         new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 5, 5, 0, 0));
+         new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 5, 5, 0, 0));
    fFrmMore->AddFrame(fNumEntries = new TGNumberEntry(fFrmMore, 0, 5, -1,
          TGNumberFormat::kNESInteger, TGNumberFormat::kNEAAnyNumber,
-         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 0, 1,
-         0, 37, 0, 0, 8));
+         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 1, 2,
+         0, 17, 0, 0, 8));
    fNumEntries->SetIntNumber(-1);
    // add "First Entry" label and number entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "First entry :"),
-         new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 5, 5, 0, 0));
+         new TGTableLayoutHints(0, 1, 2, 3, kLHintsCenterY, 5, 5, 0, 0));
    fFrmMore->AddFrame(fNumFirstEntry = new TGNumberEntry(fFrmMore, 0, 5, -1,
          TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative,
-         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 1, 2, 0,
-         37, 0, 0, 8));
+         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 2, 3, 0,
+         17, 0, 0, 8));
 
    // add "Event list" label and text entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Event list :"),
          new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 5, 5, 0, 0));
    fFrmMore->AddFrame(fTxtEventList = new TGTextEntry(fFrmMore,
-         (const char *)0, 6), new TGTableLayoutHints(1, 2, 3, 4, 0, 37,
+         (const char *)0, 6), new TGTableLayoutHints(1, 2, 3, 4, 0, 17,
          5, 0, 0));
    // add "Browse" button
    fFrmMore->AddFrame(btnTmp = new TGTextButton(fFrmMore, "Browse..."),
@@ -3456,15 +3616,16 @@ void TSessionViewer::Build()
    fSessionMenu->AddSeparator();
    fSessionMenu->AddEntry("&New Session", kSessionNew);
    fSessionMenu->AddEntry("&Add to the list", kSessionAdd);
-   fSessionMenu->AddEntry("&Delete", kSessionDelete);
+   fSessionMenu->AddEntry("De&lete", kSessionDelete);
    fSessionMenu->AddSeparator();
    fSessionMenu->AddEntry("&Connect...", kSessionConnect);
    fSessionMenu->AddEntry("&Disconnect", kSessionDisconnect);
-   fSessionMenu->AddEntry("Shut&down",  kSessionShutdown);
+   fSessionMenu->AddEntry("Shutdo&wn",  kSessionShutdown);
    fSessionMenu->AddEntry("&Show status",kSessionShowStatus);
    fSessionMenu->AddEntry("&Get Queries",kSessionGetQueries);
    fSessionMenu->AddSeparator();
    fSessionMenu->AddEntry("&Cleanup", kSessionCleanup);
+   fSessionMenu->AddEntry("&Reset",kSessionReset);
    fSessionMenu->DisableEntry(kSessionAdd);
 
    //--- Query menu
@@ -3568,11 +3729,12 @@ void TSessionViewer::Build()
    fPopupSrv->AddEntry("Disconnect",kSessionDisconnect);
    fPopupSrv->AddEntry("Shutdown",kSessionShutdown);
    fPopupSrv->AddEntry("Browse",kSessionBrowse);
-   fPopupSrv->AddEntry("&Show status",kSessionShowStatus);
-   fPopupSrv->AddEntry("&Delete", kSessionDelete);
-   fPopupSrv->AddEntry("&Get Queries",kSessionGetQueries);
+   fPopupSrv->AddEntry("Show status",kSessionShowStatus);
+   fPopupSrv->AddEntry("Delete", kSessionDelete);
+   fPopupSrv->AddEntry("Get Queries",kSessionGetQueries);
    fPopupSrv->AddSeparator();
-   fPopupSrv->AddEntry("&Cleanup", kSessionCleanup);
+   fPopupSrv->AddEntry("Cleanup", kSessionCleanup);
+   fPopupSrv->AddEntry("Reset",kSessionReset);
    fPopupSrv->Connect("Activated(Int_t)","TSessionViewer", this,
          "MyHandleMenu(Int_t)");
 
@@ -3594,9 +3756,11 @@ void TSessionViewer::Build()
    fPopupSrv->DisableEntry(kSessionDisconnect);
    fPopupSrv->DisableEntry(kSessionShutdown);
    fPopupSrv->DisableEntry(kSessionCleanup);
+   fPopupSrv->DisableEntry(kSessionReset);
    fSessionMenu->DisableEntry(kSessionDisconnect);
    fSessionMenu->DisableEntry(kSessionShutdown);
    fSessionMenu->DisableEntry(kSessionCleanup);
+   fSessionMenu->DisableEntry(kSessionReset);
    fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
 
    //--- Horizontal mother frame -----------------------------------------------
@@ -3790,6 +3954,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          fSessionMenu->DisableEntry(kSessionConnect);
          fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
          UpdateListOfPackages();
+         fSessionFrame->UpdateListOfDataSets();
       }
       else {
          fPopupSrv->EnableEntry(kSessionConnect);
@@ -3803,6 +3968,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
             fV2->ShowFrame(fSessionFrame);
             fActFrame = fSessionFrame;
             UpdateListOfPackages();
+            fSessionFrame->UpdateListOfDataSets();
          }
          fSessionFrame->GetTab()->HideFrame(
                fSessionFrame->GetTab()->GetTabTab("Options"));
@@ -3933,9 +4099,11 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fPopupSrv->EnableEntry(kSessionDisconnect);
       fPopupSrv->EnableEntry(kSessionShutdown);
       fPopupSrv->EnableEntry(kSessionCleanup);
+      fPopupSrv->EnableEntry(kSessionReset);
       fSessionMenu->EnableEntry(kSessionDisconnect);
       fSessionMenu->EnableEntry(kSessionShutdown);
       fSessionMenu->EnableEntry(kSessionCleanup);
+      fSessionMenu->EnableEntry(kSessionReset);
       fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonUp);
       fQueryMenu->EnableEntry(kQuerySubmit);
       fPopupQry->EnableEntry(kQuerySubmit);
@@ -3951,9 +4119,11 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fPopupSrv->DisableEntry(kSessionDisconnect);
       fPopupSrv->DisableEntry(kSessionShutdown);
       fPopupSrv->DisableEntry(kSessionCleanup);
+      fPopupSrv->DisableEntry(kSessionReset);
       fSessionMenu->DisableEntry(kSessionDisconnect);
       fSessionMenu->DisableEntry(kSessionShutdown);
       fSessionMenu->DisableEntry(kSessionCleanup);
+      fSessionMenu->DisableEntry(kSessionReset);
       fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
       fQueryMenu->DisableEntry(kQuerySubmit);
       fPopupQry->DisableEntry(kQuerySubmit);
@@ -3964,6 +4134,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fSessionMenu->DisableEntry(kSessionDisconnect);
       fSessionMenu->DisableEntry(kSessionShutdown);
       fSessionMenu->DisableEntry(kSessionCleanup);
+      fSessionMenu->DisableEntry(kSessionReset);
       fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
       fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
       fQueryMenu->EnableEntry(kQuerySubmit);
@@ -4182,6 +4353,31 @@ void TSessionViewer::CleanupSession()
       fActDesc->fProof->CleanupSession(query->fReference.Data());
       fSessionHierarchy->DeleteChildren(item->GetParent());
       fSessionFrame->OnBtnGetQueriesClicked();
+   }
+   // update list tree
+   fClient->NeedRedraw(fSessionHierarchy);
+}
+
+//______________________________________________________________________________
+void TSessionViewer::ResetSession()
+{
+   // Clean-up Proof session.
+
+   TGListTreeItem *item = fSessionHierarchy->GetSelected();
+   if (!item) return;
+   TObject *obj = (TObject *)item->GetUserData();
+   if (obj->IsA() != TSessionDescription::Class()) return;
+   if (!fActDesc->fProof || !fActDesc->fProof->IsValid()) return;
+   TString m;
+   m.Form("Do you really want to reset the session \"%s::%s\"",
+         fActDesc->fAddress.Data(), fActDesc->fName.Data());
+   Int_t result;
+   new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), 0,
+         kMBYes | kMBNo | kMBCancel, &result);
+   if (result == kMBYes) {
+      // send cleanup request for the session specified by the query reference
+      fActDesc->fProof->Reset(fActDesc->fAddress.Data(), 
+                              fActDesc->fUserName.Data());
    }
    // update list tree
    fClient->NeedRedraw(fSessionHierarchy);
@@ -4506,6 +4702,10 @@ void TSessionViewer::MyHandleMenu(Int_t id)
          CleanupSession();
          break;
 
+      case kSessionReset:
+         ResetSession();
+         break;
+
       case kSessionBrowse:
          if (fActDesc->fProof && fActDesc->fProof->IsValid()) {
             TBrowser *b = new TBrowser();
@@ -4665,6 +4865,10 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case kSessionCleanup:
                      CleanupSession();
+                     break;
+
+                  case kSessionReset:
+                     ResetSession();
                      break;
 
                   case kSessionConnect:

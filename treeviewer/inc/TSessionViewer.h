@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.29 2006/01/30 17:36:29 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.32 2006/06/02 23:32:40 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -267,7 +267,8 @@ class TSessionFrame : public TGCompositeFrame {
 private:
 
    TGTab             *fTab;                  // main tab frame
-   TGCompositeFrame  *fFA, *fFB, *fFC, *fFD; // four tabs element
+   TGCompositeFrame  *fFA, *fFB, *fFC;
+   TGCompositeFrame  *fFD, *fFE;             // five tabs element
    TGTextEntry       *fCommandTxt;           // Command line text entry
    TGTextBuffer      *fCommandBuf;           // Command line text buffer
    TGTextView        *fInfoTextView;         // summary on current query
@@ -289,6 +290,13 @@ private:
    TGTextButton      *fBtnEnable;            // enable packages button
    TGTextButton      *fBtnClear;             // clear all packages button
    TGTextButton      *fBtnDisable;           // disable packages button
+   // Datasets tab related items
+   TGCanvas          *fDSetView;             // dataset tree view
+   TGListTree        *fDataSetTree;          // dataset list tree
+   TGTextButton      *fBtnUploadDSet;        // upload dataset button
+   TGTextButton      *fBtnRemoveDSet;        // remove dataset button
+   TGTextButton      *fBtnVerifyDSet;        // verify dataset button
+   TGTextButton      *fBtnRefresh;           // refresh list button
    // Options tab related items
    TGTextEntry       *fTxtParallel;          // parallel nodes text entry
    TGNumberEntry     *fLogLevel;             // log level number entry
@@ -330,6 +338,10 @@ public:
    void     ProofInfos();
    void     ShutdownSession();
    void     UpdatePackages();
+   void     OnBtnUploadDSet();
+   void     OnBtnRemoveDSet();
+   void     OnBtnVerifyDSet();
+   void     UpdateListOfDataSets();
 
    ClassDef(TSessionFrame, 0) // Session frame
 };
@@ -612,6 +624,7 @@ public:
    void     QueryResultReady(char *query);
    void     DeleteQuery();
    void     ReadConfiguration(const char *filename = 0);
+   void     ResetSession();
    void     UpdateListOfProofs();
    void     UpdateListOfSessions();
    void     UpdateListOfPackages();

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.h $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.h,v 1.9 2006/01/30 17:42:06 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -32,10 +32,10 @@ class TDSet;
 class TGTextEntry;
 class TGTextButton;
 class TGTextBuffer;
+class TGCheckButton;
 class TGLabel;
 class TGListView;
 class TGPicture;
-class TGListBox;
 class TGFileContainer;
 
 //////////////////////////////////////////////////////////////////////////
@@ -116,6 +116,46 @@ public:
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    ClassDef(TNewQueryDlg, 0) // New query dialog
+};
+
+//////////////////////////////////////////////////////////////////////////
+// Upload DataSet Dialog
+//////////////////////////////////////////////////////////////////////////
+
+class TUploadDataSetDlg : public TGTransientFrame {
+
+private:
+   Bool_t                fUploading;
+   TList                *fSkippedFiles;   // List of skipped files
+   TGTextEntry          *fDSetName;       // dataset name text entry
+   TGTextEntry          *fDestinationURL; // destination URL text entry
+   TGTextEntry          *fLocationURL;    // location URL text entry
+   TGListView           *fListView;       // dataset files list view
+   TGLVContainer        *fLVContainer;    // and its container
+   TGTextButton         *fAddButton;      // Add >> button
+   TGTextButton         *fBrowseButton;   // Browse... button
+   TGTextButton         *fRemoveButton;   // Remove button
+   TGTextButton         *fClearButton;    // Clear button
+   TGCheckButton        *fOverwriteDSet;  // overwrite DataSet
+   TGCheckButton        *fOverwriteFiles; // overwrite All Files
+   TGCheckButton        *fAppendFiles;    // append files
+   TGTextButton         *fUploadButton;   // Upload button
+   TGTextButton         *fCloseDlgButton; // Close Dialog button
+   TSessionViewer       *fViewer;         // pointer on main viewer
+
+public:
+   TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h);
+   virtual ~TUploadDataSetDlg();
+
+   virtual void   CloseWindow();
+   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   void           AddFiles(const char *filename);
+   void           BrowseFiles();
+   void           ClearFiles();
+   void           RemoveFile();
+   void           UploadDataSet();
+
+   ClassDef(TUploadDataSetDlg, 0) // New query dialog
 };
 
 #endif
