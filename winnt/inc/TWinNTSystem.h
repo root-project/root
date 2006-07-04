@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.39 2006/03/28 16:35:00 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.40 2006/05/15 16:30:10 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -165,7 +165,6 @@ public:
    const char       *WorkingDirectory(char driveletter);
    const char       *WorkingDirectory();
    const char       *HomeDirectory(const char *userName=0);
-   char             *ConcatFileName(const char *dir, const char *name);
    const char       *TempDirectory() const;
    FILE             *TempFileName(TString &base, const char *dir = 0);
 
@@ -181,6 +180,7 @@ public:
 
    //---- Paths & Files ----------------------------------------
    const char        DriveName(const char *pathname="/");
+   const char       *PrependPathName(const char *dir, TString& name);
    Bool_t            ExpandPathName(TString &patbuf);
    char             *ExpandPathName(const char *path);
    Bool_t            AccessPathName(const char *path, EAccessMode mode = kFileExists);
@@ -197,7 +197,7 @@ public:
    int               Umask(Int_t mask);
    int               Utime(const char *file, Long_t modtime, Long_t actime);
    const char       *UnixPathName(const char *unixpathname);
-   char             *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
+   const char       *FindFile(const char *search, TString& file, EAccessMode mode = kFileExists);
 
    //---- Standard Output redirection --------------------------
    Int_t             RedirectOutput(const char *name, const char *mode = "a");

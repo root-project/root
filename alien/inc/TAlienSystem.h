@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.55 2006/03/29 09:21:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAlienSystem.h,v 1.1 2006/05/26 16:55:04 rdm Exp $
 // Author: Andreas Peters  15/05/2006
 
 /*************************************************************************
@@ -71,7 +71,7 @@ public:
    virtual int             Chmod(const char *file, UInt_t mode);
    virtual int             Umask(Int_t mask);
    virtual int             Utime(const char *file, Long_t modtime, Long_t actime);
-   virtual char           *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
+   virtual const char     *FindFile(const char *search, TString& file, EAccessMode mode = kFileExists);
 
    //---- Users & Groups
    virtual Int_t           GetUid(const char *user = 0);

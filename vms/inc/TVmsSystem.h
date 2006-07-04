@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.h,v 1.4 2001/01/23 19:01:55 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.h,v 1.5 2001/02/03 14:46:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -126,7 +126,7 @@ public:
    const char       *HomeDirectory();
 
    //---- Paths & Files ----------------------------------------
-   char             *ConcatFileName(const char *dir, const char *name);
+   const char       *PrependPathName(const char *dir, TString& name);
    Bool_t            ExpandPathName(TString &patbuf);
    char             *ExpandPathName(const char *path);
    Bool_t            AccessPathName(const char *path, EAccessMode mode = kFileExists);
@@ -137,7 +137,7 @@ public:
    int               GetPathInfo(const char *path, unsigned short *id,Long_t *size,
                                  Long_t *flags, Long_t *modtime);
    int               Umask(Int_t mask);
-   char             *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
+   const char       *FindFile(const char *search, TString& file, EAccessMode mode = kFileExists);
 
    //---- System Logging ---------------------------------------
    void              Openlog(const char *name, Int_t options, ELogFacility facility);

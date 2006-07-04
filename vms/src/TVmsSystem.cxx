@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.10 2001/11/26 15:37:46 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.11 2002/11/18 23:02:19 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -534,24 +534,20 @@ const char *TVmsSystem::HomeDirectory()
 }
 
 //______________________________________________________________________________
-char *TVmsSystem::ConcatFileName(const char *dir, const char *name)
+const char *TVmsSystem::PrependPathName(const char *dir, TString& name)
 {
-   // Concatenate a directory and a file name. Returned string must be
-   // deleted by user.
+   // Concatenate a directory and a file name.
 
-   if (name == 0 || strlen(name) <= 0 || strcmp(name, ".") == 0)
-      return StrDup(dir);
+   if (name.IsNull() || name == ".") {
+      if (dir) name = dir;
+      else name = "";
+      return name.Data();
 
-   char buf[kMAXPATHLEN];
-   if (dir && (strcmp(dir, "/") != 0)) {
-      if (dir[strlen(dir)-1] == '/')
-         sprintf(buf, "%s%s", dir, name);
-      else
-         sprintf(buf, "%s/%s", dir, name);
-   } else
-      sprintf(buf, "/%s", name);
+   if (dir && dir[0] && dir[strlen(dir) - 1] != '/')
+      name.Prepend("/");
+   name.Prepend(dir);
 
-   return StrDup(buf);
+   return name.Data();
 }
 
 //---- Paths & Files -----------------------------------------------------------
@@ -750,7 +746,7 @@ int TVmsSystem::Umask(Int_t mask)
 }
 
 //______________________________________________________________________________
-char *TVmsSystem::Which(const char *search, const char *file, EAccessMode mode)
+const char *TVmsSystem::FindFile(const char *search, TString& file, EAccessMode mode)
 {
    // Find location of file in a search path.
    // User must delete returned string.
@@ -759,35 +755,39 @@ char *TVmsSystem::Which(const char *search, const char *file, EAccessMode mode)
    const char *ptr;
    char *next, *exname, *ffile;
    char s2[]=":";
+   Ssiz_t posCol = 0;
 
-ffile = StrDup(file);
+   if (gEnv->GetValue("Root.ShowPath",0))
+      printf("Which: %s = ", file.Data());
 
-if (search != 0){
-  if (strchr(file,']')){
-    exname = StrDup(file);
-    return exname;
-    }
-  else if(strrchr(file,':')){
-    exname = StrDup(strtok(ffile,s2));
-    return exname;
-    }
-  else {
-   if (file == 0){
-     exname = StrDup(search);
-     return exname;
-     }
-     strcpy(temp,search);
-     strcat(temp,file);
-     exname = StrDup(temp);
-     if (exname && access(exname,mode) == 0) {
-       if (gEnv->GetValue("Root.ShowPath",0))
-          Printf("Which: %s = %s", file,exname);
-       return exname;
-       }
-   delete [] exname;
-   return 0;
+   if (search != 0){
+      if (strchr(file(),']')) {
+         if (gEnv->GetValue("Root.ShowPath",0))
+            printf("%s\n", file.Data());
+         return file.Data();
+      } else if ((posCol = file.First(':')) != kNPOS) {
+         file.Remove(0, posCol + 1);
+         if (gEnv->GetValue("Root.ShowPath",0))
+            printf("%s\n", file.Data());
+         return file.Data();
+      } else {
+         if (file.IsNull()) {
+            file = search;
+            if (gEnv->GetValue("Root.ShowPath",0))
+               printf("%s\n", file.Data());
+            return file.Data();
+         }
+         file.Prepend(search);
+         if (access(file(),mode) == 0) {
+            if (gEnv->GetValue("Root.ShowPath",0))
+               printf("%s\n", file.Data());
+            return file.Data();
+          }
+      }
    }
-}
+
+   file = "";
+   return 0;
 
 #if 0
    if (strchr(file, '/')) {

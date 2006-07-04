@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.141 2006/05/18 10:46:26 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.142 2006/05/21 18:17:24 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2078,30 +2078,20 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
 }
 
 //______________________________________________________________________________
-char *TWinNTSystem::ConcatFileName(const char *dir, const char *name)
+const char *TWinNTSystem::PrependPathName(const char *dir, TString& name)
 {
-   // Concatenate a directory and a file name. Returned string must be
-   // deleted by user.
+   // Concatenate a directory and a file name.
 
-   Int_t ldir  = dir  ? strlen(dir) : 0;
-   Int_t lname = name ? strlen(name) : 0;
-
-   if (!lname) return StrDup(dir);
-
-   char *buf = new char[ldir+lname+2];
-
-   if (ldir) {
+   if (name == ".") name = "";
+   if (dir && dir[0]) {
       // Test whether the last symbol of the directory is a separator
-      char last = dir[ldir-1];
-      if (last == '/' || last == '\\' || last == ':') {
-         sprintf(buf, "%s%s", dir, name);
-      } else {
-         sprintf(buf, "%s\\%s", dir, name);
+      char last = dir[strlen(dir) - 1];
+      if (last != '/' && last == '\\') {
+         name.Prepend('\\');
       }
-   } else {
-      sprintf(buf, "\\%s", name);
+      name.Prepend(dir);
    }
-   return buf;
+   return name.Data();
 }
 
 //______________________________________________________________________________
@@ -2422,14 +2412,10 @@ int TWinNTSystem::Utime(const char *file, Long_t modtime, Long_t actime)
 }
 
 //______________________________________________________________________________
-char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mode)
+const char *TWinNTSystem::FindFile(const char *search, TString& infile, EAccessMode mode)
 {
    // Find location of file in a search path.
    // User must delete returned string. Returns 0 in case file is not found.
-
-   static char name[kMAXPATHLEN];
-   char *lpFilePart = 0;
-   char *found = 0;
 
    // Windows cannot check on execution mode - all we can do is kReadPermission
    if (mode==kExecutePermission)
@@ -2437,44 +2423,45 @@ char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mo
 
    // Expand parameters
 
-   char *exinfile = gSystem->ExpandPathName(infile);
+   gSystem->ExpandPathName(infile);
    // Check whether this infile has the absolute path first
-   if (IsAbsoluteFileName(exinfile) ) {
-      found = exinfile;
-   } else {
-      char *tmp = gSystem->ExpandPathName(search);
-      TString exsearch(tmp);
-      delete [] tmp;
+   if (IsAbsoluteFileName(infile.Data()) ) {
+      if (!AccessPathName(infile.Data(), mode))
+      return infile.Data();
+      infile = "";
+      return 0;
+   }
+   TString exsearch(search);
+   gSystem->ExpandPathName(exsearch);
 
-      // Need to use Windows delimiters
-      Int_t lastDelim = -1;
-      for(int i=0; i<exsearch.Length(); ++i) {
-         switch( exsearch[i] ) {
-            case ':': if (i-lastDelim!=2) exsearch[i] = ';'; // Replace the ':' unless there are after a disk suffix (aka ;c:\mydirec...)
-               lastDelim = i;
-               break;
-            case ';': lastDelim = i; break;
-         }
+   // Need to use Windows delimiters
+   Int_t lastDelim = -1;
+   for(int i=0; exsearch[i]; ++i) {
+      switch( exsearch[i] ) {
+         case ':': 
+            // Replace the ':' unless there are after a disk suffix (aka ;c:\mydirec...)
+            if (i-lastDelim!=2) exsearch[i] = ';';
+            lastDelim = i;
+            break;
+         case ';': lastDelim = i; break;
       }
-
-      // Check access
-      struct stat finfo;
-      if (::SearchPath(exsearch, exinfile, NULL, kMAXPATHLEN, name, &lpFilePart) &&
-          ::access(name, mode) == 0 && stat(name, &finfo) == 0 &&
-          finfo.st_mode & S_IFREG) {
-         if (gEnv->GetValue("Root.ShowPath", 0)) {
-            Printf("Which: %s = %s", infile, name);
-         }
-         found = StrDup(name);
-      }
-      delete [] exinfile;
    }
 
-   if (found  && AccessPathName(found, mode)) {
-      delete [] found;
-      found = 0;
+   // Check access
+   struct stat finfo;
+   char name[kMAXPATHLEN];
+   char *lpFilePart = 0;
+   if (::SearchPath(exsearch.Data(), infile.Data(), NULL, kMAXPATHLEN, name, &lpFilePart) &&
+       ::access(name, mode) == 0 && stat(name, &finfo) == 0 &&
+       finfo.st_mode & S_IFREG) {
+      if (gEnv->GetValue("Root.ShowPath", 0)) {
+         Printf("Which: %s = %s", infile, name);
+      }
+      infile = name;
+      return infile.Data();
    }
-   return found;
+   infile = "";
+   return 0;
 }
 
 //---- Users & Groups ----------------------------------------------------------

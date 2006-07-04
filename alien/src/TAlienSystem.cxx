@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAlienSystem.cxx,v 1.2 2006/05/30 15:34:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAlienSystem.cxx,v 1.3 2006/06/01 14:46:49 rdm Exp $
 // Author: Andreas Peters   15/05/2006
 
 /*************************************************************************
@@ -376,9 +376,9 @@ int TAlienSystem::Utime(const char *, Long_t, Long_t)
 }
 
 //______________________________________________________________________________
-char *TAlienSystem::Which(const char *, const char *, EAccessMode)
+const char *TAlienSystem::FindFile(const char *, TString&, EAccessMode)
 {
-   // Find location of file in a search path. User must delete returned string.
+   // Find location of file in a search path.
    // Returns 0 in case file is not found.
 
    AbstractMethod("Which");

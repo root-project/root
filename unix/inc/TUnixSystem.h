@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.24 2005/09/13 10:20:30 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.25 2005/09/24 11:57:36 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -139,7 +139,7 @@ public:
    FILE             *TempFileName(TString &base, const char *dir = 0);
 
    //---- Paths & Files ----------------------------------------
-   char             *ConcatFileName(const char *dir, const char *name);
+   const char       *PrependPathName(const char *dir, TString& name);
    Bool_t            ExpandPathName(TString &patbuf);
    char             *ExpandPathName(const char *path);
    Bool_t            AccessPathName(const char *path, EAccessMode mode = kFileExists);
@@ -154,7 +154,7 @@ public:
    int               Chmod(const char *file, UInt_t mode);
    int               Umask(Int_t mask);
    int               Utime(const char *file, Long_t modtime, Long_t actime);
-   char             *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
+   const char       *FindFile(const char *search, TString& file, EAccessMode mode = kFileExists);
 
    //---- Users & Groups ---------------------------------------
    Int_t             GetUid(const char *user = 0);

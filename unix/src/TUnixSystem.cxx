@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.152 2006/05/19 07:03:36 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.153 2006/05/26 17:11:28 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1189,29 +1189,25 @@ FILE *TUnixSystem::TempFileName(TString &base, const char *dir)
 }
 
 //______________________________________________________________________________
-char *TUnixSystem::ConcatFileName(const char *dir, const char *name)
+const char *TUnixSystem::PrependPathName(const char *dir, TString& name)
 {
-   // Concatenate a directory and a file name. Returned string must be
-   // deleted by user.
+   // Concatenate a directory and a file name.
 
-   if (name == 0 || strlen(name) <= 0 || strcmp(name, ".") == 0)
-      return StrDup(dir);
-
-   TString buf;
-   if (dir && (strcmp(dir, "/") != 0)) {
-      buf = dir;
-      if (dir[strlen(dir)-1] == '/')
-         buf += name;
-      else {
-         buf += "/";
-         buf += name;
-      };
-   } else {
-      buf = "/";
-      buf +=name; // sprintf(buf, "/%s", name);
+   if (name.IsNull() || name == ".") {
+      if (dir) {
+         name = dir;
+         if (dir[strlen(dir) - 1] != '/')
+            name += '/';
+      } else name = "";
+      return name.Data();
    }
 
-   return StrDup(buf.Data());
+   if (!dir || !dir[0]) dir = "/";
+   else if (dir[strlen(dir) - 1] != '/')
+      name.Prepend('/');
+   name.Prepend(dir);
+
+   return name.Data();
 }
 
 //---- Paths & Files -----------------------------------------------------------
@@ -1524,72 +1520,68 @@ int TUnixSystem::Utime(const char *file, Long_t modtime, Long_t actime)
 }
 
 //______________________________________________________________________________
-char *TUnixSystem::Which(const char *search, const char *wfil, EAccessMode mode)
+const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode mode)
 {
    // Find location of file "wfil" in a search path.
    // The search path is specified as a : separated list of directories.
-   // User must delete returned string. Returns 0 in case file is not found.
+   // Return value is pointing to wfile for compatibility with 
+   // Which(const char*,const char*,EAccessMode) version
 
-   char name[kMAXPATHLEN], file[kMAXPATHLEN];
-   const char *ptr;
-   char *next, *exname;
-   struct stat finfo;
+   if (gEnv->GetValue("Root.ShowPath", 0))
+      printf("Which: %s = ", wfil.Data());
 
-   exname = gSystem->ExpandPathName(wfil);
-   if (exname)
-      strcpy(file, exname);
-   else
-      file[0] = 0;
-   delete [] exname;
+   gSystem->ExpandPathName(wfil);
 
-   if (file[0] == '/') {
-      exname = StrDup(file);
-      if (exname && access(exname, mode) == 0 &&
-          stat(exname, &finfo) == 0 && S_ISREG(finfo.st_mode)) {
+   if (wfil[0] == '/') {
+      struct stat finfo;
+      if (access(wfil.Data(), mode) == 0 &&
+          stat(wfil.Data(), &finfo) == 0 && S_ISREG(finfo.st_mode)) {
          if (gEnv->GetValue("Root.ShowPath", 0))
-            Printf("Which: %s = %s", wfil, exname);
-         return exname;
+            printf("%s", wfil.Data());
+         return wfil.Data();
       }
-      delete [] exname;
       if (gEnv->GetValue("Root.ShowPath", 0))
-         Printf("Which: %s = <not found>", wfil);
+         printf("<not found>");
+      wfil = "";
       return 0;
    }
 
    if (search == 0)
       search = ".";
 
-   for (ptr = search; *ptr;) {
-      for (next = name; *ptr && *ptr != ':'; )
-         *next++ = *ptr++;
-      *next = '\0';
-
-      if (name[0] != '/' && name[0] != '$' && name[0] != '~') {
-         char tmp[kMAXPATHLEN];
-         strcpy(tmp, name);
-         strcpy(name, gSystem->WorkingDirectory());
-         strcat(name, "/");
-         strcat(name, tmp);
+   TString pwd(gSystem->WorkingDirectory());
+   pwd += "/";
+   for (const char* ptr = search; *ptr;) {
+      TString name;
+      if (*ptr != '/' && *ptr !='$' && *ptr != '~')
+         name = pwd;
+      const char* posEndOfPart = strchr(ptr, ':');
+      if (posEndOfPart) {
+         name.Append(ptr, posEndOfPart - ptr);
+         ptr = posEndOfPart + 1; // skip ':'
+      } else { 
+         name.Append(ptr);
+         ptr += strlen(ptr);
       }
 
-      if (*(name + strlen(name) - 1) != '/')
-         strcat(name, "/");
-      strcat(name, file);
+      if (!name.EndsWith("/"))
+         name += '/';
+      name += wfil;
 
-      exname = gSystem->ExpandPathName(name);
-      if (exname && access(exname, mode) == 0 &&
-          stat(exname, &finfo) == 0 && S_ISREG(finfo.st_mode)) {
+      gSystem->ExpandPathName(name);
+      struct stat finfo;
+      if (access(name.Data(), mode) == 0 &&
+          stat(name.Data(), &finfo) == 0 && S_ISREG(finfo.st_mode)) {
          if (gEnv->GetValue("Root.ShowPath", 0))
-            Printf("Which: %s = %s", wfil, exname);
-         return exname;
+            printf("%s", name.Data());
+         wfil = name;
+         return wfil.Data();
       }
-      delete [] exname;
-      if (*ptr)
-         ptr++;
    }
 
    if (gEnv->GetValue("Root.ShowPath", 0))
-      Printf("Which: %s = <not found>", wfil);
+      printf("<not found>");
+   wfil = "";
    return 0;
 }
 

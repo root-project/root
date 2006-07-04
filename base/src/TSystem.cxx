@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.140 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.141 2006/05/26 09:01:58 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -952,7 +952,17 @@ const char *TSystem::UnixPathName(const char *name)
 }
 
 //______________________________________________________________________________
-char *TSystem::ConcatFileName(const char *, const char *)
+char *TSystem::ConcatFileName(const char *dir, const char *name)
+{
+   // Concatenate a directory and a file name. User must delete returned string.
+
+   TString nameString(name);
+   PrependPathName(dir, nameString);
+   return StrDup(nameString.Data());
+}
+
+//______________________________________________________________________________
+const char *TSystem::PrependPathName(const char *, TString&)
 {
    // Concatenate a directory and a file name.
 
@@ -1299,13 +1309,26 @@ int TSystem::Utime(const char *, Long_t, Long_t)
 }
 
 //______________________________________________________________________________
-char *TSystem::Which(const char *, const char *, EAccessMode)
+const char *TSystem::FindFile(const char *, TString&, EAccessMode)
+{
+   // Find location of file in a search path. Return value points to TString for
+   // compatibility with Which(const char *, const char *, EAccessMode). 
+   // Returns 0 in case file is not found.
+
+   AbstractMethod("FindFile");
+   return 0;
+}
+
+//______________________________________________________________________________
+char *TSystem::Which(const char *search, const char *wfil, EAccessMode mode)
 {
    // Find location of file in a search path. User must delete returned string.
    // Returns 0 in case file is not found.
 
-   AbstractMethod("Which");
-   return 0;
+   TString wfilString(wfil);
+   FindFile(search, wfilString, mode);
+   if (wfilString.IsNull()) return 0;
+   return StrDup(wfilString.Data());
 }
 
 //---- Users & Groups ----------------------------------------------------------

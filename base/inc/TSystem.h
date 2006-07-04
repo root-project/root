@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v5-11-02 $:$Id: TSystem.h,v 1.55 2006/03/29 09:21:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.56 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -326,6 +326,7 @@ public:
    virtual char           *ConcatFileName(const char *dir, const char *name);
    virtual Bool_t          IsAbsoluteFileName(const char *dir);
    virtual Bool_t          IsFileInIncludePath(const char *name, char **fullpath = 0);
+   virtual const char     *PrependPathName(const char *dir, TString& name);
    virtual Bool_t          ExpandPathName(TString &path);
    virtual char           *ExpandPathName(const char *path);
    virtual Bool_t          AccessPathName(const char *path, EAccessMode mode = kFileExists);
@@ -342,6 +343,7 @@ public:
    virtual int             Umask(Int_t mask);
    virtual int             Utime(const char *file, Long_t modtime, Long_t actime);
    virtual const char     *UnixPathName(const char *unixpathname);
+   virtual const char     *FindFile(const char *search, TString& file, EAccessMode mode = kFileExists);
    virtual char           *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
 
    //---- Users & Groups
