@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.149 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.150 2006/07/03 09:33:50 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4994,14 +4994,14 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
                   fileList->Add(new TFileInfo(Form("%s/%s", dest.Data(), ent)));
                } else
                   Error("UploadDataSet", "file %s was not copied", fileUrl->GetUrl());
-             } else {  // don't overwrite, but file exist and must be included
-                fileList->Add(new TFileInfo(Form("%s/%s", dest.Data(), ent)));
-                if (skippedFiles && &skippedFiles) {
-                   // user specified the TList *skippedFiles argument so we create
-                   // the list of skipped files
-                   skippedFiles->Add(new TFileInfo(fileUrl->GetUrl()));
-                }
-             }
+            } else {  // don't overwrite, but file exist and must be included
+               fileList->Add(new TFileInfo(Form("%s/%s", dest.Data(), ent)));
+               if (skippedFiles && &skippedFiles) {
+                  // user specified the TList *skippedFiles argument so we create
+                  // the list of skipped files
+                  skippedFiles->Add(new TFileInfo(fileUrl->GetUrl()));
+               }
+            }
          } //if matching dir entry
       } //while
 
