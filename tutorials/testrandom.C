@@ -51,7 +51,7 @@ void testAll() {
   TRandom *r3 = new TRandom3();
 
   TStopwatch sw;
-  printf("Distribution            microseconds/call\n");
+  printf("Distribution            nanoseconds/call\n");
   printf("                    TRandom  TRandom1 TRandom2 TRandom3\n");
 
   sw.Start();

@@ -18,15 +18,12 @@
 
 #include <iostream>
 
-// CINT does not understand some files included by LorentzVector
-#ifndef __CINT__
 #include "TLorentzVector.h"
 
 #include "Math/Vector4D.h"
 
 using namespace ROOT::Math;
 
-#endif
  
 
 
