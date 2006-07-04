@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.137 2006/06/25 14:14:11 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.138 2006/06/27 14:36:28 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -214,6 +214,11 @@ Int_t TChain::Add(TChain *chain)
       fFiles->Add(newelement);
       nf++;
    }
+
+   if (fChainProof)
+      // Update also the data set for PROOF
+      SetProof(fChainProof->GetProof(), kTRUE);
+
    return nf;
 }
 
@@ -305,6 +310,11 @@ Int_t TChain::Add(const char *name, Long64_t nentries)
       }
       l.Delete();
    }
+
+   if (fChainProof)
+      // Update also the data set for PROOF
+      SetProof(fChainProof->GetProof(), kTRUE);
+
    return nf;
 }
 
@@ -417,6 +427,11 @@ Int_t TChain::AddFile(const char *name, Long64_t nentries, const char *tname)
 
    delete [] filename;
    if (cursav) cursav->cd();
+
+   if (fChainProof)
+      // Update also the data set for PROOF
+      SetProof(fChainProof->GetProof(), kTRUE);
+
    return 1;
 }
 
@@ -439,6 +454,11 @@ Int_t TChain::AddFileInfoList(TList *fileinfolist, Long64_t nfiles)
       if (cnt>=nfiles)
          break;
    }
+
+   if (fChainProof)
+      // Update also the data set for PROOF
+      SetProof(fChainProof->GetProof(), kTRUE);
+
    return 1;
 }
 
@@ -1754,23 +1774,29 @@ TDSet* TChain::MakeTDSetWithoutFriends() const
 
 
 //______________________________________________________________________________
-void TChain::SetProof(TVirtualProof *proof)
+void TChain::SetProof(TVirtualProof *proof, Bool_t refresh, Bool_t gettreeheader)
 {
    // Sets the PROOF to be used for processing. "Draw" and "Processed" commands
    // will be handled by the proof.
    // If proof == (TVirtualProof*) -1 then the gProof is used.
    // If proof == 0 no proof is connected and the previously connected
    // proof is released.
+   // If gettreeheader is kTRUE the header of the tree will be read from the
+   // PROOF cluster: this is only needed fro browsing and should be used with
+   // care because it may take a long time to execute.
 
    if (proof == (TVirtualProof*) -1)
       proof = gProof;
-   if (fChainProof && proof == fChainProof->GetProof())
+   if (fChainProof && proof == fChainProof->GetProof() && !refresh &&
+      (!gettreeheader || (gettreeheader && fChainProof->HasTreeHeader())))
       return;
    ReleaseChainProof();
    if (proof) {
       TDSet* set = MakeTDSet();
+      // Avoid duplications in the global list (the chain is already registered)
+      gROOT->GetListOfDataSets()->Remove(set);
       R__ASSERT(set);         // should always succeed
-      fChainProof = TChainProof::MakeChainProof(set, proof);
+      fChainProof = TChainProof::MakeChainProof(set, proof, gettreeheader);
       if (!fChainProof)
          Error("SetProof", "can't set PROOF");
       else

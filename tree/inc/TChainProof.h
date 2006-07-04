@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.4 2005/11/16 20:21:34 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.5 2006/06/26 11:54:32 brun Exp $
 // Author: Marek Biskup   10/12/2004
 
 /*************************************************************************
@@ -121,8 +121,8 @@ public:
    virtual TIterator   *GetIteratorOnAllLeaves(Bool_t dir = kIterForward);
    virtual TLeaf       *GetLeaf(const char *name);
    virtual TList       *GetListOfClones() { return 0; }
-   virtual TObjArray   *GetListOfBranches() {return fTree->GetListOfBranches();}
-   virtual TObjArray   *GetListOfLeaves()   {return fTree->GetListOfLeaves();}
+   virtual TObjArray   *GetListOfBranches() {return (fTree ? fTree->GetListOfBranches() : (TObjArray *)0); }
+   virtual TObjArray   *GetListOfLeaves()   {return (fTree ? fTree->GetListOfLeaves() : (TObjArray *)0);}
    virtual TList       *GetListOfFriends()    const {return 0;}
    virtual TSeqCollection *GetListOfAliases() const {return 0;}
 
@@ -163,6 +163,7 @@ public:
    virtual Double_t    *GetW()    {return GetPlayer()->GetW();}
    virtual Double_t     GetWeight() const   {return fWeight;}
    virtual Long64_t     GetZipBytes() const {return fZipBytes;}
+   Bool_t               HasTreeHeader() const { return (fTree ? kTRUE : kFALSE); }
    virtual void         IncrementTotalBuffers(Int_t nbytes) {fTotalBuffers += nbytes;}
    Bool_t               IsFolder() const {return kTRUE;}
    virtual Int_t        LoadBaskets(Long64_t maxmemory=2000000000);
@@ -233,7 +234,7 @@ public:
    virtual void         ConnectProof(TVirtualProof* proof);
    virtual void         ReleaseProof();
    
-   static  TChainProof *MakeChainProof(TDSet *set, TVirtualProof *proof);
+   static  TChainProof *MakeChainProof(TDSet *set, TVirtualProof *proof, Bool_t gettreeheader = kFALSE);
    
    ClassDef(TChainProof,0)  //TChain proxy for running chains on PROOF
 };

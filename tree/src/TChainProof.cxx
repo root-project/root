@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.3 2005/11/16 20:24:02 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.4 2006/06/26 11:54:32 brun Exp $
 // Author: Marek Biskup   10/3/2005
 
 /*************************************************************************
@@ -44,7 +44,7 @@ TChainProof::~TChainProof()
    // Destructor - removes the chain from the proof in case a proof was set.
 
    ReleaseProof();
-   delete fTree;
+   SafeDelete(fTree);
 }
 
 //______________________________________________________________________________
@@ -317,7 +317,7 @@ TBranch *TChainProof::FindBranch(const char* branchname)
    // Forwards the execution to the dummy tree header.
    // See TTree::FindBranch().
 
-   return fTree->FindBranch(branchname);
+   return (fTree ? fTree->FindBranch(branchname) : (TBranch *)0);
 }
 
 //______________________________________________________________________________
@@ -326,7 +326,7 @@ TLeaf *TChainProof::FindLeaf(const char* searchname)
    // Forwards the execution to the dummy tree header.
    // See TTree::FindLeaf().
 
-   return fTree->FindLeaf(searchname);
+   return (fTree ? fTree->FindLeaf(searchname) : (TLeaf *)0);
 }
 
 //______________________________________________________________________________
@@ -352,7 +352,7 @@ TBranch *TChainProof::GetBranch(const char *name)
    // Forwards the execution to the dummy tree header.
    // See TTree::GetBranch().
 
-   return fTree->GetBranch(name);
+   return (fTree ? fTree->GetBranch(name) : (TBranch *)0);
 }
 
 //______________________________________________________________________________
@@ -361,7 +361,7 @@ Bool_t TChainProof::GetBranchStatus(const char *branchname) const
    // Forwards the execution to the dummy tree header.
    // See TTree::GetBranchStatus().
 
-   return fTree->GetBranchStatus(branchname);
+   return (fTree ? fTree->GetBranchStatus(branchname) : kFALSE);
 }
 
 //______________________________________________________________________________
@@ -491,7 +491,11 @@ TVirtualTreePlayer *TChainProof::GetPlayer()
    // Forwards the execution to the dummy tree header.
    // See TTree::GetPlayer().
 
-   return fTree->GetPlayer();    // FIXME ??
+   if (!fTree)
+      if (fProof)
+         fTree = fProof->GetTreeHeader(fSet);
+
+   return (fTree ? fTree->GetPlayer() : (TVirtualTreePlayer *)0);    // FIXME ??
 }
 
 //______________________________________________________________________________
@@ -855,7 +859,7 @@ Long64_t TChainProof::GetEntries() const
    // Returns the total number of entries in the TChainProof, which is
    // the number of entries in the TDSet that it holds.
 
-   return fTree->GetMaxEntryLoop();  // this was used for holding the total number of entries
+   return (fTree ? fTree->GetMaxEntryLoop() : (Long64_t)(-1));  // this was used for holding the total number of entries
 }
 
 //______________________________________________________________________________
@@ -910,24 +914,29 @@ void TChainProof::ConnectProof(TVirtualProof *proof)
 }
 
 //______________________________________________________________________________
-TChainProof *TChainProof::MakeChainProof(TDSet *set, TVirtualProof *proof)
+TChainProof *TChainProof::MakeChainProof(TDSet *set, TVirtualProof *proof, Bool_t gettreeheader)
 {
    // Creates a new TChainProof that keeps the TDSet.
-   // uses proof to get the three header.
+   // If gettreeheader is kTRUE the header of the tree will be read from the
+   // PROOF cluster: this is only needed fro browsing and should be used with
+   // care because it may take a long time to execute.
 
    if (!set->IsTree()) {
       set->Error("MakeChainProof", "TDSet contents should be of type TTree (or subtype)");
       return 0;
    }
 
-   TTree *t = proof->GetTreeHeader(set);
-   if (!t) {
-      set->Error("TChainProof::MakeChainProof", "Error getting a tree header");
-      return 0;
+   TTree *t = 0;
+   if (gettreeheader) {
+      if (!(t = proof->GetTreeHeader(set))) {
+         set->Error("TChainProof::MakeChainProof", "Error getting a tree header");
+         return 0;
+      }
    }
    TChainProof *w = new TChainProof(set, t);   // t will be deleted in w's destructor
    w->ConnectProof(proof);
    w->SetDirectory(0);
-   w->SetName(TString(t->GetName())  + "_Wrapped");
+   if (t)
+      w->SetName(TString(t->GetName())  + "_Wrapped");
    return w;
 }

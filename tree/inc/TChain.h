@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.53 2006/06/25 14:14:10 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.54 2006/06/27 14:36:27 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -128,7 +128,8 @@ public:
    virtual void      SetDirectory(TDirectory *dir);
    virtual void      SetMakeClass(Int_t make) { TTree::SetMakeClass(make); if (fTree) fTree->SetMakeClass(make);}
    virtual void      SetPacketSize(Int_t size = 100);
-   virtual void      SetProof(TVirtualProof* proof = (TVirtualProof*) -1);
+   virtual void      SetProof(TVirtualProof* proof = (TVirtualProof*) -1,
+                              Bool_t refresh = kFALSE, Bool_t gettreeheader = kFALSE);
    virtual void      SetWeight(Double_t w=1, Option_t *option="");
    virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = 0);
 
