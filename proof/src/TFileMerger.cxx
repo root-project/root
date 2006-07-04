@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.8 2006/06/28 20:07:52 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.9 2006/06/29 22:15:37 rdm Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -77,7 +77,8 @@ void TFileMerger::PrintProgress(Long64_t bytesread, Long64_t size)
       } else
          fprintf(stderr, "=");
    }
-
+   // Allow to update the GUI while uploading files
+   gSystem->ProcessEvents();
    fWatch.Stop();
    Double_t lCopy_time = fWatch.RealTime();
    fprintf(stderr, "| %.02f %% [%.01f MB/s]\r",
