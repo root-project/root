@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.48 2006/05/31 14:26:31 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.49 2006/06/01 11:38:57 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1280,7 +1280,7 @@ void TGuiBldDragManager::SelectFrame(TGFrame *frame, Bool_t add)
 
    SetCursorType(kMove);
 
-   fLassoDrawn = kFALSE;
+   SetLassoDrawn(kFALSE);
    DrawGrabRectangles(fPimpl->fGrab);
 }
 
@@ -2709,7 +2709,7 @@ void TGuiBldDragManager::HandleReturn(Bool_t on)
 
          comp->AddFrame(parent);
          parent->MapWindow();
-         fLassoDrawn = kFALSE;
+         SetLassoDrawn(kFALSE);
          SelectFrame(parent);
 
          if (fBuilder) {
@@ -2956,7 +2956,7 @@ void TGuiBldDragManager::HandleDelete(Bool_t crop)
       UngrabFrame();
       ChangeSelected(0);   //update editors
    }
-   fLassoDrawn = kFALSE;
+   SetLassoDrawn(kFALSE);
 
    if (fBuilder) {
       //fBuilder->Update();
@@ -4025,11 +4025,11 @@ void TGuiBldDragManager::DrawLasso()
    gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kCross));
    gVirtualX->SetCursor(fClient->GetRoot()->GetId(), gVirtualX->CreateCursor(kCross));
 
-   fLassoDrawn = kTRUE;
+   SetLassoDrawn(kTRUE);
    root->RequestFocus();
 
    if (fBuilder) {
-      TString str = "Presss Return to grab frames inside lasso.";
+      TString str = "Lasso drawn. Align frames inside or presss Return key to grab frames.";
       fBuilder->UpdateStatusBar(str.Data());
    }
 }
@@ -4262,7 +4262,7 @@ Bool_t TGuiBldDragManager::EndDrag()
 
       frame = (TGFrame*)fBuilder->ExecuteAction();
       PlaceFrame(frame, fBuilder->GetAction()->fHints);
-      fLassoDrawn = kFALSE;
+      SetLassoDrawn(kFALSE);
       ret = kTRUE;
       //return ret;
    } else if ((fDragType == kDragLasso) && fSelectionIsOn) {
@@ -4280,10 +4280,6 @@ Bool_t TGuiBldDragManager::EndDrag()
 
    if (fBuilder) {
       fBuilder->SetAction(0);
-      //fBuilder->Update();
-      if (fLassoDrawn) {
-         fBuilder->UpdateStatusBar("Lasso Drawn");
-      }
    }
 
    return ret;
@@ -6229,3 +6225,22 @@ void TGuiBldDragManager::ChangeImage(TGIcon *fr)
    SetEditable(kTRUE);
 }
 
+//______________________________________________________________________________
+void TGuiBldDragManager::SetLassoDrawn(Bool_t on)
+{
+   // Set lasso drawn flag
+
+   if (fLassoDrawn == on) {
+      return;
+   }
+
+   fLassoDrawn = on;
+
+   if (fBuilder) {
+      fBuilder->EnableLassoButtons(on);
+
+      if (on) {
+         fBuilder->EnableEditButtons(kFALSE);
+      }
+   }
+}

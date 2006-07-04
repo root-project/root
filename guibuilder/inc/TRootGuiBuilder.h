@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.12 2006/06/14 07:52:55 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.13 2006/06/14 10:22:37 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -64,6 +64,7 @@ class TImage;
 class TTimer;
 
 class TRootGuiBuilder : public TGuiBuilder, public TGMainFrame {
+friend class TGuiBldDragManager;
 
 private:
    TGuiBldDragManager *fManager;    // drag and drop manager

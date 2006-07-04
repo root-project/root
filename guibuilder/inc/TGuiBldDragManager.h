@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.12 2006/04/28 19:21:43 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.13 2006/05/28 20:15:09 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -189,6 +189,7 @@ private:
 
    Bool_t         IsMoveWaiting() const;
    Bool_t         IsLassoDrawn() const { return fLassoDrawn; }
+   void           SetLassoDrawn(Bool_t on);
    void           HideGrabRectangles();
    Bool_t         IgnoreEvent(Event_t *e);
    Bool_t         CheckDragResize(Event_t *event);
