@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.103 2006/05/29 14:00:36 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.104 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -1284,7 +1284,9 @@ void TRootCanvas::PrintCanvas()
       }
 
       gSystem->Exec(cmd);
+#ifndef WIN32
       gSystem->Unlink(fn);
+#endif
    }
    delete [] printer;
    delete [] printCmd;
