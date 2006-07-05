@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.5 2006/07/04 10:23:53 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.6 2006/07/04 23:45:50 rdm Exp $
 // Author: Marek Biskup   10/3/2005
 
 /*************************************************************************
@@ -46,6 +46,7 @@ TChainProof::~TChainProof()
 
    ReleaseProof();
    SafeDelete(fTree);
+   fDirectory    = 0;
 }
 
 //______________________________________________________________________________
@@ -914,10 +915,12 @@ void TChainProof::ConnectProof(TVirtualProof *proof)
       ReleaseProof();
    fProof = proof;
 
-   fDrawFeedback = fProof->CreateDrawFeedback();
+   if (fProof) {
+      fDrawFeedback = fProof->CreateDrawFeedback();
 
-   fProof->Connect("Progress(Long64_t,Long64_t)", "TChainProof",
-                   this, "Progress(Long64_t,Long64_t)");
+      fProof->Connect("Progress(Long64_t,Long64_t)", "TChainProof",
+                       this, "Progress(Long64_t,Long64_t)");
+   }
 }
 
 //______________________________________________________________________________
