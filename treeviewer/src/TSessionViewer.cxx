@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.68 2006/07/04 10:16:52 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.69 2006/07/04 23:45:50 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -1267,7 +1267,8 @@ void TSessionFrame::ProofInfos()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnUploadDSet()
 {
-   
+   // Open Upload Dataset dialog.
+
    if (fViewer->IsBusy())
       return;
    if (fViewer->GetActDesc()->fLocal) return;
@@ -1277,15 +1278,18 @@ void TSessionFrame::OnBtnUploadDSet()
 //______________________________________________________________________________
 void TSessionFrame::UpdateListOfDataSets()
 {
+   // Update list of dataset present on the cluster.
 
    TObjString *dsetname;
    TFileInfo  *dsetfilename;
+   // cleanup the list
    fDataSetTree->DeleteChildren(fDataSetTree->GetFirstItem());
    if (fViewer->GetActDesc()->fConnected && fViewer->GetActDesc()->fAttached &&
        fViewer->GetActDesc()->fProof && fViewer->GetActDesc()->fProof->IsValid() &&
        fViewer->GetActDesc()->fProof->IsParallel()) {
 
       const TGPicture *dseticon = fClient->GetPicture("rootdb_t.xpm");
+      // ask for the list of datasets
       TList *dsetlist = fViewer->GetActDesc()->fProof->GetDataSets();
       if(dsetlist) {
          TGListTreeItem *dsetitem;
@@ -1293,34 +1297,40 @@ void TSessionFrame::UpdateListOfDataSets()
          TIter nextdset(dsetlist);
          while ((dsetname = (TObjString *)nextdset())) {
             if (!fDataSetTree->FindItemByObj(fDataSetTree->GetFirstItem(), dsetname)) {
+               // add the dataset in the tree
                dsetitem = fDataSetTree->AddItem(fDataSetTree->GetFirstItem(), 
                                         dsetname->GetName(), dsetname);
+               // ask for the list of files in the dataset
                TList *dsetfilelist = fViewer->GetActDesc()->fProof->GetDataSet(
                                                             dsetname->GetName());
                if(dsetfilelist) {
                   TIter nextdsetfile(dsetfilelist);
                   while ((dsetfilename = (TFileInfo *)nextdsetfile())) {
                      if (! fDataSetTree->FindItemByObj(dsetitem, dsetfilename)) {
+                        // if not already in, add the file name in the tree
                         fDataSetTree->AddItem(dsetitem, 
                            dsetfilename->GetFirstUrl()->GetUrl(),
                            dsetfilename, dseticon, dseticon);
                      }
                   }
+                  // open the dataset item in order to show the files
                   fDataSetTree->OpenItem(dsetitem);
                }
             }
          }
       }
    }
+   // refresh list tree
    fClient->NeedRedraw(fDataSetTree);
 }
 
 //______________________________________________________________________________
 void TSessionFrame::OnBtnRemoveDSet()
 {
+   // Remove dataset from the list and from the cluster.
 
    TGListTreeItem *item;
-   TObjString *obj;
+   TObjString *obj = 0;
    if (fViewer->GetActDesc()->fLocal) return;
 
    item = fDataSetTree->GetSelected();
@@ -1336,7 +1346,7 @@ void TSessionFrame::OnBtnRemoveDSet()
    }
 
    // if valid Proof session, set parallel slaves
-   if (fViewer->GetActDesc()->fProof &&
+   if (obj && fViewer->GetActDesc()->fProof &&
       fViewer->GetActDesc()->fProof->IsValid()) {
       fViewer->GetActDesc()->fProof->RemoveDataSet(obj->GetName());
       UpdateListOfDataSets();
@@ -1346,9 +1356,10 @@ void TSessionFrame::OnBtnRemoveDSet()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnVerifyDSet()
 {
+   // Verify that the files in the selected dataset are present on the cluster.
 
    TGListTreeItem *item;
-   TObjString *obj;
+   TObjString *obj = 0;
    if (fViewer->GetActDesc()->fLocal) return;
 
    item = fDataSetTree->GetSelected();
@@ -1364,7 +1375,7 @@ void TSessionFrame::OnBtnVerifyDSet()
    }
 
    // if valid Proof session, set parallel slaves
-   if (fViewer->GetActDesc()->fProof &&
+   if (obj && fViewer->GetActDesc()->fProof &&
       fViewer->GetActDesc()->fProof->IsValid()) {
       fViewer->GetActDesc()->fProof->VerifyDataSet(obj->GetName());
    }
