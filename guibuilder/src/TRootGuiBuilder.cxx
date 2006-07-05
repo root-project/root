@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.36 2006/06/14 07:52:55 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.37 2006/06/14 10:22:37 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1165,6 +1165,12 @@ void TRootGuiBuilder::EnableLassoButtons(Bool_t on)
    if (btn) {
       btn->SetState(kButtonUp);
    }
+
+   btn = fToolBar->GetButton(kCropAct);
+   if (btn) {
+      btn->SetState(!on ? kButtonDisabled : kButtonUp);
+   }
+
 }
 
 //______________________________________________________________________________
@@ -1273,7 +1279,7 @@ void TRootGuiBuilder::EnableEditButtons(Bool_t on)
 
    btn = fToolBar->GetButton(kCropAct);
    if (btn) {
-      btn->SetState(!on ? kButtonDisabled : kButtonUp);
+      btn->SetState(!on && !lasso ? kButtonDisabled : kButtonUp);
    }
 
    btn = fToolBar->GetButton(kDeleteAct);

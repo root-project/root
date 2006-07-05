@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.49 2006/06/01 11:38:57 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.50 2006/07/04 09:21:56 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -6237,10 +6237,10 @@ void TGuiBldDragManager::SetLassoDrawn(Bool_t on)
    fLassoDrawn = on;
 
    if (fBuilder) {
-      fBuilder->EnableLassoButtons(on);
-
       if (on) {
          fBuilder->EnableEditButtons(kFALSE);
       }
+
+      fBuilder->EnableLassoButtons(on);
    }
 }
