@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: FuncHandler.cxx,v 1.7 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FuncHandler.cxx,v 1.8 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,6 +24,7 @@
 template < class R, class C >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(C::*)()) {
 //-------------------------------------------------------------------------------
+// Demangle return type of  a member function with 0 arguments.
    return Tools::Demangle(typeid(R));
 }
 
@@ -32,6 +33,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(C::*)()) {
 template < class R, class C, class T0>
 const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(C::*)(T0)) {
 //-------------------------------------------------------------------------------
+// Demangle return type of  a member function with 1 argument.
    return Tools::Demangle(typeid(R));
 }
 
@@ -40,6 +42,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(C::*)(T0)) {
 template < class R, class C, class T0, class T1 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(C::*)(T0,T1)) {
 //-------------------------------------------------------------------------------
+// Demangle return type of  a member function with 2 arguments.
    return Tools::Demangle(typeid(R));
 }
 
@@ -48,6 +51,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(C::*)(T0,T1)) 
 template < class R, class C, class T0, class T1, class T2 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(C::*)(T0,T1,T2)) {
 //-------------------------------------------------------------------------------
+// Demangle return type of  a member function with 3 arguments.
    return Tools::Demangle(typeid(R));
 }
 
@@ -56,6 +60,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(C::*)(T0,T1,T2
 template < class R, class C, class T0, class T1, class T2, class T3 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(C::*)(T0,T1,T2,T3)) {
 //-------------------------------------------------------------------------------
+// Demangle return type of  a member function with 4 arguments.
    return Tools::Demangle(typeid(R));
 }
 
@@ -64,6 +69,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(C::*)(T0,T1,T2
 template < class R, class C, class T0, class T1, class T2, class T3, class T4 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(C::*)(T0,T1,T2,T3,T4)) {
 //-------------------------------------------------------------------------------
+// Demangle return type of  a member function with 5 arguments.
    return Tools::Demangle(typeid(R));
 }
 
@@ -72,6 +78,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(C::*)(T0,T1,T2
 template < class R, class C >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(C::*)()) {
 //-------------------------------------------------------------------------------
+// Demangle parameters of a member function with 0 arguments.
    return "void";
 }
 
@@ -80,6 +87,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(C::*)()) {
 template < class R, class C, class T0>
 const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(C::*)(T0)) {
 //-------------------------------------------------------------------------------
+// Demangle parameters of a member function with 1 argument.
    return Tools::Demangle(typeid(T0));
 }
 
@@ -88,6 +96,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(C::*)(T0)) {
 template < class R, class C, class T0, class T1 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(C::*)(T0,T1)) {
 //-------------------------------------------------------------------------------
+// Demangle parameters of a member function with 2 arguments.
    std::string s = 
       Tools::Demangle(typeid(T0)) + ";" +
       Tools::Demangle(typeid(T1));
@@ -99,6 +108,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(C::*)(T0,T1))
 template < class R, class C, class T0, class T1, class T2 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(C::*)(T0,T1,T2)) {
 //-------------------------------------------------------------------------------
+// Demangle parameters of a member function with 3 arguments.
    std::string s =
       Tools::Demangle(typeid(T0)) + ";" +
       Tools::Demangle(typeid(T1)) + ";" +
@@ -111,6 +121,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(C::*)(T0,T1,T
 template < class R, class C, class T0, class T1, class T2, class T3 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(C::*)(T0,T1,T2,T3)) {
 //-------------------------------------------------------------------------------
+// Demangle parameters of a member function with 4 arguments.
    std::string s = 
       Tools::Demangle(typeid(T0)) + ";" +
       Tools::Demangle(typeid(T1)) + ";" +
@@ -124,6 +135,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(C::*)(T0,T1,T
 template < class R, class C, class T0, class T1, class T2, class T3, class T4 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(C::*)(T0,T1,T2,T3,T4)) {
 //-------------------------------------------------------------------------------
+// Demangle parameters of a member function with 5 arguments.
    std::string s = 
       Tools::Demangle(typeid(T0)) + ";" +
       Tools::Demangle(typeid(T1)) + ";" +
@@ -138,6 +150,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(C::*)(T0,T1,T
 template < class R >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(*)()) {
 //-------------------------------------------------------------------------------
+// Demangle return type of a free function with 0 arguments.
    return Tools::Demangle(typeid(R));
 }
 
@@ -146,6 +159,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(*)()) {
 template < class R, class T0>
 const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(*)(T0)) {
 //-------------------------------------------------------------------------------
+// Demangle return type of a free function with 0 arguments.
    return Tools::Demangle(typeid(R));
 }
 
@@ -154,6 +168,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(*)(T0)) {
 template < class R, class T0, class T1 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(*)(T0,T1)) {
 //-------------------------------------------------------------------------------
+// Demangle return type of a free function with 0 arguments.
    return Tools::Demangle(typeid(R));
 }
 
@@ -162,6 +177,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(*)(T0,T1)) {
 template < class R, class T0, class T1, class T2 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(*)(T0,T1,T2)) {
 //-------------------------------------------------------------------------------
+// Demangle return type of a free function with 0 arguments.
    return Tools::Demangle(typeid(R));
 }
 
@@ -170,6 +186,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(*)(T0,T1,T2)) 
 template < class R, class T0, class T1, class T2, class T3 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(*)(T0,T1,T2,T3)) {
 //-------------------------------------------------------------------------------
+// Demangle return type of a free function with 0 arguments.
    return Tools::Demangle(typeid(R));
 }
 
@@ -178,6 +195,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(*)(T0,T1,T2,T3
 template < class R, class T0, class T1, class T2, class T3, class T4 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(*)(T0,T1,T2,T3,T4)) {
 //-------------------------------------------------------------------------------
+// Demangle return type of a free function with 0 arguments.
    return Tools::Demangle(typeid(R));
 }
 
@@ -186,6 +204,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunRetType(R(*)(T0,T1,T2,T3
 template < class R >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(*)()) {
 //-------------------------------------------------------------------------------
+// Demangle parameter types of a free function with 0 arguments.
    return "void";
 }
 
@@ -194,6 +213,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(*)()) {
 template < class R, class T0>
 const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(*)(T0)) {
 //-------------------------------------------------------------------------------
+// Demangle parameter types of a free function with 1 argument.
    return Tools::Demangle(typeid(T0));
 }
 
@@ -202,6 +222,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(*)(T0)) {
 template < class R, class T0, class T1 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(*)(T0,T1)) {
 //-------------------------------------------------------------------------------
+// Demangle parameter types of a free function with 2 arguments.
    std::string s = 
       Tools::Demangle(typeid(T0)) + ";" +
       Tools::Demangle(typeid(T1));
@@ -213,6 +234,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(*)(T0,T1)) {
 template < class R, class T0, class T1, class T2 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(*)(T0,T1,T2)) {
 //-------------------------------------------------------------------------------
+// Demangle parameter types of a free function with 3 arguments.
    std::string s = 
       Tools::Demangle(typeid(T0)) + ";" +
       Tools::Demangle(typeid(T1)) + ";" +
@@ -225,6 +247,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(*)(T0,T1,T2))
 template < class R, class T0, class T1, class T2, class T3 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(*)(T0,T1,T2,T3)) {
 //-------------------------------------------------------------------------------
+// Demangle parameter types of a free function with 4 arguments.
    std::string s = 
       Tools::Demangle(typeid(T0)) + ";" +
       Tools::Demangle(typeid(T1)) + ";" +
@@ -238,6 +261,7 @@ const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(*)(T0,T1,T2,T
 template < class R, class T0, class T1, class T2, class T3, class T4 >
 const std::string ROOT::Reflex::FuncHandler::DemangleFunParTypes(R(*)(T0,T1,T2,T3,T4)) {
 //-------------------------------------------------------------------------------
+// Demangle parameter types of a free function with 5 arguments.
    std::string s = 
       Tools::Demangle(typeid(T0)) + ";" +
       Tools::Demangle(typeid(T1)) + ";" +

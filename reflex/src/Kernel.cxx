@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Kernel.cxx,v 1.12 2006/07/03 17:02:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.11 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -34,6 +34,7 @@
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reflex::Reflex() {
 //-------------------------------------------------------------------------------
+// Initialisation of Reflex.Setup of global scope, fundamental types.
 
    /** initialisation of the global namespace */
    Namespace::InitGlobalNamespace();
@@ -173,6 +174,7 @@ ROOT::Reflex::Reflex::Reflex() {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::StdString_Cont_Type_t & ROOT::Reflex::Dummy::StdStringCont() {
 //-------------------------------------------------------------------------------
+// static wrapper for an empty container of std strings.
    static StdString_Cont_Type_t c;
    return c;
 }
@@ -181,6 +183,7 @@ ROOT::Reflex::StdString_Cont_Type_t & ROOT::Reflex::Dummy::StdStringCont() {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type_Cont_Type_t & ROOT::Reflex::Dummy::TypeCont() {
 //-------------------------------------------------------------------------------
+// static wrapper for an empty container of Types.
    static Type_Cont_Type_t c;
    return c;
 }
@@ -189,6 +192,7 @@ ROOT::Reflex::Type_Cont_Type_t & ROOT::Reflex::Dummy::TypeCont() {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Base_Cont_Type_t & ROOT::Reflex::Dummy::BaseCont() {
 //-------------------------------------------------------------------------------
+// static wrapper for an empty container of Bases.
    static Base_Cont_Type_t c;
    return c;
 }
@@ -197,6 +201,7 @@ ROOT::Reflex::Base_Cont_Type_t & ROOT::Reflex::Dummy::BaseCont() {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope_Cont_Type_t & ROOT::Reflex::Dummy::ScopeCont() {
 //-------------------------------------------------------------------------------
+// static wrapper for an empty container of Scopes.
    static Scope_Cont_Type_t c;
    return c;
 }
@@ -205,6 +210,7 @@ ROOT::Reflex::Scope_Cont_Type_t & ROOT::Reflex::Dummy::ScopeCont() {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Object_Cont_Type_t & ROOT::Reflex::Dummy::ObjectCont() {
 //-------------------------------------------------------------------------------
+// static wrapper for an empty container of Objects.
    static Object_Cont_Type_t c;
    return c;
 }
@@ -213,6 +219,7 @@ ROOT::Reflex::Object_Cont_Type_t & ROOT::Reflex::Dummy::ObjectCont() {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member_Cont_Type_t & ROOT::Reflex::Dummy::MemberCont() {
 //-------------------------------------------------------------------------------
+// static wrapper for an empty container of Members.
    static Member_Cont_Type_t c;
    return c;
 }
@@ -221,6 +228,7 @@ ROOT::Reflex::Member_Cont_Type_t & ROOT::Reflex::Dummy::MemberCont() {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::TypeTemplate_Cont_Type_t & ROOT::Reflex::Dummy::TypeTemplateCont() {
 //-------------------------------------------------------------------------------
+// static wrapper for an empty container of TypeTemplates.
    static TypeTemplate_Cont_Type_t c;
    return c;
 }
@@ -229,6 +237,7 @@ ROOT::Reflex::TypeTemplate_Cont_Type_t & ROOT::Reflex::Dummy::TypeTemplateCont()
 //-------------------------------------------------------------------------------
 ROOT::Reflex::MemberTemplate_Cont_Type_t & ROOT::Reflex::Dummy::MemberTemplateCont() {
 //-------------------------------------------------------------------------------
+// static wrapper for an empty container of MemberTemplates.
    static MemberTemplate_Cont_Type_t c;
    return c;
 }
@@ -237,6 +246,7 @@ ROOT::Reflex::MemberTemplate_Cont_Type_t & ROOT::Reflex::Dummy::MemberTemplateCo
 //-------------------------------------------------------------------------------
 const std::string & ROOT::Reflex::Reflex::Argv0() {
 //-------------------------------------------------------------------------------
+// Return the name of the package.
    static std::string str = "REFLEX";
    return str;
 }

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: MemberBase.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.9 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -31,20 +31,20 @@ ROOT::Reflex::MemberBase::MemberBase( const char *  name,
                                       TYPE          memberType,
                                       unsigned int  modifiers )
 //-------------------------------------------------------------------------------
+// Construct the dictionary info for a member
    : fType( type, modifiers & ( CONST | VOLATILE | REFERENCE ), true ),
      fModifiers( modifiers ),
      fName( name ),
      fScope( Scope() ),
      fMemberType( memberType ),
      fPropertyList( PropertyList( new PropertyListImpl())) {
-   // Construct the dictionary info for a member
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::MemberBase::~MemberBase() {
 //-------------------------------------------------------------------------------
-   // destructor.
+// Destructor.
    fPropertyList.ClearProperties();
 }
 
@@ -52,7 +52,7 @@ ROOT::Reflex::MemberBase::~MemberBase() {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::MemberBase::operator ROOT::Reflex::Member () const {
 //-------------------------------------------------------------------------------
-   // Conversion operator to Member.
+// Conversion operator to Member.
    return Member( this );
 }
 
@@ -60,7 +60,7 @@ ROOT::Reflex::MemberBase::operator ROOT::Reflex::Member () const {
 //-------------------------------------------------------------------------------
 void * ROOT::Reflex::MemberBase::CalculateBaseObject( const Object & obj ) const {
 //-------------------------------------------------------------------------------
-   // Return the object address a member lives in.
+// Return the object address a member lives in.
    char * mem = (char*)obj.Address();
    // check if its a dummy object 
    Type cl = obj.TypeOf();
@@ -94,7 +94,7 @@ void * ROOT::Reflex::MemberBase::CalculateBaseObject( const Object & obj ) const
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope ROOT::Reflex::MemberBase::DeclaringScope() const {
 //-------------------------------------------------------------------------------
-   // Return the scope the member lives in.
+// Return the scope the member lives in.
    return fScope;
 }
 
@@ -102,7 +102,7 @@ ROOT::Reflex::Scope ROOT::Reflex::MemberBase::DeclaringScope() const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::MemberBase::DeclaringType() const {
 //-------------------------------------------------------------------------------
-   // Return the type the member lives in.
+// Return the type the member lives in.
    return DeclaringScope();
 }
 
