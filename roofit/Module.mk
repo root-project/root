@@ -38,7 +38,7 @@ ROOFITH1     := Roo1DTable.h Roo2DKeysPdf.h RooAbsAnaConvPdf.h RooAbsArg.h RooAb
                 RooBreitWigner.h RooBrentRootFinder.h RooBukinPdf.h RooCategory.h RooCategoryProxy.h RooCategorySharedProperties.h \
                 RooCatType.h RooCBShape.h RooChebychev.h RooChi2Var.h RooClassFactory.h RooCmdArg.h RooCmdConfig.h RooComplex.h \
                 RooConstVar.h RooConvCoefVar.h RooConvGenContext.h RooConvIntegrandBinding.h RooCurve.h RooCustomizer.h \
-                 RooGlobalFunc.h
+                RooGlobalFunc.h
 ROOFITH2     := RooDataHist.h RooDataProjBinding.h RooDataSet.h RooDecay.h RooDirItem.h RooDouble.h RooDstD0BG.h RooEffGenContext.h \
                 RooEfficiency.h RooEffProd.h RooEllipse.h RooErrorHandler.h RooErrorVar.h RooExponential.h RooExtendPdf.h \
                 RooFitResult.h RooFormula.h RooFormulaVar.h RooGaussian.h RooGaussKronrodIntegrator1D.h RooGaussModel.h \
@@ -95,13 +95,13 @@ $(ROOFITETAG): $(ROOFITSRCS)
 		   touch $$etag ; \
 		fi)
 
-$(ROOFITH):     $(ROOFITETAG)
+$(ROOFITH)      $(ROOFITL1) $(ROOFITL2) $(ROOFITL3): $(ROOFITETAG)
 
 # Use static rule here instead of implicit rule
 $(ROOFITINCH):  include/%.h: $(ROOFITDIRI)/%.h
 		cp $< $@
 
-$(ROOFITLIB):   $(ROOFITO) $(ROOFITDO) $(MAINLIBS) $(ROOFITLIBDEP)
+$(ROOFITLIB):   $(ROOFITO) $(ROOFITDO) $(ORDER_) $(MAINLIBS) $(ROOFITLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRooFit.$(SOEXT) $@ "$(ROOFITO) $(ROOFITDO)" \
 		   "$(ROOFITLIBEXTRA)"
@@ -117,15 +117,6 @@ $(ROOFITDS2):   $(ROOFITETAG) $(ROOFITH2) $(ROOFITL2) $(ROOTCINTTMPEXE)
 $(ROOFITDS3):   $(ROOFITETAG) $(ROOFITH3) $(ROOFITL3) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ROOFITH3) $(ROOFITL3)
-
-$(ROOFITDO1):   $(ROOFITDS1)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
-$(ROOFITDO2):   $(ROOFITDS2)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
-$(ROOFITDO3):   $(ROOFITDS3)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-roofit:     $(ROOFITLIB)
 
