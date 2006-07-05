@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.2 2006/04/12 16:30:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.3 2006/06/26 11:03:55 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -163,10 +163,10 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    
 #ifdef DEBUG
    std::cout << "\n\nDEBUG Variable Metric Builder  \nInitial State: "  
-      << " Parameter " << initialState.Vec()       
-      << " Gradient " << initialState.Gradient().Vec() 
-      << " Inv Hessian " << initialState.Error().InvHessian()  
-      << " edm = " << initialState.Edm() << std::endl;
+             << " Parameter " << initialState.Vec()       
+             << " Gradient " << initialState.Gradient().Vec() 
+             << " Inv Hessian " << initialState.Error().InvHessian()  
+             << " edm = " << initialState.Edm() << std::endl;
 #endif
    
    
@@ -187,9 +187,9 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       
 #ifdef DEBUG
       std::cout << "\n\n---> Iteration - " << result.size() 
-	      << "\nFval = " << s0.Fval() << " numOfCall = " << fcn.NumOfCalls() 
-	      << "\nInternal Parameter values " << s0.Vec() 
-	      << " Newton step " << step << std::endl; 
+                << "\nFval = " << s0.Fval() << " numOfCall = " << fcn.NumOfCalls() 
+                << "\nInternal Parameter values " << s0.Vec() 
+                << " Newton step " << step << std::endl; 
 #endif
       
       
@@ -227,9 +227,9 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       
 #ifdef DEBUG
       std::cout << "Result after line search : \nx = " << pp.x() 
-	      << "\nOld Fval = " << s0.Fval() 
-	      << "\nNew Fval = " << pp.y() 
-	      << "\nNFcalls = " << fcn.NumOfCalls() << std::endl; 
+                << "\nOld Fval = " << s0.Fval() 
+                << "\nNew Fval = " << pp.y() 
+                << "\nNFcalls = " << fcn.NumOfCalls() << std::endl; 
 #endif
       
       MinimumParameters p(s0.Vec() + pp.x()*step, pp.y());
@@ -256,11 +256,11 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       
 #ifdef DEBUG
       std::cout << "Updated new point: \n " 
-         << " Parameter " << p.Vec()       
-	      << " Gradient " << g.Vec() 
-	      << " InvHessian " << e.Matrix() 
-	      << " Hessian " << e.Hessian() 
-	      << " edm = " << edm << std::endl << std::endl;
+                << " Parameter " << p.Vec()       
+                << " Gradient " << g.Vec() 
+                << " InvHessian " << e.Matrix() 
+                << " Hessian " << e.Hessian() 
+                << " edm = " << edm << std::endl << std::endl;
 #endif
       
       
@@ -304,14 +304,14 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    
 #ifdef DEBUG
    std::cout << "Exiting succesfully Variable Metric Builder \n" 
-      << "NFCalls = " << fcn.NumOfCalls() 
-      << "\nFval = " <<  result.back().Fval() 
-      << "\nedm = " << edm << " requested = " << edmval << std::endl; 
+             << "NFCalls = " << fcn.NumOfCalls() 
+             << "\nFval = " <<  result.back().Fval() 
+             << "\nedm = " << edm << " requested = " << edmval << std::endl; 
 #endif
    
    return FunctionMinimum(seed, result, fcn.Up());
 }
 
-  }  // namespace Minuit2
+   }  // namespace Minuit2
 
 }  // namespace ROOT

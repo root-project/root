@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.cxx,v 1.3 2006/07/03 22:06:42 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.cxx,v 1.4 2006/07/04 10:36:52 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -180,7 +180,7 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
       }
       //     std::cout<<" slam= "<<slam<<std::endl;
       
-      double F3 = 0.;
+      double f3 = 0.;
       do {
          iterate = false;
          double toler9 = std::max(toler8, fabs(toler8*slam));
@@ -188,7 +188,7 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
          if(fabs(p0.x() - slam) < toler9 || 
             fabs(p1.x() - slam) < toler9 || 
             fabs(p2.x() - slam) < toler9) {
-            //   	std::cout<<"f1, f2, F3= "<<p0.y()<<", "<<p1.y()<<", "<<p2.y()<<std::endl;
+            //   	std::cout<<"f1, f2, f3= "<<p0.y()<<", "<<p1.y()<<", "<<p2.y()<<std::endl;
             //   	std::cout<<"x1, x2, x3= "<<p0.x()<<", "<<p1.x()<<", "<<p2.x()<<std::endl;
             //   	std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
             return MnParabolaPoint(xvmin, fvmin);
@@ -197,12 +197,12 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
          // take the step
          //       MnAlgebraicVector tmp = step;
          //       tmp *= slam;
-         F3 = fcn(st.Vec() + slam*step);
-         //       std::cout<<"F3= "<<F3<<std::endl;
-         //       std::cout<<"F3-p(2-0).y()= "<<F3-p2.y()<<" "<<F3-p1.y()<<" "<<F3-p0.y()<<std::endl;
+         f3 = fcn(st.Vec() + slam*step);
+         //       std::cout<<"f3= "<<f3<<std::endl;
+         //       std::cout<<"f3-p(2-0).y()= "<<f3-p2.y()<<" "<<f3-p1.y()<<" "<<f3-p0.y()<<std::endl;
          // if latest point worse than all three previous, cut step
-         if(F3 > p0.y() && F3 > p1.y() && F3 > p2.y()) {
-            //   	std::cout<<"F3 worse than all three previous"<<std::endl;
+         if(f3 > p0.y() && f3 > p1.y() && f3 > p2.y()) {
+            //   	std::cout<<"f3 worse than all three previous"<<std::endl;
             if(slam > xvmin) overal = std::min(overal, slam-toler8);
             if(slam < xvmin) undral = std::max(undral, slam+toler8);	
             slam = 0.5*(slam + xvmin);
@@ -217,12 +217,12 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
       }
       
       // find worst previous point out of three and replace
-      MnParabolaPoint p3(slam, F3);
+      MnParabolaPoint p3(slam, f3);
       if(p0.y() > p1.y() && p0.y() > p2.y()) p0 = p3;
       else if(p1.y() > p0.y() && p1.y() > p2.y()) p1 = p3;
       else p2 = p3;
-      if(F3 < fvmin) {
-         fvmin = F3;
+      if(f3 < fvmin) {
+         fvmin = f3;
          xvmin = slam;
       } else {
          if(slam > xvmin) overal = std::min(overal, slam-toler8);

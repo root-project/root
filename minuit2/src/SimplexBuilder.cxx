@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: SimplexBuilder.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: SimplexBuilder.cxx,v 1.2 2006/07/04 10:36:52 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -83,8 +83,8 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
       
 #ifdef DEBUG
       std::cout << "\n\nsimplex iteration: edm =  " << simplex.Edm()  
-	      << "\n--> Min Param is  " << jl << " pmin " << simplex(jl).second << " f(pmin) " << amin 
-	      << "\n--> Max param is " << jh << "  " << simplex(jh).first << std::endl;
+                << "\n--> Min Param is  " << jl << " pmin " << simplex(jl).second << " f(pmin) " << amin 
+                << "\n--> Max param is " << jh << "  " << simplex(jh).first << std::endl;
       
       //     std::cout << "ALL SIMPLEX PARAMETERS: "<< std::endl; 
       //     for (unsigned int i = 0; i < simplex.Simplex().size(); ++i)  

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: mnteigen.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: mnteigen.cxx,v 1.2 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -20,7 +20,7 @@ namespace ROOT {
 
 
 int mneigen(double* a, unsigned int ndima, unsigned int n, unsigned int mits, 
-	    double* work, double precis) {
+            double* work, double precis) {
    // compute matrix eignevalues (transaltion from mneig.F of Minuit)
    
    /* System generated locals */

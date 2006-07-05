@@ -47,12 +47,13 @@ TFitterMinuit* gMinuit2 = 0;
 
 TFitterMinuit::TFitterMinuit() : fErrorDef(0.) , fEDMVal(0.), fGradient(false),
 fState(MnUserParameterState()), fMinosErrors(std::vector<MinosError>()), fMinimizer(0), fMinuitFCN(0), fDebug(1), fStrategy(1), fMinTolerance(0) {
+   // Default constructor . Srategy and tolerance set to default values.
    Initialize();
 }
 
 
-// needed this additional contructor ? 
 TFitterMinuit::TFitterMinuit(Int_t /* maxpar */) : fErrorDef(0.) , fEDMVal(0.), fGradient(false), fState(MnUserParameterState()), fMinosErrors(std::vector<MinosError>()), fMinimizer(0), fMinuitFCN(0), fDebug(1), fStrategy(1), fMinTolerance(0) { 
+   // Constructur needed by TVirtualFitter interface. Same behavior as default constructor.
    Initialize();
 }
 

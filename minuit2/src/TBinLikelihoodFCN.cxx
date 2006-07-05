@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TBinLikelihoodFCN.cxx,v 1.4 2006/04/26 10:40:09 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TBinLikelihoodFCN.cxx,v 1.5 2006/07/04 10:36:52 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -28,18 +28,18 @@
 TBinLikelihoodFCN::TBinLikelihoodFCN( const TVirtualFitter & fitter) : 
   fUp(0.5), fOwner(true)
 { 
-     // constructor (create fit data class) and keep a pointer to the model function
-     fFunc = dynamic_cast<TF1 *> ( fitter.GetUserFunc() );
-     assert(fFunc != 0);
-     // to do: use class for likelihood data (errors are not necessary)
-     // in likelihood fit need to keep empty bins
-     fData = new TChi2FitData(fitter, false); 
+   // constructor (create fit data class) and keep a pointer to the model function
+   fFunc = dynamic_cast<TF1 *> ( fitter.GetUserFunc() );
+   assert(fFunc != 0);
+   // to do: use class for likelihood data (errors are not necessary)
+   // in likelihood fit need to keep empty bins
+   fData = new TChi2FitData(fitter, false); 
 #ifdef DEBUG
-     std::cout << "Created FitData with size = " << fData->Size() << std::endl;
+   std::cout << "Created FitData with size = " << fData->Size() << std::endl;
 #endif
-     
-     // need to set the size so ROOT can calculate ndf.
-     fFunc->SetNumberFitPoints(fData->Size());
+   
+   // need to set the size so ROOT can calculate ndf.
+   fFunc->SetNumberFitPoints(fData->Size());
 }
 
 

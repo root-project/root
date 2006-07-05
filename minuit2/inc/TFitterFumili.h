@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.h,v 1.2 2006/04/26 10:40:09 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.h,v 1.3 2006/07/03 15:48:06 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -26,41 +26,41 @@ class TFitterFumili : public TFitterMinuit {
    
 public:
 
-  TFitterFumili();
+   TFitterFumili();
 
-  TFitterFumili(Int_t maxpar);
+   TFitterFumili(Int_t maxpar);
 
-  virtual ~TFitterFumili() { } 
+   virtual ~TFitterFumili() { } 
 
 public:
 
-  //inherited interface
-  virtual Double_t  Chisquare(Int_t npar, Double_t *params) const;
+   //inherited interface
+   virtual Double_t  Chisquare(Int_t npar, Double_t *params) const;
 
 
-  //virtual FunctionMinimum Minimize(  int nfcn = 0, double edmval = 0.1) const;
+   //virtual FunctionMinimum Minimize(  int nfcn = 0, double edmval = 0.1) const;
 
 
   
 
 protected: 
 
-  void CreateMinimizer(EMinimizerType ); 
+   void CreateMinimizer(EMinimizerType ); 
 
-  void CreateChi2FCN(); 
+   void CreateChi2FCN(); 
 
-  void CreateChi2ExtendedFCN(); 
+   void CreateChi2ExtendedFCN(); 
 
-  void CreateUnbinLikelihoodFCN() {}
+   void CreateUnbinLikelihoodFCN() {}
 
-  void CreateBinLikelihoodFCN();
+   void CreateBinLikelihoodFCN();
    
 private:
 
   
 
-  ClassDef(TFitterFumili,1) // Fitter based on new Fumili method (Fumili2)
-};
+   ClassDef(TFitterFumili,1) // Fitter based on new Fumili method (Fumili2)
+      };
 
 R__EXTERN TFitterFumili* gFumili2;
 

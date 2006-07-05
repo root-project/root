@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.5 2006/03/20 08:22:40 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.6 2006/07/03 15:48:06 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -25,34 +25,34 @@
 */
 
 namespace ROOT { 
-  namespace Minuit2 { 
-    class FunctionMinimum;
-  }
+   namespace Minuit2 { 
+      class FunctionMinimum;
+   }
 }
 
 class TFitterMinuit : public TVirtualFitter {
 
 public:
 
-  // enumeration specifying the minimizers
-  enum EMinimizerType { 
-    kMigrad, 
-    kSimplex, 
-    kCombined, 
-    kScan,
-    kFumili
-  };
+   // enumeration specifying the minimizers
+   enum EMinimizerType { 
+      kMigrad, 
+      kSimplex, 
+      kCombined, 
+      kScan,
+      kFumili
+   };
    
 
-  TFitterMinuit();
+   TFitterMinuit();
 
-  TFitterMinuit(Int_t maxpar);
+   TFitterMinuit(Int_t maxpar);
 
-  virtual ~TFitterMinuit();
+   virtual ~TFitterMinuit();
 
 public:
 
-  // inherited interface
+   // inherited interface
    virtual Double_t  Chisquare(Int_t npar, Double_t *params) const;
    virtual void      Clear(Option_t *option="");
    virtual Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs);
@@ -83,87 +83,87 @@ public:
    // this for CINT (interactive functions)
    virtual void      SetFCN(void * );
 
-  // set FCN using Minuit interface
-  // you pass to the class ownership of FCNBase pointer
+   // set FCN using Minuit interface
+   // you pass to the class ownership of FCNBase pointer
 
-  virtual void SetMinuitFCN(  ROOT::Minuit2::FCNBase * f);
+   virtual void SetMinuitFCN(  ROOT::Minuit2::FCNBase * f);
 
-  // methods needed by derived classes 
-  virtual const ROOT::Minuit2::MnUserParameterState & State() const { return fState; } 
+   // methods needed by derived classes 
+   virtual const ROOT::Minuit2::MnUserParameterState & State() const { return fState; } 
 
-  virtual const ROOT::Minuit2::FCNBase * GetMinuitFCN() const { return fMinuitFCN; } 
+   virtual const ROOT::Minuit2::FCNBase * GetMinuitFCN() const { return fMinuitFCN; } 
 
-  virtual const ROOT::Minuit2::ModularFunctionMinimizer * GetMinimizer() const { return fMinimizer; }
+   virtual const ROOT::Minuit2::ModularFunctionMinimizer * GetMinimizer() const { return fMinimizer; }
 
 
-  // additional abstract methods to be implemented by derived classes 
-  virtual int Minimize(  int nfcn = 0, double edmval = 0.1);
+   // additional abstract methods to be implemented by derived classes 
+   virtual int Minimize(  int nfcn = 0, double edmval = 0.1);
 
-  int GetStrategy() { return fStrategy; }
+   int GetStrategy() { return fStrategy; }
 
-  int PrintLevel() { return fDebug; }
+   int PrintLevel() { return fDebug; }
 
-  void SetStrategy( int stra) { fStrategy = stra; } 
+   void SetStrategy( int stra) { fStrategy = stra; } 
 
-  void SetPrintLevel(int level ) { fDebug = level; } 
+   void SetPrintLevel(int level ) { fDebug = level; } 
 
-  // set minimum tolerance to avoid having clients (as TGraf::Fit) setting tolerances too small
-  void SetMinimumTolerance(double mintol) { fMinTolerance = mintol; }
+   // set minimum tolerance to avoid having clients (as TGraf::Fit) setting tolerances too small
+   void SetMinimumTolerance(double mintol) { fMinTolerance = mintol; }
 
-  double MinimumTolerance() const { return fMinTolerance; }
+   double MinimumTolerance() const { return fMinTolerance; }
 
-  /// create the minimizer type (Migard or Simplex)
-  //  can be re-implemented in the derived classes 
+   /// create the minimizer type (Migard or Simplex)
+   //  can be re-implemented in the derived classes 
 
-  virtual void CreateMinimizer(EMinimizerType = kMigrad ); 
+   virtual void CreateMinimizer(EMinimizerType = kMigrad ); 
   
 
 protected: 
 
-  // method to set internal data (no copying involved so - make protected )
+   // method to set internal data (no copying involved so - make protected )
 
-  virtual ROOT::Minuit2::MnUserParameterState & State() { return fState; }
+   virtual ROOT::Minuit2::MnUserParameterState & State() { return fState; }
 
-  virtual void SetMinimizer( ROOT::Minuit2::ModularFunctionMinimizer * m) { fMinimizer = m; }
+   virtual void SetMinimizer( ROOT::Minuit2::ModularFunctionMinimizer * m) { fMinimizer = m; }
 
 
-  // functions to create FCN - re-implemented in derived class (GFumili)
+   // functions to create FCN - re-implemented in derived class (GFumili)
 
-  virtual void CreateChi2FCN(); 
+   virtual void CreateChi2FCN(); 
 
-  virtual void CreateChi2ExtendedFCN(); 
+   virtual void CreateChi2ExtendedFCN(); 
 
-  virtual void CreateBinLikelihoodFCN();
+   virtual void CreateBinLikelihoodFCN();
 
-  virtual void CreateUnbinLikelihoodFCN() {}
+   virtual void CreateUnbinLikelihoodFCN() {}
 
-  // internal function to perform the actual minimization (could be implemented by derived classes)
-  virtual ROOT::Minuit2::FunctionMinimum DoMinimization( int nfcn = 0, double edmval = 0.1);
+   // internal function to perform the actual minimization (could be implemented by derived classes)
+   virtual ROOT::Minuit2::FunctionMinimum DoMinimization( int nfcn = 0, double edmval = 0.1);
 
-  // internal funcition to study Function minimum results
-  // return 0 if function minimum is OK or an error code
+   // internal funcition to study Function minimum results
+   // return 0 if function minimum is OK or an error code
 
-  virtual int ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & );
+   virtual int ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & );
   
-  virtual void Initialize();
+   virtual void Initialize();
    
 private:
 
-  double fErrorDef;
-  double fEDMVal;
-  bool fGradient;
+   double fErrorDef;
+   double fEDMVal;
+   bool fGradient;
 
-  ROOT::Minuit2::MnUserParameterState fState;
-  std::vector<ROOT::Minuit2::MinosError> fMinosErrors;
-  ROOT::Minuit2::ModularFunctionMinimizer * fMinimizer;
-  ROOT::Minuit2::FCNBase * fMinuitFCN;
-  int fDebug;
-  int fStrategy;
-  double fMinTolerance;
+   ROOT::Minuit2::MnUserParameterState fState;
+   std::vector<ROOT::Minuit2::MinosError> fMinosErrors;
+   ROOT::Minuit2::ModularFunctionMinimizer * fMinimizer;
+   ROOT::Minuit2::FCNBase * fMinuitFCN;
+   int fDebug;
+   int fStrategy;
+   double fMinTolerance;
 
 
-  ClassDef(TFitterMinuit,1)  // The ROOT fitter based on new Minuit (Minuit2)
-};
+   ClassDef(TFitterMinuit,1)  // The ROOT fitter based on new Minuit (Minuit2)
+      };
 
 R__EXTERN TFitterMinuit* gMinuit2;
 

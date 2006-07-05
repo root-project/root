@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: mndspr.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: mndspr.cxx,v 1.2 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -21,7 +21,7 @@ bool mnlsame(const char*, const char*);
 int mnxerbla(const char*, int);
 
 int mndspr(const char* uplo, unsigned int n, double alpha, 
-	   const double* x, int incx, double* ap) {
+           const double* x, int incx, double* ap) {
    /* System generated locals */
    int i__1, i__2;
    

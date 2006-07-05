@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: NegativeG2LineSearch.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: NegativeG2LineSearch.cxx,v 1.2 2006/07/04 10:36:52 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -31,7 +31,7 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
 //   continue iteration in case the second derivatives are still negative
 //
 
-  bool negG2 = HasNegativeG2(st.Gradient(), prec);
+   bool negG2 = HasNegativeG2(st.Gradient(), prec);
    if(!negG2) return st;
    
    unsigned int n = st.Parameters().Vec().size();

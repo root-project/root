@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2FitData.cxx,v 1.4 2006/04/26 10:40:09 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2FitData.cxx,v 1.5 2006/07/04 10:36:52 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -104,8 +104,8 @@ void TChi2FitData::GetFitData(const TH1 * hfit, const TF1 * func, const TVirtual
    
 #ifdef DEBUG
    std::cout << "TChi2FitData: ifirst = " << hxfirst << " ilast =  " << hxlast 
-	     << "total bins  " << hxlast-hxfirst+1  
-	     << "skip empty bins "  << fSkipEmptyBins << std::endl; 
+             << "total bins  " << hxlast-hxfirst+1  
+             << "skip empty bins "  << fSkipEmptyBins << std::endl; 
 #endif
    
    fInvErrors.reserve(n);
