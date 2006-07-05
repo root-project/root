@@ -101,9 +101,13 @@ STRESSO       = stress.$(ObjSuf)
 STRESSS       = stress.$(SrcSuf)
 STRESS        = stress$(ExeSuf)
 
-STRESSGEOMO   = stressGeom.$(ObjSuf)
-STRESSGEOMS   = stressGeom.$(SrcSuf)
-STRESSGEOM    = stressGeom$(ExeSuf)
+STRESSGEOMETRYO   = stressGeometry.$(ObjSuf)
+STRESSGEOMETRYS   = stressGeometry.$(SrcSuf)
+STRESSGEOMETRY    = stressGeometry$(ExeSuf)
+
+STRESSSHAPESO   = stressShapes.$(ObjSuf)
+STRESSSHAPESS   = stressShapes.$(SrcSuf)
+STRESSSHAPES    = stressShapes$(ExeSuf)
 
 STRESSFITO    = stressFit.$(ObjSuf)
 STRESSFITS    = stressFit.$(SrcSuf)
@@ -135,14 +139,14 @@ THREADS       = threads$(ExeSuf)
 
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
-                $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
-                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO) $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
+                $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) $(STRESSSHAPESO) \
+                $(TCOLLBMO) $(STRESSGEOMETRYO) $(STRESSLO) $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO) $(STRESSFITO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
-                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
-                $(STRESSGEOM) $(STRESSL) $(STRESSG) $(TESTBITS) $(CTORTURE) $(QPRANDOM) \
+                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) $(STRESSSHAPES) \
+                $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) $(TESTBITS) $(CTORTURE) $(QPRANDOM) \
                 $(THREADS) $(STRESSSP) $(STRESSVEC) $(STRESSFIT)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
@@ -287,7 +291,15 @@ $(STRESS):      $(STRESSO) $(EVENT)
 		$(LD) $(LDFLAGS) $(STRESSO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
-$(STRESSGEOM):  $(STRESSGEOMO)
+$(STRESSGEOMETRY):  $(STRESSGEOMETRYO)
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
+else
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lGeom $(OutPutOpt)$@
+endif
+		@echo "$@ done"
+
+$(STRESSSHAPES):  $(STRESSSHAPESO)
 ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
 else
