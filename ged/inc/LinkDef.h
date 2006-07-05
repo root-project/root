@@ -28,6 +28,8 @@
 #pragma link C++ class TGraphEditor;
 #pragma link C++ class TH1Editor;
 #pragma link C++ class TH2Editor;
+#pragma link C++ class TF1Editor;
+#pragma link C++ class TFunctionParametersDialog;
 #pragma link C++ class TPaveStatsEditor;
 #pragma link C++ class TPadEditor;
 #pragma link C++ class TGedToolBox;
