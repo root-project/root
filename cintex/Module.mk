@@ -122,7 +122,7 @@ $(CINTEXTESTDICTS): $(CINTEXTESTDICTH) $(CINTEXTESTDICTD)/selection.xml
 		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --rootmap=./rootmap --rootmap-lib=$(CINTEXTESTDICT) --quiet --comments
 
 ##### extra rules ######
-ifeq ($(ARCH),macosx)
+ifeq ($(PLATFORM),macosx)
 ifeq ($(ICC_MAJOR),9)
 ifeq ($(ICC_MINOR),1)
 $(CINTEXDIRS)/ROOTClassEnhancer.o: OPT = $(NOOPT)
