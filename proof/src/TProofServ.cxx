@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.129 2006/07/03 12:33:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.130 2006/07/03 12:34:46 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3758,7 +3758,8 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
       case TProof::kCreateDataSet:
          // list size must be above 0
          {
-            if (!previousDataSet) {
+            if (type == TProof::kCreateDataSet) { 
+               // if not kAppendDataSet
                (*mess) >> dataSetName;
             }
             char *fileListPath =
