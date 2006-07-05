@@ -193,6 +193,7 @@ if [ $linkstat -ne 0 ]; then
    exit $linkstat
 fi
 
+
 if [ "x$MAJOR" != "x" ]; then
     if [ -f $LIB.$MAJOR.$MINOR ]; then
         # Versioned library has format foo.so.3.05
@@ -201,9 +202,11 @@ if [ "x$MAJOR" != "x" ]; then
     elif [ -f $LIBVERS ]; then
 	# Versioned library has format foo.3.05.so
 	source_file=`echo $SONAME | sed "s/.*\./&${MINOR}./"`
-	if [ $LIB != ${LIB/.${MAJOR}.${MINOR}/} ]; then
-	    ln -fs $source_file ${LIB/.${MINOR}/}
-	    ln -fs $source_file ${LIB/.${MAJOR}.${MINOR}/}
+	LIBNOMAJORMINOR=`echo $LIB|sed 's,\.'$MAJOR'\.'$MINOR',,'`
+	if [ $LIB != $LIBNOMAJORMINOR ]; then
+	    LIBNOMINOR=`echo $LIB|sed 's,\.'$MINOR',,'`
+	    ln -fs $source_file $LIBNOMINOR
+	    ln -fs $source_file $LIBNOMAJORMINOR
 	fi
     fi
 fi
