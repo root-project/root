@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.218 2006/06/28 10:03:14 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.219 2006/07/04 23:35:37 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2543,7 +2543,8 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingStatus("STARTED",kTRUE);
 
-   if (selector->GetAbort() != TSelector::kAbortProcess) {
+   if (selector->GetAbort() != TSelector::kAbortProcess
+       && (selector->Version() != 0 || selector->GetStatus()!=-1)) {
 
       Long64_t readbytesatstart = 0;
       readbytesatstart = TFile::GetFileBytesRead();
@@ -2599,8 +2600,10 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
 
    }
 
-   selector->SlaveTerminate();   //<==call user termination function
-   selector->Terminate();        //<==call user termination function
+   if (selector->Version() != 0 || selector->GetStatus()!=-1) {
+     selector->SlaveTerminate();   //<==call user termination function
+     selector->Terminate();        //<==call user termination function
+   }
 
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingStatus("DONE");
