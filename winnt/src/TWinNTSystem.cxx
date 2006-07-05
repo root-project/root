@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.142 2006/05/21 18:17:24 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.143 2006/07/04 17:36:38 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2086,7 +2086,7 @@ const char *TWinNTSystem::PrependPathName(const char *dir, TString& name)
    if (dir && dir[0]) {
       // Test whether the last symbol of the directory is a separator
       char last = dir[strlen(dir) - 1];
-      if (last != '/' && last == '\\') {
+      if (last != '/' && last != '\\') {
          name.Prepend('\\');
       }
       name.Prepend(dir);
@@ -2436,7 +2436,7 @@ const char *TWinNTSystem::FindFile(const char *search, TString& infile, EAccessM
 
    // Need to use Windows delimiters
    Int_t lastDelim = -1;
-   for(int i=0; exsearch[i]; ++i) {
+   for(int i=0; i < exsearch.Length(); ++i) {
       switch( exsearch[i] ) {
          case ':': 
             // Replace the ':' unless there are after a disk suffix (aka ;c:\mydirec...)
