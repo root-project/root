@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionMemberTemplateInstance.cxx,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: FunctionMemberTemplateInstance.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -39,7 +39,7 @@ FunctionMemberTemplateInstance( const char * nam,
      TemplateInstance( Tools::GetTemplateArguments( nam )),
      fTemplateFamily( MemberTemplate()) {
 //-------------------------------------------------------------------------------
-  
+// Create the dictionary information for a templated function member.  
    std::string templateName = Tools::GetTemplateName( nam );
    std::string scopeName = scop.Name(SCOPED);
    std::string scopedTemplateName = "";
@@ -74,6 +74,7 @@ FunctionMemberTemplateInstance( const char * nam,
 std::string 
 ROOT::Reflex::FunctionMemberTemplateInstance::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
+// Return the name of the function member.
    return FunctionMember::Name( mod );
 }
 
@@ -82,5 +83,6 @@ ROOT::Reflex::FunctionMemberTemplateInstance::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::FunctionMemberTemplateInstance::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
+// Return nth template argument of this function member.
    return TemplateInstance::TemplateArgumentAt( nth );
 }

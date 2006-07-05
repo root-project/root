@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.7 2006/04/12 10:21:11 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Typedef.h,v 1.8 2006/06/27 08:35:10 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

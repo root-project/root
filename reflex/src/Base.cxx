@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Base.cxx,v 1.7 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Base.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -25,6 +25,8 @@ ROOT::Reflex::Base::Base( const Type &    baseType,
      fBaseType( Type() ),
      fBaseClass( 0 ) {
 //-------------------------------------------------------------------------------
+// Construct the information for a base. The pointer to the base class (type Class)
+// is set to 0 initially and set on first access.
    fBaseType = baseType;
 }
 
@@ -32,6 +34,7 @@ ROOT::Reflex::Base::Base( const Type &    baseType,
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::Class * ROOT::Reflex::Base::BaseClass() const {
 //-------------------------------------------------------------------------------
+// Return the pointer to the base class. Set on first access.
    if ( fBaseClass ) return fBaseClass;
    if ( fBaseType ) {
       fBaseClass = dynamic_cast< const Class * >(fBaseType.ToTypeBase());
@@ -44,6 +47,7 @@ const ROOT::Reflex::Class * ROOT::Reflex::Base::BaseClass() const {
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::Base::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
+// Construct the name of the base. Qualify if requested.
    std::string s = "";
    if ( 0 != ( mod & ( QUALIFIED | Q ))) {
       if ( IsPublic())    { s += "public "; }

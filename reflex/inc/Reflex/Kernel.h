@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.15 2006/06/29 17:59:47 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Kernel.h,v 1.18 2006/07/03 17:02:37 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -168,15 +168,16 @@ namespace ROOT {
       typedef MemberTemplate_Cont_Type_t::reverse_iterator Reverse_MemberTemplate_Iterator;
 
 
-      struct RFLX_API Dummy {
-         static StdString_Cont_Type_t & sStdStringCont();
-         static Type_Cont_Type_t & sTypeCont();        
-         static Base_Cont_Type_t & sBaseCont();
-         static Scope_Cont_Type_t & sScopeCont();
-         static Object_Cont_Type_t & sObjectCont();
-         static Member_Cont_Type_t & sMemberCont();
-         static TypeTemplate_Cont_Type_t & sTypeTemplateCont();
-         static MemberTemplate_Cont_Type_t & sMemberTemplateCont();
+      class RFLX_API Dummy {
+      public:
+         static StdString_Cont_Type_t & StdStringCont();
+         static Type_Cont_Type_t & TypeCont();        
+         static Base_Cont_Type_t & BaseCont();
+         static Scope_Cont_Type_t & ScopeCont();
+         static Object_Cont_Type_t & ObjectCont();
+         static Member_Cont_Type_t & MemberCont();
+         static TypeTemplate_Cont_Type_t & TypeTemplateCont();
+         static MemberTemplate_Cont_Type_t & MemberTemplateCont();
       };
 
 
@@ -259,33 +260,28 @@ namespace ROOT {
       
 
       /** enum containing all possible types and scopes */
-      enum TYPE { CLASS = 0,
-                  STRUCT,
-                  ENUM, 
-                  FUNCTION, 
-                  ARRAY, 
-                  FUNDAMENTAL, 
-                  POINTER, 
-                  POINTERTOMEMBER, 
-                  TYPEDEF, 
-                  UNION, 
-                  TYPETEMPLATEINSTANCE, 
-                  MEMBERTEMPLATEINSTANCE, 
-                  NAMESPACE, 
-                  DATAMEMBER, 
-                  FUNCTIONMEMBER,
-                  UNRESOLVED
+      enum TYPE { 
+         CLASS = 0,
+         STRUCT,
+         ENUM, 
+         FUNCTION, 
+         ARRAY, 
+         FUNDAMENTAL, 
+         POINTER, 
+         POINTERTOMEMBER, 
+         TYPEDEF, 
+         UNION, 
+         TYPETEMPLATEINSTANCE, 
+         MEMBERTEMPLATEINSTANCE, 
+         NAMESPACE, 
+         DATAMEMBER, 
+         FUNCTIONMEMBER,
+         UNRESOLVED
       };
 
 
-      /** the Name of the status code -- don't use this to check */
-#define SRSTATUSNAME rstat
-      /** the Name of the status code to check for */
-#define SRSTATUS Reflex::SRSTATUSNAME
-        
-
       /**
-       * typedef for function MemberAt At (necessary for return value of
+       * typedef for function member type (necessary for return value of
        * getter function)
        */
       typedef void * (* StubFunction) ( void *, const std::vector < void * > &, void *);

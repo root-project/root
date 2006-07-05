@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.8 2006/06/29 14:20:06 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: ScopeBase.h,v 1.10 2006/07/03 17:02:38 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -668,28 +668,28 @@ inline size_t ROOT::Reflex::ScopeBase::BaseSize() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Base_Iterator ROOT::Reflex::ScopeBase::Base_Begin() const {
 //-------------------------------------------------------------------------------
-   return Dummy::sBaseCont().begin();
+   return Dummy::BaseCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Base_Iterator ROOT::Reflex::ScopeBase::Base_End() const {
 //-------------------------------------------------------------------------------
-   return Dummy::sBaseCont().end();
+   return Dummy::BaseCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::ScopeBase::Base_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Dummy::sBaseCont().rbegin();
+   return Dummy::BaseCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::ScopeBase::Base_REnd() const {
 //-------------------------------------------------------------------------------
-   return Dummy::sBaseCont().rend();
+   return Dummy::BaseCont().rend();
 }
 
 
@@ -963,28 +963,28 @@ inline size_t ROOT::Reflex::ScopeBase::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
-   return Dummy::sTypeCont().begin();
+   return Dummy::TypeCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
-   return Dummy::sTypeCont().end();
+   return Dummy::TypeCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Dummy::sTypeCont().rbegin();
+   return Dummy::TypeCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
-   return Dummy::sTypeCont().rend();
+   return Dummy::TypeCont().rend();
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Object.cxx,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Object.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,6 +24,7 @@
 ROOT::Reflex::Object 
 ROOT::Reflex::Object::Get( const std::string & dm ) const {
 //-------------------------------------------------------------------------------
+// Get a data member value of this object.
    Member m = TypeOf().MemberByName( dm );
    if ( m ) return m.Get( * this );
    else throw RuntimeError("No such MemberAt " + dm );
@@ -52,6 +53,7 @@ ROOT::Reflex::Object
 ROOT::Reflex::Object::Invoke( const std::string & fm,
                               std::vector < void * > args ) const {
 //-------------------------------------------------------------------------------
+// Invoke a data member of this object.
    return Invoke(fm,Type(),args);
    /*
      m = TypeOf().FunctionMemberAt( fm );
@@ -71,6 +73,7 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
                               const Type & sign,
                               std::vector < void * > args ) const {
 //-------------------------------------------------------------------------------
+// Invoke a data member of this object. Sign can be used for finding overloaded funs.
    Member m = TypeOf().FunctionMemberByName( fm, sign );
    if ( m ) {
       if ( args.size() ) return m.Invoke( * this, args );
@@ -95,6 +98,7 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
 void ROOT::Reflex::Object::Set2( const std::string & dm,
                                  const void * value ) const {
 //-------------------------------------------------------------------------------
+// Internal set method. Wrapped from Set methods.
    Member m = TypeOf().MemberByName( dm );
    if ( m ) m.Set( * this, value );
    else throw RuntimeError("No such MemberAt " + dm );

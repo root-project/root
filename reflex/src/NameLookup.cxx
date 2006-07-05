@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.2 2006/06/08 17:05:51 pcanal Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: NameLookup.cxx,v 1.3 2006/06/28 08:33:12 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

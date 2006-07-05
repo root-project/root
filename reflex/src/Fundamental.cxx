@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Fundamental.cxx,v 1.6 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Fundamental.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -21,5 +21,7 @@ ROOT::Reflex::Fundamental::Fundamental( const char * typ,
                                         size_t size,
                                         const std::type_info & ti ) 
 //-------------------------------------------------------------------------------
-   : TypeBase( typ, size, FUNDAMENTAL, ti ) {}
+   : TypeBase( typ, size, FUNDAMENTAL, ti ) {
+   // Create dictionary info for this fundamental type.
+}
 

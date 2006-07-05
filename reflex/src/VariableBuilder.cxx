@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: VariableBuilder.cxx,v 1.7 2006/03/13 15:49:51 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: VariableBuilder.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -25,6 +25,7 @@ ROOT::Reflex::VariableBuilderImpl::VariableBuilderImpl( const char * nam,
                                                         unsigned int modifiers ) 
    : fDataMember(Member()) {
 //-------------------------------------------------------------------------------
+// Construct the info for a variable.
    std::string declScope = "";
    std::string memName = std::string( nam );
    size_t pos = memName.rfind( "::" );
@@ -51,6 +52,7 @@ ROOT::Reflex::VariableBuilderImpl::VariableBuilderImpl( const char * nam,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::VariableBuilderImpl::~VariableBuilderImpl() {
 //-------------------------------------------------------------------------------
+// Destructor.
    FireFunctionCallback( fDataMember );
 }
 
@@ -59,6 +61,7 @@ ROOT::Reflex::VariableBuilderImpl::~VariableBuilderImpl() {
 void ROOT::Reflex::VariableBuilderImpl::AddProperty( const char * key, 
                                                      const char * value ) {
 //-------------------------------------------------------------------------------
+// Attach a property to this variable as string.
    fDataMember.Properties().AddProperty( key , value );
 }
 
@@ -67,6 +70,7 @@ void ROOT::Reflex::VariableBuilderImpl::AddProperty( const char * key,
 void ROOT::Reflex::VariableBuilderImpl::AddProperty( const char * key, 
                                                      Any value ) {
 //-------------------------------------------------------------------------------
+// Attach a property to this variable as Any object.
    fDataMember.Properties().AddProperty( key , value );
 }
 
@@ -78,6 +82,7 @@ ROOT::Reflex::VariableBuilder::VariableBuilder( const char * nam,
                                                 unsigned int modifiers) 
    : fDataMember( Member()) {
 //-------------------------------------------------------------------------------
+// Construct the variable info.
    std::string declScope = Tools::GetScopeName(nam);
    std::string memName = Tools::GetBaseName(nam);
    
@@ -101,7 +106,7 @@ ROOT::Reflex::VariableBuilder::VariableBuilder( const char * nam,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::VariableBuilder::~VariableBuilder() {
 //-------------------------------------------------------------------------------
-  
+// Destructor.  
    FireFunctionCallback( fDataMember );
 }
 
@@ -111,6 +116,7 @@ ROOT::Reflex::VariableBuilder &
 ROOT::Reflex::VariableBuilder::AddProperty( const char * key, 
                                             const char * value ) {
 //-------------------------------------------------------------------------------
+// Attach a property to this variable as a string.
    fDataMember.Properties().AddProperty( key , value );
    return * this;
 }
@@ -121,6 +127,7 @@ ROOT::Reflex::VariableBuilder &
 ROOT::Reflex::VariableBuilder::AddProperty( const char * key, 
                                             Any value ) {
 //-------------------------------------------------------------------------------
+// Attach a property to this variable as Any object.
    fDataMember.Properties().AddProperty( key , value );
    return * this;
 }

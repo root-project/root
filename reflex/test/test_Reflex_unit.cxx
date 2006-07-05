@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.7 2006/06/28 10:43:29 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: test_Reflex_unit.cxx,v 1.10 2006/07/05 06:59:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -561,6 +561,8 @@ void ReflexUnitTest::tools() {
   CPPUNIT_ASSERT_EQUAL(size_t(10), Tools::GetBasePosition(t0));
   CPPUNIT_ASSERT_EQUAL(std::string("NS1::NS2"), Tools::GetScopeName(t0));
   CPPUNIT_ASSERT_EQUAL(std::string("Type"), Tools::GetBaseName(t0));
+  CPPUNIT_ASSERT_EQUAL(std::string("NS1"), Tools::GetScopeName(t0,true));
+  CPPUNIT_ASSERT_EQUAL(std::string("NS2::Type"), Tools::GetBaseName(t0,true));
 
   std::string t1 = "std::vector<int>";
   CPPUNIT_ASSERT_EQUAL(size_t(5), Tools::GetBasePosition(t1));
@@ -592,6 +594,11 @@ void ReflexUnitTest::tools() {
   CPPUNIT_ASSERT_EQUAL(std::string("std::vector<void (*) (int)>"), Tools::GetScopeName(t6));
   CPPUNIT_ASSERT_EQUAL(std::string("iterator"), Tools::GetBaseName(t6));
 
+  std::string t7 = "std::reverse_iterator<std::_Rb_tree_const_iterator<std::pair<std::basic_string<char, std::char_traits<char>, std::allocator<char> > const, std::pair<int, std::vector<float, std::allocator<float> > > > > >";
+  CPPUNIT_ASSERT_EQUAL(std::string("std"), Tools::GetScopeName(t7));
+  CPPUNIT_ASSERT_EQUAL(std::string("reverse_iterator<std::_Rb_tree_const_iterator<std::pair<std::basic_string<char, std::char_traits<char>, std::allocator<char> > const, std::pair<int, std::vector<float, std::allocator<float> > > > > >"), Tools::GetBaseName(t7));
+  CPPUNIT_ASSERT_EQUAL(std::string("std"), Tools::GetScopeName(t7,true));
+  CPPUNIT_ASSERT_EQUAL(std::string("reverse_iterator<std::_Rb_tree_const_iterator<std::pair<std::basic_string<char, std::char_traits<char>, std::allocator<char> > const, std::pair<int, std::vector<float, std::allocator<float> > > > > >"), Tools::GetBaseName(t7,true));
 }
 
 

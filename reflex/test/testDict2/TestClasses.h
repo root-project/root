@@ -14,6 +14,14 @@ namespace xmlTypedefSelection {
 
 namespace testclasses {
 
+   class Outer {
+   public:
+      class Inner {
+      public : 
+         class IInner {};
+      };
+   };
+
 
    class DataMembers {
 
@@ -23,6 +31,14 @@ namespace testclasses {
       int pa[5];
       int paa[5][5];
 
+   };
+
+
+   class Typedefs {
+      typedef int MYINT;
+      typedef MYINT* PMYINT;
+      typedef MYINT** PPMYINT;
+      typedef PMYINT& RPMYINT;
    };
 
   typedef int MyInt;

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.9 2006/06/29 16:50:27 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Kernel.cxx,v 1.12 2006/07/03 17:02:38 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -58,7 +58,7 @@ ROOT::Reflex::Reflex::Reflex() {
                          sizeof( short int ), 
                          typeid( short int ));
    tb->Properties().AddProperty( "desc", "fundamental type" );
-   t = (*tb);
+   t = tb->ThisType();
    new Typedef( "short", t, FUNDAMENTAL );
    new Typedef( "signed short", t, FUNDAMENTAL );
    new Typedef( "short signed", t, FUNDAMENTAL );
@@ -69,7 +69,7 @@ ROOT::Reflex::Reflex::Reflex() {
                          sizeof( int ), 
                          typeid( int ));
    tb->Properties().AddProperty( "desc", "fundamental type" );
-   t = *tb;
+   t = tb->ThisType();
    new Typedef( "signed", t, FUNDAMENTAL );
    new Typedef( "signed int", t, FUNDAMENTAL );
 
@@ -77,7 +77,7 @@ ROOT::Reflex::Reflex::Reflex() {
                          sizeof( long int ), 
                          typeid( long int ));
    tb->Properties().AddProperty( "desc", "fundamental type" );
-   t = *tb;
+   t = tb->ThisType();
    new Typedef( "long", t, FUNDAMENTAL );
    new Typedef( "signed long", t, FUNDAMENTAL );
    new Typedef( "long signed", t, FUNDAMENTAL );
@@ -94,7 +94,7 @@ ROOT::Reflex::Reflex::Reflex() {
                          sizeof( unsigned short int ), 
                          typeid( unsigned short int ));
    tb->Properties().AddProperty( "desc", "fundamental type" );
-   t = *tb;
+   t = tb->ThisType();
    new Typedef( "unsigned short", t, FUNDAMENTAL );
    new Typedef( "short unsigned int", t, FUNDAMENTAL );
 
@@ -102,14 +102,14 @@ ROOT::Reflex::Reflex::Reflex() {
                          sizeof( unsigned int ), 
                          typeid( unsigned int ));
    tb->Properties().AddProperty( "desc", "fundamental type" );
-   t = *tb;
+   t = tb->ThisType();
    new Typedef( "unsigned", t, FUNDAMENTAL );
 
    tb = new Fundamental( "unsigned long int", 
                          sizeof( unsigned long int ), 
                          typeid( unsigned long int ));
    tb->Properties().AddProperty( "desc", "fundamental type" );
-   t = *tb;
+   t = tb->ThisType();
    new Typedef( "unsigned long", t, FUNDAMENTAL );
    new Typedef( "long unsigned", t, FUNDAMENTAL );
    new Typedef( "long unsigned int", t, FUNDAMENTAL );
@@ -154,7 +154,7 @@ ROOT::Reflex::Reflex::Reflex() {
                          sizeof( longlong ), 
                          typeid( longlong ));
    tb->Properties().AddProperty( "desc", "fundamental type" );
-   t = *tb;
+   t = tb->ThisType();
    new Typedef( "long long", t, FUNDAMENTAL );
    new Typedef( "long long int", t, FUNDAMENTAL );
 
@@ -162,7 +162,7 @@ ROOT::Reflex::Reflex::Reflex() {
                          sizeof( ulonglong ), 
                          typeid( ulonglong ));
    tb->Properties().AddProperty( "desc", "fundamental type" );
-   t = *tb;
+   t = tb->ThisType();
    new Typedef( "long long unsigned", t, FUNDAMENTAL );
    new Typedef( "unsigned long long", t, FUNDAMENTAL );
    new Typedef( "unsigned long long int", t, FUNDAMENTAL );
@@ -171,7 +171,7 @@ ROOT::Reflex::Reflex::Reflex() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::StdString_Cont_Type_t & ROOT::Reflex::Dummy::sStdStringCont() {
+ROOT::Reflex::StdString_Cont_Type_t & ROOT::Reflex::Dummy::StdStringCont() {
 //-------------------------------------------------------------------------------
    static StdString_Cont_Type_t c;
    return c;
@@ -179,7 +179,7 @@ ROOT::Reflex::StdString_Cont_Type_t & ROOT::Reflex::Dummy::sStdStringCont() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type_Cont_Type_t & ROOT::Reflex::Dummy::sTypeCont() {
+ROOT::Reflex::Type_Cont_Type_t & ROOT::Reflex::Dummy::TypeCont() {
 //-------------------------------------------------------------------------------
    static Type_Cont_Type_t c;
    return c;
@@ -187,7 +187,7 @@ ROOT::Reflex::Type_Cont_Type_t & ROOT::Reflex::Dummy::sTypeCont() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Base_Cont_Type_t & ROOT::Reflex::Dummy::sBaseCont() {
+ROOT::Reflex::Base_Cont_Type_t & ROOT::Reflex::Dummy::BaseCont() {
 //-------------------------------------------------------------------------------
    static Base_Cont_Type_t c;
    return c;
@@ -195,7 +195,7 @@ ROOT::Reflex::Base_Cont_Type_t & ROOT::Reflex::Dummy::sBaseCont() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope_Cont_Type_t & ROOT::Reflex::Dummy::sScopeCont() {
+ROOT::Reflex::Scope_Cont_Type_t & ROOT::Reflex::Dummy::ScopeCont() {
 //-------------------------------------------------------------------------------
    static Scope_Cont_Type_t c;
    return c;
@@ -203,7 +203,7 @@ ROOT::Reflex::Scope_Cont_Type_t & ROOT::Reflex::Dummy::sScopeCont() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object_Cont_Type_t & ROOT::Reflex::Dummy::sObjectCont() {
+ROOT::Reflex::Object_Cont_Type_t & ROOT::Reflex::Dummy::ObjectCont() {
 //-------------------------------------------------------------------------------
    static Object_Cont_Type_t c;
    return c;
@@ -211,7 +211,7 @@ ROOT::Reflex::Object_Cont_Type_t & ROOT::Reflex::Dummy::sObjectCont() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member_Cont_Type_t & ROOT::Reflex::Dummy::sMemberCont() {
+ROOT::Reflex::Member_Cont_Type_t & ROOT::Reflex::Dummy::MemberCont() {
 //-------------------------------------------------------------------------------
    static Member_Cont_Type_t c;
    return c;
@@ -219,7 +219,7 @@ ROOT::Reflex::Member_Cont_Type_t & ROOT::Reflex::Dummy::sMemberCont() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate_Cont_Type_t & ROOT::Reflex::Dummy::sTypeTemplateCont() {
+ROOT::Reflex::TypeTemplate_Cont_Type_t & ROOT::Reflex::Dummy::TypeTemplateCont() {
 //-------------------------------------------------------------------------------
    static TypeTemplate_Cont_Type_t c;
    return c;
@@ -227,7 +227,7 @@ ROOT::Reflex::TypeTemplate_Cont_Type_t & ROOT::Reflex::Dummy::sTypeTemplateCont(
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate_Cont_Type_t & ROOT::Reflex::Dummy::sMemberTemplateCont() {
+ROOT::Reflex::MemberTemplate_Cont_Type_t & ROOT::Reflex::Dummy::MemberTemplateCont() {
 //-------------------------------------------------------------------------------
    static MemberTemplate_Cont_Type_t c;
    return c;

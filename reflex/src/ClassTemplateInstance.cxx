@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.cxx,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: ClassTemplateInstance.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -39,7 +39,9 @@ ClassTemplateInstance( const char * typ,
      TemplateInstance( Tools::GetTemplateArguments( typ )),
      fTemplateFamily( TypeTemplate()) {
 //-------------------------------------------------------------------------------
-
+// Construct a template class instance dictionary information. This constructor
+// takes case of deducing the template parameter names and generates the info for
+// a template family if necessary.
    Scope s = DeclaringScope();
 
    std::string templateName = Tools::GetTemplateName( typ );
@@ -73,6 +75,7 @@ ClassTemplateInstance( const char * typ,
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::ClassTemplateInstance::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
+// Return the name of the template class.
    return Class::Name( mod );
 }
 
@@ -80,5 +83,6 @@ std::string ROOT::Reflex::ClassTemplateInstance::Name( unsigned int mod ) const 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::ClassTemplateInstance::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
+// Return the nth template argument type.
    return TemplateInstance::TemplateArgumentAt( nth );
 }

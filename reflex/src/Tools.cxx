@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.12 2006/05/31 22:03:52 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Tools.cxx,v 1.15 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -25,27 +25,82 @@
 #include <demangle.h>
 #endif
 
+using namespace ROOT::Reflex;
+
+namespace FTypes {
+   static size_t & Char()       { static size_t t = (size_t)Type::ByName("char").Id();               return t; }
+   static size_t & SigChar()    { static size_t t = (size_t)Type::ByName("signed char").Id();        return t; }
+   static size_t & ShoInt()     { static size_t t = (size_t)Type::ByName("short int").Id();          return t; }
+   static size_t & Int()        { static size_t t = (size_t)Type::ByName("int").Id();                return t; }
+   static size_t & LonInt()     { static size_t t = (size_t)Type::ByName("long int").Id();           return t; }
+   static size_t & UnsChar()    { static size_t t = (size_t)Type::ByName("unsigned char").Id();      return t; }
+   static size_t & UnsShoInt()  { static size_t t = (size_t)Type::ByName("unsigned short int").Id(); return t; }
+   static size_t & UnsInt()     { static size_t t = (size_t)Type::ByName("unsigned int").Id();       return t; }
+   static size_t & UnsLonInt()  { static size_t t = (size_t)Type::ByName("unsigned long int").Id();  return t; }
+   static size_t & Bool()       { static size_t t = (size_t)Type::ByName("bool").Id();               return t; }
+   static size_t & Float()      { static size_t t = (size_t)Type::ByName("float").Id();              return t; }
+   static size_t & Double()     { static size_t t = (size_t)Type::ByName("double").Id();             return t; }
+   static size_t & LonDouble()  { static size_t t = (size_t)Type::ByName("long double").Id();        return t; }
+   static size_t & Void()       { static size_t t = (size_t)Type::ByName("void").Id();               return t; }
+   static size_t & LonLong()    { static size_t t = (size_t)Type::ByName("longlong").Id();           return t; }
+   static size_t & UnsLonLong() { static size_t t = (size_t)Type::ByName("ulonglong").Id();          return t; }
+}
 
 //-------------------------------------------------------------------------------
-static std::string splitScopedName( const std::string & Name, 
-                                    bool returnScope ) {
+static std::string splitScopedName( const std::string & nam, 
+                                    bool returnScope,
+                                    bool startFromLeft = false ) {
 //-------------------------------------------------------------------------------
-   size_t pos = ROOT::Reflex::Tools::GetBasePosition( Name ); 
+// Split a scoped name. If returnScope is true return the scope part otherwise
+// the base part. If startFromLeft is true, parse from left otherwise from the end.
+   size_t pos = 0;
+   if ( startFromLeft ) pos = Tools::GetFirstScopePosition( nam );
+   else                 pos = Tools::GetBasePosition( nam ); 
    if ( pos != 0 ) {
-      if ( returnScope )  return Name.substr(0,pos-2);
-      else                return Name.substr(pos);
+      if ( returnScope )  return nam.substr(0,pos-2);
+      else                return nam.substr(pos);
    }
    else {
       if ( returnScope )  return "";
-      else                return Name;
+      else                return nam;
    }
+
 }
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Tools::BuildTypeName( Type & t,
-                                                unsigned int /* modifiers */ ) {
+EFUNDAMENTALTYPE Tools::FundamentalType( const Type & typ ) {
 //-------------------------------------------------------------------------------
+// Return an enum representing the fundamental type passed in.
+   size_t tid = (size_t)typ.ToType(FINAL).Id();
+   
+   if ( tid == FTypes::Char() )         return kCHAR;
+   if ( tid == FTypes::SigChar() )      return kSIGNED_CHAR; 
+   if ( tid == FTypes::ShoInt() )       return kSHORT_INT; 
+   if ( tid == FTypes::Int() )          return kINT; 
+   if ( tid == FTypes::LonInt() )       return kLONG_INT; 
+   if ( tid == FTypes::UnsChar() )      return kUNSIGNED_CHAR; 
+   if ( tid == FTypes::UnsShoInt() )    return kUNSIGNED_SHORT_INT; 
+   if ( tid == FTypes::UnsInt() )       return kUNSIGNED_INT; 
+   if ( tid == FTypes::UnsLonInt() )    return kUNSIGNED_LONG_INT; 
+   if ( tid == FTypes::Bool() )         return kBOOL; 
+   if ( tid == FTypes::Float() )        return kFLOAT; 
+   if ( tid == FTypes::Double() )       return kDOUBLE; 
+   if ( tid == FTypes::LonDouble() )    return kLONG_DOUBLE; 
+   if ( tid == FTypes::Void() )         return kVOID; 
+   if ( tid == FTypes::LonLong() )      return kLONGLONG; 
+   if ( tid == FTypes::UnsLonLong() )   return kULONGLONG; 
+   
+   return kNOTFUNDAMENTAL;
+
+}
+
+
+//-------------------------------------------------------------------------------
+std::string Tools::BuildTypeName( Type & t,
+                                  unsigned int /* modifiers */ ) {
+//-------------------------------------------------------------------------------
+// Build a complete qualified type name.
    std::string mod = "";
    if ( t.IsConstVolatile()) mod = "const volatile";
    else if ( t.IsConst())    mod = "const";
@@ -63,8 +118,9 @@ std::string ROOT::Reflex::Tools::BuildTypeName( Type & t,
 
 
 //-------------------------------------------------------------------------------
-std::vector<std::string> ROOT::Reflex::Tools::GenTemplateArgVec( const std::string & Name ) {
+std::vector<std::string> Tools::GenTemplateArgVec( const std::string & Name ) {
 //-------------------------------------------------------------------------------
+// Return a vector of template arguments from a template type string.
    std::string tpl = "";
    std::vector<std::string> tl = std::vector<std::string>();
    unsigned long int pos1 = Name.find("<");
@@ -103,8 +159,9 @@ std::vector<std::string> ROOT::Reflex::Tools::GenTemplateArgVec( const std::stri
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::Tools::GetBasePosition( const std::string & name ) {
-//-------------------------------------------------------------------------------
+size_t Tools::GetBasePosition( const std::string & name ) {
+//------------------------------------------------------------------------------
+// Get the position of the base part of a scoped name.
    // remove the template part of the name <...>
    int ab = 0;
    int rb = 0;
@@ -130,22 +187,56 @@ size_t ROOT::Reflex::Tools::GetBasePosition( const std::string & name ) {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Tools::GetScopeName( const std::string & name ){
+size_t Tools::GetFirstScopePosition( const std::string & name ) {
 //-------------------------------------------------------------------------------
-   return splitScopedName( name, true );
+// Get the position of the first scope of a scoped name.
+   int b = 0;
+   size_t pos = 0;
+   unsigned int i = 0;
+
+   for ( i = 0; i < name.size(); ++i ) {
+      switch (name[i]) {
+      case '<':
+      case '(':
+         b++; break;
+      case '>':
+      case ')':
+         b--; break;
+      case ':':
+         if ( b == 0 && name[i+1] == ':' ) {
+            pos = i + 2;
+            break;
+         }
+      default: continue;
+      }
+      if ( pos ) break;
+   }
+   return pos;
 }
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Tools::GetBaseName( const std::string & name ) {
+std::string Tools::GetScopeName( const std::string & name,
+                                 bool startFromLeft ){
 //-------------------------------------------------------------------------------
-   return splitScopedName( name, false );
+// Get the scope of a name. Start either from the beginning (startfFromLeft=true) or end.
+   return splitScopedName( name, true, startFromLeft );
 }
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::Tools::IsTemplated(const char * name ) {
+std::string Tools::GetBaseName( const std::string & name,
+                                bool startFromLeft ) {
 //-------------------------------------------------------------------------------
+// Get the base of a name. Start either from the beginning (startFromLeft=true) or end.
+   return splitScopedName( name, false, startFromLeft );
+}
+
+
+//-------------------------------------------------------------------------------
+bool Tools::IsTemplated(const char * name ) {
+//-------------------------------------------------------------------------------
+// Check if a type name is templated.
    for (size_t i = strlen(name)-1; i > 0; --i) {
       if (( name[i] == '>' ) && ( strchr(name,'<') != 0 )) return true;
       else if ( name[i] == ' ') break;
@@ -162,10 +253,11 @@ bool ROOT::Reflex::Tools::IsTemplated(const char * name ) {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Tools::StringSplit( std::vector < std::string > & splitValues, 
-                                       const std::string & str,
-                                       const std::string & delim ) {
+void Tools::StringSplit( std::vector < std::string > & splitValues, 
+                         const std::string & str,
+                         const std::string & delim ) {
 //-------------------------------------------------------------------------------
+// Split a string by a delimiter and return it's vector of strings.
    std::string str2 = str;
   
    size_t pos = 0;
@@ -183,8 +275,9 @@ void ROOT::Reflex::Tools::StringSplit( std::vector < std::string > & splitValues
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Tools::Demangle( const std::type_info & ti ) { 
+std::string Tools::Demangle( const std::type_info & ti ) { 
 //-------------------------------------------------------------------------------
+// Demangle a type_info object.
 #if defined(_WIN32)
    static std::vector<std::string> keywords;
    if ( 0 == keywords.size() ) {
@@ -306,11 +399,12 @@ std::string ROOT::Reflex::Tools::Demangle( const std::type_info & ti ) {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Tools::StringSplitPair( std::string & val1,
-                                           std::string & val2,
-                                           const std::string & str,
-                                           const std::string & delim ) { 
+void Tools::StringSplitPair( std::string & val1,
+                             std::string & val2,
+                             const std::string & str,
+                             const std::string & delim ) { 
 //-------------------------------------------------------------------------------
+// Split a string by a delimiter into a pair and return them as val1 and val2.
    std::string str2 = str;
    size_t pos = str2.rfind( delim );
    if ( pos != std::string::npos ) { 
@@ -326,8 +420,9 @@ void ROOT::Reflex::Tools::StringSplitPair( std::string & val1,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Tools::StringStrip( std::string & str ) {
+void Tools::StringStrip( std::string & str ) {
 //-------------------------------------------------------------------------------
+// Strip spaces at the beginning and the end from a string.
    size_t sPos = 0;
    size_t ePos = str.length();
    while ( str[sPos] == ' ' ) { ++sPos; }
@@ -337,16 +432,18 @@ void ROOT::Reflex::Tools::StringStrip( std::string & str ) {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Tools::GetTemplateArguments( const char * name ) {
+std::string Tools::GetTemplateArguments( const char * name ) {
 //-------------------------------------------------------------------------------
+// Return the template arguments part of a templated type name.
    std::string baseName = GetBaseName(name);
    return baseName.substr(baseName.find('<'));
 }
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Tools::GetTemplateName( const char * name ) {
+std::string Tools::GetTemplateName( const char * name ) {
 //-------------------------------------------------------------------------------
+// Return the fully qualified scope name without template arguments.
    std::string scopeName = GetScopeName( name );
    std::string baseName = GetBaseName( name );
    std::string templateName = baseName.substr(0, baseName.find('<'));
@@ -356,15 +453,18 @@ std::string ROOT::Reflex::Tools::GetTemplateName( const char * name ) {
 }
 
 
+//-------------------------------------------------------------------------------
 bool isalphanum(int i) {
+//-------------------------------------------------------------------------------
+// Return true if char is alpha or digit.
    return isalpha(i) || isdigit(i);
 }
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Tools::NormalizeName( const std::string & nam ) {
+std::string Tools::NormalizeName( const std::string & nam ) {
 //-------------------------------------------------------------------------------
-
+// Normalize a type name.
    std::string norm_name = "";
    //char lchar = ' ';
    unsigned int nlen = nam.length();

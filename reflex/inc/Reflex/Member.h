@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.7 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Member.h,v 1.9 2006/07/03 17:02:38 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -710,7 +710,7 @@ inline std::string ROOT::Reflex::Member::FunctionParameterDefaultAt( size_t nth 
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::Member::FunctionParameterDefault_Begin() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->FunctionParameterDefault_Begin();
-   return Dummy::sStdStringCont().begin();
+   return Dummy::StdStringCont().begin();
 }
 
 
@@ -718,7 +718,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::Member::FunctionParameterD
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::Member::FunctionParameterDefault_End() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->FunctionParameterDefault_End();
-   return Dummy::sStdStringCont().end();
+   return Dummy::StdStringCont().end();
 }
 
 
@@ -726,7 +726,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::Member::FunctionParameterD
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::Member::FunctionParameterDefault_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->FunctionParameterDefault_RBegin();
-   return Dummy::sStdStringCont().rbegin();
+   return Dummy::StdStringCont().rbegin();
 }
 
 
@@ -734,7 +734,7 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::Member::FunctionPa
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::Member::FunctionParameterDefault_REnd() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->FunctionParameterDefault_REnd();
-   return Dummy::sStdStringCont().rend();
+   return Dummy::StdStringCont().rend();
 }
 
 
@@ -750,7 +750,7 @@ inline std::string ROOT::Reflex::Member::FunctionParameterNameAt( size_t nth ) c
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::Member::FunctionParameterName_Begin() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->FunctionParameterName_Begin();
-   return Dummy::sStdStringCont().begin();
+   return Dummy::StdStringCont().begin();
 }
 
 
@@ -758,7 +758,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::Member::FunctionParameterN
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::Member::FunctionParameterName_End() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->FunctionParameterName_End();
-   return Dummy::sStdStringCont().end();
+   return Dummy::StdStringCont().end();
 }
 
 
@@ -766,7 +766,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::Member::FunctionParameterN
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::Member::FunctionParameterName_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->FunctionParameterName_RBegin();
-   return Dummy::sStdStringCont().rbegin();
+   return Dummy::StdStringCont().rbegin();
 }
 
 
@@ -774,7 +774,7 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::Member::FunctionPa
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::Member::FunctionParameterName_REnd() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->FunctionParameterName_REnd();
-   return Dummy::sStdStringCont().rend();
+   return Dummy::StdStringCont().rend();
 }
 
 
@@ -829,7 +829,7 @@ inline size_t ROOT::Reflex::Member::TemplateArgumentSize() const {
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Member::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fMemberBase->TemplateArgument_Begin();
-   return Dummy::sTypeCont().begin();
+   return Dummy::TypeCont().begin();
 }
 
 
@@ -837,7 +837,7 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Member::TemplateArgument_Begin(
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Member::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fMemberBase->TemplateArgument_End();
-   return Dummy::sTypeCont().end();
+   return Dummy::TypeCont().end();
 }
 
 
@@ -845,7 +845,7 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Member::TemplateArgument_End() 
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Member::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fMemberBase->TemplateArgument_RBegin();
-   return Dummy::sTypeCont().rbegin();
+   return Dummy::TypeCont().rbegin();
 }
 
 
@@ -853,7 +853,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Member::TemplateArgumen
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Member::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fMemberBase->TemplateArgument_REnd();
-   return Dummy::sTypeCont().rend();
+   return Dummy::TypeCont().rend();
 }
 
 

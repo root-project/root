@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TemplateInstance.cxx,v 1.6 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: TemplateInstance.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -27,6 +27,7 @@
 //-------------------------------------------------------------------------------
 ROOT::Reflex::TemplateInstance::TemplateInstance( const std::string & templateArguments ) {
 //-------------------------------------------------------------------------------
+// Create the dictionary info for a template instance.
    std::vector<std::string> templArgStrVec = Tools::GenTemplateArgVec(templateArguments);
    for (std::vector<std::string>::const_iterator it = templArgStrVec.begin();
         it != templArgStrVec.end(); ++it ) {
@@ -38,6 +39,7 @@ ROOT::Reflex::TemplateInstance::TemplateInstance( const std::string & templateAr
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::TemplateInstance::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
+// Return the name of the template instance.
    std::string s = "<";
    for ( size_t i = 0; i < fTemplateArguments.size(); ++i ) {
       s += fTemplateArguments[ i ].Name( mod );

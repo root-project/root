@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.8 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: ClassBuilder.cxx,v 1.10 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -33,6 +33,7 @@ ROOT::Reflex::ClassBuilder::ClassBuilder( const char * nam,
                                           size_t size,
                                           unsigned int modifiers ) 
 //-------------------------------------------------------------------------------
+// ClassBuilder constructor. 
   : fClassBuilderImpl( nam, ti, size, modifiers ) { }
 
 
@@ -42,6 +43,7 @@ ROOT::Reflex::ClassBuilder::AddBase( const Type & bas,
                                      OffsetFunction offsFP, 
                                      unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
+// Add base class information to this class.
    fClassBuilderImpl.AddBase( bas, 
                               offsFP,
                               modifiers );
@@ -56,6 +58,7 @@ ROOT::Reflex::ClassBuilder::AddDataMember( const Type &  typ,
                                            size_t        offs,
                                            unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
+// Add data member info to this class.
    fClassBuilderImpl.AddDataMember( nam,
                                     typ,
                                     offs,
@@ -73,6 +76,7 @@ ROOT::Reflex::ClassBuilder::AddFunctionMember( const Type & typ,
                                                const char * params, 
                                                unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
+// Add function member info to this class.
    fClassBuilderImpl.AddFunctionMember( nam,
                                         typ,
                                         stubFP,
@@ -88,6 +92,7 @@ ROOT::Reflex::ClassBuilder &
 ROOT::Reflex::ClassBuilder::AddTypedef( const char * typ,
                                         const char * def ) {
 //-------------------------------------------------------------------------------
+// Add typedef info to this class.
    fClassBuilderImpl.AddTypedef( TypeBuilder( typ ),
                                  def );
    return * this;
@@ -99,6 +104,7 @@ ROOT::Reflex::ClassBuilder &
 ROOT::Reflex::ClassBuilder::AddTypedef( const Type & typ,
                                         const char * def ) {
 //-------------------------------------------------------------------------------
+// Add typedef info to this class.
    fClassBuilderImpl.AddTypedef( typ,
                                  def );
    return * this;
@@ -111,6 +117,7 @@ ROOT::Reflex::ClassBuilder::AddEnum( const char * nam,
                                      const char * values,
                                      const std::type_info * ti ) {
 //-------------------------------------------------------------------------------
+// Add enum info to this class.
    fClassBuilderImpl.AddEnum( nam, 
                               values, 
                               ti );
@@ -138,6 +145,7 @@ ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * nam,
      fLastMember( 0 )
 {
 //-------------------------------------------------------------------------------
+// Construct a class information (internal).
    Type c = Type::ByName(nam);
    if ( c ) { 
       // Class already exists. Check if it was a class.
@@ -158,6 +166,7 @@ ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * nam,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::ClassBuilderImpl::~ClassBuilderImpl() {
 //-------------------------------------------------------------------------------
+// ClassBuilderImpl destructor. Used for call back functions (e.g. Cintex).
    FireClassCallback( fClass->ThisType() );
 }
 
@@ -167,6 +176,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddBase( const Type & bas,
                                               OffsetFunction offsFP,
                                               unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
+// Add base class information (internal).
    fClass->AddBase( bas, offsFP, modifiers );
 }
     
@@ -177,6 +187,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddDataMember( const char * nam,
                                                     size_t offs,
                                                     unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
+// Add data member info (internal).
    fLastMember = Member(new DataMember( nam, typ, offs, modifiers ));
    fClass->AddDataMember( fLastMember );
 }
@@ -190,6 +201,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddFunctionMember( const char * nam,
                                                         const char * params,
                                                         unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
+// Add function member info (internal).
    if ( Tools::IsTemplated( nam )) 
       fLastMember = Member(new FunctionMemberTemplateInstance( nam, 
                                                                typ, 
@@ -213,6 +225,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddFunctionMember( const char * nam,
 void ROOT::Reflex::ClassBuilderImpl::AddTypedef( const Type & typ,
                                                  const char * def ) {
 //-------------------------------------------------------------------------------
+// Add typedef info (internal).
    new Typedef( def, typ );
 }
 
@@ -222,7 +235,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddEnum( const char * nam,
                                               const char * values,
                                               const std::type_info * ti ) {
 //-------------------------------------------------------------------------------
-  
+// Add enum info (internal).  
    Enum * e = new Enum(nam, *ti);
 
    std::vector<std::string> valVec = std::vector<std::string>();
@@ -246,6 +259,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddEnum( const char * nam,
 void ROOT::Reflex::ClassBuilderImpl::AddProperty( const char * key, 
                                                   const char * value ) {
 //-------------------------------------------------------------------------------
+// Add property info (internal).
    AddProperty( key, Any(value) );
 }
 
@@ -254,6 +268,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddProperty( const char * key,
 void ROOT::Reflex::ClassBuilderImpl::AddProperty( const char * key, 
                                                   Any value ) {
 //-------------------------------------------------------------------------------
+// Add property info (internal).
    if ( fLastMember ) fLastMember.Properties().AddProperty( key, value );
    else                fClass->Properties().AddProperty(key, value); 
 }

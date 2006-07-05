@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Any.cxx,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Any.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -23,6 +23,7 @@ using namespace ROOT::Reflex;
 std::ostream & ROOT::Reflex::operator << ( std::ostream& o, 
                                            const Any& any) {
 //-------------------------------------------------------------------------------
+// Puts the different any objects on the ostream.
    if      ( any.TypeInfo() == typeid(char) )   o << any_cast<char>(any);
    else if ( any.TypeInfo() == typeid(int) )    o << any_cast<int>(any);
    else if ( any.TypeInfo() == typeid(short) )  o << any_cast<short>(any);

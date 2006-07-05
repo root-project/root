@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Pointer.cxx,v 1.6 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Pointer.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -21,12 +21,15 @@ ROOT::Reflex::Pointer::Pointer( const Type &           pointerType,
                                 const std::type_info & ti )
 //-------------------------------------------------------------------------------
    : TypeBase( BuildTypeName(pointerType).c_str(), sizeof(void*), POINTER, ti ), 
-     fPointerType( pointerType ) { }
+     fPointerType( pointerType ) { 
+   // Construct the dictionary info for a pointer type.
+}
 
 
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::Pointer::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
+// Return the name of the pointer type.
    return BuildTypeName( fPointerType, mod );
 }
 
@@ -35,5 +38,6 @@ std::string ROOT::Reflex::Pointer::Name( unsigned int mod ) const {
 std::string ROOT::Reflex::Pointer::BuildTypeName( const Type & pointerType,
                                                   unsigned int mod ) {
 //-------------------------------------------------------------------------------
+// Build the pointer type name.
    return pointerType.Name( mod ) + "*";
 }

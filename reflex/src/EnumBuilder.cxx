@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: EnumBuilder.cxx,v 1.7 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: EnumBuilder.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,12 +24,14 @@
 ROOT::Reflex::EnumBuilder::EnumBuilder( const char * nam,
                                         const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
+// Construct a new enum dictionary info.
    fEnum = new Enum( nam, ti );
 }
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::EnumBuilder::~EnumBuilder() {
 //-------------------------------------------------------------------------------
+// Destructor of enum builder. Used for call back functions.
    FireClassCallback( *fEnum );
 }
 
@@ -38,6 +40,7 @@ ROOT::Reflex::EnumBuilder::~EnumBuilder() {
 ROOT::Reflex::EnumBuilder & ROOT::Reflex::EnumBuilder::AddItem( const char * nam,
                                                                 long value ) {  
 //-------------------------------------------------------------------------------
+// Add an item (as data member) to this enum scope.
    fEnum->AddDataMember( Member(new DataMember( nam, 
                                                 Type::ByName("int"), 
                                                 value, 
@@ -50,6 +53,7 @@ ROOT::Reflex::EnumBuilder & ROOT::Reflex::EnumBuilder::AddItem( const char * nam
 ROOT::Reflex::EnumBuilder & ROOT::Reflex::EnumBuilder::AddProperty( const char * key,
                                                                     Any value ) {
 //-------------------------------------------------------------------------------
+// Add a property info to this enum as any object.
    if ( fLastMember ) fLastMember.Properties().AddProperty( key , value );
    else                fEnum->Properties().AddProperty( key, value );
    return *this;
@@ -60,6 +64,7 @@ ROOT::Reflex::EnumBuilder & ROOT::Reflex::EnumBuilder::AddProperty( const char *
 ROOT::Reflex::EnumBuilder &  ROOT::Reflex::EnumBuilder::AddProperty( const char * key,
                                                                      const char * value ) {
 //-------------------------------------------------------------------------------
+// Add a property info to this enum as string.
    AddProperty( key, Any(value));
    return *this;
 }

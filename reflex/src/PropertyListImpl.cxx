@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.cxx,v 1.7 2006/06/26 17:21:04 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: PropertyListImpl.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -22,6 +22,7 @@
 //-------------------------------------------------------------------------------
 static ROOT::Reflex::Any & sEmptyAny() {
 //-------------------------------------------------------------------------------
+// Static wrapper around an empyt any object.
    static ROOT::Reflex::Any a;
    return a;
 }
@@ -31,6 +32,7 @@ static ROOT::Reflex::Any & sEmptyAny() {
 std::ostream & ROOT::Reflex::operator<<( std::ostream & s,
                                          const PropertyListImpl & p ) {
 //-------------------------------------------------------------------------------
+// Operator to put properties on the ostream.
    if ( p.fProperties ) {
       for ( PropertyListImpl::Properties::const_iterator pIter = p.fProperties->begin();
             pIter != p.fProperties->end(); ++pIter) {
@@ -44,6 +46,7 @@ std::ostream & ROOT::Reflex::operator<<( std::ostream & s,
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::PropertyListImpl::ClearProperties() {
 //-------------------------------------------------------------------------------
+// Clear, remove all properties.
    if ( fProperties ) delete fProperties;
    fProperties = 0;
 }
@@ -52,6 +55,7 @@ void ROOT::Reflex::PropertyListImpl::ClearProperties() {
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::PropertyListImpl::PropertyKeys() const {
 //-------------------------------------------------------------------------------
+// Return a string containing all property keys.
    std::string s = "";
    if ( fProperties ) {
       for(Properties::const_iterator pIter = fProperties->begin(); 
@@ -68,6 +72,7 @@ std::string ROOT::Reflex::PropertyListImpl::PropertyKeys() const {
 std::string 
 ROOT::Reflex::PropertyListImpl::PropertyAsString( const std::string & key ) const {
 //-------------------------------------------------------------------------------
+// Return a property as a string.
    if ( fProperties && HasKey(key) ) {
       std::ostringstream o;
       o << PropertyValue(key);
@@ -81,6 +86,7 @@ ROOT::Reflex::PropertyListImpl::PropertyAsString( const std::string & key ) cons
 ROOT::Reflex::Any &
 ROOT::Reflex::PropertyListImpl::PropertyValue( const std::string & key ) const {
 //-------------------------------------------------------------------------------
+// Return a property as an Any object.
    if ( fProperties ) return (*fProperties)[ key ];
    return sEmptyAny();
 }

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Enum.cxx,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Enum.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,6 +24,7 @@
 ROOT::Reflex::Enum::Enum( const char * enumType,
                           const std::type_info & ti )
 //-------------------------------------------------------------------------------
+// Construct the dictionary information for an enum
    : TypeBase( enumType, sizeof(int), ENUM, ti ),
      ScopeBase( enumType, ENUM ) {}
 
@@ -31,6 +32,7 @@ ROOT::Reflex::Enum::Enum( const char * enumType,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Enum::~Enum() {
 //-------------------------------------------------------------------------------
+// Destructor for enum dictionary information.
 }
 
 

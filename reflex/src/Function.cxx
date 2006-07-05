@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Function.cxx,v 1.6 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Function.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,6 +24,7 @@ ROOT::Reflex::Function::Function( const Type & retType,
                                   const std::type_info & ti,
                                   TYPE functionType) 
 //-------------------------------------------------------------------------------
+// Default constructor for a function type.
    : TypeBase( BuildTypeName(retType, parameters, QUALIFIED | SCOPED).c_str(), 0, functionType, ti ),
      fParameters(parameters),
      fReturnType(retType),
@@ -33,6 +34,7 @@ ROOT::Reflex::Function::Function( const Type & retType,
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::Function::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
+// Return the name of the function type.
    return BuildTypeName( fReturnType, fParameters, mod );
 }
 
@@ -42,6 +44,7 @@ std::string ROOT::Reflex::Function::BuildTypeName( const Type & ret,
                                                    const std::vector< Type > & pars,
                                                    unsigned int mod ) {
 //-------------------------------------------------------------------------------
+// Build the name of the function type in the form <returntype><space>(<param>*)
    std::string tyname = ret.Name( mod )+ " (";
    if ( pars.size() > 0 ) {
       std::vector< Type >::const_iterator it;

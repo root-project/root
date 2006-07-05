@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: DictSelection.h,v 1.4 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: DictSelection.h,v 1.5 2006/04/18 07:35:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 #ifndef ROOT_Reflex_DictSelection

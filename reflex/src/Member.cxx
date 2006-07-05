@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.cxx,v 1.5 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Member.cxx,v 1.7 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -28,25 +28,31 @@
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member::Member( const MemberBase * memberBase )
 //-------------------------------------------------------------------------------
-   : fMemberBase( memberBase ) {}
+   : fMemberBase( memberBase ) {
+   // Construct a member, attaching it to MemberBase.
+}
 
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member::Member( const Member & rh )
 //-------------------------------------------------------------------------------
-   : fMemberBase( rh.fMemberBase ) {}
+   : fMemberBase( rh.fMemberBase ) {
+   // Member copy constructor.
+}
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member::~Member() {
 //-------------------------------------------------------------------------------
+// Member desructor.
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Object ROOT::Reflex::Member::Get() const {
 //-------------------------------------------------------------------------------
+// Get the value of a static member.
    if ( fMemberBase ) return fMemberBase->Get( Object());
    return Object();
 }
@@ -55,6 +61,7 @@ ROOT::Reflex::Object ROOT::Reflex::Member::Get() const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Object ROOT::Reflex::Member::Get( const Object & obj) const {
 //-------------------------------------------------------------------------------
+// Get the value of a non static data member.
    if ( fMemberBase ) return fMemberBase->Get( obj );
    return Object();
 }
@@ -76,6 +83,7 @@ ROOT::Reflex::Object
 ROOT::Reflex::Member::Invoke( const Object & obj,
                               const std::vector < void * > & paramList ) const {
 //-------------------------------------------------------------------------------
+// Invoke a non static data member.
    if ( fMemberBase ) return fMemberBase->Invoke( obj, paramList );
    return Object();
 }
@@ -95,6 +103,7 @@ ROOT::Reflex::Member::Invoke( const Object & obj,
 ROOT::Reflex::Object 
 ROOT::Reflex::Member::Invoke( const std::vector < void * > & paramList ) const {
 //-------------------------------------------------------------------------------
+// Invoke a static data member.
    if ( fMemberBase ) return fMemberBase->Invoke( paramList );
    return Object();
 }
@@ -113,6 +122,7 @@ ROOT::Reflex::Member::Invoke( const std::vector < void * > & paramList ) const {
 void ROOT::Reflex::Member::Set( const Object & instance,
                                 const void * value ) const {
 //-------------------------------------------------------------------------------
+// Set a non static data member.
    if (fMemberBase ) fMemberBase->Set( instance, value );
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Pointer.h,v 1.8 2006/06/29 17:43:29 pcanal Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Pointer.h,v 1.9 2006/06/30 06:08:19 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

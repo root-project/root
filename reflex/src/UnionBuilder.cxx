@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: UnionBuilder.cxx,v 1.6 2006/03/13 15:49:51 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: UnionBuilder.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -26,6 +26,7 @@ ROOT::Reflex::UnionBuilderImpl::UnionBuilderImpl( const char * nam,
                                                   size_t size,
                                                   const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
+// Construct union info.
    fUnion = new Union( nam, size, ti );
 }
 
@@ -34,6 +35,7 @@ ROOT::Reflex::UnionBuilderImpl::UnionBuilderImpl( const char * nam,
 void ROOT::Reflex::UnionBuilderImpl::AddItem( const char * nam,
                                               const Type & typ ) {
 //-------------------------------------------------------------------------------
+// Add a union info to this union.
    fLastMember = Member(new DataMember( nam,
                                         typ,
                                         0,
@@ -46,6 +48,7 @@ void ROOT::Reflex::UnionBuilderImpl::AddItem( const char * nam,
 void ROOT::Reflex::UnionBuilderImpl::AddProperty( const char * key,
                                                   Any value ) {
 //-------------------------------------------------------------------------------
+// Attach property to this union as Any object.
    if ( fLastMember ) fLastMember.Properties().AddProperty( key, value );
    else                fUnion->Properties().AddProperty(key, value );
 }
@@ -55,5 +58,6 @@ void ROOT::Reflex::UnionBuilderImpl::AddProperty( const char * key,
 void ROOT::Reflex::UnionBuilderImpl::AddProperty( const char * key,
                                                   const char * value ) {
 //-------------------------------------------------------------------------------
+// Attach property to this union as string.
    AddProperty( key, Any(value));
 }

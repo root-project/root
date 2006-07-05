@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.cxx,v 1.8 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: FunctionBuilder.cxx,v 1.10 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -29,6 +29,7 @@
 //-------------------------------------------------------------------------------
 ROOT::Reflex::FunctionBuilder::~FunctionBuilder() {
 //-------------------------------------------------------------------------------
+// Functionbuilder destructor used for call backs.
    FireFunctionCallback( fFunction );
 }
 
@@ -38,6 +39,7 @@ ROOT::Reflex::FunctionBuilder &
 ROOT::Reflex::FunctionBuilder::AddProperty( const char * key, 
                                             const char * value ) {
 //-------------------------------------------------------------------------------
+// Add property info to this function as string.
    fFunction.Properties().AddProperty( key , value );
    return * this;
 }
@@ -48,6 +50,7 @@ ROOT::Reflex::FunctionBuilder &
 ROOT::Reflex::FunctionBuilder::AddProperty( const char * key, 
                                             Any value ) {
 //-------------------------------------------------------------------------------
+// Add property info to this function as Any object.
    fFunction.Properties().AddProperty( key , value );
    return * this;
 }
@@ -62,7 +65,7 @@ ROOT::Reflex::FunctionBuilderImpl::FunctionBuilderImpl( const char * nam,
                                                         unsigned char modifiers) 
    : fFunction( Member(0)) {
 //-------------------------------------------------------------------------------
-
+// Create function type dictionary info (internal).
    std::string fullname( nam );
    std::string declScope;
    std::string funcName;
@@ -104,6 +107,7 @@ ROOT::Reflex::FunctionBuilderImpl::FunctionBuilderImpl( const char * nam,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::FunctionBuilderImpl::~FunctionBuilderImpl() {
 //-------------------------------------------------------------------------------
+// FunctionBuilder destructor.
    FireFunctionCallback( fFunction );
 }
  
@@ -112,6 +116,7 @@ ROOT::Reflex::FunctionBuilderImpl::~FunctionBuilderImpl() {
 void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key, 
                                                      const char * value ) {
 //-------------------------------------------------------------------------------
+// Add property info to this function type.
    fFunction.Properties().AddProperty( key , value );
 }
 
@@ -120,6 +125,7 @@ void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key,
 void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key, 
                                                      Any value ) {
 //-------------------------------------------------------------------------------
+// Add property info to this function type.
    fFunction.Properties().AddProperty( key , value );
 }
 
@@ -133,7 +139,7 @@ ROOT::Reflex::FunctionBuilder::FunctionBuilder( const Type & typ,
                                                 unsigned char modifiers) 
    : fFunction(Member(0)) {
 //-------------------------------------------------------------------------------
-
+// Create function dictionary type information.
    std::string fullname( nam );
    std::string declScope;
    std::string funcName;

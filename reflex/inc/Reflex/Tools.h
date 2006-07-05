@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.h,v 1.7 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Tools.h,v 1.10 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -25,7 +25,37 @@ namespace ROOT {
       class Function;
       class Type;
 
+         enum EFUNDAMENTALTYPE {
+            kCHAR,
+            kSIGNED_CHAR,
+            kSHORT_INT,
+            kINT,
+            kLONG_INT,
+            kUNSIGNED_CHAR,
+            kUNSIGNED_SHORT_INT,
+            kUNSIGNED_INT,
+            kUNSIGNED_LONG_INT,
+            kBOOL,
+            kFLOAT,
+            kDOUBLE,
+            kLONG_DOUBLE,
+            kVOID,
+            kLONGLONG,
+            kULONGLONG,
+            kNOTFUNDAMENTAL
+         };
+
+
       namespace Tools {
+
+         /**
+          * GetFundamentalType will return an enum representing the 
+          * fundamental type which was passed in, or NOFUNDAMENTALTYPE
+          * @param typ the type passed into the system
+          * @return enum representing kind of fundamental type
+          */
+         RFLX_API EFUNDAMENTALTYPE FundamentalType( const Type & typ );
+
 
          /**
           * Demangle will call the internal demangling routines and
@@ -80,16 +110,21 @@ namespace ROOT {
          RFLX_API size_t GetBasePosition( const std::string & name );
 
 
+         RFLX_API size_t GetFirstScopePosition( const std::string & name );
+
+
          /**
           * Get the At part of a given At/member Name
           */
-         RFLX_API std::string GetScopeName( const std::string & name );
+         RFLX_API std::string GetScopeName( const std::string & name,
+                                            bool startFromLeft = false );
 
 
          /** 
           * Get the BaseAt (unscoped) Name of a At/member Name
           */
-         RFLX_API std::string GetBaseName( const std::string & name );
+         RFLX_API std::string GetBaseName( const std::string & name,
+                                           bool startFromLeft = false );
 
 
          /**

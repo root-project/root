@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id:  $
+// @(#)root/reflex:$Name: HEAD $:$Id: test_Reflex_lookup.cxx,v 1.2 2006/07/03 13:09:34 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -87,28 +87,32 @@ void ReflexLookupTest::lookupType() {
    Scope s0 = Scope::ByName("ClassF");
    CPPUNIT_ASSERT( s0 );
 
-   Type t0 = s0.LookupType("ClassA");
-   CPPUNIT_ASSERT( t0 );
+   Type t00 = s0.LookupType("ClassA");
+   CPPUNIT_ASSERT( t00 );
 
-   Type t1 = s0.LookupType("ClassM");
-   CPPUNIT_ASSERT( t1 );
+   Type t01 = s0.LookupType("ClassM");
+   CPPUNIT_ASSERT( t01 );
 
    Scope s1 = Scope::ByName("testclasses");
    CPPUNIT_ASSERT( s1 );
 
-   Type t2 = s1.LookupType("MyInt");
-   CPPUNIT_ASSERT( t2 );
-   CPPUNIT_ASSERT( t2.IsTypedef());
+   Type t10 = s1.LookupType("MyInt");
+   CPPUNIT_ASSERT( t10 );
+   CPPUNIT_ASSERT( t10.IsTypedef());
 
    Scope s2 = Scope::ByName("");
    CPPUNIT_ASSERT( s2 );
    CPPUNIT_ASSERT( s2.IsTopScope());
 
-   Type t3 = s2.LookupType("testclasses::MyInt");
-   CPPUNIT_ASSERT( t3 );
+   Type t20 = s2.LookupType("testclasses::MyInt");
+   CPPUNIT_ASSERT( t20 );
 
-   Type t4 = s2.LookupType("ClassA");
-   CPPUNIT_ASSERT(t4);
+   Type t21 = s2.LookupType("ClassA");
+   CPPUNIT_ASSERT(t21);
+
+   Scope s3 = Scope::ByName("testclasses::Outer");
+   Type t30 = s3.LookupType("Inner::IInner");
+   CPPUNIT_ASSERT(t30);
 
 }
 

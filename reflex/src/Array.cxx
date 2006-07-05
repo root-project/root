@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Array.cxx,v 1.6 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Array.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -23,6 +23,7 @@ ROOT::Reflex::Array::Array( const Type & arrayType,
                             size_t len,
                             const std::type_info & typeinfo ) 
 //-------------------------------------------------------------------------------
+// Constructs an array type.
    : TypeBase( BuildTypeName(arrayType, len ).c_str(), 
                len*(arrayType.SizeOf()), ARRAY, typeinfo ), 
      fArrayType( arrayType ), 
@@ -32,6 +33,7 @@ ROOT::Reflex::Array::Array( const Type & arrayType,
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::Array::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
+// Return the name of the array type.
    return BuildTypeName( fArrayType, fLength, mod );
 }
 
@@ -41,6 +43,7 @@ std::string ROOT::Reflex::Array::BuildTypeName( const Type & typ,
                                                 size_t len,
                                                 unsigned int mod ) {
 //-------------------------------------------------------------------------------
+// Build an array type name.
    std::ostringstream ost;
    ost << typ.Name( mod ) << "[" << len << "]";
    return ost.str();

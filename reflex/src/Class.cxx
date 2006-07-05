@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.9 2006/04/12 10:21:11 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Class.cxx,v 1.11 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -37,6 +37,7 @@ ROOT::Reflex::Class::Class(  const char *           typ,
                              unsigned int           modifiers,
                              TYPE                   classType )
 //-------------------------------------------------------------------------------
+// Construct a Class instance. 
    : TypeBase( typ, size, classType, ti ),
      ScopeBase( typ, classType ),
      fModifiers( modifiers ),
@@ -52,6 +53,7 @@ void ROOT::Reflex::Class::AddBase( const Type &   bas,
                                    OffsetFunction offsFP,
                                    unsigned int   modifiers ) const {
 //-------------------------------------------------------------------------------
+// Add a base class information.
    Base b( bas, offsFP, modifiers );
    fBases.push_back( b );
 }
@@ -61,6 +63,7 @@ void ROOT::Reflex::Class::AddBase( const Type &   bas,
 ROOT::Reflex::Object ROOT::Reflex::Class::CastObject( const Type & to, 
                                                       const Object & obj ) const {
 //-------------------------------------------------------------------------------
+// Cast an object. Will do up and down cast. Cross cast missing.
    std::vector< Base > path = std::vector< Base >();
    if ( HasBase( to, path )) { // up cast 
       // in case of up cast the Offset has to be calculated by Reflex
@@ -138,6 +141,9 @@ ROOT::Reflex::Object ROOT::Reflex::Class::Construct( const Type & signature,
                                                      const std::vector < void * > & args, 
                                                      void * mem ) const {
 //------------------------------------------------------------------------------- 
+// Construct an object of this class type. The signature of the constructor function
+// can be given as the first argument. Furhter arguments are a vector of memory 
+// addresses for non default constructors and a memory address for in place construction.
    static Type defSignature = Type::ByName("void (void)");
    Type signature2 = signature;
   
@@ -168,6 +174,8 @@ ROOT::Reflex::Object ROOT::Reflex::Class::Construct( const Type & signature,
 void ROOT::Reflex::Class::Destruct( void * instance, 
                                     bool dealloc ) const {
 //-------------------------------------------------------------------------------
+// Call the destructor for this class type on a memory address (instance). Deallocate
+// memory if dealloc = true (i.e. default).
    if ( ! fDestructor.TypeOf() ) {
       // destructor for this class not yet revealed
       for ( size_t i = 0; i < ScopeBase::FunctionMemberSize(); ++i ) {
@@ -196,13 +204,16 @@ void ROOT::Reflex::Class::Destruct( void * instance,
 //-------------------------------------------------------------------------------
 struct DynType_t {
 //-------------------------------------------------------------------------------
-   virtual ~DynType_t() {}
+   virtual ~DynType_t() {
+      // dummy type with vtable.
+   }
 };
 
     
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::Class::DynamicType( const Object & obj ) const {
 //-------------------------------------------------------------------------------
+// Discover the dynamic type of a class object and return it.
    // If no virtual_function_table return itself
    if ( IsVirtual() ) {
       // Avoid the case that the first word is a virtual_base_offset_table instead of
@@ -224,6 +235,7 @@ ROOT::Reflex::Type ROOT::Reflex::Class::DynamicType( const Object & obj ) const 
 //-------------------------------------------------------------------------------
 bool ROOT::Reflex::Class::HasBase( const Type & cl ) const {
 //-------------------------------------------------------------------------------
+// Return true if this class has a base class of type cl.
    std::vector<Base> v = std::vector<Base>();
    return HasBase(cl, v);
 }
@@ -233,6 +245,8 @@ bool ROOT::Reflex::Class::HasBase( const Type & cl ) const {
 bool ROOT::Reflex::Class::HasBase( const Type & cl,  
                                    std::vector< Base > & path ) const {
 //-------------------------------------------------------------------------------
+// Return true if this class has a base class of type cl. Return also the path
+// to this type.
    for ( size_t i = 0; i < BaseSize(); ++i ) {
       // is the final BaseAt class one of the current class ?
       if ( BaseAt( i ).ToType( FINAL ).Id() == cl.Id() ) { 
@@ -254,6 +268,8 @@ bool ROOT::Reflex::Class::HasBase( const Type & cl,
 //-------------------------------------------------------------------------------
 bool ROOT::Reflex::Class::IsComplete() const {
 //-------------------------------------------------------------------------------
+// Return true if this class is complete. I.e. all dictionary information for all
+// data and function member types and base classes is available.
    if ( ! fCompleteType ) fCompleteType = IsComplete2(); 
    return fCompleteType;
 }
@@ -262,6 +278,8 @@ bool ROOT::Reflex::Class::IsComplete() const {
 //-------------------------------------------------------------------------------
 bool ROOT::Reflex::Class::IsComplete2() const {
 //-------------------------------------------------------------------------------
+// Return true if this class is complete. I.e. all dictionary information for all
+// data and function member types and base classes is available (internal function).
    for (size_t i = 0; i < BaseSize(); ++i) {
       Type baseType = BaseAt( i ).ToType( FINAL );
       if ( ! baseType )  return false;
@@ -274,6 +292,7 @@ bool ROOT::Reflex::Class::IsComplete2() const {
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::Class::AllBases() const {
 //-------------------------------------------------------------------------------
+// Return the number of base classes.
    size_t aBases = 0;
    for ( size_t i = 0; i < BaseSize(); ++i ) {
       ++aBases;
@@ -288,6 +307,7 @@ size_t ROOT::Reflex::Class::AllBases() const {
 //-------------------------------------------------------------------------------
 bool ROOT::Reflex::Class::NewBases() const {
 //-------------------------------------------------------------------------------
+// Check if information for new base classes has been added.
    if ( ! fCompleteType ) {
       size_t numBases = AllBases();
       if ( fAllBases != numBases ) {
@@ -303,6 +323,7 @@ bool ROOT::Reflex::Class::NewBases() const {
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Class::UpdateMembers() const {
 //-------------------------------------------------------------------------------
+// Update information for function and data members. 
    std::vector < OffsetFunction > basePath = std::vector < OffsetFunction >();
    UpdateMembers2( fMembers, 
                    fDataMembers, 
@@ -316,6 +337,7 @@ void ROOT::Reflex::Class::UpdateMembers() const {
 const std::vector < ROOT::Reflex::OffsetFunction > & 
 ROOT::Reflex::Class::PathToBase( const Scope & bas ) const {
 //-------------------------------------------------------------------------------
+// Return a vector of offset functions from the current class to the base class.
    std::vector < OffsetFunction > * pathToBase = fPathsToBase[ bas.Id() ];
    if ( ! pathToBase ) {
       UpdateMembers();
@@ -340,6 +362,7 @@ void ROOT::Reflex::Class::UpdateMembers2( Members & members,
                                           PathsToBase & pathsToBase,
                                           std::vector < OffsetFunction > & basePath ) const {
 //-------------------------------------------------------------------------------
+// Internal function to update the data and function member information.
    std::vector < Base >::const_iterator bIter;
    for ( bIter = fBases.begin(); bIter != fBases.end(); ++bIter ) {
       Type bType = bIter->ToType( FINAL );
@@ -391,6 +414,7 @@ void ROOT::Reflex::Class::UpdateMembers2( Members & members,
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Class::AddDataMember( const Member & dm ) const {
 //-------------------------------------------------------------------------------
+// Add data member dm to this class
    ScopeBase::AddDataMember( dm );
 }
 
@@ -401,6 +425,7 @@ void ROOT::Reflex::Class::AddDataMember( const char * nam,
                                          size_t offs,
                                          unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
+// Add data member to this class
    ScopeBase::AddDataMember( nam, typ, offs, modifiers );
 }
 
@@ -408,6 +433,7 @@ void ROOT::Reflex::Class::AddDataMember( const char * nam,
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Class::RemoveDataMember( const Member & dm ) const {
 //-------------------------------------------------------------------------------
+// Remove data member dm from this class
    ScopeBase::RemoveDataMember( dm );
 }
 
@@ -415,6 +441,7 @@ void ROOT::Reflex::Class::RemoveDataMember( const Member & dm ) const {
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Class::AddFunctionMember( const Member & fm ) const {
 //-------------------------------------------------------------------------------
+// Add function member fm to this class
    ScopeBase::AddFunctionMember( fm );
    if ( fm.IsConstructor() )    fConstructors.push_back( fm );
    else if ( fm.IsDestructor() ) fDestructor = fm;
@@ -429,6 +456,7 @@ void ROOT::Reflex::Class::AddFunctionMember( const char * nam,
                                              const char * params,
                                              unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
+// Add function member to this class
    ScopeBase::AddFunctionMember(nam,typ,stubFP,stubCtx,params,modifiers);
    if ( 0 !=  (modifiers & CONSTRUCTOR )) fConstructors.push_back(fFunctionMembers[fFunctionMembers.size()-1]);
    // setting the destructor is not needed because it is always provided when building the class
@@ -438,5 +466,6 @@ void ROOT::Reflex::Class::AddFunctionMember( const char * nam,
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Class::RemoveFunctionMember( const Member & fm ) const {
 //-------------------------------------------------------------------------------
+// Remove function member from this class.
    ScopeBase::RemoveFunctionMember( fm );
 }

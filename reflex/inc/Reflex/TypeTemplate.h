@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplate.h,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: TypeTemplate.h,v 1.8 2006/07/03 17:02:38 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -246,7 +246,7 @@ inline std::string ROOT::Reflex::TypeTemplate::TemplateParameterDefaultAt( size_
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterDefault_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeTemplateImpl->TemplateParameterDefault_Begin();
-   return Dummy::sStdStringCont().begin();
+   return Dummy::StdStringCont().begin();
 }
 
 
@@ -254,7 +254,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplatePara
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterDefault_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeTemplateImpl->TemplateParameterDefault_End();
-   return Dummy::sStdStringCont().end();
+   return Dummy::StdStringCont().end();
 }
 
 
@@ -262,7 +262,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplatePara
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterDefault_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeTemplateImpl->TemplateParameterDefault_RBegin();
-   return Dummy::sStdStringCont().rbegin();
+   return Dummy::StdStringCont().rbegin();
 }
 
 
@@ -270,7 +270,7 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::Temp
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterDefault_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeTemplateImpl->TemplateParameterDefault_REnd();
-   return Dummy::sStdStringCont().rend();
+   return Dummy::StdStringCont().rend();
 }
 
 
@@ -286,7 +286,7 @@ inline std::string ROOT::Reflex::TypeTemplate::TemplateParameterNameAt( size_t n
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterName_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeTemplateImpl->TemplateParameterName_Begin();
-   return Dummy::sStdStringCont().begin();
+   return Dummy::StdStringCont().begin();
 }
 
 
@@ -294,7 +294,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplatePara
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterName_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeTemplateImpl->TemplateParameterName_End();
-   return Dummy::sStdStringCont().end();
+   return Dummy::StdStringCont().end();
 }
 
 
@@ -302,7 +302,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplatePara
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterName_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeTemplateImpl->TemplateParameterName_RBegin();
-   return Dummy::sStdStringCont().rbegin();
+   return Dummy::StdStringCont().rbegin();
 }
 
 
@@ -310,7 +310,7 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::Temp
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterName_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeTemplateImpl->TemplateParameterName_REnd();
-   return Dummy::sStdStringCont().rend();
+   return Dummy::StdStringCont().rend();
 }
 
 #endif // ROOT_Reflex_TypeTemplate

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyList.cxx,v 1.6 2006/03/20 09:46:18 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: PropertyList.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -21,6 +21,7 @@
 //-------------------------------------------------------------------------------
 static ROOT::Reflex::Any & sEmptyAny() {
 //-------------------------------------------------------------------------------
+// Wrapper around static any.
    static ROOT::Reflex::Any a;
    return a;
 }
@@ -30,6 +31,7 @@ static ROOT::Reflex::Any & sEmptyAny() {
 std::ostream & ROOT::Reflex::operator<<( std::ostream & s,
                                                 const PropertyList & p ) {
 //-------------------------------------------------------------------------------
+// Operator to put a property list on the ostream.
    if ( p.fPropertyListImpl ) s << *(p.fPropertyListImpl); 
    return s;
 }
@@ -39,6 +41,7 @@ std::ostream & ROOT::Reflex::operator<<( std::ostream & s,
 ROOT::Reflex::Any &
 ROOT::Reflex::PropertyList::PropertyValue(const std::string & key) const {
 //-------------------------------------------------------------------------------
+// Get the value of a property as Any object.
    if ( fPropertyListImpl ) return fPropertyListImpl->PropertyValue( key );
    return sEmptyAny();
 }

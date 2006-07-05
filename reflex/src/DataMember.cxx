@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: DataMember.cxx,v 1.7 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: DataMember.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -28,18 +28,21 @@ ROOT::Reflex::DataMember::DataMember( const char *  nam,
                                       size_t        offs,
                                       unsigned int  modifiers )
 //-------------------------------------------------------------------------------
+// Construct the dictionary information for a data member.
    : MemberBase ( nam, typ, DATAMEMBER, modifiers ),
      fOffset( offs ) { }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::DataMember::~DataMember() {}
+ROOT::Reflex::DataMember::~DataMember() {
 //-------------------------------------------------------------------------------
-
+// Data member destructor.
+}
 
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::DataMember::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
+// Return the scoped and qualified (if requested with mod) name of the data member
    std::string s = "";
 
    if ( 0 != ( mod & ( QUALIFIED | Q ))) {
@@ -71,6 +74,7 @@ std::string ROOT::Reflex::DataMember::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Object ROOT::Reflex::DataMember::Get( const Object & obj ) const {
 //-------------------------------------------------------------------------------
+// Get the value of this data member as stored in object obj.
    if (DeclaringScope().ScopeType() == ENUM ) {
       return Object(Type::ByName("int"), (void*)&fOffset);
    }
@@ -103,6 +107,7 @@ ROOT::Reflex::Object ROOT::Reflex::DataMember::Get( const Object & obj ) const {
 void ROOT::Reflex::DataMember::Set( const Object & instance,
                                     const void * value ) const {
 //-------------------------------------------------------------------------------
+// Set the data member value in object instance.
    void * mem = CalculateBaseObject( instance );
    mem = (char*)mem + Offset();
    if (TypeOf().IsClass() ) {

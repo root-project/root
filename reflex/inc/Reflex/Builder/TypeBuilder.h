@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.8 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: TypeBuilder.h,v 1.9 2006/03/13 15:49:50 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

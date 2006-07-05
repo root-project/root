@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.9 2006/06/29 16:34:46 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: Scope.h,v 1.11 2006/07/03 17:02:38 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -962,7 +962,7 @@ inline ROOT::Reflex::Scope::operator bool () const {
 inline ROOT::Reflex::Base_Iterator ROOT::Reflex::Scope::Base_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->Base_Begin();
-   return Dummy::sBaseCont().begin();
+   return Dummy::BaseCont().begin();
 }
 
 
@@ -970,7 +970,7 @@ inline ROOT::Reflex::Base_Iterator ROOT::Reflex::Scope::Base_Begin() const {
 inline ROOT::Reflex::Base_Iterator ROOT::Reflex::Scope::Base_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->Base_End();
-   return Dummy::sBaseCont().end();
+   return Dummy::BaseCont().end();
 }
 
 
@@ -978,7 +978,7 @@ inline ROOT::Reflex::Base_Iterator ROOT::Reflex::Scope::Base_End() const {
 inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::Scope::Base_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->Base_RBegin();
-   return Dummy::sBaseCont().rbegin();
+   return Dummy::BaseCont().rbegin();
 }
 
 
@@ -986,7 +986,7 @@ inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::Scope::Base_RBegin() co
 inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::Scope::Base_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->Base_REnd();
-   return Dummy::sBaseCont().rend();
+   return Dummy::BaseCont().rend();
 }
 
 
@@ -994,7 +994,7 @@ inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::Scope::Base_REnd() cons
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::DataMember_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->DataMember_Begin();
-   return Dummy::sMemberCont().begin();
+   return Dummy::MemberCont().begin();
 }
 
 
@@ -1002,7 +1002,7 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::DataMember_Begin() con
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::DataMember_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->DataMember_End();
-   return Dummy::sMemberCont().end();
+   return Dummy::MemberCont().end();
 }
 
 
@@ -1010,7 +1010,7 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::DataMember_End() const
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::DataMember_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->DataMember_RBegin();
-   return Dummy::sMemberCont().rbegin();
+   return Dummy::MemberCont().rbegin();
 }
 
 
@@ -1018,7 +1018,7 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::DataMember_RBe
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::DataMember_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->DataMember_REnd();
-   return Dummy::sMemberCont().rend();
+   return Dummy::MemberCont().rend();
 }
 
 
@@ -1034,7 +1034,7 @@ inline ROOT::Reflex::Scope ROOT::Reflex::Scope::DeclaringScope() const {
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::FunctionMember_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->FunctionMember_Begin();
-   return Dummy::sMemberCont().begin();
+   return Dummy::MemberCont().begin();
 }
 
 
@@ -1042,7 +1042,7 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::FunctionMember_Begin()
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::FunctionMember_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->FunctionMember_End();
-   return Dummy::sMemberCont().end();
+   return Dummy::MemberCont().end();
 }
 
 
@@ -1050,7 +1050,7 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::FunctionMember_End() c
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::FunctionMember_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->FunctionMember_RBegin();
-   return Dummy::sMemberCont().rbegin();
+   return Dummy::MemberCont().rbegin();
 }
 
 
@@ -1058,7 +1058,7 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::FunctionMember
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::FunctionMember_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->FunctionMember_REnd();
-   return Dummy::sMemberCont().rend();
+   return Dummy::MemberCont().rend();
 }
 
 
@@ -1129,7 +1129,7 @@ inline size_t ROOT::Reflex::Scope::MemberSize() const {
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::Member_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->Member_Begin();
-   return Dummy::sMemberCont().begin();
+   return Dummy::MemberCont().begin();
 }
 
 
@@ -1137,7 +1137,7 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::Member_Begin() const {
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::Member_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->Member_End();
-   return Dummy::sMemberCont().end();
+   return Dummy::MemberCont().end();
 }
 
 
@@ -1145,7 +1145,7 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::Member_End() const {
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::Member_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->Member_RBegin();
-   return Dummy::sMemberCont().rbegin();
+   return Dummy::MemberCont().rbegin();
 }
 
 
@@ -1153,7 +1153,7 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::Member_RBegin(
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::Member_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->Member_REnd();
-   return Dummy::sMemberCont().rend();
+   return Dummy::MemberCont().rend();
 }
 
 
@@ -1161,7 +1161,7 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::Member_REnd() 
 inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::Scope::MemberTemplate_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->MemberTemplate_Begin();
-   return Dummy::sMemberTemplateCont().begin();
+   return Dummy::MemberTemplateCont().begin();
 }
 
 
@@ -1169,7 +1169,7 @@ inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::Scope::MemberTemplate
 inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::Scope::MemberTemplate_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->MemberTemplate_End();
-   return Dummy::sMemberTemplateCont().end();
+   return Dummy::MemberTemplateCont().end();
 }
 
 
@@ -1177,7 +1177,7 @@ inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::Scope::MemberTemplate
 inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::Scope::MemberTemplate_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->MemberTemplate_RBegin();
-   return Dummy::sMemberTemplateCont().rbegin();
+   return Dummy::MemberTemplateCont().rbegin();
 }
 
 
@@ -1185,7 +1185,7 @@ inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::Scope::Member
 inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::Scope::MemberTemplate_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->MemberTemplate_REnd();
-   return Dummy::sMemberTemplateCont().rend();
+   return Dummy::MemberTemplateCont().rend();
 }
 
 
@@ -1269,7 +1269,7 @@ inline size_t ROOT::Reflex::Scope::SubScopeSize() const {
 inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Scope::SubScope_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubScope_Begin();
-   return Dummy::sScopeCont().begin();
+   return Dummy::ScopeCont().begin();
 }
 
 
@@ -1277,7 +1277,7 @@ inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Scope::SubScope_Begin() const 
 inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Scope::SubScope_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubScope_End();
-   return Dummy::sScopeCont().end();
+   return Dummy::ScopeCont().end();
 }
 
 
@@ -1285,7 +1285,7 @@ inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Scope::SubScope_End() const {
 inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Scope::SubScope_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubScope_RBegin();
-   return Dummy::sScopeCont().rbegin();
+   return Dummy::ScopeCont().rbegin();
 }
 
 
@@ -1293,7 +1293,7 @@ inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Scope::SubScope_RBegin
 inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Scope::SubScope_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubScope_REnd();
-   return Dummy::sScopeCont().rend();
+   return Dummy::ScopeCont().rend();
 }
 
 
@@ -1301,7 +1301,7 @@ inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Scope::SubScope_REnd()
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Scope::SubType_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubType_Begin();
-   return Dummy::sTypeCont().begin();
+   return Dummy::TypeCont().begin();
 }
 
 
@@ -1309,7 +1309,7 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Scope::SubType_Begin() const {
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Scope::SubType_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubType_End();
-   return Dummy::sTypeCont().end();
+   return Dummy::TypeCont().end();
 }
 
 
@@ -1317,7 +1317,7 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Scope::SubType_End() const {
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Scope::SubType_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubType_RBegin();
-   return Dummy::sTypeCont().rbegin();
+   return Dummy::TypeCont().rbegin();
 }
 
 
@@ -1325,7 +1325,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Scope::SubType_RBegin()
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Scope::SubType_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubType_REnd();
-   return Dummy::sTypeCont().rend();
+   return Dummy::TypeCont().rend();
 }
 
 
@@ -1349,7 +1349,7 @@ inline size_t ROOT::Reflex::Scope::TemplateArgumentSize() const {
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Scope::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->TemplateArgument_Begin();
-   return Dummy::sTypeCont().begin();
+   return Dummy::TypeCont().begin();
 }
 
 
@@ -1357,7 +1357,7 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Scope::TemplateArgument_Begin()
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Scope::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->TemplateArgument_End();
-   return Dummy::sTypeCont().end();
+   return Dummy::TypeCont().end();
 }
 
 
@@ -1365,7 +1365,7 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Scope::TemplateArgument_End() c
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Scope::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->TemplateArgument_RBegin();
-   return Dummy::sTypeCont().rbegin();
+   return Dummy::TypeCont().rbegin();
 }
 
 
@@ -1373,7 +1373,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Scope::TemplateArgument
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Scope::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->TemplateArgument_REnd();
-   return Dummy::sTypeCont().rend();
+   return Dummy::TypeCont().rend();
 }
 
 
@@ -1381,7 +1381,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Scope::TemplateArgument
 inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::Scope::SubTypeTemplate_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubTypeTemplate_Begin();
-   return Dummy::sTypeTemplateCont().begin();
+   return Dummy::TypeTemplateCont().begin();
 }
 
 
@@ -1389,7 +1389,7 @@ inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::Scope::SubTypeTemplate_
 inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::Scope::SubTypeTemplate_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubTypeTemplate_End();
-   return Dummy::sTypeTemplateCont().end();
+   return Dummy::TypeTemplateCont().end();
 }
 
 
@@ -1397,7 +1397,7 @@ inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::Scope::SubTypeTemplate_
 inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::Scope::SubTypeTemplate_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubTypeTemplate_RBegin();
-   return Dummy::sTypeTemplateCont().rbegin();
+   return Dummy::TypeTemplateCont().rbegin();
 }
 
 
@@ -1405,7 +1405,7 @@ inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::Scope::SubTypeT
 inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::Scope::SubTypeTemplate_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubTypeTemplate_REnd();
-   return Dummy::sTypeTemplateCont().rend();
+   return Dummy::TypeTemplateCont().rend();
 }
 
 
@@ -1429,7 +1429,7 @@ inline size_t ROOT::Reflex::Scope::UsingDirectiveSize() const {
 inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Scope::UsingDirective_Begin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->UsingDirective_Begin();
-   return Dummy::sScopeCont().begin();
+   return Dummy::ScopeCont().begin();
 }
 
 
@@ -1437,7 +1437,7 @@ inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Scope::UsingDirective_Begin() 
 inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Scope::UsingDirective_End() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->UsingDirective_End();
-   return Dummy::sScopeCont().end();
+   return Dummy::ScopeCont().end();
 }
 
 
@@ -1445,7 +1445,7 @@ inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Scope::UsingDirective_End() co
 inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Scope::UsingDirective_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->UsingDirective_RBegin();
-   return Dummy::sScopeCont().rbegin();
+   return Dummy::ScopeCont().rbegin();
 }
 
 
@@ -1453,7 +1453,7 @@ inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Scope::UsingDirective_
 inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Scope::UsingDirective_REnd() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->UsingDirective_REnd();
-   return Dummy::sScopeCont().rend();
+   return Dummy::ScopeCont().rend();
 }
 
 

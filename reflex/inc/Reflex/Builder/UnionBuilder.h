@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: UnionBuilder.h,v 1.5 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: UnionBuilder.h,v 1.7 2006/06/30 19:17:46 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -105,7 +105,7 @@ namespace ROOT{
 
       
          /** destructor */
-         virtual ~UnionBuilder();
+         virtual ~UnionBuilder() {}
 
       
          /**
