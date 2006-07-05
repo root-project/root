@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.16 2005/12/15 06:10:37 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.17 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -242,6 +242,7 @@ static inline UInt_t MapKeySym(const QKeyEvent &qev)
 //______________________________________________________________________________________
 static inline void MapEvent(const QKeyEvent  &qev, Event_t &ev)
 {
+   ev.fType  = qev.type() == QEvent::KeyPress ?  kGKeyPress : kKeyRelease;
    ev.fCode  = MapKeySym(qev);
    ev.fState = MapModifierState(qev.state());
    ev.fCount = qev.count();
@@ -345,6 +346,33 @@ static inline QWidget *widgetAt(int x, int y)
    w = w ? w->childAt(w->mapFromGlobal(QPoint(x, y ) ), TRUE ) : 0;
    return w;
 }
+//______________________________________________________________________________
+void TQtClientFilter::AddKeyEvent( const QKeyEvent &keyEvent, TQtClientWidget *frame)
+{
+   // Map and and to the ROOT event queue Qt KeyBoard event mapped to the ROOT Event_t
+   // For "dest" widget 
+   if (frame) {
+     Event_t &event = *new Event_t;
+     memset( &event,0,sizeof(Event_t));
+     QPaintDevice *paintDev = (QPaintDevice *)frame;
+     event.fWindow    = TGQt::rootwid(paintDev);
+
+     event.fSendEvent = keyEvent.spontaneous();
+     event.fTime      = QTime::currentTime().msec ();
+     event.fX         = frame->x();
+     event.fY         = frame->y();
+     event.fWidth     = frame->width();	// width and
+     event.fHeight    = frame->height();	// height excluding the frame
+
+     QPoint pointRoot = frame->mapToGlobal(QPoint(0,0));
+     event.fXRoot     = pointRoot.x();
+     event.fYRoot     = pointRoot.y();
+     MapEvent(keyEvent,event);
+
+     fRootEventQueue->enqueue(&event);
+  }
+}
+
 //______________________________________________________________________________
 bool TQtClientFilter::SelectGrab(Event_t &event, UInt_t selectEventMask,QMouseEvent &mouse) 
 {
@@ -487,42 +515,21 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          // grabSelectEvent = IsGrabSelected(selectEventMask);
          break;
       case QEvent::KeyPress:             // key pressed
-         event.fType   = kGKeyPress;
          keyEvent = (QKeyEvent *)e;
          MapEvent(*keyEvent,event);
          selectEventMask |=  kKeyPressMask;
-         {
-           TQtClientWidget *grabber = 0;
-           if (fKeyGrabber) grabber = fKeyGrabber->IsKeyGrabbed(event);
-           if (!grabber)    grabber = frame->      IsKeyGrabbed(event);
-           if (grabber) {
-              grabber->GrabEvent(event,false);
-              grabSelectEvent  = kTRUE; // to be revised later, It was: grabEvent = kTRUE;
-              ((QKeyEvent *)e)->accept();
-           } else {
-              ((QKeyEvent *)e)->ignore();
-           }
+         ((QKeyEvent *)e)->accept();
+            
          //  fprintf(stderr, " accepted: case QEvent::KeyPress: <%c><%d>: frame = %x; grabber = %x grabbed = %d\n",event.fCode,event.fCode,TGQt::wid(frame), TGQt::wid(grabber),grabEvent);
-         //  fprintf(stderr, "  QEvent::KeyPress: <%s>: key = %d, key_f=%d\n",(const char *)keyEvent->text(),keyEvent->key(),Qt::Key_F);
+         //  fprintf(stderr, "  QEvent::KeyPress: <%s>: key = %d, key_f=%d, frame = %p\n",(const char *)keyEvent->text(),keyEvent->key(),Qt::Key_F,frame);
          //  fprintf(stderr, "  QEvent::KeyPress: Current focus %p\n",(QPaintDevice *) qApp->focusWidget () );
          //  fprintf(stderr, "---------------\n\n");
-         }
          break;
       case QEvent::KeyRelease:           // key released
-         event.fType   = kKeyRelease;
          keyEvent = (QKeyEvent *)e;
          MapEvent(*keyEvent,event);
          selectEventMask |=  kKeyReleaseMask;
-         {
-           TQtClientWidget *grabber = frame->IsKeyGrabbed(event);
-           if (grabber) {
-              grabber->GrabEvent(event,false);
-              grabSelectEvent  = kTRUE; // to be revised later, It was: grabEvent = kTRUE;
-              ((QKeyEvent *)e)->accept();
-           } else {
-              ((QKeyEvent *)e)->ignore();
-           }
-         }
+         ((QKeyEvent *)e)->accept();
          break;
       case QEvent::FocusIn:              // keyboard focus received
          focusEvent   = (QFocusEvent *)e;

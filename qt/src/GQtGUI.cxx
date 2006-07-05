@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.25 2006/05/30 07:06:50 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.26 2006/06/28 09:30:58 antcheva Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -336,7 +336,7 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
         break;
 #endif /* QT_VERSION */
       }
-      DumpROp(fROp);
+      // DumpROp(fROp);
 //      fprintf(stderr," kGCFunction: fROp = %x\n",fROp );
    } else {
         // Fons said this must be like this. 4/07/2003 Valeri Fine
@@ -1831,15 +1831,11 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
    // request for all possible modifier combinations (including the combination of no modifiers).
 
     if (id == kNone) return;
-            // fprintf(stderr,"TQt::GrabKey has no QT-based implementation yet: %p %d %c %x \n",((TQtClientWidget*)wid(id)), keycode,keycode,modifier);
+
     if (grab ) {
-       wid(id)->setActiveWindow();
-       SetInputFocus(id);
       ((TQtClientWidget*)wid(id))->SetKeyMask(keycode,modifier);
-      // wid(id)->grabKeyboard();
     } else {
        ((TQtClientWidget*)wid(id))->UnSetKeyMask(keycode,modifier);
-       // wid(id)->releaseKeyboard();
     }
  }
 //______________________________________________________________________________

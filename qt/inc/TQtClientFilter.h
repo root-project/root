@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.h,v 1.29 2006/03/15 19:18:48 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.h,v 1.7 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -83,6 +83,7 @@ protected:
    static TQtPointerGrabber  *fgGrabber;
 protected:
    bool eventFilter( QObject *o, QEvent *e );
+   void AddKeyEvent( const QKeyEvent &event, TQtClientWidget *widget);
    TQtEventQueue *Queue();
    void SetKeyGrabber(TQtClientWidget *grabber)     { fKeyGrabber = grabber;}
    void UnSetKeyGrabber(TQtClientWidget *grabber)   { if (fKeyGrabber == grabber) fKeyGrabber = 0; }

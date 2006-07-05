@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.11 2006/03/24 15:31:10 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.12 2006/05/08 13:16:56 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -236,24 +236,20 @@ Bool_t TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, int insert)
    //            +1 - insert
    Bool_t found = kTRUE;
    int key[5]= {0,0,0,0,0};
+   int ikeys = 0;
    int index = 0;
    if (keycode) {
       if (modifier & kAnyModifier)  assert(!(modifier & kAnyModifier));
       else {
-#if QT_VERSION < 0x40000
-         if (modifier & kKeyShiftMask)   key[index++] = SHIFT;
-         if (modifier & kKeyLockMask)    key[index++] = META;
-         if (modifier & kKeyControlMask) key[index++] = CTRL;
-         if (modifier & kKeyMod1Mask)    key[index++] = ALT;
-#else /* QT_VERSION */
-         if (modifier & kKeyShiftMask)   key[index++] = Qt::SHIFT;
-         if (modifier & kKeyLockMask)    key[index++] = Qt::META;
-         if (modifier & kKeyControlMask) key[index++] = Qt::CTRL;
-         if (modifier & kKeyMod1Mask)    key[index++] = Qt::ALT;
-#endif /* QT_VERSION */
+         if (modifier & kKeyShiftMask)   { key[index++] = Qt::SHIFT; ikeys += Qt::SHIFT;}
+         if (modifier & kKeyLockMask)    { key[index++] = Qt::META;  ikeys += Qt::META; }
+         if (modifier & kKeyControlMask) { key[index++] = Qt::CTRL;  ikeys += Qt::CTRL; }
+         if (modifier & kKeyMod1Mask)    { key[index++] = Qt::ALT;   ikeys += Qt::ALT;  }
      }
-                                         key[index++] = Qt::UNICODE_ACCEL + keycode;
+                                           key[index++] = Qt::UNICODE_ACCEL + keycode;  ikeys += Qt::UNICODE_ACCEL + keycode; 
    }
+   QKeySequence keys(ikeys);
+
    assert(index<=4);
    switch (insert) {
       case kInsert:
@@ -264,41 +260,35 @@ Bool_t TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, int insert)
 #else /* QT_VERSION */
               fGrabbedKey = new Q3Accel(this);
 #endif /* QT_VERSION */
-     //         connect(fGrabbedKey,SIGNAL(activated ( int )),this,SLOT(Accelerate(int)));
+               connect(fGrabbedKey,SIGNAL(activated ( int )),this,SLOT(Accelerate(int)));
             }
-            QKeySequence keys(key[0],key[1],key[2],key[3]);
             if (fGrabbedKey->findKey(keys) == -1)  {
-             /* int itemId = &*/ fGrabbedKey->insertItem(keys,fGrabbedKey->count()+1);
-           //      fprintf(stderr,"+%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' %d, evail=%d \n", TGQt::wid(this), modifier, keycode ,fGrabbedKey->count()
-           //   , fGrabbedKey->isEnabled() );
+//               int itemId = 
+                fGrabbedKey->insertItem(keys);
+//                fprintf(stderr,"+%p: TQtClientWidget::SetKeyMask  modifier =%d  keycode = \'%c\' item=%d enable=%d\n", TGQt::wid(this), modifier, keycode ,itemId
+//              , fGrabbedKey->isEnabled() );
             }
-            TQtClientFilter *f = gQt->QClientFilter();
-            f->SetKeyGrabber(this);
         }
          break;
       case kRemove:
          if (!fGrabbedKey)  break;
          if (keycode) {
-              int id = fGrabbedKey->findKey(QKeySequence(key[0],key[1],key[2],key[3]));
-            // fprintf(stderr,"-%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' %d\n", this, modifier, keycode ,id);
-            if (id != -1) fGrabbedKey->removeItem(id);
+              int id = fGrabbedKey->findKey(keys);
+            if (id != -1) { fGrabbedKey->removeItem(id); }
             if (fGrabbedKey->count() ==  0) { 
                 delete fGrabbedKey; fGrabbedKey = 0; 
-                TQtClientFilter *f = gQt->QClientFilter();
-                f->UnSetKeyGrabber(this);
             }
          } else {
            // keycode ==0 - means delete all accelerators
            // fprintf(stderr,"-%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' \n", this, modifier, keycode);
              delete fGrabbedKey; fGrabbedKey = 0;
-             TQtClientFilter *f = gQt->QClientFilter();
-             f->UnSetKeyGrabber(this);
          }
          break;
       case kTestKey:
          if (fGrabbedKey) {
-            found = (fGrabbedKey->findKey(QKeySequence(key[0],key[1],key[2],key[3])) != -1);
-           // fprintf(stderr,"\n+%p:testing  TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' found=%d \n", TGQt::wid(this), modifier, keycode ,found);
+//            found = (fGrabbedKey->findKey(QKeySequence(key[0],key[1],key[2],key[3])) != -1);
+            found = (fGrabbedKey->findKey(keys) != -1);
+            // fprintf(stderr,"\n+%p:testing  TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' found=%d \n", TGQt::wid(this), modifier, keycode ,found);
          }
 
          break;
@@ -339,24 +329,26 @@ void TQtClientWidget::Accelerate(int id)
   int l = key.count();
   int keycode = key[l-1];
   uint state =0;
-  for (int i=0; i < l;i++) {
-     switch (key[i]) {
+  
 #if QT_VERSION < 0x40000
-        case SHIFT:  state |= Qt::ShiftButton;   break;
-        case META:   state |= Qt::MetaButton;    break;
-        case CTRL:   state |= Qt::ControlButton; break;
-        case ALT:    state |= Qt::AltButton;     break;
+  if (keycode & Qt::SHIFT) state |=  Qt::ShiftButton;
+  if (keycode & Qt::META)  state |=  Qt::MetaButton;
+  if (keycode & Qt::CTRL)  state |=  Qt::ControlButton;
+  if (keycode & Qt::ALT)   state |=  Qt::AltButton;
 #else /* QT_VERSION */
-        case Qt::SHIFT:  state |= Qt::ShiftModifier;   break;
-        case Qt::META:   state |= Qt::MetaModifier;    break;
-        case Qt::CTRL:   state |= Qt::ControlModifier; break;
-        case Qt::ALT:    state |= Qt::AltModifier;     break;
+  if (keycode & Qt::SHIFT) state |=  Qt::ShiftModifier;
+  if (keycode & Qt::META)  state |=  Qt::MetaModifier;
+  if (keycode & Qt::CTRL)  state |=  Qt::ControlModifier;
+  if (keycode & Qt::ALT)   state |=  Qt::AltModifier;
 #endif /* QT_VERSION */
-     };
-  }
+        
+  // Create ROOT event
   QKeyEvent ac(QEvent::KeyPress,keycode,keycode,state);
-  fprintf(stderr,"TQtClientWidget::Accelerate %c\n", keycode);
-  QApplication::sendEvent( this, &ac );
+  // call Event filter directly 
+  TQtClientFilter *f = gQt->QClientFilter();
+  if (f) f->AddKeyEvent(ac,this); 
+  QKeyEvent acRelease(QEvent::KeyRelease,keycode,keycode,state);
+  if (f) f->AddKeyEvent(acRelease,this); 
 }
 //______________________________________________________________________________
 void TQtClientWidget::Disconnect()
