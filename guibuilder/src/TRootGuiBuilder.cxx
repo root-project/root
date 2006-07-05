@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.37 2006/06/14 10:22:37 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.38 2006/07/05 07:02:23 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -164,6 +164,14 @@ const char gHelpBuilder[] = "\
  o Ctrl-N    - create new main frame\n\
  o Ctrl-Z    - undo last action (not implemented)\n\
  o Shift-Ctrl-Z - redo (not implemented)\n\
+\n\
+                    More informations\n\
+     ************************************************\n\
+\n\
+For more information, please see the GuiBuilder Howto page at:\n\
+\n\
+   http://root.cern.ch/root/HowtoGuiBuilder.html\n\
+\n\
 ";
 
 const char gHelpAboutBuilder[] = "\
