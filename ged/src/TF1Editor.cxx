@@ -38,7 +38,7 @@ ClassImp(TF1Editor)
 enum ETF1Wid {
    kTF1_TIT,  kTF1_NPX,
    kTF1_XSLD, kTF1_XMIN, kTF1_XMAX,
-   kTF1_PAR
+   kTF1_PAR,  kTF1_DRW
 };
 
 //______________________________________________________________________________
@@ -56,6 +56,14 @@ TF1Editor::TF1Editor(const TGWindow *p, Int_t id, Int_t width, Int_t height,
    fTitle->SetToolTipText(Form("Function expression or predefined name"));
    AddFrame(fTitle, new TGLayoutHints(kLHintsLeft,3, 2, 2, 3));
    
+   TGCompositeFrame *f3a = new TGCompositeFrame(this, 137, 20, kHorizontalFrame);
+   AddFrame(f3a, new TGLayoutHints(kLHintsTop, 0, 1, 3, 0));
+   fDrawMode = new TGCheckButton(f3a, "Update", kTF1_DRW);
+   fDrawMode->SetToolTipText("Immediate function redrawing");
+   f3a->AddFrame(fDrawMode, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 3, 1, 1, 0));
+   fParLabel = new TGLabel(f3a, "");
+   f3a->AddFrame(fParLabel, new TGLayoutHints(kLHintsRight | kLHintsBottom, 25, 2, 1, 0));
+
    TGCompositeFrame *f3 = new TGCompositeFrame(this, 137, 20, kHorizontalFrame | kFixedWidth);
    fSetPars = new TGTextButton(f3, "Set Parameters...", kTF1_PAR);
    f3->AddFrame(fSetPars, new TGLayoutHints(kLHintsRight | kLHintsTop | kLHintsExpandX, 
@@ -139,8 +147,11 @@ void TF1Editor::ConnectSignals2Slots()
    // Connect signals to slots.
 
    fNXpoints->Connect("ValueSet(Long_t)", "TF1Editor", this, "DoXPoints()");
-   (fNXpoints->GetNumberEntry())->Connect("ReturnPressed()", "TF1Editor", this, "DoXPoints()");
+   (fNXpoints->GetNumberEntry())->Connect("ReturnPressed()", "TF1Editor", 
+                                          this, "DoXPoints()");
    fSetPars->Connect("Clicked()", "TF1Editor", this, "DoParameterSettings()");
+   fSliderX->Connect("Pressed()","TF1Editor", this,"DoSliderXPressed()");
+   fSliderX->Connect("Released()","TF1Editor", this,"DoSliderXReleased()");
    fSliderX->Connect("PositionChanged()","TF1Editor", this,"DoSliderXMoved()");
 
    fInit = kFALSE;
@@ -163,11 +174,15 @@ void TF1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = obj;
    fPad = pad;
    TF1 *fF1 = (TF1*)fModel;
+   fAvoidSignal = kTRUE;
 
    const char *text = fF1->GetTitle();
    fTitle->SetText(text);
    
    fNP = fF1->GetNpar();
+   fParLabel->SetText(Form("Npar: %d", fNP));
+   fClient->NeedRedraw(fParLabel);
+   
    fNXpoints->SetNumber(fF1->GetNpx());
 
    if (!fNP)
@@ -186,6 +201,7 @@ void TF1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    if (fInit) ConnectSignals2Slots();
    SetActive(kTRUE);
+   fAvoidSignal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -207,6 +223,7 @@ void TF1Editor::DoXPoints()
 {
    // Slot connected to the number of points setting.
 
+   if (fAvoidSignal) return;
    TF1 *fF1 = (TF1*)fModel;
    Double_t rmin, rmax;
    fF1->GetRange(rmin, rmax);
@@ -224,6 +241,73 @@ void TF1Editor::DoSliderXMoved()
 {
    // Slot connected to the x-Slider range for function redrawing.
 
+   if (fAvoidSignal) return;
+   TF1 *fF1 = (TF1*)fModel;
+   fF1->SetNpx((Int_t)fNXpoints->GetNumber());
+   TAxis *x = fF1->GetHistogram()->GetXaxis();
+   
+   fPad->cd();
+   if (fDrawMode->GetState() == kButtonDown) {
+      TString opt = fF1->GetDrawOption();
+      opt.ToUpper();
+      if (!opt.Contains("SAME"))
+         opt += "SAME";
+      fF1->Draw(opt);
+
+      x->SetRange((Int_t)((fSliderX->GetMinPosition())+0.5),
+                  (Int_t)((fSliderX->GetMaxPosition())+0.5));
+      fSldMinX->SetNumber(x->GetBinLowEdge(x->GetFirst()));
+      fSldMaxX->SetNumber(x->GetBinUpEdge(x->GetLast())); 
+      fClient->NeedRedraw(fSliderX,kTRUE);  
+      fClient->NeedRedraw(fSldMinX,kTRUE);
+      fClient->NeedRedraw(fSldMaxX,kTRUE);
+      Update();
+
+   } else {
+      x->SetRange((Int_t)((fSliderX->GetMinPosition())+0.5),
+                  (Int_t)((fSliderX->GetMaxPosition())+0.5));
+      fSldMinX->SetNumber(x->GetBinLowEdge(x->GetFirst()));
+      fSldMaxX->SetNumber(x->GetBinUpEdge(x->GetLast())); 
+      fClient->NeedRedraw(fSliderX,kTRUE);  
+      fClient->NeedRedraw(fSldMinX,kTRUE);
+      fClient->NeedRedraw(fSldMaxX,kTRUE);
+   
+   }
+}
+
+//______________________________________________________________________________
+void TF1Editor::DoSliderXPressed()
+{
+   // Slot connected to the x-Slider.
+
+   if (fAvoidSignal || (fDrawMode->GetState() == kButtonDown)) return;
+
+   TF1 *fF1 = (TF1*)fModel;
+   fF1->SetNpx((Int_t)fNXpoints->GetNumber());
+   TAxis *x = fF1->GetHistogram()->GetXaxis();
+   fPad->cd();
+   TString opt = fF1->GetDrawOption();
+   opt.ToUpper();
+   if (!opt.Contains("SAME"))
+      opt += "SAME";
+   fF1->Draw(opt);
+
+   x->SetRange((Int_t)((fSliderX->GetMinPosition())+0.5),
+               (Int_t)((fSliderX->GetMaxPosition())+0.5));
+   fSldMinX->SetNumber(x->GetBinLowEdge(x->GetFirst()));
+   fSldMaxX->SetNumber(x->GetBinUpEdge(x->GetLast())); 
+   fClient->NeedRedraw(fSliderX,kTRUE);  
+   fClient->NeedRedraw(fSldMinX,kTRUE);
+   fClient->NeedRedraw(fSldMaxX,kTRUE);
+   Update();   
+}
+
+//______________________________________________________________________________
+void TF1Editor::DoSliderXReleased()
+{
+   // Slot connected to the x-Slider.
+
+   if (fAvoidSignal || (fDrawMode->GetState() == kButtonDown)) return;
    TF1 *fF1 = (TF1*)fModel;
    fF1->SetNpx((Int_t)fNXpoints->GetNumber());
    TAxis *x = fF1->GetHistogram()->GetXaxis();
@@ -245,11 +329,13 @@ void TF1Editor::DoSliderXMoved()
    Update();   
 }
 
+
 //______________________________________________________________________________
 void TF1Editor::DoXRange()
 {
-   // Slot connected to the Min/Max x-axis settings of the slider range.
+   // Slot connected to min/max settings of the slider range.
 
+   if (fAvoidSignal) return;
    TF1 *fF1 = (TF1*)fModel;
    TAxis *x = fF1->GetHistogram()->GetXaxis();
    Int_t nx = x->GetNbins();

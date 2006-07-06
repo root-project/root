@@ -36,17 +36,21 @@ class TGTextEntry;
 class TGTextButton;
 class TGDoubleHSlider;
 class TGNumberEntryField;
+class TGLabel;
+class TGCheckButton;
 
 class TF1Editor : public TGedFrame {
 
 protected:
    TGTextEntry         *fTitle;           // function title 
    Int_t                fNP;              // number of function parameters
+   TGLabel             *fParLabel;        // label for number of parameters
+   TGCheckButton       *fDrawMode;        // immediate function redraw (if selected)
    TGTextButton        *fSetPars;         // open 'Set Parameters' dialog 
    TGNumberEntry       *fNXpoints;        // number of points along x-axis 
    TGDoubleHSlider     *fSliderX;         // slider to set x-axis range
-   TGNumberEntryField  *fSldMinX;         // contains minimum value of x-Axis
-   TGNumberEntryField  *fSldMaxX;         // contains maximum value of x-Axis
+   TGNumberEntryField  *fSldMinX;         // contains minimum value of x-axis
+   TGNumberEntryField  *fSldMaxX;         // contains maximum value of x-axis
 
    virtual void ConnectSignals2Slots();   //connect signals to slots
 
@@ -58,6 +62,8 @@ public:
    virtual void   DoParameterSettings();
    virtual void   DoXPoints();
    virtual void   DoSliderXMoved();
+   virtual void   DoSliderXPressed();
+   virtual void   DoSliderXReleased();
    virtual void   DoXRange();
 
    ClassDef(TF1Editor,0)  // TF1 editor
