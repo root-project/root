@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.294 2006/06/26 09:46:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.295 2006/07/03 16:10:46 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2414,6 +2414,10 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
             f1->GetName(), f1->GetNdim(), GetDimension());
       return 0;
    }
+   
+   // We must empty the current buffer (if any), otherwise TH1::Reset may be
+   // called at some point, resetting the function created by this function
+   if (fBuffer) BufferEmpty(1);
 
    hxfirst = fXaxis.GetFirst();
    hxlast  = fXaxis.GetLast();
@@ -2690,7 +2694,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 
 
 //   - Store fitted function in histogram functions list and draw
-   if (!fitOption.Nostore) {
+      if (!fitOption.Nostore) {
       if (!fitOption.Plus) {
          TIter next(fFunctions, kIterBackward);
          TObject *obj;
