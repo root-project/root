@@ -404,7 +404,7 @@ endif
 $(CINTDIRSTL)/%.dll: $(CINTDIRDLLSTL)/G__cpp_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $(@:.dll=.$(SOEXT)) $^
 	$(CINTDLLSOEXTCMD)
-	-rm -f $< $(<:.o=.cxx) $(<:.o=.c) $(<:.o=.h)
+	-rm -f $< $(<:.o=.cxx) $(<:.o=.c) $(<:.o=.h) $(<:.o=.d)
 
 metautils/src/stlLoader_%.o: metautils/src/stlLoader.cc
 	$(CXX) $(OPT) $(CINTCXXFLAGS) $(INCDIRS) -DWHAT=\"$*\" $(CXXOUT)$@ -c $<
@@ -447,7 +447,6 @@ $(CINTDIRDLLS)/sys/ipc.$(SOEXT): $(CINTDIRL)/G__c_ipc.o metautils/src/stlLoader_
 ##### ipc special treatment - END
 
 ##### dictionaries
-.PRECIOUS: $(CINTDIRDLLSTL)/rootcint_%.cxx
 $(CINTDIRDLLSTL)/rootcint_%.cxx: $(ORDER_) $(ROOTCINTTMPEXE)
 	$(ROOTCINTTMP) -f $@ -c \
 	$(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) $(subst multi,,${*:2=}) \
@@ -464,6 +463,7 @@ else
 	mv -f $@ $(basename $@).so
 endif
 endif
+	-rm -f $< $(<:.o=.cxx) $(<:.o=.c) $(<:.o=.h) $(<:.o=.d)
 ##### dictionaries - END
 
 ##### configcint.h
