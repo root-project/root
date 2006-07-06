@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: InterpolationTypes.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: InterpolationTypes.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -56,9 +56,8 @@ namespace Math {
     // enumerations for the type of interpolations
     enum Type {  LINEAR, 
 		 POLYNOMIAL, 
-		 /*   to be implemented - depened on GSL LA */
-// 		 CSPLINE, 
-// 		 CSPLINE_PERIODIC,  
+ 		 CSPLINE, 
+ 		 CSPLINE_PERIODIC,  
 		 AKIMA, 
 		 AKIMA_PERIODIC
     };
