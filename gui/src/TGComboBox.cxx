@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.45 2006/06/01 09:13:17 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.46 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -620,7 +620,7 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
       AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), 0, i),
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
-   Select(1);  // to have first entry selected
+   Select(1, kFALSE);  // to have first entry selected
 
    SetWindowName();
 }
@@ -660,7 +660,7 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
    for (Int_t i = 1; i < 16; i++)
       AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), i, 0),
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
-   Select(1);  // to have first entry selected
+   Select(1, kFALSE);  // to have first entry selected
    SetWindowName();
 }
 
@@ -727,7 +727,7 @@ TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
    if (noFonts < kMaxFonts - 1)
       ;
    fFonts[noFonts] = 0;
-   Select(1);  // to have first entry selected
+   Select(1, kFALSE);  // to have first entry selected
    SetWindowName();
 }
 
