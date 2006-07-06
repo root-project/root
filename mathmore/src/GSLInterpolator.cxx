@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLInterpolator.cxx,v 1.2 2005/10/18 10:11:51 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLInterpolator.cxx,v 1.3 2006/06/16 10:34:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -38,10 +38,10 @@ namespace Math {
 
 
 GSLInterpolator::GSLInterpolator (const Interpolation::Type type, const std::vector<double> & x, const std::vector<double> & y) 
-{
+{ 
    // constructor given type and vectors of (x,y) points
    const gsl_interp_type* interpType = 0 ;
-   switch ( type )
+   switch ( type )  
    {
       case ROOT::Math::Interpolation::LINEAR          : 
          interpType = gsl_interp_linear; 
@@ -51,15 +51,15 @@ GSLInterpolator::GSLInterpolator (const Interpolation::Type type, const std::vec
          interpType = gsl_interp_polynomial; 
          fName = "Polynomial";
          break ;
-         // to be implemented : dpened on GSL linear algebra
-         //     case ROOT::Math::Interpolation::CSPLINE         :
-         //       interpType = gsl_interp_cspline ;          
-         //       fName = "Cspline";
-         //       break ;
-         //     case ROOT::Math::Interpolation::CSPLINE_PERIODIC :
-         //       interpType = gsl_interp_cspline_periodic  ; 
-         //       fName = "Cspline_Periodic";
-         //       break ;
+         // dpened on GSL linear algebra
+      case ROOT::Math::Interpolation::CSPLINE         :
+         interpType = gsl_interp_cspline ;          
+         fName = "Cspline";
+         break ;
+      case ROOT::Math::Interpolation::CSPLINE_PERIODIC :
+         interpType = gsl_interp_cspline_periodic  ; 
+         fName = "Cspline_Periodic";
+         break ;
       case ROOT::Math::Interpolation::AKIMA            :
          interpType = gsl_interp_akima; 
          fName = "Akima";
@@ -69,8 +69,8 @@ GSLInterpolator::GSLInterpolator (const Interpolation::Type type, const std::vec
          fName = "Akima_Periodic";
          break ;
       default :
-         //  interpType = gsl_interp_cspline   
-         interpType = gsl_interp_akima; 
+         interpType = gsl_interp_cspline;   
+         // interpType = gsl_interp_akima; 
          fName = "Akima";
          break ;
    }

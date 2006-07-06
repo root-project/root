@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.cxx,v 1.2 2006/05/26 14:30:17 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.cxx,v 1.3 2006/06/19 08:44:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -186,7 +186,7 @@ namespace Math {
   double GSLRandomEngine::Gaussian(double sigma)  
   {
     // Gaussian distribution
-    //#define HAVE_GSL18
+#define HAVE_GSL18
 #ifdef HAVE_GSL18
     return gsl_ran_gaussian_ziggurat(  fRng->Rng(), sigma);
 #else
