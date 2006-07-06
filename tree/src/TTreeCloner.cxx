@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.7 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.8 2006/04/17 21:21:59 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -28,6 +28,8 @@
 #include "TTree.h"
 #include "TTreeCloner.h"
 #include "TFile.h"
+#include "TLeafI.h"
+#include "TLeafL.h"
 
 TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
    fIsValid(kTRUE),
@@ -129,11 +131,41 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to)
       TBranchClones *fromclones = (TBranchClones*)from;
       TBranchClones *toclones = (TBranchClones*)to;
       numBaskets += CollectBranches(fromclones->fBranchCount,toclones->fBranchCount);
-   }
-   if (from->InheritsFrom(TBranchElement::Class())) {
+   
+   } else if (from->InheritsFrom(TBranchElement::Class())) {
       TBranchElement *fromelem = (TBranchElement*)from;
       TBranchElement *toelem   = (TBranchElement*)to;
       if (fromelem->fMaximum > toelem->fMaximum) toelem->fMaximum = fromelem->fMaximum;
+   } else {
+
+      Int_t nb = from->GetListOfLeaves()->GetEntries();
+      Int_t fnb= to->GetListOfLeaves()->GetEntries();
+      if (nb!=fnb) {
+         Error("TTreeCloner::CollectBranches",
+            "The export branch and the import branch do not have the same number of leaves (%d vs %d)",
+            fnb,nb);
+         fIsValid = kFALSE;
+         return 0;
+      }
+      for (Int_t i=0;i<nb;i++)  {
+         TLeaf *fromleaf_gen = (TLeaf*)from->GetListOfLeaves()->At(i);
+         if (fromleaf_gen->IsA()==TLeafI::Class()) {
+            TLeafI *fromleaf = (TLeafI*)from->GetListOfLeaves()->At(i);
+            TLeafI *toleaf   = (TLeafI*)to->GetListOfLeaves()->At(i);
+            if (fromleaf->GetMaximum() > toleaf->GetMaximum()) 
+               toleaf->SetMaximum( fromleaf->GetMaximum() );
+            if (fromleaf->GetMinimum() < toleaf->GetMinimum()) 
+               toleaf->SetMinimum( fromleaf->GetMinimum() );
+         } else if (fromleaf_gen->IsA()==TLeafL::Class()) {
+            TLeafL *fromleaf = (TLeafL*)from->GetListOfLeaves()->At(i);
+            TLeafL *toleaf   = (TLeafL*)to->GetListOfLeaves()->At(i);
+            if (fromleaf->GetMaximum() > toleaf->GetMaximum()) 
+               toleaf->SetMaximum( fromleaf->GetMaximum() );
+            if (fromleaf->GetMinimum() < toleaf->GetMinimum()) 
+               toleaf->SetMinimum( fromleaf->GetMinimum() );
+         }
+      }
+
    }
 
    fFromBranches.AddLast(from);
