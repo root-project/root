@@ -286,7 +286,7 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
 }
 
 //______________________________________________________________________________
- void TFunctionParametersDialog::CloseWindow()
+void TFunctionParametersDialog::CloseWindow()
 {
    // Close parameters' dialog.
 
@@ -308,7 +308,7 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
 }
 
 //______________________________________________________________________________
- void TFunctionParametersDialog::DoCancel()
+void TFunctionParametersDialog::DoCancel()
 {
    // Slot related to the Cancel button.
 
@@ -318,7 +318,7 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
 }
 
 //______________________________________________________________________________
- void TFunctionParametersDialog::DoFix(Bool_t on)
+void TFunctionParametersDialog::DoFix(Bool_t on)
 {
    // Slot related to the Fix check button.
 
@@ -363,7 +363,7 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
                   fParMax[i]->SetNumber(fPval[i]+0.1*fPval[i]);
                else
                   fParMax[i]->SetNumber(1.0);
-           } else if (fPval[i]) {
+            } else if (fPval[i]) {
                fParMin[i]->SetNumber(fPval[i]-0.1*fPval[i]);
                fParMax[i]->SetNumber(fPval[i]+0.1*fPval[i]);
             } else {
@@ -398,7 +398,7 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
 }
 
 //______________________________________________________________________________
- void TFunctionParametersDialog::DoOK()
+void TFunctionParametersDialog::DoOK()
 {
    // Slot related to the OK button.
 
@@ -409,7 +409,7 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
 }
 
 //______________________________________________________________________________
- void TFunctionParametersDialog::DoApply()
+void TFunctionParametersDialog::DoApply()
 {
    // Slot related to the Preview button.
 
@@ -420,7 +420,7 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
 }
 
 //______________________________________________________________________________
- void TFunctionParametersDialog::DoReset()
+void TFunctionParametersDialog::DoReset()
 {
    // Slot related to the Reset button.
 
@@ -461,13 +461,13 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
          fParMax[i]->SetNumber(fPval[i]+0.1*fPval[i]);
       else
          fParMax[i]->SetNumber(1.0);
-       if (fParMax[i]->GetNumber() < fParMin[i]->GetNumber()){
+      if (fParMax[i]->GetNumber() < fParMin[i]->GetNumber()){
          Double_t temp;
          temp = fParMax[i]->GetNumber();
          fParMax[i]->SetNumber(fParMin[i]->GetNumber());
          fParMin[i]->SetNumber(temp);
       }
-     if (fParMin[i]->GetNumber() == fParMax[i]->GetNumber()) {
+      if (fParMin[i]->GetNumber() == fParMax[i]->GetNumber()) {
          fParVal[i]->SetState(kFALSE);
          fParMin[i]->SetEnabled(kFALSE);
          fParMax[i]->SetEnabled(kFALSE);
@@ -508,7 +508,7 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
 }
 
 //______________________________________________________________________________
- void TFunctionParametersDialog::DoSlider()
+void TFunctionParametersDialog::DoSlider()
 {
    // Slot related to the parameters' value settings.
 
@@ -535,7 +535,7 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
 }
 
 //______________________________________________________________________________
- void TFunctionParametersDialog::DoParValue()
+void TFunctionParametersDialog::DoParValue()
 {
    // Slot related to the parameter value settings.
 
@@ -552,7 +552,7 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
                                  fParMax[i]->GetNumber()); 
             fParSld[i]->SetPosition(fParMin[i]->GetNumber(),
                                     fParMax[i]->GetNumber()); 
-        }
+         }
          if (fParVal[i]->GetNumber() > fParMax[i]->GetNumber()) {
             fParMax[i]->SetNumber(fParVal[i]->GetNumber());
             fClient->NeedRedraw(fParMax[i]);
@@ -577,7 +577,7 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
 }
 
 //______________________________________________________________________________
- void TFunctionParametersDialog::DoParMinLimit()
+void TFunctionParametersDialog::DoParMinLimit()
 {
    // Slot related to the minumum parameter limit settings.
 
@@ -613,7 +613,7 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
 }
 
 //______________________________________________________________________________
- void TFunctionParametersDialog::DoParMaxLimit()
+void TFunctionParametersDialog::DoParMaxLimit()
 {
    // Slot related to the maximum parameter limit settings.
 
