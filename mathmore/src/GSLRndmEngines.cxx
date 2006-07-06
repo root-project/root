@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.cxx,v 1.5 2006/07/06 10:16:10 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.cxx,v 1.6 2006/07/06 10:37:25 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -187,7 +187,7 @@ namespace Math {
   {
     // Gaussian distribution
     // only for GSL >= 1/8
-#ifdef HAVE_GSL_VERSION_GT_1.8
+#ifdef HAVE_GSL_VERSION_GT_1_8
      return gsl_ran_gaussian_ziggurat(  fRng->Rng(), sigma);
 //     static float gslVersion = GSL_VERSION;
 //     if (gslVersion >= 1.8) 
