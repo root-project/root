@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.8 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.9 2006/07/01 16:01:08 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -61,6 +61,7 @@ class XrdProofClient;
 class XrdProofdPriority;
 class XrdProofWorker;
 class XrdScheduler;
+class XrdSrvBuffer;
 
 class XrdProofdProtocol : XrdProtocol {
 
@@ -89,6 +90,7 @@ public:
    int           Destroy();
    int           Detach();
    void          EraseServer(int psid);
+   int           GetBuff(int quantum);
    int           GetData(const char *dtype, char *buff, int blen);
    int           GetFreeServID();
    XrdProofServProxy *GetServer(int psid);
@@ -98,6 +100,7 @@ public:
    int           Ping();
    int           Process2();
    void          Reset();
+   int           SendData(XrdProofdResponse *resp, kXR_int32 sid = -1, XrdSrvBuffer **buf = 0);
    int           SendMsg();
    int           SetUserEnvironment(const char *usr, const char *dir = 0);
    int           Urgent();
@@ -140,6 +143,7 @@ public:
    int                           fBlast;
    //
    int                           fhcPrev;
+   int                           fhcMax;
    int                           fhcNext;
    int                           fhcNow;
    int                           fhalfBSize;
