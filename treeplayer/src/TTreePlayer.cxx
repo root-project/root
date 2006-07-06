@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.219 2006/07/04 23:35:37 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.220 2006/07/05 17:29:05 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2601,8 +2601,8 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
    }
 
    if (selector->Version() != 0 || selector->GetStatus()!=-1) {
-     selector->SlaveTerminate();   //<==call user termination function
-     selector->Terminate();        //<==call user termination function
+      selector->SlaveTerminate();   //<==call user termination function
+      selector->Terminate();        //<==call user termination function
    }
 
    if (gMonitoringWriter)
