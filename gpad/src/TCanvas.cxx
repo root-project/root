@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.112 2006/05/30 07:30:41 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.113 2006/07/03 16:10:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -720,10 +720,10 @@ void TCanvas::Draw(Option_t *)
    fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
                                              fWindowWidth, fWindowHeight);
    fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
-   fCanvasImp->Show();
 
    Build();
    ResizePad();
+   fCanvasImp->Show();
    Modified();
 }
 
