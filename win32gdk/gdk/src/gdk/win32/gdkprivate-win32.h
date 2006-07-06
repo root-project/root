@@ -293,7 +293,7 @@ extern "C" {
                                  */
 // bb add
       int luser_dash;           // length of array containing custom style bits
-      int user_dash[6];         // array of custom style bits
+      int user_dash[32];        // array of custom style bits
 
       int saved_dc;
    };
