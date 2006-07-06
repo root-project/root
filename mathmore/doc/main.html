@@ -12,7 +12,6 @@ The current set includes classes and functions for:
 <li>\ref Integration
 <li>\ref Deriv
 <li>\ref RootFinders
-<li>Minimization 
 </ul>
 <li>\ref Interpolation 
 <li>\ref FuncApprox, based on Chebyshev polynomials
@@ -25,10 +24,10 @@ The current set includes classes and functions for:
 <p>
 The mathematical functions are implemented as a set of free functions in the namespace \em ROOT::Math. The naming used for the special functions is the same proposed for the C++ standard (see C++ standard extension <A HREF="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1687.pdf"> proposal document</A>).
 
-The MathCore library is implemented wrapping in C++ the GNU Scientific Library (<A HREF="http://www.gnu.org/software/gsl">GSL</A>). The needed routine of GSL are compiled in the library in the %ROOT version, while in the standalone version GSL is needed to both build and use libMathMore. 
-<A HREF="http://seal.web.cern.ch/seal/MathLibs/gsl-1.5.tar.gz">Here</A> you can find a tar file of GSL compatible with MathMore, it is the one used for building MathMore for the ROOT distribution. 
+The MathMore library is implemented wrapping in C++ the GNU Scientific Library (<A HREF="http://www.gnu.org/software/gsl">GSL</A>). To build MathMore you need to have first GSL installed somewhere in your system. A version of GSL larger or equal 1.5 is required. A tar file of GSL can be downloaded from the <A HREF="http://www.gnu.org/software/gsl/#downloading">GSL Web site</A>, or (for version 1.8) from 
+<A HREF="http://seal.web.cern.ch/seal/MathLibs/gsl-1.8.tar.gz">here</A>. Windows binaries, compiled using Visual Studio 7.1 can be downloaded from  <A HREF="http://seal.web.cern.ch/seal/MathLibs/GSL-1.8.zip">this location</A>.
 
-The current version can be downloaded <A HREF="../MathMore.tar.gz">here</A>. 
+The current version of MathMore can be downloaded <A HREF="../MathMore.tar.gz">here</A>. 
 To build the library run first the script <em>configure --with-gsl="gsl_dir_location"</em> and then <em>make</em>. Do <em>configure --help</em> to see options available in configuring, like defining the installation directory. Run also <em>make install</em> to install the library and include files and <em>make check</em> to build the tests.  
 <br>
 The library built in this way, in contrast to the one distributed by %ROOT,  does not contain the dictionary information and therefore cannot be used interactivly.
