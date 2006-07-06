@@ -404,15 +404,10 @@ endif
 $(CINTDIRSTL)/%.dll: $(CINTDIRDLLSTL)/G__cpp_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $(@:.dll=.$(SOEXT)) $^
 	$(CINTDLLSOEXTCMD)
-
-.PRECIOUS: $(addprefix metautils/src/stlLoader_,$(addsuffix .o,$(CINTDLLNAMES)))\
-	   $(addprefix $(CINTDIRDLLSTL)/G__cpp_,$(addsuffix .o,$(CINTDLLNAMES)))
+	-rm -f $< $(<:.o=.cxx) $(<:.o=.c) $(<:.o=.h)
 
 metautils/src/stlLoader_%.o: metautils/src/stlLoader.cc
 	$(CXX) $(OPT) $(CINTCXXFLAGS) $(INCDIRS) -DWHAT=\"$*\" $(CXXOUT)$@ -c $<
-
-#$(CINTDIRDLLSTL)/G__cpp_%.o: $(CINTDIRDLLSTL)/G__cpp_%.cxx
-#	$(CXX) $(OPT) $(CINTCXXFLAGS) $(CXXOUT)$@ -c $<
 
 $(CINTDIRDLLSTL)/G__cpp_%.cxx: $(ORDER_) $(CINTTMP)
 	$(CINTTMP) -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
