@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.12 2006/06/25 18:43:24 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.13 2006/06/29 20:36:43 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 #include "TUrl.h"
 #include "TList.h"
 #include "TObjString.h"
-
+#include "TObjArray.h"
 
 ClassImp(TMySQLServer)
 
@@ -29,6 +29,15 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    // of the form "mysql://<host>[:<port>][/<database>]", e.g.:
    // "mysql://pcroot.cern.ch:3456/test". The uid is the username and pw
    // the password that should be used for the connection.
+   //
+   // In addition, several parameters can be specified in url after "?" symbold:
+   //    timeout=N            n is connect timeout is seconds 
+   //    socket=socketname   socketname should be name of Unix socket, used for connection
+   //    multi_statements    Tell the server that the client may send multiple statements in a single string (separated by ;);
+   //    multi_results       Tell the server that the client can handle multiple result sets from multiple-statement executions or stored procedures.
+   // If several parameters are specified, they should be separated by "&" symbol
+   // Example of connection argument:
+   //    TSQLServer::Connect("mysql://host.domain/test?timeout=10&multi_statements");
 
    fMySQL = 0;
 
@@ -54,9 +63,51 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    
    fMySQL = new MYSQL;
    mysql_init(fMySQL);
+   
+   unsigned long client_flag = 0;
+   TString socket;
+   
+   TString optstr = url.GetOptions();
+   TObjArray* optarr = optstr.Tokenize("&");
+   if (optarr!=0) {
+      TIter next(optarr);
+      TObject* obj = 0;
+      while ((obj=next()) != 0) {
+         TString opt = obj->GetName();
+         opt.ToLower();
+         opt.ReplaceAll(" ","");
+         if (opt.Contains("timeout=")) {
+            opt.Remove(0, 8);
+            Int_t timeout = opt.Atoi();
+            if (timeout>0) {
+               unsigned int mysqltimeout = (unsigned int) timeout;
+               mysql_options(fMySQL, MYSQL_OPT_CONNECT_TIMEOUT, (const char*) &mysqltimeout);
+               if (gDebug) Info("TMySQLServer","Set timeout %d",timeout);
+            }
+         } else
+         if (opt.Contains("socket=")) {
+            socket = (obj->GetName()+7);
+            if (gDebug) Info("TMySQLServer","Use socket %s", socket.Data());
+         } else
+         if (opt.Contains("multi_statements")) {
+            #if MYSQL_VERSION_ID >= 40100
+               client_flag = client_flag | CLIENT_MULTI_STATEMENTS;
+               if (gDebug) Info("TMySQLServer","Use CLIENT_MULTI_STATEMENTS");
+            #endif             
+         } else 
+         if (opt.Contains("multi_results")) {
+            #if MYSQL_VERSION_ID >= 40100
+               client_flag = client_flag | CLIENT_MULTI_RESULTS;
+               if (gDebug) Info("TMySQLServer","Use CLIENT_MULTI_RESULTS");
+            #endif             
+         }
+      }
+      optarr->Delete();
+      delete optarr;
+   }
 
-   if (mysql_real_connect(fMySQL, url.GetHost(), uid, pw, dbase,
-                          url.GetPort(), 0, 0)) {
+   if (mysql_real_connect(fMySQL, url.GetHost(), uid, pw, dbase, url.GetPort(), 
+                         (socket.Length()>0) ? socket.Data() : 0 , client_flag)) {
       fType = "MySQL";
       fHost = url.GetHost();
       fDB   = dbase;
