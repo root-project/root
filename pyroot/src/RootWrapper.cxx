@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.44 2006/05/28 19:05:24 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.45 2006/07/04 04:38:49 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -475,7 +475,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
          else if ( tpl_open == 0 &&\
               c == ':' && pos+1 < name.size() && name[ pos+1 ] == ':' ) {
          // found a new scope part
-            std::string part = name.substr( last, pos );
+            std::string part = name.substr( last, pos-last );
 
             PyObject* next = PyObject_GetAttrString(
                scope ? scope : gRootModule, const_cast< char* >( part.c_str() ) );
