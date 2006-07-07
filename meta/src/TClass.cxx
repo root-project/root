@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.192 2006/05/24 15:09:22 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.193 2006/06/28 10:03:13 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1614,18 +1614,32 @@ TDataMember *TClass::GetDataMember(const char *datamember) const
    if (!fClassInfo) return 0;
 
    // Strip off leading *'s and trailing [
-   char memb[64];
+   const Int_t size_buffer = 256;
+   char memb[size_buffer];
    char *s = (char*)datamember;
    while (*s == '*') s++;
-   strcpy(memb, s);
-   if ((s = strchr(memb, '['))) *s = 0;
+
+   size_t len = strlen(s);
+   if (len > size_buffer - 2)
+      len = size_buffer - 2;
+   strncpy(memb, s, len);
+   memb[len] = 0;
+
+   if ((s = strchr(memb, '['))) {
+      *s = 0;
+      len = strlen(memb);
+   }
 
    TDataMember *dm;
    TIter   next(((TClass*)this)->GetListOfDataMembers());
 
    while ((dm = (TDataMember *) next()))
-      if (strcmp(memb, dm->GetName()) == 0)
-         return dm;
+      if (len >= size_buffer - 2) {
+         if (strncmp(memb, dm->GetName(), len) == 0)
+            return dm;
+      } else 
+         if (strcmp(memb, dm->GetName()) == 0)
+            return dm;
    return 0;
 }
 
