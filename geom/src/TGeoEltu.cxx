@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.28 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.29 2006/07/03 16:10:44 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -51,7 +51,7 @@ TGeoEltu::TGeoEltu(Double_t a, Double_t b, Double_t dz)
 
 //_____________________________________________________________________________
 TGeoEltu::TGeoEltu(const char *name, Double_t a, Double_t b, Double_t dz)
-           :TGeoTube()
+           :TGeoTube(name,0.,b,dz)
 {
 // Default constructor specifying X and Y semiaxis length
    SetName(name);
