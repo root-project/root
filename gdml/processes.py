@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.3
 # -*- Mode: Python -*-
-# @(#)root/gdml:$Name:$:$Id:$
+# @(#)root/gdml:$Name:  $:$Id: processes.py,v 1.2 2006/06/13 20:46:53 rdm Exp $
 # Author: Witold Pokorski   05/06/2006
 #
 from units import *
@@ -267,6 +267,39 @@ class processes(object):
 
         self.solids_dict[elem[1]['name']] = box
 
+    def paraboloid_proc(self,elem):
+	lun = '*'+elem[1].get('lunit','mm')
+	paraboloid = self.bind.paraboloid(elem[1]['name'],
+			                  eval(elem[1]['rlo']+lun),
+			                  eval(elem[1]['rhi']+lun),
+			                  eval(elem[1]['dz']+lun))
+
+        self.solids_dict[elem[1]['name']] = paraboloid
+	
+    def arb8_proc(self,elem):
+	lun = '*'+elem[1].get('lunit','mm')
+
+	arb8 = self.bind.arb8(elem[1]['name'],
+			      eval(elem[1]['v1x']+lun),
+			      eval(elem[1]['v1y']+lun),
+			      eval(elem[1]['v2x']+lun),
+			      eval(elem[1]['v2y']+lun),
+			      eval(elem[1]['v3x']+lun),
+			      eval(elem[1]['v3y']+lun),
+			      eval(elem[1]['v4x']+lun),
+			      eval(elem[1]['v4y']+lun),
+			      eval(elem[1]['v5x']+lun),
+			      eval(elem[1]['v5y']+lun),
+			      eval(elem[1]['v6x']+lun),
+			      eval(elem[1]['v6y']+lun),
+			      eval(elem[1]['v7x']+lun),
+			      eval(elem[1]['v7y']+lun),
+			      eval(elem[1]['v8x']+lun),
+			      eval(elem[1]['v8y']+lun),
+			      eval(elem[1]['dz']+lun))
+
+        self.solids_dict[elem[1]['name']] = arb8
+
     def tube_proc(self,elem):
 	lun = '*'+elem[1].get('lunit','mm')
 	aun = '*'+elem[1].get('aunit','deg')
@@ -279,6 +312,25 @@ class processes(object):
 			      eval(elem[1]['deltaphi']+aun))
 
         self.solids_dict[elem[1]['name']] = tube
+	
+    def cutTube_proc(self,elem):
+	lun = '*'+elem[1].get('lunit','mm')
+	aun = '*'+elem[1].get('aunit','deg')
+
+	cutTube = self.bind.cutTube(elem[1]['name'],
+			            eval(elem[1].get('rmin','0')+lun),
+			            eval(elem[1]['rmax']+lun),
+			            eval(elem[1]['z']+lun)/2,
+			            eval(elem[1].get('startphi','0')+aun),
+			            eval(elem[1]['deltaphi']+aun),
+				    eval(elem[1]['lowX']+lun),
+				    eval(elem[1]['lowY']+lun),
+				    eval(elem[1]['lowZ']+lun),
+				    eval(elem[1]['highX']+lun),
+				    eval(elem[1]['highY']+lun),
+				    eval(elem[1]['highZ']+lun))
+
+        self.solids_dict[elem[1]['name']] = cutTube
 
     def cone_proc(self,elem):
  	lun = '*'+elem[1].get('lunit','mm')
@@ -331,6 +383,26 @@ class processes(object):
 			      eval(elem[1]['theta']+aun))
 
  	self.solids_dict[elem[1]['name']] = trap
+	
+    def twisttrap_proc(self,elem):
+	lun = '*'+elem[1].get('lunit','mm')
+	aun = '*'+elem[1].get('aunit','deg')
+
+	twisttrap = self.bind.twisttrap(elem[1]['name'],
+			                eval(elem[1]['x1']+lun)/2,
+			                eval(elem[1]['x2']+lun)/2,
+			                eval(elem[1]['x3']+lun)/2,
+			                eval(elem[1]['x4']+lun)/2,
+			                eval(elem[1]['y1']+lun)/2,
+			                eval(elem[1]['y2']+lun)/2,
+			                eval(elem[1]['z']+lun)/2,
+			                eval(elem[1]['alpha1']+aun),
+			                eval(elem[1]['alpha2']+aun),
+			                eval(elem[1]['phi']+aun),
+			                eval(elem[1]['theta']+aun),
+					eval(elem[1]['twist']+aun))
+
+ 	self.solids_dict[elem[1]['name']] = twisttrap
 
     def trd_proc(self,elem):
 	lun = '*'+elem[1].get('lunit','mm')
@@ -393,6 +465,19 @@ class processes(object):
 
 	self.solids_dict[elem[1]['name']] = torus
 
+    def hype_proc(self, elem):
+	lun = '*'+elem[1].get('lunit','mm')
+	aun = '*'+elem[1].get('aunit','deg')
+
+	hype = self.bind.hype(elem[1]['name'],
+				eval(elem[1]['rmin']+lun),
+				eval(elem[1]['rmax']+lun),
+				eval(elem[1]['inst']+aun),
+				eval(elem[1]['outst']+aun),
+				eval(elem[1]['z']+lun)/2)
+
+	self.solids_dict[elem[1]['name']] = hype
+
     def polyhedra_proc(self, elem):
 	lun = '*'+elem[1].get('lunit','mm')
 	aun = '*'+elem[1].get('aunit','deg')
@@ -411,9 +496,25 @@ class processes(object):
 
 	self.solids_dict[elem[1]['name']] = polyh
 
+    def xtru_proc(self, elem):
+	lun = '*'+elem[1].get('lunit','mm')
+	aun = '*'+elem[1].get('aunit','deg')
+
+	vertices=[]
+	sections=[]
+	for subele in elem[2]:
+	    if subele[0]=='twoDimVertex':
+	        vertices.append((eval(subele[1]['x']+lun), eval(subele[1]['y']+lun)))
+	    elif subele[0]=='section':
+	        sections.append((eval(subele[1]['zOrder']+lun), eval(subele[1]['zPosition']+lun), eval(subele[1]['xOffset']+lun), eval(subele[1]['yOffset']+lun), eval(subele[1]['scalingFactor']+lun)))
+
+	xtru = self.bind.xtrusion(elem[1]['name'], vertices, sections)
+
+	self.solids_dict[elem[1]['name']] = xtru
+    
     def eltube_proc(self, elem):
 	lun = '*'+elem[1].get('lunit','mm')
-
+        print 'ELTUBE!'
 	eltube = self.bind.eltube(elem[1]['name'],
 				  eval(elem[1]['dx']+lun),
 				  eval(elem[1]['dy']+lun),
@@ -519,14 +620,14 @@ class processes(object):
     gdmlel_dict = { 'gdml':gdml_proc, 'setup':setup_proc, 'constant':const_proc,
                     'position':position_proc, 'rotation':rotation_proc,
                     'element':element_proc, 'isotope':isotope_proc,
-		    'material':material_proc,
-                    'volume':volume_proc, 'assembly':assembly_proc,
-		    'box':box_proc, 'tube':tube_proc,
-		    'cone':cone_proc, 'polycone':polycone_proc,
+		    'material':material_proc, 'twistTrap':twisttrap_proc,
+                    'volume':volume_proc, 'assembly':assembly_proc, 'cutTube':cutTube_proc,
+		    'box':box_proc, 'xtru': xtru_proc, 'arb8':arb8_proc, 'tube':tube_proc,
+		    'cone':cone_proc, 'polycone':polycone_proc, 'hype':hype_proc,
 		    'trap':trap_proc, 'trd':trd_proc, 'sphere':sphere_proc,
 		    'orb':orb_proc, 'para':para_proc, 'torus':torus_proc,
 		    'polyhedra':polyhedra_proc, 'eltube':eltube_proc,
-		    'subtraction':subtraction_proc, 'union':union_proc,
+		    'subtraction':subtraction_proc, 'union':union_proc, 'paraboloid':paraboloid_proc,
 		    'intersection':intersection_proc,
                     'reflectedSolid':reflection_proc}
 

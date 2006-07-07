@@ -1,4 +1,4 @@
-# @(#)root/gdml:$Name:$:$Id:$
+# @(#)root/gdml:$Name:  $:$Id: ROOTGDML.py,v 1.2 2006/06/13 20:46:53 rdm Exp $
 # Author: Witold Pokorski   05/06/2006
 
 from math import *
@@ -7,6 +7,7 @@ from units import *
 import ROOT
 import writer
 import ROOTwriter
+import libPyROOT
 
 # get TGeoManager and top volume
 geomgr = ROOT.gGeoManager
@@ -26,7 +27,7 @@ binding.dumpSolids(shapelist)
 
 # dump geo tree
 print 'Traversing geometry tree'
-gdmlwriter.addSetup('default', '1.0', topV.GetName())
+gdmlwriter.addSetup('default', '1.0', topV.GetName()+'_at_'+str(libPyROOT.AddressOf(topV)[0]))
 binding.examineVol(topV)
 
 # write file

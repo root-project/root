@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.3
 # -*- Mode: Python -*-
-# @(#)root/gdml:$Name:$:$Id:$
+# @(#)root/gdml:$Name:  $:$Id: ROOTBinding.py,v 1.2 2006/06/13 20:46:53 rdm Exp $
 # Author: Witold Pokorski   05/06/2006
 
 import ROOT
@@ -26,16 +26,22 @@ import array
 
 # Solids:
 # TGeoBBox
+# TGeoArb8
 # TGeoTubeSeg
 # TGeoConeSeg
+# TGeoCtub
 # TGeoPcon
 # TGeoTrap
+# TGeoGtra
 # TGeoTrd2
 # TGeoSphere
 # TGeoPara
 # TGeoTorus
+# TGeoHype
 # TGeoPgon
+# TGeoXtru
 # TGeoEltu
+# TGeoParaboloid
 # TGeoCompositeShape (subtraction, union, intersection)
 
 # Geometry:
@@ -142,10 +148,27 @@ class ROOTBinding(object):
 
     def box(self, name, x, y, z):
 	return ROOT.TGeoBBox(re.sub('0x........','',name), x, y, z)
+	
+    def paraboloid(self, name, rlo, rhi, dz):
+	return ROOT.TGeoParaboloid(re.sub('0x........','',name), rlo, rhi, dz)
+	
+    def arb8(self, name, v1x, v1y, v2x, v2y, v3x, v3y, v4x, v4y, v5x, v5y, v6x, v6y, v7x, v7y, v8x, v8y, dz):
+        arb = ROOT.TGeoArb8(re.sub('0x........','',name), dz)
+	arb.SetVertex(0, v1x, v1y)
+        arb.SetVertex(1, v2x, v2y)
+        arb.SetVertex(2, v3x, v3y)
+        arb.SetVertex(3, v4x, v4y)
+        arb.SetVertex(4, v5x, v5y)
+        arb.SetVertex(5, v6x, v6y)
+        arb.SetVertex(6, v7x, v7y)
+        arb.SetVertex(7, v8x, v8y)
+	return arb
 
     def tube(self, name, rmin, rmax, z, startphi, deltaphi):
-	return ROOT.TGeoTubeSeg(re.sub('0x........','',name), rmin, rmax, z, startphi,
-				startphi+deltaphi)
+	return ROOT.TGeoTubeSeg(re.sub('0x........','',name), rmin, rmax, z, startphi, startphi+deltaphi)
+				
+    def cutTube(self, name, rmin, rmax, z, startphi, deltaphi, lowX, lowY, lowZ, highX, highY, highZ):
+	return ROOT.TGeoCtub(re.sub('0x........','',name), rmin, rmax, z, startphi, startphi+deltaphi, lowX, lowY, lowZ, highX, highY, highZ)
 
     def cone(self, name, rmin1, rmax1, rmin2, rmax2, z,
 	     startphi, deltaphi):
@@ -165,6 +188,11 @@ class ROOTBinding(object):
     def trap(self, name, x1, x2, x3, x4, y1, y2, z,
 	     alpha1, alpha2, phi, theta):
 	return ROOT.TGeoTrap(re.sub('0x........','',name), z, theta, phi, y1, x1, x2,
+			     alpha1, y2, x3, x4, alpha2)
+			     
+    def twisttrap(self, name, x1, x2, x3, x4, y1, y2, z,
+	     alpha1, alpha2, phi, theta, twist):
+	return ROOT.TGeoGtra(re.sub('0x........','',name), z, theta, phi, twist, y1, x1, x2,
 			     alpha1, y2, x3, x4, alpha2)
 
     def trd(self, name, x1, x2, y1, y2, z):
@@ -186,6 +214,9 @@ class ROOTBinding(object):
     def torus(self, name, rmin, rmax, rtor, startphi, deltaphi):
 	return ROOT.TGeoTorus(re.sub('0x........','',name), rtor, rmin, rmax, startphi, deltaphi)
 
+    def hype(self, name, rmin, rmax, inst, outst, z):
+	return ROOT.TGeoHype(re.sub('0x........','',name), rmin, inst, rmax, outst, z)
+
     def polyhedra(self, name, startphi, deltaphi, numsides, zrs):
 	polyh = ROOT.TGeoPgon(re.sub('0x........','',name), startphi, deltaphi,
 			      numsides, zrs.__len__())
@@ -196,9 +227,28 @@ class ROOTBinding(object):
 	    nb = nb + 1
 
 	return polyh
+	
+    def xtrusion(self, name, vertices, sections):
+	xtru = ROOT.TGeoXtru(sections.__len__())
+        xtru.SetName(re.sub('0x........','',name))
+	x = array.array('d')
+	y = array.array('d')
+	nv = 0
+	for index in range(len(vertices)):
+	    x.append(vertices[index][0])
+	    y.append(vertices[index][1])
+	    nv = nv + 1
+	xtru.DefinePolygon(nv, x, y)
+	
+	for section in sections:
+	    xtru.DefineSection(int(section[0]), section[1], section[2], section[3], section[4])
+
+	return xtru
 
     def eltube(self, name, dx, dy, dz):
-	return ROOT.TGeoEltu(re.sub('0x........','',name), dx, dy, dz)
+        el = ROOT.TGeoEltu(re.sub('0x........','',name), dx, dy, dz)
+	print 'ELTUBE binding!', el
+	return el
 
     def subtraction(self, name, first, second, pos, rot):
 	matr = ROOT.TGeoCombiTrans(pos, ROOT.TGeoRotation(rot.Inverse()))

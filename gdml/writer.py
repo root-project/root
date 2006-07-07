@@ -1,4 +1,4 @@
-# @(#)root/gdml:$Name:$:$Id:$
+# @(#)root/gdml:$Name:  $:$Id: writer.py,v 1.2 2006/06/13 20:46:53 rdm Exp $
 # Author: Witold Pokorski   05/06/2006
 # This is the application-independent part of the GDML 'writer' implementation.
 # It contains the 'writeFile' method (at the end of the file) which does the actual
@@ -51,6 +51,12 @@ class writer(object):
 
     def addBox(self, name, dx, dy, dz):
         self.solids[2].append(['box',{'name':name, 'x':dx, 'y':dy, 'z':dz},[]])
+	
+    def addParaboloid(self, name, rlo, rhi, dz):
+        self.solids[2].append(['paraboloid',{'name':name, 'rlo':rlo, 'rhi':rhi, 'dz':dz},[]])
+	
+    def addArb8(self, name, v1x, v1y, v2x, v2y, v3x, v3y, v4x, v4y, v5x, v5y, v6x, v6y, v7x, v7y, v8x, v8y, dz):
+        self.solids[2].append(['arb8',{'name':name, 'v1x':v1x, 'v1y':v1y, 'v2x':v2x, 'v2y':v2y, 'v3x':v3x, 'v3y':v3y, 'v4x':v4x, 'v4y':v4y, 'v5x':v5x, 'v5y':v5y, 'v6x':v6x, 'v6y':v6y, 'v7x':v7x, 'v7y':v7y, 'v8x':v8x, 'v8y':v8y, 'dz':dz},[]])
 
     def addSphere(self, name, rmin, rmax, startphi, deltaphi, starttheta, deltatheta):
         self.solids[2].append(['sphere',{'name':name, 'rmin':rmin, 'rmax':rmax,
@@ -71,6 +77,11 @@ class writer(object):
         self.solids[2].append(['trap', {'name':name, 'z':z, 'theta':theta, 'phi':phi,
                                         'x1':x1, 'x2':x2, 'x3':x3, 'x4':x4,
                                         'y1':y1, 'y2':y2, 'alpha1':alpha1, 'alpha2':alpha2}, []])
+					
+    def addTwistedTrap(self, name, z, theta, phi, y1, x1, x2, alpha1, y2, x3, x4, alpha2, twist):
+        self.solids[2].append(['twistTrap', {'name':name, 'z':z, 'theta':theta, 'phi':phi,
+                                             'x1':x1, 'x2':x2, 'x3':x3, 'x4':x4,
+                                             'y1':y1, 'y2':y2, 'alpha1':alpha1, 'alpha2':alpha2, 'twist':twist, 'aunit':'deg', 'lunit':'mm'}, []])
 
     def addTrd(self, name, x1, x2, y1, y2, z):
         self.solids[2].append(['trd',{'name':name, 'x1':x1, 'x2':x2,
@@ -79,6 +90,11 @@ class writer(object):
     def addTube(self, name, rmin, rmax, z, startphi, deltaphi):
         self.solids[2].append(['tube',{'name':name, 'rmin':rmin, 'rmax':rmax,
                                        'z':z, 'startphi':startphi, 'deltaphi':deltaphi},[]])
+				       
+    def addCutTube(self, name, rmin, rmax, z, startphi, deltaphi, lowX, lowY, lowZ, highX, highY, highZ):
+        self.solids[2].append(['cutTube',{'name':name, 'rmin':rmin, 'rmax':rmax,
+                                          'z':z, 'startphi':startphi, 'deltaphi':deltaphi,
+					  'lowX':lowX, 'lowY':lowY, 'lowZ':lowZ, 'highX':highX, 'highY':highY, 'highZ':highZ},[]])
 
     def addPolycone(self, name, startphi, deltaphi, zplanes):
         zpls = []
@@ -91,15 +107,24 @@ class writer(object):
         self.solids[2].append( ['torus',{'name':name, 'rtor':r, 'rmin':rmin, 'rmax':rmax,
                                          'startphi':startphi, 'deltaphi':deltaphi},[]] )
 
-    def addPolyhedra(self, name, startphi, totalphi, numsides, zplanes):
+    def addPolyhedra(self, name, startphi, deltaphi, numsides, zplanes):
         zpls = []
         for zplane in zplanes:
             zpls.append( ['zplane',{'z':zplane[0], 'rmin':zplane[1], 'rmax':zplane[2]},[]] )
         self.solids[2].append(['polyhedra',{'name':name,
-                                            'startphi':startphi, 'totalphi':totalphi,
+                                            'startphi':startphi, 'deltaphi':deltaphi,
                                             'numsides':numsides}, zpls])
+					    
+    def addXtrusion(self, name, vertices, sections):
+        elems = []
+	for vertex in vertices:
+	    elems.append( ['twoDimVertex',{'x':vertex[0], 'y':vertex[1]},[]] )
+	for section in sections:
+	    elems.append( ['section',{'zOrder':section[0], 'zPosition':section[1], 'xOffset':section[2], 'yOffset':section[3], 'scalingFactor':section[4]},[]] )
+	self.solids[2].append(['xtru',{'name':name}, elems])
 
     def addEltube(self, name, x, y, z):
+        print 'ELTUBE written!'
         self.solids[2].append( ['eltube', {'name':name, 'x':x, 'y':y, 'z':z},[]] )
 
     def addHype(self, name, rmin, rmax, inst, outst, z):
@@ -154,6 +179,18 @@ class writer(object):
 
         self.structure[2].append(['volume',{'name':volume}, subels])
 
+    def addAssembly(self, volume, daughters):
+        subels = []
+        for child in daughters:
+            subsubels = [['volumeref',{'ref':child[0]},[]],
+                         ['positionref',{'ref':child[1]},[]]]
+            if child[2]!='':
+                subsubels.append( ['rotationref',{'ref':child[2]},[]] )
+
+            subels.append( ['physvol',{}, subsubels])
+
+        self.structure[2].append(['assembly',{'name':volume}, subels])
+
     def addSetup(self, name, version, world):
         self.document[2].append( ['setup',{'name':name, 'version':version},
                                    [ ['world',{'ref':world},[]]] ] )
@@ -178,4 +215,5 @@ class writer(object):
 
         file.write('<?xml version="1.0" encoding="UTF-8" ?>\n')
         writeElement(self.document,'')
+	
 

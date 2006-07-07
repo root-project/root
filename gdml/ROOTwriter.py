@@ -1,8 +1,12 @@
-# @(#)root/gdml:$Name:$:$Id:$
+# @(#)root/gdml:$Name:  $:$Id: ROOTwriter.py,v 1.2 2006/06/13 20:46:53 rdm Exp $
 # Author: Witold Pokorski   05/06/2006
 
 from math import *
 from units import *
+
+import libPyROOT
+import ROOT
+import math
 
 # This class provides ROOT binding for the 'writer' class. It implements specific
 # methods for all the supported TGeo classes which call the appropriate 'add-element'
@@ -17,21 +21,23 @@ from units import *
 
 # Solids:
 # TGeoBBox
-# TGeoSphere
-# TGeoConeSeg
-# TGeoCone
-# TGeoPara
-# TGeoTrap
-# TGeoTrd2
+# TGeoArb8
 # TGeoTubeSeg
+# TGeoConeSeg
+# TGeoCtub
 # TGeoPcon
+# TGeoTrap
+# TGeoGtra
+# TGeoTrd2
+# TGeoSphere
+# TGeoPara
 # TGeoTorus
-# TGeoPgon
-# TGeoEltu
 # TGeoHype
-# TGeoUnion
-# TGeoIntersection
-# TGeoSubtraction
+# TGeoPgon
+# TGeoXtru
+# TGeoEltu
+# TGeoParaboloid
+# TGeoCompositeShape (subtraction, union, intersection)
 
 # Geometry:
 # TGeoVolume
@@ -53,13 +59,20 @@ class ROOTwriter(object):
 
     def __init__(self, writer):
         self.writer = writer
-        self.vols = []
         self.elements = []
+	self.volumeCount = 0
+	self.nodeCount = 0	
+	self.bvols = []
+	self.vols = []
+	self.volsUseCount = {}
+	self.sortedVols = []
+	self.nodes = []
+	self.bnodes = []
         pass
 
-    def rotXYZ(self, r):
-        cosb = ( r[0]**2 + r[1]**2 )**0.5
-        if cosb > 0 :
+    def rotXYZ(self, r):            
+        cosb = math.sqrt( r[0]*r[0] + r[1]*r[1] )
+        if cosb > 0.00001 : #I didn't find a proper constant to use here, so I just put a value that works with all the examples on a linux machine (P4)
             a = atan2( r[5], r[8] ) * rad
             b = atan2( -r[2], cosb ) * rad
             c = atan2( r[1], r[0] ) * rad
@@ -70,72 +83,127 @@ class ROOTwriter(object):
         return (a, b, c)
 
     def TGeoBBox(self, solid):
-        self.writer.addBox(solid.GetName(), 2*solid.GetDX(), 2*solid.GetDY(), 2*solid.GetDZ())
+        self.writer.addBox(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDX(), 2*solid.GetDY(), 2*solid.GetDZ())
+
+    def TGeoParaboloid(self, solid):
+        self.writer.addParaboloid(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRlo(), solid.GetRhi(), solid.GetDz())
 
     def TGeoSphere(self, solid):
-        self.writer.addSphere(solid.GetName(), solid.GetRmin(), solid.GetRmax(),
+        self.writer.addSphere(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
                              solid.GetPhi1(), solid.GetPhi2() - solid.GetPhi1(),
                              solid.GetTheta1(), solid.GetTheta2() - solid.GetTheta1())
+			 
+    def TGeoArb8(self, solid):
+        self.writer.addArb8(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]),
+			    solid.GetVertices()[0],
+			    solid.GetVertices()[1],
+			    solid.GetVertices()[2],
+			    solid.GetVertices()[3],
+			    solid.GetVertices()[4],
+			    solid.GetVertices()[5],
+			    solid.GetVertices()[6],
+			    solid.GetVertices()[7],
+			    solid.GetVertices()[8],
+			    solid.GetVertices()[9],
+			    solid.GetVertices()[10],
+			    solid.GetVertices()[11],
+			    solid.GetVertices()[12],
+			    solid.GetVertices()[13],
+			    solid.GetVertices()[14],
+			    solid.GetVertices()[15],
+			    solid.GetDz())
 
     def TGeoConeSeg(self, solid):
-        self.writer.addCone(solid.GetName(), 2*solid.GetDz(), solid.GetRmin1(), solid.GetRmin2(),
-                           solid.GetRmax1(), solid.GetRmax2(),
-                           solid.GetPhi1(), solid.GetPhi2() - solid.GetPhi1())
+        self.writer.addCone(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDz(), solid.GetRmin1(), solid.GetRmin2(),
+                           solid.GetRmax1(), solid.GetRmax2(), solid.GetPhi1(), solid.GetPhi2() - solid.GetPhi1())
 
     def TGeoCone(self, solid):
-        self.writer.addCone(solid.GetName(), 2*solid.GetDz(), solid.GetRmax1(), solid.GetRmax2(),
-                           solid.GetRmin1(), solid.GetRmin2(), 0, 360)
+        self.writer.addCone(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDz(), solid.GetRmin1(), solid.GetRmin2(), 
+	                   solid.GetRmax1(), solid.GetRmax2(), 0, 360)
 
     def TGeoPara(self, solid):
-        self.writer.addPara(solid.GetName(), solid.GetX(), solid.GetY(), solid.GetZ(),
+        self.writer.addPara(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetX(), solid.GetY(), solid.GetZ(),
                            solid.GetAlpha(), solid.GetTheta(), solid.GetPhi())
 
     def TGeoTrap(self, solid):
-        self.writer.addTrap(solid.GetName(), 2*solid.GetDz(), solid.GetTheta(), solid.GetPhi(),
+        self.writer.addTrap(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDz(), solid.GetTheta(), solid.GetPhi(),
                            2*solid.GetH1(), 2*solid.GetBl1(), 2*solid.GetTl1(), solid.GetAlpha1(),
                            2*solid.GetH2(), 2*solid.GetBl2(), 2*solid.GetTl2(), solid.GetAlpha2())
+			   
+    def TGeoGtra(self, solid):
+        self.writer.addTwistedTrap(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDz(), solid.GetTheta(), solid.GetPhi(),
+                                   2*solid.GetH1(), 2*solid.GetBl1(), 2*solid.GetTl1(), solid.GetAlpha1(),
+                                   2*solid.GetH2(), 2*solid.GetBl2(), 2*solid.GetTl2(), solid.GetAlpha2(), solid.GetTwistAngle())
 
+    def TGeoTrd1(self, solid):
+        self.writer.addTrd(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDx1(), 2*solid.GetDx2(), 2*solid.GetDy(),
+                          2*solid.GetDy(), 2*solid.GetDz())
+    
     def TGeoTrd2(self, solid):
-        self.writer.addTrd(solid.GetName(), 2*solid.GetDx1(), 2*solid.GetDx2(), 2*solid.GetDy1(),
+        self.writer.addTrd(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDx1(), 2*solid.GetDx2(), 2*solid.GetDy1(),
                           2*solid.GetDy2(), 2*solid.GetDz())
 
     def TGeoTubeSeg(self, solid):
-        self.writer.addTube(solid.GetName(), solid.GetRmin(), solid.GetRmax(),
+        self.writer.addTube(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
                            2*solid.GetDz(), solid.GetPhi1(), solid.GetPhi2()-solid.GetPhi1())
+			   
+    def TGeoCtub(self, solid):
+        self.writer.addCutTube(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
+                              2*solid.GetDz(), solid.GetPhi1(), solid.GetPhi2()-solid.GetPhi1(),
+			      solid.GetNlow()[0],
+			      solid.GetNlow()[1],
+			      solid.GetNlow()[2],
+			      solid.GetNhigh()[0],
+			      solid.GetNhigh()[1],
+			      solid.GetNhigh()[2])
+			   
+    def TGeoTube(self, solid):
+        self.writer.addTube(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
+                           2*solid.GetDz(), 0, 360)
 
     def TGeoPcon(self, solid):
         zplanes = []
         for i in range(solid.GetNz()):
             zplanes.append( (solid.GetZ(i), solid.GetRmin(i), solid.GetRmax(i)) )
-        self.writer.addPolycone(solid.GetName(), solid.GetPhi1(), solid.GetDphi(), zplanes)
+        self.writer.addPolycone(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetPhi1(), solid.GetDphi(), zplanes)
 
     def TGeoTorus(self, solid):
-        self.writer.addTorus(solid.GetName(), solid.GetR(), solid.GetRmin(), solid.GetRmax(),
+        self.writer.addTorus(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetR(), solid.GetRmin(), solid.GetRmax(),
                             solid.GetPhi1(), solid.GetDphi())
 
     def TGeoPgon(self, solid):
         zplanes = []
         for i in range(solid.GetNz()):
             zplanes.append( (solid.GetZ(i), solid.GetRmin(i), solid.GetRmax(i)) )
-        self.writer.addPolyhedra(solid.GetName(), solid.GetPhi1(), solid.GetPhi1() + solid.GetDphi(),
+        self.writer.addPolyhedra(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetPhi1(), solid.GetDphi(),
                                 solid.GetNedges(), zplanes)
+				
+    def TGeoXtru(self, solid):
+        vertices = []
+	sections = []
+        for i in range(solid.GetNvert()):
+            vertices.append( (solid.GetX(i), solid.GetY(i)) )
+	for i in range(solid.GetNz()):
+            sections.append( (i, solid.GetZ(i), solid.GetXOffset(i), solid.GetYOffset(i), solid.GetScale(i)) )    
+        self.writer.addXtrusion(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), vertices, sections)
 
     def TGeoEltu(self, solid):
-        self.writer.addEltube(solid.GetName(), solid.GetA(), solid.GetB(), solid.GetDz())
+        print 'writing ELTUBE'
+        self.writer.addEltube(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetA(), solid.GetB(), solid.GetDz())
 
     def TGeoHype(self, solid):
-        self.writer.addHype(solid.GetName(), solid.GetRmin(), solid.GetRmax(),
+        self.writer.addHype(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
                            solid.GetStIn(), solid.GetStOut(), 2*solid.GetDz())
 
     def TGeoUnion(self, solid):
         lrot = self.rotXYZ(solid.GetBoolNode().GetLeftMatrix().Inverse().GetRotationMatrix())
         rrot = self.rotXYZ(solid.GetBoolNode().GetRightMatrix().Inverse().GetRotationMatrix())
 
-        self.writer.addUnion(solid.GetName(),
-                            solid.GetBoolNode().GetLeftShape().GetName(),
+        self.writer.addUnion(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]),
+                            solid.GetBoolNode().GetLeftShape().GetName()+'_'+str(libPyROOT.AddressOf(solid.GetBoolNode().GetLeftShape())[0]),
                             solid.GetBoolNode().GetLeftMatrix().GetTranslation(),
                             lrot,
-                            solid.GetBoolNode().GetRightShape().GetName(),
+                            solid.GetBoolNode().GetRightShape().GetName()+'_'+str(libPyROOT.AddressOf(solid.GetBoolNode().GetRightShape())[0]),
                             solid.GetBoolNode().GetRightMatrix().GetTranslation(),
                             rrot)
 
@@ -143,11 +211,11 @@ class ROOTwriter(object):
         lrot = self.rotXYZ(solid.GetBoolNode().GetLeftMatrix().Inverse().GetRotationMatrix())
         rrot = self.rotXYZ(solid.GetBoolNode().GetRightMatrix().Inverse().GetRotationMatrix())
 
-        self.writer.addIntersection(solid.GetName(),
-                                   solid.GetBoolNode().GetLeftShape().GetName(),
+        self.writer.addIntersection(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]),
+                                   solid.GetBoolNode().GetLeftShape().GetName()+'_'+str(libPyROOT.AddressOf(solid.GetBoolNode().GetLeftShape())[0]),
                                    solid.GetBoolNode().GetLeftMatrix().GetTranslation(),
                                    lrot,
-                                   solid.GetBoolNode().GetRightShape().GetName(),
+                                   solid.GetBoolNode().GetRightShape().GetName()+'_'+str(libPyROOT.AddressOf(solid.GetBoolNode().GetRightShape())[0]),
                                    solid.GetBoolNode().GetRightMatrix().GetTranslation(),
                                    rrot)
 
@@ -155,11 +223,11 @@ class ROOTwriter(object):
         lrot = self.rotXYZ(solid.GetBoolNode().GetLeftMatrix().Inverse().GetRotationMatrix())
         rrot = self.rotXYZ(solid.GetBoolNode().GetRightMatrix().Inverse().GetRotationMatrix())
 
-        self.writer.addSubtraction(solid.GetName(),
-                                  solid.GetBoolNode().GetLeftShape().GetName(),
+        self.writer.addSubtraction(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]),
+                                  solid.GetBoolNode().GetLeftShape().GetName()+'_'+str(libPyROOT.AddressOf(solid.GetBoolNode().GetLeftShape())[0]),
                                   solid.GetBoolNode().GetLeftMatrix().GetTranslation(),
                                   lrot,
-                                  solid.GetBoolNode().GetRightShape().GetName(),
+                                  solid.GetBoolNode().GetRightShape().GetName()+'_'+str(libPyROOT.AddressOf(solid.GetBoolNode().GetRightShape())[0]),
                                   solid.GetBoolNode().GetRightMatrix().GetTranslation(),
                                   rrot)
 
@@ -174,21 +242,83 @@ class ROOTwriter(object):
             else:
                 elems = {}
                 for index in range(mat.GetNelements()):
-                    elems[mat.GetElement(index).GetTitle()] = mat.GetWmixt()[index]
+                    elems[mat.GetElement(index).GetName()] = mat.GetWmixt()[index]
                     el = mat.GetElement(index)
                     if el not in self.elements:
                         self.elements.append(el)
-                        self.writer.addElement(mat.GetElement(index).GetName(), mat.GetElement(index).GetTitle(),
-                                              mat.GetElement(index).Z(), mat.GetElement(index).A())
-
-                    self.writer.addMixture(mat.GetName(), mat.GetDensity(), elems)
+                        self.writer.addElement(mat.GetElement(index).GetTitle(), mat.GetElement(index).GetName(), mat.GetZmixt()[index], mat.GetAmixt()[index])
+			
+                self.writer.addMixture(mat.GetName(), mat.GetDensity(), elems)
 
     def dumpSolids(self, shapelist):
         print 'Found ', shapelist.GetEntries(), ' shapes'
         for shape in shapelist:
             eval('self.'+shape.__class__.__name__)(shape)
-
-    def examineVol(self, volume):
+    
+    def orderVolumes(self, volume):
+        index = str(volume.GetNumber())+"_"+str(libPyROOT.AddressOf(volume)[0])
+	daughters = volume.GetNodes()
+	if len(self.sortedVols)<len(self.vols) and self.volsUseCount[index]>0:
+	    self.volsUseCount[index] = self.volsUseCount[index]-1
+	    if self.volsUseCount[index]==0:
+	        self.sortedVols.append(volume)
+	    if daughters:
+	        for node in daughters:
+	            self.orderVolumes(node.GetVolume())
+		    self.nodeCount = self.nodeCount+1
+	            if self.nodeCount%10000==0:
+	                 print '[FIRST STAGE] Node count: ', self.nodeCount
+        elif len(self.sortedVols)<len(self.volsUseCount) and self.volsUseCount[index]==0:
+	    self.sortedVols.append(volume)
+	    if daughters:
+	        for node in daughters:
+	            self.orderVolumes(node.GetVolume())
+		    self.nodeCount = self.nodeCount+1
+	            if self.nodeCount%10000==0:
+	                 print '[FIRST STAGE] Node count: ', self.nodeCount
+           
+    def getNodes(self, volume):
+        nd = volume.GetNdaughters()
+	if nd:
+	    for i in range(nd):
+	        currentNode = volume.GetNode(i)
+	        nextVol = currentNode.GetVolume()
+		index = str(nextVol.GetNumber())+"_"+str(libPyROOT.AddressOf(nextVol)[0])
+		self.volsUseCount[index] = self.volsUseCount[index]+1
+                self.nodes.append(currentNode)
+	        self.getNodes(nextVol)
+		self.nodeCount = self.nodeCount+1
+	        if self.nodeCount%10000==0:
+	            print '[ZEROTH STAGE] Analysing node: ', self.nodeCount
+    
+    def examineVol2(self, volume): #use with geometries containing many volumes
+        print ''
+	print '[RETRIEVING VOLUME LIST]'
+	geomgr = ROOT.gGeoManager
+	self.bvols = geomgr.GetListOfVolumes()
+	print ''
+	print '[INITIALISING VOLUME USE COUNT]'
+        for vol in self.bvols:
+	    self.vols.append(vol)
+	    self.volsUseCount[str(vol.GetNumber())+"_"+str(libPyROOT.AddressOf(vol)[0])]=0
+	print ''
+	print '[CALCULATING VOLUME USE COUNT]'
+	self.nodeCount = 0
+	self.getNodes(volume)
+	print ''
+	print '[ORDERING VOLUMES]'
+	self.nodeCount = 0
+        self.orderVolumes(volume)
+	print ''
+	print '[DUMPING GEOMETRY TREE]'
+	self.sortedVols.reverse()
+	self.nodeCount = 0
+        self.dumpGeoTree()
+	print ''
+	print '[FINISHED!]'
+	print ''
+    
+    def examineVol(self, volume): #use with geometries containing very few volumes and many nodes
         daughters = []
         if volume.GetNodes():
             for node in volume.GetNodes():
@@ -205,9 +335,47 @@ class ROOTwriter(object):
                 if r[0]!=0.0 or r[1]!=0.0 or r[2]!=0.0:
                     self.writer.addRotation(name+'rot', r[0], r[1], r[2])
                     rotname = name+'rot'
-                daughters.append( (node.GetVolume().GetName(),
-                                   name+'pos', rotname) )
+                daughters.append( (node.GetVolume().GetName()+'_'+str(libPyROOT.AddressOf(node.GetVolume())[0]), name+'pos', rotname) )
 
-        self.writer.addVolume(volume.GetName(), volume.GetShape().GetName(),
-                             volume.GetMaterial().GetName(), daughters)
-
+        if volume.IsTopVolume():
+	   if not volume.IsAssembly():
+	       self.writer.addVolume(volume.GetName(), volume.GetShape().GetName()+'_'+str(libPyROOT.AddressOf(volume.GetShape())[0]), volume.GetMaterial().GetName(), daughters)
+	   else:
+	       self.writer.addAssembly(volume.GetName(), daughters)
+	else: 
+	   if not volume.IsAssembly():
+	       self.writer.addVolume(volume.GetName()+'_'+str(libPyROOT.AddressOf(volume)[0]), volume.GetShape().GetName()+'_'+str(libPyROOT.AddressOf(volume.GetShape())[0]), volume.GetMaterial().GetName(), daughters)
+           else:
+	       self.writer.addAssembly(volume.GetName()+'_'+str(libPyROOT.AddressOf(volume)[0]), daughters)    
+	    
+    def dumpGeoTree(self):
+	for volume in self.sortedVols:
+	    nd = volume.GetNdaughters()
+	    daughters = []
+	    if nd:
+                for i in range(nd):
+		    node = volume.GetNode(i)
+		    name = node.GetName()+'in'+volume.GetName()
+                    pos = node.GetMatrix().GetTranslation()
+                    self.writer.addPosition(name+'pos', pos[0], pos[1], pos[2])
+	            r = self.rotXYZ(node.GetMatrix().GetRotationMatrix())
+                    rotname = ''
+                    if r[0]!=0.0 or r[1]!=0.0 or r[2]!=0.0:
+                        self.writer.addRotation(name+'rot', r[0], r[1], r[2])
+                        rotname = name+'rot'			
+                    daughters.append( (node.GetVolume().GetName()+'_'+str(libPyROOT.AddressOf(node.GetVolume())[0]), name+'pos', rotname) )
+		    self.nodeCount = self.nodeCount+1
+	            if self.nodeCount%100==0:
+	                print '[SECOND STAGE] Volume Count: ', self.nodeCount, node.GetVolume().GetName()+'_'+str(libPyROOT.AddressOf(node.GetVolume())[0])
+		    	
+	    if volume.IsTopVolume():
+		if not volume.IsAssembly():
+	            self.writer.addVolume(volume.GetName(), volume.GetShape().GetName()+'_'+str(libPyROOT.AddressOf(volume.GetShape())[0]), volume.GetMaterial().GetName(), daughters)
+		else:
+		    self.writer.addAssembly(volume.GetName(), daughters)
+	    else: 
+		if not volume.IsAssembly():
+	            self.writer.addVolume(volume.GetName()+'_'+str(libPyROOT.AddressOf(volume)[0]), volume.GetShape().GetName()+'_'+str(libPyROOT.AddressOf(volume.GetShape())[0]), volume.GetMaterial().GetName(), daughters)
+                else:
+		    self.writer.addAssembly(volume.GetName()+'_'+str(libPyROOT.AddressOf(volume)[0]), daughters)
+		
