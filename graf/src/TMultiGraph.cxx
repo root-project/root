@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.31 2006/05/24 16:44:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.32 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -87,7 +87,7 @@ TMultiGraph::TMultiGraph(const TMultiGraph& mg) :
 //______________________________________________________________________________
 TMultiGraph& TMultiGraph::operator=(const TMultiGraph& mg)
 {
-   //equal operator
+   //assignement operator
    if(this!=&mg) {
       TNamed::operator=(mg);
       fGraphs=mg.fGraphs;
