@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.33 2006/06/27 14:36:27 brun Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.34 2006/06/29 22:15:37 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -504,9 +504,9 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer
    // This function is overloaded by TNetFile, TWebFile, etc.
    // Returns kTRUE in case of failure.
-   // Note: This is the oberloading made in TXNetFile, If ReadBuffers
+   // Note: This is the overloading made in TXNetFile, If ReadBuffers
    // is supported by xrootd it will try to gt the whole list from one single
-   // call avoiding the latency of multiple call
+   // call avoiding the latency of multiple calls
 
    if (IsZombie()) {
       Error("ReadBuffers", "ReadBuffers is not possible because object"
@@ -526,10 +526,34 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    }
 
    // Read for the remote xrootd
-   //Int_t nr = fClient->Reads(buf, pos, len, nbuf);
+   Long64_t nr = fClient->ReadV(buf, pos, len, nbuf);
 
-   //if (nr>0)
-   //   return kFALSE;
+   if (gDebug > 1)
+      Info("ReadBuffers", "reponse from ReadV nr:", nr);
+
+   if ( nr > 0 ) {
+
+      if (gDebug > 1)
+	 Info("ReadBuffers", "%lld bytes of data read from a list of %d buffers", 
+ 	      nr, nbuf);
+
+      // Where should we leave the offset ?
+      // fOffset += bufferLength;
+      fBytesRead += nr;
+#ifdef WIN32
+      SetFileBytesRead(GetFileBytesRead() + nr);
+#else
+      fgBytesRead += nr;
+#endif
+
+      if (gMonitoringWriter)
+	 gMonitoringWriter->SendFileReadProgress(this);
+
+      return kFALSE;
+   }
+
+   if (gDebug > 1)
+      Info("ReadBuffers", "XrdClient->ReadV failed, executing TFile::ReadBuffers");
 
    // If it wasnt able to use the specialized call
    // then use the generic one that is like a queue
