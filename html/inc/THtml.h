@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.17 2006/05/16 08:27:12 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.18 2006/07/08 19:47:50 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -134,11 +134,12 @@ protected:
    static Bool_t  IsWord(UChar_t c);
    TMethod*LocateMethodInCurrentLine(Ssiz_t& posMethodName, TString& ret, 
       TString& name, TString& params, std::ostream &srcOut, TString &anchor, 
-      std::ifstream& sourcefile);
+      std::ifstream& sourcefile, Bool_t allowPureVirtual);
    void    LocateMethods(std::ofstream & out, const char* filename,
                           Bool_t lookForSourceInfo = kTRUE, 
                           Bool_t useDocxxStyle = kFALSE, 
-                          Bool_t lookForClassDescr = kTRUE, 
+                          Bool_t lookForClassDescr = kTRUE,
+                          Bool_t allowPureVirtual = kFALSE,
                           const char* methodPattern = 0, 
                           const char* sourceExt = 0);
    void    LocateMethodsInSource(ofstream & out);

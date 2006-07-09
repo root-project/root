@@ -1289,7 +1289,7 @@ void THtml::BeautifyLine(std::ostream &sOut, TString* anchor /*= 0*/)
                      Ssiz_t posEndComment = lineExpandedDotDot.Index("*/", i);
                      if (posEndComment == kNPOS)
                         posEndComment = lineExpandedDotDot.Length();
-                     TString comment(lineExpandedDotDot(i, posEndComment));
+                     TString comment(lineExpandedDotDot(i, posEndComment - i));
                      sOut << comment;
                      // leave "*/" fot next iteration
                      i = posEndComment - 1;
@@ -1321,7 +1321,7 @@ void THtml::BeautifyLine(std::ostream &sOut, TString* anchor /*= 0*/)
 
 //______________________________________________________________________________
 TMethod* THtml::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret, TString& name, TString& params,
-                             std::ostream &srcOut, TString &anchor, std::ifstream& sourceFile)
+                             std::ostream &srcOut, TString &anchor, std::ifstream& sourceFile, Bool_t allowPureVirtual)
 {
    // Search for a method starting at posMethodName, and return its return type, 
    // its name, and its arguments. If the end of arguments is not found in the 
@@ -1330,19 +1330,27 @@ TMethod* THtml::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret, T
    // end of the function declaration, i.e. right after the arguments' closing bracket.
    // If posMethodName == kNPOS, we look for the first matching method in fMethodNames.
 
-   if (posMethodName != kNPOS)
-      name = fLine(posMethodName, fLine.Length() - posMethodName);
-   else {
+   if (posMethodName == kNPOS) {
       name.Remove(0);
       TMethod * meth = 0;
       for (MethodNames_t::iterator iMethodName = fMethodNames.begin();
          !name.Length() && iMethodName != fMethodNames.end(); ++iMethodName) {
-         posMethodName = fLine.Index(iMethodName->first);
-         if (posMethodName != kNPOS)
-            meth = LocateMethodInCurrentLine(posMethodName, ret, name, params, srcOut, anchor, sourceFile);
+         TString lookFor(" ");
+         lookFor += iMethodName->first;
+         lookFor += "(";
+         posMethodName = fLine.Index(lookFor);
+         if (posMethodName != kNPOS) {
+            ++posMethodName;
+            meth = LocateMethodInCurrentLine(posMethodName, ret, name, params, srcOut, 
+               anchor, sourceFile, allowPureVirtual);
+            if (name.Length())
+               return meth;
+         }
       }
-      return meth;
+      return 0;
    }
+
+   name = fLine(posMethodName, fLine.Length() - posMethodName);
 
    // extract return type
    ret = fLine(0, posMethodName);
@@ -1441,38 +1449,41 @@ TMethod* THtml::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret, T
          params += fLine;
       } else
          posParamEnd = paramEnd - params.Data();
-         switch (params[posParamEnd]) {
-            case '(': ++bracketLevel; ++posParamEnd; break;
-            case ')': --bracketLevel; ++posParamEnd; break;
-            case '"': // skip ")"
-               ++posParamEnd;
-               while (params.Length() > posParamEnd && params[posParamEnd] != '"') {
-                  // skip '\"'
-                  if (params[posParamEnd] == '\\') ++posParamEnd;
-                  ++posParamEnd;
-               }
-               if (params.Length() <= posParamEnd) {
-                  // something is seriously wrong - skip :-/
-                  ret.Remove(0);
-                  name.Remove(0);
-                  params.Remove(0);
-                  return 0;
-               }
-               ++posParamEnd; // skip trailing '"'
-               break;
-            case '\'': // skip ')'
-               ++posParamEnd;
+      switch (params[posParamEnd]) {
+         case '(': ++bracketLevel; ++posParamEnd; break;
+         case ')': --bracketLevel; ++posParamEnd; break;
+         case '"': // skip ")"
+            ++posParamEnd;
+            while (params.Length() > posParamEnd && params[posParamEnd] != '"') {
+               // skip '\"'
                if (params[posParamEnd] == '\\') ++posParamEnd;
-               posParamEnd += 2;
-               break;
-            default:
                ++posParamEnd;
-         }
+            }
+            if (params.Length() <= posParamEnd) {
+               // something is seriously wrong - skip :-/
+               ret.Remove(0);
+               name.Remove(0);
+               params.Remove(0);
+               return 0;
+            }
+            ++posParamEnd; // skip trailing '"'
+            break;
+         case '\'': // skip ')'
+            ++posParamEnd;
+            if (params[posParamEnd] == '\\') ++posParamEnd;
+            posParamEnd += 2;
+            break;
+         default:
+            ++posParamEnd;
+      }
    } // while bracketlevel, i.e. (...(..)...)
    Ssiz_t posBlock     = params.Index('{', posParamEnd);
    Ssiz_t posSemicolon = params.Index(';', posParamEnd);
+   Ssiz_t posPureVirt  = params.Index('=', posParamEnd);
    if (posSemicolon != kNPOS)
-      if (posBlock == kNPOS || (posSemicolon < posBlock))
+      if ((posBlock == kNPOS || (posSemicolon < posBlock)) &&
+         (posPureVirt == kNPOS || !allowPureVirtual)
+         && !allowPureVirtual) // allow any "func();" if pv is allowed
          params.Remove(0);
 
    if (params.Length())
@@ -1495,7 +1506,8 @@ TMethod* THtml::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret, T
 void THtml::LocateMethods(std::ofstream & out, const char* filename,
                           Bool_t lookForSourceInfo /*= kTRUE*/, 
                           Bool_t useDocxxStyle /*= kFALSE*/, 
-                          Bool_t lookForClassDescr /*= kTRUE*/, 
+                          Bool_t lookForClassDescr /*= kTRUE*/,
+                          Bool_t allowPureVirtual /*= kFALSE*/,
                           const char* methodPattern /*= 0*/, 
                           const char* sourceExt /*= 0 */)
 {
@@ -1627,13 +1639,16 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
          if (posPattern != kNPOS || !pattern.Length()) {
             posPattern += pattern.Length();
             LocateMethodInCurrentLine(posPattern, methodRet, methodName, 
-               methodParam, srcHtmlOut, anchor, sourceFile);
+               methodParam, srcHtmlOut, anchor, sourceFile, allowPureVirtual);
             if (methodName.Length()) {
                fDocContext = kDocFunc;
                needAnchor = !anchor.Length();
                if (!useDocxxStyle)
                   prevComment.Remove(0);
                wroteMethodNowWaitingForOpenBlock = fLine.Index("{", posPattern) == kNPOS;
+               if (wroteMethodNowWaitingForOpenBlock)
+                  // make sure we don't have "func() = 0;"
+                  wroteMethodNowWaitingForOpenBlock = fLine.Index(";", posPattern) == kNPOS;
             }
          } // pattern matches - could be a method
       } // it's a comment over the whole line
@@ -1723,7 +1738,8 @@ void THtml::LocateMethodsInSource(ofstream & out)
    
    const char* implFileName = GetImplFileName(fCurrentClass);
    if (implFileName && implFileName[0])
-      LocateMethods(out, implFileName, kTRUE, useDocxxStyle, kTRUE, pattern, ".cxx.html");
+      LocateMethods(out, implFileName, kTRUE, useDocxxStyle, kTRUE, 
+         kFALSE, pattern, ".cxx.html");
 }
 
 //______________________________________________________________________________
@@ -1744,7 +1760,8 @@ void THtml::LocateMethodsInHeaderInline(ofstream & out)
    
    const char* declFileName = GetDeclFileName(fCurrentClass);
    if (declFileName && declFileName[0])
-      LocateMethods(out, declFileName, kFALSE, useDocxxStyle, kFALSE, pattern, 0);
+      LocateMethods(out, declFileName, kFALSE, useDocxxStyle, kFALSE, 
+         kFALSE, pattern, 0);
 }
 
 //______________________________________________________________________________
@@ -1756,7 +1773,7 @@ void THtml::LocateMethodsInHeaderClassDecl(ofstream & out)
 
    const char* declFileName = GetDeclFileName(fCurrentClass);
    if (declFileName && declFileName[0])
-      LocateMethods(out, declFileName, kFALSE, kTRUE, kFALSE, 0, ".h.html");
+      LocateMethods(out, declFileName, kFALSE, kTRUE, kFALSE, kTRUE, 0, ".h.html");
 }
 
 //______________________________________________________________________________
