@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.15 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.16 2006/05/26 09:01:58 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -62,7 +62,7 @@ TVirtualFitter::TVirtualFitter(const TVirtualFitter& tvf) :
 //______________________________________________________________________________
 TVirtualFitter& TVirtualFitter::operator=(const TVirtualFitter& tvf)
 {
-   //equal operator
+   //assignment operator
    if(this!=&tvf) {
       TNamed::operator=(tvf);
       fOption=tvf.fOption;

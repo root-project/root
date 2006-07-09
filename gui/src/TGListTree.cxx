@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.55 2006/06/19 14:08:33 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.56 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -171,7 +171,7 @@ TGListTreeItem::TGListTreeItem(const TGListTreeItem& lti) :
 //______________________________________________________________________________
 TGListTreeItem& TGListTreeItem::operator=(const TGListTreeItem& lti)
 {
-   //equal operator
+   //assignment operator
    if(this!=&lti) {
       fClient=lti.fClient;
       fParent=lti.fParent;
@@ -396,7 +396,7 @@ TGListTree::TGListTree(const TGListTree& lt) :
 //______________________________________________________________________________
 TGListTree& TGListTree::operator=(const TGListTree& lt) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&lt) {
       TGContainer::operator=(lt);
       fFirst=lt.fFirst;

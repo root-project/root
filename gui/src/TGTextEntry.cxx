@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.43 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.44 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -336,7 +336,7 @@ TGTextEntry::TGTextEntry(const TGTextEntry& te) :
 //______________________________________________________________________________
 TGTextEntry& TGTextEntry::operator=(const TGTextEntry& te)
 {
-   //equal operator
+   //assignment operator
    if(this!=&te) {
       TGFrame::operator=(te);
       TGWidget::operator=(te);

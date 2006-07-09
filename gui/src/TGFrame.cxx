@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.135 2006/06/01 11:38:15 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.136 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -240,7 +240,7 @@ TGFrame::TGFrame(const TGFrame& tgf) :
 //______________________________________________________________________________
 TGFrame& TGFrame::operator=(const TGFrame& tgf)
 {
-   //equal operator
+   //assignment operator
    if(this!=&tgf) {
       TGWindow::operator=(tgf);
       TQObject::operator=(tgf);
@@ -866,7 +866,7 @@ TGCompositeFrame::TGCompositeFrame(const TGCompositeFrame& tcf) :
 //______________________________________________________________________________
 TGCompositeFrame& TGCompositeFrame::operator=(const TGCompositeFrame& tcf) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&tcf) {
       TGFrame::operator=(tcf);
       fLayoutManager=tcf.fLayoutManager;
@@ -1489,7 +1489,7 @@ TGMainFrame::TGMainFrame(const TGMainFrame& tmf) :
 //______________________________________________________________________________
 TGMainFrame& TGMainFrame::operator=(const TGMainFrame& tmf) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&tmf) {
       TGCompositeFrame::operator=(tmf);
       fBindList=tmf.fBindList;

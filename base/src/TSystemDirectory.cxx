@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.10 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.11 2006/05/26 09:01:58 brun Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -60,7 +60,7 @@ TSystemDirectory::TSystemDirectory(const TSystemDirectory& sd) :
 //______________________________________________________________________________
 TSystemDirectory& TSystemDirectory::operator=(const TSystemDirectory& sd)
 {
-   //equal operator
+   //assignment operator
    if(this!=&sd) {
       TSystemFile::operator=(sd);
       fDirsInBrowser=sd.fDirsInBrowser;

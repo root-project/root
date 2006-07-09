@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.26 2006/06/28 17:24:34 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.27 2006/07/03 16:10:45 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1978,7 +1978,7 @@ TGNumberEntry::TGNumberEntry(const TGNumberEntry& ne) :
 //______________________________________________________________________________
 TGNumberEntry& TGNumberEntry::operator=(const TGNumberEntry& ne) 
 { 
-   //equal operator
+   //assignment operator
    if(this!=&ne) {
       TGCompositeFrame::operator=(ne);
       TGWidget::operator=(ne);

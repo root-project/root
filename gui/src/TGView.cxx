@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.19 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.20 2006/05/29 14:00:36 antcheva Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -178,7 +178,7 @@ TGView::TGView(const TGView& gv) :
 //______________________________________________________________________________
 TGView& TGView::operator=(const TGView& gv) 
 {
-   //equal operator
+   //assignment operator
 
    if(this!=&gv) {
       TGCompositeFrame::operator=(gv);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.58 2006/05/24 16:44:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.59 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -101,7 +101,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TGraphAsymmErrors &gr)
 //______________________________________________________________________________
 TGraphAsymmErrors& TGraphAsymmErrors::operator=(const TGraphAsymmErrors &gr)
 {
-   // TGraphAsymmErrors equal operator 
+   // TGraphAsymmErrors assignment operator 
    
    if(this!=&gr) {
       TGraph::operator=(gr);

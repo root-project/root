@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.12 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.13 2006/05/26 09:01:58 brun Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -137,7 +137,7 @@ TTimer::TTimer(const TTimer &ti) :
 //______________________________________________________________________________
 TTimer& TTimer::operator=(const TTimer &ti) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&ti) {
       TSysEvtHandler::operator=(ti);
       fTime=ti.fTime;

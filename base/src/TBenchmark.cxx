@@ -56,7 +56,7 @@ TBenchmark::TBenchmark(const TBenchmark& bm) :
 //______________________________________________________________________________
 TBenchmark& TBenchmark::operator=(const TBenchmark& bm)
 {
-   //equal operator
+   //assignment operator
    if(this!=&bm) {
       TNamed::operator=(bm);
       fNbench=bm.fNbench;

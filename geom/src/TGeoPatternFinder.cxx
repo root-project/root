@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.17 2006/06/13 12:11:45 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.18 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -75,7 +75,7 @@ TGeoPatternFinder::TGeoPatternFinder(const TGeoPatternFinder& pf) :
 //-----------------------------------------------------------------------------
 TGeoPatternFinder& TGeoPatternFinder::operator=(const TGeoPatternFinder& pf)
 {
-   //equal operator
+   //assignment operator
    if(this!=&pf) {
       TObject::operator=(pf);
       fStep=pf.fStep;
@@ -1087,7 +1087,7 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb(const TGeoPatternHoneycomb& pfh) :
 //-----------------------------------------------------------------------------
 TGeoPatternHoneycomb& TGeoPatternHoneycomb::operator=(const TGeoPatternHoneycomb& pfh) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&pfh) {
       TGeoPatternFinder::operator=(pfh);
       fNrows=pfh.fNrows;

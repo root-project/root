@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.29 2006/05/24 16:44:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.30 2006/07/03 16:10:45 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -116,7 +116,7 @@ TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend)
 //____________________________________________________________________________
 TLegend& TLegend::operator=(const TLegend &lg) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&lg) {
       TPave::operator=(lg);
       TAttText::operator=(lg);

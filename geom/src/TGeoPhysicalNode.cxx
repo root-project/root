@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.16 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.17 2006/05/24 17:11:54 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -74,7 +74,7 @@ TGeoPhysicalNode::TGeoPhysicalNode(const TGeoPhysicalNode& gpn) :
 //_____________________________________________________________________________
 TGeoPhysicalNode& TGeoPhysicalNode::operator=(const TGeoPhysicalNode& gpn)
 {
-   //equal operator
+   //assignment operator
    if(this!=&gpn) {
       TObject::operator=(gpn);
       TAttLine::operator=(gpn);

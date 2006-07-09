@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.14 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.15 2006/05/26 09:01:58 brun Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -82,7 +82,7 @@ TContextMenu::TContextMenu(const TContextMenu& cm) :
 //______________________________________________________________________________
 TContextMenu& TContextMenu::operator=(const TContextMenu& cm)
 {
-   //equal operator
+   //assignment operator
    if(this!=&cm) {
       TNamed::operator=(cm);
       fContextMenuImp=cm.fContextMenuImp;

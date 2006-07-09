@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.157 2006/06/08 15:11:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.158 2006/06/11 12:56:48 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -766,7 +766,7 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
 //_____________________________________________________________________________
 TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
 {
-   //equal operator
+   //assignment operator
    if(this!=&gm) {
       TNamed::operator=(gm);
       fStep=gm.fStep;

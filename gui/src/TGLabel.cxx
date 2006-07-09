@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.26 2006/06/01 11:38:15 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.27 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -108,7 +108,7 @@ TGLabel::TGLabel(const TGLabel& gl) :
 //______________________________________________________________________________
 TGLabel& TGLabel::operator=(const TGLabel& gl)
 {
-   //equal operator
+   //assignment operator
    if(this!=&gl) {
       TGFrame::operator=(gl);
       fText=gl.fText;

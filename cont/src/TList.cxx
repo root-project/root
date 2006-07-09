@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.19 2006/05/23 04:47:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.20 2006/05/26 09:04:52 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -72,7 +72,7 @@ TList::TList(const TList& ls) :
 //______________________________________________________________________________
 TList& TList::operator=(const TList& ls)
 {
-   //equal operator
+   //assignment operator
    if(this!=&ls) {
       TSeqCollection::operator=(ls);
       fFirst=ls.fFirst;

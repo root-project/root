@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGXYLayout.cxx,v 1.2 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGXYLayout.cxx,v 1.3 2006/05/24 18:20:12 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -166,7 +166,7 @@ TGXYLayout::TGXYLayout(const TGXYLayout& xyl) :
 //______________________________________________________________________________
 TGXYLayout& TGXYLayout::operator=(const TGXYLayout& xyl) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&xyl) {
       TGLayoutManager::operator=(xyl);
       fList=xyl.fList;

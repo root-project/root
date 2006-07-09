@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.59 2006/05/24 16:44:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.60 2006/07/03 16:10:45 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -309,7 +309,7 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 //______________________________________________________________________________
 TLatex& TLatex::operator=(const TLatex& lt) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&lt) {
       TText::operator=(lt);
       TAttLine::operator=(lt);

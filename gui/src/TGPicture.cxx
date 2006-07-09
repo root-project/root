@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.26 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.27 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -59,7 +59,7 @@ TGPicturePool::TGPicturePool(const TGPicturePool& pp) :
 //______________________________________________________________________________
 TGPicturePool& TGPicturePool::operator=(const TGPicturePool& pp) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&pp) {
       TObject::operator=(pp);
       fClient=pp.fClient;

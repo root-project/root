@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.50 2006/05/24 17:11:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.51 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -176,7 +176,7 @@ TGeoArb8::TGeoArb8(const TGeoArb8& ga8) :
 //_____________________________________________________________________________
 TGeoArb8& TGeoArb8::operator=(const TGeoArb8& ga8) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&ga8) {
       TGeoBBox::operator=(ga8);
       fDz=ga8.fDz;

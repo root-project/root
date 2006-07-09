@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.182 2006/05/26 09:01:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.183 2006/06/20 13:21:24 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -559,7 +559,7 @@ TROOT::TROOT(const TROOT& r) :
 //______________________________________________________________________________
 TROOT& TROOT::operator=(const TROOT& r)
 {
-   //equal operator
+   //assignment operator
    if(this!=&r) {
       TDirectory::operator=(r);
       fLineIsProcessing=r.fLineIsProcessing;

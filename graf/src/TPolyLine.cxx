@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.27 2006/05/24 16:44:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.28 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -116,7 +116,7 @@ TPolyLine::TPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 //______________________________________________________________________________
 TPolyLine& TPolyLine::operator=(const TPolyLine& pl)
 {
-   //equal operator
+   //assignment operator
    if(this!=&pl) {
       TObject::operator=(pl);
       TAttLine::operator=(pl);

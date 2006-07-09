@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.15 2006/05/24 16:44:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.16 2006/05/26 09:14:51 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -54,7 +54,7 @@ TSpline::TSpline(const TSpline &sp) :
 //____________________________________________________________________________
 TSpline& TSpline::operator=(const TSpline &sp)
 {
-   //equal operator
+   //assignment operator
    if(this!=&sp) {
       TNamed::operator=(sp);
       TAttLine::operator=(sp);
@@ -414,7 +414,7 @@ TSpline3::TSpline3(const TSpline3& sp3) :
 //____________________________________________________________________________
 TSpline3& TSpline3::operator=(const TSpline3& sp3)
 {
-   //equal operator
+   //assignment operator
    if(this!=&sp3) {
       TSpline::operator=(sp3);
       fPoly=sp3.fPoly;
@@ -1199,7 +1199,7 @@ TSpline5::TSpline5(const TSpline5& sp5) :
 //____________________________________________________________________________
 TSpline5& TSpline5::operator=(const TSpline5& sp5)
 {
-   //equal operator
+   //assignment operator
    if(this!=&sp5) {
       TSpline::operator=(sp5);
       fPoly=sp5.fPoly;

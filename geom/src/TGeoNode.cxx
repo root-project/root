@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.36 2006/06/02 16:00:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.37 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -126,7 +126,7 @@ TGeoNode::TGeoNode(const TGeoNode& gn) :
 //_____________________________________________________________________________
 TGeoNode& TGeoNode::operator=(const TGeoNode& gn) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gn) {
       TNamed::operator=(gn);
       TGeoAtt::operator=(gn);
@@ -702,7 +702,7 @@ TGeoNodeOffset::TGeoNodeOffset(const TGeoNodeOffset& gno) :
 //_____________________________________________________________________________
 TGeoNodeOffset& TGeoNodeOffset::operator=(const TGeoNodeOffset& gno)
 {
-   //equal operator
+   //assignment operator
    if(this!=&gno) {
       TGeoNode::operator=(gno);
       fOffset=gno.fOffset;

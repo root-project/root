@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.9 2006/05/24 17:11:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.10 2006/07/03 16:10:44 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -86,7 +86,7 @@ TGeoMedium::TGeoMedium(const TGeoMedium& gm) :
 //-----------------------------------------------------------------------------
 TGeoMedium& TGeoMedium::operator=(const TGeoMedium& gm) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gm) {
       TNamed::operator=(gm);
       fId=gm.fId;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.37 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.38 2006/05/24 17:11:54 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -172,7 +172,7 @@ TGeoVoxelFinder::TGeoVoxelFinder(const TGeoVoxelFinder& vf) :
 //-----------------------------------------------------------------------------
 TGeoVoxelFinder& TGeoVoxelFinder::operator=(const TGeoVoxelFinder& vf)
 {
-   //equal operator
+   //assignment operator
    if(this!=&vf) {
       TObject::operator=(vf);
       fVolume=vf.fVolume;

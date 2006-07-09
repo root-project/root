@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.17 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.18 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -78,7 +78,7 @@ TGIcon::TGIcon(const TGIcon &p) :
 //______________________________________________________________________________
 TGIcon& TGIcon::operator=(const TGIcon &p)
 {
-   //equal operator
+   //assignment operator
    if(this!=&p) {
       TGFrame::operator=(p);
       fPic = p.fPic;

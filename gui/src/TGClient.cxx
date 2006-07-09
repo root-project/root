@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.50 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.51 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -207,7 +207,7 @@ TGClient::TGClient(const TGClient& gc) :
 //______________________________________________________________________________
 TGClient& TGClient::operator=(const TGClient& gc) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gc) {
       TObject::operator=(gc);
       fBackColor=gc.fBackColor;

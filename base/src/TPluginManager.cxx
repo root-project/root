@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.28 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.29 2006/05/26 09:01:58 brun Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -121,7 +121,7 @@ TPluginHandler::TPluginHandler(const TPluginHandler& ph) :
 //______________________________________________________________________________
 TPluginHandler& TPluginHandler::operator=(const TPluginHandler& ph)
 {
-   //equal operator
+   //assignment operator
    if(this!=&ph) {
       TObject::operator=(ph);
       fBase=ph.fBase;

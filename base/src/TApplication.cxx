@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.74 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.75 2006/05/26 09:01:58 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -241,7 +241,7 @@ TApplication::TApplication(const TApplication& ap) :
 //______________________________________________________________________________
 TApplication& TApplication::operator=(const TApplication& ap) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&ap) {
       TObject::operator=(ap);
       TQObject::operator=(ap);

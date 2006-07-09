@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.141 2006/05/26 09:01:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.142 2006/07/04 17:36:37 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -110,7 +110,7 @@ TSystem::TSystem(const TSystem& ts): TNamed(ts),
 //______________________________________________________________________________
 TSystem& TSystem::operator=(const TSystem& ts) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&ts) {
       TNamed::operator=(ts);
       fReadmask=ts.fReadmask;

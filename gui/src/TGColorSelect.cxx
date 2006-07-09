@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.19 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.20 2006/07/03 16:10:45 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -102,7 +102,7 @@ TGColorFrame::TGColorFrame(const TGColorFrame& cf) :
 //________________________________________________________________________________
 TGColorFrame& TGColorFrame::operator=(const TGColorFrame& cf)
 {
-   //equal operator
+   //assignment operator
    if(this!=&cf) {
       TGFrame::operator=(cf);
       fMsgWindow=cf.fMsgWindow;
@@ -184,7 +184,7 @@ TG16ColorSelector::TG16ColorSelector(const TG16ColorSelector& cs) :
 //________________________________________________________________________________
 TG16ColorSelector& TG16ColorSelector::operator=(const TG16ColorSelector& cs) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&cs) {
       TGCompositeFrame::operator=(cs);
       fActive=cs.fActive;
@@ -303,7 +303,7 @@ TGColorPopup::TGColorPopup(const TGColorPopup& cp) :
 //________________________________________________________________________________
 TGColorPopup& TGColorPopup::operator=(const TGColorPopup& cp)
 {
-   //equal operator
+   //assignment operator
    if(this!=&cp) {
       TGCompositeFrame::operator=(cp);
       fActive=cp.fActive;
@@ -466,7 +466,7 @@ TGColorSelect::TGColorSelect(const TGColorSelect& cs) :
 //________________________________________________________________________________
 TGColorSelect& TGColorSelect::operator=(const TGColorSelect& cs)
 {
-   //equal operator
+   //assignment operator
    if(this!=&cs) {
       TGCheckButton::operator=(cs);
       fColor=cs.fColor;

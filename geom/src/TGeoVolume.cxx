@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.85 2006/06/11 12:56:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.86 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -419,7 +419,7 @@ TGeoVolume::TGeoVolume(const TGeoVolume& gv) :
 //_____________________________________________________________________________
 TGeoVolume& TGeoVolume::operator=(const TGeoVolume& gv) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gv) {
       TNamed::operator=(gv);
       TGeoAtt::operator=(gv);
@@ -1889,7 +1889,7 @@ TGeoVolumeMulti::TGeoVolumeMulti(const TGeoVolumeMulti& vm) :
 //_____________________________________________________________________________
 TGeoVolumeMulti& TGeoVolumeMulti::operator=(const TGeoVolumeMulti& vm) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&vm) {
       TGeoVolume::operator=(vm);
       fVolumes=vm.fVolumes;

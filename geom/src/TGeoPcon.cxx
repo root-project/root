@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.56 2006/06/19 14:58:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.57 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -142,7 +142,7 @@ TGeoPcon::TGeoPcon(const TGeoPcon& pc) :
 //_____________________________________________________________________________
 TGeoPcon& TGeoPcon::operator=(const TGeoPcon& pc) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&pc) {
       TGeoBBox::operator=(pc);
       fNz=pc.fNz;

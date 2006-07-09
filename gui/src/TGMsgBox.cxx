@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.13 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.14 2006/06/30 07:48:18 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -143,7 +143,7 @@ TGMsgBox::TGMsgBox(const TGMsgBox& mb) :
 //______________________________________________________________________________
 TGMsgBox& TGMsgBox::operator=(const TGMsgBox& mb)
 {
-   //equal operator
+   //assignment operator
    if(this!=&mb) {
       TGTransientFrame::operator=(mb);
       fYes=mb.fYes;

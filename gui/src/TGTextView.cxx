@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.25 2006/06/06 07:44:28 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.26 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -135,7 +135,7 @@ TGTextView::TGTextView(const TGTextView& tv) :
 //______________________________________________________________________________
 TGTextView& TGTextView::operator=(const TGTextView& tv)
 {
-   //equal operator
+   //assignment operator
    if(this!=&tv) {
       TGView::operator=(tv);
       fText=tv.fText;

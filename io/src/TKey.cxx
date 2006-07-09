@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.57 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.58 2006/05/26 09:01:58 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -103,7 +103,7 @@ TKey::TKey(const TKey& tk) :
 //______________________________________________________________________________
 TKey& TKey::operator=(const TKey& tk) 
 { 
-   // equal operator
+   // assignment operator
   
    if(this!=&tk) {
       TNamed::operator=(tk);

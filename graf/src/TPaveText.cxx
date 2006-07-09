@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.25 2006/05/24 16:44:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.26 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -99,7 +99,7 @@ TPaveText::TPaveText(const TPaveText &pavetext) : TPave(), TAttText()
 //______________________________________________________________________________
 TPaveText& TPaveText::operator=(const TPaveText& pt)
 {
-   //equal operator
+   //assignment operator
    if(this!=&pt) {
       TPave::operator=(pt);
       TAttText::operator=(pt);

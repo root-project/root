@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.65 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.66 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -100,7 +100,7 @@ TGMenuEntry::TGMenuEntry(const TGMenuEntry& me) :
 //______________________________________________________________________________
 TGMenuEntry& TGMenuEntry::operator=(const TGMenuEntry& me) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&me) {
       TObject::operator=(me);
       fEntryId=me.fEntryId;
@@ -158,7 +158,7 @@ TGMenuBar::TGMenuBar(const TGMenuBar& mb) :
 //______________________________________________________________________________
 TGMenuBar& TGMenuBar::operator=(const TGMenuBar& mb) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&mb) {
       TGHorizontalFrame::operator=(mb);
       fCurrent=mb.fCurrent;
@@ -823,7 +823,7 @@ TGPopupMenu::TGPopupMenu(const TGPopupMenu& pu) :
 //______________________________________________________________________________
 TGPopupMenu& TGPopupMenu::operator=(const TGPopupMenu& pu)
 {
-   //equal operator
+   //assignment operator
    if(this!=&pu) {
       TGFrame::operator=(pu);
       fEntryList=pu.fEntryList;
@@ -1843,7 +1843,7 @@ TGMenuTitle::TGMenuTitle(const TGMenuTitle& mt) :
 //______________________________________________________________________________
 TGMenuTitle& TGMenuTitle::operator=(const TGMenuTitle& mt)
 {
-   //equal operator
+   //assignment operator
    if(this!=&mt) {
       TGFrame::operator=(mt);
       fMenu=mt.fMenu;

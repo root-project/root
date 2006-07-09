@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.35 2006/05/30 06:40:10 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.36 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -91,7 +91,7 @@ TGTabElement::TGTabElement(const TGTabElement& te) :
 //______________________________________________________________________________
 TGTabElement& TGTabElement::operator=(const TGTabElement& te)
 { 
-   //equal operator
+   //assignment operator
    if(this!=&te) {
       TGFrame::operator=(te);
       fText=te.fText;
@@ -212,7 +212,7 @@ TGTabLayout::TGTabLayout(const TGTabLayout& tl) :
 //______________________________________________________________________________
 TGTabLayout& TGTabLayout::operator=(const TGTabLayout& tl)
 {
-   //equal operator
+   //assignment operator
    if(this!=&tl) {
       TGLayoutManager::operator=(tl);
       fMain=tl.fMain;
@@ -338,7 +338,7 @@ TGTab::TGTab(const TGTab& gt) :
 //______________________________________________________________________________
 TGTab& TGTab::operator=(const TGTab& gt) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gt) {
       TGCompositeFrame::operator=(gt);
       TGWidget::operator=(gt);

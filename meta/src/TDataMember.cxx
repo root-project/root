@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.30 2006/05/24 15:09:22 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.31 2006/05/26 09:18:35 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -794,7 +794,7 @@ TOptionListItem::TOptionListItem(const TOptionListItem& oli) :
 //______________________________________________________________________________
 TOptionListItem& TOptionListItem::operator=(const TOptionListItem& oli)
 {
-   //equal operator
+   //assignment operator
    if(this!=&oli) {
       TObject::operator=(oli);
       fDataMember=oli.fDataMember;

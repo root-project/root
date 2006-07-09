@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.33 2006/05/24 17:11:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.34 2006/07/03 16:10:44 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -165,7 +165,7 @@ TGeoXtru::TGeoXtru(const TGeoXtru& xt) :
 //_____________________________________________________________________________
 TGeoXtru& TGeoXtru::operator=(const TGeoXtru& xt)
 {
-   //equal operator
+   //assignment operator
    if(this!=&xt) {
       TGeoBBox::operator=(xt);
       fNvert=xt.fNvert;

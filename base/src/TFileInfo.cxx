@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.7 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.8 2006/05/26 09:01:58 brun Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -73,7 +73,7 @@ TFileInfo::TFileInfo(const TFileInfo& fi) :
 //______________________________________________________________________________
 TFileInfo& TFileInfo::operator=(const TFileInfo& fi)
 {
-   //equal operator
+   //assignment operator
    if(this!=&fi) {
       TNamed::operator=(fi);
       fCurrentUrl=fi.fCurrentUrl;

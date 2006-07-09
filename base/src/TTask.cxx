@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.13 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.14 2006/05/26 09:01:58 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -117,7 +117,7 @@ TTask::TTask(const char* name, const char *title)
 //______________________________________________________________________________
 TTask& TTask::operator=(const TTask& tt) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&tt) {
       TNamed::operator=(tt);
       fTasks=tt.fTasks;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.18 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.19 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -90,7 +90,7 @@ TGSlider::TGSlider(const TGSlider& sl) :
 //______________________________________________________________________________
 TGSlider& TGSlider::operator=(const TGSlider& sl) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&sl) {
       TGFrame::operator=(sl);
       TGWidget::operator=(sl);

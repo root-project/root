@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.7 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.8 2006/05/24 17:11:54 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -82,7 +82,7 @@ TGeoElementTable::TGeoElementTable(const TGeoElementTable& get) :
 //______________________________________________________________________________
 TGeoElementTable& TGeoElementTable::operator=(const TGeoElementTable& get) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&get) {
       TObject::operator=(get);
       fNelements=get.fNelements;

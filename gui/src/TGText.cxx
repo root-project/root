@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.17 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.18 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -90,7 +90,7 @@ TGTextLine::TGTextLine(const TGTextLine& tl) :
 //______________________________________________________________________________
 TGTextLine& TGTextLine::operator=(const TGTextLine& tl)
 {
-   //equal operator
+   //assignment operator
    if(this!=&tl) {
       fString=tl.fString;
       fLength=tl.fLength;
@@ -254,7 +254,7 @@ TGText::TGText(const TGText& gt) :
 //______________________________________________________________________________
 TGText& TGText::operator=(const TGText& gt)
 {
-   //equal operator
+   //assignment operator
    if(this!=&gt) {
       fFilename=gt.fFilename;
       fIsSaved=gt.fIsSaved;

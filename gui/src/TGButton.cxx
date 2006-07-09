@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.69 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.70 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -134,7 +134,7 @@ TGButton::TGButton(const TGButton& tgb) :
 //______________________________________________________________________________
 TGButton& TGButton::operator=(const TGButton& tgb) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&tgb) {
       TGFrame::operator=(tgb);
       TGWidget::operator=(tgb);
@@ -420,7 +420,7 @@ TGTextButton::TGTextButton(const TGTextButton& tgt) :
 //______________________________________________________________________________
 TGTextButton& TGTextButton::operator=(const TGTextButton& tgt) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&tgt) {
       TGButton::operator=(tgt);
       fLabel=tgt.fLabel;

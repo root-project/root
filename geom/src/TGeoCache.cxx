@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.43 2006/05/24 17:11:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.44 2006/05/26 09:09:59 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -197,7 +197,7 @@ TGeoNodeCache::TGeoNodeCache(const TGeoNodeCache& gnc) :
 //_____________________________________________________________________________
 TGeoNodeCache& TGeoNodeCache::operator=(const TGeoNodeCache& gnc) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gnc) {
       fGeoCacheUsageRatio=gnc.fGeoCacheUsageRatio;
       fGeoCacheMaxDaughters=gnc.fGeoCacheMaxDaughters;
@@ -683,7 +683,7 @@ TGeoCacheDummy::TGeoCacheDummy(const TGeoCacheDummy& gcd) :
 //_____________________________________________________________________________
 TGeoCacheDummy& TGeoCacheDummy::operator=(const TGeoCacheDummy& gcd) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gcd) {
       TGeoNodeCache::operator=(gcd);
       fTop=gcd.fTop;
@@ -943,7 +943,7 @@ TGeoNodeArray::TGeoNodeArray(const TGeoNodeArray& gna) :
 //_____________________________________________________________________________
 TGeoNodeArray& TGeoNodeArray::operator=(const TGeoNodeArray& gna) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gna) {
       TObject::operator=(gna);
       fNodeSize=gna.fNodeSize;
@@ -1159,7 +1159,7 @@ TGeoNodeObjArray::TGeoNodeObjArray(const TGeoNodeObjArray& noa) :
 //_____________________________________________________________________________
 TGeoNodeObjArray& TGeoNodeObjArray::operator=(const TGeoNodeObjArray& noa) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&noa) {
       TGeoNodeArray::operator=(noa);
       fIndex=noa.fIndex;
@@ -1323,7 +1323,7 @@ TGeoNodePos::TGeoNodePos(const TGeoNodePos& gnp) :
 //_____________________________________________________________________________
 TGeoNodePos& TGeoNodePos::operator=(const TGeoNodePos& gnp) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gnp) {
       TObject::operator=(gnp);
       fNdaughters=gnp.fNdaughters;
@@ -1508,7 +1508,7 @@ TGeoMatrixCache::TGeoMatrixCache(const TGeoMatrixCache& gmc) :
 //_____________________________________________________________________________
 TGeoMatrixCache& TGeoMatrixCache::operator=(const TGeoMatrixCache& gmc) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gmc) {
       fMatrix=gmc.fMatrix;
       fHandler=gmc.fHandler;
@@ -1726,7 +1726,7 @@ TGeoCacheState::TGeoCacheState(const TGeoCacheState& gcs) :
 //_____________________________________________________________________________
 TGeoCacheState& TGeoCacheState::operator=(const TGeoCacheState& gcs) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gcs) {
       TObject::operator=(gcs);
       fCapacity=gcs.fCapacity;
@@ -1837,7 +1837,7 @@ TGeoCacheStateDummy::TGeoCacheStateDummy(const TGeoCacheStateDummy& csd) :
 //_____________________________________________________________________________
 TGeoCacheStateDummy& TGeoCacheStateDummy::operator=(const TGeoCacheStateDummy& csd) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&csd) {
       TGeoCacheState::operator=(csd);
       fNodeBranch=csd.fNodeBranch;

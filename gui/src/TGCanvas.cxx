@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.45 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.46 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -383,7 +383,7 @@ TGContainer::TGContainer(const TGContainer& gc) :
 //______________________________________________________________________________
 TGContainer& TGContainer::operator=(const TGContainer& gc) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gc) {
       TGCompositeFrame::operator=(gc);
       fViewPort=gc.fViewPort;
@@ -1945,7 +1945,7 @@ TGCanvas::TGCanvas(const TGCanvas& gc) :
 //______________________________________________________________________________
 TGCanvas& TGCanvas::operator=(const TGCanvas& gc)
 {
-   //equal operator
+   //assignment operator
    if(this!=&gc) {
       TGFrame::operator=(gc);
       fVport=gc.fVport;

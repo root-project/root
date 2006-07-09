@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.27 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.28 2006/05/24 18:20:12 brun Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -76,7 +76,7 @@ TGFileInfo::TGFileInfo(const TGFileInfo& fi) :
 //______________________________________________________________________________
 TGFileInfo& TGFileInfo::operator=(const TGFileInfo& fi) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&fi) {
       fFilename=fi.fFilename;
       fIniDir=fi.fIniDir;
@@ -325,7 +325,7 @@ TGFileDialog::TGFileDialog(const TGFileDialog& fd) :
 //______________________________________________________________________________
 TGFileDialog& TGFileDialog::operator=(const TGFileDialog& fd) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&fd) {
       TGTransientFrame::operator=(fd);
       fTbfname=fd.fTbfname;

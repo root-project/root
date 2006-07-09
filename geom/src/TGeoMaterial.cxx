@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.31 2006/06/11 12:56:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.32 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -136,7 +136,7 @@ TGeoMaterial::TGeoMaterial(const TGeoMaterial& gm) :
 //-----------------------------------------------------------------------------
 TGeoMaterial& TGeoMaterial::operator=(const TGeoMaterial& gm) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gm) {
       TNamed::operator=(gm);
       TAttFill::operator=(gm);
@@ -316,7 +316,7 @@ TGeoMixture::TGeoMixture(const TGeoMixture& gm) :
 //-----------------------------------------------------------------------------
 TGeoMixture& TGeoMixture::operator=(const TGeoMixture& gm) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&gm) {
       TGeoMaterial::operator=(gm);
       fNelements=gm.fNelements;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.16 2006/05/30 06:40:10 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.17 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -67,7 +67,7 @@ TGShutter::TGShutter(const TGShutter& sh) :
 //______________________________________________________________________________
 TGShutter& TGShutter::operator=(const TGShutter& sh) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&sh) {
       TGCompositeFrame::operator=(sh);
       fTimer=sh.fTimer;
@@ -362,7 +362,7 @@ TGShutterItem::TGShutterItem(const TGShutterItem& si) :
 //______________________________________________________________________________
 TGShutterItem& TGShutterItem::operator=(const TGShutterItem& si) 
 {
-   //equal operator
+   //assignment operator
    if(this!=&si) {
       TGVerticalFrame::operator=(si);
       TGWidget::operator=(si);
