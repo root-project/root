@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.75 2006/05/17 16:37:25 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.76 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1168,6 +1168,7 @@ void TAxis::UnZoom()
 {
    // Reset first & last bin to the full range
 
+   if (!gPad) return;
    TView *view = gPad->GetView();
    if (view) {
       delete view;
