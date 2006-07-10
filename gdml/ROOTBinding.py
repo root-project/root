@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.3
 # -*- Mode: Python -*-
-# @(#)root/gdml:$Name:  $:$Id: ROOTBinding.py,v 1.2 2006/06/13 20:46:53 rdm Exp $
+# @(#)root/gdml:$Name:  $:$Id: ROOTBinding.py,v 1.3 2006/06/13 20:46:53 rdm Exp $
 # Author: Witold Pokorski   05/06/2006
 
 import ROOT
@@ -94,14 +94,14 @@ class ROOTBinding(object):
     def mixmat(self, name, ncompo, density):
 	return ROOT.TGeoMixture(re.sub('0x........','',name), ncompo, density)
 
-    def mix_addele(self, mixture, element, id, fraction):
-	mixture.DefineElement(id, element, fraction)
+    def mix_addele(self, mixture, element, eid, fraction):
+	mixture.DefineElement(eid, element, fraction) #problem
 	return
 
     def mixele(self, name, ncompo, density):
 	return ROOT.TGeoMixture(re.sub('0x........','',name), ncompo, density)
 
-    def mix_addiso(self, element, isotope, id, fraction):
+    def mix_addiso(self, element, isotope, eid, fraction):
 	return 0
 
     def medium(self, name, material):
@@ -247,7 +247,6 @@ class ROOTBinding(object):
 
     def eltube(self, name, dx, dy, dz):
         el = ROOT.TGeoEltu(re.sub('0x........','',name), dx, dy, dz)
-	print 'ELTUBE binding!', el
 	return el
 
     def subtraction(self, name, first, second, pos, rot):

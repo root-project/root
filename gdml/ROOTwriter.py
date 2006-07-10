@@ -1,4 +1,4 @@
-# @(#)root/gdml:$Name:  $:$Id: ROOTwriter.py,v 1.2 2006/06/13 20:46:53 rdm Exp $
+# @(#)root/gdml:$Name:  $:$Id: ROOTwriter.py,v 1.3 2006/06/13 20:46:53 rdm Exp $
 # Author: Witold Pokorski   05/06/2006
 
 from math import *
@@ -61,13 +61,15 @@ class ROOTwriter(object):
         self.writer = writer
         self.elements = []
 	self.volumeCount = 0
-	self.nodeCount = 0	
+	self.nodeCount = 0
+	self.shapesCount = 0	
 	self.bvols = []
 	self.vols = []
 	self.volsUseCount = {}
 	self.sortedVols = []
 	self.nodes = []
 	self.bnodes = []
+	self.solList = []
         pass
 
     def rotXYZ(self, r):            
@@ -188,7 +190,6 @@ class ROOTwriter(object):
         self.writer.addXtrusion(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), vertices, sections)
 
     def TGeoEltu(self, solid):
-        print 'writing ELTUBE'
         self.writer.addEltube(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetA(), solid.GetB(), solid.GetDz())
 
     def TGeoHype(self, solid):
@@ -198,6 +199,15 @@ class ROOTwriter(object):
     def TGeoUnion(self, solid):
         lrot = self.rotXYZ(solid.GetBoolNode().GetLeftMatrix().Inverse().GetRotationMatrix())
         rrot = self.rotXYZ(solid.GetBoolNode().GetRightMatrix().Inverse().GetRotationMatrix())
+	
+	if ([solid.GetBoolNode().GetLeftShape(), 0]) in self.solList:
+	    self.solList[self.solList.index([solid.GetBoolNode().GetLeftShape(), 0])][1] = 1
+            eval('self.'+solid.GetBoolNode().GetLeftShape().__class__.__name__)(solid.GetBoolNode().GetLeftShape())
+	    self.shapesCount = self.shapesCount + 1
+	if ([solid.GetBoolNode().GetRightShape(), 0]) in self.solList:
+	    self.solList[self.solList.index([solid.GetBoolNode().GetRightShape(), 0])][1] = 1
+            eval('self.'+solid.GetBoolNode().GetRightShape().__class__.__name__)(solid.GetBoolNode().GetRightShape())
+	    self.shapesCount = self.shapesCount + 1
 
         self.writer.addUnion(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]),
                             solid.GetBoolNode().GetLeftShape().GetName()+'_'+str(libPyROOT.AddressOf(solid.GetBoolNode().GetLeftShape())[0]),
@@ -210,6 +220,15 @@ class ROOTwriter(object):
     def TGeoIntersection(self, solid):
         lrot = self.rotXYZ(solid.GetBoolNode().GetLeftMatrix().Inverse().GetRotationMatrix())
         rrot = self.rotXYZ(solid.GetBoolNode().GetRightMatrix().Inverse().GetRotationMatrix())
+	
+	if ([solid.GetBoolNode().GetLeftShape(), 0]) in self.solList:
+	    self.solList[self.solList.index([solid.GetBoolNode().GetLeftShape(), 0])][1] = 1
+            eval('self.'+solid.GetBoolNode().GetLeftShape().__class__.__name__)(solid.GetBoolNode().GetLeftShape())
+	    self.shapesCount = self.shapesCount + 1
+	if ([solid.GetBoolNode().GetRightShape(), 0]) in self.solList:
+	    self.solList[self.solList.index([solid.GetBoolNode().GetRightShape(), 0])][1] = 1
+            eval('self.'+solid.GetBoolNode().GetRightShape().__class__.__name__)(solid.GetBoolNode().GetRightShape())
+	    self.shapesCount = self.shapesCount + 1
 
         self.writer.addIntersection(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]),
                                    solid.GetBoolNode().GetLeftShape().GetName()+'_'+str(libPyROOT.AddressOf(solid.GetBoolNode().GetLeftShape())[0]),
@@ -221,7 +240,16 @@ class ROOTwriter(object):
 
     def TGeoSubtraction(self, solid):
         lrot = self.rotXYZ(solid.GetBoolNode().GetLeftMatrix().Inverse().GetRotationMatrix())
-        rrot = self.rotXYZ(solid.GetBoolNode().GetRightMatrix().Inverse().GetRotationMatrix())
+        rrot = self.rotXYZ(solid.GetBoolNode().GetRightMatrix().Inverse().GetRotationMatrix())	
+	
+        if ([solid.GetBoolNode().GetLeftShape(), 0]) in self.solList:
+	    self.solList[self.solList.index([solid.GetBoolNode().GetLeftShape(), 0])][1] = 1
+            eval('self.'+solid.GetBoolNode().GetLeftShape().__class__.__name__)(solid.GetBoolNode().GetLeftShape())
+	    self.shapesCount = self.shapesCount + 1
+	if ([solid.GetBoolNode().GetRightShape(), 0]) in self.solList:
+	    self.solList[self.solList.index([solid.GetBoolNode().GetRightShape(), 0])][1] = 1
+            eval('self.'+solid.GetBoolNode().GetRightShape().__class__.__name__)(solid.GetBoolNode().GetRightShape())
+	    self.shapesCount = self.shapesCount + 1
 
         self.writer.addSubtraction(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]),
                                   solid.GetBoolNode().GetLeftShape().GetName()+'_'+str(libPyROOT.AddressOf(solid.GetBoolNode().GetLeftShape())[0]),
@@ -231,8 +259,8 @@ class ROOTwriter(object):
                                   solid.GetBoolNode().GetRightMatrix().GetTranslation(),
                                   rrot)
 
-    def TGeoCompositeShape(self, shape):
-        eval('self.'+shape.GetBoolNode().__class__.__name__)(shape)
+    def TGeoCompositeShape(self, solid):
+        eval('self.'+solid.GetBoolNode().__class__.__name__)(solid)
 
     def dumpMaterials(self, matlist):
         print 'Found ', matlist.GetSize(),' materials'
@@ -253,7 +281,14 @@ class ROOTwriter(object):
     def dumpSolids(self, shapelist):
         print 'Found ', shapelist.GetEntries(), ' shapes'
         for shape in shapelist:
-            eval('self.'+shape.__class__.__name__)(shape)
+	    self.solList.append([shape, 0])
+	for sol in self.solList:
+	    if sol[1] == 0:
+	        sol[1] = 1
+                eval('self.'+sol[0].__class__.__name__)(sol[0])
+	        self.shapesCount = self.shapesCount + 1
+	print 'Dumped ', self.shapesCount, ' shapes'
+	    
     
     def orderVolumes(self, volume):
         index = str(volume.GetNumber())+"_"+str(libPyROOT.AddressOf(volume)[0])

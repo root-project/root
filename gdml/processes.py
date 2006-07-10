@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.3
 # -*- Mode: Python -*-
-# @(#)root/gdml:$Name:  $:$Id: processes.py,v 1.2 2006/06/13 20:46:53 rdm Exp $
+# @(#)root/gdml:$Name:  $:$Id: processes.py,v 1.3 2006/06/13 20:46:53 rdm Exp $
 # Author: Witold Pokorski   05/06/2006
 #
 from units import *
@@ -158,7 +158,6 @@ class processes(object):
 		    fractions[subele[1]['ref']] = int(eval(subele[1]['n']))
 		elif subele[0] == 'D':
 		    density = eval(subele[1]['value'])
-
 	    mat = self.bind.mixmat(elem[1]['name'], ncompo, density)
 
             i = 0
@@ -171,11 +170,9 @@ class processes(object):
                     self.bind.mix_addele(mat,
                                          self.materials_dict[frac_name],
                                          i, fractions[frac_name])
-
-                i = i + 1
+		i = i + 1
 
 	self.materials_dict[elem[1]['name']] = mat
-
 	med = self.bind.medium(elem[1]['name'], mat)
 	self.mediums_dict[elem[1]['name']] = med
 
@@ -246,6 +243,9 @@ class processes(object):
 
         for subele in elem[2]:
             if subele[0] == 'physvol':
+	        reflected_vol = 0
+                pos = self.bind.position(0,0,0)
+                rot = self.bind.rotation(0,0,0)
                 for subsubel in subele[2]:
                     if subsubel[0] == 'volumeref':
                         lv = self.volumes_dict[subsubel[1]['ref']]
@@ -255,7 +255,7 @@ class processes(object):
                         rot = self.define_dict[subsubel[1]['ref']]
 
 		self.bind.physvolume(elem[1]['name'],
-				       lv, assem, rot, pos)
+				       lv, assem, rot, pos, reflected_vol)
 
     def box_proc(self,elem):
 	lun = '*'+elem[1].get('lunit','mm')
@@ -514,7 +514,6 @@ class processes(object):
     
     def eltube_proc(self, elem):
 	lun = '*'+elem[1].get('lunit','mm')
-        print 'ELTUBE!'
 	eltube = self.bind.eltube(elem[1]['name'],
 				  eval(elem[1]['dx']+lun),
 				  eval(elem[1]['dy']+lun),
