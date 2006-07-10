@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.13 2006/06/29 20:36:43 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.14 2006/07/07 09:59:04 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -310,14 +310,9 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
    MYSQL_FIELD* fields = mysql_fetch_fields(res);
    
    sql.Form("SHOW COLUMNS FROM `%s`", tablename);
-   TSQLStatement* stmt = Statement(sql.Data());
+   TSQLResult* showres = Query(sql.Data());
 
-   if ((stmt!=0) && !stmt->Process()) {
-      delete stmt;
-      stmt = 0;
-   }
-   
-   if (stmt==0) {
+   if (showres==0) {
       mysql_free_result(res);
       return 0;
    }
@@ -325,12 +320,12 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
    TList* lst = 0;
    
    unsigned int nfield = 0;
+   
+   TSQLRow* row = 0;
 
-   stmt->StoreResult();  
-
-   while (stmt->NextResultRow()) {
-      const char* column_name = stmt->GetString(0);
-      const char* type_name = stmt->GetString(1);
+   while ((row = showres->Next()) != 0) {
+      const char* column_name = row->GetField(0);
+      const char* type_name = row->GetField(1);
       
       if ((nfield>=numfields) ||
           (strcmp(column_name, fields[nfield].name)!=0))
@@ -431,10 +426,11 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
                                   data_sign));
       
       nfield++;
+      delete row;
    }
    
    mysql_free_result(res);
-   delete stmt;
+   delete showres;
 
    sql.Form("SHOW TABLE STATUS LIKE '%s'", tablename);
 
