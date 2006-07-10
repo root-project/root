@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.19 2006/06/29 12:16:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.20 2006/06/30 06:35:04 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
