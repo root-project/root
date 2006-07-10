@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.32 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.33 2006/07/09 05:27:53 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -468,7 +468,7 @@ void TGeoMixture::AddElement(TGeoElement *elem, Double_t weight)
       if (!elemold) fElements->AddAt(elemold = table->GetElement((Int_t)fZmixture[i]), i);   
       if (elemold == elem) exist = kTRUE;
    }
-   if (!exist) fElements->AddAt(elem, fNelements);   
+   if (!exist) fElements->AddAtAndExpand(elem, fNelements);   
    AddElement(elem->A(), elem->Z(), weight);
 }   
 
@@ -533,7 +533,7 @@ void TGeoMixture::AddElement(TGeoElement *elem, Int_t natoms)
    fZmixture[iel] = elem->Z();
    fAmixture[iel] = elem->A();
    fNatoms[iel]  = natoms;
-   fElements->AddAt(elem, iel);
+   fElements->AddAtAndExpand(elem, iel);
    amol = 0.;
    for (i=0; i<fNelements; i++) {
       if (fNatoms[i]<=0) return;
