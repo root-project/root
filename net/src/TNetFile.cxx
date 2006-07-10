@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.79 2006/06/27 14:36:27 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.80 2006/06/29 22:15:37 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -363,6 +363,10 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 
    if (!fSocket) return kTRUE;
 
+   // If it's an old version of the protocol try the default TFile::ReadBuffers
+   if (fProtocol < 17)
+      return TFile::ReadBuffers(buf, pos, len, nbuf);
+   
    Int_t   stat, n;
    Bool_t  result = kFALSE;
    EMessageTypes kind;
