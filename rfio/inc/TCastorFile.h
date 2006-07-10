@@ -1,8 +1,8 @@
-// @(#)root/rfio:$Name:  $:$Id: TCastorFile.h,v 1.1 2003/09/21 21:38:30 rdm Exp $
-// Author: Fons Rademakers   17/09/2003
+// @(#)root/rfio:$Name:  $:$Id: TCastorFile.h,v 1.2 2003/09/26 13:26:44 rdm Exp $
+// Author: Fons Rademakers  17/09/2003 + Giulia Taurelli  29/06/2006
 
 /*************************************************************************
- * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,7 +12,6 @@
 #ifndef ROOT_TCastorFile
 #define ROOT_TCastorFile
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TCastorFile                                                          //
@@ -21,7 +20,21 @@
 // remote node (disk server) via the CASTOR API, once the disk server   //
 // and the local file path are determined, the file will be accessed    //
 // via the rootd daemon. File names have to be specified like:          //
-//    castor:/castor/cern.ch/user/r/rdm/bla.root.                       //
+//      castor:/castor/cern.ch/user/r/rdm/bla.root.                     //
+//                                                                      //
+// If it is used with Castor 2.1 the file name can also be specified    //
+// in the following ways:                                               //
+//                                                                      //
+//  castor://stager_host:stager_port/?path=/castor/cern.ch/user/        //
+//    r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION   //
+//                                                                      //
+//  castor://stager_host/?path=/castor/cern.ch/user/                    //
+//    r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION   //
+//                                                                      //
+//  castor:///?path=/castor/cern.ch/user/                               //
+//    r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION   //
+//                                                                      //
+// path is mandatory as parameter but all the other ones are optional.  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -43,6 +56,7 @@ private:
                       Int_t tcpwindowsize, Bool_t forceOpen,
                       Bool_t forceRead);
    Int_t SysClose(Int_t fd);
+   int   ParseAndSetGlobal();
 
 public:
    TCastorFile(const char *url, Option_t *option = "", const char *ftitle = "",
@@ -52,7 +66,7 @@ public:
 
    Bool_t WriteBuffer(const char *buf, Int_t len);
 
-   ClassDef(TCastorFile,1)  //A ROOT file that reads/writes via a rootd server to a CASTOR disk server
+   ClassDef(TCastorFile,1) //TFile reading/writing via rootd to a CASTOR server
 };
 
 #endif

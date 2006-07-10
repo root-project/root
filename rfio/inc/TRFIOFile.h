@@ -1,5 +1,5 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.11 2004/10/15 16:55:07 rdm Exp $
-// Author: Fons Rademakers   20/01/99
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.12 2006/04/18 14:23:20 rdm Exp $
+// Author: Fons Rademakers  20/01/99 + Giulia Taurelli  29/06/2006
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -12,15 +12,36 @@
 #ifndef ROOT_TRFIOFile
 #define ROOT_TRFIOFile
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRFIOFile                                                            //
-//                                                                      //
-// A TRFIOFile is like a normal TFile except that it reads and writes   //
-// its data via a rfiod server.                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+//                                                                       //
+// TRFIOFile                                                             //
+//                                                                       //
+// A TRFIOFile is like a normal TFile except that it reads and writes    //
+// its data via a rfiod server (for more on the rfiod daemon see         //
+// http://wwwinfo.cern.ch/pdp/serv/shift.html). TRFIOFile file names     //
+// are in standard URL format with protocol "rfio". The following are    //
+// valid TRFIOFile URL's:                                                //
+//                                                                       //
+//    rfio:/afs/cern.ch/user/r/rdm/galice.root                           //
+//         where galice.root is a symlink of the type /shift/.../...     //
+//    rfio:na49db1:/data1/raw.root                                       //
+//                                                                       //
+// If it is used castor 2.1 the file name can be given also in the       //
+// following ways:                                                       //
+//                                                                       //
+//  rfio://host:port/?path=FILEPATH                                      //
+//  rfio://host/?path=FILEPATH                                           //
+//  rfio:///?path=FILEPATH                                               //
+//  rfio://stager_host:stager_port/?path=/castor/cern.ch/user/r/         //
+//    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
+//  rfio://stager_host/?path=/castor/cern.ch/user/r/                     //
+//    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
+//  rfio:///?path=/castor/cern.ch/user/r/                                //
+//    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
+//                                                                       //
+// path is mandatory as parameter but all the other ones are optional.   //
+//                                                                       //
+///////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TFile
 #include "TFile.h"
@@ -49,9 +70,6 @@ public:
              const char *ftitle="", Int_t compress=1);
    ~TRFIOFile();
 
-   Bool_t  ReadBuffer(char *buf, Int_t len);
-   Bool_t  WriteBuffer(const char *buf, Int_t len);
-
    Int_t   GetErrno() const;
    void    ResetErrno() const;
 
@@ -76,6 +94,7 @@ public:
    const char *GetDirEntry(void *dirp);
    Int_t       GetPathInfo(const char *path, FileStat_t &buf);
    Bool_t      AccessPathName(const char *path, EAccessMode mode);
+   Int_t       Unlink(const char *path);
 
    ClassDef(TRFIOSystem,0)  // Directory handler for RFIO
 };

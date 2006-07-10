@@ -1,5 +1,5 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.33 2005/12/09 09:35:07 rdm Exp $
-// Author: Fons Rademakers   20/01/99
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.34 2006/04/18 14:23:20 rdm Exp $
+// Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,21 +9,36 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRFIOFile                                                            //
-//                                                                      //
-// A TRFIOFile is like a normal TFile except that it reads and writes   //
-// its data via a rfiod server (for more on the rfiod daemon see        //
-// http://wwwinfo.cern.ch/pdp/serv/shift.html). TRFIOFile file names    //
-// are in standard URL format with protocol "rfio". The following are   //
-// valid TRFIOFile URL's:                                               //
-//                                                                      //
-//    rfio:/afs/cern.ch/user/r/rdm/galice.root                          //
-//         where galice.root is a symlink of the type /shift/.../...    //
-//    rfio:na49db1:/data1/raw.root                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+//                                                                       //
+// TRFIOFile                                                             //
+//                                                                       //
+// A TRFIOFile is like a normal TFile except that it reads and writes    //
+// its data via a rfiod server (for more on the rfiod daemon see         //
+// http://wwwinfo.cern.ch/pdp/serv/shift.html). TRFIOFile file names     //
+// are in standard URL format with protocol "rfio". The following are    //
+// valid TRFIOFile URL's:                                                //
+//                                                                       //
+//    rfio:/afs/cern.ch/user/r/rdm/galice.root                           //
+//         where galice.root is a symlink of the type /shift/.../...     //
+//    rfio:na49db1:/data1/raw.root                                       //
+//                                                                       //
+// If it is used castor 2.1 the file name can be given also in the       //
+// following ways:                                                       //
+//                                                                       //
+//  rfio://host:port/?path=FILEPATH                                      //
+//  rfio://host/?path=FILEPATH                                           //
+//  rfio:///?path=FILEPATH                                               //
+//  rfio://stager_host:stager_port/?path=/castor/cern.ch/user/r/         //
+//    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
+//  rfio://stager_host/?path=/castor/cern.ch/user/r/                     //
+//    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
+//  rfio:///?path=/castor/cern.ch/user/r/                                //
+//    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
+//                                                                       //
+// path is mandatory as parameter but all the other ones are optional.   //
+//                                                                       //
+///////////////////////////////////////////////////////////////////////////
 
 #include "TRFIOFile.h"
 #include "TROOT.h"
@@ -31,10 +46,10 @@
 #include <sys/types.h>
 #ifndef R__WIN32
 #include <unistd.h>
-#if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || \
-    defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
-    defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__MACOSX) || defined(R__HURD) || defined(R__OBSD)
+#if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) ||         \
+defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) ||        \
+defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) ||          \
+defined(R__MACOSX) || defined(R__HURD) || defined(R__OBSD)
 #define HAS_DIRENT
 #endif
 #endif
@@ -42,6 +57,7 @@
 #ifdef HAS_DIRENT
 #include <dirent.h>
 #else
+
 struct dirent {
    ino_t d_ino;
    off_t d_reclen;
@@ -66,6 +82,7 @@ extern "C" {
    char *rfio_serror();
    int   rfiosetopt(int opt, int *pval, int len);
    int   rfio_mkdir(const char *path, int mode);
+   int   rfio_rmdir (const char *path);
    void *rfio_opendir(const char *dirpath);
    int   rfio_closedir(void *dirp);
    void *rfio_readdir(void *dirp);
@@ -103,7 +120,7 @@ ClassImp(TRFIOSystem)
 //______________________________________________________________________________
 TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
                      Int_t compress)
-         : TFile(url, "NET", ftitle, compress)
+   : TFile(url, "NET", ftitle, compress)
 {
    // Create a RFIO file object. A RFIO file is the same as a TFile
    // except that it is being accessed via a rfiod server. The url
@@ -135,23 +152,39 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
    }
 
    TString stmp;
-   char *fname;
-   if ((fname = gSystem->ExpandPathName(fUrl.GetFile()))) {
-      if (!strstr(fname, ":/")) {
-         char *host;
-         char *name;
-         if (::rfio_parse(fname, &host, &name))
-            stmp = Form("%s:%s", host, name);
-         else
-            stmp = fname;
-      } else
-         stmp = fname;
-      delete [] fname;
-      fname = (char *)stmp.Data();
+   char *fname = 0;
+   char *host;
+   char *name;
+   // To be consinstent with new and old turl
+   if (strstr(fUrl.GetOptions(),"path=")) {
+      if (!strcmp(fUrl.GetProtocol(),"castor"))
+         fUrl.SetProtocol("rfio");
+      stmp=Form("%s://%s",fUrl.GetProtocol(),fUrl.GetFileAndOptions());
+      char* url2=strdup((char*)stmp.Data());
+      if (::rfio_parse(url2, &host, &name)>=0) {
+         // if (::rfio_parse((char*)stmp.Data(), &host, &name)){
+         stmp = Form("%s",(!name || !strstr(name,"/castor"))?(char*)stmp.Data():name);
+      } else {
+         Error("TRFIOFile", "error parsing %s", fUrl.GetUrl());
+         goto zombie;
+      }
    } else {
-      Error("TRFIOFile", "error expanding path %s", fUrl.GetFile());
-      goto zombie;
+      fname = gSystem->ExpandPathName(fUrl.GetFile());
+      if (fname) {
+         if (!strstr(fname, ":/")) {
+            if (::rfio_parse(fname, &host, &name))
+               stmp = Form("%s:%s", host, name);
+            else
+            stmp = fname;
+         } else
+            stmp = fname;
+      } else {
+         Error("TRFIOFile", "error expanding path %s", fUrl.GetFile());
+         goto zombie;
+      }
    }
+   delete [] fname;
+   fname = (char *)stmp.Data();
 
    if (recreate) {
       if (::rfio_access(fname, kFileExists) == 0)
@@ -329,40 +362,6 @@ Int_t TRFIOFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
 }
 
 //______________________________________________________________________________
-Bool_t TRFIOFile::ReadBuffer(char *buf, Int_t len)
-{
-   // Read specified byte range from remote file via rfiod daemon.
-   // Returns kTRUE in case of error.
-
-   Int_t st;
-   if ((st = ReadBufferViaCache(buf, len))) {
-      if (st == 2)
-         return kTRUE;
-      return kFALSE;
-   }
-
-   return TFile::ReadBuffer(buf, len);
-}
-
-//______________________________________________________________________________
-Bool_t TRFIOFile::WriteBuffer(const char *buf, Int_t len)
-{
-   // Write specified byte range to remote file via rfiod daemon.
-   // Returns kTRUE in case of error.
-
-   if (!IsOpen() || !fWritable) return kTRUE;
-
-   Int_t st;
-   if ((st = WriteBufferViaCache(buf, len))) {
-      if (st == 2)
-         return kTRUE;
-      return kFALSE;
-   }
-
-   return TFile::WriteBuffer(buf, len);
-}
-
-//______________________________________________________________________________
 Int_t TRFIOFile::GetErrno() const
 {
    // Method returning rfio_errno. For RFIO files must use this
@@ -390,8 +389,8 @@ void TRFIOFile::ResetErrno() const
 TRFIOSystem::TRFIOSystem() : TSystem("-rfio", "RFIO Helper System")
 {
    // Create helper class that allows directory access via rfiod.
+   // The name must start with '-' to bypass the TSystem singleton check.
 
-   // name must start with '-' to bypass the TSystem singleton check
    SetName("rfio");
 
    fDirp = 0;
@@ -512,9 +511,24 @@ Bool_t TRFIOSystem::AccessPathName(const char *path, EAccessMode mode)
    // Attention, bizarre convention of return value!!
 
    TUrl url(path);
-
    if (::rfio_access(url.GetFile(), mode) == 0)
       return kFALSE;
    gSystem->SetErrorStr(::rfio_serror());
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TRFIOSystem::Unlink(const char *path)
+{
+   // Unlink, i.e. remove, a file or directory. Returns 0 when succesfull,
+   // -1 in case of failure.
+
+   struct stat finfo;
+   if (rfio_stat(path, &finfo) < 0)
+      return -1;
+
+   if (S_ISDIR(finfo.st_mode))
+      return rfio_rmdir(path);
+   else
+      return rfio_unlink(path);
 }
