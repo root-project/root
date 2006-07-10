@@ -76,9 +76,9 @@ $(XROOTDETAG): $(XROOTDSRCS)
 		fi)
 ifeq ($(PLATFORM),win32)
 		@(if [ -d $(XROOTDDIRD)/pthreads-win32 ]; then \
-		    cp $(XROOTDDIRD)/pthreads-win32/lib/*.dll "$(ROOTSYS)/bin" ; \
-		    cp $(XROOTDDIRD)/pthreads-win32/lib/*.lib "$(ROOTSYS)/lib" ; \
-		    cp $(XROOTDDIRD)/pthreads-win32/include/*.h "$(ROOTSYS)/include" ; \
+		    cp $(XROOTDDIRD)/pthreads-win32/lib/*.dll "bin" ; \
+		    cp $(XROOTDDIRD)/pthreads-win32/lib/*.lib "lib" ; \
+		    cp $(XROOTDDIRD)/pthreads-win32/include/*.h "include" ; \
 		  fi)
 endif
 
@@ -116,7 +116,7 @@ $(XRDEXECS): $(XRDPLUGINSA)
 else
 $(XRDEXECS): $(XRDPLUGINSA)
 		@(echo "Copying xrootd executables ..." ; \
-		cp $(XROOTDDIRD)/bin/*.exe "$(ROOTSYS)/bin" ;)
+		cp $(XROOTDDIRD)/bin/*.exe "bin" ;)
 endif
 
 ifneq ($(PLATFORM),win32)
