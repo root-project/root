@@ -159,6 +159,10 @@ N: Valery Fine
 E: fine@bnl.gov
 D: Win95/NT port, OpenGL interface
 
+N: Leandro Franco
+E: Leandro.Franco.Londono@cern.ch
+D: xrootd multi-buffer support, prefetching, read-ahead
+
 N: Markus Frank
 E: Markus.Frank@cern.ch
 D: STL I/O and TBranchElement splitting
@@ -346,9 +350,10 @@ E: murat@cdfsga.fnal.gov
 D: Lorentz vector classes, PDG interface
 
 N: Axel Naumann
-E: axel@fnal.gov
+E: Axel.Naumann@cern.ch
 D: THtml improvements (namespace, header/footer)
 D: many suggestions for Trees
+D: CINT/Reflex integration
 
 N: Stanislav Nesterov
 E: Stanislav.Nesterov@cern.ch
@@ -434,7 +439,7 @@ D: Reflex and Cintex
 
 N: Paul Russo
 E: russo@fnal.gov
-D: Improvements in I/o
+D: Improvements in I/O
 
 N: Pawel Sawicki
 E: Pawel.Sawicki@ifj.edu.pl
