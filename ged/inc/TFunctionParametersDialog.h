@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id:
+// @(#)root/ged:$Name:$:$Id:$
 // Author: Ilka Antcheva 08/05/06
 
 /*************************************************************************
@@ -75,7 +75,7 @@ protected:
    Bool_t              fImmediateDraw;    // kTRUE if function is updated on run-time
 
 public:
-   TFunctionParametersDialog(const TGWindow *p, const TGWindow *main, 
+   TFunctionParametersDialog(const TGWindow *p, const TGWindow *main,
                              TF1 *func, TVirtualPad *pad,
                              Double_t rmin, Double_t rmax);
    virtual ~TFunctionParametersDialog();

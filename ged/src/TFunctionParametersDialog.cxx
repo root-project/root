@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id:
+// @(#)root/ged:$Name:$:$Id:$
 // Author: Ilka Antcheva   08/05/06
 
 /*************************************************************************
@@ -47,15 +47,15 @@ enum EParametersDialogWid {
 ClassImp(TFunctionParametersDialog)
 
 //______________________________________________________________________________
-TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p, 
+TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
                                                      const TGWindow *main,
-                                                     TF1 *func, 
+                                                     TF1 *func,
                                                      TVirtualPad *pad,
                                                      Double_t rx, Double_t ry) :
    TGTransientFrame(p, main, 10, 10, kVerticalFrame)
 {
    // Create the parameters' dialog of currently selected function 'func'.
-   
+
    fFunc = func;
    fFpad = pad;
    fRXmin = rx;
@@ -79,7 +79,7 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
    fParMin = new TGNumberEntryField*[fNP];
    fParMax = new TGNumberEntryField*[fNP];
    fParSld = new TGTripleHSlider*[fNP];
-   
+
    memset(fParNam, 0, sizeof(TGTextEntry*)*fNP);
    memset(fParFix, 0, sizeof(TGCheckButton*)*fNP);
    memset(fParVal, 0, sizeof(TGNumberEntry*)*fNP);
@@ -89,28 +89,28 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
 
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(f1, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
-   
+
    // column 'Name'
    fContNam = new TGCompositeFrame(f1, 80, 20, kVerticalFrame | kFixedWidth);
-   fContNam->AddFrame(new TGLabel(fContNam,"Name"), 
+   fContNam->AddFrame(new TGLabel(fContNam,"Name"),
                       new TGLayoutHints(kLHintsTop, 5, 0, 0, 0));
    for (Int_t i = 0; i < fNP; i++ ) {
       fParNam[i] = new TGTextEntry(fContNam, new TGTextBuffer(80), kNAME+i);
       fParNam[i]->SetText(Form("%s", fFunc->GetParName(i)));
       fParNam[i]->SetEnabled(kFALSE);
-      fContNam->AddFrame(fParNam[i], 
+      fContNam->AddFrame(fParNam[i],
                          new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 5));
    }
    f1->AddFrame(fContNam, new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
-   
+
    // column 'Fix'
    fContFix = new TGCompositeFrame(f1, 20, 20, kVerticalFrame | kFixedWidth);
-   fContFix->AddFrame(new TGLabel(fContFix,"Fix"), 
+   fContFix->AddFrame(new TGLabel(fContFix,"Fix"),
                       new TGLayoutHints(kLHintsTop, 2, 0, 0, 0));
    for (Int_t i = 0; i < fNP; i++ ) {
       fParFix[i] = new TGCheckButton(fContFix, "", kFIX*fNP+i);
       fParFix[i]->SetToolTipText(Form("Set %s to fixed", fFunc->GetParName(i)));
-      fContFix->AddFrame(fParFix[i], new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 
+      fContFix->AddFrame(fParFix[i], new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
                                                        5, 5, 10, 7));
       if ((fPmin[i] == fPmax[i]) && (fPmin[i] || fPmax[i]))
          fParFix[i]->SetState(kButtonDown);
@@ -122,7 +122,7 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
 
    // column 'Value'
    fContVal = new TGCompositeFrame(f1, 80, 20, kVerticalFrame | kFixedWidth);
-   fContVal->AddFrame(new TGLabel(fContVal,"Value"), 
+   fContVal->AddFrame(new TGLabel(fContVal,"Value"),
                       new TGLayoutHints(kLHintsTop, 5, 0, 0, 0));
    for (Int_t i = 0; i < fNP; i++ ) {
       fParVal[i] = new TGNumberEntry(fContVal, 1.2E-12, 15, kVAL*fNP+i,
@@ -131,7 +131,7 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
       fParVal[i]->SetFormat(TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber); //tbs
       fContVal->AddFrame(fParVal[i], new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 5));
       (fParVal[i]->GetNumberEntry())->SetToolTipText(Form("%s", fFunc->GetParName(i)));
-      (fParVal[i]->GetNumberEntry())->Connect("ReturnPressed()", "TFunctionParametersDialog", 
+      (fParVal[i]->GetNumberEntry())->Connect("ReturnPressed()", "TFunctionParametersDialog",
                                               this, "DoParValue()");
       fParVal[i]->Connect("ValueSet(Long_t)", "TFunctionParametersDialog", this, "DoParValue()");
    }
@@ -139,16 +139,16 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
 
    // column 'Min'
    fContMin = new TGCompositeFrame(f1, 80, 20, kVerticalFrame | kFixedWidth);
-   fContMin->AddFrame(new TGLabel(fContMin,"Min"), 
+   fContMin->AddFrame(new TGLabel(fContMin,"Min"),
                       new TGLayoutHints(kLHintsTop, 5, 0, 0, 0));
    for (Int_t i = 0; i < fNP; i++ ) {
-      fParMin[i] = new TGNumberEntryField(fContMin, kMIN*fNP+i, 0.0,  
+      fParMin[i] = new TGNumberEntryField(fContMin, kMIN*fNP+i, 0.0,
                                           TGNumberFormat::kNESReal,
                                           TGNumberFormat::kNEAAnyNumber);
       ((TGTextEntry*)fParMin[i])->SetToolTipText(Form("Lower limit of %s",
                                                  fFunc->GetParName(i)));
       fContMin->AddFrame(fParMin[i], new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 5));
-      if (fPmin[i]) 
+      if (fPmin[i])
          fParMin[i]->SetNumber(fPmin[i]);
       else if (fPerr[i])
          fParMin[i]->SetNumber(fPval[i]-3*fPerr[i]);
@@ -162,7 +162,7 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
 
    // column 'Set Range'
    fContSld = new TGCompositeFrame(f1, 120, 20, kVerticalFrame | kFixedWidth);
-   fContSld->AddFrame(new TGLabel(fContSld,"Set Range"), 
+   fContSld->AddFrame(new TGLabel(fContSld,"Set Range"),
                       new TGLayoutHints(kLHintsTop, 5, 0, 0, 0));
    for (Int_t i = 0; i < fNP; i++ ) {
       fParSld[i] = new TGTripleHSlider(fContSld, 100, kDoubleScaleBoth, kSLD*fNP+i,
@@ -175,16 +175,16 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
 
    // column 'Max'
    fContMax = new TGCompositeFrame(f1, 80, 20, kVerticalFrame);
-   fContMax->AddFrame(new TGLabel(fContMax,"Max"), 
+   fContMax->AddFrame(new TGLabel(fContMax,"Max"),
                       new TGLayoutHints(kLHintsTop, 5, 0, 0, 0));
    for (Int_t i = 0; i < fNP; i++ ) {
-      fParMax[i] = new TGNumberEntryField(fContMax, kMAX*fNP+i, 0.0,  
+      fParMax[i] = new TGNumberEntryField(fContMax, kMAX*fNP+i, 0.0,
                                           TGNumberFormat::kNESReal,
                                           TGNumberFormat::kNEAAnyNumber);
       ((TGTextEntry*)fParMax[i])->SetToolTipText(Form("Upper limit of %s",
                                                  fFunc->GetParName(i)));
       fContMax->AddFrame(fParMax[i], new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 5));
-      if (fPmax[i]) 
+      if (fPmax[i])
          fParMax[i]->SetNumber(fPmax[i]);
       else if (fPerr[i])
          fParMax[i]->SetNumber(fPval[i]+3*fPerr[i]);
@@ -202,12 +202,12 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
    }
    f1->AddFrame(fContMax, new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
 
-   
+
    fUpdate = new TGCheckButton(this, "&Immediate preview", kUPDATE);
    fUpdate->SetToolTipText("Immediate function redrawing");
    AddFrame(fUpdate, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5, 5, 5, 5));
    fUpdate->Connect("Toggled(Bool_t)", "TFunctionParametersDialog", this, "HandleButtons(Bool_t)");
-   
+
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 270, 20, kHorizontalFrame | kFixedWidth);
    AddFrame(f2, new TGLayoutHints(kLHintsRight, 20, 20, 5, 1));
 
@@ -222,7 +222,7 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
    fApply->SetState(kButtonDisabled);
    fApply->Connect("Clicked()", "TFunctionParametersDialog", this, "DoApply()");
    fApply->SetToolTipText("Apply parameter settings and redraw the function");
-   
+
    fOK = new TGTextButton(f2, "&OK", kOK);
    f2->AddFrame(fOK, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,5,5,5,5));
    fOK->SetToolTipText("Apply parameter settings, redraw function and close this dialog");
@@ -249,9 +249,9 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
          fParSld[i]->SetRange(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
          fParSld[i]->SetPosition(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
          fParSld[i]->SetPointerPosition(fPval[i]);
-         fParSld[i]->Connect("PointerPositionChanged()", "TFunctionParametersDialog", 
+         fParSld[i]->Connect("PointerPositionChanged()", "TFunctionParametersDialog",
                              this, "DoSlider()");
-         fParSld[i]->Connect("PositionChanged()", "TFunctionParametersDialog", 
+         fParSld[i]->Connect("PositionChanged()", "TFunctionParametersDialog",
                              this, "DoSlider()");
       }
    }
@@ -263,10 +263,10 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
 TFunctionParametersDialog::~TFunctionParametersDialog()
 {
    // Destructor.
-   
+
    TGFrameElement *el;
    TIter next(GetList());
-   
+
    while ((el = (TGFrameElement *)next())) {
       if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
          TGFrameElement *el1;
@@ -312,7 +312,7 @@ void TFunctionParametersDialog::DoCancel()
 {
    // Slot related to the Cancel button.
 
-   if (fHasChanges) 
+   if (fHasChanges)
       DoReset();
    TTimer::SingleShot(50, "TFunctionParametersDialog", this, "CloseWindow()");
 }
@@ -347,7 +347,7 @@ void TFunctionParametersDialog::DoFix(Bool_t on)
             fFunc->FixParameter(i, fParVal[i]->GetNumber());
          } else if (!fParMin[i]->IsEnabled()) {
             if (fPmin[i] != fPmax[i]) {
-               if (fPmin[i]) 
+               if (fPmin[i])
                   fParMin[i]->SetNumber(fPmin[i]);
                else if (fPerr[i])
                   fParMin[i]->SetNumber(fPval[i]-3*fPerr[i]);
@@ -355,7 +355,7 @@ void TFunctionParametersDialog::DoFix(Bool_t on)
                   fParMin[i]->SetNumber(fPval[i]-0.1*fPval[i]);
                else
                   fParMin[i]->SetNumber(1.0);
-               if (fPmax[i]) 
+               if (fPmax[i])
                   fParMax[i]->SetNumber(fPmax[i]);
                else if (fPerr[i])
                   fParMax[i]->SetNumber(fPval[i]+3*fPerr[i]);
@@ -383,13 +383,13 @@ void TFunctionParametersDialog::DoFix(Bool_t on)
             fParSld[i]->SetRange(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
             fParSld[i]->SetPosition(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
             fParSld[i]->SetPointerPosition(fPval[i]);
-            fParSld[i]->Connect("PointerPositionChanged()", "TFunctionParametersDialog", 
+            fParSld[i]->Connect("PointerPositionChanged()", "TFunctionParametersDialog",
                                 this, "DoSlider()");
-            fParSld[i]->Connect("PositionChanged()", "TFunctionParametersDialog", 
+            fParSld[i]->Connect("PositionChanged()", "TFunctionParametersDialog",
                                 this, "DoSlider()");
             fFunc->SetParLimits(i, fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
          }
-      } 
+      }
    }
    if (fUpdate->GetState() == kButtonDown)
       RedrawFunction();
@@ -429,10 +429,10 @@ void TFunctionParametersDialog::DoReset()
    for (Int_t i = 0; i < fNP; i++) {
       if (fParVal[i]->GetNumber() == fPval[i])
          k--;
-      else 
+      else
          break;
    }
-   
+
    if (!k) {
       if (fReset->GetState() == kButtonUp)
          fReset->SetState(kButtonDisabled);
@@ -443,8 +443,8 @@ void TFunctionParametersDialog::DoReset()
       fFunc->SetParameter(i, fPval[i]);
       fFunc->SetParLimits(i, fPmin[i], fPmax[i]);
       fFunc->SetParError(i, fPerr[i]);
-      
-      if (fPmin[i]) 
+
+      if (fPmin[i])
          fParMin[i]->SetNumber(fPmin[i]);
       else if (fPerr[i])
          fParMin[i]->SetNumber(fPval[i]-3*fPerr[i]);
@@ -453,7 +453,7 @@ void TFunctionParametersDialog::DoReset()
       else
          fParMin[i]->SetNumber(1.0);
 
-      if (fPmax[i]) 
+      if (fPmax[i])
          fParMax[i]->SetNumber(fPmax[i]);
       else if (fPerr[i])
          fParMax[i]->SetNumber(fPval[i]+3*fPerr[i]);
@@ -486,10 +486,10 @@ void TFunctionParametersDialog::DoReset()
             fParSld[i]->SetPosition(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
             fParSld[i]->SetPointerPosition(fPval[i]);
             fParSld[i]->MapWindow();
-            fParSld[i]->Connect("PointerPositionChanged()", "TFunctionParametersDialog", 
+            fParSld[i]->Connect("PointerPositionChanged()", "TFunctionParametersDialog",
                                 this, "DoSlider()");
-            fParSld[i]->Connect("PositionChanged()", "TFunctionParametersDialog", 
-                                this, "DoSlider()");       
+            fParSld[i]->Connect("PositionChanged()", "TFunctionParametersDialog",
+                                this, "DoSlider()");
          }
       }
       fParVal[i]->SetNumber(fPval[i]);
@@ -498,7 +498,7 @@ void TFunctionParametersDialog::DoReset()
       fParSld[i]->SetPosition(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
       fParSld[i]->SetPointerPosition(fPval[i]);
    }
-   
+
    if (fUpdate->GetState() == kButtonDown)
       RedrawFunction();
    else if ((fApply->GetState() == kButtonDisabled) && fHasChanges)
@@ -549,17 +549,17 @@ void TFunctionParametersDialog::DoParValue()
             fParMin[i]->SetNumber(fParVal[i]->GetNumber());
             fClient->NeedRedraw(fParMin[i]);
             fParSld[i]->SetRange(fParMin[i]->GetNumber(),
-                                 fParMax[i]->GetNumber()); 
+                                 fParMax[i]->GetNumber());
             fParSld[i]->SetPosition(fParMin[i]->GetNumber(),
-                                    fParMax[i]->GetNumber()); 
+                                    fParMax[i]->GetNumber());
          }
          if (fParVal[i]->GetNumber() > fParMax[i]->GetNumber()) {
             fParMax[i]->SetNumber(fParVal[i]->GetNumber());
             fClient->NeedRedraw(fParMax[i]);
             fParSld[i]->SetRange(fParMin[i]->GetNumber(),
-                                 fParMax[i]->GetNumber()); 
+                                 fParMax[i]->GetNumber());
             fParSld[i]->SetPosition(fParMin[i]->GetNumber(),
-                                    fParMax[i]->GetNumber()); 
+                                    fParMax[i]->GetNumber());
          }
          fClient->NeedRedraw(fParSld[i]);
          fFunc->SetParameter(i,fParSld[i]->GetPointerPosition());
@@ -596,9 +596,9 @@ void TFunctionParametersDialog::DoParMinLimit()
             return;
          }
          fParSld[i]->SetRange(fParMin[i]->GetNumber(),
-                              fParMax[i]->GetNumber()); 
+                              fParMax[i]->GetNumber());
          fParSld[i]->SetPosition(fParMin[i]->GetNumber(),
-                                 fParMax[i]->GetNumber()); 
+                                 fParMax[i]->GetNumber());
          fParSld[i]->SetPointerPosition(fParVal[i]->GetNumber());
          fClient->NeedRedraw(fParSld[i]);
       }
@@ -632,9 +632,9 @@ void TFunctionParametersDialog::DoParMaxLimit()
             return;
          }
          fParSld[i]->SetRange(fParMin[i]->GetNumber(),
-                              fParMax[i]->GetNumber()); 
+                              fParMax[i]->GetNumber());
          fParSld[i]->SetPosition(fParMin[i]->GetNumber(),
-                                 fParMax[i]->GetNumber()); 
+                                 fParMax[i]->GetNumber());
          fParSld[i]->SetPointerPosition(fParVal[i]->GetNumber());
          fClient->NeedRedraw(fParSld[i]);
       }

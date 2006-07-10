@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id:
+// @(#)root/ged:$Name:$:$Id:$
 // Author: Ilka Antcheva 21/03/06
 
 /*************************************************************************
@@ -42,12 +42,12 @@ class TGCheckButton;
 class TF1Editor : public TGedFrame {
 
 protected:
-   TGTextEntry         *fTitle;           // function title 
+   TGTextEntry         *fTitle;           // function title
    Int_t                fNP;              // number of function parameters
    TGLabel             *fParLabel;        // label for number of parameters
    TGCheckButton       *fDrawMode;        // immediate function redraw (if selected)
-   TGTextButton        *fSetPars;         // open 'Set Parameters' dialog 
-   TGNumberEntry       *fNXpoints;        // number of points along x-axis 
+   TGTextButton        *fSetPars;         // open 'Set Parameters' dialog
+   TGNumberEntry       *fNXpoints;        // number of points along x-axis
    TGDoubleHSlider     *fSliderX;         // slider to set x-axis range
    TGNumberEntryField  *fSldMinX;         // contains minimum value of x-axis
    TGNumberEntryField  *fSldMaxX;         // contains maximum value of x-axis

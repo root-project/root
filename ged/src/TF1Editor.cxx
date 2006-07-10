@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id:
+// @(#)root/ged:$Name:$:$Id:$
 // Author: Ilka Antcheva 21/03/06
 
 /*************************************************************************
@@ -42,20 +42,20 @@ enum ETF1Wid {
 };
 
 //______________________________________________________________________________
-TF1Editor::TF1Editor(const TGWindow *p, Int_t id, Int_t width, Int_t height, 
+TF1Editor::TF1Editor(const TGWindow *p, Int_t id, Int_t width, Int_t height,
                      UInt_t options, Pixel_t back)
    : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
 {
    // Constructor of TF1 editor.
- 
+
    MakeTitle("Function");
-   
+
    fTitle = new TGTextEntry(this, new TGTextBuffer(50), kTF1_TIT);
    fTitle->Resize(137, fTitle->GetDefaultHeight());
    fTitle->SetEnabled(kFALSE);
    fTitle->SetToolTipText(Form("Function expression or predefined name"));
    AddFrame(fTitle, new TGLayoutHints(kLHintsLeft,3, 2, 2, 3));
-   
+
    TGCompositeFrame *f3a = new TGCompositeFrame(this, 137, 20, kHorizontalFrame);
    AddFrame(f3a, new TGLayoutHints(kLHintsTop, 0, 1, 3, 0));
    fDrawMode = new TGCheckButton(f3a, "Update", kTF1_DRW);
@@ -66,23 +66,23 @@ TF1Editor::TF1Editor(const TGWindow *p, Int_t id, Int_t width, Int_t height,
 
    TGCompositeFrame *f3 = new TGCompositeFrame(this, 137, 20, kHorizontalFrame | kFixedWidth);
    fSetPars = new TGTextButton(f3, "Set Parameters...", kTF1_PAR);
-   f3->AddFrame(fSetPars, new TGLayoutHints(kLHintsRight | kLHintsTop | kLHintsExpandX, 
+   f3->AddFrame(fSetPars, new TGLayoutHints(kLHintsRight | kLHintsTop | kLHintsExpandX,
                                             0, 1, 5, 0));
    fSetPars->SetToolTipText("Open a dialog for parameter(s) settings");
    AddFrame(f3, new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 2, 2, 3));
-   
+
    MakeTitle("X-Range");
-   
+
    TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGCompositeFrame *f4a = new TGCompositeFrame(f4, 66, 20, kVerticalFrame | kFixedWidth);
    TGLabel *fNpxLabel = new TGLabel(f4a, "Points: ");
    f4a->AddFrame(fNpxLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 0, 5, 1));
    f4->AddFrame(f4a, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 1, 0, 0));
- 
+
    TGCompositeFrame *f4b = new TGCompositeFrame(f4, 40, 20, kVerticalFrame);
-   fNXpoints = new TGNumberEntry(f4b, 100, 7, kTF1_NPX, 
+   fNXpoints = new TGNumberEntry(f4b, 100, 7, kTF1_NPX,
                                  TGNumberFormat::kNESInteger,
-                                 TGNumberFormat::kNEANonNegative, 
+                                 TGNumberFormat::kNEANonNegative,
                                  TGNumberFormat::kNELLimitMinMax,4,100000);
    fNXpoints->GetNumberEntry()->SetToolTipText("Points along x-axis (4-100 000)");
    f4b->AddFrame(fNXpoints, new TGLayoutHints(kLHintsLeft, 0, 0, 1, 0));
@@ -94,16 +94,16 @@ TF1Editor::TF1Editor(const TGWindow *p, Int_t id, Int_t width, Int_t height,
    fSliderX->Resize(137,20);
    f5->AddFrame(fSliderX, new TGLayoutHints(kLHintsLeft));
    AddFrame(f5, new TGLayoutHints(kLHintsTop, 3, 7, 4, 1));
-   
+
    TGCompositeFrame *f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fSldMinX = new TGNumberEntryField(f6, kTF1_XMIN, 0.0,  
+   fSldMinX = new TGNumberEntryField(f6, kTF1_XMIN, 0.0,
                                      TGNumberFormat::kNESRealFour,
                                      TGNumberFormat::kNEAAnyNumber);
    ((TGTextEntry*)fSldMinX)->SetToolTipText("Lower bound along x-axis");
    fSldMinX->Resize(65,20);
    fSldMinX->SetState(kFALSE);
    f6->AddFrame(fSldMinX, new TGLayoutHints(kLHintsLeft));
-   fSldMaxX = new TGNumberEntryField(f6, kTF1_XMAX, 0.0,  
+   fSldMaxX = new TGNumberEntryField(f6, kTF1_XMAX, 0.0,
                                      TGNumberFormat::kNESRealFour,
                                      TGNumberFormat::kNEAAnyNumber);
    ((TGTextEntry*)fSldMaxX)->SetToolTipText("Upper bound along x-axis");
@@ -123,10 +123,10 @@ TF1Editor::TF1Editor(const TGWindow *p, Int_t id, Int_t width, Int_t height,
 TF1Editor::~TF1Editor()
 {
    // Destructor of TF1 editor.
-   
+
    TGFrameElement *el;
    TIter next(GetList());
-   
+
    while ((el = (TGFrameElement *)next())) {
       if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
          TGFrameElement *el1;
@@ -147,7 +147,7 @@ void TF1Editor::ConnectSignals2Slots()
    // Connect signals to slots.
 
    fNXpoints->Connect("ValueSet(Long_t)", "TF1Editor", this, "DoXPoints()");
-   (fNXpoints->GetNumberEntry())->Connect("ReturnPressed()", "TF1Editor", 
+   (fNXpoints->GetNumberEntry())->Connect("ReturnPressed()", "TF1Editor",
                                           this, "DoXPoints()");
    fSetPars->Connect("Clicked()", "TF1Editor", this, "DoParameterSettings()");
    fSliderX->Connect("Pressed()","TF1Editor", this,"DoSliderXPressed()");
@@ -165,12 +165,12 @@ void TF1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = 0;
    fPad = 0;
 
-   if (obj == 0 || !obj->InheritsFrom(TF1::Class()) || 
+   if (obj == 0 || !obj->InheritsFrom(TF1::Class()) ||
        obj->InheritsFrom("TF2") || obj->InheritsFrom("TF3")) {
       SetActive(kFALSE);
       return;
    }
-   
+
    fModel = obj;
    fPad = pad;
    TF1 *fF1 = (TF1*)fModel;
@@ -178,18 +178,18 @@ void TF1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    const char *text = fF1->GetTitle();
    fTitle->SetText(text);
-   
+
    fNP = fF1->GetNpar();
    fParLabel->SetText(Form("Npar: %d", fNP));
    fClient->NeedRedraw(fParLabel);
-   
+
    fNXpoints->SetNumber(fF1->GetNpx());
 
    if (!fNP)
       fSetPars->SetState(kButtonDisabled, kFALSE);
    else
       fSetPars->SetState(kButtonUp, kFALSE);
-   
+
    TAxis *x = fF1->GetHistogram()->GetXaxis();
    Int_t nx = x->GetNbins();
    Int_t nxbinmin = x->GetFirst();
@@ -208,12 +208,12 @@ void TF1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 void TF1Editor::DoParameterSettings()
 {
    // Slot connected to the function parameter(s) settings.
-   
+
    TF1 *fF1 = (TF1*)fModel;
    TGMainFrame *main =  (TGMainFrame *)GetMainFrame();
    Double_t rmin = fSldMinX->GetNumber();
    Double_t rmax = fSldMaxX->GetNumber();
-   new TFunctionParametersDialog(gClient->GetDefaultRoot(), main, 
+   new TFunctionParametersDialog(gClient->GetDefaultRoot(), main,
                                  fF1, fPad, rmin, rmax);
 
 }
@@ -245,7 +245,7 @@ void TF1Editor::DoSliderXMoved()
    TF1 *fF1 = (TF1*)fModel;
    fF1->SetNpx((Int_t)fNXpoints->GetNumber());
    TAxis *x = fF1->GetHistogram()->GetXaxis();
-   
+
    fPad->cd();
    if (fDrawMode->GetState() == kButtonDown) {
       TString opt = fF1->GetDrawOption();
@@ -257,8 +257,8 @@ void TF1Editor::DoSliderXMoved()
       x->SetRange((Int_t)((fSliderX->GetMinPosition())+0.5),
                   (Int_t)((fSliderX->GetMaxPosition())+0.5));
       fSldMinX->SetNumber(x->GetBinLowEdge(x->GetFirst()));
-      fSldMaxX->SetNumber(x->GetBinUpEdge(x->GetLast())); 
-      fClient->NeedRedraw(fSliderX,kTRUE);  
+      fSldMaxX->SetNumber(x->GetBinUpEdge(x->GetLast()));
+      fClient->NeedRedraw(fSliderX,kTRUE);
       fClient->NeedRedraw(fSldMinX,kTRUE);
       fClient->NeedRedraw(fSldMaxX,kTRUE);
       Update();
@@ -267,11 +267,11 @@ void TF1Editor::DoSliderXMoved()
       x->SetRange((Int_t)((fSliderX->GetMinPosition())+0.5),
                   (Int_t)((fSliderX->GetMaxPosition())+0.5));
       fSldMinX->SetNumber(x->GetBinLowEdge(x->GetFirst()));
-      fSldMaxX->SetNumber(x->GetBinUpEdge(x->GetLast())); 
-      fClient->NeedRedraw(fSliderX,kTRUE);  
+      fSldMaxX->SetNumber(x->GetBinUpEdge(x->GetLast()));
+      fClient->NeedRedraw(fSliderX,kTRUE);
       fClient->NeedRedraw(fSldMinX,kTRUE);
       fClient->NeedRedraw(fSldMaxX,kTRUE);
-   
+
    }
 }
 
@@ -295,11 +295,11 @@ void TF1Editor::DoSliderXPressed()
    x->SetRange((Int_t)((fSliderX->GetMinPosition())+0.5),
                (Int_t)((fSliderX->GetMaxPosition())+0.5));
    fSldMinX->SetNumber(x->GetBinLowEdge(x->GetFirst()));
-   fSldMaxX->SetNumber(x->GetBinUpEdge(x->GetLast())); 
-   fClient->NeedRedraw(fSliderX,kTRUE);  
+   fSldMaxX->SetNumber(x->GetBinUpEdge(x->GetLast()));
+   fClient->NeedRedraw(fSliderX,kTRUE);
    fClient->NeedRedraw(fSldMinX,kTRUE);
    fClient->NeedRedraw(fSldMaxX,kTRUE);
-   Update();   
+   Update();
 }
 
 //______________________________________________________________________________
@@ -311,7 +311,7 @@ void TF1Editor::DoSliderXReleased()
    TF1 *fF1 = (TF1*)fModel;
    fF1->SetNpx((Int_t)fNXpoints->GetNumber());
    TAxis *x = fF1->GetHistogram()->GetXaxis();
-   
+
    fPad->cd();
    TString opt = fF1->GetDrawOption();
    opt.ToUpper();
@@ -322,11 +322,11 @@ void TF1Editor::DoSliderXReleased()
    x->SetRange((Int_t)((fSliderX->GetMinPosition())+0.5),
                (Int_t)((fSliderX->GetMaxPosition())+0.5));
    fSldMinX->SetNumber(x->GetBinLowEdge(x->GetFirst()));
-   fSldMaxX->SetNumber(x->GetBinUpEdge(x->GetLast())); 
-   fClient->NeedRedraw(fSliderX,kTRUE);  
+   fSldMaxX->SetNumber(x->GetBinUpEdge(x->GetLast()));
+   fClient->NeedRedraw(fSliderX,kTRUE);
    fClient->NeedRedraw(fSldMinX,kTRUE);
    fClient->NeedRedraw(fSldMaxX,kTRUE);
-   Update();   
+   Update();
 }
 
 
@@ -342,11 +342,11 @@ void TF1Editor::DoXRange()
    Double_t width = x->GetBinWidth(1);
    Double_t lowLimit = x->GetBinLowEdge(1);
    Double_t upLimit = x->GetBinUpEdge(nx);
-   if ((fSldMinX->GetNumber()+width/2) < (lowLimit)) 
-      fSldMinX->SetNumber(lowLimit); 
-   if ((fSldMaxX->GetNumber()-width/2) > (upLimit)) 
-      fSldMaxX->SetNumber(upLimit); 
-   x->SetRangeUser(fSldMinX->GetNumber()+width/2, 
+   if ((fSldMinX->GetNumber()+width/2) < (lowLimit))
+      fSldMinX->SetNumber(lowLimit);
+   if ((fSldMaxX->GetNumber()-width/2) > (upLimit))
+      fSldMaxX->SetNumber(upLimit);
+   x->SetRangeUser(fSldMinX->GetNumber()+width/2,
                    fSldMaxX->GetNumber()-width/2);
    Int_t nxbinmin = x->GetFirst();
    Int_t nxbinmax = x->GetLast();
