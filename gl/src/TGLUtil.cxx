@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.26 2006/02/23 16:44:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.27 2006/06/13 15:43:39 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -965,7 +965,7 @@ const UChar_t *TGLSelectionBuffer::GetPixelColor(Int_t px, Int_t py)const
    if (py < 0)
       py = 0;
 
-   if (px * fWidth * 4 + py * 4 > fBuffer.size())
+   if ((UInt_t)(px * fWidth * 4 + py * 4) > fBuffer.size())
       return &fBuffer[0];
 
    return &fBuffer[px * fWidth * 4 + py * 4];
