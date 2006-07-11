@@ -100,6 +100,7 @@ N: Federico Carminati
 E: Federico.Carminati@cern.ch
 D: updates in PDG codes and eventgenerator interface classes
 D: TSpline classes
+D: Support for gcc option -weffc++
 
 N: Gian Paolo Ciceri
 E: gp.ciceri@acm.org
@@ -166,6 +167,7 @@ D: xrootd multi-buffer support, prefetching, read-ahead
 N: Markus Frank
 E: Markus.Frank@cern.ch
 D: STL I/O and TBranchElement splitting
+D: Implementation of TRefProxy
 
 N: John Frankland
 E: frankland@ganil.fr
@@ -231,6 +233,10 @@ N: Marc Hemberger
 E: hemberg@clri6a.gsi.de
 D: contributions to the thread classes, SapDB interface
 
+N: Andreas Hoecker
+E: Andreas.Hoecker@cern.ch
+D: contribution to the TMVA package
+
 N: Carsten Hof
 E: Carsten_Hof@web.de
 D: Implementation of classes TGraphEditor, TH1Editor and TH2Editor
@@ -281,6 +287,10 @@ D: changes in rootcint to handle templates
 N: Anna Kreshuk
 E: akrechtc@mail.cern.ch
 D: contrinutions to TMath, TH1::Chi2Test, TFitter::GraphFitChisquare
+
+N: Daniele Francesco Kruse
+E: punkle.64@gmail.com
+D: contrinution to the GDML interface
 
 N: Dmytro Kustov
 E: Dmytro.Kustov@cern.ch
@@ -417,6 +427,10 @@ N: Timur Pocheptsov
 E: Timur.Pocheptsov@cern.ch
 D: Advanced OpenGL viewer.
 
+N: Witold Pokorski
+E: Witold.Pokorski@cern.ch
+D: contributed to the GDML interface
+
 N: Art Poskanzer
 E: AMPoskanzer@lbl.gov
 D: contributed to styles Bold, Video, Pub
@@ -469,9 +483,17 @@ N: Abdelhalim Ssadik
 E: abdelhalim.ssadik@cern.ch
 D: contribution to GUI classes (TGDockableFrame)
 
+N: Joerg Stelzer
+E: Joerz.Stelzer@cern.ch
+D: contribution to the TMVA package
+
 N: Christian Stratowa
 E: cstrato@EUnet.at
 D: development of class TGraphSmooth + many suggestions
+
+N: Matevz Tadel
+E: Matevz.Tadel@cern.ch
+D: Several contributions to the 3-d graphics and GL interface
 
 N: Tim Tran
 E: timtran@jlab.org
@@ -489,9 +511,21 @@ N: Marco van Leeuwen
 E: mvl@nikhef.nl
 D: THistPainter improvements: support for log scales with CONT options
 
+N: Wouter Verkerke
+E: verkerke@nikhef.nl
+D: Author of the RooFit package
+
 N: Brett Viren
 E: bv@bnl.gov
 D: contributed the GUI TGTableLayout manager and the Viewer example program
+
+N: Helge Voss
+E: Helge.Voss@cern.ch
+D: contribution to the TMVA package
+
+N: Kai Voss
+E: Kai.Voss@cern.ch
+D: contribution to the TMVA package
 
 N: Andreas Zoglauer
 E: zog@mpe.mpg.de
