@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.14 2006/07/07 09:59:04 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.15 2006/07/10 11:05:50 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -64,7 +64,7 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    fMySQL = new MYSQL;
    mysql_init(fMySQL);
    
-   unsigned long client_flag = 0;
+   ULong_t client_flag = 0;
    TString socket;
    
    TString optstr = url.GetOptions();
