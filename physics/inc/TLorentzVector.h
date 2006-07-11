@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.12 2004/11/04 22:26:24 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.13 2006/05/16 08:13:31 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************
@@ -11,19 +11,6 @@
 
 #ifndef ROOT_TLorentzVector
 #define ROOT_TLorentzVector
-
-//------------------------------------------------------------------------------
-// Copyright(c) 1995-1997, P.Murat (CDF collaboration, FNAL)
-//
-// Permission to use, copy, modify and distribute this software and its
-// documentation for non-commercial purposes is hereby granted without fee,
-// provided that the above copyright notice appears in all copies and
-// that both the copyright notice and this permission notice appear in
-// the supporting documentation. The authors make no claims about the
-// suitability of this software for any purpose.
-// It is provided "as is" without express or implied warranty.
-// *0001 Mar 29 1999 P.Murat: add forgotten scalar product (dot operator)
-//------------------------------------------------------------------------------
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -180,7 +167,7 @@ public:
    inline Double_t Pt(const TVector3 & v) const;
    inline Double_t Perp(const TVector3 & v) const;
    // Transverse component of the spatial vector w.r.t. given axis.
- 
+
    inline Double_t Et2() const;
    // Transverse energy squared.
 

@@ -1,7 +1,14 @@
-// @(#)root/star:$Name:  $Id: TResponseTable.cxx,v 1.3 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Name:  $Id: TResponseTable.cxx,v 1.4 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/04/2002
-// Copyright(c) 2002 [BNL] Brookhaven National Laboratory, Valeri Fine (fine@bnl.gov)
-// All right reserved
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 
 #include "TResponseTable.h"
 
@@ -15,7 +22,7 @@ TResponseTable::TResponseTable():TGenericTable(), fResponseLocation(-1)
 }
 
 //______________________________________________________________________________
-TResponseTable::TResponseTable(const char *name,const char *volumePath, const char *responseDefinition, Int_t /*allocSize*/) 
+TResponseTable::TResponseTable(const char *name,const char *volumePath, const char *responseDefinition, Int_t /*allocSize*/)
  :  TGenericTable(), fResponseLocation(-1)
 {
    // Set an empty descriptor
@@ -36,11 +43,11 @@ void TResponseTable::AddVolumePath(const char *path)
    Int_t counter = 0;
    const Int_t maxResponseCounter = 15;
    const char *next = &path[0];
-   while( ( *next && *next != ' ') &&  counter < maxResponseCounter ) {  
+   while( ( *next && *next != ' ') &&  counter < maxResponseCounter ) {
       TString elName;
       for (int j=0; j<4 && (next[j] != ' ');j++)  elName += next[j];
       AddElement(elName,kInt);
-      next += 4; 
+      next += 4;
       counter++;
    }
 }
@@ -51,17 +58,17 @@ void TResponseTable::AddResponse(const char *chit)
    Int_t counter = 0;
    const Int_t maxResponseCounter = 15;
    const char *next = &chit[0];
-   while( ( *next != ' ' ) &&  counter < maxResponseCounter )  {  
+   while( ( *next != ' ' ) &&  counter < maxResponseCounter )  {
       TString elName;
       for (int j=0; j<4 && (next[j] != ' ');j++)  elName += next[j];
       AddElement(elName,kFloat);
-      next += 4; 
+      next += 4;
       counter++;
    }
 }
 //______________________________________________________________________________
 void TResponseTable::AddElement(const char *path,EColumnType type)
-{ 
+{
    //to be documented
    assert( (type == kInt || type == kFloat ) );
 
@@ -73,10 +80,10 @@ void TResponseTable::AddElement(const char *path,EColumnType type)
    strncpy(row.fColumnName,path,sizeof(row.fColumnName));
    if (nRow) row.fOffset = dsc[nRow-1].fOffset + dsc[nRow-1].fSize;
 
-   row.fType = type;   
+   row.fType = type;
    if (type == kInt)
       row.fTypeSize = sizeof(Int_t);
-   else 
+   else
       row.fTypeSize = sizeof(Float_t);
 
    row.fSize = row.fTypeSize;
@@ -120,7 +127,7 @@ Int_t TResponseTable::FindResponseLocation(TTableDescriptor  &dsc)
  //   +0    int TRACK
  //   +1
  //   ...   int <volume path description>
- //  +nVl.   
+ //  +nVl.
  //  +nVl+1  <----  fResponseLocation
  //   ...   response values
  //  RowSize
@@ -132,7 +139,7 @@ Int_t TResponseTable::FindResponseLocation(TTableDescriptor  &dsc)
    for (int i=0;i<nRow;i++,row++) {
       if (row->fType == kFloat) {
          // found
-         responseLocation = i;   
+         responseLocation = i;
          break;
       }
    }

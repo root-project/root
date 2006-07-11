@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.4 2005/04/25 17:23:29 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TChair.h,v 1.5 2006/07/03 16:10:46 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TChair.h,v 1.4 2005/04/25 17:23:29 brun Exp $
 #ifndef ROOT_TChair
 #define ROOT_TChair
 
@@ -120,6 +119,19 @@ inline const void *TChair::operator[](Int_t i) const
 }
 
 // $Log: TChair.h,v $
+// Revision 1.5  2006/07/03 16:10:46  brun
+// from Axel:
+// Change the signature of SavePrimitive from
+//
+//   void SavePrimitive(ofstream &out, Option_t *option);
+// to
+//   void SavePrimitive(ostream &out, Option_t *option = "");
+//
+// With this change one can do, eg
+//    myhist.SavePrimitive(std::cout);
+//
+// WARNING: do rm -f tree/src/*.o
+//
 // Revision 1.4  2005/04/25 17:23:29  brun
 // From Valeri Fine:
 //

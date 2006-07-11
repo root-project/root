@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TColumnView.h,v 1.3 2005/11/24 17:08:36 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TColumnView.h,v 1.4 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TColumnView.h,v 1.3 2005/11/24 17:08:36 rdm Exp $
 #ifndef ROOT_TColumnView
 #define ROOT_TColumnView
  

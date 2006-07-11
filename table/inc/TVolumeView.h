@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.5 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumeView.h,v 1.6 2006/07/03 16:10:46 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************

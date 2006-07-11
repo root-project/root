@@ -1,7 +1,15 @@
-// @(#)root/star:$Name:  $Id: TGenericTable.cxx,v 1.4 2005/09/08 05:33:41 brun Exp $
+// @(#)root/table:$Name:  $Id: TGenericTable.cxx,v 1.5 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
-// Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
- 
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+
 #include "TGenericTable.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -11,12 +19,12 @@
 //  This is the class to represent the array of C-struct                //
 //  defined at run-time                                                 //
 //                                                                      //
-//   Example: see $ROOTSYS/star/demo/staff.C                            //
+//   Example: see $ROOTSYS/tutorials/staff.C                            //
 //   -------                                                            //
 // !{
 // !//   example of macro to read data from an ascii file and
 // !//   create a root file with an histogram and an ntuple.
-// !//   A'la the famous ROOT/PAW staff data example 
+// !//   A'la the famous ROOT/PAW staff data example
 // !//   ( see PAW - Long write up, CERN, page33. )
 // !
 // !   gROOT->Reset();
@@ -46,7 +54,7 @@
 // !   // Create the generic table for 1000 rows (it may grow then)
 // !   TGenericTable *allStaff = new TGenericTable("staff_t","Staff-data",1000);
 // !
-// !   // Fill the memory resident table 
+// !   // Fill the memory resident table
 // !   while (fgets(&line,80,fp)) {
 // !      sscanf(&line[0] ,"%d%d%d%d", &staff.cat,&staff.division,&staff.flag,&staff.age);
 // !      sscanf(&line[13],"%d%d%d%d", &staff.service,&staff.children,&staff.grade,&staff.step);
@@ -76,7 +84,7 @@
 // !   canva->Divide(1,2);
 // !
 // !
-// !// one can use 2 meta variable: 
+// !// one can use 2 meta variable:
 // !//  n$ - the total number of the rows in the table
 // !//  i$ - stands for the current row index i = [0 -> (n$-1)]
 // !
@@ -92,13 +100,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-   ClassImp(TGenericTable) 
+   ClassImp(TGenericTable)
    TableClassStreamerImp(TGenericTable)
 
 // Create TGenericTable by TTableDescriptor pointer
 //______________________________________________________________________________
-TGenericTable::TGenericTable(const TTableDescriptor &dsc, const Text_t *name) : TTable(name,dsc.Sizeof()),fColDescriptors(0) 
-{ 
+TGenericTable::TGenericTable(const TTableDescriptor &dsc, const Text_t *name) : TTable(name,dsc.Sizeof()),fColDescriptors(0)
+{
   ///////////////////////////////////////////////////////////
   //
   //   Create TGenericTable by TTableDescriptor pointer:
@@ -111,9 +119,9 @@ TGenericTable::TGenericTable(const TTableDescriptor &dsc, const Text_t *name) : 
    // Create a private copy of the descriptor provided;
    SetDescriptorPointer(new TTableDescriptor(dsc));
    SetGenericType();
-}     
+}
 //______________________________________________________________________________
-TGenericTable::TGenericTable(const TTableDescriptor &dsc, Int_t n) : TTable("TGenericTable",n,dsc.Sizeof()),fColDescriptors(0)  
+TGenericTable::TGenericTable(const TTableDescriptor &dsc, Int_t n) : TTable("TGenericTable",n,dsc.Sizeof()),fColDescriptors(0)
 {
   ///////////////////////////////////////////////////////////
   //
@@ -128,7 +136,7 @@ TGenericTable::TGenericTable(const TTableDescriptor &dsc, Int_t n) : TTable("TGe
   // Create a provate copy of the descriptor provided;
    SetDescriptorPointer(new TTableDescriptor(dsc));
    SetGenericType();
-}     
+}
 
 //______________________________________________________________________________
 TGenericTable::TGenericTable(const TTableDescriptor &dsc,const Text_t *name,Int_t n) : TTable(name,n,dsc.Sizeof()),fColDescriptors(0)
@@ -146,11 +154,11 @@ TGenericTable::TGenericTable(const TTableDescriptor &dsc,const Text_t *name,Int_
   // Create a provate copy of the descriptor provided;
    SetDescriptorPointer(new TTableDescriptor(dsc));
    SetGenericType();
-}     
+}
 
 // Create TGenericTable by C structure name provided
 //______________________________________________________________________________
-TGenericTable::TGenericTable(const char *structName, const Text_t *name) : TTable(name,-1),fColDescriptors(0) 
+TGenericTable::TGenericTable(const char *structName, const Text_t *name) : TTable(name,-1),fColDescriptors(0)
 {
   ///////////////////////////////////////////////////////////
   //
@@ -165,10 +173,10 @@ TGenericTable::TGenericTable(const char *structName, const Text_t *name) : TTabl
    if (dsc) {
       SetDescriptorPointer(dsc);
       fSize = dsc->Sizeof();
-   } 
+   }
    if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format");
    SetGenericType();
-}     
+}
 //______________________________________________________________________________
 TGenericTable::TGenericTable(const char *structName, Int_t n) : TTable("TGenericTable",-1),fColDescriptors(0)
 {
@@ -186,7 +194,7 @@ TGenericTable::TGenericTable(const char *structName, Int_t n) : TTable("TGeneric
    if (dsc) {
       SetDescriptorPointer(dsc);
       fSize = dsc->Sizeof();
-   } 
+   }
    if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format");
    if (n > 0) Set(n);
    SetGenericType();
@@ -208,7 +216,7 @@ TGenericTable::TGenericTable(const char *structName, const Text_t *name,Int_t n)
    if (dsc) {
       SetDescriptorPointer(dsc);
       fSize = dsc->Sizeof();
-   } 
+   }
    if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format dsc=0x%x, size=%d",dsc,fSize);
    if (n > 0) Set(n);
    SetGenericType();

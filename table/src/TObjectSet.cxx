@@ -1,6 +1,5 @@
-// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.5 2005/11/24 17:08:36 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TObjectSet.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TObjectSet.cxx,v 1.5 2005/11/24 17:08:36 rdm Exp $
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -88,9 +87,9 @@ Bool_t TObjectSet::DoOwner(Bool_t done)
 }
 //______________________________________________________________________________
 TDataSet *TObjectSet::Instance() const
-{ 
+{
    // apply the class default ctor to instantiate a new object of the same kind.
-   // This is a base method to be overriden by the classes 
+   // This is a base method to be overriden by the classes
    // derived from TDataSet (to support TDataSetIter::Mkdir for example)
    return instance();
 }

@@ -1,25 +1,13 @@
-// @(#)root/star:$Name:  $:$Id: TPoints3D.cxx,v 1.5 2003/02/11 12:17:19 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TPoints3D.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
-// $Id: TPoints3D.cxx,v 1.5 2003/02/11 12:17:19 rdm Exp $
-// ***********************************************************************
-// *  C++ class to define the abstract array of 3D points
-// * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
-// * Author                  Valerie Fine  (fine@bnl.gov)
-// * Copyright(c) 1997~1999  Valerie Fine  (fine@bnl.gov)
-// *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-// *
-// * Permission to use, copy, modify and distribute this software and its
-// * documentation for any purpose is hereby granted without fee,
-// * provided that the above copyright notice appear in all copies and
-// * that both that copyright notice and this permission notice appear
-// * in supporting documentation.  Brookhaven National Laboratory makes no
-// * representations about the suitability of this software for any
-// * purpose.  It is provided "as is" without express or implied warranty.
-// ************************************************************************
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "Riostream.h"
 
@@ -152,7 +140,7 @@ void TPoints3D::Delete()
 }
 
 //______________________________________________________________________________
-Bool_t TPoints3D::DoOwner(Bool_t done) 
+Bool_t TPoints3D::DoOwner(Bool_t done)
 {
    //to be documented
    if (done) SetBit(kIsOwner);

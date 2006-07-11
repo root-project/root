@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.3 2006/06/20 13:17:48 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.4 2006/06/21 09:21:47 antcheva Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -8,25 +8,15 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 /**************************************************************************
 
-    This file is part of notepad, a simple text editor.
-    Copyright (C) 1997-2001, Harald Radke, Hector Peraza.
+    This source is based on Xclass95, a Win95-looking GUI toolkit.
+    Copyright (C) 1996, 1997 David Barth, Ricky Ralston, Hector Peraza.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    Xclass95 is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Library General Public
+    License as published by the Free Software Foundation; either
+    version 2 of the License, or (at your option) any later version.
 
 **************************************************************************/
 
@@ -35,7 +25,7 @@
 //  TGTextEditor                                                        //
 //                                                                      //
 //  A simple text editor that uses the TGTextEdit widget.               //
-//  It provides all functionalities of TGTextEdit as copy, paste, cut,  // 
+//  It provides all functionalities of TGTextEdit as copy, paste, cut,  //
 //  search, go to a given line number. In addition, it provides the     //
 //  possibilities for compiling, executing or interrupting a running    //
 //  macro.                                                              //
@@ -242,8 +232,8 @@ static char *gEPrintCommand = 0;
 ClassImp(TGTextEditor)
 
 //______________________________________________________________________________
-TGTextEditor::TGTextEditor(const char *filename, const TGWindow *p, UInt_t w, 
-                           UInt_t h) : TGMainFrame(p, w, h) 
+TGTextEditor::TGTextEditor(const char *filename, const TGWindow *p, UInt_t w,
+                           UInt_t h) : TGMainFrame(p, w, h)
 {
    // TGTextEditor constructor with file name as first argument.
 
@@ -255,8 +245,8 @@ TGTextEditor::TGTextEditor(const char *filename, const TGWindow *p, UInt_t w,
 }
 
 //______________________________________________________________________________
-TGTextEditor::TGTextEditor(TMacro *macro, const TGWindow *p, UInt_t w, UInt_t h) : 
-              TGMainFrame(p, w, h) 
+TGTextEditor::TGTextEditor(TMacro *macro, const TGWindow *p, UInt_t w, UInt_t h) :
+              TGMainFrame(p, w, h)
 {
    // TGTextEditor constructor with pointer to a TMacro as first argument.
 
@@ -269,7 +259,7 @@ TGTextEditor::TGTextEditor(TMacro *macro, const TGWindow *p, UInt_t w, UInt_t h)
       while ((obj = (TObjString*) next())) {
          fTextEdit->AddLine(obj->GetName());
       }
-      sprintf(tmp, "TMacro : %s: %ld lines read.", 
+      sprintf(tmp, "TMacro : %s: %ld lines read.",
               macro->GetName(), fTextEdit->ReturnLineCount());
       fStatusBar->SetText(tmp, 0);
       fFilename = macro->GetName();
@@ -281,7 +271,7 @@ TGTextEditor::TGTextEditor(TMacro *macro, const TGWindow *p, UInt_t w, UInt_t h)
 }
 
 //______________________________________________________________________________
-TGTextEditor::~TGTextEditor() 
+TGTextEditor::~TGTextEditor()
 {
    // TGTextEditor destructor.
 
@@ -363,7 +353,7 @@ void TGTextEditor::Build()
 
    //---- toolbar
 
-   AddFrame(new TGHorizontal3DLine(this), 
+   AddFrame(new TGHorizontal3DLine(this),
             new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,2,2));
    Int_t i,spacing = 8;
    fToolBar = new TGToolBar(this, 60, 20, kHorizontalFrame);
@@ -379,24 +369,24 @@ void TGTextEditor::Build()
    fCommandBuf = new TGTextBuffer(256);
    fComboCmd   = new TGComboBox(fToolBar, "");
    fCommand    = fComboCmd->GetTextEntry();
-   fCommandBuf = fCommand->GetBuffer(); 
+   fCommandBuf = fCommand->GetBuffer();
    fCommand->Associate(this);
    fComboCmd->Resize(200, fCommand->GetDefaultHeight());
-   fToolBar->AddFrame(fComboCmd, new TGLayoutHints(kLHintsCenterY | 
+   fToolBar->AddFrame(fComboCmd, new TGLayoutHints(kLHintsCenterY |
             kLHintsRight, 5, 5, 1, 1));
 
-   fToolBar->AddFrame(new TGLabel(fToolBar, "Command :"), 
+   fToolBar->AddFrame(new TGLabel(fToolBar, "Command :"),
             new TGLayoutHints(kLHintsCenterY | kLHintsRight, 5, 5, 1, 1));
-   AddFrame(fToolBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 
+   AddFrame(fToolBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX,
             0, 0, 0, 0));
-   AddFrame(new TGHorizontal3DLine(this), 
+   AddFrame(new TGHorizontal3DLine(this),
             new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,2,2));
 
    fToolBar->GetButton(kM_EDIT_CUT)->SetState(kButtonDisabled);
    fToolBar->GetButton(kM_EDIT_COPY)->SetState(kButtonDisabled);
    fToolBar->GetButton(kM_EDIT_DELETE)->SetState(kButtonDisabled);
    fToolBar->GetButton(kM_EDIT_PASTE)->SetState(kButtonDisabled);
-   
+
    fTextEdit = new TGTextEdit(this, 10, 10, 1);
    fTextEdit->Associate(this);
    AddFrame(fTextEdit, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
@@ -417,7 +407,7 @@ void TGTextEditor::Build()
    fTextEdit->SetFocus();
    fTextEdit->Connect("DataChanged()", "TGTextEditor", this, "DataChanged()");
    fTextEdit->MapWindow();
-   
+
    MapSubwindows();
    Resize(GetDefaultWidth() + 50, GetDefaultHeight() > 500 ? GetDefaultHeight() : 500);
    Layout();
@@ -436,7 +426,7 @@ void TGTextEditor::Build()
 }
 
 //______________________________________________________________________________
-void TGTextEditor::LoadFile(char *fname) 
+void TGTextEditor::LoadFile(char *fname)
 {
    // Load a file into the editor. If fname is 0, a TGFileDialog will popup.
 
@@ -472,7 +462,7 @@ void TGTextEditor::LoadFile(char *fname)
 }
 
 //______________________________________________________________________________
-void TGTextEditor::SaveFile(const char *fname) 
+void TGTextEditor::SaveFile(const char *fname)
 {
    // Save the edited text in the file "fname".
 
@@ -584,7 +574,7 @@ void TGTextEditor::CloseWindow()
 }
 
 //______________________________________________________________________________
-Bool_t TGTextEditor::HandleKey(Event_t *event) 
+Bool_t TGTextEditor::HandleKey(Event_t *event)
 {
    // Keyboard event handler.
 
@@ -654,12 +644,12 @@ void TGTextEditor::ClearText()
 }
 
 //______________________________________________________________________________
-void TGTextEditor::Search(Bool_t again) 
+void TGTextEditor::Search(Bool_t again)
 {
    // Invokes search dialog, or just search previous string if again is true.
 
    if (again) {
-      SendMessage(fTextEdit, MK_MSG(kC_COMMAND, kCM_MENU), 
+      SendMessage(fTextEdit, MK_MSG(kC_COMMAND, kCM_MENU),
                   TGTextEdit::kM_SEARCH_FINDAGAIN, 0);
    }
    else {
@@ -691,7 +681,7 @@ void TGTextEditor::CompileMacro()
       if (!SaveFileAs())
          return;
    }
-   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(), 
+   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(),
                                 gSystem->BaseName(fFilename.Data()));
    fTextEdit->SaveFile(tmpfile, kFALSE);
    gSystem->CompileMacro(tmpfile);
@@ -730,7 +720,7 @@ void TGTextEditor::ExecuteMacro()
       if (!SaveFileAs())
          return;
    }
-   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(), 
+   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(),
                                 gSystem->BaseName(fFilename.Data()));
    gROOT->SetExecutingMacro(kTRUE);
    fTextEdit->SaveFile(tmpfile, kFALSE);
@@ -749,7 +739,7 @@ void TGTextEditor::InterruptMacro()
 }
 
 //______________________________________________________________________________
-void TGTextEditor::About() 
+void TGTextEditor::About()
 {
    // Display ROOT splash screen.
 
@@ -777,7 +767,7 @@ void TGTextEditor::About()
 }
 
 //______________________________________________________________________________
-Bool_t TGTextEditor::HandleTimer(TTimer *t) 
+Bool_t TGTextEditor::HandleTimer(TTimer *t)
 {
    // Handle timer event.
 
@@ -849,7 +839,7 @@ Bool_t TGTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                               SaveFileAs();
                            else
                               SaveFile(fFilename.Data());
-                           if (fTextChanged) 
+                           if (fTextChanged)
                               break;
                         case kMBNo:
                            LoadFile();

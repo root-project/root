@@ -1,6 +1,5 @@
-// @(#)root/star:$Name:  $Id: TGenericTable.h,v 1.3 2005/09/08 05:33:41 brun Exp $
+// @(#)root/table:$Name:  $Id: TGenericTable.h,v 1.4 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
-// Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
 
 #ifndef ROOT_TGenericTable
 #define ROOT_TGenericTable

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TCL.h,v 1.5 2005/05/26 13:37:59 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TCL.h,v 1.6 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 
 /*************************************************************************
@@ -8,13 +8,9 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #ifndef ROOT_TCL
 #define ROOT_TCL
-//
-// The set of methods to work with the plain matrix / vector
-// "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
-//
-// $Id: TCL.h,v 1.5 2005/05/26 13:37:59 rdm Exp $
 
 #include "Rtypes.h"
 #include <string.h>

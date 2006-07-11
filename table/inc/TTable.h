@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.12 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TTable.h,v 1.13 2006/07/03 16:10:46 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -8,6 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #ifndef ROOT_TTable
 #define ROOT_TTable
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.20 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.21 2006/07/09 05:27:54 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -10,22 +10,13 @@
  *************************************************************************/
 /**************************************************************************
 
-    This file is part of xclass.
-    Copyright (C) 2000, 2001, Hector Peraza.
+    This source is based on Xclass95, a Win95-looking GUI toolkit.
+    Copyright (C) 1996, 1997 David Barth, Ricky Ralston, Hector Peraza.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    Xclass95 is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Library General Public
+    License as published by the Free Software Foundation; either
+    version 2 of the License, or (at your option) any later version.
 
 **************************************************************************/
 
@@ -95,7 +86,7 @@ TGColorFrame::TGColorFrame(const TGColorFrame& cf) :
   fPixel(cf.fPixel),
   fActive(cf.fActive),
   fGrayGC(cf.fGrayGC)
-{ 
+{
    //copy constructor
 }
 
@@ -109,7 +100,7 @@ TGColorFrame& TGColorFrame::operator=(const TGColorFrame& cf)
       fPixel=cf.fPixel;
       fActive=cf.fActive;
       fGrayGC=cf.fGrayGC;
-   } 
+   }
    return *this;
 }
 
@@ -182,7 +173,7 @@ TG16ColorSelector::TG16ColorSelector(const TG16ColorSelector& cs) :
 }
 
 //________________________________________________________________________________
-TG16ColorSelector& TG16ColorSelector::operator=(const TG16ColorSelector& cs) 
+TG16ColorSelector& TG16ColorSelector::operator=(const TG16ColorSelector& cs)
 {
    //assignment operator
    if(this!=&cs) {
@@ -190,7 +181,7 @@ TG16ColorSelector& TG16ColorSelector::operator=(const TG16ColorSelector& cs)
       fActive=cs.fActive;
       fMsgWindow=cs.fMsgWindow;
       for(Int_t i=0; i<16; i++) fCe[i]=cs.fCe[i];
-   } 
+   }
    return *this;
 }
 
@@ -296,7 +287,7 @@ TGColorPopup::TGColorPopup(const TGColorPopup& cp) :
   fLaunchDialog(cp.fLaunchDialog),
   fMsgWindow(cp.fMsgWindow),
   fCurrentColor(cp.fCurrentColor)
-{ 
+{
    //copy constructor
 }
 
@@ -310,7 +301,7 @@ TGColorPopup& TGColorPopup::operator=(const TGColorPopup& cp)
       fLaunchDialog=cp.fLaunchDialog;
       fMsgWindow=cp.fMsgWindow;
       fCurrentColor=cp.fCurrentColor;
-   } 
+   }
    return *this;
 }
 
@@ -459,7 +450,7 @@ TGColorSelect::TGColorSelect(const TGColorSelect& cs) :
   fDrawGC(cs.fDrawGC),
   fColorPopup(cs.fColorPopup),
   fPressPos(cs.fPressPos)
-{ 
+{
    //copy constructor
 }
 
@@ -473,7 +464,7 @@ TGColorSelect& TGColorSelect::operator=(const TGColorSelect& cs)
       fDrawGC=cs.fDrawGC;
       fColorPopup=cs.fColorPopup;
       fPressPos=cs.fPressPos;
-   } 
+   }
    return *this;
 }
 

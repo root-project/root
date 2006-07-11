@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.7 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumePosition.h,v 1.8 2006/07/03 16:10:46 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 // Description of parameters to position a 3-D geometry object          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-//check
+
 #ifndef ROOT_TVolumePosition
 #define ROOT_TVolumePosition
 

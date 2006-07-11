@@ -1,6 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.5 2005/09/09 04:57:59 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TDataSetIter.cxx,v 1.6 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-// Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "Riosfwd.h"
 #include "Riostream.h"
 
@@ -234,14 +242,14 @@ Int_t TDataSetIter::Du() const {
 
 //______________________________________________________________________________
 TDataSet  *TDataSetIter::FindByName(const Char_t *name,const Char_t *path,Option_t *opt)
-{ 
+{
    //to be documented
    return FindDataSet(name,path,opt);
 }
 
 //______________________________________________________________________________
 TDataSet  *TDataSetIter::FindByTitle(const Char_t *title,const Char_t *path,Option_t *opt)
-{ 
+{
    //to be documented
    TString optt = "-t";
    optt += opt;
@@ -316,7 +324,7 @@ TDataSet *TDataSetIter::FindDataSet(TDataSet *set,const Char_t *path,Option_t *o
 }
 //______________________________________________________________________________
 TObject *TDataSetIter::FindObject(const Char_t *name) const
-{ 
+{
    // This method is not recommended.
    // It is done to back TObject::FindObject method only.
    // One is recommnened to use FindByName method instead.
@@ -325,7 +333,7 @@ TObject *TDataSetIter::FindObject(const Char_t *name) const
 
 //______________________________________________________________________________
 TObject  *TDataSetIter::FindObject(const TObject *dataset) const
-{ 
+{
    // This method is not recommended.
    // It is done to back TObject::FindObject method only.
    // One is recommended to use FindByName method instead.
@@ -445,14 +453,14 @@ TDataSet *TDataSetIter::Rmdir(TDataSet *dataset,Option_t *)
    //  becomes the "current dataset" or 0 if this dataset has no parent.
    //
    //  returns: the "current dataset" pointer
-   // 
+   //
    //
    TDataSet *set = dataset;
    if (set) {
       if (set == fWorkingDataSet) {
          fWorkingDataSet = set->GetParent();
       }
-      if (set == fRootDataSet) { 
+      if (set == fRootDataSet) {
          fRootDataSet = 0;
       }
       delete set;
@@ -537,7 +545,7 @@ TDataSet *TDataSetIter::NextDataSet(Int_t nDataSet)
 }
 //______________________________________________________________________________
 TDataSet  *TDataSetIter::FindByPath(const Char_t *path, TDataSet *rootset,Bool_t mkdir)
-{ 
+{
    //to be documented
    return Find(path,rootset,mkdir);
 }
@@ -549,7 +557,7 @@ TDataSet *TDataSetIter::Find(const Char_t *path, TDataSet *rootset,
    ////////////////////////////////////////////////////////////////////////////////
    //                                                                            //
    //     titleFlag = kFALSE; use object name as key (by default)                //
-   //                 kTRUE;  use object title as key  and ignore mkdirFlag      // 
+   //                 kTRUE;  use object title as key  and ignore mkdirFlag      //
    //                                                                            //
    //           "path" ::= <relative path> | <absolute path> | <empty>           //
    //                                                                            //
@@ -634,7 +642,7 @@ NOTFOUND:
       // create dir the same type as the type of the fRootDataSet if present
       // Create TDataSet by default.
       char buf[512];buf[0]=0; strncat(buf,name,len);
-      if (!fRootDataSet) 
+      if (!fRootDataSet)
          ds = new TDataSet(buf);
       else {
          ds = fRootDataSet->Instance();

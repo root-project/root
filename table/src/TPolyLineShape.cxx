@@ -1,24 +1,13 @@
-// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.6 2006/05/21 18:05:26 brun Exp $
-// Author:
-// $Id: TPolyLineShape.cxx,v 1.6 2006/05/21 18:05:26 brun Exp $
-// ***********************************************************************
-// *  C++ class library to define an abstract 3D shape os STAR "event" geometry
-// * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
-// * Author                  Valeri Fine  (fine@bnl.gov)
-// * Copyright(c) 1997~1999  Valeri Fine  (fine@bnl.gov)
-// *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-// *
-// * Permission to use, copy, modify and distribute this software and its
-// * documentation for any purpose is hereby granted without fee,
-// * provided that the above copyright notice appear in all copies and
-// * that both that copyright notice and this permission notice appear
-// * in supporting documentation.  Brookhaven National Laboratory makes no
-// * representations about the suitability of this software for any
-// * purpose.  It is provided "as is" without express or implied warranty.
-// ************************************************************************
+// @(#)root/table:$Name:  $:$Id: TPolyLineShape.cxx,v 1.7 2006/05/26 15:13:02 rdm Exp $
+// Author: Valeri Fine 1999
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TPolyLineShape.h"
 

@@ -1,8 +1,12 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.12 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.13 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine   10/12/98
-//
+
 /*************************************************************************
- * Copyright(c) 1998, FineSoft, All rights reserved. Valery Fine (Faine) *
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
 #include "Riostream.h"

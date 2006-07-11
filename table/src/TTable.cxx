@@ -1,6 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.15 2006/06/23 04:59:33 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.16 2006/07/03 16:10:46 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
-// Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
@@ -68,7 +76,7 @@
 // ---------------------                                                  //
 //                                                                        //
 //  where the CPP macro defines several convinient methods for the        //
-//  "table" class (see: $ROOTSYS/star/inc/Ttypes.h for details:           //
+//  "table" class (see: $ROOTSYS/table/inc/Ttypes.h for details:          //
 //                                                                        //
 //  #define ClassDefTable(className,structName)
 //    protected:
@@ -2055,7 +2063,7 @@ void TTable::ResetMap(Bool_t wipe)
       if (wipe) delete *mp;
       *mp = 0;
    }
-} 
+}
 //______________________________________________________________________________
 void TTable::Set(Int_t n, Char_t *array)
 {

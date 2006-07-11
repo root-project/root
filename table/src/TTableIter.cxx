@@ -1,9 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TTableIter.cxx,v 1.2 2003/01/27 20:41:37 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTableIter.cxx,v 1.3 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/12/99
-// Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
-// Author                  Valerie Fine  (fine@bnl.gov)
-// Copyright(c) 1997~1999  Valerie Fine  (fine@bnl.gov)
-// $Id: TTableIter.cxx,v 1.2 2003/01/27 20:41:37 brun Exp $
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TTableIter - class iterator to loop over sorted TTable's             //

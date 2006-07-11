@@ -1,6 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TPointsArray3D.cxx,v 1.5 2003/02/11 12:17:19 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TPointsArray3D.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
-// $Id: TPointsArray3D.cxx,v 1.5 2003/02/11 12:17:19 rdm Exp $
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "Riostream.h"
 
 #include "TPointsArray3D.h"

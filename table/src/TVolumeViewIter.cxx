@@ -1,5 +1,13 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeViewIter.cxx,v 1.3 2003/08/14 12:02:20 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumeViewIter.cxx,v 1.4 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/01/99
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TVolumeViewIter.h"
 #include "TObjArray.h"

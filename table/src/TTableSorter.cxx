@@ -1,6 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTableSorter.cxx,v 1.7 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
-// $Id: TTableSorter.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 
 #include <stdlib.h>
 #include "TTableSorter.h"
@@ -131,19 +139,19 @@ TTableSorter::TTableSorter(const TTable *table, TString &colName,Int_t firstRow
    BuildSorter(colName, firstRow, numberRows);
 }
 //_____________________________________________________________________________
-TTableSorter::TTableSorter(const TTable &table, SEARCHMETHOD search, 
+TTableSorter::TTableSorter(const TTable &table, SEARCHMETHOD search,
                            COMPAREMETHOD compare, Int_t firstRow,Int_t numberRows)
                           :fsimpleArray(0),fParentTable(&table)
 {
   //
   // TTableSorter ctor sorts the input table according the function "search"
   //
-  //    - search     - the function to compare the "key" and the table rows during sorting 
+  //    - search     - the function to compare the "key" and the table rows during sorting
   //                   typedef Int_t (*SEARCHMETHOD) (const void *, const void **);
   //
   //    - compare    - the function to compare two table rows during searching
   //                   typedef Int_t (*COMPAREMETHOD)(const void **, const void **);
-  //  
+  //
   //    - firstRow   - the first table row to sort from (=0 by default)
   //    - numberRows - the number of the table rows to sort (=0 by default)
   //                   = 0 means sort all rows from the "firstRow" by the end of table
@@ -151,26 +159,26 @@ TTableSorter::TTableSorter(const TTable &table, SEARCHMETHOD search,
   //  -----  to allow "void *" one may potect the end-user code
   //         providing a derived class with the appropriated type
   //         of the parameters.
-  //  
+  //
    fCompareMethod =  compare;
    fSearchMethod  =  search;
    TString colName = "user's defined";
    BuildSorter(colName, firstRow, numberRows);
 }
 //_____________________________________________________________________________
-TTableSorter::TTableSorter(const TTable *table, SEARCHMETHOD search, 
+TTableSorter::TTableSorter(const TTable *table, SEARCHMETHOD search,
                            COMPAREMETHOD compare, Int_t firstRow,Int_t numberRows)
                           :fsimpleArray(0),fParentTable(table)
 {
   //
   // TTableSorter ctor sorts the input table according the function "search"
   //
-  //    - search     - the function to compare the "key" and the table rows during sorting 
+  //    - search     - the function to compare the "key" and the table rows during sorting
   //                   typedef Int_t (*SEARCHMETHOD) (const void *, const void **);
   //
   //    - compare    - the function to compare two table rows during searching
   //                   typedef Int_t (*COMPAREMETHOD)(const void **, const void **);
-  //  
+  //
   //    - firstRow   - the first table row to sort from (=0 by default)
   //    - numberRows - the number of the table rows to sort (=0 by default)
   //                   = 0 means sort all rows from the "firstRow" by the end of table
@@ -178,7 +186,7 @@ TTableSorter::TTableSorter(const TTable *table, SEARCHMETHOD search,
   //  -----  to allow "void *" one may potect the end-user code
   //         providing a derived class with the appropriated type
   //         of the parameters.
-  //  
+  //
 
    fCompareMethod =  compare;
    fSearchMethod  =  search;
@@ -212,7 +220,7 @@ void TTableSorter::BuildSorter(TString &colName, Int_t firstRow, Int_t numberRow
    fColDimensions =  0;
    fColOffset     =  0;
 
-   // Generate new object name 
+   // Generate new object name
    TString n = fParentTable->GetName();
    n += ".";
    n += colName;
@@ -308,7 +316,7 @@ TTableSorter::TTableSorter(const Float_t *simpleArray, Int_t arraySize, Int_t fi
    for (Int_t i=0; i < fNumberOfRows;i++,p++) {
       fSortIndex[i-fFirstRow] = p;
       if ( isPreSorted) {
-         if (sample > *p) isPreSorted = kFALSE; 
+         if (sample > *p) isPreSorted = kFALSE;
          else sample = *p;
       }
    }
@@ -343,7 +351,7 @@ TTableSorter::TTableSorter(const Double_t *simpleArray, Int_t arraySize, Int_t f
    fColType = TTable::kDouble;
    fColSize = sizeof(Double_t);
    fParentRowSize = fColSize;
-      
+
   // FillIndexArray();
 
    Double_t *p = ((Double_t *)simpleArray) + fFirstRow;
@@ -352,7 +360,7 @@ TTableSorter::TTableSorter(const Double_t *simpleArray, Int_t arraySize, Int_t f
    for (Int_t i=0; i < fNumberOfRows;i++,p++) {
       fSortIndex[i-fFirstRow] = p;
       if ( isPreSorted) {
-         if (sample > *p) isPreSorted = kFALSE; 
+         if (sample > *p) isPreSorted = kFALSE;
          else sample = *p;
       }
    }
@@ -396,7 +404,7 @@ TTableSorter::TTableSorter(const Long_t *simpleArray, Int_t arraySize, Int_t fir
    for (Int_t i=0; i < fNumberOfRows;i++,p++) {
       fSortIndex[i-fFirstRow] = p;
       if ( isPreSorted) {
-         if (sample > *p) isPreSorted = kFALSE; 
+         if (sample > *p) isPreSorted = kFALSE;
          else sample = *p;
       }
    }
@@ -440,7 +448,7 @@ TTableSorter::~TTableSorter()
 //*-*-*-*-*-*-*Binary search in an array of n values to locate value*-*-*-*-*-*-*
 //*-*          ==================================================
 //*-*  If match is found, the function returns the position (index) of the element.
-//*-*  If no match found, the function gives the index of the nearest element 
+//*-*  If no match found, the function gives the index of the nearest element
 //*-*  smaller than key value.
 //*-*  Note: The function returns the negative result if the key value
 //*-*  ----  is smaller any table value.
@@ -592,7 +600,7 @@ BINARYSEARCH(valuetype)
 #define SEARCHORDER(valuetype) Search##valuetype
 
 //_____________________________________________________________________________
-Int_t TTableSorter::BSearch(const void *value) const 
+Int_t TTableSorter::BSearch(const void *value) const
 {
    //to be documented
    Int_t index = -1;
@@ -713,7 +721,7 @@ Int_t TTableSorter::CountKeys() const
 //_____________________________________________________________________________
 Bool_t TTableSorter::FillIndexArray(){
   //////////////////////////////////////////////////////////////
-  // File the array of the pointers and check whether 
+  // File the array of the pointers and check whether
   // the original table has been sorted to avoid an extra job.
   //
   // Return: kTRUE  - the table has been sorted
@@ -723,10 +731,10 @@ Bool_t TTableSorter::FillIndexArray(){
    const char *row = At(fFirstRow) + fColOffset;
    Bool_t isPreSorted = kTRUE;
    const void  *sample = row;
-   for (Int_t i=fFirstRow; i < fFirstRow+fNumberOfRows;i++,row += fParentRowSize) { 
+   for (Int_t i=fFirstRow; i < fFirstRow+fNumberOfRows;i++,row += fParentRowSize) {
       fSortIndex[i-fFirstRow] = (char *)row;
       if ( isPreSorted) {
-         if (fCompareMethod(&sample,(const void **)&row)>0) isPreSorted = kFALSE; 
+         if (fCompareMethod(&sample,(const void **)&row)>0) isPreSorted = kFALSE;
          else sample = row;
       }
    }

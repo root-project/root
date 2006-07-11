@@ -1,7 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.16 2006/05/21 18:05:26 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumeView.cxx,v 1.17 2006/07/03 16:10:46 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id:
-// $Log:
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 
 #include "Riostream.h"
 #include <assert.h>
@@ -308,11 +315,11 @@ TVolumeView::TVolumeView(TVolumeView &viewNode):
              TObjectSet(viewNode.GetName(),(TObject *)viewNode.GetPosition())
             ,TAtt3D()
             ,fListOfShapes(viewNode.GetListOfShapes())
-{ 
+{
    //to be documented
-   if (viewNode.IsOwner()) { 
-      viewNode.DoOwner(kFALSE); DoOwner(); 
-   } 
+   if (viewNode.IsOwner()) {
+      viewNode.DoOwner(kFALSE); DoOwner();
+   }
 }
 
 //_____________________________________________________________________________
@@ -543,7 +550,7 @@ void TVolumeView::Draw(Option_t *option)
 }
 
 //_____________________________________________________________________________
-TVolume *TVolumeView::GetNode() const 
+TVolume *TVolumeView::GetNode() const
 {
    //to be documented
    TVolumePosition *pos = GetPosition();

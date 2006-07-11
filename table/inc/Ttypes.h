@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.8 2005/05/27 03:00:05 pcanal Exp $ */
+/* @(#)root/table:$Name:  $:$Id: Ttypes.h,v 1.9 2005/05/27 16:42:58 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.8 2005/05/27 03:00:05 pcanal Exp $
+//                                                                      //
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TPoints3D.h,v 1.3 2003/01/27 20:41:36 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TPoints3D.h,v 1.4 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************
@@ -8,27 +8,9 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #ifndef ROOT_TPoints3D
 #define ROOT_TPoints3D
-// $Id: TPoints3D.h,v 1.3 2003/01/27 20:41:36 brun Exp $
-// ***********************************************************************
-// *  C++ class to define the abstract array of 3D points
-// * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
-// * Author                  Valerie Fine  (fine@bnl.gov)
-// * Copyright(c) 1997~1999  Valerie Fine  (fine@bnl.gov)
-// *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-// *
-// * Permission to use, copy, modify and distribute this software and its
-// * documentation for any purpose is hereby granted without fee,
-// * provided that the above copyright notice appear in all copies and
-// * that both that copyright notice and this permission notice appear
-// * in supporting documentation.  Brookhaven National Laboratory makes no
-// * representations about the suitability of this software for any
-// * purpose.  It is provided "as is" without express or implied warranty.
-// ************************************************************************
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

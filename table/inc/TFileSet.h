@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TFileSet.h,v 1.3 2005/11/24 17:08:36 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TFileSet.h,v 1.4 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************

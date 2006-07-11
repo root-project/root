@@ -1,6 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.12 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTableDescriptor.cxx,v 1.13 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.12 2006/05/20 14:06:09 brun Exp $
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -68,7 +76,7 @@ TTableDescriptor::~TTableDescriptor()
 
 //____________________________________________________________________________
 Int_t TTableDescriptor::AddAt(const void *c)
-{ 
+{
    //to be documented
    if (!c) return -1;
    TDataSet *cmnt = MakeCommentField();
@@ -77,10 +85,10 @@ Int_t TTableDescriptor::AddAt(const void *c)
    TDataSet *comment = new TDataSet(element->fColumnName);comment->SetTitle("N/A");
    cmnt->AddAtAndExpand(comment,(Int_t)GetNRows());
 
-   return TTable::AddAt(c); 
+   return TTable::AddAt(c);
 }
 //____________________________________________________________________________
-void  TTableDescriptor::AddAt(const void *c, Int_t i) 
+void  TTableDescriptor::AddAt(const void *c, Int_t i)
 {
    //to be documented
    AddAt(*(tableDescriptor_st *)c,"N/A",i);
@@ -260,9 +268,9 @@ TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
    ///////////////////////////////////////////////////////////
    //
    // MakeDescriptor(const char *structName) - static method
-   //                structName - the name of the C structure 
+   //                structName - the name of the C structure
    //                             to create descriptor of
-   // return a new instance of the TTableDescriptor or 0 
+   // return a new instance of the TTableDescriptor or 0
    // if the "structName is not present with the dictionary
    //
    ///////////////////////////////////////////////////////////
@@ -277,7 +285,7 @@ TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
 TDataSet *TTableDescriptor::MakeCommentField(Bool_t createFlag){
    // Instantiate a comment dataset if any
    TDataSet *comments = FindByName(fgCommentsName.Data());
-   if (!comments && createFlag) 
+   if (!comments && createFlag)
       comments =  new TDataSet(fgCommentsName.Data(),this,kTRUE);
    return comments;
 }
@@ -286,10 +294,10 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
 {
   //                  "Schema evolution"
   // Method updates the offsets with a new ones from another descriptor
-  // 
+  //
    Int_t maxColumns = NumberOfColumns();
    Int_t mismathes = 0;
- 
+
    if (   (UInt_t(maxColumns) == newDescriptor->NumberOfColumns())
       && (memcmp(GetArray(),newDescriptor->GetArray(),sizeof(tableDescriptor_st)*GetNRows()) == 0)
      ) return mismathes; // everything fine for sure !
@@ -406,8 +414,8 @@ TTable::EColumnType TTableDescriptor::ColumnType(const Char_t *columnName) const
    return EColumnType(indx);
 }
 //____________________________________________________________________________
-Int_t   TTableDescriptor::Sizeof() const 
-{ 
+Int_t   TTableDescriptor::Sizeof() const
+{
    //to be documented
    Int_t fullRowSize = 0;
    if (RowClass() ) fullRowSize = RowClass()->Size();

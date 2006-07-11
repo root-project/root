@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.143 2006/07/04 17:36:38 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.144 2006/07/05 04:49:05 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -341,7 +341,7 @@ namespace {
                if (buf.st_size > 0)
                   return 1;
             }
-            // yield execution to another thread that is ready to run 
+            // yield execution to another thread that is ready to run
             // if no other thread is ready, sleep 1 ms before to return
             if (!SwitchToThread())
                SleepEx(1, TRUE);
@@ -455,7 +455,7 @@ namespace {
    }
 
    //______________________________________________________________________________
-   LONG WINAPI ExceptionFilter(LPEXCEPTION_POINTERS pXcp) 
+   LONG WINAPI ExceptionFilter(LPEXCEPTION_POINTERS pXcp)
    {
       // Function that's called when an unhandled exception occurs.
       // Produces a stack trace, and lets the system deal with it
@@ -539,7 +539,7 @@ namespace {
    }
 
    //=========================================================================
-   // Load IMAGEHLP.DLL and get the address of functions in it that we'll use 
+   // Load IMAGEHLP.DLL and get the address of functions in it that we'll use
    // by Microsoft, from http://www.microsoft.com/msj/0597/hoodtextfigs.htm#fig1
    //=========================================================================
    // Make typedefs for some IMAGEHLP.DLL functions so that we can use them
@@ -570,7 +570,7 @@ namespace {
 
    BOOL InitImagehlpFunctions()
    {
-      // Fetches function addresses from IMAGEHLP.DLL at run-time, so we 
+      // Fetches function addresses from IMAGEHLP.DLL at run-time, so we
       // don't need to link against its import library. These functions
       // are used in StackTrace; if they cannot be found (e.g. because
       // IMAGEHLP.DLL doesn't exist or has the wrong version) we cannot
@@ -619,15 +619,19 @@ namespace {
       if (!_SymInitialize(GetCurrentProcess(), 0, TRUE ))
          return FALSE;
 
-      return TRUE;        
+      return TRUE;
    }
 
    // stack trace helpers getModuleName, getFunctionName by
-   /******************************************************************************
+   /**************************************************************************
    * VRS - The Virtual Rendering System
-   * Copyright (C) 2000-2004 Computer Graphics Systems Group at the 
+   * Copyright (C) 2000-2004 Computer Graphics Systems Group at the
    * Hasso-Plattner-Institute (HPI), Potsdam, Germany.
-   ******************************************************************************/
+   * This library is free software; you can redistribute it and/or modify it
+   * under the terms of the GNU Lesser General Public License as published by
+   * the Free Software Foundation; either version 2.1 of the License, or
+   * (at your option) any later version.
+   ***************************************************************************/
    std::string GetModuleName(DWORD64 address)
    {
       // Return the name of the module that contains the function at address.
@@ -676,8 +680,8 @@ namespace {
             _UnDecorateSymbolName(
                symbol->Name,
                name,
-               NAME_SIZE, 
-               UNDNAME_COMPLETE             | 
+               NAME_SIZE,
+               UNDNAME_COMPLETE             |
                UNDNAME_NO_THISTYPE          |
                UNDNAME_NO_SPECIAL_SYMS      |
                UNDNAME_NO_MEMBER_TYPE       |
@@ -1221,7 +1225,7 @@ void TWinNTSystem::StackTrace()
 {
    // Print a stack trace, if gEnv entry "Root.Stacktrace" is unset or 1,
    // and if the image helper functions can be found (see InitImagehlpFunctions()).
-   // The stack trace is printed for each thread; if fgXcptContext is set (e.g. 
+   // The stack trace is printed for each thread; if fgXcptContext is set (e.g.
    // because there was an exception) use it to define the current thread's context.
    // For each frame in the stack, the frame's module name, the frame's function
    // name, and the frame's line number are printed.
@@ -1268,7 +1272,7 @@ void TWinNTSystem::StackTrace()
    do {
       if (threadentry.th32OwnerProcessID != currentProcessID)
          continue;
-      HANDLE thread = ::OpenThread(THREAD_GET_CONTEXT|THREAD_SUSPEND_RESUME|THREAD_QUERY_INFORMATION, 
+      HANDLE thread = ::OpenThread(THREAD_GET_CONTEXT|THREAD_SUSPEND_RESUME|THREAD_QUERY_INFORMATION,
          FALSE, threadentry.th32ThreadID);
       CONTEXT context;
       STACKFRAME64 frame;
@@ -1406,7 +1410,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    while (1) {
       if (gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
          if (!pendingOnly) {
-            // yield execution to another thread that is ready to run 
+            // yield execution to another thread that is ready to run
             // if no other thread is ready, sleep 1 ms before to return
             if (!SwitchToThread())
                SleepEx(1, TRUE);
@@ -1468,7 +1472,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 
       if (fReadmask && !fReadmask->GetBits() &&
           fWritemask && !fWritemask->GetBits()) {
-         // yield execution to another thread that is ready to run 
+         // yield execution to another thread that is ready to run
          // if no other thread is ready, sleep 1 ms before to return
          if (!SwitchToThread())
             SleepEx(1, TRUE);
@@ -2438,7 +2442,7 @@ const char *TWinNTSystem::FindFile(const char *search, TString& infile, EAccessM
    Int_t lastDelim = -1;
    for(int i=0; i < exsearch.Length(); ++i) {
       switch( exsearch[i] ) {
-         case ':': 
+         case ':':
             // Replace the ':' unless there are after a disk suffix (aka ;c:\mydirec...)
             if (i-lastDelim!=2) exsearch[i] = ';';
             lastDelim = i;

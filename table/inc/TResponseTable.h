@@ -1,6 +1,5 @@
-// @(#)root/star:$Name:  $Id: TResponseTable.h,v 1.1 2003/01/03 15:03:11 fisyak Exp $
+// @(#)root/table:$Name:  $Id: TResponseTable.h,v 1.1 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
-// Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved"
 
 #include "TGenericTable.h"
 

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.12 2006/05/16 08:13:31 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.13 2006/05/18 13:31:59 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -8,17 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-//------------------------------------------------------------------------------
-// Copyright(c) 1995-1997, P.Murat (CDF collaboration, FNAL)
-//
-// Permission to use, copy, modify and distribute this software and its
-// documentation for non-commercial purposes is hereby granted without fee,
-// provided that the above copyright notice appears in all copies and
-// that both the copyright no:tice and this permission notice appear in
-// the supporting documentation. The authors make no claims about the
-// suitability of this software for any purpose.
-// It is provided "as is" without express or implied warranty.
-//------------------------------------------------------------------------------
 
 #ifndef ROOT_TVector2
 #define ROOT_TVector2

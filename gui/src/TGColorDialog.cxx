@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.21 2006/04/24 14:07:47 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.22 2006/05/28 20:07:59 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -10,22 +10,13 @@
  *************************************************************************/
 /**************************************************************************
 
-    This file is part of xclass.
-    Copyright (C) 2000, 2001, Hector Peraza.
+    This source is based on Xclass95, a Win95-looking GUI toolkit.
+    Copyright (C) 1996, 1997 David Barth, Ricky Ralston, Hector Peraza.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    Xclass95 is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Library General Public
+    License as published by the Free Software Foundation; either
+    version 2 of the License, or (at your option) any later version.
 
 **************************************************************************/
 
@@ -413,9 +404,9 @@ TGColorPick::TGColorPick(const TGWindow *p, Int_t w, Int_t h, Int_t id) :
    TGFrame(p, w, h, kChildFrame), fCursorGC(GetBlackGC())
 {
    // TGColorPick constructor.
-   // TGColorPick is a widget which allows a color to be picked from HLS space. 
-   // It consists of two elements: a color map window from where the user can 
-   // select the hue and saturation level of a color, and a slider to select 
+   // TGColorPick is a widget which allows a color to be picked from HLS space.
+   // It consists of two elements: a color map window from where the user can
+   // select the hue and saturation level of a color, and a slider to select
    // color's lightness.
 
    UInt_t iw, ih;
@@ -1126,7 +1117,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    g = 232./255;
    b = 222./255;
 
-   // Gui Builder background 
+   // Gui Builder background
    Pixel_t pixel = TColor::RGB2Pixel(r, g, b);
    fPalette->SetColor(46, pixel);
 
@@ -1134,7 +1125,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    g = 230./255;
    b = 230./255;
 
-   // a la MAC background 
+   // a la MAC background
    pixel = TColor::RGB2Pixel(r, g, b);
    fPalette->SetColor(45, pixel);
 
@@ -1142,7 +1133,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    g = 174./255;
    b = 205./255;
 
-   // a la CDE background 
+   // a la CDE background
    pixel = TColor::RGB2Pixel(r, g, b);
    fPalette->SetColor(44, pixel);
 
@@ -1150,7 +1141,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    g = 195./255;
    b = 175./255;
 
-   // a la FOX background 
+   // a la FOX background
    pixel = TColor::RGB2Pixel(r, g, b);
    fPalette->SetColor(43, pixel);
 

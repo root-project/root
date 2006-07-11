@@ -1,16 +1,13 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.6 2006/05/17 06:49:59 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.7 2006/05/18 13:31:59 brun Exp $
 // Author: Pasha Murat   12/02/99
-//------------------------------------------------------------------------------
-// Copyright(c) 1995-1997, P.Murat (CDF collaboration, FNAL)
-//
-// Permission to use, copy, modify and distribute this software and its
-// documentation for non-commercial purposes is hereby granted without fee,
-// provided that the above copyright notice appears in all copies and
-// that both the copyright notice and this permission notice appear in
-// the supporting documentation. The authors make no claims about the
-// suitability of this software for any purpose.
-// It is provided "as is" without express or implied warranty.
-//------------------------------------------------------------------------------
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TROOT.h"
 #include "TVector2.h"
@@ -56,8 +53,8 @@ Double_t TVector2::Phi_0_2pi(Double_t x) {
    // (static function) returns phi angle in the interval [0,2*PI)
    if(TMath::IsNaN(x)){
       gROOT->Error("TVector2::Phi_0_2pi","function called with NaN");
-      return x; 
-   }  
+      return x;
+   }
    while (x >= kTWOPI) x -= kTWOPI;
    while (x <     0.)  x += kTWOPI;
    return x;
@@ -68,8 +65,8 @@ Double_t TVector2::Phi_mpi_pi(Double_t x) {
    // (static function) returns phi angle in the interval [-PI,PI)
    if(TMath::IsNaN(x)){
       gROOT->Error("TVector2::Phi_mpi_pi","function called with NaN");
-      return x; 
-   }  
+      return x;
+   }
    while (x >= kPI) x -= kTWOPI;
    while (x < -kPI) x += kTWOPI;
    return x;
@@ -101,7 +98,7 @@ void TVector2::Streamer(TBuffer &R__b)
       R__b >> fY;
       R__b.CheckByteCount(R__s, R__c, TVector2::IsA());
       //====end of old versions
-      
+
    } else {
       TVector2::Class()->WriteBuffer(R__b,this);
    }

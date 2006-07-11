@@ -1,12 +1,22 @@
-// @(#)root/star:$Name:  $:$Id: TCL.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TCL.cxx,v 1.7 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
-//
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+////////////////////////////////////////////////////////////////////////////////
 // The set of methods to work with the plain matrix / vector
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f112/top.html
 //
-// $Id: TCL.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
-// $Log: TCL.cxx,v $
+// Revision 1.7  2006/05/21 18:05:26  brun
+// Fix more coding conventions violations
+//
 // Revision 1.6  2006/05/20 14:06:09  brun
 // Fix a VERY long list of coding conventions violations
 //
@@ -2135,12 +2145,12 @@ double *TCL::trsat(const double *s, const double *a, double *b, int m, int n)
 //_____________________________________________________________________________
 float *TCL::trsequ(float *smx, int m, float *b, int n)
 {
-   // Linear Equations, Matrix Inversion 
-   // trsequ solves the matrix equation 
+   // Linear Equations, Matrix Inversion
+   // trsequ solves the matrix equation
    //
    //             SMX*x = B
    //
-   // which represents a system of m simultaneous linear equations with n right-hand sides: 
+   // which represents a system of m simultaneous linear equations with n right-hand sides:
    // SMX is an  unpacked symmetric matrix (all  elements) (m x m)
    // B is an unpacked matrix of right-hand sides (n x m)
    //
@@ -2161,12 +2171,12 @@ float *TCL::trsequ(float *smx, int m, float *b, int n)
 //_____________________________________________________________________________
 double *TCL::trsequ(double *smx, int m, double *b, int n)
 {
-   // Linear Equations, Matrix Inversion 
-   // trsequ solves the matrix equation 
+   // Linear Equations, Matrix Inversion
+   // trsequ solves the matrix equation
    //
    //             SMX*x = B
    //
-   // which represents a system of m simultaneous linear equations with n right-hand sides: 
+   // which represents a system of m simultaneous linear equations with n right-hand sides:
    // SMX is an  unpacked symmetric matrix (all  elements) (m x m)
    // B is an unpacked matrix of right-hand sides (n x m)
    //

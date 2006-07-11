@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableIter.h,v 1.3 2003/01/27 20:41:36 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTableIter.h,v 1.4 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/12/99
 
 /*************************************************************************
@@ -10,10 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TTableIter
 #define ROOT_TTableIter
-// $Id: TTableIter.h,v 1.3 2003/01/27 20:41:36 brun Exp $
-// Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
-// Author                  Valerie Fine  (fine@bnl.gov)
-// Copyright(c) 1997~1999  Valerie Fine  (fine@bnl.gov)
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TTableIter - class iterator to loop over sorted TTable's             //

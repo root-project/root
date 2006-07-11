@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBits.h,v 1.13 2006/01/11 07:21:05 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TBits.h,v 1.14 2006/06/14 11:47:11 rdm Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -11,18 +11,6 @@
 
 #ifndef ROOT_TBits
 #define ROOT_TBits
-
-//------------------------------------------------------------------------------
-// Copyright(c) 2001,.Canal (FNAL)
-//
-// Permission to use, copy, modify and distribute this software and its
-// documentation for non-commercial purposes is hereby granted without fee,
-// provided that the above copyright notice appears in all copies and
-// that both the copyright notice and this permission notice appear in
-// the supporting documentation. The authors make no claims about the
-// suitability of this software for any purpose.
-// It is provided "as is" without express or implied warranty.
-//------------------------------------------------------------------------------
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

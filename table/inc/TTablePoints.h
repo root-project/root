@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTablePoints.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
+// @(#)root/table:$Name:  $:$Id: TTablePoints.h,v 1.2 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine   14/05/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -8,28 +8,10 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// $Id: TTablePoints.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
 
 #ifndef ROOT_TTablePoints
 #define ROOT_TTablePoints
-// ***********************************************************************
-// * Observer to draw use ant TTable object as an element of "event" geometry
-// * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
-// * Author                  Valerie Fine  (fine@bnl.gov)
-// * Copyright(c) 1997~1999  Valerie Fine  (fine@bnl.gov)
-// *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-// *
-// * Permission to use, copy, modify and distribute this software and its
-// * documentation for any purpose is hereby granted without fee,
-// * provided that the above copyright notice appear in all copies and
-// * that both that copyright notice and this permission notice appear
-// * in supporting documentation.  Brookhaven National Laboratory makes no
-// * representations about the suitability of this software for any
-// * purpose.  It is provided "as is" without express or implied warranty.
-// ************************************************************************
+
 #include "TPoints3DABC.h"
 #include "TTableSorter.h"
 #include "TTable.h"

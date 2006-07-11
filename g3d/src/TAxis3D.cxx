@@ -1,25 +1,13 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.18 2005/11/24 17:28:07 couet Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.19 2006/07/03 16:10:43 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
-// ***********************************************************************
-// * C++ class library to paint 3D axice "arround" TView object
-//                     and zoom 3D objects  as well
-// * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
-// * Author                  Valeri Fine  (fine@bnl.gov)
-// * Copyright(c) 1997~1999  Valeri Fine  (fine@bnl.gov)
-// *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-// *
-// * Permission to use, copy, modify and distribute this software and its
-// * documentation for any purpose is hereby granted without fee,
-// * provided that the above copyright notice appear in all copies and
-// * that both that copyright notice and this permission notice appear
-// * in supporting documentation.  Brookhaven National Laboratory makes no
-// * representations about the suitability of this software for any
-// * purpose.  It is provided "as is" without express or implied warranty.
-// ************************************************************************
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include <ctype.h>
 #include <assert.h>
@@ -742,7 +730,7 @@ void TAxis3D::SetTitleOffset(Float_t offset, Option_t *axis)
 TAxis3D *TAxis3D::GetPadAxis(TVirtualPad *pad)
 {
    // Returns the "pad" Axis3D object pointer if any.
- 
+
    TObject *obj = 0;
    TVirtualPad *thisPad=pad;
    if (!thisPad) thisPad = gPad;

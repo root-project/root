@@ -1,26 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.13 2006/05/21 18:05:26 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TDataSet.cxx,v 1.14 2006/06/23 04:59:33 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-static const char *gCoPyRiGhT[] = {
-     "Dataset C++ base class library:",
-     "Copyright(c) 1997~2002  [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
-     "************************************************************************",
-     "This program is distributed in the hope that it will be useful,",
-     "but WITHOUT ANY WARRANTY; without even the implied warranty of",
-     "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
-     "",
-     "Permission to use, copy, modify and distribute this software and its",
-     "documentation for any purpose is hereby granted without fee,",
-     "provided that the above copyright notice appear in all copies and",
-     "that both that copyright notice and this permission notice appear",
-     "in supporting documentation.  Brookhaven National Laboratory makes no",
-     "representations about the suitability of this software for any",
-     "purpose.  It is provided \"as is\" without express or implied warranty.",
-     "************************************************************************"
-};
 
-static const char *gId = {
-   "$Id: TDataSet.cxx,v 1.13 2006/05/21 18:05:26 brun Exp $"
-};
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "Riostream.h"
 #include "TSystem.h"
 #include "TDataSetIter.h"
@@ -304,7 +292,7 @@ void TDataSet::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-TObject *TDataSet::Clone(const char*) const 
+TObject *TDataSet::Clone(const char*) const
 {
    // the custom implementation fo the TObject::Clone
    return new TDataSet(*this);
@@ -330,7 +318,7 @@ void TDataSet::Delete(Option_t *opt)
    while ((son = (TDataSet *)next())) {
       if ( (!son->TObject::IsOnHeap()) || (this != son->TDataSet::GetParent()) ) continue;
       // mark the object is deleted from the TDataSet dtor or Delete method
-      son->TDataSet::SetParent(0); 
+      son->TDataSet::SetParent(0);
       if (son->TDataSet::Last()) { son->TDataSet::Delete(); }
       son->TObject::SetBit(kCanDelete);
       delete son;
@@ -401,7 +389,7 @@ TDataSet *TDataSet::First() const
    return 0;
 }
 //______________________________________________________________________________
-TObject *TDataSet::GetObject() const 
+TObject *TDataSet::GetObject() const
 {
    // The depricated method (left here for the sake of the backward compatibility)
    printf("***DUMMY GetObject***\n");
@@ -512,9 +500,9 @@ void TDataSet::ls(Int_t depth) const
 }
 //______________________________________________________________________________
 TDataSet *TDataSet::Instance() const
-{ 
+{
  // apply the class default ctor to instantiate a new object of the same kind.
- // This is a base method to be overriden by the classes 
+ // This is a base method to be overriden by the classes
  // derived from TDataSet (to support TDataSetIter::Mkdir for example)
    return instance();
 }
@@ -524,7 +512,7 @@ Bool_t TDataSet::IsThisDir(const Char_t *dirname,int len,int ignorecase) const
 {
    // Compare the name of the TDataSet with "dirname"
    // ignorercase flags indicates whether the comparision is case sensitive
-   
+
    if (!ignorecase) {
       if (len<0) {return !strcmp (GetName(),dirname);
       } else     {return !strncmp(GetName(),dirname,len);}
@@ -583,7 +571,7 @@ void TDataSet::PrintContents(Option_t *opt) const {
    // This is to allow to sepoarate navigation and the custom invormation
    // in the derived classes (see; TTable::PrintContents for example
    if (opt) { /* no used */ }
-   printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());  
+   printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());
 }
 
 //______________________________________________________________________________
@@ -799,7 +787,7 @@ void TDataSet::Update(TDataSet* set,UInt_t opt)
          while ( ((oldset = (TDataSet *)nextold())!=0) && !found) {
             // if the "new" set does contain the dataset
             // with the same name as ours update it too
-            // (We do not update itself (oldset == newset) 
+            // (We do not update itself (oldset == newset)
             if ( (oldset != newset) && oldset->IsThisDir(newname) ) {
                oldset->Update(newset);
                found = kTRUE;
@@ -870,19 +858,3 @@ Int_t TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize) const
    const_cast<TDataSet*>(this)->fParent = saveParent;
    return nbytes;
 }
-
-
-class TCopyright {public: TCopyright(const Char_t *id=0) {
-   if (!gSystem) return;
-   if ( gSystem->Getenv("STAR") || !gSystem->Getenv("Copyright"))  return;
-   Int_t i = 0;
-   cout <<  " " << gCoPyRiGhT[i++] << endl
-        <<  " " << id << endl;
-   cout <<  " " << gCoPyRiGhT[i++] << endl;
-   if (gSystem->Getenv("Copyright") && id) {
-      Int_t lCopy = sizeof(gCoPyRiGhT)/4;
-      for (Int_t l =i; l < lCopy; l++) cout << " " << gCoPyRiGhT[l] << endl;
-   }}
-};
-   
-static TCopyright gTDataSetLibraryCopyright(gId);

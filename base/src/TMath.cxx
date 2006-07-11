@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.113 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.114 2006/04/25 06:19:35 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -3181,8 +3181,7 @@ void TMath::BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2)
    // of arr1 with arr2[0] corresponding to the largest arr1 value and
    // arr2[Narr] the smallest.
    //
-   //  Author:        Adrian Bevan (bevan@slac.stanford.edu)
-   //  Copyright:     Liverpool University, July 2001
+   //  Author: Adrian Bevan (bevan@slac.stanford.edu)
 
    if (Narr <= 0) return;
    double *localArr1 = new double[Narr];
@@ -3221,8 +3220,7 @@ void TMath::BubbleLow(Int_t Narr, Double_t *arr1, Int_t *arr2)
 {
    // Opposite ordering of the array arr2[] to that of BubbleHigh.
    //
-   //  Author:        Adrian Bevan (bevan@slac.stanford.edu)
-   //  Copyright:     Liverpool University, July 2001
+   //  Author: Adrian Bevan (bevan@slac.stanford.edu)
 
    if (Narr <= 0) return;
    double *localArr1 = new double[Narr];

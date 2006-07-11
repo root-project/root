@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: tableDescriptor.h,v 1.1.1.1 2002/05/28 12:32:02 fisyak Exp $ */
+/* @(#)root/table:$Name:  $:$Id: tableDescriptor.h,v 1.2 2003/01/27 20:41:36 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -10,7 +10,7 @@
 /* tableDescriptor.h */
 #ifndef TABLEDESCRIPTOR_H
 #define TABLEDESCRIPTOR_H
-// $Id: tableDescriptor.h,v 1.1.1.1 2002/05/28 12:32:02 fisyak Exp $"
+
 #ifdef NORESTRICTIONS
 # define TABLEDESCRIPTOR_SPEC   \
  "struct tableDescriptor {      \
@@ -63,6 +63,10 @@ typedef struct tableDescriptor_st {
     Int_t        fType;        /* The data type of the selected column                                  */
 } TABLEDESCRIPTOR_ST;
 // $Log: tableDescriptor.h,v $
+// Revision 1.2  2003/01/27 20:41:36  brun
+// New version of the Table package by Valeri Fine.
+// New classes TIndexTable TResponseIterator TResponseTable TTableMap
+//
 // Revision 1.1.1.1  2002/05/28 12:32:02  fisyak
 //
 //

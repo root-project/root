@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.4 2004/07/30 01:12:27 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TDataSet.h,v 1.5 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -8,24 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// ***********************************************************************
-//     C++ class library to create and manipulate hierarchy datasets
-// * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
-// * Author                  Valerie Fine  (fine@bnl.gov)
-// * Copyright(c) 1997~1999  Valerie Fine  (fine@bnl.gov)
-// *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-// *
-// * Permission to use, copy, modify and distribute this software and its
-// * documentation for any purpose is hereby granted without fee,
-// * provided that the above copyright notice appear in all copies and
-// * that both that copyright notice and this permission notice appear
-// * in supporting documentation.  Brookhaven National Laboratory makes no
-// * representations about the suitability of this software for any
-// * purpose.  It is provided "as is" without express or implied warranty.
-// ************************************************************************
 
 #ifndef ROOT_TDataSet
 #define ROOT_TDataSet

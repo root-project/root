@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.h,v 1.1 2006/06/20 07:58:33 antcheva Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -12,26 +12,6 @@
 #ifndef ROOT_TGTextEditor
 #define ROOT_TGTextEditor
 
-/**************************************************************************
-
-    This file is part of notepad, a simple text editor.
-    Copyright (C) 1997-2001, Harald Radke, Hector Peraza.
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-**************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -79,9 +59,9 @@ protected:
    virtual void      Build();
 
 public:
-   TGTextEditor(const char *filename = 0, const TGWindow *p = 0, 
+   TGTextEditor(const char *filename = 0, const TGWindow *p = 0,
                 UInt_t w = 900, UInt_t h = 600);
-   TGTextEditor(TMacro *macro, const TGWindow *p = 0, UInt_t w = 0, 
+   TGTextEditor(TMacro *macro, const TGWindow *p = 0, UInt_t w = 0,
                 UInt_t h = 0);
    virtual ~TGTextEditor();
 

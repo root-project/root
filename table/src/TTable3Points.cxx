@@ -1,5 +1,13 @@
-// @(#)root/star:$Name:  $:$Id: TTable3Points.cxx,v 1.2 2003/01/27 20:41:37 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTable3Points.cxx,v 1.3 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine   10/05/99  (E-mail: fine@bnl.gov)
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TTable3Points.h"
 

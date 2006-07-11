@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.17 2006/06/01 09:08:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.18 2006/06/30 14:08:36 antcheva Exp $
 // Author: Bertrand Bellenot + Fons Rademakers + Valeriy Onuchin  23/04/03
 
 /*************************************************************************
@@ -10,22 +10,13 @@
  *************************************************************************/
 /**************************************************************************
 
-    This file is part of xclass.
-    Copyright (C) 1996-2000 David Barth, Hector Peraza.
+    This source is based on Xclass95, a Win95-looking GUI toolkit.
+    Copyright (C) 1996, 1997 David Barth, Ricky Ralston, Hector Peraza.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    Xclass95 is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Library General Public
+    License as published by the Free Software Foundation; either
+    version 2 of the License, or (at your option) any later version.
 
 **************************************************************************/
 
@@ -381,7 +372,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    //---- position the dialog relative to the parent's window
    CenterOnParent();
 
-   // set minimum size 
+   // set minimum size
    SetWMSize(width, height);
    SetWMSizeHints(width, height, 10000, 10000, 0, 0);
 
@@ -512,7 +503,7 @@ Bool_t TGFontDialog::Build(char **fontList, Int_t cnt)
    Int_t  i;
    fNumberOfFonts = 1;
    Int_t n1, n2;
- 
+
    for (i = 0; i < cnt; i++) {
       font = fontList[i];
       n1 = font.Index("-", 1);
@@ -608,34 +599,34 @@ void TGFontDialog::UpdateStyleSize(const char *family)
       if ((style1 == "normal") || (style1 == "medium")) {
          if (style2 == "r") {
             styles[0]  = kTRUE;
-            gFontStylesReal[0] = style1 + "-" + style2; 
+            gFontStylesReal[0] = style1 + "-" + style2;
          } else if (style2 == "i") {
             styles[2]  = kTRUE;
-            gFontStylesReal[2] = style1 + "-" + style2; 
+            gFontStylesReal[2] = style1 + "-" + style2;
          } else if (style2 == "o") {
             styles[2]  = kTRUE;
-            gFontStylesReal[2] = style1 + "-" + style2; 
+            gFontStylesReal[2] = style1 + "-" + style2;
          }
       } else if (style1 == "bold") {
          if (style2 == "r") {
             styles[1]  = kTRUE;
-            gFontStylesReal[1] = style1 + "-" + style2; 
+            gFontStylesReal[1] = style1 + "-" + style2;
          } else if (style2 == "i") {
             styles[3]  = kTRUE;
-            gFontStylesReal[3] = style1 + "-" + style2; 
+            gFontStylesReal[3] = style1 + "-" + style2;
          } else if (style2 == "o") {
             styles[3]  = kTRUE;
-            gFontStylesReal[3] = style1 + "-" + style2; 
+            gFontStylesReal[3] = style1 + "-" + style2;
          }
       } else if (style1 == "(null)") {
          styles[0]  = kTRUE;
-         gFontStylesReal[0] = "normal-r"; 
+         gFontStylesReal[0] = "normal-r";
          styles[1]  = kTRUE;
-         gFontStylesReal[1] = "bold-r"; 
+         gFontStylesReal[1] = "bold-r";
          styles[2]  = kTRUE;
-         gFontStylesReal[2] = "normal-i"; 
+         gFontStylesReal[2] = "normal-i";
          styles[3]  = kTRUE;
-         gFontStylesReal[3] = "bold-i"; 
+         gFontStylesReal[3] = "bold-i";
       }
 
       n1++;
@@ -701,7 +692,7 @@ void TGFontDialog::UpdateStyleSize(const char *family)
    fFontStyles->MapSubwindows();
    fFontStyles->Layout();
 //
- 
+
    sz = Form("%d", fSize);
    if (sz.Length() == 1) {
       sz = " " + sz;

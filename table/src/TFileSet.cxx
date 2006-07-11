@@ -1,6 +1,13 @@
-// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.4 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TFileSet.cxx,v 1.5 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-// $Id: TFileSet.cxx,v 1.4 2006/05/20 14:06:09 brun Exp $
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TFileSet.h"
 #include "TBrowser.h"
@@ -70,7 +77,7 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
 
       if (!setname) {
          setname = strrchr(name,'/');
-         if (setname) setname++;      
+         if (setname) setname++;
       }
       if (setname) SetName(setname);
       else SetName(name);
@@ -97,16 +104,16 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
             TFileSet *fs = new TFileSet(nextdir,name,kFALSE,maxDepth-1);
             if (fs->IsZombie())  {
                // propagate "Zombie flag upwards
-               MakeZombie(); 
+               MakeZombie();
             }
             Add(fs);
          }
          gSystem->FreeDirectory(dir);
       } else
          SetTitle("file");
-   } else { 
+   } else {
       // Set Zombie flag
-      MakeZombie(); 
+      MakeZombie();
       SetTitle("Zombie");
    }
 }

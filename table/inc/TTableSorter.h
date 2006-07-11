@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.h,v 1.3 2005/01/19 20:00:41 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTableSorter.h,v 1.4 2005/11/24 17:08:36 rdm Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -15,8 +15,6 @@
 #include "TTableDescriptor.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////
-//
-//  $Id: TTableSorter.h,v 1.3 2005/01/19 20:00:41 brun Exp $
 //
 //  TTableSorter  - Is an "observer" class to sort the TTable objects
 //                    The class provides an interface to the standard "C/C++"

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.h,v 1.3 2005/09/08 05:33:41 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TDataSetIter.h,v 1.4 2005/09/09 04:57:59 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 // ***********************************************************************
@@ -15,8 +15,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// $Id: TDataSetIter.h,v 1.3 2005/09/08 05:33:41 brun Exp $
-//
+//                                                                      //
 // TDataSetIter                                                         //
 //                                                                      //
 // Iterator of TDataSet lists.                                          //

@@ -1,6 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.7 2006/05/21 18:05:26 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.8 2006/07/03 16:10:46 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TVolumePosition.cxx,v 1.7 2006/05/21 18:05:26 brun Exp $
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 
 #include "Riostream.h"
 
@@ -107,12 +115,12 @@ TVolumePosition::TVolumePosition(const TVolumePosition* oldPosition, const TVolu
       oldTranslation[1] = oldPosition->GetY();
       oldTranslation[2] = oldPosition->GetZ();
    }
-  
+
    // Pick the "current" position by pieces
 
    // Create a new position
    Double_t newMatrix[9];
-  
+
    if(oldMatrix)  {
       TGeometry::UpdateTempMatrix(oldTranslation,oldMatrix->GetMatrix(),
                                  curPosition->GetX(),curPosition->GetY(),curPosition->GetZ(),
@@ -139,7 +147,7 @@ TVolumePosition::TVolumePosition(const TVolumePosition&pos): TObject()
 {
    //to be documented
    for (int i=0;i<3;i++) fX[i] = pos.GetX(i);
-   // Transferring the ownership. 
+   // Transferring the ownership.
    // The last created object owns the matrix if any.
    // The source object gives up its ownership in favour of the destination object
 
@@ -538,7 +546,7 @@ TVolumePosition &TVolumePosition::Mult(const TVolumePosition &curPosition) {
    oldTranslation[0] = GetX();
    oldTranslation[1] = GetY();
    oldTranslation[2] = GetZ();
- 
+
    // Pick the "current" position by pieces
    const TRotMatrix *curMatrix        = curPosition.GetMatrix();
 
@@ -569,7 +577,7 @@ TVolumePosition &TVolumePosition::Mult(const TVolumePosition &curPosition) {
 }
 
 //______________________________________________________________________________
-void TVolumePosition::SetXYZ(Double_t *xyz) 
+void TVolumePosition::SetXYZ(Double_t *xyz)
 {
    //to be documented
    if (xyz)  memcpy(fX,xyz,sizeof(fX));
@@ -592,14 +600,14 @@ void TVolumePosition::Streamer(TBuffer &R__b)
    }
 }
 //______________________________________________________________________________
-ostream& operator<<(ostream& s,const TVolumePosition &target) 
+ostream& operator<<(ostream& s,const TVolumePosition &target)
 {
    //to be documented
    s << " Node: ";
    if (target.GetNode()) s <<  target.GetNode()->GetName() << endl;
    else                  s << "NILL" << endl;
    s << Form(" Position: x=%10.5f : y=%10.5f : z=%10.5f\n", target.GetX(), target.GetY(), target.GetZ());
-   TRotMatrix *rot = (TRotMatrix *) target.GetMatrix(); 
+   TRotMatrix *rot = (TRotMatrix *) target.GetMatrix();
    if (rot){
       s << rot->IsA()->GetName() << "\t" << rot->GetName() << "\t" << rot->GetTitle() << endl;
       Double_t *matrix = rot->GetMatrix();
