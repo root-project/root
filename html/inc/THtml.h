@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.19 2006/07/09 05:26:34 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.20 2006/07/11 10:39:15 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -106,6 +106,7 @@ protected:
    std::map<TClass*,std::string> fGuessedImplFileNames; // names of additional impl file names
    static std::set<std::string>  fgKeywords; // C++ keywords
 
+   void    AnchorFromLine(TString& anchor, const char* line);
    virtual void BeautifyLine(std::ostream &srcOut, TString* anchor = 0);
    void    Class2Html(Bool_t force=kFALSE);
    void    ClassDescription(ofstream &out);
@@ -125,6 +126,9 @@ protected:
    void    ExpandKeywords(ostream& out, const char* line);
    void    ExpandKeywords(TString& text);
    void    ExpandPpLine(ostream &out);
+   Bool_t  ExtractComments(const TString &lineExpandedStripped, 
+                           Bool_t &foundClassDescription,
+                           const char* classDescrTag, TString& comment);
    TClass *GetClass(const char *name, Bool_t load=kFALSE);
    const char   *GetFileName(const char *filename);
    void    GetSourceFileName(TString& filename);
@@ -132,7 +136,7 @@ protected:
    Bool_t  IsModified(TClass *classPtr, const Int_t type);
    static Bool_t  IsName(UChar_t c);
    static Bool_t  IsWord(UChar_t c);
-   TMethod*LocateMethodInCurrentLine(Ssiz_t& posMethodName, TString& ret, 
+   TMethod* LocateMethodInCurrentLine(Ssiz_t& posMethodName, TString& ret, 
       TString& name, TString& params, std::ostream &srcOut, TString &anchor, 
       std::ifstream& sourcefile, Bool_t allowPureVirtual);
    void    LocateMethods(std::ofstream & out, const char* filename,
@@ -152,6 +156,10 @@ protected:
    void    ReplaceSpecialChars(TString& text, Ssiz_t &pos);
    void    SortNames(const char **strings, Int_t num, Bool_t type=0);
    char   *StrDup(const char *s1, Int_t n = 1);
+   virtual void WriteMethod(std::ostream & out, TString& ret, 
+                            TString& name, TString& params,
+                            const char* file, TString& anchor,
+                            TString& comment, TString& codeOneLiner);
 
    friend Int_t CaseSensitiveSort(const void *name1, const void *name2);
    friend Int_t CaseInsensitiveSort(const void *name1, const void *name2);

@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.101 2006/07/09 05:26:34 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.102 2006/07/11 10:39:15 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -744,6 +744,18 @@ void THtml::Class2Html(Bool_t force)
             classFile << " - <a href=\"" << classFileName << "_Tree.pdf\"";
             classFile << ">inheritance tree (.pdf)</a>";
          }
+         const char* viewCVSLink = gEnv->GetValue("Root.Html.ViewCVS","");
+         const char* headerFileName = GetDeclFileName(fCurrentClass);
+         const char* sourceFileName = GetImplFileName(fCurrentClass);
+         if (viewCVSLink && viewCVSLink[0] && (headerFileName || sourceFileName )) {
+            classFile << "<br/>";
+            if (headerFileName)
+               classFile << "<a href=\"" << viewCVSLink << headerFileName << "\">viewCVS header</a>";
+            if (headerFileName && sourceFileName)
+               classFile << " - ";
+            if (sourceFileName)
+               classFile << "<a href=\"" << viewCVSLink << sourceFileName << "\">viewCVS source</a>";
+         }
 
          classFile << "</em>" << endl;
          classFile << "<hr width=300>" << endl;
@@ -1199,6 +1211,20 @@ void THtml::CreateSourceOutputStream(std::ofstream& out, const char* extension,
 }
 
 //______________________________________________________________________________
+void THtml::AnchorFromLine(TString& anchor, const char* line) {
+   // Create an anchor from the given line, by hashing it and
+   // convertig the hash into a custom base64 string.
+
+   const char base64String[65] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_.";
+
+   UInt_t hash = ::Hash(line);
+   while (hash) {
+      anchor += base64String[hash % 64];
+      hash /= 64;
+   }
+}
+
+//______________________________________________________________________________
 void THtml::BeautifyLine(std::ostream &sOut, TString* anchor /*= 0*/)
 {
    // Put colors around tags, create links, escape characters.
@@ -1244,9 +1270,9 @@ void THtml::BeautifyLine(std::ostream &sOut, TString* anchor /*= 0*/)
       // use hash of line instead of e.g. line number.
       // advantages: more stable (lines can move around, we still find them back),
       // no need for keeping a line number context
-      *anchor += lineStripped.Hash();
+      *anchor = "#";
+      AnchorFromLine(*anchor, lineStripped);
       sOut << "<a name=\"" << *anchor << "\"></a>";
-      anchor->Prepend("#");
    }
 
    if (context == kDontTouch || fLine.Contains("End_Html") && !fLine.Contains("\"End_Html")) {
@@ -1503,6 +1529,120 @@ TMethod* THtml::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret, T
 }
 
 //______________________________________________________________________________
+void THtml::WriteMethod(std::ostream & out, TString& ret, 
+                        TString& name, TString& params,
+                        const char* filename, TString& anchor,
+                        TString& comment, TString& codeOneLiner)
+{
+   // Write method name with return type ret and parameters param to out.
+   // Build a link using file and anchor. Cooment it with comment, and
+   // show the code codeOneLiner (set if the func consists of only one line
+   // of code, immediately surrounded by "{","}"). Also updates fMethodNames's
+   // count of method names.
+
+   ExpandKeywords(ret);
+   ExpandKeywords(params);
+   out << "<div class=\"funcdoc\"><span class=\"funcname\">";
+   out << ret << " <a name=\"";
+   ReplaceSpecialChars(out, fCurrentClass->GetName());
+   out << ":";
+   ReplaceSpecialChars(out, name);
+   out << "\" href=\"src/" << filename << anchor << "\">";
+   ReplaceSpecialChars(out, name);
+   out << "</a>" << params << "</span><br>" << std::endl;
+
+   out << "<pre>" << comment << "</pre>" << std::endl;
+
+   if (codeOneLiner.Length()) {
+      out << std::endl << "<div class=\"inlinecode\"><code class=\"inlinecode\">" 
+          << codeOneLiner << "</code></div>" << std::endl;
+      codeOneLiner.Remove(0);
+   }
+   out << "</div>" << std::endl;
+
+   ret.Remove(0);
+   name.Remove(0);
+   params.Remove(0);
+   anchor.Remove(0);
+   comment.Remove(0);
+
+   fDocContext = kIgnore;
+
+   MethodNames_t::iterator iMethodName = fMethodNames.find(name.Data());
+   if (iMethodName != fMethodNames.end()) {
+      --(iMethodName->second);
+      if (iMethodName->second <= 0)
+         fMethodNames.erase(iMethodName);
+   }
+
+}
+
+
+//______________________________________________________________________________
+Bool_t THtml::ExtractComments(const TString &lineExpandedStripped, 
+                              Bool_t &foundClassDescription,
+                              const char* classDescrTag, 
+                              TString& comment) {
+// Extracts comments from the current line into comment, 
+// updating whether a class description was found (foundClassDescription).
+// Returns kTRUE if comment found.
+
+   //if (fParseContext != kCComment && fParseContext != kBeginEndHtml &&
+   //   fParseContext != kBeginEndHtmlInCComment) 
+   //   return kFALSE;
+   if (fParseContext != kBeginEndHtml &&
+      fParseContext != kBeginEndHtmlInCComment &&
+      fParseContext != kCComment && 
+      (lineExpandedStripped.Length() <= 1 ||
+      lineExpandedStripped[0] != '/' ||
+      (lineExpandedStripped[1] != '/' && lineExpandedStripped[1] != '*')))
+      return kFALSE;
+
+   TString commentLine(lineExpandedStripped);
+
+   // remove repeating characters from the end of the line
+   if (!foundClassDescription && commentLine.Length() > 3) {
+      TString lineAllOneChar(commentLine);
+
+      Ssiz_t len = lineAllOneChar.Length();
+      Char_t c = lineAllOneChar[len - 1];
+      // also a class doc signature: line consists of same char
+      if (c == lineAllOneChar[len - 2] && c == lineAllOneChar[len - 3] &&
+         lineAllOneChar.Strip(TString::kTrailing, c).Length() == 0)
+            commentLine.Remove(0);
+   }
+
+   // look for start tag of class description
+   if (!foundClassDescription && !comment.Length() && fDocContext == kIgnore &&
+      (!commentLine.Length() || classDescrTag && lineExpandedStripped.Contains(classDescrTag))) {
+      fDocContext = kDocClass;
+      foundClassDescription = kTRUE;
+   }
+
+   // remove leading and trailing chars if non-word and identical, e.g.
+   // * some doc *, or // some doc //
+   while (fParseContext != kBeginEndHtml && fParseContext != kBeginEndHtmlInCComment && 
+      commentLine.Length() > 2 &&
+      commentLine[0] == commentLine[commentLine.Length() - 1] &&
+      (commentLine[0] == '/' || commentLine[0] == '*')) {
+      commentLine = commentLine.Strip(TString::kBoth, commentLine[0]);
+   }
+
+   // remove leading /*, //, */
+   if (commentLine.Length()>1 && commentLine[0] == '/' && 
+      (commentLine[1] == '/' || commentLine[1] == '*'))
+      commentLine.Remove(0, 2);
+   if (commentLine.Length()>1 && commentLine[commentLine.Length() - 2] == '*' && 
+      commentLine[commentLine.Length() - 1] == '/')
+      commentLine.Remove(0, 2);
+
+   comment += commentLine + "\n";
+
+   return kTRUE;
+} 
+
+      
+//______________________________________________________________________________
 void THtml::LocateMethods(std::ofstream & out, const char* filename,
                           Bool_t lookForSourceInfo /*= kTRUE*/, 
                           Bool_t useDocxxStyle /*= kFALSE*/, 
@@ -1555,6 +1695,12 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
    TString pattern(methodPattern);
 
    TString prevComment;
+   TString codeOneLiner;
+   TString methodRet;
+   TString methodName;
+   TString methodParam;
+   TString anchor;
+
    Bool_t wroteMethodNowWaitingForOpenBlock = kFALSE;
 
    ofstream srcHtmlOut;
@@ -1574,7 +1720,6 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
 
    while (!sourceFile.eof()) {
       Bool_t needAnchor = kFALSE;
-      TString anchor;
 
       fLine.ReadLine(sourceFile, kFALSE);
       if (sourceFile.eof()) break;
@@ -1585,73 +1730,61 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
 
       // remove leading and trailing spaces
       TString lineExpandedStripped(fLineExpanded.Strip(TString::kBoth));
-      TString commentLine(lineExpandedStripped);
-      TString methodRet;
-      TString methodName;
-      TString methodParam;
 
-      if (fParseContext == kCComment || fParseContext == kBeginEndHtml ||
-         fParseContext == kBeginEndHtmlInCComment ||
-         lineExpandedStripped.Length() > 1 &&
-         lineExpandedStripped[0] == '/' && 
-         (lineExpandedStripped[1] == '/' || lineExpandedStripped[1] == '*')) {
+      if (!ExtractComments(lineExpandedStripped, foundClassDescription, 
+                           descriptionStr, prevComment)) {
+         // not a commented line
 
-         // remove repeating characters from the end of the line
-         if (!foundClassDescription && commentLine.Length() > 3) {
-            TString lineAllOneChar(commentLine);
-
-            Ssiz_t len = lineAllOneChar.Length();
-            Char_t c = lineAllOneChar[len - 1];
-            // also a class doc signature: line consists of same char
-            if (c == lineAllOneChar[len - 2] && c == lineAllOneChar[len - 3] &&
-               lineAllOneChar.Strip(TString::kTrailing, c).Length() == 0)
-                  commentLine.Remove(0);
+         // write previous method
+         if (methodName.Length() && !wroteMethodNowWaitingForOpenBlock) {
+            WriteMethod(out, methodRet, methodName, methodParam, 
+               gSystem->BaseName(srcHtmlOutName), anchor, 
+               prevComment, codeOneLiner);
+         } else if (fDocContext == kDocClass) {
+            // write class description
+            out << "<pre>" << prevComment << "</pre></div>" << std::endl;
+            prevComment.Remove(0);
+            fDocContext = kIgnore;
          }
 
-         // look for start tag of class description
-         if (!foundClassDescription && !prevComment.Length() && fDocContext == kIgnore &&
-            (!commentLine.Length() || lineExpandedStripped.Contains(descriptionStr))) {
-            fDocContext = kDocClass;
-            foundClassDescription = kTRUE;
-         }
+         if (!wroteMethodNowWaitingForOpenBlock) {
+            // check for method
+            Ssiz_t posPattern = pattern.Length() ? fLine.Index(pattern) : kNPOS;
+            if (posPattern != kNPOS || !pattern.Length()) {
+               posPattern += pattern.Length();
+               LocateMethodInCurrentLine(posPattern, methodRet, methodName, 
+                  methodParam, srcHtmlOut, anchor, sourceFile, allowPureVirtual);
+               if (methodName.Length()) {
+                  fDocContext = kDocFunc;
+                  needAnchor = !anchor.Length();
+                  if (!useDocxxStyle)
+                     prevComment.Remove(0);
+                  codeOneLiner.Remove(0);
 
-         // remove leading and trailing chars if non-word and identical, e.g.
-         // * some doc *, or // some doc //
-         while (fParseContext != kBeginEndHtml && fParseContext != kBeginEndHtmlInCComment && 
-            commentLine.Length() > 2 &&
-            commentLine[0] == commentLine[commentLine.Length() - 1] &&
-            (commentLine[0] == '/' || commentLine[0] == '*')) {
-            commentLine = commentLine.Strip(TString::kBoth, commentLine[0]);
-         }
-
-         // remove leading /*, //
-         if (commentLine.Length()>1 && 
-            (commentLine[0] == '/' && 
-               (commentLine[1] == '/' || commentLine[1] == '*') ||
-            (commentLine[0] == '*' && 
-               (commentLine[1] == '/'))))
-               commentLine.Remove(0, 2);
-
-         prevComment += commentLine + "\n";
-      } else {
-         // check for method
-         Ssiz_t posPattern = pattern.Length() ? fLine.Index(pattern) : kNPOS;
-         if (posPattern != kNPOS || !pattern.Length()) {
-            posPattern += pattern.Length();
-            LocateMethodInCurrentLine(posPattern, methodRet, methodName, 
-               methodParam, srcHtmlOut, anchor, sourceFile, allowPureVirtual);
-            if (methodName.Length()) {
-               fDocContext = kDocFunc;
-               needAnchor = !anchor.Length();
-               if (!useDocxxStyle)
+                  wroteMethodNowWaitingForOpenBlock = fLine.Index("{", posPattern) == kNPOS;
+                  wroteMethodNowWaitingForOpenBlock &= fLine.Index(";", posPattern) == kNPOS;
+               } else 
                   prevComment.Remove(0);
-               wroteMethodNowWaitingForOpenBlock = fLine.Index("{", posPattern) == kNPOS;
-               if (wroteMethodNowWaitingForOpenBlock)
-                  // make sure we don't have "func() = 0;"
-                  wroteMethodNowWaitingForOpenBlock = fLine.Index(";", posPattern) == kNPOS;
+            } // pattern matches - could be a method
+            else 
+               prevComment.Remove(0);
+         } else {
+            wroteMethodNowWaitingForOpenBlock &= fLine.Index("{") == kNPOS;
+            wroteMethodNowWaitingForOpenBlock &= fLine.Index(";") == kNPOS;
+         } // if !wroteMethodNowWaitingForOpenBlock
+
+         if (methodName.Length() && !wroteMethodNowWaitingForOpenBlock) {
+            // make sure we don't have more '{' in lineExpandedStripped than in fLine
+            if (!codeOneLiner.Length() &&
+                lineExpandedStripped.CountChar('{') == 1 && 
+                lineExpandedStripped.CountChar('}') == 1) {
+               // a one-liner
+               codeOneLiner = lineExpandedStripped;
+               codeOneLiner.Remove(0, codeOneLiner.Index('{'));
+               codeOneLiner.Remove(codeOneLiner.Index('}') + 1);
             }
-         } // pattern matches - could be a method
-      } // it's a comment over the whole line
+         } // if method name and '{'
+      } // if comment
 
       // check for last update,...
       Ssiz_t posTag = kNPOS;
@@ -1666,50 +1799,17 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
             BeautifyLine(srcHtmlOut, &anchor);
          else 
             BeautifyLine(srcHtmlOut);
-
-      Bool_t writeMethod = anchor.Length() && fDocContext == kDocFunc && methodName.Length();
-      if (writeMethod) {
-         if (fDocContext == kDocFunc && !foundClassDescription)
-            // method doc, but no class doc - close ClassDescr div
-            out << "</div>";
-         ExpandKeywords(methodRet);
-         ExpandKeywords(methodParam);
-         out << "<div class=\"funcdoc\"><span class=\"funcname\">";
-         out << methodRet << " <a name=\"";
-         ReplaceSpecialChars(out, fCurrentClass->GetName());
-         out << ":";
-         ReplaceSpecialChars(out, methodName);
-         out << "\" href=\"src/" << gSystem->BaseName(srcHtmlOutName) << anchor << "\">";
-         ReplaceSpecialChars(out, methodName);
-         out << "</a>" << methodParam << "</span><br>" << std::endl;
-
-         MethodNames_t::iterator iMethodName = fMethodNames.find(methodName.Data());
-         if (iMethodName != fMethodNames.end()) {
-            --(iMethodName->second);
-            if (iMethodName->second <= 0)
-               fMethodNames.erase(iMethodName);
-         }
-      }
-
-      if (fParseContext != kBeginEndHtml && fParseContext != kBeginEndHtmlInCComment && 
-         fParseContext != kCComment &&
-         (!wroteMethodNowWaitingForOpenBlock && !writeMethod || useDocxxStyle) &&
-         (lineExpandedStripped.Length() < 2 || lineExpandedStripped[0] != '/' || 
-         lineExpandedStripped[1] != '/')) {
-         // within func block, end of comments - do we need them?
-         if (fDocContext == kDocFunc || fDocContext == kDocClass) {
-            /* alread done for the "Class Description" title
-            if (fDocContext == kDocClass)
-               out << "<div class=\"classdescr\">"; */
-            out << "<pre>" << prevComment << "</pre></div>" << std::endl;
-            if (fDocContext == kDocClass)
-               out << "</div>";
-         }
-         prevComment.Remove(0);
-         fDocContext = kIgnore;
-         } else if (wroteMethodNowWaitingForOpenBlock && fLine.Index('{') != kNPOS)
-            wroteMethodNowWaitingForOpenBlock = kFALSE;
    } // while !sourceFile.eof()
+
+   // deal with last func
+   if (methodName.Length()) {
+      WriteMethod(out, methodRet, methodName, methodParam, 
+         gSystem->BaseName(srcHtmlOutName), anchor, 
+         prevComment, codeOneLiner);
+   } else if (fDocContext == kDocClass) {
+      // write class description
+      out << prevComment << "</div>" << std::endl;
+   }
 
    srcHtmlOut << "</pre>" << std::endl;
    WriteHtmlFooter(srcHtmlOut, "../");
@@ -3041,7 +3141,7 @@ void THtml::CreateStyleSheet() {
          << "   font-weight: normal;" << std::endl
          << "}" << std::endl
          << "span.keyword {" << std::endl
-         << "   color: Maroon;" << std::endl
+         << "   color: Black;" << std::endl
          << "   font-weight: normal;" << std::endl
          << "}" << std::endl
          << "span.cpp {" << std::endl
@@ -3064,6 +3164,15 @@ void THtml::CreateStyleSheet() {
          << "    border-bottom: solid 3px #cccccc;" << std::endl
          << "    border-left: solid 1px #cccccc;" << std::endl
          << "    background-color: White;" << std::endl
+         << "}" << std::endl
+         << "div.inlinecode {" << std::endl
+         << "	margin-bottom: 0.5em;" << std::endl
+         << "	padding: 0.5em;" << std::endl
+         << "}" << std::endl
+         << "code.inlinecode {" << std::endl
+         << "	padding: 0.5em;" << std::endl
+         << "	border: solid 1px #ffff77;" << std::endl
+         << "   background-color: #ffffdd;" << std::endl
          << "}" << std::endl
          << "body {" << std::endl
          << "	background-color: #fcfcfc;" << std::endl
