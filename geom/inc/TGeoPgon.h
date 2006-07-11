@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.23 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.24 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -77,6 +77,7 @@ public:
    Double_t              SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_t in, Double_t safphi, Double_t safmin=TGeoShape::Big()) const;
    virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    virtual void          SetDimensions(Double_t *param);
+   void                  SetNedges(Int_t ne) {if (ne>2) fNedges=ne;}
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;

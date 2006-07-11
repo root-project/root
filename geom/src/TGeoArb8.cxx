@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.51 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.52 2006/07/09 05:27:53 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -1396,6 +1396,52 @@ void TGeoTrap::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
+//_____________________________________________________________________________
+void TGeoTrap::SetDimensions(Double_t *param)
+{
+// Set all arb8 params in one step.
+// param[0] = dz
+// param[1] = theta
+// param[2] = phi
+// param[3] = h1
+// param[4] = bl1
+// param[5] = tl1
+// param[6] = alpha1
+// param[7] = h2
+// param[8] = bl2
+// param[9] = tl2
+// param[10] = alpha2
+   fDz      = param[0];
+   fTheta = param[1];
+   fPhi   = param[2];
+   fH1 = param[3];
+   fH2 = param[7];
+   fBl1 = param[4];
+   fBl2 = param[8];
+   fTl1 = param[5];
+   fTl2 = param[9];
+   fAlpha1 = param[6];
+   fAlpha2 = param[10];
+   Double_t tx = TMath::Tan(fTheta*TMath::DegToRad())*TMath::Cos(fPhi*TMath::DegToRad());
+   Double_t ty = TMath::Tan(fTheta*TMath::DegToRad())*TMath::Sin(fPhi*TMath::DegToRad());
+   Double_t ta1 = TMath::Tan(fAlpha1*TMath::DegToRad());
+   Double_t ta2 = TMath::Tan(fAlpha2*TMath::DegToRad());
+   fXY[0][0] = -fDz*tx-fH1*ta1-fBl1;    fXY[0][1] = -fDz*ty-fH1;
+   fXY[1][0] = -fDz*tx+fH1*ta1-fTl1;    fXY[1][1] = -fDz*ty+fH1;
+   fXY[2][0] = -fDz*tx+fH1*ta1+fTl1;    fXY[2][1] = -fDz*ty+fH1;
+   fXY[3][0] = -fDz*tx-fH1*ta1+fBl1;    fXY[3][1] = -fDz*ty-fH1;
+   fXY[4][0] = fDz*tx-fH2*ta2-fBl2;    fXY[4][1] = fDz*ty-fH2;
+   fXY[5][0] = fDz*tx+fH2*ta2-fTl2;    fXY[5][1] = fDz*ty+fH2;
+   fXY[6][0] = fDz*tx+fH2*ta2+fTl2;    fXY[6][1] = fDz*ty+fH2;
+   fXY[7][0] = fDz*tx-fH2*ta2+fBl2;    fXY[7][1] = fDz*ty-fH2;
+   ComputeTwist();
+   if ((fDz<0) || (fH1<0) || (fBl1<0) || (fTl1<0) || 
+       (fH2<0) || (fBl2<0) || (fTl2<0)) {
+      SetShapeBit(kGeoRunTimeShape);
+   } 
+   else TGeoArb8::ComputeBBox();
+}   
+
 ClassImp(TGeoGtra)
 
 //_____________________________________________________________________________
@@ -1613,3 +1659,66 @@ void TGeoGtra::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
    out << "   TGeoShape *" << GetPointerName() << " = new TGeoGtra(\"" << GetName() << "\", dz,theta,phi,twist,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
+
+//_____________________________________________________________________________
+void TGeoGtra::SetDimensions(Double_t *param)
+{
+// Set all arb8 params in one step.
+// param[0] = dz
+// param[1] = theta
+// param[2] = phi
+// param[3] = h1
+// param[4] = bl1
+// param[5] = tl1
+// param[6] = alpha1
+// param[7] = h2
+// param[8] = bl2
+// param[9] = tl2
+// param[10] = alpha2
+// param[11] = twist
+   fDz      = param[0];
+   fTheta = param[1];
+   fPhi   = param[2];
+   fH1 = param[3];
+   fH2 = param[7];
+   fBl1 = param[4];
+   fBl2 = param[8];
+   fTl1 = param[5];
+   fTl2 = param[9];
+   fAlpha1 = param[6];
+   fAlpha2 = param[10];
+   fTwistAngle = param[11];
+   Double_t x, y, dx, dy, dx1, dx2, th, ph, al1, al2;
+   al1 = fAlpha1*TMath::DegToRad();
+   al2 = fAlpha2*TMath::DegToRad();
+   th = fTheta*TMath::DegToRad();
+   ph = fPhi*TMath::DegToRad();
+   dx = 2*fDz*TMath::Sin(th)*TMath::Cos(ph);
+   dy = 2*fDz*TMath::Sin(th)*TMath::Sin(ph);
+   dx1 = 2*fH1*TMath::Tan(al1);
+   dx2 = 2*fH2*TMath::Tan(al2);
+   Int_t i;
+   for (i=0; i<8; i++) {
+      fXY[i][0] = 0.0;
+      fXY[i][1] = 0.0;
+   }   
+
+   fXY[0][0] = -fBl1;                fXY[0][1] = -fH1;
+   fXY[1][0] = -fTl1+dx1;            fXY[1][1] = fH1;
+   fXY[2][0] = fTl1+dx1;             fXY[2][1] = fH1;
+   fXY[3][0] = fBl1;                 fXY[3][1] = -fH1;
+   fXY[4][0] = -fBl2+dx;             fXY[4][1] = -fH2+dy;
+   fXY[5][0] = -fTl2+dx+dx2;         fXY[5][1] = fH2+dy;
+   fXY[6][0] = fTl2+dx+dx2;          fXY[6][1] = fH2+dy;
+   fXY[7][0] = fBl2+dx;              fXY[7][1] = -fH2+dy;
+   for (i=4; i<8; i++) {
+      x = fXY[i][0];
+      y = fXY[i][1];
+      fXY[i][0] = x*TMath::Cos(fTwistAngle*TMath::DegToRad()) + y*TMath::Sin(fTwistAngle*TMath::DegToRad());
+      fXY[i][1] = -x*TMath::Sin(fTwistAngle*TMath::DegToRad()) + y*TMath::Cos(fTwistAngle*TMath::DegToRad());      
+   }
+   ComputeTwist();
+   if ((fDz<0) || (fH1<0) || (fBl1<0) || (fTl1<0) || 
+       (fH2<0) || (fBl2<0) || (fTl2<0)) SetShapeBit(kGeoRunTimeShape);
+   else TGeoArb8::ComputeBBox();
+}   

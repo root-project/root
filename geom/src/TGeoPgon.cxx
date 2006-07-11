@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.58 2006/04/05 09:36:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.59 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -705,13 +705,13 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t ipl, Int_
          } else {
             rpgin = Rpg(pt[2], ipl, kTRUE, apgin, bpgin);
             db = bpgin-bpr;
-            if (db != 0.) {
+            if (TMath::Abs(db) > TGeoShape::Tolerance()) {
                znew = (apr-apgin)/db;
                din = (znew-pt[2])*invdir;
             }
             rpgout = Rpg(pt[2], ipl, kFALSE, apgout, bpgout);
             db = bpgout-bpr;
-            if (db != 0.) {
+            if (TMath::Abs(db) > TGeoShape::Tolerance()) {
                znew = (apr-apgout)/db;
                dout = (znew-pt[2])*invdir;
             }
@@ -1679,9 +1679,19 @@ void TGeoPgon::SetDimensions(Double_t *param)
    fDphi    = param[1];
    fNedges  = (Int_t)param[2];
    fNz      = (Int_t)param[3];
-   if (!fRmin) fRmin = new Double_t [fNz];
-   if (!fRmax) fRmax = new Double_t [fNz];
-   if (!fZ)    fZ    = new Double_t [fNz];
+   if (fNz<2) {
+      Error("SetDimensions","Pgon %s: Number of Z sections must be > 2", GetName());
+      return;
+   } 
+   if (fRmin) delete [] fRmin;  
+   if (fRmax) delete [] fRmax;  
+   if (fZ) delete [] fZ;  
+   fRmin = new Double_t [fNz];
+   fRmax = new Double_t [fNz];
+   fZ    = new Double_t [fNz];
+   memset(fRmin, 0, fNz*sizeof(Double_t));
+   memset(fRmax, 0, fNz*sizeof(Double_t));
+   memset(fZ, 0, fNz*sizeof(Double_t));
    for (Int_t i=0; i<fNz; i++) 
       DefineSection(i, param[4+3*i], param[5+3*i], param[6+3*i]);
 }   

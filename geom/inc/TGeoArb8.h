@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.21 2006/05/23 04:47:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.22 2006/07/03 16:10:43 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -166,6 +166,7 @@ public:
    Double_t              GetAlpha2() const   {return fAlpha2;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const {return 8;}
+   virtual void          SetDimensions(Double_t *param);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ostream &out, Option_t *option = "");
 
@@ -210,6 +211,7 @@ public:
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const {return 8;}
    Double_t              GetTwistAngle() const {return fTwistAngle;}
+   virtual void          SetDimensions(Double_t *param);
    virtual void          SavePrimitive(ostream &out, Option_t *option = "");
  
    ClassDef(TGeoGtra, 1)         // G3 GTRA shape
