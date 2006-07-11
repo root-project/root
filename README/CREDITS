@@ -350,7 +350,7 @@ D: XML interface package
 D: SQL interface extensions, ODBC driver
 
 N: Yan Liu
-E: unknown
+E: liuyan@fnal.gov
 D: TOracleResult
 
 N: Jose Lo
@@ -584,7 +584,7 @@ E: Kai.Voss@cern.ch
 D: contribution to the TMVA package
 
 N: Shaowen Wang
-E: unknown
+E: shaowen-wang@uiowa.edu 
 D: TOracleResult
 
 N: Andreas Zoglauer
