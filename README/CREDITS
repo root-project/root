@@ -10,6 +10,10 @@ PS: please let us know if you are not on this list while you should be, or
     if something in your entry is incorrect.
 
 -------------------
+N: Mohammad AL-Turany
+E: m.al-turany@gsi.de
+D: QTGSI classes
+
 N: Eric Anciant
 E: eric.anciant@sodern.fr
 D: TQuaternion class
@@ -60,6 +64,10 @@ D: TMath::BubbleHigh, TMath::BubbleLow
 N: Marek Biskup
 E: Marek.Biskup@cern.ch
 D: PROOF contributions
+
+N: Sebastian Boeser
+E: sboeser@ifh.de
+D: class TGraphPolar
 
 N: Dan Bradley
 E: dan@hep.wisc.edu
@@ -124,6 +132,10 @@ N: Christophe Delaere
 E: Christophe.Delaere@cern.ch
 D: TLimit TLimitDataSource TConfidenceLevel and TMultiLayerPerceptron classes
 
+N: Matthieu Demaret
+E: Matthieu.Demaret@cern.ch
+D: class TGraphPolar
+
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
 D: TLegend class
@@ -143,6 +155,18 @@ D: CASTOR interface code in the TCastorFile class
 N: Rutger v.d. Eijk
 E: r36@nikhef.nl
 D: various contributions to GUI classes
+
+N: Giulio Eulisse
+E: Giulio.Eulisse@cern.ch
+D: class TQtLock
+
+N: Denis Favre-Miville
+E: Denis.Favre-Miville@ensimag.imag.fr
+D: contribution to the GUI and graphics editors
+
+N: Jan Fiete Grosse-Oetringhaus
+E: Jan.Fiete.Grosse-Oetringhaus@cern.ch
+D: several contributions to PROOF testing and class TGridJDL
 
 N: Valerio Filippini
 E: Valerio.Filippini@pv.infn.it
@@ -197,6 +221,18 @@ N: Mihaela Gheata
 E: Mihaela.Gheata@cern.ch
 D: many contributions to the geometry package
 D: extension of g2root, author of stressgeom
+
+N: Thorsten Glebe
+E: T.Glebe@mpi-hd.mpg.de
+D: Original author of the Smatrix package
+
+N: Piotr Golonka
+E: Piotr.Golonka@cern.ch
+D: class TMCParticle
+
+N: Piotr Golonka
+E: Piotr.Golonka@cern.ch
+D: class TMCParticle
 
 N: Masaharu Goto
 E: MXJ02154@niftyserve.or.jp
@@ -268,6 +304,10 @@ N: Stanislaw Jadach
 E: Stanislaw.jadach@ifj.edu.pl
 D: the FOAM classes
 
+N: Luke Jones
+E: jones@netoffice.com
+D: class TGraphDelaunay
+
 N: Michal Kapalka
 E: kapalka@icslab.agh.edu.pl
 D: improvements in the ZIP package
@@ -309,6 +349,10 @@ E: S.Linev@gsi.de
 D: XML interface package
 D: SQL interface extensions, ODBC driver
 
+N: Yan Liu
+E: unknown
+D: TOracleResult
+
 N: Jose Lo
 E: Jose.Lo@cern.ch
 D: SAX and DOM XML parser interfaces
@@ -316,6 +360,10 @@ D: SAX and DOM XML parser interfaces
 N: Constantin Loizides
 E: loizides@MIT.EDU
 D: PROOF testing and debugging
+
+N: Elaine Lyons
+E: unknown
+D: First versions of the Users Guide
 
 N: Jiri Masik
 E: Jiri.Masik@fzu.cz
@@ -350,6 +398,10 @@ D: TSpectrum class
 N: Dave Morrison
 E: dave@bnl.gov
 D: library load path fixes, some Makefile updates
+
+N: Andreas Morsch
+E: Andreas.Morsch@cern.ch
+D: many contributions to the Virtual Monte Carlo
 
 N: Johannes Muelmenstaedt
 E: jmuelmen@socrates.Berkeley.EDU
@@ -439,6 +491,10 @@ N: Miha Puc
 E: miha.puc@marvin.fmf.uni-lj.si
 D: contributed to TMath::Voigt
 
+N: Xavier Prudent
+E: prudent@lapp.in2p3.fr
+D: contributed to TMVA classes
+
 N: Sven Ravndal
 E: Sven.Ravndal@dresdner-bank.com
 D: initial event generator interface
@@ -526,6 +582,10 @@ D: contribution to the TMVA package
 N: Kai Voss
 E: Kai.Voss@cern.ch
 D: contribution to the TMVA package
+
+N: Shaowen Wang
+E: unknown
+D: TOracleResult
 
 N: Andreas Zoglauer
 E: zog@mpe.mpg.de
