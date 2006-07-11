@@ -1775,7 +1775,16 @@ if test ! "x$enable_rfio" = "xno" ; then
     stagerinc=$found_hdr
 
     if test ! "x$stagerinc" = "x"; then
-       shiftcflags=-DR__CASTOR2
+        shiftcflags=-DR__CASTOR2
+        # check for Castor >= 2.1
+        message "Checking for Castor version >= 2.1"
+        castor_version=`grep "define BASEVERSION" $shiftincdir/patchlevel.h | sed 's/^.*"\([0-9]\.[0-9]\.[0-9]\)"/\1/' | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
+        if test $castor_version -lt 2001; then
+            shiftincdir=""
+            result "no"
+        else
+            result "ok"
+        fi
     fi
 
     check_library "libshift shiftmd shift" "$enable_shared" "$shiftlibdir" \
@@ -3363,7 +3372,7 @@ if test ! "x$enable_mathmore" = "xno"; then
 	    enable_mathmore="no"
 	fi
     fi
-    
+
     if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x") && \
         test ! "x$gslskip" = "xskip"; then
 	checking_msg "gsl-config"
