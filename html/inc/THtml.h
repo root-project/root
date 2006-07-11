@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.18 2006/07/08 19:47:50 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.19 2006/07/09 05:26:34 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -104,7 +104,7 @@ protected:
    std::list<std::string> fModules; // Names of modules
    std::map<TClass*,std::string> fGuessedDeclFileNames; // names of additional decl file names
    std::map<TClass*,std::string> fGuessedImplFileNames; // names of additional impl file names
-   static std::set<std::string>  fKeywords; // C++ keywords
+   static std::set<std::string>  fgKeywords; // C++ keywords
 
    virtual void BeautifyLine(std::ostream &srcOut, TString* anchor = 0);
    void    Class2Html(Bool_t force=kFALSE);

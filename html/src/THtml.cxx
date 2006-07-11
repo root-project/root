@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.99 2006/06/14 09:32:09 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.101 2006/07/09 05:26:34 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -46,7 +46,7 @@ const char *formatStr = "%12s %5s %s";
 
 enum ESortType { kCaseInsensitive, kCaseSensitive };
 enum EFileType { kSource, kInclude, kTree };
-std::set<std::string>  THtml::fKeywords;
+std::set<std::string>  THtml::fgKeywords;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -348,70 +348,70 @@ THtml::THtml(): fCurrentClass(0), fDocContext(kIgnore), fParseContext(kCode),
       gROOT->GetListOfSpecials()->Add(gHtml);
    }
 
-   if (fKeywords.empty()) {
-      fKeywords.insert("asm");
-      fKeywords.insert("auto");
-      fKeywords.insert("bool");
-      fKeywords.insert("break");
-      fKeywords.insert("case");
-      fKeywords.insert("catch");
-      fKeywords.insert("char");
-      fKeywords.insert("class");
-      fKeywords.insert("const");
-      fKeywords.insert("const_cast");
-      fKeywords.insert("continue");
-      fKeywords.insert("default");
-      fKeywords.insert("delete");
-      fKeywords.insert("do");
-      fKeywords.insert("double");
-      fKeywords.insert("dynamic_cast");
-      fKeywords.insert("else");
-      fKeywords.insert("enum");
-      fKeywords.insert("explicit");
-      fKeywords.insert("export");
-      fKeywords.insert("extern");
-      fKeywords.insert("false");
-      fKeywords.insert("float");
-      fKeywords.insert("for");
-      fKeywords.insert("friend");
-      fKeywords.insert("goto");
-      fKeywords.insert("if");
-      fKeywords.insert("inline");
-      fKeywords.insert("int");
-      fKeywords.insert("long");
-      fKeywords.insert("mutable");
-      fKeywords.insert("namespace");
-      fKeywords.insert("new");
-      fKeywords.insert("operator");
-      fKeywords.insert("private");
-      fKeywords.insert("protected");
-      fKeywords.insert("public");
-      fKeywords.insert("register");
-      fKeywords.insert("reinterpret_cast");
-      fKeywords.insert("return");
-      fKeywords.insert("short");
-      fKeywords.insert("signed");
-      fKeywords.insert("sizeof");
-      fKeywords.insert("static");
-      fKeywords.insert("static_cast");
-      fKeywords.insert("struct");
-      fKeywords.insert("switch");
-      fKeywords.insert("template");
-      fKeywords.insert("this");
-      fKeywords.insert("throw");
-      fKeywords.insert("true");
-      fKeywords.insert("try");
-      fKeywords.insert("typedef");
-      fKeywords.insert("typeid");
-      fKeywords.insert("typename");
-      fKeywords.insert("union");
-      fKeywords.insert("unsigned");
-      fKeywords.insert("using");
-      fKeywords.insert("virtual");
-      fKeywords.insert("void");
-      fKeywords.insert("volatile");
-      fKeywords.insert("wchar_t");
-      fKeywords.insert("while");
+   if (fgKeywords.empty()) {
+      fgKeywords.insert("asm");
+      fgKeywords.insert("auto");
+      fgKeywords.insert("bool");
+      fgKeywords.insert("break");
+      fgKeywords.insert("case");
+      fgKeywords.insert("catch");
+      fgKeywords.insert("char");
+      fgKeywords.insert("class");
+      fgKeywords.insert("const");
+      fgKeywords.insert("const_cast");
+      fgKeywords.insert("continue");
+      fgKeywords.insert("default");
+      fgKeywords.insert("delete");
+      fgKeywords.insert("do");
+      fgKeywords.insert("double");
+      fgKeywords.insert("dynamic_cast");
+      fgKeywords.insert("else");
+      fgKeywords.insert("enum");
+      fgKeywords.insert("explicit");
+      fgKeywords.insert("export");
+      fgKeywords.insert("extern");
+      fgKeywords.insert("false");
+      fgKeywords.insert("float");
+      fgKeywords.insert("for");
+      fgKeywords.insert("friend");
+      fgKeywords.insert("goto");
+      fgKeywords.insert("if");
+      fgKeywords.insert("inline");
+      fgKeywords.insert("int");
+      fgKeywords.insert("long");
+      fgKeywords.insert("mutable");
+      fgKeywords.insert("namespace");
+      fgKeywords.insert("new");
+      fgKeywords.insert("operator");
+      fgKeywords.insert("private");
+      fgKeywords.insert("protected");
+      fgKeywords.insert("public");
+      fgKeywords.insert("register");
+      fgKeywords.insert("reinterpret_cast");
+      fgKeywords.insert("return");
+      fgKeywords.insert("short");
+      fgKeywords.insert("signed");
+      fgKeywords.insert("sizeof");
+      fgKeywords.insert("static");
+      fgKeywords.insert("static_cast");
+      fgKeywords.insert("struct");
+      fgKeywords.insert("switch");
+      fgKeywords.insert("template");
+      fgKeywords.insert("this");
+      fgKeywords.insert("throw");
+      fgKeywords.insert("true");
+      fgKeywords.insert("try");
+      fgKeywords.insert("typedef");
+      fgKeywords.insert("typeid");
+      fgKeywords.insert("typename");
+      fgKeywords.insert("union");
+      fgKeywords.insert("unsigned");
+      fgKeywords.insert("using");
+      fgKeywords.insert("virtual");
+      fgKeywords.insert("void");
+      fgKeywords.insert("volatile");
+      fgKeywords.insert("wchar_t");
+      fgKeywords.insert("while");
    }
 }
 
@@ -3096,11 +3096,11 @@ void THtml::ExpandKeywords(ostream & out, const char *text)
 
 //______________________________________________________________________________
 void THtml::ExpandKeywords(TString& keyword)
-// Find keywords in keyword and create URLs around them. Escape characters with a 
-// special meaning for HTML. Protect "Begin_Html"/"End_Html" pairs, and set the
-// parsing context. Evaluate sequences like a::b->c.
-//
 {
+   // Find keywords in keyword and create URLs around them. Escape characters with a 
+   // special meaning for HTML. Protect "Begin_Html"/"End_Html" pairs, and set the
+   // parsing context. Evaluate sequences like a::b->c.
+
    static Bool_t pre_is_open = kFALSE;
    // we set parse context to kCComment even for CPP comment, and note it here:
    Bool_t commentIsCPP = kFALSE;
@@ -3246,7 +3246,7 @@ void THtml::ExpandKeywords(TString& keyword)
 
       // don't replace keywords in comments
       if (fParseContext == kCode && 
-         fKeywords.find(word.Data()) != fKeywords.end()) {
+         fgKeywords.find(word.Data()) != fgKeywords.end()) {
          keyword.Insert(i, "<span class=\"keyword\">");
          i += 22 + word.Length();
          keyword.Insert(i, "</span>");
@@ -3763,7 +3763,7 @@ void THtml::MakeClass(const char *className, Bool_t force)
               || htmlFile.BeginsWith("https://")
               || gSystem->IsAbsoluteFileName(htmlFile))
           ) {
-             htmlFile.Remove(0);
+         htmlFile.Remove(0);
          //printf("CASE skipped, class=%s, htmlFile=%s\n",className,htmlFile);
       }
       if (htmlFile.Length()) {
@@ -3836,7 +3836,7 @@ void THtml::MakeTree(const char *className, Bool_t force)
               || htmlFile.BeginsWith("https://")
               || gSystem->IsAbsoluteFileName(htmlFile))
           ) {
-             htmlFile.Remove(0);
+         htmlFile.Remove(0);
       }
       if (htmlFile.Length()) {
          // make a class tree
