@@ -10,7 +10,7 @@ EVENT         = Event$(ExeSuf)
 ifeq ($(PLATFORM),win32)
 EVENTLIB      = libEvent.lib
 else
-EVENTLIB      = $(EVENTSO)
+EVENTLIB      = ./$(EVENTSO)
 endif
 MAINEVENTO    = MainEvent.$(ObjSuf)
 MAINEVENTS    = MainEvent.$(SrcSuf)
