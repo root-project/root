@@ -1,4 +1,8 @@
 template <class T> void fill(T& filled, UInt_t seed);
+template <class F, class S> void fill(std::pair<F, S> &filled, UInt_t seed);
+template <class F, class S> void fill(std::pair<F, S*> &filled, UInt_t seed);
+template <class F, class S> void fill(std::pair<F*, S> &filled, UInt_t seed);
+template <class F, class S> void fill(std::pair<F*, S*> &filled, UInt_t seed);
 
 template <> void fill(Helper& filled, UInt_t seed) {
    filled.val = seed;

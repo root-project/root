@@ -49,6 +49,9 @@ void TestError(const std::string &test, const std::string &msg) {
    TestError(test,msg.c_str());
 }
 
+template <class T> void TestError(const std::string &test, const T &orig, const T &copy);
+template <class T> void TestError(const std::string &test, T* orig, T* copy);
+
 template <class T> void TestError(const std::string &test, 
                                   const std::vector<T> &/*orig*/, 
                                   const std::vector<T> &/*copy*/) {

@@ -5,6 +5,7 @@
 #include "TBranch.h"
 #include "TTree.h"
 #include "exception"
+#include "algorithm"
 #include "set"
 
 namespace std {
@@ -25,7 +26,7 @@ namespace std {
     cmap (const _cmap& x): _map(x), map_name(x.map_name) {}
     value& operator[] (const key& k) { return (dynamic_cast<_map &>(*this))[k]; }
     const value& operator[] (const key& k) const {
-      const_iterator item = find (k);
+      const_iterator item = this->find (k);
       if (item == _map::end ()) {
          throw ("Element not fount!");
       }
