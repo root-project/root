@@ -27,10 +27,17 @@ void pstable()
                       "\361","\362","\363","\364","\365","\366","\367","\370",
                       "\371","\372","\373","\374","\375","\376","\377","END"};
 
+   char *symbol5[] = {"\177","\200","\201","\202","\203","\204","\205","\206",
+                      "\207","\210","\211","\212","\213","\214","\215","\216",
+                      "\217","\220","\221","\222","\223","\224","\225","\226",
+                      "\227","\230","\231","\232","\233","\234","\235","\236",
+                      "\237","\240","END"};
+
    Float_t xrange = 18;
    Float_t yrange = 25;
    Int_t w = 650;
    Int_t h = w*yrange/xrange;
+   
    TCanvas *c1 = new TCanvas("c1","c1",200,10,w,h);
    c1->Range(0,0,xrange,yrange);
 
@@ -59,6 +66,15 @@ void pstable()
    c2->Modified();
    c2->Update();
    c2->Print("pstable2.ps");
+
+   TCanvas *c3 = new TCanvas("c3","c3",240,20,w,h);
+   c3->Range(0,0,xrange,yrange);
+
+   table(0.5,0.5*xrange-0.5,yrange,t,symbol5,1);
+   tlabel->DrawText(0.5*xrange,1.3,"Input characters using backslash and octal numbers");
+   c3->Modified();
+   c3->Update();
+   c3->Print("pstable3.ps");
 }
 void table(Float_t x1, Float_t x2, Float_t yrange, TText *t, char **symbol, Bool_t octal)
 {
