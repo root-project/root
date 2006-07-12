@@ -1,3 +1,7 @@
+#
+# $Id:$
+#
+
 all: tests
 
 test: tests ;
