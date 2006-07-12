@@ -96,6 +96,10 @@ ifeq ($(ARCH),)
 endif
 PLATFORM      = $(ARCH)
 
+ifeq ($(ROOTBITS),)
+   export ROOTBITS := $(shell root -b -q -n $(ROOTTEST_HOME)/scripts/Bits.C | grep Bits_in_long | awk '{print $$2;}' )
+endif
+
 ifeq ($(CXXFLAGS),)
    export CXXFLAGS = $(shell root-config --cflags)
 endif
@@ -346,11 +350,19 @@ define WarnFailTest
 endef
 
 define TestDiff
-	$(CMDECHO) diff -b $@.ref $<
+	$(CMDECHO) if [ -f $@.ref$(ROOTBITS) ]; then \
+	   diff -b $@.ref$(ROOTBITS) $< ; \
+	else \
+	   diff -b $@.ref $< ; \
+	fi
 endef
 
 define TestDiffW
-	$(CMDECHO) diff -b -w $@.ref $<
+	$(CMDECHO) if [ -f $@.ref$(ROOTBITS) ]; then \
+	   diff -b -w $@.ref$(ROOTBITS) $< ; \
+	else \
+	   diff -b -w $@.ref $< ; \
+	fi
 endef
 
 
