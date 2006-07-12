@@ -11,8 +11,8 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 vararyobj: vararyruns
 	$(CMDECHO) rm -f tmp1.log tmp2.log ; \
-	tail +3 varyingArrayWrite.clog > tmp1.log ; \
-	tail +3 varyingArrayRead.clog > tmp2.log ; \
+	tail -3 varyingArrayWrite.clog > tmp1.log ; \
+	tail -3 varyingArrayRead.clog > tmp2.log ; \
 	diff tmp1.log tmp2.log ; \
 	if [ "$$?" != "0" ] ; \
 	then \
@@ -30,8 +30,8 @@ vararyruns: varyingArrayWrite.clog
 
 vararynoclassdefobj: vararynoclassdefruns
 	$(CMDECHO) rm -rf tmp3.log tmp4.log ; \
-	tail +3 varyingArrayNoClassDefWrite.clog > tmp3.log ; \
-	tail +3 varyingArrayNoClassDefRead.clog > tmp4.log ; \
+	tail -3 varyingArrayNoClassDefWrite.clog > tmp3.log ; \
+	tail -3 varyingArrayNoClassDefRead.clog > tmp4.log ; \
 	diff tmp3.log tmp4.log ; \
 	if [ "$$?" != "0" ] ; \
 	then \
