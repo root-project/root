@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoPconEditor.h,v 1.2 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -68,7 +68,7 @@ protected:
    Bool_t       IsDelayed() const;   
    void         CreateSections(Int_t inew);
    void         UpdateSections();
-
+   virtual void CreateEdges() {;}
 public:
    TGeoPconEditor(const TGWindow *p, Int_t id,               
                    Int_t width = 140, Int_t height = 30,
@@ -82,8 +82,8 @@ public:
    void           DoNz();
    void           DoPhi();
    void           DoSectionChange(Int_t i);
-   void           DoApply();
-   void           DoUndo();
+   virtual void   DoApply();
+   virtual void   DoUndo();
    
    ClassDef(TGeoPconEditor,0)   // TGeoPcon editor
 };   

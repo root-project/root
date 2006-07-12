@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.4 2006/06/24 08:26:42 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -66,6 +66,7 @@
 #include "TGeoManager.h"
 #include "TGeoBBox.h"
 #include "TGeoPara.h"
+#include "TGeoArb8.h"
 #include "TGeoTube.h"
 #include "TGeoEltu.h"
 #include "TGeoHype.h"
@@ -75,6 +76,7 @@
 #include "TGeoCone.h"
 #include "TGeoSphere.h"
 #include "TGeoPcon.h"
+#include "TGeoPgon.h"
 #include "TGeoElement.h"
 #include "TGeoMaterial.h"
 #include "TView.h"
@@ -828,12 +830,24 @@ void TGeoManagerEditor::DoCreateTrd2()
 void TGeoManagerEditor::DoCreateTrap()
 {
 // Create a general trapezoid.
+   Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
+   fSelectedShape = new TGeoTrap(Form("trap_%i",id), 1., 15., 45., 0.5, 0.3, 0.5, 30., 0.5, 0.3, 0.5, 30.);
+   ShowSelectShape();
+   if (fGeometry->GetListOfMedia()->GetSize())
+      fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
+   DoEditShape();
 }
 
 //______________________________________________________________________________
 void TGeoManagerEditor::DoCreateGtra()
 {
 // Create a twisted trapezoid.
+   Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
+   fSelectedShape = new TGeoGtra(Form("gtra_%i",id), 1., 15., 45., 45.,0.5, 0.3, 0.5, 30., 0.5, 0.3, 0.5, 30.);
+   ShowSelectShape();
+   if (fGeometry->GetListOfMedia()->GetSize())
+      fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
+   DoEditShape();
 }
 
 //______________________________________________________________________________
@@ -958,6 +972,14 @@ void TGeoManagerEditor::DoCreatePcon()
 void TGeoManagerEditor::DoCreatePgon()
 {
 // Create a polygone shape.
+   Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
+   fSelectedShape = new TGeoPgon(Form("pgon_%i",id), 0., 360.,6,2);
+   ((TGeoPcon*)fSelectedShape)->DefineSection(0, -1, 0.5, 1.);
+   ((TGeoPcon*)fSelectedShape)->DefineSection(1, 1, 0.2, 0.5);
+   ShowSelectShape();
+   if (fGeometry->GetListOfMedia()->GetSize())
+      fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
+   DoEditShape();   
 }
 
 //______________________________________________________________________________

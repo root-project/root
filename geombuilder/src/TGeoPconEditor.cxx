@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoPconEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoPconEditor.cxx,v 1.4 2006/06/24 08:30:18 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -43,6 +43,7 @@ TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t id, Int_t width,
    // Constructor for polycone editor
    fShape   = 0;
    fNsections = 0;
+   fSections = 0;
    fNsecti = 0;
    fPhi1i = 0;
    fDPhii = 0;
@@ -192,7 +193,7 @@ void TGeoPconEditor::ConnectSignals2Slots()
 void TGeoPconEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
    // Connect to a given pcon.
-   if (obj == 0 || (obj->IsA()!=TGeoPcon::Class())) {
+   if (obj == 0 || (obj->IsA() != TGeoPcon::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
@@ -270,8 +271,8 @@ Bool_t TGeoPconEditor::CheckSections(Bool_t change)
          sect->SetZ(zmin+1.);
       }   
       zmin = sect->GetZ();
-      if (sect->GetRmin()<0 || sect->GetRmin()>sect->GetRmax() ||
-          (change && sect->GetRmin()*sect->GetRmax()==0)) {
+      if (sect->GetRmin()<0 ||
+          (sect->GetRmax()<0) || ((sect->GetRmin()==0) && (sect->GetRmax()==0))) {
          if (!change) return kFALSE;
          sect->SetRmin(rmin);
          sect->SetRmax(rmax);
@@ -347,6 +348,7 @@ void TGeoPconEditor::DoApply()
          array[5+3*isect] = sect->GetRmax();
       }
       fShape->SetDimensions(array);
+      delete [] array;
       if (fPad) {
          if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
             TView *view = fPad->GetView();
@@ -600,7 +602,7 @@ void TGeoPconSection::DoRmin()
 // Rmin slot.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
-   if (rmin>rmax) fERmax->SetNumber(rmin);
+   if (rmin>rmax-1.e-8) fERmin->SetNumber(rmax);
    Changed(fNumber);
 }
    
@@ -610,6 +612,6 @@ void TGeoPconSection::DoRmax()
 // Rmax slot.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
-   if (rmax<rmin) fERmin->SetNumber(rmax);
+   if (rmax<rmin+1.e-8) fERmax->SetNumber(rmin);
    Changed(fNumber);
 }
