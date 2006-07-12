@@ -4,3 +4,4 @@ Event.root
 Event.h
  *.exe *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
 Event.cxx EventDict.cxx EventDict.h EventLinkDef.h
+.root_hist

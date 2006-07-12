@@ -10,3 +10,4 @@
 *.d
 *Dict*
 output *.manifest
+.root_hist

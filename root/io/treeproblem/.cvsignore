@@ -4,3 +4,4 @@ FooDict.h
 reader writer file.root FooDict*
 *.manifest
 *.manifest
+.root_hist

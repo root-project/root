@@ -1,3 +1,4 @@
  *.root *.out 
  *.dll *.def *.exp *.lib *.pdb *.log *.d 
 *.manifest
+.root_hist

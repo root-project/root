@@ -10,3 +10,4 @@
  *.pdb
 *.clog
 *.manifest 
+.root_hist

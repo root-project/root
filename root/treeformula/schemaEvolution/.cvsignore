@@ -4,3 +4,4 @@ EventDict*.*
 *.sln *.suo *.dylib
 *.manifest
 schemaRun.ref
+.root_hist

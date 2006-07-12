@@ -6,3 +6,4 @@ set_problem_cxx.d
 *.log *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
 *.manifest
 *.manifest
+.root_hist

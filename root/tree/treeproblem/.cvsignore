@@ -2,3 +2,4 @@
  *.out 
  FooDict* file.root  *.dylib reader writer
 *.manifest
+.root_hist

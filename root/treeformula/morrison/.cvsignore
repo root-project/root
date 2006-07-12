@@ -6,3 +6,4 @@ barDict.h
  *.dll *.def *.exp *.lib *.pdb *.log *.d 
  Event.root 
 *.manifest
+.root_hist

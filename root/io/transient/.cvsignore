@@ -1,3 +1,4 @@
 *.d
 *.log
 *.manifest
+.root_hist

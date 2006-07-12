@@ -3,3 +3,4 @@
  test.root 
 *.manifest
 *.manifest
+.root_hist

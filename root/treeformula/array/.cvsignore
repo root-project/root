@@ -10,3 +10,4 @@ filltree.output
 arrayDrawTest.output
 *.pdb *.def *.exp *ilk *.lib *.clog
 *.manifest
+.root_hist

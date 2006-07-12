@@ -1,3 +1,4 @@
  *.root *.log *.ilk *.manifest 
  hsimple.out 
 Event.h copiedEvent*
+.root_hist

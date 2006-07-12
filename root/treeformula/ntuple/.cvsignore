@@ -1,1 +1,2 @@
 *.root *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
+.root_hist

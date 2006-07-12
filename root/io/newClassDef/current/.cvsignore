@@ -2,3 +2,4 @@
  test.root *dict* 
 *.manifest
 *.manifest
+.root_hist

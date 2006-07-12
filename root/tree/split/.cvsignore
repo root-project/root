@@ -1,2 +1,4 @@
  *.dll *.def *.exp *.lib *.pdb *.log *.d 
 *.manifest
+.root_hist
+.root_hist

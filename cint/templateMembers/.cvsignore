@@ -7,3 +7,4 @@ templateMembersNoMem.ref
 *.def *.exp *.lib *.pdb *.log *Dict.*
  *.dll
 *.manifest
+.root_hist

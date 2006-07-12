@@ -1,3 +1,4 @@
 *.clog *.log *.d
  *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
 *.manifest
+.root_hist

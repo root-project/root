@@ -1,3 +1,4 @@
  *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
  pass.mode mytest.root mydict* *.dylib driver* 
 *.manifest
+.root_hist

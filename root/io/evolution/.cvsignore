@@ -1,2 +1,3 @@
 *.xml *.def *.dll *.exp *.lib *.so *.pdb *.log *.root *.d 
 *.manifest
+.root_hist

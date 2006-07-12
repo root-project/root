@@ -35,6 +35,7 @@ mkdir $1
 #Copy Makefile.template to the new test directory
 cp scripts/Makefile.template $1/Makefile
 cp scripts/cvsignore.template $1/.cvsignore
+cp scripts/rootrc.template $1/.rootrc
 
 #Add to CVS
 #cvs add $1

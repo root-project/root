@@ -13,3 +13,4 @@ slaveDict.h
 *.out
 *.d
 *.manifest
+.root_hist
