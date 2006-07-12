@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.64 2006/01/10 15:45:00 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.65 2006/05/11 15:50:52 couet Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1338,13 +1338,13 @@ void TPostScript::FontEncode()
    PrintStr(" 224 /Ntilde");
    PrintStr(" 226 /ocircumflex");
    PrintStr("@228 /Ocircumflex");
-   PrintStr(" 229 /odieresis");
    PrintStr(" 230 /Odieresis");
    PrintStr(" 231 /ucircumflex");
    PrintStr(" 236 /Ucircumflex");
    PrintStr("@237 /udieresis");
    PrintStr(" 238 /Udieresis");
    PrintStr(" 239 /aring");
+   PrintStr(" 240 /odieresis");
    PrintStr(" 242 /Aring");
    PrintStr(" 243 /ydieresis");
    PrintStr("@244 /Ydieresis");
@@ -1352,6 +1352,18 @@ void TPostScript::FontEncode()
    PrintStr(" 247 /Aacute");
    PrintStr(" 252 /ugrave");
    PrintStr(" 253 /Ugrave");
+   PrintStr("@127 /atilde");
+   PrintStr(" 128 /Atilde");
+   PrintStr(" 129 /oacute");
+   PrintStr(" 130 /Oacute");
+   PrintStr(" 131 /iacute");
+   PrintStr("@132 /Iacute");
+   PrintStr(" 133 /igrave");
+   PrintStr(" 134 /Igrave");
+   PrintStr(" 135 /otilde");
+   PrintStr(" 136 /Otilde");
+   PrintStr("@137 /uacute");
+   PrintStr(" 138 /Uacute");
    PrintStr("] def");
    PrintStr("/Times-Roman /Times-Roman accvec ReEncode@");
    PrintStr("/Times-Italic /Times-Italic accvec ReEncode@");
