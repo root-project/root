@@ -60,7 +60,7 @@ class NtpRecord: public TObject {
 
   NtpRecord();
   virtual ~NtpRecord();
-  void NtpRecord::Clear(Option_t* option = "");
+  void Clear(Option_t* option = "");
 
   TClonesArray* GetShowers() const { return fShowers; }
   TClonesArray* GetEvents() const { return fEvents; }
