@@ -6,6 +6,8 @@
 #endif
 
 
+#include "Rtypes.h"
+
 
 Bool_t TestUpdate()
 {
@@ -137,10 +139,10 @@ Bool_t TestOne(ULong_t h, Long_t k, Long_t v)
 }
 
 
-const ULong_t  ulv[] = { 0, 1, 2, 0xFFFFFFFF /*kMaxUlong*/ };
+const ULong_t  ulv[] = { 0, 1, 2, kMaxULong };
 const Int_t    kNUlv = sizeof(ulv) / sizeof(ULong_t);
 
-const Long_t  lv[] = { 0x80000000/*kMinLong*/, -1, 0, 1, 0x7FFFFFFF /*kMaxlong*/ };
+const Long_t  lv[] = { kMinLong, -1, 0, 1, kMaxLong };
 const Int_t   kNLv = sizeof(lv) / sizeof(Long_t);
 
 
