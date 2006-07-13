@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Type.h,v 1.14 2006/07/03 17:02:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.14 2006/07/03 17:02:38 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -667,6 +667,13 @@ namespace ROOT {
           * @return c string to unqualified type name
           */
          const char * Name_c_str() const;
+
+
+         /**
+          * PointerToMemberScope will return the scope of the pointer to member type
+          * @return scope of the pointer to member type
+          */
+         Scope PointerToMemberScope() const;
 
 
          /**

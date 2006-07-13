@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: ScopeBase.h,v 1.10 2006/07/03 17:02:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.10 2006/07/03 17:02:38 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -264,6 +264,15 @@ namespace ROOT {
          size_t MemberTemplateSize() const;
 
 
+         /**
+          * MemberTemplateByName will return the member template representation in this 
+          * scope
+          * @param string representing the member template to look for
+          * @return member template representation of the looked up member
+          */
+         MemberTemplate MemberTemplateByName( const std::string & nam ) const;
+
+
          MemberTemplate_Iterator MemberTemplate_Begin() const;
          MemberTemplate_Iterator MemberTemplate_End() const;
          Reverse_MemberTemplate_Iterator MemberTemplate_RBegin() const;
@@ -322,6 +331,15 @@ namespace ROOT {
          size_t SubScopeSize() const;
 
 
+         /** 
+          * SubScopeByName will return a sub scope representing the unscoped name passed
+          * as argument
+          * @param unscoped name of the sub scope to look for
+          * @return Scope representation of the sub scope
+          */
+         Scope SubScopeByName( const std::string & nam ) const;
+
+
          Scope_Iterator SubScope_Begin() const;
          Scope_Iterator SubScope_End() const;
          Reverse_Scope_Iterator SubScope_RBegin() const;
@@ -341,6 +359,14 @@ namespace ROOT {
           * @return number of sub-types
           */
          size_t SubTypeSize() const;
+
+
+         /**
+          * SubTypeByName will return the Type representing the sub type 
+          * @param string of the unscoped sub type to look for
+          * @return Type representation of the sub type
+          */
+         Type SubTypeByName( const std::string & nam ) const;
 
 
          Type_Iterator SubType_Begin() const;
@@ -390,6 +416,15 @@ namespace ROOT {
           * @return number of defined sub type templates
           */
          size_t SubTypeTemplateSize() const;
+
+
+         /**
+          * SubTypeTemplateByName will return a type template defined in this scope looked up by 
+          * it's unscoped name
+          * @param unscoped name of the type template to look for
+          * @return TypeTemplate representation of the sub type template
+          */
+         TypeTemplate SubTypeTemplateByName( const std::string & nam ) const;
 
 
          TypeTemplate_Iterator SubTypeTemplate_Begin() const;

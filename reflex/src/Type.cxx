@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Type.cxx,v 1.11 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.11 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -285,6 +285,15 @@ std::string ROOT::Reflex::Type::Name( unsigned int mod ) const {
    if ( ( 0 != ( mod & ( QUALIFIED | Q ))) && IsReference()) s += "&";
 
    return s;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Scope ROOT::Reflex::Type::PointerToMemberScope() const {
+//-------------------------------------------------------------------------------
+   // Return the scope of the pointer to member type
+   if ( * this ) return fTypeName->fTypeBase->PointerToMemberScope();
+   return Scope();
 }
 
 

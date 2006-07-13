@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: NameLookup.h,v 1.3 2006/06/28 08:33:12 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.h,v 1.4 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -28,55 +28,57 @@ namespace ROOT {
        * point of declaration (3.3.1 [basic.scope.pdecl]) is not taken into account 
        */
 
-      namespace NameLookup {
+      struct NameLookup {
 
          // 1. Lookup
-         Type LookupType( const std::string & nam,
-                          const Scope & current );
+         static Type LookupType( const std::string & nam,
+                                 const Scope & current );
 
          
-         Type LookupTypeQualified( const std::string & nam );
+         static Type LookupTypeQualified( const std::string & nam );
 
          
-         Type LookupTypeUnqualified( const std::string & nam,
+         static Type LookupTypeUnqualified( const std::string & nam,
+                                            const Scope & current );
+
+
+         static Scope LookupScope( const std::string & nam,
+                                   const Scope & current );
+
+
+         static Scope LookupScopeQualified( const std::string & nam );
+
+
+         static Scope LookupScopeUnqualified( const std::string & nam,
+                                              const Scope & current );
+
+
+         static Member LookupMember( const std::string & nam,
                                      const Scope & current );
 
 
-         Scope LookupScope( const std::string & nam,
-                            const Scope & current );
-
-
-         Scope LookupScopeQualified( const std::string & nam );
-
-
-         Scope LookupScopeUnqualified( const std::string & nam,
-                                       const Scope & current );
-
-
-         Member LookupMember( const std::string & nam,
-                              const Scope & current );
-
-
-         Member LookupMemberQualified( const std::string & nam );
+         static Member LookupMemberQualified( const std::string & nam );
 
          
-         Member LookupMemberUnqualified( const std::string & nam,
-                                         const Scope & current );
+         static Member LookupMemberUnqualified( const std::string & nam,
+                                                const Scope & current );
 
          
 
 
          // 2. OverloadResolution
-         Member OverloadResultion( const std::string & nam,
-                                   const std::vector< Member > & funcs );
+         static Member OverloadResultion( const std::string & nam,
+                                          const std::vector< Member > & funcs );
                                    
 
          // 3. AccessControl
-         bool AccessControl( const Type & typ,
-                             const Scope & current );
+         static bool AccessControl( const Type & typ,
+                                    const Scope & current );
 
+         private:
 
-      } // namespace NameLookup
+      }; // struct  NameLookup
+
    } //namespace Reflex
 } //namespace ROOT
 

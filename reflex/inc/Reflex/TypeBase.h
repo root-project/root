@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: TypeBase.h,v 1.13 2006/07/03 17:02:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.13 2006/07/03 17:02:38 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -189,6 +189,7 @@ namespace ROOT {
           * @return the actual class of the object
           */
          virtual Type DynamicType( const Object & obj ) const;
+
 
 
          /**
@@ -415,6 +416,13 @@ namespace ROOT {
          virtual Type_Iterator FunctionParameter_End() const;
          virtual Reverse_Type_Iterator FunctionParameter_RBegin() const;
          virtual Reverse_Type_Iterator FunctionParameter_REnd() const;
+
+ 
+         /**
+          * PointerToMemberScope will return the scope of the pointer to member type
+          * @return scope of the pointer to member type
+          */
+         virtual Scope PointerToMemberScope() const;
 
 
          /**
@@ -657,6 +665,11 @@ namespace ROOT {
           */
          TypeName * fTypeName;
 
+
+         /** C++ type_info object */
+         mutable
+         const std::type_info * fTypeInfo;
+
       private:
 
          /**
@@ -673,10 +686,6 @@ namespace ROOT {
          size_t fSize;
 
 
-         /** C++ type_info object */
-         const std::type_info & fTypeInfo;
-
-
          /**
           * At of the At
           * @link aggregationByValue
@@ -688,7 +697,7 @@ namespace ROOT {
 
 
          /**
-          * pointer to the PropertyNth list
+          * pointer to the Property list
           * @label propertylist
           * @link aggregationByValue
           * @clientCardinality 1
@@ -701,6 +710,28 @@ namespace ROOT {
           * The position where the unscoped Name starts in the typename
           */
          size_t fBasePosition;
+
+
+         /**
+          * the final type excluding typedefs
+          * @label final typedef type
+          * @link aggrgationByValue
+          * @supplierCardinality 1
+          * @clientCardinality 1
+          */
+         mutable
+            Type * fFinalType;
+
+
+         /**
+          * the raw type excluding pointers, typedefs and arrays
+          * @alabel raw type
+          * @link aggegationByValue
+          * @supplierCardinality 1
+          * @clientCardinality 1
+          */
+         mutable
+            Type * fRawType;
 
       }; // class TypeBase
    } //namespace Reflex
@@ -1135,7 +1166,7 @@ inline ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeBase::TemplateFamily() const
 //-------------------------------------------------------------------------------
 inline const std::type_info & ROOT::Reflex::TypeBase::TypeInfo() const {
 //-------------------------------------------------------------------------------
-   return fTypeInfo;
+   return *fTypeInfo;
 }
 
 

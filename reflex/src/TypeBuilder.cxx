@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: TypeBuilder.cxx,v 1.10 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.cxx,v 1.10 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -23,6 +23,7 @@
 #include "Array.h"
 #include "Enum.h"
 #include "Typedef.h"
+#include "PointerToMember.h"
 #include "Reflex/Tools.h"
 
 
@@ -69,6 +70,18 @@ ROOT::Reflex::Type ROOT::Reflex::PointerBuilder( const Type & t,
    Type ret = Type::ByName( Pointer::BuildTypeName(t));
    if ( ret ) return ret;
    else       return (new Pointer(t, ti))->ThisType();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type ROOT::Reflex::PointerToMemberBuilder( const Type & t,
+                                                         const Scope & s,
+                                                         const std::type_info & ti ) {
+//-------------------------------------------------------------------------------
+// Construct a pointer type.
+   Type ret = Type::ByName( PointerToMember::BuildTypeName(t,s));
+   if ( ret ) return ret;
+   else       return (new PointerToMember(t, s, ti))->ThisType();
 }
 
 

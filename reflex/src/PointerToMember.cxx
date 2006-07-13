@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: PointerToMember.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PointerToMember.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -18,10 +18,12 @@
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::PointerToMember::PointerToMember( const Type & pointerToMemberType,
+                                                const Scope & pointerToMemberScope,
                                                 const std::type_info & ti ) 
 //------------------------------------------------------------------------------- 
-   : TypeBase( BuildTypeName( pointerToMemberType ).c_str(), sizeof(void*), POINTERTOMEMBER, ti ),
-     fPointerToMemberType( pointerToMemberType ) {
+   : TypeBase( BuildTypeName( pointerToMemberType, pointerToMemberScope ).c_str(), sizeof(void*), POINTERTOMEMBER, ti ),
+     fPointerToMemberType( pointerToMemberType ),
+     fPointerToMemberScope( pointerToMemberScope ) {
    // Construct dictionary info for a pointer to member type.
 }
 
@@ -30,15 +32,31 @@ ROOT::Reflex::PointerToMember::PointerToMember( const Type & pointerToMemberType
 std::string ROOT::Reflex::PointerToMember::Name( unsigned int mod ) const { 
 //-------------------------------------------------------------------------------
 // Return the name of the pointer to member type.
-   return BuildTypeName( fPointerToMemberType, mod );
+   return BuildTypeName( fPointerToMemberType, fPointerToMemberScope, mod );
 }
 
 
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::PointerToMember::BuildTypeName( const Type & pointerToMemberType,
+                                                          const Scope & pointerToMemberScope,
                                                           unsigned int mod ) {
 //-------------------------------------------------------------------------------
 // Build the pointer to member type name.
-   return pointerToMemberType.Name( mod ) + " ::*";
+   if ( pointerToMemberType.TypeType() == FUNCTION ) {
+
+      std::string nam = pointerToMemberType.ReturnType().Name(mod) + " (" + 
+         pointerToMemberScope.Name(mod) + "::*)(";
+
+      Type_Iterator lastbutone = pointerToMemberType.FunctionParameter_End()-1;
+      for (Type_Iterator ti = pointerToMemberType.FunctionParameter_Begin();
+           ti != pointerToMemberType.FunctionParameter_End(); ++ti) {
+         nam += (*ti).Name(mod);
+         if ( ti != lastbutone ) nam += ", ";
+      }
+      nam += ")";
+      return nam;
+
+   }
+   return pointerToMemberType.Name( mod ) + " " + pointerToMemberScope.Name(mod) + " ::*";
 }
                                                           

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Typedef.h,v 1.8 2006/06/27 08:35:10 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.9 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -373,17 +373,6 @@ namespace ROOT {
           * @clientCardinality 1
           */
          Type fTypedefType;
-
-
-         /**
-          * the final type of the typedef (initialised at first lookup if possible)
-          * @label final typedef type
-          * @link aggrgationByValue
-          * @supplierCardinality 0..1
-          * @clientCardinality 1
-          */
-         mutable
-         Type fFinalType;
 
       }; // class Typedef
    } //namespace Reflex
@@ -962,20 +951,19 @@ inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::Typedef::SubTyp
 //-------------------------------------------------------------------------------
 inline const std::type_info & ROOT::Reflex::Typedef::TypeInfo() const {
 //-------------------------------------------------------------------------------
-   return ToType( FINAL ).TypeInfo();
+   if ( *fTypeInfo != typeid(UnknownType) ) return *fTypeInfo;
+   Type current = ThisType();
+   while ( current.TypeType() == TYPEDEF ) current = current.ToType();
+   if ( current && current.TypeInfo() != typeid(UnknownType)) fTypeInfo = &current.TypeInfo();
+   return *fTypeInfo;
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type ROOT::Reflex::Typedef::ToType( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
-  Type finalType = fTypedefType;
-  if ( 0 != ( mod & ( FINAL | F ))) {
-     if ( fFinalType ) return fFinalType;
-     while (finalType.TypeType() == TYPEDEF) finalType = finalType.ToType();
-     if ( fFinalType.TypeType() != UNRESOLVED ) fFinalType = finalType;
-  }
-  return finalType;
+   if ( 0 != ( mod & ( RAW | R | FINAL | F ))) return TypeBase::ToType( mod );
+   return fTypedefType;
 }
 
 

@@ -5,6 +5,15 @@
 
 class ClassC: virtual public ClassA {
  public:
+
+   class PublicInner { 
+   public:
+      class PublicInnerInner {};
+   private:
+      class PrivateInnerInner {};
+   };
+
+
   ClassC() : fC('c') {}
   virtual ~ClassC() {}
   int c() { return fC; }

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: TypeBase.cxx,v 1.14 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.14 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -35,6 +35,7 @@
 #include "ClassTemplateInstance.h"
 #include "FunctionMemberTemplateInstance.h"
 #include "Reflex/Tools.h"
+#include "Reflex/Builder/TypeBuilder.h"
 
 #include <iostream>
 
@@ -43,12 +44,14 @@ ROOT::Reflex::TypeBase::TypeBase( const char * nam,
                                   size_t size,
                                   TYPE typeTyp, 
                                   const std::type_info & ti ) 
-   : fScope( Scope::__NIRVANA__() ),
+   : fTypeInfo( &ti ), 
+     fScope( Scope::__NIRVANA__() ),
      fSize( size ),
-     fTypeInfo( ti ), 
      fTypeType( typeTyp ),
      fPropertyList( PropertyList(new PropertyListImpl())),
-     fBasePosition(Tools::GetBasePosition( nam)) {
+     fBasePosition(Tools::GetBasePosition( nam)),
+     fFinalType(0),
+     fRawType(0) {
 //-------------------------------------------------------------------------------
 // Construct the dictinary info for a type.
    Type t = TypeName::ByName( nam );
@@ -291,6 +294,13 @@ size_t ROOT::Reflex::TypeBase::FunctionParameterSize() const {
 
 
 //-------------------------------------------------------------------------------
+ROOT::Reflex::Scope ROOT::Reflex::TypeBase::PointerToMemberScope() const {
+//-------------------------------------------------------------------------------
+   return Scope();
+}
+
+
+//-------------------------------------------------------------------------------
 ROOT::Reflex::PropertyList ROOT::Reflex::TypeBase::Properties() const {
 //-------------------------------------------------------------------------------
 // Return the property list attached to this type.
@@ -334,8 +344,66 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBase::TemplateArgumentAt( size_t /* nth */ 
 ROOT::Reflex::Type ROOT::Reflex::TypeBase::ToType( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the underlying type.
-   if ( 0 != ( mod & ( FINAL | RAW | F | R ))) return ThisType();
-   return Type();
+
+   if ( 0 != ( mod & ( RAW | R ))) {
+
+      if ( fRawType ) return *fRawType;
+
+      Type rawType = ThisType();
+
+      while ( true ) {
+
+         switch (rawType.TypeType()) {
+
+         case POINTER:
+         case POINTERTOMEMBER:
+         case TYPEDEF:
+         case ARRAY:
+            rawType = rawType.ToType();
+            break;
+         case UNRESOLVED:
+            return Type();
+         default:
+            fRawType = new Type(rawType);
+            return *fRawType;
+         }     
+      }
+   }
+
+   if ( 0 != ( mod & ( FINAL | F ))) {
+
+      if ( fFinalType ) return *fFinalType;
+
+      Type tmpType = ThisType();
+      while ( tmpType.TypeType() == TYPEDEF ) tmpType = tmpType.ToType();
+
+      Type retType = tmpType;
+
+      while ( true ) {
+
+         while ( tmpType.TypeType() == TYPEDEF ) tmpType = tmpType.ToType();
+
+         switch ( tmpType.TypeType()) {
+
+         case POINTER:
+            tmpType = PointerBuilder(tmpType.ToType(),tmpType.TypeInfo()).ToType();
+            break;
+         case POINTERTOMEMBER:
+            tmpType = PointerToMemberBuilder(tmpType.ToType(), tmpType.PointerToMemberScope(), tmpType.TypeInfo()).ToType();
+            break;
+         case ARRAY:
+            tmpType = ArrayBuilder(tmpType.ToType(), tmpType.ArrayLength(), tmpType.TypeInfo()).ToType();
+            break;
+         case UNRESOLVED:
+            return Type();
+         default:
+            fFinalType = new Type(retType);
+            return *fFinalType;
+         }
+      }
+   }
+
+   return ThisType();
 }
 
 

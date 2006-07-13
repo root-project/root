@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: test_Reflex_lookup.cxx,v 1.2 2006/07/03 13:09:34 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_lookup.cxx,v 1.2 2006/07/03 13:09:34 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -16,6 +16,8 @@
 #else
 #include<dlfcn.h>
 #endif
+
+#include "testDict2/ClassH.h"
 
 using namespace ROOT::Reflex;
 
@@ -110,9 +112,20 @@ void ReflexLookupTest::lookupType() {
    Type t21 = s2.LookupType("ClassA");
    CPPUNIT_ASSERT(t21);
 
-   Scope s3 = Scope::ByName("testclasses::Outer");
-   Type t30 = s3.LookupType("Inner::IInner");
-   CPPUNIT_ASSERT(t30);
+   //Scope s3 = Scope::ByName("testclasses::Outer");
+   //Type t30 = s3.LookupType("Inner::IInner");
+   //CPPUNIT_ASSERT(t30);
+
+   Scope s4 = Scope::ByName("ClassH");
+   CPPUNIT_ASSERT(s4);
+   Type t40 = s4.LookupType("ClassE");
+   CPPUNIT_ASSERT(ClassH::testLookup<ClassE>(t40.TypeInfo()));
+
+   Type t41 = s4.LookupType("PublicInner");
+   CPPUNIT_ASSERT(ClassH::testLookup<ClassH::PublicInner>(t41.TypeInfo()));
+   
+   Type t42 = s4.LookupType("PublicInner::PublicInnerInner");
+   CPPUNIT_ASSERT(ClassH::testLookup<ClassH::PublicInner::PublicInnerInner>(t42.TypeInfo()));
 
 }
 

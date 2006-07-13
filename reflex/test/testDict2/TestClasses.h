@@ -23,6 +23,12 @@ namespace testclasses {
    };
 
 
+   class TemplFun {
+   public: 
+      template <class T> void foooo(T /*t*/) {}
+   };
+
+
    class DataMembers {
 
       int i;
@@ -33,12 +39,14 @@ namespace testclasses {
 
    };
 
-
    class Typedefs {
+
       typedef int MYINT;
       typedef MYINT* PMYINT;
-      typedef MYINT** PPMYINT;
-      typedef PMYINT& RPMYINT;
+      typedef const MYINT** PPMYINT;
+      typedef const PMYINT& RPMYINT;
+      typedef const PPMYINT * PPPMYINT;
+
    };
 
   typedef int MyInt;
@@ -208,7 +216,13 @@ class BadDictionary {
 // template instances
 namespace {
   struct _testclasses_instances {
-    testclasses::ConvOp::ConversionOperatorT<int> m1;
+     struct A {};
+     _testclasses_instances() {
+        A a;
+        testclasses::TemplFun tf;
+        tf.foooo(a);
+     }
+     testclasses::ConvOp::ConversionOperatorT<int> m1;
     testclasses::WithTypedefMemberT<testclasses::MyVector> m2;
     testclasses::WithTypedefMemberT<testclasses::MyInt> m3;
   };

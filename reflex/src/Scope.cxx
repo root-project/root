@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Scope.cxx,v 1.11 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.11 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -222,6 +222,15 @@ size_t ROOT::Reflex::Scope::MemberTemplateSize() const {
 
 
 //-------------------------------------------------------------------------------
+ROOT::Reflex::MemberTemplate ROOT::Reflex::Scope::MemberTemplateByName( const std::string & nam ) const {
+//-------------------------------------------------------------------------------
+   // Look up a member template in this scope by name and return it.
+   if ( * this ) return fScopeName->fScopeBase->MemberTemplateByName( nam );
+   return MemberTemplate();
+}
+
+
+//-------------------------------------------------------------------------------
 std::string ROOT::Reflex::Scope::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the name of this scope, scoped if requested.
@@ -271,6 +280,15 @@ size_t ROOT::Reflex::Scope::SubTypeSize() const {
 
 
 //-------------------------------------------------------------------------------
+ROOT::Reflex::Type ROOT::Reflex::Scope::SubTypeByName( const std::string & nam ) const {
+//-------------------------------------------------------------------------------
+   // Look up a sub type by name and return it.
+   if ( * this ) return fScopeName->fScopeBase->SubTypeByName( nam );
+   return Type();
+}
+
+
+//-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::Scope::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template argument of this scope (ie. class).
@@ -303,6 +321,15 @@ size_t ROOT::Reflex::Scope::SubTypeTemplateSize() const {
 // Return the number of type templates in this scope.
    if ( * this ) return fScopeName->fScopeBase->SubTypeTemplateSize();
    return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::TypeTemplate ROOT::Reflex::Scope::SubTypeTemplateByName( const std::string & nam ) const {
+//-------------------------------------------------------------------------------
+// Lookup a sub type template by string and return it.
+   if ( * this ) return fScopeName->fScopeBase->SubTypeTemplateByName( nam );
+   return TypeTemplate();
 }
 
 

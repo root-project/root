@@ -5,6 +5,10 @@
 
 class ClassB : virtual public ClassA {
  public:
+
+
+   class Ambigous {};
+
   ClassB() : fB('b') {}
   virtual ~ClassB() {}
   int funWithManyArgs(int i0,int i1,int i2,int i3,int i4,int i5,int i6,int i7,

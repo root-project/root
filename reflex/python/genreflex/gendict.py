@@ -1037,8 +1037,15 @@ class genDictionary(object) :
     if 'virtual' in attrs : mod += ' | VIRTUAL'
     if 'static'  in attrs : mod += ' | STATIC'
     # Extra modifiers
-    if ((xattrs and xattrs.get('transient') == 'true') or
-	('extra' in attrs and attrs['extra'].get('transient') == 'true')) : mod += ' | TRANSIENT'
+    xtrans = ''
+    etrans = ''
+    if xattrs :
+      xtrans = xattrs.get('transient')
+      if xtrans : xtrans = xtrans.lower()
+    if 'extra' in attrs:
+      etrans = attrs['extra'].get('transient')
+      if etrans : etrans = etrans.lower()
+    if xtrans == 'true' or etrans == 'true' : mod += ' | TRANSIENT'
     if 'artificial' in attrs : mod += ' | ARTIFICIAL' 
     return mod
 #----------------------------------------------------------------------------------

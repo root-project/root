@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: PointerToMember.h,v 1.6 2006/04/12 10:21:11 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PointerToMember.h,v 1.7 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,6 +15,7 @@
 // Include files
 #include "Reflex/TypeBase.h"
 #include "Reflex/Type.h"
+#include "Reflex/Scope.h"
 
 namespace ROOT {
    namespace Reflex {
@@ -32,7 +33,8 @@ namespace ROOT {
       public:
 
          /** default constructor */
-         PointerToMember( const Type &           pointerToMemberType,
+         PointerToMember( const Type & pointerToMemberType,
+                          const Scope & pointerToMemberScope,
                           const std::type_info & ti );
 
 
@@ -48,6 +50,13 @@ namespace ROOT {
          std::string Name( unsigned int mod = 0 ) const;
 
 
+         /**
+          * PointerToMemberScope will return the scope of the pointer to member type
+          * @return scope of the pointer to member type
+          */
+         Scope PointerToMemberScope() const;
+
+
          /** pointerToMemberType will return a pointer to the Type the pointer to
           * MemberAt points to
           * @return pointer to Type of pointer to MemberAt
@@ -57,25 +66,45 @@ namespace ROOT {
 
          /** static funtion that composes the At Name */
          static std::string BuildTypeName( const Type & pointerToMemberType,
+                                           const Scope & pointerToMemberScope,
                                            unsigned int mod = SCOPED | QUALIFIED );
 
       private:
 
          /**
           * @link aggregationByValue
-          * @label pointer to MemberAt At
+          * @label pointer to member type
           * @supplierCardinality 1
           * @clientCardinality 1
           */
          Type fPointerToMemberType;
 
+
+         /** 
+          * @link aggregationByValue
+          * @label pointer to member scope
+          * @supplierCardinality 1
+          * @clientCardinality 1
+          */
+         Scope fPointerToMemberScope;
+
+
       }; // class PointerToMember
    } // namespace Reflex
 } // namespace ROOT
 
+
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::PointerToMember::ToType( unsigned int /* mod */ ) const {
+inline ROOT::Reflex::Scope ROOT::Reflex::PointerToMember::PointerToMemberScope() const {
 //-------------------------------------------------------------------------------
+   return fPointerToMemberScope;
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type ROOT::Reflex::PointerToMember::ToType( unsigned int mod ) const {
+//-------------------------------------------------------------------------------
+   if ( 0 != ( mod & ( RAW | R | FINAL | F ))) return TypeBase::ToType( mod );
    return fPointerToMemberType;
 }
 

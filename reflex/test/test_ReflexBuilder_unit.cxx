@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: test_ReflexBuilder_unit.cxx,v 1.7 2006/04/25 09:26:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.8 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -477,7 +477,10 @@ void ReflexBuilderUnitTest::typedefbuilder()
   Type t = Type::ByName("MyInt1");
   CPPUNIT_ASSERT(t);
   CPPUNIT_ASSERT(t.IsTypedef());
-  CPPUNIT_ASSERT(Type::ByName("int") == t.ToType() );
+  Type t2 = Type::ByName("int");
+  Type t3 = Type::ByTypeInfo(typeid(int));
+  Type t4 = t.ToType();
+  CPPUNIT_ASSERT(Type::ByTypeInfo(typeid(int)) == t.ToType() );
   // Within namespace or class
   NamespaceBuilder("AA");
   TypedefBuilder<float>("AA::MyInt1");

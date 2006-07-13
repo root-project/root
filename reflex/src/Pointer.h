@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Pointer.h,v 1.9 2006/06/30 06:08:19 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Pointer.h,v 1.10 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -76,7 +76,7 @@ namespace ROOT {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type ROOT::Reflex::Pointer::ToType( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
-   if ( 0 != ( mod & ( RAW | R ))) return fPointerType.ToType( mod );
+   if ( 0 != ( mod & ( RAW | R | FINAL | F ))) return TypeBase::ToType( mod );
    return fPointerType;
 }
 

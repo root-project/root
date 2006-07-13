@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: TypeBuilder.h,v 1.9 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.10 2006/07/05 07:09:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -39,6 +39,11 @@ namespace ROOT{
 
       RFLX_API Type PointerBuilder( const Type & t,
                                     const std::type_info & ti = typeid(UnknownType));
+
+
+      RFLX_API Type PointerToMemberBuilder( const Type & t,
+                                            const Scope & s,
+                                            const std::type_info & ti = typeid(UnknownType));
 
 
       RFLX_API Type ReferenceBuilder( const Type & t );
