@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.177 2006/06/30 06:31:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.178 2006/06/30 14:24:05 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -697,8 +697,6 @@ void TFile::Close(Option_t *option)
    delete fClassIndex;
    fClassIndex = 0;
 
-   TCollection::StartGarbageCollection();
-
    TDirectory *cursav = gDirectory;
    cd();
 
@@ -756,7 +754,6 @@ void TFile::Close(Option_t *option)
    gROOT->GetListOfFiles()->Remove(this);
    gROOT->GetListOfBrowsers()->RecursiveRemove(this);
 
-   TCollection::EmptyGarbageCollection();
 }
 
 //____________________________________________________________________________________
