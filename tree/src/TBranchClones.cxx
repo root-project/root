@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.19 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.20 2005/11/16 20:23:33 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -15,135 +15,159 @@
 //                                                                      //
 // See TTree.                                                           //
 //                                                                      //
-//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TROOT.h"
 #include "TBranchClones.h"
-#include "TFile.h"
-#include "TTree.h"
+
 #include "TBasket.h"
 #include "TClass.h"
-#include "TRealData.h"
-#include "TDataType.h"
 #include "TDataMember.h"
+#include "TDataType.h"
+#include "TFile.h"
 #include "TLeafI.h"
+#include "TROOT.h"
+#include "TRealData.h"
+#include "TTree.h"
 
-R__EXTERN TTree *gTree;
+#include <cstring>
+
+R__EXTERN TTree* gTree;
 
 ClassImp(TBranchClones)
 
 //______________________________________________________________________________
-TBranchClones::TBranchClones(): TBranch()
+TBranchClones::TBranchClones()
+: TBranch()
+, fList(0)
+, fRead(0)
+, fN(0)
+, fNdataMax(0)
+, fBranchCount(0)
 {
-//*-*-*-*-*-*Default constructor for BranchClones*-*-*-*-*-*-*-*-*-*
-//*-*        ====================================
-
-   fList        = 0;
-   fRead        = 0;
-   fN           = 0;
-   fNdataMax    = 0;
-   fBranchCount = 0;
+   // -- Default and i/o constructor.
 }
 
-
 //______________________________________________________________________________
-TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
-    :TBranch()
+TBranchClones::TBranchClones(const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
+: TBranch()
+, fList(0)
+, fRead(0)
+, fN(0)
+, fNdataMax(0)
+, fBranchCount(0)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create a BranchClones*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =====================
-//
+   // -- Constructor.
+
    char leaflist[80];
    char branchname[80];
    char branchcount[64];
    SetName(name);
-   if (compress == -1 && gTree->GetDirectory()) {
-      TFile *bfile = 0;
-      if (gTree->GetDirectory()) bfile = gTree->GetDirectory()->GetFile();
-      if (bfile) compress = bfile->GetCompressionLevel();
+   if ((compress == -1) && gTree->GetDirectory()) {
+      TFile* bfile = 0;
+      if (gTree->GetDirectory()) {
+         bfile = gTree->GetDirectory()->GetFile();
+      }
+      if (bfile) {
+         compress = bfile->GetCompressionLevel();
+      }
    }
-   char *cpointer  = (char*)pointer;
-   char **ppointer = (char**)(cpointer);
-   fList     = (TClonesArray*)(*ppointer);
-   fAddress  = cpointer;
-   fRead     = 0;
-   fN        = 0;
-   fNdataMax = 0;
-   TClass *cl = fList->GetClass();
-   if (!cl) return;
+   char* cpointer = (char*) pointer;
+   char** ppointer = (char**) pointer;
+   fList = (TClonesArray*) *ppointer;
+   fAddress = cpointer;
+   TClass* cl = fList->GetClass();
+   if (!cl) {
+      return;
+   }
    gTree->BuildStreamerInfo(cl);
-
    fClassName = cl->GetName();
-   
    fSplitLevel = splitlevel;
 
-//*-*- Create a branch to store the array count
-   if (basketsize < 100) basketsize = 100;
-   sprintf(leaflist,"%s_/I",name);
-   sprintf(branchcount,"%s_",name);
-   fBranchCount = new TBranch(branchcount,&fN,leaflist,basketsize);
+   // Create a branch to store the array count.
+   if (basketsize < 100) {
+      basketsize = 100;
+   }
+   std::sprintf(leaflist, "%s_/I", name);
+   std::sprintf(branchcount, "%s_", name);
+   fBranchCount = new TBranch(branchcount, &fN, leaflist, basketsize);
    fBranchCount->SetBit(kIsClone);
-   TLeaf *leafcount = (TLeaf*)fBranchCount->GetListOfLeaves()->UncheckedAt(0);
+   TLeaf* leafcount = (TLeaf*) fBranchCount->GetListOfLeaves()->UncheckedAt(0);
+   fTree = gTree;
+   fDirectory = fTree->GetDirectory();
+   fFileName = "";
 
-   fTree       = gTree;
-   fDirectory  = fTree->GetDirectory();
-   fFileName   = "";
-
-//*-*-  Create the first basket
-   TBasket *basket = new TBasket(branchcount,fTree->GetName(),this);
+   // Create the first basket.
+   TBasket* basket = new TBasket(branchcount, fTree->GetName(), this);
    fBaskets.Add(basket);
-   
-//*-*- Loop on all public data members of the class and its base classes
-   const char *itype = 0;
-   TRealData *rd;
-   TIter      next(cl->GetListOfRealData());
+   // Loop on all public data members of the class and its base classes.
+   const char* itype = 0;
+   TRealData* rd = 0;
+   TIter next(cl->GetListOfRealData());
    while ((rd = (TRealData *) next())) {
-      if (rd->IsObject()) continue;
-      TDataMember *member = rd->GetDataMember();
-      if (!member->IsPersistent()) continue; //do not process members with a ! as the first
-                                             // character in the comment field
-      if (!member->IsBasic() || member->IsaPointer() ) {
-         Warning("BranchClones","Cannot process: %s::%s",cl->GetName(),member->GetName());
+      if (rd->IsObject()) {
          continue;
       }
-      // forget TObject part if splitlevel = 2
-      if (splitlevel > 1 || fList->TestBit(TClonesArray::kForgetBits)
-                         || cl->CanIgnoreTObjectStreamer()) {
-         if (strcmp(member->GetName(),"fBits")     == 0) continue;
-         if (strcmp(member->GetName(),"fUniqueID") == 0) continue;
+      TDataMember* member = rd->GetDataMember();
+      if (!member->IsPersistent()) {
+         // -- Skip non-persistent members.
+         continue;
       }
-      
+      if (!member->IsBasic() || member->IsaPointer()) {
+         Warning("BranchClones", "Cannot process: %s::%s", cl->GetName(), member->GetName());
+         continue;
+      }
+      // Forget TObject part if splitlevel = 2.
+      if ((splitlevel > 1) || fList->TestBit(TClonesArray::kForgetBits) || cl->CanIgnoreTObjectStreamer()) {
+         if (!std::strcmp(member->GetName(), "fBits")) {
+            continue;
+         }
+         if (!std::strcmp(member->GetName(), "fUniqueID")) {
+            continue;
+         }
+      }
       gTree->BuildStreamerInfo(gROOT->GetClass(member->GetFullTypeName()));
-      
-      TDataType *membertype = member->GetDataType();
+      TDataType* membertype = member->GetDataType();
       Int_t type = membertype->GetType();
-      if (type == 0) {
-         Warning("BranchClones","Cannot process: %s::%s",cl->GetName(),member->GetName());
+      if (!type) {
+         Warning("BranchClones", "Cannot process: %s::%s of type zero!", cl->GetName(), member->GetName());
          continue;
       }
-      if (type == 1)  itype = "B";
-      if (type == 11) itype = "b";
-      if (type == 3)  itype = "I";
-      if (type == 5)  itype = "F";
-      if (type == 8)  itype = "D";
-      if (type == 9)  itype = "D";
-      if (type == 13) itype = "i";
-      if (type == 2)  itype = "S";
-      if (type == 12) itype = "s";
-      sprintf(leaflist,"%s[%s]/%s",member->GetName(),branchcount,itype);
+
+      if (type ==  1) {
+         itype = "B";
+      } else if (type == 2) {
+         itype = "S";
+      } else if (type == 3) {
+         itype = "I";
+      } else if (type == 5) {
+         itype = "F";
+      } else if (type == 8) {
+         itype = "D";
+      } else if (type == 9) {
+         itype = "D";
+      } else if (type == 11) {
+         itype = "b";
+      } if (type == 12) {
+         itype = "s";
+      } if (type == 13) {
+         itype = "i";
+      }
+
+      sprintf(leaflist, "%s[%s]/%s", member->GetName(), branchcount, itype);
       Int_t comp = compress;
-      if (type == 5) comp--;
-      sprintf(branchname,"%s.%s",name,rd->GetName());
-      TBranch *branch  = new TBranch(branchname,this,leaflist,basketsize,comp);
+      if (type == 5) {
+         comp--;
+      }
+      sprintf(branchname, "%s.%s", name, rd->GetName());
+      TBranch* branch  = new TBranch(branchname, this, leaflist, basketsize, comp);
       branch->SetBit(kIsClone);
-      TObjArray *leaves = branch->GetListOfLeaves();
-      TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(0);
+      TObjArray* leaves = branch->GetListOfLeaves();
+      TLeaf* leaf = (TLeaf*) leaves->UncheckedAt(0);
       leaf->SetOffset(rd->GetThisOffset());
       leaf->SetLeafCount(leafcount);
       Int_t arraydim = member->GetArrayDim();
       if (arraydim) {
-         Int_t maxindex=1;
+         Int_t maxindex = 1;
          while (arraydim) {
             maxindex *= member->GetMaxIndex(--arraydim);
          }
@@ -153,61 +177,59 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
    }
 }
 
-
 //______________________________________________________________________________
 TBranchClones::~TBranchClones()
 {
-//*-*-*-*-*-*Default destructor for a BranchClones*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        =====================================
+   // -- Destructor.
 
    delete fBranchCount;
    fBranchCount = 0;
    fBranches.Delete();
+   // FIXME: We might own this, possible memory leak.
    fList = 0;
 }
 
-
 //______________________________________________________________________________
-void TBranchClones::Browse(TBrowser *b)
+void TBranchClones::Browse(TBrowser* b)
 {
-   // Browse this branch. 
+   // -- Browse this branch.
 
-   fBranches.Browse( b );
+   fBranches.Browse(b);
 }
 
 //______________________________________________________________________________
 Int_t TBranchClones::Fill()
 {
-//*-*-*-*-*Loop on all Branches of this BranchClones to fill Basket buffer*-*
-//*-*      ===============================================================
+   // -- Loop on all branches and fill Basket buffer.
 
-   Int_t i;
+   Int_t i = 0;
    Int_t nbytes = 0;
    Int_t nbranches = fBranches.GetEntriesFast();
-   char **ppointer = (char**)(fAddress);
-   if (ppointer == 0) return 0;
-   fList = (TClonesArray*)(*ppointer);
-   fN    = fList->GetEntriesFast();
+   char** ppointer = (char**) fAddress;
+   if (!ppointer) {
+      return 0;
+   }
+   fList = (TClonesArray*) *ppointer;
+   fN = fList->GetEntriesFast();
    fEntries++;
-
    if (fN > fNdataMax) {
       fNdataMax = fList->GetSize();
       char branchcount[64];
-      sprintf(branchcount,"%s_",GetName());
-      TLeafI *leafi = (TLeafI*)fBranchCount->GetLeaf(branchcount);
+      sprintf(branchcount, "%s_", GetName());
+      TLeafI* leafi = (TLeafI*) fBranchCount->GetLeaf(branchcount);
       leafi->SetMaximum(fNdataMax);
-      for (i=0;i<nbranches;i++)  {
-         TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
-         TObjArray *leaves = branch->GetListOfLeaves();
-         TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(0);
+      for (i = 0; i < nbranches; i++) {
+         TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
+         TObjArray* leaves = branch->GetListOfLeaves();
+         TLeaf* leaf = (TLeaf*) leaves->UncheckedAt(0);
          leaf->SetAddress();
       }
    }
    nbytes += fBranchCount->Fill();
-   for (i=0;i<nbranches;i++)  {
-      TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
-      TObjArray *leaves = branch->GetListOfLeaves();
-      TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(0);
+   for (i = 0; i < nbranches; i++)  {
+      TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
+      TObjArray* leaves = branch->GetListOfLeaves();
+      TLeaf* leaf = (TLeaf*) leaves->UncheckedAt(0);
       leaf->Import(fList, fN);
       nbytes += branch->Fill();
    }
@@ -217,34 +239,36 @@ Int_t TBranchClones::Fill()
 //______________________________________________________________________________
 Int_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
 {
-//*-*-*-*-*Read all branches of a BranchClones and return total number of bytes
-//*-*      ====================================================================
+   // -- Read all branches and return total number of bytes read.
 
-   if (TestBit(kDoNotProcess) && !getall) return 0;
-   Int_t nbytes = fBranchCount->GetEntry(entry, getall);
-   TLeaf *leafcount = (TLeaf*)fBranchCount->GetListOfLeaves()->UncheckedAt(0);
-   fN = Int_t(leafcount->GetValue());
-   if (fN <= 0) {
-      if (fList) fList->Clear();
+   if (TestBit(kDoNotProcess) && !getall) {
       return 0;
    }
-   TBranch *branch;
+   Int_t nbytes = fBranchCount->GetEntry(entry, getall);
+   TLeaf* leafcount = (TLeaf*) fBranchCount->GetListOfLeaves()->UncheckedAt(0);
+   fN = Int_t(leafcount->GetValue());
+   if (fN <= 0) {
+      if (fList) {
+         fList->Clear();
+      }
+      return 0;
+   }
+   TBranch* branch = 0;
    Int_t nbranches = fBranches.GetEntriesFast();
-
-     // if fList exists, create clonesarray objects
+   // If fList exists, create clones array objects.
    if (fList) {
       fList->Clear();
       fList->ExpandCreateFast(fN);
-      for (Int_t i=0;i<nbranches;i++)  {
-         branch = (TBranch*)fBranches.UncheckedAt(i);
-         if (((TLeaf*)branch->GetListOfLeaves()->UncheckedAt(0))->GetOffset()<0) {
+      for (Int_t i = 0; i < nbranches; i++)  {
+         branch = (TBranch*) fBranches.UncheckedAt(i);
+         if (((TLeaf*) branch->GetListOfLeaves()->UncheckedAt(0))->GetOffset() < 0) {
             continue;
          }
          nbytes += branch->GetEntryExport(entry, getall, fList, fN);
       }
    } else {
-      for (Int_t i=0;i<nbranches;i++)  {
-         branch = (TBranch*)fBranches.UncheckedAt(i);
+      for (Int_t i = 0; i < nbranches; i++)  {
+         branch = (TBranch*) fBranches.UncheckedAt(i);
          nbytes += branch->GetEntry(entry, getall);
       }
    }
@@ -254,84 +278,73 @@ Int_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
 //______________________________________________________________________________
 void TBranchClones::Print(Option_t *option) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Print TBranch parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ========================
+   // -- Print branch parameters.
 
    fBranchCount->Print(option);
-   Int_t i;
    Int_t nbranches = fBranches.GetEntriesFast();
-   for (i=0;i<nbranches;i++)  {
-      TBranch *branch = (TBranch*)fBranches.At(i);
+   for (Int_t i = 0; i < nbranches; i++) {
+      TBranch* branch = (TBranch*) fBranches.At(i);
       branch->Print(option);
    }
 }
 
 //______________________________________________________________________________
-void TBranchClones::Reset(Option_t *option)
+void TBranchClones::Reset(Option_t* option)
 {
-//*-*-*-*-*-*-*-*Reset a Branch*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            ====================
-//
-//    Existing buffers are deleted
-//    Entries, max and min are reset
-//
+   // -- Reset branch.
+   //
+   //    Existing buffers are deleted
+   //    Entries, max and min are reset
+   //
 
-   fEntries        = 0;
-   fTotBytes       = 0;
-   fZipBytes       = 0;
-   Int_t i;
+   fEntries = 0;
+   fTotBytes = 0;
+   fZipBytes = 0;
    Int_t nbranches = fBranches.GetEntriesFast();
-   for (i=0;i<nbranches;i++)  {
-      TBranch *branch = (TBranch*)fBranches.At(i);
+   for (Int_t i = 0; i < nbranches; i++) {
+      TBranch* branch = (TBranch*) fBranches.At(i);
       branch->Reset(option);
    }
    fBranchCount->Reset();
 }
 
 //______________________________________________________________________________
-void TBranchClones::SetAddress(void *add)
+void TBranchClones::SetAddress(void* addr)
 {
-//*-*-*-*-*-*-*-*Set address of this branch*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            ====================
-//*-*
+   // -- Set address of this branch.
 
    fReadEntry = -1;
-   fAddress = (char*)add;
-   char **ppointer = (char**)(fAddress);
-
-   // test if the pointer is null
-   // in this case create the correct TClonesArray
-   if ( (*ppointer)==0 ) {
-      *ppointer = (char*) new TClonesArray(fClassName);
-      fAddress = (char*)ppointer;
+   fAddress = (char*) addr;
+   char** pp= (char**) fAddress;
+   if (pp && (*pp == 0)) {
+      // We've been asked to allocate an object for the user.
+      *pp= (char*) new TClonesArray(fClassName);
    }
-
-   fList = (TClonesArray*)(*ppointer);
+   fList = 0;
+   if (pp) {
+      fList = (TClonesArray*) *pp;
+   }
    fBranchCount->SetAddress(&fN);
 }
 
 //______________________________________________________________________________
 void TBranchClones::SetBasketSize(Int_t buffsize)
 {
-//*-*-*-*-*-*-*-*Reset basket size for all subbranches of this branchclones
-//*-*            ==========================================================
-//
+   // -- Reset basket size for all sub-branches.
 
    TBranch::SetBasketSize(buffsize);
 
-   Int_t i;
    Int_t nbranches = fBranches.GetEntriesFast();
-   for (i=0;i<nbranches;i++)  {
-      TBranch *branch = (TBranch*)fBranches[i];
+   for (Int_t i = 0; i < nbranches; i++)  {
+      TBranch* branch = (TBranch*) fBranches[i];
       branch->SetBasketSize(fBasketSize);
    }
 }
 
 //_______________________________________________________________________
-void TBranchClones::Streamer(TBuffer &b)
+void TBranchClones::Streamer(TBuffer& b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
+   // -- Serialize/Deserialize from a buffer.
    UInt_t R__s, R__c;
    if (b.IsReading()) {
       b.ReadVersion(&R__s, &R__c);
@@ -350,39 +363,44 @@ void TBranchClones::Streamer(TBuffer &b)
       fClassName.Streamer(b);
       fBranches.Streamer(b);
       fTree = gTree;
-      TBranch *branch;
-      TLeaf *leaf;
+      TBranch* branch = 0;
+      TLeaf* leaf = 0;
       Int_t nbranches = fBranches.GetEntriesFast();
-      for (Int_t i=0;i<nbranches;i++)  {
-         branch = (TBranch*)fBranches[i];
+      for (Int_t i = 0; i < nbranches; i++) {
+         branch = (TBranch*) fBranches[i];
          branch->SetBit(kIsClone);
-         leaf = (TLeaf*)branch->GetListOfLeaves()->UncheckedAt(0);
+         leaf = (TLeaf*) branch->GetListOfLeaves()->UncheckedAt(0);
          leaf->SetOffset(-1);
       }
       fRead = 1;
-      TClass *cl = gROOT->GetClass((const char*)fClassName);
+      TClass* cl = gROOT->GetClass((const char*) fClassName);
       if (!cl) {
-         Warning("Streamer","Unknow class: %s. Cannot read BranchClones: %s",
-            fClassName.Data(),GetName());
+         Warning("Streamer", "Unknown class: %s. Cannot read BranchClones: %s", fClassName.Data(), GetName());
          SetBit(kDoNotProcess);
          return;
       }
-      if (!cl->GetListOfRealData())  cl->BuildRealData();
+      if (!cl->GetListOfRealData()) {
+         cl->BuildRealData();
+      }
       char branchname[80];
-      TRealData *rd;
-      TIter      next(cl->GetListOfRealData());
-      while ((rd = (TRealData *) next())) {
-         TDataMember *member = rd->GetDataMember();
-         if (!member)                 continue;
-         if (!member->IsBasic())      continue;
-         if (!member->IsPersistent()) continue;
-         TDataType *membertype = member->GetDataType();
-         if (membertype->GetType() == 0) continue;
-         sprintf(branchname,"%s.%s",GetName(),rd->GetName());
-         branch  = (TBranch*)fBranches.FindObject(branchname);
-         if (!branch) continue;
-         TObjArray *leaves = branch->GetListOfLeaves();
-         leaf = (TLeaf*)leaves->UncheckedAt(0);
+      TRealData* rd = 0;
+      TIter next(cl->GetListOfRealData());
+      while ((rd = (TRealData*) next())) {
+         TDataMember* member = rd->GetDataMember();
+         if (!member || !member->IsBasic() || !member->IsPersistent()) {
+            continue;
+         }
+         TDataType* membertype = member->GetDataType();
+         if (!membertype->GetType()) {
+            continue;
+         }
+         std::sprintf(branchname, "%s.%s", GetName(), rd->GetName());
+         branch = (TBranch*) fBranches.FindObject(branchname);
+         if (!branch) {
+            continue;
+         }
+         TObjArray* leaves = branch->GetListOfLeaves();
+         leaf = (TLeaf*) leaves->UncheckedAt(0);
          leaf->SetOffset(rd->GetThisOffset());
       }
       b.CheckByteCount(R__s, R__c, TBranchClones::IsA());
@@ -405,3 +423,4 @@ void TBranchClones::Streamer(TBuffer &b)
       b.SetByteCount(R__c, kTRUE);
    }
 }
+
