@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.30 2006/05/26 09:23:46 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.31 2006/06/28 10:03:14 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -41,14 +41,16 @@
 //
 //
 
+#include "TFormLeafInfo.h"
+
 #include "TArrayI.h"
 #include "TClonesArray.h"
 #include "TError.h"
-#include "TFormLeafInfo.h"
 #include "TInterpreter.h"
+#include "TLeafObject.h"
 #include "TMethod.h"
 #include "TMethodCall.h"
-#include "TLeafObject.h"
+#include "TTree.h"
 #include "TVirtualCollectionProxy.h"
 
 
@@ -138,35 +140,62 @@ TClass* TFormLeafInfo::GetClass() const
 }
 
 //______________________________________________________________________________
-char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t &instance)
+char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t& instance)
 {
    // Returns the the location of the object pointed to.
    // Modify instance if the object is part of an array.
 
-   char* thisobj = 0;
-   TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
-   TStreamerInfo * info = branch->GetInfo();
+   TBranchElement* branch = (TBranchElement*) leaf->GetBranch();
    Int_t id = branch->GetID();
-   Int_t offset = (id<0)?0:info->GetOffsets()[id];
-   char* address = (char*)branch->GetAddress();
-   if (address) {
-      Int_t type = (id<0)?-1:info->GetNewTypes()[id];
+   if (id < 0) {
+      // Branch is a top-level branch.
+      if (branch->GetTree()->GetMakeClass()) {
+         // Branch belongs to a MakeClass tree.
+         return branch->GetAddress();
+      } else {
+         return branch->GetObject();
+      }
+   }
+   TStreamerInfo* info = branch->GetInfo();
+   Int_t offset = 0;
+   if (id > -1) {
+      // Branch is *not* a top-level branch.
+      offset = info->GetOffsets()[id];
+   }
+   char* address = 0;
+   // Branch is *not* a top-level branch.
+   if (branch->GetTree()->GetMakeClass()) {
+      // Branch belongs to a MakeClass tree.
+      address = (char*) branch->GetAddress();
+   } else {
+      address = (char*) branch->GetObject();
+   }
+   char* thisobj = 0;
+   if (!address) {
+      // FIXME: This makes no sense, if the branch address is not set, then object will not be set either.
+      thisobj = branch->GetObject();
+   } else {
+      Int_t type = -1;
+      if (id > -1) {
+         type = info->GetNewTypes()[id];
+      }
       switch (type) {
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kSTLp:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kAnyp:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kAnyP:
-            instance = instance;
-            Error("GetValuePointer","Type (%d) not yet supported\n",type);
+            Error("GetValuePointer", "Type (%d) not yet supported\n", type);
             break;
+
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kAny:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kSTL:
-            thisobj = (char*)(address+offset);
-            Int_t len, index, sub_instance;
-
-            len = GetArrayLength();
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kSTL: 
+         {
+            // An array of objects.
+            Int_t index;
+            Int_t sub_instance;
+            Int_t len = GetArrayLength();
             if (len) {
                index = instance / len;
                sub_instance = instance % len;
@@ -174,11 +203,11 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t &instance)
                index = instance;
                sub_instance = 0;
             }
-
-            thisobj += index*fClass->Size();
-
+            thisobj = address + offset + (index * fClass->Size());
             instance = sub_instance;
             break;
+         }
+
          case TStreamerInfo::kBase:
          case TStreamerInfo::kObject:
          case TStreamerInfo::kTString:
@@ -186,8 +215,10 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t &instance)
          case TStreamerInfo::kTObject:
          case TStreamerInfo::kAny:
          case TStreamerInfo::kSTL:
-            thisobj = (char*)(address+offset);
+            // A single object.
+            thisobj = address + offset;
             break;
+
          case kBool_t:
          case kChar_t:
          case kUChar_t:
@@ -219,12 +250,16 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t &instance)
          case TStreamerInfo::kOffsetL + kDouble_t:
          case TStreamerInfo::kOffsetL + kDouble32_t:
          case TStreamerInfo::kOffsetL + kchar:
-            thisobj = (address+offset);
+            // A simple type, or an array of a simple type.
+            thisobj = address + offset;
             break;
+
          default:
-            thisobj = (char*) *(void**)(address+offset);
+            // Everything else is a pointer to something.
+            thisobj = *((char**) (address + offset));
+            break;
          }
-   } else thisobj = branch->GetObject();
+   }
    return thisobj;
 }
 
