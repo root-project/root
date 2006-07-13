@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.18 2006/05/24 15:10:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.19 2006/07/13 05:30:48 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -75,7 +75,7 @@ TLeaf::TLeaf(const char* name, const char *)
          char* bracket = strchr(newname, '[');
          *bracket = 0;
          SetName(newname);
-         delete newname;
+         delete [] newname;
          newname = 0;
       }
    }
