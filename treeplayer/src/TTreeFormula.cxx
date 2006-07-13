@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.196 2006/06/06 16:42:17 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.197 2006/06/28 10:03:14 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -86,9 +86,11 @@ ClassImp(TTreeFormula)
 //
 
 //______________________________________________________________________________
-inline static void R__LoadBranch(TBranch *br, Long64_t entry, Bool_t quickLoad)
+inline static void R__LoadBranch(TBranch* br, Long64_t entry, Bool_t quickLoad)
 {
-   if (!quickLoad || br->GetReadEntry()!=entry)  br->GetEntry(entry);
+   if (!quickLoad || (br->GetReadEntry() != entry)) {
+      br->GetEntry(entry);
+   }
 }
 
 //______________________________________________________________________________
@@ -665,11 +667,7 @@ Int_t TTreeFormula::DefineAlternate(const char *expression)
 }
 
 //______________________________________________________________________________
-Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
-                                  Bool_t final, UInt_t paran_level,
-                                  TObjArray &castqueue,
-                                  Bool_t useLeafCollectionObject,
-                                  const char* fullExpression)
+Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t final, UInt_t paran_level, TObjArray& castqueue, Bool_t useLeafCollectionObject, const char* fullExpression)
 {
    // Decompose 'expression' as pointing to something inside the leaf
    // Returns:
@@ -715,11 +713,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                   mom->GetName());
             return -2;
          }
-         if (mom->GetType()<0 && mom->GetAddress()==0) {
-            Error("DefinedVariable",
-                  "Address not set when the type of the branch is negatif for for %s."
-                  "  We will be unable to read!",
-                  mom->GetName());
+         if ((mom->GetType()) < 0 && !mom->GetAddress()) {
+            Error("DefinedVariable", "Address not set when the type of the branch is negative for for %s.  We will be unable to read!", mom->GetName());
             return -2;
          }
       }
@@ -1847,13 +1842,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
    return action;
 }
 //______________________________________________________________________________
-Int_t TTreeFormula::FindLeafForExpression(const char* expression,
-                                          TLeaf *&leaf,
-                                          TString &leftover, Bool_t &final,
-                                          UInt_t &paran_level, TObjArray &castqueue,
-                                          std::vector<std::string>& aliasUsed,
-                                          Bool_t &useLeafCollectionObject,
-                                          const char *fullExpression)
+Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, TString& leftover, Bool_t& final, UInt_t& paran_level, TObjArray& castqueue, std::vector<std::string>& aliasUsed, Bool_t& useLeafCollectionObject, const char* fullExpression)
 {
    // Look for the leaf corresponding to the start of expression.
    // It returns the corresponding leaf if any.
@@ -1938,20 +1927,26 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
 
          if (branch && !leaf) {
             // We have a branch but not a leaf.  We are likely to have found
-            // the top of splitted branch.
-            if (BranchHasMethod(0,branch,work,params,readentry)) {
-               //fprintf(stderr,"Does have a method %s for %s.\n",work,branch->GetName());
+            // the top of split branch.
+            if (BranchHasMethod(0, branch, work, params, readentry)) {
+               //fprintf(stderr, "Does have a method %s for %s.\n", work, branch->GetName());
             }
          }
 
          // What we have so far might be a member function of one of the
          // leaves that are not splitted (for example "GetNtrack" for the Event class).
-         TIter next (fTree->GetIteratorOnAllLeaves());
-         TLeaf *leafcur;
-         while (!leaf && (leafcur = (TLeaf*)next())) {
-            if (BranchHasMethod(leafcur,leafcur->GetBranch(),work,params,readentry)) {
-               //fprintf(stderr,"Does have a method %s for %s found in leafcur %s.\n",work,leafcur->GetBranch()->GetName(),leafcur->GetName());
-               leaf = leafcur;
+         TIter next(fTree->GetIteratorOnAllLeaves());
+         TLeaf* leafcur = 0;
+         while (!leaf && (leafcur = (TLeaf*) next())) {
+            if (leafcur) {
+               TBranch* br = leafcur->GetBranch();
+               Bool_t yes = BranchHasMethod(leafcur, br, work, params, readentry);
+               if (yes) {
+                  leaf = leafcur;
+                  //fprintf(stderr, "Does have a method %s for %s found in leafcur %s.\n", work, leafcur->GetBranch()->GetName(), leafcur->GetName());
+               }
+            } else {
+               Fatal("FindLeafForExpression", "Tree has no leaves!");
             }
          }
          if (!leaf) {
@@ -2592,9 +2587,9 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
    return -1;
 }
 
-TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
-                                           const char* nextchoice,
-                                           Long64_t readentry) const {
+//______________________________________________________________________________
+TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* nextchoice, Long64_t readentry) const
+{
 
    // Return the leaf (if any) which contains an object containing
    // a data member which has the name provided in the arguments.
@@ -2758,14 +2753,11 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
    } else {
       return 0;
    }
-
 }
 
-Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
-                                     TBranch * branch,
-                                     const char* method,
-                                     const char* params,
-                                     Long64_t readentry) const {
+//______________________________________________________________________________
+Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char* method, const char* params, Long64_t readentry) const
+{
    // Return the leaf (if any) of the tree with contains an object of a class
    // having a method which has the name provided in the argument.
 
@@ -2774,78 +2766,78 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
 
    // Since the user does not want this branch to be loaded anyway, we just
    // skip it.  This prevents us from warning the user that the method might
-   // be on a disable branch.  However, and more usefully, this allows the
-   // user to avoid error messages from branches that can not be currently
+   // be on a disabled branch.  However, and more usefully, this allows the
+   // user to avoid error messages from branches that cannot be currently
    // read without warnings/errors.
-   if (branch->TestBit(kDoNotProcess)) return kFALSE;
 
-   // The following code is used somewhere else, we need to factor it out.
-   if (branch->InheritsFrom(TBranchObject::Class()) ) {
+   if (branch->TestBit(kDoNotProcess)) {
+      return kFALSE;
+   }
 
-      lobj = (TLeafObject*)branch->GetListOfLeaves()->At(0);
+   // FIXME: The following code is used somewhere else, we need to factor it out.
+   if (branch->InheritsFrom(TBranchObject::Class())) {
+      lobj = (TLeafObject*) branch->GetListOfLeaves()->At(0);
       cl = lobj->GetClass();
-
-   } else if (branch->InheritsFrom(TBranchElement::Class()) ) {
-      TBranchElement *branchEl = (TBranchElement *)branch;
+   } else if (branch->InheritsFrom(TBranchElement::Class())) {
+      TBranchElement* branchEl = (TBranchElement*) branch;
       Int_t type = branchEl->GetStreamerType();
-      if (type==-1) {
-         cl =  branchEl->GetInfo()->GetClass();
-      } else if (type>60) {
+      if (type == -1) {
+         cl = branchEl->GetInfo()->GetClass();
+      } else if (type > 60) {
          // Case of an object data member.  Here we allow for the
          // variable name to be ommitted.  Eg, for Event.root with split
          // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-         TStreamerElement* element = (TStreamerElement*)
-            branchEl->GetInfo()->GetElems()[branchEl->GetID()];
-         if (element) cl = element->GetClassPointer();
-         else cl = 0;
-
-         if (cl==TClonesArray::Class() && branchEl->GetType() == 31 ) {
+         TStreamerElement* element = (TStreamerElement*) branchEl->GetInfo()->GetElems()[branchEl->GetID()];
+         if (element) {
+            cl = element->GetClassPointer();
+         } else {
+            cl = 0;
+         }
+         if ((cl == TClonesArray::Class()) && (branchEl->GetType() == 31)) {
             // we have a TClonesArray inside a split TClonesArray,
-
             // Let's not dig any further.  If the user really wants a data member
             // inside the nested TClonesArray, it has to specify it explicitly.
-
             cl = 0;
          }
          // NOTE do we need code for Collection here?
       }
    }
+
    if (cl == TClonesArray::Class()) {
       // We might be try to call a method of the top class inside a
       // TClonesArray.
-      // Since the leaf was not terminal, we might have a splitted or
-      // unsplitted and/or top leaf/branch.
-      TClonesArray * clones = 0;
-      TBranch *branchcur = branch;
-      R__LoadBranch(branchcur,readentry,fQuickLoad);
-      if (branch->InheritsFrom(TBranchObject::Class()) ) {
-         clones = (TClonesArray*)(lobj->GetObject());
-      } else if (branch->InheritsFrom(TBranchElement::Class()) ) {
+      // Since the leaf was not terminal, we might have a split or
+      // unsplit and/or top leaf/branch.
+      TClonesArray* clones = 0;
+      R__LoadBranch(branch, readentry, fQuickLoad);
+      if (branch->InheritsFrom(TBranchObject::Class())) {
+         clones = (TClonesArray*) lobj->GetObject();
+      } else if (branch->InheritsFrom(TBranchElement::Class())) {
          // We do not know exactly where the leaf of the TClonesArray is
          // in the hierachy but we still need to get the correct class
          // holder.
-         if (branchcur==((TBranchElement*)branchcur)->GetMother()) {
+         TBranchElement* bc = (TBranchElement*) branch;
+         if (bc == bc->GetMother()) {
             // Top level branch
-            clones = *(TClonesArray**)((TBranchElement*)branchcur)->GetAddress();
-         } else if (!leafcur || (!leafcur->IsOnTerminalBranch()) ) {
-            TBranchElement *branchEl = (TBranchElement *)branch;
-            TStreamerElement* element = (TStreamerElement*)
-               branchEl->GetInfo()->GetElems()[branchEl->GetID()];
+            //clones = *((TClonesArray**) bc->GetAddress());
+            clones = (TClonesArray*) bc->GetObject();
+         } else if (!leafcur || !leafcur->IsOnTerminalBranch()) {
+            TStreamerElement* element = (TStreamerElement*) bc->GetInfo()->GetElems()[bc->GetID()];
             if (element->IsaPointer()) {
-               clones = *(TClonesArray**)((TBranchElement*)branchcur)->GetAddress();
+               clones = *((TClonesArray**) bc->GetAddress());
+               //clones = *((TClonesArray**) bc->GetObject());
             } else {
-               clones = (TClonesArray*)((TBranchElement*)branchcur)->GetAddress();
+               //clones = (TClonesArray*) bc->GetAddress();
+               clones = (TClonesArray*) bc->GetObject();
             }
          }
-         if (clones==0) {
-            TBranch *branchcur = branch;
-            R__LoadBranch(branchcur,readentry,fQuickLoad);
-            TClass * mother_cl;
-            mother_cl = ((TBranchElement*)branchcur)->GetInfo()->GetClass();
-
+         if (!clones) {
+            R__LoadBranch(bc, readentry, fQuickLoad);
+            TClass* mother_cl;
+            mother_cl = bc->GetInfo()->GetClass();
             TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
-            // if (!leafcur) { leafcur = (TLeaf*)branch->GetListOfLeaves()->At(0); }
-            clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leafcur,0);
+            // if (!leafcur) { leafcur = (TLeaf*) branch->GetListOfLeaves()->At(0); }
+            clones = (TClonesArray*) clonesinfo->GetLocalValuePointer(leafcur, 0);
             // cl = clones->GetClass();
             delete clonesinfo;
          }
@@ -2854,25 +2846,31 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
    } else if (cl && cl->GetCollectionProxy()) {
       cl = cl->GetCollectionProxy()->GetValueClass();
    }
-   if (cl && cl->GetClassInfo() && cl->GetMethodAllAny(method)) {
-      // Let's try to see if the function we found belongs to the current
-      // class.  Note that this implementation currently can not work if
-      // one the argument is another leaf or data member of the object.
-      // (Anyway we do NOT support this case).
-      TMethodCall *methodcall = new TMethodCall(cl, method, params);
-      if (methodcall->GetMethod()) {
-         // We have a method that works.
-         // We will use it.
-         return kTRUE;
+
+   if (cl) {
+      if (cl->GetClassInfo()) {
+         if (cl->GetMethodAllAny(method)) {
+            // Let's try to see if the function we found belongs to the current
+            // class.  Note that this implementation currently can not work if
+            // one the argument is another leaf or data member of the object.
+            // (Anyway we do NOT support this case).
+            TMethodCall* methodcall = new TMethodCall(cl, method, params);
+            if (methodcall->GetMethod()) {
+               // We have a method that works.
+               // We will use it.
+               return kTRUE;
+            }
+            delete methodcall;
+         }
       }
-      delete methodcall;
    }
+
    cl = 0;
    return kFALSE;
 }
 
+//______________________________________________________________________________
 Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
-
       // Now let calculate what physical instance we really need.
       // Some redundant code is used to speed up the cases where
       // they are no dimensions.
@@ -3725,25 +3723,45 @@ Int_t TTreeFormula::GetNdata()
 }
 
 //______________________________________________________________________________
-Double_t TTreeFormula::GetValueFromMethod(Int_t i, TLeaf *leaf) const
+Double_t TTreeFormula::GetValueFromMethod(Int_t i, TLeaf* leaf) const
 {
-//*-*-*-*-*-*-*-*Return result of a leafobject method*-*-*-*-*-*-*-*
-//*-*            ====================================
-//
+   // Return result of a leafobject method.
 
-   TMethodCall *m = GetMethodCall(i);
+   TMethodCall* m = GetMethodCall(i);
 
-   if (m==0) return 0;
+   if (!m) {
+      return 0.0;
+   }
 
-   void *thisobj;
-   if (leaf->InheritsFrom("TLeafObject") ) thisobj = ((TLeafObject*)leaf)->GetObject();
-   else {
-      TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
-      Int_t offset =  branch->GetInfo()->GetOffsets()[branch->GetID()];
-      char* address = (char*)branch->GetAddress();
-
-      if (address) thisobj = (char*) *(void**)(address+offset);
-      else thisobj = branch->GetObject();
+   void* thisobj = 0;
+   if (leaf->InheritsFrom("TLeafObject")) {
+      thisobj = ((TLeafObject*) leaf)->GetObject();
+   } else {
+      TBranchElement* branch = (TBranchElement*) ((TLeafElement*) leaf)->GetBranch();
+      Int_t id = branch->GetID();
+      // FIXME: This is wrong for a top-level branch.
+      Int_t offset = 0;
+      if (id > -1) {
+         TStreamerInfo* info = branch->GetInfo();
+         if (info) {
+            offset = info->GetOffsets()[id];
+         } else {
+            Warning("GetValueFromMethod", "No streamer info for branch %s.", branch->GetName());
+         }
+      }
+      if (id < 0) {
+         char* address = branch->GetObject();
+         thisobj = address;
+      } else {
+         //char* address = branch->GetAddress();
+         char* address = branch->GetObject();
+         if (address) {
+            thisobj = *((char**) (address + offset));
+         } else {
+            // FIXME: If the address is not set, the object won't be either!
+            thisobj = branch->GetObject();
+         }
+      }
    }
 
    TMethodCall::EReturnType r = m->ReturnType();
@@ -3753,37 +3771,57 @@ Double_t TTreeFormula::GetValueFromMethod(Int_t i, TLeaf *leaf) const
       m->Execute(thisobj, l);
       return (Double_t) l;
    }
+
    if (r == TMethodCall::kDouble) {
       Double_t d;
       m->Execute(thisobj, d);
-      return (Double_t) d;
+      return d;
    }
+
    m->Execute(thisobj);
 
    return 0;
-
 }
 
 //______________________________________________________________________________
-void* TTreeFormula::GetValuePointerFromMethod(Int_t i, TLeaf *leaf) const
+void* TTreeFormula::GetValuePointerFromMethod(Int_t i, TLeaf* leaf) const
 {
-//*-*-*-*-*-*-*-*Return result of a leafobject method*-*-*-*-*-*-*-*
-//*-*            ====================================
-//
+   // Return result of a leafobject method.
 
-   TMethodCall *m = GetMethodCall(i);
+   TMethodCall* m = GetMethodCall(i);
 
-   if (m==0) return 0;
+   if (!m) {
+      return 0;
+   }
 
-   void *thisobj;
-   if (leaf->InheritsFrom("TLeafObject") ) thisobj = ((TLeafObject*)leaf)->GetObject();
-   else {
-      TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
-      Int_t offset =  branch->GetInfo()->GetOffsets()[branch->GetID()];
-      char* address = (char*)branch->GetAddress();
-
-      if (address) thisobj = (char*) *(void**)(address+offset);
-      else thisobj = branch->GetObject();
+   void* thisobj;
+   if (leaf->InheritsFrom("TLeafObject")) {
+      thisobj = ((TLeafObject*) leaf)->GetObject();
+   } else {
+      TBranchElement* branch = (TBranchElement*) ((TLeafElement*) leaf)->GetBranch();
+      Int_t id = branch->GetID();
+      Int_t offset = 0;
+      if (id > -1) {
+         TStreamerInfo* info = branch->GetInfo();
+         if (info) {
+            offset = info->GetOffsets()[id];
+         } else {
+            Warning("GetValuePointerFromMethod", "No streamer info for branch %s.", branch->GetName());
+         }
+      }
+      if (id < 0) {
+         char* address = branch->GetObject();
+         thisobj = address;
+      } else {
+         //char* address = branch->GetAddress();
+         char* address = branch->GetObject();
+         if (address) {
+            thisobj = *((char**) (address + offset));
+         } else {
+            // FIXME: If the address is not set, the object won't be either!
+            thisobj = branch->GetObject();
+         }
+      }
    }
 
    TMethodCall::EReturnType r = m->ReturnType();
@@ -3793,20 +3831,22 @@ void* TTreeFormula::GetValuePointerFromMethod(Int_t i, TLeaf *leaf) const
       m->Execute(thisobj, l);
       return 0;
    }
+
    if (r == TMethodCall::kDouble) {
       Double_t d;
       m->Execute(thisobj, d);
       return 0;
    }
+
    if (r == TMethodCall::kOther) {
-      char *c;
+      char* c;
       m->Execute(thisobj, &c);
       return c;
    }
+
    m->Execute(thisobj);
 
    return 0;
-
 }
 
 //______________________________________________________________________________
@@ -4447,8 +4487,9 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             // read branchcount value
             Long64_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
             if (readentry==-1) readentry=0;
-            if (!branchcount->GetAddress()) R__LoadBranch(branchcount,readentry,fQuickLoad);
-            else {
+            if (!branchcount->GetAddress()) {
+               R__LoadBranch(branchcount, readentry, fQuickLoad);
+            } else {
                // Since we do not read the full branch let's reset the read entry number
                // so that a subsequent read from TTreeFormula will properly load the full
                // object event if fQuickLoad is true.
