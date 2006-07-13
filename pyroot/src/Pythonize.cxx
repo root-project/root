@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.39 2006/06/13 06:39:05 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.40 2006/07/01 21:19:55 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -957,7 +957,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TLeaf* leaf = tree->GetLeaf( name );
       if ( leaf ) {
       // found a leaf, extract value and wrap
-         if ( ! leaf->IsRange() ) {
+         if ( 1 < leaf->GetLenStatic() || leaf->GetLeafCount() ) {
          // array types
             std::string typeName = leaf->GetTypeName();
             TConverter* pcnv = CreateConverter( typeName + '*', leaf->GetNdata() );
