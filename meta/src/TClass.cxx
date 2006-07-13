@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.193 2006/06/28 10:03:13 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.194 2006/07/07 14:59:30 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -24,44 +24,47 @@
 
 //*-*x7.5 macros/layout_class
 
-#include "TROOT.h"
-#include "TFile.h"
 #include "TClass.h"
-#include "TClassEdit.h"
-#include "TClassRef.h"
-#include "TClassTable.h"
-#include "TObjArray.h"
+
+#include "Api.h"
+#include "Riostream.h"
 #include "TBaseClass.h"
 #include "TBrowser.h"
+#include "TBuffer.h"
+#include "TClassEdit.h"
+#include "TClassMenuItem.h"
+#include "TClassRef.h"
+#include "TClassTable.h"
+#include "TCollectionProxy.h"
 #include "TDataMember.h"
+#include "TDataType.h"
+#include "TError.h"
 #include "TExMap.h"
+#include "TFile.h"
+#include "TInterpreter.h"
+#include "TMapFile.h"
+#include "TMemberInspector.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TMethodCall.h"
-#include "TDataType.h"
-#include "TRealData.h"
-#include "TVirtualPad.h"
-#include "TInterpreter.h"
-#include "TBuffer.h"
-#include "TMemberInspector.h"
-#include "TError.h"
-#include "TMapFile.h"
-#include "TStreamerInfo.h"
-#include "TStreamerElement.h"
-#include "TClassMenuItem.h"
-#include "Api.h"
-#include "TVirtualMutex.h"
-#include "TVirtualUtilPad.h"
-#include "TPluginManager.h"
-#include "TStreamer.h"
-#include "TStreamerInfo.h"
 #include "TObjArray.h"
-#include "TCollectionProxy.h"
+#include "TObjArray.h"
+#include "TPluginManager.h"
+#include "TROOT.h"
+#include "TRealData.h"
+#include "TStreamer.h"
+#include "TStreamerElement.h"
+#include "TStreamerInfo.h"
+#include "TStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualIsAProxy.h"
 #include "TVirtualRefProxy.h"
 #include "TVirtualMutex.h"
-#include "Riostream.h"
+#include "TVirtualMutex.h"
+#include "TVirtualPad.h"
+#include "TVirtualUtilPad.h"
+
+#include <set>
 
 using namespace std;
 
@@ -72,11 +75,20 @@ extern Long_t G__globalvarpointer;
 // Mutex to protect CINT operations
 // (exported to be used for similar cases in related classes)
 
-TVirtualMutex *gCINTMutex = 0;
+TVirtualMutex* gCINTMutex = 0;
 
-Int_t  TClass::fgClassCount;
+Int_t TClass::fgClassCount;
 TClass::ENewType TClass::fgCallingNew = kRealNew;
-std::map<void*, Version_t> TClass::fgObjectVersionRepository;
+#if 0
+// FIXME: Turn off for now, trouble when ptr is reallocated to
+//        some different type and we don't know.
+#endif
+std::multimap<void*, Version_t> TClass::fgObjectVersionRepository;
+//#endif
+
+//______________________________________________________________________________
+//______________________________________________________________________________
+//______________________________________________________________________________
 
 class TDumpMembers : public TMemberInspector {
 
@@ -180,6 +192,10 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
    Printf("%s", line);
 }
 
+//______________________________________________________________________________
+//______________________________________________________________________________
+//______________________________________________________________________________
+
 class TBuildRealData : public TMemberInspector {
 
 private:
@@ -195,21 +211,24 @@ public:
 };
 
 //______________________________________________________________________________
-void TBuildRealData::Inspect(TClass *cl, const char *pname, const char *mname, const void *add)
+void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, const void* add)
 {
    // This method is called from ShowMembers() via BuildRealdata().
 
-   TRealData   *rd;
-   TDataMember *dm = cl->GetDataMember(mname);
-   if (!dm || !dm->IsPersistent()) return;
+   TDataMember* dm = cl->GetDataMember(mname);
+   if (!dm || !dm->IsPersistent()) {
+      return;
+   }
    char rname[512];
-   strcpy(rname,pname);
-   //take into account cases like TPaveStats->TPaveText->TPave->TBox
-   //check that member is in a derived class or an object in the class
+   strcpy(rname, pname);
+   // Take into account cases like TPaveStats->TPaveText->TPave->TBox.
+   // Check that member is in a derived class or an object in the class.
    if (cl != fRealDataClass) {
       if (!fRealDataClass->InheritsFrom(cl)) {
-         char *dot = strchr(rname,'.');
-         if (!dot) return;
+         char* dot = strchr(rname, '.');
+         if (!dot) {
+            return;
+         }
          *dot = 0;
          if (!fRealDataClass->GetDataMember(rname)) {
             //could be a data member in a base class like in this example
@@ -233,25 +252,33 @@ void TBuildRealData::Inspect(TClass *cl, const char *pname, const char *mname, c
          *dot = '.';
       }
    }
-   strcat(rname,mname);
-   Int_t offset = Int_t((Long_t)add - (Long_t)fRealDataObject);
+   strcat(rname, mname);
+   Int_t offset = Int_t(((Long_t) add) - ((Long_t) fRealDataObject));
 
-   // Data Member is a pointer
-   if (dm->IsaPointer()) {     // pointer to class object
+   if (dm->IsaPointer()) {
+      // Data member is a pointer.
       if (!dm->IsBasic()) {
-         rd = new TRealData(rname,offset,dm);
+         // Pointer to class object.
+         TRealData* rd = new TRealData(rname, offset, dm);
          fRealDataClass->GetListOfRealData()->Add(rd);
-      } else {                 // pointer to basic data type
-         rd = new TRealData(rname,offset,dm);
+      } else {
+         // Pointer to basic data type.
+         TRealData* rd = new TRealData(rname, offset, dm);
          fRealDataClass->GetListOfRealData()->Add(rd);
       }
    } else {
-      // Data Member is a basic data type
-      rd = new TRealData(rname,offset,dm);
-      if (!dm->IsBasic()) rd->SetIsObject(kTRUE);
+      // Data Member is a basic data type.
+      TRealData* rd = new TRealData(rname, offset, dm);
+      if (!dm->IsBasic()) {
+         rd->SetIsObject(kTRUE);
+      }
       fRealDataClass->GetListOfRealData()->Add(rd);
    }
 }
+
+//______________________________________________________________________________
+//______________________________________________________________________________
+//______________________________________________________________________________
 
 //______________________________________________________________________________
 class TAutoInspector : public TMemberInspector {
@@ -398,6 +425,10 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
       }
    }
 }
+
+//______________________________________________________________________________
+//______________________________________________________________________________
+//______________________________________________________________________________
 
 ClassImp(TClass)
 
@@ -965,7 +996,7 @@ void TClass::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-void TClass::BuildRealData(void *pointer)
+void TClass::BuildRealData(void* pointer)
 {
    // Build a full list of persistent data members.
    // Scans the list of all data members in the class itself and also
@@ -975,28 +1006,43 @@ void TClass::BuildRealData(void *pointer)
    // If pointer is not 0, uses the object at pointer
    // otherwise creates a temporary object of this class.
 
-   if (fRealData) return;
-
-   if (!fClassInfo || TClassEdit::IsSTLCont(GetName(), 0)) {
-      fRealData = new TList;
-      BuildEmulatedRealData("",0,this);
+   // Only do this once.
+   if (fRealData) {
       return;
    }
 
-   void *realDataObject = pointer;
-
-   if ((!pointer) && (Property() & kIsAbstract)) return;
-
-   // Create an instance of this class
-   if (!realDataObject) {
-      if (!strcmp(GetName(),"TROOT"))        realDataObject = gROOT;
-      else if (!strcmp(GetName(),"TGWin32")) realDataObject = gVirtualX;
-      else if (!strcmp(GetName(),"TGQt"))    realDataObject = gVirtualX;
-      else                                   realDataObject = New();
+   // Handle emulated classes and STL containers specially.
+   if (!fClassInfo || TClassEdit::IsSTLCont(GetName(), 0)) {
+      // We are an emulated class or an STL container.
+      fRealData = new TList;
+      BuildEmulatedRealData("", 0, this);
+      return;
    }
 
-   // The following statement will call recursively all the subclasses
-   // of this class.
+   void* realDataObject = pointer;
+
+   // If we are not given an object, and the class
+   // is abstract (so that we cannot make one), give up.
+   if ((!pointer) && (Property() & kIsAbstract)) {
+      return;
+   }
+
+   // If we are not given an object, make one.
+   // Note: We handle singletons carefully.
+   if (!realDataObject) {
+      if (!strcmp(GetName(), "TROOT")) {
+         realDataObject = gROOT;
+      } else if (!strcmp(GetName(), "TGWin32")) {
+         realDataObject = gVirtualX;
+      } else if (!strcmp(GetName(), "TGQt")) {
+         realDataObject = gVirtualX;
+      } else {
+         realDataObject = New();
+      }
+   }
+
+   // The following statement will recursively call
+   // all the subclasses of this class.
    if (realDataObject) {
       char parent[256];
       parent[0] = 0;
@@ -1004,86 +1050,70 @@ void TClass::BuildRealData(void *pointer)
 
       TBuildRealData brd(realDataObject, this);
 
-      //Force a call to InheritsFrom. This function indirectly calls gROOT->GetClass
-      //It forces the loading of new typedefs in case some of them were not
-      //yet loaded.
+      // Force a call to InheritsFrom. This function indirectly
+      // calls gROOT->GetClass.  It forces the loading of new
+      // typedefs in case some of them were not yet loaded.
       InheritsFrom(TObject::Class());
 
       if (fShowMembers) {
-         // printf("Running local ShowMembers Methods for %s\n",GetName());
          // This should always works since 'pointer' should be pointing
          // to an object of the actual type of this TClass object.
          fShowMembers(realDataObject, brd, parent);
       } else {
-         //Always call ShowMembers via the interpreter. A direct call like
+         // Always call ShowMembers via the interpreter. A direct call
+         // like:
+         //
          //      realDataObject->ShowMembers(brd, parent);
-         //will not work if the class derives from TObject but not as primary
-         //inheritance.
+         //
+         // will not work if the class derives from TObject but does not
+         // have TObject as the leftmost base class.
+         //
          R__LOCKGUARD2(gCINTMutex);
          G__CallFunc func;
-         void *address;
-         Long_t offset;
-         func.SetFunc(fClassInfo->GetMethod("ShowMembers",
-                                            "TMemberInspector&,char*", &offset));
+         void* address = 0;
+         Long_t offset = 0;
+         func.SetFunc(fClassInfo->GetMethod("ShowMembers", "TMemberInspector&,char*", &offset));
          if (!func.IsValid()) {
-            if (strcmp(GetName(),"string")!=0) {
-               // For std::string we know that we do not have a ShowMembers function and
-               // that it's okay.
-               Error("BuildRealData","can not find any ShowMembers function for %s!",GetName());
+            if (strcmp(GetName(), "string") != 0) {
+               // For std::string we know that we do not have a ShowMembers
+               // function and that it's okay.
+               Error("BuildRealData", "Cannot find any ShowMembers function for %s!", GetName());
             }
          } else {
-            func.SetArg((long)&brd);
-            func.SetArg((long)parent);
-            address = (void*)((long)realDataObject + offset);
+            func.SetArg((long) &brd);
+            func.SetArg((long) parent);
+            address = (void*) (((long) realDataObject) + offset);
             func.Exec(address);
          }
-#if 0
-         // Not data member call ShowMembers, let try for the global
-         // scope ShowMembers.
-         G__ClassInfo gcl("ROOT");
-         Long_t offset;
-         char *proto = new char[strlen(GetName())+31];
-         sprintf(proto,"%s*,TMemberInspector&,char*",GetName());
-         G__MethodInfo methodinfo = gcl.GetMethod("ShowMembers",proto,&offset);
-         delete proto;
-         func.SetFunc(methodinfo.InterfaceMethod());
-         if (gDebug >= 0) {
-            printf("No ShowMembers Methods for %s\n",GetName());
-            if (func.IsValid()) {
-               printf("Found global ShowMembers for %s \n",GetName());
-            } else {
-               printf("DID NOT find global ShowMembers for %s \n",GetName());
-            }
-         }
-         func.SetArg(((long)realDataObject + offset));
-         func.SetArg((long)&brd);
-         func.SetArg((long)parent);
-         func.Exec(0);
-#endif
       }
 
-      // take this opportunity to build the real data for base classes
+      // Take this opportunity to build the real data for base classes.
       // In case one base class is abstract, it would not be possible later
-      // to create the list of real data for this abstract class
-      TBaseClass *base;
-      TIter       next(GetListOfBases());
-      while ((base = (TBaseClass *) next())) {
-         if (base->IsSTLContainer()) continue;
-         TClass *c = base->GetClassPointer();
-         if (c) c->BuildRealData((char*)realDataObject + base->GetDelta());
+      // to create the list of real data for this abstract class.
+      TBaseClass* base = 0;
+      TIter next(GetListOfBases());
+      while ((base = (TBaseClass*) next())) {
+         if (base->IsSTLContainer()) {
+            continue;
+         }
+         TClass* c = base->GetClassPointer();
+         if (c) {
+            c->BuildRealData(((char*) realDataObject) + base->GetDelta());
+         }
       }
    }
 
-   if (!pointer && realDataObject && realDataObject != gROOT
-        && realDataObject != gVirtualX) {
+   // Clean up any allocated temporary object.
+   if (!pointer && realDataObject && (realDataObject != gROOT) && (realDataObject != gVirtualX)) {
       Int_t delta = GetBaseClassOffset(TObject::Class());
-      if (delta>=0) {
-         TObject *tobj = (TObject*) ( ( (char*)realDataObject ) + delta );
+      if (delta >= 0) {
+         TObject* tobj = (TObject*) (((char*) realDataObject) + delta);
          tobj->SetBit(kZombie); //this info useful in object destructor
          delete tobj;
+         tobj = 0;
       } else {
          Destructor(realDataObject);
-         //::operator delete(realDataObject);
+         realDataObject = 0;
       }
    }
 }
@@ -1659,52 +1689,94 @@ Int_t TClass::GetDataMemberOffset(const char *name) const
 }
 
 //______________________________________________________________________________
-TRealData *TClass::GetRealData(const char *name) const
+TRealData* TClass::GetRealData(const char* name) const
 {
-   // return pointer to TRealData element with name.
-   // name can be a data member in the class itself,
-   // one of its base classes, or one member in
+   // Return pointer to TRealData element with name "name".
+   //
+   // Name can be a data member in the class itself,
+   // one of its base classes, or a member in
    // one of the aggregated classes.
    //
-   // In case of an emulated class, the list of emulated TRealData is built
+   // In case of an emulated class, the list of emulated TRealData is built.
 
-   if (!fRealData) ((TClass*)this)->BuildRealData();
+   if (!fRealData) {
+      ((TClass*) this)->BuildRealData();
+   }
 
-   TRealData *rd = (TRealData*)fRealData->FindObject(name);
-   if (rd) return rd;
+   // First try just the whole name.
+   TRealData* rd = (TRealData*) fRealData->FindObject(name);
+   if (rd) {
+      return rd;
+   }
+   
+   // Now try it as a pointer.
+   rd = (TRealData*) fRealData->FindObject(Form("*%s", name));
+   if (rd) {
+      return rd;
+   }
 
-   //may be member is a pointer
-   rd = (TRealData*)fRealData->FindObject(Form("*%s",name));
-   if (rd) return rd;
+   // Check for a dot in the name.
+   const char* dot = strchr(name, '.');
+   if (!dot) {
+      // Simple name, not found.
+      return 0;
+   }
+   const char* ldot = strrchr(name, '.');
 
-   const char *dot = strchr(name,'.');
-   const char *ldot = strrchr(name,'.');
-   if (!dot) return 0;
+   //
+   //  At this point the name has a dot in it, so it is the name
+   //  of some contained sub-object.
+   //
 
-   //may be a pointer like in TH1 fXaxis.fLabels (in TRealdata is fXaxis.*fLabels)
+   // May be a pointer like in TH1: fXaxis.fLabels (in TRealdata is named fXaxis.*fLabels)
+   Int_t nch = ldot - name;
    char starname[1024];
-   Int_t nch = ldot-name;
-   strncpy(starname,name,nch);
-   sprintf(starname+nch,".*%s",ldot+1);
-   rd = (TRealData*)fRealData->FindObject(starname);
-   if (rd) return rd;
+   strncpy(starname, name, nch);
+   sprintf(starname + nch, ".*%s", ldot + 1);
+   rd = (TRealData*) fRealData->FindObject(starname);
+   if (rd) {
+      return rd;
+   }
 
-   //new attempt starting after the first "." if any
-   rd = (TRealData*)fRealData->FindObject(dot+1);
-   if (rd) return rd;
-   rd = (TRealData*)fRealData->FindObject(Form("*%s",dot+1));
-   if (rd) return rd;
+   // New attempt starting after the first "." if any,
+   // this allows for the case that the first component
+   // may have been a branch name (for TBranchElement).
+   rd = (TRealData*) fRealData->FindObject(dot + 1);
+   if (rd) {
+      return rd;
+   }
 
-   //last attempt in case a member has been changed from a static array to a pointer
-   //for example the member was arr[20] and is now *arr
-   char *bracket = strchr(starname,'[');
-   if (!bracket) return 0;
+   // New attempt starting after the first "." if any,
+   // but this time check for a pointer type.  Again, we
+   // are allowing for the case that the first component
+   // may have been a branch name (for TBranchElement).
+   rd = (TRealData*) fRealData->FindObject(Form("*%s", dot + 1));
+   if (rd) {
+      return rd;
+   }
 
+   // Last attempt in case a member has been changed from
+   // a static array to a pointer, for example the member
+   // was arr[20] and is now *arr.
+   //
+   // Note: In principle, one could also take into account
+   // the opposite situation where a member like *arr has
+   // been converted to arr[20].
+   //
+   // FIXME: What about checking after the first dot as well?
+   //
+   char* bracket = strchr(starname, '[');
+   if (!bracket) {
+      return 0;
+   }
    *bracket = 0;
-   rd = (TRealData*)fRealData->FindObject(starname);
-   return rd;
-   //in principle, one could also take into account the opposite situation
-   //where a member like *arr has been converted to arr[20]
+   rd = (TRealData*) fRealData->FindObject(starname);
+   if (rd) {
+      return rd;
+   }
+
+   // Not found;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -2252,43 +2324,79 @@ Int_t TClass::GetNmethods()
 }
 
 //______________________________________________________________________________
-TStreamerInfo *TClass::GetStreamerInfo(Int_t version)
+TStreamerInfo* TClass::GetStreamerInfo(Int_t version)
 {
    // returns a pointer to the TStreamerInfo object for version
    // If the object doest not exist, it is created
+   //
+   // Note: There are two special version numbers:
+   //
+   //       0: Use the class version from the currently loaded class library.
+   //      -1: Assume no class library loaded (emulated class).
+   //
+   // Warning:  If we create a new streamer info, whether or not the build
+   //           optimizes is controlled externally to us by a global variable!
+   //           Don't call us unless you have set that variable properly
+   //           with TStreamer::Optimize()!
+   //
 
-   if (version == 0) version = fClassVersion;
-
-   if (!fStreamerInfo) fStreamerInfo = new TObjArray(version+10,-1);
-   else {
+   // Handle special version, 0 means currently loaded version.
+   // Warning:  This may be -1 for an emulated class.
+   if (version == 0) {
+      version = fClassVersion;
+   }
+   if (!fStreamerInfo) {
+      fStreamerInfo = new TObjArray(version + 10, -1);
+   } else {
       Int_t ninfos = fStreamerInfo->GetSize();
-      if (version < -1 || version >= ninfos) {
-         Error("GetStreamerInfo","class: %s, attempting to access a wrong version: %d",GetName(),version);
+      if ((version < -1) || (version >= ninfos)) {
+         Error("GetStreamerInfo", "class: %s, attempting to access a wrong version: %d", GetName(), version);
+         // FIXME: Shouldn't we go to -1 here, or better just abort?
          version = 0;
       }
    }
-
-   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
-   if (!sinfo && version!=fClassVersion) {
-      // When the requested version does not exist we return the current TStreamerInfo.
-      // However to be consistent we need to first check if that StreamerInfo already
-      // exist.
-      sinfo = (TStreamerInfo*)fStreamerInfo->At(fClassVersion);
+   TStreamerInfo* sinfo = (TStreamerInfo*) fStreamerInfo->At(version);
+   if (!sinfo && (version != fClassVersion)) {
+      // When the requested version does not exist we return
+      // the TStreamerInfo for the currently loaded class vesion.
+      // FIXME: This arguably makes no sense, we should warn and return nothing instead.
+      // Note: fClassVersion could be -1 here (for an emulated class).
+      sinfo = (TStreamerInfo*) fStreamerInfo->At(fClassVersion);
    }
    if (!sinfo) {
-      sinfo = new TStreamerInfo(this,"");
-      fStreamerInfo->AddAtAndExpand(sinfo,fClassVersion);
-      if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
+      // We just were not able to find a streamer info, we have to make a new one.
+      sinfo = new TStreamerInfo(this, "");
+      fStreamerInfo->AddAtAndExpand(sinfo, fClassVersion);
+      if (gDebug > 0) {
+         printf("Creating StreamerInfo for class: %s, version: %d\n", GetName(), fClassVersion);
+      }
       if (fClassInfo || fCollectionProxy) {
-         // if we do not have a StreamerInfo for this version and we do not
-         // have a ClassInfo, there is nothing to built!
+         // If we do not have a StreamerInfo for this version and we do not
+         // have dictionary information nor a proxy, there is nothing to build!
+         //
+         // Warning:  Whether or not the build optimizes is controlled externally
+         //           to us by a global variable!  Don't call us unless you have
+         //           set that variable properly with TStreamer::Optimize()!
+         //
+         // FIXME: Why don't we call BuildOld() like we do below?  Answer: We are new and so don't have to do schema evolution?
          sinfo->Build();
       }
    } else {
-      if (!sinfo->GetOffsets()) sinfo->BuildOld();
-      if (sinfo->IsOptimized() && !TStreamerInfo::CanOptimize()) sinfo->Compile();
+      if (!sinfo->GetOffsets()) {
+         // Streamer info has not been compiled, but exists.
+         // Therefore it was read in from a file and we have to do schema evolution?
+         // Or it didn't have a dictionary before, but does now?
+         sinfo->BuildOld();
+      }
+      if (sinfo->IsOptimized() && !TStreamerInfo::CanOptimize()) {
+         // Undo optimization if the global flag tells us to.
+         sinfo->Compile();
+      }
    }
-   if (version==fClassVersion) fCurrentInfo=sinfo;
+   // Cache the current info if we now have it.
+   if (version == fClassVersion) {
+      fCurrentInfo = sinfo;
+   }
    return sinfo;
 }
 
@@ -2463,18 +2571,17 @@ void *TClass::New(ENewType defConstructor)
       // as preallocated with the "->" comment, in which case
       // we default-construct an object to point at).
 
-      // ???BUG???  ???WHY???
       // Do not register any TObject's that we create
       // as a result of creating this object.
-      //
-      // ???Is this because we may never actually deregister them???
+      // FIXME: Why do we do this?
+      // FIXME: Partial Answer: Is this because we may never actually deregister them???
 
       Bool_t statsave = GetObjectStat();
       SetObjectStat(kFALSE);
 
       TStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
-         Error("New", "Cannot construct class %s version %d, no streamer info available!", GetName(), fClassVersion);
+         Error("New", "Cannot construct class '%s' version %d, no streamer info available!", GetName(), fClassVersion);
          return 0;
       }
 
@@ -2482,24 +2589,33 @@ void *TClass::New(ENewType defConstructor)
       p = sinfo->New();
       fgCallingNew = kRealNew;
 
-      // ???BUG???
+      // FIXME: Mistake?  See note above at the GetObjectStat() call.
       // Allow TObject's to be registered again.
       SetObjectStat(statsave);
 
+#if 0
+      // FIXME: Turn off for now, trouble when ptr is reallocated to
+      //        some different type and we don't know.
+#endif
       // Register the object for special handling in the destructor.
       if (p) {
-         //Warning("New", "Registering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
-         std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-         if (!tmp.second) {
-            //Warning("New", "Reregistering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
-            fgObjectVersionRepository.erase(tmp.first);
-            tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-            if (!tmp.second) {
-               Warning("New", "Failed to reregister an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
-            }
-         }
+         //if (!fgObjectVersionRepository.count(p)) {
+         //   Warning("New", "Registering address %p of class '%s' version %d", p, GetName(), fClassVersion);
+         //} else {
+         //   Warning("New", "Registering address %p again of class '%s' version %d", p, GetName(), fClassVersion);
+         //}
+         fgObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
+         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+         //if (!tmp.second) {
+            //Warning("New", "Reregistering an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
+            //fgObjectVersionRepository.erase(tmp.first);
+            //tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+            //if (!tmp.second) {
+               //Warning("New", "Failed to reregister an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
+            //}
+         //}
       }
-
+//#endif
    } else {
       Error("New", "This cannot happen!");
    }
@@ -2567,7 +2683,7 @@ void *TClass::New(void *arena, ENewType defConstructor)
 
       TStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
-         Error("New with placement", "Cannot construct class %s version %d at address %p, no streamer info available!", GetName(), fClassVersion, arena);
+         Error("New with placement", "Cannot construct class '%s' version %d at address %p, no streamer info available!", GetName(), fClassVersion, arena);
          return 0;
       }
 
@@ -2579,20 +2695,29 @@ void *TClass::New(void *arena, ENewType defConstructor)
       // Allow TObject's to be registered again.
       SetObjectStat(statsave);
 
+#if 0
+      // FIXME: Turn off for now, trouble when ptr is reallocated to
+      //        some different type and we don't know.
       // Register the object for special handling in the destructor.
+#endif
       if (p) {
-         //Warning("New with placement", "Registering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
-         std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-         if (!tmp.second) {
-            //Warning("New with placement", "Reregistering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
-            fgObjectVersionRepository.erase(tmp.first);
-            tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-            if (!tmp.second) {
-               Warning("New with placement", "Failed to reregister an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
-            }
-         }
+         //if (!fgObjectVersionRepository.count(p)) {
+         //   Warning("New with placement", "Registering address %p of class '%s' version %d", p, GetName(), fClassVersion);
+         //} else {
+         //   Warning("New with placement", "Registering address %p again of class '%s' version %d", p, GetName(), fClassVersion);
+         //}
+         fgObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
+         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+         //if (!tmp.second) {
+            //Warning("New with placement", "Reregistering an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
+            //fgObjectVersionRepository.erase(tmp.first);
+            //tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+            //if (!tmp.second) {
+               //Warning("New with placement", "Failed to reregister an object of class '%s' version %d at address %0lx", GetName(), fClassVersion, p);
+            //}
+         //}
       }
-
+//#endif
    } else {
       Error("New with placement", "This cannot happen!");
    }
@@ -2661,7 +2786,7 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor)
 
       TStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
-         Error("NewArray", "Cannot construct class %s version %d, no streamer info available!", GetName(), fClassVersion);
+         Error("NewArray", "Cannot construct class '%s' version %d, no streamer info available!", GetName(), fClassVersion);
          return 0;
       }
 
@@ -2673,20 +2798,29 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor)
       // Allow TObject's to be registered again.
       SetObjectStat(statsave);
 
+#if 0
+      // FIXME: Turn off for now, trouble when ptr is reallocated to
+      //        some different type and we don't know.
+#endif
       // Register the object for special handling in the destructor.
       if (p) {
-         //Warning("NewArray", "Registering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
-         std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-         if (!tmp.second) {
-            //Warning("NewArray", "Reregistering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
-            fgObjectVersionRepository.erase(tmp.first);
-            tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-            if (!tmp.second) {
-               Warning("NewArray", "Failed to reregister an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
-            }
-         }
+         //if (!fgObjectVersionRepository.count(p)) {
+         //   Warning("NewArray", "Registering address %p of class '%s' version %d", p, GetName(), fClassVersion);
+         //} else {
+         //   Warning("NewArray", "Registering address %p again of class '%s' version %d", p, GetName(), fClassVersion);
+         //}
+         fgObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
+         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+         //if (!tmp.second) {
+            //Warning("NewArray", "Reregistering an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
+            //fgObjectVersionRepository.erase(tmp.first);
+            //tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+            //if (!tmp.second) {
+               //Warning("NewArray", "Failed to reregister an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
+            //}
+         //}
       }
-
+//#endif
    } else {
       Error("NewArray", "This cannot happen!");
    }
@@ -2754,7 +2888,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor)
 
       TStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
-         Error("NewArray with placement", "Cannot construct class %s version %d at address %p, no streamer info available!", GetName(), fClassVersion, arena);
+         Error("NewArray with placement", "Cannot construct class '%s' version %d at address %p, no streamer info available!", GetName(), fClassVersion, arena);
          return 0;
       }
 
@@ -2771,20 +2905,29 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor)
          // use the streamer info to destroy them.
       }
 
+#if 0
+      // FIXME: Turn off for now, trouble when ptr is reallocated to
+      //        some different type and we don't know.
+#endif
       // Register the object for special handling in the destructor.
       if (p) {
-         //Warning("NewArray with placement", "Registering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
-         std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-         if (!tmp.second) {
-            //Warning("NewArray with placement", "Reregistering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
-            fgObjectVersionRepository.erase(tmp.first);
-            tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-            if (!tmp.second) {
-               Warning("NewArray with placement", "Failed to reregister an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
-            }
-         }
+         //if (!fgObjectVersionRepository.count(p)) {
+         //   Warning("NewArray with placement", "Registering address %p of class '%s' version %d", p, GetName(), fClassVersion);
+         //} else {
+         //   Warning("NewArray with placement", "Registering address %p again of class '%s' version %d", p, GetName(), fClassVersion);
+         //}
+         fgObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
+         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+         //if (!tmp.second) {
+            //Warning("NewArray with placement", "Reregistering an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
+            //fgObjectVersionRepository.erase(tmp.first);
+            //tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+            //if (!tmp.second) {
+               //Warning("NewArray with placement", "Failed to reregister an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
+            //}
+         //}
       }
-
+//#endif
    } else {
       Error("NewArray with placement", "This cannot happen!");
    }
@@ -2831,38 +2974,43 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling a
-      // constructor (basically we just make sure that the
-      // pointer data members are null, unless they are marked
-      // as preallocated with the "->" comment, in which case
-      // we default-construct an object to point at).
+      // destructor.
 
       Bool_t inRepo = kTRUE;
-      Version_t objVer = -1;
+      Bool_t verFound = kFALSE;
 
       // Was this object allocated through TClass?
-      std::map<void*, Version_t>::iterator iter = fgObjectVersionRepository.find(p);
+      std::multiset<Version_t> knownVersions;
+      std::multimap<void*, Version_t>::iterator iter = fgObjectVersionRepository.find(p);
       if (iter == fgObjectVersionRepository.end()) {
          // No, it wasn't, skip special version handling.
-         //Error("Destructor", "Attempt to delete unregistered object of class %s at address %p!", GetName(), p);
+         //Error("Destructor2", "Attempt to delete unregistered object of class '%s' at address %p!", GetName(), p);
          inRepo = kFALSE;
       } else {
-         objVer = iter->second;
+         //objVer = iter->second;
+         for (; (iter != fgObjectVersionRepository.end()) && (iter->first == p); ++iter) {
+            Version_t ver = iter->second;
+            knownVersions.insert(ver);
+            if (ver == fClassVersion) {
+               verFound = kTRUE;
+            }
+         }
       }
 
-      if (!inRepo || (objVer == fClassVersion)) {
+      if (!inRepo || verFound) {
          // The object was allocated using code for the same class version
          // as is loaded now.  We may proceed without worry.
          TStreamerInfo* si = GetStreamerInfo();
          if (si) {
             si->Destructor(p, dtorOnly);
          } else {
-            Error("Destructor1", "No streamer info available for class %s version %d at address %p, cannot destruct emulated object!", GetName(), fClassVersion, p);
-            Error("Destructor1", "length of fStreamerInfo is %d", fStreamerInfo->GetSize());
+            Error("Destructor", "No streamer info available for class '%s' version %d at address %p, cannot destruct emulated object!", GetName(), fClassVersion, p);
+            Error("Destructor", "length of fStreamerInfo is %d", fStreamerInfo->GetSize());
             Int_t i = fStreamerInfo->LowerBound();
             for (Int_t v = 0; v < fStreamerInfo->GetSize(); ++v, ++i) {
-               Error("Destructor1", "fStreamerInfo->At(%d): %p", i, fStreamerInfo->At(i));
+               Error("Destructor", "fStreamerInfo->At(%d): %p", i, fStreamerInfo->At(i));
                if (fStreamerInfo->At(i) != 0) {
-                  Error("Destructor1", "Doing Dump() ...");
+                  Error("Destructor", "Doing Dump() ...");
                   ((TStreamerInfo*)fStreamerInfo->At(i))->Dump();
                }
             }
@@ -2871,28 +3019,39 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
          // The loaded class version is not the same as the version of the code
          // which was used to allocate this object.  The best we can do is use
          // the TStreamerInfo to try to free up some of the allocated memory.
-         Error("Destructor2", "Loaded class version does not match version of object, objVer: %d; fClassVersion: %d", objVer, fClassVersion);
+         Error("Destructor", "Loaded class version %d is not registered for addr %p", fClassVersion, p);
+#if 0
          TStreamerInfo* si = (TStreamerInfo*) fStreamerInfo->At(objVer);
          if (si) {
             si->Destructor(p, dtorOnly);
          } else {
-            Error("Destructor2", "No streamer info available for class %s version %d, cannot destruct object!", GetName(), objVer);
+            Error("Destructor2", "No streamer info available for class '%s' version %d, cannot destruct object at addr: %p", GetName(), objVer, p);
             Error("Destructor2", "length of fStreamerInfo is %d", fStreamerInfo->GetSize());
             Int_t i = fStreamerInfo->LowerBound();
             for (Int_t v = 0; v < fStreamerInfo->GetSize(); ++v, ++i) {
                Error("Destructor2", "fStreamerInfo->At(%d): %p", i, fStreamerInfo->At(i));
                if (fStreamerInfo->At(i) != 0) {
                   // Do some debugging output.
+                  Error("Destructor2", "Doing Dump() ...");
+                  ((TStreamerInfo*)fStreamerInfo->At(i))->Dump();
                }
             }
          }
+#endif
       }
 
-      // Deregister the object for special handling in the destructor.
-      if (inRepo && p) {
-         std::map<void*, Version_t>::iterator tmp = fgObjectVersionRepository.find(p);
-         if (tmp != fgObjectVersionRepository.end()) {
-            fgObjectVersionRepository.erase(tmp);
+      if (inRepo && verFound && p) {
+         std::multimap<void*, Version_t>::iterator cur = fgObjectVersionRepository.find(p);
+         for (; cur != fgObjectVersionRepository.end();) {
+            std::multimap<void*, Version_t>::iterator tmp = cur++;
+            if ((tmp->first == p) && (tmp->second == fClassVersion)) {
+               // -- We still have an address, version match.
+               //Error("Destructor", "Deregistering addr %p of class '%s' version %d", p, GetName(), fClassVersion);
+               fgObjectVersionRepository.erase(tmp);
+            } else {
+               // -- No address, version match, we've reached the end.
+               break;
+            }
          }
       }
    } else {
@@ -2937,36 +3096,43 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling the
-      // array destructor (basically we just destruct the
-      // objects preallocated byt the "->" comment).
+      // array destructor.
 
       Bool_t inRepo = kTRUE;
-      Version_t objVer = -1;
+      Bool_t verFound = kFALSE;
 
       // Was this array object allocated through TClass?
-      std::map<void*, Version_t>::iterator iter = fgObjectVersionRepository.find(p);
+      std::multiset<Version_t> knownVersions;
+      std::multimap<void*, Version_t>::iterator iter = fgObjectVersionRepository.find(p);
       if (iter == fgObjectVersionRepository.end()) {
          // No, it wasn't, we cannot know what to do.
-         //Error("DeleteArray", "Attempt to delete unregistered array object, element type %s, at address %p!", GetName(), p);
+         //Error("DeleteArray", "Attempt to delete unregistered array object, element type '%s', at address %p!", GetName(), p);
          inRepo = kFALSE;
       } else {
-         objVer = iter->second;
+         for (; (iter != fgObjectVersionRepository.end()) && (iter->first == p); ++iter) {
+            Version_t ver = iter->second;
+            knownVersions.insert(ver);
+            if (ver == fClassVersion) {
+               verFound = kTRUE;
+            }
+         }
       }
 
-      if (!inRepo || (objVer == fClassVersion)) {
+      if (!inRepo || verFound) {
          // The object was allocated using code for the same class version
          // as is loaded now.  We may proceed without worry.
          TStreamerInfo* si = GetStreamerInfo();
          if (si) {
             si->DeleteArray(ary, dtorOnly);
          } else {
-            Error("DeleteArray", "No streamer info available for class %s version %d at address %p, cannot destruct object!", GetName(), objVer, ary);
+            Error("DeleteArray", "No streamer info available for class '%s' version %d at address %p, cannot destruct object!", GetName(), fClassVersion, ary);
             Error("DeleteArray", "length of fStreamerInfo is %d", fStreamerInfo->GetSize());
             Int_t i = fStreamerInfo->LowerBound();
             for (Int_t v = 0; v < fStreamerInfo->GetSize(); ++v, ++i) {
                Error("DeleteArray", "fStreamerInfo->At(%d): %p", v, fStreamerInfo->At(i));
                if (fStreamerInfo->At(i)) {
-                  // Print some debugging info.
+                  Error("DeleteArray", "Doing Dump() ...");
+                  ((TStreamerInfo*)fStreamerInfo->At(i))->Dump();
                }
             }
          }
@@ -2974,31 +3140,49 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
          // The loaded class version is not the same as the version of the code
          // which was used to allocate this array.  The best we can do is use
          // the TStreamerInfo to try to free up some of the allocated memory.
+         Error("DeleteArray", "Loaded class version %d is not registered for addr %p", fClassVersion, p);
+
+
+
+#if 0
          TStreamerInfo* si = (TStreamerInfo*) fStreamerInfo->At(objVer);
          if (si) {
             si->DeleteArray(ary, dtorOnly);
          } else {
-            Error("DeleteArray", "No streamer info available for class %s version %d at address %p, cannot destruct object!", GetName(), objVer, ary);
+            Error("DeleteArray", "No streamer info available for class '%s' version %d at address %p, cannot destruct object!", GetName(), objVer, ary);
             Error("DeleteArray", "length of fStreamerInfo is %d", fStreamerInfo->GetSize());
             Int_t i = fStreamerInfo->LowerBound();
             for (Int_t v = 0; v < fStreamerInfo->GetSize(); ++v, ++i) {
                Error("DeleteArray", "fStreamerInfo->At(%d): %p", v, fStreamerInfo->At(i));
                if (fStreamerInfo->At(i)) {
                   // Print some debugging info.
+                  Error("DeleteArray", "Doing Dump() ...");
+                  ((TStreamerInfo*)fStreamerInfo->At(i))->Dump();
                }
             }
          }
+#endif
+
+
       }
 
       // Deregister the object for special handling in the destructor.
-      if (inRepo && p) {
-         std::map<void*, Version_t>::iterator tmp = fgObjectVersionRepository.find(p);
-         if (tmp != fgObjectVersionRepository.end()) {
-            fgObjectVersionRepository.erase(tmp);
+      if (inRepo && verFound && p) {
+         std::multimap<void*, Version_t>::iterator cur = fgObjectVersionRepository.find(p);
+         for (; cur != fgObjectVersionRepository.end();) {
+            std::multimap<void*, Version_t>::iterator tmp = cur++;
+            if ((tmp->first == p) && (tmp->second == fClassVersion)) {
+               // -- We still have an address, version match.
+               //Error("DeleteArray", "Deregistering addr %p of class '%s' version %d", p, GetName(), fClassVersion);
+               fgObjectVersionRepository.erase(tmp);
+            } else {
+               // -- No address, version match, we've reached the end.
+               break;
+            }
          }
       }
    } else {
-      Error("DeleteArray", "This cannot happen! (class %s)", GetName());
+      Error("DeleteArray", "This cannot happen! (class '%s')", GetName());
    }
 }
 

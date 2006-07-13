@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.63 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.64 2006/06/28 10:03:13 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -137,7 +137,12 @@ private:
    static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
                                         //stored in TObject::fUniqueID
-   static std::map<void*, Version_t> fgObjectVersionRepository; // Record what version of a class was used to construct an object
+#if 0
+   // FIXME: Turn off for now, trouble when ptr is reallocated to
+   //        some different type and we don't know.
+#endif
+   static std::multimap<void*, Version_t> fgObjectVersionRepository; // Record what version of a class was used to construct an object
+//#endif
 
    // Internal status bits
    enum { kLoading = BIT(14) };
@@ -263,7 +268,12 @@ public:
    void               AdoptMemberStreamer(const char *name, TMemberStreamer *strm);
    void               SetMemberStreamer(const char *name, MemberStreamerFunc_t strm);
 
-   static std::map<void*, Version_t>& GetObjectVersionRepository() { return fgObjectVersionRepository; }
+#if 0
+   // FIXME: Turn off for now, trouble when ptr is reallocated to
+   //        some different type and we don't know.
+#endif
+   static std::multimap<void*, Version_t>& GetObjectVersionRepository() { return fgObjectVersionRepository; }
+//#endif
 
    // Function to retrieve the TClass object and dictionary function
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE);
@@ -316,4 +326,4 @@ namespace ROOT {
                               Int_t dl, Int_t il);
 }
 
-#endif
+#endif // ROOT_TClass
