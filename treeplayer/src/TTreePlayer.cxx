@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.220 2006/07/05 17:29:05 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.221 2006/07/06 08:29:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -370,6 +370,16 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Long64_t nentrie
    // we make a copy of the tree header
    TTree *tree = fTree->CloneTree(0);
    if (tree == 0) return 0;
+
+   // The clone should not delete any shared i/o buffers.
+   TObjArray* branches = tree->GetListOfBranches();
+   Int_t nb = branches->GetEntriesFast();
+   for (Int_t i = 0; i < nb; ++i) {
+      TBranch* br = (TBranch*) branches->UncheckedAt(i);
+      if (br->InheritsFrom("TBranchElement")) {
+         ((TBranchElement*) br)->ResetDeleteObject();
+      }
+   }
 
    Long64_t entry,entryNumber;
    nentries = GetEntriesToProcess(firstentry, nentries);
