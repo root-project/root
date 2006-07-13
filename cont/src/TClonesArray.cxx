@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.51 2006/02/19 21:02:35 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.52 2006/04/19 08:22:22 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -184,15 +184,20 @@ TClonesArray::~TClonesArray()
 
    if (fKeep) {
       for (Int_t i = 0; i < fKeep->fSize; i++) {
-         if (fClass->GetClassInfo()) {
-            if (fKeep->fCont[i] && fKeep->fCont[i]->TestBit(kNotDeleted)) {
-               delete fKeep->fCont[i];
-            } else {
-               // remove any possible entries from the ObjectTable
-               if (TObject::GetObjectStat() && gObjectTable)
-                  gObjectTable->RemoveQuietly(fKeep->fCont[i]);
-               ::operator delete(fKeep->fCont[i]);
+         TObject* p = fKeep->fCont[i];
+         if (p && p->TestBit(kNotDeleted)) {
+            // -- The TObject destructor has not been called.
+            fClass->Destructor(p);
+            fKeep->fCont[i] = 0;
+         } else {
+            // -- The TObject destructor was called, just free memory.
+            //
+            // remove any possible entries from the ObjectTable
+            if (TObject::GetObjectStat() && gObjectTable) {
+               gObjectTable->RemoveQuietly(p);
             }
+            ::operator delete(p);
+            fKeep->fCont[i] = 0;
          }
       }
    }
