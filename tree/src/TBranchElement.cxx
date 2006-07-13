@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.199 2006/06/28 10:03:13 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.202 2006/07/13 07:33:27 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -3529,8 +3529,6 @@ void TBranchElement::ValidateAddress() const
 {
    // -- Check to see if the user changed the object pointer without telling us.
 
-   return; // FIXME: Disable the deletion of object owned by the TTree until we add a missing interface.
-
    if (fID < 0) {
       // -- We are a top-level branch.
       if (fAddress && (*((char**) fAddress) != fObject)) {
@@ -3538,7 +3536,10 @@ void TBranchElement::ValidateAddress() const
          // Assume the user changed the pointer on us.
          // Note: The cast is here because we want to be able to
          //       be called from the constant get functions.
-         if (TestBit(kDeleteObject)) {
+
+
+	 // FIXME: Disable the check/warning TTree until we add a missing interface.
+         if (false && TestBit(kDeleteObject)) {
             Warning("ValidateAddress", "branch: %s, You have overwritten the pointer to an object which I owned!", GetName());
             Warning("ValidateAddress", "This is a memory leak.  Please use SetAddress() to change the pointer instead.");
             const_cast<TBranchElement*>(this)->ResetBit(kDeleteObject);
