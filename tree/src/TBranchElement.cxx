@@ -2616,6 +2616,8 @@ void TBranchElement::ReleaseObject()
    //       infinite loop.
    //ValidateAddress();
 
+   return; // FIXME: Disable the deletion of object owned by the TTree until we add a missing interface.
+
    if (fID < 0) {
       // -- We are a top-level branch.
       if (fAddress && (*((char**) fAddress) != fObject)) {
@@ -3526,6 +3528,9 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
 void TBranchElement::ValidateAddress() const
 {
    // -- Check to see if the user changed the object pointer without telling us.
+
+   return; // FIXME: Disable the deletion of object owned by the TTree until we add a missing interface.
+
    if (fID < 0) {
       // -- We are a top-level branch.
       if (fAddress && (*((char**) fAddress) != fObject)) {
