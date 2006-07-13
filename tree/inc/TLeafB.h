@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafB.h,v 1.6 2004/10/18 12:32:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafB.h,v 1.7 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -35,26 +35,26 @@ protected:
 
 public:
    TLeafB();
-   TLeafB(const char *name, const char *type);
+   TLeafB(const char* name, const char* type);
    virtual ~TLeafB();
 
-   virtual void    Export(TClonesArray *list, Int_t n);
-   virtual void    FillBasket(TBuffer &b);
+   virtual void    Export(TClonesArray* list, Int_t n);
+   virtual void    FillBasket(TBuffer& b);
+   virtual Int_t   GetMaximum() const { return fMaximum; }
+   virtual Int_t   GetMinimum() const { return fMinimum; }
    const char     *GetTypeName() const;
-   Double_t        GetValue(Int_t i=0) const;
-   virtual void   *GetValuePointer() const {return fValue;}
-   virtual void    Import(TClonesArray *list, Int_t n);
-   virtual void    PrintValue(Int_t i=0) const;
-   virtual void    ReadBasket(TBuffer &b);
-   virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
-   virtual void    ReadValue(ifstream & s);
-   virtual void    SetAddress(void *add=0);
+   Double_t        GetValue(Int_t i = 0) const { return IsUnsigned() ? ((UChar_t) fValue[i]) : fValue[i]; }
+   virtual void   *GetValuePointer() const { return fValue; }
+   virtual void    Import(TClonesArray* list, Int_t n);
+   virtual void    PrintValue(Int_t i = 0) const;
+   virtual void    ReadBasket(TBuffer&);
+   virtual void    ReadBasketExport(TBuffer&, TClonesArray* list, Int_t n);
+   virtual void    ReadValue(ifstream&);
+   virtual void    SetAddress(void* addr = 0);
+   virtual void    SetMaximum(Char_t max) { fMaximum = max; }
+   virtual void    SetMinimum(Char_t min) { fMinimum = min; }
    
    ClassDef(TLeafB,1);  //A TLeaf for an 8 bit Integer data type.
 };
-
-inline Double_t TLeafB::GetValue(Int_t i) const { 
-   return (IsUnsigned())? (UChar_t)(fValue[i]):fValue[i]; 
-}
 
 #endif
