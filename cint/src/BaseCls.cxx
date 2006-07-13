@@ -30,114 +30,125 @@
 *********************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////
-
-G__BaseClassInfo::G__BaseClassInfo(G__ClassInfo &a) : G__ClassInfo()
+G__BaseClassInfo::G__BaseClassInfo(G__ClassInfo& a)
+: G__ClassInfo()
 {
   Init(a);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-
-void G__BaseClassInfo::Init(G__ClassInfo &a)
+void G__BaseClassInfo::Init(G__ClassInfo& a)
 {
   derivedtagnum = a.Tagnum();
   basep = -1;
 }
 
 ///////////////////////////////////////////////////////////////////////////
-
 long G__BaseClassInfo::Offset()
 {
-  if(IsValid()) {
-    return((long)G__struct.baseclass[derivedtagnum]->baseoffset[basep]);
+  if (IsValid()) {
+    return (long) G__struct.baseclass[derivedtagnum]->baseoffset[basep];
   }
   else {
-    return(-1);
+    return -1;
   }
 }
 
 ///////////////////////////////////////////////////////////////////////////
-
 long G__BaseClassInfo::Property()
 {
-  long property;
-  if(IsValid()) {
-    property = G__ClassInfo::Property();
-    if(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISVIRTUALBASE)
-      property|=G__BIT_ISVIRTUALBASE;
-    if(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT)
-      property|=G__BIT_ISDIRECTINHERIT;
-    switch(G__struct.baseclass[derivedtagnum]->baseaccess[basep]) {
-    case G__PUBLIC:
-      return(property|G__BIT_ISPUBLIC);
-    case G__PROTECTED:
-      return(property|G__BIT_ISPROTECTED);
-    case G__PRIVATE:
-      return(property|G__BIT_ISPRIVATE);
-    default:
-      return(property);
+  if (IsValid()) {
+    long property = G__ClassInfo::Property();
+    if (G__struct.baseclass[derivedtagnum]->property[basep] & G__ISVIRTUALBASE) {
+      property |= G__BIT_ISVIRTUALBASE;
     }
+    if (G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT) {
+      property |= G__BIT_ISDIRECTINHERIT;
+    }
+    switch (G__struct.baseclass[derivedtagnum]->baseaccess[basep]) {
+    case G__PUBLIC:
+      property |= G__BIT_ISPUBLIC;
+      break;
+    case G__PROTECTED:
+      property |= G__BIT_ISPROTECTED;
+      break;
+    case G__PRIVATE:
+      property |= G__BIT_ISPRIVATE;
+      break;
+    default:
+      break;
+    }
+    return property;
   }
   else {
-    return(0);
+    return 0;
   }
 }
 
 ///////////////////////////////////////////////////////////////////////////
-
 int G__BaseClassInfo::IsValid()
 {
-  if(0<=derivedtagnum && derivedtagnum < G__struct.alltag &&
-     0<=basep && basep<G__struct.baseclass[derivedtagnum]->basen) {
-    return(1);
+  if (
+      (0 <= derivedtagnum) &&
+      (derivedtagnum < G__struct.alltag) &&
+      (0 <= basep) &&
+      (basep < G__struct.baseclass[derivedtagnum]->basen)
+  ) {
+    return 1;
   }
   else {
-    return(0);
+    return 0;
   }
 }
 
 ///////////////////////////////////////////////////////////////////////////
-int G__BaseClassInfo::Next() {
-  return(Next(1)); 
+int G__BaseClassInfo::Next()
+{
+  return Next(1); 
 }
 
 ///////////////////////////////////////////////////////////////////////////
 int G__BaseClassInfo::Next(int onlydirect)
 {
   ++basep;
-  if(onlydirect) {
-    while (IsValid() &&
-     !(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT))
+  if (onlydirect) {
+    while (IsValid() && !(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT)) {
       ++basep;
+    }
   }
   // initialize base class so we can get name of baseclass
   if (IsValid()) {
-     G__ClassInfo::Init(G__struct.baseclass[derivedtagnum]->basetagnum[basep]);
-     return 1;
+    G__ClassInfo::Init(G__struct.baseclass[derivedtagnum]->basetagnum[basep]);
+    return 1;
   }
-  return(IsValid());
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
-int G__BaseClassInfo::Prev() {
-  return(Next(1)); 
+int G__BaseClassInfo::Prev()
+{
+  return Prev(1); 
 }
 
 ///////////////////////////////////////////////////////////////////////////
 int G__BaseClassInfo::Prev(int onlydirect)
 {
-  if(-1==basep) basep = G__struct.baseclass[derivedtagnum]->basen-1;
-  else --basep;
+  if (basep == -1) {
+    basep = G__struct.baseclass[derivedtagnum]->basen - 1;
+  }
+  else {
+    --basep;
+  }
   if(onlydirect) {
-    while (IsValid() &&
-     !(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT))
+    while (IsValid() && !(G__struct.baseclass[derivedtagnum]->property[basep] & G__ISDIRECTINHERIT)) {
       --basep;
+    }
   }
   // initialize base class so we can get name of baseclass
   if (IsValid()) {
      G__ClassInfo::Init(G__struct.baseclass[derivedtagnum]->basetagnum[basep]);
      return 1;
   }
-  return(IsValid());
+  return 0;
 }
-///////////////////////////////////////////////////////////////////////////
+
