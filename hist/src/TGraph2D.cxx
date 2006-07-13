@@ -357,7 +357,6 @@ TGraph2D::~TGraph2D()
       delete fFunctions;
    }
    if (fDirectory) {
-      if (!fDirectory->TestBit(TDirectory::kCloseDirectory))
       fDirectory->GetList()->Remove(this);
    }
    if (fPainter)  delete fPainter;

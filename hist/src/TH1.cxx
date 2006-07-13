@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.295 2006/07/03 16:10:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.296 2006/07/06 10:46:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -480,14 +480,16 @@ TH1::~TH1()
 //   -*-*-*-*-*-*-*-*-*Histogram default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //                     ============================
 
-   //TH1 *junk = 0;
-   //junk->SetLineColor(0);
-   if (!TestBit(kNotDeleted)) return;
-   if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
-   if (fBuffer)   {delete [] fBuffer;   fBuffer   = 0;}
+   if (!TestBit(kNotDeleted)) {
+      return;
+   }
+   delete[] fIntegral;
+   fIntegral = 0;
+   delete[] fBuffer;
+   fBuffer = 0;
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
-      TObject *obj;
+      TObject* obj = 0;
       //special logic to support the case where the same object is
       //added multiple times in fFunctions.
       //This case happens when the same object is added with different
@@ -497,18 +499,21 @@ TH1::~TH1()
       //and may have been already deleted.
       while ((obj  = fFunctions->First())) {
          while(fFunctions->Remove(obj));
-         if (!obj->TestBit(kNotDeleted)) break;
+         if (!obj->TestBit(kNotDeleted)) {
+            break;
+         }
          delete obj;
+         obj = 0;
       }
       delete fFunctions;
+      fFunctions = 0;
    }
    if (fDirectory) {
-      if (!fDirectory->TestBit(TDirectory::kCloseDirectory))
-         fDirectory->GetList()->Remove(this);
+      fDirectory->GetList()->Remove(this);
+      fDirectory = 0;
    }
-   fFunctions = 0;
-   fDirectory = 0;
    delete fPainter;
+   fPainter = 0;
 }
 
 //______________________________________________________________________________
@@ -1988,7 +1993,7 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
 //    if w is NULL each entry is assumed a weight=1
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   
+
    Int_t bin,i;
    //If a buffer is activated, go via standard Fill (sorry)
    //if (fBuffer) {
@@ -1998,7 +2003,7 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
    //   }
    //   return;
    //}
-   
+
    fEntries += ntimes;
    Double_t ww = 1;
    Int_t nbins   = fXaxis.GetNbins();

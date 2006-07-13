@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.85 2006/06/20 18:17:34 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.86 2006/06/21 07:43:59 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -152,43 +152,40 @@ TDirectory::TDirectory(const TDirectory &directory) : TNamed(directory)
 //______________________________________________________________________________
 TDirectory::~TDirectory()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Directory destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ====================
+   // -- Destructor.
 
-   if (gROOT == 0) return; //when called by TROOT destructor
-
-   TCollection::StartGarbageCollection();
+   if (!gROOT) {
+      return; //when called by TROOT destructor
+   }
 
    if (fList) {
-      SetBit(kCloseDirectory);
-      fList->Delete();
+      fList->Delete("slow");
       SafeDelete(fList);
    }
+
    if (fKeys) {
-      fKeys->Delete();
+      fKeys->Delete("slow");
       SafeDelete(fKeys);
    }
 
-   TCollection::EmptyGarbageCollection();
-
-   if (gDirectory==this) {
-      if (gFile!=this) gFile->cd();
-      else {
+   if (gDirectory == this) {
+      if (gFile != this) {
+         gFile->cd();
+      } else {
          gDirectory = gROOT;
          gFile = 0;
       }
    }
 
-   TDirectory *mom = GetMotherDir();
+   TDirectory* mom = GetMotherDir();
 
-   if (mom!=0) {
-      if (!mom->TestBit(TDirectory::kCloseDirectory)) {
-         mom->GetList()->Remove(this);
-      }
+   if (mom) {
+      mom->GetList()->Remove(this);
    }
 
-   if (gDebug)
+   if (gDebug) {
       Info("~TDirectory", "dtor called for %s", GetName());
+   }
 }
 
 //______________________________________________________________________________
@@ -493,18 +490,18 @@ void TDirectory::Clear(Option_t *)
 //______________________________________________________________________________
 void TDirectory::Close(Option_t *)
 {
-//*-*-*-*Delete all objects from memory and directory structure itself-*-*-*-*
-//       ============================================================
+   // -- Delete all objects from memory and directory structure itself.
 
-   if (!fList) return;
-
-   TCollection::StartGarbageCollection();
+   if (!fList) {
+      return;
+   }
 
    TDirectory *cursav = gDirectory;
    cd();
 
-   if (cursav == this)
+   if (cursav == this) {
       cursav = GetMotherDir();
+   }
 
    // Save the directory key list and header
    //SaveSelf();
@@ -512,34 +509,31 @@ void TDirectory::Close(Option_t *)
 
    // Delete objects from directory list, this in turn, recursively closes all
    // sub-directories (that were allocated on the heap)
-   SetBit(kCloseDirectory);
-   fList->Delete();
+   fList->Delete("slow");
 
    // Delete keys from key list (but don't delete the list header)
-   if (fKeys) fKeys->Delete();
-
-   if (cursav)
-      cursav->cd();
-   else {
-      gFile = 0;
-      if (this == gROOT)
-         gDirectory = 0;
-      else
-         gDirectory = gROOT;
+   if (fKeys) {
+      fKeys->Delete("slow");
    }
 
-   TCollection::EmptyGarbageCollection();
+   if (cursav) {
+      cursav->cd();
+   } else {
+      gFile = 0;
+      if (this == gROOT) {
+         gDirectory = 0;
+      } else {
+         gDirectory = gROOT;
+      }
+   }
 }
 
 //______________________________________________________________________________
 void TDirectory::DeleteAll(Option_t *)
 {
-//*-*-*-*-*-*-*-*-*Delete all objects from memory*-*-*-*-*-*-*-*-*-*
-//                 ==============================
+   // -- Delete all objects from memory.
 
-   SetBit(kCloseDirectory);
-   fList->Delete();
-   ResetBit(kCloseDirectory);
+   fList->Delete("slow");
 }
 
 //______________________________________________________________________________
