@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoSphereEditor.cxx,v 1.4 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoSphereEditor.cxx,v 1.5 2006/06/24 08:30:18 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -14,6 +14,16 @@
 //  TGeoSphereEditor                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/sphe_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/sphe_ed.jpg">
+*/
+//End_Html
 
 #include "TGeoSphereEditor.h"
 #include "TGeoTabManager.h"
@@ -302,10 +312,7 @@ void TGeoSphereEditor::DoApply()
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
          fShape->Draw();
          fPad->GetView()->ShowAxis();
-      } else {   
-         fPad->Modified();
-         fPad->Update();
-      }   
+      } else Update();
    }   
 }
 

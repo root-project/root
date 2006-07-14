@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoVolumeEditor.cxx,v 1.4 2006/06/24 08:26:42 brun Exp $
+// @(#):$Name:  $:$Id: TGeoVolumeEditor.cxx,v 1.5 2006/06/25 07:34:59 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -611,10 +611,7 @@ void TGeoVolumeEditor::DoAddNode()
    fLSelMatrix->SetText("Select matrix");
    fAddNode->SetEnabled(kFALSE);   
    fGeometry->SetTopVisible();
-   if (fPad) {
-      fPad->Modified();
-      fPad->Update();
-   }      
+   Update();
 }
 
 //______________________________________________________________________________
@@ -650,10 +647,7 @@ void TGeoVolumeEditor::DoRemoveNode()
       fEDivStep->SetNumber(step);
       fEDivN->SetNumber(ndiv);      
    }
-   if (fPad) {
-      fPad->Modified();
-      fPad->Update();
-   }      
+   Update();
 }
 
 //______________________________________________________________________________
@@ -663,7 +657,7 @@ void TGeoVolumeEditor::DoVisVolume()
    Bool_t on = (fBVis[0]->GetState()==kButtonDown)?kTRUE:kFALSE;
    if (fVolume->IsVisible() == on) return;
    fVolume->SetVisibility(on);
-   UpdatePad();
+   Update();
 }
 
 //______________________________________________________________________________
@@ -673,7 +667,7 @@ void TGeoVolumeEditor::DoVisDaughters()
    Bool_t on = (fBVis[1]->GetState()==kButtonDown)?kTRUE:kFALSE;
    if (fVolume->IsVisibleDaughters() == on) return;
    fVolume->VisibleDaughters(on);
-   UpdatePad();
+   Update();
 }
 
 //______________________________________________________________________________
@@ -684,7 +678,7 @@ void TGeoVolumeEditor::DoVisAuto()
    if ((fGeometry->GetVisLevel()==0) == on) return;
    if (on) fGeometry->SetVisLevel(0);
    else    fGeometry->SetVisLevel(fEVisLevel->GetIntNumber());
-   UpdatePad();
+   Update();
 }
 
 //______________________________________________________________________________
@@ -693,7 +687,7 @@ void TGeoVolumeEditor::DoVisLevel()
 // Slot for visibility level.
    fBAuto->SetState(kButtonUp);
    fGeometry->SetVisLevel(fEVisLevel->GetIntNumber());
-   UpdatePad();
+   Update();
 }
 
 //______________________________________________________________________________
@@ -708,7 +702,7 @@ void TGeoVolumeEditor::DoViewAll()
       fBRaytrace->SetState(kButtonUp);
    }   
    fVolume->SetVisContainers(on);
-   UpdatePad();
+   Update();
 }
 
 //______________________________________________________________________________
@@ -723,7 +717,7 @@ void TGeoVolumeEditor::DoViewLeaves()
       fBRaytrace->SetState(kButtonUp);
    }   
    fVolume->SetVisLeaves(on);
-   UpdatePad();
+   Update();
 }
 
 //______________________________________________________________________________
@@ -738,7 +732,7 @@ void TGeoVolumeEditor::DoViewOnly()
       fBRaytrace->SetState(kButtonUp);
    }   
    fVolume->SetVisOnly(on);
-   UpdatePad();
+   Update();
 }
 
 //______________________________________________________________________________
@@ -748,7 +742,7 @@ void TGeoVolumeEditor::DoRaytrace()
    Bool_t on = (fBRaytrace->GetState()==kButtonDown)?kTRUE:kFALSE;
    if (fVolume->IsRaytracing() == on) return;
    fVolume->Raytrace(on);
-   UpdatePad();
+   Update();
 }
 
 //______________________________________________________________________________
@@ -946,16 +940,6 @@ void TGeoVolumeEditor::DoApplyDiv()
    fVolume->Divide(fDivName->GetText(), iaxis, ndiv, xlo, step);
    fApplyDiv->SetEnabled(kFALSE);   
    fGeometry->SetTopVisible();
-   UpdatePad();
+   Update();
 //   fVolume->Draw();  
 }
-
-//______________________________________________________________________________
-void TGeoVolumeEditor::UpdatePad()
-{
-// Update pad.
-   if (fPad) {
-      fPad->Modified();
-      fPad->Update();
-   }
-}      

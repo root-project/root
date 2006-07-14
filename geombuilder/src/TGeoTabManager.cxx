@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.4 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.5 2006/06/24 08:26:42 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -225,6 +225,22 @@ Int_t TGeoTabManager::GetTabIndex() const
       if (tel && !strcmp(tel->GetString(),tabname.Data())) return i;
    }   
    return 0;
+}
+
+//______________________________________________________________________________
+void TGeoTabManager::MoveFrame(TGCompositeFrame *fr, TGCompositeFrame *p)
+{
+// Move frame fr at the end of the list of parent p.
+   TList *list = p->GetList();
+   TIter next(list);
+   TGFrameElement *el = 0;
+   while ((el=(TGFrameElement*)next())) {
+      if (el->fFrame == fr) break;
+   }  
+   if (el) { 
+      list->Remove(el);
+      list->Add(el);
+   }   
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoTrapEditor.h,v 1.1 2006/07/12 10:25:34 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -65,7 +65,9 @@ protected:
    TGNumberEntry       *fEPhi  ;            // Number entry for  Theta 
    TGTextButton        *fApply;             // Apply-Button to accept changes
    TGTextButton        *fUndo;              // Undo-Button
+   TGCompositeFrame    *fBFrame;            // Frame containing Apply/Undo
    TGCheckButton       *fDelayed;           // Check button for delayed draw
+   TGCompositeFrame    *fDFrame;            // Frame containing Delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
    Bool_t       IsDelayed() const;   

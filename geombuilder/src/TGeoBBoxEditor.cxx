@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBBoxEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBBoxEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -14,6 +14,16 @@
 //  TGeoBBoxEditor                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/box_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/box_ed.jpg">
+*/
+//End_Html
 
 #include "TGeoBBoxEditor.h"
 #include "TGeoTabManager.h"
@@ -290,13 +300,9 @@ void TGeoBBoxEditor::DoApply()
             const Double_t *orig = fShape->GetOrigin();
             view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
                            orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
-            fPad->Modified();               
-            fPad->Update();
+            Update();
          }                  
-      } else {   
-         fPad->Modified();
-         fPad->Update();
-      }   
+      } else Update();
    }   
 }
 

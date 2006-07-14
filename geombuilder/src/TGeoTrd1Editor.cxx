@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTrd1Editor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTrd1Editor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -14,6 +14,16 @@
 //  TGeoTrd1Editor                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/trd1_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/trd1_ed.jpg">
+*/
+//End_Html
 
 #include "TGeoTrd1Editor.h"
 #include "TGeoTabManager.h"
@@ -254,10 +264,7 @@ void TGeoTrd1Editor::DoApply()
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
          fShape->Draw();
          fPad->GetView()->ShowAxis();
-      } else {   
-         fPad->Modified();
-         fPad->Update();
-      }   
+      } else Update();
    }   
 }
 

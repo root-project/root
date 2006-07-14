@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTubeEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTubeEditor.h,v 1.2 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -54,7 +54,9 @@ protected:
    TGNumberEntry  *fEDz;               // Number entry for DZ
    TGTextButton   *fApply;             // Apply-Button to accept changes
    TGTextButton   *fUndo;              // Undo-Button
+   TGCompositeFrame *fBFrame;          // Frame containing Apply/Undo
    TGCheckButton  *fDelayed;           // Check button for delayed draw
+   TGCompositeFrame *fDFrame;          // Frame containing Delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
    Bool_t       IsDelayed() const;   
@@ -117,5 +119,43 @@ public:
    
    ClassDef(TGeoTubeSegEditor,0)   // TGeoTubeSeg editor
 };   
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+//  TGeoCtubEditor                                                      //
+//                                                                      //
+//  Editor for a tube segment cut with 2 planes.                        //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TGeoCtubEditor : public TGeoTubeSegEditor {
+
+protected:
+   Double_t         fThlo;              // Theta angle of the normal to the lower plane (90, 180)
+   Double_t         fPhlo;              // Phi angle of the normal to lower Z plane
+   Double_t         fThhi;              // Theta angle of the normal to the upper plane (0, 90)
+   Double_t         fPhhi;              // Phi angle of the normal to upper Z plane
+   TGNumberEntry   *fEThlo;             // Number entry for thlo
+   TGNumberEntry   *fEPhlo;             // Number entry for phlo
+   TGNumberEntry   *fEThhi;             // Number entry for thhi
+   TGNumberEntry   *fEPhhi;             // Number entry for phhi
+
+public:
+   TGeoCtubEditor(const TGWindow *p, Int_t id,               
+                   Int_t width = 140, Int_t height = 30,
+                   UInt_t options = kChildFrame,
+                   Pixel_t back = GetDefaultFrameBackground());
+   virtual ~TGeoCtubEditor();
+   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+
+   void           DoThlo();
+   void           DoPhlo();
+   void           DoThhi();
+   void           DoPhhi();
+   virtual void   DoApply();
+   virtual void   DoUndo();
+   
+   ClassDef(TGeoCtubEditor,0)   // TGeoCtub editor
+};
   
 #endif                    

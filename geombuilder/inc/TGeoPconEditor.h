@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoPconEditor.h,v 1.2 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoPconEditor.h,v 1.3 2006/07/12 10:25:34 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -61,7 +61,9 @@ protected:
    TGNumberEntry       *fEDPhi;             // Number entry for dphi  
    TGTextButton        *fApply;             // Apply-Button to accept changes
    TGTextButton        *fUndo;              // Undo-Button
+   TGCompositeFrame    *fBFrame;            // Frame containing Apply/Undo
    TGCheckButton       *fDelayed;           // Check button for delayed draw
+   TGCompositeFrame    *fDFrame;            // Frame containing Delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
    Bool_t       CheckSections(Bool_t change=kFALSE);

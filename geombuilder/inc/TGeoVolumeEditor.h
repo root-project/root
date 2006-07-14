@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoVolumeEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -93,7 +93,6 @@ protected:
    TGNumberEntry       *fEDivN;             // Number entry for division Nslices
 
    virtual void ConnectSignals2Slots();     // Connect the signals to the slots
-   void         UpdatePad();
 
 public:
    TGeoVolumeEditor(const TGWindow *p, Int_t id,               

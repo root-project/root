@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoTrapEditor.cxx,v 1.1 2006/07/12 10:25:34 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -14,6 +14,16 @@
 //  TGeoTrapEditor                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/trap_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/trap_ed.jpg">
+*/
+//End_Html
 
 #include "TGeoTrapEditor.h"
 #include "TGeoTabManager.h"
@@ -168,20 +178,20 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
      
    // Delayed draw
-   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
-   fDelayed = new TGCheckButton(f1, "Delayed draw");
-   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   fDFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
+   fDelayed = new TGCheckButton(fDFrame, "Delayed draw");
+   fDFrame->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   AddFrame(fDFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
 
    // Buttons
-   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
-   fApply = new TGTextButton(f1, "Apply");
-   f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   fBFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
+   fApply = new TGTextButton(fBFrame, "Apply");
+   fBFrame->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
-   fUndo = new TGTextButton(f1, "Undo");
-   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   fUndo = new TGTextButton(fBFrame, "Undo");
+   fBFrame->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
 
    // Initialize layout
@@ -349,13 +359,9 @@ void TGeoTrapEditor::DoApply()
          } else {
             view->SetRange(-fShape->GetDX(), -fShape->GetDY(), -fShape->GetDZ(),
                            fShape->GetDX(), fShape->GetDY(), fShape->GetDZ());
-            fPad->Modified();               
-            fPad->Update();
+            Update();
          }                  
-      } else {   
-         fPad->Modified();
-         fPad->Update();
-      }   
+      } else Update();
    }   
 }
 
@@ -511,6 +517,22 @@ enum ETGeoGtraWid {
    kGTRA_TWIST
 };
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+//  TGeoGtraEditor                                                      //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/gtra_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/gtra_ed.jpg">
+*/
+//End_Html
+
 //______________________________________________________________________________
 TGeoGtraEditor::TGeoGtraEditor(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
@@ -529,6 +551,8 @@ TGeoGtraEditor::TGeoGtraEditor(const TGWindow *p, Int_t id, Int_t width,
    fETwist->Associate(this);
    f1->AddFrame(fETwist, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   TGeoTabManager::MoveFrame(fDFrame, this);
+   TGeoTabManager::MoveFrame(fBFrame, this);
    // Initialize layout
    MapSubwindows();
    Layout();
@@ -658,13 +682,9 @@ void TGeoGtraEditor::DoApply()
          } else {
             view->SetRange(-fShape->GetDX(), -fShape->GetDY(), -fShape->GetDZ(),
                            fShape->GetDX(), fShape->GetDY(), fShape->GetDZ());
-            fPad->Modified();               
-            fPad->Update();
+            Update();
          }                  
-      } else {   
-         fPad->Modified();
-         fPad->Update();
-      }   
+      } else Update();
    }   
 }
 

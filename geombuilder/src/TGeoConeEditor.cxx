@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoConeEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoConeEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -14,6 +14,16 @@
 //  TGeoConeEditor                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/cone_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/cone_ed.jpg">
+*/
+//End_Html
 
 #include "TGeoConeEditor.h"
 #include "TGeoTabManager.h"
@@ -64,8 +74,7 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t id, Int_t width,
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame);
    
    // Number entry for Rmin1
-   TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kOwnBackground);
+   TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rmin1"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fERmin1 = new TGNumberEntry(f1, 0., 5, kCONE_RMIN1);
    fERmin1->SetNumAttr(TGNumberFormat::kNEANonNegative);
@@ -73,12 +82,11 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t id, Int_t width,
    nef->SetToolTipText("Enter the inner radius");
    fERmin1->Associate(this);
    fERmin1->Resize(100, fERmin1->GetDefaultHeight());
-   f1->AddFrame(fERmin1, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fERmin1, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
    
   // Number entry for Rmax1
-   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kOwnBackground);
+   f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rmax1"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fERmax1 = new TGNumberEntry(f1, 0., 5, kCONE_RMAX1);
    fERmax1->SetNumAttr(TGNumberFormat::kNEANonNegative);
@@ -86,12 +94,11 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t id, Int_t width,
    nef->SetToolTipText("Enter the outer radius");
    fERmax1->Associate(this);
    fERmax1->Resize(100, fERmax1->GetDefaultHeight());
-   f1->AddFrame(fERmax1, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fERmax1, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
     
    // Number entry for Rmin2
-   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kOwnBackground);
+   f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rmin2"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fERmin2 = new TGNumberEntry(f1, 0., 5, kCONE_RMIN2);
    fERmin2->SetNumAttr(TGNumberFormat::kNEANonNegative);
@@ -99,12 +106,11 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t id, Int_t width,
    nef->SetToolTipText("Enter the inner radius");
    fERmin2->Associate(this);
    fERmin2->Resize(100, fERmin2->GetDefaultHeight());
-   f1->AddFrame(fERmin2, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4)); 
+   f1->AddFrame(fERmin2, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
     
    // Number entry for Rmax2
-   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kOwnBackground);
+   f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rmax2"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fERmax2 = new TGNumberEntry(f1, 0., 5, kCONE_RMAX2);
    fERmax2->SetNumAttr(TGNumberFormat::kNEANonNegative);
@@ -112,12 +118,11 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t id, Int_t width,
    nef->SetToolTipText("Enter the outer radius");
    fERmax2->Associate(this);
    fERmax2->Resize(100, fERmax2->GetDefaultHeight());
-   f1->AddFrame(fERmax2, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fERmax2, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
    
    // Number entry for dz
-   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kOwnBackground);
+   f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "DZ"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDz = new TGNumberEntry(f1, 0., 5, kCONE_Z);
    fEDz->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -125,27 +130,27 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t id, Int_t width,
    nef->SetToolTipText("Enter the cone half-lenth in Z");
    fEDz->Associate(this);
    fEDz->Resize(100, fEDz->GetDefaultHeight());
-   f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
    
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
       
    // Delayed draw
-   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
-   fDelayed = new TGCheckButton(f1, "Delayed draw");
-   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   fDFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
+   fDelayed = new TGCheckButton(fDFrame, "Delayed draw");
+   fDFrame->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 2, 2));
+   AddFrame(fDFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
 
    // Buttons
-   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
-   fApply = new TGTextButton(f1, "Apply");
-   f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   fBFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
+   fApply = new TGTextButton(fBFrame, "Apply");
+   fBFrame->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
-   fUndo = new TGTextButton(f1, "Undo");
-   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   fUndo = new TGTextButton(fBFrame, "Undo");
+   fBFrame->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
 
    // Initialize layout
@@ -272,10 +277,7 @@ void TGeoConeEditor::DoApply()
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
          fShape->Draw();
          fPad->GetView()->ShowAxis();
-      } else {   
-         fPad->Modified();
-         fPad->Update();
-      }   
+      } else Update();
    }   
 }
 
@@ -382,6 +384,16 @@ void TGeoConeEditor::DoDz()
 //  TGeoConeSegEditor                                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/cons_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/cons_ed.jpg">
+*/
+//End_Html
 
 ClassImp(TGeoConeSegEditor)
 
@@ -398,20 +410,21 @@ TGeoConeSegEditor::TGeoConeSegEditor(const TGWindow *p, Int_t id, Int_t width,
    fLock = kFALSE;
    MakeTitle("Phi range");
    TGTextEntry *nef;
-   TGCompositeFrame *compxyz = new TGCompositeFrame(this, 155, 200, kHorizontalFrame | kRaisedFrame);
+   TGCompositeFrame *compxyz = new TGCompositeFrame(this, 155, 110, kHorizontalFrame | kFixedWidth | kFixedHeight | kRaisedFrame);
    // Vertical slider
-   fSPhi = new TGDoubleVSlider(compxyz,140);
+   fSPhi = new TGDoubleVSlider(compxyz,100);
    fSPhi->SetRange(0.,720.);
-   compxyz->AddFrame(fSPhi, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 2, 4, 4)); 
-   TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 100, 200, kVerticalFrame);
-   f1->AddFrame(new TGLabel(f1, "Phi min."), new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 2, 2));
+   fSPhi->Resize(fSPhi->GetDefaultWidth(), 100);
+   compxyz->AddFrame(fSPhi, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4)); 
+   TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 135, 100, kVerticalFrame | kFixedHeight);
+   f1->AddFrame(new TGLabel(f1, "Phi min."), new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 6, 0));
    fEPhi1 = new TGNumberEntry(f1, 0., 5, kCONESEG_PHI1);
    fEPhi1->Resize(100, fEPhi1->GetDefaultHeight());
    fEPhi1->SetNumAttr(TGNumberFormat::kNEANonNegative);
    nef = (TGTextEntry*)fEPhi1->GetNumberEntry();
    nef->SetToolTipText("Enter the phi1 value");
    fEPhi1->Associate(this);
-   f1->AddFrame(fEPhi1, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
+   f1->AddFrame(fEPhi1, new TGLayoutHints(kLHintsTop | kLHintsRight, 2, 2, 2, 2));
 
    fEPhi2 = new TGNumberEntry(f1, 0., 5, kCONESEG_PHI2);
    fEPhi2->Resize(100, fEPhi2->GetDefaultHeight());
@@ -419,12 +432,14 @@ TGeoConeSegEditor::TGeoConeSegEditor(const TGWindow *p, Int_t id, Int_t width,
    nef = (TGTextEntry*)fEPhi2->GetNumberEntry();
    nef->SetToolTipText("Enter the phi2 value");
    fEPhi2->Associate(this);
-   f1->AddFrame(fEPhi2, new TGLayoutHints(kLHintsBottom | kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
-   f1->AddFrame(new TGLabel(f1, "Phi max."), new TGLayoutHints(kLHintsBottom | kLHintsLeft, 2, 2, 2, 2));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 2, 2, 2, 2));
+   f1->AddFrame(fEPhi2, new TGLayoutHints(kLHintsBottom | kLHintsRight, 2, 2, 2, 2));
+   f1->AddFrame(new TGLabel(f1, "Phi max."), new TGLayoutHints(kLHintsBottom, 0, 0, 6, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    
-   compxyz->Resize(150,150);
+//   compxyz->Resize(150,150);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+   TGeoTabManager::MoveFrame(fDFrame, this);
+   TGeoTabManager::MoveFrame(fBFrame, this);
    
    // Initialize layout
    MapSubwindows();
@@ -603,10 +618,7 @@ void TGeoConeSegEditor::DoApply()
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
          fShape->Draw();
          fPad->GetView()->ShowAxis();
-      } else {   
-         fPad->Modified();
-         fPad->Update();
-      }   
+      } else Update();
    }   
 }
 
@@ -614,6 +626,11 @@ void TGeoConeSegEditor::DoApply()
 void TGeoConeSegEditor::DoUndo()
 {
    // Slot for undoing last operation.
+   fERmin1->SetNumber(fRmini1);
+   fERmin2->SetNumber(fRmini2);
+   fERmax1->SetNumber(fRmaxi1);
+   fERmax2->SetNumber(fRmaxi2);
+   fEDz->SetNumber(fDzi);
    fEPhi1->SetNumber(fPmini);
    fEPhi2->SetNumber(fPmaxi);
    fSPhi->SetPosition(fPmini,fPmaxi);

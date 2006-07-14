@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoConeEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoConeEditor.h,v 1.2 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -59,7 +59,9 @@ protected:
    TGNumberEntry  *fEDz;               // Number entry for DZ
    TGTextButton   *fApply;             // Apply-Button to accept changes
    TGTextButton   *fUndo;              // Undo-Button
+   TGCompositeFrame *fBFrame;          // Frame containing Apply/Undo
    TGCheckButton  *fDelayed;           // Check button for delayed draw
+   TGCompositeFrame *fDFrame;          // Frame containing Delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
    Bool_t       IsDelayed() const;   

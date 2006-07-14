@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoPgonEditor.cxx,v 1.1 2006/07/12 10:25:34 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -14,6 +14,16 @@
 //  TGeoPgonEditor                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/pgon_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/pgon_ed.jpg">
+*/
+//End_Html
 
 #include "TGeoPgonEditor.h"
 #include "TGeoTabManager.h"
@@ -43,7 +53,9 @@ TGeoPgonEditor::TGeoPgonEditor(const TGWindow *p, Int_t id, Int_t width,
    // Constructor for polycone editor
    fNedgesi = 0;
    CreateEdges();
-
+   TGeoTabManager::MoveFrame(fDFrame, this);
+   TGeoTabManager::MoveFrame(fBFrame, this);
+   
    // Initialize layout
    MapSubwindows();
    Layout();
@@ -159,13 +171,9 @@ void TGeoPgonEditor::DoApply()
                const Double_t *orig = fShape->GetOrigin();
                view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
                               orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
-               fPad->Modified();               
-               fPad->Update();
+               Update();
             }                  
-         } else {   
-            fPad->Modified();
-            fPad->Update();
-         }   
+         } else Update();
       }
       return;
    }           
@@ -190,13 +198,9 @@ void TGeoPgonEditor::DoApply()
             const Double_t *orig = fShape->GetOrigin();
             view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
                            orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
-            fPad->Modified();               
-            fPad->Update();
+            Update();
          }                  
-      } else {   
-         fPad->Modified();
-         fPad->Update();
-      }   
+      } else Update();
    }   
 }
 

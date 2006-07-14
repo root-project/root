@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.4 2006/06/24 08:26:42 brun Exp $
+// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.5 2006/07/12 10:25:34 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -927,6 +927,12 @@ void TGeoManagerEditor::DoCreateSphe()
 void TGeoManagerEditor::DoCreateCtub()
 {
 // Create a cut tube.
+   Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
+   fSelectedShape = new TGeoCtub(Form("ctub_%i",id), 0.5, 1., 1.,0.,45.,0.,0.,-1,0.,0.,1);
+   ShowSelectShape();
+   if (fGeometry->GetListOfMedia()->GetSize())
+      fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
+   DoEditShape();
 }
 
 //______________________________________________________________________________

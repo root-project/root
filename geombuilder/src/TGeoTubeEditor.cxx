@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.4 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.5 2006/06/24 08:30:18 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -14,6 +14,16 @@
 //  TGeoTubeEditor                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/tube_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/tube_ed.jpg">
+*/
+//End_Html
 
 #include "TGeoTubeEditor.h"
 #include "TGeoTabManager.h"
@@ -63,8 +73,7 @@ TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t id, Int_t width,
    MakeTitle("Tube dimensions");
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame);
    // Number entry for rmin
-   TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kOwnBackground);
+   TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rmin"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fERmin = new TGNumberEntry(f1, 0., 5, kTUBE_RMIN);
    fERmin->SetNumAttr(TGNumberFormat::kNEANonNegative);
@@ -72,12 +81,11 @@ TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t id, Int_t width,
    nef->SetToolTipText("Enter the inner radius");
    fERmin->Associate(this);
    fERmin->Resize(100,fERmin->GetDefaultHeight());
-   f1->AddFrame(fERmin, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fERmin, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
    
    // Number entry for Rmax
-   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kOwnBackground);
+   f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rmax"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fERmax = new TGNumberEntry(f1, 0., 5, kTUBE_RMAX);
    fERmax->SetNumAttr(TGNumberFormat::kNEANonNegative);
@@ -85,12 +93,11 @@ TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t id, Int_t width,
    nef->SetToolTipText("Enter the outer radius");
    fERmax->Associate(this);
    fERmax->Resize(100,fERmax->GetDefaultHeight());
-   f1->AddFrame(fERmax, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fERmax, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
    
    // Number entry for dz
-   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kOwnBackground);
+   f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "DZ"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDz = new TGNumberEntry(f1, 0., 5, kTUBE_Z);
    fEDz->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -98,27 +105,27 @@ TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t id, Int_t width,
    nef->SetToolTipText("Enter the tube half-lenth in Z");
    fEDz->Associate(this);
    fEDz->Resize(100,fEDz->GetDefaultHeight());
-   f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
    
-   compxyz->Resize(150,30);
+//   compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
       
    // Delayed draw
-   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
-   fDelayed = new TGCheckButton(f1, "Delayed draw");
-   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   fDFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
+   fDelayed = new TGCheckButton(fDFrame, "Delayed draw");
+   fDFrame->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   AddFrame(fDFrame,  new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));  
 
    // Buttons
-   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
-   fApply = new TGTextButton(f1, "Apply");
-   f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   fBFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
+   fApply = new TGTextButton(fBFrame, "Apply");
+   fBFrame->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
-   fUndo = new TGTextButton(f1, "Undo");
-   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   fUndo = new TGTextButton(fBFrame, "Undo");
+   fBFrame->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
    
    // Initialize layout
@@ -231,10 +238,7 @@ void TGeoTubeEditor::DoApply()
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
          fShape->Draw();
          fPad->GetView()->ShowAxis();
-      } else {   
-         fPad->Modified();
-         fPad->Update();
-      }   
+      } else Update();
    }   
 }
 
@@ -307,6 +311,16 @@ void TGeoTubeEditor::DoDz()
 //  TGeoTubeSegEditor                                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/tubs_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/tubs_ed.jpg">
+*/
+//End_Html
 
 ClassImp(TGeoTubeSegEditor)
 
@@ -323,20 +337,21 @@ TGeoTubeSegEditor::TGeoTubeSegEditor(const TGWindow *p, Int_t id, Int_t width,
    fLock = kFALSE;
    MakeTitle("Phi range");
    TGTextEntry *nef;
-   TGCompositeFrame *compxyz = new TGCompositeFrame(this, 155, 200, kHorizontalFrame | kRaisedFrame);
+   TGCompositeFrame *compxyz = new TGCompositeFrame(this, 155, 110, kHorizontalFrame | kFixedWidth | kFixedHeight | kRaisedFrame);
    // Vertical slider
-   fSPhi = new TGDoubleVSlider(compxyz,140);
+   fSPhi = new TGDoubleVSlider(compxyz,100);
    fSPhi->SetRange(0.,720.);
-   compxyz->AddFrame(fSPhi, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 2, 4, 4)); 
-   TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 100, 200, kVerticalFrame);
-   f1->AddFrame(new TGLabel(f1, "Phi min."), new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 2, 2));
+   fSPhi->Resize(fSPhi->GetDefaultWidth(), 100);
+   compxyz->AddFrame(fSPhi, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4)); 
+   TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 135, 100, kVerticalFrame | kFixedHeight);
+   f1->AddFrame(new TGLabel(f1, "Phi min."), new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 6, 0));
    fEPhi1 = new TGNumberEntry(f1, 0., 5, kTUBESEG_PHI1);
    fEPhi1->Resize(100, fEPhi1->GetDefaultHeight());
    fEPhi1->SetNumAttr(TGNumberFormat::kNEANonNegative);
    nef = (TGTextEntry*)fEPhi1->GetNumberEntry();
    nef->SetToolTipText("Enter the phi1 value");
    fEPhi1->Associate(this);
-   f1->AddFrame(fEPhi1, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
+   f1->AddFrame(fEPhi1, new TGLayoutHints(kLHintsTop | kLHintsRight, 2, 2, 2, 2));
 
    fEPhi2 = new TGNumberEntry(f1, 0., 5, kTUBESEG_PHI2);
    fEPhi2->Resize(100, fEPhi2->GetDefaultHeight());
@@ -344,12 +359,14 @@ TGeoTubeSegEditor::TGeoTubeSegEditor(const TGWindow *p, Int_t id, Int_t width,
    nef = (TGTextEntry*)fEPhi2->GetNumberEntry();
    nef->SetToolTipText("Enter the phi2 value");
    fEPhi2->Associate(this);
-   f1->AddFrame(fEPhi2, new TGLayoutHints(kLHintsBottom | kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
-   f1->AddFrame(new TGLabel(f1, "Phi max."), new TGLayoutHints(kLHintsBottom | kLHintsLeft, 2, 2, 2, 2));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 2, 2, 2, 2));
+   f1->AddFrame(fEPhi2, new TGLayoutHints(kLHintsBottom | kLHintsRight, 2, 2, 2, 2));
+   f1->AddFrame(new TGLabel(f1, "Phi max."), new TGLayoutHints(kLHintsBottom, 0, 0, 6, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    
-   compxyz->Resize(150,150);
+//   compxyz->Resize(150,150);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+   TGeoTabManager::MoveFrame(fDFrame, this);
+   TGeoTabManager::MoveFrame(fBFrame, this);
    
    // Initialize layout
    MapSubwindows();
@@ -521,10 +538,7 @@ void TGeoTubeSegEditor::DoApply()
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
          fShape->Draw();
          fPad->GetView()->ShowAxis();
-      } else {   
-         fPad->Modified();
-         fPad->Update();
-      }   
+      } else Update();
    }   
 }
 
@@ -532,6 +546,9 @@ void TGeoTubeSegEditor::DoApply()
 void TGeoTubeSegEditor::DoUndo()
 {
 // Slot for undoing last operation.
+   fERmin->SetNumber(fRmini);
+   fERmax->SetNumber(fRmaxi);
+   fEDz->SetNumber(fDzi);
    fEPhi1->SetNumber(fPmini);
    fEPhi2->SetNumber(fPmaxi);
    fSPhi->SetPosition(fPmini,fPmaxi);
@@ -540,6 +557,281 @@ void TGeoTubeSegEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+//  TGeoCtubEditor                                                   //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/ctub_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/ctub_ed.jpg">
+*/
+//End_Html
 
+ClassImp(TGeoCtubEditor)
 
+enum ETGeoCtubSegWid {
+   kCTUB_THLO, kCTUB_PHLO, kCTUB_THHI, kCTUB_PHHI
+};
+
+//______________________________________________________________________________
+TGeoCtubEditor::TGeoCtubEditor(const TGWindow *p, Int_t id, Int_t width,
+                               Int_t height, UInt_t options, Pixel_t back)
+               : TGeoTubeSegEditor(p, id, width, height, options, back)
+{
+   // Constructor for cut tube editor
+   MakeTitle("Theta/phi low");
+   TGTextEntry *nef;
+   // Number entry for theta/phi of the lower normal
+   TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame);
+   TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
+   f1->AddFrame(new TGLabel(f1, "TH_LO"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
+   fEThlo = new TGNumberEntry(f1, 0., 5, kCTUB_THLO);
+   fEThlo->SetNumAttr(TGNumberFormat::kNEANonNegative);
+   nef = (TGTextEntry*)fEThlo->GetNumberEntry();
+   nef->SetToolTipText("Enter the theta angle of the lower plane normal");
+   fEThlo->Associate(this);
+   fEThlo->Connect("ValueSet(Long_t)", "TGeoCtubEditor", this, "DoThlo()");
+   nef->Connect("TextChanged(const char *)","TGeoCtubEditor", this, "DoModified()");
+   fEThlo->Resize(100,fEThlo->GetDefaultHeight());
+   f1->AddFrame(fEThlo, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
+
+   f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
+   f1->AddFrame(new TGLabel(f1, "PH_LO"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
+   fEPhlo = new TGNumberEntry(f1, 0., 5, kCTUB_PHLO);
+   fEPhlo->SetNumAttr(TGNumberFormat::kNEANonNegative);
+   nef = (TGTextEntry*)fEPhlo->GetNumberEntry();
+   nef->SetToolTipText("Enter the phi angle of the lower plane normal");
+   fEPhlo->Associate(this);
+   fEPhlo->Connect("ValueSet(Long_t)", "TGeoCtubEditor", this, "DoPhlo()");
+   nef->Connect("TextChanged(const char *)","TGeoCtubEditor", this, "DoModified()");
+   fEPhlo->Resize(100,fEPhlo->GetDefaultHeight());
+   f1->AddFrame(fEPhlo, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
+   AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 2));
+
+   // Number entry for theta/phi of the lower normal
+   MakeTitle("Theta/phi high");
+   compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame);
+   f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
+   f1->AddFrame(new TGLabel(f1, "TH_HI"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
+   fEThhi = new TGNumberEntry(f1, 0., 5, kCTUB_THHI);
+   fEThhi->SetNumAttr(TGNumberFormat::kNEANonNegative);
+   nef = (TGTextEntry*)fEThhi->GetNumberEntry();
+   nef->SetToolTipText("Enter the theta angle of the upper plane normal");
+   fEThhi->Associate(this);
+   fEThhi->Connect("ValueSet(Long_t)", "TGeoCtubEditor", this, "DoThhi()");
+   nef->Connect("TextChanged(const char *)","TGeoCtubEditor", this, "DoModified()");
+   fEThhi->Resize(100,fEThhi->GetDefaultHeight());
+   f1->AddFrame(fEThhi, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
+
+   f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
+   f1->AddFrame(new TGLabel(f1, "PH_HI"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
+   fEPhhi = new TGNumberEntry(f1, 0., 5, kCTUB_PHHI);
+   fEPhhi->SetNumAttr(TGNumberFormat::kNEANonNegative);
+   nef = (TGTextEntry*)fEPhhi->GetNumberEntry();
+   nef->SetToolTipText("Enter the phi angle of the upper plane normal");
+   fEPhhi->Associate(this);
+   fEPhhi->Connect("ValueSet(Long_t)", "TGeoCtubEditor", this, "DoPhhi()");
+   nef->Connect("TextChanged(const char *)","TGeoCtubEditor", this, "DoModified()");
+   fEPhhi->Resize(100,fEPhhi->GetDefaultHeight());
+   f1->AddFrame(fEPhhi, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 2));
+   TGeoTabManager::MoveFrame(fDFrame, this);
+   TGeoTabManager::MoveFrame(fBFrame, this);
    
+   // Initialize layout
+   MapSubwindows();
+   Layout();
+   MapWindow();
+
+   TClass *cl = TGeoCtub::Class();
+   TGedElement *ge = new TGedElement;
+   ge->fGedFrame = this;
+   ge->fCanvas = 0;
+   cl->GetEditorList()->Add(ge);
+}
+
+//______________________________________________________________________________
+TGeoCtubEditor::~TGeoCtubEditor()
+{
+// Destructor
+   TGFrameElement *el;
+   TIter next(GetList());
+   while ((el = (TGFrameElement *)next())) {
+      if (el->fFrame->IsComposite()) 
+         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
+   }
+   Cleanup();   
+
+   TClass *cl = TGeoCtub::Class();
+   TIter next1(cl->GetEditorList()); 
+   TGedElement *ge;
+   while ((ge=(TGedElement*)next1())) {
+      if (ge->fGedFrame==this) {
+         cl->GetEditorList()->Remove(ge);
+         delete ge;
+         next1.Reset();
+      }
+   }      
+}
+
+//______________________________________________________________________________
+void TGeoCtubEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+{
+   // Connect to the selected object.
+   if (obj == 0 || (obj->IsA()!=TGeoCtub::Class())) {
+      SetActive(kFALSE);
+      return;                 
+   } 
+   fModel = obj;
+   fPad = pad;
+   fShape = (TGeoTube*)fModel;
+   fRmini = fShape->GetRmin();
+   fRmaxi = fShape->GetRmax();
+   fDzi = fShape->GetDz();
+   fNamei = fShape->GetName();
+   fPmini = ((TGeoTubeSeg*)fShape)->GetPhi1();
+   fPmaxi = ((TGeoTubeSeg*)fShape)->GetPhi2();
+   const Double_t *nlo = ((TGeoCtub*)fShape)->GetNlow();
+   const Double_t *nhi = ((TGeoCtub*)fShape)->GetNhigh();
+   fThlo = TMath::RadToDeg() * TMath::ACos(nlo[2]);
+   fPhlo = TMath::RadToDeg() * TMath::ATan2(nlo[1], nlo[0]);
+   fThhi = TMath::RadToDeg() * TMath::ACos(nhi[2]);
+   fPhhi = TMath::RadToDeg() * TMath::ATan2(nhi[1], nhi[0]);
+   
+   fShapeName->SetText(fShape->GetName());
+   fEPhi1->SetNumber(fPmini);
+   fEPhi2->SetNumber(fPmaxi);
+   fSPhi->SetPosition(fPmini,fPmaxi);
+   fERmin->SetNumber(fRmini);
+   fERmax->SetNumber(fRmaxi);
+   fEDz->SetNumber(fDzi);
+   fEThlo->SetNumber(fThlo);
+   fEPhlo->SetNumber(fPhlo);
+   fEThhi->SetNumber(fThhi);
+   fEPhhi->SetNumber(fPhhi);
+   fApply->SetEnabled(kFALSE);
+   fUndo->SetEnabled(kFALSE);
+   
+   if (fInit) ConnectSignals2Slots();
+   SetActive();
+}
+
+//______________________________________________________________________________
+void TGeoCtubEditor::DoThlo()
+{
+// Slot for phi1.
+   Double_t thlo = fEThlo->GetNumber();
+   if (thlo <= 90.) {thlo = 91.; fEThlo->SetNumber(thlo);}
+   if (thlo > 180.) {thlo = 180.; fEThlo->SetNumber(thlo);}
+   DoModified();
+   if (!IsDelayed()) DoApply();
+}
+
+//______________________________________________________________________________
+void TGeoCtubEditor::DoPhlo()
+{
+// Slot for phi1.
+   Double_t phlo = fEPhlo->GetNumber();
+   if (phlo >= 360.) {
+      phlo = 0.; 
+      fEPhlo->SetNumber(phlo);
+   }
+   DoModified();
+   if (!IsDelayed()) DoApply();
+}
+   
+//______________________________________________________________________________
+void TGeoCtubEditor::DoThhi()
+{
+// Slot for phi1.
+   Double_t thhi = fEThhi->GetNumber();
+   if (thhi >= 90.) {thhi = 89.; fEThhi->SetNumber(thhi);}
+   DoModified();
+   if (!IsDelayed()) DoApply();
+}
+
+//______________________________________________________________________________
+void TGeoCtubEditor::DoPhhi()
+{
+// Slot for phi1.
+   Double_t phhi = fEPhhi->GetNumber();
+   if (phhi >= 360.) {
+      phhi = 0.; 
+      fEPhhi->SetNumber(phhi);
+   }
+   DoModified();
+   if (!IsDelayed()) DoApply();
+}
+
+//______________________________________________________________________________
+void TGeoCtubEditor::DoApply()
+{
+// Slot for applying modifications.
+   fApply->SetEnabled(kFALSE);
+   const char *name = fShapeName->GetText();
+   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
+   Double_t rmin = fERmin->GetNumber();
+   Double_t rmax = fERmax->GetNumber();
+   if (rmin<0 || rmax<rmin) return;
+   Double_t dz = fEDz->GetNumber();
+   Double_t phi1 = fEPhi1->GetNumber();
+   Double_t phi2 = fEPhi2->GetNumber();
+   if ((phi2-phi1) > 360.001) {
+      phi1 = 0.;
+      phi2 = 360.;
+      fEPhi1->SetNumber(phi1);
+      fEPhi2->SetNumber(phi2);
+      fLock = kTRUE;
+      fSPhi->SetPosition(phi1,phi2);
+      fLock = kFALSE;
+   } 
+   Double_t thlo = TMath::DegToRad()*fEThlo->GetNumber();
+   Double_t phlo = TMath::DegToRad()*fEPhlo->GetNumber();
+   Double_t thhi = TMath::DegToRad()*fEThhi->GetNumber();  
+   Double_t phhi = TMath::DegToRad()*fEPhhi->GetNumber();
+   Double_t lx = TMath::Sin(thlo)*TMath::Cos(phlo);  
+   Double_t ly = TMath::Sin(thlo)*TMath::Sin(phlo);  
+   Double_t lz = TMath::Cos(thlo);
+   Double_t tx = TMath::Sin(thhi)*TMath::Cos(phhi);  
+   Double_t ty = TMath::Sin(thhi)*TMath::Sin(phhi);  
+   Double_t tz = TMath::Cos(thhi);
+   ((TGeoCtub*)fShape)->SetCtubDimensions(rmin, rmax, dz, phi1, phi2, lx,ly,lz,tx,ty,tz);
+   fShape->ComputeBBox();
+   fUndo->SetEnabled();
+   if (fPad) {
+      if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
+         fShape->Draw();
+         fPad->GetView()->ShowAxis();
+      } else Update();
+   }   
+}
+
+//______________________________________________________________________________
+void TGeoCtubEditor::DoUndo()
+{
+// Slot for undoing last operation.
+   fERmin->SetNumber(fRmini);
+   fERmax->SetNumber(fRmaxi);
+   fEDz->SetNumber(fDzi);
+   fEPhi1->SetNumber(fPmini);
+   fEPhi2->SetNumber(fPmaxi);
+   fSPhi->SetPosition(fPmini,fPmaxi);
+   fEThlo->SetNumber(fThlo);
+   fEPhlo->SetNumber(fPhlo);
+   fEThhi->SetNumber(fThhi);
+   fEPhhi->SetNumber(fPhhi);
+   
+   DoApply();
+   fUndo->SetEnabled(kFALSE);
+   fApply->SetEnabled(kFALSE);
+}

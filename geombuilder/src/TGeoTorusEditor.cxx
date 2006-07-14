@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoTorusEditor.cxx,v 1.1 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -14,6 +14,16 @@
 //  TGeoTorusEditor                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/torus_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/torus_ed.jpg">
+*/
+//End_Html
 
 #include "TGeoTorusEditor.h"
 #include "TGeoTabManager.h"
@@ -272,13 +282,9 @@ void TGeoTorusEditor::DoApply()
          } else {
             view->SetRange(-fShape->GetDX(), -fShape->GetDY(), -fShape->GetDZ(),
                            fShape->GetDX(), fShape->GetDY(), fShape->GetDZ());
-            fPad->Modified();               
-            fPad->Update();
+            Update();
          }                  
-      } else {   
-         fPad->Modified();
-         fPad->Update();
-      }   
+      } else Update();
    }   
 }
 

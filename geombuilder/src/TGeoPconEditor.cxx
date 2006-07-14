@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoPconEditor.cxx,v 1.4 2006/06/24 08:30:18 brun Exp $
+// @(#):$Name:  $:$Id: TGeoPconEditor.cxx,v 1.5 2006/07/12 10:25:34 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -14,6 +14,16 @@
 //  TGeoPconEditor                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/pcon_pic.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/pcon_ed.jpg">
+*/
+//End_Html
 
 #include "TGeoPconEditor.h"
 #include "TGeoTabManager.h"
@@ -119,20 +129,20 @@ TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(fCan, new TGLayoutHints(kLHintsLeft, 0, 0, 4, 4));
       
    // Delayed draw
-   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
-   fDelayed = new TGCheckButton(f1, "Delayed draw");
-   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   fDFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
+   fDelayed = new TGCheckButton(fDFrame, "Delayed draw");
+   fDFrame->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   AddFrame(fDFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
 
    // Buttons
-   f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
-   fApply = new TGTextButton(f1, "Apply");
-   f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   fBFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
+   fApply = new TGTextButton(fBFrame, "Apply");
+   fBFrame->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
-   fUndo = new TGTextButton(f1, "Undo");
-   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   fUndo = new TGTextButton(fBFrame, "Undo");
+   fBFrame->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
 
    // Initialize layout
@@ -359,13 +369,9 @@ void TGeoPconEditor::DoApply()
                const Double_t *orig = fShape->GetOrigin();
                view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
                               orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
-               fPad->Modified();               
-               fPad->Update();
+               Update();
             }                  
-         } else {   
-            fPad->Modified();
-            fPad->Update();
-         }   
+         } else Update();
       }   
       return;
    }           
@@ -389,13 +395,9 @@ void TGeoPconEditor::DoApply()
             const Double_t *orig = fShape->GetOrigin();
             view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
                            orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
-            fPad->Modified();               
-            fPad->Update();
+            Update();
          }                  
-      } else {   
-         fPad->Modified();
-         fPad->Update();
-      }   
+      } else Update();
    }   
 }
 

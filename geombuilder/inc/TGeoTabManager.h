@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.h,v 1.2 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.h,v 1.3 2006/06/24 08:26:42 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -69,6 +69,7 @@ public:
    TVirtualPad        *GetPad() const {return fPad;}
    TGTab              *GetTab() const {return fTab;}
    Int_t               GetTabIndex() const;
+   static void         MoveFrame(TGCompositeFrame *fr, TGCompositeFrame *p);
    void                SetVolTabEnabled(Bool_t flag=kTRUE);
    void                SetModel(TObject *model, Int_t event=0);
    void                SetTab();
