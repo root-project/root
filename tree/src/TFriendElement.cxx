@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.12 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.13 2006/05/31 10:05:49 brun Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -192,9 +192,12 @@ TFile *TFriendElement::GetFile()
    // Return pointer to TFile containing this friend TTree.
 
    if (fFile || IsZombie()) return fFile;
-   if (strlen(GetTitle()))
+
+   TDirectory::TContext ctxt(gDirectory, 0);
+
+   if (strlen(GetTitle())) {
       fFile = new TFile(GetTitle());
-   else {
+   } else {
       TDirectory *dir = fParentTree->GetDirectory();
       if (dir) {
          fFile = dir->GetFile();
@@ -215,19 +218,15 @@ TTree *TFriendElement::GetTree()
    // Return pointer to friend TTree.
 
    if (fTree) return fTree;
-   if (!GetFile()) {
-      // This could be a memory tree or chain
-      fTree = (TTree*)gROOT->FindObject(GetTreeName());
-      if (fTree) {
-         if (!fTree->InheritsFrom(TTree::Class()) ) {
-            fTree = 0;
-         } 
-      }
-      return fTree;
+
+   if (GetFile()) {
+      fFile->GetObject(GetTreeName(),fTree);
+      if (fTree) return fTree;
    }
-   fTree = (TTree*)fFile->Get(GetTreeName());
-   TDirectory *dir = fParentTree->GetDirectory();
-   if (dir && dir != gDirectory) dir->cd();
+
+   // This could be a memory tree or chain
+   fTree = dynamic_cast<TTree*>( gROOT->FindObject(GetTreeName()) );
+
    return fTree;
 }
 
