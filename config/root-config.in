@@ -16,9 +16,10 @@ dicttype=@dicttype@
 zliblib=@zliblib@
 
 if test "$platform" = "win32"; then
-   bindir=`cygpath -u $bindir`
-   libdir=`cygpath -u $libdir`
-   incdir=`cygpath -u $incdir`
+   unixROOTSYS=`cygpath -u $ROOTSYS`
+   bindir=$unixROOTSYS/bin
+   libdir=$unixROOTSYS/lib
+   incdir=$unixROOTSYS/include
 fi
 
 ### ROOT libraries ###
@@ -475,18 +476,13 @@ while test $# -gt 0; do
     --prefix=*)
       ### Set the prefix
       if test "$platform" = "win32"; then
+         ### We need to expand the path to backslash seperated path
          optarg=`cygpath -u $optarg`
       fi
       prefix=$optarg
       bindir=${prefix}/bin
       libdir=${prefix}/lib
       incdir=${prefix}/include
-      ### We need to expand the path to backslash seperated path
-      if test "$platform" = "win32"; then
-         bindir=`cygpath -u $bindir`
-         libdir=`cygpath -u $libdir`
-         incdir=`cygpath -u $incdir`
-      fi
       if test $exec_prefix_set = no ; then
          exec_prefix=$optarg
       fi
@@ -498,17 +494,13 @@ while test $# -gt 0; do
     --exec-prefix=*)
       ### Set the exec-prefix
       if test "$platform" = "win32"; then
+      ### We need to expand the path to backslash seperated path
          optarg=`cygpath -u $optarg`
       fi
       exec_prefix=$optarg
       exec_prefix_set=yes
       bindir=${exec_prefix}/bin
       libdir=${exec_prefix}/lib
-      ### We need to expand the path to backslash seperated path
-      if test "$platform" = "win32"; then
-         bindir=`cygpath -u $bindir`
-         libdir=`cygpath -u $libdir`
-      fi
       ;;
     --exec-prefix)
       ### Output the exec-prefix
