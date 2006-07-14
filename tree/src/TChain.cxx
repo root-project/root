@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.139 2006/07/04 10:23:52 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.140 2006/07/13 05:41:37 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1254,6 +1254,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
       TFriendElement* fe = 0;
       while ((fe = (TFriendElement*) next())) {
          TTree* t = fe->GetTree();
+         if (!t) continue;
          if (t->GetTreeIndex()) {
             t->GetTreeIndex()->UpdateFormulaLeaves();
          }
