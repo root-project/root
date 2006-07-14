@@ -1,5 +1,5 @@
 ifeq (,$(strip $(ROOTTEST_HOME)))
-export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+   export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 
 TEST_TARGETS += vararyobj vararynoclassdefobj

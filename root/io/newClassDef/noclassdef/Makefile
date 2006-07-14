@@ -4,7 +4,7 @@ CLEAN_TARGETS += *.o *.so ti_files ii_files mydict.* driver$(ExeSuf) *~ \
 	*.obj .def *.root *.mode driver.output
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 

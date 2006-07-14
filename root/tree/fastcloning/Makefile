@@ -3,7 +3,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog copiedEvent* Event.h one two merg
 
 TEST_TARGETS += cloneChain single merge
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
@@ -100,7 +100,7 @@ merged/$(REFFILE) : merged/Event.new.split9.root copiedEvent$(ExeSuf) merged/lib
 merged:
 	mkdir -p merged
 
-merged/libEvent.$(DllSuf) : copiedEvent$(ExeSuf) libEvent.$(DllSuf)
+merged/libEvent.$(DllSuf) : copiedEvent$(ExeSuf)
 	$(CMDECHO) mkdir -p merged; cp libEvent.* merged	
 
 $(MERGEFILES): %: $(ONEFILES) $(TWOFILES) 

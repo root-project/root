@@ -3,11 +3,10 @@ CLEAN_TARGETS += *.root *~ *.$(ObjSuf) *Dict.cxx *Dict.h *.$(DllSuf) reader writ
 TEST_TARGETS +=  check
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
-
 
 LIBS = $(ROOTLIBS)
 
@@ -17,10 +16,12 @@ LIBS = $(ROOTLIBS)
 #Foo.$(DllSuf): Foo.$(ObjSuf)
 #	$(BuildFromObjs)
 
-Foo.$(DllSuf): Foo.h Foo.cxx
+FooDict.cxx: Foo.h
 	$(CMDECHO) rootcint -f FooDict.cxx -c Foo.h+
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c Foo.cxx 
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c FooDict.cxx 
+
+Foo.cxx : Foo.h
+
+Foo.$(DllSuf): FooDict.$(ObjSuf) Foo.$(ObjSuf) Foo.h Foo.cxx
 ifeq ($(ARCH),aix)
                 $(CMDECHO) /usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
@@ -48,8 +49,7 @@ endif
 
 #	g++ -shared -Wl,-soname,Foo.$(DllSuf) -o Foo.$(DllSuf) Foo.$(ObjSuf) FooDict.$(ObjSuf)
 
-reader$(ExeSuf) :reader.C
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<  
+reader$(ExeSuf) :reader.$(ObjSuf)
 	$(CMDECHO) $(LD) reader.$(ObjSuf) $(LDFLAGS) $(LIBS) $(OutPutOpt)$@
 
 
@@ -57,8 +57,7 @@ reader$(ExeSuf) :reader.C
 #g++ -o $@ reader.$(ObjSuf) `root-config --libs` \
 #	-Wl,-rpath,`root-config --libdir`
 
-writer$(ExeSuf):writer.C Foo.$(DllSuf) 
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< 
+writer$(ExeSuf):writer.$(ObjSuf) Foo.$(DllSuf) 
 ifeq ($(PLATFORM),win32)
 	$(CMDECHO) $(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.lib $(OutPutOpt)$@
 else
@@ -69,16 +68,6 @@ else
 endif
 endif
 
-#	g++ -o $@ writer.$(ObjSuf) Foo.$(DllSuf) `root-config --libs` \
-#		-Wl,-rpath,`root-config --libdir` -Wl,-rpath,.
-
-dist:
-	mkdir -p treeproblem 
-	cp Foo.{cxx,h} tree.{C,h} reader.C writer.C Makefile README \
-		treeproblem
-	tar -czvf treeproblem.tar.gz treeproblem 
-	rm -rf treeproblem 
-
 write.log:  writer$(ExeSuf) Foo.$(DllSuf)
 	$(CMDECHO) root -b -l -q writer.C > write.log
 
@@ -87,7 +76,4 @@ reader.log: Foo.$(DllSuf) reader$(ExeSuf) write.log
 
 check: reader.log
 	$(CMDECHO)diff -b -w reader.ref reader.log
-
-#clean:
-#	rm -f *.root *~ *.$(ObjSuf) *Dict.cxx *Dict.h *.$(DllSuf) reader writer
 

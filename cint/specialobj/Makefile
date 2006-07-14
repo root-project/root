@@ -2,7 +2,7 @@ CLEAN_TARGETS += *.log problem.root $(ALL_LIBRARIES)
 TEST_TARGETS += stlProxies argtwice
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

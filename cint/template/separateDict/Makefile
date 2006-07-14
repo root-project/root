@@ -1,21 +1,15 @@
 
-ARCH          = $(shell root-config --arch)
-PLATFORM      = $(ARCH)
-
 TEST_TARGETS += sepDictLibs
 CLEAN_TARGETS +=  *.$(ObjSuf) *.$(DllSuf) *Dict.[Ch] *.log
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-
-ROOTCFLAGS   := $(shell root-config --cflags) -DUSE_ROOT
-ROOTLIBS     := $(patsubst -lCore, -lThread -lCore, $(shell root-config --libs))
+ROOTCFLAGS   := $(CXXFLAGS) -DUSE_ROOT
 ROOTLIBS     += -lGui
-ROOTGLIBS    := $(shell root-config --glibs)
 
 sepDictLibs: sepDictLibs.log
 	$(CMDECHO) diff -b -w sepDictLibs.ref sepDictLibs.log

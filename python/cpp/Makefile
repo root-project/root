@@ -4,10 +4,11 @@
 CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog
 
 #Set the list of target to make while testing
-TEST_TARGETS += PyROOT_cpptests PyROOT_advancedtests
+TEST_TARGETS += PyROOT_cpptests 
+#PyROOT_advancedtests
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 

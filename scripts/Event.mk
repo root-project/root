@@ -1,5 +1,3 @@
-include $(ROOTSYS)/test/Makefile.arch
-
 EventDict.cxx: Event.h EventLinkDef.h $(ROOTSYS)/bin/rootcint $(ROOTSYS)/lib/libCint.$(DllSuf)
 	$(CMDECHO) rootcint -f EventDict.cxx -c Event.h EventLinkDef.h
 
@@ -14,6 +12,7 @@ EVENTLIB      = ./$(EVENTSO)
 endif
 MAINEVENTO    = MainEvent.$(ObjSuf)
 MAINEVENTS    = MainEvent.$(SrcSuf)
+LIBS          = $(ROOTLIBS)
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 -include Event.d

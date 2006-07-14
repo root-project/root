@@ -1,6 +1,6 @@
 # Replace Rules.mk for disabled test
 
-SUBDIRS = $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
+SUBDIRS := $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
 
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 

@@ -1,5 +1,5 @@
 #
-# $Id:$
+# $Id: Rules.mk,v 1.62 2006/07/12 14:25:18 maartenb Exp $
 #
 
 all: tests
@@ -19,14 +19,14 @@ test: tests ;
 
 # doing gmake FAIL=true run the test that are known to fail
 
-SUBDIRS = $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
+SUBDIRS := $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
 
 TEST_TARGETS_DIR = $(SUBDIRS:%=%.test)
 TEST_TARGETS += $(TEST_TARGETS_DIR)
 
 # allow tests to be disabled by putting their names into a file called !DISABLE
 ifneq ($(MAKECMDGOALS),clean)
-TEST_TARGETS_DISABLED = $(if $(wildcard !DISABLE),$(shell cat !DISABLE))
+TEST_TARGETS_DISABLED := $(if $(wildcard !DISABLE),$(shell cat !DISABLE))
 endif
 TEST_TARGETS := $(if $(TEST_TARGETS_DISABLED),\
                      $(filter-out $(TEST_TARGETS_DISABLED),$(TEST_TARGETS))\
@@ -48,7 +48,7 @@ else
 	TESTGOAL = test
 endif
 
-EVENTDIR = $(ROOTTEST_HOME)/root/io/event/
+EVENTDIR = $(ROOTTEST_LOC)/root/io/event/
 $(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)  
 	$(CMDECHO) (cd $(EVENTDIR); $(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory $(TESTGOAL); )
 
@@ -96,7 +96,7 @@ endif
 # here we guess the platform
 
 ifeq ($(ARCH),)
-   ARCH          = $(shell root-config --arch)
+   export ARCH          := $(shell root-config --arch)
 endif
 PLATFORM      = $(ARCH)
 
@@ -105,7 +105,7 @@ ifeq ($(ROOTBITS),)
 endif
 
 ifeq ($(CXXFLAGS),)
-   export CXXFLAGS = $(shell root-config --cflags)
+   export CXXFLAGS := $(shell root-config --cflags)
 endif
 ifeq ($(ROOTLIBS),)
    export ROOTLIBS     := $(shell root-config --nonew --libs)
@@ -117,7 +117,7 @@ endif
 ObjSuf   = o
 
 ifeq ($(HAS_PYTHON),)
-   export HAS_PYTHON = $(shell root-config --has-python)
+   export HAS_PYTHON := $(shell root-config --has-python)
 endif
 ifeq ($(HAS_PYTHON),yes)
    ifeq ($(findstring $(ROOTSYS)/lib, $(PYTHONPATH)),)
@@ -133,7 +133,10 @@ endif
 
 ifeq ($(PLATFORM),win32)
 
-ROOTTEST_HOME := $(shell cygpath -m $(ROOTTEST_HOME))
+ifeq ($(ROOTTEST_LOC),)
+    export ROOTTEST_LOC := $(shell cygpath -u '$(ROOTTEST_HOME)')
+    export ROOTTEST_HOME := $(shell cygpath -m $(ROOTTEST_HOME))
+endif
 ifeq ($(ROOT_LOC),)
    export ROOT_LOC := $(shell cygpath -u '$(ROOTSYS)')
 endif
@@ -149,9 +152,12 @@ CXXOPT        = -O2
 #CXXOPT        = -Z7
 #CXXFLAGS      = $(CXXOPT) -G5 -GR -MD -DWIN32 -D_WINDOWS -nologo \
 #                -DVISUAL_CPLUSPLUS -D_X86_=1 -D_DLL
-CXXFLAGS      += $(CXXOPT) -nologo -I$(shell root-config --incdir) -FIw32pragma.h
+ifeq ($(RCONFIG_INC),)
+   export RCONFIG_INC   := $(shell root-config --incdir)
+endif
+CXXFLAGS      += $(CXXOPT) -nologo -I$(RCONFIG_INC) -FIw32pragma.h
 CXXFLAGS      += /TP 
-LD            = link
+LD            = link -nologo
 #LDOPT         = -opt:ref
 #LDOPT         = -debug
 #LDFLAGS       = $(LDOPT) -nologo -nodefaultlib -incremental:no
@@ -164,6 +170,7 @@ else
 # Non windows default:
 
 ROOT_LOC = $(ROOTSYS)
+ROOTTEST_LOC = $(ROOTTEST_HOME)
 
 ObjSuf        = o
 SrcSuf        = cxx
@@ -241,8 +248,11 @@ endif
 
 # Track the version of ROOT we are runing with
 
-ROOTV=$(ROOTTEST_HOME)/root_version
-dummy:=$(shell (echo "$(ROOTSYS)" | diff - "$(ROOTV)" 2> /dev/null ) || (echo "$(ROOTSYS)" > $(ROOTV); echo "New ROOT version ($(ROOTSYS))" >&2))
+ROOTV=$(ROOTTEST_LOC)/root_version
+ROOTVFILE=$(ROOTTEST_HOME)/root_version
+ifeq ($(ROOTTEST_CHECKED_VERSION),)
+   export ROOTTEST_CHECKED_VERSION:=$(shell (echo "$(ROOTSYS)" | diff - "$(ROOTVFILE)" 2> /dev/null ) || (echo "$(ROOTSYS)" > $(ROOTVFILE); echo "New ROOT version ($(ROOTSYS))" >&2))
+endif
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf) .$(ExeSuf) .cc .cxx .C .cpp
 
@@ -258,7 +268,10 @@ ROOTCORELIBS_LIST = Core Cint Tree Hist TreePlayer
 ROOTCORELIBS = $(addprefix $(ROOT_LOC)/lib/lib,$(addsuffix .$(DllSuf),$(ROOTCORELIBS_LIST)))
 ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 
-UTILS_LIBS =  $(ROOTTEST_HOME)scripts/utils_cc.$(DllSuf)
+UTILS_LIBS =  $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf)
+
+$(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/utils.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1
 
 override ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
 

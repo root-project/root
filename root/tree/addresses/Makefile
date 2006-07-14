@@ -12,7 +12,7 @@ TEST_TARGETS += ursula inheritAndOwn BadBaseAddresses treeBranch iobug \
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

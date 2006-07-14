@@ -5,7 +5,7 @@ RULES_DIR=$(ROOTTEST_HOME)/scripts
 
 VERSION := $(subst .,-,$(subst /,-,$(shell root-config --version)))
 ifeq ($(ARCH),)
-   ARCH       = $(shell root-config --arch)
+   ARCH       := $(shell root-config --arch)
 endif
 PLATFORM      = $(ARCH)
 ifeq ($(PLATFORM),win32)
@@ -29,7 +29,7 @@ TEST_TARGETS += base emptyCollection stlIoTest emulatedWrite
 #stlNoLibTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

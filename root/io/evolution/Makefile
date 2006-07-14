@@ -2,7 +2,7 @@ CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.log *.xml
 TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

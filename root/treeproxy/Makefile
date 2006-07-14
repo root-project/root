@@ -26,14 +26,11 @@ TEST_TARGETS += reducedSpill leaflist
 #  the home directory.
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-
-# Uncomment the following line to have gmake called recursively on subdirectories which contain a file named "Makefile".
-#SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
 
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
@@ -72,7 +69,7 @@ leaflist: leaflist.log
 
 producereducedSpill.log: producereducedSpill.C
 	$(CMDECHO) root.exe -q -l -b producereducedSpill.C 2>&1 | $(RemoveDirs) > producereducedSpill.log
-	
+
 producereducedSpill: producereducedSpill.log
 	$(TestDiff)
 
