@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.86 2006/06/21 07:43:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.87 2006/07/13 05:08:04 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -496,15 +496,7 @@ void TDirectory::Close(Option_t *)
       return;
    }
 
-   TDirectory *cursav = gDirectory;
-   cd();
-
-   if (cursav == this) {
-      cursav = GetMotherDir();
-   }
-
    // Save the directory key list and header
-   //SaveSelf();
    Save();
 
    // Delete objects from directory list, this in turn, recursively closes all
@@ -516,16 +508,19 @@ void TDirectory::Close(Option_t *)
       fKeys->Delete("slow");
    }
 
-   if (cursav) {
-      cursav->cd();
-   } else {
-      gFile = 0;
-      if (this == gROOT) {
-         gDirectory = 0;
+   if (gDirectory == this) {
+      TDirectory *cursav = GetMotherDir();
+      if (cursav && cursav != this) {
+         cursav->cd();
       } else {
-         gDirectory = gROOT;
+         gFile = 0;
+         if (this == gROOT) {
+            gDirectory = 0;
+         } else {
+            gDirectory = gROOT;
+         }
       }
-   }
+   } 
 }
 
 //______________________________________________________________________________

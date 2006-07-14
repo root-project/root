@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.178 2006/06/30 14:24:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.179 2006/07/13 05:10:24 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -697,16 +697,10 @@ void TFile::Close(Option_t *option)
    delete fClassIndex;
    fClassIndex = 0;
 
-   TDirectory *cursav = gDirectory;
-   cd();
-
-   if (cursav == this || (cursav && cursav->GetFile() == this)) {
-      cursav = 0;
-   }
-
    // Delete all supported directories structures from memory
+   // If gDirectory points to this object or any of the nested
+   // TDirectory, TDirectory::Close will induce the proper cd.
    TDirectory::Close();
-   cd();      // Close() sets gFile = 0
 
    if (IsWritable()) {
       TFree *f1 = (TFree*)fFree->First();
@@ -729,13 +723,6 @@ void TFile::Close(Option_t *option)
    }
 
    fWritable = kFALSE;
-
-   if (cursav)
-      cursav->cd();
-   else {
-      gFile      = 0;
-      gDirectory = gROOT;
-   }
 
    // delete the TProcessIDs
    TList pidDeleted;
