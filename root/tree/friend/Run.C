@@ -1,4 +1,7 @@
-bool TestError(char *test, char *msg) {
+#include "TChain.h"
+#include "TFile.h"
+
+bool TestError(const char *test, const char *msg) {
   fprintf(stderr,"In test \"%s\", failed: %s\n",
           test,msg);
   return false;
@@ -110,7 +113,7 @@ bool testChainByPointer() {
   TChain *c2 = new TChain("T2");
   c2->Add("Event2.root/T");
 
-  c1->AddFriend(c2);
+  c1->AddFriend(c2,"");
   c1->AddFriend(c2,"T3");
 
   TLeaf* l = c1->GetLeaf("event");
