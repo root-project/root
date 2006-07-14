@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.10 2006/07/03 09:22:46 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.11 2006/07/03 10:22:13 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -82,7 +82,7 @@ namespace ROOT { namespace Cintex {
       int ret_typedeft = -1;
       if ( rt.IsTypedef()) {
          ret_typedeft = CINTTypedefBuilder::Setup(rt);
-         rt = rt.ToType(FINAL);
+         rt = rt.FinalType();
       }
       //CINTScopeBuilder::Setup( rt );
       CintTypeDesc ret_desc = CintType( rt );
