@@ -1,5 +1,5 @@
 #
-# $Id: Rules.mk,v 1.62 2006/07/12 14:25:18 maartenb Exp $
+# $Id: Rules.mk,v 1.63 2006/07/14 20:15:45 pcanal Exp $
 #
 
 all: tests
@@ -47,6 +47,18 @@ ifeq ($(MAKECMDGOALS),cleantest)
 else
 	TESTGOAL = test
 endif
+
+ifeq ($(ROOTTEST_LOC),)
+
+ifeq ($(PLATFORM),win32)
+    export ROOTTEST_LOC := $(shell cygpath -u '$(ROOTTEST_HOME)')
+    export ROOTTEST_HOME := $(shell cygpath -m $(ROOTTEST_HOME))
+else
+    export ROOTTEST_LOC := $(ROOTTEST_HOME)
+endif
+
+endif
+
 
 EVENTDIR = $(ROOTTEST_LOC)/root/io/event/
 $(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)  
@@ -133,10 +145,6 @@ endif
 
 ifeq ($(PLATFORM),win32)
 
-ifeq ($(ROOTTEST_LOC),)
-    export ROOTTEST_LOC := $(shell cygpath -u '$(ROOTTEST_HOME)')
-    export ROOTTEST_HOME := $(shell cygpath -m $(ROOTTEST_HOME))
-endif
 ifeq ($(ROOT_LOC),)
    export ROOT_LOC := $(shell cygpath -u '$(ROOTSYS)')
 endif
@@ -169,8 +177,7 @@ else
 
 # Non windows default:
 
-ROOT_LOC = $(ROOTSYS)
-ROOTTEST_LOC = $(ROOTTEST_HOME)
+export ROOT_LOC := $(ROOTSYS)
 
 ObjSuf        = o
 SrcSuf        = cxx
