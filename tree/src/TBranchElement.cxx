@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.202 2006/07/13 07:33:27 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.203 2006/07/13 17:49:41 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -439,9 +439,9 @@ TBranchElement::TBranchElement(const char* bname, TStreamerInfo* sinfo, Int_t id
             TClass* clm = gROOT->GetClass(elem_type);
             Int_t err = Unroll(name, clm, clm, pointer, basketsize, splitlevel, 0);
             if (err >= 0) {
-              // Return on success.
-              // FIXME: Why not on error too?
-              return;
+               // Return on success.
+               // FIXME: Why not on error too?
+               return;
             }
          }
       }
@@ -882,11 +882,11 @@ void TBranchElement::BuildTitle(const char* name)
    for (Int_t i = 0; i < nbranches; ++i) {
       TBranchElement* bre = (TBranchElement*) fBranches.At(i);
       if (fType == 3) {
-        bre->SetType(31);
+         bre->SetType(31);
       } else if (fType == 4) {
-        bre->SetType(41);
+         bre->SetType(41);
       } else {
-        Error("BuildTitle", "This cannot happen, fType of parent is not 3 or 4!");
+         Error("BuildTitle", "This cannot happen, fType of parent is not 3 or 4!");
       }
       bre->fCollProxy = GetCollectionProxy();
       // FIXME: This will fail if our sub-branches are not containers.
@@ -1573,9 +1573,9 @@ const char* TBranchElement::GetTypeName() const
    // FIXME: Use symbolic constants here.
    if ((fStreamerType < 1) || (fStreamerType > 59)) {
       if (fBranchClass.GetClass()) {
-        return fBranchClass.GetClass()->GetName();
+         return fBranchClass.GetClass()->GetName();
       } else {
-        return 0;
+         return 0;
       }
    }
    const char *types[19] = {

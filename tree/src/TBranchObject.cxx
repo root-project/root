@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.34 2006/05/31 19:36:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.35 2006/07/13 05:26:51 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -337,8 +337,8 @@ void TBranchObject::SetAddress(void* add)
          }
          TClass* clm = clones->GetClass();
          if (clm) {
-           clm->BuildRealData(); //just in case clm derives from an abstract class
-           clm->GetStreamerInfo();
+            clm->BuildRealData(); //just in case clm derives from an abstract class
+	    clm->GetStreamerInfo();
          }
       }
    }

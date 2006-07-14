@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.291 2006/06/28 15:51:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.292 2006/07/13 05:31:49 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -816,7 +816,7 @@ TFriendElement* TTree::AddFriend(const char* treename, const char* filename)
          Warning("AddFriend", "FriendElement %s in file %s has less entries %g than its parent Tree: %g", treename, filename, t->GetEntries(), fEntries);
       }
    } else {
-       Warning("AddFriend", "Cannot add FriendElement %s in file %s", treename, filename);
+      Warning("AddFriend", "Cannot add FriendElement %s in file %s", treename, filename);
    }
    return fe;
 }
@@ -844,7 +844,7 @@ TFriendElement* TTree::AddFriend(const char* treename, TFile* file)
          Warning("AddFriend", "FriendElement %s in file %s has less entries %g than its parent tree: %g", treename, file->GetName(), t->GetEntries(), fEntries);
       }
    } else {
-       Warning("AddFriend", "unknown tree '%s' in file '%s'", treename, file->GetName());
+      Warning("AddFriend", "unknown tree '%s' in file '%s'", treename, file->GetName());
    }
    return fe;
 }
@@ -1178,15 +1178,15 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
             if (curname[i] == '/') {
                curname[i] = '.';
             }
-          }
-          Int_t noccur = folder->Occurence(obj);
-          if (noccur > 0) {
-             sprintf(occur, "_%d", noccur);
-             strcat(curname, occur);
-          }
-          TBranchElement* br = (TBranchElement*) Bronch(curname, obj->ClassName(), add, bufsize, splitlevel - 1);
-          br->SetBranchFolder();
-       }
+         }
+	 Int_t noccur = folder->Occurence(obj);
+	 if (noccur > 0) {
+            sprintf(occur, "_%d", noccur);
+	    strcat(curname, occur);
+	 }
+	 TBranchElement* br = (TBranchElement*) Bronch(curname, obj->ClassName(), add, bufsize, splitlevel - 1);
+	 br->SetBranchFolder();
+      }
    }
    delete[] curname;
    return GetListOfBranches()->GetEntries() - nbranches;
@@ -5160,12 +5160,15 @@ void TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr)
 void TTree::SetBranchAddress(const char* bname, void* add, TClass* ptrClass, EDataType datatype, Bool_t isptr)
 {
    // -- Verify the validity of the type of add before calling SetBranchAddress.
+
    SetBranchAddress(bname, add, 0, ptrClass, datatype, isptr);
 }
 
 //_______________________________________________________________________
 void TTree::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TClass* ptrClass, EDataType datatype, Bool_t isptr)
 {
+   // -- Verify the validity of the type of add before calling SetBranchAddress.
+
    TBranch* branch = GetBranch(bname);
    if (!branch) {
       Error("SetBranchAddress", "unknown branch -> %s", bname);
