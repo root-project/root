@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.13 2006/07/03 17:02:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.14 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -190,6 +190,13 @@ namespace ROOT {
           */
          virtual Type DynamicType( const Object & obj ) const;
 
+
+
+         /**
+          * FinalType will return the type without typedefs 
+          * @return type with all typedef info removed
+          */
+         Type FinalType() const;
 
 
          /**
@@ -434,6 +441,14 @@ namespace ROOT {
 
 
          /**
+          * RawType will return the underlying type of a type removing all information
+          * of pointers, arrays, typedefs
+          * @return the raw type representation
+          */
+         Type RawType() const;
+
+
+         /**
           * ReturnType will return a pointer to the At of the return At.
           * @return pointer to Type of return At
           */
@@ -521,7 +536,7 @@ namespace ROOT {
           * arrayType will return a pointer to the At of the array.
           * @return pointer to Type of MemberAt et. al.
           */
-         virtual Type ToType( unsigned int mod = 0 ) const;
+         virtual Type ToType() const;
 
 
          /** 

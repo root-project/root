@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Kernel.h,v 1.18 2006/07/03 17:02:37 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.17 2006/07/05 07:09:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -251,11 +251,9 @@ namespace ROOT {
          FINAL     = (1<<0),
          QUALIFIED = (1<<1),
          SCOPED    = (1<<2),
-         RAW       = (1<<7),
          F         = (1<<4),
          Q         = (1<<5),
-         S         = (1<<6),
-         R         = (1<<8)
+         S         = (1<<6)
       };
       
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Tools.cxx,v 1.15 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.14 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -72,7 +72,7 @@ static std::string splitScopedName( const std::string & nam,
 EFUNDAMENTALTYPE Tools::FundamentalType( const Type & typ ) {
 //-------------------------------------------------------------------------------
 // Return an enum representing the fundamental type passed in.
-   size_t tid = (size_t)typ.ToType(FINAL).Id();
+   size_t tid = (size_t)typ.FinalType().Id();
    
    if ( tid == FTypes::Char() )         return kCHAR;
    if ( tid == FTypes::SigChar() )      return kSIGNED_CHAR; 

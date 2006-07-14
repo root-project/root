@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.14 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.15 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -219,6 +219,42 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBase::DynamicType( const Object & /* obj */
 
 
 //-------------------------------------------------------------------------------
+ROOT::Reflex::Type ROOT::Reflex::TypeBase::FinalType() const {
+//-------------------------------------------------------------------------------
+// Return the type without typedefs information.
+   if ( fFinalType ) return *fFinalType;
+
+   Type tmpType = ThisType();
+   while ( tmpType.TypeType() == TYPEDEF ) tmpType = tmpType.ToType();
+
+   Type retType = tmpType;
+
+   while ( true ) {
+
+      while ( tmpType.TypeType() == TYPEDEF ) tmpType = tmpType.ToType();
+
+      switch ( tmpType.TypeType()) {
+
+      case POINTER:
+         tmpType = PointerBuilder(tmpType.ToType(),tmpType.TypeInfo()).ToType();
+         break;
+      case POINTERTOMEMBER:
+         tmpType = PointerToMemberBuilder(tmpType.ToType(), tmpType.PointerToMemberScope(), tmpType.TypeInfo()).ToType();
+         break;
+      case ARRAY:
+         tmpType = ArrayBuilder(tmpType.ToType(), tmpType.ArrayLength(), tmpType.TypeInfo()).ToType();
+         break;
+      case UNRESOLVED:
+         return Type();
+      default:
+         fFinalType = new Type(retType);
+         return *fFinalType;
+      }
+   }
+}
+
+
+//-------------------------------------------------------------------------------
 ROOT::Reflex::Member ROOT::Reflex::TypeBase::FunctionMemberAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return the nth function member.
@@ -309,6 +345,34 @@ ROOT::Reflex::PropertyList ROOT::Reflex::TypeBase::Properties() const {
 
 
 //-------------------------------------------------------------------------------
+ROOT::Reflex::Type ROOT::Reflex::TypeBase::RawType() const {
+//-------------------------------------------------------------------------------
+// Return the raw type of this type, removing all info of pointers, arrays, typedefs.
+   if ( fRawType ) return *fRawType;
+   
+   Type rawType = ThisType();
+   
+   while ( true ) {
+      
+      switch (rawType.TypeType()) {
+         
+      case POINTER:
+      case POINTERTOMEMBER:
+      case TYPEDEF:
+      case ARRAY:
+         rawType = rawType.ToType();
+         break;
+      case UNRESOLVED:
+         return Type();
+      default:
+         fRawType = new Type(rawType);
+         return *fRawType;
+      }     
+   }
+}
+
+
+//-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::TypeBase::ReturnType() const {
 //-------------------------------------------------------------------------------
 // Return the function return type.
@@ -341,69 +405,10 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBase::TemplateArgumentAt( size_t /* nth */ 
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeBase::ToType( unsigned int mod ) const {
+ROOT::Reflex::Type ROOT::Reflex::TypeBase::ToType() const {
 //-------------------------------------------------------------------------------
 // Return the underlying type.
-
-   if ( 0 != ( mod & ( RAW | R ))) {
-
-      if ( fRawType ) return *fRawType;
-
-      Type rawType = ThisType();
-
-      while ( true ) {
-
-         switch (rawType.TypeType()) {
-
-         case POINTER:
-         case POINTERTOMEMBER:
-         case TYPEDEF:
-         case ARRAY:
-            rawType = rawType.ToType();
-            break;
-         case UNRESOLVED:
-            return Type();
-         default:
-            fRawType = new Type(rawType);
-            return *fRawType;
-         }     
-      }
-   }
-
-   if ( 0 != ( mod & ( FINAL | F ))) {
-
-      if ( fFinalType ) return *fFinalType;
-
-      Type tmpType = ThisType();
-      while ( tmpType.TypeType() == TYPEDEF ) tmpType = tmpType.ToType();
-
-      Type retType = tmpType;
-
-      while ( true ) {
-
-         while ( tmpType.TypeType() == TYPEDEF ) tmpType = tmpType.ToType();
-
-         switch ( tmpType.TypeType()) {
-
-         case POINTER:
-            tmpType = PointerBuilder(tmpType.ToType(),tmpType.TypeInfo()).ToType();
-            break;
-         case POINTERTOMEMBER:
-            tmpType = PointerToMemberBuilder(tmpType.ToType(), tmpType.PointerToMemberScope(), tmpType.TypeInfo()).ToType();
-            break;
-         case ARRAY:
-            tmpType = ArrayBuilder(tmpType.ToType(), tmpType.ArrayLength(), tmpType.TypeInfo()).ToType();
-            break;
-         case UNRESOLVED:
-            return Type();
-         default:
-            fFinalType = new Type(retType);
-            return *fFinalType;
-         }
-      }
-   }
-
-   return ThisType();
+   return Type();
 }
 
 

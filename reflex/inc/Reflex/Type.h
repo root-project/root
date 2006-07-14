@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.14 2006/07/03 17:02:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.15 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -298,6 +298,13 @@ namespace ROOT {
           * @return the actual class of the object
           */
          Type DynamicType( const Object & obj ) const;
+
+         
+         /**
+          * FinalType will return the type without typedefs 
+          * @return type with all typedef info removed
+          */
+         Type FinalType() const;
 
 
          /**
@@ -684,6 +691,14 @@ namespace ROOT {
 
 
          /**
+          * RawType will return the underlying type of a type removing all information
+          * of pointers, arrays, typedefs
+          * @return the raw type representation
+          */
+         Type RawType() const;
+
+
+         /**
           * ReturnType will return the type of the return type
           * @return reflection information of the return type
           */
@@ -878,10 +893,9 @@ namespace ROOT {
 
          /**
           * ToType will return an underlying type if possible (e.g. typedef, pointer..)
-          * @param mod accepts FINAL to go to the final type for a typedef
           * @return reflection information of underlying type
           */
-         Type ToType( unsigned int mod = 0 ) const;
+         Type ToType() const;
 
 
          /**
@@ -1491,6 +1505,14 @@ inline size_t ROOT::Reflex::Type::ArrayLength() const {
 
 
 //-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type ROOT::Reflex::Type::FinalType() const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fTypeName->fTypeBase->FinalType();
+   return Type();
+}
+
+
+//-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::Type::MemberTemplateSize() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeName->fTypeBase->MemberTemplateSize();
@@ -1635,6 +1657,14 @@ inline ROOT::Reflex::PropertyList ROOT::Reflex::Type::Properties() const {
 
 
 //-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type ROOT::Reflex::Type::RawType() const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fTypeName->fTypeBase->RawType();
+   return Type();
+}
+
+
+//-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type ROOT::Reflex::Type::ReturnType() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeName->fTypeBase->ReturnType();
@@ -1763,9 +1793,9 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Type::TemplateArgument_
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Type::ToType( unsigned int mod ) const {
+inline ROOT::Reflex::Type ROOT::Reflex::Type::ToType() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->ToType( mod );
+   if ( * this ) return fTypeName->fTypeBase->ToType();
    return Type();
 }
 

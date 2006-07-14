@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.16 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.17 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -381,6 +381,7 @@ size_t ROOT::Reflex::ScopeBase::SubTypeSize() const {
 ROOT::Reflex::Type ROOT::Reflex::ScopeBase::SubTypeByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
    // Lookup a sub type by name and return it.
+   if ( Tools::GetBasePosition(nam)) return Type::ByName(Name(SCOPED)+"::"+nam);
    for ( size_t i = 0; i < fSubTypes.size(); ++i ) {
       if ( fSubTypes[i].Name() == nam ) return fSubTypes[i];
    }
@@ -436,6 +437,7 @@ ROOT::Reflex::TypeTemplate ROOT::Reflex::ScopeBase::SubTypeTemplateByName( const
 ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::SubScopeByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
 // Lookup a sub scope of this scope by name and return it.
+   if (Tools::GetBasePosition(nam)) return Scope::ByName(Name(SCOPED)+"::"+nam);
    for ( size_t i = 0; i < fSubScopes.size(); ++i ) {
       if ( fSubScopes[i].Name() == nam ) return fSubScopes[i];
    }

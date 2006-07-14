@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.9 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.10 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -94,9 +94,9 @@ void ReflexSimple1Test::testBase() {
   CPPUNIT_ASSERT(t1);
   CPPUNIT_ASSERT(t2);
 
-  CPPUNIT_ASSERT_EQUAL(std::string("ScopeName"), t1.ToType().Name());
-  CPPUNIT_ASSERT_EQUAL(t1.Name(), t1.ToType(FINAL).Name());
-  CPPUNIT_ASSERT_EQUAL(t1.Name(), t1.ToType(RAW).Name());
+  CPPUNIT_ASSERT_EQUAL(std::string(""), t1.ToType().Name());
+  CPPUNIT_ASSERT_EQUAL(t1.Name(), t1.FinalType().Name());
+  CPPUNIT_ASSERT_EQUAL(t1.Name(), t1.RawType().Name());
 
   CPPUNIT_ASSERT(!t1.HasBase(t2));
   CPPUNIT_ASSERT(!t2.HasBase(t1));

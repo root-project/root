@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Array.h,v 1.8 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Array.h,v 1.9 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -60,7 +60,7 @@ namespace ROOT {
           * arrayType will return a pointer to the At of the array.
           * @return pointer to Type of MemberAt et. al.
           */
-         Type ToType( unsigned int mod ) const;
+         Type ToType() const;
 
 
          /** static funtion that composes the At Name */
@@ -96,9 +96,8 @@ inline size_t ROOT::Reflex::Array::ArrayLength() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Array::ToType( unsigned int mod ) const {
+inline ROOT::Reflex::Type ROOT::Reflex::Array::ToType() const {
 //-------------------------------------------------------------------------------
-   if ( 0 != ( mod & ( RAW | R | FINAL | F ))) return TypeBase::ToType( mod );
    return fArrayType;
 }
 

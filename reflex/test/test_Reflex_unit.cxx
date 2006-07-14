@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: test_Reflex_unit.cxx,v 1.10 2006/07/05 06:59:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.9 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -187,11 +187,9 @@ void ReflexUnitTest::empty_type() {
   CPPUNIT_ASSERT_EQUAL(0, int(t.TemplateArgumentSize()));
   CPPUNIT_ASSERT(!t.TemplateFamily());
   CPPUNIT_ASSERT(!t.ToType());
-  CPPUNIT_ASSERT(!t.ToType(FINAL));
-  CPPUNIT_ASSERT(!t.ToType(RAW));
-  CPPUNIT_ASSERT(!t.ToType(F));
-  CPPUNIT_ASSERT(!t.ToType(R));
-  CPPUNIT_ASSERT(!t.ToType(FINAL|F|RAW|R));
+  CPPUNIT_ASSERT(!t.FinalType());
+  CPPUNIT_ASSERT(!t.RawType());
+  CPPUNIT_ASSERT(!t.FinalType().RawType());
   CPPUNIT_ASSERT_EQUAL(std::string(typeid(void).name()), std::string(t.TypeInfo().name()));
   CPPUNIT_ASSERT(!t.SubTypeTemplateAt(0));
   CPPUNIT_ASSERT_EQUAL(0, int(t.SubTypeTemplateSize()));

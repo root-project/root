@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.9 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.10 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -355,7 +355,7 @@ namespace ROOT {
           * typedefType will return a pointer to the At of the typedef.
           * @return pointer to Type of MemberAt et. al.
           */
-         virtual Type ToType( unsigned int mod ) const;
+         virtual Type ToType() const;
 
       private:  
 
@@ -743,7 +743,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::FunctionParame
 //-------------------------------------------------------------------------------
 inline std::string ROOT::Reflex::Typedef::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
-   if ( 0 != ( mod & ( FINAL | F ))) return ToType( mod ).Name( mod );
+   if ( 0 != ( mod & ( FINAL | F ))) return FinalType().Name( mod );
    else                              return TypeBase::Name( mod );
 }
 
@@ -960,9 +960,8 @@ inline const std::type_info & ROOT::Reflex::Typedef::TypeInfo() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Typedef::ToType( unsigned int mod ) const {
+inline ROOT::Reflex::Type ROOT::Reflex::Typedef::ToType() const {
 //-------------------------------------------------------------------------------
-   if ( 0 != ( mod & ( RAW | R | FINAL | F ))) return TypeBase::ToType( mod );
    return fTypedefType;
 }
 

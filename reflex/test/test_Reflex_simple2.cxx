@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.20 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.21 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -597,45 +597,42 @@ void ReflexSimple2Test::testDataMembers() {
   CPPUNIT_ASSERT(m20);
   Type m20t = m20.TypeOf();
   CPPUNIT_ASSERT(m20t);
-  CPPUNIT_ASSERT_EQUAL(std::string("int"), m20t.ToType().Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m20t.ToType(FINAL).Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m20t.ToType(RAW).Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m20t.ToType(FINAL|RAW).Name());
+  CPPUNIT_ASSERT_EQUAL(std::string(""), m20t.ToType().Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m20t.FinalType().Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m20t.RawType().Name());
 
   Member m21 = t2.MemberByName("pi");
   CPPUNIT_ASSERT(m21);
   Type m21t = m21.TypeOf();
   CPPUNIT_ASSERT(m21t);
-  CPPUNIT_ASSERT_EQUAL(m21t.Name(), m21t.ToType(FINAL).Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m21t.ToType(RAW).Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m21t.ToType(FINAL|RAW).Name());
+  CPPUNIT_ASSERT_EQUAL(m21t.Name(), m21t.FinalType().Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m21t.RawType().Name());
 
   Member m22 = t2.MemberByName("ppi");
   CPPUNIT_ASSERT(m22);
   Type m22t = m22.TypeOf();
   CPPUNIT_ASSERT(m22t);
-  CPPUNIT_ASSERT_EQUAL(m22t.Name(), m22t.ToType(FINAL).Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m22t.ToType(RAW).Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m22t.ToType(FINAL|RAW).Name());
-  CPPUNIT_ASSERT_EQUAL(m21t.Name(), m22t.ToType(FINAL).ToType().Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m22t.ToType(RAW).ToType().Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m22t.ToType(FINAL|RAW).ToType().Name());
+  CPPUNIT_ASSERT_EQUAL(m22t.Name(), m22t.FinalType().Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m22t.RawType().Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m22t.RawType().Name());
+  CPPUNIT_ASSERT_EQUAL(m21t.Name(), m22t.FinalType().ToType().Name());
+  CPPUNIT_ASSERT_EQUAL(std::string(""), m22t.RawType().ToType().Name());
 
   Member m23 = t2.MemberByName("pa");
   CPPUNIT_ASSERT(m23);
   Type m23t = m23.TypeOf();
   CPPUNIT_ASSERT(m23t);
-  CPPUNIT_ASSERT_EQUAL(m23t.Name(), m23t.ToType(FINAL).Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m23t.ToType(RAW).Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m23t.ToType(FINAL|RAW).Name());
+  CPPUNIT_ASSERT_EQUAL(m23t.Name(), m23t.FinalType().Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m23t.RawType().Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m23t.RawType().Name());
 
   Member m24 = t2.MemberByName("paa");
   CPPUNIT_ASSERT(m24);
   Type m24t = m24.TypeOf();
   CPPUNIT_ASSERT(m24t);
-  CPPUNIT_ASSERT_EQUAL(m24t.Name(), m24t.ToType(FINAL).Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m24t.ToType(RAW).Name());
-  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m24t.ToType(FINAL|RAW).Name());
+  CPPUNIT_ASSERT_EQUAL(m24t.Name(), m24t.FinalType().Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m24t.RawType().Name());
+  CPPUNIT_ASSERT_EQUAL(m20t.Name(), m24t.RawType().Name());
 
 }
 
@@ -884,8 +881,8 @@ void ReflexSimple2Test::testTypedefSelection() {
   CPPUNIT_ASSERT(t3.IsClass());
   CPPUNIT_ASSERT_EQUAL(std::string("RealXmlSelClass"), t3.Name());
 
-  CPPUNIT_ASSERT_EQUAL(t3.Name(), t2.ToType(FINAL).Name());
-  CPPUNIT_ASSERT_EQUAL(t3.Name(), t.ToType(FINAL).Name());
+  CPPUNIT_ASSERT_EQUAL(t3.Name(), t2.FinalType().Name());
+  CPPUNIT_ASSERT_EQUAL(t3.Name(), t.FinalType().Name());
 
 }
 
@@ -895,7 +892,7 @@ void ReflexSimple2Test::testTypedef() {
   CPPUNIT_ASSERT(t);
   CPPUNIT_ASSERT_EQUAL(std::string("TypedefXmlSelClass"), t.ToType().Name());
   CPPUNIT_ASSERT_EQUAL(std::string("RealXmlSelClass"), t.ToType().ToType().Name());
-  CPPUNIT_ASSERT_EQUAL(std::string("RealXmlSelClass"), t.ToType(FINAL).Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("RealXmlSelClass"), t.FinalType().Name());
 }
 
 
@@ -973,8 +970,8 @@ void ReflexSimple2Test::testTypedefInClass() {
   CPPUNIT_ASSERT(t0m1);
   CPPUNIT_ASSERT(t0m1.TypeOf().IsTypedef());
   CPPUNIT_ASSERT_EQUAL(std::string("MyInt"), t0m1.TypeOf().Name());
-  CPPUNIT_ASSERT(t0m1.TypeOf().ToType(FINAL).IsFundamental());
-  CPPUNIT_ASSERT_EQUAL(std::string("int"), t0m1.TypeOf().ToType(FINAL).Name());
+  CPPUNIT_ASSERT(t0m1.TypeOf().FinalType().IsFundamental());
+  CPPUNIT_ASSERT_EQUAL(std::string("int"), t0m1.TypeOf().FinalType().Name());
   Member t0m2 = t0.DataMemberByName("m_v");
   CPPUNIT_ASSERT(t0m2);
   CPPUNIT_ASSERT(t0m2.TypeOf().IsClass());
@@ -985,10 +982,10 @@ void ReflexSimple2Test::testTypedefInClass() {
   CPPUNIT_ASSERT(t0m3.TypeOf().IsTypedef());
   CPPUNIT_ASSERT_EQUAL(std::string("MyVector"), t0m3.TypeOf().Name());
   CPPUNIT_ASSERT_EQUAL(std::string("testclasses::MyVector"), t0m3.TypeOf().Name(SCOPED));
-  CPPUNIT_ASSERT(t0m3.TypeOf().ToType(FINAL).IsClass());
-  CPPUNIT_ASSERT(t0m3.TypeOf().ToType(FINAL).IsTemplateInstance());
-  CPPUNIT_ASSERT_EQUAL(std::string("vector<int>"), t0m3.TypeOf().ToType(FINAL).Name());
-  CPPUNIT_ASSERT_EQUAL(std::string("std::vector<int>"), t0m3.TypeOf().ToType(FINAL).Name(SCOPED));
+  CPPUNIT_ASSERT(t0m3.TypeOf().FinalType().IsClass());
+  CPPUNIT_ASSERT(t0m3.TypeOf().FinalType().IsTemplateInstance());
+  CPPUNIT_ASSERT_EQUAL(std::string("vector<int>"), t0m3.TypeOf().FinalType().Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("std::vector<int>"), t0m3.TypeOf().FinalType().Name(SCOPED));
 
   Type t1 = Type::ByName("testclasses::WithTypedefMemberT<std::vector<int> >");
   CPPUNIT_ASSERT(t1);
@@ -996,8 +993,8 @@ void ReflexSimple2Test::testTypedefInClass() {
   CPPUNIT_ASSERT(t1m0);
   CPPUNIT_ASSERT(t1m0.TypeOf().IsTypedef());
   CPPUNIT_ASSERT_EQUAL(std::string("testclasses::MyVector"), t1m0.TypeOf().Name(SCOPED));
-  CPPUNIT_ASSERT(t1m0.TypeOf().ToType(FINAL).IsClass());
-  CPPUNIT_ASSERT_EQUAL(std::string("std::vector<int>"), t1m0.TypeOf().ToType(FINAL).Name(SCOPED));
+  CPPUNIT_ASSERT(t1m0.TypeOf().FinalType().IsClass());
+  CPPUNIT_ASSERT_EQUAL(std::string("std::vector<int>"), t1m0.TypeOf().FinalType().Name(SCOPED));
   
   Type t2 = Type::ByName("testclasses::WithTypedefMemberT<int>");
   CPPUNIT_ASSERT(t2);
@@ -1005,8 +1002,8 @@ void ReflexSimple2Test::testTypedefInClass() {
   CPPUNIT_ASSERT(t2m0);
   CPPUNIT_ASSERT(t2m0.TypeOf().IsTypedef());
   CPPUNIT_ASSERT_EQUAL(std::string("testclasses::MyInt"), t2m0.TypeOf().Name(SCOPED));
-  CPPUNIT_ASSERT(t2m0.TypeOf().ToType(FINAL).IsFundamental());
-  CPPUNIT_ASSERT_EQUAL(std::string("int"), t2m0.TypeOf().ToType(FINAL).Name(SCOPED));
+  CPPUNIT_ASSERT(t2m0.TypeOf().FinalType().IsFundamental());
+  CPPUNIT_ASSERT_EQUAL(std::string("int"), t2m0.TypeOf().FinalType().Name(SCOPED));
   
 }
 
@@ -1073,9 +1070,8 @@ void ReflexSimple2Test::testToTypeFinal() {
    CPPUNIT_ASSERT(t0);
    CPPUNIT_ASSERT_EQUAL(std::string("RPMYINT"), t0.Name());
    CPPUNIT_ASSERT_EQUAL(std::string("testclasses::Typedefs::RPMYINT"), t0.Name(S|Q));
-   CPPUNIT_ASSERT_EQUAL(std::string("int*"), t0.ToType(FINAL).Name());
-   CPPUNIT_ASSERT_EQUAL(std::string("int* const&"), t0.ToType(FINAL).Name(S|Q));
-   CPPUNIT_ASSERT(t0.ToType(RAW) == t0.ToType(FINAL|RAW));
+   CPPUNIT_ASSERT_EQUAL(std::string("int*"), t0.FinalType().Name());
+   CPPUNIT_ASSERT_EQUAL(std::string("int* const&"), t0.FinalType().Name(S|Q));
 
    Type t1;
    for ( Type_Iterator ti = t.SubType_Begin(); ti != t.SubType_End(); ++ti ) {
@@ -1084,9 +1080,8 @@ void ReflexSimple2Test::testToTypeFinal() {
    CPPUNIT_ASSERT(t1);
    CPPUNIT_ASSERT_EQUAL(std::string("PPMYINT"), t1.Name());
    CPPUNIT_ASSERT_EQUAL(std::string("testclasses::Typedefs::PPMYINT"), t1.Name(S|Q));
-   CPPUNIT_ASSERT_EQUAL(std::string("int**"), t1.ToType(FINAL).Name());
-   CPPUNIT_ASSERT_EQUAL(std::string("const int**"), t1.ToType(FINAL).Name(S|Q));
-   CPPUNIT_ASSERT(t1.ToType(RAW) == t1.ToType(FINAL|RAW));
+   CPPUNIT_ASSERT_EQUAL(std::string("int**"), t1.FinalType().Name());
+   CPPUNIT_ASSERT_EQUAL(std::string("const int**"), t1.FinalType().Name(S|Q));
 
    Type t2;
    for ( Type_Iterator ti = t.SubType_Begin(); ti != t.SubType_End(); ++ti ) {
@@ -1095,10 +1090,8 @@ void ReflexSimple2Test::testToTypeFinal() {
    CPPUNIT_ASSERT(t2);
    CPPUNIT_ASSERT_EQUAL(std::string("PPPMYINT"), t2.Name());
    CPPUNIT_ASSERT_EQUAL(std::string("testclasses::Typedefs::PPPMYINT"), t2.Name(S|Q));
-   CPPUNIT_ASSERT_EQUAL(std::string("const int** const*"), t2.ToType(FINAL).Name(Q));
-   CPPUNIT_ASSERT_EQUAL(std::string("const int** const*"), t2.ToType(FINAL).Name(S|Q));
-   CPPUNIT_ASSERT(t2.ToType(RAW) == t2.ToType(FINAL|RAW));
-
+   CPPUNIT_ASSERT_EQUAL(std::string("const int** const*"), t2.FinalType().Name(Q));
+   CPPUNIT_ASSERT_EQUAL(std::string("const int** const*"), t2.FinalType().Name(S|Q));
 
 }
 
@@ -1111,6 +1104,9 @@ void ReflexSimple2Test::testScopeSubFuns() {
    Type t = s.SubTypeByName("Outer");
    CPPUNIT_ASSERT(t);
    CPPUNIT_ASSERT_EQUAL(std::string("testclasses::Outer"), t.Name(S));
+   t = s.SubTypeByName("Outer::Inner");
+   CPPUNIT_ASSERT(t);
+   CPPUNIT_ASSERT_EQUAL(std::string("testclasses::Outer::Inner"), t.Name(S));
 
    TypeTemplate tt = s.SubTypeTemplateByName("WithTypedefMemberT");
    CPPUNIT_ASSERT(tt);
@@ -1120,10 +1116,14 @@ void ReflexSimple2Test::testScopeSubFuns() {
    Scope s0 = s.SubScopeByName("TemplFun");
    CPPUNIT_ASSERT(s0);
    CPPUNIT_ASSERT_EQUAL(std::string("TemplFun"), s0.Name());
+   s0 = s.SubScopeByName("Outer::Inner");
+   CPPUNIT_ASSERT(s0);
+   CPPUNIT_ASSERT_EQUAL(std::string("testclasses::Outer::Inner"), s0.Name(S));
 
-   for (MemberTemplate_Iterator mti = s0.MemberTemplate_Begin(); mti != s0.MemberTemplate_End(); ++mti ) {
-      std::cout << (*mti).Name(S|Q) << std::endl;
-   }
+
+   //for (MemberTemplate_Iterator mti = s0.MemberTemplate_Begin(); mti != s0.MemberTemplate_End(); ++mti ) {
+   //   std::cout << (*mti).Name(S|Q) << std::endl;
+   //}
    
    // FIXME: gccxml 060_patch3 does not produce a demangled name of a symbol, while later versions do
    // this will allow to check whether a function is templated or not and produce member templates
