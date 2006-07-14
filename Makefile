@@ -783,6 +783,7 @@ install: all
 	   echo "Installing main/src/rmain.cxx in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDATA) main/src/rmain.cxx    $(DESTDIR)$(INCDIR); \
 	   echo "Installing cint/include cint/lib and cint/stl in $(DESTDIR)$(CINTINCDIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(CINTINCDIR); \
 	   $(INSTALLDATA) cint/include          $(DESTDIR)$(CINTINCDIR); \
 	   $(INSTALLDATA) cint/lib              $(DESTDIR)$(CINTINCDIR); \
 	   $(INSTALLDATA) cint/stl              $(DESTDIR)$(CINTINCDIR); \
