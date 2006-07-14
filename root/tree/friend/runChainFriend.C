@@ -132,7 +132,7 @@ bool testChainByPointer() {
 
 
 
-int Run() {
+int runChainFriend() {
   bool result = true;
   result &= testTreeByName();
   result &= testTreeByPointer();

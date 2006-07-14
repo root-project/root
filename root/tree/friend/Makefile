@@ -1,9 +1,9 @@
-CLEAN_TARGETS += Event.root Event2.root main *Dict* *~ createfile.out run.out unevenFriend.out \
+CLEAN_TARGETS += copiedEvent.* libEvent.* Event.h Event.root Event2.root main *Dict* *~ createfile.out run.out unevenFriend.out \
      treeChainFriend.log $(ALL_LIBRARIES) [a-f][0-4].root treeparent.root treefriend.root *.log
 TEST_TARGETS += friendInChain treefriend ChainFriend unevenFriend treeChainFriend ChainFriendStatus FriendOfFriends FriendsIndices
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
@@ -24,29 +24,21 @@ unevenFriend: unevenFriend.out
 unevenFriend.out:  unevenFriend.C unevenFriend.ref
 	$(CMDECHO) root.exe -q -l -b unevenFriend.C > unevenFriend.out
 
-ifeq ($(ARCH),win32)
-ROOTFILE = $(shell cygpath -u '$(ROOTTEST_HOME)/root/io/event/Event.root')
-ROOTDIR = $(shell cygpath -u '$(ROOTSYS)')
-else
-ROOTFILE = $(ROOTTEST_HOME)/root/io/event/Event.root
-ROOTDIR = $(ROOTSYS)
-endif
+ROOTFILE := Event.root
 
-$(ROOTFILE): $(ROOTTEST_HOME)/root/io/event/Event.h
-	$(CMDECHO) ( \
-		cd $(ROOTTEST_HOME)/root/io/event; \
-		$(MAKE) Event$(ExeSuf); \
-		./Event 10 1 9 1; \
-	) 2>&1 > createfile.out
-
-Event.root: $(ROOTFILE)
-	$(CMDECHO) cp $(ROOTFILE) .
+$(ROOTFILE): copiedEvent$(ExeSuf)
+	$(CMDECHO) ./copiedEvent 10 1 9 1 2>&1 > createfile.out
 
 Event2.root: $(ROOTFILE)
 	$(CMDECHO) cp $(ROOTFILE) Event2.root
 
-ChainFriend: Run.C  $(ROOTSYS)/lib/libTreePlayer.$(DllSuf) files
-	$(CMDECHO) root.exe -q -b -l Run.C > run.out 2>&1
+ChainFriend.log: $(ROOT_LOC)/lib/libTreePlayer.$(DllSuf) files 
+
+ChainFriend: ChainFriend.log 
+	$(TestDiff)
+
+
+#	$(CMDECHO) root.exe -q -b -l Run.C > run.out 2>&1
 
 ChainFriendStatus: testFriend4.cc
 	$(CMDECHO) root.exe -q -b -l testFriend4.cc  > ChainFriendStatus.log 2>&1

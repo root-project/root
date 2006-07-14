@@ -1,4 +1,5 @@
- *.dll *.def *.exp *.lib *.pdb *.log *.d 
+ Event.h 
+*.dll *.def *.exp *.lib *.pdb *.log *.d 
  *.root *.out 
 [a-d][0-4].root*.manifest
 *.manifest
