@@ -5,11 +5,7 @@ EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
 EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)
 EVENTSO       = libEvent.$(DllSuf)
 EVENT         = Event$(ExeSuf)
-ifeq ($(PLATFORM),win32)
-EVENTLIB      = libEvent.lib
-else
-EVENTLIB      = ./$(EVENTSO)
-endif
+EVENTLIB      = libEvent.$(LibSuf)
 MAINEVENTO    = MainEvent.$(ObjSuf)
 MAINEVENTS    = MainEvent.$(SrcSuf)
 LIBS          = $(ROOTLIBS)
@@ -48,8 +44,9 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
-		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-		$(CMDECHO) $(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
+		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTLIB)
+		$(CMDECHO) $(LD) -bundle -undefined $(UNDEFOPT) \
+		   $(LDFLAGS) $(EVENTO) \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(PLATFORM),win32)

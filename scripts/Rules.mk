@@ -1,5 +1,5 @@
 #
-# $Id: Rules.mk,v 1.63 2006/07/14 20:15:45 pcanal Exp $
+# $Id: Rules.mk,v 1.64 2006/07/14 20:25:36 pcanal Exp $
 #
 
 all: tests
@@ -154,6 +154,7 @@ ObjSuf        = obj
 SrcSuf        = cxx
 ExeSuf        = .exe
 DllSuf        = dll
+LibSuf        = lib
 OutPutOpt     = -out:
 CXX           = cl
 CXXOPT        = -O2
@@ -183,6 +184,7 @@ ObjSuf        = o
 SrcSuf        = cxx
 ExeSuf        =
 DllSuf        = so
+LibSuf        = so
 OutPutOpt     = -o 
 
 endif
@@ -250,7 +252,8 @@ LD            = c++
 endif
 endif
 SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
-DllSuf   = so
+DllSuf        = so
+LibSuf        = dylib
 endif
 
 # Track the version of ROOT we are runing with
