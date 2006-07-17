@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.15 2006/05/29 05:03:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.16 2006/06/06 05:16:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1367,7 +1367,10 @@ void TVectorT<Element>::Print(Option_t *flag) const
 {
 // Print the vector as a list of elements.
 
-   R__ASSERT(IsValid());
+  if (!IsValid()) {
+      Error("Print","Vector is invalid");
+      return;
+   }
 
    printf("\nVector (%d) %s is as follows",fNrows,flag);
 
