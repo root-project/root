@@ -1188,11 +1188,19 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    // Reuse cache from previous file (if any).
    if (tpf) {
-      fFile->SetCacheRead(tpf);
-      // FIXME: fFile may be zero here.
-      tpf->SetFile(fFile);
-      // FIXME: fTree may be zero here.
-      tpf->UpdateBranches(fTree);
+      if (fFile) {
+         fFile->SetCacheRead(tpf);
+         tpf->SetFile(fFile);
+         // FIXME: fTree may be zero here.
+         tpf->UpdateBranches(fTree);
+      } else {
+         // FIXME: One of the file in the chain is missing
+         // we have no place to hold the pointer to the
+         // TTreeCache.
+         delete tpf;
+         tpf = 0;
+         this->SetCacheSize(fCacheSize);
+      }
    } else {
       this->SetCacheSize(fCacheSize);
    }
