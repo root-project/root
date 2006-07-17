@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.5 2006/06/29 20:36:43 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.6 2006/06/30 06:36:35 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -83,11 +83,11 @@ void TMySQLStatement::Close(Option_t *)
 // check last mysql statement error code
 #define CheckErrNo(method, force, res)                  \
    {                                                    \
-      unsigned int errno = mysql_stmt_errno(fStmt);     \
-      if ((errno!=0) || force) {                        \
-         const char* errmsg = mysql_stmt_error(fStmt);  \
-         if (errno==0) { errno = 11111; errmsg = "MySQL statement error"; } \
-         SetError(errno, errmsg, method);               \
+      unsigned int stmterrno = mysql_stmt_errno(fStmt);     \
+      if ((stmterrno!=0) || force) {                        \
+         const char* stmterrmsg = mysql_stmt_error(fStmt);  \
+         if (stmterrno==0) { stmterrno = 11111; stmterrmsg = "MySQL statement error"; } \
+         SetError(stmterrno, stmterrmsg, method);               \
          return res;                                    \
       }                                                 \
    }

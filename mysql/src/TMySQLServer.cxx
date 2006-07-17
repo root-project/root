@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.15 2006/07/10 11:05:50 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.16 2006/07/11 10:34:23 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -142,11 +142,11 @@ TMySQLServer::~TMySQLServer()
 // check last mysql error code
 #define CheckErrNo(method, force, res)                  \
    {                                                    \
-      unsigned int errno = mysql_errno(fMySQL);         \
-      if ((errno!=0) || force) {                        \
-         const char* errmsg = mysql_error(fMySQL);      \
-         if (errno==0) { errno = 11111; errmsg = "MySQL error"; } \
-         SetError(errno, errmsg, method);               \
+      unsigned int sqlerrno = mysql_errno(fMySQL);         \
+      if ((sqlerrno!=0) || force) {                        \
+         const char* sqlerrmsg = mysql_error(fMySQL);      \
+         if (sqlerrno==0) { sqlerrno = 11111; sqlerrmsg = "MySQL error"; } \
+         SetError(sqlerrno, sqlerrmsg, method);               \
          return res;                                    \
       }                                                 \
    }
