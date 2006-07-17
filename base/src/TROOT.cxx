@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.183 2006/06/20 13:21:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.184 2006/07/09 05:27:53 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1115,12 +1115,17 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       if (strcmp(altname,name)!=0) {
          // altname now contains the full name of the class including a possible
          // namespace if there has been a using namespace statement.
+         delete [] modifiable_name;
          return GetClass(altname,load);
       }
       TClass *ncl = new TClass(name, 1, 0, 0, -1, -1);
-      if (!ncl->IsZombie()) return ncl;
+      if (!ncl->IsZombie()) {
+         delete [] modifiable_name;
+         return ncl;
+      }
       delete ncl;
    }
+   delete [] modifiable_name;
    return 0;
 }
 

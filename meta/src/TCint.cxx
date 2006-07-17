@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.122 2006/05/24 15:09:21 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.123 2006/06/14 18:15:30 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -998,17 +998,17 @@ Int_t TCint::LoadLibraryMap()
       // by any extension, like rootmap_ModuleX, rootmap-Module-Y.
       TString ldpath = gSystem->GetDynamicPath();
 #ifdef WIN32
-      TObjArray *a = ldpath.Tokenize(";");
+      TObjArray *paths = ldpath.Tokenize(";");
 #else
-      TObjArray *a = ldpath.Tokenize(":");
+      TObjArray *paths = ldpath.Tokenize(":");
 #endif
-      a->Sort();
+      paths->Sort();
 
       TString d;
-      for (Int_t i = 0; i < a->GetEntries(); i++) {
-         if (d == ((TObjString*)a->At(i))->GetString())
+      for (Int_t i = 0; i < paths->GetEntries(); i++) {
+         if (d == ((TObjString*)paths->At(i))->GetString())
             continue;  // skip already seen directories
-         d = ((TObjString*)a->At(i))->GetString();
+         d = ((TObjString*)paths->At(i))->GetString();
 
          void *dirp = gSystem->OpenDirectory(d);
          if (dirp) {
@@ -1032,8 +1032,10 @@ Int_t TCint::LoadLibraryMap()
          gSystem->FreeDirectory(dirp);
       }
 
-      if (!fMapfile->GetTable()->GetEntries())
+      delete paths;
+      if (!fMapfile->GetTable()->GetEntries()) {
          return -1;
+      }
    }
 
    TEnvRec *rec;
