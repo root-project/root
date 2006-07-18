@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.37 2006/06/09 15:01:10 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.38 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -385,7 +385,7 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
             else // default to TEXT_LEFT
                lx = fCpos[i] + 2;
 
-            if (x + lx < 0) break; // quick fix for mess in name
+            if (x + lx < 0) continue; // out of left boundary or mess in name
             fSubnames[i]->Draw(id, fNormGC, x + lx, y + ly + max_ascent);
          }
       }
