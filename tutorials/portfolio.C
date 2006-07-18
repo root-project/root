@@ -6,6 +6,7 @@
 #include "TH1.h"
 #include "TF1.h"
 #include "TLegend.h"
+#include "TSystem.h"
 
 #include "TMatrixD.h"
 #include "TMatrixDSym.h"
@@ -14,7 +15,7 @@
 #include "TGondzioSolver.h"
 
 // Running this macro :
-//     .x portFolio.C
+//     .x portfolio.C+
 // or  gSystem->Load("libQuadp"); .L portFolio.C+; portfolio()
 //
 // This macro shows in detail the use of the quadratic programming package quadp .
@@ -125,6 +126,7 @@ public:
   TStockDaily() {
      fDate = fVol = fOpen = fHigh = fLow = fClose = fCloseAdj = 0; 
   }
+  virtual ~TStockDaily() {}
 
   ClassDef(TStockDaily,1)
 };
@@ -151,17 +153,26 @@ TArrayF &StockReturn(TFile *f,const TString &name,Int_t sDay,Int_t eDay)
     b_date->GetEntry(i); 
     b_closeAdj->GetEntry(i); 
     if (data->fDate >= sDay && data->fDate <= eDay)
+#ifdef __CINT__
+      closeAdj.AddAt(data->fCloseAdj/100. , i );
+#else
       closeAdj[i] = data->fCloseAdj/100.;
+#endif
   }
 
   TArrayF *r = new TArrayF(nrEntries-1);
   for (Int_t i = 1; i < nrEntries; i++)
 //    (*r)[i-1] = closeAdj[i]-closeAdj[i-1];
+#ifdef __CINT__
+    r->AddAt(closeAdj[i]/closeAdj[i-1],1);
+#else
     (*r)[i-1] = closeAdj[i]/closeAdj[i-1];
+#endif
 
   return *r;
 }
 
+#ifndef __MAKECINT__
 //---------------------------------------------------------------------------
 TVectorD OptimalInvest(Double_t riskFactor,TVectorD r,TMatrixDSym Covar)
 {
@@ -249,6 +260,7 @@ TVectorD OptimalInvest(Double_t riskFactor,TVectorD r,TMatrixDSym Covar)
 
   return weight;
 }
+#endif
 
 //---------------------------------------------------------------------------
 void portfolio()
