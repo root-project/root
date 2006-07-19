@@ -163,11 +163,12 @@ distclean::     distclean-reflex
 # test suite
 
 check-reflex: $(REFLEXLIB) $(RFLX_TESTLIB) $(RFLX_UNITTESTX)
-		@if [ ! -e lib/libcppunit.$(SOEXT) ]; then ln -s -f $(CPPUNIT)/lib/libcppunit.$(SOEXT) lib/libcppunit.$(SOEXT); fi
-		$(RFLX_TESTD)/test_Reflex_generate
-		$(RFLX_TESTD)/test_Reflex_simple1
-		$(RFLX_TESTD)/test_Reflex_simple2
-		$(RFLX_TESTD)/test_Reflex_unit
+		#@if [ ! -e lib/libcppunit.$(SOEXT) ]; then ln -s -f $(CPPUNIT)/lib/libcppunit.$(SOEXT) lib/libcppunit.$(SOEXT); fi
+		@export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(CPPUNIT)/lib; \
+		$(RFLX_TESTD)/test_Reflex_generate; \
+		$(RFLX_TESTD)/test_Reflex_simple1; \
+		$(RFLX_TESTD)/test_Reflex_simple2; \
+		$(RFLX_TESTD)/test_Reflex_unit; \
 		$(RFLX_TESTD)/test_ReflexBuilder_unit
 
 lib/libtest_%Rflx.$(SOEXT) : $(RFLX_TESTD)/%_rflx.o
