@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.28 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.29 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -36,7 +36,7 @@
 #include "TList.h"
 #include "TSystem.h"
 #include "Riostream.h"
-
+#include <time.h>
 
 ClassImp(TGFileItem)
 ClassImp(TGFileContainer)
@@ -152,8 +152,8 @@ TGFileItem::TGFileItem(const TGWindow *p,
                        const TGPicture *bpic, const TGPicture *blpic,
                        const TGPicture *spic, const TGPicture *slpic,
                        TGString *name, Int_t type, Long64_t size, Int_t uid,
-                       Int_t gid, EListViewMode viewMode, UInt_t options,
-                       ULong_t back) :
+                       Int_t gid, Long_t modtime, EListViewMode viewMode,
+                       UInt_t options, ULong_t back) :
    TGLVEntry(p, bpic, spic, name, 0, viewMode, options, back)
 {
    // Create a list view item.
@@ -172,11 +172,12 @@ TGFileItem::TGFileItem(const TGWindow *p,
    fSize = size;
    fUid  = uid;
    fGid  = gid;
+   fModTime = modtime;
 
    // FIXME: hack...
    fIsLink = (blpic != 0);
 
-   fSubnames = new TGString* [5];
+   fSubnames = new TGString* [6];
 
    // file type
    sprintf(tmp, "%c%c%c%c%c%c%c%c%c%c",
@@ -234,7 +235,15 @@ TGFileItem::TGFileItem(const TGWindow *p,
       }
    }
 
-   fSubnames[4] = 0;
+   struct tm *newtime;
+   const time_t loctime = (const time_t) fModTime;
+   newtime = localtime(&loctime);
+   sprintf(tmp, "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
+           newtime->tm_mday, newtime->tm_mday, newtime->tm_hour,
+           newtime->tm_min);
+   fSubnames[4] = new TGString(tmp);
+
+   fSubnames[5] = 0;
 
    int i;
    for (i = 0; fSubnames[i] != 0; ++i)
@@ -547,6 +556,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
 
    Bool_t      is_link;
    Int_t       type, uid, gid;
+   Long_t      modtime;
    Long64_t    size;
    TString     filename;
    TGFileItem *item = 0;
@@ -559,6 +569,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
    size    = 0;
    uid     = 0;
    gid     = 0;
+   modtime = 0;
    is_link = kFALSE;
 
    if (gSystem->GetPathInfo(name, sbuf) == 0) {
@@ -567,6 +578,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
       size    = sbuf.fSize;
       uid     = sbuf.fUid;
       gid     = sbuf.fGid;
+      modtime = sbuf.fMtime;
    } else {
       char msg[256];
 
@@ -592,7 +604,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
       lpic = (TGPicture*)slpic; lpic->AddReference();
 
       item = new TGFileItem(this, lpic, slpic, spic, pic, new TGString(name),
-                            type, size, uid, gid, fViewMode);
+                            type, size, uid, gid, modtime, fViewMode);
       AddItem(item);
    }
 

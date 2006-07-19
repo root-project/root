@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.14 2005/05/25 16:20:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.15 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -61,6 +61,7 @@ protected:
    Int_t             fType;         // file type
    Int_t             fUid, fGid;    // file uid and gid
    Bool_t            fIsLink;       // true if symbolic link
+   Long_t            fModTime;      // modification time
    Long64_t          fSize;         // file size
 
    virtual void DoRedraw();
@@ -70,7 +71,7 @@ public:
               const TGPicture *bpic = 0, const TGPicture *blpic = 0,
               const TGPicture *spic = 0, const TGPicture *slpic = 0,
               TGString *name = 0, Int_t type = 0, Long64_t size = 1,
-              Int_t uid = 0, Int_t gid = 0,
+              Int_t uid = 0, Int_t gid = 0, Long_t modtime = 0,
               EListViewMode viewMode = kLVList, UInt_t options = kVerticalFrame,
               Pixel_t back = GetWhitePixel());
 
