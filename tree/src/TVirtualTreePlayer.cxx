@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.6 2005/05/02 10:57:32 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.7 2006/03/20 21:43:44 pcanal Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -43,6 +43,17 @@ TVirtualTreePlayer *TVirtualTreePlayer::TreePlayer(TTree *obj)
    fgCurrent = p;
    return p;
 }
+
+TVirtualTreePlayer::~TVirtualTreePlayer() 
+{ 
+   // Common destructor.
+
+   if (fgCurrent==this) {
+      // Make sure fgCurrent does not point to a deleted player.
+      fgCurrent=0;
+   }
+}
+
 
 //______________________________________________________________________________
 TVirtualTreePlayer *TVirtualTreePlayer::GetCurrentPlayer()

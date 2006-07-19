@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.25 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.26 2006/03/21 05:20:34 pcanal Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -41,7 +41,7 @@ private:
 
 public:
    TVirtualTreePlayer() { }
-   virtual ~TVirtualTreePlayer() { }
+   virtual ~TVirtualTreePlayer();
    virtual TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname) = 0;
    virtual TTree         *CopyTree(const char *selection, Option_t *option=""
                                    ,Long64_t nentries=1000000000, Long64_t firstentry=0) = 0;
