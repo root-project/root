@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.8 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.9 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -114,7 +114,7 @@ void ReflexBuilderUnitTest::demangler()
 {
   CPPUNIT_ASSERT_EQUAL(string("int"), Tools::Demangle(typeid(int)));
   CPPUNIT_ASSERT_EQUAL(string("int*"), Tools::Demangle(typeid(int*)));
-#if defined(__GNUC__) && __GNUC__ >= 4
+#if defined(__GNUC__) && __GNUC__ >= 4 || ( __GNUC__ >= 3 && defined(__GNUC_MINOR__) && __GNUC_MINOR__ >= 4 )
   CPPUNIT_ASSERT_EQUAL(string("float ()(int)"), Tools::Demangle(typeid(float (int))));
   CPPUNIT_ASSERT_EQUAL(string("float* ()(int)"), Tools::Demangle(typeid(float* (int))));
 #else
