@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.260 2006/05/14 09:53:04 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.261 2006/05/29 13:28:58 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -809,18 +809,20 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"P0"))  Hoption.Mark =10;
    if (strstr(chopt,"E")) {
       if (fH->GetDimension() == 1) {
-         Hoption.Error =1;
-         if (strstr(chopt,"E0"))  Hoption.Error =10;
-         if (strstr(chopt,"E1"))  Hoption.Error =11;
-         if (strstr(chopt,"E2"))  Hoption.Error =12;
-         if (strstr(chopt,"E3"))  Hoption.Error =13;
-         if (strstr(chopt,"E4"))  Hoption.Error =14;
+         Hoption.Error = 1;
+         if (strstr(chopt,"E0"))  Hoption.Error = 10;
+         if (strstr(chopt,"E1"))  Hoption.Error = 11;
+         if (strstr(chopt,"E2"))  Hoption.Error = 12;
+         if (strstr(chopt,"E3"))  Hoption.Error = 13;
+         if (strstr(chopt,"E4"))  Hoption.Error = 14;
+         if (strstr(chopt,"X0") && Hoption.Error == 1)  Hoption.Error += 20; 
       } else {
          if (Hoption.Error == 0) {
             Hoption.Error = 100;
             Hoption.Scat  = 0;
          }
       }
+      if (strstr(chopt,"X0"))  Hoption.Error += 10; 
    }
 
    if (strstr(chopt,"9"))  Hoption.HighRes = 1;
@@ -992,6 +994,8 @@ void THistPainter::Paint(Option_t *option)
    //    "E2"     : Draw error bars with rectangles
    //    "E3"     : Draw a fill area througth the end points of the vertical error bars
    //    "E4"     : Draw a smoothed filled area through the end points of the error bars
+   //    "X0"     : When used with one of the "E" option, it suppress the error
+   //               bar along X as gStyle->SetErrorX(0) would do.
    //    "L"      : Draw a line througth the bin contents
    //    "P"      : Draw current marker at each bin except empty bins
    //    "P0"     : Draw current marker at each bin including empty bins
@@ -2869,6 +2873,9 @@ void THistPainter::PaintErrors(Option_t *)
    //           vertical error bars.
    //       '0' Turn off the symbols clipping.
    //
+   //      'X0' When used with one of the "E" option, it suppress the error
+   //           bar along X as gStyle->SetErrorX(0) would do.
+   //
    //     Note that for all options, the line and fill attributes of the
    //     histogram are used for the errors or errors contours.
    //
@@ -2896,11 +2903,13 @@ void THistPainter::PaintErrors(Option_t *)
    Int_t if1 = 0;
    Int_t if2 = 0;
    Int_t drawmarker, errormarker;
-   Int_t option0, option1, option2, option3, option4, optionE;
+   Int_t option0, option1, option2, option3, option4, optionE, optionEX0;
 
    Double_t *xline = 0;
    Double_t *yline = 0;
-   option0 = option1 = option2 = option3 = option4 = optionE = 0;
+   option0 = option1 = option2 = option3 = option4 = optionE = optionEX0 = 0;
+   if (Int_t(Hoption.Error/10) == 2) {optionEX0 = 1; Hoption.Error -= 10;}
+   if (Hoption.Error == 31) {optionEX0 = 1; Hoption.Error = 1;}
    if (Hoption.Error == 10) option0 = 1;
    if (Hoption.Error == 11) option1 = 1;
    if (Hoption.Error == 12) option2 = 1;
@@ -2909,10 +2918,14 @@ void THistPainter::PaintErrors(Option_t *)
    if (option2+option3 == 0) optionE = 1;
    if (Hoption.Error == 0) optionE = 0;
    if (fXaxis->GetXbins()->fN) fixbin = 0;
-   else                       fixbin = 1;
+   else                        fixbin = 1;
 
    errormarker = fH->GetMarkerStyle();
-   xerror      = gStyle->GetErrorX();
+   if (optionEX0) {
+      xerror = 0;
+   } else {
+      xerror = gStyle->GetErrorX();
+   }
    symbolsize  = fH->GetMarkerSize();
    if (errormarker == 1) symbolsize = 0.01;
    sbase       = symbolsize*kBASEMARKER;
@@ -3182,7 +3195,12 @@ void THistPainter::Paint2DErrors(Option_t *)
    Double_t y, ey, y1, y2;
    Double_t z, ez, z1, z2;
    Double_t temp1[3],temp2[3];
-   Double_t xyerror = gStyle->GetErrorX();
+   Double_t xyerror;
+   if (Hoption.Error == 110) {
+      xyerror = 0 ;
+   } else {
+      xyerror = gStyle->GetErrorX();
+   }
 
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       y  = fYaxis->GetBinCenter(j);
