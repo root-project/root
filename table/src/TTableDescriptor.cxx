@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTableDescriptor.cxx,v 1.13 2006/05/21 18:05:26 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTableDescriptor.cxx,v 1.14 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -57,7 +57,7 @@ TTableDescriptor::TTableDescriptor(TClass *classPtr)
 //______________________________________________________________________________
 TTableDescriptor::~TTableDescriptor()
 {
-   //to be documented
+   // class destructor 
 #ifdef NORESTRICTIONS
    if (!IsZombie()) {
       for (Int_t i=0;i<GetNRows();i++) {
@@ -77,27 +77,34 @@ TTableDescriptor::~TTableDescriptor()
 //____________________________________________________________________________
 Int_t TTableDescriptor::AddAt(const void *c)
 {
-   //to be documented
+   // Append one row pointed by "c" to the descriptor
+
    if (!c) return -1;
    TDataSet *cmnt = MakeCommentField();
    assert(cmnt!=0);
-   tableDescriptor_st *element = (tableDescriptor_st *)c;
-   TDataSet *comment = new TDataSet(element->fColumnName);comment->SetTitle("N/A");
-   cmnt->AddAtAndExpand(comment,(Int_t)GetNRows());
 
    return TTable::AddAt(c);
 }
 //____________________________________________________________________________
 void  TTableDescriptor::AddAt(const void *c, Int_t i)
 {
-   //to be documented
-   AddAt(*(tableDescriptor_st *)c,"N/A",i);
+   //Add one row pointed by "c" to the "i"-th row of the descriptor
+   if (c) {
+      tableDescriptor_st *element = (tableDescriptor_st *)c;
+      const char *comment = element->fColumnName ? element->fColumnName : "N/A";
+      AddAt(*(tableDescriptor_st *)c,comment,i);
+   }
 }
+
 //____________________________________________________________________________
-void  TTableDescriptor::AddAt(TDataSet *dataset,Int_t idx){
-   //to be documented
+void  TTableDescriptor::AddAt(TDataSet *dataset,Int_t idx)
+{
+   // Add one dataset to the descriptor. 
+   // There is no new implementation here. 
+   // One needs it to avoid the "hidden method" compilation warning
    TTable::AddAt(dataset,idx);
 }
+
 //____________________________________________________________________________
 void TTableDescriptor::AddAt(const tableDescriptor_st &element,const char *commentText,Int_t indx)
 {
@@ -111,6 +118,7 @@ void TTableDescriptor::AddAt(const tableDescriptor_st &element,const char *comme
    comment->SetTitle(commentText);
    cmnt->AddAtAndExpand(comment,indx);
 }
+
 //____________________________________________________________________________
 TString TTableDescriptor::CreateLeafList() const
 {

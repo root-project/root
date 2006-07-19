@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.13 2006/05/21 18:05:26 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.14 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine   10/12/98
 
 /*************************************************************************
@@ -471,7 +471,8 @@ void TVolume::Draw(Option_t *option)
    }
 
    // Create a 3D viewer to draw us
-   gPad->GetViewer3D(option);
+//   gPad->GetViewer3D(option);
+   gPad->GetViewer3D();
 #else
     Paint(option);
 #endif
