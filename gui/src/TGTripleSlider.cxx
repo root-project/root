@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.cxx,v 1.3 2006/03/06 09:10:44 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.cxx,v 1.4 2006/07/03 16:10:45 brun Exp $
 // Author: Bertrand Bellenot   20/01/06
 
 /*************************************************************************
@@ -121,6 +121,10 @@ Bool_t TGTripleVSlider::HandleButton(Event_t *event)
    // Handle mouse button event in vertical slider.
 
    if (event->fType == kButtonPress && event->fCode == kButton1) {
+      // constrain to the slider width
+      if (event->fX < (Int_t)fWidth/2-7 || event->fX > (Int_t)fWidth/2+7) {
+         return kTRUE;
+      }
       fPressPoint = event->fY;
       fPressSmin  = fSmin;
       fPressSmax  = fSmax;
@@ -166,10 +170,23 @@ Bool_t TGTripleVSlider::HandleMotion(Event_t *event)
 {
    // Handle mouse motion event in vertical slider.
 
+   if (fMove < 3) {
+      // if the mouse pointer is on the cursor,
+      // and we are not moving anything,
+      // set the cursor shape as Pointer
+      if (event->fY > (fCz - 5) && event->fY < (fCz + 5) &&
+          event->fX > ((Int_t)fWidth / 2) - 7 &&
+          event->fX < ((Int_t)fWidth / 2) + 5 &&
+          fMove == 0)
+         gVirtualX->SetCursor(fId, kNone);
+      else
+         ChangeCursor(event);
+   }
    static int oldDiff = 0;
    static Long_t was = gSystem->Now();
    Long_t now = (long)gSystem->Now();
 
+   if (fMove == 0)  return kTRUE;
    if ((now-was) < 50) return kTRUE;
    was = now;
 
@@ -364,6 +381,10 @@ Bool_t TGTripleHSlider::HandleButton(Event_t *event)
    // Handle mouse button event in horizontal slider widget.
 
    if (event->fType == kButtonPress && event->fCode == kButton1) {
+      // constrain to the slider height
+      if (event->fY < (Int_t)fHeight/2-7 || event->fY > (Int_t)fHeight/2+7) {
+         return kTRUE;
+      }
       fPressPoint = event->fX;
       fPressSmin  = fSmin;
       fPressSmax  = fSmax;
@@ -409,10 +430,23 @@ Bool_t TGTripleHSlider::HandleMotion(Event_t *event)
 {
    // Handle mouse motion event in horizontal slide widget.
 
+   if (fMove < 3) {
+      // if the mouse pointer is on the cursor, 
+      // and we are not moving anything, 
+      // set the cursor shape as Pointer
+      if (event->fX > (fCz - 5) && event->fX < (fCz + 5) &&
+          event->fY > ((Int_t)fHeight / 2) - 7 && 
+          event->fY < ((Int_t)fHeight / 2) + 5 &&
+          fMove == 0)
+         gVirtualX->SetCursor(fId, kNone);
+      else
+         ChangeCursor(event);
+   }
    static int oldDiff = 0;
    static Long_t was = gSystem->Now();
    Long_t now = (long)gSystem->Now();
 
+   if (fMove == 0)  return kTRUE;
    if ((now-was) < 50) return kTRUE;
    was = now;
 

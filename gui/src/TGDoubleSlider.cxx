@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.14 2006/01/25 10:34:42 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.15 2006/07/03 16:10:45 brun Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -87,6 +87,7 @@ TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t typ
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
                          kPointerMotionMask, kNone, kNone);
+   AddInput(kPointerMotionMask);
    SetWindowName();
 }
 
@@ -138,6 +139,68 @@ TString TGDoubleSlider::GetSString() const
       }
    }
    return stype;
+}
+
+//______________________________________________________________________________
+void TGDoubleSlider::ChangeCursor(Event_t *event)
+{
+   // Change the cursor shape depending on the slider area.
+
+   static Cursor_t topCur = kNone, leftCur = kNone;
+   static Cursor_t botCur = kNone, rightCur = kNone;
+   Int_t hw = 0, wh = 0, xy = 0, yx = 0;
+   Cursor_t minCur = kNone, maxCur = kNone;
+
+   if (topCur == kNone)
+      topCur    = gVirtualX->CreateCursor(kTopSide);
+   if (leftCur == kNone)
+      leftCur   = gVirtualX->CreateCursor(kLeftSide);
+   if (botCur == kNone)
+      botCur    = gVirtualX->CreateCursor(kBottomSide);
+   if (rightCur == kNone)
+      rightCur  = gVirtualX->CreateCursor(kRightSide);
+   if (GetOptions() & kVerticalFrame) {
+      hw = (Int_t)fWidth;
+      wh = (Int_t)fHeight;
+      xy = (Int_t)event->fX;
+      yx = (Int_t)event->fY;
+      minCur = topCur;
+      maxCur = botCur;
+   }
+   else if (GetOptions() & kHorizontalFrame) {
+      hw  = (Int_t)fHeight;
+      wh  = (Int_t)fWidth;
+      xy  = (Int_t)event->fY;
+      yx  = (Int_t)event->fX;
+      minCur = leftCur;
+      maxCur = rightCur;
+   }
+   else return;
+   
+   Int_t relMin = (Int_t)((wh-16) * (fSmin - fVmin) / (fVmax - fVmin)) + 1;
+   Int_t relMax = (Int_t)((wh-16) * (fSmax - fVmin) / (fVmax - fVmin) + 15);
+   // constrain to the slider width
+   if (xy > hw/2-7 && xy < hw/2+7 && fMove != 3) {
+      // if the mouse pointer is in the top resizing zone,
+      // and we are not already moving the the bottom side,
+      // set the cursor shape as TopSide
+      if ((yx <= (relMax - relMin) / 4 + relMin) &&
+          (yx >= relMin) && (fMove != 2))
+         gVirtualX->SetCursor(fId, minCur);
+      // if the mouse pointer is in the bottom resizing zone, 
+      // and we are not already moving the the top side, 
+      // set the cursor shape as BottomSide
+      else if ((yx >= (relMax - relMin) / 4 * 3 + relMin) && 
+               (yx <= relMax) && (fMove != 1))
+         gVirtualX->SetCursor(fId, maxCur);
+      // if we are not moving any side, restore the cursor
+      else if ((fMove < 1) || (fMove > 2))
+         gVirtualX->SetCursor(fId, kNone);
+   }
+   // if we are not inside the slider, and not moving any side, 
+   // restore the cursor
+   else if ((fMove < 1) || (fMove > 2))
+      gVirtualX->SetCursor(fId, kNone);
 }
 
 //______________________________________________________________________________
@@ -225,6 +288,10 @@ Bool_t TGDoubleVSlider::HandleButton(Event_t *event)
    // Handle mouse button event in vertical slider.
 
    if (event->fType == kButtonPress && event->fCode == kButton1) {
+      // constrain to the slider width
+      if (event->fX < (Int_t)fWidth/2-7 || event->fX > (Int_t)fWidth/2+7) {
+         return kTRUE;
+      }
       fPressPoint = event->fY;
       fPressSmin  = fSmin;
       fPressSmax  = fSmax;
@@ -266,6 +333,9 @@ Bool_t TGDoubleVSlider::HandleButton(Event_t *event)
 Bool_t TGDoubleVSlider::HandleMotion(Event_t *event)
 {
    // Handle mouse motion event in vertical slider.
+
+   ChangeCursor(event);
+   if (fMove == 0) return kTRUE;
 
    static Long_t was = gSystem->Now();
    Long_t now = (long)gSystem->Now();
@@ -395,6 +465,10 @@ Bool_t TGDoubleHSlider::HandleButton(Event_t *event)
    // Handle mouse button event in horizontal slider widget.
 
    if (event->fType == kButtonPress && event->fCode == kButton1) {
+      // constrain to the slider height
+      if (event->fY < (Int_t)fHeight/2-7 || event->fY > (Int_t)fHeight/2+7) {
+         return kTRUE;
+      }
       fPressPoint = event->fX;
       fPressSmin  = fSmin;
       fPressSmax  = fSmax;
@@ -436,6 +510,9 @@ Bool_t TGDoubleHSlider::HandleButton(Event_t *event)
 Bool_t TGDoubleHSlider::HandleMotion(Event_t *event)
 {
    // Handle mouse motion event in horizontal slide widget.
+
+   ChangeCursor(event);
+   if (fMove == 0) return kTRUE;
 
    static Long_t was = gSystem->Now();
    Long_t now = (long)gSystem->Now();

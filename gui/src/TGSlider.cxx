@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.19 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.20 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -184,6 +184,10 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
    // Handle mouse button event in vertical slider.
 
    if (event->fType == kButtonPress) {
+      // constrain to the slider width
+      if (event->fX < (Int_t)fWidth/2-7 || event->fX > (Int_t)fWidth/2+7) {
+         return kTRUE;
+      }
       // last argument kFALSE forces all specified events to this window
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
                              kPointerMotionMask, kNone, kNone, 
@@ -333,6 +337,10 @@ Bool_t TGHSlider::HandleButton(Event_t *event)
    // Handle mouse button event in horizontal slider widget.
 
    if (event->fType == kButtonPress) {
+      // constrain to the slider height
+      if (event->fY < (Int_t)fHeight/2-7 || event->fY > (Int_t)fHeight/2+7) {
+         return kTRUE;
+      }
       if (event->fX >= fRelPos - 7 && event->fX <= fRelPos + 7) {
          // slider selected
          fDragging = kTRUE;

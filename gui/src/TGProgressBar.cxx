@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.16 2006/06/14 10:22:36 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.17 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -223,7 +223,7 @@ TGHProgressBar::TGHProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
                               GContext_t norm, FontStruct_t font, UInt_t options) :
       TGProgressBar(p, w, h, back, barcolor, norm, font, options)
 {
-   // ctor.
+   // Horizontal progress bar constructor.
 
    fBarWidth = h;
    fEditDisabled = kEditDisableHeight;

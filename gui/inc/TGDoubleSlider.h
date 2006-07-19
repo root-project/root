@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.10 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.11 2006/07/03 16:10:45 brun Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -97,6 +97,7 @@ protected:
    TString       GetSString() const; // returns scaling type as string
 
    static void   FixBounds(Float_t &min, Float_t &max);
+   void          ChangeCursor(Event_t *event);
 
 public:
    TGDoubleSlider(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, UInt_t type = 1, Int_t id = -1,
