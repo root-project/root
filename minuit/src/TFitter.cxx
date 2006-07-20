@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.41 2006/04/13 09:25:54 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.42 2006/05/13 21:49:17 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -549,9 +549,9 @@ void TFitter::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
    //  Minimization function for H1s using a Chisquare method
    //  Default method (function evaluated at center of bin)
    //  for each point the cache contains the following info
-   //    -1D : bc,e,xc  (bin content, error, x of center of bin)
-   //    -2D : bc,e,xc,yc
-   //    -3D : bc,e,xc,yc,zc
+   //    -1D : bc,e, xc  (bin content, error, x of center of bin)
+   //    -2D : bc,e, xc,yc
+   //    -3D : bc,e, xc,yc,zc
 
    Foption_t fitOption = GetFitOption();
    if (fitOption.Integral) {
@@ -601,9 +601,9 @@ void TFitter::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
    //  Minimization function for H1s using a Chisquare method
    //  The "I"ntegral method is used
    //  for each point the cache contains the following info
-   //    -1D : bc,e,xc,xw  (bin content, error, x of center of bin, x bin width of bin)
-   //    -2D : bc,e,xc,xw,yc,yw
-   //    -3D : bc,e,xc,xw,yc,yw,zc,zw
+   //    -1D : bc,e, xc,xw  (bin content, error, x of center of bin, x bin width of bin)
+   //    -2D : bc,e, xc,xw,yc,yw
+   //    -3D : bc,e, xc,xw,yc,yw,zc,zw
    
    Double_t cu,eu,fu,fsum;
    Double_t dersum[100], grad[100];
@@ -657,9 +657,9 @@ void TFitter::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
    //     and the sum of the logs is taken as the likelihood.
    //  Default method (function evaluated at center of bin)
    //  for each point the cache contains the following info
-   //    -1D : bc,e,xc  (bin content, error, x of center of bin)
-   //    -2D : bc,e,xc,yc
-   //    -3D : bc,e,xc,yc,zc
+   //    -1D : bc,e, xc  (bin content, error, x of center of bin)
+   //    -2D : bc,e, xc,yc
+   //    -3D : bc,e, xc,yc,zc
 
    Foption_t fitOption = GetFitOption();
    if (fitOption.Integral) {
@@ -726,9 +726,9 @@ void TFitter::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
    //     and the sum of the logs is taken as the likelihood.
    //  The "I"ntegral method is used
    //  for each point the cache contains the following info
-   //    -1D : bc,e,xc,xw  (bin content, error, x of center of bin, x bin width of bin)
-   //    -2D : bc,e,xc,xw,yc,yw
-   //    -3D : bc,e,xc,xw,yc,yw,zc,zw
+   //    -1D : bc,e, xc,xw  (bin content, error, x of center of bin, x bin width of bin)
+   //    -2D : bc,e, xc,xw,yc,yw
+   //    -3D : bc,e, xc,xw,yc,yw,zc,zw
 
    Double_t cu,fu,fobs,fsub;
    Double_t dersum[100];
@@ -749,8 +749,8 @@ void TFitter::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
    Int_t npfit = 0;
    Double_t *cache = fCache;
    for (Int_t i=0;i<fNpoints;i++) {
-      if (nd > 2) x[2] = cache[4];
-      if (nd > 1) x[1] = cache[3];
+      if (nd > 2) x[2] = cache[6];
+      if (nd > 1) x[1] = cache[4];
       x[0]     = cache[2];
       cu  = cache[0];
       TF1::RejectPoint(kFALSE);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.296 2006/07/06 10:46:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.297 2006/07/13 05:08:05 pcanal Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2523,17 +2523,17 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
    hFitter->SetZfirst(hzfirst); hFitter->SetZlast(hzlast);
    //for each point the cache contains the following info
    // -normal case
-   //   -1D : bc,e,xc  (bin content, error, x of center of bin)
-   //   -2D : bc,e,xc,yc
-   //   -3D : bc,e,xc,yc,zc
+   //   -1D : bc,e, xc  (bin content, error, x of center of bin)
+   //   -2D : bc,e, xc,yc
+   //   -3D : bc,e, xc,yc,zc
    //
    // -Integral case
-   //   -1D : bc,e,xc,xw  (bin content, error, x of center of bin, x bin width of bin)
-   //   -2D : bc,e,xc,xw,yc,yw
-   //   -3D : bc,e,xc,xw,yc,yw,zc,zw
+   //   -1D : bc,e, xc,xw  (bin content, error, x of center of bin, x bin width of bin)
+   //   -2D : bc,e, xc,xw,yc,yw
+   //   -3D : bc,e, xc,xw,yc,yw,zc,zw
    Int_t maxpoints = (hzlast-hzfirst+1)*(hylast-hyfirst+1)*(hxlast-hxfirst+1);
    Int_t psize = 2 +fDimension;
-   if (fitOption.Integral) psize = 2+3*fDimension;
+   if (fitOption.Integral) psize = 2+2*fDimension;
    Double_t *cache = hFitter->SetCache(maxpoints,psize);
    Int_t np = 0;
    for (Int_t binz=hzfirst;binz<=hzlast;binz++) {
