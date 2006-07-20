@@ -30,7 +30,7 @@ GUIH1        := TGObject.h TGClient.h TGWindow.h TGPicture.h TGDimension.h \
                 TGButton.h TGTextBuffer.h TGTextEntry.h TGMsgBox.h TGMenu.h \
                 TGGC.h TGShutter.h TG3DLine.h TGProgressBar.h TGButtonGroup.h \
                 TGNumberEntry.h TGTableLayout.h WidgetMessageTypes.h \
-                TGIdleHandler.h
+                TGIdleHandler.h TGInputDialog.h
 GUIH2        := TGObject.h TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
                 TGTab.h TGSlider.h TGPicture.h TGListView.h TGMimeTypes.h \
                 TGFSContainer.h TGFileDialog.h TGStatusBar.h TGToolTip.h \

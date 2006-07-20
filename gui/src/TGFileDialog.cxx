@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.28 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.29 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "TGFSComboBox.h"
 #include "TGMsgBox.h"
 #include "TSystem.h"
+#include "TGInputDialog.h"
 
 #include <sys/stat.h>
 
@@ -416,8 +417,11 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         if (ret == kMBNo)
                            return kTRUE;
                      }
-                     fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
-                                                                    fTbfname->GetString());
+                     if (gSystem->IsAbsoluteFileName(fTbfname->GetString()))
+                        fFileInfo->fFilename = strdup(fTbfname->GetString());
+                     else
+                        fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
+                                                                       fTbfname->GetString());
                      if (fOverWR && (fOverWR->GetState() == kButtonDown))
                         fFileInfo->fOverwrite = kTRUE;
                      else
@@ -438,7 +442,30 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
 
                   case kIDF_NEW_FOLDER:
-                     Warning("ProcessMessage", "new folder not yet implemented");
+                     char answer[128];
+                     strcpy(answer, "(empty)");
+                     new TGInputDialog(gClient->GetRoot(), GetMainFrame(),
+                                       "Give a name for the directory",
+                                       answer/*"(empty)"*/, answer);
+
+                     while ( strcmp(answer, "(empty)") == 0 ) {
+                        new TGMsgBox(gClient->GetRoot(), GetMainFrame(), "Error",
+                                     "Please introduce a valid directory name",
+                                     kMBIconStop, kMBOk);
+                        new TGInputDialog(gClient->GetRoot(), GetMainFrame(),
+                                          "Give a name for the directory",
+                                          answer, answer);
+                     }
+                     if ( strcmp(answer, "") == 0 )  // Cancel button was pressed
+                        break;
+
+                     if ( gSystem->MakeDirectory(answer) != 0 )
+                        new TGMsgBox(gClient->GetRoot(), GetMainFrame(),
+                                     "Error", "Directory name already exists!",
+                                     kMBIconStop, kMBOk);
+                     else {
+                        fFc->DisplayDirectory();
+                     }
                      break;
 
                   case kIDF_LIST:
@@ -520,8 +547,11 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            if (ret == kMBNo)
                               return kTRUE;
                         }
-                        fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
-                                                                       fTbfname->GetString());
+                        if (gSystem->IsAbsoluteFileName(fTbfname->GetString()))
+                           fFileInfo->fFilename = strdup(fTbfname->GetString());
+                        else
+                           fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
+                                                                          fTbfname->GetString());
                         if (fOverWR && (fOverWR->GetState() == kButtonDown))
                            fFileInfo->fOverwrite = kTRUE;
                         else
