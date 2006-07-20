@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.203 2006/07/13 17:49:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.204 2006/07/14 20:51:08 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -744,7 +744,9 @@ TBranchElement::~TBranchElement()
    // -- Destructor.
 
    // Release any allocated I/O buffers.
-   ResetAddress();
+   // FIXME: Temporarily disable until we sort out the interface/documentation
+   // issues related the TTree ownership of the objects (See ReleaseObject)
+   // ResetAddress();
 
    delete[] fBranchOffset;
    fBranchOffset = 0;
