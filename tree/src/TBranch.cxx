@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.107 2006/06/27 17:30:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.108 2006/07/13 05:26:07 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1325,25 +1325,28 @@ void TBranch::Print(Option_t*) const
 
    const int kLINEND = 77;
    Float_t cx = 1;
-   int aLength = strlen (GetTitle());
-   if (strcmp(GetName(),GetTitle()) == 0) aLength = 0;
-   int len = aLength;
+   
+   Int_t titleLength = strlen (GetTitle());
+   if (strcmp(GetName(),GetTitle()) == 0) titleLength = 0;
+   
+   Int_t aLength = titleLength + strlen(GetName());
    aLength += (aLength / 54 + 1) * 80 + 100;
    if (aLength < 200) aLength = 200;
    char *bline = new char[aLength];
+
    Long64_t totBytes = GetTotalSize();
    if (fZipBytes) cx = (fTotBytes+0.00001)/fZipBytes;
-   if (len) sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName(),GetTitle());
-   else     sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName()," ");
+   if (titleLength) sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName(),GetTitle());
+   else             sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName()," ");
    if (strlen(bline) > UInt_t(kLINEND)) {
       char *tmp = new char[strlen(bline)+1];
-      if (len) strcpy(tmp, GetTitle());
+      if (titleLength) strcpy(tmp, GetTitle());
       sprintf(bline,"*Br%5d :%-9s : ",fgCount,GetName());
       int pos = strlen (bline);
       int npos = pos;
       int beg=0, end;
-      while (beg < len) {
-         for (end=beg+1; end < len-1; end ++)
+      while (beg < titleLength) {
+         for (end=beg+1; end < titleLength-1; end ++)
             if (tmp[end] == ':')  break;
          if (npos + end-beg+1 >= 78) {
             while (npos < kLINEND) {
