@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.18 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.19 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -49,27 +49,26 @@ TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
    fPic = 0;
    char *path;
 
-   if (!image) {
-      const char *rootsys = gSystem->ExpandPathName("$ROOTSYS");
-      path = gSystem->ConcatFileName(rootsys, "icons/bld_rgb.xpm");
-   } else {
-      path = strdup(image);
-   }
+   if (!image)
+      image = "bld_rgb.xpm";
+
+   path = StrDup(image);
+
    fPath = gSystem->DirName(path);
 
    fImage = TImage::Open(path);
-   fPic = fClient->GetPicturePool()->GetPicture(gSystem->BaseName(path), 
+   fPic = fClient->GetPicturePool()->GetPicture(gSystem->BaseName(path),
                                                 fImage->GetPixmap(), fImage->GetMask());
    TGFrame::Resize(fImage->GetWidth(), fImage->GetHeight());
    SetWindowName();
-   delete path;
+   delete [] path;
 }
 
 //______________________________________________________________________________
-TGIcon::TGIcon(const TGIcon &p) :
-  TGFrame(p)
+TGIcon::TGIcon(const TGIcon &p) : TGFrame(p)
 {
-   // Copy constructor
+   // Copy constructor.
+
    fPic = 0;
    fImage = 0;
    fPath = "";
@@ -78,13 +77,14 @@ TGIcon::TGIcon(const TGIcon &p) :
 //______________________________________________________________________________
 TGIcon& TGIcon::operator=(const TGIcon &p)
 {
-   //assignment operator
+   // Assignment operator.
+
    if(this!=&p) {
       TGFrame::operator=(p);
       fPic = p.fPic;
       fImage = p.fImage;
       fPath = p.fPath;
-   } 
+   }
    return *this;
 }
 
@@ -148,7 +148,7 @@ void TGIcon::DoRedraw()
 {
    // Redraw picture.
 
-   Bool_t border = (GetOptions() & kRaisedFrame) || 
+   Bool_t border = (GetOptions() & kRaisedFrame) ||
                    (GetOptions() & kSunkenFrame) ||
                    (GetOptions() & kDoubleBorder);
 
@@ -173,7 +173,7 @@ void TGIcon::Resize(UInt_t w, UInt_t h)
    if (fPic) {
       fClient->FreePicture(fPic);
    }
-   Bool_t border = (GetOptions() & kRaisedFrame) || 
+   Bool_t border = (GetOptions() & kRaisedFrame) ||
                    (GetOptions() & kSunkenFrame) ||
                    (GetOptions() & kDoubleBorder);
 
@@ -186,7 +186,7 @@ void TGIcon::Resize(UInt_t w, UInt_t h)
 //______________________________________________________________________________
 void TGIcon::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Move icon to (x,y) and resize it to (w,h). 
+   // Move icon to (x,y) and resize it to (w,h).
 
    Move(x, y);
    Resize(w, h);

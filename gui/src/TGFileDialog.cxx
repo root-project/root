@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.29 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.30 2006/07/20 12:08:34 brun Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -64,18 +64,18 @@ static TGFileInfo gInfo;
 ClassImp(TGFileDialog)
 
 //______________________________________________________________________________
-TGFileInfo::TGFileInfo(const TGFileInfo& fi) : 
+TGFileInfo::TGFileInfo(const TGFileInfo& fi) :
     fFilename(fi.fFilename),
     fIniDir(fi.fIniDir),
     fFileTypes(fi.fFileTypes),
     fFileTypeIdx(fi.fFileTypeIdx),
     fOverwrite(fi.fOverwrite)
-{ 
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TGFileInfo& TGFileInfo::operator=(const TGFileInfo& fi) 
+TGFileInfo& TGFileInfo::operator=(const TGFileInfo& fi)
 {
    //assignment operator
    if(this!=&fi) {
@@ -84,7 +84,7 @@ TGFileInfo& TGFileInfo::operator=(const TGFileInfo& fi)
       fFileTypes=fi.fFileTypes;
       fFileTypeIdx=fi.fFileTypeIdx;
       fOverwrite=fi.fOverwrite;
-   } 
+   }
    return *this;
 }
 
@@ -299,7 +299,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 }
 
 //______________________________________________________________________________
-TGFileDialog::TGFileDialog(const TGFileDialog& fd) : 
+TGFileDialog::TGFileDialog(const TGFileDialog& fd) :
   TGTransientFrame(fd),
   fTbfname(fd.fTbfname),
   fName(fd.fName),
@@ -319,12 +319,12 @@ TGFileDialog::TGFileDialog(const TGFileDialog& fd) :
   fFv(fd.fFv),
   fFc(fd.fFc),
   fFileInfo(fd.fFileInfo)
-{ 
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TGFileDialog& TGFileDialog::operator=(const TGFileDialog& fd) 
+TGFileDialog& TGFileDialog::operator=(const TGFileDialog& fd)
 {
    //assignment operator
    if(this!=&fd) {
@@ -347,7 +347,7 @@ TGFileDialog& TGFileDialog::operator=(const TGFileDialog& fd)
       fFv=fd.fFv;
       fFc=fd.fFc;
       fFileInfo=fd.fFileInfo;
-   } 
+   }
    return *this;
 }
 
@@ -369,7 +369,7 @@ TGFileDialog::~TGFileDialog()
    fClient->FreePicture(fPdetails);
 
    delete fTreeLB;
-   
+
 }
 
 //______________________________________________________________________________
@@ -418,7 +418,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            return kTRUE;
                      }
                      if (gSystem->IsAbsoluteFileName(fTbfname->GetString()))
-                        fFileInfo->fFilename = strdup(fTbfname->GetString());
+                        fFileInfo->fFilename = StrDup(fTbfname->GetString());
                      else
                         fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                                        fTbfname->GetString());
@@ -535,9 +535,9 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
                         fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
                      } else {
-                        if (!strcmp(fOk->GetTitle(), "Save") && 
+                        if (!strcmp(fOk->GetTitle(), "Save") &&
                             (!(fOverWR->GetState() == kButtonDown))) {
-                           
+
                            Int_t ret;
                            txt = Form("File name %s already exists, OK to overwrite it?",
                                       fTbfname->GetString());
@@ -548,7 +548,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                               return kTRUE;
                         }
                         if (gSystem->IsAbsoluteFileName(fTbfname->GetString()))
-                           fFileInfo->fFilename = strdup(fTbfname->GetString());
+                           fFileInfo->fFilename = StrDup(fTbfname->GetString());
                         else
                            fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                                           fTbfname->GetString());
