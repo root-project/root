@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.6 2006/06/05 22:51:14 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.7 2006/06/21 16:18:26 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -95,10 +95,6 @@ private:
    Int_t               fByteCur;       // current position in the first buffer
    TXSockBuf          *fBufCur;        // current read buffer
 
-   // List of spare buffers
-   TMutex             *fSMtx;          // To protect spare list
-   std::list<TXSockBuf *> fSQue;       // list of spare buffers
-
    // Interrupts
    TMutex             *fIMtx;          // To protect interrupt queue
    kXR_int32           fILev;          // Highest received interrupt
@@ -115,6 +111,10 @@ private:
    static Int_t        fgPipe[2];      // Pipe for input monitoring
    static TString      fgLoc;          // Location string
    static Bool_t       fgInitDone;     // Avoid initializing more than once
+
+   // List of spare buffers
+   static TMutex       fgSMtx;          // To protect spare list
+   static std::list<TXSockBuf *> fgSQue; // list of spare buffers
 
    // Manage asynchronous message
    Int_t               PickUpReady();
@@ -233,15 +233,18 @@ public:
    Int_t   fCid;
 
    TXSockBuf(Char_t *bp=0, Int_t sz=0, Bool_t own=1)
-             { fBuf = fMem = bp; fSiz = fLen = sz; fOwn = own; fCid = -1; }
-  ~TXSockBuf() {if (fOwn && fMem) free(fMem);}
+             { fBuf = fMem = bp; fSiz = fLen = sz; fOwn = own; fCid = -1; fgBuffMem += sz; }
+  ~TXSockBuf() {if (fOwn && fMem) { free(fMem); fgBuffMem -= fSiz; }}
 
    void Resize(Int_t sz) { if (sz > fSiz)
-                              if ((fMem = (Char_t *)realloc(fMem, sz))) {
+                              if ((fMem = (Char_t *)realloc(fMem, sz))) { fgBuffMem += (sz - fSiz);
                                  fBuf = fMem; fSiz = sz; fLen = 0;}}
+
+   static Long64_t BuffMem() { return fgBuffMem; }
 
 private:
    Char_t *fMem;
+   static Long64_t fgBuffMem;  // Total allocated memory
 };
 
 #endif

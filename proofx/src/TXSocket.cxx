@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.14 2006/06/09 13:39:33 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.15 2006/06/21 16:18:26 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -100,6 +100,11 @@ TMutex       TXSocket::fgReadyMtx(kTRUE);   // Protect access to the sockets-rea
 Int_t        TXSocket::fgPipe[2] = {-1,-1}; // Pipe for input monitoring
 TString      TXSocket::fgLoc = "undef";     // Location string
 
+// Static buffer manager
+TMutex       TXSocket::fgSMtx;              // To protect spare list
+std::list<TXSockBuf *> TXSocket::fgSQue;    // list of spare buffers
+Long64_t     TXSockBuf::fgBuffMem = 0;      // Total allocated memory
+
 //_____________________________________________________________________________
 TXSocket::TXSocket(const char *url, Char_t m, Int_t psid,
                    Char_t capver, const char *logbuf, Int_t loglevel)
@@ -136,13 +141,6 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid,
       return;
    }
    fAQue.clear();
-
-   // Queue for spare buffers
-   if (!(fSMtx = new TMutex(kTRUE))) {
-      Error("TXSocket", "problems initializing mutex for spare queue");
-      return;
-   }
-   fSQue.clear();
 
    // Interrupts queue related stuff
    if (!(fIMtx = new TMutex(kTRUE))) {
@@ -237,12 +235,9 @@ TXSocket::~TXSocket()
    // force its closing)
    Close();
 
-   // Cleanup buffers
-   list<TXSockBuf *>::iterator i;
-   for (i = fSQue.begin(); i != fSQue.end(); ++i) {
-      if (*i)
-         delete (*i);
-   }
+   // Delete mutexes
+   SafeDelete(fAMtx);
+   SafeDelete(fIMtx);
 }
 
 //_____________________________________________________________________________
@@ -321,10 +316,6 @@ void TXSocket::Close(Option_t *opt)
 
    // Delete the connection module
    SafeDelete(fConn);
-
-   SafeDelete(fAMtx);
-   SafeDelete(fSMtx);
-   SafeDelete(fIMtx);
 }
 
 //_____________________________________________________________________________
@@ -759,8 +750,9 @@ Int_t TXSocket::Flush()
       list<TXSockBuf *>::iterator i;
       for (i = fAQue.begin(); i != fAQue.end(); i++) {
          if (*i) {
-            R__LOCKGUARD(fSMtx);
-            fSQue.push_back(*i);
+            {  R__LOCKGUARD(&fgSMtx);
+               fgSQue.push_back(*i);
+            }
             fAQue.erase(i);
             nf += (*i)->fLen;
          }
@@ -1058,30 +1050,46 @@ TXSockBuf *TXSocket::PopUpSpare(Int_t size)
    // If none is found either one is reallocated or a new one
    // created
    TXSockBuf *buf = 0;
+   static Int_t nBuf = 0;
 
-   R__LOCKGUARD(fSMtx);
 
-   if (fSQue.size() > 0) {
+   R__LOCKGUARD(&fgSMtx);
+
+
+   Int_t maxsz = 0;
+   if (fgSQue.size() > 0) {
       list<TXSockBuf *>::iterator i;
-      for (i = fSQue.begin(); i != fSQue.end(); i++) {
+      for (i = fgSQue.begin(); i != fgSQue.end(); i++) {
+         maxsz = ((*i)->fSiz > maxsz) ? (*i)->fSiz : maxsz;
          if ((*i) && (*i)->fSiz >= size) {
             buf = *i;
+            if (gDebug > 2)
+               Info("PopUpSpare","asked: %d, spare: %d/%d, REUSE buf %p, sz: %d",
+                                 size, fgSQue.size(), nBuf, buf, buf->fSiz);
             // Drop from this list
-            fSQue.erase(i);
+            fgSQue.erase(i);
             return buf;
          }
       }
       // All buffers are too small: enlarge the first one
-      buf = fSQue.front();
+      buf = fgSQue.front();
       buf->Resize(size);
+      if (gDebug > 2)
+         Info("PopUpSpare","asked: %d, spare: %d/%d, maxsz: %d, RESIZE buf %p, sz: %d",
+                           size, fgSQue.size(), nBuf, maxsz, buf, buf->fSiz);
       // Drop from this list
-      fSQue.pop_front();
+      fgSQue.pop_front();
+      return buf;
    }
 
    // Create a new buffer
    char *b = (char *)malloc(size);
    if (b)
       buf = new TXSockBuf(b, size);
+   nBuf++;
+   if (gDebug > 2)
+      Info("PopUpSpare","asked: %d, spare: %d/%d, maxsz: %d, NEW buf %p, sz: %d",
+                        size, fgSQue.size(), nBuf, maxsz, buf, buf->fSiz);
 
    // We are done
    return buf;
@@ -1092,13 +1100,23 @@ void TXSocket::PushBackSpare()
 {
    // Release read buffer giving back to the spare list
 
-   R__LOCKGUARD(fSMtx);
+   // Max size of average total allocated memory (in MB) 
+   static Long64_t maxBuffMem = gEnv->GetValue("XProof.MaxBuffMem", 10) * 1048576;
 
-   fSQue.push_back(fBufCur);
+   R__LOCKGUARD(&fgSMtx);
+
+   if (gDebug > 2)
+      Info("PushBackSpare","release buf %p, sz: %d (BuffMem: %lld)",
+                           fBufCur, fBufCur->fSiz, TXSockBuf::BuffMem());
+
+   if (TXSockBuf::BuffMem() < maxBuffMem) {
+      fgSQue.push_back(fBufCur);
+   } else {
+      delete fBufCur;
+   }
    fBufCur = 0;
    fByteCur = 0;
    fByteLeft = 0;
-
 }
 
 //______________________________________________________________________________
@@ -1118,10 +1136,9 @@ Int_t TXSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions)
    if (fByteLeft >= length) {
       memcpy(buffer, fBufCur->fBuf + fByteCur, length);
       fByteCur += length;
-      if (fByteLeft == length)
+      if ((fByteLeft -= length) <= 0)
          // All used: give back
          PushBackSpare();
-      fByteLeft -= length;
       return length;
    } else {
       // Copy the first part
@@ -1137,7 +1154,9 @@ Int_t TXSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions)
          Int_t ncpy = (fByteLeft > tobecopied) ? tobecopied : fByteLeft;
          memcpy((void *)((Char_t *)buffer+at), fBufCur->fBuf, ncpy);
          fByteCur = ncpy;
-         fByteLeft -= ncpy;
+         if ((fByteLeft -= ncpy) <= 0)
+            // All used: give back
+            PushBackSpare();
          // Recalculate
          tobecopied -= ncpy;
          at += ncpy;
