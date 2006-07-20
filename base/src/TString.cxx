@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.47 2005/12/08 18:22:32 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.48 2006/04/19 08:22:22 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -771,9 +771,9 @@ void TString::AssertElement(Ssiz_t i) const
 {
    // Check to make sure a string index is in range.
 
-   if (i == kNPOS || i >= Length())
+   if (i == kNPOS || i > Length())
       Error("TString::AssertElement",
-            "out of bounds: i = %d, Length = %d", i, Length()-1);
+            "out of bounds: i = %d, Length = %d", i, Length());
 }
 
 //______________________________________________________________________________
