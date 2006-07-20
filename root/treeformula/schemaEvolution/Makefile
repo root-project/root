@@ -29,13 +29,8 @@ EVENT2O       = Event_2.$(ObjSuf) EventDict_2.$(ObjSuf)
 EVENT2SO      = libEvent_2.$(DllSuf)
 
 EVENT         = Event$(ExeSuf)
-ifeq ($(ARCH),win32)
-EVENTLIB      = libEvent.lib
-EVENT2LIB     = libEvent_2.lib
-else
-EVENTLIB      = $(EVENTSO)
-EVENT2LIB     = $(EVENT2SO)
-endif
+EVENTLIB      = libEvent.$(LibSuf)
+EVENT2LIB     = libEvent_2.$(LibSuf)
 
 schemaRun.ref: schemaRun1.C Event.root 
 	$(CMDECHO) root.exe -q -b -l schemaRun1.C 2>&1 \
@@ -87,7 +82,7 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
+		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTLIB)
 		$(CMDECHO) $(LD) -bundle -undefined $(UNDEFOPT)  -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
@@ -119,7 +114,7 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENT2SO)
+		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENT2LIB)
 		$(CMDECHO) $(LD) -bundle -undefined  $(UNDEFOPT) -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
