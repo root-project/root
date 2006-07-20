@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.56 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.57 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -1343,11 +1343,11 @@ void TGListTree::DrawItemName(TGListTreeItem *item)
 
    if (fColorMode != 0 && item->fHasColor) {
       gVirtualX->SetForeground(fColorGC, TColor::Number2Pixel(item->fColor));
-      if (fColorMode | kColorUnderline) {
+      if (fColorMode & kColorUnderline) {
          Int_t y = item->fYtext-pos.fY + FontAscent(fFont) + 2;
          gVirtualX->DrawLine(fId, fColorGC, item->fXtext, y, item->fXtext + width, y);
       }
-      if (fColorMode | kColorBox) {
+      if (fColorMode & kColorBox) {
          Int_t x = item->fXtext + width + 4;
          Int_t y = item->fYtext-pos.fY  + 3;
          Int_t h = FontAscent(fFont)    - 4;
