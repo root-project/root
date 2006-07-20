@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.15 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.16 2006/07/19 12:58:52 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -57,6 +57,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGDoubleSlider.h"
+#include "TGPicture.h"
 #include "Riostream.h"
 #include "TSystem.h"
 
@@ -72,6 +73,8 @@ TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t typ
    : TGFrame(p, w, h, options, back)
 {
    // Slider constructor.
+
+   fSliderPic = 0;
 
    fWidgetId    = id;
    fWidgetFlags = kWidgetWantFocus;
@@ -212,6 +215,10 @@ TGDoubleVSlider::TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t
 {
    // Create a vertical slider widget.
 
+   fSliderPic = fClient->GetPicture("sliderv.xpm");
+
+   if (!fSliderPic)
+      Error("TGDoubleVSlider", "sliderv.xpm not found");
    // set initial values
    fSmin = h/8*3; fSmax = h/8*5; fVmin = 0; fVmax = h;
    SetWindowName();
@@ -221,6 +228,8 @@ TGDoubleVSlider::TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t
 TGDoubleVSlider::~TGDoubleVSlider()
 {
    // Delete vertical slider widget.
+
+   if (fSliderPic) fClient->FreePicture(fSliderPic);
 }
 
 //______________________________________________________________________________
@@ -273,6 +282,13 @@ void TGDoubleVSlider::DoRedraw()
       }
    }
 
+   if (fSliderPic) {
+      Int_t xpos = (fWidth/2) - (fSliderPic->GetWidth()/2);
+      Int_t ypos = relMin + 2;
+      fSliderPic->Draw(fId, GetBckgndGC()(), xpos, ypos);
+      ypos = relMax - fSliderPic->GetHeight() - 2;
+      fSliderPic->Draw(fId, GetBckgndGC()(), xpos, ypos);
+   }
    if (fMarkEnds) {
       // Draw scaling zones.
       int y1 = (relMax - relMin) / 4 + relMin;
@@ -391,6 +407,10 @@ TGDoubleHSlider::TGDoubleHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t
 {
    // Create horizontal slider widget.
 
+   fSliderPic = fClient->GetPicture("sliderh.xpm");
+
+   if (!fSliderPic)
+      Error("TGDoubleHSlider", "sliderh.xpm not found");
    // set initial values
    fSmin = w/8*3; fSmax = w/8*5; fVmin = 0; fVmax = w;
    SetWindowName();
@@ -401,6 +421,7 @@ TGDoubleHSlider::~TGDoubleHSlider()
 {
    // Delete a horizontal slider widget.
 
+   if (fSliderPic) fClient->FreePicture(fSliderPic);
 }
 
 //______________________________________________________________________________
@@ -450,6 +471,13 @@ void TGDoubleHSlider::DoRedraw()
       }
    }
 
+   if (fSliderPic) {
+      Int_t ypos = (fHeight/2) - (fSliderPic->GetHeight()/2);
+      Int_t xpos = relMin + 2;
+      fSliderPic->Draw(fId, GetBckgndGC()(), xpos, ypos);
+      xpos = relMax - fSliderPic->GetWidth() - 2;
+      fSliderPic->Draw(fId, GetBckgndGC()(), xpos, ypos);
+   }
    if (fMarkEnds) {
       // Draw scaling zones.
       int x1 = (relMax - relMin) / 4 + relMin;

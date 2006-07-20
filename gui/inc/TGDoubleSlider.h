@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.11 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.12 2006/07/19 12:58:52 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -56,7 +56,7 @@
 #include "TGWidget.h"
 #endif
 
-
+class TGPicture;
 
 enum EDoubleSliderSize {
    //--- sizes for vert. and horz. sliders
@@ -93,6 +93,7 @@ protected:
                                  // 0: don't move any value
    Bool_t        fReversedScale; // reverse which end is min and max
    Bool_t        fMarkEnds;      // lines marking where stretch zones begin
+   const TGPicture *fSliderPic;  // picture to draw slider ends
 
    TString       GetSString() const; // returns scaling type as string
 
