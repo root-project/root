@@ -44,7 +44,7 @@ G__TypeInfo : public G__ClassInfo  {
   G__TypeInfo() : G__ClassInfo(), type(0), typenum(-1), reftype(0), isconst(0) {}
   void Init(const char *typenamein);
 #ifndef __MAKECINT__
-  G__TypeInfo(G__value buf) : G__ClassInfo() { Init(buf); }
+  G__TypeInfo(G__value buf) : G__ClassInfo(), type(0), typenum(-1), reftype(0), isconst(0) { Init(buf); }
   void Init(G__value& buf) { 
     type    = buf.type; 
     typenum = buf.typenum; 

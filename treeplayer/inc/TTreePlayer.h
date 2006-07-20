@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.34 2005/02/08 14:34:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.35 2005/11/11 23:21:43 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -40,6 +40,10 @@
 class TVirtualIndex;
 
 class TTreePlayer : public TVirtualTreePlayer {
+
+private:
+   TTreePlayer(const TTreePlayer &);
+   TTreePlayer& operator=(const TTreePlayer &);
 
 protected:
    TTree         *fTree;            //!  Pointer to current Tree
