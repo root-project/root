@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.297 2006/07/13 05:08:05 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.298 2006/07/20 07:23:35 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4919,6 +4919,7 @@ void  TH1::Smooth(Int_t ntimes, Int_t firstbin, Int_t lastbin)
    if (lastbin  > nbins+1) lastbin  = nbins;
    nbins = lastbin - firstbin + 1;
    Double_t *xx = new Double_t[nbins];
+   Double_t nent = fEntries;
    Int_t i;
    for (i=0;i<nbins;i++) {
       xx[i] = GetBinContent(i+firstbin);
@@ -4929,6 +4930,7 @@ void  TH1::Smooth(Int_t ntimes, Int_t firstbin, Int_t lastbin)
    for (i=0;i<nbins;i++) {
       SetBinContent(i+firstbin,xx[i]);
    }
+   fEntries = nent;
    delete [] xx;
 
    if (gPad) gPad->Modified();
