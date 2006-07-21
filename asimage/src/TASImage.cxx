@@ -3022,8 +3022,8 @@ void TASImage::EndPaint()
 //______________________________________________________________________________
 UInt_t *TASImage::GetArgbArray()
 {
-   // Returns a pointer to internal array[width x height] of ARGB32 pixel values
-   // This array is directly acessible. That allows to manipulate/change the image
+   // Returns a pointer to internal array[width x height] of ARGB32 values
+   // This array is directly accessible. That allows to manipulate/change the image
 
    if (!fImage) {
       Warning("GetArgbArray", "no image");
@@ -3037,6 +3037,48 @@ UInt_t *TASImage::GetArgbArray()
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
 
    return (UInt_t *)img->alt.argb32;
+}
+
+
+//______________________________________________________________________________
+UInt_t *TASImage::GetRgbaArray()
+{
+   // Returns a pointer to an array[width x height] of RGBA32 values.
+   // This array is created from internal ARGB32 array,
+   // must be deleted after usage.
+
+   if (!fImage) {
+      Warning("GetRgbaArray", "no image");
+      return 0;
+   }
+
+   if (!fImage->alt.argb32) {
+      BeginPaint();
+   }
+
+   ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
+
+   UInt_t i, j;
+   Int_t y = 0;
+   Int_t idx = 0;
+   UChar_t a, rgb, rgba, argb;
+   y = 0;
+
+   UInt_t *ret = new UInt_t[img->width*img->height];
+
+   for (i = 0; i < img->height; i++) {
+      for (j = 0; j < img->width; j++) {
+         idx = y + j;
+         argb = img->alt.argb32[idx];
+         a = argb >> 24;
+         rgb =  argb & 0x00ffffff;
+         rgba = (rgb <<  8) + a;
+         ret[idx] = rgba; 
+      }
+      y += img->width;
+   }
+
+   return ret;
 }
 
 //______________________________________________________________________________

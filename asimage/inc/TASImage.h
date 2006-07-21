@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.20 2006/05/28 20:07:59 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.21 2006/07/03 16:10:43 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -204,6 +204,7 @@ public:
    TArrayL   *GetPixels(Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
    TArrayD   *GetArray(UInt_t w = 0, UInt_t h = 0, TImagePalette *pal = gWebImagePalette);
    UInt_t    *GetArgbArray();
+   UInt_t    *GetRgbaArray();
    UInt_t    *GetScanline(UInt_t y);
    void       GetImageBuffer(char **buffer, int *size, EImageFileTypes type = TImage::kPng);
    Bool_t     SetImageBuffer(char **buffer, EImageFileTypes type = TImage::kPng);
