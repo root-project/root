@@ -3061,7 +3061,7 @@ UInt_t *TASImage::GetRgbaArray()
    UInt_t i, j;
    Int_t y = 0;
    Int_t idx = 0;
-   UChar_t a, rgb, rgba, argb;
+   UInt_t a, rgb, rgba, argb;
    y = 0;
 
    UInt_t *ret = new UInt_t[img->width*img->height];
