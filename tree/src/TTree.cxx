@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.292 2006/07/13 05:31:49 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.293 2006/07/14 20:51:08 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1609,10 +1609,9 @@ TBranch* TTree::BranchRef()
    // is saved keeping the information with the pointers to the branches
    // having referenced objects.
 
-   if (fBranchRef) {
-      return 0;
+   if (!fBranchRef) {
+      fBranchRef = new TBranchRef(this);
    }
-   fBranchRef = new TBranchRef(this);
    return fBranchRef;
 }
 
