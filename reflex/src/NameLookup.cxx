@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: NameLookup.cxx,v 1.3 2006/06/28 08:33:12 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: NameLookup.cxx,v 1.4 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,10 +24,14 @@ ROOT::Reflex::Type
 ROOT::Reflex::NameLookup::LookupType( const std::string & nam, 
                                       const Scope & current ) {
 //-------------------------------------------------------------------------------
-   Type t = Type();
+   Type t;
 
-   if ( Tools::GetBasePosition(nam)) t = LookupTypeQualified( nam );
-   else                              t = LookupTypeUnqualified( nam, current );
+   if ( nam.find("::") == 0 ) {
+      std::set<Scope> lookedAtUsingDir;
+      bool partial_success = false;
+      t = LookupTypeInScope( nam.substr(2), Scope::GlobalScope(),  partial_success, lookedAtUsingDir);
+   } else
+      t = LookupTypeInUnknownScope( nam, current );
 
    //if ( t && AccessControl(t, current)) return t;
    //else                                 return Type();
@@ -37,46 +41,89 @@ ROOT::Reflex::NameLookup::LookupType( const std::string & nam,
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type
-ROOT::Reflex::NameLookup::LookupTypeQualified( const std::string & nam ) {
+ROOT::Reflex::NameLookup::LookupTypeInScope( const std::string & nam,
+                                             const Scope & current,
+                                             bool &partial_success,
+                                             std::set<Scope> & lookedAtUsingDir,
+                                             size_t pos_subscope /*= 0*/,
+                                             size_t pos_next_scope /*= npos*/ ) {
 //-------------------------------------------------------------------------------
 
-   Scope bscope = Scope::ByName(Tools::GetScopeName(nam));
-   if ( bscope ) {
-      return LookupType( Tools::GetBaseName(nam), bscope);
+   if (!current) return Type();
+   if (lookedAtUsingDir.find(current) != lookedAtUsingDir.end()) return Type();
+
+   if (pos_next_scope == std::string::npos) {
+      pos_next_scope = nam.find("::", pos_subscope);
+      if (pos_next_scope == std::string::npos) pos_next_scope = 0;
+      else                                     pos_next_scope += 2;
    }
-   else { 
-      return Type(); 
+   std::string scopenam = nam.substr(pos_subscope, pos_next_scope == 0 ? std::string::npos : pos_next_scope - 2 - pos_subscope);
+   size_t pos_current = pos_subscope;
+   pos_subscope = pos_next_scope;
+   if (pos_next_scope) {
+      pos_next_scope = nam.find("::", pos_next_scope);
+      if (pos_next_scope == std::string::npos) pos_next_scope = 0;
+      else                                     pos_next_scope += 2;
    }
 
+   for ( Type_Iterator it = current.SubType_Begin(); it != current.SubType_End(); ++it ) {
+      if ( (*it).Name() == scopenam ) {
+         partial_success = true;
+         lookedAtUsingDir.clear();
+         if (!pos_subscope) return *it;
+         if (it->IsTypedef())
+            return LookupTypeInScope(nam, it->FinalType(), partial_success, lookedAtUsingDir, pos_subscope, pos_next_scope);
+         else
+            return LookupTypeInScope(nam, *it, partial_success, lookedAtUsingDir, pos_subscope, pos_next_scope);
+      }
+   }
+
+   for ( Scope_Iterator in = current.SubScope_Begin(); in != current.SubScope_End(); ++in ) {
+      if (in->IsNamespace() && (*in).Name() == scopenam ) {
+         partial_success = true;
+         lookedAtUsingDir.clear();
+         if (!pos_subscope) return Type(); // namespace is no a type
+         return LookupTypeInScope(nam, *in, partial_success, lookedAtUsingDir, pos_subscope, pos_next_scope);
+      }
+   }
+
+   lookedAtUsingDir.insert(current);
+   for ( Scope_Iterator si = current.UsingDirective_Begin(); si != current.UsingDirective_End(); ++si ) {
+      Type t = LookupTypeInScope( nam, *si, partial_success, lookedAtUsingDir, pos_current, pos_subscope);
+      if (t || partial_success) return t;
+   }
+
+   if (pos_current == 0) // only for "BaseClass::whatever", not for "CurrentScope::BaseClass::whatever"!
+      for ( Base_Iterator bi = current.Base_Begin(); bi != current.Base_End(); ++bi ) {
+         if ( (*bi).Name() == scopenam ) {
+            partial_success = true;
+            lookedAtUsingDir.clear();
+            if (!pos_subscope) return bi->ToType();
+            return LookupTypeInScope(nam, bi->ToType().FinalType(), partial_success, lookedAtUsingDir, pos_subscope, pos_next_scope);
+         }
+      }
+
+   for ( Base_Iterator bi = current.Base_Begin(); bi != current.Base_End(); ++bi ) {
+      Type t = LookupTypeInScope( nam, bi->ToScope(), partial_success, lookedAtUsingDir, pos_current, pos_subscope );
+      if ( t || partial_success) return t;
+   }
+
+   return Type();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type
-ROOT::Reflex::NameLookup::LookupTypeUnqualified( const std::string & nam,
-                                                 const Scope & current ) {
+ROOT::Reflex::NameLookup::LookupTypeInUnknownScope( const std::string & nam,
+                                                    const Scope & current ) {
 //-------------------------------------------------------------------------------
 
-   Type t = Type();
-
-   for ( Type_Iterator it = current.SubType_Begin(); it != current.SubType_End(); ++it ) {
-      if ( (*it).Name() == nam ) return *it;
-   }
-
-   for ( Scope_Iterator si = current.UsingDirective_Begin(); si != current.UsingDirective_End(); ++si ) {
-      t = LookupType( nam, *si );
-      if ( t ) return t;
-   }
-
-   for ( Base_Iterator bi = current.Base_Begin(); bi != current.Base_End(); ++bi ) {
-      t = LookupType( nam, bi->ToScope() );
-      if ( t ) return t;
-   }
-
-   if ( ! current.IsTopScope() ) t = LookupType( nam, current.DeclaringScope() );
-
+   bool partial_success = false;
+   std::set<Scope> lookedAtUsingDir;
+   Type t = LookupTypeInScope( nam, current, partial_success, lookedAtUsingDir);
+   if ( t || partial_success) return t;
+   if ( ! current.IsTopScope() ) t = LookupTypeInUnknownScope( nam, current.DeclaringScope() );
    return t;
-
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.h,v 1.4 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name: HEAD $:$Id: NameLookup.h,v 1.5 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,6 +15,8 @@
 // Include files
 #include <string>
 #include <vector>
+#include <set>
+
 
 namespace ROOT {
    namespace Reflex {
@@ -41,6 +43,16 @@ namespace ROOT {
          static Type LookupTypeUnqualified( const std::string & nam,
                                             const Scope & current );
 
+         static Type LookupTypeInScope( const std::string & nam, 
+                                        const Scope & current,
+                                        bool &partial_success,
+                                        std::set<Scope> & lookedAtUsingDir,
+                                        size_t pos_subscope = 0,
+                                        size_t pos_scope_end = std::string::npos );
+  
+           
+         static Type LookupTypeInUnknownScope( const std::string & nam,
+                                               const Scope & current );
 
          static Scope LookupScope( const std::string & nam,
                                    const Scope & current );
