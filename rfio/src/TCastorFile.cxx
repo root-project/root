@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.9 2005/08/18 00:24:38 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.13 2006/07/10 13:01:12 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand 17/09/2003 + Ben Couturier 31/05/2005
 // + Giulia Taurelli 26/04/2006
 
@@ -20,7 +20,7 @@
 // via the rootd daemon. File names have to be specified like:          //
 //    castor:/castor/cern.ch/user/r/rdm/bla.root.                       //
 //                                                                      //
-// If it is used with Castor 2.1 the file name can also be specified    //
+// If Castor 2.1 is used the file names can also be specified           //
 // in the following ways:                                               //
 //                                                                      //
 //  castor://stager_host:stager_port/?path=/castor/cern.ch/user/        //
@@ -67,11 +67,12 @@ extern "C" { int rfio_HsmIf_reqtoput (char *); }
 extern "C" { int DLL_DECL rfio_parse(char *, char **, char **); }
 extern "C" { int rfio_HsmIf_IsHsmFile (const char *); }
 extern "C" { char *getconfent(char *, char *, int); }
+
+#ifdef R__CASTOR2
 extern int tStageHostKey;
 extern int tStagePortKey;
 extern int tSvcClassKey;
 extern int tCastorVersionKey;
-
 
 //______________________________________________________________________________
 int TCastorFile::ParseAndSetGlobal()
@@ -323,6 +324,34 @@ static int UseCastor2API()
    return 0;
 }
 
+#else
+
+//______________________________________________________________________________
+static int UseCastor2API()
+{
+   // Function that checks whether we should use the old or new stager API.
+
+   char *p;
+
+   if (((p = getenv(RFIO_USE_CASTOR_V2)) == 0) &&
+       ((p = getconfent("RFIO","USE_CASTOR_V2",0)) == 0)) {
+      // Variable not set: compat mode
+      return 0;
+   }
+   if ((strcmp(p,"YES") == 0) || (strcmp(p,"yes") == 0) || (atoi(p) == 1)) {
+      // Variable set to yes or 1 but old CASTOR 1: compat mode + warning
+      static int once = 0;
+      if (!once) {
+         ::Warning("UseCastor2API", "asked to use CASTOR 2, but linked with CASTOR 1");
+         once = 1;
+      }
+      return 0;
+   }
+   // Variable set but not to 1 : compat mode
+   return 0;
+}
+#endif
+
 
 ClassImp(TCastorFile)
 
@@ -356,12 +385,14 @@ void TCastorFile::FindServerAndPath()
 {
    // Find the CASTOR disk server and internal file path.
 
+#ifdef R__CASTOR2
    int ret=ParseAndSetGlobal();
 
    if (ret<0) {
       Error("FindServerAndPath", "can't parse the turl given");
       return;
    }
+#endif
 
    if (!UseCastor2API()) {
 

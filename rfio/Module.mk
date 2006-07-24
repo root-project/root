@@ -65,7 +65,7 @@ distclean::     distclean-rfio
 
 ##### extra rules ######
 ifeq ($(PLATFORM),win32)
-$(RFIOO): CXXFLAGS += $(SHIFTCFLAGS) $(SHIFTINCDIR:%=-I%) -D__INSIDE_CYGWIN__
+$(RFIOO): CXXFLAGS += $(SHIFTCFLAGS) $(SHIFTINCDIR:%=-I%) -DNOGDI -D__INSIDE_CYGWIN__
 else
 $(RFIOO): CXXFLAGS += $(SHIFTCFLAGS) $(SHIFTINCDIR:%=-I%)
 endif

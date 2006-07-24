@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TCastorFile.h,v 1.2 2003/09/26 13:26:44 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TCastorFile.h,v 1.3 2006/07/10 13:01:12 rdm Exp $
 // Author: Fons Rademakers  17/09/2003 + Giulia Taurelli  29/06/2006
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 // via the rootd daemon. File names have to be specified like:          //
 //      castor:/castor/cern.ch/user/r/rdm/bla.root.                     //
 //                                                                      //
-// If it is used with Castor 2.1 the file name can also be specified    //
+// If Castor 2.1 is used the file names can also be specified           //
 // in the following ways:                                               //
 //                                                                      //
 //  castor://stager_host:stager_port/?path=/castor/cern.ch/user/        //
