@@ -142,7 +142,7 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		*)               xopt="";; \
 		esac; \
 		if [ "x$(KRB5LIB)" = "x" ] ; then \
-		   xopt="$$xopt --disable-krb4 --disable-krb5"; \
+		   xopt="$$xopt --disable-krb5"; \
 		fi; \
 		if [ ! "x$(SSLLIBDIR)" = "x" ] ; then \
 		   xlib=`echo $(SSLLIBDIR) | cut -c3-`; \
@@ -151,7 +151,7 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		if [ ! "x$(SSLINCDIR)" = "x" ] ; then \
 		   xopt="$$xopt --with-ssl-incdir=$(SSLINCDIR)"; \
 		fi; \
-		xopt="$$xopt --enable-echo --no-arch-subdirs --disable-mon"; \
+		xopt="$$xopt --disable-krb4 --enable-echo --no-arch-subdirs --disable-mon"; \
 		cd xrootd; \
 		echo "Options to Xrootd-configure: $$xopt $(XRDDBG)"; \
 		GNUMAKE=$(MAKE) ./configure.classic $$xopt $(XRDDBG); \
