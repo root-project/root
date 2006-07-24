@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.29 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.30 2006/07/19 13:01:49 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -90,7 +90,21 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
    switch (fContainer->fSortType) {
       default:
       case kSortByName:
-         return strcmp(f1->GetItemName()->GetString(), f2->GetItemName()->GetString());
+         //--- this is not exactly what I want...
+         type1 = f1->GetType();
+         type2 = f2->GetType();
+
+         //--- use posix macros
+         if (R_ISDIR(type1)) type1 = 1;
+         else                type1 = 6;
+
+         if (R_ISDIR(type2)) type2 = 1;
+         else                type2 = 6;
+
+         if (type1 < type2)  return -1;
+         if (type1 > type2)  return  1;
+         return strcmp(f1->GetItemName()->GetString(),
+                       f2->GetItemName()->GetString());
 
       case kSortByType:
          //--- this is not exactly what I want...
@@ -116,12 +130,14 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
 
          if (type1 < type2) return -1;
          if (type1 > type2) return 1;
-         return strcmp(f1->GetItemName()->GetString(), f2->GetItemName()->GetString());
+         return strcmp(f1->GetItemName()->GetString(),
+                       f2->GetItemName()->GetString());
 
       case kSortBySize:
          if (f1->GetSize() < f2->GetSize()) return -1;
          if (f1->GetSize() > f2->GetSize()) return 1;
-         return strcmp(f1->GetItemName()->GetString(), f2->GetItemName()->GetString());
+         return strcmp(f1->GetItemName()->GetString(),
+                       f2->GetItemName()->GetString());
    }
 }
 

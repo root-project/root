@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.29 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.30 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -75,6 +75,7 @@ protected:
    virtual void DoRedraw();
    virtual void ClearViewPort();
    virtual void ActivateItem(TGFrameElement* el);
+   virtual void DeActivateItem(TGFrameElement* el);
    virtual void SearchPattern();
    virtual void OnAutoScroll();
    virtual void RepeatSearch();

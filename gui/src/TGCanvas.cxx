@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.46 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.47 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -408,7 +408,7 @@ TGContainer& TGContainer::operator=(const TGContainer& gc)
       fKeyInput=gc.fKeyInput;
       fKeyTimerActive=gc.fKeyTimerActive;
       fScrolling=gc.fScrolling;
-   } 
+   }
    return *this;
 }
 
@@ -703,6 +703,18 @@ void TGContainer::ActivateItem(TGFrameElement* el)
    }
 
    if (!fSelected) fSelected = 1;
+
+   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED), fTotal, fSelected);
+   fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGContainer::DeActivateItem(TGFrameElement* el)
+{
+   // DeActivate item.
+
+   fLastActiveEl = el;
+   el->fFrame->Activate(kFALSE);
 
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED), fTotal, fSelected);
    fClient->NeedRedraw(this);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.38 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.39 2006/07/18 19:31:38 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 #include "TMath.h"
 #include "TSystem.h"
 #include "TGMimeTypes.h"
+#include "TObjString.h"
 #include "Riostream.h"
 
 const TGFont *TGLVEntry::fgDefaultFont = 0;
@@ -454,6 +455,7 @@ TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fListView = 0;
    fLastActive = 0;
    fCpos = fJmode = 0;
+   fMultiSelect = kFALSE;
 
    fViewMode = kLVLargeIcons;
    fItemLayout = new TGLayoutHints(kLHintsExpandY | kLHintsCenterX);
@@ -472,6 +474,7 @@ TGLVContainer::TGLVContainer(TGCanvas *p,UInt_t options, ULong_t back) :
    fListView = 0;
    fLastActive = 0;
    fCpos = fJmode = 0;
+   fMultiSelect = kFALSE;
 
    fViewMode = kLVLargeIcons;
    fItemLayout = new TGLayoutHints(kLHintsExpandY | kLHintsCenterX);
@@ -688,6 +691,183 @@ void TGLVContainer::ActivateItem(TGFrameElement* el)
 }
 
 //______________________________________________________________________________
+void TGLVContainer::DeActivateItem(TGFrameElement* el)
+{
+   // Unselect/deactivate item.
+
+   TGContainer::DeActivateItem(el);
+   fLastActive = (TGLVEntry*)el->fFrame;
+}
+
+//______________________________________________________________________________
+Bool_t TGLVContainer::HandleButton(Event_t* event)
+{
+   // Handle mouse button event in container.
+
+   if ( !fMultiSelect ) {
+      return TGContainer::HandleButton(event);
+   }
+
+   Int_t total = 0, selected = fSelected, page = 0;
+
+   TGPosition pos = GetPagePosition();
+   TGDimension dim = GetPageDimension();
+   Int_t newpos;
+   page = dim.fHeight/4;
+
+   if (event->fCode == kButton4) {
+      //scroll up
+      newpos = pos.fY - page;
+      if (newpos < 0) newpos = 0;
+      fCanvas->SetVsbPosition(newpos);
+      return kTRUE;
+   }
+   if (event->fCode == kButton5) {
+      // scroll down
+      newpos = fCanvas->GetVsbPosition() + page;
+      fCanvas->SetVsbPosition(newpos);
+      return kTRUE;
+   }
+
+   Int_t xx = pos.fX + event->fX; // translate coordinates
+   Int_t yy = pos.fY + event->fY;
+
+   if (event->fType == kButtonPress) {
+      gVirtualX->SetInputFocus(fId);
+
+      fXp = pos.fX + event->fX;
+      fYp = pos.fY + event->fY;
+
+      TGFrameElement *el;
+      TIter next(fList);
+      Bool_t select_frame = kFALSE;
+
+      if (event->fState & kKeyShiftMask) {
+         Bool_t inSelection = kFALSE;
+         TGLVEntry* last = fLastActive;
+
+         while ((el = (TGFrameElement *) next())) {
+            select_frame = kFALSE;
+
+            if (!fMapSubwindows) {
+               if ((Int_t(el->fFrame->GetY()) + (Int_t)el->fFrame->GetHeight() > yy ) &&
+                  (Int_t(el->fFrame->GetX()) + (Int_t)el->fFrame->GetWidth() > xx ) &&
+                  (Int_t(el->fFrame->GetY()) < yy) &&
+                  (Int_t(el->fFrame->GetX()) < xx))  {
+                  select_frame = kTRUE;
+               }
+            } else {
+               if (el->fFrame->GetId() == (Window_t)event->fUser[0]) {
+                  select_frame = kTRUE;
+               }
+            }
+
+            if (select_frame || last==el->fFrame)
+               inSelection = !inSelection;
+            if (inSelection || select_frame) {
+               if ( !el->fFrame->IsActive() ) {
+                  selected++;
+                  ActivateItem(el);
+               }
+               Clicked(el->fFrame, event->fCode);
+               Clicked(el->fFrame, event->fCode, event->fXRoot, event->fYRoot);
+            }
+            total++;
+         }
+      } else if (event->fState & kKeyControlMask) {
+         // DO NOTHING!
+      } else {
+         UnSelectAll();
+         total = selected = 0;
+      }
+
+      select_frame = kFALSE;
+      while ((el = (TGFrameElement *) next())) {
+         select_frame = kFALSE;
+
+         if (!fMapSubwindows) {
+            if ((Int_t(el->fFrame->GetY()) + (Int_t)el->fFrame->GetHeight() > yy ) &&
+               (Int_t(el->fFrame->GetX()) + (Int_t)el->fFrame->GetWidth() > xx ) &&
+               (Int_t(el->fFrame->GetY()) < yy) &&
+               (Int_t(el->fFrame->GetX()) < xx))  {
+               select_frame = kTRUE;
+            }
+         } else {
+            if (el->fFrame->GetId() == (Window_t)event->fUser[0]) {
+               select_frame = kTRUE;
+            }
+         }
+
+         if (select_frame) {
+            if ( el->fFrame->IsActive() ) {
+               selected--;
+               DeActivateItem(el);
+            } else {
+               selected++;
+               ActivateItem(el);
+            }
+            Clicked(el->fFrame, event->fCode);
+            Clicked(el->fFrame, event->fCode, event->fXRoot, event->fYRoot);
+         }
+         total++;
+      }
+
+      if (fTotal != total || fSelected != selected) {
+         fTotal = total;
+         fSelected = selected;
+         SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
+                     fTotal, fSelected);
+      }
+
+      if ( selected == 0 ) {
+         fDragging = kTRUE;
+         fX0 = fXf = fXp;
+         fY0 = fYf = fYp;
+         if (fMapSubwindows)
+            gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0,
+                                     fYf-fY0);
+      }
+   }
+
+
+   if (event->fType == kButtonRelease) {
+      gVirtualX->SetInputFocus(fId);
+
+      if (fDragging) {
+         fDragging = kFALSE;
+         fScrolling = kFALSE;
+
+         if (gSystem) gSystem->RemoveTimer(fScrollTimer);
+         if (fMapSubwindows)
+            gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0,
+                                     fYf-fY0);
+      } else {
+         SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
+                     event->fCode, (event->fYRoot << 16) | event->fXRoot);
+      }
+   }
+   fClient->NeedRedraw(this);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+TList* TGLVContainer::GetSelectedItems()
+{
+   // Get list of selected items in container.
+
+   TGFrameElement *el;
+   TIter next(fList);
+   TList *ret = new TList();
+
+   while ((el = (TGFrameElement *) next())) {
+      if (el->fFrame->IsActive()) {
+         ret->Add(new TObjString(((TGLVEntry*)el->fFrame)->GetItemName()->GetString()));
+      }
+   }
+   return ret;
+}
+
+//______________________________________________________________________________
 TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
                        UInt_t options, ULong_t back) :
    TGCanvas(p, w, h, options, back)
@@ -702,7 +882,8 @@ TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
    fFontStruct = GetDefaultFontStruct();
    fNormGC     = GetDefaultGC()();
    if (fHScrollbar)
-      fHScrollbar->Connect("PositionChanged(Int_t)", "TGListView", this, "ScrollHeader(Int_t)");
+      fHScrollbar->Connect("PositionChanged(Int_t)", "TGListView", this,
+                           "ScrollHeader(Int_t)");
    fHeader = new TGHorizontalFrame(this, 20, 20, kChildFrame);
    SetDefaultHeaders();
 }
@@ -865,6 +1046,15 @@ void TGListView::SetContainer(TGFrame *f)
 }
 
 //______________________________________________________________________________
+void TGListView::SetIncrements(Int_t hInc, Int_t vInc)
+{
+   // Set horizontal and vertical scrollbar increments.
+
+   fHScrollbar->SetSmallIncrement(hInc);
+   fVScrollbar->SetSmallIncrement(vInc);
+}
+
+//______________________________________________________________________________
 void TGListView::Layout()
 {
    // Layout list view components (container and contents of container).
@@ -914,7 +1104,8 @@ void TGListView::Layout()
 
    if (fViewMode == kLVDetails) {
       fColHeader[i]->MoveResize(xl, 0, fVport->GetWidth()-xl, h);
-      fVport->MoveResize(fBorderWidth, fBorderWidth+h, fVport->GetWidth(), fVport->GetHeight()-h);
+      fVport->MoveResize(fBorderWidth, fBorderWidth+h, fVport->GetWidth(),
+                         fVport->GetHeight()-h);
       fVScrollbar->SetRange(container->GetHeight(), fVport->GetHeight());
    }
 }
@@ -1118,3 +1309,4 @@ void TGLVContainer::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 }
+

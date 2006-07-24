@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.14 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.15 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -83,6 +83,7 @@ protected:
    Int_t                fPos;          // logical current position
    Int_t                fSliderSize;   // logical slider size
    Int_t                fSliderRange;  // logical slider range
+   Int_t                fSmallInc;     // Small Increment in the sliding algorithm
    TGScrollBarElement  *fHead;         // head button of scrollbar
    TGScrollBarElement  *fTail;         // tail button of scrollbar
    TGScrollBarElement  *fSlider;       // slider
@@ -103,7 +104,8 @@ public:
                Pixel_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options | kOwnBackground, back)
             { fMsgWindow = p; fRepeat = 0; fGrabPointer = kTRUE;
-              SetBackgroundPixmap(GetBckgndPixmap()); SetWindowName(); }
+              SetBackgroundPixmap(GetBckgndPixmap()); SetWindowName();
+              fSmallInc = 1; }
    virtual ~TGScrollBar();
 
    void           GrabPointer(Bool_t grab) { fGrabPointer = grab; }
@@ -133,6 +135,9 @@ public:
    virtual void  PositionChanged(Int_t pos) { Emit("PositionChanged(Int_t)", pos); } //*SIGNAL*
    virtual void  RangeChanged(Int_t range) { Emit("RangeChanged(Int_t)", range); } //*SIGNAL*
    virtual void  PageSizeChanged(Int_t range) { Emit("PageSizeChanged(Int_t)", range); } //*SIGNAL*
+
+   virtual Int_t GetSmallIncrement() { return fSmallInc; }
+   virtual void  SetSmallIncrement(Int_t increment) { fSmallInc = increment; }
 
    ClassDef(TGScrollBar,0)  // Scrollbar widget
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.18 2006/06/14 07:52:55 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.19 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -393,13 +393,13 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
              //  return kFALSE;
             //}
             fHead->SetState(kButtonDown);
-            fPos--;
+            fPos -= fSmallInc;
          } else if (subw == fTail->GetId()) {
             //if (!fTail->IsEnabled()) {
            //    return kFALSE;
            // }
             fTail->SetState(kButtonDown);
-            fPos++;
+            fPos += fSmallInc;
          } else if (event->fX > fgScrollBarWidth && event->fX < fX0)
             fPos -= fPsize;
          else if (event->fX > fX0+fSliderSize && event->fX < (Int_t)fWidth-fgScrollBarWidth)
@@ -638,13 +638,13 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
             //   return kFALSE;
            // }
             fHead->SetState(kButtonDown);
-            fPos--;
+            fPos -= fSmallInc;
          } else if (subw == fTail->GetId()) {
             //if (!fTail->IsEnabled()) {
             //   return kFALSE;
             //}
             fTail->SetState(kButtonDown);
-            fPos++;
+            fPos += fSmallInc;
          } else if (event->fY > fgScrollBarWidth && event->fY < fY0)
             fPos -= fPsize;
          else if (event->fY > fY0+fSliderSize && event->fY < (Int_t)fHeight-fgScrollBarWidth)

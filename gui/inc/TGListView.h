@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.28 2006/06/06 14:44:59 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.29 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -162,6 +162,7 @@ public:
    EListViewMode  GetViewMode() const { return fViewMode; }
    virtual const char *GetHeader(Int_t idx) const;
    virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SetIncrements(Int_t hInc, Int_t vInc);
 
    virtual void SelectionChanged() { Emit("SelectionChanged()"); }  //*SIGNAL*
    virtual void Clicked(TGLVEntry *entry, Int_t btn);  //*SIGNAL*
@@ -180,10 +181,12 @@ protected:
    EListViewMode      fViewMode;      // list view viewing mode
    Int_t             *fCpos;          // position of sub names
    Int_t             *fJmode;         // alignment of sub names
+   Bool_t             fMultiSelect;   // true = multiple file selection
    TGListView        *fListView;      // listview which contains this container
    TGLVEntry         *fLastActive;    // last active item
 
    virtual void ActivateItem(TGFrameElement* el);
+   virtual void DeActivateItem(TGFrameElement* el);
 
 public:
    TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
@@ -212,6 +215,10 @@ public:
                                const char* n7="",const char* n8="",const char* n9="",
                                const char* n10="",const char* n11="",const char* n12="");
 
+   virtual Bool_t HandleButton(Event_t* event);
+   TList* GetSelectedItems();
+   Bool_t GetMultipleSelection() const { return fMultiSelect; };
+   void   SetMultipleSelection(Bool_t multi = kTRUE) { fMultiSelect = multi; };
    void   SetHeaders(Int_t ncolumns) { fListView->SetHeaders(ncolumns); }
    void   SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
                               { fListView->SetHeader(s,hmode,cmode,idx); }

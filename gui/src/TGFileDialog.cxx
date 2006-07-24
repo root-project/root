@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.30 2006/07/20 12:08:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.31 2006/07/20 17:52:55 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "TGMsgBox.h"
 #include "TSystem.h"
 #include "TGInputDialog.h"
+#include "TObjString.h"
 
 #include <sys/stat.h>
 
@@ -47,6 +48,7 @@ enum EFileFialog {
    kIDF_LIST,
    kIDF_DETAILS,
    kIDF_OVERWRITE,
+   kIDF_MULTISEL,
    kIDF_FSLB,
    kIDF_FTYPESLB,
    kIDF_OK,
@@ -69,7 +71,9 @@ TGFileInfo::TGFileInfo(const TGFileInfo& fi) :
     fIniDir(fi.fIniDir),
     fFileTypes(fi.fFileTypes),
     fFileTypeIdx(fi.fFileTypeIdx),
-    fOverwrite(fi.fOverwrite)
+    fOverwrite(fi.fOverwrite),
+    fMultipleSelection(fi.fMultipleSelection),
+    fFileNamesList(fi.fFileNamesList)
 {
    //copy constructor
 }
@@ -84,8 +88,40 @@ TGFileInfo& TGFileInfo::operator=(const TGFileInfo& fi)
       fFileTypes=fi.fFileTypes;
       fFileTypeIdx=fi.fFileTypeIdx;
       fOverwrite=fi.fOverwrite;
+      fMultipleSelection=fi.fMultipleSelection;
+      fFileNamesList=fi.fFileNamesList;
    }
    return *this;
+}
+
+//______________________________________________________________________________
+TGFileInfo::~TGFileInfo()
+{
+   // TGFileInfo Destructor.
+
+   delete [] fFilename;
+   delete [] fIniDir;
+   if ( fFileNamesList != 0 ) {
+      fFileNamesList->Delete();
+      delete fFileNamesList;
+   }
+}
+
+//______________________________________________________________________________
+void TGFileInfo::SetMultipleSelection(Bool_t option)
+{
+   // Turn on/off multiple selection.
+
+   if ( fMultipleSelection != option ) {
+      fMultipleSelection = option;
+      if ( fMultipleSelection == kTRUE )
+         fFileNamesList = new TList();
+      else {
+         fFileNamesList->Delete();
+         delete fFileNamesList;
+         fFileNamesList = 0;
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -172,7 +208,15 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
       fOverWR->SetToolTipText("Overwrite a file without displaying a message if selected.");
       fHtop->AddFrame(fOverWR, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
       fOverWR->SetOn(fFileInfo->fOverwrite);
-   } else fOverWR = 0;
+      fMultiSel = 0;
+   } else {
+      fMultiSel = new TGCheckButton(fHtop, "&Multiple Sel", kIDF_MULTISEL);
+      fMultiSel->SetToolTipText("Allows Multiple File Selection if selected.");
+      fHtop->AddFrame(fMultiSel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+      fMultiSel->SetOn(fFileInfo->fMultipleSelection);
+      fMultiSel->Connect("Toggled(Bool_t)","TGFileInfo",fFileInfo,"SetMultipleSelection(Bool_t)");
+      fOverWR = 0;
+   }
    AddFrame(fHtop, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 4, 4, 3, 1));
 
    //--- file view
@@ -186,11 +230,18 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    fFv->GetViewPort()->SetBackgroundColor(fgWhitePixel);
    fFv->SetContainer(fFc);
    fFv->SetViewMode(kLVList);
+   fFv->SetIncrements(1, 19); // set vertical scroll one line height at a time
 
    fFc->SetFilter(fFileInfo->fFileTypes[fFileInfo->fFileTypeIdx+1]);
-   fFc->Sort(kSortByType);
+   fFc->Sort(kSortByName);
    fFc->ChangeDirectory(fFileInfo->fIniDir);
+   fFc->SetMultipleSelection(fFileInfo->fMultipleSelection);
    fTreeLB->Update(fFc->GetDirectory());
+
+   if (fMultiSel) {
+      fMultiSel->Connect("Toggled(Bool_t)","TGFileContainer",fFc,"SetMultipleSelection(Bool_t)");
+      fMultiSel->Connect("Toggled(Bool_t)","TGFileContainer",fFc,"UnSelectAll()");
+   }
 
    fList->SetState(kButtonEngaged);
 
@@ -417,11 +468,19 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         if (ret == kMBNo)
                            return kTRUE;
                      }
-                     if (gSystem->IsAbsoluteFileName(fTbfname->GetString()))
-                        fFileInfo->fFilename = StrDup(fTbfname->GetString());
-                     else
-                        fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
-                                                                       fTbfname->GetString());
+                     if (fFileInfo->fMultipleSelection) {
+                        if (fFileInfo->fFilename) {
+                           delete [] fFileInfo->fFilename;
+                        }
+                        fFileInfo->fFilename = 0;
+                     }
+                     else {
+                        if (gSystem->IsAbsoluteFileName(fTbfname->GetString()))
+                           fFileInfo->fFilename = StrDup(fTbfname->GetString());
+                        else
+                           fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
+                                                                          fTbfname->GetString());
+                     }
                      if (fOverWR && (fOverWR->GetState() == kButtonDown))
                         fFileInfo->fOverwrite = kTRUE;
                      else
@@ -515,11 +574,31 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          switch (GET_SUBMSG(msg)) {
             case kCT_ITEMCLICK:
                if (parm1 == kButton1) {
-                  if (fFc->NumSelected() == 1) {
-                     TGLVEntry *e = (TGLVEntry *) fFc->GetNextSelected(&p);
-                     fTbfname->Clear();
-                     fTbfname->AddText(0, e->GetItemName()->GetString());
-                     fClient->NeedRedraw(fName);
+                  if (fFc->NumSelected() > 0) {
+                     if ( fFileInfo->fMultipleSelection == kFALSE ) {
+                        TGLVEntry *e = (TGLVEntry *) fFc->GetNextSelected(&p);
+                        fTbfname->Clear();
+                        fTbfname->AddText(0, e->GetItemName()->GetString());
+                        fClient->NeedRedraw(fName);
+                     }
+                     else {
+                        TString tmpString;
+                        TList *tmp = fFc->GetSelectedItems();
+                        TObjString *el;
+                        TIter next(tmp);
+                        if ( fFileInfo->fFileNamesList != 0 ) {
+                           fFileInfo->fFileNamesList->Delete();
+                        }
+                        while ((el = (TObjString *) next())) {
+                           tmpString += "\"" + el->GetString() + "\" ";
+                           fFileInfo->fFileNamesList->Add(new TObjString(
+                              gSystem->ConcatFileName(fFc->GetDirectory(),
+                                                      el->GetString())));
+                        }
+                        fTbfname->Clear();
+                        fTbfname->AddText(0, tmpString);
+                        fClient->NeedRedraw(fName);
+                     }
                   }
                }
                break;

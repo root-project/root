@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.96 2006/05/04 17:08:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.97 2006/05/26 09:16:29 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -63,6 +63,7 @@
 #include "THashTable.h"
 #include "TMethod.h"
 #include "TColor.h"
+#include "TObjString.h"
 
 #include "HelpText.h"
 
@@ -1587,10 +1588,19 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         TGFileInfo fi;
                         fi.fFileTypes = gOpenTypes;
                         fi.fIniDir    = StrDup(dir);
-                        new TGFileDialog(fClient->GetDefaultRoot(), this, kFDOpen,&fi);
-                        if (!fi.fFilename) return kTRUE;
+                        new TGFileDialog(fClient->GetDefaultRoot(), this,
+                                         kFDOpen,&fi);
                         dir = fi.fIniDir;
-                        new TFile(fi.fFilename, "update");
+                        if (fi.fMultipleSelection && fi.fFileNamesList) {
+                           TObjString *el;
+                           TIter next(fi.fFileNamesList);
+                           while ((el = (TObjString *) next())) {
+                              new TFile(el->GetString(), "update");
+                           }
+                        }
+                        else if (fi.fFilename) {
+                           new TFile(fi.fFilename, "update");
+                        }
                      }
                      break;
                   case kFileSave:
