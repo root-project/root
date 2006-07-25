@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: String.cxx,v 1.2 2005/06/01 15:40:08 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: String.cxx,v 1.3 2005/06/22 17:01:55 brun Exp $
 // Author: Philippe Canal 03/09/2003
 
 /*************************************************************************
@@ -30,6 +30,11 @@ void std_string_streamer(TBuffer &b, void *objadd)
    UChar_t nwh;
    if (b.IsReading()) {
       b >> nwh;
+
+      if( obj->size() ) {
+	 // Insure that the underlying data storage is not shared
+	 (*obj)[0] = '\0';
+      }
       if (nwh == 255)  {
          b >> nbig;
          obj->resize(nbig,'\0');
