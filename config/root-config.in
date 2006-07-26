@@ -16,7 +16,11 @@ dicttype=@dicttype@
 zliblib=@zliblib@
 
 if test "$platform" = "win32"; then
-   unixROOTSYS=`cygpath -u $ROOTSYS`
+   if [ "x$ROOTSYS" != "x" ]; then
+      unixROOTSYS=`cygpath -u $ROOTSYS`
+   else
+      unixROOTSYS=.
+   fi
    bindir=$unixROOTSYS/bin
    libdir=$unixROOTSYS/lib
    incdir=$unixROOTSYS/include
