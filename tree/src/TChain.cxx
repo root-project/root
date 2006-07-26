@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.142 2006/07/17 18:38:51 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.143 2006/07/26 13:36:44 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1311,9 +1311,14 @@ void TChain::Lookup()
    Int_t nlook = 0;
    while ((element = (TChainElement*) next())) {
       nlook++;
+      // Get the Url
       TUrl cachefileurl(element->GetTitle());
+      // Save current options and anchor
+      TString anchor = cachefileurl.GetAnchor();
       TString options = cachefileurl.GetOptions();
-      cachefileurl.SetOptions(options += "&filetype=raw");
+      // Add the 'raw' specification for fast opening
+      cachefileurl.SetOptions(Form("%s&filetype=raw", options.Data()));
+      // Open the file
       TFile* cachefile = TFile::Open(cachefileurl.GetUrl());
       if ((!cachefile) || cachefile->IsZombie()) {
          fFiles->Remove(element);
@@ -1321,9 +1326,13 @@ void TChain::Lookup()
       } else {
          printf("Lookup | %03.02f %% finished\r", 100.0 * nlook / nelements);
          fflush(stdout);
-         TString urlstring = ((TUrl*) cachefile->GetEndpointUrl())->GetUrl();
-         urlstring.ReplaceAll("&filetype=raw", "");
-         element->SetTitle(urlstring);
+         // Get the effective end-point Url
+         TUrl endurl = ((TUrl*) cachefile->GetEndpointUrl())->GetUrl();
+         // Restore original options and anchor, if any
+         endurl.SetOptions(options);
+         endurl.SetAnchor(anchor);
+         // Save it into the element
+         element->SetTitle(endurl.GetUrl());
          delete cachefile;
          cachefile = 0;
       }
