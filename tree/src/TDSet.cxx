@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.32 2006/06/03 05:49:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.33 2006/06/27 14:56:57 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -166,8 +166,7 @@ void TDSetElement::Validate(Bool_t isTree)
 {
    // Validate by opening the file.
 
-   Long64_t entries = TDSet::GetEntries(isTree, fFileName,
-                                        fDirectory, fObjName);
+   Long64_t entries = GetEntries(isTree);
    if (entries < 0) return; // Error should be reported by GetEntries()
    if (fFirst < entries) {
       if (fNum == -1) {
@@ -288,6 +287,190 @@ void TDSetElement::DeleteFriends()
    }
    delete fFriends;
    fFriends = 0;
+}
+
+//______________________________________________________________________________
+TDSetElement *TDSet::Next(Long64_t /*totalEntries*/)
+{
+   // Returns next TDSetElement.
+
+   if (!fIterator) {
+      fIterator = new TIter(fElements);
+   }
+
+   fCurrent = (TDSetElement *) fIterator->Next();
+   return fCurrent;
+}
+
+//______________________________________________________________________________
+Long64_t TDSetElement::GetEntries(Bool_t isTree)
+{
+   // Returns number of entries in tree or objects in file. Returns -1 in
+   // case of error.
+
+   if (fEntries > -1)
+      return fEntries;
+
+   Double_t start = 0;
+   if (gPerfStats != 0) start = TTimeStamp();
+
+   TFile *file = TFile::Open(fFileName);
+
+   if (gPerfStats != 0) {
+      gPerfStats->FileOpenEvent(file, fFileName, double(TTimeStamp())-start);
+   }
+
+   if (file == 0) {
+      ::SysError("TDSet::GetEntries", "cannot open file %s", fFileName.Data());
+      return -1;
+   }
+
+   // Record end-point Url and mark has looked-up
+   fFileName = ((TUrl *)file->GetEndpointUrl())->GetUrl();
+   SetBit(kHasBeenLookedUp);
+
+   TDirectory *dirsave = gDirectory;
+   if (!file->cd(fDirectory)) {
+      Error("GetEntries", "cannot cd to %s", fDirectory.Data());
+      delete file;
+      return -1;
+   }
+
+   TDirectory *dir = gDirectory;
+   dirsave->cd();
+
+   if (isTree) {
+
+      TString on(fObjName);
+      TString sreg(fObjName);
+      // If a wild card we will use the first object of the type
+      // requested compatible with the reg expression we got
+      if (sreg.Length() <= 0 || sreg == "" || sreg.Contains("*")) {
+         if (sreg.Contains("*"))
+            sreg.ReplaceAll("*", ".*");
+         else
+            sreg = ".*";
+         TRegexp re(sreg);
+         if (dir->GetListOfKeys()) {
+            TIter nxk(dir->GetListOfKeys());
+            TKey *k = 0;
+            Bool_t notfound = kTRUE;
+            while ((k = (TKey *) nxk())) {
+               if (!strcmp(k->GetClassName(), "TTree")) {
+                  TString kn(k->GetName());
+                  if (kn.Index(re) != kNPOS) {
+                     if (notfound) {
+                        on = kn;
+                        notfound = kFALSE;
+                     } else if (kn != on) {
+                       Warning("GetEntries",
+                               "additional tree found in the file: %s", kn.Data());
+                     }
+                  }
+               }
+            }
+         }
+      }
+
+      TKey *key = dir->GetKey(on);
+      if (key == 0) {
+         Error("GetEntries", "cannot find tree \"%s\" in %s",
+               fObjName.Data(), fFileName.Data());
+         delete file;
+         return -1;
+      }
+      TTree *tree = (TTree *) key->ReadObj();
+      if (tree == 0) {
+         // Error always reported?
+         delete file;
+         return -1;
+      }
+      fEntries = tree->GetEntries();
+      delete tree;
+
+   } else {
+      TList *keys = dir->GetListOfKeys();
+      fEntries = keys->GetSize();
+   }
+
+   delete file;
+   return fEntries;
+}
+
+//______________________________________________________________________________
+void TDSetElement::Lookup(Bool_t force)
+{
+   // Resolve end-point URL for this element
+   static Int_t xNetPluginOK = -1;
+   static TString xNotRedir;
+
+   // Check if required
+   if (!force && HasBeenLookedUp())
+      return;
+
+   // Open the file as raw to avoid the (slow) initialization
+   TUrl url(fFileName);
+   // Save current options and anchor
+   TString anch = url.GetAnchor();
+   TString opts = url.GetOptions();
+   // Add the 'raw' specification for fast opening
+   url.SetOptions(Form("%s&filetype=rawremote=1", opts.Data()));
+   const char *name = url.GetUrl();
+
+   // Depending on the type of backend, it might not make any sense to lookup
+   Bool_t doit = kFALSE;
+   TFile::EFileType type = TFile::GetType(name, "");
+   if (type == TFile::kNet) {
+      TPluginHandler *h = 0;
+      // Network files via XROOTD
+      if (xNetPluginOK == -1) {
+         // Check the plugin the first time
+         xNetPluginOK = 0;
+         if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
+            !strcmp(h->GetClass(),"TXNetFile") && h->LoadPlugin() == 0)
+            xNetPluginOK = 1;
+      }
+      doit = (xNetPluginOK == 1) ? kTRUE : kFALSE;
+
+      // The server may not be redirector: we might know this from the past
+      // experience, if any
+      if (xNotRedir.Length() > 0) {
+         TUrl u(fFileName);
+         TString hp(Form("|%s:%d|", u.GetHostFQDN(), u.GetPort()));
+         if (xNotRedir.Contains(hp))
+            doit = kFALSE;
+      }
+   }
+
+   // Do it by opening and closing the file. Ideally we could just
+   // AccessPathName the path, but the TXNetSystem implementation is very
+   // slow. To be fixed.
+   if (doit) {
+      // Open the file
+      TFile *f = TFile::Open(name);
+      if (!f || f->IsZombie()) {
+         Error("Lookup", "Couldn't open %s\n", name);
+      } else {
+         TUrl *u = (TUrl *) f->GetEndpointUrl();
+         // If not redirected, save the server coordinates to avoid
+         // redoing it next time
+         if (!(f->TestBit(TFile::kRedirected))) {
+            xNotRedir += Form("|%s:%d|", u->GetHostFQDN(), u->GetPort());
+         } else {
+            // Get the effective end-point url
+            TUrl eu(u->GetUrl());
+            // Restore original options and anchor, if any
+            eu.SetOptions(opts);
+            eu.SetAnchor(anch);
+            // Save it into the element
+            fFileName = eu.GetUrl();
+         }
+         delete f;
+      }
+   }
+
+   // Mark has looked-up
+   SetBit(kHasBeenLookedUp);
 }
 
 //______________________________________________________________________________
@@ -670,19 +853,6 @@ void TDSet::Reset()
 }
 
 //______________________________________________________________________________
-TDSetElement *TDSet::Next(Long64_t /*totalEntries*/)
-{
-   // Returns next TDSetElement.
-
-   if (!fIterator) {
-      fIterator = new TIter(fElements);
-   }
-
-   fCurrent = (TDSetElement *) fIterator->Next();
-   return fCurrent;
-}
-
-//______________________________________________________________________________
 Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path,
                            const char *objname)
 {
@@ -859,14 +1029,59 @@ Bool_t TDSet::ElementsValid() const
 }
 
 //______________________________________________________________________________
+Int_t TDSet::Remove(TDSetElement *elem)
+{
+   // Remove TDSetElement 'elem' from the list.
+   // Return 0 on success, -1 if the element is not in the list
+
+   if (!elem || !(GetListOfElements()->Remove(elem)))
+      return -1;
+
+   SafeDelete(elem);
+   return 0;
+}
+
+//______________________________________________________________________________
 void TDSet::Validate()
 {
    // Validate the TDSet by opening files.
 
    TIter nextElem(GetListOfElements());
    while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem())) {
-      if (!elem->GetValid()) elem->Validate(IsTree());
+      if (!elem->GetValid())
+         elem->Validate(IsTree());
    }
+}
+
+//______________________________________________________________________________
+void TDSet::Lookup()
+{
+   // Resolve the end-point URL for the current elements of this data set
+
+   TString msg("Looking up for exact location of files");
+   UInt_t n = 0;
+   UInt_t tot = GetListOfElements()->GetSize();
+   Bool_t st = kTRUE;
+   TIter nextElem(GetListOfElements());
+   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem())) {
+      if (!elem->GetValid())
+         elem->Lookup();
+      n++;
+      // Notify the client
+      if (gProof)
+         gProof->SendDataSetStatus(msg, n, tot, st);
+   }
+}
+
+//______________________________________________________________________________
+void TDSet::SetLookedUp()
+{
+   // Flag all the elements as looked-up, so to avoid opening the files
+   // if the functionality is not supported
+
+   TIter nextElem(GetListOfElements());
+   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem()))
+      elem->SetLookedUp();
 }
 
 //______________________________________________________________________________

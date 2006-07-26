@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.16 2005/09/22 09:57:25 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.17 2006/06/01 15:58:41 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -68,6 +68,11 @@ class TDSetElement : public TObject {
 public:
    typedef  std::list<std::pair<TDSetElement*, TString> > FriendsList_t;
 private:
+   // TDSetElement status bits
+   enum EStatusBits {
+      kHasBeenLookedUp = BIT(15)
+   };
+
    TString          fFileName;   // physical or logical file name
    TString          fObjName;    // name of objects to be analyzed in this file
    TString          fDirectory;  // directory in file where to look for objects
@@ -82,8 +87,10 @@ private:
    FriendsList_t   *fFriends;    // friend elements
    Bool_t           fIsTree;     // true if type is a TTree (or TTree derived)
 
+   Bool_t           HasBeenLookedUp() const { return TestBit(kHasBeenLookedUp); }
+
 public:
-   TDSetElement() { fValid = kFALSE; fEventList = 0; fFriends = 0; }
+   TDSetElement() { fValid = kFALSE; fEventList = 0; fEntries = -1; fFriends = 0; }
    TDSetElement(const char *file, const char *objname = 0,
                 const char *dir = 0, Long64_t first = 0, Long64_t num = -1,
                 const char *msd = 0);
@@ -97,7 +104,7 @@ public:
    Long64_t         GetFirst() const { return fFirst; }
    void             SetFirst(Long64_t first) { fFirst = first; }
    Long64_t         GetNum() const { return fNum; }
-   Long64_t         GetEntries() const { return fEntries; }
+   Long64_t         GetEntries(Bool_t istree = kTRUE);
    void             SetEntries(Long64_t ent) { fEntries = ent; }
    const char      *GetMsd() const { return fMsd; }
    void             SetNum(Long64_t num) { fNum = num; }
@@ -114,6 +121,8 @@ public:
    void             Invalidate() { fValid = kFALSE; }
    Int_t            Compare(const TObject *obj) const;
    Bool_t           IsSortable() const { return kTRUE; }
+   void             Lookup(Bool_t force = kFALSE);
+   void             SetLookedUp() { SetBit(kHasBeenLookedUp); }
 
    ClassDef(TDSetElement,3)  // A TDSet element
 };
@@ -175,6 +184,8 @@ public:
    const char           *GetDirectory() const { return fDir; }
    TList                *GetListOfElements() const { return fElements; }
 
+   Int_t                 Remove(TDSetElement *elem);
+
    virtual void          Reset();
    virtual TDSetElement *Next(Long64_t totalEntries = -1);
    TDSetElement         *Current() const { return fCurrent; };
@@ -193,6 +204,9 @@ public:
    TEventList           *GetEventList() const {return fEventList; }
    void                  Validate();
    void                  Validate(TDSet *dset);
+
+   void                  Lookup();
+   void                  SetLookedUp();
 
    ClassDef(TDSet,3)  // Data set for remote processing (PROOF)
 };
