@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.15 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.16 2006/07/20 01:24:48 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -95,15 +95,16 @@ Bool_t TXSocketPingHandler::Notify()
 Bool_t TXSocket::fgInitDone = kFALSE;
 
 // Static variables for input notification
-TList        TXSocket::fgReadySock;         // Static list of sockets ready to be read
-TMutex       TXSocket::fgReadyMtx(kTRUE);   // Protect access to the sockets-ready list
-Int_t        TXSocket::fgPipe[2] = {-1,-1}; // Pipe for input monitoring
-TString      TXSocket::fgLoc = "undef";     // Location string
+TList        TXSocket::fgReadySock;          // Static list of sockets ready to be read
+TMutex       TXSocket::fgReadyMtx(kTRUE);    // Protect access to the sockets-ready list
+Int_t        TXSocket::fgPipe[2] = {-1,-1};  // Pipe for input monitoring
+TString      TXSocket::fgLoc = "undef";      // Location string
 
 // Static buffer manager
-TMutex       TXSocket::fgSMtx;              // To protect spare list
-std::list<TXSockBuf *> TXSocket::fgSQue;    // list of spare buffers
-Long64_t     TXSockBuf::fgBuffMem = 0;      // Total allocated memory
+TMutex       TXSocket::fgSMtx;               // To protect spare list
+std::list<TXSockBuf *> TXSocket::fgSQue;     // list of spare buffers
+Long64_t     TXSockBuf::fgBuffMem = 0;       // Total allocated memory
+Long64_t     TXSockBuf::fgMemMax = 10485760; // Max allowed allocated memory [10 MB]
 
 //_____________________________________________________________________________
 TXSocket::TXSocket(const char *url, Char_t m, Int_t psid,
@@ -441,7 +442,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
                len -= sizeof(kXR_int32);
             }
 
-            // Handle this input in this thread to avoid queuing on the 
+            // Handle this input in this thread to avoid queuing on the
             // main thread
             XHandleIn_t hin = {acod, opt, delay, 0};
             fHandler->HandleInput((const void *)&hin);
@@ -485,7 +486,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
                len -= sizeof(kXR_int32);
             }
 
-            // Handle this input in this thread to avoid queuing on the 
+            // Handle this input in this thread to avoid queuing on the
             // main thread
             XHandleIn_t hin = {acod, type, int1, int2};
             fHandler->HandleInput((const void *)&hin);
@@ -1100,16 +1101,13 @@ void TXSocket::PushBackSpare()
 {
    // Release read buffer giving back to the spare list
 
-   // Max size of average total allocated memory (in MB) 
-   static Long64_t maxBuffMem = gEnv->GetValue("XProof.MaxBuffMem", 10) * 1048576;
-
    R__LOCKGUARD(&fgSMtx);
 
    if (gDebug > 2)
       Info("PushBackSpare","release buf %p, sz: %d (BuffMem: %lld)",
                            fBufCur, fBufCur->fSiz, TXSockBuf::BuffMem());
 
-   if (TXSockBuf::BuffMem() < maxBuffMem) {
+   if (TXSockBuf::BuffMem() < TXSockBuf::GetMemMax()) {
       fgSQue.push_back(fBufCur);
    } else {
       delete fBufCur;
@@ -1575,3 +1573,33 @@ void TXSocket::InitEnvs()
    // Only once
    fgInitDone = kTRUE;
 }
+
+//
+// TXSockBuf static methods
+//
+
+//_____________________________________________________________________________
+Long64_t TXSockBuf::BuffMem()
+{
+   // Return the currently allocated memory
+
+   return fgBuffMem;
+}
+
+//_____________________________________________________________________________
+Long64_t TXSockBuf::GetMemMax()
+{
+   // Return the max allocated memory allowed
+
+   return fgMemMax;
+}
+
+//_____________________________________________________________________________
+void TXSockBuf::SetMemMax(Long64_t memmax)
+{
+   // Return the max allocated memory allowed
+
+   fgMemMax = memmax > 0 ? memmax : fgMemMax;
+}
+
+

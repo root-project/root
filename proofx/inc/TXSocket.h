@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.7 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.8 2006/07/20 01:24:48 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -240,11 +240,14 @@ public:
                               if ((fMem = (Char_t *)realloc(fMem, sz))) { fgBuffMem += (sz - fSiz);
                                  fBuf = fMem; fSiz = sz; fLen = 0;}}
 
-   static Long64_t BuffMem() { return fgBuffMem; }
+   static Long64_t BuffMem();
+   static Long64_t GetMemMax();
+   static void     SetMemMax(Long64_t memmax);
 
 private:
    Char_t *fMem;
-   static Long64_t fgBuffMem;  // Total allocated memory
+   static Long64_t fgBuffMem; // Total allocated memory
+   static Long64_t fgMemMax;  // Max allocated memory allowed
 };
 
 #endif
