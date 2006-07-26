@@ -4,8 +4,8 @@
 # Date:06/29/01
 #############################################################################
 
-include $(ROOTSYS)/config/Makefile.config
-include $(ROOTSYS)/test/Makefile.arch
+include ../../../config/Makefile.config
+include ../../../test/Makefile.arch
 
 MAKEDEP = rmkdepend
 
@@ -42,9 +42,9 @@ SYSCONF_LINK_LIB_SHARED	=  $(LD) -shared -Wl,-soname,lib$(TARGET).so.$(VER_MAJ) 
 ####### Compiler, tools and options
 
 QTCXXFLAGS=	-I$(QTINCDIR) $(CXXFLAGS) -DDEBUG_LEVEL=$(QDL) $(shell root-config --cflags)
-INCPATH =	-I$(ROOTSYS)/include
+INCPATH =	-I../../../include
 LFLAGS	=	$(LDFLAGS) $(QTLIBDIR) $(X11LIBDIR)
-LIBS	=	$(QTLIB) $(SYSCONF_LIBS_X11) $(shell root-config --prefix=$(ROOTSYS) --glibs) -lQtGSI
+LIBS	=	$(QTLIB) $(SYSCONF_LIBS_X11) $(shell root-config --prefix=../../../ --glibs) -lQtGSI
 
 ####### Target
 
