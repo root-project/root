@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.97 2006/05/26 09:16:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.98 2006/07/24 16:11:45 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -258,7 +258,7 @@ public:
 TRootObjItem::TRootObjItem(const TGWindow *p, const TGPicture *bpic,
                            const TGPicture *spic, TGString *name,
                            TObject *obj, TClass *, EListViewMode viewMode) :
-   TGFileItem(p, bpic, 0, spic, 0, name, 0, 0, 0, 0, viewMode)
+   TGFileItem(p, bpic, 0, spic, 0, name, 0, 0, 0, 0, 0, viewMode)
 {
    // Create an icon box item.
 
@@ -1067,6 +1067,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fListView = new TGListView(fV2, 520, 250); // canvas
    fIconBox = new TRootIconBox(fListView,kHorizontalFrame, fgWhitePixel); // container
    fIconBox->Associate(this);
+   fListView->SetIncrements(1, 19); // set vertical scroll one line height at a time
 
    TString str = gEnv->GetValue("Browser.AutoThumbnail", "yes");
    str.ToLower();
