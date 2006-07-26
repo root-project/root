@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.34 2006/06/29 22:15:37 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.35 2006/07/09 16:59:47 brun Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -266,6 +266,12 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
    // set the Endpoint Url we are now connected to
    fEndpointUrl = fClient->GetClientConn()->GetCurrentUrl().GetUrl().c_str();
 
+   // check equivalence of initial and end-point Url to see whether we have
+   // been redirected
+   if (fEndpointUrl.GetPort() != fUrl.GetPort() ||
+       strcmp(fEndpointUrl.GetHostFQDN(), fUrl.GetHostFQDN()))
+      SetBit(TFile::kRedirected);
+
    return;
 
 zombie:
@@ -398,6 +404,7 @@ Bool_t TXNetFile::Open(Option_t *option, Bool_t doitparallel)
       create = kTRUE;
    } else if (create) {
       openOpt |= kXR_new;
+      openOpt |= kXR_mkpath;
    }
    if (read)
       openOpt |= kXR_open_read;

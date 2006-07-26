@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.9 2006/06/29 22:15:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.10 2006/07/04 10:15:36 rdm Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -97,6 +97,9 @@ Bool_t TFileMerger::Cp(const char *src, const char *dst, Bool_t progressbar,
    TUrl sURL(src, kTRUE);
    TUrl dURL(dst, kTRUE);
 
+   TString oopt = "RECREATE";
+   TString ourl = dURL.GetUrl();
+
    TString raw = "filetype=raw";
 
    TString opt = sURL.GetOptions();
@@ -125,7 +128,14 @@ Bool_t TFileMerger::Cp(const char *src, const char *dst, Bool_t progressbar,
       goto copyout;
    }
 
-   dfile = TFile::Open(dURL.GetUrl(), "RECREATE");
+   // "RECREATE" does not work always well with XROOTD
+   // namely when some pieces of the path are missing;
+   // we force "NEW" in such a case
+   if (TFile::GetType(ourl, "") == TFile::kNet)
+      if (gSystem->AccessPathName(ourl))
+         oopt = "NEW";
+
+   dfile = TFile::Open(dURL.GetUrl(), oopt);
 
    if (!dfile) {
       Error("Cp", "cannot open destination file %s", dst);
