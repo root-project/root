@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.4 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.5 2006/07/01 12:05:49 rdm Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -244,6 +244,9 @@ void TPacketizerProgressive::Init()
       fn->IncMySlaveCnt();
       ss->SetFileNode(fn);
    }
+
+   // Resolve end-point urls to optmize distribution
+   fDset->Lookup();
 
    // put TDSetElements in the appropriate TFileStat object
    THashTable slaves_added; // map of slaves that have already been added to the available list

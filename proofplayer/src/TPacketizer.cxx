@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.46 2006/06/01 16:26:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.35 2006/07/01 12:05:49 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -271,6 +271,9 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 
 
    fValid = kTRUE;
+
+   // Resolve end-point urls to optmize distribution
+   dset->Lookup();
 
    // Split into per host entries
    dset->Reset();
@@ -617,6 +620,12 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
    // Some monitoring systems (TXSocketHandler) need to know this
    ((TProof*)gProof)->fCurrentMonitor = &mon;
 
+   // Preparing for client notification
+   TString msg("Validating files");
+   UInt_t n = 0;
+   UInt_t tot = dset->GetListOfElements()->GetSize();
+   Bool_t st = kTRUE;
+
    while (kTRUE) {
 
       // send work
@@ -751,12 +760,19 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
                e->SetNum( entries - e->GetFirst() );
             }
          }
+
+
+         // Notify the client
+         n++;
+         gProof->SendDataSetStatus(msg, n, tot, st);
+
       } else {
 
          Error("ValidateFiles", "cannot get entries for %s (", e->GetFileName() );
 
          // disable element
-         slavestat->fCurFile->SetDone();
+         if (dset->Remove(e) == -1)
+            Error("ValidateFiles", "removing of not-registered element %p failed", e);
          //
          // Need to fix this with a user option to allow incomplete file sets (rdm)
          //

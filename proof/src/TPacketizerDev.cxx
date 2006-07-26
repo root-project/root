@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizerDev.cxx,v 1.46 2006/06/01 16:26:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizerDev.cxx,v 1.1 2006/07/01 12:05:49 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -271,6 +271,9 @@ TPacketizerDev::TPacketizerDev(TDSet *dset, TList *slaves, Long64_t first,
 
 
    fValid = kTRUE;
+
+   // Resolve end-point urls to optmize distribution
+   dset->Lookup();
 
    // Split into per host entries
    dset->Reset();
@@ -756,8 +759,9 @@ void TPacketizerDev::ValidateFiles(TDSet *dset, TList *slaves)
          Error("ValidateFiles", "cannot get entries for %s (", e->GetFileName() );
 
          // disable element
-         slavestat->fCurFile->SetDone();
-         // fValid = kFALSE; // all element must be readable!
+         if (dset->Remove(e) == -1)
+            Error("ValidateFiles", "removing of not-registered element %p failed", e);
+
          if (gProofServ) {
             TMessage m(kPROOF_MESSAGE);
             m << TString(Form("Cannot get entries for file: %s - skipping", e->GetFileName()));
