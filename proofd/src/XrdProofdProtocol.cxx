@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.15 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.16 2006/07/06 12:41:16 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -130,6 +130,7 @@ char                 *XrdProofdProtocol::fgWorkDir  = 0;
 int                   XrdProofdProtocol::fgPort     = 0;
 char                 *XrdProofdProtocol::fgSecLib   = 0;
 //
+XrdOucString          XrdProofdProtocol::fgEffectiveUser;
 XrdOucString          XrdProofdProtocol::fgLocalHost;
 char                 *XrdProofdProtocol::fgPoolURL = 0;
 char                 *XrdProofdProtocol::fgNamespace = strdup("/proofpool");
@@ -145,6 +146,7 @@ EStaticSelOpt         XrdProofdProtocol::fgWorkerSel = kSSORoundRobin; // select
 std::vector<XrdProofWorker *> XrdProofdProtocol::fgWorkers;  // list of possible workers
 std::list<XrdOucString *> XrdProofdProtocol::fgMastersAllowed;
 std::list<XrdProofdPriority *> XrdProofdProtocol::fgPriorities;
+char                 *XrdProofdProtocol::fgSuperUsers = 0; // ':' separated list of privileged users
 //
 char                 *XrdProofdProtocol::fgPROOFcfg = 0; // PROOF static configuration
 bool                  XrdProofdProtocol::fgWorkerUsrCfg = 0; // user cfg files enabled / disabled
@@ -249,6 +251,12 @@ int XrdProofdProtocol::Broadcast(int type, const char *msg)
    // Return 0 on success, -1 on error
    int rc = 0;
 
+   // We try only once
+   int maxtry_save = -1;
+   int timewait_save = -1;
+   XrdProofConn::GetRetryParam(maxtry_save, timewait_save);
+   XrdProofConn::SetRetryParam(1, 1);
+
    // Loop over worker nodes
    int iw = 0;
    XrdProofWorker *w = 0;
@@ -261,7 +269,9 @@ int XrdProofdProtocol::Broadcast(int type, const char *msg)
                     (w->fPort == -1 || w->fPort == fgPort)) ? 1 : 0;
          if (!us) {
             // Create 'url'
-            XrdOucString u = w->fHost;
+            XrdOucString u = fgEffectiveUser;
+            u += '@';
+            u += w->fHost;
             if (w->fPort != -1) {
                u += ':';
                u += w->fPort;
@@ -269,6 +279,7 @@ int XrdProofdProtocol::Broadcast(int type, const char *msg)
             // Type of server
             int srvtype = (w->fType != 'W') ? (kXR_int32) kXPD_MasterServer
                                             : (kXR_int32) kXPD_WorkerServer;
+            TRACEP(REQ,"Broadcast: sending request to "<<u);
             // Send request
             if (!(xrsp = SendCoordinator(u.c_str(), type, msg, srvtype))) {
                TRACEP(REQ,"Broadcast: problems sending request to "<<u);
@@ -280,6 +291,9 @@ int XrdProofdProtocol::Broadcast(int type, const char *msg)
       // Next worker
       iw++;
    }
+
+   // Restore original retry parameters
+   XrdProofConn::SetRetryParam(maxtry_save, timewait_save);
 
    // Done
    return rc;
@@ -340,6 +354,9 @@ XrdClientMessage *XrdProofdProtocol::SendCoordinator(const char *url,
 
    } else {
       TRACEP(REQ,"SendCoordinator: could not open connection to "<<url);
+      XrdOucString cmsg = "failure attempting connection to ";
+      cmsg += url;
+      fResponse.Send(kXR_attn, kXPD_srvmsg, (char *) cmsg.c_str(), cmsg.length());
    }
 
    // Done
@@ -896,6 +913,8 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    // Function: Establish configuration at load time.
    // Output: 1 upon success or 0 otherwise.
 
+   XrdOucString mp;
+
    // Only once
    if (fgConfigDone)
       return 1;
@@ -912,6 +931,18 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    // Debug flag
    if (pi->DebugON)
       XrdProofdTrace->What = TRACE_ALL;
+
+   // Effective user
+   struct passwd *pw = getpwuid(geteuid());
+   if (pw) {
+      fgEffectiveUser += pw->pw_name;
+   } else {
+      mp = "Configure: could not resolve effective user (getpwuid, errno: ";
+      mp += errno;
+      mp += ")";
+      fgEDest.Say(0, mp.c_str());
+      return 0;
+   }
 
    // Local FQDN
    char *host = XrdNetDNS::getHostName();
@@ -969,12 +1000,12 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    fgEDest.Say(0, "Configure: PROOF server application: ", fgPrgmSrv);
 
    // Find out timeout on internal communications
-   char *pw = pe ? (char *)strstr(pe+1, "intwait:") : 0;
-   if (pw) {
-      pe = (char *)strstr(pw, " ");
+   char *pto = pe ? (char *)strstr(pe+1, "intwait:") : 0;
+   if (pto) {
+      pe = (char *)strstr(pto, " ");
       if (pe) *pe = 0;
-      fgInternalWait = strtol(pw+8, 0, 10);
-      fgEDest.Say(0, "Configure: setting internal timeout to (secs): ", pw+8);
+      fgInternalWait = strtol(pto+8, 0, 10);
+      fgEDest.Say(0, "Configure: setting internal timeout to (secs): ", pto+8);
    }
 
    // Find out if a specific temporary directory is required
@@ -1094,7 +1125,7 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    }
 
    // Shutdown options
-   XrdOucString mp("Configure: client sessions shutdown after disconnection");
+   mp = "Configure: client sessions shutdown after disconnection";
    if (fgShutdownOpt > 0) {
       if (fgShutdownOpt == 1)
          mp = "Configure: client sessions kept idle for ";
@@ -1103,6 +1134,26 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
       mp += fgShutdownDelay;
       mp += " secs after disconnection";
    }
+   fgEDest.Say(0, mp.c_str());
+
+   // Superusers: add default
+   if (fgSuperUsers) {
+      int l = strlen(fgSuperUsers);
+      char *su = (char *) malloc(l + fgEffectiveUser.length() + 2);
+      if (su) {
+         sprintf(su, "%s,%s", fgEffectiveUser.c_str(), fgSuperUsers);
+         free(fgSuperUsers);
+         fgSuperUsers = su;
+      } else {
+         // Failure: stop
+         fgEDest.Say(0, "Configure: no memory for superuser list - stop");
+         return 0;
+      }
+   } else {
+      fgSuperUsers = strdup(fgEffectiveUser.c_str());
+   }
+   mp = "Configure: list of superusers: ";
+   mp += fgSuperUsers;
    fgEDest.Say(0, mp.c_str());
 
    // Test forking and get PROOF server protocol version
@@ -1186,7 +1237,7 @@ int XrdProofdProtocol::Config(const char *cfn)
    int cfgFD, NoGo = 0;
    int nmRole = -1, nmRootSys = -1, nmTmp = -1, nmInternalWait = -1,
        nmMaxSessions = -1, nmImage = -1, nmWorkDir = -1,
-       nmPoolUrl = -1, nmNamespace = -1;
+       nmPoolUrl = -1, nmNamespace = -1, nmSuperUsers = -1;
 
    // Open and attach the config file
    if ((cfgFD = open(cfn, O_RDONLY, 0)) < 0)
@@ -1336,6 +1387,9 @@ int XrdProofdProtocol::Config(const char *cfn)
                } else if (!strcmp("namespace",var)) {
                   // Local pool entry point
                   XPDSETSTRING(nm, nmNamespace, fgNamespace, tval);
+               } else if (!strcmp("superusers",var)) {
+                  // Local pool entry point
+                  XPDSETSTRING(nm, nmSuperUsers, fgSuperUsers, tval);
                } else if (!strcmp("role",var)) {
                   // Role this server
                   if (XPDCOND(nm, nmRole)) {
@@ -1977,6 +2031,16 @@ int XrdProofdProtocol::Login()
    // If this is the second call (after authentication) we just need
    // mapping
    if (fStatus == XPD_NEED_MAP) {
+      // Check if this is a priviliged client
+      char *p = 0;
+      if ((p = (char *) strstr(fgSuperUsers, fClientID))) {
+         if (p == fgSuperUsers || (p > fgSuperUsers && *(p-1) == ',')) {
+            if (!(strncmp(p, fClientID, strlen(fClientID)))) {
+               fSuperUser = 1;
+               TRACEP(REQ,"Login: privileged user ");
+            }
+         }
+      }
       // Acknowledge the client
       fResponse.Send();
       fStatus = XPD_LOGGEDIN;
@@ -2000,6 +2064,13 @@ int XrdProofdProtocol::Login()
       uname[i] = fRequest.login.username[i];
    }
    uname[i] = '\0';
+
+   // No 'root' logins
+   if (!strncmp(uname, "root", 4)) {
+      TRACEP(REQ,"Login: 'root' logins not accepted ");
+      fResponse.Send(kXR_InvalidRequest,"Login: 'root' logins not accepted");
+      return rc;
+   }
 
    // Here we check if the user is known locally.
    // If not, we fail for now.
@@ -2027,6 +2098,7 @@ int XrdProofdProtocol::Login()
       fResponse.Send(kXR_NoMemory, "Login: ClientID: out-of-resources");
       return rc;
    }
+
 
    // Find out the server type: 'i', internal, means this is a proofsrv calling back.
    // For the time being authentication is required for clients only.
@@ -2093,6 +2165,17 @@ int XrdProofdProtocol::Login()
    } else {
       rc = fResponse.Send((kXR_int32)XPROOFD_VERSBIN);
       fStatus = XPD_LOGGEDIN;
+
+      // Check if this is a priviliged client
+      char *p = 0;
+      if ((p = (char *) strstr(fgSuperUsers, fClientID))) {
+         if (p == fgSuperUsers || (p > fgSuperUsers && *(p-1) == ',')) {
+            if (!(strncmp(p, fClientID, strlen(fClientID)))) {
+               fSuperUser = 1;
+               TRACEP(REQ,"Login: privileged user ");
+            }
+         }
+      }
    }
 
    // Map the client
@@ -3498,6 +3581,7 @@ int XrdProofdProtocol::Admin()
       // If super user we may be requested to cleanup everything
       bool all = 0;
       char *usr = 0;
+      bool clntfound = 1;
       if (fSuperUser) {
          int what = ntohl(fRequest.proof.int2);
          all = (what == 1) ? 1 : 0;
@@ -3505,8 +3589,16 @@ int XrdProofdProtocol::Admin()
          if (!all) {
             // Get a user name, if any.
             // A super user can ask cleaning for clients different from itself
-            char *buf = fArgp->buff;
-            int len = (fRequest.header.dlen < 9) ? fRequest.header.dlen : 8;
+            char *buf = 0;
+            int len = fRequest.header.dlen; 
+            if (len > 0) {
+               clntfound = 0;
+               buf = fArgp->buff;
+               len = (len < 9) ? len : 8;
+            } else {
+               buf = fClientID;
+               len = strlen(fClientID);
+            }
             if (len > 0) {
                usr = new char[len+1];
                memcpy(usr, buf, len);
@@ -3517,94 +3609,113 @@ int XrdProofdProtocol::Admin()
                for (i = fgProofClients.begin(); i != fgProofClients.end(); ++i) {
                   if ((c = *i) && c->Match(usr)) {
                      tgtclnt = c;
+                     clntfound = 1;
                      break;
+                  }
+               }
+               TRACEP(REQ, "Admin: CleanupSessions: superuser, cleaning usr: "<< usr);
+            }
+         } else {
+            TRACEP(REQ, "Admin: CleanupSessions: superuser, all sessions cleaned");
+         }
+      } else {
+         // Define the user name for later transactions (their executed under
+         // the admin name)
+         int len = strlen(tgtclnt->ID()) + 1;
+         usr = new char[len+1];
+         memcpy(usr, tgtclnt->ID(), len);
+         usr[len] = '\0';
+      }
+
+      // We cannot continue if we do not have anything to clean
+      if (!clntfound) {
+         TRACEP(REQ, "Admin: specified client has no sessions - do nothing");
+      }
+
+      if (clntfound) {
+
+         // The clinets to cleaned
+         std::list<XrdProofClient *> *clnts;
+         if (all) {
+            // The full list
+            clnts = &fgProofClients;
+         } else {
+            clnts = new std::list<XrdProofClient *>;
+            clnts->push_back(tgtclnt);
+         }
+
+         // List of process IDs asked to terminate
+         std::list<int *> signalledpid;
+
+         // Loop over them
+         XrdProofClient *c = 0;
+         std::list<XrdProofClient *>::iterator i;
+         for (i = clnts->begin(); i != clnts->end(); ++i) {
+            if ((c = *i)) {
+
+               // Notify the attached clients that we are going to cleanup
+               XrdOucString msg = "Admin: CleanupSessions: cleaning up client: requested by: ";
+               msg += fLink->ID;
+               int ic = 0;
+               XrdProofdProtocol *p = 0;
+               for (ic = 0; ic < (int) c->fClients.size(); ic++) {
+                  if ((p = c->fClients.at(ic)) && (p != this) && p->fTopClient) {
+                     unsigned short sid;
+                     p->fResponse.GetSID(sid);
+                     p->fResponse.Set(c->RefSid());
+                     p->fResponse.Send(kXR_attn, kXPD_srvmsg, (char *) msg.c_str(), msg.length());
+                     p->fResponse.Set(sid);
+                     // Close the link, so that the associated protocol instance
+                     // can be recycled
+                     p->fLink->Close(); 
+                  }
+               }
+
+               // Loop over client sessions and terminated them
+               int is = 0;
+               XrdProofServProxy *s = 0;
+               for (is = 0; is < (int) c->fProofServs.size(); is++) {
+                  if ((s = c->fProofServs.at(is)) && s->IsValid() &&
+                     s->SrvType() == srvtype) {
+                     int *pid = new int;
+                     *pid = s->SrvID();
+                     TRACEP(REQ, "Admin: CleanupSessions: terminating " << *pid);
+                     if (TerminateProofServ(s, 0) != 0) {
+                        if (KillProofServ(*pid, 0, 0) != 0) {
+                           XrdOucString msg = "Admin: CleanupSessions: WARNING: process ";
+                           msg += *pid;
+                           msg += " could not be signalled for termination";
+                           TRACEP(REQ, msg.c_str());
+                        } else
+                           signalledpid.push_back(pid);
+                     } else
+                        signalledpid.push_back(pid);
+                     // Reset session proxy
+                     s->Reset();
                   }
                }
             }
          }
-      }
 
-      // The clinets to cleaned
-      std::list<XrdProofClient *> *clnts;
-      if (all) {
-         // The full list
-         clnts = &fgProofClients;
-      } else {
-         clnts = new std::list<XrdProofClient *>;
-         clnts->push_back(tgtclnt);
-      }
+         // Now we give sometime to sessions to terminate (10 sec).
+         // We check the status every second
+         int nw = 10;
+         int nleft = signalledpid.size();
+         while (nw-- && nleft > 0) {
 
-      // List of process IDs asked to terminate
-      std::list<int *> signalledpid;
+            // Loop over the list of processes requested to terminate
+            std::list<int *>::iterator ii;
+            for (ii = signalledpid.begin(); ii != signalledpid.end(); )
+               if (VerifyProcessByID(*(*ii)) == 0) {
+                  nleft--;
+                  delete (*ii);
+                  ii = signalledpid.erase(ii);
+               } else
+                  ++ii;
 
-      // Loop over them
-      XrdProofClient *c = 0;
-      std::list<XrdProofClient *>::iterator i;
-      for (i = fgProofClients.begin(); i != fgProofClients.end(); ++i) {
-         if ((c = *i)) {
-
-            // Notify the attached clients that we are going to cleanup
-            XrdOucString msg = "Admin: CleanupSessions: cleaning up client: requested by: ";
-            msg += fLink->ID;
-            int ic = 0;
-            XrdProofdProtocol *p = 0;
-            for (ic = 0; ic < (int) c->fClients.size(); ic++) {
-               if ((p = c->fClients.at(ic)) && (p != this) && p->fTopClient) {
-                  unsigned short sid;
-                  p->fResponse.GetSID(sid);
-                  p->fResponse.Set(c->RefSid());
-                  p->fResponse.Send(kXR_attn, kXPD_srvmsg, (char *) msg.c_str(), msg.length());
-                  p->fResponse.Set(sid);
-                  // Close the link, so that the associated protocol instance
-                  // can be recycled
-                  p->fLink->Close(); 
-               }
-            }
-
-            // Loop over client sessions and terminated them
-            int is = 0;
-            XrdProofServProxy *s = 0;
-            for (is = 0; is < (int) c->fProofServs.size(); is++) {
-               if ((s = c->fProofServs.at(is)) && s->IsValid() &&
-                  s->SrvType() == srvtype) {
-                  int *pid = new int;
-                  *pid = s->SrvID();
-                  TRACEP(REQ, "Admin: CleanupSessions: terminating " << *pid);
-                  if (TerminateProofServ(s, 0) != 0) {
-                     if (KillProofServ(*pid, 0, 0) != 0) {
-                        XrdOucString msg = "Admin: CleanupSessions: WARNING: process ";
-                        msg += *pid;
-                        msg += " could not be signalled for termination";
-                        TRACEP(REQ, msg.c_str());
-                     } else
-                        signalledpid.push_back(pid);
-                  } else
-                     signalledpid.push_back(pid);
-                  // Reset session proxy
-                  s->Reset();
-               }
-            }
+            // Wait a bit before retrying
+            sleep(1);
          }
-      }
-
-      // Now we give sometime to sessions to terminate (10 sec).
-      // We check the status every second
-      int nw = 10;
-      int nleft = signalledpid.size();
-      while (nw-- && nleft > 0) {
-
-         // Loop over the list of processes requested to terminate
-         std::list<int *>::iterator ii;
-         for (ii = signalledpid.begin(); ii != signalledpid.end(); )
-            if (VerifyProcessByID(*(*ii)) == 0) {
-               nleft--;
-               delete (*ii);
-               ii = signalledpid.erase(ii);
-            } else
-               ++ii;
-
-         // Wait a bit before retrying
-         sleep(1);
       }
 
       // Now we cleanup what left (any zombies or super resistent processes)
@@ -3612,6 +3723,9 @@ int XrdProofdProtocol::Admin()
 
       // Cleanup all possible sessions around
       Broadcast(type, usr);
+
+      // Cleanup usr
+      SafeDelete(usr);
 
       // Acknowledge user
       fResponse.Send();
@@ -4119,14 +4233,17 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
 
    // Build command
    XrdOucString cmd = "ps ";
+   bool busr = 0;
+   const char *cusr = (usr && strlen(usr) && fSuperUser) ? usr : (const char *)fClientID;
    if (all) {
       cmd += "ax";
    } else {
-      cmd += "aU ";
-      if (usr && strlen(usr) && fSuperUser)
-         cmd += usr;
-      else
-         cmd += fClientID;
+      cmd += "-U ";
+      cmd += cusr;
+      cmd += " -u ";
+      cmd += cusr;
+      cmd += " -f";
+      busr = 1;
    }
    cmd += " | grep proofserv 2>/dev/null";
 
@@ -4157,7 +4274,10 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
                continue;
          }
          // Get pid now
-         int pid = (int) GetLong(line);
+         int from = 0;
+         if (busr)
+            from += strlen(cusr);
+         int pid = (int) GetLong(&line[from]);
          // Kill it
          if (KillProofServ(pid, 1) == 0)
             nk++;

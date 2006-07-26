@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.9 2006/07/01 16:01:08 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.10 2006/07/06 12:41:16 brun Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -176,6 +176,7 @@ public:
    static int                    fgPort;
    static char                  *fgSecLib;
    // 
+   static XrdOucString           fgEffectiveUser;  // Effective user
    static XrdOucString           fgLocalHost;  // FQDN of this machine
    static char                  *fgPoolURL;    // Local pool URL
    static char                  *fgNamespace;  // Local pool namespace
@@ -190,6 +191,7 @@ public:
    static std::vector<XrdProofWorker *> fgWorkers;  // vector of possible workers
    static std::list<XrdOucString *> fgMastersAllowed;  // list of master (domains) allowed
    static std::list<XrdProofdPriority *> fgPriorities;  // list of {users, priority change}
+   static char                  *fgSuperUsers;  // ':' separated list of privileged users
    //
    static char                  *fgPROOFcfg; // PROOF static configuration
    static bool                   fgWorkerUsrCfg; // user cfg files enabled / disabled
