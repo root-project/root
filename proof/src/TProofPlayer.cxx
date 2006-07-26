@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.83 2006/07/04 23:35:36 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.84 2006/07/26 13:36:43 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -532,6 +532,23 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
 }
 
 //______________________________________________________________________________
+Int_t TProofPlayer::AddOutputObject(TObject *)
+{
+   // Incorporate output object (may not be used in this class).
+
+   MayNotUse("AddOutputObject");
+   return -1;
+}
+
+//______________________________________________________________________________
+void TProofPlayer::AddOutput(TList *)
+{
+   // Incorporate output list (may not be used in this class).
+
+   MayNotUse("AddOutput");
+}
+
+//______________________________________________________________________________
 void TProofPlayer::StoreOutput(TList *)
 {
    // Store output list (may not be used in this class).
@@ -692,7 +709,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    StopFeedback();
 
-   delete fEvIter; fEvIter = 0;
+   SafeDelete(fEvIter);
 
    // Finalize
 
@@ -1033,26 +1050,25 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
    // Finalize a query.
    // Returns -1 in case error, 0 otherwise.
 
-   if (fOutputLists == 0) {
-      if (IsClient()) {
+   if (IsClient()) {
+      if (fOutputLists == 0) {
          if (force)
             if (fQuery)
                return fProof->Finalize(Form("%s:%s", fQuery->GetTitle(),
                                                      fQuery->GetName()), force);
-         Info("Finalize","Output list is empty (already finalized?)");
       } else {
-         PDB(kGlobal,1)
-            Info("Finalize","Output list is empty (already finalized?)");
+         if (fProof->fProtocol < 11) {
+            PDB(kGlobal,1) Info("Finalize","Calling Merge Output");
+            MergeOutput();
+         }
       }
-      return -1;
    }
-
-   PDB(kGlobal,1) Info("Finalize","Calling Merge Output");
-   MergeOutput();
 
    Long64_t rv = 0;
    if (fProof->IsMaster()) {
       TPerfStats::Stop();
+      fOutput->SetOwner();
+      SafeDelete(fSelector);
    } else {
       if (fExitStatus != kAborted) {
 
@@ -1099,9 +1115,15 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          // Set in finalized state (cannot be done twice)
          fQuery->SetFinalized();
 
-         // FIXME
+         // We have transferred copy of the output objects in TQueryResult,
+         // so now we can cleanup the selector, making sure that we do not
+         // touch the output objects
          output->SetOwner(kFALSE);
-         output->Clear("nodelete");
+         SafeDelete(fSelector);
+
+         // Delete fOutput (not needed anymore, cannot be finalized twice)
+         fOutput->SetOwner();
+         SafeDelete(fOutput);
       }
    }
    PDB(kGlobal,1) Info("Process","exit");
@@ -1327,6 +1349,228 @@ void TProofPlayerRemote::StopProcess(Bool_t abort, Int_t)
 }
 
 //______________________________________________________________________________
+Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
+{
+   // Incorporate the recived object 'obj' into the output list fOutput.
+   // The latter is created if not existing.
+   // This method short cuts 'StoreOutput + MergeOutput' optimizing the memory
+   // consumption.
+   // Returns -1 in case of error, 1 if the object has been merged into another
+   // one (so that its ownership has not been taken and can be deleted), and 0
+   // otherwise.
+
+   PDB(kOutput,1) Info("AddOutputObject","Enter");
+
+   // We must something to process
+   if (!obj) {
+      PDB(kOutput,1) Info("AddOutputObject","Invalid input (obj == 0x0)");
+      return -1;
+   }
+
+   // Create the output list, if not yet done
+   if (!fOutput)
+      fOutput = new TList;
+
+   // Flag about merging
+   Bool_t merged = kTRUE;
+
+   // Process event lists first
+   TList *elists = dynamic_cast<TList *> (obj);
+   if (elists && !strcmp(elists->GetName(), "PROOF_EventListsList")) {
+
+      // Create a global event list, result of merging the event lists
+      // coresponding to the various data set elements
+      TEventList *evlist = new TEventList("PROOF_EventList");
+
+      // Iterate the list of event list segments
+      TIter nxevl(elists);
+      TEventList *evl = 0;
+      while ((evl = dynamic_cast<TEventList *> (nxevl()))) {
+
+         // Find the file offset (fDSet is the current TDSet instance)
+         // locating the element by name
+         TIter nxelem(fDSet->GetListOfElements());
+         TDSetElement *elem = 0;
+         while ((elem = dynamic_cast<TDSetElement *> (nxelem()))) {
+            if (!strcmp(elem->GetFileName(), evl->GetName()))
+               break;
+         }
+         if (!elem) {
+            Error("AddOutputObject", "Found an event list for %s, but no object with"
+                                     " the same name in the TDSet", evl->GetName());
+            continue;
+         }
+         Long64_t offset = elem->GetTDSetOffset();
+
+         // Shift the list by the number of first event in that file
+         Long64_t *arr = evl->GetList();
+         Int_t num = evl->GetN();
+         if (arr && offset > 0)
+            for (Int_t i = 0; i < num; i++)
+               arr[i] += offset;
+
+         // Add to the global event list
+         evlist->Add(evl);
+      }
+
+      // Incorporate the resulting global list in fOutput
+      Incorporate(evlist, fOutput, merged);
+
+      // Delete the global list if merged
+      if (merged)
+         SafeDelete(evlist);
+
+      // The original object has been transformed in something else; we do
+      // not have ownership on it
+      return 1;
+   }
+
+   // For other objects we just run the incorporation procedure
+   Incorporate(obj, fOutput, merged);
+
+   // We are done
+   return (merged ? 1 : 0);
+}
+
+//______________________________________________________________________________
+void TProofPlayerRemote::AddOutput(TList *out)
+{
+   // Incorporate the content of the received output list 'out' into the final
+   // output list fOutput. The latter is created if not existing.
+   // This method short cuts 'StoreOutput + MergeOutput' limiting the memory
+   // consumption.
+
+   PDB(kOutput,1) Info("AddOutput","Enter");
+
+   // We must something to process
+   if (!out) {
+      PDB(kOutput,1) Info("AddOutput","Invalid input (out == 0x0)");
+      return;
+   }
+
+   // Create the output list, if not yet done
+   if (!fOutput)
+      fOutput = new TList;
+
+   // Process event lists first
+   Bool_t merged = kTRUE;
+   TList *elists = dynamic_cast<TList *> (out->FindObject("PROOF_EventListsList"));
+   if (elists) {
+
+      // Create a global event list, result of merging the event lists
+      // coresponding to the various data set elements
+      TEventList *evlist = new TEventList("PROOF_EventList");
+
+      // Iterate the list of event list segments
+      TIter nxevl(elists);
+      TEventList *evl = 0;
+      while ((evl = dynamic_cast<TEventList *> (nxevl()))) {
+
+         // Find the file offset (fDSet is the current TDSet instance)
+         // locating the element by name
+         TIter nxelem(fDSet->GetListOfElements());
+         TDSetElement *elem = 0;
+         while ((elem = dynamic_cast<TDSetElement *> (nxelem()))) {
+            if (!strcmp(elem->GetFileName(), evl->GetName()))
+               break;
+         }
+         if (!elem) {
+            Error("AddOutput", "Found an event list for %s, but no object with"
+                               " the same name in the TDSet", evl->GetName());
+            continue;
+         }
+         Long64_t offset = elem->GetTDSetOffset();
+
+         // Shift the list by the number of first event in that file
+         Long64_t *arr = evl->GetList();
+         Int_t num = evl->GetN();
+         if (arr && offset > 0)
+            for (Int_t i = 0; i < num; i++)
+               arr[i] += offset;
+
+         // Add to the global event list
+         evlist->Add(evl);
+      }
+
+      // Remove and delete the events lists object to avoid spoiling iteration
+      // during next steps
+      out->Remove(elists);
+      delete elists;
+
+      // Incorporate the resulting global list in fOutput
+      Incorporate(evlist, fOutput, merged);
+   }
+
+   // Iterate on the remaining objects in the received list
+   TIter nxo(out);
+   TObject *obj = 0;
+   while ((obj = nxo())) {
+      Incorporate(obj, fOutput, merged);
+      // If not merged, drop from the temporary list, as the ownership
+      // passes to fOutput
+      if (!merged)
+         out->Remove(obj);
+   }
+
+   // Done
+   return;
+}
+
+//______________________________________________________________________________
+Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &merged)
+{
+   // Incorporate object 'newobj' in the list 'outlist'.
+   // The object is merged with an object of the same name already existing in
+   // the list, or just added.
+   // The boolean merged is set to kFALSE when the object is just added to 'outlist';
+   // this happens if the Merge() method does not exist or if a object named as 'obj'
+   // is not already in the list. If the obj is not 'merged' than it should not be 
+   // deleted, unless outlist is not owner of its objects.
+   // Return 0 on success, -1 on error.
+
+   merged = kTRUE;
+
+   // The object and list must exist
+   if (!newobj || !outlist) {
+      Error("Incorporate","Invalid inputs: obj: %p, list: %p", newobj, outlist);
+      return -1;
+   }
+
+   // Check if an object with the same name exists already
+   TObject *obj = outlist->FindObject(newobj->GetName());
+
+   // If no, add the new object and return
+   if (!obj) {
+      outlist->Add(newobj);
+      merged = kFALSE;
+      // Done
+      return 0;
+   }
+
+   // Locate the Merge(TCollection *) method 
+   TMethodCall callEnv;
+   if (obj->IsA())
+      callEnv.InitWithPrototype(obj->IsA(), "Merge", "TCollection*");
+   if (callEnv.IsValid()) {
+      // Found: put the object in a one-element list
+      static TList *xlist = new TList;
+      xlist->Add(newobj);
+      // Call the method
+      callEnv.SetParam((Long_t) xlist);
+      callEnv.Execute(obj);
+      // Ready for next call
+      xlist->Clear();
+   } else {
+      // Not found: return individual objects
+      outlist->Add(newobj);
+      merged = kFALSE;
+   }
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
 void TProofPlayerRemote::StoreOutput(TList *out)
 {
    // Store received output list.
@@ -1405,10 +1649,12 @@ TList *TProofPlayerRemote::MergeFeedback()
 {
    // Merge feedback lists.
 
-   PDB(kFeedback,1) Info("MergeFeedback","Enter");
+   PDB(kFeedback,1)
+     Info("MergeFeedback","Enter");
 
    if ( fFeedbackLists == 0 ) {
-      PDB(kFeedback,1) Info("MergeFeedback","Leave (no output)");
+      PDB(kFeedback,1)
+         Info("MergeFeedback","Leave (no output)");
       return 0;
    }
 
@@ -1479,7 +1725,8 @@ TList *TProofPlayerRemote::MergeFeedback()
       delete list;
    }
 
-   PDB(kFeedback,1) Info("MergeFeedback","Leave (%d object(s))", fb->GetSize());
+   PDB(kFeedback,1)
+      Info("MergeFeedback","Leave (%d object(s))", fb->GetSize());
 
    return fb;
 }
@@ -1489,10 +1736,12 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
 {
    // Store feedback results from the specified slave.
 
-   PDB(kFeedback,1) Info("StoreFeedback","Enter");
+   PDB(kFeedback,1)
+      Info("StoreFeedback","Enter");
 
    if ( out == 0 ) {
-      PDB(kFeedback,1) Info("StoreFeedback","Leave (empty)");
+      PDB(kFeedback,1)
+         Info("StoreFeedback","Leave (empty)");
       return;
    }
 
@@ -1514,17 +1763,20 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
 
    TObject *obj;
    while( (obj = next()) ) {
-      PDB(kFeedback,2) Info("StoreFeedback","Find '%s'", obj->GetName() );
+      PDB(kFeedback,2)
+         Info("StoreFeedback","Find '%s'", obj->GetName() );
 
       TMap *map = (TMap*) fFeedbackLists->FindObject(obj->GetName());
       if ( map == 0 ) {
-         PDB(kFeedback,2) Info("StoreFeedback","Map not Found (creating)", obj->GetName() );
+         PDB(kFeedback,2)
+            Info("StoreFeedback","Map not Found (creating)", obj->GetName() );
          // map must not be owner (ownership is with regards to the keys (only))
          map = new TMap;
          map->SetName(obj->GetName());
          fFeedbackLists->Add(map);
       } else {
-         PDB(kFeedback,2) Info("StoreFeedback","removing previous value");
+         PDB(kFeedback,2)
+            Info("StoreFeedback","removing previous value");
          if (map->GetValue(slave))
             delete map->GetValue(slave);
          map->Remove(slave);
@@ -1533,7 +1785,8 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
    }
 
    delete out;
-   PDB(kFeedback,1) Info("StoreFeedback","Leave");
+   PDB(kFeedback,1)
+       Info("StoreFeedback","Leave");
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.11 2006/06/05 22:51:14 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.12 2006/06/08 09:16:45 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -74,6 +74,10 @@ typedef XrdSecProtocol *(*XrdSecGetProt_t)(const char *, const struct sockaddr &
 
 XrdClientConnectionMgr *XrdProofConn::fgConnMgr = 0;
 
+// Retry controllers
+int XrdProofConn::fgMaxTry = 5;
+int XrdProofConn::fgTimeWait = 2;  // seconds
+
 #ifndef SafeDelete
 #define SafeDelete(x) { if (x) { delete x; x = 0; } }
 #endif
@@ -105,6 +109,26 @@ XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
                     " connection" << " to server "<<URLTAG);
       return;
    }
+}
+
+//_____________________________________________________________________________
+void XrdProofConn::GetRetryParam(int &maxtry, int &timewait)
+{
+   // Retrieve current values of the retry control parameters, numer of retries
+   // and wait time between attempts (in seconds).
+
+   maxtry = fgMaxTry;
+   timewait = fgTimeWait;
+}
+
+//_____________________________________________________________________________
+void XrdProofConn::SetRetryParam(int maxtry, int timewait)
+{
+   // Change values of the retry control parameters, numer of retries
+   // and wait time between attempts (in seconds).
+
+   fgMaxTry = maxtry;
+   fgTimeWait = timewait;
 }
 
 //_____________________________________________________________________________
@@ -141,8 +165,8 @@ bool XrdProofConn::Init(const char *url)
    fPort = fUrl.Port;
 
    // Max number of tries and timeout
-   int maxTry = EnvGetLong(NAME_FIRSTCONNECTMAXCNT);
-   int timeOut = EnvGetLong(NAME_CONNECTTIMEOUT);
+   int maxTry = (fgMaxTry > -1) ? fgMaxTry : EnvGetLong(NAME_FIRSTCONNECTMAXCNT);
+   int timeWait = (fgTimeWait > -1) ? fgTimeWait : EnvGetLong(NAME_CONNECTTIMEOUT);
 
    int logid = -1;
    int i = 0;
@@ -197,8 +221,10 @@ bool XrdProofConn::Init(const char *url)
       Close("P");
 
       // And we wait a bit before retrying
-      TRACE(REQ,"XrdProofConn::Init: connection attempt failed: sleep " << timeOut << " secs");
-      sleep(timeOut);
+      if (i < maxTry - 1) {
+         TRACE(REQ,"XrdProofConn::Init: connection attempt failed: sleep " << timeWait << " secs");
+         sleep(timeWait);
+      }
 
    } //for connect try
 

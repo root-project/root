@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.36 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.37 2006/07/26 13:36:43 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -124,11 +124,14 @@ public:
    virtual TList    *GetInputList() const { return fInput; }
    virtual TList    *GetListOfResults() const { return fQueryResults; }
    virtual void      AddQueryResult(TQueryResult *q);
+   virtual TQueryResult *GetCurrentQuery() const { return fQuery; }
    virtual TQueryResult *GetQueryResult(const char *ref);
    virtual void      RemoveQueryResult(const char *ref);
    virtual void      SetCurrentQuery(TQueryResult *q);
    virtual void      SetMaxDrawQueries(Int_t max) { fMaxDrawQueries = max; }
    virtual void      RestorePreviousQuery() { fQuery = fPreviousQuery; }
+   virtual Int_t     AddOutputObject(TObject *obj);
+   virtual void      AddOutput(TList *out);   // Incorporate a list
    virtual void      StoreOutput(TList *out);   // Adopts the list
    virtual void      StoreFeedback(TObject *slave, TList *out); // Adopts the list
    virtual void      Progress(Long64_t total, Long64_t processed); // *SIGNAL*
@@ -208,6 +211,9 @@ public:
    void           StopProcess(Bool_t abort, Int_t timeout = -1);
    void           StoreOutput(TList *out);   // Adopts the list
    void           StoreFeedback(TObject *slave, TList *out); // Adopts the list
+   Int_t          Incorporate(TObject *obj, TList *out, Bool_t &merged);
+   Int_t          AddOutputObject(TObject *obj);
+   void           AddOutput(TList *out);   // Incorporate a list
    void           MergeOutput();
    void           Progress(Long64_t total, Long64_t processed); // *SIGNAL*
    void           Progress(TSlave*, Long64_t total, Long64_t processed)

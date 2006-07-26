@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.34 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.35 2006/07/03 09:33:49 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -235,6 +235,10 @@ public:
                                    Long64_t fst, Long64_t ent) = 0; //*SIGNAL*
    virtual void        StartupMessage(const char *msg, Bool_t status,
                                       Int_t done, Int_t total) = 0; //*SIGNAL*
+   virtual void        DataSetStatus(const char *msg, Bool_t status,
+                                      Int_t done, Int_t total) = 0; //*SIGNAL*
+
+   virtual void        SendDataSetStatus(const char *msg, UInt_t n, UInt_t tot, Bool_t st) = 0;
 
    virtual void        GetLog(Int_t start = -1, Int_t end = -1) = 0;
    virtual void        PutLog(TQueryResult *qr) = 0;

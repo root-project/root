@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.h,v 1.5 2006/06/05 22:51:13 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.h,v 1.6 2006/06/21 16:18:26 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -91,6 +91,9 @@ private:
 
    static XrdClientConnectionMgr *fgConnMgr; //Connection Manager
 
+   static int          fgMaxTry; //max number of connection attempts
+   static int          fgTimeWait; //Wait time between an attempt and the other
+
    XrdSecProtocol     *Authenticate(char *plist, int lsiz);
    bool                CheckErrorStatus(XrdClientMessage *, int &, const char *);
    bool                CheckResp(struct ServerResponseHeader *resp,
@@ -132,6 +135,9 @@ public:
                                void **answData, const char *CmdName);
    void                SetSID(kXR_char *sid);
    virtual int         WriteRaw(const void *buf, int len);
+
+   static void         GetRetryParam(int &maxtry, int &timewait);
+   static void         SetRetryParam(int maxtry = 5, int timewait = 2);
 
    virtual UnsolRespProcResult ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *s,
                                                      XrdClientMessage *m);

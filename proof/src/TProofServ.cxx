@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.130 2006/07/03 12:34:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.131 2006/07/05 14:06:09 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -674,6 +674,7 @@ void TProofServ::HandleSocketInput()
       // but at least get a message in the log file
       Error("HandleSocketInput", "retrieving message from input socket");
       Terminate(0);
+      return;
    }
 
    what = mess->What();
@@ -1120,6 +1121,7 @@ void TProofServ::HandleSocketInputDuringProcess()
       // but at least get a message in the log file
       Error("HandleSocketInputDuringProcess", "retrieving message from input socket");
       Terminate(0);
+      return;
    }
 
    what = mess->What();
@@ -1340,6 +1342,8 @@ void TProofServ::HandleUrgentData()
             }
          }
 
+         SendLogFile();
+
          break;
 
       case TProof::kSoftInterrupt:
@@ -1356,6 +1360,8 @@ void TProofServ::HandleUrgentData()
 
          Interrupt();
 
+         SendLogFile();
+
          break;
 
       case TProof::kShutdownInterrupt:
@@ -1365,7 +1371,7 @@ void TProofServ::HandleUrgentData()
          if (IsMaster())
             fProof->Interrupt(TProof::kShutdownInterrupt);
 
-         Terminate(0);  // will not return from here....
+         Terminate(0);
 
          break;
 
@@ -1373,8 +1379,6 @@ void TProofServ::HandleUrgentData()
          Error("HandleUrgentData", "unexpected OOB byte");
          break;
    }
-
-   SendLogFile();
 
    if (fProof) fProof->SetActive(kFALSE);
 }
@@ -1934,8 +1938,6 @@ void TProofServ::Setup()
       fQueryDir += TString("/") + kPROOF_QueryDir;
       if (gSystem->AccessPathName(fQueryDir))
          gSystem->MakeDirectory(fQueryDir);
-      else
-         ScanPreviousQueries(fQueryDir);
       fQueryDir += TString("/session-") + fSessionTag;
       if (gSystem->AccessPathName(fQueryDir))
          gSystem->MakeDirectory(fQueryDir);
@@ -2017,7 +2019,10 @@ void TProofServ::Terminate(Int_t status)
          gSystem->RemoveFileHandler(ih);
    }
 
-   gSystem->Exit(status);
+   // Stop processing events
+   gSystem->ExitLoop();
+
+   // Exit() is called in pmain
 }
 
 //______________________________________________________________________________
@@ -2274,6 +2279,46 @@ void TProofServ::FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq)
    }
 
    // Done!
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::CleanupQueriesDir()
+{
+   // Remove all queries results referring to previous sessions
+
+   Int_t nd = 0;
+
+   // Cleanup previous stuff
+   if (fPreviousQueries) {
+      fPreviousQueries->Delete();
+      SafeDelete(fPreviousQueries);
+   }
+
+   // Loop over session dirs
+   TString queriesdir = fQueryDir;
+   queriesdir = queriesdir.Remove(queriesdir.Index(kPROOF_QueryDir) +
+                                  strlen(kPROOF_QueryDir));
+   void *dirs = gSystem->OpenDirectory(queriesdir);
+   char *sess = 0;
+   while ((sess = (char *) gSystem->GetDirEntry(dirs))) {
+
+      // We are interested only in "session-..." subdirs
+      if (strlen(sess) < 7 || strncmp(sess,"session",7))
+         continue;
+
+      // We do not want this session at this level
+      if (strstr(sess, fSessionTag))
+         continue;
+
+      // Remove the directory
+      TString qdir = Form("%s/%s", queriesdir.Data(), sess);
+      Info("RemoveQuery", "removing directory: %s", qdir.Data());
+      gSystem->Exec(Form("%s %s", kRM, qdir.Data()));
+      nd++;
+   }
+
+   // Done
+   return nd;
 }
 
 //______________________________________________________________________________
@@ -2753,6 +2798,10 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Create instance of query results
       pq = MakeQueryResult(nentries, opt, input, first, dset, filename, evl);
 
+      // Make sure that cleanup is done when required
+      input->SetOwner();
+      SafeDelete(input);
+
       // If not a draw action add the query to the main list
       if (!(pq->IsDraw())) {
          fQueries->Add(pq);
@@ -2879,11 +2928,68 @@ void TProofServ::HandleProcess(TMessage *mess)
          FinalizeQuery(p, pq);
 
          // Send back the results
-         if (p->GetExitStatus() != TProofPlayer::kAborted) {
-            if (fProtocol > 6) {
-               PDB(kGlobal, 2) Info("HandleProcess","Sending results");
-               fSocket->SendObject(pq, kPROOF_OUTPUTLIST);
+         TQueryResult *pqr = pq->CloneInfo();
+         if (p->GetExitStatus() != TProofPlayer::kAborted && p->GetOutputList()) {
+
+            PDB(kGlobal, 2) Info("HandleProcess","Sending results");
+            if (fProtocol > 10) {
+               // Send objects one-by-one to optimize transfer and merging
+               TMessage m(kPROOF_MESSAGE);
+               TMessage mbuf(kPROOF_OUTPUTOBJECT);
+               // Objects in the output list
+               Int_t olsz = p->GetOutputList()->GetSize();
+               // Message for the client
+               m << TString(Form("Master-%s: sending output: %d objs",
+                                   fOrdinal.Data(), olsz));
+               m << (Bool_t) kFALSE;
+               fSocket->Send(m);
+               // Send light query info
+               mbuf << (Int_t) 0;
+               mbuf.WriteObject(pqr);
+               fSocket->Send(mbuf);
+
+               Int_t ns = 0;
+               Int_t totsz = 0;
+               TIter nxo(p->GetOutputList());
+               TObject *o = 0;
+               while ((o = nxo())) {
+                  ns++;
+                  mbuf.Reset();
+                  Int_t type = (Int_t) ((ns >= olsz) ? 2 : 1);
+                  mbuf << type;
+                  mbuf.WriteObject(o);
+                  totsz += mbuf.Length();
+                  m.Reset();
+                  m << TString(Form("Master-%s: sending obj %d/%d (%d bytes)",
+                                    fOrdinal.Data(), ns, olsz, mbuf.Length()));
+                  m << (Bool_t) kFALSE;
+                  fSocket->Send(m);
+                  fSocket->Send(mbuf);
+               }
+               // Total size
+               m.Reset();
+               m << TString(Form("Master-%s: grand total: sent %d objects, size: %d bytes",
+                                      fOrdinal.Data(), olsz, totsz));
+               m << (Bool_t) kTRUE;
+               fSocket->Send(m);
+            } else if (fProtocol > 6) {
+
+               // Buffer to be sent
+               TMessage mbuf(kPROOF_OUTPUTLIST);
+               mbuf.WriteObject(pq);
+               // Sizes
+               Int_t blen = mbuf.Length();
+               Int_t olsz = p->GetOutputList()->GetSize();
+               // Message for the client
+               TString cmsg = Form("Master-%s: sending output: %d objs, %d bytes",
+                                   fOrdinal.Data(), olsz, blen);
+               TMessage m(kPROOF_MESSAGE);
+               m << cmsg;
+               fSocket->Send(m);
+               fSocket->Send(mbuf);
+
             } else {
+               // TQueryResult unknow to client: send the output list only
                PDB(kGlobal, 2) Info("HandleProcess","Sending output list");
                fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
             }
@@ -2894,6 +3000,15 @@ void TProofServ::HandleProcess(TMessage *mess)
          // Remove aborted queries from the list
          if (p->GetExitStatus() == TProofPlayer::kAborted)
             RemoveQuery(pq);
+
+         // Keep in memory only light infor about a query
+         if (!(pq->IsDraw())) {
+            if (pqr)
+               fQueries->Add(pqr);
+            // Remove from the fQueries list
+            fQueries->Remove(pq);
+            SafeDelete(pq);
+         }
 
          // Player cleanup
          if (fProof != 0)
@@ -2945,16 +3060,34 @@ void TProofServ::HandleProcess(TMessage *mess)
       fSocket->Send(m);
 
       // Send back the results
-      if (p->GetExitStatus() != TProofPlayer::kAborted) {
-         PDB(kGlobal, 2) Info("HandleProcess","Sending output list");
-         fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
+      if (p->GetExitStatus() != TProofPlayer::kAborted && p->GetOutputList()) {
+         if (fProtocol > 10) {
+            // Send objects one-by-one to optimize transfer and merging
+            // Messages for objects
+            TMessage mbuf(kPROOF_OUTPUTOBJECT);
+            // Objects in the output list
+            Int_t ns = 0;
+            Int_t olsz = p->GetOutputList()->GetSize();
+            TIter nxo(p->GetOutputList());
+            TObject *o = 0;
+            while ((o = nxo())) {
+               ns++;
+               mbuf.Reset();
+               mbuf << (Int_t) ((ns >= olsz) ? 2 : 1);
+               mbuf.WriteObject(o);
+               fSocket->Send(mbuf);
+            }
+         } else {
+            PDB(kGlobal, 2) Info("HandleProcess","Sending output list");
+            fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
+         }
       } else {
          fSocket->SendObject(0,kPROOF_OUTPUTLIST);
       }
 
       // Cleanup
       SafeDelete(dset);
-      SafeDelete(input)
+      p->GetInputList()->SetOwner();  // Make sure the input list objects are deleted
       SafeDelete(p);
    }
 
@@ -3045,6 +3178,19 @@ void TProofServ::HandleRemove(TMessage *mess)
       // We are done
       return;
    }
+
+   if (queryref == "cleanupdir") {
+
+      // Cleanup previous sessions results
+      Int_t nd = CleanupQueriesDir();
+
+      // Notify
+      Info("HandleRemove", "%d directories removed", nd);
+      // We are done
+      return;
+   }
+
+
 
    TProofLockPath *lck = 0;
    if (LockSession(queryref, &lck) == 0) {
@@ -3523,6 +3669,14 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          break;
       case TProof::kLoadPackage:
          (*mess) >> package;
+
+         // If already loaded don't do it again
+         if (fEnabledPackages->FindObject(package)) {
+            Info("HandleCache",
+                 "package %s already loaded", package.Data());
+            break;
+         }
+
          // always follows BuildPackage so no need to check for PROOF-INF
          pdir = fPackageDir + "/" + package;
 
@@ -3687,11 +3841,29 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
       case TProof::kActivateWorker:
          (*mess) >> ord;
          if (fProof) {
-            fProof->ActivateWorker(ord);
-            if (ord == "*")
-               Info("HandleWorkerList","all workers (re-)activated");
-            else
-               Info("HandleWorkerList","worker %s (re-)activated", ord.Data());
+            Int_t nact = fProof->GetListOfActiveSlaves()->GetSize();
+            Int_t nactmax = fProof->GetListOfSlaves()->GetSize() -
+                            fProof->GetListOfBadSlaves()->GetSize();
+            if (nact < nactmax) {
+               fProof->ActivateWorker(ord);
+               Int_t nactnew = fProof->GetListOfActiveSlaves()->GetSize();
+               if (ord == "*") {
+                  if (nactnew == nactmax) {
+                     Info("HandleWorkerList","all workers (re-)activated");
+                  } else {
+                     Info("HandleWorkerList","%d workers could not be (re-)activated", nactmax - nactnew);
+                  }
+               } else {
+                  if (nactnew == (nact + 1)) {
+                     Info("HandleWorkerList","worker %s (re-)activated", ord.Data());
+                  } else {
+                     Info("HandleWorkerList","worker %s could not be (re-)activated:"
+                                             " check the ordinal number", ord.Data());
+                  }
+               }
+            } else {
+               Info("HandleWorkerList","all workers are already active");
+            }
          } else {
             Warning("HandleWorkerList","undefined PROOF session: protocol error?");
          }
@@ -3699,11 +3871,27 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
       case TProof::kDeactivateWorker:
          (*mess) >> ord;
          if (fProof) {
-            fProof->DeactivateWorker(ord);
-            if (ord == "*")
-               Info("HandleWorkerList","all workers deactivated");
-            else
-               Info("HandleWorkerList","worker %s deactivated", ord.Data());
+            Int_t nact = fProof->GetListOfActiveSlaves()->GetSize();
+            if (nact > 0) {
+               fProof->DeactivateWorker(ord);
+               Int_t nactnew = fProof->GetListOfActiveSlaves()->GetSize();
+               if (ord == "*") {
+                  if (nactnew == 0) {
+                     Info("HandleWorkerList","all workers deactivated");
+                  } else {
+                     Info("HandleWorkerList","%d workers could not be deactivated", nactnew);
+                  }
+               } else {
+                  if (nactnew == (nact - 1)) {
+                     Info("HandleWorkerList","worker %s deactivated", ord.Data());
+                  } else {
+                     Info("HandleWorkerList","worker %s could not be deactivated:"
+                                             " check the ordinal number", ord.Data());
+                  }
+               }
+            } else {
+               Info("HandleWorkerList","all workers are already inactive");
+            } 
          } else {
             Warning("HandleWorkerList","undefined PROOF session: protocol error?");
          }
@@ -4090,7 +4278,6 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
       gSystem->Abort();
    }
 }
-
 
 //______________________________________________________________________________
 Int_t TProofLockPath::Lock()

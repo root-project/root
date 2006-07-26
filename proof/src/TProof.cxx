@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.150 2006/07/03 09:33:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.151 2006/07/04 06:31:22 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1818,6 +1818,42 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          }
          break;
 
+      case kPROOF_OUTPUTOBJECT:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTOBJECT","Enter");
+            Int_t type = 0;
+            (*mess) >> type;
+            // If a query result header, add it to the player list
+            if (type == 0) {
+               // Retrieve query result instance (output list not filled)
+               TQueryResult *pq =
+                  (TQueryResult *) mess->ReadObject(TQueryResult::Class());
+               if (pq) {
+                  // Remove duplicates of the data set from the official list
+                  gROOT->GetListOfDataSets()->Remove(pq->GetDSet());
+                  // Add query to the result list in TProofPlayer
+                  fPlayer->AddQueryResult(pq);
+                  fPlayer->SetCurrentQuery(pq);
+               } else {
+                  PDB(kGlobal,2)
+                     Info("Collect:kPROOF_OUTPUTLIST","query result missing");
+               }
+            } else if (type > 0) {
+               // Read object
+               TObject *obj = mess->ReadObject(TObject::Class());
+               // Add or merge it
+               if ((fPlayer->AddOutputObject(obj) == 1))
+                  // Remove the object if it has been merged
+                  SafeDelete(obj);
+               if (type > 1 && !IsMaster()) {
+                  TQueryResult *pq = fPlayer->GetCurrentQuery();
+                  // If the last object, notify the GUI that the result arrived
+                  QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
+               }
+            }
+         }
+         break;
+
       case kPROOF_OUTPUTLIST:
          {
             PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","Enter");
@@ -1847,7 +1883,8 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             }
             if (out) {
                out->SetOwner();
-               fPlayer->StoreOutput(out); // Adopts the list
+               fPlayer->AddOutput(out); // Incorporate the list
+               SafeDelete(out);
             } else {
                PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","ouputlist is empty");
             }
@@ -1951,6 +1988,40 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
                // Just send the message one level up
                TMessage m(kPROOF_SERVERSTARTED);
+               m << action << tot << done << st;
+               gProofServ->GetSocket()->Send(m);
+            }
+         }
+         break;
+
+      case kPROOF_DATASET_STATUS:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_DATASET_STATUS","Enter");
+
+            UInt_t tot = 0, done = 0;
+            TString action;
+            Bool_t st = kTRUE;
+
+            (*mess) >> action >> tot >> done >> st;
+
+            if (!IsMaster()) {
+               if (tot) {
+                  TString type = "files";
+                  Int_t frac = (Int_t) (done*100.)/tot;
+                  if (frac >= 100) {
+                     fprintf(stderr,"%s: OK (%d %s)                 \n",
+                             action.Data(),tot, type.Data());
+                  } else {
+                     fprintf(stderr,"%s: %d out of %d (%d %%)\r",
+                             action.Data(), done, tot, frac);
+                  }
+               }
+               // Notify GUIs
+               DataSetStatus(action.Data(), st, (Int_t)done, (Int_t)tot);
+            } else {
+
+               // Just send the message one level up
+               TMessage m(kPROOF_DATASET_STATUS);
                m << action << tot << done << st;
                gProofServ->GetSocket()->Send(m);
             }
@@ -2138,7 +2209,26 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             // We have received the unique tag and save it as name of this object
             TString msg;
             (*mess) >> msg;
-            Info("Collect:kPROOF_MESSAGE","%s", msg.Data());
+            Bool_t lfeed = kTRUE;
+            if ((mess->BufferSize() > mess->Length()))
+               (*mess) >> lfeed;
+
+            if (!IsMaster()) {
+
+               // Notify locally ...
+               if (lfeed) {
+                  fprintf(stderr, "%s\n", msg.Data());
+               } else {
+                  fprintf(stderr, "%s\r", msg.Data());
+               }
+
+            } else {
+
+               // Just send the message one level up
+               TMessage m(kPROOF_MESSAGE);
+               m << msg;
+               gProofServ->GetSocket()->Send(m);
+            }
          }
          break;
 
@@ -2383,6 +2473,9 @@ Int_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
    }
 
    Long64_t rv = fPlayer->Process(dset, selector, option, nentries, first, evl);
+
+//   // Clear input list
+//   fPlayer->ClearInput();
 
    if (fSync) {
       // reactivate the default application interrupt handler
@@ -4086,16 +4179,40 @@ void TProof::ResetProgressDialog(const char *sel, Int_t sz, Long64_t fst,
 }
 
 //______________________________________________________________________________
-void TProof::StartupMessage(const char *msg, Bool_t st, Int_t done,
-                                 Int_t total)
+void TProof::StartupMessage(const char *msg, Bool_t st, Int_t done, Int_t total)
 {
    // Send startup message.
 
    PDB(kGlobal,1)
-      Info("StartupMessge","(%s,%d,%d,%d)", msg, st, done, total);
+      Info("StartupMessage","(%s,%d,%d,%d)", msg, st, done, total);
 
    EmitVA("StartupMessage(const char*,Bool_t,Int_t,Int_t)",
           4, msg, st, done, total);
+}
+
+//______________________________________________________________________________
+void TProof::DataSetStatus(const char *msg, Bool_t st, Int_t done, Int_t total)
+{
+   // Send dataset preparation status.
+
+   PDB(kGlobal,1)
+      Info("DataSetStatus","(%s,%d,%d,%d)", msg, st, done, total);
+
+   EmitVA("DataSetStatus(const char*,Bool_t,Int_t,Int_t)",
+          4, msg, st, done, total);
+}
+
+//______________________________________________________________________________
+void TProof::SendDataSetStatus(const char *msg, UInt_t n,
+                                 UInt_t tot, Bool_t st)
+{
+   // Send data set status
+
+   if (IsMaster()) {
+      TMessage mess(kPROOF_DATASET_STATUS);
+      mess << TString(msg) << tot << n << st;
+      gProofServ->GetSocket()->Send(mess);
+   }
 }
 
 //______________________________________________________________________________
@@ -4480,33 +4597,43 @@ void *TProof::SlaveStartupThread(void *arg)
       sl = ta->fProof->CreateSlave(ta->fUrl->GetUrl(), ta->fOrd,
                                    ta->fPerf, ta->fImage, ta->fWorkdir);
       // Finalize setup of the server
-      sl->SetupServ(TSlave::kSlave, 0);
+      if (sl && sl->IsValid())
+         sl->SetupServ(TSlave::kSlave, 0);
    } else {
       // Open the connection
       sl = ta->fProof->CreateSubmaster(ta->fUrl->GetUrl(), ta->fOrd,
                                        ta->fImage, ta->fMsd);
       // Finalize setup of the server
-      sl->SetupServ(TSlave::kMaster, ta->fWorkdir);
+      if (sl && sl->IsValid())
+         sl->SetupServ(TSlave::kMaster, ta->fWorkdir);
    }
 
-   {
-      R__LOCKGUARD2(gProofMutex);
+   if (sl && sl->IsValid()) {
 
-      // Add to the started slaves list
-      ta->fSlaves->Add(sl);
+      {  R__LOCKGUARD2(gProofMutex);
 
-      if (ta->fClaims) { // Condor slave
-         // Remove from the pending claims list
-         TCondorSlave *c = ta->fCslave;
-         ta->fClaims->Remove(c);
+         // Add to the started slaves list
+         ta->fSlaves->Add(sl);
+
+         if (ta->fClaims) { // Condor slave
+            // Remove from the pending claims list
+            TCondorSlave *c = ta->fCslave;
+            ta->fClaims->Remove(c);
+         }
       }
-   }
 
-   // Notify we are done
-   PDB(kGlobal,1)
-      ::Info("TProof::SlaveStartupThread",
-             "slave %s on host %s created and added to list",
-             ta->fOrd.Data(), ta->fUrl->GetHost());
+      // Notify we are done
+      PDB(kGlobal,1)
+         ::Info("TProof::SlaveStartupThread",
+                "slave %s on host %s created and added to list",
+                ta->fOrd.Data(), ta->fUrl->GetHost());
+   } else {
+      // Failure
+      SafeDelete(sl);
+      ::Error("TProof::SlaveStartupThread",
+              "slave %s on host %s could not be created",
+              ta->fOrd.Data(), ta->fUrl->GetHost());
+   }
 
    if (fgSemaphore) fgSemaphore->Post();
 
@@ -4942,16 +5069,7 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
       TString dest = Form("%s/%s", GetDataPoolUrl(), relativeDestDir);
 
       delete[] relativeDestDir;
-      //creating the destination directory
-      if (gSystem->AccessPathName(dest, kFileExists) == kTRUE) {
-         // directory does not exist
-         if (gSystem->mkdir(dest, kTRUE)) { // 7 for root://
-            //illegal path; or other session just created it
-            // as we just checked that the dir does not exist
-            Error("UploadDataSet", "Could not create the dest dir %s", dest.Data());
-            return kError;
-         }
-      }
+
       // Now we will actually copy files and create the TList object
       TList *fileList = new TList();
       TFileMerger fileCopier;

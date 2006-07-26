@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.84 2006/07/03 09:33:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.85 2006/07/03 15:18:38 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -91,9 +91,10 @@ class TVirtualMutex;
 // 7 -> 8: return number of entries in GetNextPacket
 // 8 -> 9: support for stateless connection via xproofd
 // 9 -> 10: new features requested, tested at CAF
+// 10 -> 11: new merging strategy
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol = 10;            // protocol version number
+const Int_t       kPROOF_Protocol = 11;            // protocol version number
 const Int_t       kPROOF_Port     = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
@@ -572,6 +573,10 @@ public:
                                    Long64_t fst, Long64_t ent); //*SIGNAL*
    void        StartupMessage(const char *msg, Bool_t status, Int_t done,
                               Int_t total); //*SIGNAL*
+   void        DataSetStatus(const char *msg, Bool_t status,
+                             Int_t done, Int_t total); //*SIGNAL*
+
+   void        SendDataSetStatus(const char *msg, UInt_t n, UInt_t tot, Bool_t st);
 
    void        GetLog(Int_t start = -1, Int_t end = -1);
    void        PutLog(TQueryResult *qr);

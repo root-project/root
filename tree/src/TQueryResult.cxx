@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.4 2005/09/24 11:33:41 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.5 2006/03/20 21:26:55 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -53,7 +53,11 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
    fEnd.Set(fStart.Convert()-1);
 
    // Save input list
-   fInputList = inlist;
+   fInputList = 0;
+   if (inlist) {
+      fInputList = (TList *) (inlist->Clone());
+      fInputList->SetOwner();
+   }
 
    // Data set
    fDSet = dset ? (TDSet *)(dset->Clone()) : 0;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.41 2006/06/23 13:26:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.42 2006/07/03 09:33:50 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -124,6 +124,7 @@ private:
 
    // Query handlers
    void          AddLogFile(TProofQueryResult *pq);
+   Int_t         CleanupQueriesDir();
    void          FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq);
    TList        *GetDataSet(const char *name);
 

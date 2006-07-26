@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.8 2006/06/02 15:34:56 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.9 2006/06/02 23:38:19 rdm Exp $
 // Author: Fons Rademakers   15/02/97
 
 /*************************************************************************
@@ -157,8 +157,6 @@ int main(int argc, char **argv)
 
    theApp->Run();
 
-   // When we return here we are done
-   delete theApp;
-
-   exit(0);
+   // We can exit now
+   gSystem->Exit(0);
 }

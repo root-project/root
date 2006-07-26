@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.9 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.10 2006/06/23 13:26:56 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -489,6 +489,9 @@ void TXProofServ::HandleUrgentData()
          // Flush input socket
          ((TXSocket *)fSocket)->Flush();
 
+         if (IsMaster())
+            SendLogFile();
+
          break;
 
       case TProof::kSoftInterrupt:
@@ -500,12 +503,16 @@ void TXProofServ::HandleUrgentData()
 
          Interrupt();
 
+         if (IsMaster())
+            SendLogFile();
+
          break;
 
 
       case TProof::kShutdownInterrupt:
          Info("HandleUrgentData", "Shutdown Interrupt");
 
+         // When retuning for here connection are closed 
          HandleTermination();
 
          break;
@@ -515,7 +522,6 @@ void TXProofServ::HandleUrgentData()
          break;
    }
 
-   SendLogFile();
 
    if (fProof) fProof->SetActive(kFALSE);
 }
@@ -560,9 +566,8 @@ void TXProofServ::HandleTermination()
       fProof->Close("S");
    }
 
-   // Close link with coordinator
+   // Avoid communicating back anything to the coordinator (it is gone)
    ((TXSocket *)fSocket)->SetSessionID(-1);
-   fSocket->Close();
 
    Terminate(0);  // will not return from here....
 }
@@ -730,8 +735,6 @@ void TXProofServ::Setup()
       fQueryDir += TString("/") + kPROOF_QueryDir;
       if (gSystem->AccessPathName(fQueryDir))
          gSystem->MakeDirectory(fQueryDir);
-      else
-         ScanPreviousQueries(fQueryDir);
       fQueryDir += TString("/session-") + fSessionTag;
       if (gSystem->AccessPathName(fQueryDir))
          gSystem->MakeDirectory(fQueryDir);
@@ -924,11 +927,10 @@ Bool_t TXProofServ::HandleError(const void *)
    if (IsMaster())
       fProof->Close("S");
 
-   // Close link with coordinator
+   // Avoid communicating back anything to the coordinator (it is gone)
    ((TXSocket *)fSocket)->SetSessionID(-1);
-   fSocket->Close();
 
-   Terminate(0);  // will not return from here....
+   Terminate(0);
 
    Printf("TXProofServ::HandleError: %p: DONE ... ", this);
 
@@ -1054,7 +1056,12 @@ void TXProofServ::Terminate(Int_t status)
    gSystem->RemoveFileHandler(fInputHandler);
    gSystem->RemoveSignalHandler(fInterruptHandler);
 
-   gSystem->Exit(status);
+   // Stop processing events
+   gSystem->ExitLoop();
+//   SafeDelete(fSocket);
+
+   // Exit
+//   gSystem->Exit(status);
 }
 
 //______________________________________________________________________________
