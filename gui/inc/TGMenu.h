@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.36 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.37 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -91,8 +91,9 @@ protected:
    const TGPicture  *fPic;       // menu entry icon
    TGPopupMenu      *fPopup;     // pointer to popup menu (in case of cascading menus)
 
-   TGMenuEntry(const TGMenuEntry&);
-   TGMenuEntry& operator=(const TGMenuEntry&);
+private:
+   TGMenuEntry(const TGMenuEntry&);             // not implemented
+   TGMenuEntry& operator=(const TGMenuEntry&);  // not implemented
 
 public:
    TGMenuEntry(): fEntryId(0), fUserData(0), fType(), fStatus(0),
@@ -156,9 +157,6 @@ protected:
    static const TGGC   *fgDefaultSelectedGC;
    static const TGGC   *fgDefaultSelectedBackgroundGC;
 
-   TGPopupMenu(const TGPopupMenu&);
-   TGPopupMenu& operator=(const TGPopupMenu&);
-
    void DrawTrianglePattern(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
    void DrawCheckMark(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
    void DrawRCheckMark(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
@@ -171,6 +169,10 @@ protected:
    static const TGGC   &GetDefaultGC();
    static const TGGC   &GetDefaultSelectedGC();
    static const TGGC   &GetDefaultSelectedBackgroundGC();
+
+private:
+   TGPopupMenu(const TGPopupMenu&);             // not implemented
+   TGPopupMenu& operator=(const TGPopupMenu&);  // not implemented
 
 public:
    TGPopupMenu(const TGWindow *p = 0, UInt_t w = 10, UInt_t h = 10,
@@ -257,14 +259,15 @@ protected:
    FontStruct_t    fFontStruct;       // font
    GContext_t      fNormGC, fSelGC;   // normal and selection graphics contexts
 
-   TGMenuTitle(const TGMenuTitle&);
-   TGMenuTitle& operator=(const TGMenuTitle&);
-
    virtual void DoRedraw();
 
    static const TGFont *fgDefaultFont;
    static const TGGC   *fgDefaultSelectedGC;
    static const TGGC   *fgDefaultGC;
+
+private:
+   TGMenuTitle(const TGMenuTitle&);             // not implemented
+   TGMenuTitle& operator=(const TGMenuTitle&);  // not implemented
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -309,14 +312,15 @@ protected:
    TList        *fTrash;         // garbage
    Bool_t        fKeyNavigate;   // kTRUE if arrow key navigation is on
 
-   TGMenuBar(const TGMenuBar&);
-   TGMenuBar& operator=(const TGMenuBar&);
-
    virtual void AddFrameBefore(TGFrame *f, TGLayoutHints *l = 0,
                                TGPopupMenu *before = 0);
 
    virtual void BindKeys(Bool_t on = kTRUE);
    virtual void BindHotKey(Int_t keycode, Bool_t on = kTRUE);
+
+private:
+   TGMenuBar(const TGMenuBar&);             // not implemented
+   TGMenuBar& operator=(const TGMenuBar&);  // not implemented
 
 public:
    TGMenuBar(const TGWindow *p = 0, UInt_t w = 60, UInt_t h = 20,

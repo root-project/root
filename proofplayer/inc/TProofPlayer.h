@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.35 2006/05/23 07:43:55 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.36 2006/06/21 16:18:26 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -263,8 +263,6 @@ protected:
 public:
    TProofPlayerSuperMaster(TProof *proof = 0) :
       TProofPlayerRemote(proof), fReturnFeedback(kFALSE) { }
-   TProofPlayerSuperMaster(const TProofPlayerSuperMaster &p);
-   TProofPlayerSuperMaster& operator=(const TProofPlayerSuperMaster& p);
    virtual ~TProofPlayerSuperMaster() { }
 
    virtual Long64_t Process(TDSet *set, const char *selector,

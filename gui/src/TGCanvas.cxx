@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.47 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.48 2006/07/24 16:11:45 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -135,7 +135,7 @@ TGViewPort::TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
 void TGViewPort::SetContainer(TGFrame *f)
 {
    // Add container frame to the viewport. We must make sure that the added
-   // container is at least a TGCompositeFrame (TGCanvas::AddFrame depends 
+   // container is at least a TGCompositeFrame (TGCanvas::AddFrame depends
    // on it).
 
    if (!f) {
@@ -148,10 +148,10 @@ void TGViewPort::SetContainer(TGFrame *f)
       fContainer = f;
       AddFrame(f, 0);
       fContainer->SetEditDisabled(fContainer->GetEditDisabled() | kEditDisableGrab);
- 
+
       if (fContainer->InheritsFrom(TGContainer::Class())) {
          ((TGContainer*)fContainer)->fViewPort = this;
-         if (fParent->InheritsFrom(TGCanvas::Class())) 
+         if (fParent->InheritsFrom(TGCanvas::Class()))
             ((TGContainer*)fContainer)->fCanvas = (TGCanvas*)fParent;
       }
    }
@@ -261,7 +261,7 @@ void TGViewPort::SetVPos(Int_t ypos)
 //______________________________________________________________________________
 void TGViewPort::SetPos(Int_t xpos, Int_t ypos)
 {
-   // goto new position
+   // Goto new position.
 
    if (!fContainer) return;
 
@@ -272,7 +272,7 @@ void TGViewPort::SetPos(Int_t xpos, Int_t ypos)
 //______________________________________________________________________________
 Bool_t TGViewPort::HandleConfigureNotify(Event_t *event)
 {
-   // handle resize events.
+   // Handle resize events.
 
    if (!fContainer->InheritsFrom(TGContainer::Class())) {
       TGFrame::HandleConfigureNotify(event);
@@ -349,67 +349,6 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    AddInput(kKeyPressMask | kPointerMotionMask);
    SetWindowName();
    fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable;
-}
-
-//______________________________________________________________________________
-TGContainer::TGContainer(const TGContainer& gc) :
-  TGCompositeFrame(gc),
-  fViewPort(gc.fViewPort),
-  fCanvas(gc.fCanvas),
-  fMsgWindow(gc.fMsgWindow),
-  fLastActiveEl(gc.fLastActiveEl),
-  fXp(gc.fXp),
-  fYp(gc.fYp),
-  fX0(gc.fX0),
-  fY0(gc.fY0),
-  fXf(gc.fXf),
-  fYf(gc.fYf),
-  fDragging(gc.fDragging),
-  fTotal(gc.fTotal),
-  fSelected(gc.fSelected),
-  fScrollTimer(gc.fScrollTimer),
-  fOnMouseOver(gc.fOnMouseOver),
-  fLastDir(gc.fLastDir),
-  fLastCase(gc.fLastCase),
-  fLastName(gc.fLastName),
-  fKeyTimer(gc.fKeyTimer),
-  fKeyInput(gc.fKeyInput),
-  fKeyTimerActive(gc.fKeyTimerActive),
-  fScrolling(gc.fScrolling)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGContainer& TGContainer::operator=(const TGContainer& gc) 
-{
-   //assignment operator
-   if(this!=&gc) {
-      TGCompositeFrame::operator=(gc);
-      fViewPort=gc.fViewPort;
-      fCanvas=gc.fCanvas;
-      fMsgWindow=gc.fMsgWindow;
-      fLastActiveEl=gc.fLastActiveEl;
-      fXp=gc.fXp;
-      fYp=gc.fYp;
-      fX0=gc.fX0;
-      fY0=gc.fY0;
-      fXf=gc.fXf;
-      fYf=gc.fYf;
-      fDragging=gc.fDragging;
-      fTotal=gc.fTotal;
-      fSelected=gc.fSelected;
-      fScrollTimer=gc.fScrollTimer;
-      fOnMouseOver=gc.fOnMouseOver;
-      fLastDir=gc.fLastDir;
-      fLastCase=gc.fLastCase;
-      fLastName=gc.fLastName;
-      fKeyTimer=gc.fKeyTimer;
-      fKeyInput=gc.fKeyInput;
-      fKeyTimerActive=gc.fKeyTimerActive;
-      fScrolling=gc.fScrolling;
-   }
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -1454,7 +1393,7 @@ void TGContainer::RepeatSearch()
 }
 
 //______________________________________________________________________________
-TGFrameElement* TGContainer::FindFrame(Int_t x,Int_t y,Bool_t exclude)
+TGFrameElement *TGContainer::FindFrame(Int_t x,Int_t y,Bool_t exclude)
 {
    // Find frame located int container at position x,y.
 
@@ -1944,31 +1883,6 @@ TGCanvas::TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
 }
 
 //______________________________________________________________________________
-TGCanvas::TGCanvas(const TGCanvas& gc) :
-  TGFrame(gc),
-  fVport(gc.fVport),
-  fHScrollbar(gc.fHScrollbar),
-  fVScrollbar(gc.fVScrollbar),
-  fScrolling(gc.fScrolling)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGCanvas& TGCanvas::operator=(const TGCanvas& gc)
-{
-   //assignment operator
-   if(this!=&gc) {
-      TGFrame::operator=(gc);
-      fVport=gc.fVport;
-      fHScrollbar=gc.fHScrollbar;
-      fVScrollbar=gc.fVScrollbar;
-      fScrolling=gc.fScrolling;
-   } 
-   return *this;
-}
-
-//______________________________________________________________________________
 TGCanvas::~TGCanvas()
 {
    // Delete canvas.
@@ -2053,7 +1967,7 @@ void TGCanvas::Layout()
       return;
    }
 
-   Bool_t fixedw = container->IsLayoutBroken() || (container->GetOptions() & kFixedWidth) ? 
+   Bool_t fixedw = container->IsLayoutBroken() || (container->GetOptions() & kFixedWidth) ?
                    kTRUE : kFALSE;
    Bool_t fixedh = container->IsLayoutBroken() || (container->GetOptions() & kFixedHeight) ?
                    kTRUE : kFALSE;

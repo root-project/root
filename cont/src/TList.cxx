@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.20 2006/05/26 09:04:52 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.21 2006/07/09 05:27:53 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -57,31 +57,6 @@
 namespace std {} using namespace std;
 
 ClassImp(TList)
-
-//______________________________________________________________________________
-TList::TList(const TList& ls) :
-  TSeqCollection(ls),
-  fFirst(ls.fFirst),
-  fLast(ls.fLast),
-  fCache(ls.fCache),
-  fAscending(ls.fAscending)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TList& TList::operator=(const TList& ls)
-{
-   //assignment operator
-   if(this!=&ls) {
-      TSeqCollection::operator=(ls);
-      fFirst=ls.fFirst;
-      fLast=ls.fLast;
-      fCache=ls.fCache;
-      fAscending=ls.fAscending;
-   } 
-   return *this;
-}
 
 //______________________________________________________________________________
 TList::~TList()
@@ -643,7 +618,6 @@ TObject *TList::Remove(TObjLink *lnk)
 
    return obj;
 }
-
 
 //______________________________________________________________________________
 void TList::Sort(Bool_t order)

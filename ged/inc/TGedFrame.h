@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.7 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.8 2006/06/23 15:19:21 antcheva Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -43,10 +43,11 @@ protected:
    Bool_t        fAvoidSignal;   //flag for executing slots
    TGTab        *fTab;           //pointer to the parent tab
 
-   TGedFrame(const TGedFrame&);
-   TGedFrame& operator=(const TGedFrame&);
-
    virtual void MakeTitle(const char *title);
+
+private:
+   TGedFrame(const TGedFrame&);             // not implemented
+   TGedFrame& operator=(const TGedFrame&);  // not implemented
 
 public:
    TGedFrame(const TGWindow *p, Int_t id,
@@ -73,12 +74,10 @@ public:
 // in the list TClass::fClassEditors via the class TGedElement
 
 class TGedElement : public TObject {
-protected:
-   TGedElement(const TGedElement& ge)
-     : TObject(ge), fGedFrame(ge.fGedFrame), fCanvas(ge.fCanvas) { }
-   TGedElement& operator=(const TGedElement& ge)
-     {if(this!=&ge) {TObject::operator=(ge); fGedFrame=ge.fGedFrame;
-     fCanvas=ge.fCanvas;} return *this;}
+
+private:
+   TGedElement(const TGedElement&);             // not implemented
+   TGedElement& operator=(const TGedElement&);  // not implemented
 
 public:
    TGedElement(): fGedFrame(0), fCanvas(0) { }
@@ -91,12 +90,14 @@ public:
 
 
 class TGedNameFrame : public TGedFrame {
+
 protected:
    TGLabel          *fLabel;      //label of attribute frame
    TGCompositeFrame *f1, *f2;     //container frames
 
-   TGedNameFrame(const TGedNameFrame&); // Not implemented
-   TGedNameFrame& operator=(const TGedNameFrame&); // Not implemented
+private:
+   TGedNameFrame(const TGedNameFrame&);            // not implemented
+   TGedNameFrame& operator=(const TGedNameFrame&); // not implemented
 
 public:
    TGedNameFrame(const TGWindow *p, Int_t id,

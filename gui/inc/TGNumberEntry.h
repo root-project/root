@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.15 2006/06/28 17:24:34 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.16 2006/07/03 16:10:45 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -171,14 +171,14 @@ private:
    const TGPicture  *fPicUp;      // Up arrow
    const TGPicture  *fPicDown;    // Down arrow
 
+   TGNumberEntry(const TGNumberEntry&);             // not implemented
+   TGNumberEntry& operator=(const TGNumberEntry&);  // not implemented
+
 protected:
    TGNumberEntryField *fNumericEntry;  // Number text entry field
    TGButton           *fButtonUp;      // Button for increasing value
    TGButton           *fButtonDown;    // Button for decreasing value
    Bool_t              fButtonToNum;   // Send button messages to parent rather than number entry field
-
-   TGNumberEntry(const TGNumberEntry&);
-   TGNumberEntry& operator=(const TGNumberEntry&);
 
 public:
    TGNumberEntry(const TGWindow *parent = 0, Double_t val = 0,
@@ -295,11 +295,9 @@ class TGNumberEntryLayout : public TGLayoutManager {
 protected:
    TGNumberEntry *fBox;        // pointer to numeric control box
 
-   TGNumberEntryLayout(const TGNumberEntryLayout& el) :
-     TGLayoutManager(el), fBox(el.fBox) { }
-   TGNumberEntryLayout& operator=(const TGNumberEntryLayout& el)
-     {if(this!=&el) { TGLayoutManager::operator=(el); fBox=el.fBox;}
-     return *this;}
+private:
+   TGNumberEntryLayout(const TGNumberEntryLayout&);             // not implemented
+   TGNumberEntryLayout& operator=(const TGNumberEntryLayout&);  // not implemented
 
 public:
    TGNumberEntryLayout(TGNumberEntry *box): fBox(box) { }

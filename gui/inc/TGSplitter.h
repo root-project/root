@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.14 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.15 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -35,13 +35,9 @@ protected:
    Bool_t      fDragging;         // true if in dragging mode
    const TGPicture *fSplitterPic; // picture to draw splitter
 
-   TGSplitter(const TGSplitter& sp) : TGFrame(sp),
-     fSplitCursor(sp.fSplitCursor), fDragging(sp.fDragging),
-     fSplitterPic(sp.fSplitterPic) { }
-   TGSplitter& operator=(const TGSplitter& sp) 
-     {if(this!=&sp) { TGFrame::operator=(sp);
-     fSplitCursor=sp.fSplitCursor; fDragging=sp.fDragging;
-     fSplitterPic=sp.fSplitterPic;} return *this; }
+private:
+   TGSplitter(const TGSplitter&);             // not implemented
+   TGSplitter& operator=(const TGSplitter&);  // not implemented
 
 public:
    TGSplitter(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 4,
@@ -60,8 +56,8 @@ public:
 class TGVSplitter : public TGSplitter {
 
 private:
-   TGVSplitter(const TGVSplitter&);
-   TGVSplitter& operator=(const TGVSplitter&);
+   TGVSplitter(const TGVSplitter&);             // not implemented
+   TGVSplitter& operator=(const TGVSplitter&);  // not implemented
 
 protected:
    Int_t       fStartX;         // x position when dragging starts
@@ -96,8 +92,8 @@ public:
 class TGHSplitter : public TGSplitter {
 
 private:
-   TGHSplitter(const TGHSplitter&);
-   TGHSplitter& operator=(const TGHSplitter&);
+   TGHSplitter(const TGHSplitter&);             // not implemented
+   TGHSplitter& operator=(const TGHSplitter&);  // not implemented
 
 protected:
    Int_t       fStartY;         // y position when dragging starts

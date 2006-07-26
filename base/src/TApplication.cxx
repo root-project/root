@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.75 2006/05/26 09:01:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.76 2006/07/09 05:27:53 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -216,49 +216,6 @@ TApplication::TApplication(const char *appClassName,
    gInterpreter->EnableAutoLoading();
 
    gROOT->SetLineHasBeenProcessed(); // to allow user to interact with TCanvas's under WIN32
-}
-
-//______________________________________________________________________________
-TApplication::TApplication(const TApplication& ap) :
-  TObject(ap),
-  TQObject(ap),
-  fArgc(ap.fArgc),
-  fArgv(ap.fArgv),
-  fAppImp(ap.fAppImp),
-  fIsRunning(ap.fIsRunning),
-  fReturnFromRun(ap.fReturnFromRun),
-  fNoLog(ap.fNoLog),
-  fNoLogo(ap.fNoLogo),
-  fQuit(ap.fQuit),
-  fFiles(ap.fFiles),
-  fIdleCommand(ap.fIdleCommand),
-  fIdleTimer(ap.fIdleTimer),
-  fSigHandler(ap.fSigHandler)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TApplication& TApplication::operator=(const TApplication& ap) 
-{
-   //assignment operator
-   if(this!=&ap) {
-      TObject::operator=(ap);
-      TQObject::operator=(ap);
-      fArgc=ap.fArgc;
-      fArgv=ap.fArgv;
-      fAppImp=ap.fAppImp;
-      fIsRunning=ap.fIsRunning;
-      fReturnFromRun=ap.fReturnFromRun;
-      fNoLog=ap.fNoLog;
-      fNoLogo=ap.fNoLogo;
-      fQuit=ap.fQuit;
-      fFiles=ap.fFiles;
-      fIdleCommand=ap.fIdleCommand;
-      fIdleTimer=ap.fIdleTimer;
-      fSigHandler=ap.fSigHandler;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________

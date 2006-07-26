@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.30 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.31 2006/07/24 16:11:45 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -69,9 +69,6 @@ protected:
    static TGGC       *fgLineGC;
    static const TGGC &GetLineGC();
 
-   TGContainer(const TGContainer&);
-   TGContainer& operator=(const TGContainer&);
-
    virtual void DoRedraw();
    virtual void ClearViewPort();
    virtual void ActivateItem(TGFrameElement* el);
@@ -79,6 +76,10 @@ protected:
    virtual void SearchPattern();
    virtual void OnAutoScroll();
    virtual void RepeatSearch();
+
+private:
+   TGContainer(const TGContainer&);               // not implemented
+   TGContainer& operator=(const TGContainer&);    // not implemented
 
 public:
    TGContainer(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
@@ -103,7 +104,7 @@ public:
    const TGWindow   *GetMessageWindow() const { return fMsgWindow; }
    TGPosition        GetPagePosition() const;
    TGDimension       GetPageDimension() const;
-   TGCanvas         *GetCanvas() const { return fCanvas; }          
+   TGCanvas         *GetCanvas() const { return fCanvas; }
 
    virtual Int_t  NumSelected() const { return fSelected; }
    virtual Int_t  NumItems() const { return fTotal; }
@@ -161,11 +162,9 @@ protected:
    Int_t       fX0, fY0;     // position of container frame in viewport
    TGFrame    *fContainer;   // container frame
 
-   TGViewPort(const TGViewPort& vp) :
-     TGCompositeFrame(vp), fX0(vp.fX0), fY0(vp.fY0), fContainer(vp.fContainer) { }
-   TGViewPort& operator=(const TGViewPort& vp)
-     {if(this!=&vp) { TGCompositeFrame::operator=(vp); 
-     fX0=vp.fX0; fY0=vp.fY0;} return *this;}
+private:
+   TGViewPort(const TGViewPort&);             // not implemented
+   TGViewPort& operator=(const TGViewPort&);  // not implemented
 
 public:
    TGViewPort(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
@@ -199,8 +198,9 @@ protected:
    TGVScrollBar    *fVScrollbar;   // vertical scrollbar
    Int_t            fScrolling;    // flag which scrolling modes are allowed
 
-   TGCanvas(const TGCanvas&);
-   TGCanvas& operator=(const TGCanvas&);
+private:
+   TGCanvas(const TGCanvas&);              // not implemented
+   TGCanvas& operator=(const TGCanvas&);   // not implemented
 
 public:
    enum { kCanvasNoScroll         = 0,

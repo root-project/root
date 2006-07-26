@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.70 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.71 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -113,41 +113,6 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
 
    AddInput(kEnterWindowMask | kLeaveWindowMask);
    SetWindowName();
-}
-
-//______________________________________________________________________________
-TGButton::TGButton(const TGButton& tgb) :
-  TGFrame(tgb),
-  TGWidget(tgb),
-  fTWidth(tgb.fTWidth),
-  fTHeight(tgb.fTHeight),
-  fState(tgb.fState),
-  fStayDown(tgb.fStayDown),
-  fNormGC(tgb.fNormGC),
-  fUserData(tgb.fUserData), 
-  fTip(tgb.fTip), 
-  fGroup(tgb.fGroup)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGButton& TGButton::operator=(const TGButton& tgb) 
-{
-   //assignment operator
-   if(this!=&tgb) {
-      TGFrame::operator=(tgb);
-      TGWidget::operator=(tgb);
-      fTWidth=tgb.fTWidth;
-      fTHeight=tgb.fTHeight;
-      fState=tgb.fState;
-      fStayDown=tgb.fStayDown;
-      fNormGC=tgb.fNormGC;
-      fUserData=tgb.fUserData; 
-      fTip=tgb.fTip; 
-      fGroup=tgb.fGroup;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -327,18 +292,18 @@ void TGButton::SetToolTipText(const char *text, Long_t delayms)
 void TGButton::SetEnabled(Bool_t e)
 {
    // Set enabled or disabled state of button
- 
+
    SetState(e ? kButtonUp : kButtonDisabled);
 
    if (e) fWidgetFlags |= kWidgetIsEnabled;
    else   fWidgetFlags &= ~kWidgetIsEnabled;
-} 
+}
 
 //______________________________________________________________________________
 const TGGC &TGButton::GetDefaultGC()
 {
    // Return default graphics context.
-   
+
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
@@ -348,10 +313,10 @@ const TGGC &TGButton::GetDefaultGC()
 const TGGC &TGButton::GetHibckgndGC()
 {
    // Return graphics context for highlighted frame background.
-   
+
    if (!fgHibckgndGC) {
       GCValues_t gval;
-      gval.fMask = kGCForeground | kGCBackground | kGCTile | 
+      gval.fMask = kGCForeground | kGCBackground | kGCTile |
                    kGCFillStyle  | kGCGraphicsExposures;
       gval.fForeground = gClient->GetResourcePool()->GetFrameHiliteColor();
       gval.fBackground = gClient->GetResourcePool()->GetFrameBgndColor();
@@ -403,33 +368,6 @@ TGTextButton::TGTextButton(const TGWindow *p, const char *s, const char *cmd,
    fCommand = cmd;
 
    Init();
-}
-
-//______________________________________________________________________________
-TGTextButton::TGTextButton(const TGTextButton& tgt) :
-  TGButton(tgt),
-  fLabel(tgt.fLabel),
-  fTMode(tgt.fTMode),
-  fHKeycode(tgt.fHKeycode),
-  fFontStruct(tgt.fFontStruct),
-  fHasOwnFont(tgt.fHasOwnFont) 
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGTextButton& TGTextButton::operator=(const TGTextButton& tgt) 
-{
-   //assignment operator
-   if(this!=&tgt) {
-      TGButton::operator=(tgt);
-      fLabel=tgt.fLabel;
-      fTMode=tgt.fTMode;
-      fHKeycode=tgt.fHKeycode;
-      fFontStruct=tgt.fFontStruct;
-      fHasOwnFont=tgt.fHasOwnFont;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -627,7 +565,7 @@ void TGTextButton::SetFont(FontStruct_t font, Bool_t global)
       if (!v) return;
 
       fFontStruct = font;
-      TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool(); 
+      TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
       TGGC *gc = pool->FindGC(fNormGC);
 
       if (!global) {
@@ -665,7 +603,7 @@ void TGTextButton::SetTextColor(Pixel_t color, Bool_t global)
    // Changes text color.
    // If global is true color is changed globally, otherwise - locally.
 
-   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool(); 
+   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
    TGGC *gc = pool->FindGC(fNormGC);
 
    if (!global) {
@@ -1131,7 +1069,7 @@ void TGCheckButton::DoRedraw()
 FontStruct_t TGCheckButton::GetDefaultFontStruct()
 {
    // Return default font structure.
-   
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
@@ -1337,7 +1275,7 @@ Bool_t TGRadioButton::HandleKey(Event_t *event)
    else
       gVirtualX->SetKeyAutoRepeat(kTRUE);
 
-   if (fTip && event->fType == kGKeyPress) 
+   if (fTip && event->fType == kGKeyPress)
       fTip->Hide();
 
    if (fState == kButtonDisabled) return kTRUE;

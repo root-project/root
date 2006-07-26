@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.293 2006/07/14 20:51:08 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.294 2006/07/23 03:41:21 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -435,103 +435,6 @@ TTree::TTree()
 
    fMaxEntryLoop = 1000000000;
    fMaxEntryLoop *= 1000;
-}
-
-//______________________________________________________________________________
-TTree::TTree(const TTree& tt): TNamed(tt), TAttLine(tt), TAttFill(tt), TAttMarker(tt),
-     fEntries(tt.fEntries),
-     fTotBytes(tt.fTotBytes),
-     fZipBytes(tt.fZipBytes),
-     fSavedBytes(tt.fSavedBytes),
-     fWeight(tt.fWeight),
-     fTimerInterval(tt.fTimerInterval),
-     fScanField(tt.fScanField),
-     fUpdate(tt.fUpdate),
-     fMaxEntries(tt.fMaxEntries),
-     fMaxEntryLoop(tt.fMaxEntryLoop),
-     fMaxVirtualSize(tt.fMaxVirtualSize),
-     fAutoSave(tt.fAutoSave),
-     fEstimate(tt.fEstimate),
-     fCacheSize(10000000),
-     fChainOffset(tt.fChainOffset),
-     fReadEntry(tt.fReadEntry),
-     fTotalBuffers(tt.fTotalBuffers),
-     fPacketSize(tt.fPacketSize),
-     fNfill(tt.fNfill),
-     fDebug(tt.fDebug),
-     fDebugMin(tt.fDebugMin),
-     fDebugMax(tt.fDebugMax),
-     fMakeClass(tt.fMakeClass),
-     fFileNumber(tt.fFileNumber),
-     fNotify(tt.fNotify),
-     fDirectory(tt.fDirectory),
-     fBranches(tt.fBranches),
-     fLeaves(tt.fLeaves),
-     fAliases(tt.fAliases),
-     fEventList(tt.fEventList),
-     fIndexValues(tt.fIndexValues),
-     fIndex(tt.fIndex),
-     fTreeIndex(tt.fTreeIndex),
-     fFriends(tt.fFriends),
-     fUserInfo(tt.fUserInfo),
-     fPlayer(tt.fPlayer),
-     fClones(tt.fClones),
-     fBranchRef(tt.fBranchRef),
-     fFriendLockStatus(tt.fFriendLockStatus)
-{
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TTree& TTree::operator=(const TTree& tt)
-{
-   //assignement operator
-   if(this!=&tt) {
-      TNamed::operator=(tt);
-      TAttLine::operator=(tt);
-      TAttFill::operator=(tt);
-      TAttMarker::operator=(tt);
-      fEntries=tt.fEntries;
-      fTotBytes=tt.fTotBytes;
-      fZipBytes=tt.fZipBytes;
-      fSavedBytes=tt.fSavedBytes;
-      fWeight=tt.fWeight;
-      fTimerInterval=tt.fTimerInterval;
-      fScanField=tt.fScanField;
-      fUpdate=tt.fUpdate;
-      fMaxEntries=tt.fMaxEntries;
-      fMaxEntryLoop=tt.fMaxEntryLoop;
-      fMaxVirtualSize=tt.fMaxVirtualSize;
-      fAutoSave=tt.fAutoSave;
-      fEstimate=tt.fEstimate;
-      fCacheSize=tt.fCacheSize;
-      fChainOffset=tt.fChainOffset;
-      fReadEntry=tt.fReadEntry;
-      fTotalBuffers=tt.fTotalBuffers;
-      fPacketSize=tt.fPacketSize;
-      fNfill=tt.fNfill;
-      fDebug=tt.fDebug;
-      fDebugMin=tt.fDebugMin;
-      fDebugMax=tt.fDebugMax;
-      fMakeClass=tt.fMakeClass;
-      fFileNumber=tt.fFileNumber;
-      fNotify=tt.fNotify;
-      fDirectory=tt.fDirectory;
-      fBranches=tt.fBranches;
-      fLeaves=tt.fLeaves;
-      fAliases=tt.fAliases;
-      fEventList=tt.fEventList;
-      fIndexValues=tt.fIndexValues;
-      fIndex=tt.fIndex;
-      fTreeIndex=tt.fTreeIndex;
-      fFriends=tt.fFriends;
-      fUserInfo=tt.fUserInfo;
-      fPlayer=tt.fPlayer;
-      fClones=tt.fClones;
-      fBranchRef=tt.fBranchRef;
-      fFriendLockStatus=tt.fFriendLockStatus;
-   }
-   return *this;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.31 2006/07/20 17:52:55 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.32 2006/07/24 16:11:45 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -64,35 +64,6 @@ static TGFileInfo gInfo;
 
 
 ClassImp(TGFileDialog)
-
-//______________________________________________________________________________
-TGFileInfo::TGFileInfo(const TGFileInfo& fi) :
-    fFilename(fi.fFilename),
-    fIniDir(fi.fIniDir),
-    fFileTypes(fi.fFileTypes),
-    fFileTypeIdx(fi.fFileTypeIdx),
-    fOverwrite(fi.fOverwrite),
-    fMultipleSelection(fi.fMultipleSelection),
-    fFileNamesList(fi.fFileNamesList)
-{
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGFileInfo& TGFileInfo::operator=(const TGFileInfo& fi)
-{
-   //assignment operator
-   if(this!=&fi) {
-      fFilename=fi.fFilename;
-      fIniDir=fi.fIniDir;
-      fFileTypes=fi.fFileTypes;
-      fFileTypeIdx=fi.fFileTypeIdx;
-      fOverwrite=fi.fOverwrite;
-      fMultipleSelection=fi.fMultipleSelection;
-      fFileNamesList=fi.fFileNamesList;
-   }
-   return *this;
-}
 
 //______________________________________________________________________________
 TGFileInfo::~TGFileInfo()
@@ -205,13 +176,13 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 
    if (dlg_type == kFDSave) {
       fOverWR = new TGCheckButton(fHtop, "&Overwrite", kIDF_OVERWRITE);
-      fOverWR->SetToolTipText("Overwrite a file without displaying a message if selected.");
+      fOverWR->SetToolTipText("Overwrite a file without displaying a message if selected");
       fHtop->AddFrame(fOverWR, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
       fOverWR->SetOn(fFileInfo->fOverwrite);
       fMultiSel = 0;
    } else {
-      fMultiSel = new TGCheckButton(fHtop, "&Multiple Sel", kIDF_MULTISEL);
-      fMultiSel->SetToolTipText("Allows Multiple File Selection if selected.");
+      fMultiSel = new TGCheckButton(fHtop, "&Multi Select", kIDF_MULTISEL);
+      fMultiSel->SetToolTipText("Allow multiple file to be selected");
       fHtop->AddFrame(fMultiSel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
       fMultiSel->SetOn(fFileInfo->fMultipleSelection);
       fMultiSel->Connect("Toggled(Bool_t)","TGFileInfo",fFileInfo,"SetMultipleSelection(Bool_t)");
@@ -347,59 +318,6 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    MapWindow();
    fFc->DisplayDirectory();
    fClient->WaitFor(this);
-}
-
-//______________________________________________________________________________
-TGFileDialog::TGFileDialog(const TGFileDialog& fd) :
-  TGTransientFrame(fd),
-  fTbfname(fd.fTbfname),
-  fName(fd.fName),
-  fTypes(fd.fTypes),
-  fTreeLB(fd.fTreeLB),
-  fCdup(fd.fCdup),
-  fNewf(fd.fNewf),
-  fList(fd.fList),
-  fDetails(fd.fDetails),
-  fOverWR(fd.fOverWR),
-  fPcdup(fd.fPcdup),
-  fPnewf(fd.fPnewf),
-  fPlist(fd.fPlist),
-  fPdetails(fd.fPdetails),
-  fOk(fd.fOk),
-  fCancel(fd.fCancel),
-  fFv(fd.fFv),
-  fFc(fd.fFc),
-  fFileInfo(fd.fFileInfo)
-{
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGFileDialog& TGFileDialog::operator=(const TGFileDialog& fd)
-{
-   //assignment operator
-   if(this!=&fd) {
-      TGTransientFrame::operator=(fd);
-      fTbfname=fd.fTbfname;
-      fName=fd.fName;
-      fTypes=fd.fTypes;
-      fTreeLB=fd.fTreeLB;
-      fCdup=fd.fCdup;
-      fNewf=fd.fNewf;
-      fList=fd.fList;
-      fDetails=fd.fDetails;
-      fOverWR=fd.fOverWR;
-      fPcdup=fd.fPcdup;
-      fPnewf=fd.fPnewf;
-      fPlist=fd.fPlist;
-      fPdetails=fd.fPdetails;
-      fOk=fd.fOk;
-      fCancel=fd.fCancel;
-      fFv=fd.fFv;
-      fFc=fd.fFc;
-      fFileInfo=fd.fFileInfo;
-   }
-   return *this;
 }
 
 //______________________________________________________________________________

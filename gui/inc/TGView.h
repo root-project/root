@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.15 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.16 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -75,8 +75,9 @@ protected:
                                     // generates GraphicsExposure events
    Bool_t            fReadOnly;     // text cannot be editted
 
-   TGView(const TGView&); 
-   TGView& operator=(const TGView&); 
+private:
+   TGView(const TGView&);              // not implemented
+   TGView& operator=(const TGView&);   // not implemented
 
 public:
    TGView(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
@@ -131,7 +132,7 @@ public:
    virtual void SetReadOnly(Bool_t on = kTRUE) { fReadOnly = on; } //*TOGGLE* *GETTER=IsReadOnly
    virtual Bool_t IsReadOnly() const { return fReadOnly; }
    virtual void   ChangeBackground(Pixel_t);
-   const TGGC &GetWhiteGC() { return fWhiteGC; }    
+   const TGGC &GetWhiteGC() { return fWhiteGC; }
 
    virtual void Marked(Bool_t mark) { Emit("Marked(Bool_t)", mark); } // *SIGNAL*
 
@@ -149,12 +150,8 @@ class TGViewFrame : public TGCompositeFrame {
 private:
    TGView   *fView;  // pointer back to the view
 
-protected:
-   TGViewFrame(const TGViewFrame& vf) :
-     TGCompositeFrame(vf), fView(vf.fView) {}
-   TGViewFrame& operator=(const TGViewFrame& vf) 
-     {if(this!=&vf) { TGCompositeFrame::operator=(vf);
-     fView=vf.fView;} return *this;}
+   TGViewFrame(const TGViewFrame&);              // not implemented
+   TGViewFrame& operator=(const TGViewFrame&);   // not implemented
 
 public:
    TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options = 0,
@@ -187,12 +184,8 @@ class TViewTimer : public TTimer {
 private:
    TGView   *fView;
 
-protected:
-   TViewTimer(const TViewTimer& vt) :
-     TTimer(vt), fView(vt.fView) { }
-   TViewTimer& operator=(const TViewTimer& vt)
-     {if(this!=&vt) { TTimer::operator=(vt); fView=vt.fView; }
-     return *this; }
+   TViewTimer(const TViewTimer&);             // not implemented
+   TViewTimer& operator=(const TViewTimer&);  // not implemented
 
 public:
    TViewTimer(TGView *t, Long_t ms) : TTimer(ms, kTRUE), fView(t) { }

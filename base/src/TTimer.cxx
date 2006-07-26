@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.13 2006/05/26 09:01:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.14 2006/07/09 05:27:53 brun Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -117,39 +117,6 @@ TTimer::TTimer(const char *command, Long_t ms, Bool_t mode) : fTime(ms)
    fSync        = mode;
    fIntSyscalls = kFALSE;
    Reset();
-}
-
-//______________________________________________________________________________
-TTimer::TTimer(const TTimer &ti) :
-  TSysEvtHandler(ti),
-  fTime(ti.fTime),
-  fAbsTime(ti.fAbsTime),
-  fTimeout(ti.fTimeout),
-  fSync(ti.fSync),
-  fIntSyscalls(ti.fIntSyscalls),
-  fTimeID(ti.fTimeID),
-  fObject(ti.fObject),
-  fCommand(ti.fCommand)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TTimer& TTimer::operator=(const TTimer &ti) 
-{
-   //assignment operator
-   if(this!=&ti) {
-      TSysEvtHandler::operator=(ti);
-      fTime=ti.fTime;
-      fAbsTime=ti.fAbsTime;
-      fTimeout=ti.fTimeout;
-      fSync=ti.fSync;
-      fIntSyscalls=ti.fIntSyscalls;
-      fTimeID=ti.fTimeID;
-      fObject=ti.fObject;
-      fCommand=ti.fCommand;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________

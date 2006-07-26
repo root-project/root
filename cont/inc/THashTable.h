@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.11 2006/05/23 04:47:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.12 2006/05/26 15:13:01 rdm Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -50,10 +50,8 @@ private:
    Int_t       GetHashValue(TString &s) const { return s.Hash() % fSize; }
    Int_t       GetHashValue(const char *str) const { return ::Hash(str) % fSize; }
 
-
-protected:
-   THashTable(const THashTable&);
-   THashTable& operator=(const THashTable&);
+   THashTable(const THashTable&);             // not implemented
+   THashTable& operator=(const THashTable&);  // not implemented
 
 public:
    THashTable(Int_t capacity = TCollection::kInitHashTableCapacity, Int_t rehash = 0);

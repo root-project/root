@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.7 2006/05/13 11:00:50 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.8 2006/05/23 04:47:36 brun Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -37,7 +37,6 @@ class TExMap : public TObject {
 friend class TExMapIter;
 
 private:
-
    struct Assoc_t {
    private:
       ULong_t  fHash;
@@ -58,6 +57,7 @@ private:
    void        Expand(Int_t newsize);
    Int_t       FindElement(ULong_t hash, Long_t key);
    void        FixCollisions(Int_t index);
+
 
 public:
    TExMap(Int_t mapSize = 100);
@@ -87,15 +87,14 @@ public:
 class TExMapIter {
 
 private:
-   TExMapIter& operator=(const TExMapIter&);
-
    const TExMap   *fMap;
    Int_t           fCursor;
 
 public:
    TExMapIter(const TExMap *map);
-   TExMapIter(const TExMapIter& tei): 
+   TExMapIter(const TExMapIter& tei):
      fMap(tei.fMap), fCursor(tei.fCursor) { }
+   TExMapIter& operator=(const TExMapIter&);
    virtual ~TExMapIter() { }
 
    const TExMap  *GetCollection() const { return fMap; }

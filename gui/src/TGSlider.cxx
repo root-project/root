@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.20 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.21 2006/07/19 12:58:52 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -69,41 +69,6 @@ TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
    fType     = type;
    fScale    = 10;
    fDragging = kFALSE;
-}
-
-//______________________________________________________________________________
-TGSlider::TGSlider(const TGSlider& sl) :
-   TGFrame(sl),
-   TGWidget(sl),
-   fPos(sl.fPos),
-   fRelPos(sl.fRelPos),
-   fVmin(sl.fVmin),
-   fVmax(sl.fVmax),
-   fType(sl.fType),
-   fScale(sl.fScale),
-   fDragging(sl.fDragging),
-   fSliderPic(sl.fSliderPic)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGSlider& TGSlider::operator=(const TGSlider& sl) 
-{
-   //assignment operator
-   if(this!=&sl) {
-      TGFrame::operator=(sl);
-      TGWidget::operator=(sl);
-      fPos=sl.fPos;
-      fRelPos=sl.fRelPos;
-      fVmin=sl.fVmin;
-      fVmax=sl.fVmax;
-      fType=sl.fType;
-      fScale=sl.fScale;
-      fDragging=sl.fDragging;
-      fSliderPic=sl.fSliderPic;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -190,7 +155,7 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
       }
       // last argument kFALSE forces all specified events to this window
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                             kPointerMotionMask, kNone, kNone, 
+                             kPointerMotionMask, kNone, kNone,
                              kTRUE, kFALSE);
 
       if (event->fY >= fRelPos - 7 && event->fY <= fRelPos + 7) {

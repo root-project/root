@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.13 2006/05/23 04:47:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.14 2006/05/24 15:10:47 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -45,26 +45,6 @@ TNtuple::TNtuple(): TTree()
 
    fNvar = 0;
    fArgs = 0;
-}
-
-//______________________________________________________________________________
-TNtuple::TNtuple(const TNtuple& tnt) : 
-  TTree(tnt), fNvar(tnt.fNvar), fArgs(tnt.fArgs)
-{
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TNtuple& TNtuple::operator=(const TNtuple& tnt)
-{
-   //assignement operator
-   
-   if(this!=&tnt) {
-      TTree::operator=(tnt);
-      fNvar=tnt.fNvar;
-      fArgs=tnt.fArgs;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -202,7 +182,7 @@ Long64_t TNtuple::ReadFile(const char *filename, const char * /*branchDescriptor
    // the function returns the number of rows found in the file
    // The second argument "branchDescriptor" is currently not used.
    // Lines in the input file starting with "#" are ignored.
-   
+
    Long64_t nlines = 0;
    ifstream in;
    in.open(filename);

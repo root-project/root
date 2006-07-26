@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.7 2005/03/03 22:06:49 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.8 2006/05/23 04:47:36 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
@@ -48,15 +48,16 @@ protected:
    TVirtualPad      *fPad;              //selected pad
    TCanvas          *fCanvas;           //canvas related to the editor
    TClass           *fClass;            //class of the selected object
-   Int_t             fWid;              //widget id 
+   Int_t             fWid;              //widget id
    Bool_t            fGlobal;           //true if editor is global
-   
-   TGedEditor(const TGedEditor&); 
-   TGedEditor& operator=(const TGedEditor&); 
 
    virtual void GetEditors();
    virtual void GetClassEditor(TClass *cl);
    virtual void GetBaseClassEditor(TClass *cl);
+
+private:
+   TGedEditor(const TGedEditor&);              // not implemented
+   TGedEditor& operator=(const TGedEditor&);   // not implemented
 
 public:
    TGedEditor(TCanvas* canvas = 0);
@@ -67,15 +68,15 @@ public:
    virtual void   DeleteEditors();
    virtual void   DisconnectEditors(TCanvas *canvas);
    TCanvas       *GetCanvas() const { return fCanvas; }
-   virtual Bool_t IsGlobal() const { return fGlobal; } 
+   virtual Bool_t IsGlobal() const { return fGlobal; }
    virtual void   Hide();
    virtual void   SetCanvas(TCanvas *c);
    virtual void   SetGlobal(Bool_t global) { fGlobal = global; }
    virtual void   SetModel(TVirtualPad* pad, TObject* obj, Int_t event);
    virtual void   Show();
    virtual void   RecursiveRemove(TObject* obj);
-   
-   ClassDef(TGedEditor,0)  //new editor 
+
+   ClassDef(TGedEditor,0)  //new editor
 };
 
 #endif

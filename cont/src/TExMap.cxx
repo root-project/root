@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.11 2006/05/23 04:47:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.12 2006/05/24 14:34:00 brun Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -34,7 +34,7 @@ TExMap::TExMap(Int_t mapSize)
 
    // needed for automatic resizing to guarantee that one slot is always empty
    if (mapSize < 4) mapSize = 5;
-   
+
    switch (mapSize) {
       // Avoid calling NextPrime for the common case:
       case   5: fSize = 5; break;
@@ -62,14 +62,15 @@ TExMap::TExMap(const TExMap &map) : TObject(map)
 //______________________________________________________________________________
 TExMap& TExMap::operator=(const TExMap &map)
 {
-   //assignement operator
-   if(this!=&map) {
+   // Assignement operator.
+
+   if (this != &map) {
       TObject::operator=(map);
       fSize  = map.fSize;
       fTally = map.fTally;
       fTable = new Assoc_t [fSize];
       memcpy(fTable, map.fTable, fSize*sizeof(Assoc_t));
-   } 
+   }
    return *this;
 }
 
@@ -108,7 +109,7 @@ void TExMap::AddAt(UInt_t slot, ULong_t hash, Long_t key, Long_t value)
    // otherwise revert to Add(hash,key,value)
    // This is usually used in conjuction with GetValue wiht 3 parameters:
    // if ((idx = (ULong_t)fMap->GetValue(hash, key, slot)) != 0) {
-   //    ... 
+   //    ...
    // } else {
    //    fMap->AddAt(slot,hash,key,value);
    // }
@@ -341,6 +342,18 @@ ClassImp(TExMapIter)
 TExMapIter::TExMapIter(const TExMap *map) : fMap(map), fCursor(0)
 {
    // Create TExMap iterator.
+}
+
+//______________________________________________________________________________
+TExMapIter &TExMapIter::operator=(const TExMapIter &rhs)
+{
+   // Overloaded assignment operator.
+
+   if (this != &rhs) {
+      fMap    = rhs.fMap;
+      fCursor = rhs.fCursor;
+   }
+   return *this;
 }
 
 //______________________________________________________________________________

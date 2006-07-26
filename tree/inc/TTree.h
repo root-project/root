@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.89 2006/06/25 14:14:10 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.90 2006/07/13 05:31:49 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -90,7 +90,7 @@ class TCut;
 class TVirtualIndex;
 class TBranchRef;
 
-class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker { 
+class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
 protected:
    Long64_t       fEntries;           //  Number of entries
@@ -136,8 +136,9 @@ protected:
    static Int_t     fgBranchStyle;      //  Old/New branch style
    static Long64_t  fgMaxTreeSize;      //  Maximum size of a file containg a Tree
 
-   TTree(const TTree& tt);
-   TTree& operator=(const TTree& tt);
+private:
+   TTree(const TTree& tt);              // not implemented
+   TTree& operator=(const TTree& tt);   // not implemented
 
 protected:
    void             AddClone(TTree*);
@@ -149,7 +150,7 @@ protected:
    virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual Bool_t   CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, Bool_t ptr);
 
-   class TFriendLock { 
+   class TFriendLock {
       // Helper class to prevent infinite recursion in the
       // usage of TTree Friends. Implemented in TTree.cxx.
       TTree  *fTree;      // Pointer to the locked tree
@@ -167,7 +168,7 @@ protected:
    friend class TFriendLock;
 
    // use to update fFriendLockStatus
-   enum ELockStatusBits { 
+   enum ELockStatusBits {
       kFindBranch        = BIT(0),
       kFindLeaf          = BIT(1),
       kGetAlias          = BIT(2),
@@ -184,7 +185,7 @@ protected:
 
 public:
    // TTree status bits
-   enum { 
+   enum {
       kForceRead   = BIT(11),
       kCircular    = BIT(12)
    };
@@ -207,12 +208,12 @@ public:
    virtual TBranch        *Branch(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 99);
 #endif
    template <class T> TBranch *Branch(const char* name, const char* classname, T** addobj, Int_t bufsize = 32000, Int_t splitlevel = 99)
-   { 
+   {
       // See BranchImp for details
       return BranchImp(name, classname, TBuffer::GetClass(typeid(T)), addobj, bufsize, splitlevel);
    }
    template <class T> TBranch *Branch(const char* name, T** addobj, Int_t bufsize = 32000, Int_t splitlevel = 99)
-   { 
+   {
       // See BranchImp for details
       return BranchImp(name, TBuffer::GetClass(typeid(T)), addobj, bufsize, splitlevel);
    }
@@ -392,7 +393,7 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TTreeFriendLeafIter : public TIterator { 
+class TTreeFriendLeafIter : public TIterator {
 
 protected:
    TTree             *fTree;         //tree being iterated

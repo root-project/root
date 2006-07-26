@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.11 2006/05/24 14:49:21 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.12 2006/06/23 15:19:22 antcheva Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -48,36 +48,6 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t id, Int_t width,
 }
 
 //______________________________________________________________________________
-TGedFrame::TGedFrame(const TGedFrame& gf) :
-  TGCompositeFrame(gf),
-  TGWidget(gf),
-  fModel(gf.fModel),
-  fPad(gf.fPad),
-  fInit(gf.fInit),
-  fAvoidSignal(gf.fAvoidSignal),
-  fTab(gf.fTab)
-{ 
-   // Copy constructor.
-}
-
-//______________________________________________________________________________
-TGedFrame& TGedFrame::operator=(const TGedFrame& gf)
-{
-   // Assignement operator.
-
-   if(this!=&gf) {
-      TGCompositeFrame::operator=(gf);
-      TGWidget::operator=(gf);
-      fModel=gf.fModel;
-      fPad=gf.fPad;
-      fInit=gf.fInit;
-      fAvoidSignal=gf.fAvoidSignal;
-      fTab=gf.fTab;
-   } 
-   return *this;
-}
-
-//______________________________________________________________________________
 TGedFrame::~TGedFrame()
 {
    // Destructor of the base GUI attribute frame.
@@ -107,10 +77,10 @@ void TGedFrame::MakeTitle(const char *title)
    // Create attribute frame title.
 
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
-                                                              kLHintsExpandX | 
-                                                              kFixedWidth | 
+                                                              kLHintsExpandX |
+                                                              kFixedWidth |
                                                               kOwnBackground);
-   f1->AddFrame(new TGLabel(f1, title), 
+   f1->AddFrame(new TGLabel(f1, title),
                 new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1),
                 new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
@@ -126,7 +96,7 @@ void TGedFrame::SetActive(Bool_t active)
       ((TGCompositeFrame*)GetParent())->ShowFrame(this);
    else
       ((TGCompositeFrame*)GetParent())->HideFrame(this);
-   
+
 // no need to call for every single editor Layout of TGMainFrame
 //   ((TGMainFrame*)GetMainFrame())->Layout();
 
@@ -195,12 +165,12 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
 {
    // Create the frame containing the selected object name.
 
-   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | 
-                                            kFixedWidth      | 
+   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
+                                            kFixedWidth      |
                                             kOwnBackground);
-   f1->AddFrame(new TGLabel(f1,"Name"), 
+   f1->AddFrame(new TGLabel(f1,"Name"),
                 new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-   f1->AddFrame(new TGHorizontal3DLine(f1), 
+   f1->AddFrame(new TGHorizontal3DLine(f1),
                 new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    AddFrame(f1, new TGLayoutHints(kLHintsTop));
 
@@ -213,30 +183,6 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
    Pixel_t color;
    gClient->GetColorByName("#ff0000", color);
    fLabel->SetTextColor(color, kFALSE);
-}
-
-//______________________________________________________________________________
-TGedNameFrame::TGedNameFrame(const TGedNameFrame& nf) :
-  TGedFrame(nf),
-  fLabel(nf.fLabel),
-  f1(nf.f1),
-  f2(nf.f2)
-{ 
-   // Copy constructor.
-}
-
-//______________________________________________________________________________
-TGedNameFrame& TGedNameFrame::operator=(const TGedNameFrame& nf)
-{
-   // Assignement operator.
-
-   if(this!=&nf) {
-      TGedFrame::operator=(nf);
-      fLabel=nf.fLabel;
-      f1=nf.f1;
-      f2=nf.f2;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.27 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.28 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -90,41 +90,6 @@ TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
 }
 
 //______________________________________________________________________________
-TGLabel::TGLabel(const TGLabel& gl) :
-  TGFrame(gl),
-  fText(gl.fText),
-  fTWidth(gl.fTWidth),
-  fTHeight(gl.fTHeight),
-  fTMode(gl.fTMode),
-  fTextChanged(gl.fTextChanged),
-  fNormGC(gl.fNormGC),
-  fFontStruct(gl.fFontStruct),
-  fHasOwnFont(gl.fHasOwnFont),
-  fDisabled(gl.fDisabled)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGLabel& TGLabel::operator=(const TGLabel& gl)
-{
-   //assignment operator
-   if(this!=&gl) {
-      TGFrame::operator=(gl);
-      fText=gl.fText;
-      fTWidth=gl.fTWidth;
-      fTHeight=gl.fTHeight;
-      fTMode=gl.fTMode;
-      fTextChanged=gl.fTextChanged;
-      fNormGC=gl.fNormGC;
-      fFontStruct=gl.fFontStruct;
-      fHasOwnFont=gl.fHasOwnFont;
-      fDisabled=gl.fDisabled;
-   } 
-   return *this;
-}
-
-//______________________________________________________________________________
 TGLabel::~TGLabel()
 {
    // Delete label.
@@ -212,7 +177,7 @@ void TGLabel::DoRedraw()
       if (!gc2) {
          gc2 = fClient->GetResourcePool()->GetGCPool()->FindGC(GetShadowGC()());
          gc2 = new TGGC(*gc2); // copy
-      }  
+      }
       gc2->SetFont(fontH);
       fText->Draw(fId, gc2->GetGC(), x, y + max_ascent);
    }
@@ -231,7 +196,7 @@ void TGLabel::SetTextFont(FontStruct_t font, Bool_t global)
 
    fFontStruct = font;
 
-   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool(); 
+   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
    TGGC *gc = pool->FindGC(fNormGC);
 
    if (!global) {
@@ -283,7 +248,7 @@ void TGLabel::SetTextColor(Pixel_t color, Bool_t global)
    // Changes text color.
    // If global is true color is changed globally - otherwise locally.
 
-   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool(); 
+   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
    TGGC *gc = pool->FindGC(fNormGC);
 
    if (!global) {

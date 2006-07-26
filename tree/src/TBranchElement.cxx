@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.204 2006/07/14 20:51:08 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.205 2006/07/20 21:52:56 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -675,67 +675,6 @@ TBranchElement::TBranchElement(const char* bname, TVirtualCollectionProxy* cont,
    fNleaves = 1;
    fLeaves.Add(leaf);
    gTree->GetListOfLeaves()->Add(leaf);
-}
-
-//______________________________________________________________________________
-TBranchElement::TBranchElement(const TBranchElement& tbe) :
-  TBranch(tbe),
-  fClassName(tbe.fClassName),
-  fParentName(tbe.fParentName),
-  fClonesName(tbe.fClonesName),
-  fCollProxy(tbe.fCollProxy),
-  fCheckSum(tbe.fCheckSum),
-  fClassVersion(tbe.fClassVersion),
-  fID(tbe.fID),
-  fType(tbe.fType),
-  fStreamerType(tbe.fStreamerType),
-  fMaximum(tbe.fMaximum),
-  fSTLtype(tbe.fSTLtype),
-  fNdata(tbe.fNdata),
-  fBranchCount(tbe.fBranchCount),
-  fBranchCount2(tbe.fBranchCount2),
-  fInfo(tbe.fInfo),
-  fObject(tbe.fObject),
-  fInit(tbe.fInit),
-  fInitOffsets(tbe.fInitOffsets),
-  fCurrentClass(tbe.fCurrentClass),
-  fParentClass(tbe.fParentClass),
-  fBranchClass(tbe.fBranchClass),
-  fBranchOffset(tbe.fBranchOffset)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TBranchElement& TBranchElement::operator=(const TBranchElement& tbe)
-{
-   //assignement operator
-   if(this!=&tbe) {
-      TBranch::operator=(tbe);
-      fClassName=tbe.fClassName;
-      fParentName=tbe.fParentName;
-      fClonesName=tbe.fClonesName;
-      fCollProxy=tbe.fCollProxy;
-      fCheckSum=tbe.fCheckSum;
-      fClassVersion=tbe.fClassVersion;
-      fID=tbe.fID;
-      fType=tbe.fType;
-      fStreamerType=tbe.fStreamerType;
-      fMaximum=tbe.fMaximum;
-      fSTLtype=tbe.fSTLtype;
-      fNdata=tbe.fNdata;
-      fBranchCount=tbe.fBranchCount;
-      fBranchCount2=tbe.fBranchCount2;
-      fInfo=tbe.fInfo;
-      fObject=tbe.fObject;
-      fInit=tbe.fInit;
-      fInitOffsets=tbe.fInitOffsets;
-      fCurrentClass=tbe.fCurrentClass;
-      fParentClass=tbe.fParentClass;
-      fBranchClass=tbe.fBranchClass;
-      fBranchOffset=tbe.fBranchOffset;
-   } 
-   return *this; 
 }
 
 //______________________________________________________________________________
@@ -3117,7 +3056,7 @@ void TBranchElement::SetAddress(void* add)
          // -- Caller did not provide an i/o buffer for us to use, we must make one for ourselves.
          if (clOfBranch) {
             SetBit(kDeleteObject);
-            // FIXME: 
+            // FIXME:
             // If we end up creating a histogram here, we might not
             // want to add it to the current directory and
             // take ownership instead.  If we let it get added

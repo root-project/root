@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.20 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.21 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -46,8 +46,9 @@ protected:
    TGTab    *fMain;      // container frame
    TList    *fList;      // list of frames to arrange
 
-   TGTabLayout(const TGTabLayout&);
-   TGTabLayout& operator=(const TGTabLayout&);
+private:
+   TGTabLayout(const TGTabLayout&);             // not implemented
+   TGTabLayout& operator=(const TGTabLayout&);  // not implemented
 
 public:
    TGTabLayout(TGTab *main);
@@ -71,13 +72,14 @@ protected:
    FontStruct_t        fFontStruct;     // font
    GContext_t          fNormGC;         // drawing context
 
-   TGTab(const TGTab&);
-   TGTab& operator=(const TGTab&);
-
    void ChangeTab(Int_t tabIndex);
 
    static const TGFont *fgDefaultFont;
    static const TGGC   *fgDefaultGC;
+
+private:
+   TGTab(const TGTab&);             // not implemented
+   TGTab& operator=(const TGTab&);  // not implemented
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -132,12 +134,13 @@ protected:
    UInt_t           fTHeight;         // height of tab text
    Bool_t           fEnabled;         // enabled or disabled
 
-   TGTabElement(const TGTabElement&);
-   TGTabElement& operator=(const TGTabElement&);
+private:
+   TGTabElement(const TGTabElement&);             // not implemented
+   TGTabElement& operator=(const TGTabElement&);  // not implemented
 
 public:
    TGTabElement(const TGWindow *p = 0, TGString *text = 0, UInt_t w = 1, UInt_t h = 1,
-                GContext_t norm = TGTab::GetDefaultGC()(), 
+                GContext_t norm = TGTab::GetDefaultGC()(),
                 FontStruct_t font = TGTab::GetDefaultFontStruct(),
                 UInt_t options = kRaisedFrame,
                 Pixel_t back = GetDefaultFrameBackground());
@@ -155,6 +158,5 @@ public:
 
    ClassDef(TGTabElement,0)  // Little tab on tab widget
 };
-
 
 #endif

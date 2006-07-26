@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.50 2006/07/13 05:19:19 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.51 2006/07/14 20:51:08 pcanal Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -70,10 +70,10 @@ protected:
    TClassRef                fBranchClass;   //! Reference to class definition in fClassName
    Int_t                   *fBranchOffset;  //! Sub-Branch offsets with respect to current transient class
 
-// Forbidden functions (implemented but you should not use them!)
-protected:
-   TBranchElement(const TBranchElement&);
-   TBranchElement& operator=(const TBranchElement&);
+// Not implemented
+private:
+   TBranchElement(const TBranchElement&);            // not implemented
+   TBranchElement& operator=(const TBranchElement&); // not implemented
 
 // Implementation use only functions.
 private:

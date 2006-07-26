@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.108 2006/07/13 05:26:07 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.109 2006/07/20 17:44:37 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -311,81 +311,6 @@ TBranch::TBranch(const char* name, void* address, const char* leaflist, Int_t ba
 }
 
 //______________________________________________________________________________
-TBranch::TBranch(const TBranch& tb):
-  TNamed(tb),
-  TAttFill(tb),
-  fCompress(tb.fCompress),
-  fBasketSize(tb.fBasketSize),
-  fEntryOffsetLen(tb.fEntryOffsetLen),
-  fWriteBasket(tb.fWriteBasket),
-  fEntryNumber(tb.fEntryNumber),
-  fOffset(tb.fOffset),
-  fMaxBaskets(tb.fMaxBaskets),
-  fSplitLevel(tb.fSplitLevel),
-  fNleaves(tb.fNleaves),
-  fReadBasket(tb.fReadBasket),
-  fReadEntry(tb.fReadEntry),
-  fEntries(tb.fEntries),
-  fTotBytes(tb.fTotBytes),
-  fZipBytes(tb.fZipBytes),
-  fBranches(tb.fBranches),
-  fLeaves(tb.fLeaves),
-  fBaskets(tb.fBaskets),
-  fNBasketRAM(tb.fNBasketRAM),
-  fBasketRAM(tb.fBasketRAM),
-  fBasketBytes(tb.fBasketBytes),
-  fBasketEntry(tb.fBasketEntry),
-  fBasketSeek(tb.fBasketSeek),
-  fTree(tb.fTree),
-  fAddress(tb.fAddress),
-  fDirectory(tb.fDirectory),
-  fFileName(tb.fFileName),
-  fEntryBuffer(tb.fEntryBuffer),
-  fBrowsables(tb.fBrowsables)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TBranch& TBranch::operator=(const TBranch& tb)
-{
-   //assignement operator
-   if(this!=&tb) {
-      TNamed::operator=(tb);
-      TAttFill::operator=(tb);
-      fCompress=tb.fCompress;
-      fBasketSize=tb.fBasketSize;
-      fEntryOffsetLen=tb.fEntryOffsetLen;
-      fWriteBasket=tb.fWriteBasket;
-      fEntryNumber=tb.fEntryNumber;
-      fOffset=tb.fOffset;
-      fMaxBaskets=tb.fMaxBaskets;
-      fSplitLevel=tb.fSplitLevel;
-      fNleaves=tb.fNleaves;
-      fReadBasket=tb.fReadBasket;
-      fReadEntry=tb.fReadEntry;
-      fEntries=tb.fEntries;
-      fTotBytes=tb.fTotBytes;
-      fZipBytes=tb.fZipBytes;
-      fBranches=tb.fBranches;
-      fLeaves=tb.fLeaves;
-      fBaskets=tb.fBaskets;
-      fNBasketRAM=tb.fNBasketRAM;
-      fBasketRAM=tb.fBasketRAM;
-      fBasketBytes=tb.fBasketBytes;
-      fBasketEntry=tb.fBasketEntry;
-      fBasketSeek=tb.fBasketSeek;
-      fTree=tb.fTree;
-      fAddress=tb.fAddress;
-      fDirectory=tb.fDirectory;
-      fFileName=tb.fFileName;
-      fEntryBuffer=tb.fEntryBuffer;
-      fBrowsables=tb.fBrowsables;
-   } 
-   return *this;
-}
-
-//______________________________________________________________________________
 TBranch::~TBranch()
 {
    // Destructor.
@@ -454,7 +379,7 @@ void TBranch::AddBasket(TBasket& b, Bool_t ondisk, Long64_t startEntry)
    // Add the basket to this branch.
 
    // Warning: if the basket are not 'flushed/copied' in the same
-   // order as they were created, this will induce a slow down in 
+   // order as they were created, this will induce a slow down in
    // the insert (since we'll need to move all the record that are
    // entere 'too early).
    // Warning we also assume that the __current__ write basket is
@@ -1325,10 +1250,10 @@ void TBranch::Print(Option_t*) const
 
    const int kLINEND = 77;
    Float_t cx = 1;
-   
+
    Int_t titleLength = strlen (GetTitle());
    if (strcmp(GetName(),GetTitle()) == 0) titleLength = 0;
-   
+
    Int_t aLength = titleLength + strlen(GetName());
    aLength += (aLength / 54 + 1) * 80 + 100;
    if (aLength < 200) aLength = 200;

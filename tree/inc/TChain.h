@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.55 2006/07/04 10:23:52 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.56 2006/07/13 05:41:37 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -46,9 +46,9 @@ protected:
    TList       *fStatus;           //-> List of active/inactive branches (TChainElement, owned)
    TChainProof *fChainProof;       //! wrapper class for a TDSet if this chain is to be processed by PROOF
 
-protected:
-   TChain(const TChain&);
-   TChain& operator=(const TChain&);
+private:
+   TChain(const TChain&);            // not implemented
+   TChain& operator=(const TChain&); // not implemented
 
 protected:
    void ReleaseChainProof();

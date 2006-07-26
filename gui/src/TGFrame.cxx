@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.136 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.137 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -214,51 +214,6 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fFE          = 0;
 
    SetWindowName();
-}
-
-//______________________________________________________________________________
-TGFrame::TGFrame(const TGFrame& tgf) :
-  TGWindow(tgf),
-  TQObject(tgf),
-  fX(tgf.fX),
-  fY(tgf.fY),
-  fWidth(tgf.fWidth),
-  fHeight(tgf.fHeight),
-  fMinWidth(tgf.fMinWidth),
-  fMinHeight(tgf.fMinHeight),
-  fMaxWidth(tgf.fMaxWidth),
-  fMaxHeight(tgf.fMaxHeight),
-  fBorderWidth(tgf.fBorderWidth),
-  fOptions(tgf.fOptions),
-  fBackground(tgf.fBackground),
-  fEventMask(tgf.fEventMask),
-  fFE(tgf.fFE) 
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGFrame& TGFrame::operator=(const TGFrame& tgf)
-{
-   //assignment operator
-   if(this!=&tgf) {
-      TGWindow::operator=(tgf);
-      TQObject::operator=(tgf);
-      fX=tgf.fX;
-      fY=tgf.fY;
-      fWidth=tgf.fWidth;
-      fHeight=tgf.fHeight;
-      fMinWidth=tgf.fMinWidth;
-      fMinHeight=tgf.fMinHeight;
-      fMaxWidth=tgf.fMaxWidth;
-      fMaxHeight=tgf.fMaxHeight;
-      fBorderWidth=tgf.fBorderWidth;
-      fOptions=tgf.fOptions;
-      fBackground=tgf.fBackground;
-      fEventMask=tgf.fEventMask;
-      fFE=tgf.fFE;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -852,33 +807,6 @@ TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *par
 }
 
 //______________________________________________________________________________
-TGCompositeFrame::TGCompositeFrame(const TGCompositeFrame& tcf) :
-  TGFrame(tcf),
-  fLayoutManager(tcf.fLayoutManager),
-  fList(tcf.fList),
-  fLayoutBroken(tcf.fLayoutBroken),
-  fMustCleanup(tcf.fMustCleanup),
-  fMapSubwindows(tcf.fMapSubwindows) 
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGCompositeFrame& TGCompositeFrame::operator=(const TGCompositeFrame& tcf) 
-{
-   //assignment operator
-   if(this!=&tcf) {
-      TGFrame::operator=(tcf);
-      fLayoutManager=tcf.fLayoutManager;
-      fList=tcf.fList;
-      fLayoutBroken=tcf.fLayoutBroken; 
-      fMustCleanup=tcf.fMustCleanup;
-      fMapSubwindows=tcf.fMapSubwindows;
-   } 
-   return *this;
-}
-
-//______________________________________________________________________________
 TGCompositeFrame::~TGCompositeFrame()
 {
    // Delete a composite frame.
@@ -927,7 +855,7 @@ void TGCompositeFrame::SetEditable(Bool_t on)
    //    m->MapWindow();
    //
 
-   if (on && ((fEditDisabled & kEditDisable) || 
+   if (on && ((fEditDisabled & kEditDisable) ||
               (fEditDisabled & kEditDisableLayout))) return;
 
    if (on) {
@@ -1003,7 +931,7 @@ void TGCompositeFrame::SetEditDisabled(UInt_t on)
    UInt_t set = on & kEditDisable;
 
    // propagate only kEditDisable
-   if (set == kEditDisable) { 
+   if (set == kEditDisable) {
 
       TGFrameElement *el;
       TIter next(fList);
@@ -1262,7 +1190,7 @@ void TGCompositeFrame::ChangeSubframesBackground(Pixel_t back)
    TGFrameElement *el;
 
    TIter next(fList);
- 
+
    while ((el = (TGFrameElement*)next())) {
       el->fFrame->SetBackgroundColor(back);
       if (el->fFrame->InheritsFrom(TGCompositeFrame::Class())) {
@@ -1335,13 +1263,13 @@ Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
 {
    // Handle drag enter event.
 
-   if (fClient && fClient->IsEditable() && 
+   if (fClient && fClient->IsEditable() &&
        (fId != fClient->GetRoot()->GetId())) {
 
-      // the dragged frame cannot be droppped 
+      // the dragged frame cannot be droppped
       if (fEditDisabled & (kEditDisable | kEditDisableLayout)) return kFALSE;
 
-      // 
+      //
       if (IsEditable()) {
          return kTRUE;
       }
@@ -1457,63 +1385,6 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    }
    //AddInput(kButtonPressMask); // to allow Drag and Drop
    SetWindowName();
-}
-
-//______________________________________________________________________________
-TGMainFrame::TGMainFrame(const TGMainFrame& tmf) :
-  TGCompositeFrame(tmf),
-  fBindList(tmf.fBindList),
-  fWindowName(tmf.fWindowName),
-  fIconName(tmf.fIconName),
-  fIconPixmap(tmf.fIconPixmap),
-  fClassName(tmf.fClassName),
-  fResourceName(tmf.fResourceName),
-  fMWMValue(tmf.fMWMValue),
-  fMWMFuncs(tmf.fMWMFuncs),
-  fMWMInput(tmf.fMWMInput),
-  fWMX(tmf.fWMX),
-  fWMY(tmf.fWMY),
-  fWMWidth(tmf.fWMWidth),
-  fWMHeight(tmf.fWMHeight),
-  fWMMinWidth(tmf.fWMMinWidth),
-  fWMMinHeight(tmf.fWMMinHeight),
-  fWMMaxWidth(tmf.fWMMaxWidth),
-  fWMMaxHeight(tmf.fWMMaxHeight),
-  fWMWidthInc(tmf.fWMWidthInc),
-  fWMHeightInc(tmf.fWMHeightInc),
-  fWMInitState(tmf.fWMInitState) 
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGMainFrame& TGMainFrame::operator=(const TGMainFrame& tmf) 
-{
-   //assignment operator
-   if(this!=&tmf) {
-      TGCompositeFrame::operator=(tmf);
-      fBindList=tmf.fBindList;
-      fWindowName=tmf.fWindowName;
-      fIconName=tmf.fIconName;
-      fIconPixmap=tmf.fIconPixmap;
-      fClassName=tmf.fClassName;
-      fResourceName=tmf.fResourceName;
-      fMWMValue=tmf.fMWMValue;
-      fMWMFuncs=tmf.fMWMFuncs;
-      fMWMInput=tmf.fMWMInput;
-      fWMX=tmf.fWMX;
-      fWMY=tmf.fWMY;
-      fWMWidth=tmf.fWMWidth;
-      fWMHeight=tmf.fWMHeight;
-      fWMMinWidth=tmf.fWMMinWidth;
-      fWMMinHeight=tmf.fWMMinHeight;
-      fWMMaxWidth=tmf.fWMMaxWidth;
-      fWMMaxHeight=tmf.fWMMaxHeight;
-      fWMWidthInc=tmf.fWMWidthInc;
-      fWMHeightInc=tmf.fWMHeightInc;
-      fWMInitState=tmf.fWMInitState;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -1799,6 +1670,7 @@ void TGMainFrame::SetWMState(EInitialState state)
    gVirtualX->SetWMState(fId, state);
 }
 
+
 //______________________________________________________________________________
 TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
                                    UInt_t w, UInt_t h, UInt_t options)
@@ -2021,7 +1893,7 @@ void TGGroupFrame::SetTextColor(Pixel_t color, Bool_t local)
    // Changes text color.
    // If local is true color is changed locally, otherwise - globally.
 
-   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool(); 
+   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
    TGGC *gc = pool->FindGC(fNormGC);
 
    if (local) {
@@ -2045,7 +1917,7 @@ void TGGroupFrame::SetTextFont(FontStruct_t font, Bool_t local)
 
    fFontStruct = font;
 
-   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool(); 
+   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
    TGGC *gc = pool->FindGC(fNormGC);
 
    if (local) {
@@ -2432,7 +2304,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*=
       if (!el->fState & kIsVisible) {
          gListOfHiddenFrames->Add(el->fFrame);
       }
-      
+
       // saving signals/slots
       signalslist = (TList*)el->fFrame->GetListOfSignals();
       if (!signalslist)  continue;
@@ -2443,15 +2315,15 @@ void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*=
          slot_name = conn->GetName();
          Int_t eq = slot_name.First('=');
          Int_t rb = slot_name.First(')');
-         if (eq != -1) 
+         if (eq != -1)
             slot_name.Remove(eq, rb-eq);
-         out << "   " << el->fFrame->GetName() << "->Connect(" << quote << signal_name 
+         out << "   " << el->fFrame->GetName() << "->Connect(" << quote << signal_name
              << quote << ", 0, 0, " << quote << slot_name << quote << ");" << endl;
 
          TList *lsl = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfSlots");
          if (lsl) {
             TObjString *slotel = (TObjString *)lsl->FindObject(slot_name);
-            if (!slotel) 
+            if (!slotel)
                lsl->Add(new TObjString(slot_name));
          }
       }
@@ -2704,7 +2576,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
       TIter nextsl(sl);
       TObjString *slobj;
       Int_t pnumber = 1;
-      
+
       while ((slobj = (TObjString*) nextsl())) {
          TString s = slobj->GetString();
          TString p = "";
@@ -2722,20 +2594,20 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
             out << "{" << endl;
             s = slobj->GetString();
             s[rb] = ' ';
-            out << "   cout << " << quote << "Slot " << s  << quote 
-                << " <<" << p << " << " << quote << ")" << quote  
+            out << "   cout << " << quote << "Slot " << s  << quote
+                << " <<" << p << " << " << quote << ")" << quote
                 << " << endl; " << endl;
             } else {
                if (eq != -1) {
                   s.Remove(eq, rb-eq);
                   out << "void " << s << endl;
                   out << "{" << endl;
-                  out << "   cout << " << quote << "Slot " << s  
+                  out << "   cout << " << quote << "Slot " << s
                       << quote << " << endl; " << endl;
                } else {
                   out << "void " << slobj->GetString() << endl;
                   out << "{" << endl;
-                  out << "   cout << " << quote << "Slot " << slobj->GetString()  
+                  out << "   cout << " << quote << "Slot " << slobj->GetString()
                       << quote << " << endl; " << endl;
                }
             }
@@ -3183,7 +3055,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
       TIter nextsl(sl);
       TObjString *slobj;
       Int_t pnumber = 1;
-      
+
       while ((slobj = (TObjString*) nextsl())) {
          TString s = slobj->GetString();
          TString p = "";
@@ -3201,20 +3073,20 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
             out << "{" << endl;
             s = slobj->GetString();
             s[rb] = ' ';
-            out << "   cout << " << quote << "Slot " << s  << quote 
-                << " <<" << p << " << " << quote << ")" << quote  
+            out << "   cout << " << quote << "Slot " << s  << quote
+                << " <<" << p << " << " << quote << ")" << quote
                 << " << endl; " << endl;
             } else {
                if (eq != -1) {
                   s.Remove(eq, rb-eq);
                   out << "void " << s << endl;
                   out << "{" << endl;
-                  out << "   cout << " << quote << "Slot " << s  
+                  out << "   cout << " << quote << "Slot " << s
                       << quote << " << endl; " << endl;
                } else {
                   out << "void " << slobj->GetString() << endl;
                   out << "{" << endl;
-                  out << "   cout << " << quote << "Slot " << slobj->GetString()  
+                  out << "   cout << " << quote << "Slot " << slobj->GetString()
                       << quote << " << endl; " << endl;
                }
             }

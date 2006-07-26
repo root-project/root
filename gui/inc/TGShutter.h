@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.11 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.12 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -52,8 +52,9 @@ protected:
    TGFrame       *fContainer;  // container in canvas containing shutter items
    TGLayoutHints *fL1, *fL2;   // positioning hints
 
-   TGShutterItem(const TGShutterItem&);
-   TGShutterItem& operator=(const TGShutterItem&);
+private:
+   TGShutterItem(const TGShutterItem&);              // not implemented
+   TGShutterItem& operator=(const TGShutterItem&);   // not implemented
 
 public:
    TGShutterItem(const TGWindow *p = 0, TGHotString *s = 0, Int_t id = -1,
@@ -82,8 +83,9 @@ protected:
    Int_t           fClosingHeight;          // Closing items current height
    Int_t           fClosingHadScrollbar;    // Closing item had a scroll bar
 
-   TGShutter(const TGShutter&);
-   TGShutter& operator=(const TGShutter&);
+private:
+   TGShutter(const TGShutter&);             // not implemented
+   TGShutter& operator=(const TGShutter&);  // not implemented
 
 public:
    TGShutter(const TGWindow *p = 0, UInt_t options = kSunkenFrame);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.30 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.31 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -74,9 +74,6 @@ protected:
    ETextJustification fAlignment;        // *OPTION={GetMethod="GetAlignment";SetMethod="SetAlignment";Items=(kTextLeft="Left",kTextCenterX="Center",kTextRight="Right")}*
    Bool_t            fHasOwnFont;        // kTRUE - font defined locally,  kFALSE - globally
 
-   TGTextEntry(const TGTextEntry&);
-   TGTextEntry& operator=(const TGTextEntry&);
-
             void        CopyText() const;
    virtual  void        DoRedraw();
             Int_t       GetCharacterIndex(Int_t xcoord);
@@ -95,6 +92,10 @@ protected:
 
    static const TGGC   &GetDefaultSelectedGC();
    static const TGGC   &GetDefaultSelectedBackgroundGC();
+
+private:
+   TGTextEntry(const TGTextEntry&);              // not implemented
+   TGTextEntry& operator=(const TGTextEntry&);   // not implemented
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -158,8 +159,8 @@ public:
    virtual  void        SetToolTipText(const char *text, Long_t delayms = 500);  //*MENU*
    virtual  void        SetMaxLength(Int_t maxlen);                              //*MENU*
    virtual  void        SelectAll();
-   virtual  void        SetAlignment(ETextJustification mode = kTextLeft);       //*SUBMENU*         
-   virtual  void        SetInsertMode(EInsertMode mode = kInsert);               //*SUBMENU*               
+   virtual  void        SetAlignment(ETextJustification mode = kTextLeft);       //*SUBMENU*
+   virtual  void        SetInsertMode(EInsertMode mode = kInsert);               //*SUBMENU*
    virtual  void        SetEchoMode(EEchoMode mode = kNormal);                   //*SUBMENU*
             void        SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }    //*TOGGLE* *GETTER=IsEnabled
    virtual  void        SetCursorPosition(Int_t pos);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.66 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.67 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -75,47 +75,6 @@ Bool_t TPopupDelayTimer::Notify()
    return kFALSE;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMenuEntry member functions.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-//______________________________________________________________________________
-TGMenuEntry::TGMenuEntry(const TGMenuEntry& me) :
-  TObject(me),
-  fEntryId(me.fEntryId),
-  fUserData(me.fUserData),
-  fType(me.fType),
-  fStatus(me.fStatus),
-  fEy(me.fEy),
-  fEh(me.fEh),
-  fLabel(me.fLabel),
-  fPic(me.fPic),
-  fPopup(me.fPopup)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGMenuEntry& TGMenuEntry::operator=(const TGMenuEntry& me) 
-{
-   //assignment operator
-   if(this!=&me) {
-      TObject::operator=(me);
-      fEntryId=me.fEntryId;
-      fUserData=me.fUserData;
-      fType=me.fType;
-      fStatus=me.fStatus;
-      fEy=me.fEy;
-      fEh=me.fEh;
-      fLabel=me.fLabel;
-      fPic=me.fPic;
-      fPopup=me.fPopup;
-   } 
-   return *this;
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -140,35 +99,6 @@ TGMenuBar::TGMenuBar(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
                        kNone, kNone);
 
    fKeyNavigate = kFALSE;
-}
-
-//______________________________________________________________________________
-TGMenuBar::TGMenuBar(const TGMenuBar& mb) :
-  TGHorizontalFrame(mb),
-  fCurrent(mb.fCurrent),
-  fTitles(mb.fTitles),
-  fDefaultCursor(mb.fDefaultCursor),
-  fStick(mb.fStick),
-  fTrash(mb.fTrash),
-  fKeyNavigate(mb.fKeyNavigate)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGMenuBar& TGMenuBar::operator=(const TGMenuBar& mb) 
-{
-   //assignment operator
-   if(this!=&mb) {
-      TGHorizontalFrame::operator=(mb);
-      fCurrent=mb.fCurrent;
-      fTitles=mb.fTitles;
-      fDefaultCursor=mb.fDefaultCursor;
-      fStick=mb.fStick;
-      fTrash=mb.fTrash;
-      fKeyNavigate=mb.fKeyNavigate;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -493,7 +423,7 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
             fCurrent = target;
             target->SetState(kTRUE);
 
-            gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask | 
+            gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
                                    kPointerMotionMask, kNone, fDefaultCursor);
          }
       }
@@ -793,59 +723,6 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
 
    AddInput(kPointerMotionMask | kEnterWindowMask | kLeaveWindowMask);
-}
-
-//______________________________________________________________________________
-TGPopupMenu::TGPopupMenu(const TGPopupMenu& pu) :
-  TGFrame(pu),
-  fEntryList(pu.fEntryList),
-  fCurrent(pu.fCurrent),
-  fStick(pu.fStick),
-  fHasGrab(pu.fHasGrab),
-  fPoppedUp(pu.fPoppedUp),
-  fXl(pu.fXl),
-  fMenuWidth(pu.fMenuWidth),
-  fMenuHeight(pu.fMenuHeight),
-  fDelay(pu.fDelay),
-  fNormGC(pu.fNormGC),
-  fSelGC(pu.fSelGC),
-  fSelbackGC(pu.fSelbackGC),
-  fFontStruct(pu.fFontStruct),
-  fHifontStruct(pu.fHifontStruct),
-  fDefaultCursor(pu.fDefaultCursor),
-  fMsgWindow(pu.fMsgWindow),
-  fMenuBar(pu.fMenuBar),
-  fEntrySep(pu.fEntrySep)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGPopupMenu& TGPopupMenu::operator=(const TGPopupMenu& pu)
-{
-   //assignment operator
-   if(this!=&pu) {
-      TGFrame::operator=(pu);
-      fEntryList=pu.fEntryList;
-      fCurrent=pu.fCurrent;
-      fStick=pu.fStick;
-      fHasGrab=pu.fHasGrab;
-      fPoppedUp=pu.fPoppedUp;
-      fXl=pu.fXl;
-      fMenuWidth=pu.fMenuWidth;
-      fMenuHeight=pu.fMenuHeight;
-      fDelay=pu.fDelay;
-      fNormGC=pu.fNormGC;
-      fSelGC=pu.fSelGC;
-      fSelbackGC=pu.fSelbackGC;
-      fFontStruct=pu.fFontStruct;
-      fHifontStruct=pu.fHifontStruct;
-      fDefaultCursor=pu.fDefaultCursor;
-      fMsgWindow=pu.fMsgWindow;
-      fMenuBar=pu.fMenuBar;
-      fEntrySep=pu.fEntrySep;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -1756,7 +1633,7 @@ const TGGC &TGPopupMenu::GetDefaultSelectedGC()
 const TGGC &TGPopupMenu::GetDefaultSelectedBackgroundGC()
 {
    // Return the selection background graphics context in use.
-   
+
    if (!fgDefaultSelectedBackgroundGC)
       fgDefaultSelectedBackgroundGC = gClient->GetResourcePool()->GetSelectedBckgndGC();
    return *fgDefaultSelectedBackgroundGC;
@@ -1823,39 +1700,6 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
       TGMenuBar *bar = (TGMenuBar*)p;
       fMenu->SetMenuBar(bar);
    }
-}
-
-//______________________________________________________________________________
-TGMenuTitle::TGMenuTitle(const TGMenuTitle& mt) :
-  TGFrame(mt),
-  fMenu(mt.fMenu),
-  fLabel(mt.fLabel),
-  fTitleId(mt.fTitleId),
-  fTitleData(mt.fTitleData),
-  fState(mt.fState),
-  fHkeycode(mt.fHkeycode),
-  fFontStruct(mt.fFontStruct),
-  fSelGC(mt.fSelGC)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGMenuTitle& TGMenuTitle::operator=(const TGMenuTitle& mt)
-{
-   //assignment operator
-   if(this!=&mt) {
-      TGFrame::operator=(mt);
-      fMenu=mt.fMenu;
-      fLabel=mt.fLabel;
-      fTitleId=mt.fTitleId;
-      fTitleData=mt.fTitleData;
-      fState=mt.fState;
-      fHkeycode=mt.fHkeycode;
-      fFontStruct=mt.fFontStruct;
-      fSelGC=mt.fSelGC;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________

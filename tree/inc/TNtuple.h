@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.h,v 1.9 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.h,v 1.10 2006/05/23 04:47:42 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -33,10 +33,11 @@ protected:
    Int_t       fNvar;            //  Number of columns
    Float_t    *fArgs;            //! [fNvar] Array of variables
 
-   TNtuple(const TNtuple&); 
-   TNtuple& operator=(const TNtuple&);
-
    virtual Int_t  Fill();
+
+private:
+   TNtuple(const TNtuple&);             // not implemented
+   TNtuple& operator=(const TNtuple&);  // not implmeneted
 
 public:
    TNtuple();

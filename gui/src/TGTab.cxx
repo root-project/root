@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.36 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.37 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -76,35 +76,6 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
 }
 
 //______________________________________________________________________________
-TGTabElement::TGTabElement(const TGTabElement& te) :
-  TGFrame(te),
-  fText(te.fText),
-  fNormGC(te.fNormGC),
-  fFontStruct(te.fFontStruct),
-  fTWidth(te.fTWidth),
-  fTHeight(te.fTHeight),
-  fEnabled(te.fEnabled)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGTabElement& TGTabElement::operator=(const TGTabElement& te)
-{ 
-   //assignment operator
-   if(this!=&te) {
-      TGFrame::operator=(te);
-      fText=te.fText;
-      fNormGC=te.fNormGC;
-      fFontStruct=te.fFontStruct;
-      fTWidth=te.fTWidth;
-      fTHeight=te.fTHeight;
-      fEnabled=te.fEnabled;
-   } 
-   return *this;
-}
-
-//______________________________________________________________________________
 TGTabElement::~TGTabElement()
 {
    // Delete tab element.
@@ -142,7 +113,7 @@ Bool_t TGTabElement::HandleButton(Event_t *event)
 {
    // Handle button event in the tab widget. Basically we only handle
    // button events in the small tabs.
-   
+
    if (event->fType == kButtonPress) {
       TGTab* main = (TGTab*)fParent;
       if (main) {
@@ -198,27 +169,6 @@ TGTabLayout::TGTabLayout(TGTab *main)
 
    fMain = main;
    fList = fMain->GetList();
-}
-
-//______________________________________________________________________________
-TGTabLayout::TGTabLayout(const TGTabLayout& tl) :
-   TGLayoutManager(tl),
-   fMain(tl.fMain),
-   fList(tl.fList)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGTabLayout& TGTabLayout::operator=(const TGTabLayout& tl)
-{
-   //assignment operator
-   if(this!=&tl) {
-      TGLayoutManager::operator=(tl);
-      fMain=tl.fMain;
-      fList=tl.fList;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -319,37 +269,6 @@ TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
 
    fEditDisabled = kEditDisable | kEditDisableLayout;
    fContainer->SetEditDisabled(kEditDisable | kEditDisableGrab);
-}
-
-//______________________________________________________________________________
-TGTab::TGTab(const TGTab& gt) :
-   TGCompositeFrame(gt),
-   TGWidget(gt),
-   fCurrent(gt.fCurrent),
-   fTabh(gt.fTabh),
-   fContainer(gt.fContainer),
-   fRemoved(gt.fRemoved),
-   fFontStruct(gt.fFontStruct),
-   fNormGC(gt.fNormGC)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGTab& TGTab::operator=(const TGTab& gt) 
-{
-   //assignment operator
-   if(this!=&gt) {
-      TGCompositeFrame::operator=(gt);
-      TGWidget::operator=(gt);
-      fCurrent=gt.fCurrent;
-      fTabh=gt.fTabh;
-      fContainer=gt.fContainer;
-      fRemoved=gt.fRemoved;
-      fFontStruct=gt.fFontStruct;
-      fNormGC=gt.fNormGC;
-   } 
-   return *this; 
 }
 
 //______________________________________________________________________________
@@ -697,7 +616,7 @@ void TGTab::SetText(const char *text)
 
    GetCurrentTab()->SetText(new TGString(text));
    GetLayoutManager()->Layout();
-} 
+}
 
 //______________________________________________________________________________
 TGLayoutManager *TGTab::GetLayoutManager() const
@@ -788,10 +707,10 @@ void TGTab::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             out << "   " << cf->GetName() <<"->SetLayoutManager(";
             lm->SavePrimitive(out, option);
             out << ");" << endl;
-         }    
+         }
       }
       cf->SavePrimitiveSubframes(out, option);
- 
+
       if (GetTabTab(i)->GetBackground() != GetTabTab(i)->GetDefaultFrameBackground()) {
          GetTabTab(i)->SaveUserColor(out, option);
          out << "   TGTabElement *tab" << i << " = "
@@ -808,8 +727,7 @@ void TGTab::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 // __________________________________________________________________________
 void TGTabLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
-
-   // Save tab layout manager as a C++ statement(s) on out stream
+   // Save tab layout manager as a C++ statement(s) on out stream.
 
    out << "new TGTabLayout(" << fMain->GetName() << ")";
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.18 2006/05/11 10:35:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.19 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -58,10 +58,11 @@ private:
    TTimer            *fIdleTimer;      //Idle timer
    TSignalHandler    *fSigHandler;     //Interrupt handler
 
+   TApplication(const TApplication&);             // not implemented
+   TApplication& operator=(const TApplication&);  // not implemented
+
 protected:
    TApplication();
-   TApplication(const TApplication&);
-   TApplication& operator=(const TApplication&);
 
    virtual void Help(const char *line);
    virtual void InitializeColors();

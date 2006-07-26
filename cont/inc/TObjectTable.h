@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectTable.h,v 1.2 2000/12/13 15:56:17 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjectTable.h,v 1.3 2006/05/23 04:47:36 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -46,9 +46,9 @@ private:
    Int_t      FindElement(TObject *obj);
    void       FixCollisions(Int_t index);
 
-protected:
-   TObjectTable(const TObjectTable&);
-   TObjectTable& operator=(const TObjectTable&);
+private:
+   TObjectTable(const TObjectTable&);             // not implemented
+   TObjectTable& operator=(const TObjectTable&);  // not implemented
 
 public:
    TObjectTable(Int_t tableSize = 100);

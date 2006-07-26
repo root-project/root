@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.8 2005/11/16 20:11:59 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.9 2006/05/23 04:47:41 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -41,9 +41,9 @@ private:
    Bool_t        fInterrupt;          // if true macro execution will be stopped
    TFileHandler *fInputHandler;       // terminal input handler
 
-protected:
-   TRint(const TRint&);
-   TRint& operator=(const TRint&);
+private:
+   TRint(const TRint&);               // not implemented
+   TRint& operator=(const TRint&);    // not implemented
 
 public:
    TRint(const char *appClassName, int *argc, char **argv,

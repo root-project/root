@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.140 2006/07/13 05:41:37 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.142 2006/07/17 18:38:51 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -127,43 +127,6 @@ TChain::TChain(const char* name, const char* title)
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
-}
-
-//______________________________________________________________________________
-TChain::TChain(const TChain& tc) :
-  TTree(tc),
-  fTreeOffsetLen(tc.fTreeOffsetLen),
-  fNtrees(tc.fNtrees),
-  fTreeNumber(tc.fTreeNumber),
-  fTreeOffset(tc.fTreeOffset),
-  fCanDeleteRefs(tc.fCanDeleteRefs),
-  fTree(tc.fTree),
-  fFile(tc.fFile),
-  fFiles(tc.fFiles),
-  fStatus(tc.fStatus),
-  fChainProof(tc.fChainProof)
-{
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TChain& TChain::operator=(const TChain& tc)
-{
-   //assignement operator
-   if(this!=&tc) {
-      TTree::operator=(tc);
-      fTreeOffsetLen=tc.fTreeOffsetLen;
-      fNtrees=tc.fNtrees;
-      fTreeNumber=tc.fTreeNumber;
-      fTreeOffset=tc.fTreeOffset;
-      fCanDeleteRefs=tc.fCanDeleteRefs;
-      fTree=tc.fTree;
-      fFile=tc.fFile;
-      fFiles=tc.fFiles;
-      fStatus=tc.fStatus;
-      fChainProof=tc.fChainProof;
-   }
-   return *this;
 }
 
 //______________________________________________________________________________

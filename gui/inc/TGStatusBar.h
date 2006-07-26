@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.14 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.15 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -31,8 +31,12 @@ class TGStatusBarPart;
 class TGStatusBar : public TGHorizontalFrame {
 
 friend class TGStatusBarPart;
+
 private:
    static TGLayoutHints *fgHints; // hints to add parts (kLHintsTop|kLHintsLeft,0,0,0,0)
+
+   TGStatusBar(const TGStatusBar&);            // not implemented
+   TGStatusBar& operator=(const TGStatusBar&); // not implemented
 
 protected:
    TGStatusBarPart **fStatusPart; // frames containing statusbar text
@@ -44,9 +48,6 @@ protected:
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;
-
-   TGStatusBar(const TGStatusBar&);
-   TGStatusBar& operator=(const TGStatusBar&);
 
    virtual void DoRedraw();
 
@@ -65,7 +66,7 @@ public:
            void AddText(const char *text, Int_t partidx = 0)
                   { SetText(text, partidx); }                  //*MENU*
    virtual void SetParts(Int_t npart);                         //*MENU*
-   virtual void SetParts(Int_t *parts, Int_t npart); 
+   virtual void SetParts(Int_t *parts, Int_t npart);
    void         Draw3DCorner(Bool_t corner) { f3DCorner = corner; }
    TGCompositeFrame *GetBarPart(Int_t npart) const;
    TGDimension GetDefaultSize() const;

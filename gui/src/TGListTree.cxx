@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.57 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.58 2006/07/20 12:03:48 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -137,67 +137,6 @@ TGListTreeItem::TGListTreeItem(TGClient *client, const char *name,
 
    fHasColor = kFALSE;
    fColor = 0;
-}
-
-//______________________________________________________________________________
-TGListTreeItem::TGListTreeItem(const TGListTreeItem& lti) :
-  fClient(lti.fClient),
-  fParent(lti.fParent),
-  fFirstchild(lti.fFirstchild),
-  fPrevsibling(lti.fPrevsibling),
-  fNextsibling(lti.fNextsibling),
-  fOpen(lti.fOpen),
-  fActive(lti.fActive),
-  fCheckBox(lti.fCheckBox),
-  fChecked(lti.fChecked),
-  fText(lti.fText),
-  fTipText(lti.fTipText),
-  fY(lti.fY),
-  fXtext(lti.fXtext),
-  fYtext(lti.fYtext),
-  fHeight(lti.fHeight),
-  fPicWidth(lti.fPicWidth),
-  fOpenPic(lti.fOpenPic),
-  fClosedPic(lti.fClosedPic),
-  fCheckedPic(lti.fCheckedPic),
-  fUncheckedPic(lti.fUncheckedPic),
-  fUserData(lti.fUserData),
-  fHasColor(lti.fHasColor),
-  fColor(lti.fColor)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGListTreeItem& TGListTreeItem::operator=(const TGListTreeItem& lti)
-{
-   //assignment operator
-   if(this!=&lti) {
-      fClient=lti.fClient;
-      fParent=lti.fParent;
-      fFirstchild=lti.fFirstchild;
-      fPrevsibling=lti.fPrevsibling;
-      fNextsibling=lti.fNextsibling;
-      fOpen=lti.fOpen;
-      fActive=lti.fActive;
-      fCheckBox=lti.fCheckBox;
-      fChecked=lti.fChecked;
-      fText=lti.fText;
-      fTipText=lti.fTipText;
-      fY=lti.fY;
-      fXtext=lti.fXtext;
-      fYtext=lti.fYtext;
-      fHeight=lti.fHeight;
-      fPicWidth=lti.fPicWidth;
-      fOpenPic=lti.fOpenPic;
-      fClosedPic=lti.fClosedPic;
-      fCheckedPic=lti.fCheckedPic;
-      fUncheckedPic=lti.fUncheckedPic;
-      fUserData=lti.fUserData;
-      fHasColor=lti.fHasColor;
-      fColor=lti.fColor;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -362,67 +301,6 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    SetWindowName();
 
    fEditDisabled = kEditDisable | kEditDisableGrab | kEditDisableBtnEnable;
-}
-
-//______________________________________________________________________________
-TGListTree::TGListTree(const TGListTree& lt) : 
-  TGContainer(lt),
-  fFirst(lt.fFirst),
-  fSelected(lt.fSelected),
-  fHspacing(lt.fHspacing),
-  fVspacing(lt.fVspacing),
-  fIndent(lt.fIndent),
-  fMargin(lt.fMargin),
-  fLastY(lt.fLastY),
-  fGrayPixel(lt.fGrayPixel),
-  fDrawGC(lt.fDrawGC),
-  fLineGC(lt.fLineGC),
-  fHighlightGC(lt.fHighlightGC),
-  fFont(lt.fFont),
-  fDefw(lt.fDefw),
-  fDefh(lt.fDefh),
-  fExposeTop(lt.fExposeTop),
-  fExposeBottom(lt.fExposeBottom),
-  fTip(lt.fTip),
-  fTipItem(lt.fTipItem),
-  fAutoTips(lt.fAutoTips),
-  fDisableOpen(lt.fDisableOpen),
-  fColorMode(lt.fColorMode),
-  fColorGC(lt.fColorGC)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGListTree& TGListTree::operator=(const TGListTree& lt) 
-{
-   //assignment operator
-   if(this!=&lt) {
-      TGContainer::operator=(lt);
-      fFirst=lt.fFirst;
-      fSelected=lt.fSelected;
-      fHspacing=lt.fHspacing;
-      fVspacing=lt.fVspacing;
-      fIndent=lt.fIndent;
-      fMargin=lt.fMargin;
-      fLastY=lt.fLastY;
-      fGrayPixel=lt.fGrayPixel;
-      fDrawGC=lt.fDrawGC;
-      fLineGC=lt.fLineGC;
-      fHighlightGC=lt.fHighlightGC;
-      fFont=lt.fFont;
-      fDefw=lt.fDefw;
-      fDefh=lt.fDefh;
-      fExposeTop=lt.fExposeTop;
-      fExposeBottom=lt.fExposeBottom;
-      fTip=lt.fTip;
-      fTipItem=lt.fTipItem;
-      fAutoTips=lt.fAutoTips;
-      fDisableOpen=lt.fDisableOpen;
-      fColorMode=lt.fColorMode;
-      fColorGC=lt.fColorGC;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -2185,18 +2063,18 @@ void TGListTree::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
-   out << endl; 
+   out << endl;
 
-   static Int_t n = 0; 
-   
+   static Int_t n = 0;
+
    TGListTreeItem *current;
    current = GetFirstItem();
-   
+
    if (current->fOpenPic)
       out << "   const TGPicture *popen;       //used for list tree items" << endl;
    if (current->fClosedPic)
       out << "   const TGPicture *pclose;      //used for list tree items" << endl;
-   out << endl; 
+   out << endl;
 
    while (current) {
       out << "   TGListTreeItem *item" << n << " = " << GetName() << "->AddItem(";
@@ -2205,7 +2083,7 @@ void TGListTree::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          out << "   " << GetName() << "->OpenItem(item" << n << ");" << endl;
       else
          out << "   " << GetName() << "->CloseItem(item" << n << ");" << endl;
-      
+
       if (current == fSelected)
          out << "   " << GetName() << "->SetSelected(item" << n << ");" << endl;
 
@@ -2215,15 +2093,15 @@ void TGListTree::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       }
       current = current->fNextsibling;
    }
-   
-   out << endl; 
+
+   out << endl;
 }
 
 //______________________________________________________________________________
 void TGListTree::SaveChildren(ostream &out, TGListTreeItem *item, Int_t &n)
 {
    // Save child items as a C++ statements on output stream out.
-   
+
    Int_t p = n-1;
    while (item) {
       out << "   TGListTreeItem *item" << n << " = " << GetName() << "->AddItem(";
@@ -2248,7 +2126,7 @@ void TGListTreeItem::SavePrimitive(ostream &out, Option_t *option, Int_t n)
    static Bool_t makecheck = kTRUE;
    static Bool_t makeuncheck = kTRUE;
    static Color_t oldcolor = -1;
-   
+
    char quote = '"';
    TString s = Form("%d",n);
 
@@ -2257,7 +2135,7 @@ void TGListTreeItem::SavePrimitive(ostream &out, Option_t *option, Int_t n)
    else
       out << "item" << option << ",";
    out << quote << GetText() << quote;
-   out << ");" << endl; 
+   out << ");" << endl;
 
    if (oldopen != fOpenPic) {
       oldopen = fOpenPic;
@@ -2305,9 +2183,9 @@ void TGListTreeItem::SavePrimitive(ostream &out, Option_t *option, Int_t n)
    }
    if (fTipText.Length() > 0) {
       out << "   item" << s.Data() << "->SetTipText(" << quote
-          << GetTipText() << quote << ");" << endl;   
+          << GetTipText() << quote << ");" << endl;
    }
-      
+
 }
 
 //______________________________________________________________________________

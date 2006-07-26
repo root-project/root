@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.76 2006/05/30 16:35:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.77 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -176,6 +176,10 @@ protected:
    // some protected methods use in gui builder
    virtual void StartGuiBuilding(Bool_t on = kTRUE);
 
+private:
+   TGFrame(const TGFrame&);             // not implemented
+   TGFrame& operator=(const TGFrame&);  // not implemented
+
 public:
    // Default colors and graphics contexts
    static Pixel_t     GetDefaultFrameBackground();
@@ -191,11 +195,8 @@ public:
    TGFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
            UInt_t options = 0, Pixel_t back = GetDefaultFrameBackground());
    TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
-   TGFrame(const TGFrame& tgf);
-
-   TGFrame& operator=(const TGFrame&);
-
    virtual ~TGFrame();
+
    virtual void DeleteWindow();
    virtual void ReallyDelete() { delete this; }
 
@@ -337,15 +338,16 @@ protected:
 
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
 
+private:
+   TGCompositeFrame(const TGCompositeFrame&);            // not implemented
+   TGCompositeFrame& operator=(const TGCompositeFrame&); // not implemented
+
 public:
    TGCompositeFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                     UInt_t options = 0,
                     Pixel_t back = GetDefaultFrameBackground());
    TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
-   TGCompositeFrame(const TGCompositeFrame&);
-
    virtual ~TGCompositeFrame();
-   TGCompositeFrame& operator=(const TGCompositeFrame&);
 
    virtual TList *GetList() const { return fList; }
 
@@ -478,17 +480,17 @@ protected:
    UInt_t        fWMHeightInc;  // WM height increments
    EInitialState fWMInitState;  // WM initial state
 
-   TGMainFrame& operator=(const TGMainFrame&);
-
    TString GetMWMvalueString() const;  //used in SaveSource()
    TString GetMWMfuncString() const;   //used in SaveSource()
    TString GetMWMinpString() const;    //used in SaveSource()
 
+private:
+   TGMainFrame(const TGMainFrame&);             // not implemented
+   TGMainFrame& operator=(const TGMainFrame&);  // not implemented
+
 public:
    TGMainFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kVerticalFrame);
-   TGMainFrame(const TGMainFrame&);
-
    virtual ~TGMainFrame();
 
    virtual Bool_t HandleKey(Event_t *event);
@@ -548,15 +550,13 @@ class TGTransientFrame : public TGMainFrame {
 protected:
    const TGWindow   *fMain;  // window over which to popup dialog
 
-   TGTransientFrame& operator=(const TGTransientFrame& ttf)
-     {if(this!=&ttf) {TGMainFrame::operator=(ttf); fMain=ttf.fMain;}
-     return *this;}
+private:
+   TGTransientFrame(const TGTransientFrame&);             // not implemented
+   TGTransientFrame& operator=(const TGTransientFrame&);  // not implemented
 
 public:
    TGTransientFrame(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
                     UInt_t options = kVerticalFrame);
-
-   TGTransientFrame(const TGTransientFrame& ttf): TGMainFrame(ttf), fMain(ttf.fMain) { }
 
    enum EPlacement { kCenter, kLeft, kRight, kTop, kBottom, kTopLeft, kTopRight,
                      kBottomLeft, kBottomRight };
@@ -581,9 +581,6 @@ public:
 
 class TGGroupFrame : public TGCompositeFrame {
 
-private:
-   TGGroupFrame& operator=(const TGGroupFrame&);
-
 protected:
    TGString      *fText;         // title text
    FontStruct_t   fFontStruct;   // title fontstruct
@@ -595,6 +592,10 @@ protected:
 
    static const TGFont *fgDefaultFont;
    static const TGGC   *fgDefaultGC;
+
+private:
+   TGGroupFrame(const TGGroupFrame&);              // not implemented
+   TGGroupFrame& operator=(const TGGroupFrame&);   // not implemented
 
 public:
    enum ETitlePos { kLeft = -1, kCenter = 0, kRight = 1 };
@@ -612,10 +613,6 @@ public:
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 Pixel_t back = GetDefaultFrameBackground());
-   TGGroupFrame(const TGGroupFrame& tgf): TGCompositeFrame(tgf),
-      fText(tgf.fText), fFontStruct(tgf.fFontStruct), fNormGC(tgf.fNormGC),
-      fTitlePos(tgf.fTitlePos), fHasOwnFont(tgf.fHasOwnFont) { }
-
    virtual ~TGGroupFrame();
 
    virtual TGDimension GetDefaultSize() const;

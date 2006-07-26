@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.28 2006/06/19 14:02:27 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.29 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -72,9 +72,8 @@ private:
    Bool_t           fHasColor;     // true if item has assigned color
    Color_t          fColor;        // item's color
 
-protected:
-   TGListTreeItem(const TGListTreeItem&);
-   TGListTreeItem& operator=(const TGListTreeItem&);
+   TGListTreeItem(const TGListTreeItem&);             // not implemented
+   TGListTreeItem& operator=(const TGListTreeItem&);  // not implemented
 
 public:
    TGListTreeItem(TGClient *fClient = gClient, const char *name = 0,
@@ -163,9 +162,6 @@ protected:
    static const TGGC   &GetHighlightGC();
    static const TGGC   &GetColorGC();
 
-   TGListTree(const TGListTree&);
-   TGListTree& operator=(const TGListTree&);
-
    virtual void DoRedraw();
    void  Draw(Int_t yevent, Int_t hevent);
    void  Draw(Option_t * ="") { MayNotUse("Draw(Option_t*)"); }
@@ -201,6 +197,10 @@ protected:
    void DoubleClicked(TGFrame *, Int_t /*btn*/) { }
    void DoubleClicked(TGFrame *, Int_t /*btn*/, Int_t /*x*/, Int_t /*y*/) { }
    void KeyPressed(TGFrame *, UInt_t /*keysym*/, UInt_t /*mask*/) { }
+
+private:
+   TGListTree(const TGListTree&);               // not implemented
+   TGListTree& operator=(const TGListTree&);    // not implemented
 
 public:
    TGListTree(TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.13 2006/05/23 04:47:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.14 2006/05/26 15:13:01 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -46,9 +46,6 @@ protected:
    TObjLink  *fCache;     //! cache to speedup sequential calling of Before() and After() functions
    Bool_t     fAscending; //! sorting order (when calling Sort() or for TSortedList)
 
-   TList(const TList&);
-   TList& operator=(const TList&);
-
    TObjLink          *LinkAt(Int_t idx) const;
    TObjLink          *FindLink(const TObject *obj, Int_t &idx) const;
    TObjLink         **DoSort(TObjLink **head, Int_t n);
@@ -56,6 +53,10 @@ protected:
    virtual TObjLink  *NewLink(TObject *obj, TObjLink *prev = 0);
    virtual TObjLink  *NewOptLink(TObject *obj, Option_t *opt, TObjLink *prev = 0);
    virtual void       DeleteLink(TObjLink *lnk);
+
+private:
+   TList(const TList&);             // not implemented
+   TList& operator=(const TList&);  // not implemented
 
 public:
    TList() : fFirst(0), fLast(0), fCache(0), fAscending(kTRUE) { }
@@ -113,8 +114,8 @@ private:
    TObjLink   *fPrev;
    TObject    *fObject;
 
-   TObjLink(const TObjLink&); // Not implemented
-   TObjLink& operator=(const TObjLink&); // Not implemented
+   TObjLink(const TObjLink&);            // not implemented
+   TObjLink& operator=(const TObjLink&); // not implemented
 
 protected:
    TObjLink() : fNext(0), fPrev(0), fObject(0) { fNext = fPrev = this; }

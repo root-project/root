@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.14 2006/05/12 12:25:45 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.15 2006/05/13 11:00:50 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -109,8 +109,8 @@ public:
       PairHolder() {}
       PairHolder(const PairHolder& c) : first(c.first), second(c.second) {}
       virtual ~PairHolder() {}
-     private:
-      PairHolder& operator=(const PairHolder&);
+   private:
+      PairHolder& operator=(const PairHolder&);  // not implemented
    };
 
    template <class T> struct Address {
@@ -464,7 +464,7 @@ public:
  */
 class TCollectionStreamer   {
 private:
-   TCollectionStreamer& operator=(const TCollectionStreamer&);
+   TCollectionStreamer& operator=(const TCollectionStreamer&);   // not implemented
 
 protected:
    TGenCollectionProxy* fStreamer;   /// Pointer to worker streamer
@@ -511,7 +511,7 @@ public:
 
    /// Virtual copy constructor.
    virtual TClassStreamer *Generate() {
-      return new TCollectionClassStreamer(*this); 
+      return new TCollectionClassStreamer(*this);
    }
 
 };

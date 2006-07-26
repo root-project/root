@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.9 2004/11/12 21:51:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.10 2006/04/19 08:22:22 rdm Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -57,7 +57,6 @@ private:
    void RootIsEmpty();        //called when root is empty
 
 protected:
-
    void IncrNofKeys() { fSize++; }
    void DecrNofKeys() { fSize--; }
 
@@ -67,7 +66,6 @@ protected:
    Int_t IdxAdd(const TObject &obj);
 
 public:
-
    TBtree(Int_t ordern = 3);  //create a TBtree of order n
    virtual     ~TBtree();
    void        Clear(Option_t *option="");
@@ -126,7 +124,6 @@ protected:
    Int_t         fIsLeaf;   // run-time type flag
 
 public:
-
    TBtNode(Int_t isleaf, TBtInnerNode *p, TBtree *t = 0);
    virtual ~TBtNode();
 
@@ -186,11 +183,9 @@ public:
 class TBtInnerNode : public TBtNode {
 
 private:
-
    TBtItem    *fItem;   // actually fItem[MaxIndex()+1] is desired
 
 public:
-
    TBtInnerNode(TBtInnerNode *parent, TBtree *t = 0);
    TBtInnerNode(TBtInnerNode *parent, TBtree *tree, TBtNode *oldroot);
    ~TBtInnerNode();

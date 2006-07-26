@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.h,v 1.6 2004/11/12 21:51:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.h,v 1.7 2006/05/23 04:47:36 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -37,12 +37,10 @@ class THashList : public TList {
 
 protected:
    THashTable   *fTable;    //Hashtable used for quick lookup of objects
-   
-   THashList(const THashList& hl)
-     : TList(hl), fTable(hl.fTable) { }
-   THashList& operator=(const THashList& hl)
-     {if(this!=&hl) {TList::operator=(hl); fTable=hl.fTable;} 
-     return *this;}
+
+private:
+   THashList(const THashList&);              // not implemented
+   THashList& operator=(const THashList&);   // not implemented
 
 public:
    THashList(Int_t capacity=TCollection::kInitHashTableCapacity, Int_t rehash=0);

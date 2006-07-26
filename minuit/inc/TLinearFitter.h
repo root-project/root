@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name: v5-11-02 $:$Id: TLinearFitter.h,v 1.11 2006/03/20 16:15:40 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.12 2006/05/23 04:47:40 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -213,15 +213,15 @@ private:
    Double_t  CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *index, Int_t *subdat, Int_t start, Int_t end);
    Bool_t    Linf();
 
-protected:
-   TLinearFitter& operator=(const TLinearFitter&);
+private:
+   TLinearFitter(const TLinearFitter&);              // not implemented
+   TLinearFitter& operator=(const TLinearFitter&);   // not implemented
 
 public:
    TLinearFitter();
    TLinearFitter(Int_t ndim, const char *formula, Option_t *opt="D");
    TLinearFitter(Int_t ndim);
    TLinearFitter(TFormula *function, Option_t *opt="D");
-   TLinearFitter(const TLinearFitter&);
    virtual ~TLinearFitter();
 
    virtual void       AddPoint(Double_t *x, Double_t y, Double_t e=1);
@@ -237,7 +237,7 @@ public:
    virtual void       FixParameter(Int_t ipar, Double_t parvalue);
    virtual Double_t   GetChisquare();
    virtual void       GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95);
-   virtual void       GetConfidenceIntervals(TObject *obj, Double_t cl=0.95); 
+   virtual void       GetConfidenceIntervals(TObject *obj, Double_t cl=0.95);
    virtual Double_t*  GetCovarianceMatrix() const;
    virtual void       GetCovarianceMatrix(TMatrixD &matr);
    virtual Double_t   GetCovarianceMatrixElement(Int_t i, Int_t j) const {return fParCovar(i, j);}

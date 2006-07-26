@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.27 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.28 2006/06/20 16:01:16 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -248,89 +248,6 @@ TLinearFitter::TLinearFitter(Int_t ndim, const char *formula, Option_t *opt)
       fStoreData=kFALSE;
    fRobust=kFALSE;
    SetFormula(formula);
-}
-
-//______________________________________________________________________________
-TLinearFitter::TLinearFitter(const TLinearFitter& tlf):
-  TVirtualFitter(tlf),
-  fParams(tlf.fParams),
-  fParCovar(tlf.fParCovar),
-  fTValues(tlf.fTValues),
-  fParSign(tlf.fParSign),
-  fDesign(tlf.fDesign),
-  fDesignTemp(tlf.fDesignTemp),
-  fDesignTemp2(tlf.fDesignTemp2),
-  fDesignTemp3(tlf.fDesignTemp3),
-  fAtb(tlf.fAtb),
-  fAtbTemp(tlf.fAtbTemp),
-  fAtbTemp2(tlf.fAtbTemp2),
-  fAtbTemp3(tlf.fAtbTemp3),
-  fFixedParams(tlf.fFixedParams),
-  fFunctions(tlf.fFunctions),
-  fY(tlf.fY),
-  fY2(tlf.fY2),
-  fY2Temp(tlf.fY2Temp),
-  fX(tlf.fX),
-  fE(tlf.fE),
-  fInputFunction(tlf.fInputFunction),
-  fNpoints(tlf.fNpoints),
-  fNfunctions(tlf.fNfunctions),
-  fFormulaSize(tlf.fFormulaSize),
-  fNdim(tlf.fNdim),
-  fNfixed(tlf.fNfixed),
-  fSpecial(tlf.fSpecial),
-  fFormula(tlf.fFormula),
-  fIsSet(tlf.fIsSet),
-  fStoreData(tlf.fStoreData),
-  fChisquare(tlf.fChisquare),
-  fH(tlf.fH),
-  fRobust(tlf.fRobust),
-  fFitsample(tlf.fFitsample)
-{
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
-{
-   //assignement operator
-   if(this!=&tlf) {
-      TVirtualFitter::operator=(tlf);
-      fParams=tlf.fParams;
-      fParCovar=tlf.fParCovar;
-      fTValues=tlf.fTValues;
-      fParSign=tlf.fParSign;
-      fDesign=tlf.fDesign;
-      fDesignTemp=tlf.fDesignTemp;
-      fDesignTemp2=tlf.fDesignTemp2;
-      fDesignTemp3=tlf.fDesignTemp3;
-      fAtb=tlf.fAtb;
-      fAtbTemp=tlf.fAtbTemp;
-      fAtbTemp2=tlf.fAtbTemp2;
-      fAtbTemp3=tlf.fAtbTemp3;
-      fFixedParams=tlf.fFixedParams;
-      fFunctions=tlf.fFunctions;
-      fY=tlf.fY;
-      fY2=tlf.fY2;
-      fY2Temp=tlf.fY2Temp;
-      fX=tlf.fX;
-      fE=tlf.fE;
-      fInputFunction=tlf.fInputFunction;
-      fNpoints=tlf.fNpoints;
-      fNfunctions=tlf.fNfunctions;
-      fFormulaSize=tlf.fFormulaSize;
-      fNdim=tlf.fNdim;
-      fNfixed=tlf.fNfixed;
-      fSpecial=tlf.fSpecial;
-      fFormula=tlf.fFormula;
-      fIsSet=tlf.fIsSet;
-      fStoreData=tlf.fStoreData;
-      fChisquare=tlf.fChisquare;
-      fH=tlf.fH;
-      fRobust=tlf.fRobust;
-      fFitsample=tlf.fFitsample;
-   }
-   return *this;
 }
 
 //______________________________________________________________________________

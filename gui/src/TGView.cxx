@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.20 2006/05/29 14:00:36 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.21 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -147,62 +147,6 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
    // layout manager is not used
    delete fLayoutManager;
    fLayoutManager = 0;
-}
-
-//______________________________________________________________________________
-TGView::TGView(const TGView& gv) : 
-   TGCompositeFrame(gv), 
-   TGWidget(gv),
-   fMarkedStart(gv.fMarkedStart),
-   fMarkedEnd(gv.fMarkedEnd),
-   fVisible(gv.fVisible),
-   fMousePos(gv.fMousePos),
-   fScrollVal(gv.fScrollVal),
-   fIsMarked(gv.fIsMarked),
-   fIsMarking(gv.fIsMarking),
-   fIsSaved(gv.fIsSaved),
-   fScrolling(gv.fScrolling),
-   fClipboard(gv.fClipboard),
-   fXMargin(gv.fXMargin),
-   fYMargin(gv.fYMargin),
-   fCanvas(gv.fCanvas),
-   fHsb(gv.fHsb),
-   fVsb(gv.fVsb),
-   fScrollTimer(gv.fScrollTimer),
-   fWhiteGC(gv.fWhiteGC),
-   fReadOnly(gv.fReadOnly)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGView& TGView::operator=(const TGView& gv) 
-{
-   //assignment operator
-
-   if(this!=&gv) {
-      TGCompositeFrame::operator=(gv);
-      TGWidget::operator=(gv);
-      fMarkedStart=gv.fMarkedStart;
-      fMarkedEnd=gv.fMarkedEnd;
-      fVisible=gv.fVisible;
-      fMousePos=gv.fMousePos;
-      fScrollVal=gv.fScrollVal;
-      fIsMarked=gv.fIsMarked;
-      fIsMarking=gv.fIsMarking;
-      fIsSaved=gv.fIsSaved;
-      fScrolling=gv.fScrolling;
-      fClipboard=gv.fClipboard;
-      fXMargin=gv.fXMargin;
-      fYMargin=gv.fYMargin;
-      fCanvas=gv.fCanvas;
-      fHsb=gv.fHsb;
-      fVsb=gv.fVsb;
-      fScrollTimer=gv.fScrollTimer;
-      fWhiteGC=gv.fWhiteGC;
-      fReadOnly=gv.fReadOnly;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________

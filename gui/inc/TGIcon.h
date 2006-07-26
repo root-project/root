@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.10 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.11 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -35,14 +35,14 @@ class TGIcon : public TGFrame {
 
 protected:
    const TGPicture  *fPic;     // icon picture
-   TImage           *fImage;   // image  
+   TImage           *fImage;   // image
    TString           fPath;    // directory of image
- 
+
    virtual void DoRedraw();
 
-protected:
-   TGIcon(const TGIcon &p);
-   TGIcon& operator=(const TGIcon&);
+private:
+   TGIcon(const TGIcon &);            // not implemented
+   TGIcon& operator=(const TGIcon&);  // not implemented
 
 public:
    TGIcon(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,
@@ -57,7 +57,7 @@ public:
    const TGPicture *GetPicture() const { return fPic; }
    TImage *GetImage() const { return fImage; }
    virtual void SetPicture(const TGPicture *pic);
-   virtual void SetImage(const char *img); 
+   virtual void SetImage(const char *img);
    virtual void SetImage(TImage *img);
    virtual void SetImagePath(const char *path);
 
@@ -67,7 +67,7 @@ public:
    virtual void ChangeBackgroundColor() { }
 
    virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(ostream &out, Option_t *option = ""); 
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGIcon,0)  // Icon GUI class
 };

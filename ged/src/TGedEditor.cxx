@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.28 2006/05/24 14:49:21 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.29 2006/06/23 15:19:22 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -39,8 +39,8 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
    TGMainFrame(gClient->GetRoot(), 175, 20)
 {
    // Constructor of graphics editor.
-   
-   fCan = new TGCanvas(this, 170, 10, kFixedWidth); 
+
+   fCan = new TGCanvas(this, 170, 10, kFixedWidth);
    fTab = new TGTab(fCan->GetViewPort(), 10, 10);
    fCan->SetContainer(fTab);
    AddFrame(fCan, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
@@ -79,7 +79,7 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
       if (ch)
          Resize(GetWidth(), ch > 700 ? 700 : ch);
       else
-         Resize(GetWidth(), canvas->GetWh()<450 ? 450 : canvas->GetWh() + 4);  
+         Resize(GetWidth(), canvas->GetWh()<450 ? 450 : canvas->GetWh() + 4);
                                                        // canvas borders=4pix
    } else {
       Resize(GetDefaultSize());
@@ -92,52 +92,13 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
 }
 
 //______________________________________________________________________________
-TGedEditor::TGedEditor(const TGedEditor& ge) :
-  TVirtualPadEditor(ge),
-  TGMainFrame(ge),
-  fCan(ge.fCan),
-  fTab(ge.fTab),
-  fTabContainer(ge.fTabContainer),
-  fStyle(ge.fStyle),
-  fModel(ge.fModel),
-  fPad(ge.fPad),
-  fCanvas(ge.fCanvas),
-  fClass(ge.fClass),
-  fWid(ge.fWid),
-  fGlobal(ge.fGlobal)
-{ 
-   //copy constructor
-}
-   
-//______________________________________________________________________________
-TGedEditor& TGedEditor::operator=(const TGedEditor& ge)
-{
-   //assignement operator
-   if(this!=&ge) {
-      TVirtualPadEditor::operator=(ge);
-      TGMainFrame::operator=(ge);
-      fCan=ge.fCan;
-      fTab=ge.fTab;
-      fTabContainer=ge.fTabContainer;
-      fStyle=ge.fStyle;
-      fModel=ge.fModel;
-      fPad=ge.fPad;
-      fCanvas=ge.fCanvas;
-      fClass=ge.fClass;
-      fWid=ge.fWid;
-      fGlobal=ge.fGlobal;
-   } 
-   return *this;
-}
-   
-//______________________________________________________________________________
 TGedEditor::~TGedEditor()
 {
    // Editor destructor.
 
    gROOT->GetListOfCleanups()->Remove(this);
 
-   fStyle->Cleanup(); 
+   fStyle->Cleanup();
    //Cleanup() cannot be used because of TH1/2Editors
    delete fTab;       //delete tab widget and its containers
    delete fCan;       //delete TGCanvas
@@ -179,7 +140,7 @@ void TGedEditor::GetEditors()
                else {
                   GetClassEditor(fModel->IsA());
                   TList *blist = fModel->IsA()->GetListOfBases();
-                  if (blist->First() != 0) 
+                  if (blist->First() != 0)
                      GetBaseClassEditor(fModel->IsA());
                }
             }
@@ -189,7 +150,7 @@ void TGedEditor::GetEditors()
 
       // scan list of base classes
       list = fModel->IsA()->GetListOfBases();
-      if (list->First() != 0) 
+      if (list->First() != 0)
          GetBaseClassEditor(fModel->IsA());
 
       //search for a class editor = classname + 'Editor'
@@ -276,7 +237,7 @@ void TGedEditor::SetCanvas(TCanvas *newcan)
    // Change connection to another canvas.
 
    if (!newcan || !fCanvas || (fCanvas == newcan)) return;
-   
+
    if (fCanvas && (fCanvas != newcan))
       DisconnectEditors(fCanvas);
    fCanvas = newcan;
@@ -298,12 +259,12 @@ void TGedEditor::SetCanvas(TCanvas *newcan)
 void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
 {
    // Activate object editors according to the selected object.
-   
+
    if (!fGlobal && (event != kButton1Down)) return;
 
    TCanvas *c = (TCanvas *) gTQSender;
 
-   if (!fGlobal && (c != fCanvas)) return; 
+   if (!fGlobal && (c != fCanvas)) return;
 
    fModel = obj;
    fPad   = pad;
@@ -332,7 +293,7 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
       if ((el->fFrame)->InheritsFrom(TGedFrame::Class()))
          ((TGedFrame *)(el->fFrame))->SetModel(fPad, fModel, event);
    }
-   if (fGlobal) 
+   if (fGlobal)
       Layout();
    else
       ((TGMainFrame*)GetMainFrame())->Layout();
@@ -360,7 +321,7 @@ void TGedEditor::Show()
       UInt_t ch = fCanvas->GetWindowHeight();
       UInt_t cx = (UInt_t)fCanvas->GetWindowTopX();
       UInt_t cy = (UInt_t)fCanvas->GetWindowTopY();
-      if (!ch) 
+      if (!ch)
          cy = cy + 20;      // embedded canvas protection
 
       Int_t gedx = 0, gedy = 0;
@@ -398,8 +359,8 @@ void TGedEditor::Hide()
 //______________________________________________________________________________
 void TGedEditor::DisconnectEditors(TCanvas *canvas)
 {
-   // Disconnect GUI editors connected to canvas. 
-   
+   // Disconnect GUI editors connected to canvas.
+
    if (!canvas) return;
 
    Disconnect(canvas, "Selected(TVirtualPad*,TObject*,Int_t)", this, "SetModel(TVirtualPad*,TObject*,Int_t)");
@@ -458,7 +419,7 @@ void TGedEditor::DeleteEditors()
          }
       }
    }
-}  
+}
 
 //______________________________________________________________________________
 void TGedEditor::RecursiveRemove(TObject* obj)
@@ -468,7 +429,7 @@ void TGedEditor::RecursiveRemove(TObject* obj)
 
 
    if ((fModel != obj) || (obj == fCanvas)) return;
-   if (obj == fPad) 
+   if (obj == fPad)
       SetModel(fCanvas, fCanvas, kButton1Down);
    else
       SetModel(fPad, fPad, kButton1Down);

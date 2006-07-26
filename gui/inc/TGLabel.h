@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.21 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.22 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -46,13 +46,14 @@ protected:
    Bool_t         fHasOwnFont;   // kTRUE - font defined locally,  kFALSE - globally
    Bool_t         fDisabled;     // if kTRUE label looks disabled (shaded text)
 
-   TGLabel(const TGLabel&);
-   TGLabel& operator=(const TGLabel&);
-
    virtual void DoRedraw();
 
    static const TGFont  *fgDefaultFont;
    static const TGGC    *fgDefaultGC;
+
+private:
+   TGLabel(const TGLabel&);             // not implemented
+   TGLabel& operator=(const TGLabel&);  // not implemented
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -87,7 +88,7 @@ public:
    virtual void SetTextColor(Pixel_t color, Bool_t global = kFALSE);
    virtual void SetTextColor(TColor *color, Bool_t global = kFALSE);
    virtual void SetForegroundColor(Pixel_t fore) { SetTextColor(fore); }
-   virtual void Disable(Bool_t on = kTRUE) 
+   virtual void Disable(Bool_t on = kTRUE)
                { fDisabled = on; fClient->NeedRedraw(this); } //*TOGGLE* *GETTER=IsDisabled
    virtual void Enable() { fDisabled = kFALSE; fClient->NeedRedraw(this); }
    Bool_t IsDisabled() const { return fDisabled; }

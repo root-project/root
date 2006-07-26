@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.12 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.13 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -79,13 +79,14 @@ protected:
    Bool_t           fDragging;      // true if in dragging mode
    const TGPicture *fSliderPic;     // picture to draw slider
 
-   TGSlider(const TGSlider&);
-   TGSlider& operator=(const TGSlider&);
-
    TString GetTypeString() const;   // used in SavePrimitive
 
+private:
+   TGSlider(const TGSlider&);             // not implemented
+   TGSlider& operator=(const TGSlider&);  // not implemented
+
 public:
-   TGSlider(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, 
+   TGSlider(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
             UInt_t type = kSlider1 | kScaleBoth, Int_t id = -1,
             UInt_t options = kChildFrame,
             Pixel_t back = GetDefaultFrameBackground());
@@ -101,7 +102,7 @@ public:
    virtual Int_t GetPosition() const { return fPos; }
    virtual Int_t GetMinPosition() const { return fVmin; }
    virtual Int_t GetMaxPosition() const { return fVmax; }
-   virtual Int_t GetScale() const { return fScale; }   
+   virtual Int_t GetScale() const { return fScale; }
    virtual void  MapSubwindows() { TGWindow::MapSubwindows(); }
 
    virtual void  PositionChanged(Int_t pos) { Emit("PositionChanged(Int_t)", pos); } // *SIGNAL*
@@ -120,7 +121,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGVSlider(const TGWindow *p = 0, UInt_t h = 40, 
+   TGVSlider(const TGWindow *p = 0, UInt_t h = 40,
              UInt_t type = kSlider1 | kScaleBoth, Int_t id = -1,
              UInt_t options = kVerticalFrame,
              Pixel_t back = GetDefaultFrameBackground());
@@ -146,7 +147,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGHSlider(const TGWindow *p = 0, UInt_t w = 40, 
+   TGHSlider(const TGWindow *p = 0, UInt_t w = 40,
              UInt_t type = kSlider1 | kScaleBoth, Int_t id = -1,
              UInt_t options = kHorizontalFrame,
              Pixel_t back = GetDefaultFrameBackground());

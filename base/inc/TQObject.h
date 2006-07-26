@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.29 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.30 2006/05/26 15:13:01 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -76,15 +76,9 @@ protected:
                                  TClass *sender_class, const char *signal,
                                  TClass *receiver_class, const char *slot);
 
-   TQObject(const TQObject& tqo):
-     fListOfSignals(tqo.fListOfSignals),
-     fListOfConnections(tqo.fListOfConnections) {}
-
-   TQObject& operator=(const TQObject& tqo) {
-     if(this!=&tqo) {
-       fListOfSignals=tqo.fListOfSignals;
-       fListOfConnections=tqo.fListOfConnections;
-     } return *this;}
+private:
+   TQObject(const TQObject& tqo);            // not implemented
+   TQObject& operator=(const TQObject& tqo); // not implemented
 
 public:
    TQObject();
@@ -178,13 +172,10 @@ public:
    ClassDef(TQObject,1) //Base class for object communication mechanism
 };
 
+
 R__EXTERN void *gTQSender;   // the latest sender object
 
 class TQObjSender : public TQObject {
-
-private:
-  TQObjSender(const TQObjSender&); // Not implemented
-  TQObjSender& operator=(const TQObjSender&); // Not implemented
 
 protected:
    void    *fSender;        //delegation object
@@ -192,6 +183,10 @@ protected:
 
    virtual void       *GetSender() { return fSender; }
    virtual const char *GetSenderClassName() const { return fSenderClass; }
+
+private:
+   TQObjSender(const TQObjSender&);            // not implemented
+   TQObjSender& operator=(const TQObjSender&); // not implemented
 
 public:
    TQObjSender() : TQObject(), fSender(0), fSenderClass() { }

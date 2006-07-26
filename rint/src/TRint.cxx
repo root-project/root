@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.57 2006/05/24 15:10:46 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.58 2006/05/31 09:58:12 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -216,33 +216,6 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    gTabCom      = new TTabCom;
    Gl_in_key    = &Key_Pressed;
    Gl_beep_hook = &BeepHook;
-}
-
-//______________________________________________________________________________
-TRint::TRint(const TRint& ri) :
-  TApplication(ri),
-  fNcmd(ri.fNcmd),
-  fDefaultPrompt(ri.fDefaultPrompt),
-  fInterrupt(ri.fInterrupt),
-  fInputHandler(ri.fInputHandler)
-{
-   //copy constructor
-   strncpy(fPrompt,ri.fPrompt,64);
-}
-
-//______________________________________________________________________________
-TRint& TRint::operator=(const TRint& ri)
-{
-   //assignement operator
-   if(this!=&ri) {
-      TApplication::operator=(ri);
-      fNcmd=ri.fNcmd;
-      fDefaultPrompt=ri.fDefaultPrompt;
-      strncpy(fPrompt,ri.fPrompt,64);
-      fInterrupt=ri.fInterrupt;
-      fInputHandler=ri.fInputHandler;
-   }
-   return *this;
 }
 
 //______________________________________________________________________________

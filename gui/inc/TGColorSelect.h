@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.11 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.12 2006/07/03 16:10:45 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -55,8 +55,9 @@ protected:
    GContext_t      fGrayGC;      // Shadow GC
    Pixel_t         fColor;       // returned color value
 
-   TGColorFrame(const TGColorFrame&);
-   TGColorFrame& operator=(const TGColorFrame&);
+private:
+   TGColorFrame(const TGColorFrame&);             // not implemented
+   TGColorFrame& operator=(const TGColorFrame&);  // not implemented
 
 public:
    TGColorFrame(const TGWindow *p = 0, Pixel_t c = 0, Int_t n = 1);
@@ -80,8 +81,9 @@ protected:
    const TGWindow  *fMsgWindow;  // window handling container messages
    TGColorFrame    *fCe[16];     // matrix of color cells
 
-   TG16ColorSelector(const TG16ColorSelector&);   
-   TG16ColorSelector& operator=(const TG16ColorSelector&);   
+private:
+   TG16ColorSelector(const TG16ColorSelector&);             // not implemented
+   TG16ColorSelector& operator=(const TG16ColorSelector&);  // not implemented
 
 public:
    TG16ColorSelector(const TGWindow *p = 0);
@@ -105,8 +107,9 @@ protected:
    const TGWindow  *fMsgWindow;     // window handling container messages
    Pixel_t          fCurrentColor;  // currently selected color value
 
-   TGColorPopup(const TGColorPopup&);
-   TGColorPopup& operator=(const TGColorPopup&);
+private:
+   TGColorPopup(const TGColorPopup&);              // not implemented
+   TGColorPopup& operator=(const TGColorPopup&);   // not implemented
 
 public:
    TGColorPopup(const TGWindow *p = 0, const TGWindow *m = 0, Pixel_t color = 0);
@@ -131,15 +134,16 @@ protected:
    TGColorPopup *fColorPopup;    // color popup associated
    TGPosition    fPressPos;      // psotion of frame on button press event
 
-   TGColorSelect(const TGColorSelect&);
-   TGColorSelect& operator=(const TGColorSelect&);
-
    virtual void DoRedraw();
 
    void DrawTriangle(GContext_t gc, Int_t x, Int_t y);
 
+private:
+   TGColorSelect(const TGColorSelect&);             // not implemented
+   TGColorSelect& operator=(const TGColorSelect&);  // not implemented
+
 public:
-   TGColorSelect(const TGWindow *p = 0, Pixel_t color = 0, 
+   TGColorSelect(const TGWindow *p = 0, Pixel_t color = 0,
                  Int_t id = -1);
    virtual ~TGColorSelect();
 

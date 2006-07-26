@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.17 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.18 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -44,41 +44,9 @@ TGShutter::TGShutter(const TGWindow *p, UInt_t options) :
    fTimer               = 0;
    fTrash               = new TList;
 
-   // layout manager is not used 
+   // layout manager is not used
    delete fLayoutManager;
    fLayoutManager = 0;
-}
-
-
-//______________________________________________________________________________
-TGShutter::TGShutter(const TGShutter& sh) :
-   TGCompositeFrame(sh),
-   fTimer(sh.fTimer),
-   fSelectedItem(sh.fSelectedItem),
-   fClosingItem(sh.fClosingItem),
-   fTrash(sh.fTrash),
-   fHeightIncrement(sh.fHeightIncrement),
-   fClosingHeight(sh.fClosingHeight),
-   fClosingHadScrollbar(sh.fClosingHadScrollbar)
-{ 
-   // Copy ctor.
-}
-
-//______________________________________________________________________________
-TGShutter& TGShutter::operator=(const TGShutter& sh) 
-{
-   //assignment operator
-   if(this!=&sh) {
-      TGCompositeFrame::operator=(sh);
-      fTimer=sh.fTimer;
-      fSelectedItem=sh.fSelectedItem;
-      fClosingItem=sh.fClosingItem;
-      fTrash=sh.fTrash;
-      fHeightIncrement=sh.fHeightIncrement;
-      fClosingHeight=sh.fClosingHeight;
-      fClosingHadScrollbar=sh.fClosingHadScrollbar;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -301,7 +269,7 @@ void TGShutter::SetSelectedItem(TGShutterItem *item)
 //______________________________________________________________________________
 TGShutterItem *TGShutter::GetItem(const char *name)
 {
-   // returns a shutter item by name (name is hot string of shutter item) 
+   // returns a shutter item by name (name is hot string of shutter item)
 
    TGFrameElement *el;
    TGShutterItem  *item = 0;
@@ -317,6 +285,7 @@ TGShutterItem *TGShutter::GetItem(const char *name)
 
    return item;
 }
+
 
 //______________________________________________________________________________
 TGShutterItem::TGShutterItem(const TGWindow *p, TGHotString *s, Int_t id,
@@ -344,35 +313,6 @@ TGShutterItem::TGShutterItem(const TGWindow *p, TGHotString *s, Int_t id,
    fButton->SetEditDisabled(kEditDisableGrab | kEditDisableBtnEnable);
    fContainer->SetEditDisabled(kEditDisableGrab);
    fEditDisabled = kEditDisableGrab | kEditDisableLayout;
-}
-
-//______________________________________________________________________________
-TGShutterItem::TGShutterItem(const TGShutterItem& si) :
-   TGVerticalFrame(si),
-   TGWidget(si),
-   fButton(si.fButton),
-   fCanvas(si.fCanvas),
-   fContainer(si.fContainer),
-   fL1(si.fL1),
-   fL2(si.fL2)
-{
-   // Copy ctor.
-}
-
-//______________________________________________________________________________
-TGShutterItem& TGShutterItem::operator=(const TGShutterItem& si) 
-{
-   //assignment operator
-   if(this!=&si) {
-      TGVerticalFrame::operator=(si);
-      TGWidget::operator=(si);
-      fButton=si.fButton;
-      fCanvas=si.fCanvas;
-      fContainer=si.fContainer;
-      fL1=si.fL1;
-      fL2=si.fL2;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________

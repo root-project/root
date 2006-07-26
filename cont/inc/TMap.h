@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name: v5-11-02 $:$Id: TMap.h,v 1.18 2006/03/28 16:11:27 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.19 2006/05/23 04:47:36 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -44,12 +44,8 @@ friend class  TMapIter;
 private:
    THashTable   *fTable;     //Hash table used to store TPair's
 
-protected:
-   TMap(const TMap& map)
-     : TCollection(map), fTable(map.fTable) { }
-   TMap& operator=(const TMap& map)
-     {if(this!=&map) {TCollection::operator=(map); fTable=map.fTable;}
-     return *this;}
+   TMap(const TMap& map);             // not implemented
+   TMap& operator=(const TMap& map);  // not implemented
 
 public:
    TMap(Int_t capacity = TCollection::kInitHashTableCapacity, Int_t rehash = 0);

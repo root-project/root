@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.44 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.45 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -235,7 +235,7 @@ public:
 Bool_t TBlinkTimer::Notify()
 {
    // Notify when timer times out and reset the timer.
-   
+
    fTextEntry->HandleTimer(0);
    Reset();
    return kFALSE;
@@ -299,73 +299,6 @@ TGTextEntry::TGTextEntry(const TString &contents, const TGWindow *parent, Int_t 
    fText->AddText(0, contents.Data());
 
    Init();                             // default initialization
-}
-
-//______________________________________________________________________________
-TGTextEntry::TGTextEntry(const TGTextEntry& te) :
-  TGFrame(te),
-  TGWidget(te),
-  fText(te.fText),
-  fStartX(te.fStartX),
-  fEndX(te.fEndX),
-  fStartIX(te.fStartIX),
-  fEndIX(te.fEndIX),
-  fSelectionOn(te.fSelectionOn),
-  fOffset(te.fOffset),
-  fCursorX(te.fCursorX),
-  fCursorIX(te.fCursorIX),
-  fCursorOn(te.fCursorOn),
-  fFontStruct(te.fFontStruct),
-  fNormGC(te.fNormGC),
-  fSelGC(te.fSelGC),
-  fSelbackGC(te.fSelbackGC),
-  fClipboard(te.fClipboard),
-  fCurBlink(te.fCurBlink),
-  fTip(te.fTip),
-  fMaxLen(te.fMaxLen),
-  fEdited(te.fEdited),
-  fFrameDrawn(te.fFrameDrawn),
-  fEchoMode(te.fEchoMode),
-  fInsertMode(te.fInsertMode),
-  fAlignment(te.fAlignment),
-  fHasOwnFont(te.fHasOwnFont)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGTextEntry& TGTextEntry::operator=(const TGTextEntry& te)
-{
-   //assignment operator
-   if(this!=&te) {
-      TGFrame::operator=(te);
-      TGWidget::operator=(te);
-      fText=te.fText;
-      fStartX=te.fStartX;
-      fEndX=te.fEndX;
-      fStartIX=te.fStartIX;
-      fEndIX=te.fEndIX;
-      fSelectionOn=te.fSelectionOn;
-      fOffset=te.fOffset;
-      fCursorX=te.fCursorX;
-      fCursorIX=te.fCursorIX;
-      fCursorOn=te.fCursorOn;
-      fFontStruct=te.fFontStruct;
-      fNormGC=te.fNormGC;
-      fSelGC=te.fSelGC;
-      fSelbackGC=te.fSelbackGC;
-      fClipboard=te.fClipboard;
-      fCurBlink=te.fCurBlink;
-      fTip=te.fTip;
-      fMaxLen=te.fMaxLen;
-      fEdited=te.fEdited;
-      fFrameDrawn=te.fFrameDrawn;
-      fEchoMode=te.fEchoMode;
-      fInsertMode=te.fInsertMode;
-      fAlignment=te.fAlignment;
-      fHasOwnFont=te.fHasOwnFont;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________

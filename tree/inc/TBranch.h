@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.31 2006/05/12 12:24:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.32 2006/05/23 04:47:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -94,10 +94,11 @@ protected:
 
    Bool_t      fSkipZip;         //!After being read, the buffer will not be unziped.
 
-   TBranch(const TBranch&);   
-   TBranch& operator=(const TBranch&);
-
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
+
+private:
+   TBranch(const TBranch&);             // not implemented
+   TBranch& operator=(const TBranch&);  // not implemented
 
 public:
    TBranch();

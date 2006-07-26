@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.19 2006/05/31 09:02:00 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.20 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -119,37 +119,6 @@ TGStatusBar::TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
 
    //fEditDisabled = kEditDisableLayout;
 }
-
-//______________________________________________________________________________
-TGStatusBar::TGStatusBar(const TGStatusBar& sb) :
-  TGHorizontalFrame(sb),
-  fStatusPart(sb.fStatusPart),
-  fParts(sb.fParts),
-  fNpart(sb.fNpart),
-  fYt(sb.fYt),
-  fXt(sb.fXt),
-  f3DCorner(sb.f3DCorner)
-{ 
-   // Copy constructor.
-}
-
-//______________________________________________________________________________
-TGStatusBar& TGStatusBar::operator=(const TGStatusBar& sb) 
-{ 
-   // Equal operator.
-   
-   if(this!=&sb) {
-      TGHorizontalFrame::operator=(sb);
-      fStatusPart=sb.fStatusPart;
-      fParts=sb.fParts;
-      fNpart=sb.fNpart;
-      fYt=sb.fYt;
-      fXt=sb.fXt;
-      f3DCorner=sb.f3DCorner;
-   } 
-   return *this;
-}
-
 
 //______________________________________________________________________________
 TGStatusBar::~TGStatusBar()

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.42 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.43 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -82,8 +82,6 @@ protected:
    TGToolTip     *fTip;         // tool tip associated with button
    TGButtonGroup *fGroup;       // button group this button belongs to
 
-   TGButton& operator=(const TGButton&);
-
    virtual void   SetToggleButton(Bool_t) { }
    virtual void   EmitSignals(Bool_t wasUp);
 
@@ -92,13 +90,16 @@ protected:
 
    static Window_t fgReleaseBtn; // the last released button
 
+private:
+   TGButton(const TGButton&);             // not implemented
+   TGButton& operator=(const TGButton&);  // not implemented
+
 public:
    static const TGGC   &GetDefaultGC();
    static const TGGC   &GetHibckgndGC();
 
    TGButton(const TGWindow *p = 0, Int_t id = -1, GContext_t norm = GetDefaultGC()(),
             UInt_t option = kRaisedFrame | kDoubleBorder);
-   TGButton(const TGButton& tgb);
    virtual ~TGButton();
 
    virtual Bool_t       HandleButton(Event_t *event);
@@ -146,10 +147,12 @@ protected:
 
    static const TGFont *fgDefaultFont;
 
-   TGTextButton& operator=(const TGTextButton&);
-
    void Init();
    virtual void DoRedraw();
+
+private:
+   TGTextButton(const TGTextButton&);              // not implemented
+   TGTextButton& operator=(const TGTextButton&);   // not implemented
 
 public:
    static FontStruct_t GetDefaultFontStruct();
@@ -166,7 +169,6 @@ public:
                 Int_t id = -1, GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 UInt_t option = kRaisedFrame | kDoubleBorder);
-   TGTextButton(const TGTextButton& tgt);
 
    virtual ~TGTextButton();
 
@@ -199,9 +201,6 @@ public:
 
 class TGPictureButton : public TGButton {
 
-private:
-   TGPictureButton& operator=(const TGPictureButton&);
-
 protected:
    const TGPicture   *fPic;            // picture to be put in button
    const TGPicture   *fPicD;           // picture shown when button disabled
@@ -209,6 +208,10 @@ protected:
 
    virtual void DoRedraw();
    virtual void CreateDisabledPicture();
+
+private:
+   TGPictureButton(const TGPictureButton&);             // not implemented
+   TGPictureButton& operator=(const TGPictureButton&);  // not implemented
 
 public:
    TGPictureButton(const TGWindow *p, const TGPicture *pic, Int_t id = -1,
@@ -220,8 +223,6 @@ public:
    TGPictureButton(const TGWindow *p = 0, const char* pic = 0, Int_t id = -1,
                    GContext_t norm = GetDefaultGC()(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
-   TGPictureButton(const TGPictureButton& tgp): TGButton(tgp), fPic(tgp.fPic),
-      fPicD(tgp.fPicD), fOwnDisabledPic(tgp.fOwnDisabledPic) { }
    virtual ~TGPictureButton();
 
    virtual void     SetPicture(const TGPicture *new_pic);

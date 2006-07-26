@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.8 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.9 2006/07/24 16:11:45 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -55,9 +55,9 @@ class TGFSComboBox;
 
 class TGFileInfo {
 
-protected:
-   TGFileInfo(const TGFileInfo&);
-   TGFileInfo& operator=(const TGFileInfo&);
+private:
+   TGFileInfo(const TGFileInfo&);              // not implemented
+   TGFileInfo& operator=(const TGFileInfo&);   // not implemented
 
 public:
    char         *fFilename;            // selected file name
@@ -87,7 +87,7 @@ protected:
    TGPictureButton   *fNewf;     // top toolbar button
    TGPictureButton   *fList;     // top toolbar button
    TGPictureButton   *fDetails;  // top toolbar button
-   TGCheckButton     *fOverWR;   // set on/off file overwriting 
+   TGCheckButton     *fOverWR;   // set on/off file overwriting
    TGCheckButton     *fMultiSel; // set on/off multiple file selection
    const TGPicture   *fPcdup;    // picture for fCdup
    const TGPicture   *fPnewf;    // picture for fNewf
@@ -99,8 +99,9 @@ protected:
    TGFileContainer   *fFc;       // file list view container (containing the files)
    TGFileInfo        *fFileInfo; // file info passed to this dialog
 
-   TGFileDialog(const TGFileDialog&);
-   TGFileDialog& operator=(const TGFileDialog&);
+private:
+   TGFileDialog(const TGFileDialog&);              // not implemented
+   TGFileDialog& operator=(const TGFileDialog&);   // not implemented
 
 public:
    TGFileDialog(const TGWindow *p = 0, const TGWindow *main = 0,

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.14 2006/06/30 07:48:18 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.15 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -47,7 +47,7 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
    TGTransientFrame(p, main, 10, 10, options)
 {
    // Create a message dialog box.
-   
+
    if (p)
       PMsgBox(title, msg, icon, buttons, ret_code, text_align);
    else
@@ -66,11 +66,11 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
    //         msg: Message to be shown ('\n' may be used to split it in lines)
    //        icon: Picture to be shown at the left on the dialog window.
    //              It might take any of the following values:
-   //              kMBIconStop, kMBIconQuestion, 
+   //              kMBIconStop, kMBIconQuestion,
    //              kMBIconExclamation, kMBIconAsterisk
    //     buttons: Buttons to be shown at the botton of the dialgo window.
    //              Look at EMsgBoxButton for the different possible values.
-   //    ret_code: It will hold the value of the button pressed when the 
+   //    ret_code: It will hold the value of the button pressed when the
    //              dialog is closed
    //     options: Frame options of this dialog window.
    //  text_align: Align options for 'msg'. See ETextJustification for the values.
@@ -107,71 +107,6 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
       PMsgBox(title, msg, icon_pic, buttons, ret_code, text_align);
    else
       MakeZombie();
-}
-
-//______________________________________________________________________________
-TGMsgBox::TGMsgBox(const TGMsgBox& mb) :
-  TGTransientFrame(mb),
-  fYes(mb.fYes),
-  fNo(mb.fNo),
-  fOK(mb.fOK),
-  fApply(mb.fApply),
-  fRetry(mb.fRetry),
-  fIgnore(mb.fIgnore),
-  fCancel(mb.fCancel),
-  fClose(mb.fClose),
-  fYesAll(mb.fYesAll),
-  fNoAll(mb.fNoAll),
-  fNewer(mb.fNewer),
-  fAppend(mb.fAppend),
-  fDismiss(mb.fDismiss),
-  fIcon(mb.fIcon),
-  fButtonFrame(mb.fButtonFrame),
-  fIconFrame(mb.fIconFrame),
-  fLabelFrame(mb.fLabelFrame),
-  fL1(mb.fL1),
-  fL2(mb.fL2),
-  fL3(mb.fL3),
-  fL4(mb.fL4),
-  fL5(mb.fL5),
-  fMsgList(mb.fMsgList),
-  fRetCode(mb.fRetCode)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGMsgBox& TGMsgBox::operator=(const TGMsgBox& mb)
-{
-   //assignment operator
-   if(this!=&mb) {
-      TGTransientFrame::operator=(mb);
-      fYes=mb.fYes;
-      fNo=mb.fNo;
-      fOK=mb.fOK;
-      fApply=mb.fApply;
-      fRetry=mb.fRetry;
-      fIgnore=mb.fIgnore;
-      fCancel=mb.fCancel;
-      fClose=mb.fClose;
-      fYesAll=mb.fYesAll;
-      fNoAll=mb.fNoAll;
-      fNewer=mb.fNewer;
-      fAppend=mb.fAppend;
-      fDismiss=mb.fDismiss;
-      fIcon=mb.fIcon;
-      fButtonFrame=mb.fButtonFrame;
-      fIconFrame=mb.fIconFrame;
-      fLabelFrame=mb.fLabelFrame;
-      fL1=mb.fL1;
-      fL2=mb.fL2;
-      fL3=mb.fL3;
-      fL4=mb.fL4;
-      fL5=mb.fL5;
-      fMsgList=mb.fMsgList;
-      fRetCode=mb.fRetCode;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
