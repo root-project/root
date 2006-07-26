@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.52 2006/06/29 22:15:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.53 2006/06/30 14:24:05 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -113,10 +113,6 @@ private:
    TFile(const TFile &);            //Files cannot be copied
    void operator=(const TFile &);
 
-   // File type
-   enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4};
-   static EFileType GetType(const char *name, Option_t *option = "");
-
 public:
    // TFile status bits
    enum EStatusBits {
@@ -124,10 +120,13 @@ public:
       kHasReferences = BIT(11),
       kDevNull       = BIT(12),
       kWriteError    = BIT(14), // BIT(13) is taken up by TObject
-      kBinaryFile    = BIT(15)
+      kBinaryFile    = BIT(15),
+      kRedirected    = BIT(16)
    };
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
    enum { kStartBigFile  = 2000000000 };
+   // File type
+   enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4};
 
    TFile();
    TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress=1);
@@ -213,6 +212,8 @@ public:
                             const char *ftitle = "", Int_t compress = 1,
                             Int_t netopt = 0);
    static TFile       *Open(TFileOpenHandle *handle);
+
+   static EFileType    GetType(const char *name, Option_t *option = "");
 
    static EAsyncOpenStatus GetAsyncOpenStatus(const char *name);
    static EAsyncOpenStatus GetAsyncOpenStatus(TFileOpenHandle *handle);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.179 2006/07/13 05:10:24 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.180 2006/07/14 19:49:59 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -2202,7 +2202,9 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    if (type == kLocal) {
 
       // Local files
-      f = new TFile(urlname.GetFile(), option, ftitle, compress);
+      urlname.SetHost("");
+      urlname.SetProtocol("file");
+      f = new TFile(urlname.GetUrl(), option, ftitle, compress);
 
    } else if (type == kNet) {
 
@@ -2571,7 +2573,14 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option)
       const char *lfname = 0;
       Bool_t localFile = kFALSE;
       TUrl url(name);
-      Bool_t forceRemote = gEnv->GetValue("TFile.ForceRemote",0);
+      //
+      // Check whether we should try to optimize for local files
+      Bool_t forceRemote = gEnv->GetValue("TFile.ForceRemote", 0);
+      TString opts = url.GetOptions();
+      if (opts.Contains("remote=1"))
+         forceRemote = kTRUE;
+      else if (opts.Contains("remote=0"))
+         forceRemote = kFALSE;
       if (!forceRemote) {
          TInetAddress a(gSystem->GetHostByName(url.GetHost()));
          TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
