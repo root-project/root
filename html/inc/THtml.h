@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.20 2006/07/11 10:39:15 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.21 2006/07/11 17:34:02 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -87,11 +87,14 @@ protected:
    TString        fSourceDir;       // source path
    TString        fOutputDir;       // output directory
    TString        fLine;            // current line
+   UInt_t         fLineNo;          // current line number
    TString        fLineExpanded;    // current line with links
+   TString        fLineStripped;    // current line without surrounding spaces
    TClass        *fCurrentClass;    // current class context of sources being parsed
    MethodNames_t  fMethodNames;     // current class's method names
    EDocContext    fDocContext;      // current context of parsed sources for documenting
    EParseContext  fParseContext;    // current context of parsed sources
+   std::set<UInt_t> fExtraLinesWithAnchor; // lines that need an additional anchor
    TString        fSourceInfo[kNumSourceInfos];// author, last changed, ...
    TString        fCounter;         // counter string
    Bool_t         fEscFlag;         // Flag to mark the symbol must be written "as is"
@@ -106,8 +109,8 @@ protected:
    std::map<TClass*,std::string> fGuessedImplFileNames; // names of additional impl file names
    static std::set<std::string>  fgKeywords; // C++ keywords
 
-   void    AnchorFromLine(TString& anchor, const char* line);
-   virtual void BeautifyLine(std::ostream &srcOut, TString* anchor = 0);
+   void    AnchorFromLine(TString& anchor);
+   virtual void BeautifyLine(std::ostream &srcOut);
    void    Class2Html(Bool_t force=kFALSE);
    void    ClassDescription(ofstream &out);
    void    ClassHtmlTree(ofstream &out, TClass *classPtr, ETraverse dir=kBoth, int depth=1);

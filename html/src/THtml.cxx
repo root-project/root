@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.102 2006/07/11 10:39:15 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.103 2006/07/11 17:34:02 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -705,7 +705,7 @@ void THtml::Class2Html(Bool_t force)
             }
             if (incl) {
                if (lib)
-                  classFile << "<br/>";
+                  classFile << "<br />";
                classFile << "#include \""
                          << incl << "\"";
             }
@@ -719,8 +719,10 @@ void THtml::Class2Html(Bool_t force)
          classFile << "<h1>";
          ReplaceSpecialChars(classFile, fCurrentClass->GetName());
          classFile << "</h1>" << endl;
-         classFile << "<hr width=300>" << endl;
-         classFile << "<!--SDL--><em><a href=\"#" << fCurrentClass->GetName();
+         classFile << "<hr width=\"300\" />" << endl;
+         TString currClassNameMangled(fCurrentClass->GetName());
+         NameSpace2FileName(currClassNameMangled);
+         classFile << "<!--SDL--><em><a href=\"#" << currClassNameMangled;
          if (IsNamespace(fCurrentClass)) {
             classFile << ":description\">namespace description</a>";
          } else {
@@ -748,7 +750,7 @@ void THtml::Class2Html(Bool_t force)
          const char* headerFileName = GetDeclFileName(fCurrentClass);
          const char* sourceFileName = GetImplFileName(fCurrentClass);
          if (viewCVSLink && viewCVSLink[0] && (headerFileName || sourceFileName )) {
-            classFile << "<br/>";
+            classFile << "<br />";
             if (headerFileName)
                classFile << "<a href=\"" << viewCVSLink << headerFileName << "\">viewCVS header</a>";
             if (headerFileName && sourceFileName)
@@ -758,7 +760,7 @@ void THtml::Class2Html(Bool_t force)
          }
 
          classFile << "</em>" << endl;
-         classFile << "<hr width=300>" << endl;
+         classFile << "<hr width=\"300\" />" << endl;
          classFile << "</center>" << endl;
 
 
@@ -893,11 +895,11 @@ void THtml::Class2Html(Bool_t force)
 
          const char* tab4nbsp="&nbsp;&nbsp;&nbsp;&nbsp;";
          if (fCurrentClass->Property() & kIsAbstract)
-            classFile << "&nbsp;<br><b>"
-                      << tab4nbsp << "This is an abstract class, constructors will not be documented.<br>" << endl
+            classFile << "&nbsp;<br /><b>"
+                      << tab4nbsp << "This is an abstract class, constructors will not be documented.<br />" << endl
                       << tab4nbsp << "Look at the <a href=\""
                       << GetFileName((const char *) GetDeclFileName(fCurrentClass))
-                      << "\">header</a> to check for available constructors.</b><br>" << endl;
+                      << "\">header</a> to check for available constructors.</b><br />" << endl;
 
          classFile << "<pre>" << endl;
 
@@ -927,7 +929,7 @@ void THtml::Class2Html(Bool_t force)
                }
                if (j)
                   classFile << endl;
-               classFile << tab4 << "<b>" << ftitle << "</b><br>" << endl;
+               classFile << tab4 << "<b>" << ftitle << "</b><br />" << endl;
 
                TString strClassNameNoScope(fCurrentClass->GetName());
                
@@ -985,11 +987,14 @@ void THtml::Class2Html(Bool_t force)
                      if (!isctor && !isdtor)
                         ExpandKeywords(classFile, method->GetReturnTypeName());
 
+                     TString mangled(fCurrentClass->GetName());
+                     NameSpace2FileName(mangled);
                      classFile << " " << tab << "<!--BOLD-->";
-                     classFile << "<a href=\"#" << fCurrentClass->GetName();
+                     classFile << "<a href=\"#" << mangled;
                      classFile << ":";
-                     ReplaceSpecialChars(classFile, method->GetName());
-                     classFile << "\">";
+                     mangled = method->GetName();
+                     NameSpace2FileName(mangled);
+                     classFile << mangled << "\">";
                      ReplaceSpecialChars(classFile, method->GetName());
                      classFile << "</a><!--PLAIN-->";
 
@@ -1071,7 +1076,7 @@ void THtml::Class2Html(Bool_t force)
                classFile << endl;
                classFile << "<h3>" << tab2 << "<a name=\"";
                classFile << fCurrentClass->GetName();
-               classFile << ":Data Members\">Data Members</a></h3>" <<
+               classFile << ":Data_Members\">Data Members</a></h3>" <<
                    endl;
                classFile << "<pre>" << endl;
 
@@ -1091,7 +1096,7 @@ void THtml::Class2Html(Bool_t force)
                      }
                      if (j)
                         classFile << endl;
-                     classFile << tab4 << "<b>" << ftitle << "</b><br>" <<
+                     classFile << tab4 << "<b>" << ftitle << "</b><br />" <<
                          endl;
 
                      for (i = 0; i < num[j]; i++) {
@@ -1211,13 +1216,17 @@ void THtml::CreateSourceOutputStream(std::ofstream& out, const char* extension,
 }
 
 //______________________________________________________________________________
-void THtml::AnchorFromLine(TString& anchor, const char* line) {
+void THtml::AnchorFromLine(TString& anchor) {
    // Create an anchor from the given line, by hashing it and
    // convertig the hash into a custom base64 string.
 
    const char base64String[65] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_.";
 
-   UInt_t hash = ::Hash(line);
+   // use hash of line instead of e.g. line number.
+   // advantages: more stable (lines can move around, we still find them back),
+   // no need for keeping a line number context
+   UInt_t hash = ::Hash(fLineStripped);
+   anchor.Remove(0);
    while (hash) {
       anchor += base64String[hash % 64];
       hash /= 64;
@@ -1225,7 +1234,7 @@ void THtml::AnchorFromLine(TString& anchor, const char* line) {
 }
 
 //______________________________________________________________________________
-void THtml::BeautifyLine(std::ostream &sOut, TString* anchor /*= 0*/)
+void THtml::BeautifyLine(std::ostream &sOut)
 {
    // Put colors around tags, create links, escape characters.
    // In short: make a nice HTML page out of C++ code, and put it into srcOut.
@@ -1242,12 +1251,11 @@ void THtml::BeautifyLine(std::ostream &sOut, TString* anchor /*= 0*/)
    };
    EBeautifyContext context = kNothingSpecialMoveOn;
 
-   TString lineStripped(fLine.Strip(TString::kBoth));
 
    switch (fParseContext) {
       case kCode:
          context = kNothingSpecialMoveOn;
-         if (lineStripped.Length() && lineStripped[0] == '#') {
+         if (fLineStripped.Length() && fLineStripped[0] == '#') {
             context = kPreProc;
             sOut << "<span class=\"cpp\">";
             ExpandPpLine(sOut);
@@ -1264,15 +1272,6 @@ void THtml::BeautifyLine(std::ostream &sOut, TString* anchor /*= 0*/)
          context = kCommentC;
          break;
       default: ;
-   }
-
-   if (anchor) {
-      // use hash of line instead of e.g. line number.
-      // advantages: more stable (lines can move around, we still find them back),
-      // no need for keeping a line number context
-      *anchor = "#";
-      AnchorFromLine(*anchor, lineStripped);
-      sOut << "<a name=\"" << *anchor << "\"></a>";
    }
 
    if (context == kDontTouch || fLine.Contains("End_Html") && !fLine.Contains("\"End_Html")) {
@@ -1359,14 +1358,16 @@ TMethod* THtml::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret, T
    if (posMethodName == kNPOS) {
       name.Remove(0);
       TMethod * meth = 0;
+      Ssiz_t posBlock = fLine.Index('{');
+      if (posBlock == kNPOS) 
+         posBlock = fLine.Length();
       for (MethodNames_t::iterator iMethodName = fMethodNames.begin();
          !name.Length() && iMethodName != fMethodNames.end(); ++iMethodName) {
-         TString lookFor(" ");
-         lookFor += iMethodName->first;
+         TString lookFor(iMethodName->first);
          lookFor += "(";
          posMethodName = fLine.Index(lookFor);
-         if (posMethodName != kNPOS) {
-            ++posMethodName;
+         if (posMethodName != kNPOS && posMethodName < posBlock 
+            && (posMethodName == 0 || !IsWord(fLine[posMethodName - 1]))) {
             meth = LocateMethodInCurrentLine(posMethodName, ret, name, params, srcOut, 
                anchor, sourceFile, allowPureVirtual);
             if (name.Length())
@@ -1454,11 +1455,13 @@ TMethod* THtml::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret, T
       if (!paramEnd) {
          // func with params over multiple lines
          // gotta write out this line before it gets lost
-         if (!anchor.Length())
+         if (!anchor.Length()) {
             // request an anchor, just in case...
-            BeautifyLine(srcOut, &anchor);
-         else 
-            BeautifyLine(srcOut);
+            AnchorFromLine(anchor);
+            if (srcOut)
+               srcOut << "<a name=\"" << anchor << "\"></a>";
+         }
+         BeautifyLine(srcOut);
 
          fLine.ReadLine(sourceFile, kFALSE);
          if (sourceFile.eof()) {
@@ -1544,12 +1547,17 @@ void THtml::WriteMethod(std::ostream & out, TString& ret,
    ExpandKeywords(params);
    out << "<div class=\"funcdoc\"><span class=\"funcname\">";
    out << ret << " <a name=\"";
-   ReplaceSpecialChars(out, fCurrentClass->GetName());
-   out << ":";
+   TString mangled(fCurrentClass->GetName());
+   NameSpace2FileName(mangled);
+   out << mangled << ":";
+   mangled = name;
+   NameSpace2FileName(mangled);
+   out << mangled << "\" href=\"src/" << filename;
+   if (anchor.Length())
+      out << "#" << anchor;
+   out << "\">";
    ReplaceSpecialChars(out, name);
-   out << "\" href=\"src/" << filename << anchor << "\">";
-   ReplaceSpecialChars(out, name);
-   out << "</a>" << params << "</span><br>" << std::endl;
+   out << "</a>" << params << "</span><br />" << std::endl;
 
    out << "<pre>" << comment << "</pre>" << std::endl;
 
@@ -1560,14 +1568,6 @@ void THtml::WriteMethod(std::ostream & out, TString& ret,
    }
    out << "</div>" << std::endl;
 
-   ret.Remove(0);
-   name.Remove(0);
-   params.Remove(0);
-   anchor.Remove(0);
-   comment.Remove(0);
-
-   fDocContext = kIgnore;
-
    MethodNames_t::iterator iMethodName = fMethodNames.find(name.Data());
    if (iMethodName != fMethodNames.end()) {
       --(iMethodName->second);
@@ -1575,6 +1575,13 @@ void THtml::WriteMethod(std::ostream & out, TString& ret,
          fMethodNames.erase(iMethodName);
    }
 
+   ret.Remove(0);
+   name.Remove(0);
+   params.Remove(0);
+   anchor.Remove(0);
+   comment.Remove(0);
+
+   fDocContext = kIgnore;
 }
 
 
@@ -1607,9 +1614,14 @@ Bool_t THtml::ExtractComments(const TString &lineExpandedStripped,
       Ssiz_t len = lineAllOneChar.Length();
       Char_t c = lineAllOneChar[len - 1];
       // also a class doc signature: line consists of same char
-      if (c == lineAllOneChar[len - 2] && c == lineAllOneChar[len - 3] &&
-         lineAllOneChar.Strip(TString::kTrailing, c).Length() == 0)
+      if (c == lineAllOneChar[len - 2] && c == lineAllOneChar[len - 3]) {
+         TString lineAllOneCharStripped(lineAllOneChar.Strip(TString::kTrailing, c));
+         if (lineAllOneCharStripped.BeginsWith("//") || lineAllOneCharStripped.BeginsWith("/*"))
+            lineAllOneCharStripped.Remove(0, 2);
+         lineAllOneCharStripped.Strip(TString::kBoth);
+         if (!lineAllOneCharStripped.Length())
             commentLine.Remove(0);
+      }
    }
 
    // look for start tag of class description
@@ -1628,13 +1640,14 @@ Bool_t THtml::ExtractComments(const TString &lineExpandedStripped,
       commentLine = commentLine.Strip(TString::kBoth, commentLine[0]);
    }
 
-   // remove leading /*, //, */
+   // remove leading /*, //
    if (commentLine.Length()>1 && commentLine[0] == '/' && 
       (commentLine[1] == '/' || commentLine[1] == '*'))
       commentLine.Remove(0, 2);
+   // remove trailing */
    if (commentLine.Length()>1 && commentLine[commentLine.Length() - 2] == '*' && 
       commentLine[commentLine.Length() - 1] == '/')
-      commentLine.Remove(0, 2);
+      commentLine.Remove(commentLine.Length()-2);
 
    comment += commentLine + "\n";
 
@@ -1717,9 +1730,12 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
 
    fParseContext = kCode;
    fDocContext = kIgnore;
+   fLineNo = 0;
 
    while (!sourceFile.eof()) {
       Bool_t needAnchor = kFALSE;
+
+      ++fLineNo; // we count fortrany
 
       fLine.ReadLine(sourceFile, kFALSE);
       if (sourceFile.eof()) break;
@@ -1727,6 +1743,7 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
       // replace class names etc
       fLineExpanded = fLine;
       ExpandKeywords(fLineExpanded);
+      fLineStripped = fLine.Strip(TString::kBoth);
 
       // remove leading and trailing spaces
       TString lineExpandedStripped(fLineExpanded.Strip(TString::kBoth));
@@ -1793,12 +1810,18 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
             if (!fSourceInfo[si].Length() && (posTag = fLine.Index(sourceInfoTags[si])) != kNPOS)
                fSourceInfo[si] = fLine(posTag + strlen(sourceInfoTags[si]), fLine.Length() - posTag);
 
+      if (needAnchor || fExtraLinesWithAnchor.find(fLineNo) != fExtraLinesWithAnchor.end()) {
+         AnchorFromLine(anchor);
+         if (sourceExt)
+            srcHtmlOut << "<a name=\"" << anchor << "\"></a>";
+      }
+      // else anchor.Remove(0); - NO! WriteMethod will need it later!
+
       // write to .cxx.html
       if (sourceExt)
-         if (needAnchor)
-            BeautifyLine(srcHtmlOut, &anchor);
-         else 
-            BeautifyLine(srcHtmlOut);
+         BeautifyLine(srcHtmlOut);
+      else if (needAnchor)
+         fExtraLinesWithAnchor.insert(fLineNo);
    } // while !sourceFile.eof()
 
    // deal with last func
@@ -1809,7 +1832,8 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
    } else if (fDocContext == kDocClass) {
       // write class description
       out << prevComment << "</div>" << std::endl;
-   }
+   } else if (!foundClassDescription && lookForClassDescr)
+      out << "</div>" << std::endl;
 
    srcHtmlOut << "</pre>" << std::endl;
    WriteHtmlFooter(srcHtmlOut, "../");
@@ -1840,6 +1864,7 @@ void THtml::LocateMethodsInSource(ofstream & out)
    if (implFileName && implFileName[0])
       LocateMethods(out, implFileName, kTRUE, useDocxxStyle, kTRUE, 
          kFALSE, pattern, ".cxx.html");
+   else out << "</div>" << endl; // close class descr div
 }
 
 //______________________________________________________________________________
@@ -1887,7 +1912,7 @@ void THtml::ClassDescription(ofstream & out)
 
 
    // Class Description Title
-   out << "<hr>" << endl;
+   out << "<hr />" << endl;
    out << "<!--DESCRIPTION-->";
    out << "<div class=\"classdescr\">";
    out << "<h2><a name=\"" << fCurrentClass->GetName();
@@ -2308,7 +2333,7 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
             iModule != fModules.end(); ++iModule) {
             indexFile << "<a href=\"" << *iModule << "_Index.html\">" << *iModule << "</a>" << endl;
          }
-         indexFile << "</div><br/>" << endl;
+         indexFile << "</div><br />" << endl;
       }
 
       std::vector<std::string> indexChars;
@@ -2320,7 +2345,7 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
             indexFile << "<a href=\"#idx" << iIdxEntry << "\">" << indexChars[iIdxEntry] 
                       << "</a>" << endl;
          }
-         indexFile << "</div><br/>" << endl;
+         indexFile << "</div><br />" << endl;
       }
 
       // check for a search engine
@@ -2530,7 +2555,7 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames)
                   outputFile << "<a href=\"#idx" << iIdxEntry << "\">" << indexChars[iIdxEntry] 
                              << "</a>" << endl;
                }
-               outputFile << "</div><br/>" << endl;
+               outputFile << "</div><br />" << endl;
             }
             outputFile << "<ul id=\"indx\">" << endl;
             currentIndexEntry = 0;
@@ -2680,7 +2705,7 @@ void THtml::CreateHierarchy(const char **classNames, Int_t numberOfClasses)
          TList *bases = basePtr->GetListOfBases();
          if (bases && bases->IsEmpty()){
 
-            out << "<hr>" << endl;
+            out << "<hr />" << endl;
 
             out << "<table><tr><td><ul><li><tt>";
             TString htmlFile;
@@ -2982,7 +3007,7 @@ void THtml::CreateListOfTypes()
             typesList << "<a href=\"#idx" << iIdxEntry << "\">" << indexChars[iIdxEntry] 
                       << "</a>" << endl;
          }
-         typesList << "</div><br/>" << endl;
+         typesList << "</div><br />" << endl;
       }
 
       typesList << "<ul id=\"indx\">" << endl;
@@ -3248,7 +3273,7 @@ void THtml::ExpandKeywords(TString& keyword)
             Bool_t closeString = !fEscFlag && fParseContext == kString && 
                ( keyword[i] == '"' || keyword[i] == '\'');
             if (!fEscFlag)
-               if (fParseContext == kCode || fParseContext == kCComment) {
+               if (fParseContext == kCode || fParseContext == kCComment)
                   if (keyword.Length() > i + 1 && keyword[i] == '"' || 
                      keyword[i] == '\'' && (
                         // 'a'
@@ -3265,13 +3290,14 @@ void THtml::ExpandKeywords(TString& keyword)
                      fParseContext = kCComment;
                      commentIsCPP = keyword[i+1] == '/';
                      currentType = 0;
+                     ++i;
+                  } else if (fParseContext == kCComment && !commentIsCPP
+                     && keyword.Length() > i + 1 
+                     && keyword[i] == '*' && keyword[i+1] == '/') {
+                     fParseContext = kCode;
+                     currentType = 0;
+                     ++i;
                   }
-               } else if (fParseContext == kCComment && !commentIsCPP &&
-                  keyword.Length() > i + 1 &&
-                  keyword[i] == '*' && keyword[i+1] == '/') {
-                  fParseContext = kCode;
-                  currentType = 0;
-               }
 
             ReplaceSpecialChars(keyword, i);
             if (closeString) {
@@ -3374,6 +3400,8 @@ void THtml::ExpandKeywords(TString& keyword)
       TDataMember *datamem = 0;
       TMethod *meth = 0;
       TClass* lookupScope = currentType;
+      const char* globalTypeName = 0;
+
       if (!lookupScope)
          lookupScope = fCurrentClass;
 
@@ -3385,7 +3413,7 @@ void THtml::ExpandKeywords(TString& keyword)
             TGlobal *global = gROOT->GetGlobal(word);
             if (global) {
                // cannot doc globals; take at least their type...
-               const char* globalTypeName = global->GetTypeName();
+               globalTypeName = global->GetTypeName();
                subClass = GetClass(globalTypeName);
                if (!subClass)
                   subType = gROOT->GetType(globalTypeName);
@@ -3418,7 +3446,11 @@ void THtml::ExpandKeywords(TString& keyword)
       if (subType) {
          link = "./ListOfTypes.html";
          link += "#";
-         TString mangledWord(word);
+         TString mangledWord;
+         if (!globalTypeName)
+            mangledWord = word;
+         else 
+            mangledWord = globalTypeName;
          NameSpace2FileName(mangledWord);
          link += mangledWord;
          currentType = 0;
@@ -3461,9 +3493,10 @@ void THtml::ExpandKeywords(TString& keyword)
          i += link.Length();
       }
       TString mangledWord(word);
-      NameSpace2FileName(mangledWord);
+      Ssiz_t posReplace = 0;
+      ReplaceSpecialChars(mangledWord, posReplace);
       keyword.Replace(i, word.Length(), mangledWord);
-      i += word.Length();
+      i += mangledWord.Length();
       if (link.Length()) {
          keyword.Insert(i, "</a>");
          i += 4;
@@ -3789,12 +3822,12 @@ Bool_t THtml::IsName(UChar_t c)
 // Output: TRUE if c is a valid C++ name character
 //         and FALSE if it's not.
 //
-//   NOTE: Valid name characters are [a..zA..Z0..9_],
+//   NOTE: Valid name characters are [a..zA..Z0..9_~],
 //
 
    Bool_t ret = kFALSE;
 
-   if (isalnum(c) || c == '_')
+   if (isalnum(c) || c == '_' || c == '~')
       ret = kTRUE;
 
    return ret;
@@ -3812,12 +3845,12 @@ Bool_t THtml::IsWord(UChar_t c)
 // Output: TRUE if c is a valid first character for C++ name,
 //         and FALSE if it's not.
 //
-//   NOTE: Valid first characters are [a..zA..Z_]
+//   NOTE: Valid first characters are [a..zA..Z_~]
 //
 
    Bool_t ret = kFALSE;
 
-   if (isalpha(c) || c == '_')
+   if (isalpha(c) || c == '_' || c == '~')
       ret = kTRUE;
 
    return ret;
@@ -4124,12 +4157,13 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title,
        && (strlen(addHeader) == 0
            || addHeader[strlen(addHeader) - 1] == '+')) {
       TDatime date;
-      out << "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">" <<
-          endl;
-      out << "<html>" << endl;
+      out << "<?xml version=\"1.0\"?>" << endl;
+      out << "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"" << endl
+          << "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">" << endl;
+      out << "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">" << endl;
       out << "<!--                                             -->" <<
           endl;
-      out << "<!-- Author: ROOT team (rootdev@hpsalo.cern.ch)  -->" <<
+      out << "<!-- Author: ROOT team (rootdev@pcroot.cern.ch)  -->" <<
           endl;
       out << "<!--                                             -->" <<
           endl;
@@ -4143,8 +4177,6 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title,
       out << "<title>";
       ReplaceSpecialChars(out, title);
       out << "</title>" << endl;
-      out << "<link rev=made href=\"mailto:rootdev@root.cern.ch\" />" <<
-          endl;
       out << "<meta name=\"rating\" content=\"General\" />" << endl;
       out << "<meta name=\"objecttype\" content=\"Manual\" />" << endl;
       out <<
@@ -4157,9 +4189,7 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title,
       out << "<link rel=\"stylesheet\" href=\"" << dir << "ROOT.css\" type=\"text/css\" id=\"ROOTstyle\" />" << endl;
       out << "</head>" << endl;
 
-      out <<
-          "<body>"
-          << endl;
+      out << "<body>" << endl;
    };
    // do we have an additional header?
    if (addHeader && strlen(addHeader) > 0) {
@@ -4261,7 +4291,7 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
        && (strlen(addFooter) == 0
            || addFooter[strlen(addFooter) - 1] == '+')) {
       if (*author || *lastUpdate || *copyright)
-         out << "<br>" << endl;
+         out << "<br />" << endl;
 
       out << "<!--SIGNATURE-->" << endl;
 
@@ -4367,19 +4397,19 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
 
          } while ((name - auth) < (int) strlen(author)
                   && (name = strtok(name, ",")));
-         out << "</em><br>" << endl;
+         out << "</em><br />" << endl;
          delete[]auth;
       }
 
       if (*lastUpdate)
-         out << "<em>Last update: " << lastUpdate << "</em><br>" << endl;
+         out << "<em>Last update: " << lastUpdate << "</em><br />" << endl;
       if (*copyright)
-         out << "<em>Copyright " << copyright << "</em><br>" << endl;
+         out << "<em>Copyright " << copyright << "</em><br />" << endl;
 
 
       // this is a menu
-      out << "<br>" << endl;
-      out << "<hr>" << endl;
+      out << "<br />" << endl;
+      out << "<hr />" << endl;
       out << "<center>" << endl;
       out << "<address>" << endl;
 
@@ -4413,20 +4443,20 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
       out << "ClassHierarchy.html\">Class Hierarchy</a> - ";
 
       // link to the top of the page
-      out << "<a href=\"#TopOfPage\">Top of the page</a><br>" << endl;
+      out << "<a href=\"#TopOfPage\">Top of the page</a><br />" << endl;
       out << "</address>" << endl;
 
       out << "</center>" << endl;
 
-      out << "<hr>" << endl;
-      out << "<address>" << endl;
+      out << "<hr />" << endl;
+      out << "<em>" << endl;
       out << "This page has been automatically generated. If you have any comments or suggestions ";
       out <<
           "about the page layout send a mail to <a href=\"mailto:rootdev@root.cern.ch\">ROOT support</a>, or ";
       out <<
           "contact <a href=\"mailto:rootdev@root.cern.ch\">the developers</a> with any questions or problems regarding ROOT."
           << endl;
-      out << "</address>" << endl;
+      out << "</em>" << endl;
       out << "</body>" << endl;
       out << "</html>" << endl;
    }
@@ -4436,8 +4466,8 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
 void THtml::NameSpace2FileName(TString& name)
 {
    // Replace "::" in name by "__"
-   // Replace "<", ">", " ", "," in name by "_"
-   const char* replaceWhat = ":<> ,";
+   // Replace "<", ">", " ", ",", "~", "=" in name by "_"
+   const char* replaceWhat = ":<> ,~=";
    for (Ssiz_t i=0; i < name.Length(); ++i)
       if (strchr(replaceWhat, name[i])) 
          name[i] = '_';
