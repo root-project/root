@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.21 2006/07/03 16:10:43 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.22 2006/07/21 09:15:46 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -215,6 +215,9 @@ public:
    static const ASVisual *GetVisual();
    static UInt_t AlphaBlend(UInt_t bot, UInt_t top);
    static void Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y);
+
+   // some static functions
+   Bool_t SetJpegDpi(const char *name, UInt_t dpi = 72);
 
    ClassDef(TASImage,2)  // image processing class
 };

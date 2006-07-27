@@ -5815,3 +5815,58 @@ void TASImage::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << "   " << name << "->SetImageBuffer((char**)&" << xpm << ", TImage::kXpm);" << endl;
    out << "   " << name << "->Draw();" << endl;
 }
+
+//_______________________________________________________________________
+Bool_t TASImage::SetJpegDpi(const char *name, UInt_t set)
+{
+   // Sets an image printing resolution in Dots Per Inch units.
+   // name - the name of jpeg file.
+   // set - dpi resolution.
+   // Returns kFALSE in case of error.
+
+   static char buf[20];
+   FILE *fp = fopen(name, "rb+");
+
+   if (!fp) {
+      printf("file %s : failed to open\n", name);
+      return kFALSE;
+   }
+
+   fread(buf, 1, 20, fp);
+
+   char dpi1 = (set & 0xffff) >> 8;
+   char dpi2 = set & 0xff;
+
+   int i = 0;
+
+   int dpi = 0; // start of dpi data
+   for (i = 0; i < 20; i++) {
+      if ((buf[i] == 0x4a) && (buf[i+1] == 0x46) &&  (buf[i+2] == 0x49) &&  
+          (buf[i+3] == 0x46) && (buf[i+4] == 0x00) ) {
+         dpi = i + 7;
+         break;         
+      }
+   }
+
+   if (i == 20) { // jpeg maker was not found
+      fclose(fp);
+      printf("file %s : wrong JPEG format\n", name);
+      return kFALSE;
+   }
+
+   buf[dpi] = 1;   // format specified in  dots per inch
+
+   // set x density in dpi units
+   buf[dpi + 1] = dpi1;
+   buf[dpi + 2] = dpi2;
+
+   // set y density in dpi units
+   buf[dpi + 3] = dpi1;
+   buf[dpi + 4] = dpi2;
+
+   rewind(fp);
+   fwrite(buf, 1, 20, fp);
+   fclose(fp);
+
+   return kTRUE;
+}
