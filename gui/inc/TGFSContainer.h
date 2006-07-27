@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.15 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.16 2006/07/19 13:01:49 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -81,6 +81,7 @@ public:
    Bool_t  IsSymLink() const { return fIsLink; }
    Int_t   GetType() const { return fType; }
    ULong_t GetSize() const { return fSize; }
+   Long_t  GetModTime() const { return fModTime; }
 
    ClassDef(TGFileItem,0)   // Class representing file system object
 };

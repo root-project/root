@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.30 2006/07/19 13:01:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.31 2006/07/24 16:11:45 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -138,6 +138,28 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
          if (f1->GetSize() > f2->GetSize()) return 1;
          return strcmp(f1->GetItemName()->GetString(),
                        f2->GetItemName()->GetString());
+
+      case kSortByDate:
+         const time_t loctimeF1 = (const time_t) f1->GetModTime();
+         struct tm tmF1 = *localtime(&loctimeF1);
+
+         const time_t loctimeF2 = (const time_t) f2->GetModTime();
+         struct tm tmF2 = *localtime(&loctimeF2);
+
+         if ( tmF1.tm_year != tmF2.tm_year )
+            return (tmF1.tm_year < tmF2.tm_year) ? +1 : -1;
+         else if ( tmF1.tm_mon != tmF2.tm_mon )
+            return (tmF1.tm_mon < tmF2.tm_mon) ? +1 : -1;
+         else if ( tmF1.tm_mday != tmF2.tm_mday )
+            return (tmF1.tm_mday < tmF2.tm_mday) ? +1 : -1;
+         else if ( tmF1.tm_hour != tmF2.tm_hour )
+            return (tmF1.tm_hour < tmF2.tm_hour) ? +1 : -1;
+         else if ( tmF1.tm_min != tmF2.tm_min )
+            return (tmF1.tm_min < tmF2.tm_min) ? +1 : -1;
+         else if ( tmF1.tm_sec != tmF2.tm_sec )
+            return (tmF1.tm_sec < tmF2.tm_sec) ? +1 : -1;
+         else
+            return 0;
    }
 }
 
@@ -255,7 +277,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
    const time_t loctime = (const time_t) fModTime;
    newtime = localtime(&loctime);
    sprintf(tmp, "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
-           newtime->tm_mday, newtime->tm_mday, newtime->tm_hour,
+           newtime->tm_mon, newtime->tm_mday, newtime->tm_hour,
            newtime->tm_min);
    fSubnames[4] = new TGString(tmp);
 
