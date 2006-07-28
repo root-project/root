@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixTCramerInv.cxx,v 1.3 2006/05/22 04:53:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixTCramerInv.cxx,v 1.4 2006/05/24 20:07:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Jan 2004
 
 /*************************************************************************
@@ -33,6 +33,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrixTCramerInv.h"
+
+NamespaceImp(TMatrixTCramerInv);
 
 //______________________________________________________________________________
 template<class Element> 

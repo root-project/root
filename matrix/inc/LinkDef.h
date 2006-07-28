@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.26 2006/04/04 05:51:06 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.27 2006/06/02 05:11:19 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,7 +17,28 @@
 #pragma link C++ global gMatrixCheck;
 
 #pragma link C++ namespace TMatrixTCramerInv;
+#pragma link C++ function  TMatrixTCramerInv::Inv2x2(TMatrixT<Float_t>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv2x2(TMatrixT<Double_t>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv3x3(TMatrixT<Float_t>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv3x3(TMatrixT<Double_t>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv4x4(TMatrixT<Float_t>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv4x4(TMatrixT<Double_t>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv5x5(TMatrixT<Float_t>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv5x5(TMatrixT<Double_t>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv6x6(TMatrixT<Float_t>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv6x6(TMatrixT<Double_t>&,Double_t*);
+
 #pragma link C++ namespace TMatrixTSymCramerInv;
+#pragma link C++ function  TMatrixTSymCramerInv::Inv2x2(TMatrixTSym<Float_t>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv2x2(TMatrixTSym<Double_t>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<Float_t>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<Double_t>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Float_t>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Double_t>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Float_t>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Double_t>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<Float_t>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<Double_t>&,Double_t*);
 
 #pragma link C++ class TVectorT                <Float_t>-;
 #pragma link C++ class TMatrixTBase            <Float_t>-;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixTSymCramerInv.cxx,v 1.2 2005/12/23 07:20:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixTSymCramerInv.cxx,v 1.3 2006/05/24 20:07:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Oct 2004
 
 /*************************************************************************
@@ -33,6 +33,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrixTSymCramerInv.h"
+
+NamespaceImp(TMatrixTSymCramerInv);
 
 //______________________________________________________________________________
 template<class Element> 
