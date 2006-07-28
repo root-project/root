@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.180 2006/07/14 19:49:59 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.181 2006/07/26 14:16:03 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -96,7 +96,7 @@ TFile::TFile() : TDirectory(), fInfoCache(0)
       Info("TFile", "default ctor");
 }
 
-//1_____________________________________________________________________________
+//_____________________________________________________________________________
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
            : TDirectory(), fUrl(fname1,kTRUE), fInfoCache(0)
 {

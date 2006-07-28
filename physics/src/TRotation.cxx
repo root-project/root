@@ -1,5 +1,6 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.10 2006/05/16 08:13:31 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.11 2006/05/17 06:49:59 brun Exp $
 // Author: Peter Malzacher   19/06/99
+
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ==========================                       *

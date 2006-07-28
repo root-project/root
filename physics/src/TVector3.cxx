@@ -1,10 +1,11 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.8 2004/04/29 17:43:59 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.9 2006/05/16 08:13:31 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 //    Aug 11 1999: added Pt == 0 guard to Eta()
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()
 //    Oct 20 1999: Bug fix: sign in PseudoRapidity
 //                 Warning-> Error in Double_t operator()
+
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ==========================                       *
