@@ -1,4 +1,4 @@
-// @(#)root/build:$Name:  $:$Id: mainroot.cxx,v 1.2 2006/03/21 00:21:00 rdm Exp $
+// @(#)root/build:$Name:  $:$Id: mainroot.cxx,v 1.3 2006/03/23 14:00:18 rdm Exp $
 // Author: Axel Naumann   21/03/06
 
 /*************************************************************************
@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <string>
+
 extern "C" {
 #if defined(__sun) && defined(__SUNPRO_CC)
 #include <signal.h>
 #endif
 #include "def.h"
 }
-
-#include <string>
 
 extern "C" int main_orig(int argc, char **argv);
 extern "C" int unlink (const char *FILENAME);
@@ -65,15 +65,15 @@ void ROOT_adddep(char* buf, size_t len)
 
 /* isDict:
    sed -e 's@^\(.*\)\.o[ :]*\(.*\)\@
-             \1.d: $\(wildcard \2\)\@\1.cxx: $\(wildcard \2\)@' 
-       -e 's@^#.*$@@' 
+             \1.d: $\(wildcard \2\)\@\1.cxx: $\(wildcard \2\)@'
+       -e 's@^#.*$@@'
        -e '/^$/d'
    | tr '@' '\n'
 else
    sed -e 's@^\(.*\)\.o[ :]*\(.*\)@
-             \1.d: $\(wildcard \2\)\@\1.o: \2@' 
-       -e 's@^#.*$@@' 
-       -e '/^$/d' $1.tmp 
+             \1.d: $\(wildcard \2\)\@\1.o: \2@'
+       -e 's@^#.*$@@'
+       -e '/^$/d' $1.tmp
    | tr '@' '\n'
 */
    // flush out the old dependencies
@@ -102,7 +102,7 @@ else
 
 int main(int argc, char **argv)
 {
-   if (argc<3 || strcmp(argv[1], "-R")) 
+   if (argc<3 || strcmp(argv[1], "-R"))
       return main_orig(argc, argv);
 
    rootBuild = 1;
