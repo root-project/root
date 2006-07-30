@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.103 2006/07/11 17:34:02 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.104 2006/07/27 19:57:14 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1297,9 +1297,7 @@ void THtml::BeautifyLine(std::ostream &sOut)
                      sOut << "</span>";
                      context = kNothingSpecialMoveOn;
                   }
-                  if (context == kNothingSpecialMoveOn)
-                     sOut << "<span class=\"comment\">";
-                  sOut << lineExpandedDotDot.Data() + i << "</span>";
+                  sOut << lineExpandedDotDot.Data() + i;
                   i = lineExpandedDotDot.Length();
                } else if (lineExpandedDotDot[i + 1] == '*') {
                   if (context == kPreProc) {
@@ -1308,7 +1306,6 @@ void THtml::BeautifyLine(std::ostream &sOut)
                      context = kNothingSpecialMoveOn;
                   }
                   if (context == kNothingSpecialMoveOn || context == kCommentC) {
-                     sOut << "<span class=\"comment\">";
                      context = kCommentC;
                      fParseContext = kCComment;
                      Ssiz_t posEndComment = lineExpandedDotDot.Index("*/", i);
@@ -1331,7 +1328,7 @@ void THtml::BeautifyLine(std::ostream &sOut)
                (context == kCommentC ||
                /*can happen if CPP comment inside C comment: */
                context == kNothingSpecialMoveOn)) {
-                  sOut << "*/</span>";
+                  sOut << "*/";
                   context = kNothingSpecialMoveOn;
                   fParseContext = kCode;
                   i += 1;
@@ -3290,13 +3287,15 @@ void THtml::ExpandKeywords(TString& keyword)
                      fParseContext = kCComment;
                      commentIsCPP = keyword[i+1] == '/';
                      currentType = 0;
-                     ++i;
+                     keyword.Insert(i, "<span class=\"comment\">");
+                     i += 23;
                   } else if (fParseContext == kCComment && !commentIsCPP
                      && keyword.Length() > i + 1 
                      && keyword[i] == '*' && keyword[i+1] == '/') {
                      fParseContext = kCode;
                      currentType = 0;
-                     ++i;
+                     keyword.Insert(i + 2, "</span>");
+                     i += 9;
                   }
 
             ReplaceSpecialChars(keyword, i);
@@ -3456,11 +3455,13 @@ void THtml::ExpandKeywords(TString& keyword)
          currentType = 0;
       } else if (subClass) {
          GetHtmlFileName(subClass, link);
-         link.Prepend("./");
+         if (!link.BeginsWith("http://") && !link.BeginsWith("https://"))
+            link.Prepend("./");
          currentType = subClass;
       } else if (datamem || meth) {
          GetHtmlFileName(lookupScope, link);
-         link.Prepend("./");
+         if (!link.BeginsWith("http://") && !link.BeginsWith("https://"))
+            link.Prepend("./");
          link += "#";
          TString mangledName(lookupScope->GetName());
          NameSpace2FileName(mangledName);
@@ -3672,6 +3673,7 @@ void THtml::GetHtmlFileName(TClass * classPtr, TString& filename)
       NameSpace2FileName(className);
       gSystem->PrependPathName(filename, className);
       filename = className;
+      filename.ReplaceAll("\\", "/");
       filename += ".html";
    } else filename.Remove(0);
 }
