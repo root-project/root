@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.35 2006/07/03 09:33:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.36 2006/07/26 14:28:58 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -97,7 +97,7 @@ public:
    virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }
 
    virtual Int_t       Ping() = 0;
-   virtual Int_t       Exec(const char *cmd) = 0;
+   virtual Int_t       Exec(const char *cmd, Bool_t plusMaster = kFALSE) = 0;
    virtual Int_t       Process(TDSet *set, const char *selector,
                                Option_t *option = "",
                                Long64_t nentries = -1,
@@ -153,22 +153,22 @@ public:
                                      const char *dest = 0,
                                      Int_t opt = kAskUser,
                                      TList *skippedFiles = 0) = 0;
-                                     
+
    virtual Int_t       UploadDataSet(const char *dataset,
                                      TList *files,
                                      const char *dest = 0,
                                      Int_t opt = kAskUser,
                                      TList *skippedFiles = 0) = 0;
-                                     
+
    virtual Int_t       UploadDataSetFromFile(const char *dataset,
                                              const char *file,
                                              const char *dest = 0,
                                              Int_t opt = kAskUser) = 0;
 
    virtual Int_t       CreateDataSet(const char *dataset,
-                                     TList *files, 
+                                     TList *files,
                                      Int_t opt = kAskUser) = 0;
-                                             
+
    virtual TList      *GetDataSets(const char *dir = 0) = 0;
    virtual void        ShowDataSets(const char * dir = 0) = 0;
    virtual void        ShowDataSet(const char *dataset) = 0;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.85 2006/07/03 15:18:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.86 2006/07/26 14:28:58 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -210,10 +210,10 @@ friend class TProofPlayerRemote;
 friend class TProofProgressDialog;
 friend class TSlave;
 friend class TXSlave;
-friend class TXSocket;     // to access kPing
+friend class TXSocket;        // to access kPing
 friend class TXSocketHandler; // to access fCurrentMonitor and CollectInputFrom
-friend class TXProofMgr;  // to access EUrgent
-friend class TXProofServ;  // to access EUrgent
+friend class TXProofMgr;      // to access EUrgent
+friend class TXProofServ;     // to access EUrgent
 
 private:
    enum EUrgent {
@@ -343,7 +343,7 @@ private:
 
    void     CleanGDirectory(TList *ol);
 
-   Int_t    Exec(const char *cmd, ESlaves list);
+   Int_t    Exec(const char *cmd, ESlaves list, Bool_t plusMaster);
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
    Int_t    SendCurrentState(ESlaves list = kActive);
    Bool_t   CheckFile(const char *file, TSlave *sl, Long_t modtime);
@@ -358,6 +358,7 @@ private:
    void     AskStatistics();
    void     AskParallel();
    Int_t    GoParallel(Int_t nodes, Bool_t accept = kFALSE);
+   Int_t    SetParallelSilent(Int_t nodes);
    void     RecvLogFile(TSocket *s, Int_t size);
    Int_t    BuildPackage(const char *package);
    Int_t    LoadPackage(const char *package);
@@ -441,7 +442,7 @@ public:
    void        cd(Int_t id = -1);
 
    Int_t       Ping();
-   Int_t       Exec(const char *cmd);
+   Int_t       Exec(const char *cmd, Bool_t plusMaster = kFALSE);
    Int_t       Process(TDSet *set, const char *selector,
                        Option_t *option = "", Long64_t nentries = -1,
                        Long64_t firstentry = 0, TEventList *evl = 0);

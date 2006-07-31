@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.151 2006/07/04 06:31:22 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.152 2006/07/26 14:28:58 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -3005,19 +3005,20 @@ Int_t TProof::SendGroupView()
 }
 
 //______________________________________________________________________________
-Int_t TProof::Exec(const char *cmd)
+Int_t TProof::Exec(const char *cmd, Bool_t plusMaster)
 {
    // Send command to be executed on the PROOF master and/or slaves.
+   // If plusMaster is kTRUE then exeucte on slaves and master too.
    // Command can be any legal command line command. Commands like
    // ".x file.C" or ".L file.C" will cause the file file.C to be send
    // to the PROOF cluster. Returns -1 in case of error, >=0 in case of
    // succes.
 
-   return Exec(cmd, kActive);
+   return Exec(cmd, kActive, plusMaster);
 }
 
 //______________________________________________________________________________
-Int_t TProof::Exec(const char *cmd, ESlaves list)
+Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
 {
    // Send command to be executed on the PROOF master and/or slaves.
    // Command can be any legal command line command. Commands like
@@ -3058,6 +3059,14 @@ Int_t TProof::Exec(const char *cmd, ESlaves list)
       delete [] fn;
    }
 
+   if (plusMaster) {
+      Int_t n = GetParallel();
+      SetParallelSilent(0);
+      Int_t res = SendCommand(cmd, list);
+      SetParallelSilent(n);
+      if (res < 0)
+         return res;
+   }
    return SendCommand(cmd, list);
 }
 
@@ -3360,7 +3369,7 @@ void TProof::SetLogLevel(Int_t level, UInt_t mask)
 }
 
 //______________________________________________________________________________
-Int_t TProof::SetParallel(Int_t nodes)
+Int_t TProof::SetParallelSilent(Int_t nodes)
 {
    // Tell RPOOF how many slaves to use in parallel. Returns the number of
    // parallel slaves. Returns -1 in case of error.
@@ -3371,18 +3380,33 @@ Int_t TProof::SetParallel(Int_t nodes)
       GoParallel(nodes);
       return SendCurrentState();
    } else {
-      PDB(kGlobal,1) Info("SetParallel", "request %d node%s", nodes,
-         nodes == 1 ? "" : "s");
+      PDB(kGlobal,1) Info("SetParallelSilent", "request %d node%s", nodes,
+          nodes == 1 ? "" : "s");
       TMessage mess(kPROOF_PARALLEL);
       mess << nodes;
       Broadcast(mess);
       Collect();
-      Int_t parallel = GetParallel();
-      PDB(kGlobal,1) Info("SetParallel", "got %d node%s", parallel,
-         parallel == 1 ? "" : "s");
-      if (parallel > 0) printf("PROOF set to parallel mode (%d workers)\n", parallel);
-      return parallel;
+      Int_t n = GetParallel();
+      PDB(kGlobal,1) Info("SetParallelSilent", "got %d node%s", n, n == 1 ? "" : "s");
+      return n;
    }
+}
+
+//______________________________________________________________________________
+Int_t TProof::SetParallel(Int_t nodes)
+{
+   // Tell RPOOF how many slaves to use in parallel. Returns the number of
+   // parallel slaves. Returns -1 in case of error.
+
+   Int_t n = SetParallelSilent(nodes);
+   if (!IsMaster()) {
+      if (n < 1)
+         printf("PROOF set to sequential mode\n");
+      else
+         printf("PROOF set to parallel mode (%d worker%s)\n",
+                n, n == 1 ? "" : "s");
+   }
+   return n;
 }
 
 //______________________________________________________________________________
@@ -3430,7 +3454,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach)
                Collect(sl);
                fActiveSlaves->Add(sl);
                fActiveMonitor->Add(sl->GetSocket());
-               if (sl->GetParallel()>0) {
+               if (sl->GetParallel() > 0) {
                   slavenodes = sl->GetParallel();
                } else {
                   slavenodes = 0;
@@ -3455,11 +3479,13 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach)
       SendGroupView();
 
    Int_t n = GetParallel();
-   if (IsMaster()) {
+
+   if (!IsMaster()) {
       if (n < 1)
          printf("PROOF set to sequential mode\n");
-   } else {
-      printf("PROOF set to parallel mode (%d workers)\n", n);
+      else
+         printf("PROOF set to parallel mode (%d worker%s)\n",
+                n, n == 1 ? "" : "s");
    }
 
    PDB(kGlobal,1) Info("GoParallel", "got %d node%s", n, n == 1 ? "" : "s");
