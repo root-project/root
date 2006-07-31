@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXUnixSocket.cxx,v 1.3 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXUnixSocket.cxx,v 1.4 2006/06/05 22:51:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -33,7 +33,7 @@ TXUnixSocket::TXUnixSocket(const char *url, Int_t psid, Char_t capver)
    if (url) {
 
       // Create connection
-      fConn = new XrdProofPhyConn(url, psid, capver, this, 1);
+      fConn = new XrdProofPhyConn(url, psid, capver, this);
       if (!(fConn->IsValid())) {
          Error("TXUnixSocket", "severe error occurred while opening a connection"
                                " to server [%s]", fUrl.Data());

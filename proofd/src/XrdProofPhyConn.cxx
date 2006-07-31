@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.7 2006/04/19 11:21:30 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.8 2006/06/07 14:17:18 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -187,7 +187,8 @@ int XrdProofPhyConn::Connect()
    fPhyConn = new XrdClientPhyConnection(this);
 
    // Connect
-   if (!(fPhyConn->Connect(fUrl,~fTcp))) {
+   bool isUnix = (fTcp) ? 0 : 1;
+   if (!(fPhyConn->Connect(fUrl, isUnix))) {
       TRACE(REQ,"XrdProofPhyConn::Connect: creating "<<ctype[fTcp]<<
                 " connection to "<<URLTAG);
       fLogConnID = -1;

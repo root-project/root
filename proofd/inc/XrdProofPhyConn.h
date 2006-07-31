@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.4 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.h,v 1.2 2006/03/01 15:46:33 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -43,7 +43,7 @@ private:
 
 public:
    XrdProofPhyConn(const char *url, int psid = -1, char ver = -1,
-                   XrdClientAbsUnsolMsgHandler *uh = 0, bool tcp = 1);
+                   XrdClientAbsUnsolMsgHandler *uh = 0, bool tcp = 0);
    virtual ~XrdProofPhyConn() { Close(); }
 
    void        Close(const char *opt = "");
