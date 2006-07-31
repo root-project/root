@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.104 2006/07/27 19:57:14 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.105 2006/07/30 11:20:00 rdm Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1274,7 +1274,9 @@ void THtml::BeautifyLine(std::ostream &sOut)
       default: ;
    }
 
-   if (context == kDontTouch || fLine.Contains("End_Html") && !fLine.Contains("\"End_Html")) {
+   if (context == kDontTouch 
+      || kNPOS != fLine.Index("End_Html", 0, TString::kIgnoreCase)
+      && kNPOS == fLine.Index("\"End_Html", 0, TString::kIgnoreCase)) {
       ReplaceSpecialChars(sOut, fLine);
       sOut << std::endl;
       return;
@@ -1597,12 +1599,18 @@ Bool_t THtml::ExtractComments(const TString &lineExpandedStripped,
    if (fParseContext != kBeginEndHtml &&
       fParseContext != kBeginEndHtmlInCComment &&
       fParseContext != kCComment && 
-      (lineExpandedStripped.Length() <= 1 ||
-      lineExpandedStripped[0] != '/' ||
-      (lineExpandedStripped[1] != '/' && lineExpandedStripped[1] != '*')))
+      !lineExpandedStripped.BeginsWith("<span class=\"comment\">"))
       return kFALSE;
 
    TString commentLine(lineExpandedStripped);
+   if (commentLine.BeginsWith("<span class=\"comment\">/")) {
+      if (commentLine[23] == '/')
+         if (!commentLine.EndsWith("</span>"))
+            return kFALSE;
+         else 
+            commentLine.Remove(commentLine.Length()-7, 7);
+      commentLine.Remove(0,22);
+   }
 
    // remove repeating characters from the end of the line
    if (!foundClassDescription && commentLine.Length() > 3) {
@@ -3352,11 +3360,18 @@ void THtml::ExpandKeywords(TString& keyword)
       if (fParseContext == kBeginEndHtml || fParseContext == kBeginEndHtmlInCComment) {
          if (!word.CompareTo("end_html", TString::kIgnoreCase) && 
             (i == 0 || keyword[i - 1] != '\"')) {
-            if (fParseContext == kBeginEndHtmlInCComment) {
-               fParseContext = kCComment;
+            if (fParseContext == kBeginEndHtmlInCComment)
                commentIsCPP = kFALSE;
-            } else 
-               fParseContext = kCode;
+            else {
+               commentIsCPP = kTRUE;
+               // special case; we're skipping the "//" recognition inside BeginEndHtml,
+               // but here, we need it so this line is added to the doc
+               if (keyword.BeginsWith("//")) {
+                  keyword.Prepend("<span class=\"comment\">");
+                  i += 22;
+               }
+            }
+            fParseContext = kCComment;
             pre_is_open = kTRUE;
             keyword.Replace(i, word.Length(), "<pre>");
             i += 4;
@@ -3365,8 +3380,9 @@ void THtml::ExpandKeywords(TString& keyword)
          currentType = 0;
          continue;
       }
-      if (!word.CompareTo("begin_html", TString::kIgnoreCase) && 
-         (i == 0 || keyword[i - 1] != '\"')) {
+      if (fParseContext == kCComment 
+         && !word.CompareTo("begin_html", TString::kIgnoreCase)
+         && (i == 0 || keyword[i - 1] != '\"')) {
          if (commentIsCPP)
             fParseContext = kBeginEndHtml;
          else
@@ -3507,8 +3523,13 @@ void THtml::ExpandKeywords(TString& keyword)
    } // while i < keyword.Length()
 
    // clean up, no CPP comment across lines
-   if (commentIsCPP && fParseContext == kCComment)
-      fParseContext = kCode;
+   if (commentIsCPP) {
+      keyword += "</span>";
+      i += 7;
+      if (fParseContext == kCComment) // and not BeginEndHtml
+         fParseContext = kCode;
+      currentType = 0;
+   }
 
    // clean up, no strings across lines
    if (fParseContext == kString) {
