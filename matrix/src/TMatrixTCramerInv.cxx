@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixTCramerInv.cxx,v 1.4 2006/05/24 20:07:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixTCramerInv.cxx,v 1.5 2006/07/28 10:50:14 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Jan 2004
 
 /*************************************************************************
@@ -34,7 +34,9 @@
 
 #include "TMatrixTCramerInv.h"
 
+#if !defined(R__ALPHA) && !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)
 NamespaceImp(TMatrixTCramerInv);
+#endif
 
 //______________________________________________________________________________
 template<class Element> 
