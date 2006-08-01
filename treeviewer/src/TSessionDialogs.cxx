@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.25 2006/07/04 10:16:52 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.26 2006/07/04 23:45:50 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -1027,6 +1027,29 @@ void TUploadDataSetDlg::AddFiles(const char *fileName)
 }
 
 //______________________________________________________________________________
+void TUploadDataSetDlg::AddFiles(TList *fileList)
+{
+   // Add File name(s) from the file location URL to the list view.
+
+   TObjString *el;
+   TIter next(fileList);
+   while ((el = (TObjString *) next())) {
+      const char *fileName = el->GetString();
+      // single file
+      if (!fLVContainer->FindItem(fileName)) {
+         TGLVEntry *entry = new TGLVEntry(fLVContainer, fileName, fileName);
+         entry->SetPictures(gClient->GetPicture("rootdb_t.xpm"),
+                            gClient->GetPicture("rootdb_t.xpm"));
+         fLVContainer->AddItem(entry);
+      }
+   }
+   // update list view
+   fListView->AdjustHeaders();
+   fListView->Layout();
+   fClient->NeedRedraw(fLVContainer);
+}
+
+//______________________________________________________________________________
 void TUploadDataSetDlg::BrowseFiles()
 {
    // Opens the TGFileDialog to allow user to select local file(s) to be added
@@ -1036,8 +1059,12 @@ void TUploadDataSetDlg::BrowseFiles()
    fi.fFileTypes = datasettypes;
    fi.fFilename  = "*.root";
    new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
-   if (fi.fFilename)
+   if (fi.fMultipleSelection && fi.fFileNamesList) {
+      AddFiles(fi.fFileNamesList);
+   }
+   else if (fi.fFilename) {
       AddFiles(fi.fFilename);
+   }
 }
 
 //______________________________________________________________________________

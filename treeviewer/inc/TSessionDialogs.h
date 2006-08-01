@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.h,v 1.10 2006/07/04 10:16:52 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.h,v 1.11 2006/07/04 23:45:50 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -149,7 +149,8 @@ public:
 
    virtual void   CloseWindow();
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   void           AddFiles(const char *filename);
+   void           AddFiles(const char *fileName);
+   void           AddFiles(TList *fileList);
    void           BrowseFiles();
    void           ClearFiles();
    void           RemoveFile();
