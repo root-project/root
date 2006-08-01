@@ -36,7 +36,7 @@ GLH2         := $(filter-out $(GLH1), $(GLH))
 
 ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                $(X11LIBDIR) -lX11 -lXmu -lXi -lm
+                $(X11LIBDIR) -lX11 -lm
 endif
 ifeq ($(ARCH),win32)
 GLLIBS       := opengl32.lib glu32.lib $(LPATH)/libGraf.lib $(LPATH)/libHist.lib $(LPATH)/libGed.lib
