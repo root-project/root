@@ -96,9 +96,14 @@ RFLX_UNITTESTX = $(subst .cxx,,$(RFLX_UNITTESTS))
 
 ##### local rules #####
 include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
-		@(if [ ! -d "include/Reflex" ]; then    \
-		   mkdir -p include/Reflex/Builder;     \
-		   mkdir -p include/Reflex/internal;    \
+		@(if [ ! -d "include/Reflex" ]; then          \
+		   mkdir -p include/Reflex;                   \
+		fi)
+		@(if [ ! -d "include/Reflex/Builder" ]; then  \
+		   mkdir -p include/Reflex/Builder;           \
+		fi)
+		@(if [ ! -d "include/Reflex/internal" ]; then \
+		   mkdir -p include/Reflex/internal;          \
 		fi)
 		cp $< $@
 
