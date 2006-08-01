@@ -188,8 +188,9 @@ X11TTFLIBDEP        = $(X11LIB) $(GRAFLIB)
 X11TTFLIBEXTRA      = -Llib -lGX11 -lGraf
 TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
 TABLELIBEXTRA       = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist
-GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB) $(GEDLIB)
-GLLIBEXTRA         := -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed
+GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB) \
+                      $(GEDLIB)
+GLLIBEXTRA          = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed
 HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(TREEPLAYERLIB)
 HBOOKLIBEXTRA       = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer
