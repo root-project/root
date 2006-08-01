@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.26 2006/07/04 23:45:50 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.27 2006/08/01 11:01:42 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -1022,6 +1022,7 @@ void TUploadDataSetDlg::AddFiles(const char *fileName)
       }
    }
    // update list view
+   fListView->AdjustHeaders();
    fListView->Layout();
    fClient->NeedRedraw(fLVContainer);
 }
@@ -1111,6 +1112,7 @@ void TUploadDataSetDlg::RemoveFile()
    TGFrame *item = (TGFrame *)fLVContainer->GetLastActive();
    fLVContainer->RemoveItem(item);
    // update list view
+   fListView->AdjustHeaders();
    fListView->Layout();
    fClient->NeedRedraw(fLVContainer);
 }
