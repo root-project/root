@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: TypeTemplateImpl.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -13,7 +13,7 @@
 #define REFLEX_BUILD
 #endif
 
-#include "Reflex/TypeTemplateImpl.h"
+#include "Reflex/internal/TypeTemplateImpl.h"
 
 #include "Reflex/Type.h"
 #include "Reflex/Member.h"
@@ -40,12 +40,13 @@ ROOT::Reflex::TypeTemplateImpl::~TypeTemplateImpl() {
 // Destructor.
 }
 
+
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeTemplateImpl::TemplateInstanceAt( size_t nth ) const {
+const ROOT::Reflex::Type & ROOT::Reflex::TypeTemplateImpl::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template instance of this family.
    if ( nth < fTemplateInstances.size() ) return fTemplateInstances[ nth ];
-   return Type();
+   return Dummy::Type();
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PointerToMember.h,v 1.8 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PointerToMember.h,v 1.9 2006/07/14 06:47:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -13,9 +13,9 @@
 #define ROOT_Reflex_PointerToMember
 
 // Include files
-#include "Reflex/TypeBase.h"
-#include "Reflex/Type.h"
-#include "Reflex/Scope.h"
+#include "Reflex/internal/TypeBase.h"
+#include "Reflex/internal/OwnedType.h"
+#include "Reflex/internal/OwnedScope.h"
 
 namespace ROOT {
    namespace Reflex {
@@ -54,14 +54,14 @@ namespace ROOT {
           * PointerToMemberScope will return the scope of the pointer to member type
           * @return scope of the pointer to member type
           */
-         Scope PointerToMemberScope() const;
+         const Scope & PointerToMemberScope() const;
 
 
          /** pointerToMemberType will return a pointer to the Type the pointer to
           * MemberAt points to
           * @return pointer to Type of pointer to MemberAt
           */
-         Type ToType() const;
+         const Type & ToType() const;
 
 
          /** static funtion that composes the At Name */
@@ -95,14 +95,14 @@ namespace ROOT {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Scope ROOT::Reflex::PointerToMember::PointerToMemberScope() const {
+inline const ROOT::Reflex::Scope & ROOT::Reflex::PointerToMember::PointerToMemberScope() const {
 //-------------------------------------------------------------------------------
    return fPointerToMemberScope;
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::PointerToMember::ToType() const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::PointerToMember::ToType() const {
 //-------------------------------------------------------------------------------
    return fPointerToMemberType;
 }

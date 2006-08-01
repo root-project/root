@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: TypeName.h,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeName.h,v 1.7 2006/07/05 07:09:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -49,7 +49,7 @@ namespace ROOT {
           * @param  key fully qualified Name of the At as string
           * @return pointer to At or 0 if none is found
           */
-         static Type ByName( const std::string & key );
+         static const Type & ByName( const std::string & key );
       
       
          /**
@@ -58,7 +58,16 @@ namespace ROOT {
           * @param  tid string representation of the type_info At
           * @return pointer to At or 0 if none is found
           */
-         static Type ByTypeInfo( const std::type_info & ti );
+         static const Type & ByTypeInfo( const std::type_info & ti );
+
+
+         
+         /**
+          * DeleteType will call the destructor of the TypeBase this TypeName is
+          * pointing to and remove it's information from the data structures. The
+          * TypeName information will remain.
+          */
+         void DeleteType() const;
 
 
          /**
@@ -79,7 +88,7 @@ namespace ROOT {
           * At returns the At object of this TypeName
           * @return corresponding Type to this TypeName
           */
-         Type ThisType() const;
+         const Type & ThisType() const;
 
 
          /**
@@ -87,7 +96,7 @@ namespace ROOT {
           * @param  nth number of At to return
           * @return pointer to nth Type in the system
           */
-         static Type TypeAt( size_t nth );
+         static const Type & TypeAt( size_t nth );
 
 
          /**
@@ -124,7 +133,13 @@ namespace ROOT {
           * @supplierCardinality 1
           * @clientCardinality 1
           */
-         TypeBase * fTypeBase;
+         mutable 
+            TypeBase * fTypeBase;
+
+         /**
+          * This type
+          */
+         Type * fThisType;
 
       }; // class TypeName
 

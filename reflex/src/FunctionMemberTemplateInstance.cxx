@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: FunctionMemberTemplateInstance.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionMemberTemplateInstance.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -16,7 +16,7 @@
 #include "FunctionMemberTemplateInstance.h"
 
 #include "Reflex/MemberTemplate.h"
-#include "Reflex/MemberTemplateImpl.h"
+#include "Reflex/internal/MemberTemplateImpl.h"
 
 #include "Reflex/Tools.h"
 
@@ -81,7 +81,7 @@ ROOT::Reflex::FunctionMemberTemplateInstance::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionMemberTemplateInstance::TemplateArgumentAt( size_t nth ) const {
+const ROOT::Reflex::Type & ROOT::Reflex::FunctionMemberTemplateInstance::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return nth template argument of this function member.
    return TemplateInstance::TemplateArgumentAt( nth );

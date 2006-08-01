@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.11 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.12 2006/07/05 08:04:02 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -16,7 +16,7 @@
 #include "Reflex/Kernel.h"
 
 #include "Reflex/Scope.h"
-#include "Reflex/ScopeName.h"
+#include "Reflex/internal/ScopeName.h"
 #include "Reflex/PropertyList.h"
 #include "Reflex/Type.h"
 #include "Reflex/Base.h"
@@ -240,6 +240,78 @@ ROOT::Reflex::MemberTemplate_Cont_Type_t & ROOT::Reflex::Dummy::MemberTemplateCo
 // static wrapper for an empty container of MemberTemplates.
    static MemberTemplate_Cont_Type_t c;
    return c;
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::Object & ROOT::Reflex::Dummy::Object() {
+//-------------------------------------------------------------------------------
+   // static wrapper for an empty Object 
+   static ROOT::Reflex::Object i;
+   return i;
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::Type & ROOT::Reflex::Dummy::Type() {
+//-------------------------------------------------------------------------------
+   // static wrapper for an empty Type 
+   static ROOT::Reflex::Type i;
+   return i;
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Dummy::TypeTemplate() {
+//-------------------------------------------------------------------------------
+   // static wrapper for an empty TypeTemplate 
+   static ROOT::Reflex::TypeTemplate i;
+   return i;
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::Base & ROOT::Reflex::Dummy::Base() {
+//-------------------------------------------------------------------------------
+   // static wrapper for an empty Base 
+   static ROOT::Reflex::Base i;
+   return i;
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::PropertyList & ROOT::Reflex::Dummy::PropertyList() {
+//-------------------------------------------------------------------------------
+   // static wrapper for an empty PropertyList 
+   static ROOT::Reflex::PropertyList i;
+   return i;
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::Member & ROOT::Reflex::Dummy::Member() {
+//-------------------------------------------------------------------------------
+   // static wrapper for an empty Member 
+   static ROOT::Reflex::Member i;
+   return i;
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::MemberTemplate & ROOT::Reflex::Dummy::MemberTemplate() {
+//-------------------------------------------------------------------------------
+   // static wrapper for an empty MemberTemplate 
+   static ROOT::Reflex::MemberTemplate i;
+   return i;
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::Scope & ROOT::Reflex::Dummy::Scope() {
+//-------------------------------------------------------------------------------
+   // static wrapper for an empty Scope 
+   static ROOT::Reflex::Scope i;
+   return i;
 }
 
 

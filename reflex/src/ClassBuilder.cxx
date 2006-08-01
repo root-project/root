@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: ClassBuilder.cxx,v 1.10 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.10 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -115,12 +115,14 @@ ROOT::Reflex::ClassBuilder::AddTypedef( const Type & typ,
 ROOT::Reflex::ClassBuilder &
 ROOT::Reflex::ClassBuilder::AddEnum( const char * nam,
                                      const char * values,
-                                     const std::type_info * ti ) {
+                                     const std::type_info * ti,
+                                     unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
 // Add enum info to this class.
    fClassBuilderImpl.AddEnum( nam, 
                               values, 
-                              ti );
+                              ti,
+                              modifiers );
    return * this;
 }
 
@@ -128,9 +130,10 @@ ROOT::Reflex::ClassBuilder::AddEnum( const char * nam,
 /*/-------------------------------------------------------------------------------
   ROOT::Reflex::ClassBuilder &
   ROOT::Reflex::ClassBuilder::addUnion( const char * nam,
-  const char * values ) {
+  const char * values,
+  unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
-  fClassBuilderImpl.addUnion( nam, values );
+  fClassBuilderImpl.addUnion( nam, values, modifiers );
   return * this;
   }
 */
@@ -188,7 +191,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddDataMember( const char * nam,
                                                     unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
 // Add data member info (internal).
-   fLastMember = Member(new DataMember( nam, typ, offs, modifiers ));
+   fLastMember = OwnedMember(new DataMember( nam, typ, offs, modifiers ));
    fClass->AddDataMember( fLastMember );
 }
 
@@ -203,20 +206,20 @@ void ROOT::Reflex::ClassBuilderImpl::AddFunctionMember( const char * nam,
 //-------------------------------------------------------------------------------
 // Add function member info (internal).
    if ( Tools::IsTemplated( nam )) 
-      fLastMember = Member(new FunctionMemberTemplateInstance( nam, 
-                                                               typ, 
-                                                               stubFP, 
-                                                               stubCtx, 
-                                                               params, 
-                                                               modifiers,
-                                                               *(dynamic_cast<ScopeBase*>(fClass))));
+      fLastMember = OwnedMember(new FunctionMemberTemplateInstance( nam, 
+                                                                    typ, 
+                                                                    stubFP, 
+                                                                    stubCtx, 
+                                                                    params, 
+                                                                    modifiers,
+                                                                    *(dynamic_cast<ScopeBase*>(fClass))));
    else                            
-      fLastMember = Member(new FunctionMember( nam, 
-                                               typ, 
-                                               stubFP, 
-                                               stubCtx, 
-                                               params, 
-                                               modifiers ));
+      fLastMember = OwnedMember(new FunctionMember( nam, 
+                                                    typ, 
+                                                    stubFP, 
+                                                    stubCtx, 
+                                                    params, 
+                                                    modifiers ));
    fClass->AddFunctionMember( fLastMember );
 }
 
@@ -233,10 +236,11 @@ void ROOT::Reflex::ClassBuilderImpl::AddTypedef( const Type & typ,
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::ClassBuilderImpl::AddEnum( const char * nam,
                                               const char * values,
-                                              const std::type_info * ti ) {
+                                              const std::type_info * ti,
+                                              unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
 // Add enum info (internal).  
-   Enum * e = new Enum(nam, *ti);
+   Enum * e = new Enum(nam, *ti, modifiers);
 
    std::vector<std::string> valVec = std::vector<std::string>();
    Tools::StringSplit(valVec, values, ";");

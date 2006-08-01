@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.21 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.22 2006/07/14 06:47:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -174,6 +174,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testSubTypes );
   CPPUNIT_TEST( testToTypeFinal );
   CPPUNIT_TEST( testScopeSubFuns );
+  CPPUNIT_TEST( testEnums );
   CPPUNIT_TEST( unloadLibrary );
   CPPUNIT_TEST_SUITE_END();
 
@@ -201,6 +202,7 @@ public:
   void testSubTypes();
   void testToTypeFinal();
   void testScopeSubFuns() ;
+  void testEnums();
 
   void unloadLibrary();
   void tearDown() {}
@@ -1022,10 +1024,34 @@ void ReflexSimple2Test::testConstMembers() {
 
   Member m2 = t.DataMemberByName("m_i");
   CPPUNIT_ASSERT(m2);
+  CPPUNIT_ASSERT(! m2.IsConst());
   CPPUNIT_ASSERT(! m2.TypeOf().IsConst());
   Member m3 = t.DataMemberByName("m_ci");
   CPPUNIT_ASSERT(m3);
+  CPPUNIT_ASSERT(m3.IsConst());
   CPPUNIT_ASSERT(m3.TypeOf().IsConst());
+
+  Member m4 = t.MemberByName("constfoo");
+  CPPUNIT_ASSERT(m4);
+  CPPUNIT_ASSERT(m4.IsConst());
+  CPPUNIT_ASSERT(m4.TypeOf().IsConst());
+  CPPUNIT_ASSERT(!m4.IsVolatile());
+  CPPUNIT_ASSERT(!m4.TypeOf().IsVolatile());
+
+  Member m5 = t.MemberByName("nonconstfoo");
+  CPPUNIT_ASSERT(m5);
+  CPPUNIT_ASSERT(!m5.IsConst());
+  CPPUNIT_ASSERT(!m5.TypeOf().IsConst());
+  CPPUNIT_ASSERT(!m5.IsVolatile());
+  CPPUNIT_ASSERT(!m5.TypeOf().IsVolatile());
+
+  Member m6 = t.MemberByName("m_vi");
+  CPPUNIT_ASSERT(m6);
+  CPPUNIT_ASSERT(!m6.IsConst());
+  CPPUNIT_ASSERT(!m6.TypeOf().IsConst());
+  CPPUNIT_ASSERT(m6.IsVolatile());
+  CPPUNIT_ASSERT(m6.TypeOf().IsVolatile());
+
 }
 
 
@@ -1129,6 +1155,26 @@ void ReflexSimple2Test::testScopeSubFuns() {
    // this will allow to check whether a function is templated or not and produce member templates
    //MemberTemplate mt = s0.MemberTemplateByName("foo");
    //CPPUNIT_ASSERT(mt);
+}
+
+
+void ReflexSimple2Test::testEnums() {
+
+   Scope s = Type::ByName("Bla::Base");
+   CPPUNIT_ASSERT(2);
+
+   Type t1 = s.SubTypeByName("protectedEnum");
+   CPPUNIT_ASSERT(t1);
+   CPPUNIT_ASSERT(!t1.IsPublic());
+   CPPUNIT_ASSERT(t1.IsProtected());
+   CPPUNIT_ASSERT(!t1.IsPrivate());
+
+   Type t2 = s.SubTypeByName("privateEnum");
+   CPPUNIT_ASSERT(t2);
+   CPPUNIT_ASSERT(!t2.IsPublic());
+   CPPUNIT_ASSERT(!t2.IsProtected());
+   CPPUNIT_ASSERT(t2.IsPrivate());
+
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.17 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.18 2006/07/14 06:47:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -168,17 +168,24 @@ namespace ROOT {
       typedef MemberTemplate_Cont_Type_t::reverse_iterator Reverse_MemberTemplate_Iterator;
 
 
-      class RFLX_API Dummy {
-      public:
-         static StdString_Cont_Type_t & StdStringCont();
-         static Type_Cont_Type_t & TypeCont();        
-         static Base_Cont_Type_t & BaseCont();
-         static Scope_Cont_Type_t & ScopeCont();
-         static Object_Cont_Type_t & ObjectCont();
-         static Member_Cont_Type_t & MemberCont();
-         static TypeTemplate_Cont_Type_t & TypeTemplateCont();
-         static MemberTemplate_Cont_Type_t & MemberTemplateCont();
-      };
+      namespace Dummy {
+         RFLX_API StdString_Cont_Type_t & StdStringCont();
+         RFLX_API Type_Cont_Type_t & TypeCont();        
+         RFLX_API Base_Cont_Type_t & BaseCont();
+         RFLX_API Scope_Cont_Type_t & ScopeCont();
+         RFLX_API Object_Cont_Type_t & ObjectCont();
+         RFLX_API Member_Cont_Type_t & MemberCont();
+         RFLX_API TypeTemplate_Cont_Type_t & TypeTemplateCont();
+         RFLX_API MemberTemplate_Cont_Type_t & MemberTemplateCont();
+         RFLX_API const Object & Object();
+         RFLX_API const Type & Type();
+         RFLX_API const TypeTemplate & TypeTemplate();
+         RFLX_API const Base & Base();
+         RFLX_API const PropertyList & PropertyList();
+         RFLX_API const Member & Member();
+         RFLX_API const MemberTemplate & MemberTemplate();
+         RFLX_API const Scope & Scope();
+      }
 
 
       /** some general information about the Reflex package */

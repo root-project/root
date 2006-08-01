@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Member.h,v 1.9 2006/07/03 17:02:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.9 2006/07/03 17:02:38 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -33,6 +33,8 @@ namespace ROOT {
        * @ingroup Ref
        */
       class RFLX_API Member {
+
+         friend class OwnedMember;
 
       public:
 
@@ -83,7 +85,7 @@ namespace ROOT {
           * DeclaringScope will return the scope which the member lives in
           * @return the declaring scope of the member
           */
-         Scope DeclaringScope() const;
+         const Scope & DeclaringScope() const;
 
 
          /** 
@@ -91,7 +93,7 @@ namespace ROOT {
           * (i.e. the same as the Scope)
           * @return the declaring type of the member
           */
-         Type DeclaringType() const;
+         const Type & DeclaringType() const;
 
 
          /** 
@@ -149,6 +151,13 @@ namespace ROOT {
           * @return true if member is a constructor
           */
          bool IsConstructor() const;
+
+
+         /** 
+          * IsConst will check whether this member is const qualified.
+          * @return true if the member is const qualified
+          */
+         bool IsConst() const;
 
 
          /** 
@@ -279,6 +288,13 @@ namespace ROOT {
 
 
          /** 
+          * IsVolatile will check whether this member is volatile qualified.
+          * @return true if the member is volatile qualified
+          */
+         bool IsVolatile() const;
+
+
+         /** 
           * MemberType return the type of the member as enum value (function or data member) 
           * @return member type as enum
           */
@@ -346,7 +362,7 @@ namespace ROOT {
           * Properties will return the properties attached to this item
           * @return properties of this member
           */
-         PropertyList Properties() const;
+         const PropertyList & Properties() const;
 
 
          /*void Set( const Object & instance,
@@ -386,7 +402,7 @@ namespace ROOT {
           * @param  nth template argument
           * @return nth template argument
           */
-         Type TemplateArgumentAt( size_t nth ) const;
+         const Type & TemplateArgumentAt( size_t nth ) const;
 
 
          /**
@@ -406,14 +422,14 @@ namespace ROOT {
           * TemplateFamily returns the corresponding MemberTemplate if any
           * @return corresponding MemberTemplate
           */
-         MemberTemplate TemplateFamily() const;
+         const MemberTemplate & TemplateFamily() const;
 
 
          /** 
           * TypeOf returns the member type 
           * @return member type
           */
-         Type TypeOf() const;
+         const Type & TypeOf() const;
 
       private:
 
@@ -429,7 +445,7 @@ namespace ROOT {
    } //namespace Reflex
 } //namespace ROOT
 
-#include "Reflex/MemberBase.h"
+#include "Reflex/internal/MemberBase.h"
 #include "Reflex/Scope.h"
 #include "Reflex/PropertyList.h"
 #include "Reflex/Type.h"
@@ -476,18 +492,18 @@ inline ROOT::Reflex::Member::operator bool () const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Scope ROOT::Reflex::Member::DeclaringScope() const {
+inline const ROOT::Reflex::Scope & ROOT::Reflex::Member::DeclaringScope() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->DeclaringScope();
-   return Scope();
+   return Dummy::Scope();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Member::DeclaringType() const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Member::DeclaringType() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->DeclaringScope();
-   return Type();
+   return Dummy::Type();
 }
 
 
@@ -510,6 +526,14 @@ inline bool ROOT::Reflex::Member::IsAuto() const {
 inline bool ROOT::Reflex::Member::IsConstructor() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->IsConstructor();
+   return false;
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Member::IsConst() const {
+//-------------------------------------------------------------------------------
+   if ( *this ) return fMemberBase->IsConst();
    return false;
 }
 
@@ -659,6 +683,14 @@ inline bool ROOT::Reflex::Member::IsVirtual() const {
 
 
 //-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Member::IsVolatile() const {
+//-------------------------------------------------------------------------------
+   if ( *this ) return fMemberBase->IsVolatile();
+   return false;
+}
+
+
+//-------------------------------------------------------------------------------
 inline ROOT::Reflex::TYPE ROOT::Reflex::Member::MemberType() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->MemberType();
@@ -779,10 +811,10 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::Member::FunctionPa
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::PropertyList ROOT::Reflex::Member::Properties() const {
+inline const ROOT::Reflex::PropertyList & ROOT::Reflex::Member::Properties() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->Properties();
-   return PropertyList();
+   return Dummy::PropertyList();
 }
 
 
@@ -810,10 +842,10 @@ inline ROOT::Reflex::StubFunction ROOT::Reflex::Member::Stubfunction() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Member::TemplateArgumentAt( size_t nth ) const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Member::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fMemberBase->TemplateArgumentAt( nth );
-   return Type();
+   return Dummy::Type();
 }
 
 
@@ -858,18 +890,18 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Member::TemplateArgumen
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::MemberTemplate ROOT::Reflex::Member::TemplateFamily() const {
+inline const ROOT::Reflex::MemberTemplate & ROOT::Reflex::Member::TemplateFamily() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fMemberBase->TemplateFamily();
-   return MemberTemplate();
+   return Dummy::MemberTemplate();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Member::TypeOf() const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Member::TypeOf() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->TypeOf();
-   return Type();
+   return Dummy::Type();
 }
 
 

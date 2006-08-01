@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.11 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.12 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -28,25 +28,25 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type::operator ROOT::Reflex::Scope () const {
+ROOT::Reflex::Type::operator const ROOT::Reflex::Scope & () const {
 //-------------------------------------------------------------------------------
 // Conversion operator to Scope.
    if ( * this ) return *(fTypeName->fTypeBase);
-   return Scope();
+   return Dummy::Scope();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Base ROOT::Reflex::Type::BaseAt( size_t nth ) const {
+const ROOT::Reflex::Base & ROOT::Reflex::Type::BaseAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return nth base info.
    if ( * this ) return fTypeName->fTypeBase->BaseAt( nth );
-   return Base();
+   return Dummy::Base();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type
+const ROOT::Reflex::Type &
 ROOT::Reflex::Type::ByName( const std::string & key ) {
 //-------------------------------------------------------------------------------
 // Lookup a type by its fully qualified name.
@@ -55,7 +55,7 @@ ROOT::Reflex::Type::ByName( const std::string & key ) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type
+const ROOT::Reflex::Type &
 ROOT::Reflex::Type::ByTypeInfo( const std::type_info & tid ) {
 //-------------------------------------------------------------------------------
 // Lookup a type by its type_info.
@@ -70,7 +70,7 @@ ROOT::Reflex::Type::CastObject( const Type & to,
 //-------------------------------------------------------------------------------
 // Cast the current type to "to" using the object obj.
    if ( * this ) return fTypeName->fTypeBase->CastObject( to, obj );
-   return Object();
+   return Dummy::Object();
 }
 
 
@@ -89,7 +89,7 @@ ROOT::Reflex::Type::CastObject( const Type & to,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object 
+ROOT::Reflex::Object
 ROOT::Reflex::Type::Construct( const Type & signature,
                                const std::vector < void * > & values, 
                                void * mem ) const {
@@ -100,53 +100,53 @@ ROOT::Reflex::Type::Construct( const Type & signature,
    if ( * this ) return fTypeName->fTypeBase->Construct( signature, 
                                                          values, 
                                                          mem ); 
-   return Object();
+   return Dummy::Object();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::DataMemberAt( size_t nth ) const {
+const ROOT::Reflex::Member & ROOT::Reflex::Type::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth data member.
    if ( * this ) return fTypeName->fTypeBase->DataMemberAt( nth );
-   return Member();
+   return Dummy::Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::DataMemberByName( const std::string & nam ) const {
+const ROOT::Reflex::Member & ROOT::Reflex::Type::DataMemberByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
 // Return a data member by name.
    if ( * this ) return fTypeName->fTypeBase->DataMemberByName( nam );
-   return Member();
+   return Dummy::Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::Type::DynamicType( const Object & obj ) const {
+const ROOT::Reflex::Type & ROOT::Reflex::Type::DynamicType( const Object & obj ) const {
 //-------------------------------------------------------------------------------
 // Return the dynamic type of this type.
    if ( * this ) return fTypeName->fTypeBase->DynamicType( obj );
-   return Type();
+   return Dummy::Type();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::FunctionMemberAt( size_t nth ) const {
+const ROOT::Reflex::Member & ROOT::Reflex::Type::FunctionMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth function member.
    if ( * this ) return fTypeName->fTypeBase->FunctionMemberAt( nth );
-   return Member();
+   return Dummy::Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::FunctionMemberByName( const std::string & nam,
-                                                               const Type & signature ) const {
+const ROOT::Reflex::Member & ROOT::Reflex::Type::FunctionMemberByName( const std::string & nam,
+                                                                       const Type & signature ) const {
 //-------------------------------------------------------------------------------
 // Return a function member by name. Signature can be used for overloaded functions.
    if ( * this ) return fTypeName->fTypeBase->FunctionMemberByName( nam, signature );
-   return Member();
+   return Dummy::Member();
 }
 
 
@@ -220,30 +220,30 @@ bool ROOT::Reflex::Type::IsEquivalentTo( const Type & typ ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::MemberByName( const std::string & nam,
+const ROOT::Reflex::Member & ROOT::Reflex::Type::MemberByName( const std::string & nam,
                                                        const Type & signature ) const {
 //-------------------------------------------------------------------------------
 // Return a member by name. Signature is optional for overloaded function members.
    if ( * this ) return fTypeName->fTypeBase->MemberByName( nam, signature );
-   return Member();
+   return Dummy::Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::MemberAt( size_t nth ) const {
+const ROOT::Reflex::Member & ROOT::Reflex::Type::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth member.
    if ( * this ) return fTypeName->fTypeBase->MemberAt( nth );
-   return Member();
+   return Dummy::Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate ROOT::Reflex::Type::MemberTemplateAt( size_t nth ) const {
+const ROOT::Reflex::MemberTemplate & ROOT::Reflex::Type::MemberTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth member template.
    if ( * this ) return fTypeName->fTypeBase->MemberTemplateAt( nth );
-   return MemberTemplate();
+   return Dummy::MemberTemplate();
 }
 
 
@@ -289,34 +289,34 @@ std::string ROOT::Reflex::Type::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::Type::PointerToMemberScope() const {
+const ROOT::Reflex::Scope & ROOT::Reflex::Type::PointerToMemberScope() const {
 //-------------------------------------------------------------------------------
    // Return the scope of the pointer to member type
    if ( * this ) return fTypeName->fTypeBase->PointerToMemberScope();
-   return Scope();
+   return Dummy::Scope();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::Type::SubScopeAt( size_t nth ) const {
+const ROOT::Reflex::Scope & ROOT::Reflex::Type::SubScopeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth sub scope.
    if ( * this ) return fTypeName->fTypeBase->SubScopeAt( nth );
-   return Scope();
+   return Dummy::Scope();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::Type::SubTypeAt( size_t nth ) const {
+const ROOT::Reflex::Type & ROOT::Reflex::Type::SubTypeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth sub type.
    if ( * this ) return fTypeName->fTypeBase->SubTypeAt( nth );
-   return Type();
+   return Dummy::Type();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::Type::TypeAt( size_t nth ) {
+const ROOT::Reflex::Type & ROOT::Reflex::Type::TypeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
 // Return the nth type defined in Reflex.
    return TypeName::TypeAt( nth );
@@ -332,9 +332,9 @@ size_t ROOT::Reflex::Type::TypeSize() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate ROOT::Reflex::Type::SubTypeTemplateAt( size_t nth ) const {
+const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Type::SubTypeTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth sub type template.
    if ( * this ) return fTypeName->fTypeBase->SubTypeTemplateAt( nth );
-   return TypeTemplate();
+   return Dummy::TypeTemplate();
 }

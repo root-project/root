@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: MemberTemplateImpl.h,v 1.9 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.h,v 1.7 2006/07/05 07:09:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -9,47 +9,46 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_MemberTemplateImpl
-#define ROOT_Reflex_MemberTemplateImpl  
+#ifndef ROOT_Reflex_TypeTemplateImpl
+#define ROOT_Reflex_TypeTemplateImpl
 
 // Include files
 #include "Reflex/Kernel.h"
-#include "Reflex/Scope.h"
+#include "Reflex/internal/OwnedScope.h"
 
 namespace ROOT {
    namespace Reflex {
 
       // forward declarations
-      class Member;
-      class Scope;
-      class FunctionMemberTemplateInstance;
+      class Type;
+      class ClassTemplateInstance;
 
       /** 
-       * @class MemberTemplateImpl MemberTemplateImpl.h Reflex/MemberTemplateImpl.h
+       * @class TypeTemplateImpl TypeTemplateImpl.h Reflex/TypeTemplateImpl.h
        * @author Stefan Roiser
        * @date 2005-02-03
        * @ingroup Ref
        */
-      class RFLX_API MemberTemplateImpl {
+      class RFLX_API TypeTemplateImpl {
 
       public:
 
          /** default constructor */
-         MemberTemplateImpl( const std::string & templateName,
-                             const Scope & scope,
-                             std::vector < std::string > parameterNames, 
-                             std::vector < std::string > parameterDefaults = std::vector<std::string>());
+         TypeTemplateImpl( const std::string & templateName,
+                           const Scope & scop,
+                           std::vector < std::string > parameterNames, 
+                           std::vector < std::string > parameterDefaults = std::vector<std::string>());
 
 
          /** destructor */
-         virtual ~MemberTemplateImpl();
+         virtual ~TypeTemplateImpl();
 
 
          /** 
           * operator == will return true if two At templates are the same
           * @return true if At templates match
           */
-         bool operator == ( const MemberTemplateImpl & rh ) const;
+         bool operator == ( const TypeTemplateImpl & rh ) const;
 
 
          /**
@@ -57,7 +56,7 @@ namespace ROOT {
           * @param  nth template instantion
           * @return pointer to nth template instantion
           */
-         Member TemplateInstanceAt( size_t nth ) const;
+         const Type & TemplateInstanceAt( size_t nth ) const;
 
 
          /**
@@ -90,7 +89,7 @@ namespace ROOT {
           */
          std::string TemplateParameterDefaultAt( size_t nth ) const;
 
-
+ 
          StdString_Iterator TemplateParameterDefault_Begin() const;
          StdString_Iterator TemplateParameterDefault_End() const;
          Reverse_StdString_Iterator TemplateParameterDefault_RBegin() const;
@@ -116,7 +115,7 @@ namespace ROOT {
           * AddTemplateInstance adds one TemplateInstanceAt of the template to the local container
           * @param templateInstance the template TemplateInstanceAt
           */
-         void AddTemplateInstance( const Member & templateInstance ) const;
+         void AddTemplateInstance( const Type & templateInstance ) const;
 
       private:
 
@@ -128,7 +127,7 @@ namespace ROOT {
 
          /**
           * pointer back to the corresponding At
-          * @label MemberAt template At
+          * @label At template At
           * @clientCardinality 0..*
           * @supplierCardinality 1
           */
@@ -137,11 +136,12 @@ namespace ROOT {
 
          /** 
           * pointer to the class template instances
+          * @supplierCardinality 1..*
           * @clientCardinality 0..1
           * @label template instances
           */
          mutable
-            std::vector < Member > fTemplateInstances;
+            std::vector < Type > fTemplateInstances;
 
 
          /**
@@ -163,19 +163,27 @@ namespace ROOT {
           */
          size_t fReqParameters;
       
-      }; // class MemberTemplateImpl
+      }; // class TypeTemplateImpl
 
    } // namespace ROOT
 } // namespace Reflex
 
 
 //-------------------------------------------------------------------------------
-inline std::string ROOT::Reflex::MemberTemplateImpl::Name( unsigned int mod ) const {
+inline bool ROOT::Reflex::TypeTemplateImpl::operator == ( const TypeTemplateImpl & tt ) const {
+//-------------------------------------------------------------------------------
+   return ( ( fTemplateName == tt.fTemplateName ) && 
+            ( fParameterNames.size() == tt.fParameterNames.size() ) );
+}
+
+
+//-------------------------------------------------------------------------------
+inline std::string ROOT::Reflex::TypeTemplateImpl::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
    std::string s = "";
    if ( 0 != ( mod & ( SCOPED | S ))) {
       std::string sName = fScope.Name(mod);
-      if ( ! fScope.IsTopScope()) s += sName + "::";
+      if (! fScope.IsTopScope()) s += sName + "::";
    }
    s += fTemplateName;
    return s;  
@@ -183,14 +191,14 @@ inline std::string ROOT::Reflex::MemberTemplateImpl::Name( unsigned int mod ) co
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::MemberTemplateImpl::TemplateParameterSize() const {
+inline size_t ROOT::Reflex::TypeTemplateImpl::TemplateParameterSize() const {
 //-------------------------------------------------------------------------------
    return fParameterNames.size();
 }
 
 
 //-------------------------------------------------------------------------------
-inline std::string ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefaultAt( size_t nth ) const {
+inline std::string ROOT::Reflex::TypeTemplateImpl::TemplateParameterDefaultAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( nth < fParameterDefaults.size() ) return fParameterDefaults[ nth ];
    return "";
@@ -198,35 +206,35 @@ inline std::string ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefaultAt(
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefault_Begin() const {
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateParameterDefault_Begin() const {
 //-------------------------------------------------------------------------------
    return fParameterDefaults.begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefault_End() const {
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateParameterDefault_End() const {
 //-------------------------------------------------------------------------------
    return fParameterDefaults.end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefault_RBegin() const {
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateParameterDefault_RBegin() const {
 //-------------------------------------------------------------------------------
    return fParameterDefaults.rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefault_REnd() const {
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateParameterDefault_REnd() const {
 //-------------------------------------------------------------------------------
    return fParameterDefaults.rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline std::string ROOT::Reflex::MemberTemplateImpl::TemplateParameterNameAt( size_t nth ) const {
+inline std::string ROOT::Reflex::TypeTemplateImpl::TemplateParameterNameAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( nth < fParameterNames.size() ) return fParameterNames[ nth ];
    return "";
@@ -234,30 +242,30 @@ inline std::string ROOT::Reflex::MemberTemplateImpl::TemplateParameterNameAt( si
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterName_Begin() const {
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateParameterName_Begin() const {
 //-------------------------------------------------------------------------------
    return fParameterNames.begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterName_End() const {
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateParameterName_End() const {
 //-------------------------------------------------------------------------------
    return fParameterNames.end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterName_RBegin() const {
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateParameterName_RBegin() const {
 //-------------------------------------------------------------------------------
    return fParameterNames.rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterName_REnd() const {
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateParameterName_REnd() const {
 //-------------------------------------------------------------------------------
    return fParameterNames.rend();
 }
 
-#endif // ROOT_Reflex_MemberTemplateImpl
+#endif // ROOT_Reflex_TypeTemplateImpl

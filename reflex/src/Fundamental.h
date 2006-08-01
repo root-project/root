@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Fundamental.h,v 1.4 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Fundamental.h,v 1.5 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -13,7 +13,7 @@
 #define ROOT_Reflex_Fundamental
 
 // Include files
-#include "Reflex/TypeBase.h"
+#include "Reflex/internal/TypeBase.h"
 
 namespace ROOT {
    namespace Reflex {

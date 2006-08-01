@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: ScopeName.cxx,v 1.15 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.15 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -13,10 +13,10 @@
 #define REFLEX_BUILD
 #endif
 
-#include "Reflex/ScopeName.h"
+#include "Reflex/internal/ScopeName.h"
 
 #include "Reflex/Scope.h"
-#include "Reflex/ScopeBase.h"
+#include "Reflex/internal/ScopeBase.h"
 #include "Reflex/Type.h"
 
 #include "Reflex/Tools.h"
@@ -27,7 +27,7 @@
 
 
 //-------------------------------------------------------------------------------
-typedef __gnu_cxx::hash_map < const char *, ROOT::Reflex::ScopeName * > Name2Scope_t;
+typedef __gnu_cxx::hash_map < const char *, ROOT::Reflex::Scope > Name2Scope_t;
 typedef std::vector< ROOT::Reflex::Scope > ScopeVec_t;
 
 //-------------------------------------------------------------------------------
@@ -55,8 +55,9 @@ ROOT::Reflex::ScopeName::ScopeName( const char * name,
      fScopeBase(scopeBase) {
 //-------------------------------------------------------------------------------
 // Create the scope name dictionary info.
-   sScopes() [ fName.c_str() ] = this;
-   sScopeVec().push_back(Scope(this));
+   fThisScope = new Scope(this);
+   sScopes() [ fName.c_str() ] = *fThisScope;
+   sScopeVec().push_back(*fThisScope);
    //---Build recursively the declaring scopeNames
    if( fName != "@N@I@R@V@A@N@A@" ) {
       std::string decl_name = Tools::GetScopeName(fName);
@@ -73,39 +74,48 @@ ROOT::Reflex::ScopeName::~ScopeName() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ByName( const std::string & name ) {
+const ROOT::Reflex::Scope & ROOT::Reflex::ScopeName::ByName( const std::string & name ) {
 //-------------------------------------------------------------------------------
 // Lookup a scope by fully qualified name.
    size_t pos =  name.substr(0,2) == "::" ?  2 : 0;
    Name2Scope_t::iterator it = sScopes().find(name.substr(pos).c_str());
-   if (it != sScopes().end() ) return Scope( it->second );
-   //else                        return Scope();
+   if (it != sScopes().end() ) return it->second;
+   //else                        return Dummy::Scope();
    // HERE STARTS AN UGLY HACK WHICH HAS TO BE UNDONE ASAP
    // (also remove inlcude Reflex/Type.h)
    Type t = Type::ByName(name);
    if ( t && t.IsTypedef()) {
       while ( t.IsTypedef()) t = t.ToType();
-      if ( t.IsClass() || t.IsEnum() || t.IsUnion() ) return (Scope)t;
+      if ( t.IsClass() || t.IsEnum() || t.IsUnion() ) return t.operator const Scope &();
    }
-   return Scope();
+   return Dummy::Scope();
    // END OF UGLY HACK
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ThisScope() const {
+void ROOT::Reflex::ScopeName::DeleteScope() const {
 //-------------------------------------------------------------------------------
-// Return the scope corresponding to this scope.
-   return Scope( this );
+// Delete the scope base information.
+   delete fScopeBase;
+   fScopeBase = 0;
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ScopeAt( size_t nth ) {
+const ROOT::Reflex::Scope & ROOT::Reflex::ScopeName::ThisScope() const {
+//-------------------------------------------------------------------------------
+// Return the scope corresponding to this scope.
+   return *fThisScope;
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::Scope & ROOT::Reflex::ScopeName::ScopeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
 // Return the nth scope defined in Reflex.
    if ( nth < sScopeVec().size()) return sScopeVec()[nth];
-   return Scope();
+   return Dummy::Scope();
 }
 
 

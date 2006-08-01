@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Object.h,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Object.h,v 1.7 2006/07/05 07:09:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -96,7 +96,7 @@ namespace ROOT {
           * case of polymorphism)
           * @return the actual class of the object
           */
-         Type DynamicType() const;
+         const Type & DynamicType() const;
 
 
          /** 
@@ -219,7 +219,7 @@ namespace ROOT {
           * TypeOf will return the type of the object
           * @return type of the object
           */
-         Type TypeOf() const;
+         const Type & TypeOf() const;
 
       private:
 
@@ -337,7 +337,7 @@ inline void ROOT::Reflex::Object::Destruct() const {
    
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Object::DynamicType() const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Object::DynamicType() const {
 //-------------------------------------------------------------------------------
    return fType.DynamicType(*this);
 }
@@ -428,7 +428,7 @@ inline void ROOT::Reflex::Object::Set( const std::string & dm,
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Object::TypeOf() const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Object::TypeOf() const {
 //-------------------------------------------------------------------------------
   return fType;
 }

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: UnionBuilder.h,v 1.7 2006/06/30 19:17:46 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: UnionBuilder.h,v 1.7 2006/06/30 19:17:46 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -36,7 +36,8 @@ namespace ROOT{
          /** constructor */
          UnionBuilderImpl( const char * nam,
                            size_t size,
-                           const std::type_info & ti );
+                           const std::type_info & ti,
+                           unsigned int modifiers = 0 );
 
          /** destructor */
          virtual ~UnionBuilderImpl() {}
@@ -97,11 +98,12 @@ namespace ROOT{
          public:    
 
          /** constructor */
-         UnionBuilder();
+         UnionBuilder( unsigned int modifiers = 0 );
 
 
          /** constructor */
-         UnionBuilder(const char * nam );
+         UnionBuilder(const char * nam, 
+                      unsigned int modifiers = 0 );
 
       
          /** destructor */
@@ -152,20 +154,23 @@ namespace ROOT{
 
 //-------------------------------------------------------------------------------
 template < typename T > 
-inline ROOT::Reflex::UnionBuilder<T>::UnionBuilder() 
+inline ROOT::Reflex::UnionBuilder<T>::UnionBuilder( unsigned int modifiers ) 
 //-------------------------------------------------------------------------------
    : fUnionBuilderImpl( Tools::Demangle( typeid(T) ).c_str(),
                         sizeof(T),
-                        typeid(T)) {}
+                        typeid(T),
+                        modifiers ) {}
 
 
 //-------------------------------------------------------------------------------
 template < typename T > 
-inline ROOT::Reflex::UnionBuilder<T>::UnionBuilder( const char * nam )
+inline ROOT::Reflex::UnionBuilder<T>::UnionBuilder( const char * nam,
+                                                    unsigned int modifiers )
 //-------------------------------------------------------------------------------
    : fUnionBuilderImpl( nam,
                         sizeof(T),
-                        typeid(T)) {}
+                        typeid(T),
+                        modifiers ) {}
 
 
 //-------------------------------------------------------------------------------

@@ -678,13 +678,14 @@ class genDictionary(object) :
     values = ''
     for child in childs : values += child['name'] + '=' + child['init'] +';'
     values = values[:-1]
+    mod = self.genModifier(attrs, None)
     if self.isUnnamedType(name) :
-      s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnnamedEnum))' % (name[name.rfind('::')+3:], values) 
+      s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnnamedEnum), %s)' % (name[name.rfind('::')+3:], values, mod) 
     else :
       if attrs.get('access') in ('protected','private'):
-        s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnknownType))' % (name, values)        
+        s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnknownType), %s)' % (name, values, mod)        
       else:
-        s += '  .AddEnum("%s", "%s", &typeid(%s))' % (name, values, name)
+        s += '  .AddEnum("%s", "%s", &typeid(%s), %s)' % (name, values, name, mod)
     return s 
 #----------------------------------------------------------------------------------
   def genScopeName(self, attrs, enum=False, const=False, colon=False) :
@@ -939,8 +940,9 @@ class genDictionary(object) :
       id   = e['id']
       cname = self.genTypeName(id, colon=True)
       name  = self.genTypeName(id)
+      mod = self.genModifier(self.xref[id]['attrs'], None)
       if not self.quiet : print 'enum ' + name
-      s += '      EnumBuilder("%s",typeid(%s))' % (name, cname)
+      s += '      EnumBuilder("%s",typeid(%s), %s)' % (name, cname, mod)
       items = self.xref[id]['subelems']
       for item in items :
         s += '\n        .AddItem("%s",%s)' % (item['name'], item['init'])
@@ -992,6 +994,12 @@ class genDictionary(object) :
     if self.selector : xattrs = self.selector.selfield( cls,name)
     else             : xattrs = None
     mod = self.genModifier(attrs,xattrs)
+    if attrs['type'][-1] == 'c' :
+      if mod : mod += ' | CONST'
+      else   : mod =  'CONST'
+    if attrs['type'][-1] == 'v' :
+      if mod : mod += ' | VOLATILE'
+      else   : mod = 'VOLATILE'
     shadow = '__shadow__::' + string.translate( str(cl), self.transtable)
     c = '  .AddDataMember(%s, "%s", OffsetOf(%s, %s), %s)' % (self.genTypeID(attrs['type']), name, shadow, name, mod)
     c += self.genCommentProperty(attrs)

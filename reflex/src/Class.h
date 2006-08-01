@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Class.h,v 1.7 2006/05/31 22:07:43 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.8 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -13,10 +13,9 @@
 #define ROOT_Reflex_Class
 
 // Include files
-#include "Reflex/TypeBase.h"
-#include "Reflex/ScopeBase.h"
-#include "Reflex/Member.h"
-#include "Reflex/Base.h"
+#include "Reflex/internal/TypeBase.h"
+#include "Reflex/internal/ScopeBase.h"
+#include "Reflex/internal/OwnedMember.h"
 #include <map>
 #include <vector>
 
@@ -24,6 +23,9 @@ namespace ROOT {
    namespace Reflex {
     
       // forward declarations
+      class Base;
+      class OwnedBase;
+      class Member;
       class MemberTemplate;
       class TypeTemplate;
     
@@ -53,14 +55,14 @@ namespace ROOT {
           * operator Scope will return the corresponding scope of this type if
           * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
           */                                       
-         operator Scope() const;
+         operator const Scope & () const;
 
 
          /** 
           * the operator Type will return a corresponding Type object to the At if
           * applicable (i.e. if the Scope is also a Type e.g. Class, Union, Enum)
           */
-         operator Type () const;
+         operator const Type & () const;
 
 
          /**
@@ -68,7 +70,7 @@ namespace ROOT {
           * @param  nth nth BaseAt class
           * @return pointer to BaseAt class information
           */
-         virtual Base BaseAt( size_t nth ) const;
+         virtual const Base & BaseAt( size_t nth ) const;
 
 
          /**
@@ -116,7 +118,7 @@ namespace ROOT {
           * @param  nth data MemberAt
           * @return pointer to data MemberAt
           */
-         virtual Member DataMemberAt( size_t nth ) const;
+         virtual const Member & DataMemberAt( size_t nth ) const;
 
 
          /**
@@ -124,7 +126,7 @@ namespace ROOT {
           * @param  Name of data MemberAt
           * @return data MemberAt
           */
-         virtual Member DataMemberByName( const std::string & nam ) const;
+         virtual const Member & DataMemberByName( const std::string & nam ) const;
 
 
          /**
@@ -144,7 +146,7 @@ namespace ROOT {
           * DeclaringScope will return a pointer to the At of this one
           * @return pointer to declaring At
           */
-         virtual Scope DeclaringScope() const;
+         virtual const Scope & DeclaringScope() const;
 
 
          /**
@@ -163,7 +165,7 @@ namespace ROOT {
           * @param  mem is the memory AddressGet of the object to checked
           * @return the actual class of the object
           */
-         virtual Type DynamicType( const Object & obj ) const;
+         virtual const Type & DynamicType( const Object & obj ) const;
 
 
          /**
@@ -171,7 +173,7 @@ namespace ROOT {
           * @param  nth function MemberAt
           * @return pointer to function MemberAt
           */
-         virtual Member FunctionMemberAt( size_t nth ) const;
+         virtual const Member & FunctionMemberAt( size_t nth ) const;
 
  
          /**
@@ -181,8 +183,8 @@ namespace ROOT {
           * @param  signature of the MemberAt function 
           * @return function MemberAt
           */
-         virtual Member FunctionMemberByName( const std::string & nam,
-                                              const Type & signature ) const;
+         virtual const Member & FunctionMemberByName( const std::string & nam,
+                                                      const Type & signature ) const;
 
 
          /**
@@ -233,6 +235,27 @@ namespace ROOT {
          virtual bool IsComplete() const;
 
 
+         /** 
+          * IsPrivate will check if the scope access is private
+          * @return true if scope access is private
+          */
+         virtual bool IsPrivate() const;
+
+
+         /** 
+          * IsProtected will check if the scope access is protected
+          * @return true if scope access is protected
+          */
+         virtual bool IsProtected() const;
+
+
+         /** 
+          * IsPublic will check if the scope access is public
+          * @return true if scope access is public
+          */
+         virtual bool IsPublic() const;
+
+
          /**
           * IsVirtual will return true if the class contains a virtual table
           * @return true if the class contains a virtual table
@@ -245,8 +268,8 @@ namespace ROOT {
           * @param Name  MemberAt Name
           * @return pointer to MemberAt
           */
-         virtual Member MemberByName( const std::string & nam,
-                                      const Type & signature ) const;
+         virtual const Member & MemberByName( const std::string & nam,
+                                              const Type & signature ) const;
 
 
          /**
@@ -254,7 +277,7 @@ namespace ROOT {
           * @param  nth MemberAt
           * @return pointer to nth MemberAt
           */
-         virtual Member MemberAt( size_t nth ) const;
+         virtual const Member & MemberAt( size_t nth ) const;
 
 
          /**
@@ -275,7 +298,7 @@ namespace ROOT {
           * @param nth MemberAt template
           * @return nth MemberAt template
           */
-         virtual MemberTemplate MemberTemplateAt( size_t nth ) const;
+         virtual const MemberTemplate & MemberTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -312,7 +335,7 @@ namespace ROOT {
           * to this item
           * @return pointer to PropertyNth list
           */
-         virtual PropertyList Properties() const;
+         virtual const PropertyList & Properties() const;
 
 
          /**
@@ -320,7 +343,7 @@ namespace ROOT {
           * @param  nth sub-At
           * @return pointer to nth sub-At
           */
-         virtual Scope SubScopeAt( size_t nth ) const;
+         virtual const Scope & SubScopeAt( size_t nth ) const;
 
 
          /**
@@ -341,7 +364,7 @@ namespace ROOT {
           * @param  nth sub-At
           * @return pointer to nth sub-At
           */
-         virtual Type SubTypeAt( size_t nth ) const;
+         virtual const Type & SubTypeAt( size_t nth ) const;
 
 
          /**
@@ -362,7 +385,7 @@ namespace ROOT {
           * @param nth At template
           * @return nth At template
           */
-         virtual TypeTemplate SubTypeTemplateAt( size_t nth ) const;
+         virtual const TypeTemplate & SubTypeTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -480,7 +503,7 @@ namespace ROOT {
       public:
 
          /** 
-          * return the At Name 
+          * return the type name 
           */
          TypeName * TypeNameGet() const;
 
@@ -500,7 +523,7 @@ namespace ROOT {
           * @param pathsToBase the cache storing pathes to all known bases
           * @param basePath the current path to the BaseAt class
           */
-         void UpdateMembers2( Members & members,
+         void UpdateMembers2( OMembers & members,
                               Members & dataMembers,
                               Members & functionMembers,
                               PathsToBase & pathsToBase,
@@ -589,16 +612,16 @@ namespace ROOT {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Class::operator ROOT::Reflex::Scope () const {
+inline ROOT::Reflex::Class::operator const ROOT::Reflex::Scope & () const {
 //-------------------------------------------------------------------------------
-   return ScopeBase::operator Scope();
+   return ScopeBase::operator const Scope & ();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Class::operator ROOT::Reflex::Type () const {
+inline ROOT::Reflex::Class::operator const ROOT::Reflex::Type & () const {
 //-------------------------------------------------------------------------------
-   return TypeBase::operator Type();
+   return TypeBase::operator const Type & ();
 }
 
 
@@ -610,10 +633,10 @@ inline void ROOT::Reflex::Class::AddBase( const Base & b ) const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Base ROOT::Reflex::Class::BaseAt( size_t nth ) const {
+inline const ROOT::Reflex::Base & ROOT::Reflex::Class::BaseAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( nth < fBases.size() ) { return fBases[ nth ]; }
-   return Base();
+   return Dummy::Base();
 }
 
 
@@ -653,14 +676,14 @@ inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::Class::Base_REnd() cons
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Class::DataMemberAt( size_t nth ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Class::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMemberAt( nth );
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Class::DataMemberByName( const std::string & nam ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Class::DataMemberByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMemberByName( nam );
 }
@@ -702,21 +725,21 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Class::DataMember_REn
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Scope ROOT::Reflex::Class::DeclaringScope() const {
+inline const ROOT::Reflex::Scope & ROOT::Reflex::Class::DeclaringScope() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DeclaringScope();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Class::FunctionMemberAt( size_t nth ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Class::FunctionMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::FunctionMemberAt( nth );
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Class::FunctionMemberByName( const std::string & nam,
+inline const ROOT::Reflex::Member & ROOT::Reflex::Class::FunctionMemberByName( const std::string & nam,
                                                                        const Type & signature ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::FunctionMemberByName( nam, signature );
@@ -766,6 +789,27 @@ inline bool ROOT::Reflex::Class::IsAbstract() const {
 
 
 //-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Class::IsPrivate() const {
+//-------------------------------------------------------------------------------
+   return 0 != (fModifiers & PRIVATE);
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Class::IsProtected() const {
+//-------------------------------------------------------------------------------
+   return 0 != (fModifiers & PROTECTED);
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Class::IsPublic() const {
+//-------------------------------------------------------------------------------
+   return 0 != (fModifiers & PUBLIC);
+}
+
+
+//-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::Class::IsVirtual() const {
 //-------------------------------------------------------------------------------
    return 0 != (fModifiers & VIRTUAL);
@@ -773,15 +817,15 @@ inline bool ROOT::Reflex::Class::IsVirtual() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Class::MemberByName( const std::string & nam,
-                                                               const Type & signature ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Class::MemberByName( const std::string & nam,
+                                                                       const Type & signature ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::MemberByName( nam, signature );
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Class::MemberAt( size_t nth ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Class::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::MemberAt( nth );
 }
@@ -823,7 +867,7 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Class::Member_REnd() 
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::MemberTemplate ROOT::Reflex::Class::MemberTemplateAt( size_t nth ) const {
+inline const ROOT::Reflex::MemberTemplate & ROOT::Reflex::Class::MemberTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::MemberTemplateAt( nth );
 }
@@ -872,14 +916,14 @@ inline std::string ROOT::Reflex::Class::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::PropertyList ROOT::Reflex::Class::Properties() const {
+inline const ROOT::Reflex::PropertyList & ROOT::Reflex::Class::Properties() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::Properties();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Scope ROOT::Reflex::Class::SubScopeAt( size_t nth ) const {
+inline const ROOT::Reflex::Scope & ROOT::Reflex::Class::SubScopeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::SubScopeAt( nth );
 }
@@ -921,7 +965,7 @@ inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Class::SubScope_REnd()
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Class::SubTypeAt( size_t nth ) const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Class::SubTypeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::SubTypeAt( nth );
 }
@@ -963,7 +1007,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Class::SubType_REnd() c
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::TypeTemplate ROOT::Reflex::Class::SubTypeTemplateAt( size_t nth ) const {
+inline const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Class::SubTypeTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::SubTypeTemplateAt( nth );
 }

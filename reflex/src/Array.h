@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Array.h,v 1.9 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Array.h,v 1.10 2006/07/14 06:47:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -13,8 +13,8 @@
 #define ROOT_Reflex_Array
 
 // Include files
-#include "Reflex/TypeBase.h"
-#include "Reflex/Type.h"
+#include "Reflex/internal/TypeBase.h"
+#include "Reflex/internal/OwnedType.h"
 
 namespace ROOT {
    namespace Reflex {
@@ -60,7 +60,7 @@ namespace ROOT {
           * arrayType will return a pointer to the At of the array.
           * @return pointer to Type of MemberAt et. al.
           */
-         Type ToType() const;
+         const Type & ToType() const;
 
 
          /** static funtion that composes the At Name */
@@ -96,7 +96,7 @@ inline size_t ROOT::Reflex::Array::ArrayLength() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Array::ToType() const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Array::ToType() const {
 //-------------------------------------------------------------------------------
    return fArrayType;
 }

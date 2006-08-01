@@ -14,7 +14,8 @@ REFLEXDIRI   := $(REFLEXDIR)/inc
 ##### libReflex #####
 REFLEXAH     := $(wildcard $(MODDIRI)/Reflex/*.h)
 REFLEXBH     := $(wildcard $(MODDIRI)/Reflex/Builder/*.h)
-REFLEXH      := $(REFLEXAH) $(REFLEXBH)
+REFLEXIH     := $(wildcard $(MODDIRI)/Reflex/internal/*.h)
+REFLEXH      := $(REFLEXAH) $(REFLEXBH) $(REFLEXIH)
 REFLEXS      := $(wildcard $(MODDIRS)/*.cxx)
 REFLEXO      := $(REFLEXS:.cxx=.o)
 
@@ -97,6 +98,7 @@ RFLX_UNITTESTX = $(subst .cxx,,$(RFLX_UNITTESTS))
 include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
 		@(if [ ! -d "include/Reflex" ]; then    \
 		   mkdir -p include/Reflex/Builder;     \
+		   mkdir -p include/Reflex/internal;    \
 		fi)
 		cp $< $@
 
@@ -178,7 +180,7 @@ lib/libtest_%Rflx.$(SOEXT) : $(RFLX_TESTD)/%_rflx.o
 		$(CXX) $(OPT) $(CXXFLAGS) -c $< $(CXXOUT)$@
 
 $(RFLX_TESTLIBS1) : $(REFLEXDIRI)/Reflex/Reflex.h $(RFLX_TESTLIBD1)/selection.xml
-		cd $(RFLX_TESTD); $(RFLX_GENREFLEX_CMD) ../../include/Reflex/Reflex.h -s testDict1/selection.xml -I../../include
+		cd $(RFLX_TESTD); $(RFLX_GENREFLEX_CMD) testDict1/Reflex.h -s testDict1/selection.xml -I../../include
 
 $(RFLX_TESTLIBS2) : $(RFLX_TESTLIBD2)/Class2Dict.h $(RFLX_TESTLIBD2)/selection.xml
 		cd $(RFLX_TESTD); $(RFLX_GENREFLEX_CMD) testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include

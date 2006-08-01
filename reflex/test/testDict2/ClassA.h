@@ -45,6 +45,11 @@ struct Base {
   int i; 
   Base() : i(99) {}
   virtual ~Base(){} 
+   protected:
+   enum protectedEnum { PA, PB, PC };
+  private:
+   enum privateEnum {QA, QB, QC };
+
 }; 
 struct Left : virtual Base {}; 
 struct Right : virtual Base {}; 

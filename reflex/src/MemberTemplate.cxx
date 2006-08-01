@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: MemberTemplate.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -17,11 +17,11 @@
 #include "Reflex/Member.h"
                                               
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::MemberTemplate::TemplateInstanceAt( size_t nth ) const {
+const ROOT::Reflex::Member & ROOT::Reflex::MemberTemplate::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template instance of this family.
    if ( * this ) return fMemberTemplateImpl->TemplateInstanceAt( nth );
-   return Member();
+   return Dummy::Member();
 }
 
 

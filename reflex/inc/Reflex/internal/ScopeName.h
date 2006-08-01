@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: ScopeName.h,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.h,v 1.7 2006/07/05 07:09:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -47,7 +47,15 @@ namespace ROOT {
           * @param  Name fully qualified Name of At
           * @return pointer to At or 0 if none is found
           */
-         static Scope ByName( const std::string & name );
+         static const Scope & ByName( const std::string & name );
+
+
+         /**
+          * DeleteScope will call the destructor of the ScopeBase this ScopeName is
+          * pointing to and aremove it's information from the data structures. The
+          * ScopeName information will remain.
+          */
+         void DeleteScope() const;
 
 
          /**
@@ -68,7 +76,7 @@ namespace ROOT {
           * At will return the unqualified Scope object of this ScopeName
           * @return corresponding Scope
           */
-         Scope ThisScope() const;
+         const Scope & ThisScope() const;
 
 
          /**
@@ -77,7 +85,7 @@ namespace ROOT {
           * @param  nth At defined in the system
           * @return vector of all available scopes
           */
-         static Scope ScopeAt( size_t nth );
+         static const Scope & ScopeAt( size_t nth );
 
 
          /**
@@ -110,7 +118,13 @@ namespace ROOT {
           * @supplierCardinality 1
           * @clientCardinality 1
           */
-         ScopeBase * fScopeBase;
+         mutable
+            ScopeBase * fScopeBase;
+
+         /**
+          * This scope
+          */
+         Scope * fThisScope;
 
       }; // class ScopeName
    } // namespace Reflex

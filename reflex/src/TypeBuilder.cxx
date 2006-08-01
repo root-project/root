@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.cxx,v 1.10 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.cxx,v 1.11 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -16,7 +16,7 @@
 #include "Reflex/Builder/TypeBuilder.h"
 
 #include "Reflex/Type.h"
-#include "Reflex/TypeName.h"
+#include "Reflex/internal/TypeName.h"
 
 #include "Pointer.h"
 #include "Function.h"
@@ -108,14 +108,15 @@ ROOT::Reflex::Type ROOT::Reflex::ArrayBuilder( const Type & t,
 }
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::EnumTypeBuilder( const char * Name, 
+ROOT::Reflex::Type ROOT::Reflex::EnumTypeBuilder( const char * nam, 
                                                   const char * values,
-                                                  const std::type_info & ti ) {
+                                                  const std::type_info & ti,
+                                                  unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
 // Construct an enum type.
-   Type ret = Type::ByName(Name);
+   Type ret = Type::ByName(nam);
    if ( ret ) return ret;
-   Enum * e = new Enum(Name, ti);
+   Enum * e = new Enum(nam, ti, modifiers );
 
    std::vector<std::string> valVec;
    Tools::StringSplit(valVec, values, ";");
@@ -132,13 +133,13 @@ ROOT::Reflex::Type ROOT::Reflex::EnumTypeBuilder( const char * Name,
 }
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypedefTypeBuilder(const char * Name, 
+ROOT::Reflex::Type ROOT::Reflex::TypedefTypeBuilder(const char * nam, 
                                                     const Type & t) {
 //-------------------------------------------------------------------------------
 // Construct a typedef type.
-   Type ret = Type::ByName(Name);
+   Type ret = Type::ByName(nam);
    if ( ret ) return ret;
-   else       return (new Typedef( Name , t ))->ThisType();        
+   else       return (new Typedef( nam , t ))->ThisType();        
 }
 
 

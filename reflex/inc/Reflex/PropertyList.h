@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: PropertyList.h,v 1.7 2006/06/26 17:21:04 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyList.h,v 1.8 2006/07/05 07:09:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -32,8 +32,10 @@ namespace ROOT {
        */
       class RFLX_API PropertyList {
 
+         friend class OwnedPropertyList;
          friend std::ostream & operator << ( std::ostream & s,
                                              const PropertyList & p );
+
       public:
 
          /** default constructor */
@@ -61,7 +63,7 @@ namespace ROOT {
           * @param value the value of the property (as any object)
           */
          void AddProperty( const std::string & key,
-                           const Any & value );
+                           const Any & value ) const;
 
 
          /**
@@ -70,20 +72,20 @@ namespace ROOT {
           * @param value the value of the property (as any object)
           */
          void AddProperty( const std::string & key,
-                           const char * value );
+                           const char * value ) const;
 
 
          /**
           * ClearProperties will remove all properties from the list
           */
-         void ClearProperties();
+         void ClearProperties() const;
 
       
          /**
           * RemoveProperty will remove a key value pair to the property lsit
           * @param key the key of the property
           */
-         void RemoveProperty( const std::string & key );
+         void RemoveProperty( const std::string & key ) const;
 
 
          /**
@@ -145,7 +147,7 @@ namespace ROOT {
    } //namespace Reflex
 } //namespace ROOT
 
-#include "Reflex/PropertyListImpl.h"
+#include "Reflex/internal/PropertyListImpl.h"
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::PropertyList::operator bool () const {
@@ -174,7 +176,7 @@ inline ROOT::Reflex::PropertyList::~PropertyList() {
 
 //-------------------------------------------------------------------------------
 inline void ROOT::Reflex::PropertyList::AddProperty( const std::string & key,
-                                                     const Any & value ) {
+                                                     const Any & value ) const {
 //-------------------------------------------------------------------------------
    if ( fPropertyListImpl ) fPropertyListImpl->AddProperty( key, value );
 }
@@ -182,14 +184,14 @@ inline void ROOT::Reflex::PropertyList::AddProperty( const std::string & key,
 
 //-------------------------------------------------------------------------------
 inline void ROOT::Reflex::PropertyList::AddProperty( const std::string & key,
-                                                     const char* value ) {
+                                                     const char* value ) const {
 //-------------------------------------------------------------------------------
    if ( fPropertyListImpl ) fPropertyListImpl->AddProperty( key, value );
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::PropertyList::ClearProperties() {
+inline void ROOT::Reflex::PropertyList::ClearProperties() const {
 //-------------------------------------------------------------------------------
    if ( fPropertyListImpl ) fPropertyListImpl->ClearProperties();
 }
@@ -229,7 +231,7 @@ inline std::string ROOT::Reflex::PropertyList::PropertyKeys() const {
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::PropertyList::RemoveProperty( const std::string & key ) {
+inline void ROOT::Reflex::PropertyList::RemoveProperty( const std::string & key ) const {
 //-------------------------------------------------------------------------------
    if ( fPropertyListImpl ) fPropertyListImpl->RemoveProperty( key );
 }

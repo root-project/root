@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Base.h,v 1.9 2006/04/12 10:21:11 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.10 2006/07/05 07:09:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -28,9 +28,10 @@ namespace ROOT {
        * @ingroup Ref
        */
       class RFLX_API Base {
-  
-         friend class Class;
 
+         friend class Class;
+         friend class OwnedBase;
+  
       public:
       
          /** default constructor */
@@ -110,14 +111,14 @@ namespace ROOT {
           * @param mod accepts FINAL to go to the final type for a typedef
           * @return type of base class
           */
-         Type ToType( unsigned int mod = 0 ) const;
+         const Type & ToType() const;
 
       
          /** 
           * ToScope will return this base classes scope
           * @return this base class as scope
           */
-         Scope ToScope() const;
+         const Scope & ToScope() const;
 
       private:
 
@@ -219,16 +220,16 @@ inline ROOT::Reflex::OffsetFunction ROOT::Reflex::Base::OffsetFP() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Base::ToType( unsigned int /* mod */ ) const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Base::ToType() const {
 //-------------------------------------------------------------------------------
    return fBaseType;
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Scope ROOT::Reflex::Base::ToScope() const {
+inline const ROOT::Reflex::Scope & ROOT::Reflex::Base::ToScope() const {
 //-------------------------------------------------------------------------------
-   return (Scope)fBaseType;
+   return (const Scope &)fBaseType;
 }
 
 #endif // ROOT_Reflex_Base

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: MemberTemplateImpl.cxx,v 1.11 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.11 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -13,8 +13,8 @@
 #define REFLEX_BUILD
 #endif
 
-#include "Reflex/MemberTemplateImpl.h"
-#include "Reflex/Member.h"
+#include "Reflex/internal/MemberTemplateImpl.h"
+#include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::MemberTemplateImpl::MemberTemplateImpl( const std::string & templateName,
@@ -37,6 +37,7 @@ ROOT::Reflex::MemberTemplateImpl::~MemberTemplateImpl() {
 // Destructor.
 }
 
+
 //-------------------------------------------------------------------------------
 bool ROOT::Reflex::MemberTemplateImpl::operator == ( const MemberTemplateImpl & mt ) const {
 //-------------------------------------------------------------------------------
@@ -47,11 +48,11 @@ bool ROOT::Reflex::MemberTemplateImpl::operator == ( const MemberTemplateImpl & 
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::MemberTemplateImpl::TemplateInstanceAt( size_t nth ) const {
+const ROOT::Reflex::Member & ROOT::Reflex::MemberTemplateImpl::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template instance of this template family.
-   if ( nth < fTemplateInstances.size() ) return Member(fTemplateInstances[ nth ]);
-   return Member();
+   if ( nth < fTemplateInstances.size() ) return fTemplateInstances[ nth ];
+   return Dummy::Member();
 }
 
 

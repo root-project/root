@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: TypeTemplate.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplate.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,7 +15,6 @@
 
 #include "Reflex/TypeTemplate.h"
 #include "Reflex/Type.h"
-#include "Reflex/Member.h"
                                                              
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::TypeTemplate::AddTemplateInstance( const Type & templateInstance ) const {
@@ -25,11 +24,11 @@ void ROOT::Reflex::TypeTemplate::AddTemplateInstance( const Type & templateInsta
 }
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeTemplate::TemplateInstanceAt( size_t nth ) const {
+const ROOT::Reflex::Type & ROOT::Reflex::TypeTemplate::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template instance of this family.
    if ( * this ) return fTypeTemplateImpl->TemplateInstanceAt( nth );
-   return Type();
+   return Dummy::Type();
 }
 
 

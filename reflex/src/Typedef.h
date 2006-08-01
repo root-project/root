@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.10 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.11 2006/07/14 06:47:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -13,8 +13,8 @@
 #define ROOT_Reflex_Typedef
 
 // Include files
-#include "Reflex/TypeBase.h"
-#include "Reflex/Type.h"
+#include "Reflex/internal/TypeBase.h"
+#include "Reflex/internal/OwnedType.h"
 
 namespace ROOT {
    namespace Reflex {
@@ -52,7 +52,7 @@ namespace ROOT {
           * @param  nth nth BaseAt class
           * @return pointer to BaseAt class information
           */
-         virtual Base BaseAt( size_t nth ) const;
+         virtual const Base & BaseAt( size_t nth ) const;
 
 
          /**
@@ -82,7 +82,7 @@ namespace ROOT {
           * @param  nth data MemberAt
           * @return pointer to data MemberAt
           */
-         virtual Member DataMemberAt( size_t nth ) const;
+         virtual const Member & DataMemberAt( size_t nth ) const;
 
 
          /**
@@ -90,7 +90,7 @@ namespace ROOT {
           * @param  Name of data MemberAt
           * @return data MemberAt
           */
-         virtual Member DataMemberByName( const std::string & Name ) const;
+         virtual const Member & DataMemberByName( const std::string & Name ) const;
 
 
          /**
@@ -122,7 +122,7 @@ namespace ROOT {
           * @param  mem is the memory AddressGet of the object to checked
           * @return the actual class of the object
           */
-         virtual Type DynamicType( const Object & obj ) const;
+         virtual const Type & DynamicType( const Object & obj ) const;
 
 
          /**
@@ -130,7 +130,7 @@ namespace ROOT {
           * @param  nth function MemberAt
           * @return pointer to function MemberAt
           */
-         virtual Member FunctionMemberAt( size_t nth ) const;
+         virtual const Member & FunctionMemberAt( size_t nth ) const;
 
 
          /**
@@ -140,8 +140,8 @@ namespace ROOT {
           * @param  signature of the MemberAt function 
           * @return function MemberAt
           */
-         virtual Member FunctionMemberByName( const std::string & Name,
-                                              const Type & signature = Type() ) const;
+         virtual const Member & FunctionMemberByName( const std::string & Name,
+                                                      const Type & signature = Type() ) const;
 
 
          /**
@@ -193,8 +193,8 @@ namespace ROOT {
           * @param  MemberAt Name
           * @return pointer to MemberAt
           */
-         virtual Member MemberByName( const std::string & Name,
-                                      const Type & signature ) const;
+         virtual const Member & MemberByName( const std::string & Name,
+                                              const Type & signature ) const;
 
 
          /**
@@ -202,7 +202,7 @@ namespace ROOT {
           * @param  nth MemberAt
           * @return pointer to nth MemberAt
           */
-         virtual Member MemberAt( size_t nth ) const;
+         virtual const Member & MemberAt( size_t nth ) const;
 
 
          /**
@@ -223,7 +223,7 @@ namespace ROOT {
           * @param nth MemberAt template
           * @return nth MemberAt template
           */
-         virtual MemberTemplate MemberTemplateAt( size_t nth ) const;
+         virtual const MemberTemplate & MemberTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -258,7 +258,7 @@ namespace ROOT {
           * @param  nth sub-At
           * @return pointer to nth sub-At
           */
-         virtual Scope SubScopeAt( size_t nth ) const;
+         virtual const Scope & SubScopeAt( size_t nth ) const;
 
 
          /**
@@ -279,7 +279,7 @@ namespace ROOT {
           * @param  nth sub-At
           * @return pointer to nth sub-At
           */
-         virtual Type SubTypeAt( size_t nth ) const;
+         virtual const Type & SubTypeAt( size_t nth ) const;
 
 
          /**
@@ -300,7 +300,7 @@ namespace ROOT {
           * @param  nth nth template argument
           * @return pointer to nth template argument
           */
-         virtual Type TemplateArgumentAt( size_t nth ) const;
+         virtual const Type & TemplateArgumentAt( size_t nth ) const;
 
 
          /**
@@ -320,7 +320,7 @@ namespace ROOT {
           * TemplateFamily returns the corresponding TypeTemplate if any
           * @return corresponding TypeTemplate
           */
-         virtual TypeTemplate TemplateFamily() const;
+         virtual const TypeTemplate & TemplateFamily() const;
 
 
          /** 
@@ -328,7 +328,7 @@ namespace ROOT {
           * @param nth At template
           * @return nth At template
           */
-         virtual TypeTemplate SubTypeTemplateAt( size_t nth ) const;
+         virtual const TypeTemplate & SubTypeTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -355,7 +355,7 @@ namespace ROOT {
           * typedefType will return a pointer to the At of the typedef.
           * @return pointer to Type of MemberAt et. al.
           */
-         virtual Type ToType() const;
+         virtual const Type & ToType() const;
 
       private:  
 
@@ -386,10 +386,10 @@ namespace ROOT {
 #include "Reflex/TypeTemplate.h"
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Base ROOT::Reflex::Typedef::BaseAt( size_t nth ) const {
+inline const ROOT::Reflex::Base & ROOT::Reflex::Typedef::BaseAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.BaseAt( nth );
-   return Base();  
+   return Dummy::Base();  
 }
 
 
@@ -438,23 +438,23 @@ inline ROOT::Reflex::Object ROOT::Reflex::Typedef::CastObject( const Type & to,
                                                                const Object & obj ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.CastObject( to, obj );
-   return Object();
+   return Dummy::Object();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Typedef::DataMemberAt( size_t nth ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.DataMemberAt( nth );
-   return Member();
+   return Dummy::Member();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Typedef::DataMemberByName( const std::string & name ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::DataMemberByName( const std::string & name ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.DataMemberByName( name );
-   return Member();
+   return Dummy::Member();
 }
 
 
@@ -470,7 +470,7 @@ inline size_t ROOT::Reflex::Typedef::DataMemberSize() const {
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Typedef::DataMember_Begin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.DataMember_Begin();
-   return Member_Iterator();
+   return Dummy::MemberCont().begin();
 }
 
 
@@ -478,7 +478,7 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Typedef::DataMember_Begin() c
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Typedef::DataMember_End() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.DataMember_End();
-   return Member_Iterator();
+   return Dummy::MemberCont().end();
 }
 
 
@@ -486,7 +486,7 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Typedef::DataMember_End() con
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Typedef::DataMember_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.DataMember_RBegin();
-   return Reverse_Member_Iterator();
+   return Dummy::MemberCont().rbegin();
 }
 
 
@@ -494,7 +494,7 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Typedef::DataMember_R
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Typedef::DataMember_REnd() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.DataMember_REnd();
-   return Reverse_Member_Iterator();
+   return Dummy::MemberCont().rend();
 }
 
 
@@ -507,27 +507,27 @@ inline void ROOT::Reflex::Typedef::Destruct( void * instance,
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Typedef::DynamicType( const Object & obj ) const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Typedef::DynamicType( const Object & obj ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.DynamicType( obj );
-   return Type();
+   return Dummy::Type();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Typedef::FunctionMemberAt( size_t nth ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::FunctionMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.FunctionMemberAt( nth );
-   return Member();
+   return Dummy::Member();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Typedef::FunctionMemberByName( const std::string & name,
-                                                                         const Type & signature ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::FunctionMemberByName( const std::string & name,
+                                                                                 const Type & signature ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.FunctionMemberByName( name, signature );
-   return Member();
+   return Dummy::Member();
 }
 
 
@@ -543,7 +543,7 @@ inline size_t ROOT::Reflex::Typedef::FunctionMemberSize() const {
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Typedef::FunctionMember_Begin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.FunctionMember_Begin();
-   return Member_Iterator();
+   return Dummy::MemberCont().begin();
 }
 
 
@@ -551,7 +551,7 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Typedef::FunctionMember_Begin
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Typedef::FunctionMember_End() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.FunctionMember_End();
-   return Member_Iterator();
+   return Dummy::MemberCont().end();
 }
 
 
@@ -559,7 +559,7 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Typedef::FunctionMember_End()
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Typedef::FunctionMember_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.FunctionMember_RBegin();
-   return Reverse_Member_Iterator();
+   return Dummy::MemberCont().rbegin();
 }
 
 
@@ -567,7 +567,7 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Typedef::FunctionMemb
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Typedef::FunctionMember_REnd() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.FunctionMember_REnd();
-   return Reverse_Member_Iterator();
+   return Dummy::MemberCont().rend();
 }
 
 
@@ -604,19 +604,19 @@ inline bool ROOT::Reflex::Typedef::IsVirtual() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Typedef::MemberByName( const std::string & name,
-                                                                 const Type & signature ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::MemberByName( const std::string & name,
+                                                                         const Type & signature ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.MemberByName( name, signature );
-   return Member();
+   return Dummy::Member();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Typedef::MemberAt( size_t nth ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.MemberAt( nth );
-   return Member();
+   return Dummy::Member();
 }
 
 
@@ -632,7 +632,7 @@ inline size_t ROOT::Reflex::Typedef::MemberSize() const {
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Typedef::Member_Begin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.Member_Begin();
-   return Member_Iterator();
+   return Dummy::MemberCont().begin();
 }
 
 
@@ -640,7 +640,7 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Typedef::Member_Begin() const
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Typedef::Member_End() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.Member_End();
-   return Member_Iterator();
+   return Dummy::MemberCont().end();
 }
 
 
@@ -648,7 +648,7 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Typedef::Member_End() const {
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Typedef::Member_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.Member_RBegin();
-   return Reverse_Member_Iterator();
+   return Dummy::MemberCont().rbegin();
 }
 
 
@@ -656,15 +656,15 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Typedef::Member_RBegi
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Typedef::Member_REnd() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.Member_REnd();
-   return Reverse_Member_Iterator();  
+   return Dummy::MemberCont().rend();  
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::MemberTemplate ROOT::Reflex::Typedef::MemberTemplateAt( size_t nth ) const {
+inline const ROOT::Reflex::MemberTemplate & ROOT::Reflex::Typedef::MemberTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.MemberTemplateAt( nth );
-   return MemberTemplate();
+   return Dummy::MemberTemplate();
 }
 
 
@@ -680,7 +680,7 @@ inline size_t ROOT::Reflex::Typedef::MemberTemplateSize() const {
 inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::Typedef::MemberTemplate_Begin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.MemberTemplate_Begin();
-   return MemberTemplate_Iterator();
+   return Dummy::MemberTemplateCont().begin();
 }
 
 
@@ -688,7 +688,7 @@ inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::Typedef::MemberTempla
 inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::Typedef::MemberTemplate_End() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.MemberTemplate_End();
-   return MemberTemplate_Iterator();
+   return Dummy::MemberTemplateCont().end();
 }
 
 
@@ -696,7 +696,7 @@ inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::Typedef::MemberTempla
 inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::Typedef::MemberTemplate_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.MemberTemplate_RBegin();
-   return Reverse_MemberTemplate_Iterator();
+   return Dummy::MemberTemplateCont().rbegin();
 }
 
 
@@ -704,7 +704,7 @@ inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::Typedef::Memb
 inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::Typedef::MemberTemplate_REnd() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.MemberTemplate_REnd(); 
-   return Reverse_MemberTemplate_Iterator();
+   return Dummy::MemberTemplateCont().rend();
 }
 
 
@@ -712,7 +712,7 @@ inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::Typedef::Memb
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Typedef::FunctionParameter_Begin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardFunction()) return fTypedefType.FunctionParameter_Begin();
-   return Type_Iterator();
+   return Dummy::TypeCont().begin();
 }
 
 
@@ -720,7 +720,7 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Typedef::FunctionParameter_Begi
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Typedef::FunctionParameter_End() const {
 //-------------------------------------------------------------------------------
    if ( ForwardFunction()) return fTypedefType.FunctionParameter_End();
-   return Type_Iterator();
+   return Dummy::TypeCont().end();
 }
 
 
@@ -728,7 +728,7 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Typedef::FunctionParameter_End(
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::FunctionParameter_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardFunction()) return fTypedefType.FunctionParameter_RBegin();
-   return Reverse_Type_Iterator();
+   return Dummy::TypeCont().rbegin();
 }
 
 
@@ -736,7 +736,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::FunctionParame
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::FunctionParameter_REnd() const {
 //-------------------------------------------------------------------------------
    if ( ForwardFunction()) return fTypedefType.FunctionParameter_REnd();
-   return Reverse_Type_Iterator();
+   return Dummy::TypeCont().rend();
 }
 
 
@@ -749,10 +749,10 @@ inline std::string ROOT::Reflex::Typedef::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Scope ROOT::Reflex::Typedef::SubScopeAt( size_t nth ) const {
+inline const ROOT::Reflex::Scope & ROOT::Reflex::Typedef::SubScopeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubScopeAt( nth );
-   return Scope();
+   return Dummy::Scope();
 }
 
 
@@ -768,7 +768,7 @@ inline size_t ROOT::Reflex::Typedef::SubScopeSize() const {
 inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Typedef::SubScope_Begin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubScope_Begin();
-   return Scope_Iterator();
+   return Dummy::ScopeCont().begin();
 }
 
 
@@ -776,7 +776,7 @@ inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Typedef::SubScope_Begin() cons
 inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Typedef::SubScope_End() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubScope_End();
-   return Scope_Iterator();
+   return Dummy::ScopeCont().end();
 }
 
 
@@ -784,7 +784,7 @@ inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::Typedef::SubScope_End() const 
 inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Typedef::SubScope_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubScope_RBegin();
-   return Reverse_Scope_Iterator();
+   return Dummy::ScopeCont().rbegin();
 }
 
 
@@ -792,15 +792,15 @@ inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Typedef::SubScope_RBeg
 inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Typedef::SubScope_REnd() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubScope_REnd();
-   return Reverse_Scope_Iterator();
+   return Dummy::ScopeCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Typedef::SubTypeAt( size_t nth ) const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Typedef::SubTypeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubTypeAt( nth );
-   return Type();
+   return Dummy::Type();
 }
 
 
@@ -816,7 +816,7 @@ inline size_t ROOT::Reflex::Typedef::SubTypeSize() const {
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Typedef::SubType_Begin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubType_Begin();
-   return Type_Iterator();
+   return Dummy::TypeCont().begin();
 }
 
 
@@ -824,7 +824,7 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Typedef::SubType_Begin() const 
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Typedef::SubType_End() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubType_End();
-   return Type_Iterator();
+   return Dummy::TypeCont().end();
 }
 
 
@@ -832,7 +832,7 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Typedef::SubType_End() const {
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::SubType_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubType_RBegin();
-   return Reverse_Type_Iterator();
+   return Dummy::TypeCont().rbegin();
 }
 
 
@@ -840,15 +840,15 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::SubType_RBegin
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::SubType_REnd() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubType_REnd();
-   return Reverse_Type_Iterator();
+   return Dummy::TypeCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Typedef::TemplateArgumentAt( size_t nth ) const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Typedef::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardTemplate()) return fTypedefType.TemplateArgumentAt( nth );
-   return Type();
+   return Dummy::Type();
 }
 
 
@@ -864,7 +864,7 @@ inline size_t ROOT::Reflex::Typedef::TemplateArgumentSize() const {
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Typedef::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardTemplate()) return fTypedefType.TemplateArgument_Begin();
-   return Type_Iterator();
+   return Dummy::TypeCont().begin();
 }
 
 
@@ -872,7 +872,7 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Typedef::TemplateArgument_Begin
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Typedef::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
    if ( ForwardTemplate()) return fTypedefType.TemplateArgument_End();
-   return Type_Iterator();
+   return Dummy::TypeCont().end();
 }
 
 
@@ -880,7 +880,7 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Typedef::TemplateArgument_End()
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardTemplate()) return fTypedefType.TemplateArgument_RBegin();
-   return Reverse_Type_Iterator();
+   return Dummy::TypeCont().rbegin();
 }
 
 
@@ -888,23 +888,23 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::TemplateArgume
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
    if ( ForwardTemplate()) return fTypedefType.TemplateArgument_REnd();
-   return Reverse_Type_Iterator();
+   return Dummy::TypeCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::TypeTemplate ROOT::Reflex::Typedef::TemplateFamily() const {
+inline const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Typedef::TemplateFamily() const {
 //-------------------------------------------------------------------------------
    if ( ForwardTemplate()) return fTypedefType.TemplateFamily();
-   return TypeTemplate();
+   return Dummy::TypeTemplate();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::TypeTemplate ROOT::Reflex::Typedef::SubTypeTemplateAt( size_t nth ) const {
+inline const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Typedef::SubTypeTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubTypeTemplateAt( nth );
-   return TypeTemplate();
+   return Dummy::TypeTemplate();
 }
 
 
@@ -920,7 +920,7 @@ inline size_t ROOT::Reflex::Typedef::SubTypeTemplateSize() const {
 inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::Typedef::SubTypeTemplate_Begin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubTypeTemplate_Begin();
-   return TypeTemplate_Iterator();
+   return Dummy::TypeTemplateCont().begin();
 }
 
 
@@ -928,7 +928,7 @@ inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::Typedef::SubTypeTemplat
 inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::Typedef::SubTypeTemplate_End() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubTypeTemplate_End();
-   return TypeTemplate_Iterator();
+   return Dummy::TypeTemplateCont().end();
 }
 
 
@@ -936,7 +936,7 @@ inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::Typedef::SubTypeTemplat
 inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::Typedef::SubTypeTemplate_RBegin() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubTypeTemplate_RBegin();
-   return Reverse_TypeTemplate_Iterator();
+   return Dummy::TypeTemplateCont().rbegin();
 }
 
 
@@ -944,7 +944,7 @@ inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::Typedef::SubTyp
 inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::Typedef::SubTypeTemplate_REnd() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubTypeTemplate_REnd();
-   return Reverse_TypeTemplate_Iterator();
+   return Dummy::TypeTemplateCont().rend();
 }
 
 
@@ -960,7 +960,7 @@ inline const std::type_info & ROOT::Reflex::Typedef::TypeInfo() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Typedef::ToType() const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Typedef::ToType() const {
 //-------------------------------------------------------------------------------
    return fTypedefType;
 }

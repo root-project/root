@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.15 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.16 2006/07/14 06:47:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -49,6 +49,8 @@ namespace ROOT {
        * @ingroup Ref
        */
       class RFLX_API Type {
+
+         friend class OwnedType;
 
       public:
 
@@ -104,7 +106,7 @@ namespace ROOT {
           * operator Scope will return the corresponding scope of this type if
           * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
           */                                       
-         operator Scope() const;
+         operator const Scope &() const;
 
 
          /**
@@ -133,7 +135,7 @@ namespace ROOT {
           * @param  nth base class
           * @return pointer to base class information
           */
-         Base BaseAt( size_t nth ) const;
+         const Base & BaseAt( size_t nth ) const;
 
 
          /**
@@ -177,7 +179,7 @@ namespace ROOT {
           * @param  key fully qualified name of the type as string
           * @return reflection type information
           */
-         static Type ByName( const std::string & key );
+         static const Type & ByName( const std::string & key );
       
       
          /**
@@ -186,7 +188,7 @@ namespace ROOT {
           * @param  tid std::type_info to look for
           * @return reflection information of type
           */
-         static Type ByTypeInfo( const std::type_info & tid );
+         static const Type & ByTypeInfo( const std::type_info & tid );
 
 
          /**
@@ -221,7 +223,7 @@ namespace ROOT {
           * @param  nth the nth data member
           * @return nth data member 
           */
-         Member DataMemberAt( size_t nth ) const;
+         const Member & DataMemberAt( size_t nth ) const;
 
 
          /**
@@ -229,7 +231,7 @@ namespace ROOT {
           * @param  name of data member
           * @return data member
           */
-         Member DataMemberByName( const std::string & nam ) const;
+         const Member & DataMemberByName( const std::string & nam ) const;
 
 
          /**
@@ -278,7 +280,7 @@ namespace ROOT {
           * DeclaringScope will return the declaring socpe of this type
           * @return declaring scope of this type
           */
-         Scope DeclaringScope() const;
+         const Scope & DeclaringScope() const;
 
 
          /**
@@ -297,14 +299,14 @@ namespace ROOT {
           * @param  mem is the memory address of the object to checked
           * @return the actual class of the object
           */
-         Type DynamicType( const Object & obj ) const;
+         const Type & DynamicType( const Object & obj ) const;
 
          
          /**
           * FinalType will return the type without typedefs 
           * @return type with all typedef info removed
           */
-         Type FinalType() const;
+         const Type & FinalType() const;
 
 
          /**
@@ -312,7 +314,7 @@ namespace ROOT {
           * @param  nth function member
           * @return reflection information of nth function member
           */
-         Member FunctionMemberAt( size_t nth ) const;
+         const Member & FunctionMemberAt( size_t nth ) const;
 
 
          /**
@@ -322,8 +324,8 @@ namespace ROOT {
           * @param  signature of the member function 
           * @return reflection information of the function member
           */
-         Member FunctionMemberByName( const std::string & nam,
-                                      const Type & signature = Type(0,0) ) const;
+         const Member & FunctionMemberByName( const std::string & nam,
+                                              const Type & signature = Type(0,0) ) const;
 
 
          /**
@@ -367,7 +369,7 @@ namespace ROOT {
           * @param  nth function parameter
           * @return reflection information of nth function parameter
           */
-         Type FunctionParameterAt( size_t nth ) const;
+         const Type & FunctionParameterAt( size_t nth ) const;
 
 
          /**
@@ -493,6 +495,27 @@ namespace ROOT {
 
 
          /** 
+          * IsPrivate will check if the scope access is private
+          * @return true if scope access is private
+          */
+         bool IsPrivate() const;
+
+
+         /** 
+          * IsProtected will check if the scope access is protected
+          * @return true if scope access is protected
+          */
+         bool IsProtected() const;
+
+
+         /** 
+          * IsPublic will check if the scope access is public
+          * @return true if scope access is public
+          */
+         bool IsPublic() const;
+
+
+         /** 
           * IsPointer returns true if the type represents a pointer
           * @return true if type represents a pointer
           */
@@ -567,7 +590,7 @@ namespace ROOT {
           * @param  nth member
           * @return reflection information nth member
           */
-         Member MemberAt( size_t nth ) const;
+         const Member & MemberAt( size_t nth ) const;
 
 
          /**
@@ -576,8 +599,8 @@ namespace ROOT {
           * @param  signature of the (function) member 
           * @return reflection information of the member
           */
-         Member MemberByName( const std::string & nam,
-                              const Type & signature = Type(0,0)) const;
+         const Member & MemberByName( const std::string & nam,
+                                      const Type & signature = Type(0,0)) const;
 
 
          /**
@@ -620,7 +643,7 @@ namespace ROOT {
           * @param nth member template
           * @return nth member template
           */
-         MemberTemplate MemberTemplateAt( size_t nth ) const;
+         const MemberTemplate & MemberTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -680,14 +703,14 @@ namespace ROOT {
           * PointerToMemberScope will return the scope of the pointer to member type
           * @return scope of the pointer to member type
           */
-         Scope PointerToMemberScope() const;
+         const Scope & PointerToMemberScope() const;
 
 
          /**
           * Properties will return a PropertyList attached to this item
           * @return PropertyList of this type
           */
-         PropertyList Properties() const;
+         const PropertyList & Properties() const;
 
 
          /**
@@ -695,14 +718,14 @@ namespace ROOT {
           * of pointers, arrays, typedefs
           * @return the raw type representation
           */
-         Type RawType() const;
+         const Type & RawType() const;
 
 
          /**
           * ReturnType will return the type of the return type
           * @return reflection information of the return type
           */
-         Type ReturnType() const;
+         const Type & ReturnType() const;
       
 
          /**
@@ -717,7 +740,7 @@ namespace ROOT {
           * @param  nth sub scope
           * @return reflection information of nth sub scope
           */
-         Scope SubScopeAt( size_t nth ) const;
+         const Scope & SubScopeAt( size_t nth ) const;
 
 
          /**
@@ -760,7 +783,7 @@ namespace ROOT {
           * @param  nth sub type
           * @return reflection information of nth sub type
           */
-         Type SubTypeAt( size_t nth ) const;
+         const Type & SubTypeAt( size_t nth ) const;
 
 
          /**
@@ -803,7 +826,7 @@ namespace ROOT {
           * @param nth type template
           * @return nth type template
           */
-         TypeTemplate SubTypeTemplateAt( size_t nth ) const;
+         const TypeTemplate & SubTypeTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -846,7 +869,7 @@ namespace ROOT {
           * @param  nth nth template argument
           * @return reflection information of nth template argument
           */
-         Type TemplateArgumentAt( size_t nth ) const;
+         const Type & TemplateArgumentAt( size_t nth ) const;
 
 
          /**
@@ -888,14 +911,14 @@ namespace ROOT {
           * TemplateFamily returns the corresponding TypeTemplate if any
           * @return corresponding TypeTemplate
           */
-         TypeTemplate TemplateFamily() const;
+         const TypeTemplate & TemplateFamily() const;
 
 
          /**
           * ToType will return an underlying type if possible (e.g. typedef, pointer..)
           * @return reflection information of underlying type
           */
-         Type ToType() const;
+         const Type & ToType() const;
 
 
          /**
@@ -903,7 +926,7 @@ namespace ROOT {
           * @param  nth number of type to return
           * @return reflection information of nth type in the system
           */
-         static Type TypeAt( size_t nth );
+         static const Type & TypeAt( size_t nth );
 
 
          /**
@@ -1110,8 +1133,8 @@ namespace ROOT {
    } //namespace Reflex
 } // namespace ROOT
 
-#include "Reflex/TypeName.h"
-#include "Reflex/TypeBase.h"
+#include "Reflex/internal/TypeName.h"
+#include "Reflex/internal/TypeBase.h"
 #include "Reflex/PropertyList.h"
 
 //-------------------------------------------------------------------------------
@@ -1279,10 +1302,10 @@ inline void ROOT::Reflex::Type::Deallocate( void * instance ) const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Scope ROOT::Reflex::Type::DeclaringScope() const {
+inline const ROOT::Reflex::Scope & ROOT::Reflex::Type::DeclaringScope() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeName->fTypeBase->DeclaringScope();
-   return Scope();
+   return Dummy::Scope();
 }
 
 
@@ -1436,6 +1459,30 @@ inline bool ROOT::Reflex::Type::IsPointerToMember() const {
 
 
 //-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Type::IsPrivate() const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fTypeName->fTypeBase->IsPrivate();
+   return false;
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Type::IsProtected() const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fTypeName->fTypeBase->IsProtected();
+   return false;
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Type::IsPublic() const {
+//-------------------------------------------------------------------------------
+   if ( * this ) return fTypeName->fTypeBase->IsPublic();
+   return false;
+}
+
+
+//-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::Type::IsReference() const {
 //-------------------------------------------------------------------------------
    return 0 != ( fModifiers & REFERENCE );
@@ -1505,10 +1552,10 @@ inline size_t ROOT::Reflex::Type::ArrayLength() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Type::FinalType() const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Type::FinalType() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeName->fTypeBase->FinalType();
-   return Type();
+   return Dummy::Type();
 }
 
 
@@ -1601,10 +1648,10 @@ inline const char * ROOT::Reflex::Type::Name_c_str() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Type::FunctionParameterAt( size_t nth ) const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Type::FunctionParameterAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeName->fTypeBase->FunctionParameterAt( nth );
-   return Type();
+   return Dummy::Type();
 }
 
 
@@ -1649,26 +1696,26 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Type::FunctionParameter
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::PropertyList ROOT::Reflex::Type::Properties() const {
+inline const ROOT::Reflex::PropertyList & ROOT::Reflex::Type::Properties() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeName->fTypeBase->Properties();
-   return PropertyList();
+   return Dummy::PropertyList();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Type::RawType() const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Type::RawType() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeName->fTypeBase->RawType();
-   return Type();
+   return Dummy::Type();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Type::ReturnType() const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Type::ReturnType() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeName->fTypeBase->ReturnType();
-   return Type();
+   return Dummy::Type();
 }
 
 
@@ -1793,10 +1840,10 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Type::TemplateArgument_
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Type::ToType() const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Type::ToType() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeName->fTypeBase->ToType();
-   return Type();
+   return Dummy::Type();
 }
 
 
@@ -1900,10 +1947,10 @@ inline void ROOT::Reflex::Type::UpdateMembers() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Type::TemplateArgumentAt( size_t nth ) const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::Type::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeName->fTypeBase->TemplateArgumentAt( nth );
-   return Type();
+   return Dummy::Type();
 }
 
 
@@ -1916,10 +1963,10 @@ inline size_t ROOT::Reflex::Type::TemplateArgumentSize() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::TypeTemplate ROOT::Reflex::Type::TemplateFamily() const {
+inline const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Type::TemplateFamily() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fTypeName->fTypeBase->TemplateFamily();
-   return TypeTemplate();
+   return Dummy::TypeTemplate();
 }
 
 

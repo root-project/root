@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: ClassBuilder.h,v 1.7 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.h,v 1.8 2006/07/05 07:09:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -13,9 +13,11 @@
 #define ROOT_Reflex_ClassBuilder
 
 // Include files
-#include "Reflex/Reflex.h"
+#include "Reflex/Kernel.h"
 #include "Reflex/Tools.h"
 #include "Reflex/Builder/TypeBuilder.h"
+#include "Reflex/internal/OwnedMember.h"
+#include "Reflex/Callback.h"
 
 namespace ROOT {
    namespace Reflex {
@@ -93,12 +95,14 @@ namespace ROOT {
 
          void AddEnum( const char * nam,
                        const char * values,
-                       const std::type_info * ti );
+                       const std::type_info * ti,
+                       unsigned int modifiers = 0 );
 
 
          //void addUnion( const char * nam,
          //               const char * values,
-         //               const std::type_info & ti );
+         //               const std::type_info & ti,
+         //               unsigned int modifiers = 0 );
 
 
          /** AddProperty will add a PropertyNth to the PropertyNth stack
@@ -119,7 +123,7 @@ namespace ROOT {
          Class * fClass;
 
          /** last added MemberAt */
-         Member fLastMember;    
+         OwnedMember fLastMember;    
 
       }; // class ClassBuilderImpl
     
@@ -206,13 +210,16 @@ namespace ROOT {
                                     const char * def );
 
          template < typename E >
-            ClassBuilder & AddEnum( const char * values );
+            ClassBuilder & AddEnum( const char * values,
+                                    unsigned int modifiers = 0 );
          ClassBuilder & AddEnum( const char * nam,
                                  const char * values,
-                                 const std::type_info * ti = 0 );
+                                 const std::type_info * ti = 0,
+                                 unsigned int modifiers = 0 );
 
          //ClassBuilder & addUnion( const char * nam,
-         //                           const char * values );
+         //                           const char * values,
+         //                           unsigned int modifiers );
 
 
          /** AddProperty will add a PropertyNth to the last defined
@@ -315,13 +322,16 @@ namespace ROOT {
                                      const char * def );
 
          template < typename E >
-            ClassBuilderT & AddEnum( const char * values );
+            ClassBuilderT & AddEnum( const char * values,
+                                     unsigned int modifiers = 0 );
          ClassBuilderT & AddEnum( const char * nam,
                                   const char * values,
-                                  const std::type_info * ti = 0 );
+                                  const std::type_info * ti = 0,
+                                  unsigned int modifiers = 0 );
       
          //ClassBuilderT & addUnion( const char * nam,
-         //                          const char * values );
+         //                          const char * values,
+         //                          unsigned int modifiers );
 
 
          /** AddProperty will add a PropertyNth to the last defined
@@ -404,11 +414,13 @@ ROOT::Reflex::ClassBuilder::AddTypedef( const char * def ) {
 //-------------------------------------------------------------------------------
 template < typename E >
 inline ROOT::Reflex::ClassBuilder &
-ROOT::Reflex::ClassBuilder::AddEnum( const char * values ) {
+ROOT::Reflex::ClassBuilder::AddEnum( const char * values,
+                                     unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
    fClassBuilderImpl.AddEnum( Tools::Demangle(typeid(E)).c_str(),
                               values,
-                              & typeid(E));
+                              & typeid(E),
+                              modifiers );
    return * this;
 }
 
@@ -580,11 +592,13 @@ ROOT::Reflex::ClassBuilderT<C>::AddTypedef( const Type & typ,
 //-------------------------------------------------------------------------------
 template < class C > template < typename E >
 inline ROOT::Reflex::ClassBuilderT<C> &
-ROOT::Reflex::ClassBuilderT<C>::AddEnum( const char * values ) {
+ROOT::Reflex::ClassBuilderT<C>::AddEnum( const char * values,
+                                         unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
    fClassBuilderImpl.AddEnum( Tools::Demangle(typeid(E)).c_str(),
                               values,
-                              & typeid(E));
+                              & typeid(E),
+                              modifiers );
    return * this;
 }
 
@@ -594,11 +608,13 @@ template < class C >
 inline ROOT::Reflex::ClassBuilderT<C> &
 ROOT::Reflex::ClassBuilderT<C>::AddEnum( const char * nam,
                                          const char * values,
-                                         const std::type_info * ti ) {
+                                         const std::type_info * ti,
+                                         unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
    fClassBuilderImpl.AddEnum( nam, 
                               values, 
-                              ti );
+                              ti,
+                              modifiers );
    return * this;
 }
 
@@ -607,9 +623,10 @@ ROOT::Reflex::ClassBuilderT<C>::AddEnum( const char * nam,
   template < class C > 
   inline ROOT::Reflex::ClassBuilderT<C> &
   ROOT::Reflex::ClassBuilderT<C>::addUnion( const char * nam,
-  const char * values ) {
+  const char * values,
+  unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
-  fClassBuilderImpl.addUnion( nam, values );
+  fClassBuilderImpl.addUnion( nam, values, modifiers );
   return * this;
   }
 */

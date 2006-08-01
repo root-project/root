@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.h,v 1.9 2006/07/03 17:02:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.h,v 1.10 2006/07/14 06:47:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -30,10 +30,12 @@ namespace ROOT {
        */
       class RFLX_API MemberTemplate {
 
+         friend class OwnedMemberTemplate;
+
       public:
 
          /** default constructor */
-         MemberTemplate( MemberTemplateImpl * = 0 );
+         MemberTemplate( const MemberTemplateImpl * memberTemplateImpl = 0 );
 
 
          /** destructor */
@@ -52,7 +54,7 @@ namespace ROOT {
           * @param  nth template instantion
           * @return pointer to nth template instantion
           */
-         Member TemplateInstanceAt( size_t nth ) const;
+         const Member & TemplateInstanceAt( size_t nth ) const;
 
 
          /**
@@ -165,17 +167,17 @@ namespace ROOT {
           * @clientCardinality 1
           * @supplierCardinality 1
           */
-         MemberTemplateImpl * fMemberTemplateImpl;
+         const MemberTemplateImpl * fMemberTemplateImpl;
       
       }; // class MemberTemplate
 
    } // namespace ROOT
 } // namespace Reflex
 
-#include "Reflex/MemberTemplateImpl.h"
+#include "Reflex/internal/MemberTemplateImpl.h"
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::MemberTemplate::MemberTemplate( MemberTemplateImpl * memberTemplateImpl )
+inline ROOT::Reflex::MemberTemplate::MemberTemplate( const MemberTemplateImpl * memberTemplateImpl )
 //------------------------------------------------------------------------------- 
    : fMemberTemplateImpl( memberTemplateImpl ) {}
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.h,v 1.9 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.h,v 1.10 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -535,6 +535,26 @@ namespace ROOT {
          template < typename T > class CheckPointer < T * > { 
          public:
            static void * Get(const T & value) { return (void*) value; } 
+         };
+
+
+         // internal stuff (can be moved)
+
+         template< typename TO > class ToIter {
+            
+         public:
+
+            template < typename FROM > 
+               static typename std::vector<TO>::iterator Forward( const FROM & iter ) {
+               return typename std::vector<TO>::iterator(iter.base());
+            }
+
+
+            template < typename FROM > 
+               static typename std::vector<TO>::reverse_iterator Reverse( const FROM & iter ) {
+               return typename std::vector<TO>::reverse_iterator(typename std::vector<TO>::iterator(iter.base().base()));
+            }
+
          };
 
       } // namespace Tools

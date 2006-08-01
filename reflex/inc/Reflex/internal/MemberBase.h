@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: MemberBase.h,v 1.10 2006/07/03 17:02:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.10 2006/07/03 17:02:38 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -48,7 +48,7 @@ namespace ROOT {
          /**
           * operator Member will return the MemberAt object of this MemberAt BaseAt
           */
-         operator Member () const;
+         operator const Member & () const;
 
 
          /** 
@@ -56,7 +56,7 @@ namespace ROOT {
           * (i.e. the same as the Type)
           * @return the declaring Scope of the MemberAt
           */
-         Scope DeclaringScope() const;
+         const Scope & DeclaringScope() const;
 
 
          /** 
@@ -64,7 +64,7 @@ namespace ROOT {
           * (i.e. the same as the Scope)
           * @return the declaring Type of the MemberAt
           */
-         Type DeclaringType() const;
+         const Type & DeclaringType() const;
 
 
          /** Get the MemberAt value (as void*) */
@@ -94,6 +94,10 @@ namespace ROOT {
 
          /** check whether the function MemberAt is a constructor */
          bool IsConstructor() const;
+
+
+         /** check whether a member is const qualified */
+         bool IsConst() const;
 
 
          /** check whether the function MemberAt is a user defined conversion function */
@@ -172,6 +176,10 @@ namespace ROOT {
          bool IsVirtual() const;
 
 
+         /** check whether a member is volatile qualified */
+         bool IsVolatile() const;
+
+
          /** return the At of the MemberAt (function or data MemberAt) */
          TYPE MemberType() const;
 
@@ -217,7 +225,7 @@ namespace ROOT {
           * to this item
           * @return pointer to PropertyNth list
           */
-         PropertyList Properties() const;
+         const PropertyList & Properties() const;
 
 
          /** Set the MemberAt value */
@@ -244,7 +252,7 @@ namespace ROOT {
           * @param  nth nth template argument
           * @return pointer to nth template argument
           */
-         virtual Type TemplateArgumentAt( size_t nth ) const;
+         virtual const Type & TemplateArgumentAt( size_t nth ) const;
 
 
          /**
@@ -264,11 +272,11 @@ namespace ROOT {
           * TemplateFamily returns the corresponding MemberTemplate if any
           * @return corresponding MemberTemplate
           */
-         virtual MemberTemplate TemplateFamily() const;
+         virtual const MemberTemplate & TemplateFamily() const;
 
 
          /** return pointer to MemberAt At */
-         Type TypeOf() const;
+         const Type & TypeOf() const;
 
       protected:
 
@@ -329,7 +337,17 @@ namespace ROOT {
           * @clientCardinality 1
           * @supplierCardinality 1
           */
-         PropertyList fPropertyList;
+         OwnedPropertyList fPropertyList;
+
+         
+         /**
+          * Pointer back to the member object
+          * @label this member
+          * @link aggregation
+          * @supplierCardinality 1
+          * @clientCardinality 1
+          */
+         Member * fThisMember;
 
       }; // class Member
 
@@ -398,6 +416,13 @@ inline bool ROOT::Reflex::MemberBase::IsAuto() const {
 inline bool ROOT::Reflex::MemberBase::IsConstructor() const {
 //-------------------------------------------------------------------------------
    return 0 != (fModifiers & CONSTRUCTOR);
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::MemberBase::IsConst() const {
+//-------------------------------------------------------------------------------
+   return 0 != (fModifiers & CONST);
 }
 
 
@@ -524,6 +549,13 @@ inline bool ROOT::Reflex::MemberBase::IsTransient() const {
 inline bool ROOT::Reflex::MemberBase::IsVirtual() const {
 //-------------------------------------------------------------------------------
    return 0 != (fModifiers & VIRTUAL);
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::MemberBase::IsVolatile() const {
+//-------------------------------------------------------------------------------
+   return 0 != (fModifiers & VOLATILE);
 }
 
 
@@ -701,14 +733,14 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::MemberBase::TemplateArg
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberBase::TemplateFamily() const {
+inline const ROOT::Reflex::MemberTemplate & ROOT::Reflex::MemberBase::TemplateFamily() const {
 //-------------------------------------------------------------------------------
-   return MemberTemplate();
+   return Dummy::MemberTemplate();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::MemberBase::TypeOf() const {
+inline const ROOT::Reflex::Type & ROOT::Reflex::MemberBase::TypeOf() const {
 //-------------------------------------------------------------------------------
    return fType;
 }

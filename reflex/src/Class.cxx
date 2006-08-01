@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Class.cxx,v 1.11 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.11 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,9 +15,8 @@
 
 #include "Class.h"
 
-#include "Reflex/Object.h"
-#include "Reflex/Type.h"
-#include "Reflex/Base.h"
+#include "Reflex/internal/OwnedObject.h"
+#include "Reflex/internal/OwnedType.h"
 
 #include "DataMember.h"
 #include "FunctionMember.h"
@@ -54,7 +53,7 @@ void ROOT::Reflex::Class::AddBase( const Type &   bas,
                                    unsigned int   modifiers ) const {
 //-------------------------------------------------------------------------------
 // Add a base class information.
-   Base b( bas, offsFP, modifiers );
+   Base b(bas, offsFP, modifiers);
    fBases.push_back( b );
 }
 
@@ -211,7 +210,7 @@ struct DynType_t {
 
     
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::Class::DynamicType( const Object & obj ) const {
+const ROOT::Reflex::Type & ROOT::Reflex::Class::DynamicType( const Object & obj ) const {
 //-------------------------------------------------------------------------------
 // Discover the dynamic type of a class object and return it.
    // If no virtual_function_table return itself
@@ -219,15 +218,15 @@ ROOT::Reflex::Type ROOT::Reflex::Class::DynamicType( const Object & obj ) const 
       // Avoid the case that the first word is a virtual_base_offset_table instead of
       // a virtual_function_table  
       long int offset = **(long**)obj.Address();
-      if ( offset == 0 ) return * this;
+      if ( offset == 0 ) return ThisType();
       else {
-         Type dytype = Type::ByTypeInfo(typeid(*(DynType_t*)obj.Address()));
+         const Type & dytype = Type::ByTypeInfo(typeid(*(DynType_t*)obj.Address()));
          if ( dytype && dytype.IsClass() ) return dytype;
-         else                              return * this;
+         else                              return ThisType();
       }
    }
    else {
-      return * this; 
+      return ThisType(); 
    }
 }
 
@@ -249,7 +248,7 @@ bool ROOT::Reflex::Class::HasBase( const Type & cl,
 // to this type.
    for ( size_t i = 0; i < BaseSize(); ++i ) {
       // is the final BaseAt class one of the current class ?
-      if ( BaseAt( i ).ToType( FINAL ).Id() == cl.Id() ) { 
+      if ( BaseAt( i ).ToType().FinalType().Id() == cl.Id() ) { 
          // remember the path to this class
          path.push_back( BaseAt( i )); 
          return true; 
@@ -281,7 +280,7 @@ bool ROOT::Reflex::Class::IsComplete2() const {
 // Return true if this class is complete. I.e. all dictionary information for all
 // data and function member types and base classes is available (internal function).
    for (size_t i = 0; i < BaseSize(); ++i) {
-      Type baseType = BaseAt( i ).ToType( FINAL );
+      Type baseType = BaseAt( i ).ToType().FinalType();
       if ( ! baseType )  return false;
       if ( ! baseType.IsComplete()) return false;
    }
@@ -356,7 +355,7 @@ ROOT::Reflex::Class::PathToBase( const Scope & bas ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Class::UpdateMembers2( Members & members,
+void ROOT::Reflex::Class::UpdateMembers2( OMembers & members,
                                           Members & dataMembers,
                                           Members & functionMembers,
                                           PathsToBase & pathsToBase,
@@ -365,7 +364,7 @@ void ROOT::Reflex::Class::UpdateMembers2( Members & members,
 // Internal function to update the data and function member information.
    std::vector < Base >::const_iterator bIter;
    for ( bIter = fBases.begin(); bIter != fBases.end(); ++bIter ) {
-      Type bType = bIter->ToType( FINAL );
+      Type bType = bIter->ToType().FinalType();
       basePath.push_back( bIter->OffsetFP());
       if ( bType ) {
          pathsToBase[ (dynamic_cast<const Class*>(bType.ToTypeBase()))->ThisScope().Id() ] = new std::vector < OffsetFunction >( basePath );
@@ -375,7 +374,7 @@ void ROOT::Reflex::Class::UpdateMembers2( Members & members,
             if ( std::find( dataMembers.begin(),
                             dataMembers.end(),
                             dm ) == dataMembers.end()) {
-               members.push_back( dm );
+               members.push_back( OwnedMember(dm) );
                dataMembers.push_back( dm );
             }
          }
@@ -384,7 +383,7 @@ void ROOT::Reflex::Class::UpdateMembers2( Members & members,
             if ( std::find( functionMembers.begin(), 
                             functionMembers.end(),
                             fm ) == functionMembers.end()) {
-               members.push_back( fm );
+               members.push_back( OwnedMember(fm) );
                functionMembers.push_back( fm );
             }
          }

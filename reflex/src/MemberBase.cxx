@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.9 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.10 2006/07/05 08:04:02 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -13,14 +13,14 @@
 #define REFLEX_BUILD
 #endif
 
-#include "Reflex/MemberBase.h"
+#include "Reflex/internal/MemberBase.h"
 
-#include "Reflex/Member.h"
-#include "Reflex/Scope.h"
-#include "Reflex/Type.h"
-#include "Reflex/Base.h"
-#include "Reflex/Object.h"
-#include "Reflex/PropertyList.h"
+#include "Reflex/internal/OwnedMember.h"
+#include "Reflex/internal/OwnedScope.h"
+#include "Reflex/internal/OwnedType.h"
+#include "Reflex/internal/OwnedBase.h"
+#include "Reflex/internal/OwnedObject.h"
+#include "Reflex/internal/OwnedPropertyList.h"
 
 #include "Reflex/Tools.h"
 #include "Class.h"
@@ -37,7 +37,8 @@ ROOT::Reflex::MemberBase::MemberBase( const char *  name,
      fName( name ),
      fScope( Scope() ),
      fMemberType( memberType ),
-     fPropertyList( PropertyList( new PropertyListImpl())) {
+     fPropertyList( OwnedPropertyList( new PropertyListImpl())) {
+   fThisMember = new Member(this);
 }
 
 
@@ -50,10 +51,10 @@ ROOT::Reflex::MemberBase::~MemberBase() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberBase::operator ROOT::Reflex::Member () const {
+ROOT::Reflex::MemberBase::operator const ROOT::Reflex::Member & () const {
 //-------------------------------------------------------------------------------
 // Conversion operator to Member.
-   return Member( this );
+   return *fThisMember;
 }
 
 
@@ -92,7 +93,7 @@ void * ROOT::Reflex::MemberBase::CalculateBaseObject( const Object & obj ) const
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::MemberBase::DeclaringScope() const {
+const ROOT::Reflex::Scope & ROOT::Reflex::MemberBase::DeclaringScope() const {
 //-------------------------------------------------------------------------------
 // Return the scope the member lives in.
    return fScope;
@@ -100,7 +101,7 @@ ROOT::Reflex::Scope ROOT::Reflex::MemberBase::DeclaringScope() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::MemberBase::DeclaringType() const {
+const ROOT::Reflex::Type & ROOT::Reflex::MemberBase::DeclaringType() const {
 //-------------------------------------------------------------------------------
 // Return the type the member lives in.
    return DeclaringScope();
@@ -125,7 +126,7 @@ std::string ROOT::Reflex::MemberBase::MemberTypeAsString() const {
 }
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::PropertyList ROOT::Reflex::MemberBase::Properties() const {
+const ROOT::Reflex::PropertyList & ROOT::Reflex::MemberBase::Properties() const {
 //-------------------------------------------------------------------------------
 // Return the property list attached to this member.
    return fPropertyList;
@@ -133,9 +134,9 @@ ROOT::Reflex::PropertyList ROOT::Reflex::MemberBase::Properties() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::MemberBase::TemplateArgumentAt( size_t /* nth */ ) const {
+const ROOT::Reflex::Type & ROOT::Reflex::MemberBase::TemplateArgumentAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template argument (in FunMemTemplInstance)
-   return Type();
+   return Dummy::Type();
 }
 

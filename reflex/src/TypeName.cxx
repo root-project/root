@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: TypeName.cxx,v 1.11 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.11 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -13,7 +13,7 @@
 #define REFLEX_BUILD
 #endif
 
-#include "Reflex/TypeName.h"
+#include "Reflex/internal/TypeName.h"
 
 #include "Reflex/Type.h"
 #include "Reflex/Member.h"
@@ -63,8 +63,9 @@ ROOT::Reflex::TypeName::TypeName( const char * nam,
      fTypeBase( typeBas ) {
 //-------------------------------------------------------------------------------
 // Construct a type name.
+   fThisType = new Type(this);
    sTypes() [ fName.c_str() ] = this;
-   sTypeVec().push_back(Type(this));
+   sTypeVec().push_back(*fThisType);
    if ( ti ) sTypeInfos() [ ti->name() ] = this;
 }
 
@@ -77,6 +78,15 @@ ROOT::Reflex::TypeName::~TypeName() {
 
 
 //-------------------------------------------------------------------------------
+void ROOT::Reflex::TypeName::DeleteType() const {
+//-------------------------------------------------------------------------------
+// Delete the type base information.
+   delete fTypeBase;
+   fTypeBase = 0;
+}
+
+
+//-------------------------------------------------------------------------------
 void ROOT::Reflex::TypeName::SetTypeId( const std::type_info & ti ) const {
 //-------------------------------------------------------------------------------
 // Add a type_info to the map.
@@ -85,42 +95,42 @@ void ROOT::Reflex::TypeName::SetTypeId( const std::type_info & ti ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type
+const ROOT::Reflex::Type &
 ROOT::Reflex::TypeName::ByName( const std::string & key ) {
 //-------------------------------------------------------------------------------
 // Lookup a type by name.
    size_t pos =  key.substr(0,2) == "::" ?  2 : 0;
    Name2Type_t::iterator it = sTypes().find(key.substr(pos).c_str());
-   if( it != sTypes().end() ) return Type( it->second );
-   else                       return Type();
+   if( it != sTypes().end() ) return it->second->ThisType();
+   else                       return Dummy::Type();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type
+const ROOT::Reflex::Type &
 ROOT::Reflex::TypeName::ByTypeInfo( const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
 // Lookup a type by type_info.
    TypeId2Type_t::iterator it = sTypeInfos().find(ti.name());
-   if( it != sTypeInfos().end() ) return Type( it->second );
-   else                           return Type();
+   if( it != sTypeInfos().end() ) return it->second->ThisType();
+   else                           return Dummy::Type();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeName::ThisType() const {
+const ROOT::Reflex::Type & ROOT::Reflex::TypeName::ThisType() const {
 //-------------------------------------------------------------------------------
 // Return Type of this TypeName.
-   return Type( this );
+   return *fThisType;
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeName::TypeAt( size_t nth ) {
+const ROOT::Reflex::Type & ROOT::Reflex::TypeName::TypeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
 // Return nth type in Reflex.
    if ( nth < sTypeVec().size()) return sTypeVec()[nth];
-   return Type();
+   return Dummy::Type();
 }
 
 

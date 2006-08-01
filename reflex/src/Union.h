@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Union.h,v 1.6 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Union.h,v 1.7 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -13,8 +13,8 @@
 #define ROOT_Reflex_Union
 
 // Include Files
-#include "Reflex/TypeBase.h"
-#include "Reflex/ScopeBase.h"
+#include "Reflex/internal/TypeBase.h"
+#include "Reflex/internal/ScopeBase.h"
 
 namespace ROOT {
    namespace Reflex {
@@ -33,7 +33,8 @@ namespace ROOT {
          /** constructor */
          Union( const char * unionType,
                 size_t size,
-                const std::type_info & ti ) ;
+                const std::type_info & ti,
+                unsigned int modifiers ) ;
 
 
          /** destructor */
@@ -44,14 +45,14 @@ namespace ROOT {
           * operator Scope will return the corresponding scope of this type if
           * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
           */                                       
-         operator Scope() const;
+         operator const Scope & () const;
 
 
          /**
           * operator Type will return the corresponding Type object
           * @return Type corresponding to this TypeBase
           */
-         operator Type() const;
+         operator const Type & () const;
 
 
          /**
@@ -70,7 +71,7 @@ namespace ROOT {
           * @param  nth data MemberAt
           * @return pointer to data MemberAt
           */
-         virtual Member DataMemberAt( size_t nth ) const;
+         virtual const Member & DataMemberAt( size_t nth ) const;
 
 
          /**
@@ -78,7 +79,7 @@ namespace ROOT {
           * @param  Name of data MemberAt
           * @return data MemberAt
           */
-         virtual Member DataMemberByName( const std::string & nam ) const;
+         virtual const Member & DataMemberByName( const std::string & nam ) const;
 
 
          /**
@@ -98,7 +99,28 @@ namespace ROOT {
           * DeclaringScope will return a pointer to the At of this one
           * @return pointer to declaring At
           */
-         virtual Scope DeclaringScope() const;
+         virtual const Scope & DeclaringScope() const;
+
+
+         /** 
+          * IsPrivate will check if the scope access is private
+          * @return true if scope access is private
+          */
+         virtual bool IsPrivate() const;
+
+
+         /** 
+          * IsProtected will check if the scope access is protected
+          * @return true if scope access is protected
+          */
+         virtual bool IsProtected() const;
+
+
+         /** 
+          * IsPublic will check if the scope access is public
+          * @return true if scope access is public
+          */
+         virtual bool IsPublic() const;
 
 
          /**
@@ -106,7 +128,7 @@ namespace ROOT {
           * @param  nth MemberAt
           * @return pointer to nth MemberAt
           */
-         virtual Member MemberAt( size_t nth ) const;
+         virtual const Member & MemberAt( size_t nth ) const;
 
 
          /**
@@ -114,8 +136,8 @@ namespace ROOT {
           * @param  MemberAt Name
           * @return pointer to MemberAt
           */
-         virtual Member MemberByName( const std::string & nam,
-                                      const Type & signature ) const;
+         virtual const Member & MemberByName( const std::string & nam,
+                                              const Type & signature ) const;
 
          /**
           * MemberSize will return the number of members
@@ -135,26 +157,33 @@ namespace ROOT {
           * to this item
           * @return pointer to PropertyNth list
           */
-         virtual PropertyList Properties() const;
+         virtual const PropertyList & Properties() const;
+
+      private:
+
+         /**
+          * Modifiers of this union 
+          */
+         unsigned int fModifiers;
 
       }; // class Union
 
    } // namespace Reflex
 } // namespace ROOT
 
-#include "Reflex/Member.h"
+#include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Union::operator ROOT::Reflex::Scope () const {
+inline ROOT::Reflex::Union::operator const ROOT::Reflex::Scope & () const {
 //-------------------------------------------------------------------------------
-   return ScopeBase::operator Scope();
+   return ScopeBase::operator const Scope & ();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Union::operator ROOT::Reflex::Type () const {
+inline ROOT::Reflex::Union::operator const ROOT::Reflex::Type & () const {
 //-------------------------------------------------------------------------------
-   return TypeBase::operator Type();
+   return TypeBase::operator const Type & ();
 }
 
 
@@ -183,6 +212,27 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::DataMember_RBe
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::DataMember_REnd() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMember_REnd();
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Union::IsPrivate() const {
+//-------------------------------------------------------------------------------
+   return 0 != ( fModifiers & PRIVATE );
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Union::IsProtected() const {
+//-------------------------------------------------------------------------------
+   return 0 != ( fModifiers & PROTECTED );
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Union::IsPublic() const {
+//-------------------------------------------------------------------------------
+   return 0 != ( fModifiers & PUBLIC );
 }
 
 
@@ -232,14 +282,14 @@ inline void ROOT::Reflex::Union::AddDataMember( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Union::DataMemberAt( size_t nth ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Union::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMemberAt( nth );
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Union::DataMemberByName( const std::string & nam ) const {
+inline const  ROOT::Reflex::Member & ROOT::Reflex::Union::DataMemberByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMemberByName( nam );
 }
@@ -253,15 +303,15 @@ inline size_t ROOT::Reflex::Union::DataMemberSize() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Scope ROOT::Reflex::Union::DeclaringScope() const {
+inline const ROOT::Reflex::Scope & ROOT::Reflex::Union::DeclaringScope() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DeclaringScope();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Union::MemberByName( const std::string & nam,
-                                                               const Type & signature ) const {
+inline const ROOT::Reflex::Member & ROOT::Reflex::Union::MemberByName( const std::string & nam,
+                                                                       const Type & signature ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::MemberByName( nam, signature );
 }
@@ -275,7 +325,7 @@ inline size_t ROOT::Reflex::Union::MemberSize() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::PropertyList ROOT::Reflex::Union::Properties() const {
+inline const ROOT::Reflex::PropertyList & ROOT::Reflex::Union::Properties() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::Properties();
 }

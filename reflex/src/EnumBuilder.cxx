@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: EnumBuilder.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: EnumBuilder.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -22,10 +22,11 @@
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::EnumBuilder::EnumBuilder( const char * nam,
-                                        const std::type_info & ti ) {
+                                        const std::type_info & ti,
+                                        unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
 // Construct a new enum dictionary info.
-   fEnum = new Enum( nam, ti );
+   fEnum = new Enum( nam, ti, modifiers );
 }
 
 //-------------------------------------------------------------------------------

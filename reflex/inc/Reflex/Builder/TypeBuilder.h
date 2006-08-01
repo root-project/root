@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.10 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.11 2006/07/13 14:45:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -55,7 +55,8 @@ namespace ROOT{
 
       RFLX_API Type EnumTypeBuilder( const char *, 
                                      const char * items = "",
-                                     const std::type_info & ti = typeid(UnknownType));
+                                     const std::type_info & ti = typeid(UnknownType),
+                                     unsigned int modifiers = 0 );
 
       RFLX_API Type TypedefTypeBuilder( const char * Name, 
                                         const Type & t );
