@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.12 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.13 2006/08/01 09:36:50 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -355,7 +355,7 @@ ROOT::Reflex::Class::PathToBase( const Scope & bas ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Class::UpdateMembers2( OMembers & members,
+void ROOT::Reflex::Class::UpdateMembers2( Members & members,
                                           Members & dataMembers,
                                           Members & functionMembers,
                                           PathsToBase & pathsToBase,

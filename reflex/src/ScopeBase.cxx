@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.19 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.20 2006/08/01 10:28:45 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -37,7 +37,7 @@
 //-------------------------------------------------------------------------------
 ROOT::Reflex::ScopeBase::ScopeBase( const char * scope, 
                                     TYPE scopeType )
-   : fMembers( OMembers() ),
+   : fMembers( Members() ),
      fDataMembers( Members() ),
      fFunctionMembers( Members() ),
      fScopeName( 0 ),
@@ -86,7 +86,7 @@ ROOT::Reflex::ScopeBase::ScopeBase( const char * scope,
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::ScopeBase::ScopeBase() 
-   : fMembers( OMembers()),
+   : fMembers( Members()),
      fDataMembers( Members()),
      fFunctionMembers( Members()),
      fScopeName( 0 ),
@@ -251,28 +251,36 @@ ROOT::Reflex::ScopeBase::LookupType( const std::string & nam,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::Member_Begin() const {
 //-------------------------------------------------------------------------------
-   return OTools::ToIter<Member>::Forward(fMembers.begin());
+// Return the begin iterator for members
+   return fMembers.begin();
+//   return OTools::ToIter<Member>::Forward(fMembers.begin());
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::Member_End() const {
 //-------------------------------------------------------------------------------
-   return OTools::ToIter<Member>::Forward(fMembers.end());
+// Return the end iterator for members
+   return fMembers.end();
+   //   return OTools::ToIter<Member>::Forward(fMembers.end());
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::Member_RBegin() const {
 //-------------------------------------------------------------------------------
-   return OTools::ToIter<Member>::Reverse(fMembers.rbegin());
+// Return the rbegin iterator for members
+   return fMembers.rbegin();
+   //return OTools::ToIter<Member>::Reverse(fMembers.rbegin());
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::Member_REnd() const {
 //-------------------------------------------------------------------------------
-   return OTools::ToIter<Member>::Reverse(fMembers.rend());
+// Return the rend iterator for members
+   return fMembers.rend();
+   //return OTools::ToIter<Member>::Reverse(fMembers.rend());
 }
 
 
@@ -503,7 +511,7 @@ void ROOT::Reflex::ScopeBase::RemoveDataMember( const Member & dm ) const {
    for ( it = fDataMembers.begin(); it != fDataMembers.end(); ++it) {
       if ( *it == dm ) fDataMembers.erase(it); break;
    }
-   std::vector< OwnedMember >::iterator im;
+   std::vector< Member >::iterator im;
    for ( im = fMembers.begin(); im != fMembers.end(); ++im) {
       if ( *im == dm ) fMembers.erase(im); break;
    }
@@ -541,7 +549,7 @@ void ROOT::Reflex::ScopeBase::RemoveFunctionMember( const Member & fm ) const {
    for ( it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it) {
       if ( *it == fm ) fFunctionMembers.erase(it); break;
    }
-   std::vector< OwnedMember >::iterator im;
+   std::vector< Member >::iterator im;
    for ( im = fMembers.begin(); im != fMembers.end(); ++im) {
       if ( *im == fm ) fMembers.erase(im); break;
    }

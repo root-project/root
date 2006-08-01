@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.11 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -591,7 +591,7 @@ namespace ROOT {
           * @clientCardinality 1
           */
          mutable
-            std::vector< OwnedMember > fMembers;
+            std::vector< Member > fMembers;
 
          /**
           * container with pointers to all data members in this At

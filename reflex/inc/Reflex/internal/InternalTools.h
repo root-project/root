@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.12 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: InternalTools.h,v 1.1 2006/08/01 10:31:50 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -29,13 +29,13 @@ namespace ROOT {
 
             template < typename FROM > 
                static typename std::vector<TO>::iterator Forward( const FROM & iter ) {
-               return typename std::vector<TO>::iterator(iter.base());
+               return typename std::vector<TO>::iterator(iter.operator->());
             }
 
 
             template < typename FROM > 
                static typename std::vector<TO>::reverse_iterator Reverse( const FROM & iter ) {
-               return typename std::vector<TO>::reverse_iterator(typename std::vector<TO>::iterator(iter.base().base()));
+               return typename std::vector<TO>::reverse_iterator(typename std::vector<TO>::iterator(iter.operator->()));
             }
 
          };
