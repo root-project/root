@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.25 2006/05/28 19:05:24 brun Exp $
+// @(#)root/pyroot:$Name: v5-12-00 $:$Id: RootModule.cxx,v 1.26 2006/07/01 21:19:55 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -100,8 +100,7 @@ namespace {
          // add reference to ROOT entity in the given dictionary
             ((DictLookup_t&)mp->ma_lookup) = gDictLookupOrg;     // prevent recursion
             if ( PyDict_SetItem( (PyObject*)mp, key, val ) == 0 ) {
-               if ( ep->me_value != val )
-                  ep = (*gDictLookupOrg)( mp, key, hash );
+               ep = (*gDictLookupOrg)( mp, key, hash );
             } else {
                ep->me_key   = 0;
                ep->me_value = 0;
