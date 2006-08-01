@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.29 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.30 2006/07/24 16:11:45 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -37,6 +37,9 @@
 #ifndef ROOT_TGWidget
 #include "TGWidget.h"
 #endif
+#ifndef ROOT_TGSplitter
+#include "TGSplitter.h"
+#endif
 
 
 enum EListViewMode {
@@ -51,6 +54,7 @@ class TGSelectedPicture;
 class TGTextButton;
 class TGListView;
 class TGLVContainer;
+class TGHeaderFrame;
 
 
 class TGLVEntry : public TGFrame {
@@ -129,21 +133,25 @@ public:
 class TGListView : public TGCanvas {
 
 protected:
-   Int_t           fNColumns;     // number of columns
-   Int_t          *fColumns;      // column width
-   Int_t          *fJmode;        // column text alignment
-   EListViewMode   fViewMode;     // view mode if list view widget
-   TGDimension     fMaxSize;      // maximum item size
-   TGTextButton  **fColHeader;    // column headers for in detailed mode
-   GContext_t      fNormGC;       // drawing graphics context
-   FontStruct_t    fFontStruct;   // text font
-   TGFrame        *fHeader;       // frame used as container for column headers
+   Int_t                 fNColumns;      // number of columns
+   Int_t                *fColumns;       // column width
+   Int_t                *fJmode;         // column text alignment
+   EListViewMode         fViewMode;      // view mode if list view widget
+   TGDimension           fMaxSize;       // maximum item size
+   TGTextButton        **fColHeader;     // column headers for in detailed mode
+   TString              *fColNames;      // column titles for in detailed mode
+   TGVFileSplitter     **fSplitHeader;   // column splitters
+   GContext_t            fNormGC;        // drawing graphics context
+   FontStruct_t          fFontStruct;    // text font
+   TGHeaderFrame        *fHeader;        // frame used as container for column headers
+   Bool_t                fJustChanged;   // Indicate whether the view mode was just changed to Detail
+   Int_t                 fMinColumnSize; // Minimun column size
 
-   static const TGFont *fgDefaultFont;
-   static TGGC         *fgDefaultGC;
+   static const TGFont  *fgDefaultFont;
+   static TGGC          *fgDefaultGC;
 
-   static FontStruct_t  GetDefaultFontStruct();
-   static const TGGC   &GetDefaultGC();
+   static FontStruct_t   GetDefaultFontStruct();
+   static const TGGC    &GetDefaultGC();
 
 public:
    TGListView(const TGWindow *p, UInt_t w, UInt_t h,
@@ -152,17 +160,22 @@ public:
    virtual ~TGListView();
 
    virtual void   Layout();
+   virtual void   LayoutHeader(TGFrame *head);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    virtual void   ScrollHeader(Int_t pos);
    virtual void   SetContainer(TGFrame *f);
+   virtual void   AdjustHeaders() { fJustChanged = kTRUE; LayoutHeader(0); }
    virtual void   SetHeaders(Int_t ncolumns);
    virtual void   SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx);
    virtual void   SetDefaultHeaders();
    virtual void   SetViewMode(EListViewMode viewMode);
+   TGTextButton** GetHeaderButtons() { return fColHeader; }
+   UInt_t         GetNumColumns() { return fNColumns; }
    EListViewMode  GetViewMode() const { return fViewMode; }
    virtual const char *GetHeader(Int_t idx) const;
    virtual void   SavePrimitive(ostream &out, Option_t *option = "");
    virtual void   SetIncrements(Int_t hInc, Int_t vInc);
+   virtual void   SetDefaultColumnWidth(TGVFileSplitter* splitter);
 
    virtual void SelectionChanged() { Emit("SelectionChanged()"); }  //*SIGNAL*
    virtual void Clicked(TGLVEntry *entry, Int_t btn);  //*SIGNAL*

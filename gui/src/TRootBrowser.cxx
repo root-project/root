@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.98 2006/07/24 16:11:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.99 2006/07/26 13:55:34 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -354,6 +354,7 @@ private:
    Bool_t           fIsEmpty;
    THashTable      *fThumbnails;     // hash table with thumbnailed pictures
    Bool_t           fAutoThumbnail;  //
+   TRootBrowser    *fBrowser;
 
    void  *FindItem(const TString& name,
                    Bool_t direction = kTRUE,
@@ -362,7 +363,8 @@ private:
    void RemoveGarbage();
 
 public:
-   TRootIconBox(TGListView *lv, UInt_t options = kSunkenFrame,
+   TRootIconBox(TRootBrowser *browser, TGListView *lv,
+                UInt_t options = kSunkenFrame,
                 ULong_t back = GetDefaultFrameBackground());
 
    virtual ~TRootIconBox();
@@ -380,12 +382,13 @@ public:
 };
 
 //______________________________________________________________________________
-TRootIconBox::TRootIconBox(TGListView *lv, UInt_t options, ULong_t back) :
-   TGFileContainer(lv, options, back)
+TRootIconBox::TRootIconBox(TRootBrowser *browser, TGListView *lv, UInt_t options,
+                           ULong_t back) : TGFileContainer(lv, options, back)
 {
    // Create iconbox containing ROOT objects in browser.
 
    fListView = lv;
+   fBrowser = browser;
 
    fCheckHeaders = kTRUE;
    fTotal = 0;
@@ -509,8 +512,20 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    if (obj->IsA() == TSystemFile::Class() ||
        obj->IsA() == TSystemDirectory::Class()) {
       if (fCheckHeaders) {
-         if (strcmp(fListView->GetHeader(1), "Attributes"))
+         if (strcmp(fListView->GetHeader(1), "Attributes")) {
             fListView->SetDefaultHeaders();
+            TGTextButton** buttons = fListView->GetHeaderButtons();
+            if (buttons) {
+               buttons[0]->Connect("Clicked()", "TRootBrowser", fBrowser,
+                                   Form("SetSortMode(=%d)", kViewArrangeByName));
+               buttons[1]->Connect("Clicked()", "TRootBrowser", fBrowser,
+                                   Form("SetSortMode(=%d)", kViewArrangeByType));
+               buttons[2]->Connect("Clicked()", "TRootBrowser", fBrowser,
+                                   Form("SetSortMode(=%d)", kViewArrangeBySize));
+               buttons[5]->Connect("Clicked()", "TRootBrowser", fBrowser,
+                                   Form("SetSortMode(=%d)", kViewArrangeByDate));
+            }
+         }
          fCheckHeaders = kFALSE;
       }
 
@@ -1065,7 +1080,8 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    // Create list view (icon box)
    fListView = new TGListView(fV2, 520, 250); // canvas
-   fIconBox = new TRootIconBox(fListView,kHorizontalFrame, fgWhitePixel); // container
+   // container
+   fIconBox = new TRootIconBox(this, fListView, kHorizontalFrame, fgWhitePixel);
    fIconBox->Associate(this);
    fListView->SetIncrements(1, 19); // set vertical scroll one line height at a time
 
@@ -1839,6 +1855,8 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      if (obj) fBrowser->GetContextMenu()->Popup(x, y, obj, fBrowser);
                   }
                   fClient->NeedRedraw(fLt);
+                  fListView->AdjustHeaders();
+                  fListView->Layout();
                }
                break;
 
@@ -2511,6 +2529,19 @@ void TRootBrowser::SetViewMode(Int_t new_mode, Bool_t force)
          gToolBarData[i].fButton->SetState((i == bnum) ? kButtonEngaged : kButtonUp);
 
       fListView->SetViewMode(lv);
+      TGTextButton** buttons = fListView->GetHeaderButtons();
+      if ((lv == kLVDetails) && (buttons)) {
+         if (!strcmp(fListView->GetHeader(1), "Attributes")) {
+            buttons[0]->Connect("Clicked()", "TRootBrowser", this,
+                                Form("SetSortMode(=%d)", kViewArrangeByName));
+            buttons[1]->Connect("Clicked()", "TRootBrowser", this,
+                                Form("SetSortMode(=%d)", kViewArrangeByType));
+            buttons[2]->Connect("Clicked()", "TRootBrowser", this,
+                                Form("SetSortMode(=%d)", kViewArrangeBySize));
+            buttons[5]->Connect("Clicked()", "TRootBrowser", this,
+                                Form("SetSortMode(=%d)", kViewArrangeByDate));
+         }
+      }
       fIconBox->AdjustPosition();
    }
 }

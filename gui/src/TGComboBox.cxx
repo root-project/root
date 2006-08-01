@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.46 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.47 2006/07/06 09:39:18 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -166,7 +166,7 @@ TGComboBox::TGComboBox(const TGWindow *p, const char *text, Int_t id,
    fTextEntry->SetFrameDrawn(kFALSE);
    fTextEntry->Connect("ReturnPressed()", "TGComboBox", this, "ReturnPressed()");
 
-   AddFrame(fTextEntry, fLhs = new TGLayoutHints(kLHintsLeft | 
+   AddFrame(fTextEntry, fLhs = new TGLayoutHints(kLHintsLeft |
                                                  kLHintsExpandY | kLHintsExpandX));
    Init();
 }

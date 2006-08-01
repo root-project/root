@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.137 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.138 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -83,6 +83,8 @@
 #include "TVirtualDragManager.h"
 #include "TGuiBuilder.h"
 #include "TQConnection.h"
+#include "TGButton.h"
+#include "TGSplitter.h"
 
 
 Bool_t      TGFrame::fgInit = kFALSE;
@@ -120,6 +122,7 @@ ClassImp(TGHorizontalFrame)
 ClassImp(TGMainFrame)
 ClassImp(TGTransientFrame)
 ClassImp(TGGroupFrame)
+ClassImp(TGHeaderFrame)
 
 
 //______________________________________________________________________________
@@ -2083,6 +2086,125 @@ const TGGC &TGGroupFrame::GetDefaultGC()
    if (!fgDefaultGC && gClient)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
+}
+
+//______________________________________________________________________________
+TGHeaderFrame::TGHeaderFrame(const TGWindow *p, UInt_t w, UInt_t h,
+                 UInt_t options, Pixel_t back) :
+  TGHorizontalFrame(p, w, h, options | kVerticalFrame, back)
+{
+   // Header Frame constructor.
+
+   fSplitCursor = kNone;
+   fSplitCursor = gVirtualX->CreateCursor(kArrowHor);
+   fOverSplitter = false;
+   fOverButton = -1;
+   fLastButton = -1;
+
+   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
+                         kButtonPressMask | kButtonReleaseMask,
+                         kNone, kNone);
+   AddInput(kPointerMotionMask);
+}
+
+//______________________________________________________________________________
+void TGHeaderFrame::SetColumnsInfo(Int_t nColumns, TGTextButton  **colHeader,
+               TGVFileSplitter  **splitHeader)
+{
+   // Set columns informations in the header frame.
+
+   fNColumns = nColumns;
+   fColHeader = colHeader;
+   fSplitHeader = splitHeader;
+}
+
+//______________________________________________________________________________
+Bool_t TGHeaderFrame::HandleButton(Event_t* event)
+{
+   // Handle mouse button event in header frame.
+
+   if ( event->fY > 0 &&
+        event->fY <= (Int_t) this->GetHeight() ) {
+      for (Int_t i = 1; i < fNColumns; ++i ) {
+         if ( event->fX < fColHeader[i]->GetX() &&
+            event->fX >= fColHeader[i-1]->GetX() ) {
+            if ( fOverSplitter ) {
+               if ( event->fX <= fColHeader[i-1]->GetX() + 5 )
+                  fSplitHeader[i-2]->HandleButton(event);
+               else
+                  fSplitHeader[i-1]->HandleButton(event);
+            } else {
+               if ( event->fType == kButtonPress ) {
+                  fLastButton = i - 1;
+               } else {
+                  fLastButton = -1;
+               }
+               event->fX -= fColHeader[i-1]->GetX();
+               fColHeader[i-1]->HandleButton(event);
+            }
+            break;
+         }
+      }
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGHeaderFrame::HandleDoubleClick(Event_t *event)
+{
+   // Handle double click mouse event in header frame.
+
+   if ( event->fY > 0 &&
+        event->fY <= (Int_t) this->GetHeight() ) {
+      for (Int_t i = 1; i < fNColumns; ++i ) {
+         if ( event->fX < fColHeader[i]->GetX() &&
+            event->fX >= fColHeader[i-1]->GetX() ) {
+            if ( fOverSplitter ) {
+               if ( event->fX <= fColHeader[i-1]->GetX() + 5 )
+                  fSplitHeader[i-2]->HandleDoubleClick(event);
+               else
+                  fSplitHeader[i-1]->HandleDoubleClick(event);
+            } else {
+               event->fX -= fColHeader[i-1]->GetX();
+               fColHeader[i-1]->HandleDoubleClick(event);
+            }
+            break;
+         }
+      }
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGHeaderFrame::HandleMotion(Event_t* event)
+{
+   // Handle mouse motion events in header frame.
+
+   if ( event->fY > 0 &&
+        event->fY <= (Int_t) this->GetHeight() ) {
+      Bool_t inMiddle = false;
+
+      for (Int_t i = 1; i < fNColumns; ++i ) {
+         if ( event->fX > fColHeader[i]->GetX() - 5 &&
+            event->fX < fColHeader[i]->GetX() + 5 ) {
+            inMiddle = true;
+         }
+         if ( event->fX < fColHeader[i]->GetX() &&
+            event->fX >= fColHeader[i-1]->GetX() ) {
+            fOverButton = i - 1;
+         }
+      }
+      fOverSplitter = inMiddle;
+      if ( fOverSplitter ) {
+         gVirtualX->SetCursor(fId, fSplitCursor);
+      }
+      else {
+         gVirtualX->SetCursor(fId, kNone);
+      }
+   }
+   return kTRUE;
 }
 
 //______________________________________________________________________________

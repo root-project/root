@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.31 2006/07/24 16:11:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.32 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -36,6 +36,7 @@ class TGFrameElement;
 class TGContainerTimer;
 class TGContainerKeyboardTimer;
 class TGContainerScrollTimer;
+class TGListView;
 
 
 class TGContainer : public TGCompositeFrame {
@@ -44,6 +45,7 @@ friend class TGViewPort;
 friend class TGCanvas;
 friend class TGContainerKeyboardTimer;
 friend class TGContainerScrollTimer;
+friend class TGListView;
 
 protected:
    TGViewPort        *fViewPort;      // container viewport

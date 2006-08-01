@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.20 2005/09/05 14:21:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.21 2005/12/13 16:03:42 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -90,7 +90,6 @@ private:
    void  DisplayDirectory();
    void  DisplayTotal(Int_t total, Int_t selected);
    void  SetViewMode(Int_t new_mode, Bool_t force = kFALSE);
-   void  SetSortMode(Int_t new_mode);
    void  ToSystemDirectory(const char *dirname);
    void  UpdateDrawOption();
    void  Search();
@@ -155,6 +154,7 @@ public:
    TGToolBar       *GetToolBar()   const { return fToolBar; }
    void             SetDrawOption(Option_t *option="");
    Option_t        *GetDrawOption() const;
+   void             SetSortMode(Int_t new_mode);
 
    // overridden from TGMainFrame
    void     CloseWindow();

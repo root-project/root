@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.15 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.16 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -123,5 +123,28 @@ public:
 
    ClassDef(TGHSplitter,0)  //A horizontal frame splitter
 };
+
+class TGVFileSplitter : public TGVSplitter {
+
+public:
+   TGVFileSplitter(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 4,
+               UInt_t options = kChildFrame,
+               Pixel_t back = GetDefaultFrameBackground());
+   virtual ~TGVFileSplitter();
+
+   virtual Bool_t HandleDoubleClick(Event_t *);
+   virtual Bool_t HandleButton(Event_t *event);
+   virtual Bool_t HandleMotion(Event_t *event);
+   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+
+   void LayoutHeader(TGFrame *f);  //*SIGNAL*
+   void LayoutListView();  //*SIGNAL*
+   void ButtonPressed();   //*SIGNAL*
+   void ButtonReleased();  //*SIGNAL*
+   void DoubleClicked(TGVFileSplitter* frame);  //*SIGNAL*
+
+   ClassDef(TGVFileSplitter,0)  //A vertical file frame splitter
+};
+
 
 #endif

@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.17 2006/04/12 12:56:32 antcheva Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.18 2006/07/20 12:08:34 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -57,6 +57,7 @@
 #pragma link C++ class TGCompositeFrame;
 #pragma link C++ class TGVerticalFrame;
 #pragma link C++ class TGHorizontalFrame;
+#pragma link C++ class TGHeaderFrame;
 #pragma link C++ class TGMainFrame;
 #pragma link C++ class TGTransientFrame;
 #pragma link C++ class TGGroupFrame;

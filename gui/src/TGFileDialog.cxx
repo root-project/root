@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.32 2006/07/24 16:11:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.33 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -203,6 +203,14 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    fFv->SetViewMode(kLVList);
    fFv->SetIncrements(1, 19); // set vertical scroll one line height at a time
 
+   TGTextButton** buttons = fFv->GetHeaderButtons();
+   if (buttons) {
+      buttons[0]->Connect("Clicked()", "TGFileContainer", fFc, "Sort(=kSortByName)");
+      buttons[1]->Connect("Clicked()", "TGFileContainer", fFc, "Sort(=kSortByType)");
+      buttons[2]->Connect("Clicked()", "TGFileContainer", fFc, "Sort(=kSortBySize)");
+      buttons[5]->Connect("Clicked()", "TGFileContainer", fFc, "Sort(=kSortByDate)");
+   }
+
    fFc->SetFilter(fFileInfo->fFileTypes[fFileInfo->fFileTypeIdx+1]);
    fFc->Sort(kSortByName);
    fFc->ChangeDirectory(fFileInfo->fIniDir);
@@ -387,9 +395,6 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            return kTRUE;
                      }
                      if (fFileInfo->fMultipleSelection) {
-                        if (fFileInfo->fFilename) {
-                           delete [] fFileInfo->fFilename;
-                        }
                         fFileInfo->fFilename = 0;
                      }
                      else {

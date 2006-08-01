@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.39 2006/07/18 19:31:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.40 2006/07/24 16:11:45 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -343,17 +343,6 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
       ly = (fHeight - (fTHeight + 1)) >> 1;
    }
 
-   if (fActive) {
-      if (fSelPic) fSelPic->Draw(id, fNormGC, x + ix, y + iy);
-      gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
-      gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, fTWidth, fTHeight + 1);
-      gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
-   } else {
-      fCurrent->Draw(id, fNormGC, x + ix, y + iy);
-      gVirtualX->SetForeground(fNormGC, fgWhitePixel);
-      gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, fTWidth, fTHeight + 1);
-      gVirtualX->SetForeground(fNormGC, fgBlackPixel);
-   }
    if ((fChecked) && (fCheckMark)) {
       if (fViewMode == kLVLargeIcons) {
          fCheckMark->Draw(id, fNormGC, x + ix + 8, y + iy + 8);
@@ -368,26 +357,83 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
          gVirtualX->SetForeground(fNormGC, fgBlackPixel);
       }
    }
-
-   fItemName->Draw(id, fNormGC, x+lx, y+ly + max_ascent);
+   // This if tries to print the elements with ... appened at the end if
+   // the widht of the string is longer than that of the column
+   if (fViewMode == kLVDetails && fSubnames && fCpos && fJmode && fCtw) {
+      TString tmpString = *fItemName;
+      Int_t ftmpWidth = gVirtualX->TextWidth(fFontStruct, tmpString,
+                                             tmpString.Length());
+      if ( ftmpWidth > (fCpos[0] - lx) ) {
+         for (Int_t j = fItemName->Length() - 1 ; j > 0; j--) {
+            tmpString =  (*fItemName)(0,j) + "...";
+            ftmpWidth = gVirtualX->TextWidth(GetDefaultFontStruct(), tmpString,
+                                             tmpString.Length());
+            if ( ftmpWidth <= (fCpos[0] - lx) ) {
+               break;
+            }
+         }
+      }
+      if (fActive) {
+         if (fSelPic) fSelPic->Draw(id, fNormGC, x + ix, y + iy);
+         gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
+         gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, ftmpWidth, fTHeight + 1);
+         gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
+      } else {
+         fCurrent->Draw(id, fNormGC, x + ix, y + iy);
+         gVirtualX->SetForeground(fNormGC, fgWhitePixel);
+         gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, ftmpWidth, fTHeight + 1);
+         gVirtualX->SetForeground(fNormGC, fgBlackPixel);
+      }
+      TGString tmpTGString(tmpString);
+      tmpTGString.Draw(id, fNormGC, x+lx, y+ly + max_ascent);
+   } else {
+      if (fActive) {
+         if (fSelPic) fSelPic->Draw(id, fNormGC, x + ix, y + iy);
+         gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
+         gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, fTWidth, fTHeight + 1);
+         gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
+      } else {
+         fCurrent->Draw(id, fNormGC, x + ix, y + iy);
+         gVirtualX->SetForeground(fNormGC, fgWhitePixel);
+         gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, fTWidth, fTHeight + 1);
+         gVirtualX->SetForeground(fNormGC, fgBlackPixel);
+      }
+      fItemName->Draw(id, fNormGC, x+lx, y+ly + max_ascent);
+   }
    gVirtualX->SetForeground(fNormGC, fgBlackPixel);
 
    if (fViewMode == kLVDetails) {
       if (fSubnames && fCpos && fJmode && fCtw) {
          int i;
 
+         // Again fixes the size of the strings
          for (i = 0; fSubnames[i] != 0; ++i) {
+            TString tmpString = *fSubnames[i];
+            Int_t ftmpWidth = gVirtualX->TextWidth(fFontStruct, tmpString,
+                                                   tmpString.Length());
+            if ( ftmpWidth > (fCpos[i+1] - fCpos[i]) ) {
+               for (int j = fSubnames[i]->Length() - 1 ; j > 0; j--) {
+                  tmpString =  (*fSubnames[i])(0,j) + "...";
+                  ftmpWidth = gVirtualX->TextWidth(GetDefaultFontStruct(),
+                                                   tmpString,
+                                                   tmpString.Length());
+                  if ( ftmpWidth <= (fCpos[i+1] - fCpos[i]) ) {
+                     break;
+                  }
+               }
+            }
             if (fCpos[i] == 0)
                break;
             if (fJmode[i] == kTextRight)
-               lx = fCpos[i+1] - fCtw[i] - 2;
+               lx = fCpos[i+1] - ftmpWidth - 2;
             else if (fJmode[i] == kTextCenterX)
-               lx = (fCpos[i] + fCpos[i+1] - fCtw[i]) >> 1;
+               lx = (fCpos[i] + fCpos[i+1] - ftmpWidth) >> 1;
             else // default to TEXT_LEFT
                lx = fCpos[i] + 2;
 
             if (x + lx < 0) continue; // out of left boundary or mess in name
-            fSubnames[i]->Draw(id, fNormGC, x + lx, y + ly + max_ascent);
+            TGString tmpTGString(tmpString);
+            tmpTGString.Draw(id, fNormGC, x + lx, y + ly + max_ascent);
          }
       }
    }
@@ -874,17 +920,22 @@ TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
 {
    // Create a list view widget.
 
-   fViewMode   = kLVLargeIcons;
-   fNColumns   = 0;
-   fColumns    = 0;
-   fJmode      = 0;
-   fColHeader  = 0;
+   fViewMode    = kLVLargeIcons;
+   fNColumns    = 0;
+   fColumns     = 0;
+   fJmode       = 0;
+   fColHeader   = 0;
+   fColNames    = 0;
+   fSplitHeader = 0;
+   fJustChanged = kFALSE;
+   fMinColumnSize = 25;
    fFontStruct = GetDefaultFontStruct();
    fNormGC     = GetDefaultGC()();
    if (fHScrollbar)
-      fHScrollbar->Connect("PositionChanged(Int_t)", "TGListView", this,
-                           "ScrollHeader(Int_t)");
-   fHeader = new TGHorizontalFrame(this, 20, 20, kChildFrame);
+      fHScrollbar->Connect("PositionChanged(Int_t)", "TGListView",
+                           this, "ScrollHeader(Int_t)");
+   fHeader = new TGHeaderFrame(this, 20, 20, kChildFrame | kFixedWidth);
+
    SetDefaultHeaders();
 }
 
@@ -896,9 +947,13 @@ TGListView::~TGListView()
    if (fNColumns) {
       delete [] fColumns;
       delete [] fJmode;
-      for (int i = 0; i < fNColumns; i++)
+      for (int i = 0; i < fNColumns; i++) {
          delete fColHeader[i];
+         delete fSplitHeader[i];
+      }
       delete [] fColHeader;
+      delete [] fColNames;
+      delete [] fSplitHeader;
       delete fHeader;
    }
 }
@@ -913,8 +968,11 @@ void TGListView::ScrollHeader(Int_t pos)
       for (i = 0; i < fNColumns-1; ++i) {
          fColHeader[i]->Move(xl, 0);
          xl += fColHeader[i]->GetWidth();
+         fSplitHeader[i]->Move(xl,fSplitHeader[i]->GetHeight());
       }
       fColHeader[i]->Move(xl, 0);
+      xl += fColHeader[i]->GetWidth();
+      fSplitHeader[i]->Move(xl,fSplitHeader[i]->GetHeight());
    }
 }
 
@@ -945,19 +1003,34 @@ void TGListView::SetHeaders(Int_t ncolumns)
    fColumns   = new int[fNColumns];
    fJmode     = new int[fNColumns];
    fColHeader = new TGTextButton* [fNColumns];
+   fColNames  = new TString [fNColumns];
+   fSplitHeader = new TGVFileSplitter* [fNColumns];
    for (int i = 0; i < fNColumns; i++) {
       fColHeader[i] = 0;
       fJmode[i] = kTextLeft;
+      fSplitHeader[i] = new TGVFileSplitter(fHeader, 10);
+      fSplitHeader[i]->Connect("LayoutListView()", "TGListView",
+                               this, "Layout()");
+      fSplitHeader[i]->Connect("LayoutHeader(TGFrame *)", "TGListView",
+                               this, "LayoutHeader(TGFrame *)");
+      fSplitHeader[i]->Connect("DoubleClicked(TGVFileSplitter*)", "TGListView",
+                               this, "SetDefaultColumnWidth(TGVFileSplitter*)");
    }
 
    // create blank filler header
+   fColNames[fNColumns-1] = "";
    fColHeader[fNColumns-1] = new TGTextButton(fHeader, new TGHotString(""), -1,
-                                              fNormGC, fFontStruct);
+                                    fNormGC, fFontStruct, kRaisedFrame |
+                                    kDoubleBorder | kFixedWidth);
+   fColHeader[fNColumns-1]->Associate(fHeader);
    fColHeader[fNColumns-1]->SetTextJustify(kTextCenterX | kTextCenterY);
    fColHeader[fNColumns-1]->SetState(kButtonDisabled);
    fColHeader[fNColumns-1]->SetState(kButtonDisabled);
    fJmode[fNColumns-1]   = kTextCenterX;
    fColumns[fNColumns-1] = 0;
+   fSplitHeader[fNColumns-1]->SetFrame(fColHeader[fNColumns-1], kTRUE);
+   fHeader->SetColumnsInfo(fNColumns, fColHeader, fSplitHeader);
+   fJustChanged = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -972,9 +1045,14 @@ void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
       return;
    }
    delete fColHeader[idx];
-   fColHeader[idx] = new TGTextButton(fHeader, new TGHotString(s),
-                                      idx, fNormGC, fFontStruct);
+
+   fColNames[idx] = s;
+   fColHeader[idx] = new TGTextButton(fHeader, new TGHotString(s), idx,
+                                      fNormGC, fFontStruct, kRaisedFrame |
+                                      kDoubleBorder | kFixedWidth);
+   fColHeader[idx]->Associate(fHeader);
    fColHeader[idx]->SetTextJustify(hmode | kTextCenterY);
+   fSplitHeader[idx]->SetFrame(fColHeader[idx], kTRUE);
 
    // fJmode and fColumns contain values for columns idx > 0. idx==0 is
    // the small icon with the object name
@@ -982,11 +1060,11 @@ void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
       fJmode[idx-1] = cmode;
 
    if (!fColHeader[0]) return;
-   int xl = fColHeader[0]->GetDefaultWidth() + 20 + 10;
+   int xl = fColHeader[0]->GetDefaultWidth() + 20 + 10 + fSplitHeader[0]->GetDefaultWidth();
    for (int i = 1; i < fNColumns; i++) {
       fColumns[i-1] = xl;
       if (!fColHeader[i]) break;
-      xl += fColHeader[i]->GetDefaultWidth() + 20;
+      xl += fColHeader[i]->GetDefaultWidth() + 20 + fSplitHeader[i]->GetDefaultWidth();
    }
 }
 
@@ -997,7 +1075,7 @@ const char *TGListView::GetHeader(Int_t idx) const
    // 0 is returned.
 
    if (idx >= 0 && idx < fNColumns-1 && fColHeader[idx])
-      return fColHeader[idx]->GetText()->GetString();
+      return (const char*) fColNames[idx];
    return 0;
 }
 
@@ -1024,6 +1102,7 @@ void TGListView::SetViewMode(EListViewMode viewMode)
    TGLVContainer *container;
 
    if (fViewMode != viewMode) {
+      fJustChanged = kTRUE;
       fViewMode = viewMode;
       container = (TGLVContainer *) fVport->GetContainer();
       if (container) container->SetViewMode(viewMode);
@@ -1055,6 +1134,28 @@ void TGListView::SetIncrements(Int_t hInc, Int_t vInc)
 }
 
 //______________________________________________________________________________
+void TGListView::SetDefaultColumnWidth(TGVFileSplitter* splitter)
+{
+   // Set default column width of the columns headers.
+
+   TGLVContainer *container = (TGLVContainer *) fVport->GetContainer();
+
+   if (!container) {
+      Error("SetDefaultColumnWidth", "no listview container set yet");
+      return;
+   }
+   for (int i = 0; i < fNColumns; ++i) {
+      if ( fSplitHeader[i] == splitter ) {
+         UInt_t w = fColHeader[i]->GetDefaultWidth() + 20;
+         if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
+         if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
+         fColHeader[i]->Resize(w, fColHeader[i]->GetHeight());
+         Layout();
+      }
+   }
+}
+
+//______________________________________________________________________________
 void TGListView::Layout()
 {
    // Layout list view components (container and contents of container).
@@ -1076,25 +1177,44 @@ void TGListView::Layout()
       fHeader->MoveResize(fBorderWidth, fBorderWidth, fWidth-4, h);
       fHeader->MapWindow();
       for (i = 0; i < fNColumns-1; ++i) {
-         w = fColHeader[i]->GetDefaultWidth()+20;
+         fColHeader[i]->SetText(fColNames[i]);
 
-         if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
-         if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
+         if ( fJustChanged ) {
+            w = fColHeader[i]->GetDefaultWidth() + 20;
+            if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
+            if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
+         } else {
+            w = fColHeader[i]->GetWidth();
+         }
+         w = TMath::Max( fMinColumnSize, (Int_t)w);
+         if ( fColHeader[i]->GetDefaultWidth() > w ) {
+            for (int j = fColNames[i].Length() - 1 ; j > 0; j--) {
+               fColHeader[i]->SetText( fColNames[i](0,j) + "..." );
+               if ( fColHeader[i]->GetDefaultWidth() < w )
+                  break;
+            }
+         }
 
          fColHeader[i]->MoveResize(xl, 0, w, h);
          fColHeader[i]->MapWindow();
          xl += w;
+         fSplitHeader[i]->Move(xl, 0);
+         fSplitHeader[i]->MapWindow();
          fColumns[i] = xl-2;  // -2 is fSep in the layout routine
       }
       fColHeader[i]->MoveResize(xl, 0, fVport->GetWidth()-xl, h);
       fColHeader[i]->MapWindow();
+      fSplitHeader[i]->Move(fVport->GetWidth(),  fSplitHeader[i]->GetHeight());
+      fSplitHeader[i]->MapWindow();
       fVScrollbar->RaiseWindow();
 
       container->SetColumns(fColumns, fJmode);
 
    } else {
-      for (i = 0; i < fNColumns; ++i)
+      for (i = 0; i < fNColumns; ++i) {
          fColHeader[i]->UnmapWindow();
+         fSplitHeader[i]->UnmapWindow();
+      }
       fHeader->UnmapWindow();
    }
 
@@ -1108,6 +1228,74 @@ void TGListView::Layout()
                          fVport->GetHeight()-h);
       fVScrollbar->SetRange(container->GetHeight(), fVport->GetHeight());
    }
+
+   fJustChanged = kFALSE;
+}
+
+//______________________________________________________________________________
+void TGListView::LayoutHeader(TGFrame *head)
+{
+   // Layout list view components (container and contents of container).
+
+   Int_t  i, xl = 0;
+   UInt_t w, h = 0;
+   static Int_t oldPos = 0;
+   if (head == 0) oldPos = 0;
+
+   TGLVContainer *container = (TGLVContainer *) fVport->GetContainer();
+
+   if (!container) {
+      Error("Layout", "no listview container set yet");
+      return;
+   }
+   fMaxSize = container->GetMaxItemSize();
+
+   if (fViewMode == kLVDetails) {
+      h = fColHeader[0]->GetDefaultHeight()-4;
+      fHeader->MoveResize(fBorderWidth, fBorderWidth, fWidth-4, h);
+      fHeader->MapWindow();
+      for (i = 0; i < fNColumns-1; ++i) {
+         fColHeader[i]->SetText(fColNames[i]);
+
+         if ( fJustChanged ) {
+            w = fColHeader[i]->GetDefaultWidth() + 20;
+            if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
+            if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
+         } else {
+            w = fColHeader[i]->GetWidth();
+         }
+         w = TMath::Max( fMinColumnSize, (Int_t)w);
+         if ( fColHeader[i]->GetDefaultWidth() > w ) {
+            for (int j = fColNames[i].Length() - 1 ; j > 0; j--) {
+               fColHeader[i]->SetText( fColNames[i](0,j) + "..." );
+               if ( fColHeader[i]->GetDefaultWidth() < w )
+                  break;
+            }
+         }
+
+         if ((TGFrame *)fColHeader[i] == head) {
+            if (oldPos > 0)
+               gVirtualX->DrawLine(container->GetId(), container->GetLineGC()(),
+                                   oldPos, 0, oldPos, container->GetHeight());
+            gVirtualX->DrawLine(container->GetId(), container->GetLineGC()(),
+                                xl + w, 0, xl + w, container->GetHeight());
+            oldPos = xl + w;
+         }
+
+         fColHeader[i]->MoveResize(xl, 0, w, h);
+         fColHeader[i]->MapWindow();
+         xl += w;
+         fSplitHeader[i]->Move(xl, 0);
+         fSplitHeader[i]->MapWindow();
+         fColumns[i] = xl-2;  // -2 is fSep in the layout routine
+      }
+      fColHeader[i]->MoveResize(xl, 0, fVport->GetWidth()-xl, h);
+      fColHeader[i]->MapWindow();
+      fSplitHeader[i]->Move(fVport->GetWidth(),  fSplitHeader[i]->GetHeight());
+      fSplitHeader[i]->MapWindow();
+      fVScrollbar->RaiseWindow();
+   }
+   fJustChanged = kFALSE;
 }
 
 //______________________________________________________________________________

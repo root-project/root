@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.77 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.78 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -46,6 +46,8 @@
 
 class TList;
 class TGResourcePool;
+class TGTextButton;
+class TGVFileSplitter;
 
 
 //---- frame states
@@ -635,5 +637,39 @@ public:
 
    ClassDef(TGGroupFrame,0)  // A composite frame with border and title
 };
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGHeaderFrame                                                        //
+//                                                                      //
+// Horizontal Frame used to contain header buttons and splitters        //
+// in a list view. Used to have resizable column headers.               //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TGHeaderFrame : public TGHorizontalFrame {
+protected:
+   Int_t              fNColumns;     // number of columns
+   TGTextButton     **fColHeader;    // column headers for in detailed mode
+   TGVFileSplitter  **fSplitHeader;  // column splitters
+   Cursor_t           fSplitCursor;  // split cursor;
+   Bool_t             fOverSplitter; // Indicates if the cursor is over a splitter
+   Int_t              fOverButton;   // Indicates over which button the mouse is
+   Int_t              fLastButton;   // Indicates the last button clicked if any
+
+public:
+   TGHeaderFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+                 UInt_t options = kChildFrame,
+                 Pixel_t back = GetDefaultFrameBackground());
+
+   virtual Bool_t HandleButton(Event_t* event);
+   virtual Bool_t HandleMotion(Event_t* event);
+   virtual Bool_t HandleDoubleClick(Event_t *event);
+
+   void SetColumnsInfo(Int_t nColumns, TGTextButton  **colHeader, TGVFileSplitter  **splitHeader);
+
+   ClassDef(TGHeaderFrame,0)  // Header frame with buttons and splitters
+};
+
 
 #endif
