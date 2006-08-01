@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.18 2006/07/14 06:47:25 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.19 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -22,6 +22,7 @@
 #include "Reflex/internal/ScopeName.h"
 #include "Reflex/internal/OwnedTypeTemplate.h"
 #include "Reflex/internal/OwnedMemberTemplate.h"
+#include "Reflex/internal/InternalTools.h"
 #include "Reflex/Tools.h"
 
 #include "Class.h"
@@ -250,28 +251,28 @@ ROOT::Reflex::ScopeBase::LookupType( const std::string & nam,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::Member_Begin() const {
 //-------------------------------------------------------------------------------
-   return Tools::ToIter<Member>::Forward(fMembers.begin());
+   return OTools::ToIter<Member>::Forward(fMembers.begin());
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::Member_End() const {
 //-------------------------------------------------------------------------------
-   return Tools::ToIter<Member>::Forward(fMembers.end());
+   return OTools::ToIter<Member>::Forward(fMembers.end());
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::Member_RBegin() const {
 //-------------------------------------------------------------------------------
-   return Tools::ToIter<Member>::Reverse(fMembers.rbegin());
+   return OTools::ToIter<Member>::Reverse(fMembers.rbegin());
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::Member_REnd() const {
 //-------------------------------------------------------------------------------
-   return Tools::ToIter<Member>::Reverse(fMembers.rend());
+   return OTools::ToIter<Member>::Reverse(fMembers.rend());
 }
 
 
