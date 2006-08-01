@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.10 2006/07/05 08:04:02 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.11 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -19,7 +19,7 @@
 #include "Reflex/internal/OwnedScope.h"
 #include "Reflex/internal/OwnedType.h"
 #include "Reflex/internal/OwnedBase.h"
-#include "Reflex/internal/OwnedObject.h"
+#include "Reflex/Object.h"
 #include "Reflex/internal/OwnedPropertyList.h"
 
 #include "Reflex/Tools.h"
