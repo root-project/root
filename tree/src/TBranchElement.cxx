@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.198 2006/06/01 22:28:07 pcanal Exp $
+// @(#)root/tree:$Name: v5-12-00-patches $:$Id: TBranchElement.cxx,v 1.199 2006/06/28 10:03:13 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2767,7 +2767,11 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
 
             } else if  (clbase->InheritsFrom(TClonesArray::Class())) {
 
-               branch = new TBranchElement(branchname,info,jd,fBranchPointer ,basketsize,splitlevel-1,btype);
+	       Int_t subSplitlevel = splitlevel-1;
+	       if (btype == 31 || btype == 41 || elem->CannotSplit()) {
+		  subSplitlevel = 0;
+	       }
+               branch = new TBranchElement(branchname,info,jd,fBranchPointer ,basketsize,subSplitlevel,btype);
                branch->SetParentClass(cltop);
                fBranches.Add(branch);
                unroll = 0;
