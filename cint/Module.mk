@@ -295,16 +295,20 @@ $(CINTDIRS)/v6_loadfile_tmp.cxx: $(CINTDIRS)/v6_loadfile.cxx
 
 ##### cintdlls ######
 # no: string valarray, limits iterator pair vectorbool
-CINTDLLNAMES = vector list deque map map2 set multimap multimap2 multiset \
-           stack queue exception complex stdfunc stdcxxfunc
+CINTSTLDLLNAMES = vector list deque map map2 set multimap multimap2 multiset \
+           stack queue exception complex
+CINTINCDLLNAMES = stdfunc stdcxxfunc
 ifneq ($(PLATFORM),win32)
 # FIX THEM!
-  CINTDLLNAMES += posix ipc
+  CINTINCDLLNAMES += posix ipc
 endif
 # ".dll", not ".$(SOEXT)"!
-CINTDLLS = $(subst $(CINTDIRSTL)/ipc.dll,$(CINTDIRDLLS)/sys/ipc.$(SOEXT),\
-  $(subst $(CINTDIRSTL)/posix.dll,$(CINTDIRDLLS)/posix.$(SOEXT),\
-  $(addprefix $(CINTDIRSTL)/,$(addsuffix .dll,$(CINTDLLNAMES)))))
+CINTDLLS = $(addsuffix .dll,$(addprefix $(CINTDIRSTL)/,$(CINTSTLDLLNAMES)) $(addprefix $(CINTDIRDLLS)/,$(CINTINCDLLNAMES)))
+CINTDLLNAMES = $(CINTSTLDLLNAMES) $(CINTINCDLLNAMES)
+
+#$(subst $(CINTDIRSTL)/ipc.dll,$(CINTDIRDLLS)/sys/ipc.$(SOEXT),\
+#  $(subst $(CINTDIRSTL)/posix.dll,$(CINTDIRDLLS)/posix.$(SOEXT),\
+#  $(addprefix $(CINTDIRSTL)/,$(addsuffix .dll,$(CINTDLLNAMES)))))
 
 # these need dictionaries
 ifneq ($(findstring vector,$(CINTDLLS)),)
@@ -368,10 +372,11 @@ $(CINTDIRDLLSTL)/G__cpp_pair.cxx:	$(CINTDIRL)/dll_stl/pr.h
 $(CINTDIRDLLSTL)/G__cpp_string.cxx:	$(CINTDIRL)/dll_stl/str.h
 $(CINTDIRDLLSTL)/G__cpp_valarray.cxx:	$(CINTDIRL)/dll_stl/vary.h
 $(CINTDIRDLLSTL)/G__cpp_vectorbool.cxx: $(CINTDIRL)/dll_stl/vecbool.h
-$(CINTDIRDLLSTL)/G__cpp_stdcxxfunc.cxx: $(CINTDIRL)/stdstrct/stdcxxfunc.h
-#$(CINTDIRDLLSTL)/G__c_stdfunc.cxx:	$(CINTDIRL)/stdstrct/stdfunc.h
-$(CINTDIRDLLSTL)/G__c_posix.c:		$(CINTDIRL)/posix/exten.h
-$(CINTDIRDLLSTL)/G__c_ipc.c:		$(CINTDIRL)/ipc/ipcif.h
+
+$(CINTDIRL)/G__cpp_stdcxxfunc.cxx: 	$(CINTDIRL)/stdstrct/stdcxxfunc.h
+$(CINTDIRL)/G__c_stdfunc.c:		$(CINTDIRL)/stdstrct/stdfunc.h
+$(CINTDIRL)/G__c_posix.c:		$(CINTDIRL)/posix/exten.h
+$(CINTDIRL)/G__c_ipc.c:			$(CINTDIRL)/ipc/ipcif.h
 
 
 FAVOR_SYSINC := -I-
@@ -406,10 +411,21 @@ $(CINTDIRSTL)/%.dll: $(CINTDIRDLLSTL)/G__cpp_%.o
 	$(CINTDLLSOEXTCMD)
 	-rm -f $< $(<:.o=.cxx) $(<:.o=.c) $(<:.o=.h) $(<:.o=.d)
 
+$(CINTDIRDLLS)/%.dll: $(CINTDIRL)/G__c_%.o
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $(@:.dll=.$(SOEXT)) $^
+	$(CINTDLLSOEXTCMD)
+	-rm -f $< $(<:.o=.cxx) $(<:.o=.c) $(<:.o=.h) $(<:.o=.d)
+
+
 metautils/src/stlLoader_%.o: metautils/src/stlLoader.cc
 	$(CXX) $(OPT) $(CINTCXXFLAGS) $(INCDIRS) -DWHAT=\"$*\" $(CXXOUT)$@ -c $<
 
 $(CINTDIRDLLSTL)/G__cpp_%.cxx: $(ORDER_) $(CINTTMP)
+	$(CINTTMP) -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
+            -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRDLLSTL) -I$(CINTDIRL) \
+            -c-1 -A -Z0 $(filter %.h,$^)
+
+$(CINTDIRDLLINC)/G__cpp_%.cxx: $(ORDER_) $(CINTTMP)
 	$(CINTTMP) -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
             -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRDLLSTL) -I$(CINTDIRL) \
             -c-1 -A -Z0 $(filter %.h,$^)
