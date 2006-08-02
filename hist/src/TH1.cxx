@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.298 2006/07/20 07:23:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.299 2006/07/21 09:04:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1148,7 +1148,7 @@ Double_t TH1::Chi2TestX(const TH1 *h, Double_t &chi2, Int_t &ndf, Option_t *opti
       i_start = fXaxis.GetFirst();
       i_end   = fXaxis.GetLast();
    }
-   ndf = i_end-i_start+1-constraint;
+   ndf = i_end-i_start-constraint;
 
    if(opt.Contains("O")) {
       i_end = nbins1+1;
