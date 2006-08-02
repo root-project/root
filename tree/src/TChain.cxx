@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.138 2006/06/27 14:36:28 brun Exp $
+// @(#)root/tree:$Name: v5-12-00-patches $:$Id: TChain.cxx,v 1.139 2006/07/04 10:23:52 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1017,9 +1017,19 @@ Long64_t TChain::LoadTree(Long64_t entry)
    //reuse cache from previous file (if any)
    
    if (tpf) {
-      fFile->SetCacheRead(tpf);
-      tpf->SetFile(fFile);
-      tpf->UpdateBranches(fTree);
+      if (fFile) {
+         fFile->SetCacheRead(tpf);
+         tpf->SetFile(fFile);
+         // FIXME: fTree may be zero here.
+         tpf->UpdateBranches(fTree);
+      } else {
+         // FIXME: One of the file in the chain is missing
+         // we have no place to hold the pointer to the
+         // TTreeCache.
+         delete tpf;
+         tpf = 0;
+         this->SetCacheSize(fCacheSize);
+      }
    } else {
       this->SetCacheSize(fCacheSize);
    }
@@ -1056,11 +1066,13 @@ Long64_t TChain::LoadTree(Long64_t entry)
       //(and to overload a few more).
       TIter next(fFriends);
       TFriendLock lock(this,kLoadTree);
-      TFriendElement *fe;
+      TFriendElement *fe = 0;
       while ((fe = (TFriendElement*)next())) {
          TTree *t = fe->GetTree();
-         if (t->GetTreeIndex())
+         if (!t) continue;
+         if (t->GetTreeIndex()) {
             t->GetTreeIndex()->UpdateFormulaLeaves();
+         }
          t->LoadTreeFriend(entry, this);
          TTree *friend_t = t->GetTree();
          if (friend_t) {
