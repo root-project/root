@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.220 2006/07/05 17:29:05 pcanal Exp $
+// @(#)root/treeplayer:$Name: v5-12-00-patches $:$Id: TTreePlayer.cxx,v 1.221 2006/07/06 08:29:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1096,6 +1096,49 @@ const char *TTreePlayer::GetNameByIndex(TString &varexp, Int_t *index,Int_t coli
 }
 
 //______________________________________________________________________________
+static TString R__GetBranchPointerName(TLeaf *leaf)
+{
+   // Return the name of the branch pointer needed by MakeClass/MakeSelector
+
+   TLeaf *leafcount = leaf->GetLeafCount();
+   TBranch *branch = leaf->GetBranch();
+
+   TString branchname( branch->GetName() );
+
+   if ( branch->GetNleaves() <= 1 ) {
+       if (branch->IsA() != TBranchObject::Class()) {
+         if (!leafcount) {
+            TBranch *mother = branch->GetMother();
+            const char* ltitle = leaf->GetTitle();
+            if (mother && mother!=branch) {
+               branchname = mother->GetName();
+               if (branchname[branchname.Length()-1]!='.') {
+                  branchname += ".";
+               }
+               if (strncmp(branchname.Data(),ltitle,branchname.Length())==0) {
+                  branchname[0] = 0;
+               }
+            } else {
+               branchname[0] = 0;
+            }
+            branchname += ltitle;
+         }
+      }
+   }
+   char *bname = (char*)branchname.Data();
+   char *twodim = (char*)strstr(bname,"[");
+   if (twodim) *twodim = 0;
+   while (*bname) {
+      if (*bname == '.') *bname='_';
+      if (*bname == ':') *bname='_';
+      if (*bname == '<') *bname='_';
+      if (*bname == '>') *bname='_';
+      bname++;
+   }
+   return branchname;
+}
+
+//______________________________________________________________________________
 Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 {
 // Generate skeleton analysis class for this Tree.
@@ -1458,42 +1501,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    for (l=0;l<nleaves;l++) {
       if (leafStatus[l]) continue;
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
-      //if (strlen(leaf->GetTypeName()) == 0) continue;
-      leafcount =leaf->GetLeafCount();
-      TBranch *branch = leaf->GetBranch();
-      strcpy(branchname,branch->GetName());
-      if ( branch->GetNleaves() <= 1 ) {
-         // Code duplicated around line 1362
-         if (branch->IsA() != TBranchObject::Class()) {
-            if (!leafcount) {
-               TBranch *mother = branch->GetMother();
-               const char* ltitle = leaf->GetTitle();
-               if (mother && mother!=branch) {
-                  strcpy(branchname,mother->GetName());
-                  if (branchname[strlen(branchname)-1]!='.') {
-                     strcat(branchname,".");
-                  }
-                  if (strncmp(branchname,ltitle,strlen(branchname))==0) {
-                     branchname[0] = 0;
-                  }
-               } else {
-                  branchname[0] = 0;
-               }
-               strcat(branchname,ltitle);
-            }
-         }
-      }
-      bname = branchname;
-      char *twodim = (char*)strstr(bname,"[");
-      if (twodim) *twodim = 0;
-      while (*bname) {
-         if (*bname == '.') *bname='_';
-         if (*bname == ':') *bname='_';
-         if (*bname == '<') *bname='_';
-         if (*bname == '>') *bname='_';
-         bname++;
-      }
-      fprintf(fp,"   TBranch        *b_%s;   //!\n",branchname);
+      fprintf(fp,"   TBranch        *b_%s;   //!\n",R__GetBranchPointerName(leaf).Data());
    }
 
 // generate class member functions prototypes
@@ -1712,9 +1720,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       if (leafcount) len = leafcount->GetMaximum()+1;
       if (len > 1) fprintf(fp,"   fChain->SetBranchAddress(\"%s\", %s, &b_%s);\n",
-                           branch->GetName(), branchname, branchname);
+                           branch->GetName(), branchname, R__GetBranchPointerName(leaf).Data());
       else         fprintf(fp,"   fChain->SetBranchAddress(\"%s\", &%s, &b_%s);\n",
-                           branch->GetName(), branchname, branchname);
+                           branch->GetName(), branchname, R__GetBranchPointerName(leaf).Data());
    }
    //must call Notify in case of MakeClass
    if (!opt.Contains("selector")) {
