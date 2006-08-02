@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.77 2006/06/26 09:46:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.78 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -264,7 +264,7 @@ public:
    virtual void     Paint(Option_t *option="");
    virtual void     Print(Option_t *option="") const;
    virtual void     PutStats(Double_t *stats);
-   virtual TH1     *Rebin(Int_t ngroup=2, const char*newname="");  // *MENU*
+   virtual TH1     *Rebin(Int_t ngroup=2, const char*newname="", const Double_t *xbins=0);  // *MENU*
    virtual void     RebinAxis(Double_t x, Option_t *axis="X");
    virtual void     Rebuild(Option_t *option="");
    virtual void     RecursiveRemove(TObject *obj);

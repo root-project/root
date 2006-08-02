@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.299 2006/07/21 09:04:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.300 2006/08/02 08:27:54 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4402,10 +4402,11 @@ void TH1::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
+TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
 {
-   //   -*-*-*Rebin this histogram grouping ngroup bins together*-*-*-*-*-*-*-*-*
-   //         ==================================================
+   //   Rebin this histogram
+   //
+   //  -case 1  xbins=0
    //   if newname is not blank a new temporary histogram hnew is created.
    //   else the current histogram is modified (default)
    //   The parameter ngroup indicates how many bins of this have to me merged
@@ -4424,8 +4425,20 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
    //          to the upper edge of the bin=newbins*ngroup and the corresponding
    //          bins are added to the overflow bin.
    //          Statistics will be recomputed from the new bin contents.
+   //
+   //  -case 2  xbins!=0
+   //   a new histogram is created (you should specify newname).
+   //   The parameter is the number of variable size bins in the created histogram.
+   //   The array xbins must contain ngroup+1 elements that represent the low-edge
+   //   of the bins.
+   //   If the original histogram has errors stored (via Sumw2), the resulting
+   //   histograms has new errors correctly calculated.
+   //
+   //   examples: if h1 is an existing TH1F histogram with 100 bins
+   //     Double_t xbins[25] = {...} array of low-edges (xbins[25] is the upper edge of last bin
+   //     h1->Rebin(24,"hnew",xbins);  //creates a new variable bin size histogram hnew
 
-   Int_t nbins  = fXaxis.GetNbins();
+   Int_t nbins    = fXaxis.GetNbins();
    Double_t xmin  = fXaxis.GetXmin();
    Double_t xmax  = fXaxis.GetXmax();
    if ((ngroup <= 0) || (ngroup > nbins)) {
@@ -4437,7 +4450,8 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
       return 0;
    }
    Int_t newbins = nbins/ngroup;
-
+   if (xbins) newbins = ngroup;
+   
    // Save old bin contents into a new array
    Double_t entries = fEntries;
    Double_t *oldBins = new Double_t[nbins+2];
@@ -4451,13 +4465,12 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
 
    // create a clone of the old histogram if newname is specified
    TH1 *hnew = this;
-   if (newname && strlen(newname) > 0) {
-      hnew = (TH1*)Clone();
-      hnew->SetName(newname);
+   if ((newname && strlen(newname) > 0) || xbins) {
+      hnew = (TH1*)Clone(newname);
    }
 
    // change axis specs and rebuild bin contents array::RebinAx
-   if(newbins*ngroup != nbins) {
+   if(!xbins && (newbins*ngroup != nbins)) {
       xmax = fXaxis.GetBinUpEdge(newbins*ngroup);
       hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
    }
@@ -4474,13 +4487,16 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
    Color_t  titleColor  = fXaxis.GetTitleColor();
    Style_t  titleFont   = fXaxis.GetTitleFont();
 
-   if(fXaxis.GetXbins()->GetSize() > 0){ // variable bin sizes
+   if(!xbins && (fXaxis.GetXbins()->GetSize() > 0)){ // variable bin sizes
       Double_t *bins = new Double_t[newbins+1];
       for(Int_t i = 0; i <= newbins; ++i) bins[i] = fXaxis.GetBinLowEdge(1+i*ngroup);
       hnew->SetBins(newbins,bins); //this also changes errors array (if any)
       delete [] bins;
+   } else if (xbins) {
+      ngroup = 1;
+      hnew->SetBins(newbins,xbins);
    } else {
-      hnew->SetBins(newbins,xmin,xmax); //this also changes errors array (if any)
+      hnew->SetBins(newbins,xmin,xmax);
    }
 
    // Restore axis attributes

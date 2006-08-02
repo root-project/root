@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.79 2006/05/17 16:37:26 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.80 2006/07/03 16:10:46 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1482,10 +1482,11 @@ void TProfile::PutStats(Double_t *stats)
 }
 
 //______________________________________________________________________________
-TH1 *TProfile::Rebin(Int_t ngroup, const char*newname)
+TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
 {
 //*-*-*-*-*Rebin this profile grouping ngroup bins together*-*-*-*-*-*-*-*-*
 //*-*      ================================================
+//  -case 1  xbins=0
 //   if newname is not blank a new temporary profile hnew is created.
 //   else the current profile is modified (default)
 //   The parameter ngroup indicates how many bins of this have to me merged
@@ -1504,8 +1505,18 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname)
 //          to the upper edge of the bin=newbins*ngroup and the corresponding
 //          bins are added to the overflow bin.
 //          Statistics will be recomputed from the new bin contents.
+//
+//  -case 2  xbins!=0
+//   a new profile is created (you should specify newname).
+//   The parameter is the number of variable size bins in the created profile
+//   The array xbins must contain ngroup+1 elements that represent the low-edge
+//   of the bins.
+//
+//   examples: if hp is an existing TProfile with 100 bins
+//     Double_t xbins[25] = {...} array of low-edges (xbins[25] is the upper edge of last bin
+//     hp->Rebin(24,"hpnew",xbins);  //creates a new variable bin size profile hpnew
 
-   Int_t nbins  = fXaxis.GetNbins();
+   Int_t nbins    = fXaxis.GetNbins();
    Double_t xmin  = fXaxis.GetXmin();
    Double_t xmax  = fXaxis.GetXmax();
    if ((ngroup <= 0) || (ngroup > nbins)) {
@@ -1513,8 +1524,10 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname)
       return 0;
    }
    Int_t newbins = nbins/ngroup;
+   if (xbins) newbins = ngroup;
 
    // Save old bin contents into a new array
+   Double_t entries = fEntries;
    Double_t *oldBins   = new Double_t[nbins];
    Double_t *oldCount  = new Double_t[nbins];
    Double_t *oldErrors = new Double_t[nbins];
@@ -1530,47 +1543,50 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname)
 
    // create a clone of the old histogram if newname is specified
    TProfile *hnew = this;
-   if (newname && strlen(newname) > 0) {
-      hnew = (TProfile*)Clone();
-      hnew->SetName(newname);
+   if ((newname && strlen(newname) > 0) || xbins) {
+      hnew = (TProfile*)Clone(newname);
    }
 
    // change axis specs and rebuild bin contents array
-   if(newbins*ngroup != nbins) {
+   if(!xbins && (newbins*ngroup != nbins)) {
       xmax = fXaxis.GetBinUpEdge(newbins*ngroup);
       hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
    }
 
-   if(fXaxis.GetXbins()->GetSize() > 0){ // variable bin sizes
+   if(!xbins && (fXaxis.GetXbins()->GetSize() > 0)){ // variable bin sizes
       Double_t *bins = new Double_t[newbins+1];
       for(Int_t i = 0; i <= newbins; ++i) bins[i] = fXaxis.GetBinLowEdge(1+i*ngroup);
       hnew->SetBins(newbins,bins); //this also changes errors array (if any)
       delete [] bins;
+   } else if (xbins) {
+      ngroup = 1;
+      hnew->SetBins(newbins,xbins);
    } else {
-      hnew->SetBins(newbins,xmin,xmax); //this also changes errors array (if any)
+      hnew->SetBins(newbins,xmin,xmax);
    }
 
    // copy merged bin contents (ignore under/overflows)
    Double_t *cu2 = hnew->GetW();
    Double_t *er2 = hnew->GetW2();
    Double_t *en2 = hnew->GetB();
-   Int_t oldbin = 0;
+   Int_t oldbin = 1;
    Double_t binContent, binCount, binError;
-   for (bin = 0;bin<=newbins;bin++) {
+   for (bin = 1;bin<=newbins;bin++) {
       binContent = 0;
       binCount   = 0;
       binError   = 0;
       for (i=0;i<ngroup;i++) {
-         if (oldbin+i >= nbins) break;
+         if (oldbin+i > nbins) break;
          binContent += oldBins[oldbin+i];
          binCount   += oldCount[oldbin+i];
          binError   += oldErrors[oldbin+i];
       }
-      cu2[bin+1] = binContent;
-      er2[bin+1] = binError;
-      en2[bin+1] = binCount;
+      cu2[bin] = binContent;
+      er2[bin] = binError;
+      en2[bin] = binCount;
       oldbin += ngroup;
    }
+   hnew->SetEntries(entries); //was modified by SetBinContent
 
    delete [] oldBins;
    delete [] oldCount;
