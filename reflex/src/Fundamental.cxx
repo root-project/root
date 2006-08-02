@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Fundamental.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Fundamental.cxx,v 1.9 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -14,6 +14,9 @@
 #endif
 
 #include "Fundamental.h"
+
+#include "Reflex/Type.h"
+#include "Reflex/Member.h"
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Fundamental::Fundamental( const char * typ,
