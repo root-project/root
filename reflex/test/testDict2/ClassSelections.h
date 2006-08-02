@@ -35,6 +35,8 @@ namespace ns {
   int fooadd (int i) { return i+i; }
 
   class TestSelectionClass {
+  public:
+    void bar() {}
   private:
     int fI;
     float fF;

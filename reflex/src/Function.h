@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Function.h,v 1.7 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Function.h,v 1.8 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -35,7 +35,7 @@ namespace ROOT {
 
          /** default constructor */
          Function( const Type & retType,
-                   std::vector< Type > parameters,
+                   const std::vector< Type > & parameters,
                    const std::type_info & ti,
                    TYPE functionType = FUNCTION );
 

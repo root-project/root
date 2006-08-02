@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.10 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -37,8 +37,8 @@ namespace ROOT {
          /** default constructor */
          MemberTemplateImpl( const std::string & templateName,
                              const Scope & scope,
-                             std::vector < std::string > parameterNames, 
-                             std::vector < std::string > parameterDefaults = std::vector<std::string>());
+                             const std::vector < std::string > & parameterNames, 
+                             const std::vector < std::string > & parameterDefaults = std::vector<std::string>());
 
 
          /** destructor */

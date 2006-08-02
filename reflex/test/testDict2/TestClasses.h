@@ -97,6 +97,8 @@ namespace testclasses {
 
   struct ConstNonConstMembers {
 
+    ConstNonConstMembers() : m_i(0), m_ci(1), m_vi(2) {}
+
     int foo(int i) { return m_i * i; }
     int foo(int i) const { return m_i * i ; }
      int constfoo() const { return 0; }
@@ -206,6 +208,7 @@ namespace testclasses {
 
 
 class BadDictionary {
+ public:
   const A* rioOnTrack(unsigned int indx) const {
     //return new A();
     return m_vect->operator[](indx);

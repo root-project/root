@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.9 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.10 2006/07/19 13:04:01 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -431,6 +431,7 @@ namespace f {
   struct foo { 
     foo(int i, float f) : fI(i), fF(f)  {}
     foo(const foo& o) : fI(o.fI), fF(o.fF)  {}
+    ~foo() {}
     int   fI;
     float fF;
   };
@@ -440,12 +441,17 @@ namespace f {
   void * ctor2 ( void * o, const vector<void*> & args, void * ) {
     return new (o) foo(*(foo*)args[0]);
   }
+  void * dtor ( void * o, const vector<void*> &, void * ) {
+    ((foo*)o)->~foo(); 
+    return 0;
+  }
 }
 void ReflexBuilderUnitTest::objectinstantiation()
 {
   ClassBuilderT<f::foo>()
     .AddFunctionMember<void(int,float)>("foo", &f::ctor1, 0, 0, CONSTRUCTOR)
     .AddFunctionMember<void(const f::foo&)>("foo", &f::ctor2, 0, 0, CONSTRUCTOR)
+    .AddFunctionMember<void(void)>("~foo", &f::dtor, 0, 0, DESTRUCTOR | PUBLIC )
     .AddDataMember<int>("fI", OffsetOf(f::foo, fI) )
     .AddDataMember<float>("fF", OffsetOf(f::foo, fF) );
   Type c = Type::ByTypeInfo(typeid(f::foo));
@@ -467,6 +473,9 @@ void ReflexBuilderUnitTest::objectinstantiation()
   CPPUNIT_ASSERT(o2.Address());
   CPPUNIT_ASSERT_EQUAL(100,    *(int*)o2.Get("fI").Address());
   CPPUNIT_ASSERT_EQUAL(400.0F, *(float*)o2.Get("fF").Address());
+
+  o2.Destruct();
+  o1.Destruct();
 }
 //==============================================================================================
 // Typedefs
