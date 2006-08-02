@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.17 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name: v5-12-00-patches $:$Id: TMapFile.cxx,v 1.18 2005/11/16 20:04:11 pcanal Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -1127,7 +1127,7 @@ void *TMapFile::MapToAddress()
    // to be remapped at it's original address. This becomes a problem if
    // the desired address is already in use.
 
-#ifdef HAVE_MMAP
+#ifdef R__HAVE_MMAP
    if (TStorage::HasCustomNewDelete())
       return (void *)fgMapAddress;
    else
