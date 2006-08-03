@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.27 2006/08/01 11:01:42 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.28 2006/08/01 20:23:47 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -1035,7 +1035,9 @@ void TUploadDataSetDlg::AddFiles(TList *fileList)
    TObjString *el;
    TIter next(fileList);
    while ((el = (TObjString *) next())) {
-      const char *fileName = el->GetString();
+      const char *fileName = Form("%s/%s",
+                  gSystem->UnixPathName(gSystem->DirName(el->GetString())),
+                  gSystem->BaseName(el->GetString()));
       // single file
       if (!fLVContainer->FindItem(fileName)) {
          TGLVEntry *entry = new TGLVEntry(fLVContainer, fileName, fileName);
