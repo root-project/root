@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.20 2006/08/01 10:28:45 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.21 2006/08/01 15:04:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -37,7 +37,7 @@
 //-------------------------------------------------------------------------------
 ROOT::Reflex::ScopeBase::ScopeBase( const char * scope, 
                                     TYPE scopeType )
-   : fMembers( Members() ),
+   : fMembers( OMembers() ),
      fDataMembers( Members() ),
      fFunctionMembers( Members() ),
      fScopeName( 0 ),
@@ -46,8 +46,8 @@ ROOT::Reflex::ScopeBase::ScopeBase( const char * scope,
      fSubScopes( std::vector<Scope>() ),
      fSubTypes( std::vector<Type>() ),
      fTypeTemplates( std::vector<TypeTemplate>() ),
-     fMemberTemplates( std::vector<MemberTemplate>() ),
-     fPropertyList( OwnedPropertyList( new PropertyListImpl())),
+     fMemberTemplates( std::vector<OwnedMemberTemplate>() ),
+     fPropertyList( OwnedPropertyList()),
      fBasePosition( Tools::GetBasePosition( scope )) {
 //-------------------------------------------------------------------------------
 // Construct the dictionary information for a scope.
@@ -86,7 +86,7 @@ ROOT::Reflex::ScopeBase::ScopeBase( const char * scope,
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::ScopeBase::ScopeBase() 
-   : fMembers( Members()),
+   : fMembers( OMembers()),
      fDataMembers( Members()),
      fFunctionMembers( Members()),
      fScopeName( 0 ),
@@ -94,12 +94,29 @@ ROOT::Reflex::ScopeBase::ScopeBase()
      fDeclaringScope( Scope::__NIRVANA__() ),
      fSubScopes( std::vector<Scope>()),
      fSubTypes( std::vector<Type>()),
+     fTypeTemplates( std::vector<TypeTemplate>()),
+     fMemberTemplates( std::vector<OwnedMemberTemplate>()),
      fPropertyList( OwnedPropertyList() ),
      fBasePosition( 0 ) {
 //-------------------------------------------------------------------------------
 // Default constructor for the ScopeBase (used at init time for the global scope)
    fScopeName = new ScopeName("", this);
    fPropertyList.AddProperty("Description", "global namespace");
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::ScopeBase::ScopeBase( const ScopeBase & ) {
+//-------------------------------------------------------------------------------
+   // No copying allowed.
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::ScopeBase & ROOT::Reflex::ScopeBase::operator = ( const ScopeBase & ) { 
+//-------------------------------------------------------------------------------
+   // No assignment allowed.
+   return *this; 
 }
 
 
@@ -251,36 +268,32 @@ ROOT::Reflex::ScopeBase::LookupType( const std::string & nam,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::Member_Begin() const {
 //-------------------------------------------------------------------------------
-// Return the begin iterator for members
-   return fMembers.begin();
-//   return OTools::ToIter<Member>::Forward(fMembers.begin());
+// Return the begin iterator for members.
+   return OTools::ToIter<Member>::Begin(fMembers);
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::Member_End() const {
 //-------------------------------------------------------------------------------
-// Return the end iterator for members
-   return fMembers.end();
-   //   return OTools::ToIter<Member>::Forward(fMembers.end());
+// Return the end iterator for members.
+   return OTools::ToIter<Member>::End(fMembers);
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::Member_RBegin() const {
 //-------------------------------------------------------------------------------
-// Return the rbegin iterator for members
-   return fMembers.rbegin();
-   //return OTools::ToIter<Member>::Reverse(fMembers.rbegin());
+// Return the rbegin iterator for members.
+   return OTools::ToIter<Member>::RBegin(fMembers);
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::Member_REnd() const {
 //-------------------------------------------------------------------------------
-// Return the rend iterator for members
-   return fMembers.rend();
-   //return OTools::ToIter<Member>::Reverse(fMembers.rend());
+// Return the rend iterator for members.
+   return OTools::ToIter<Member>::REnd(fMembers);
 }
 
 
@@ -312,6 +325,38 @@ ROOT::Reflex::ScopeBase::MemberByName( const std::string & name,
       if ( fMembers[i].Name() == name ) return fMembers[i];
    }
    return Dummy::Member();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_Begin() const {
+//-------------------------------------------------------------------------------
+// Return the begin iterator of the member template container.
+   return OTools::ToIter<MemberTemplate>::Begin(fMemberTemplates);
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_End() const {
+//-------------------------------------------------------------------------------
+// Return the end iterator of the member template container.
+   return OTools::ToIter<MemberTemplate>::End(fMemberTemplates);
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_RBegin() const {
+//-------------------------------------------------------------------------------
+// Return the rbegin iterator of the member template container.
+   return OTools::ToIter<MemberTemplate>::RBegin(fMemberTemplates);
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_REnd() const {
+//-------------------------------------------------------------------------------
+// Return the rend iterator of the member template container.
+   return OTools::ToIter<MemberTemplate>::REnd(fMemberTemplates);
 }
 
 
@@ -511,7 +556,7 @@ void ROOT::Reflex::ScopeBase::RemoveDataMember( const Member & dm ) const {
    for ( it = fDataMembers.begin(); it != fDataMembers.end(); ++it) {
       if ( *it == dm ) fDataMembers.erase(it); break;
    }
-   std::vector< Member >::iterator im;
+   std::vector< OwnedMember >::iterator im;
    for ( im = fMembers.begin(); im != fMembers.end(); ++im) {
       if ( *im == dm ) fMembers.erase(im); break;
    }
@@ -549,7 +594,7 @@ void ROOT::Reflex::ScopeBase::RemoveFunctionMember( const Member & fm ) const {
    for ( it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it) {
       if ( *it == fm ) fFunctionMembers.erase(it); break;
    }
-   std::vector< Member >::iterator im;
+   std::vector< OwnedMember >::iterator im;
    for ( im = fMembers.begin(); im != fMembers.end(); ++im) {
       if ( *im == fm ) fMembers.erase(im); break;
    }
@@ -568,7 +613,7 @@ void ROOT::Reflex::ScopeBase::AddMemberTemplate( const MemberTemplate & mt ) con
 void ROOT::Reflex::ScopeBase::RemoveMemberTemplate( const MemberTemplate & mt ) const {
 //-------------------------------------------------------------------------------
 // Remove member template mt from this scope.
-   std::vector< MemberTemplate >::iterator it;
+   std::vector< OwnedMemberTemplate >::iterator it;
    for ( it = fMemberTemplates.begin(); it != fMemberTemplates.end(); ++it ) {
       if ( *it == mt ) fMemberTemplates.erase(it); break;
    }

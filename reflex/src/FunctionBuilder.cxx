@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: FunctionBuilder.cxx,v 1.10 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.cxx,v 1.10 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -20,6 +20,7 @@
 #include "Reflex/Any.h"
 #include "Reflex/Type.h"
 #include "Reflex/Tools.h"
+#include "Reflex/internal/OwnedMember.h"
 
 #include "FunctionMember.h"
 #include "FunctionMemberTemplateInstance.h"

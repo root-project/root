@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.h,v 1.8 2006/08/01 09:36:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.h,v 1.9 2006/08/01 10:28:45 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -30,7 +30,8 @@ namespace ROOT {
        * point of declaration (3.3.1 [basic.scope.pdecl]) is not taken into account 
        */
 
-      struct NameLookup {
+      class NameLookup {
+      public:
 
          // 1. Lookup
          static const Type & LookupType( const std::string & nam,

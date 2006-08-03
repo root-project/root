@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.2 2006/08/01 15:04:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -33,9 +33,6 @@ namespace ROOT {
       class MemberTemplate;
       class OwnedMemberTemplate;
       class Type;
-
-      class OwnedMemberIterator;
-      class OwnedReverseMemberIterator;
 
       /**
        * @class ScopeBase ScopeBase.h Reflex/ScopeBase.h
@@ -577,6 +574,14 @@ namespace ROOT {
          
          void RemoveUsingDirective( const Scope & ud ) const;
 
+      private:
+
+         /* no copying */
+         ScopeBase( const ScopeBase & );
+
+         /* no assignment */
+         ScopeBase & operator = ( const ScopeBase & );
+
       protected:
       
          /** container for all members of the Scope */
@@ -591,7 +596,7 @@ namespace ROOT {
           * @clientCardinality 1
           */
          mutable
-            std::vector< Member > fMembers;
+            std::vector< OwnedMember > fMembers;
 
          /**
           * container with pointers to all data members in this At
@@ -686,7 +691,7 @@ namespace ROOT {
           * @clientCardinality 1
           */
          mutable
-            std::vector < MemberTemplate > fMemberTemplates;
+            std::vector < OwnedMemberTemplate > fMemberTemplates;
 
 
          /** 
@@ -815,34 +820,6 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::FunctionMe
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::FunctionMember_REnd() const {
 //-------------------------------------------------------------------------------
    return fFunctionMembers.rend();
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_Begin() const {
-//-------------------------------------------------------------------------------
-   return fMemberTemplates.begin();
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_End() const {
-//-------------------------------------------------------------------------------
-   return fMemberTemplates.end();
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_RBegin() const {
-//-------------------------------------------------------------------------------
-   return fMemberTemplates.rbegin();
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_REnd() const {
-//-------------------------------------------------------------------------------
-   return fMemberTemplates.rend();
 }
 
 

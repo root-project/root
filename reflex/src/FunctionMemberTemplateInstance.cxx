@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionMemberTemplateInstance.cxx,v 1.9 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionMemberTemplateInstance.cxx,v 1.10 2006/08/02 14:14:49 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -17,6 +17,7 @@
 
 #include "Reflex/MemberTemplate.h"
 #include "Reflex/internal/MemberTemplateImpl.h"
+#include "Reflex/internal/OwnedMember.h"
 
 #include "Reflex/Tools.h"
 

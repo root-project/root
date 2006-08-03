@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplate.cxx,v 1.10 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplate.cxx,v 1.11 2006/08/02 13:25:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,7 +15,7 @@
 
 #include "Reflex/TypeTemplate.h"
 #include "Reflex/Type.h"
-#include "Reflex/Member.h"
+#include "Reflex/internal/OwnedMember.h"
                                                              
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::TypeTemplate::AddTemplateInstance( const Type & templateInstance ) const {

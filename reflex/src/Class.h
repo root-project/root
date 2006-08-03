@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.9 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.10 2006/08/01 15:04:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -523,7 +523,7 @@ namespace ROOT {
           * @param pathsToBase the cache storing pathes to all known bases
           * @param basePath the current path to the BaseAt class
           */
-         void UpdateMembers2( Members & members,
+         void UpdateMembers2( OMembers & members,
                               Members & dataMembers,
                               Members & functionMembers,
                               PathsToBase & pathsToBase,

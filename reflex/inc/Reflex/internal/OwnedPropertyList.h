@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: $
+// @(#)root/reflex:$Name:  $:$Id: OwnedPropertyList.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -37,10 +37,12 @@ namespace ROOT {
             : PropertyList( propertyListImpl ) {}
 
          
-         /** destructor */
-         ~OwnedPropertyList() {
-            delete fPropertyListImpl;
-            fPropertyListImpl = 0;
+         /** delete */
+         void Delete() {
+            if ( fPropertyListImpl ) {
+               delete fPropertyListImpl;
+               fPropertyListImpl = 0;
+            }
          }
 
       }; // class OwnedPropertyList

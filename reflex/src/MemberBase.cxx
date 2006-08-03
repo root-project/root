@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.11 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.12 2006/08/01 09:36:50 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -31,13 +31,13 @@ ROOT::Reflex::MemberBase::MemberBase( const char *  name,
                                       TYPE          memberType,
                                       unsigned int  modifiers )
 //-------------------------------------------------------------------------------
-// Construct the dictionary info for a member
    : fType( type, modifiers & ( CONST | VOLATILE | REFERENCE ), true ),
      fModifiers( modifiers ),
      fName( name ),
      fScope( Scope() ),
      fMemberType( memberType ),
-     fPropertyList( OwnedPropertyList( new PropertyListImpl())) {
+     fPropertyList( OwnedPropertyList()) {
+// Construct the dictionary info for a member
    fThisMember = new Member(this);
 }
 
@@ -46,7 +46,7 @@ ROOT::Reflex::MemberBase::MemberBase( const char *  name,
 ROOT::Reflex::MemberBase::~MemberBase() {
 //-------------------------------------------------------------------------------
 // Destructor.
-   fPropertyList.ClearProperties();
+   fPropertyList.Delete();
 }
 
 

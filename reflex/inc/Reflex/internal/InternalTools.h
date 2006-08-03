@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: InternalTools.h,v 1.1 2006/08/01 10:31:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: InternalTools.h,v 1.2 2006/08/01 15:04:59 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -11,9 +11,6 @@
 
 
 // Include Files
-// Note: the Owned*.h stuff is needed for Solaris CC
-#include "Reflex/internal/OwnedMember.h"
-
 
 namespace ROOT {
 
@@ -21,21 +18,30 @@ namespace ROOT {
 
       namespace OTools {
 
-         // internal stuff (can be moved)
-
          template< typename TO > class ToIter {
             
          public:
 
-            template < typename FROM > 
-               static typename std::vector<TO>::iterator Forward( const FROM & iter ) {
-               return typename std::vector<TO>::iterator(iter.operator->());
+            template < typename CONT > 
+               static typename std::vector<TO>::iterator Begin( const CONT & cont ) {
+               return typename std::vector<TO>::iterator((TO*)&cont[0]);
             }
 
+            template < typename CONT >
+               static typename std::vector<TO>::iterator End( const CONT & cont ) {
+               typename std::vector<TO>::iterator it = typename std::vector<TO>::iterator((TO*)&cont[cont.size()-1]);
+               return it++;
+            }
 
-            template < typename FROM > 
-               static typename std::vector<TO>::reverse_iterator Reverse( const FROM & iter ) {
-               return typename std::vector<TO>::reverse_iterator(typename std::vector<TO>::iterator(iter.operator->()));
+            template < typename CONT > 
+               static typename std::vector<TO>::reverse_iterator RBegin( const CONT & cont ) {
+               return typename std::vector<TO>::reverse_iterator(typename std::vector<TO>::iterator((TO*)&cont[cont.size()-1]));
+            }
+
+            template < typename CONT >
+               static typename std::vector<TO>::reverse_iterator REnd( const CONT & cont ) {
+               typename std::vector<TO>::iterator it = typename std::vector<TO>::iterator((TO*)&cont[0]);
+               return typename std::vector<TO>::reverse_iterator(it--);
             }
 
          };

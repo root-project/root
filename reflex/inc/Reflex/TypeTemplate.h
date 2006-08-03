@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplate.h,v 1.8 2006/07/03 17:02:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplate.h,v 1.9 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -37,6 +37,10 @@ namespace ROOT {
 
          /** default constructor */
          TypeTemplate( const TypeTemplateImpl * tti = 0 );
+
+
+         /** copy constructor */
+         TypeTemplate( const TypeTemplate & rh );
 
 
          /** destructor */
@@ -189,6 +193,12 @@ namespace ROOT {
 inline ROOT::Reflex::TypeTemplate::TypeTemplate( const TypeTemplateImpl * tti )
 //------------------------------------------------------------------------------- 
    : fTypeTemplateImpl( tti ) {}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::TypeTemplate::TypeTemplate( const TypeTemplate & rh ) 
+//-------------------------------------------------------------------------------
+   : fTypeTemplateImpl( rh.fTypeTemplateImpl ) {}
 
 
 //-------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.h,v 1.10 2006/07/14 06:47:25 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.h,v 1.11 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -36,6 +36,10 @@ namespace ROOT {
 
          /** default constructor */
          MemberTemplate( const MemberTemplateImpl * memberTemplateImpl = 0 );
+
+
+         /** copy constructor */
+         MemberTemplate( const MemberTemplate & rh );
 
 
          /** destructor */
@@ -180,6 +184,12 @@ namespace ROOT {
 inline ROOT::Reflex::MemberTemplate::MemberTemplate( const MemberTemplateImpl * memberTemplateImpl )
 //------------------------------------------------------------------------------- 
    : fMemberTemplateImpl( memberTemplateImpl ) {}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::MemberTemplate::MemberTemplate( const MemberTemplate & rh ) 
+//-------------------------------------------------------------------------------
+   : fMemberTemplateImpl( rh.fMemberTemplateImpl ) {}
 
 
 //-------------------------------------------------------------------------------

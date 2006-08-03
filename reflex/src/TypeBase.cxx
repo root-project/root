@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.17 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.18 2006/08/01 09:36:50 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -50,7 +50,7 @@ ROOT::Reflex::TypeBase::TypeBase( const char * nam,
      fScope( Scope::__NIRVANA__() ),
      fSize( size ),
      fTypeType( typeTyp ),
-     fPropertyList( OwnedPropertyList(new PropertyListImpl())),
+     fPropertyList( OwnedPropertyList()),
      fBasePosition(Tools::GetBasePosition( nam)),
      fFinalType(0),
      fRawType(0) {
@@ -84,6 +84,7 @@ ROOT::Reflex::TypeBase::TypeBase( const char * nam,
 ROOT::Reflex::TypeBase::~TypeBase( ) {
 //-------------------------------------------------------------------------------
 // Destructor.
+   fPropertyList.Delete();
    if( fTypeName->fTypeBase == this ) fTypeName->fTypeBase = 0;
 }
 
@@ -333,6 +334,7 @@ size_t ROOT::Reflex::TypeBase::FunctionParameterSize() const {
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::Scope & ROOT::Reflex::TypeBase::PointerToMemberScope() const {
 //-------------------------------------------------------------------------------
+// Return the scope of a pointer to member type.
    return Dummy::Scope();
 }
 

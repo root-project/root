@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.5 2006/07/24 14:57:40 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.6 2006/08/01 10:28:45 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -17,14 +17,14 @@
 #include "Reflex/Base.h"
 #include "Reflex/Scope.h"
 #include "Reflex/Type.h"
-#include "Reflex/Member.h"
+#include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::Type &
 ROOT::Reflex::NameLookup::LookupType( const std::string & nam, 
                                       const Scope & current ) {
 //-------------------------------------------------------------------------------
-
+// Lookup up a type name.
    if ( nam.find("::") == 0 ) {
       std::set<Scope> lookedAtUsingDir;
       bool partial_success = false;
@@ -44,7 +44,7 @@ ROOT::Reflex::NameLookup::LookupTypeInScope( const std::string & nam,
                                              size_t pos_subscope /*= 0*/,
                                              size_t pos_next_scope /*= npos*/ ) {
 //-------------------------------------------------------------------------------
-
+// Lookup a type in a scope.
    if (!current) return Dummy::Type();
    if (lookedAtUsingDir.find(current) != lookedAtUsingDir.end()) return Dummy::Type();
 
@@ -113,7 +113,7 @@ const ROOT::Reflex::Type &
 ROOT::Reflex::NameLookup::LookupTypeInUnknownScope( const std::string & nam,
                                                     const Scope & current ) {
 //-------------------------------------------------------------------------------
-
+// Lookup a type in an unknown scope.
    bool partial_success = false;
    std::set<Scope> lookedAtUsingDir;
    const Type & t = LookupTypeInScope( nam, current, partial_success, lookedAtUsingDir);
@@ -128,7 +128,7 @@ const ROOT::Reflex::Member &
 ROOT::Reflex::NameLookup::LookupMember( const std::string & nam, 
                                         const Scope & current ) {
 //-------------------------------------------------------------------------------
-
+// Lookup a member.
    if ( Tools::GetBasePosition(nam)) return LookupMemberQualified( nam );
    else                              return LookupMemberUnqualified( nam, current );
 
@@ -139,7 +139,7 @@ ROOT::Reflex::NameLookup::LookupMember( const std::string & nam,
 const ROOT::Reflex::Member &
 ROOT::Reflex::NameLookup::LookupMemberQualified( const std::string & nam ) {
 //-------------------------------------------------------------------------------
-
+// Lookup of a qualified member.
    const Scope & bscope = Scope::ByName(Tools::GetScopeName(nam));
    if ( bscope ) {
       return LookupMemberUnqualified( Tools::GetBaseName(nam), bscope);
@@ -157,7 +157,7 @@ const ROOT::Reflex::Member &
 ROOT::Reflex::NameLookup::LookupMemberUnqualified( const std::string & nam,
                                                    const Scope & current ) {
 //-------------------------------------------------------------------------------
-
+// Lookup of an unqualified member.
    const Member & m0 = current.MemberByName(nam);
    if ( m0 ) return m0;
       
@@ -183,7 +183,7 @@ ROOT::Reflex::NameLookup::LookupMemberUnqualified( const std::string & nam,
 const ROOT::Reflex::Type & ROOT::Reflex::NameLookup::AccessControl( const Type & typ,
                                                                     const Scope & /* current */ ) {
 //-------------------------------------------------------------------------------
-
+// Check access .
    
    //if ( typ.IsPublic()) return true;
 

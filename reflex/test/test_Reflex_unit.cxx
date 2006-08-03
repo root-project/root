@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.9 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.10 2006/07/14 06:47:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -471,8 +471,8 @@ void ReflexUnitTest::object_basics() {
 
 void ReflexUnitTest::class_type() {
   {
-    Class _foo = Class("foo", sizeof(foo), typeid(foo));
-    Class _bar = Class("bar", sizeof(bar), typeid(bar));
+    Class _foo("foo", sizeof(foo), typeid(foo));
+    Class _bar("bar", sizeof(bar), typeid(bar));
     CPPUNIT_ASSERT(Type::ByName("foo"));
     CPPUNIT_ASSERT(_foo.ThisType() == Type::ByName("foo"));
     CPPUNIT_ASSERT(_foo.ThisType() == Type::ByName("::foo"));
@@ -491,11 +491,11 @@ void ReflexUnitTest::class_type() {
 
 
 void ReflexUnitTest::type_template() {
-  Namespace _n = Namespace("mmm");
-  ClassTemplateInstance _cti = ClassTemplateInstance("mmm::template<int,float,dummy>",
-                                                     1,
-                                                     typeid(int),
-                                                     0);
+  Namespace _n("mmm");
+  ClassTemplateInstance _cti("mmm::template<int,float,dummy>",
+                             1,
+                             typeid(int),
+                             0);
 
   Scope s = Scope::ByName("mmm");
 

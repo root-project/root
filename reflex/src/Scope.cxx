@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.12 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.13 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -196,6 +196,7 @@ ROOT::Reflex::Scope::MemberByName( const std::string & name,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::Member_Begin() const {
 //-------------------------------------------------------------------------------
+// Return the begin iterator of member container.
    if ( * this ) return fScopeName->fScopeBase->Member_Begin();
    return Dummy::MemberCont().begin();
 }
@@ -204,6 +205,7 @@ ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::Member_Begin() const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::Member_End() const {
 //-------------------------------------------------------------------------------
+// Return the end iterator of member container.
    if ( * this ) return fScopeName->fScopeBase->Member_End();
    return Dummy::MemberCont().end();
 }
@@ -212,6 +214,7 @@ ROOT::Reflex::Member_Iterator ROOT::Reflex::Scope::Member_End() const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::Member_RBegin() const {
 //-------------------------------------------------------------------------------
+// Return the rbegin iterator of member container.
    if ( * this ) return fScopeName->fScopeBase->Member_RBegin();
    return Dummy::MemberCont().rbegin();
 }
@@ -220,6 +223,7 @@ ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::Member_RBegin() const
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::Member_REnd() const {
 //-------------------------------------------------------------------------------
+// Return the rend iterator of member container.
    if ( * this ) return fScopeName->fScopeBase->Member_REnd();
    return Dummy::MemberCont().rend();
 }

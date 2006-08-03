@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: $
+// @(#)root/reflex:$Name:  $:$Id: OwnedMemberTemplate.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -36,9 +36,14 @@ namespace ROOT {
          OwnedMemberTemplate( const MemberTemplateImpl * memberTemplateImpl )
             : MemberTemplate( memberTemplateImpl ) {}
 
+
+         /** take ownership */
+         OwnedMemberTemplate( const MemberTemplate & rh )
+            : MemberTemplate( rh ) {}
+
          
-         /** destructor */
-         ~OwnedMemberTemplate() {
+         /** delete info */
+         void Delete() {
             delete fMemberTemplateImpl;
             fMemberTemplateImpl = 0;
          }

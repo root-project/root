@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: VariableBuilder.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: VariableBuilder.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,8 +15,11 @@
 
 #include "Reflex/Builder/VariableBuilder.h"
 
+#include "Reflex/internal/OwnedMember.h"
+
 #include "Namespace.h"
 #include "DataMember.h"
+
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::VariableBuilderImpl::VariableBuilderImpl( const char * nam,
