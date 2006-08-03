@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.34 2006/04/18 14:23:20 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.36 2006/07/24 16:26:28 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 //         where galice.root is a symlink of the type /shift/.../...     //
 //    rfio:na49db1:/data1/raw.root                                       //
 //                                                                       //
-// If it is used castor 2.1 the file name can be given also in the       //
+// If Castor 2.1 is used the file names can be given also in the         //
 // following ways:                                                       //
 //                                                                       //
 //  rfio://host:port/?path=FILEPATH                                      //
@@ -527,7 +527,7 @@ Int_t TRFIOSystem::Unlink(const char *path)
    if (rfio_stat(path, &finfo) < 0)
       return -1;
 
-   if (S_ISDIR(finfo.st_mode))
+   if (R_ISDIR(finfo.st_mode))
       return rfio_rmdir(path);
    else
       return rfio_unlink(path);
