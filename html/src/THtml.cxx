@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.107 2006/08/03 08:38:41 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.108 2006/08/03 12:10:28 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -725,7 +725,7 @@ void THtml::AddClassMethodsRecursive(TBaseClass* bc, TList methodNames[3])
           !strcmp(method->GetName(), "ImplFileName") ||
           !strcmp(method->GetName(), "ImplFileLine") ||
           bc && (method->GetName()[0] == '~' // d'tor
-             || ~strcmp(method->GetName(), method->GetReturnTypeName())) // c'tor
+             || !strcmp(method->GetName(), method->GetReturnTypeName())) // c'tor
           )
          continue;
 
@@ -746,7 +746,13 @@ void THtml::AddClassMethodsRecursive(TBaseClass* bc, TList methodNames[3])
             mtype = 1;
       }
 
-      methodNames[mtype].Add(new TMethodWrapper(method));
+      Bool_t hidden = kFALSE;
+      for (Int_t access = 0; !hidden && access < 3; ++access) {
+         TMethodWrapper* other = (TMethodWrapper*) methodNames[access].FindObject(method->GetName());
+         hidden |= (other) && (other->GetMethod()->GetClass() != method->GetClass());
+      }
+      if (!hidden)
+         methodNames[mtype].Add(new TMethodWrapper(method));
    }
 
    TIter iBase(cl->GetListOfBases());
@@ -755,17 +761,56 @@ void THtml::AddClassMethodsRecursive(TBaseClass* bc, TList methodNames[3])
       AddClassMethodsRecursive(base, methodNames);
 }
 
+void  THtml::AddClassDataMembersRecursive(TBaseClass* bc, TList datamembers[6]) {
+   // Add data members of fCurrentClass and of bc to datamembers, recursively.
+   // Real data members are in idx 0..2 (public, protected, private access),
+   // enum constants in idx 3..5.
+
+   // make a loop on member functions
+   TClass *cl = fCurrentClass;
+   if (bc) 
+      cl = bc->GetClassPointer(kFALSE);
+   if (!cl) return;
+
+   TDataMember *dm;
+   TIter nextDM(cl->GetListOfDataMembers());
+
+   while ((dm = (TDataMember *) nextDM())) {
+      if (!strcmp(dm->GetName(), "fgIsA"))
+         continue;
+      Int_t mtype = 0;
+      if (kIsPrivate & dm->Property())
+         mtype = 0;
+      else if (kIsProtected & dm->Property())
+         mtype = 1;
+      else if (kIsPublic & dm->Property())
+         mtype = 2;
+
+      if (bc) {
+         if (mtype == 0) continue;
+         if (bc->Property() & kIsPrivate)
+            mtype = 0;
+         else if ((bc->Property() & kIsProtected) && mtype == 2)
+            mtype = 1;
+      }
+
+      if (dm->Property() & G__BIT_ISENUM)
+         mtype += 3;
+
+      datamembers[mtype].Add(dm);
+   }
+
+   TIter iBase(cl->GetListOfBases());
+   TBaseClass* base = 0;
+   while ((base = (TBaseClass*)iBase()))
+      AddClassDataMembersRecursive(base, datamembers);
+}
 
 //______________________________________________________________________________
 void THtml::Class2Html(Bool_t force)
 {
 // Create HTML files for a single class.
 //
-
-   const char *tab = "";
-   const char *tab2 = "  ";
-   const char *tab4 = "    ";
-   const char *tab6 = "      ";
 
    gROOT->GetListOfGlobals(kTRUE);
 
@@ -879,12 +924,8 @@ void THtml::Class2Html(Bool_t force)
          gSystem->PrependPathName("src", headerHtmlFileName);
          headerHtmlFileName += ".h.html";
 
-         classFile << "<h2>class <a name=\"" << fCurrentClass->GetName()
-                   << "\" href=\"";
-         classFile << headerHtmlFileName << "\">";
+         classFile << "<h2>class ";
          ReplaceSpecialChars(classFile, fCurrentClass->GetName());
-         classFile << "</a> ";
-
 
          // copy .h file to the Html output directory
          TString declf(GetDeclFileName(fCurrentClass));
@@ -931,20 +972,23 @@ void THtml::Class2Html(Bool_t force)
          if (!IsNamespace(fCurrentClass)) 
             ClassHtmlTree(classFile, fCurrentClass);
 
-         classFile << endl << "<div id=\"functions\">" << endl;
-         classFile << "<div id=\"dispopt\">Display options:<br /><form>" << endl
-            << "<input id=\"dispoptCBInh\" type=\"checkbox\" "
-            "onchange=\"javascript:CBChanged(this);\" "
-            "title=\"Select to display inherited methods\" />Show inherited<br />" << endl
-            << "<input id=\"dispoptCBPub\" type=\"checkbox\" checked=\"checked\" "
-            "onchange=\"javascript:CBChanged(this);\" "
-            "title=\"Select to display non-public methods\" />Show non-public<br />"
-            << "</form></div>";
-
          // loop to get a pointers to method names
          TList methodNames[3];
          AddClassMethodsRecursive(0, methodNames);
          TMethodWrapper::SetClass(fCurrentClass);
+
+         classFile << endl << "<div id=\"functions\">" << endl;
+         classFile << "<h3><a name=\"" << fCurrentClass->GetName()
+            << ":Function_Members\"></a>Function Members (Methods)</h3>" << endl;
+
+         classFile << "<div id=\"dispopt\">Display options:<br /><form action=\"#\">" << endl
+            << "<input id=\"dispoptCBInh\" type=\"checkbox\" "
+            "onclick=\"javascript:CBChanged(this);\" "
+            "title=\"Select to display inherited members\" />Show inherited<br />" << endl
+            << "<input id=\"dispoptCBPub\" type=\"checkbox\" checked=\"checked\" "
+            "onclick=\"javascript:CBChanged(this);\" "
+            "title=\"Select to display protected and private members\" />Show non-public<br />"
+            << "</form></div>";
 
          const char* tab4nbsp="&nbsp;&nbsp;&nbsp;&nbsp;";
          if (fCurrentClass->Property() & kIsAbstract)
@@ -960,22 +1004,12 @@ void THtml::Class2Html(Bool_t force)
             methodNames[access].SetOwner();
             methodNames[access].Sort();
             classFile << "<div class=\"access\" ";
-            const char* accessID = "funcpubl";
+            const char* accessID [] = {"priv", "prot", "publ"};
+            const char* accesstxt[] = {"private", "protected", "public"};
 
-            switch (access) {
-            case 0:
-               accessID = "funcpriv";
-               classFile << "id=\"" << accessID << "\"><b>private:</b>";
-               break;
-            case 1:
-               accessID = "funcprot";
-               classFile << "id=\"" << accessID << "\"><b>protected:</b>";
-               break;
-            case 2:
-               classFile << "id=\"" << accessID << "\"><b>public:</b>";
-               break;
-            }
-            classFile << endl << "<table class=\"func\" id=\"tab" << accessID << "\">" << endl;
+            classFile << "id=\"func" << accessID[access] << "\"><b>" 
+               << accesstxt[access] << ":</b>" << endl
+               << "<table class=\"func\" id=\"tabfunc" << accessID[access] << "\">" << endl;
 
             TIter iMethWrap(&methodNames[access]);
             TMethodWrapper *methWrap = 0;
@@ -1033,165 +1067,115 @@ void THtml::Class2Html(Bool_t force)
          classFile << "</div>" << endl; // class="functions"
 
          // make a loop on data members
-         first = kFALSE;
-         TDataMember *member;
-         TIter nextMember(fCurrentClass->GetListOfDataMembers());
-
-
-         Int_t len1, len2, maxLen1[3], maxLen2[3], mtype, num[3], i, j;
-         len1 = len2 = maxLen1[0] = maxLen1[1] = maxLen1[2] = 0;
-         maxLen2[0] = maxLen2[1] = maxLen2[2] = 0;
-         mtype = num[0] = num[1] = num[2] = 0;
-
-         Int_t ndata = fCurrentClass->GetNdata();
-
-         // if data member exist
-         if (ndata) {
-            TDataMember **memberArray = new TDataMember *[3 * ndata];
-
-            if (memberArray) {
-               while ((member = (TDataMember *) nextMember())) {
-                  if (!strcmp(member->GetName(), "fgIsA")
-                      )
-                     continue;
-
-                  if (kIsPrivate & member->Property())
-                     mtype = 0;
-                  else if (kIsProtected & member->Property())
-                     mtype = 1;
-                  else if (kIsPublic & member->Property())
-                     mtype = 2;
-
-                  memberArray[mtype * ndata + num[mtype]] = member;
-                  num[mtype]++;
-
-                  if (member->GetFullTypeName())
-                     len1 = strlen((char *) member->GetFullTypeName());
-                  else
-                     len1 = 0;
-                  if (member->GetName())
-                     len2 = strlen(member->GetName());
-                  else
-                     len2 = 0;
-
-                  if (kIsStatic & member->Property())
-                     len1 += 7;
-
-                  // Take in account the room the array index will occupy
-
-                  Int_t dim = member->GetArrayDim();
-                  Int_t indx = 0;
-                  Int_t maxidx;
-                  while (indx < dim) {
-                     maxidx = member->GetMaxIndex(indx);
-                     if (maxidx <= 0)
-                        break;
-                     else
-                        len2 += (Int_t)TMath::Log10(maxidx) + 3;
-                     indx++;
-                  }
-                  maxLen1[mtype] =
-                      maxLen1[mtype] > len1 ? maxLen1[mtype] : len1;
-                  maxLen2[mtype] =
-                      maxLen2[mtype] > len2 ? maxLen2[mtype] : len2;
-               }
-
-               classFile << endl;
-               classFile << "<h3>" << tab2 << "<a name=\"";
-               classFile << fCurrentClass->GetName();
-               classFile << ":Data_Members\">Data Members</a></h3>" <<
-                   endl;
-               classFile << "<pre>" << endl;
-
-               for (j = 0; j < 3; j++) {
-                  if (num[j]) {
-                     const char *ftitle = 0;
-                     switch (j) {
-                     case 0:
-                        ftitle = "private:";
-                        break;
-                     case 1:
-                        ftitle = "protected:";
-                        break;
-                     case 2:
-                        ftitle = "public:";
-                        break;
-                     }
-                     if (j)
-                        classFile << endl;
-                     classFile << tab4 << "<b>" << ftitle << "</b><br />" <<
-                         endl;
-
-                     for (i = 0; i < num[j]; i++) {
-                        Int_t w = 0;
-                        member = memberArray[j * ndata + i];
-
-                        classFile << tab6;
-                        if (member->GetFullTypeName())
-                           len1 = strlen(member->GetFullTypeName());
-                        else
-                           len1 = 0;
-
-                        if (kIsStatic & member->Property())
-                           len1 += 7;
-
-                        for (w = 0; w < (maxLen1[j] - len1); w++)
-                           classFile << " ";
-
-                        if (kIsStatic & member->Property())
-                           classFile << "static ";
-
-                        ExpandKeywords(classFile, member->GetFullTypeName());
-
-                        classFile << " " << tab << "<!--BOLD-->";
-                        classFile << "<a name=\"" << fCurrentClass->
-                            GetName() << ":";
-                        classFile << member->GetName();
-                        classFile << "\">" << member->GetName();
-
-                        // Add the dimensions to "array" members
-
-                        Int_t dim = member->GetArrayDim();
-                        Int_t indx = 0;
-                        Int_t indxlen = 0;
-                        while (indx < dim) {
-                           if (member->GetMaxIndex(indx) <= 0)
-                              break;
-                           classFile << "[" << member->
-                               GetMaxIndex(indx) << "]";
-                           // Take in account the room this index will occupy
-                           indxlen +=
-                               Int_t(TMath::
-                                     Log10(member->GetMaxIndex(indx))) + 3;
-                           indx++;
-                        }
-
-                        classFile << "</a><!--PLAIN--> ";
-
-                        len2 = 0;
-                        if (member->GetName())
-                           len2 = strlen(member->GetName()) + indxlen;
-
-                        for (w = 0; w < (maxLen2[j] - len2); w++)
-                           classFile << " ";
-                        classFile << " " << tab;
-
-                        classFile << "<i><a name=\"Title:";
-                        classFile << member->GetName();
-
-                        classFile << "\">";
-
-                        ReplaceSpecialChars(classFile, member->GetTitle());
-                        classFile << "</a></i>" << endl;
-                     }
-                  }
-               }
-               classFile << "</pre>" << endl;
-               delete[]memberArray;
-            }
+         TList datamembers[6];
+         AddClassDataMembersRecursive(0, datamembers);
+         Bool_t haveDataMembers = (datamembers[0].GetEntries() || 
+                                   datamembers[1].GetEntries() ||
+                                   datamembers[2].GetEntries() ||
+                                   datamembers[3].GetEntries() || 
+                                   datamembers[4].GetEntries() ||
+                                   datamembers[5].GetEntries());
+         if (haveDataMembers) {
+            classFile << endl << "<div id=\"datamembers\">" << endl;
+            classFile << "<h3><a name=\"" << fCurrentClass->GetName()
+               << ":Data_Members\"></a>Data Members</h3>" << endl;
          }
 
-         classFile << "<!--END-->" << endl;
+         for (Int_t access = 5; access > 0 && !IsNamespace(fCurrentClass); --access) {
+            if (datamembers[access].GetEntries() == 0)
+               continue;
+
+            if (access < 3) // don't sort enums
+               datamembers[access].Sort();
+
+            classFile << "<div class=\"access\" ";
+            const char* what = "data";
+            if (access > 2) what = "enum";
+            const char* accessID [] = {"priv", "prot", "publ"};
+            const char* accesstxt[] = {"private", "protected", "public"};
+
+            classFile << "id=\"" << what << accessID[access%3] << "\"><b>" 
+               << accesstxt[access%3] << ":</b>" << endl
+               << "<table class=\"data\" id=\"tab" << what << accessID[access%3] << "\">" << endl;
+
+            TIter iDM(&datamembers[access]);
+            TDataMember *member = 0;
+            TString prevEnumName;
+            Bool_t prevIsInh = kTRUE;
+
+            while ((member = (TDataMember*) iDM())) {
+               Bool_t haveNewEnum = access > 2 && prevEnumName != member->GetTypeName();
+               if (haveNewEnum) {
+                  if (prevEnumName.Length()) {
+                     classFile << "<tr class=\"data";
+                     if (prevIsInh)
+                        classFile << "inh";
+                     classFile << "\"><td class=\"datatype\">};</td><td></td><td></td></tr>" << endl;
+                  }
+                  prevEnumName = member->GetTypeName();
+               }
+
+               classFile << "<tr class=\"data";
+               prevIsInh = (member->GetClass() != fCurrentClass);
+               if (prevIsInh)
+                  classFile << "inh";
+               classFile << "\"><td class=\"datatype\">";
+               if (haveNewEnum) {
+                  TString enumName(member->GetTypeName());
+                  TString myScope(fCurrentClass->GetName());
+                  myScope += "::";
+                  enumName.ReplaceAll(myScope, "");
+                  if (enumName.EndsWith("::"))
+                     enumName += "<i>[unnamed]</i>";
+                  classFile << enumName;
+                  classFile << " { ";
+               } else
+                  if (access < 3)
+                     ExpandKeywords(classFile, member->GetFullTypeName());
+
+               TString mangled(member->GetClass()->GetName());
+               NameSpace2FileName(mangled);
+               classFile << "</td><td class=\"dataname\"><a href=\"";
+               if (member->GetClass() != fCurrentClass) {
+                  TString htmlFile;
+                  GetHtmlFileName(member->GetClass(), htmlFile);
+                  classFile << htmlFile;
+               }
+               classFile << "#" << mangled;
+               classFile << ":";
+               mangled = member->GetName();
+               NameSpace2FileName(mangled);
+               classFile << mangled << "\">";
+               if (access < 3 && member->GetClass() != fCurrentClass) {
+                  classFile << "<span class=\"baseclass\">";
+                  ReplaceSpecialChars(classFile, member->GetClass()->GetName());
+                  classFile << "::</span>";
+               }
+               ReplaceSpecialChars(classFile, member->GetName());
+
+               // Add the dimensions to "array" members
+               for (Int_t indx = 0; indx < member->GetArrayDim(); ++indx)
+                  if (member->GetMaxIndex(indx) <= 0)
+                     break;
+                  else
+                     classFile << "[" << member->GetMaxIndex(indx) << "]";
+
+               classFile << "</a></td><td class=\"datadesc\">";
+               ReplaceSpecialChars(classFile, member->GetTitle());
+               classFile << "</td></tr>" << endl;
+            } // for members
+
+            if (prevEnumName.Length()) {
+               classFile << "<tr class=\"data";
+               if (prevIsInh)
+                  classFile << "inh";
+               classFile << "\"><td class=\"datatype\">};</td><td></td><td></td></tr>" << endl;
+            }
+            classFile << endl << "</table></div>" << endl;
+         } // for access
+
+         if (haveDataMembers)
+            classFile << "</div>" << endl; // datamembers
 
          // process a '.cxx' file
          ClassDescription(classFile);
@@ -1583,7 +1567,8 @@ void THtml::WriteMethod(std::ostream & out, TString& ret,
    ReplaceSpecialChars(out, name);
    out << "</a>" << params << "</span><br />" << std::endl;
 
-   out << "<pre>" << comment << "</pre>" << std::endl;
+   if (comment.Length())
+      out << "<pre>" << comment << "</pre>" << std::endl;
 
    if (codeOneLiner.Length()) {
       out << std::endl << "<div class=\"inlinecode\"><code class=\"inlinecode\">" 
@@ -3097,31 +3082,34 @@ void THtml::CreateJavascript() {
       return;
    }
    js << "function SetCSSValue(where,what,to){" << endl
-      << "if(document.all) r='rules';" << endl
-      << "else r='cssRules';" << endl
-      << "for(i=0;i<document.styleSheets.length;++i) " << endl
-      << "   for(j=0;j<document.styleSheets[i][r].length;++j)" << endl
-      << "      if(document.styleSheets[i][r][j].selectorText==where) {" << endl
-      << "         document.styleSheets[i][r][j].style[what]=to;" << endl
-      << "         return;" << endl
-      << "      }" << endl
+      << "   var r='cssRules';" << endl
+      << "   if(document.all) r='rules';" << endl
+      << "   var i;" << endl
+      << "   for(i=0;i<document.styleSheets.length;++i) {" << endl
+      << "      var cssrules=document.styleSheets[i][r]" << endl
+      << "      for(j=0;j<cssrules.length;++j)" << endl
+      << "         if(cssrules[j].selectorText.toUpperCase()==where.toUpperCase()) {" << endl
+      << "            cssrules[j].style[what]=to;" << endl
+      << "            return;" << endl
+      << "         }" << endl
+      << "   }" << endl
       << "}" << endl
       << "var elements=new Array('dispoptCBInh.checked','dispoptCBPub.checked');" << endl
       << "function SetValuesFromCookie() {" << endl
-      << "   prev=0;" << endl
-      << "   arrcookie=document.cookie.split(\";\");" << endl
+      << "   var i;" << endl
+      << "   var arrcookie=document.cookie.split(\";\");" << endl
       << "   for(i=0; i<arrcookie.length; ++i) {" << endl
       << "      while(arrcookie[i].charAt(0)==' ') " << endl
       << "         arrcookie[i]=arrcookie[i].substring(1,arrcookie[i].length);" << endl
       << "      if (arrcookie[i].indexOf(\"ROOT\")==0) {" << endl
       << "         var arrval=arrcookie[i].substring(5).split(':');" << endl
       << "         for (i=0; i<arrval.length; ++i) {" << endl
-      << "            posdelim=elements[i].indexOf(\".\");" << endl
-      << "            what=elements[i].substring(0,posdelim);" << endl
-      << "            mem =elements[i].substring(posdelim+1);" << endl
-      << "            val=arrval[i];" << endl
+      << "            var posdelim=elements[i].indexOf(\".\");" << endl
+      << "            var what=elements[i].substring(0,posdelim);" << endl
+      << "            var mem =elements[i].substring(posdelim+1);" << endl
+      << "            var val=arrval[i];" << endl
       << "            if (val=='false') val=false;" << endl
-      << "            else if (val=='true') vale=true;" << endl
+      << "            else if (val=='true') val=true;" << endl
       << "            var el=document.getElementById(what);" << endl
       << "            el[mem]=val;" << endl
       << "            CBChanged(el);" << endl
@@ -3131,12 +3119,13 @@ void THtml::CreateJavascript() {
       << "   }" << endl
       << "}" << endl
       << "function UpdateCookie() {" << endl
-      << "   cookietxt=\"ROOT=\";" << endl
+      << "   var cookietxt=\"ROOT=\";" << endl
+      << "   var i;" << endl
       << "   for (i=0; i<elements.length; ++i) {" << endl
-      << "      posdelim=elements[i].indexOf(\".\");" << endl
-      << "      what=elements[i].substring(0,posdelim);" << endl
-      << "      mem =elements[i].substring(posdelim+1);" << endl
-      << "      val=document.getElementById(what)[mem];" << endl
+      << "      var posdelim=elements[i].indexOf(\".\");" << endl
+      << "      var what=elements[i].substring(0,posdelim);" << endl
+      << "      var mem =elements[i].substring(posdelim+1);" << endl
+      << "      var val=document.getElementById(what)[mem];" << endl
       << "      if (i>0) cookietxt+=':';" << endl
       << "      cookietxt+=val;" << endl
       << "   }" << endl
@@ -3146,10 +3135,16 @@ void THtml::CreateJavascript() {
       << "   document.cookie=cookietxt;" << endl
       << "}" << endl
       << "function CBChanged(cb){" << endl
-      << "   if(cb.id=='dispoptCBInh') SetCSSValue('tr.funcinh','display',cb.checked?'':'none');" << endl
-      << "   else if(cb.id=='dispoptCBPub') {" << endl
+      << "   if(cb.id=='dispoptCBInh') {" << endl
+      << "      SetCSSValue('tr.funcinh','display',cb.checked?'':'none');" << endl
+      << "      SetCSSValue('tr.datainh','display',cb.checked?'':'none');" << endl
+      << "   } else if(cb.id=='dispoptCBPub') {" << endl
       << "      SetCSSValue('#funcprot','display',cb.checked?'':'none');" << endl
       << "      SetCSSValue('#funcpriv','display',cb.checked?'':'none');" << endl
+      << "      SetCSSValue('#dataprot','display',cb.checked?'':'none');" << endl
+      << "      SetCSSValue('#datapriv','display',cb.checked?'':'none');" << endl
+      << "      SetCSSValue('#enumprot','display',cb.checked?'':'none');" << endl
+      << "      SetCSSValue('#enumpriv','display',cb.checked?'':'none');" << endl
       << "   }" << endl
       << "   UpdateCookie();" << endl
       << "}" << endl
@@ -3307,20 +3302,25 @@ void THtml::CreateStyleSheet() {
          << "	background-color: #fcfcfc;" << std::endl
          << "}" << std::endl
          << "table.inhtree {" << std::endl
-         << "	background-color: White;" << std::endl
-         << "	border: solid 1px Black;" << std::endl
-         << "	width: 100%;" << std::endl
+         << "   background-color: White;" << std::endl
+         << "   border: solid 1px Black;" << std::endl
+         << "   width: 100%;" << std::endl
          << "}" << std::endl
          << "table.libinfo {" << std::endl
-         << "	background-color: White;" << std::endl
-         << "	padding: 2px;" << std::endl
-         << "	border: solid 1px Gray; " << std::endl
-         << "	float: right;" << std::endl
+         << "   background-color: White;" << std::endl
+         << "   padding: 2px;" << std::endl
+         << "   border: solid 1px Gray; " << std::endl
+         << "   float: right;" << std::endl
          << "}" << std::endl
-         << "#functions div {" << std::endl
-         << "   margin-top: 2em;" << std::endl
+         << "#functions {" << std::endl
+         << "   margin-top: 4em;" << std::endl
+         << "   background-color: White;" << std::endl
          << "}" << std::endl
-         << " div.access {" << std::endl
+         << "#datamembers {" << std::endl
+         << "   margin-top: 4em;" << std::endl
+         << "   background-color: White;" << std::endl
+         << "}" << std::endl
+         << "div.access {" << std::endl
          << "   border-left: solid 3pt black;" << std::endl
          << "   padding-left: 1em;" << std::endl
          << "   margin-left: 1em;" << std::endl
@@ -3329,16 +3329,41 @@ void THtml::CreateStyleSheet() {
          << "#funcpubl {" << std::endl
          << "   border-left-color: #77ff77;" << std::endl
          << "}" << std::endl
-         << " #funcprot {" << std::endl
+         << "#funcprot {" << std::endl
          << "   border-left-color: #ffff00;" << std::endl
          << "}" << std::endl
          << "#funcpriv {" << std::endl
          << "   border-left-color: #ff7777;" << std::endl
          << "}" << std::endl
+         << "#datapubl {" << std::endl
+         << "   border-left-color: #77ff77;" << std::endl
+         << "}" << std::endl
+         << "#dataprot {" << std::endl
+         << "   border-left-color: #ffff00;" << std::endl
+         << "}" << std::endl
+         << "#datapriv {" << std::endl
+         << "   border-left-color: #ff7777;" << std::endl
+         << "}" << std::endl
+         << "#enumpubl {" << std::endl
+         << "   border-left-color: #77ff77;" << std::endl
+         << "}" << std::endl
+         << "#enumprot {" << std::endl
+         << "   border-left-color: #ffff00;" << std::endl
+         << "}" << std::endl
+         << "#enumpriv {" << std::endl
+         << "   border-left-color: #ff7777;" << std::endl
+         << "}" << std::endl
          << "tr.func {" << std::endl
          << "   white-space: nowrap;" << std::endl
          << "}" << std::endl
+         << "tr.data {" << std::endl
+         << "   white-space: nowrap;" << std::endl
+         << "}" << std::endl
          << "tr.funcinh {" << std::endl
+         << "   display: none;" << std::endl
+         << "   white-space: nowrap;" << std::endl
+         << "}" << std::endl
+         << "tr.datainh {" << std::endl
          << "   display: none;" << std::endl
          << "   white-space: nowrap;" << std::endl
          << "}" << std::endl
@@ -3348,6 +3373,14 @@ void THtml::CreateStyleSheet() {
          << "td.funcret {" << std::endl
          << "   float: right;" << std::endl
          << "   padding-right: 0.5em;" << std::endl
+         << "}" << std::endl
+         << "td.datatype {" << std::endl
+         << "   float: right;" << std::endl
+         << "   padding-right: 0.5em;" << std::endl
+         << "}" << std::endl
+         << "td.datadesc {" << std::endl
+         << "   font-style: italic;" << std::endl
+         << "   padding-left: 0.5em;" << std::endl
          << "}" << std::endl
          << "#dispopt {" << std::endl
          << "   background-color: White;" << std::endl

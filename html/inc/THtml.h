@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.22 2006/07/27 19:57:14 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.23 2006/08/03 08:38:41 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -110,6 +110,7 @@ protected:
    static std::set<std::string>  fgKeywords; // C++ keywords
 
    void    AddClassMethodsRecursive(TBaseClass* bc, TList methodNames[3]);
+   void    AddClassDataMembersRecursive(TBaseClass* bc, TList datamembers[6]);
    void    AnchorFromLine(TString& anchor);
    virtual void BeautifyLine(std::ostream &srcOut);
    void    Class2Html(Bool_t force=kFALSE);
