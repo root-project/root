@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.105 2006/07/30 11:20:00 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.106 2006/07/31 16:53:46 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -298,7 +298,7 @@ std::set<std::string>  THtml::fgKeywords;
 
 ClassImp(THtml)
 //______________________________________________________________________________
-THtml::THtml(): fCurrentClass(0), fDocContext(kIgnore), fParseContext(kCode), 
+THtml::THtml(): fCurrentClass(0), fDocContext(kIgnore), 
    fHierarchyLines(0), fNumberOfClasses(0), fClassNames(0), fNumberOfFileNames(0), fFileNames(0)
 {
    // Create a THtml object.
@@ -645,7 +645,116 @@ namespace {
       delete [] carr;
       l.swap(lsort);
    }
+
+   class TMethodWrapper: public TObject {
+   public:
+      TMethodWrapper(const TMethod* m): fMeth(m) {}
+
+      static void SetClass(const TClass* cl) { fClass = cl; }
+
+      const char* GetName() const { return fMeth->GetName(); }
+      Int_t GetNargs() const { return fMeth->GetNargs(); }
+      const TMethod* GetMethod() const { return fMeth; }
+      Bool_t IsSortable() const { return kTRUE; }
+
+      Int_t Compare(const TObject *obj) const {
+         const TMethodWrapper* m = dynamic_cast<const TMethodWrapper*>(obj);
+         if (!m) return 1;
+
+         Int_t ret = strcasecmp(GetName(), m->GetName());
+         if (ret == 0) {
+            if (GetNargs() < m->GetNargs()) return -1;
+            else if (GetNargs() > m->GetNargs()) return 1;
+            if (GetMethod()->GetClass()->InheritsFrom(m->GetMethod()->GetClass()))
+               return -1;
+            else 
+               return 1;
+         }
+
+         const char* l(GetName());
+         const char* r(m->GetName());
+         if (l[0] == '~' && r[0] == '~') {
+            ++l;
+            ++r;
+         }
+         if (fClass->InheritsFrom(l)) {
+            if (fClass->InheritsFrom(r)) {
+               if (gROOT->GetClass(l)->InheritsFrom(r))
+                  return -1;
+               else return 1;
+            } else return -1;
+         } else if (fClass->InheritsFrom(r))
+            return 1;
+
+         if (l[0] == '~') return -1;
+         if (r[0] == '~') return 1;
+         return (ret < 0) ? -1 : 1;
+      }
+
+   private:
+      static const TClass* fClass; // current class, defining inheritance sort order
+      const TMethod* fMeth; // my method
+   };
+   const TClass* TMethodWrapper::fClass = 0;
 }
+
+
+//______________________________________________________________________________
+void THtml::AddClassMethodsRecursive(TBaseClass* bc, TList methodNames[3])
+{
+   // Add accessible (i.e. non-private) methods of base class bc 
+   // and its base classes' methods to methodNames.
+   // If bc==0, we add fCurrentClass's methods (and also private functions).
+
+   // make a loop on member functions
+   TClass *cl = fCurrentClass;
+   if (bc) 
+      cl = bc->GetClassPointer(kFALSE);
+   if (!cl) return;
+
+   TMethod *method;
+   TIter nextMethod(cl->GetListOfMethods());
+
+   while ((method = (TMethod *) nextMethod())) {
+
+      if (!strcmp(method->GetName(), "Dictionary") ||
+          !strcmp(method->GetName(), "Class_Version") ||
+          !strcmp(method->GetName(), "Class_Name") ||
+          !strcmp(method->GetName(), "DeclFileName") ||
+          !strcmp(method->GetName(), "DeclFileLine") ||
+          !strcmp(method->GetName(), "ImplFileName") ||
+          !strcmp(method->GetName(), "ImplFileLine") ||
+          bc && (method->GetName()[0] == '~' // d'tor
+             || ~strcmp(method->GetName(), method->GetReturnTypeName())) // c'tor
+          )
+         continue;
+
+
+      Int_t mtype = 0;
+      if (kIsPrivate & method->Property())
+         mtype = 0;
+      else if (kIsProtected & method->Property())
+         mtype = 1;
+      else if (kIsPublic & method->Property())
+         mtype = 2;
+
+      if (bc) {
+         if (mtype == 0) continue;
+         if (bc->Property() & kIsPrivate)
+            mtype = 0;
+         else if ((bc->Property() & kIsProtected) && mtype == 2)
+            mtype = 1;
+      }
+
+      methodNames[mtype].Add(new TMethodWrapper(method));
+   }
+
+   TIter iBase(cl->GetListOfBases());
+   TBaseClass* base = 0;
+   while ((base = (TBaseClass*)iBase()))
+      AddClassMethodsRecursive(base, methodNames);
+}
+
 
 //______________________________________________________________________________
 void THtml::Class2Html(Bool_t force)
@@ -819,79 +928,23 @@ void THtml::Class2Html(Bool_t force)
 
 
          // create an html inheritance tree
-         if (!IsNamespace(fCurrentClass)) ClassHtmlTree(classFile, fCurrentClass);
+         if (!IsNamespace(fCurrentClass)) 
+            ClassHtmlTree(classFile, fCurrentClass);
 
+         classFile << endl << "<div id=\"functions\">" << endl;
+         classFile << "<div id=\"dispopt\">Display options:<br /><form>" << endl
+            << "<input id=\"dispoptCBInh\" type=\"checkbox\" "
+            "onchange=\"javascript:CBChanged(this);\" "
+            "title=\"Select to display inherited methods\" />Show inherited<br />" << endl
+            << "<input id=\"dispoptCBPub\" type=\"checkbox\" checked=\"checked\" "
+            "onchange=\"javascript:CBChanged(this);\" "
+            "title=\"Select to display non-public methods\" />Show non-public<br />"
+            << "</form></div>";
 
-         // make a loop on member functions
-         TMethod *method;
-         TIter nextMethod(fCurrentClass->GetListOfMethods());
-
-         Int_t len, maxLen[3];
-         len = maxLen[0] = maxLen[1] = maxLen[2] = 0;
-
-         // loop to get a pointers to a method names
-         const Int_t nMethods = fCurrentClass->GetNmethods();
-         const char **fMethodNames = new const char *[3 * 2 * nMethods];
-
-         Int_t mtype, num[3];
-         mtype = num[0] = num[1] = num[2] = 0;
-
-         while ((method = (TMethod *) nextMethod())) {
-
-            if (!strcmp(method->GetName(), "Dictionary") ||
-                !strcmp(method->GetName(), "Class_Version") ||
-                !strcmp(method->GetName(), "Class_Name") ||
-                !strcmp(method->GetName(), "DeclFileName") ||
-                !strcmp(method->GetName(), "DeclFileLine") ||
-                !strcmp(method->GetName(), "ImplFileName") ||
-                !strcmp(method->GetName(), "ImplFileLine")
-                )
-               continue;
-
-
-            if (kIsPrivate & method->Property())
-               mtype = 0;
-            else if (kIsProtected & method->Property())
-               mtype = 1;
-            else if (kIsPublic & method->Property())
-               mtype = 2;
-
-            fMethodNames[mtype * 2 * nMethods + 2 * num[mtype]] =
-               method->GetName();
-
-            if (method->GetReturnTypeName())
-               len = strlen(method->GetReturnTypeName());
-            else
-               len = 0;
-
-            if (kIsVirtual & method->Property())
-               len += 8;
-            if (kIsStatic & method->Property())
-               len += 7;
-
-            maxLen[mtype] = maxLen[mtype] > len ? maxLen[mtype] : len;
-
-            const char *type = strrchr(method->GetReturnTypeName(), ' ');
-            if (!type)
-               type = method->GetReturnTypeName();
-            else
-               type++;
-
-            if (fCurrentClass && !strcmp(type, fCurrentClass->GetName()))
-               fMethodNames[mtype * 2 * nMethods + 2 * num[mtype]] =
-                  "A00000000";
-
-            // if this is the destructor
-            while ('~' ==
-                   *fMethodNames[mtype * 2 * nMethods + 2 * num[mtype]])
-               fMethodNames[mtype * 2 * nMethods + 2 * num[mtype]] =
-                  "A00000001";
-
-            fMethodNames[mtype * 2 * nMethods + 2 * num[mtype] + 1] =
-               (char *) method;
-
-            num[mtype]++;
-         }
+         // loop to get a pointers to method names
+         TList methodNames[3];
+         AddClassMethodsRecursive(0, methodNames);
+         TMethodWrapper::SetClass(fCurrentClass);
 
          const char* tab4nbsp="&nbsp;&nbsp;&nbsp;&nbsp;";
          if (fCurrentClass->Property() & kIsAbstract)
@@ -901,113 +954,84 @@ void THtml::Class2Html(Bool_t force)
                       << GetFileName((const char *) GetDeclFileName(fCurrentClass))
                       << "\">header</a> to check for available constructors.</b><br />" << endl;
 
-         classFile << "<pre>" << endl;
+         for (Int_t access = 2; access >=0 && !IsNamespace(fCurrentClass); --access) {
+            if (methodNames[access].GetEntries() == 0)
+               continue;
+            methodNames[access].SetOwner();
+            methodNames[access].Sort();
+            classFile << "<div class=\"access\" ";
+            const char* accessID = "funcpubl";
 
-         Int_t i, j;
-
-         if (IsNamespace(fCurrentClass)) {
-            j = 2;
-         } else {
-            j = 0;
-         }
-         for (; j < 3; j++) {
-            if (num[j]) {
-                 qsort(fMethodNames + j * 2 * nMethods, num[j],
-                        2 * sizeof(fMethodNames), CaseInsensitiveSort);
-
-               const char *ftitle = 0;
-               switch (j) {
-               case 0:
-                  ftitle = "private:";
-                  break;
-               case 1:
-                  ftitle = "protected:";
-                  break;
-               case 2:
-                  ftitle = "public:";
-                  break;
-               }
-               if (j)
-                  classFile << endl;
-               classFile << tab4 << "<b>" << ftitle << "</b><br />" << endl;
-
-               TString strClassNameNoScope(fCurrentClass->GetName());
-               
-               UInt_t templateNest = 0;
-               Ssiz_t posLastScope = strClassNameNoScope.Length()-1;
-               for (;posLastScope && (templateNest || strClassNameNoScope[posLastScope] != ':'); --posLastScope)
-                  if (strClassNameNoScope[posLastScope] == '>') ++templateNest;
-                  else if (strClassNameNoScope[posLastScope] == '<') --templateNest;
-                  else if (!strncmp(strClassNameNoScope.Data()+posLastScope,"operator", 8) && templateNest==1) 
-                     --templateNest;
-               if (strClassNameNoScope[posLastScope] == ':' 
-                   && strClassNameNoScope[posLastScope-1] == ':')
-                  strClassNameNoScope.Remove(0, posLastScope+1);
-
-               for (i = 0; i < num[j]; i++) {
-                  method =
-                     (TMethod *) fMethodNames[j * 2 * nMethods + 2 * i +
-                                             1];
-
-                  if (method) {
-                     Int_t w = 0;
-                     Bool_t isctor=false;
-                     Bool_t isdtor=false;
-                     if (method->GetReturnTypeName())
-                        len = strlen(method->GetReturnTypeName());
-                     else
-                        len = 0;
-                     if (!strcmp(method->GetName(),strClassNameNoScope.Data()))
-                        // it's a c'tor - Cint stores the class name as return type
-                        isctor=true;
-                     if (!isctor && method->GetName()[0] == '~' && !strcmp(method->GetName()+1,strClassNameNoScope.Data()))
-                        // it's a d'tor - Cint stores "void" as return type
-                        isdtor=true;
-                     if (isctor || isdtor)
-                        len=0;
-
-                     if (kIsVirtual & method->Property())
-                        len += 8;
-                     if (kIsStatic & method->Property())
-                        len += 7;
-
-                     classFile << tab6;
-                     for (w = 0; w < (maxLen[j] - len); w++)
-                        classFile << " ";
-
-                     if (kIsVirtual & method->Property())
-                        if (!isdtor)
-                           classFile << "virtual ";
-                        else
-                           classFile << " virtual";
-
-                     if (kIsStatic & method->Property())
-                        classFile << "static ";
-
-                     if (!isctor && !isdtor)
-                        ExpandKeywords(classFile, method->GetReturnTypeName());
-
-                     TString mangled(fCurrentClass->GetName());
-                     NameSpace2FileName(mangled);
-                     classFile << " " << tab << "<!--BOLD-->";
-                     classFile << "<a href=\"#" << mangled;
-                     classFile << ":";
-                     mangled = method->GetName();
-                     NameSpace2FileName(mangled);
-                     classFile << mangled << "\">";
-                     ReplaceSpecialChars(classFile, method->GetName());
-                     classFile << "</a><!--PLAIN-->";
-
-                     ExpandKeywords(classFile, method->GetSignature());
-                     classFile << endl;
-                  }
-               }
+            switch (access) {
+            case 0:
+               accessID = "funcpriv";
+               classFile << "id=\"" << accessID << "\"><b>private:</b>";
+               break;
+            case 1:
+               accessID = "funcprot";
+               classFile << "id=\"" << accessID << "\"><b>protected:</b>";
+               break;
+            case 2:
+               classFile << "id=\"" << accessID << "\"><b>public:</b>";
+               break;
             }
+            classFile << endl << "<table class=\"func\" id=\"tab" << accessID << "\">" << endl;
+
+            TIter iMethWrap(&methodNames[access]);
+            TMethodWrapper *methWrap = 0;
+            while ((methWrap = (TMethodWrapper*) iMethWrap())) {
+               const TMethod* method = methWrap->GetMethod();
+
+               Int_t w = 0;
+               // it's a c'tor - Cint stores the class name as return type
+               Bool_t isctor = (!strcmp(method->GetName(), method->GetReturnTypeName()));
+               // it's a d'tor - Cint stores "void" as return type
+               Bool_t isdtor = (!isctor && method->GetName()[0] == '~');
+
+               classFile << "<tr class=\"func";
+               if (method->GetClass() != fCurrentClass)
+                  classFile << "inh";
+               classFile << "\"><td class=\"funcret\">";
+               if (kIsVirtual & method->Property())
+                  if (!isdtor)
+                     classFile << "virtual ";
+                  else
+                     classFile << " virtual";
+
+               if (kIsStatic & method->Property())
+                  classFile << "static ";
+
+               if (!isctor && !isdtor)
+                  ExpandKeywords(classFile, method->GetReturnTypeName());
+
+               TString mangled(method->GetClass()->GetName());
+               NameSpace2FileName(mangled);
+               classFile << "</td><td class=\"funcname\"><a href=\"";
+               if (method->GetClass() != fCurrentClass) {
+                  TString htmlFile;
+                  GetHtmlFileName(method->GetClass(), htmlFile);
+                  classFile << htmlFile;
+               }
+               classFile << "#" << mangled;
+               classFile << ":";
+               mangled = method->GetName();
+               NameSpace2FileName(mangled);
+               classFile << mangled << "\">";
+               if (method->GetClass() != fCurrentClass) {
+                  classFile << "<span class=\"baseclass\">";
+                  ReplaceSpecialChars(classFile, method->GetClass()->GetName());
+                  classFile << "::</span>";
+               }
+               ReplaceSpecialChars(classFile, method->GetName());
+               classFile << "</a>";
+
+               ExpandKeywords(classFile, const_cast<TMethod*>(method)->GetSignature());
+               classFile << "</td></tr>" << endl;
+            }
+            classFile << endl << "</table></div>" << endl;
          }
 
-         delete[]fMethodNames;
-
-         classFile << "</pre>" << endl;
+         classFile << "</div>" << endl; // class="functions"
 
          // make a loop on data members
          first = kFALSE;
@@ -1015,7 +1039,7 @@ void THtml::Class2Html(Bool_t force)
          TIter nextMember(fCurrentClass->GetListOfDataMembers());
 
 
-         Int_t len1, len2, maxLen1[3], maxLen2[3];
+         Int_t len1, len2, maxLen1[3], maxLen2[3], mtype, num[3], i, j;
          len1 = len2 = maxLen1[0] = maxLen1[1] = maxLen1[2] = 0;
          maxLen2[0] = maxLen2[1] = maxLen2[2] = 0;
          mtype = num[0] = num[1] = num[2] = 0;
@@ -1252,7 +1276,7 @@ void THtml::BeautifyLine(std::ostream &sOut)
    EBeautifyContext context = kNothingSpecialMoveOn;
 
 
-   switch (fParseContext) {
+   switch (fParseContext.back()) {
       case kCode:
          context = kNothingSpecialMoveOn;
          if (fLineStripped.Length() && fLineStripped[0] == '#') {
@@ -1309,7 +1333,6 @@ void THtml::BeautifyLine(std::ostream &sOut)
                   }
                   if (context == kNothingSpecialMoveOn || context == kCommentC) {
                      context = kCommentC;
-                     fParseContext = kCComment;
                      Ssiz_t posEndComment = lineExpandedDotDot.Index("*/", i);
                      if (posEndComment == kNPOS)
                         posEndComment = lineExpandedDotDot.Length();
@@ -1332,7 +1355,10 @@ void THtml::BeautifyLine(std::ostream &sOut)
                context == kNothingSpecialMoveOn)) {
                   sOut << "*/";
                   context = kNothingSpecialMoveOn;
-                  fParseContext = kCode;
+                  fParseContext.pop_back();
+                  if (fParseContext.empty())
+                     fParseContext.push_back(kCode);
+
                   i += 1;
             }
             else sOut << "*";
@@ -1360,7 +1386,7 @@ TMethod* THtml::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret, T
       Ssiz_t posBlock = fLine.Index('{');
       if (posBlock == kNPOS) 
          posBlock = fLine.Length();
-      for (MethodNames_t::iterator iMethodName = fMethodNames.begin();
+      for (MethodCount_t::iterator iMethodName = fMethodNames.begin();
          !name.Length() && iMethodName != fMethodNames.end(); ++iMethodName) {
          TString lookFor(iMethodName->first);
          lookFor += "(";
@@ -1438,7 +1464,7 @@ TMethod* THtml::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret, T
    params = name(posParam, name.Length() - posParam);
    name.Remove(posParam);
 
-   MethodNames_t::const_iterator iMethodName = fMethodNames.find(name.Data());
+   MethodCount_t::const_iterator iMethodName = fMethodNames.find(name.Data());
    if (iMethodName == fMethodNames.end() || iMethodName->second <= 0) {
       ret.Remove(0);
       name.Remove(0);
@@ -1567,7 +1593,7 @@ void THtml::WriteMethod(std::ostream & out, TString& ret,
    }
    out << "</div>" << std::endl;
 
-   MethodNames_t::iterator iMethodName = fMethodNames.find(name.Data());
+   MethodCount_t::iterator iMethodName = fMethodNames.find(name.Data());
    if (iMethodName != fMethodNames.end()) {
       --(iMethodName->second);
       if (iMethodName->second <= 0)
@@ -1593,12 +1619,9 @@ Bool_t THtml::ExtractComments(const TString &lineExpandedStripped,
 // updating whether a class description was found (foundClassDescription).
 // Returns kTRUE if comment found.
 
-   //if (fParseContext != kCComment && fParseContext != kBeginEndHtml &&
-   //   fParseContext != kBeginEndHtmlInCComment) 
-   //   return kFALSE;
-   if (fParseContext != kBeginEndHtml &&
-      fParseContext != kBeginEndHtmlInCComment &&
-      fParseContext != kCComment && 
+   if (fParseContext.back() != kBeginEndHtml &&
+      fParseContext.back() != kBeginEndHtmlInCComment &&
+      fParseContext.back() != kCComment && 
       !lineExpandedStripped.BeginsWith("<span class=\"comment\">"))
       return kFALSE;
 
@@ -1638,7 +1661,7 @@ Bool_t THtml::ExtractComments(const TString &lineExpandedStripped,
 
    // remove leading and trailing chars if non-word and identical, e.g.
    // * some doc *, or // some doc //
-   while (fParseContext != kBeginEndHtml && fParseContext != kBeginEndHtmlInCComment && 
+   while (fParseContext.back() != kBeginEndHtml && fParseContext.back() != kBeginEndHtmlInCComment && 
       commentLine.Length() > 2 &&
       commentLine[0] == commentLine[commentLine.Length() - 1] &&
       (commentLine[0] == '/' || commentLine[0] == '*')) {
@@ -1733,7 +1756,8 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
       srcHtmlOutName += ".h.html";
    }
 
-   fParseContext = kCode;
+   fParseContext.clear();
+   fParseContext.push_back(kCode);
    fDocContext = kIgnore;
    fLineNo = 0;
 
@@ -1843,7 +1867,8 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
    srcHtmlOut << "</pre>" << std::endl;
    WriteHtmlFooter(srcHtmlOut, "../");
 
-   fParseContext = kCode;
+   fParseContext.clear();
+   fParseContext.push_back(kCode);
    fDocContext = kIgnore;
 }
 
@@ -2316,6 +2341,7 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
 
    // create CSS file, we need it
    CreateStyleSheet();
+   CreateJavascript();
 
    // open indexFile file
    ofstream indexFile;
@@ -3057,6 +3083,81 @@ void THtml::CreateListOfTypes()
       delete[]outFile;
 }
 
+//______________________________________________________________________________
+void THtml::CreateJavascript() {
+   // Write the default ROOT style sheet.
+
+   // open file
+   ofstream js;
+
+   gSystem->ExpandPathName(fOutputDir);
+   char *outFile = gSystem->ConcatFileName(fOutputDir, "ROOT.js");
+   js.open(outFile, ios::out);
+   if (!js.good()) {
+      delete []outFile;
+      return;
+   }
+   js << "function SetCSSValue(where,what,to){" << endl
+      << "if(document.all) r='rules';" << endl
+      << "else r='cssRules';" << endl
+      << "for(i=0;i<document.styleSheets.length;++i) " << endl
+      << "   for(j=0;j<document.styleSheets[i][r].length;++j)" << endl
+      << "      if(document.styleSheets[i][r][j].selectorText==where) {" << endl
+      << "         document.styleSheets[i][r][j].style[what]=to;" << endl
+      << "         return;" << endl
+      << "      }" << endl
+      << "}" << endl
+      << "var elements=new Array('dispoptCBInh.checked','dispoptCBPub.checked');" << endl
+      << "function SetValuesFromCookie() {" << endl
+      << "   prev=0;" << endl
+      << "   arrcookie=document.cookie.split(\";\");" << endl
+      << "   for(i=0; i<arrcookie.length; ++i) {" << endl
+      << "      while(arrcookie[i].charAt(0)==' ') " << endl
+      << "         arrcookie[i]=arrcookie[i].substring(1,arrcookie[i].length);" << endl
+      << "      if (arrcookie[i].indexOf(\"ROOT\")==0) {" << endl
+      << "         var arrval=arrcookie[i].substring(5).split(':');" << endl
+      << "         for (i=0; i<arrval.length; ++i) {" << endl
+      << "            posdelim=elements[i].indexOf(\".\");" << endl
+      << "            what=elements[i].substring(0,posdelim);" << endl
+      << "            mem =elements[i].substring(posdelim+1);" << endl
+      << "            val=arrval[i];" << endl
+      << "            if (val=='false') val=false;" << endl
+      << "            else if (val=='true') vale=true;" << endl
+      << "            var el=document.getElementById(what);" << endl
+      << "            el[mem]=val;" << endl
+      << "            CBChanged(el);" << endl
+      << "         }" << endl
+      << "         return;" << endl
+      << "      }" << endl
+      << "   }" << endl
+      << "}" << endl
+      << "function UpdateCookie() {" << endl
+      << "   cookietxt=\"ROOT=\";" << endl
+      << "   for (i=0; i<elements.length; ++i) {" << endl
+      << "      posdelim=elements[i].indexOf(\".\");" << endl
+      << "      what=elements[i].substring(0,posdelim);" << endl
+      << "      mem =elements[i].substring(posdelim+1);" << endl
+      << "      val=document.getElementById(what)[mem];" << endl
+      << "      if (i>0) cookietxt+=':';" << endl
+      << "      cookietxt+=val;" << endl
+      << "   }" << endl
+      << "   var ayear=new Date();" << endl
+      << "   ayear.setTime(ayear.getTime()+31536000000);" << endl
+      << "   cookietxt+=\";path=/;expires=\"+ayear.toUTCString();" << endl
+      << "   document.cookie=cookietxt;" << endl
+      << "}" << endl
+      << "function CBChanged(cb){" << endl
+      << "   if(cb.id=='dispoptCBInh') SetCSSValue('tr.funcinh','display',cb.checked?'':'none');" << endl
+      << "   else if(cb.id=='dispoptCBPub') {" << endl
+      << "      SetCSSValue('#funcprot','display',cb.checked?'':'none');" << endl
+      << "      SetCSSValue('#funcpriv','display',cb.checked?'':'none');" << endl
+      << "   }" << endl
+      << "   UpdateCookie();" << endl
+      << "}" << endl
+      << "" << endl;
+   delete []outFile;
+}
+
 
 //______________________________________________________________________________
 void THtml::CreateStyleSheet() {
@@ -3190,7 +3291,6 @@ void THtml::CreateStyleSheet() {
          << "	margin-left: 0.3em;" << std::endl
          << "	padding-left: 1em;" << std::endl
          << "	margin-bottom: 2em;" << std::endl
-         << "	/*border-bottom: solid 1px Black;*/" << std::endl
          << "    border-bottom: solid 3px #cccccc;" << std::endl
          << "    border-left: solid 1px #cccccc;" << std::endl
          << "    background-color: White;" << std::endl
@@ -3212,15 +3312,56 @@ void THtml::CreateStyleSheet() {
          << "	border: solid 1px Black;" << std::endl
          << "	width: 100%;" << std::endl
          << "}" << std::endl
-         << "table.libinfo " << std::endl
-         << "{" << std::endl
+         << "table.libinfo {" << std::endl
          << "	background-color: White;" << std::endl
          << "	padding: 2px;" << std::endl
          << "	border: solid 1px Gray; " << std::endl
          << "	float: right;" << std::endl
-         << "}" << std::endl;
-   }      
-   delete outFile;
+         << "}" << std::endl
+         << "#functions div {" << std::endl
+         << "   margin-top: 2em;" << std::endl
+         << "}" << std::endl
+         << " div.access {" << std::endl
+         << "   border-left: solid 3pt black;" << std::endl
+         << "   padding-left: 1em;" << std::endl
+         << "   margin-left: 1em;" << std::endl
+         << "   margin-bottom: 1em;" << std::endl
+         << "}" << std::endl
+         << "#funcpubl {" << std::endl
+         << "   border-left-color: #77ff77;" << std::endl
+         << "}" << std::endl
+         << " #funcprot {" << std::endl
+         << "   border-left-color: #ffff00;" << std::endl
+         << "}" << std::endl
+         << "#funcpriv {" << std::endl
+         << "   border-left-color: #ff7777;" << std::endl
+         << "}" << std::endl
+         << "tr.func {" << std::endl
+         << "   white-space: nowrap;" << std::endl
+         << "}" << std::endl
+         << "tr.funcinh {" << std::endl
+         << "   display: none;" << std::endl
+         << "   white-space: nowrap;" << std::endl
+         << "}" << std::endl
+         << "span.baseclass {" << std::endl
+         << "   font-size:x-small;" << std::endl
+         << "}" << std::endl
+         << "td.funcret {" << std::endl
+         << "   float: right;" << std::endl
+         << "   padding-right: 0.5em;" << std::endl
+         << "}" << std::endl
+         << "#dispopt {" << std::endl
+         << "   background-color: White;" << std::endl
+         << "   padding: 2px;" << std::endl
+         << "   border: solid 1px Gray; " << std::endl
+         << "   float: right;" << std::endl
+         << "   position: relative;" << std::endl
+         << "   top: -5em;" << std::endl
+         << "   z-index: 2;" << std::endl
+         << "}" << std::endl
+         << std::endl;
+   }
+   delete []outFile;
 }
 
 
@@ -3258,7 +3399,7 @@ void THtml::ExpandKeywords(TString& keyword)
          scoping = kNada;
 
       // skip until start of the word
-      if (fParseContext == kCode || fParseContext == kCComment) {
+      if (fParseContext.back() == kCode || fParseContext.back() == kCComment) {
          if (!strncmp(keyword.Data() + i, "::", 2)) {
             scoping = kScope;
             i += 2;
@@ -3274,11 +3415,11 @@ void THtml::ExpandKeywords(TString& keyword)
       } else currentType = 0;
 
       if (!IsWord(keyword[i])){
-         if (fParseContext != kBeginEndHtml && fParseContext != kBeginEndHtmlInCComment) {
-            Bool_t closeString = !fEscFlag && fParseContext == kString && 
+         if (fParseContext.back() != kBeginEndHtml && fParseContext.back() != kBeginEndHtmlInCComment) {
+            Bool_t closeString = !fEscFlag && fParseContext.back() == kString && 
                ( keyword[i] == '"' || keyword[i] == '\'');
             if (!fEscFlag)
-               if (fParseContext == kCode || fParseContext == kCComment)
+               if (fParseContext.back() == kCode || fParseContext.back() == kCComment)
                   if (keyword.Length() > i + 1 && keyword[i] == '"' || 
                      keyword[i] == '\'' && (
                         // 'a'
@@ -3287,20 +3428,23 @@ void THtml::ExpandKeywords(TString& keyword)
                         keyword.Length() > i + 3 && keyword[i + 1] == '\'' && keyword[i + 3] == '\'')) {
                      keyword.Insert(i, "<span class=\"string\">");
                      i += 21;
-                     fParseContext = kString;
+                     fParseContext.push_back(kString);
                      currentType = 0;
-                  } else if (fParseContext != kCComment && 
+                  } else if (fParseContext.back() != kCComment && 
                      keyword.Length() > i + 1 && keyword[i] == '/' && 
                      (keyword[i+1] == '/' || keyword[i+1] == '*')) {
-                     fParseContext = kCComment;
+                     fParseContext.push_back(kCComment);
                      commentIsCPP = keyword[i+1] == '/';
                      currentType = 0;
                      keyword.Insert(i, "<span class=\"comment\">");
                      i += 23;
-                  } else if (fParseContext == kCComment && !commentIsCPP
+                  } else if (fParseContext.back() == kCComment && !commentIsCPP
                      && keyword.Length() > i + 1 
                      && keyword[i] == '*' && keyword[i+1] == '/') {
-                     fParseContext = kCode;
+                     fParseContext.pop_back();
+                     if (fParseContext.empty())
+                        fParseContext.push_back(kCode);
+
                      currentType = 0;
                      keyword.Insert(i + 2, "</span>");
                      i += 9;
@@ -3310,7 +3454,10 @@ void THtml::ExpandKeywords(TString& keyword)
             if (closeString) {
                keyword.Insert(i, "</span>");
                i += 7;
-               fParseContext = kCode;
+               fParseContext.pop_back();
+               if (fParseContext.empty())
+                  fParseContext.push_back(kCode);
+
                currentType = 0;
             }
             --i; // i already moved by ReplaceSpecialChar
@@ -3347,8 +3494,8 @@ void THtml::ExpandKeywords(TString& keyword)
       while (endWord < keyword.Length() && IsName(keyword[endWord]))
          endWord++;
 
-      if (fParseContext != kCode && fParseContext != kCComment && 
-         fParseContext != kBeginEndHtml && fParseContext != kBeginEndHtmlInCComment) {
+      if (fParseContext.back() != kCode && fParseContext.back() != kCComment && 
+         fParseContext.back() != kBeginEndHtml && fParseContext.back() != kBeginEndHtmlInCComment) {
          // don't replace in strings, cpp, etc
          i = endWord - 1;
          continue;
@@ -3357,10 +3504,10 @@ void THtml::ExpandKeywords(TString& keyword)
       TString word(keyword(i, endWord - i));
 
       // check if this is a HTML block
-      if (fParseContext == kBeginEndHtml || fParseContext == kBeginEndHtmlInCComment) {
+      if (fParseContext.back() == kBeginEndHtml || fParseContext.back() == kBeginEndHtmlInCComment) {
          if (!word.CompareTo("end_html", TString::kIgnoreCase) && 
             (i == 0 || keyword[i - 1] != '\"')) {
-            if (fParseContext == kBeginEndHtmlInCComment)
+            if (fParseContext.back() == kBeginEndHtmlInCComment)
                commentIsCPP = kFALSE;
             else {
                commentIsCPP = kTRUE;
@@ -3371,7 +3518,9 @@ void THtml::ExpandKeywords(TString& keyword)
                   i += 22;
                }
             }
-            fParseContext = kCComment;
+            fParseContext.pop_back();
+            if (fParseContext.back() != kCComment)
+               fParseContext.push_back(kCComment);
             pre_is_open = kTRUE;
             keyword.Replace(i, word.Length(), "<pre>");
             i += 4;
@@ -3380,13 +3529,13 @@ void THtml::ExpandKeywords(TString& keyword)
          currentType = 0;
          continue;
       }
-      if (fParseContext == kCComment 
+      if (fParseContext.back() == kCComment 
          && !word.CompareTo("begin_html", TString::kIgnoreCase)
          && (i == 0 || keyword[i - 1] != '\"')) {
          if (commentIsCPP)
-            fParseContext = kBeginEndHtml;
+            fParseContext.push_back(kBeginEndHtml);
          else
-            fParseContext = kBeginEndHtmlInCComment;
+            fParseContext.push_back(kBeginEndHtmlInCComment);
          pre_is_open = kFALSE;
          keyword.Replace(i, word.Length(), "</pre>");
          i += 5;
@@ -3395,7 +3544,7 @@ void THtml::ExpandKeywords(TString& keyword)
       }
 
       // don't replace keywords in comments
-      if (fParseContext == kCode && 
+      if (fParseContext.back() == kCode && 
          fgKeywords.find(word.Data()) != fgKeywords.end()) {
          keyword.Insert(i, "<span class=\"keyword\">");
          i += 22 + word.Length();
@@ -3522,22 +3671,27 @@ void THtml::ExpandKeywords(TString& keyword)
       --i; // due to ++i
    } // while i < keyword.Length()
 
+   // clean up, no strings across lines
+   if (fParseContext.back() == kString) {
+      keyword += "</span>";
+      i += 7;
+      fParseContext.pop_back();
+      if (fParseContext.empty())
+         fParseContext.push_back(kCode);
+      currentType = 0;
+   }
    // clean up, no CPP comment across lines
    if (commentIsCPP) {
       keyword += "</span>";
       i += 7;
-      if (fParseContext == kCComment) // and not BeginEndHtml
-         fParseContext = kCode;
+      if (fParseContext.back() == kCComment) {// and not BeginEndHtml
+         fParseContext.pop_back();
+         if (fParseContext.empty())
+            fParseContext.push_back(kCode);
+      }
       currentType = 0;
    }
 
-   // clean up, no strings across lines
-   if (fParseContext == kString) {
-      keyword += "</span>";
-      i += 7;
-      fParseContext = kCode;
-      currentType = 0;
-   }
 }
 
 
@@ -4209,10 +4363,11 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title,
       out <<
           "<meta name=\"description\" content=\"ROOT - An Object Oriented Framework For Large Scale Data Analysis.\" />"
           << endl;
-      out << "<link rel=\"stylesheet\" href=\"" << dir << "ROOT.css\" type=\"text/css\" id=\"ROOTstyle\" />" << endl;
+      out << "<link rel=\"stylesheet\" type=\"text/css\" href=\"" << dir << "ROOT.css\" id=\"ROOTstyle\" />" << endl;
+      out << "<script type=\"text/javascript\" src=\"ROOT.js\"></script>" << endl;
       out << "</head>" << endl;
 
-      out << "<body>" << endl;
+      out << "<body  onload=\"javascript:SetValuesFromCookie();\">" << endl;
    };
    // do we have an additional header?
    if (addHeader && strlen(addHeader) > 0) {

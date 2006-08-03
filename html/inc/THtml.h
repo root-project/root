@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.21 2006/07/11 17:34:02 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.22 2006/07/27 19:57:14 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -36,8 +36,8 @@
 #ifndef ROOT_TROOT
 #include "TROOT.h"
 #endif
-#ifndef ROOT_TDictionary
-#include "TDictionary.h"
+#ifndef ROOT_TClass
+#include "TClass.h"
 #endif
 #ifndef ROOT_TMap
 #include "TMap.h"
@@ -80,7 +80,7 @@ protected:
       kNumSourceInfos
    };
 
-   typedef std::map<std::string /*method name*/, Int_t > MethodNames_t;
+   typedef std::map<std::string /*method name*/, Int_t > MethodCount_t;
 
    TString        fXwho;            // by default http://xwho.cern.ch/WHO/people?
    TString        fSourcePrefix;    // prefix to relative source path
@@ -91,9 +91,9 @@ protected:
    TString        fLineExpanded;    // current line with links
    TString        fLineStripped;    // current line without surrounding spaces
    TClass        *fCurrentClass;    // current class context of sources being parsed
-   MethodNames_t  fMethodNames;     // current class's method names
+   MethodCount_t  fMethodNames;     // current class's method names
    EDocContext    fDocContext;      // current context of parsed sources for documenting
-   EParseContext  fParseContext;    // current context of parsed sources
+   std::list<EParseContext> fParseContext; // current context of parsed sources
    std::set<UInt_t> fExtraLinesWithAnchor; // lines that need an additional anchor
    TString        fSourceInfo[kNumSourceInfos];// author, last changed, ...
    TString        fCounter;         // counter string
@@ -109,6 +109,7 @@ protected:
    std::map<TClass*,std::string> fGuessedImplFileNames; // names of additional impl file names
    static std::set<std::string>  fgKeywords; // C++ keywords
 
+   void    AddClassMethodsRecursive(TBaseClass* bc, TList methodNames[3]);
    void    AnchorFromLine(TString& anchor);
    virtual void BeautifyLine(std::ostream &srcOut);
    void    Class2Html(Bool_t force=kFALSE);
@@ -122,6 +123,7 @@ protected:
    void    CreateListOfTypes();
    void    CreateListOfClasses(const char* filter);
    void    CreateSourceOutputStream(std::ofstream& out, const char* extension, TString& filename);
+   void    CreateJavascript();
    void    CreateStyleSheet();
    void    DescendHierarchy(ofstream &out, TClass* basePtr, 
                   const char **classNames, Int_t numberOfClasses, 
