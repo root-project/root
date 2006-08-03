@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.106 2006/07/31 16:53:46 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.107 2006/08/03 08:38:41 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -982,7 +982,6 @@ void THtml::Class2Html(Bool_t force)
             while ((methWrap = (TMethodWrapper*) iMethWrap())) {
                const TMethod* method = methWrap->GetMethod();
 
-               Int_t w = 0;
                // it's a c'tor - Cint stores the class name as return type
                Bool_t isctor = (!strcmp(method->GetName(), method->GetReturnTypeName()));
                // it's a d'tor - Cint stores "void" as return type
