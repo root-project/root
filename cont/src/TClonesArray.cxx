@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.52 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.53 2006/07/13 05:12:43 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -33,7 +33,7 @@
 // One better uses a TClonesArray which reduces the number of           //
 // new/delete calls to only O(10000):                                   //
 //                                                                      //
-//   TCloneArray a("TTrack", 10000);                                    //
+//   TClonesArray a("TTrack", 10000);                                   //
 //   while (TEvent *ev = (TEvent *)next()) {      // O(100000) events   //
 //      for (int i = 0; i < ev->Ntracks; i++) {   // O(10000) tracks    //
 //         new(a[i]) TTrack(x,y,z,...);                                 //
