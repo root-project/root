@@ -801,14 +801,14 @@ typedef int (*G__IgnoreInclude)();
 #ifdef G__WIN32
 #if defined(_MSC_VER) && (_MSC_VER>1300)
 #define G__MAXSTRUCT  16000  /* struct table */
-#define G__MAXTYPEDEF  8000  /* typedef table */
+#define G__MAXTYPEDEF 12000  /* typedef table */
 #else
 #define G__MAXSTRUCT   4000  /* struct table */
 #define G__MAXTYPEDEF  8000  /* typedef table */
 #endif
 #else
-#define G__MAXSTRUCT   8000  /* struct table */
-#define G__MAXTYPEDEF  8000  /* typedef table */
+#define G__MAXSTRUCT  12000  /* struct table */
+#define G__MAXTYPEDEF 12000  /* typedef table */
 #endif
 
 /* G__MAXIFUNC and G__MEMDEPTH are not real limit
