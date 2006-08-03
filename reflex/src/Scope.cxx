@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.13 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.14 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -259,7 +259,7 @@ size_t ROOT::Reflex::Scope::MemberTemplateSize() const {
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::MemberTemplate & ROOT::Reflex::Scope::MemberTemplateByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
-   // Look up a member template in this scope by name and return it.
+// Look up a member template in this scope by name and return it.
    if ( * this ) return fScopeName->fScopeBase->MemberTemplateByName( nam );
    return Dummy::MemberTemplate();
 }
@@ -317,7 +317,7 @@ size_t ROOT::Reflex::Scope::SubTypeSize() const {
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::Type & ROOT::Reflex::Scope::SubTypeByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
-   // Look up a sub type by name and return it.
+// Look up a sub type by name and return it.
    if ( * this ) return fScopeName->fScopeBase->SubTypeByName( nam );
    return Dummy::Type();
 }

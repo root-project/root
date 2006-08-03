@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.21 2006/08/01 15:04:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.22 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -108,14 +108,14 @@ ROOT::Reflex::ScopeBase::ScopeBase()
 //-------------------------------------------------------------------------------
 ROOT::Reflex::ScopeBase::ScopeBase( const ScopeBase & ) {
 //-------------------------------------------------------------------------------
-   // No copying allowed.
+// No copying allowed.
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::ScopeBase & ROOT::Reflex::ScopeBase::operator = ( const ScopeBase & ) { 
 //-------------------------------------------------------------------------------
-   // No assignment allowed.
+// No assignment allowed.
    return *this; 
 }
 
@@ -380,7 +380,7 @@ size_t ROOT::Reflex::ScopeBase::MemberTemplateSize() const {
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::MemberTemplate & ROOT::Reflex::ScopeBase::MemberTemplateByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
-   // Lookup a member template by name and return it.
+// Lookup a member template by name and return it.
    for ( size_t i = 0; i < fMemberTemplates.size(); ++i ) {
       if ( fMemberTemplates[i].Name() == nam ) return fMemberTemplates[i];
    }
@@ -462,7 +462,7 @@ size_t ROOT::Reflex::ScopeBase::SubTypeSize() const {
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::Type & ROOT::Reflex::ScopeBase::SubTypeByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
-   // Lookup a sub type by name and return it.
+// Lookup a sub type by name and return it.
    if ( Tools::GetBasePosition(nam)) return Type::ByName(Name(SCOPED)+"::"+nam);
    for ( size_t i = 0; i < fSubTypes.size(); ++i ) {
       if ( fSubTypes[i].Name() == nam ) return fSubTypes[i];
@@ -507,7 +507,7 @@ size_t ROOT::Reflex::ScopeBase::SubTypeTemplateSize() const {
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::TypeTemplate & ROOT::Reflex::ScopeBase::SubTypeTemplateByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
-   // Lookup a type template in this scope by name and return it.
+// Lookup a type template in this scope by name and return it.
    for ( size_t i = 0; i < fTypeTemplates.size(); ++i ) {
       if ( fTypeTemplates[i].Name() == nam ) return fTypeTemplates[i];
    }
