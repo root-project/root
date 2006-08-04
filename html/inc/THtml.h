@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.23 2006/08/03 08:38:41 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.24 2006/08/03 21:20:23 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -112,7 +112,7 @@ protected:
    void    AddClassMethodsRecursive(TBaseClass* bc, TList methodNames[3]);
    void    AddClassDataMembersRecursive(TBaseClass* bc, TList datamembers[6]);
    void    AnchorFromLine(TString& anchor);
-   virtual void BeautifyLine(std::ostream &srcOut);
+   virtual void BeautifyLine(std::ostream &srcOut, const char* relpath = "../");
    void    Class2Html(Bool_t force=kFALSE);
    void    ClassDescription(ofstream &out);
    void    ClassHtmlTree(ofstream &out, TClass *classPtr, ETraverse dir=kBoth, int depth=1);
@@ -173,7 +173,8 @@ protected:
 public:
    THtml();
    virtual      ~THtml();
-   void          Convert(const char *filename, const char *title, const char *dirname = "");
+   void          Convert(const char *filename, const char *title, 
+                         const char *dirname = "", const char *relpath="../");
    const char   *GetDeclFileName(TClass* cl) const;
    const char   *GetImplFileName(TClass* cl) const;
    const char   *GetSourceDir()  { return fSourceDir; }

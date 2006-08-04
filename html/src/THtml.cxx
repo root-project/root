@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.109 2006/08/03 21:20:23 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.110 2006/08/04 10:54:54 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -650,7 +650,7 @@ namespace {
    public:
       TMethodWrapper(const TMethod* m): fMeth(m) {}
 
-      static void SetClass(const TClass* cl) { fClass = cl; }
+      static void SetClass(const TClass* cl) { fgClass = cl; }
 
       const char* GetName() const { return fMeth->GetName(); }
       Int_t GetNargs() const { return fMeth->GetNargs(); }
@@ -677,13 +677,13 @@ namespace {
             ++l;
             ++r;
          }
-         if (fClass->InheritsFrom(l)) {
-            if (fClass->InheritsFrom(r)) {
+         if (fgClass->InheritsFrom(l)) {
+            if (fgClass->InheritsFrom(r)) {
                if (gROOT->GetClass(l)->InheritsFrom(r))
                   return -1;
                else return 1;
             } else return -1;
-         } else if (fClass->InheritsFrom(r))
+         } else if (fgClass->InheritsFrom(r))
             return 1;
 
          if (l[0] == '~') return -1;
@@ -692,10 +692,10 @@ namespace {
       }
 
    private:
-      static const TClass* fClass; // current class, defining inheritance sort order
+      static const TClass* fgClass; // current class, defining inheritance sort order
       const TMethod* fMeth; // my method
    };
-   const TClass* TMethodWrapper::fClass = 0;
+   const TClass* TMethodWrapper::fgClass = 0;
 }
 
 
@@ -1244,7 +1244,7 @@ void THtml::AnchorFromLine(TString& anchor) {
 }
 
 //______________________________________________________________________________
-void THtml::BeautifyLine(std::ostream &sOut)
+void THtml::BeautifyLine(std::ostream &sOut, const char* relpath /*="../"*/)
 {
    // Put colors around tags, create links, escape characters.
    // In short: make a nice HTML page out of C++ code, and put it into srcOut.
@@ -2111,7 +2111,7 @@ void THtml::ClassTree(TVirtualPad * psCanvas, TClass * classPtr,
 
 //______________________________________________________________________________
 void THtml::Convert(const char *filename, const char *title,
-                    const char *dirname)
+                    const char *dirname /*= ""*/, const char *relpath /*= "../"*/)
 {
 // It converts a single text file to HTML
 //
@@ -2119,7 +2119,9 @@ void THtml::Convert(const char *filename, const char *title,
 // Input: filename - name of the file to convert
 //        title    - title which will be placed at the top of the HTML file
 //        dirname  - optional parameter, if it's not specified, output will
-//                   be placed in html/examples directory.
+//                   be placed in htmldoc/examples directory.
+//        relpath  - optional parameter pointing to the THtml generated doc 
+//                   on the server, relative to the current page.
 //
 //  NOTE: Output file name is the same as filename, but with extension .html
 //
@@ -2146,89 +2148,90 @@ void THtml::Convert(const char *filename, const char *title,
    char *realFilename =
        gSystem->Which(fSourceDir, filename, kReadPermission);
 
-   if (realFilename) {
-
-      // open source file
-      ifstream sourceFile;
-      sourceFile.open(realFilename, ios::in);
-
-      delete[]realFilename;
-      realFilename = 0;
-
-      if (sourceFile.good()) {
-
-         // open temp file with extension '.html'
-         if (!gSystem->AccessPathName(dir)) {
-            char *tmp1 =
-                gSystem->ConcatFileName(dir, GetFileName(filename));
-            char *htmlFilename = StrDup(tmp1, 16);
-            strcat(htmlFilename, ".html");
-
-            if (tmp1)
-               delete[]tmp1;
-            tmp1 = 0;
-
-            ofstream tempFile;
-            tempFile.open(htmlFilename, ios::out);
-
-            if (tempFile.good()) {
-
-               Printf("Convert: %s", htmlFilename);
-
-               // write a HTML header
-               WriteHtmlHeader(tempFile, title);
-
-               tempFile << "<h1>" << title << "</h1>" << endl;
-               tempFile << "<pre>" << endl;
-
-               while (!sourceFile.eof()) {
-                  fLine.ReadLine(sourceFile, kFALSE);
-                  if (sourceFile.eof())
-                     break;
-
-
-                  // remove leading spaces
-                  fLine = fLine.Strip(TString::kBoth);
-
-                  // check for a commented line
-                  isCommentedLine = fLine.BeginsWith("//");
-
-                  // write to a '.html' file
-                  if (isCommentedLine)
-                     tempFile << "<b>";
-                  ExpandKeywords(fLine);
-                  fLine.ReplaceAll("=\"./", "=\"../"); // adjust rel path
-                  tempFile << fLine;
-                  if (isCommentedLine)
-                     tempFile << "</b>";
-                  tempFile << endl;
-               }
-               tempFile << "</pre>" << endl;
-
-
-               // write a HTML footer
-               WriteHtmlFooter(tempFile, "../");
-
-
-               // close a temp file
-               tempFile.close();
-
-            } else
-               Error("Convert", "Can't open file '%s' !", htmlFilename);
-
-            // close a source file
-            sourceFile.close();
-            if (htmlFilename)
-               delete[]htmlFilename;
-            htmlFilename = 0;
-         } else
-            Error("Convert",
-                  "Directory '%s' doesn't exist, or it's write protected !",
-                  dir);
-      } else
-         Error("Convert", "Can't open file '%s' !", realFilename);
-   } else
+   if (!realFilename) {
       Error("Convert", "Can't find file '%s' !", filename);
+      return;
+   }
+
+   // open source file
+   ifstream sourceFile;
+   sourceFile.open(realFilename, ios::in);
+
+   delete[]realFilename;
+   realFilename = 0;
+
+   if (!sourceFile.good()) {
+      Error("Convert", "Can't open file '%s' !", realFilename);
+      return;
+   }
+
+   // open temp file with extension '.html'
+   if (gSystem->AccessPathName(dir)) {
+      Error("Convert",
+            "Directory '%s' doesn't exist, or it's write protected !", dir);
+      return;
+   }
+   char *tmp1 =
+       gSystem->ConcatFileName(dir, GetFileName(filename));
+   char *htmlFilename = StrDup(tmp1, 16);
+   strcat(htmlFilename, ".html");
+
+   if (tmp1)
+      delete[]tmp1;
+   tmp1 = 0;
+
+   ofstream tempFile;
+   tempFile.open(htmlFilename, ios::out);
+
+   if (!tempFile.good()) {
+      Error("Convert", "Can't open file '%s' !", htmlFilename);
+      if (htmlFilename)
+         delete[]htmlFilename;
+      return;
+   }
+
+   Printf("Convert: %s", htmlFilename);
+
+   // write a HTML header
+   WriteHtmlHeader(tempFile, title, relpath);
+
+   tempFile << "<h1>" << title << "</h1>" << endl;
+   tempFile << "<pre>" << endl;
+
+   fParseContext.clear();
+   fParseContext.push_back(kCode);
+   fDocContext = kIgnore;
+   fLineNo = 0;
+
+   while (!sourceFile.eof()) {
+      fLine.ReadLine(sourceFile, kFALSE);
+      if (sourceFile.eof())
+         break;
+
+
+      // remove leading spaces
+      // fLine = fLine.Strip(TString::kBoth);
+      fLineExpanded = fLine;
+      ExpandKeywords(fLineExpanded);
+      fLineStripped = fLine.Strip(TString::kBoth);
+
+      BeautifyLine(tempFile, relpath);
+
+   }
+   tempFile << "</pre>" << endl;
+
+
+   // write a HTML footer
+   WriteHtmlFooter(tempFile, relpath);
+
+
+   // close a temp file
+   tempFile.close();
+
+   // close a source file
+   sourceFile.close();
+   if (htmlFilename)
+      delete[]htmlFilename;
 }
 
 
