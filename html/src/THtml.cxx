@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.108 2006/08/03 12:10:28 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.109 2006/08/03 21:20:23 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1085,9 +1085,6 @@ void THtml::Class2Html(Bool_t force)
             if (datamembers[access].GetEntries() == 0)
                continue;
 
-            if (access < 3) // don't sort enums
-               datamembers[access].Sort();
-
             classFile << "<div class=\"access\" ";
             const char* what = "data";
             if (access > 2) what = "enum";
@@ -1135,17 +1132,21 @@ void THtml::Class2Html(Bool_t force)
 
                TString mangled(member->GetClass()->GetName());
                NameSpace2FileName(mangled);
-               classFile << "</td><td class=\"dataname\"><a href=\"";
+               classFile << "</td><td class=\"dataname\"><a ";
                if (member->GetClass() != fCurrentClass) {
+                  classFile << "href=\"";
                   TString htmlFile;
                   GetHtmlFileName(member->GetClass(), htmlFile);
-                  classFile << htmlFile;
-               }
-               classFile << "#" << mangled;
+                  classFile << htmlFile << "#";
+               } else
+                  classFile << "name=\"";
+               classFile << mangled;
                classFile << ":";
                mangled = member->GetName();
                NameSpace2FileName(mangled);
                classFile << mangled << "\">";
+               if (member->GetClass() == fCurrentClass)
+                  classFile << "</a>";
                if (access < 3 && member->GetClass() != fCurrentClass) {
                   classFile << "<span class=\"baseclass\">";
                   ReplaceSpecialChars(classFile, member->GetClass()->GetName());
@@ -1160,7 +1161,9 @@ void THtml::Class2Html(Bool_t force)
                   else
                      classFile << "[" << member->GetMaxIndex(indx) << "]";
 
-               classFile << "</a></td><td class=\"datadesc\">";
+               if (member->GetClass() != fCurrentClass)
+                  classFile << "</a>";
+               classFile << "</td><td class=\"datadesc\">";
                ReplaceSpecialChars(classFile, member->GetTitle());
                classFile << "</td></tr>" << endl;
             } // for members
@@ -3256,10 +3259,8 @@ void THtml::CreateStyleSheet() {
          << "}" << std::endl
          << "span.funcname {" << std::endl
          << "   margin-left: -0.7em;" << std::endl
-         << "   /*border-bottom: solid 1px #cccccc;*/" << std::endl
          << "   font-weight: bolder;" << std::endl
          << "}" << std::endl
-         << "" << std::endl
          << "span.comment {" << std::endl
          << "   background-color: #eeeeee;" << std::endl
          << "   color: Green;" << std::endl
@@ -3374,9 +3375,15 @@ void THtml::CreateStyleSheet() {
          << "   float: right;" << std::endl
          << "   padding-right: 0.5em;" << std::endl
          << "}" << std::endl
+         << "td.funcname {" << std::endl
+         << "   font-weight: bolder;" << std::endl
+         << "}" << std::endl
          << "td.datatype {" << std::endl
          << "   float: right;" << std::endl
          << "   padding-right: 0.5em;" << std::endl
+         << "}" << std::endl
+         << "td.dataname {" << std::endl
+         << "   font-weight: bolder;" << std::endl
          << "}" << std::endl
          << "td.datadesc {" << std::endl
          << "   font-style: italic;" << std::endl
@@ -3656,11 +3663,12 @@ void THtml::ExpandKeywords(TString& keyword)
             link.Prepend("./");
          currentType = subClass;
       } else if (datamem || meth) {
-         GetHtmlFileName(lookupScope, link);
+         TClass* scope = datamem ? datamem->GetClass() : meth->GetClass();
+         GetHtmlFileName(scope, link);
          if (!link.BeginsWith("http://") && !link.BeginsWith("https://"))
             link.Prepend("./");
          link += "#";
-         TString mangledName(lookupScope->GetName());
+         TString mangledName(scope->GetName());
          NameSpace2FileName(mangledName);
          link += mangledName;
          link += ":";
