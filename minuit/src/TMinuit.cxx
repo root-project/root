@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.52 2006/05/14 20:05:37 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.53 2006/05/15 06:31:19 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -490,7 +490,7 @@ void TMinuit::BuildArrays(Int_t maxpar)
 //*-*          =======================================================
 
    fMaxpar = 25;
-   if (maxpar > 10) fMaxpar = maxpar;
+   if (maxpar >= fMaxpar) fMaxpar = maxpar+1;
    fMaxpar1= fMaxpar*(fMaxpar+1);
    fMaxpar2= 2*fMaxpar;
    fMaxpar5= fMaxpar1/2;
