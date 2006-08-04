@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.8 2005/05/27 16:42:58 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.9 2006/05/23 04:47:40 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -91,6 +91,7 @@ namespace ROOT {
 
       Short_t              AdoptStreamer(TClassStreamer*);
       Short_t              AdoptCollectionProxy(TVirtualCollectionProxy*);
+      Int_t                SetDeclFile(const char *file, Int_t line);
       void                 SetDelete(DelFunc_t deleteFunc);
       void                 SetDeleteArray(DelArrFunc_t deleteArrayFunc);
       void                 SetDestructor(DesFunc_t destructorFunc);

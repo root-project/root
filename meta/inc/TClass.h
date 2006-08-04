@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.64 2006/06/28 10:03:13 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.65 2006/07/13 05:17:11 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -253,6 +253,7 @@ public:
    Int_t              Size() const;
    void               SetContextMenuTitle(const char *title);
    void               SetGlobalIsA(IsAGlobalFunc_t);
+   void               SetDeclFile(const char *name, int line) { fDeclFileName = name; fDeclFileLine = line; }
    void               SetDelete(ROOT::DelFunc_t deleteFunc);
    void               SetDeleteArray(ROOT::DelArrFunc_t deleteArrayFunc);
    void               SetDestructor(ROOT::DesFunc_t destructorFunc);

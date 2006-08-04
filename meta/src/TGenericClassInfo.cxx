@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.14 2005/11/16 20:10:45 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.15 2006/05/23 04:47:40 brun Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -247,6 +247,16 @@ namespace ROOT {
       fImplFileName = file;
       fImplFileLine = line;
       if (fClass) fClass->AddImplFile(file,line);
+      return 0;
+   }
+
+   Int_t TGenericClassInfo::SetDeclFile(const char *file, Int_t line)
+   {
+      // Set the name of the declaration file.
+
+      fDeclFileName = file;
+      fDeclFileLine = line;
+      if (fClass) fClass->SetDeclFile(file,line);
       return 0;
    }
 
