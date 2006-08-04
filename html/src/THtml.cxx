@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.110 2006/08/04 10:54:54 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.111 2006/08/04 13:59:09 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1296,7 +1296,9 @@ void THtml::BeautifyLine(std::ostream &sOut, const char* relpath /*="../"*/)
    TString lineExpandedDotDot(stripSubExpanded);
 
    // adjust relative path
-   lineExpandedDotDot.ReplaceAll("=\"./", "=\"../");
+   TString replWithRelPath("=\"");
+   replWithRelPath += relpath;
+   lineExpandedDotDot.ReplaceAll("=\"./", replWithRelPath);
    if (stripSubExpanded.Start() > 0)
       sOut << fLineExpanded(0,stripSubExpanded.Start());
    for (Int_t i = 0; i < lineExpandedDotDot.Length(); ++i)
@@ -2130,7 +2132,6 @@ void THtml::Convert(const char *filename, const char *title,
    CreateListOfClasses("*");
 
    const char *dir;
-   Bool_t isCommentedLine = kFALSE;
 
    // if it's not defined, make the "examples" as a default directory
    if (!*dirname) {
@@ -3814,6 +3815,7 @@ const char *THtml::GetFileName(const char *filename)
 //         '/usr/root/test.dat' will return 'test.dat'
 //
 
+   if (!filename || !filename[0]) return "";
    return gSystem->BaseName(filename);
 }
 
