@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.294 2006/07/23 03:41:21 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.295 2006/07/26 13:36:44 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1082,13 +1082,13 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
                curname[i] = '.';
             }
          }
-	 Int_t noccur = folder->Occurence(obj);
-	 if (noccur > 0) {
+         Int_t noccur = folder->Occurence(obj);
+         if (noccur > 0) {
             sprintf(occur, "_%d", noccur);
-	    strcat(curname, occur);
-	 }
-	 TBranchElement* br = (TBranchElement*) Bronch(curname, obj->ClassName(), add, bufsize, splitlevel - 1);
-	 br->SetBranchFolder();
+            strcat(curname, occur);
+         }
+         TBranchElement* br = (TBranchElement*) Bronch(curname, obj->ClassName(), add, bufsize, splitlevel - 1);
+         br->SetBranchFolder();
       }
    }
    delete[] curname;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: String.cxx,v 1.3 2005/06/22 17:01:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: String.cxx,v 1.4 2006/07/25 19:04:30 pcanal Exp $
 // Author: Philippe Canal 03/09/2003
 
 /*************************************************************************
@@ -32,8 +32,8 @@ void std_string_streamer(TBuffer &b, void *objadd)
       b >> nwh;
 
       if( obj->size() ) {
-	 // Insure that the underlying data storage is not shared
-	 (*obj)[0] = '\0';
+         // Insure that the underlying data storage is not shared
+         (*obj)[0] = '\0';
       }
       if (nwh == 255)  {
          b >> nbig;
