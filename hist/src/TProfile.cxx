@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.80 2006/07/03 16:10:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.81 2006/08/02 12:54:19 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1535,10 +1535,10 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    Double_t *cu1 = GetW();
    Double_t *er1 = GetW2();
    Double_t *en1 = GetB();
-   for (bin=0;bin<nbins;bin++) {
-      oldBins[bin]   = cu1[bin+1];
-      oldCount[bin]  = en1[bin+1];
-      oldErrors[bin] = er1[bin+1];
+   for (bin=1;bin<=nbins;bin++) {
+      oldBins[bin]   = cu1[bin];
+      oldCount[bin]  = en1[bin];
+      oldErrors[bin] = er1[bin];
    }
 
    // create a clone of the old histogram if newname is specified
