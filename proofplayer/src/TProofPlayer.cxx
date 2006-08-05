@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.84 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.85 2006/07/26 14:28:58 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -61,6 +61,10 @@
 // Timeout exception
 #define kPEX_STOPPED  1001
 #define kPEX_ABORTED  1002
+
+// To flag an abort condition: use a local static variable to avoid
+// warnings about problems with longjumps
+static Bool_t gAbort = kFALSE;
 
 class TAutoBinVal : public TNamed {
 private:
@@ -361,7 +365,10 @@ TList *TProofPlayer::GetOutputList() const
 {
    // Get output list.
 
-   return fOutput;
+   TList *ol = fOutput;
+   if (!ol && fQuery)
+      ol = fQuery->GetOutputList();
+   return ol;
 }
 
 //______________________________________________________________________________
@@ -658,7 +665,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    PDB(kLoop,1) Info("Process","Looping over Process()");
 
    // Loop over range
-   Bool_t abort = kFALSE;
+   gAbort = kFALSE;
    Long64_t entry;
    fEventsProcessed = 0;
    while ((entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
@@ -680,7 +687,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             if (excode == kPEX_STOPPED) {
                Info("Process","received stop-process signal");
             } else if (excode == kPEX_ABORTED) {
-               abort = kTRUE;
+               gAbort = kTRUE;
                Info("Process","received abort-process signal");
             } else {
                Error("Process","exception %d caught", excode);
@@ -703,7 +710,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    // Stop active timers
    if (fStopTimer != 0)
-      SetStopTimer(kFALSE, abort);
+      SetStopTimer(kFALSE, gAbort);
    if (fFeedbackTimer != 0)
       HandleTimer(0);
 
@@ -1109,7 +1116,6 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
             fOutput->Add(o);
          }
          // Save the output list in the current query
-         // (list contents is duplicated inside)
          fQuery->SetOutputList(fOutput);
 
          // Set in finalized state (cannot be done twice)
@@ -1121,8 +1127,9 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          output->SetOwner(kFALSE);
          SafeDelete(fSelector);
 
-         // Delete fOutput (not needed anymore, cannot be finalized twice)
-         fOutput->SetOwner();
+         // Delete fOutput (not needed anymore, cannot be finalized twice),
+         // making sure that the objects saved in TQueryResult are not deleted
+         fOutput->SetOwner(kFALSE);
          SafeDelete(fOutput);
       }
    }
@@ -1175,16 +1182,19 @@ Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
       Info("Finalize(TQueryResult *)", "ouputlist is empty");
       return -1;
    }
-   TList *out = new TList;
+   TList *out = fOutput;
+   if (fProof->fProtocol < 11)
+      out = new TList;
    TIter nxo(tmp);
    TObject *o = 0;
    while ((o = nxo()))
       out->Add(o->Clone());
 
    // Adopts the list
-   out->SetOwner();
-   StoreOutput(out);
-
+   if (fProof->fProtocol < 11) {
+      out->SetOwner();
+      StoreOutput(out);
+   }
    gSystem->RedirectOutput(0);
 
    // Finalize it
@@ -1205,12 +1215,19 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
       Info("SendSelector", "Invalid input: selector (file) name undefined");
       return kFALSE;
    }
-   if (!strchr(selector_file, '.')) {
-      if (gDebug > 1)
-         Info("SendSelector", "selector name '%s' does not contain a '.':"
-              " nothing to send, it will be loaded from a library", selector_file);
-      return kTRUE;
+
+   // Supported extensions for the implementation file
+   const char *cext[3] = { ".C", ".cxx", ".cc" };
+   Int_t e = 0;
+   for ( ; e < 3; e++)
+      if (strstr(selector_file, cext[e]))
+         break;
+   if (e >= 3) {
+      Info("SendSelector",
+           "Invalid extension: %s (supportd extensions: .C, .cxx, .cc", selector_file);
+      return kFALSE;
    }
+   Int_t l = strlen(cext[e]);
 
    // Extract the fine name first
    TString selec = selector_file;
@@ -1218,19 +1235,6 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
    TString arguments;
    TString io;
    selec = gSystem->SplitAclicMode(selec, aclicMode, arguments, io);
-
-   // Supported extensions for the implementation file
-   const char *cext[3] = { ".C", ".cxx", ".cc" };
-   Int_t e = 0;
-   for ( ; e < 3; e++)
-      if (selec.EndsWith(cext[e]))
-         break;
-   if (e >= 3) {
-      Info("SendSelector",
-           "Invalid extension: %s (supportd extensions: .C, .cxx, .cc", selec.Data());
-      return kFALSE;
-   }
-   Int_t l = strlen(cext[e]);
 
    // Header file
    TString header = selec;

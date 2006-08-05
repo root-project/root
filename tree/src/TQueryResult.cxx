@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.5 2006/03/20 21:26:55 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.6 2006/07/26 14:28:59 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -398,14 +398,25 @@ void TQueryResult::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-void TQueryResult::SetOutputList(TList *out)
+void TQueryResult::SetOutputList(TList *out, Bool_t adopt)
 {
    // Set / change the output list.
+   // The flag 'adopt' determines whether the list is adopted (default)
+   // or cloned. The internal fOutputList will always be owner of its
+   // objects.
 
    SafeDelete(fOutputList);
 
    if (out) {
-      fOutputList = (TList *) (out->Clone());
+      if (!adopt) {
+         fOutputList = (TList *) (out->Clone());
+      } else {
+         fOutputList = new TList;
+         TIter nxo(out);
+         TObject *o = 0;
+         while ((o = nxo()))
+            fOutputList->Add(o);
+      }
       fOutputList->SetOwner();
    }
 }

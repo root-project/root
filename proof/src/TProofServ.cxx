@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.131 2006/07/05 14:06:09 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.132 2006/07/26 14:28:58 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3232,42 +3232,52 @@ void TProofServ::HandleRetrieve(TMessage *mess)
    TString qdir;
    TProofQueryResult *pqr = LocateQuery(queryref, qry, qdir);
 
-   if (!pqr || qry < 0) {
-      TString fout = qdir;
-      fout += "/query-result.root";
+   TString fout = qdir;
+   fout += "/query-result.root";
 
-      TFile *f = TFile::Open(fout,"READ");
-      pqr = 0;
-      if (f) {
-         f->ReadKeys();
-         TIter nxk(f->GetListOfKeys());
-         TKey *k =  0;
-         while ((k = (TKey *)nxk())) {
-            if (!strcmp(k->GetClassName(), "TProofQueryResult")) {
-               pqr = (TProofQueryResult *) f->Get(k->GetName());
-               if (pqr) {
-                  fSocket->SendObject(pqr, kPROOF_RETRIEVE);
-               } else {
-                  Info("HandleRetrieve",
-                       "query not found in file %s",fout.Data());
-                  // Notify not found
-                  fSocket->SendObject(0, kPROOF_RETRIEVE);
+   TFile *f = TFile::Open(fout,"READ");
+   pqr = 0;
+   if (f) {
+      f->ReadKeys();
+      TIter nxk(f->GetListOfKeys());
+      TKey *k =  0;
+      while ((k = (TKey *)nxk())) {
+         if (!strcmp(k->GetClassName(), "TProofQueryResult")) {
+            pqr = (TProofQueryResult *) f->Get(k->GetName());
+            if (pqr) {
+
+               TMessage m(kPROOF_MESSAGE);
+               // Message for the client
+               Float_t qsz = (Float_t) f->GetSize();
+               Int_t ilb = 0;
+               static const char *clb[4] = { "bytes", "KB", "MB", "GB" };
+               while (qsz > 1000. && ilb < 3) {
+                  qsz /= 1000.;
+                  ilb++;
                }
-               break;
+               m << TString(Form("Master-%s: sending result of %s:%s (%'.1f %s)",
+                                  fOrdinal.Data(), pqr->GetTitle(), pqr->GetName(),
+                                  qsz, clb[ilb]));
+               m << (Bool_t) kTRUE;
+               fSocket->Send(m);
+               fSocket->SendObject(pqr, kPROOF_RETRIEVE);
+            } else {
+               Info("HandleRetrieve",
+                    "query not found in file %s",fout.Data());
+               // Notify not found
+               fSocket->SendObject(0, kPROOF_RETRIEVE);
             }
+            break;
          }
-         f->Close();
-         delete f;
-      } else {
-         Info("HandleRetrieve",
-              "file cannot be open (%s)",fout.Data());
-         // Notify not found
-         fSocket->SendObject(0, kPROOF_RETRIEVE);
-         return;
       }
+      f->Close();
+      delete f;
    } else {
-      // Send the object
-      fSocket->SendObject(pqr, kPROOF_RETRIEVE);
+      Info("HandleRetrieve",
+           "file cannot be open (%s)",fout.Data());
+      // Notify not found
+      fSocket->SendObject(0, kPROOF_RETRIEVE);
+      return;
    }
 
    // Done

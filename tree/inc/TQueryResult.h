@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.h,v 1.2 2005/09/24 11:33:41 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.h,v 1.3 2005/12/09 14:56:47 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -93,7 +93,7 @@ protected:
    void            SaveSelector(const char *selec);
    void            SetArchived(const char *archfile);
    virtual void    SetFinalized() { fFinalized = kTRUE; }
-   virtual void    SetOutputList(TList *out);
+   virtual void    SetOutputList(TList *out, Bool_t adopt = kTRUE);
    virtual void    SetProcessInfo(Long64_t ent, Float_t cpu = 0., Long64_t siz = -1);
 
 public:

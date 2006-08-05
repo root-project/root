@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TTree.h,v 1.83 2005/09/04 15:35:08 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofQueryResult.h,v 1.1 2005/09/16 08:48:38 rdm Exp $
 // Author: G Ganis Aug 2005
 
 /*************************************************************************
@@ -40,7 +40,6 @@ private:
                      const char *selec, TEventList *elist = 0);
 
    void  SetFinalized() { TQueryResult::SetFinalized(); }
-   void  SetOutputList(TList *out)  { TQueryResult::SetOutputList(out); }
    void  SetRunning(Int_t startlog, const char *par);
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.152 2006/07/26 14:28:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.153 2006/07/31 08:20:38 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -3150,41 +3150,51 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime)
       MD5Mod_t md = (*it).second;
       if (md.fModtime != modtime) {
          TMD5 *md5 = TMD5::FileChecksum(file);
-         if ((*md5) != md.fMD5) {
-            sendto       = kTRUE;
-            md.fMD5      = *md5;
-            md.fModtime  = modtime;
-            fFileMap[sn] = md;
-            // When on the master, the master and/or slaves may share
-            // their file systems and cache. Therefore always make a
-            // check for the file. If the file already exists with the
-            // expected md5 the kPROOF_CHECKFILE command will cause the
-            // file to be copied from cache to slave sandbox.
-            if (IsMaster()) {
-               sendto = kFALSE;
-               TMessage mess(kPROOF_CHECKFILE);
-               mess << TString(file) << md.fMD5;
-               slave->GetSocket()->Send(mess);
+         if (md5) {
+            if ((*md5) != md.fMD5) {
+               sendto       = kTRUE;
+               md.fMD5      = *md5;
+               md.fModtime  = modtime;
+               fFileMap[sn] = md;
+               // When on the master, the master and/or slaves may share
+               // their file systems and cache. Therefore always make a
+               // check for the file. If the file already exists with the
+               // expected md5 the kPROOF_CHECKFILE command will cause the
+               // file to be copied from cache to slave sandbox.
+               if (IsMaster()) {
+                  sendto = kFALSE;
+                  TMessage mess(kPROOF_CHECKFILE);
+                  mess << TString(gSystem->BaseName(file)) << md.fMD5;
+                  slave->GetSocket()->Send(mess);
 
-               TMessage *reply;
-               slave->GetSocket()->Recv(reply);
-               if (reply->What() != kPROOF_CHECKFILE)
-                  sendto = kTRUE;
-               delete reply;
+                  TMessage *reply;
+                  slave->GetSocket()->Recv(reply);
+                  if (reply->What() != kPROOF_CHECKFILE)
+                     sendto = kTRUE;
+                  delete reply;
+               }
             }
+            delete md5;
+         } else {
+            Error("CheckFile", "could not calculate local MD5 check sum - dont send");
+            return kFALSE;
          }
-         delete md5;
       }
    } else {
       // file not in map
       TMD5 *md5 = TMD5::FileChecksum(file);
       MD5Mod_t md;
-      md.fMD5      = *md5;
-      md.fModtime  = modtime;
-      fFileMap[sn] = md;
-      delete md5;
+      if (md5) {
+         md.fMD5      = *md5;
+         md.fModtime  = modtime;
+         fFileMap[sn] = md;
+         delete md5;
+      } else {
+         Error("CheckFile", "could not calculate local MD5 check sum - dont send");
+         return kFALSE;
+      }
       TMessage mess(kPROOF_CHECKFILE);
-      mess << TString(file) << md.fMD5;
+      mess << TString(gSystem->BaseName(file)) << md.fMD5;
       slave->GetSocket()->Send(mess);
 
       TMessage *reply;
@@ -3268,7 +3278,7 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
       if (!sl->IsValid())
          continue;
 
-      Bool_t sendto = force ? kTRUE : CheckFile(fnam, sl, modtime);
+      Bool_t sendto = force ? kTRUE : CheckFile(file, sl, modtime);
       // Don't send the kPROOF_SENDFILE command to real slaves when sendto
       // is false. Masters might still need to send the file to newly added
       // slaves.
