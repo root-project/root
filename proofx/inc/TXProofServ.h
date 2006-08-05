@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.6 2006/06/05 22:51:14 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.7 2006/06/21 16:18:26 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -36,18 +36,21 @@ class TXProofServ : public TProofServ, public TXHandler {
 private:
    TXProofServInterruptHandler *fInterruptHandler;
    TXSocketHandler             *fInputHandler;
+   TList                       *fEnvList;
+   TString                      fSockPath;
 
    Bool_t        fTerminated; //true if Terminate() has been already called
 
    Int_t         LockSession(const char *sessiontag, TProofLockPath **lck);
 
+   Int_t         ReadEnvFile(Int_t dbglevel = 0);
    void          SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
    void          SetShutdownTimer(Bool_t on = kTRUE, Int_t delay = 0);
    void          Setup();
 
 public:
    TXProofServ(Int_t *argc, char **argv,  FILE *flog = 0) : TProofServ(argc, argv, flog)
-                 { fInterruptHandler = 0; fInputHandler = 0; fTerminated = kFALSE;}
+                 { fInterruptHandler = 0; fInputHandler = 0; fTerminated = kFALSE; fEnvList = 0;}
    virtual ~TXProofServ();
 
    void          CreateServer();

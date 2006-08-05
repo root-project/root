@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.85 2006/07/26 14:28:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.86 2006/08/05 11:14:25 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -1214,6 +1214,13 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
    if (!selector_file) {
       Info("SendSelector", "Invalid input: selector (file) name undefined");
       return kFALSE;
+   }
+
+   if (!strchr(gSystem->BaseName(selector_file), '.')) {
+      if (gDebug > 1)
+         Info("SendSelector", "selector name '%s' does not contain a '.':"
+              " nothing to send, it will be loaded from a library", selector_file);
+      return kTRUE;
    }
 
    // Supported extensions for the implementation file

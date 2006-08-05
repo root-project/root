@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.10 2006/06/23 13:26:56 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.11 2006/07/26 14:28:58 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -218,8 +218,18 @@ void TXProofServ::CreateServer()
    // Finalize the server setup. If master, create the TProof instance to talk
    // the worker or submaster nodes.
 
+   TNamed *env = 0;
+   Bool_t xtest = (Argc() > 3 && !strcmp(Argv(3), "test")) ? kTRUE : kFALSE;
+
    if (gProofDebugLevel > 0)
-      Info("CreateServer", "starting server creation");
+      Info("CreateServer", "starting%s server creation", (xtest ? " test" : ""));
+
+   // Read environment
+   if (!xtest && ReadEnvFile(gProofDebugLevel) != 0) {
+      Error("CreateServer", "reading environment file");
+      exit(1);
+   }
+
 
    // Get file descriptor for log file
    if (fLogFile) {
@@ -237,33 +247,40 @@ void TXProofServ::CreateServer()
    EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", 0));
 
    // Get socket to be used to call back our xpd
-   const char *sockpath = 0;
-   if (!(sockpath = gSystem->Getenv("ROOTOPENSOCK"))) {
-     Error("CreateServer", "Socket setup by xpd undefined");
-     exit(1);
-   }
-
-   // If test session, just send the protocol version and exit
-   if (Argc() > 3 && !strcmp(Argv(3), "test")) {
-      Int_t fpw = (Int_t) strtol(sockpath, 0, 10);
+   if (xtest) {
+      // test session, just send the protocol version on the open pipe
+      // and exit
+      if (!(fSockPath = gSystem->Getenv("ROOTOPENSOCK"))) {
+         Error("CreateServer", "Socket setup by xpd undefined");
+         exit(1);
+      }
+      Int_t fpw = (Int_t) strtol(fSockPath.Data(), 0, 10);
       int proto = htonl(kPROOF_Protocol);
+      fSockPath = "";
       if (write(fpw, &proto, sizeof(proto)) != sizeof(proto)) {
          Error("CreateServer", "test: sending protocol number");
          exit(1);
       }
       exit(0);
+   } else {
+      env = (TNamed *) fEnvList->FindObject("ROOTOPENSOCK");
+      if (!env) {
+         Error("CreateServer", "Socket setup by xpd undefined");
+         exit(1);
+      }
+      fSockPath = env->GetTitle();
    }
 
    // Get the sessions ID
-   const char *sessID = 0;
-   if (!(sessID = gSystem->Getenv("ROOTSESSIONID"))) {
+   env = (TNamed *) fEnvList->FindObject("ROOTSESSIONID");
+   if (!env) {
      Error("CreateServer", "Session ID undefined");
      exit(1);
    }
-   Int_t psid = (Int_t) strtol(sessID, 0, 10);
+   Int_t psid = (Int_t) strtol(env->GetTitle(), 0, 10);
 
    // Call back the server
-   fSocket = new TXUnixSocket(sockpath, psid);
+   fSocket = new TXUnixSocket(fSockPath, psid);
    if (!fSocket || !(fSocket->IsValid())) {
       Error("CreateServer", "Failed to open connection to XrdProofd coordinator");
       exit(1);
@@ -273,13 +290,13 @@ void TXProofServ::CreateServer()
    Int_t sock = fSocket->GetDescriptor();
 
    // Get the client ID
-   const char *clntID = 0;
-   if (!(clntID = gSystem->Getenv("ROOTCLIENTID"))) {
+   env = (TNamed *) fEnvList->FindObject("ROOTCLIENTID");
+   if (!env) {
      Error("CreateServer", "Client ID undefined");
      SendLogFile();
      exit(1);
    }
-   Int_t cid = (Int_t) strtol(clntID, 0, 10);
+   Int_t cid = (Int_t) strtol(env->GetTitle(), 0, 10);
    ((TXSocket *)fSocket)->SetClientID(cid);
 
    // debug hooks
@@ -375,10 +392,10 @@ void TXProofServ::CreateServer()
       TString master = "proof://__master__";
 
       // Add port, if defined
-      const char *port = 0;
-      if ((port = (char *) gSystem->Getenv("ROOTXPDPORT"))) {
+      TNamed *env = (TNamed *) fEnvList->FindObject("ROOTXPDPORT");
+      if (env) {
          master += ":";
-         master += port;
+         master += env->GetTitle();
       }
 
       // Make sure that parallel startup via threads is not active
@@ -436,6 +453,10 @@ TXProofServ::~TXProofServ()
    // live anyway.
 
    delete fSocket;
+   if (fEnvList) {
+      fEnvList->SetOwner();
+      SafeDelete(fEnvList);
+   }
 }
 
 //______________________________________________________________________________
@@ -592,12 +613,13 @@ void TXProofServ::Setup()
    }
 
    // Get client protocol
-   if (!gSystem->Getenv("ROOTPROOFCLNTVERS")) {
+   TNamed *env = (TNamed *) fEnvList->FindObject("ROOTPROOFCLNTVERS");
+   if (!env) {
       Error("Setup", "remote proof protocol missing");
       SendLogFile();
       gSystem->Exit(1);
    }
-   fProtocol = atoi(gSystem->Getenv("ROOTPROOFCLNTVERS"));
+   fProtocol = atoi(env->GetTitle());
 
    // The local user
    UserGroup_t *pw = gSystem->GetUserInfo();
@@ -608,10 +630,12 @@ void TXProofServ::Setup()
 
    // Work dir and ...
    if (IsMaster())
-      if (gSystem->Getenv("ROOTPROOFCFGFILE"))
-         fConfFile = gSystem->Getenv("ROOTPROOFCFGFILE");
-   if (gSystem->Getenv("ROOTPROOFWORKDIR"))
-      fWorkDir = gSystem->Getenv("ROOTPROOFWORKDIR");
+      env = (TNamed *) fEnvList->FindObject("ROOTPROOFCFGFILE");
+      if (env)
+         fConfFile = env->GetTitle();
+   env = (TNamed *) fEnvList->FindObject("ROOTPROOFWORKDIR");
+   if (env)
+      fWorkDir = env->GetTitle();
    else
       fWorkDir = kPROOF_WorkDir;
 
@@ -691,12 +715,13 @@ void TXProofServ::Setup()
       new TProofLockPath(Form("%s%s",kPROOF_PackageLockFile,fUser.Data()));
 
    // Get Session tag
-   if (!gSystem->Getenv("ROOTPROOFSESSIONTAG")) {
+   env = (TNamed *) fEnvList->FindObject("ROOTPROOFSESSIONTAG");
+   if (!env) {
      Error("Setup", "Session tag missing");
      SendLogFile();
      gSystem->Exit(1);
    }
-   fSessionTag = gSystem->Getenv("ROOTPROOFSESSIONTAG");
+   fSessionTag = env->GetTitle();
    if (gProofDebugLevel > 0)
       Info("Setup", "session tag is %s", fSessionTag.Data());
 
@@ -1024,6 +1049,9 @@ void TXProofServ::Terminate(Int_t status)
       exit(1);
    fTerminated = kTRUE;
 
+   // Notify
+   Info("Terminate", "starting session termination operations ...");
+
    // Cleanup session directory
    if (status == 0) {
       // make sure we remain in a "connected" directory
@@ -1051,6 +1079,10 @@ void TXProofServ::Terminate(Int_t status)
          fQueryLock->Unlock();
    }
 
+   // Cleanup UNIX socket
+   if (fSockPath.Length() > 0 && !gSystem->AccessPathName(fSockPath))
+      gSystem->Unlink(fSockPath);
+
    // Remove input handler to avoid spurious signals in socket
    // selection for closing activities executed upon exit()
    gSystem->RemoveFileHandler(fInputHandler);
@@ -1059,6 +1091,9 @@ void TXProofServ::Terminate(Int_t status)
    // Stop processing events
    gSystem->ExitLoop();
 //   SafeDelete(fSocket);
+
+   // Notify
+   Info("Terminate", "termination operations ended: quitting!");
 
    // Exit
 //   gSystem->Exit(status);
@@ -1139,7 +1174,7 @@ void TXProofServ::SetShutdownTimer(Bool_t on, Int_t delay)
    // Make sure that 'delay' make sense, i.e. not larger than 10 days
    if (delay > 864000) {
       Warning("SetShutdownTimer",
-              "Abnormous delay value (%d): corruption? setting to 0", delay);
+              "abnormous delay value (%d): corruption? setting to 0", delay);
       delay = 1;
    }
    // Set a minimum value (0 does not seem to start the timer ...)
@@ -1158,6 +1193,9 @@ void TXProofServ::SetShutdownTimer(Bool_t on, Int_t delay)
          // Start the countdown
          fShutdownTimer->Start(-1, kTRUE);
       }
+      // Notify
+      Info("SetShutdownTimer",
+              "session will be shutdown in %d seconds", delay);
    } else {
       if (fShutdownTimer) {
          // Stop timer (client has reattached)
@@ -1166,6 +1204,67 @@ void TXProofServ::SetShutdownTimer(Bool_t on, Int_t delay)
          fShutdownTimer->Disconnect("Timeout()", this, "HandleTermination()");
          // Clean-up the timer
          SafeDelete(fShutdownTimer);
+         // Notify
+         Info("SetShutdownTimer", "shutdown countdown timer stopped: resuming session");
+      } else {
+         // Notify
+         Info("SetShutdownTimer", "shutdown countdown timer never started - do nothing");
       }
    }
+
+   // To avoid having the client notified about this at reconnection
+   lseek(fLogFileDes, lseek(fileno(stdout), (off_t)0, SEEK_END), SEEK_SET);
 }
+
+//______________________________________________________________________________
+Int_t TXProofServ::ReadEnvFile(Int_t dbglevel)
+{
+   // Read file with environment settings and fill the appropriate list
+   // Return 0 on success, -1 otherwise
+
+   // Get env file path
+   char *envfile = 0;
+   const char *sessdir = getenv("ROOTPROOFSESSDIR");
+   if (sessdir) {
+      envfile = new char[strlen(sessdir) + 5];
+      sprintf(envfile, "%s.env", sessdir);
+   } else {
+      Info("ReadEnvFile", "cannot build path: session dir missing");
+      return -1;
+   }
+
+   // Open input file
+   fstream infile(envfile, std::ios::in);
+   if (infile.is_open()) {
+      // Reset env list, if needed
+      if (fEnvList) {
+         fEnvList->SetOwner();
+         SafeDelete(fEnvList);
+      }
+      fEnvList = new TList;
+      TString line;
+      while (!infile.eof()) {
+         line.ReadLine(infile, kFALSE);
+         if (dbglevel > 2)
+            Info("ReadEnvFile", "read line: %s", line.Data());
+         // Parse line
+         Int_t keq = line.Index("=");
+         if (keq != kNPOS) {
+            TString name = line;
+            name.Remove(keq);
+            TString val = line;
+            val.Remove(0, keq+1);
+            fEnvList->Add(new TNamed(name, val));
+            if (dbglevel > 0)
+               Info("ReadEnvFile", "found name: %s, val: %s", name.Data(), val.Data());
+         }
+      }
+   } else {
+      Info("ReadEnvFile"," file %s cannot be open", envfile);
+      return -1;
+   }
+
+   // Done
+   return 0;
+}
+

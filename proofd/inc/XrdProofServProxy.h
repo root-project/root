@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.3 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.4 2006/06/21 16:18:26 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -97,6 +97,7 @@ class XrdClientID {
 #define kXPROOFSRVALIASMAX 256
 
 class XrdProofWorker;
+class XrdNet;
 
 class XrdProofServProxy
 {
@@ -114,6 +115,7 @@ public:
    inline int          SrvID() const { return fSrvID; }
    inline int          SrvType() const { return fSrvType; }
    inline void         SetClient(const char *c) { if (c) memcpy(fClient, c, 8); }
+   inline void         SetFileout(const char *f) { if (f) strcpy(fFileout, f); }
    inline void         SetID(short int id) { fID = id;}
    inline void         SetSrv(int id) { fSrvID = id; }
    inline void         SetSrvType(int id) { fSrvType = id; }
@@ -126,8 +128,13 @@ public:
    int                 GetFreeID();
    int                 GetNClients();
 
+   int                 GetNWorkers() { return (int) fWorkers.size(); }
    void                AddWorker(XrdProofWorker *w) { fWorkers.push_back(w); }
    void                RemoveWorker(XrdProofWorker *w) { fWorkers.remove(w); }
+
+   int                 CreateUNIXSock(XrdOucError *edest, char *tmpdir);
+   XrdNet             *UNIXSock() const { return fUNIXSock; }
+   char               *UNIXSockPath() const { return fUNIXSockPath; }
 
    bool                IsValid() const { return fIsValid; }
    const char         *StatusAsString() const;
@@ -148,6 +155,9 @@ public:
 
    XrdSrvBuffer             *fQueryNum;  // Msg with sequential number of currebt query
    XrdSrvBuffer             *fStartMsg;  // Msg with start processing info
+
+   XrdNet                   *fUNIXSock;     // UNIX server socket for internal connections
+   char                     *fUNIXSockPath; // UNIX server socket path
 
    int                       fStatus;
    int                       fSrvID;  // Srv process ID

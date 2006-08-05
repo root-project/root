@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.5 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.6 2006/06/21 16:18:26 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -16,6 +16,8 @@
 #include <list>
 #include <map>
 
+#include "XrdNet/XrdNet.hh"
+#include "XrdSys/XrdSysPriv.hh"
 #include "XrdProofServProxy.h"
 #include "XrdProofdProtocol.h"
 
@@ -46,9 +48,12 @@ XrdProofServProxy::XrdProofServProxy()
    fProtVer = -1;
    strcpy(fFileout,"none");
    memset(fClient, 0, 9);
+   memset(fFileout, 0, sizeof(fFileout));
    strcpy(fTag,"");
    strcpy(fAlias,"");
    fClients.reserve(10);
+   fUNIXSock = 0;
+   fUNIXSockPath = 0;
 }
 
 //__________________________________________________________________________
@@ -68,6 +73,10 @@ XrdProofServProxy::~XrdProofServProxy()
 
    // Cleanup worker info
    ClearWorkers();
+
+   // Unix socket
+   SafeDelete(fUNIXSock);
+   SafeDelete(fUNIXSockPath);
 }
 
 //__________________________________________________________________________
@@ -100,12 +109,16 @@ void XrdProofServProxy::Reset()
    fID = -1;
    fIsValid = 0;
    fProtVer = -1;
-   strcpy(fFileout,"none");
+   memset(fClient, 0, 9);
+   memset(fFileout, 0, sizeof(fFileout));
    strcpy(fTag,"");
    strcpy(fAlias,"");
    fClients.clear();
    // Cleanup worker info
    ClearWorkers();
+   // Unix socket
+   SafeDelete(fUNIXSock);
+   SafeDelete(fUNIXSockPath);
 }
 
 //__________________________________________________________________________
@@ -202,3 +215,55 @@ const char *XrdProofServProxy::StatusAsString() const
    // Done
    return sst[ist];
 }
+
+//__________________________________________________________________________
+int XrdProofServProxy::CreateUNIXSock(XrdOucError *edest, char *tmpdir)
+{
+   // Create UNIX socket for internal connections
+
+   // Make sure we do not have already a socket
+   if (fUNIXSock && fUNIXSockPath) {
+       TRACE(REQ,"CreateUNIXSock: UNIX socket exists already! (" <<
+             fUNIXSockPath<<")");
+       return 0;
+   }
+
+   // Make sure we do not have inconsistencies
+   if (fUNIXSock || fUNIXSockPath) {
+       PRINT("CreateUNIXSock: inconsistent values: corruption? (sock: " <<
+                  fUNIXSock<<", path: "<< fUNIXSockPath);
+       return -1;
+   }
+
+   // Inputs must make sense
+   if (!edest || !tmpdir) {
+       PRINT("CreateUNIXSock: invalid inputs: edest: " <<
+                  (int *)edest <<", tmpdir: "<< (int *)tmpdir);
+       return -1;
+   }
+
+   // Create socket
+   fUNIXSock = new XrdNet(edest);
+
+   // Create path
+   fUNIXSockPath = new char[strlen(tmpdir)+strlen("/xpdsock_XXXXXX")+2];
+   sprintf(fUNIXSockPath,"%s/xpdsock_XXXXXX", tmpdir);
+   int fd = mkstemp(fUNIXSockPath);
+   if (fd > -1) {
+      close(fd);
+      if (fUNIXSock->Bind(fUNIXSockPath)) {
+         PRINT("CreateUNIXSock: warning:"
+               " problems binding to UNIX socket; path: " <<fUNIXSockPath);
+         return -1;
+      } else
+         TRACE(REQ, "CreateUNIXSock: path for UNIX for socket is " <<fUNIXSockPath);
+   } else {
+      PRINT("CreateUNIXSock: unable to generate unique"
+            " path for UNIX socket; tried path " << fUNIXSockPath);
+      return -1;
+   }
+
+   // We are done
+   return 0;
+}
+

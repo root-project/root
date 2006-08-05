@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.8 2006/06/05 22:51:14 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.9 2006/06/21 16:18:26 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -204,6 +204,7 @@ void TXSlave::Init(const char *host, Int_t stype)
    if (!(fSocket->IsValid())) {
       Error("Init", "some severe error occurred while opening"
                         " the connection at %s - exit", url.GetUrl(kTRUE));
+      SafeDelete(fSocket);
       return;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.16 2006/07/20 01:24:48 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.17 2006/07/26 14:48:02 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -193,7 +193,8 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid,
          // We attach or create
          if (!Create()) {
             // Failure
-            Error("TXSocket", "create or attach failed (%s)",fConn->fLastErrMsg.c_str());
+            Error("TXSocket", "create or attach failed (%s)",
+                  ((fConn->fLastErrMsg.length() > 0) ? fConn->fLastErrMsg.c_str() : "-"));
             Close();
             return;
          }
@@ -331,13 +332,13 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    UnsolRespProcResult rc = kUNSOL_KEEP;
 
    if (gDebug > 2)
-      Info("TXSocket::ProcessUnsolicitedMsg", "Processing unsolicited msg: %p", m);
+      Info("ProcessUnsolicitedMsg", "Processing unsolicited msg: %p", m);
    if (!m) {
       // Some one is perhaps interested in empty messages
       return kUNSOL_CONTINUE;
    } else {
       if (gDebug > 2)
-         Info("TXSocket::ProcessUnsolicitedMsg", "status: %d, len: %d bytes",
+         Info("ProcessUnsolicitedMsg", "status: %d, len: %d bytes",
               m->GetStatusCode(), m->DataLen());
    }
 
@@ -346,13 +347,16 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
       if (m->GetStatusCode() != XrdClientMessage::kXrdMSC_timeout) {
          if (gDebug > 0)
             Info("ProcessUnsolicitedMsg","got error from underlying connection");
-         fHandler->HandleError();
+         if (fHandler)
+            fHandler->HandleError();
+         else
+            Error("ProcessUnsolicitedMsg","handler undefined");
          // Avoid to contact the server any more
          fSessionID = -1;
       } else {
          // Time out
          if (gDebug > 2)
-            Info("TXSocket::ProcessUnsolicitedMsg", "underlying connection timed out");
+            Info("ProcessUnsolicitedMsg", "underlying connection timed out");
       }
       // Propagate the message to other possible handlers
       return kUNSOL_CONTINUE;
@@ -412,7 +416,10 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             // Handle this input in this thread to avoid queuing on the
             // main thread
             XHandleIn_t hin = {acod, 0, 0, 0};
-            fHandler->HandleInput((const void *)&hin);
+            if (fHandler)
+               fHandler->HandleInput((const void *)&hin);
+            else
+               Error("ProcessUnsolicitedMsg","handler undefined");
          }
          break;
       case kXPD_timer:
@@ -445,7 +452,10 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             // Handle this input in this thread to avoid queuing on the
             // main thread
             XHandleIn_t hin = {acod, opt, delay, 0};
-            fHandler->HandleInput((const void *)&hin);
+            if (fHandler)
+               fHandler->HandleInput((const void *)&hin);
+            else
+               Error("ProcessUnsolicitedMsg","handler undefined");
          }
          break;
       case kXPD_urgent:
@@ -489,7 +499,10 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             // Handle this input in this thread to avoid queuing on the
             // main thread
             XHandleIn_t hin = {acod, type, int1, int2};
-            fHandler->HandleInput((const void *)&hin);
+            if (fHandler)
+               fHandler->HandleInput((const void *)&hin);
+            else
+               Error("ProcessUnsolicitedMsg","handler undefined");
          }
          break;
       case kXPD_msg:
@@ -541,7 +554,10 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
          Printf("| Error condition occured: message from server:");
          Printf("| %.*s", len, (char *)pdata);
          // Handle error
-         fHandler->HandleError();
+         if (fHandler)
+            fHandler->HandleError();
+         else
+            Error("ProcessUnsolicitedMsg","handler undefined");
          break;
       case kXPD_msgsid:
          //
@@ -866,7 +882,8 @@ Bool_t TXSocket::Create()
 
    // Notify failure
    Printf("TXSocket::Create:"
-          "creating or attaching to a remote server (%s)", fConn->fLastErrMsg.c_str());
+          "problems creating or attaching to a remote server (%s)",
+          ((fConn->fLastErrMsg.length() > 0) ? fConn->fLastErrMsg.c_str() : "-"));
    return kFALSE;
 }
 

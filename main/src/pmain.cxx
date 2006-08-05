@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.9 2006/06/02 23:38:19 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.10 2006/07/26 14:28:58 rdm Exp $
 // Author: Fons Rademakers   15/02/97
 
 /*************************************************************************
@@ -45,38 +45,38 @@ static FILE *RedirectOutput(const char *logfile, const char *loc)
    // On success return a pointer to the open log file. Return 0 on failure.
 
    if (loc)
-      Printf("%s: RedirectOutput: enter: %s", loc, logfile);
+      fprintf(stderr,"%s: RedirectOutput: enter: %s\n", loc, logfile);
 
    if (!logfile || strlen(logfile) <= 0) {
-      Printf("%s: RedirectOutput: logfile path undefined", loc);
+      fprintf(stderr,"%s: RedirectOutput: logfile path undefined\n", loc);
       return 0;
    }
 
    if (loc)
-      Printf("%s: RedirectOutput: reopen %s", loc, logfile);
+      fprintf(stderr,"%s: RedirectOutput: reopen %s\n", loc, logfile);
    FILE *flog = freopen(logfile, "w", stdout);
    if (!flog) {
-      Printf("%s: RedirectOutput: could not freopen stdout", loc);
+      fprintf(stderr,"%s: RedirectOutput: could not freopen stdout\n", loc);
       return 0;
    }
 
    if (loc)
-      Printf("%s: RedirectOutput: dup2 ...", loc);
+      fprintf(stderr,"%s: RedirectOutput: dup2 ...\n", loc);
    if ((dup2(fileno(stdout), fileno(stderr))) < 0) {
-      Printf("%s: RedirectOutput: could not redirect stderr", loc);
+      fprintf(stderr,"%s: RedirectOutput: could not redirect stderr\n", loc);
       return 0;
    }
 
    if (loc)
-      Printf("%s: RedirectOutput: read open ...", loc);
+      fprintf(stderr,"%s: RedirectOutput: read open ...\n", loc);
    FILE *fLog = fopen(logfile, "r");
    if (!fLog) {
-      Printf("%s: RedirectOutput: could not open logfile %s", loc, logfile);
+      fprintf(stderr,"%s: RedirectOutput: could not open logfile %s\n", loc, logfile);
       return 0;
    }
 
    if (loc)
-      Printf("%s: RedirectOutput: done!", loc);
+      fprintf(stderr,"%s: RedirectOutput: done!\n", loc);
    // We are done
    return fLog;
 }
@@ -96,22 +96,26 @@ int main(int argc, char **argv)
    if (getenv("ROOTPROOFLOGLEVEL"))
       loglevel = atoi(getenv("ROOTPROOFLOGLEVEL"));
    if (loglevel > 0)
-      Printf("%s: starting %s", argv[1], argv[0]);
+      fprintf(stderr,"%s: starting %s\n", argv[1], argv[0]);
 
    // Redirect the output
    FILE *fLog = 0;
-   const char *logfile = 0;
-   if ((logfile = getenv("ROOTPROOFLOGFILE"))) {
+   char *logfile = 0;
+   const char *sessdir = getenv("ROOTPROOFSESSDIR");
+   if (sessdir && !getenv("ROOTPROOFDONOTREDIR")) {
+      logfile = new char[strlen(sessdir) + 5];
+      sprintf(logfile, "%s.log", sessdir);
       char *loc = (loglevel > 0) ? argv[1] : 0;
       if (loglevel > 0)
-         Printf("%s: redirecting output to %s", argv[1], logfile);
+         fprintf(stderr,"%s: redirecting output to %s\n", argv[1], logfile);
       if (!(fLog = RedirectOutput(logfile, loc))) {
-         Printf("%s: problems redirecting output to file %s", argv[1], logfile);
+         fprintf(stderr,"%s: problems redirecting output to file %s\n", argv[1], logfile);
          exit(1);
       }
    }
    if (loglevel > 0)
-      Printf("%s: output redirected to %s", argv[1], logfile);
+      fprintf(stderr,"%s: output redirected to: %s\n",
+             argv[1], (logfile ? logfile : "+++not redirected+++"));
 
    gROOT->SetBatch();
    TApplication *theApp = 0;
@@ -134,11 +138,11 @@ int main(int argc, char **argv)
    if ((p = gSystem->DynamicPathName(prooflib, kTRUE))) {
       delete[] p;
       if (gSystem->Load(prooflib) == -1) {
-         Printf("%s: can't load %s", argv[1], prooflib.Data());
+         fprintf(stderr,"%s: can't load %s\n", argv[1], prooflib.Data());
          exit(1);
       }
    } else {
-      Printf("%s: can't locate %s", argv[1], prooflib.Data());
+      fprintf(stderr,"%s: can't locate %s\n", argv[1], prooflib.Data());
       exit(1);
    }
 
@@ -147,13 +151,13 @@ int main(int argc, char **argv)
    if (f) {
       theApp = (TApplication *) (*((TProofServ_t)f))(&argc, argv, fLog);
    } else {
-      Printf("%s: can't find %s", argv[1], getter.Data());
+      fprintf(stderr,"%s: can't find %s\n", argv[1], getter.Data());
       exit(1);
    }
 
    // Ready to run
    if (loglevel > 0)
-      Printf("%s: running the TProofServ application", argv[1]);
+      fprintf(stderr,"%s: running the TProofServ application\n", argv[1]);
 
    theApp->Run();
 

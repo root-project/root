@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.10 2006/07/06 12:41:16 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.11 2006/07/26 14:42:10 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -24,10 +24,10 @@
 
 #include "XrdOuc/XrdOucError.hh"
 #include "XrdOuc/XrdOucPthread.hh"
+#include "XrdOuc/XrdOucSemWait.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdSec/XrdSecInterface.hh"
-#include "XrdNet/XrdNet.hh"
 
 #include "Xrd/XrdProtocol.hh"
 #include "Xrd/XrdObject.hh"
@@ -51,6 +51,18 @@
 
 enum EResourceType { kRTStatic, kRTPlb };
 enum EStaticSelOpt { kSSORoundRobin, kSSORandom };
+
+// User Info class
+class XrdProofUI {
+public:
+   XrdOucString fUser;
+   XrdOucString fHomeDir;
+   int          fUid;
+   int          fGid;
+
+   XrdProofUI() { fUid = -1; fGid = -1; }
+   ~XrdProofUI() { }
+};
 
 class XrdBuffer;
 class XrdClientMessage;
@@ -85,7 +97,6 @@ public:
    int           Admin();
    int           Attach();
    int           Auth();
-   int           Cleanup();
    int           Create();
    int           Destroy();
    int           Detach();
@@ -101,8 +112,9 @@ public:
    int           Process2();
    void          Reset();
    int           SendData(XrdProofdResponse *resp, kXR_int32 sid = -1, XrdSrvBuffer **buf = 0);
+   int           SendDataN(XrdProofServProxy *xps, XrdSrvBuffer **buf = 0);
    int           SendMsg();
-   int           SetUserEnvironment(const char *usr, const char *dir = 0);
+   int           SetUserEnvironment(XrdProofServProxy *xps, const char *usr, const char *dir = 0);
    int           Urgent();
 
    int           Broadcast(int type, const char *msg);
@@ -124,12 +136,11 @@ public:
    XrdBuffer                    *fArgp;
    char                          fStatus;
    char                         *fClientID;
+   XrdProofUI                    fUI;           // user info
    unsigned char                 fCapVer;
    kXR_int32                     fSrvType;      // Master or Worker
    bool                          fTopClient;    // External client (not ProofServ)
    bool                          fSuperUser;    // TRUE for privileged clients (admins)
-   XrdNet                       *fUNIXSock;     // UNIX server socket for internal connections
-   char                         *fUNIXSockPath; // UNIX server socket path
    //
    XrdProofClient               *fPClient;    // Our reference XrdProofClient
    kXR_int32                     fCID;        // Reference ID of this client
@@ -183,6 +194,7 @@ public:
    //
    static char                  *fgPrgmSrv;  // PROOF server application
    static int                    fgSrvProtVers;  // Protocol version run by PROOF server
+   static XrdOucSemWait          fgForkSem;   // To serialize fork requests
    //
    static EResourceType          fgResourceType; // resource type
    static int                    fgMaxSessions; // max number of sessions per client
@@ -245,17 +257,9 @@ class XrdProofClient {
 
  public:
    XrdProofClient(XrdProofdProtocol *p, short int clientvers = -1,
-                  const char *tag = 0, const char *ord = 0)
-                              { fClientID = (p && p->GetID()) ? strdup(p->GetID()) : 0;
-                                fSessionTag = (tag) ? strdup(tag) : 0;
-                                fOrdinal = (ord) ? strdup(ord) : 0;
-                                fClientVers = clientvers;
-                                fProofServs.reserve(10); fClients.reserve(10); }
-   virtual ~XrdProofClient()
-                              { if (fClientID) free(fClientID);
-                                if (fSessionTag) free(fSessionTag);
-                                if (fOrdinal) free(fOrdinal); }
+                  const char *tag = 0, const char *ord = 0);
 
+   virtual ~XrdProofClient();
 
    inline const char      *ID() const
                               { return (const char *)fClientID; }
