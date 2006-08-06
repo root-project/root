@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name: v5-12-00-patches $:$Id: TBranch.cxx,v 1.107 2006/06/27 17:30:19 brun Exp $
+// @(#)root/tree:$Name: v5-12-00-patches $:$Id: TBranch.cxx,v 1.107.2.1 2006/08/02 19:32:05 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -392,7 +392,7 @@ void TBranch::AddBasket(TBasket &b, Bool_t ondisk, Long64_t startEntry)
    }
    Int_t where = fWriteBasket;
 
-   if (startEntry != fEntryNumber) {
+   if (where && startEntry < fBasketEntry[where-1]) {
       // Need to find the right location and move the possible baskets
 
       if (!ondisk) {
