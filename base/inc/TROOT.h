@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.53 2006/04/27 09:20:33 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.54 2006/05/23 04:47:35 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -48,7 +48,7 @@ class TPluginManager;
 class TProcessUUID;
 class TClassGenerator;
 class TVirtualMutex;
-class TVirtualProof;
+
 
 namespace ROOT {
    class TMapTypeToTClass;
@@ -228,8 +228,6 @@ public:
    void              ProcessLine(const char *line, Int_t *error = 0);
    void              ProcessLineSync(const char *line, Int_t *error = 0);
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
-   TVirtualProof    *Proof(const char *cluster = 0, const char *conffile = 0,
-                           const char *confdir = 0, Int_t loglevel = 0);
    Bool_t            ReadingObject() const { return fReadingObject; }
    void              RefreshBrowsers();
    void              RemoveClass(TClass *);

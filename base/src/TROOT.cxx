@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.184 2006/07/09 05:27:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.185 2006/07/17 19:19:11 pcanal Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -107,7 +107,6 @@
 #include "TObjString.h"
 #include "TVirtualUtilHist.h"
 #include "TAuthenticate.h"
-#include "TVirtualProof.h"
 #include "TVirtualMutex.h"
 
 #include <string>
@@ -552,7 +551,7 @@ TROOT::TROOT(const TROOT& r) :
   fPluginManager(r.fPluginManager),
   fCutClassName(r.fCutClassName),
   fDefCanvasName(r.fDefCanvasName)
-{ 
+{
    //copy constructor
 }
 
@@ -615,7 +614,7 @@ TROOT& TROOT::operator=(const TROOT& r)
       fPluginManager=r.fPluginManager;
       fCutClassName=r.fCutClassName;
       fDefCanvasName=r.fDefCanvasName;
-   } 
+   }
    return *this;
 }
 #endif
@@ -1860,18 +1859,6 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
    }
 
    return result;
-}
-
-//_____________________________________________________________________________
-TVirtualProof *TROOT::Proof(const char *cluster, const char *conffile,
-                            const char *confdir, Int_t loglevel)
-{
-   // Start a PROOF session on a specific cluster. The actual work is done
-   // in TVirtualProof::Open(). The use of this method is deprecated and
-   // provided only for backward compatibility. Users should use either
-   // TProof::Open or TVirtualProof::Open() instead.
-
-   return TVirtualProof::Open(cluster, conffile, confdir, loglevel);
 }
 
 //______________________________________________________________________________
