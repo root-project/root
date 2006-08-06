@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.17 2006/07/26 14:42:10 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.18 2006/08/05 20:04:47 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -264,7 +264,11 @@ static int GetUserInfo(const char *usr, XrdProofUI &ui)
    struct passwd pw;
    struct passwd *ppw = 0;
    char buf[2048];
+#if defined(SUN)
+   if ((ppw = getpwnam_r(usr, &pw, buf, sizeof(buf))) != 0) {
+#else
    if (getpwnam_r(usr, &pw, buf, sizeof(buf), &ppw) == 0) {
+#endif
       // Fill output
       ui.fUid = (int) pw.pw_uid;
       ui.fGid = (int) pw.pw_gid;
@@ -292,7 +296,11 @@ static int GetUserInfo(int uid, XrdProofUI &ui)
    struct passwd pw;
    struct passwd *ppw = 0;
    char buf[2048];
+#if defined(SUN)
+   if ((ppw = getpwuid_r((uid_t)uid, &pw, buf, sizeof(buf))) != 0) {
+#else
    if (getpwuid_r((uid_t)uid, &pw, buf, sizeof(buf), &ppw) == 0) {
+#endif
       // Fill output
       ui.fUid = uid;
       ui.fGid = (int) pw.pw_gid;
