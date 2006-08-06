@@ -1,7 +1,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog copiedEvent* Event.h one two merged \
-	Event*.root dt_reference.root CloneTree.root
+	Event*.root dt_reference.root CloneTree.root cal.root
 
-TEST_TARGETS += cloneChain single merge
+TEST_TARGETS += cloneChain single merge Plot
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
@@ -126,4 +126,7 @@ CloneTree.root: make_CloneTree.C
 cloneChain.log: CloneTree.root
 
 cloneChain: cloneChain.log
+	$(TestDiff)
+
+Plot: Plot.log
 	$(TestDiff)
