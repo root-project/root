@@ -264,7 +264,7 @@ static int GetUserInfo(const char *usr, XrdProofUI &ui)
    struct passwd pw;
    struct passwd *ppw = 0;
    char buf[2048];
-#if defined(_sun)
+#if defined(__sun)
    if ((ppw = getpwnam_r(usr, &pw, buf, sizeof(buf))) != 0) {
 #else
    if (getpwnam_r(usr, &pw, buf, sizeof(buf), &ppw) == 0) {
