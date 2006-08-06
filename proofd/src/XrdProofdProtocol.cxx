@@ -32,7 +32,7 @@
 
 // Bypass Solaris ELF madness
 //
-#if (defined(SUNCC) || defined(SUN))
+#if (defined(SUNCC) || defined(__sun))
 #include <sys/isa_defs.h>
 #if defined(_ILP32) && (_FILE_OFFSET_BITS != 32)
 #undef  _FILE_OFFSET_BITS
@@ -42,7 +42,7 @@
 #endif
 
 // System info on Solaris
-#if (defined(SUNCC) || defined(SUN)) && !defined(__KCC)
+#if (defined(SUNCC) || defined(__sun)) && !defined(__KCC)
 #   define XPD__SUNCC
 #   include <sys/systeminfo.h>
 #   include <sys/filio.h>
@@ -264,7 +264,7 @@ static int GetUserInfo(const char *usr, XrdProofUI &ui)
    struct passwd pw;
    struct passwd *ppw = 0;
    char buf[2048];
-#if defined(SUN)
+#if defined(_sun)
    if ((ppw = getpwnam_r(usr, &pw, buf, sizeof(buf))) != 0) {
 #else
    if (getpwnam_r(usr, &pw, buf, sizeof(buf), &ppw) == 0) {
@@ -296,7 +296,7 @@ static int GetUserInfo(int uid, XrdProofUI &ui)
    struct passwd pw;
    struct passwd *ppw = 0;
    char buf[2048];
-#if defined(SUN)
+#if defined(__sun)
    if ((ppw = getpwuid_r((uid_t)uid, &pw, buf, sizeof(buf))) != 0) {
 #else
    if (getpwuid_r((uid_t)uid, &pw, buf, sizeof(buf), &ppw) == 0) {
