@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.143 2006/07/26 13:36:44 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.144 2006/07/26 14:18:37 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -599,7 +599,8 @@ void TChain::CreatePackets()
 //______________________________________________________________________________
 Long64_t TChain::Draw(const char* varexp, const TCut& selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
-   // -- Draw expression varexp for selected entries.
+   // Draw expression varexp for selected entries.
+   // Returns -1 in case of error or number of selected events in case of success.
    //
    // This function accepts TCut objects as arguments.
    // Useful to use the string operator +, example:
@@ -616,7 +617,9 @@ Long64_t TChain::Draw(const char* varexp, const TCut& selection, Option_t* optio
 //______________________________________________________________________________
 Long64_t TChain::Draw(const char* varexp, const char* selection, Option_t* option,Long64_t nentries, Long64_t firstentry)
 {
-   // -- Process all entries in this chain and draw histogram corresponding to expression varexp.
+   // Process all entries in this chain and draw histogram corresponding to
+   // expression varexp.
+   // Returns -1 in case of error or number of selected events in case of success.
 
    if (fChainProof) {
       fChainProof->SetEventList(fEventList);
@@ -1712,8 +1715,11 @@ void TChain::Print(Option_t *option) const
 //______________________________________________________________________________
 Long64_t TChain::Process(const char *filename, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
-   // -- Process all entries in this chain, calling functions in filename.
+   // Process all entries in this chain, calling functions in filename.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
    // See TTree::Process.
+
    if (fChainProof) {
       return fChainProof->Process(filename, option, nentries, firstentry);
    }
@@ -1726,7 +1732,9 @@ Long64_t TChain::Process(const char *filename, Option_t *option, Long64_t nentri
 //______________________________________________________________________________
 Long64_t TChain::Process(TSelector* selector, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
-   // -- Process this chain executing the code in selector.
+   // Process this chain executing the code in selector.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
 
    if (fChainProof) {
       return fChainProof->Process(selector, option, nentries, firstentry);

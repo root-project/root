@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.h,v 1.12 2005/02/21 09:41:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorCint.h,v 1.13 2006/07/04 23:35:37 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -74,7 +74,7 @@ public:
    virtual void        SlaveTerminate();
    virtual void        Terminate();
    virtual EAbort      GetAbort() const;
-   virtual Int_t       GetStatus() const;
+   virtual Long64_t    GetStatus() const;
 
    ClassDef(TSelectorCint,0)  //A utility class for tree and object processing (interpreted version)
 };

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.295 2006/07/26 13:36:44 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.296 2006/08/04 10:08:17 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2526,7 +2526,8 @@ void TTree::Delete(Option_t* option /* = "" */)
 //______________________________________________________________________________
 Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
-   // -- Draw expression varexp for specified entries.
+   // Draw expression varexp for specified entries.
+   // Returns -1 in case of error or number of selected events in case of success.
    //
    //      This function accepts TCut objects as arguments.
    //      Useful to use the string operator +
@@ -2540,7 +2541,8 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 //______________________________________________________________________________
 Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
-   // -- Draw expression varexp for specified entries.
+   // Draw expression varexp for specified entries.
+   // Returns -1 in case of error or number of selected events in case of success.
    //
    //  varexp is an expression of the general form
    //   - "e1"           produces a 1-d histogram (TH1F) of expression "e1"
@@ -2940,8 +2942,9 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //
 
    GetPlayer();
-   if (fPlayer) return fPlayer->DrawSelect(varexp,selection,option,nentries,firstentry);
-   else return -1;
+   if (fPlayer)
+      return fPlayer->DrawSelect(varexp,selection,option,nentries,firstentry);
+   return -1;
 }
 
 //______________________________________________________________________________
@@ -4598,11 +4601,13 @@ void TTree::Print(Option_t* option) const
 //______________________________________________________________________________
 Long64_t TTree::Process(const char* filename, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
-   // -- Process this tree executing the code in filename.
+   // Process this tree executing the code in filename.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
    //
-   //   The code in filename is loaded (interpreted or compiled , see below)
-   //   filename must contain a valid class implementation derived from TSelector.
-   //   where TSelector has the following member functions:
+   // The code in filename is loaded (interpreted or compiled , see below)
+   // filename must contain a valid class implementation derived from TSelector.
+   // where TSelector has the following member functions:
    //
    //     void TSelector::Begin(). This function is called before looping on the
    //          events in the Tree. The user can create his histograms in this function.
@@ -4673,7 +4678,9 @@ Long64_t TTree::Process(const char* filename, Option_t* option, Long64_t nentrie
 //______________________________________________________________________________
 Long64_t TTree::Process(TSelector* selector, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
-   // -- Process this tree executing the code in selector.
+   // Process this tree executing the code in selector.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
    //
    // The TSelector class has the following member functions:
    //

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.17 2006/06/01 15:58:41 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.18 2006/07/26 14:17:22 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -129,7 +129,6 @@ public:
 
 
 class TDSet : public TNamed {
-public:
 
 private:
    TString        fDir;         // name of the directory
@@ -138,7 +137,8 @@ private:
    TList         *fElements;    //-> list of TDSetElements
    Bool_t         fIsTree;      // true if type is a TTree (or TTree derived)
    TIter         *fIterator;    //! iterator on fElements
-   TEventList    *fEventList; //! event list for processing
+   TEventList    *fEventList;   //! event list for processing
+
    TDSet(const TDSet &);           // not implemented
    void operator=(const TDSet &);  // not implemented
 
@@ -157,14 +157,14 @@ public:
    virtual Bool_t        Add(TList *fileinfo);
    virtual void          AddFriend(TDSet *friendset, const char *alias);
 
-   virtual Int_t         Process(const char *selector, Option_t *option = "",
+   virtual Long64_t      Process(const char *selector, Option_t *option = "",
                                  Long64_t nentries = -1,
                                  Long64_t firstentry = 0,
                                  TEventList *evl = 0); // *MENU*
-   virtual Int_t         Draw(const char *varexp, const char *selection,
+   virtual Long64_t      Draw(const char *varexp, const char *selection,
                               Option_t *option = "", Long64_t nentries = -1,
                               Long64_t firstentry = 0); // *MENU*
-   virtual Int_t         Draw(const char *varexp, const TCut &selection,
+   virtual Long64_t      Draw(const char *varexp, const TCut &selection,
                               Option_t *option = "", Long64_t nentries = -1,
                               Long64_t firstentry = 0); // *MENU*
    virtual void          Draw(Option_t *opt) { Draw(opt, "", "", 1000000000, 0); }

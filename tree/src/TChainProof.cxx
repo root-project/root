@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.6 2006/07/04 23:45:50 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.7 2006/07/05 17:24:57 brun Exp $
 // Author: Marek Biskup   10/3/2005
 
 /*************************************************************************
@@ -268,6 +268,7 @@ void TChainProof::Delete(Option_t *)
 Long64_t TChainProof::Draw(const char *varexp, const TCut &selection, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
    // Forwards the execution to the TDSet.
+   // Returns -1 in case of error or number of selected events in case of success.
    // See TDSet::Browse().
 
    if (!fProof && gProof) {
@@ -286,6 +287,7 @@ Long64_t TChainProof::Draw(const char *varexp, const TCut &selection, Option_t *
 Long64_t TChainProof::Draw(const char *varexp, const char *selection, Option_t *option,Long64_t nentries, Long64_t firstentry)
 {
    // Forwards the execution to the TDSet.
+   // Returns -1 in case of error or number of selected events in case of success.
    // See TDSet::Browse().
 
    if (!fProof && gProof) {
@@ -640,6 +642,8 @@ void TChainProof::Print(Option_t *) const
 Long64_t TChainProof::Process(const char *filename,Option_t *option,Long64_t nentries, Long64_t firstentry)
 {
    // Forwards the execution to the TDSet.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
    // See TDSet::Process().
 
    return fSet->Process(filename, option, nentries, firstentry);
@@ -649,11 +653,13 @@ Long64_t TChainProof::Process(const char *filename,Option_t *option,Long64_t nen
 Long64_t TChainProof::Process(TSelector *selector,Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
    // Not implemented in TChainProof. Shouldn't be used.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
 
    if (selector ||  option || nentries || firstentry);
    //   return fSet->Process(selector, option, nentries, firstentry);
    Warning("Process", "not implemented"); // TODO
-   return 0;
+   return -1;
 }
 
 //______________________________________________________________________________

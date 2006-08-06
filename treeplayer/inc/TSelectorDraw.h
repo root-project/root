@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.10 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.11 2006/05/23 04:47:42 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -70,11 +70,12 @@ protected:
    Bool_t         fObjEval;        //  true if fVar1 returns an object (or pointer to).
 
 protected:
-   TSelectorDraw(const TSelectorDraw&);
-   TSelectorDraw& operator=(const TSelectorDraw&);
-
    virtual void      ClearFormula();
    virtual Bool_t    CompileVariables(const char *varexp="", const char *selection="");
+
+private:
+   TSelectorDraw(const TSelectorDraw&);             // not implemented
+   TSelectorDraw& operator=(const TSelectorDraw&);  // not implemented
 
 public:
    TSelectorDraw();

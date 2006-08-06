@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.153 2006/07/31 08:20:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.154 2006/08/05 11:14:25 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2448,11 +2448,12 @@ void TProof::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
-                      Long64_t nentries, Long64_t first, TEventList *evl)
+Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
+                         Long64_t nentries, Long64_t first, TEventList *evl)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
-   // Returns -1 in case of error, 0 otherwise.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
 
    if (!IsValid()) return -1;
 
@@ -2776,11 +2777,11 @@ TProof::EQueryMode TProof::GetQueryMode(Option_t *mode) const
 }
 
 //______________________________________________________________________________
-Int_t TProof::DrawSelect(TDSet *dset, const char *varexp, const char *selection, Option_t *option,
-                         Long64_t nentries, Long64_t first)
+Long64_t TProof::DrawSelect(TDSet *dset, const char *varexp, const char *selection, Option_t *option,
+                            Long64_t nentries, Long64_t first)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
-   // Returns -1 in case of error, 0 otherwise.
+   // Returns -1 in case of error or number of selected events in case of success.
 
    if (!IsValid()) return -1;
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.21 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.22 2006/07/04 23:35:37 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -357,7 +357,7 @@ TSelector::EAbort TSelectorCint::GetAbort() const
 }
 
 //______________________________________________________________________________
-Int_t TSelectorCint::GetStatus() const
+Long64_t TSelectorCint::GetStatus() const
 {
    // Invoke the GetStatus function via the interpreter.
 
@@ -366,7 +366,7 @@ Int_t TSelectorCint::GetStatus() const
 
    if (fFuncGetStat->IsValid()) {
       fFuncGetStat->ResetArg();
-      return fFuncGetStat->ExecInt(fIntSelector);
+      return fFuncGetStat->ExecInt64(fIntSelector);
    } else {
       return 0; // emulate for old version
    }

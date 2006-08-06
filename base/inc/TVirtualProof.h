@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.36 2006/07/26 14:28:58 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.37 2006/07/31 08:20:38 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -98,12 +98,12 @@ public:
 
    virtual Int_t       Ping() = 0;
    virtual Int_t       Exec(const char *cmd, Bool_t plusMaster = kFALSE) = 0;
-   virtual Int_t       Process(TDSet *set, const char *selector,
+   virtual Long64_t    Process(TDSet *set, const char *selector,
                                Option_t *option = "",
                                Long64_t nentries = -1,
                                Long64_t firstentry = 0,
                                TEventList *evl = 0) = 0;
-   virtual Int_t       DrawSelect(TDSet *set, const char *varexp,
+   virtual Long64_t    DrawSelect(TDSet *set, const char *varexp,
                                   const char *selection = "",
                                   Option_t *option = "",
                                   Long64_t nentries = -1,

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.222 2006/07/13 05:36:31 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.223 2006/08/02 05:23:49 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -437,12 +437,12 @@ void TTreePlayer::DeleteSelectorFromFile()
 
 //______________________________________________________________________________
 Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
-                              const char *macrofilename, const char *cutfilename,
-                              Option_t *option, Long64_t nentries, Long64_t firstentry)
+                                 const char *macrofilename, const char *cutfilename,
+                                 Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
-   // Draw the result of a C++ script
+   // Draw the result of a C++ script.
    //
-   // macrofilename and optionally cutfilename are assumed to contain
+   // The macrofilename and optionally cutfilename are assumed to contain
    // at least a method with the same name as the file.  The method
    // should return a value that can be automatically cast to
    // respectively a double and a boolean.
@@ -486,7 +486,7 @@ Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
 
    selname = gp.GetFileName();
    if (aclicMode.Length()==0) {
-      Warning("DrawScript","TTreeProxy does not work in interpreted mode yet.  The script will to compiled.");
+      Warning("DrawScript","TTreeProxy does not work in interpreted mode yet. The script will be compiled.");
       aclicMode = "+";
    }
    selname.Append(aclicMode);
@@ -504,8 +504,8 @@ Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
 //______________________________________________________________________________
 Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_t *option,Long64_t nentries, Long64_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
-//*-*                  ============================================
+// Draw expression varexp for specified entries
+// Returns -1 in case of error or number of selected events in case of success.
 //
 //  varexp is an expression of the general form
 //   - "e1"           produces a 1-d histogram of expression "e1"
@@ -531,7 +531,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  example, if e1= x*(y<0), the value histogrammed will be x if y<0
 //  and will be 0 otherwise.
 //
-//  selection is an expression with a combination of the columns.
+//  The selection is an expression with a combination of the columns.
 //  In a selection all the C++ operators are authorized.
 //  The value corresponding to the selection expression is used as a weight
 //  to fill the histogram.
@@ -557,7 +557,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //
 //     Drawing expressions using arrays and array elements
 //     ===================================================
-// Let assumes, a leaf fMatrix, on the branch fEvent, which is a 3 by 3 array,
+// Let assume, a leaf fMatrix, on the branch fEvent, which is a 3 by 3 array,
 // or a TClonesArray.
 // In a TTree::Draw expression you can now access fMatrix using the following
 // syntaxes:
@@ -581,7 +581,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 // You can also specify the index as an expression of any other variables from the
 // tree.
 //
-// TTree::Draw also now properly handling operations involving 2 or more arrays.
+// TTree::Draw now also properly handles operations involving 2 or more arrays.
 //
 // Let assume a second matrix fResults[5][2], here are a sample of some
 // of the possible combinations, the number of elements they produce and
@@ -1037,10 +1037,10 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //______________________________________________________________________________
 Long64_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Long64_t nentries, Long64_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*Fit  a projected item(s) from a Tree*-*-*-*-*-*-*-*-*-*
-//*-*              ======================================
+// Fit  a projected item(s) from a Tree.
+// Returns -1 in case of error or number of selected events in case of success.
 //
-//  formula is a TF1 expression.
+//  The formula is a TF1 expression.
 //
 //  See TTree::Draw for explanations of the other parameters.
 //
@@ -2284,8 +2284,7 @@ Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
 //______________________________________________________________________________
 TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*Interface to the Principal Components Analysis class*-*-*
-//*-*              ====================================================
+// Interface to the Principal Components Analysis class.
 //
 //   Create an instance of TPrincipal
 //   Fill it with the selected variables
@@ -2299,7 +2298,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 //   to delete this object.
 //   The option default value is "np"
 //
-//   see TTreePlayer::DrawSelect for explanation of the other parameters.
+//   See TTreePlayer::DrawSelect for explanation of the other parameters.
 
    TTreeFormula **var;
    TString *cnames;
@@ -2432,71 +2431,65 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 //______________________________________________________________________________
 Long64_t TTreePlayer::Process(const char *filename,Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*Process this tree executing the code in filename*-*-*-*-*
-//*-*              ================================================
-//
-//   The code in filename is loaded (interpreted or compiled , see below)
-//   filename must contain a valid class implementation derived from TSelector.
-//   where TSelector has the following member functions:
-//
-//     void TSelector::Begin(). This function is called before looping on the
-//          events in the Tree. The user can create his histograms in this function.
-//
-//     Bool_t TSelector::Notify(). This function is called at the first entry
-//          of a new file in a chain.
-//
-//     Bool_t TSelector::ProcessCut(Long64_t tentry). This function is called
-//          before processing tentry. It is the user's responsability to read
-//          the corresponding entry in memory (may be just a partial read).
-//          The function returns kTRUE if the entry must be processed,
-//          kFALSE otherwise. tentry is the entry number in the current Tree.
-//
-//     void TSelector::ProcessFill(Long64_t tentry). This function is called for
-//          all selected events. User fills histograms in this function.
-//
-//     void TSelector::Terminate(). This function is called at the end of
-//          the loop on all events.
-//
-//   if filename is of the form file.C, the file will be interpreted.
-//   if filename is of the form file.C++, the file file.C will be compiled
-//      and dynamically loaded.
-//   if filename is of the form file.C+, the file file.C will be compiled
-//      and dynamically loaded. At next call, if file.C is older than file.o
-//      and file.so, the file.C is not compiled, only file.so is loaded.
-//
-//  NOTE1
-//  It may be more interesting to invoke directly the other Process function
-//  accepting a TSelector* as argument.eg
-//     MySelector *selector = (MySelector*)TSelector::GetSelector(filename);
-//     selector->CallSomeFunction(..);
-//     mytree.Process(selector,..);
-//
-//  NOTE2
-//  One should not call this function twice with the same selector file
-//  in the same script. If this is required, proceed as indicated in NOTE1,
-//  by getting a pointer to the corresponding TSelector,eg
-//    workaround 1
-//    ------------
-//void stubs1() {
-//   TSelector *selector = TSelector::GetSelector("h1test.C");
-//   TFile *f1 = new TFile("stubs_nood_le1.root");
-//   TTree *h1 = (TTree*)f1->Get("h1");
-//   h1->Process(selector);
-//   TFile *f2 = new TFile("stubs_nood_le1_coarse.root");
-//   TTree *h2 = (TTree*)f2->Get("h1");
-//   h2->Process(selector);
-//}
-//  or use ACLIC to compile the selector
-//   workaround 2
-//   ------------
-//void stubs2() {
-//   TFile *f1 = new TFile("stubs_nood_le1.root");
-//   TTree *h1 = (TTree*)f1->Get("h1");
-//   h1->Process("h1test.C+");
-//   TFile *f2 = new TFile("stubs_nood_le1_coarse.root");
-//   TTree *h2 = (TTree*)f2->Get("h1");
-//   h2->Process("h1test.C+");
-//}
+   // Process this tree executing the TSelector code in the specified filename.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
+   //
+   // The code in filename is loaded (interpreted or compiled, see below),
+   // filename must contain a valid class implementation derived from TSelector,
+   // where TSelector has the following member functions:
+   //
+   //    Begin():        called everytime a loop on the tree starts,
+   //                    a convenient place to create your histograms.
+   //    SlaveBegin():   called after Begin(), when on PROOF called only on the
+   //                    slave servers.
+   //    Process():      called for each event, in this function you decide what
+   //                    to read and fill your histograms.
+   //    SlaveTerminate: called at the end of the loop on the tree, when on PROOF
+   //                    called only on the slave servers.
+   //    Terminate():    called at the end of the loop on the tree,
+   //                    a convenient place to draw/fit your histograms.
+   //
+   // If filename is of the form file.C, the file will be interpreted.
+   // If filename is of the form file.C++, the file file.C will be compiled
+   // and dynamically loaded.
+   // If filename is of the form file.C+, the file file.C will be compiled
+   // and dynamically loaded. At next call, if file.C is older than file.o
+   // and file.so, the file.C is not compiled, only file.so is loaded.
+   //
+   //  NOTE1
+   //  It may be more interesting to invoke directly the other Process function
+   //  accepting a TSelector* as argument.eg
+   //     MySelector *selector = (MySelector*)TSelector::GetSelector(filename);
+   //     selector->CallSomeFunction(..);
+   //     mytree.Process(selector,..);
+   //
+   //  NOTE2
+   //  One should not call this function twice with the same selector file
+   //  in the same script. If this is required, proceed as indicated in NOTE1,
+   //  by getting a pointer to the corresponding TSelector,eg
+   //    workaround 1
+   //    ------------
+   //void stubs1() {
+   //   TSelector *selector = TSelector::GetSelector("h1test.C");
+   //   TFile *f1 = new TFile("stubs_nood_le1.root");
+   //   TTree *h1 = (TTree*)f1->Get("h1");
+   //   h1->Process(selector);
+   //   TFile *f2 = new TFile("stubs_nood_le1_coarse.root");
+   //   TTree *h2 = (TTree*)f2->Get("h1");
+   //   h2->Process(selector);
+   //}
+   //  or use ACLIC to compile the selector
+   //   workaround 2
+   //   ------------
+   //void stubs2() {
+   //   TFile *f1 = new TFile("stubs_nood_le1.root");
+   //   TTree *h1 = (TTree*)f1->Get("h1");
+   //   h1->Process("h1test.C+");
+   //   TFile *f2 = new TFile("stubs_nood_le1_coarse.root");
+   //   TTree *h2 = (TTree*)f2->Get("h1");
+   //   h2->Process("h1test.C+");
+   //}
 
    DeleteSelectorFromFile(); //delete previous selector if any
 
@@ -2517,32 +2510,26 @@ Long64_t TTreePlayer::Process(const char *filename,Option_t *option, Long64_t ne
 //______________________________________________________________________________
 Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*Process this tree executing the code in selector*-*-*-*-*
-//*-*              ================================================
-//
-//   The TSelector class has the following member functions:
-//
-//     void TSelector::Begin(). This function is called before looping on the
-//          events in the Tree. The user can create his histograms in this function.
-//
-//     Bool_t TSelector::Notify(). This function is called at the first entry
-//          of a new file in a chain.
-//
-//     Bool_t TSelector::ProcessCut(Long64_t tentry). This function is called
-//          before processing tentry. It is the user's responsability to read
-//          the corresponding entry in memory (may be just a partial read).
-//          The function returns kTRUE if the entry must be processed,
-//          kFALSE otherwise. tentry is the entry number in the current Tree.
-//
-//     void TSelector::ProcessFill(Long64_t tentry). This function is called for
-//          all selected events. User fills histograms in this function.
-//
-//     void TSelector::Terminate(). This function is called at the end of
-//          the loop on all events.
-//
-//  If the Tree (Chain) has an associated EventList, the loop is on the nentries
-//  of the EventList, starting at firstentry, otherwise the loop is on the
-//  specified Tree entries.
+   // Process this tree executing the code in the specified selector.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
+   //
+   //   The TSelector class has the following member functions:
+   //
+   //    Begin():        called everytime a loop on the tree starts,
+   //                    a convenient place to create your histograms.
+   //    SlaveBegin():   called after Begin(), when on PROOF called only on the
+   //                    slave servers.
+   //    Process():      called for each event, in this function you decide what
+   //                    to read and fill your histograms.
+   //    SlaveTerminate: called at the end of the loop on the tree, when on PROOF
+   //                    called only on the slave servers.
+   //    Terminate():    called at the end of the loop on the tree,
+   //                    a convenient place to draw/fit your histograms.
+   //
+   //  If the Tree (Chain) has an associated EventList, the loop is on the nentries
+   //  of the EventList, starting at firstentry, otherwise the loop is on the
+   //  specified Tree entries.
 
    nentries = GetEntriesToProcess(firstentry, nentries);
 
@@ -2562,7 +2549,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       gMonitoringWriter->SendProcessingStatus("STARTED",kTRUE);
 
    if (selector->GetAbort() != TSelector::kAbortProcess
-       && (selector->Version() != 0 || selector->GetStatus()!=-1)) {
+       && (selector->Version() != 0 || selector->GetStatus() != -1)) {
 
       Long64_t readbytesatstart = 0;
       readbytesatstart = TFile::GetFileBytesRead();
@@ -2572,7 +2559,8 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       TFile *curfile = fTree->GetCurrentFile();
       if (curfile && fTree->GetCacheSize() > 0) {
          tpf = (TTreeCache*)curfile->GetCacheRead();
-         if (tpf) tpf->SetEntryRange(firstentry,firstentry+nentries);
+         if (tpf)
+            tpf->SetEntryRange(firstentry,firstentry+nentries);
          else {
             fTree->SetCacheSize(fTree->GetCacheSize());
             tpf = (TTreeCache*)curfile->GetCacheRead();
@@ -2615,10 +2603,9 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       delete timer;
       //we must reset the cache
       if (tpf) tpf->SetEntryRange(0,fTree->GetEntries());
-
    }
 
-   if (selector->Version() != 0 || selector->GetStatus()!=-1) {
+   if (selector->Version() != 0 || selector->GetStatus() != -1) {
       selector->SlaveTerminate();   //<==call user termination function
       selector->Terminate();        //<==call user termination function
    }

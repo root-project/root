@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.33 2006/06/27 14:56:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.34 2006/07/26 14:17:22 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -569,13 +569,13 @@ TDSet::~TDSet()
    gROOT->GetListOfDataSets()->Remove(this);
 }
 
-
 //______________________________________________________________________________
-Int_t TDSet::Process(const char *selector, Option_t *option, Long64_t nentries,
-                     Long64_t first, TEventList *evl)
+Long64_t TDSet::Process(const char *selector, Option_t *option, Long64_t nentries,
+                        Long64_t first, TEventList *evl)
 {
    // Process TDSet on currently active PROOF session.
-   // Returns -1 in case of error, 0 otherwise.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
 
    if (!IsValid() || !fElements->GetSize()) {
       Error("Process", "not a correctly initialized TDSet");
@@ -943,10 +943,11 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
 }
 
 //______________________________________________________________________________
-Int_t TDSet::Draw(const char *varexp, const TCut &selection, Option_t *option,
-                  Long64_t nentries, Long64_t firstentry)
+Long64_t TDSet::Draw(const char *varexp, const TCut &selection, Option_t *option,
+                     Long64_t nentries, Long64_t firstentry)
 {
    // Draw expression varexp for specified entries.
+   // Returns -1 in case of error or number of selected events in case of success.
    // This function accepts a TCut objects as argument.
    // Use the operator+ to concatenate cuts.
    // Example:
@@ -956,11 +957,12 @@ Int_t TDSet::Draw(const char *varexp, const TCut &selection, Option_t *option,
 }
 
 //______________________________________________________________________________
-Int_t TDSet::Draw(const char *varexp, const char *selection, Option_t *option,
-                  Long64_t nentries, Long64_t firstentry)
+Long64_t TDSet::Draw(const char *varexp, const char *selection, Option_t *option,
+                     Long64_t nentries, Long64_t firstentry)
 {
    // Draw expression varexp for specified entries.
-   // See TTree::Draw().
+   // Returns -1 in case of error or number of selected events in case of success.
+   // For more see TTree::Draw().
 
    if (!IsValid() || !fElements->GetSize()) {
       Error("Draw", "not a correctly initialized TDSet");

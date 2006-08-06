@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.25 2006/06/13 21:12:20 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.26 2006/07/04 23:35:37 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -87,36 +87,6 @@ TSelector::TSelector() : TObject()
    fInput  = 0;
    fOutput = new TSelectorList;
    fOutput->SetOwner();
-}
-
-//______________________________________________________________________________
-TSelector::TSelector(const TSelector& sel) :
-   TObject(sel),
-   fStatus(sel.fStatus),
-   fAbort(sel.fAbort),
-   fOption(sel.fOption),
-   fObject(sel.fObject),
-   fInput(sel.fInput),
-   fOutput(sel.fOutput)
-{
-   // Copy constructor.
-}
-
-//______________________________________________________________________________
-TSelector& TSelector::operator=(const TSelector& sel)
-{
-   // Assignment operator.
-
-   if (this != &sel) {
-      TObject::operator=(sel);
-      fStatus = sel.fStatus;
-      fAbort  = sel.fAbort;
-      fOption = sel.fOption;
-      fObject = sel.fObject;
-      fInput  = sel.fInput;
-      fOutput = sel.fOutput;
-   }
-   return *this;
 }
 
 //______________________________________________________________________________

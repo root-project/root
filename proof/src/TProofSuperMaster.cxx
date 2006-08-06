@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.13 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.14 2006/05/15 09:45:03 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -300,11 +300,12 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel, Bool_t)
 }
 
 //______________________________________________________________________________
-Int_t TProofSuperMaster::Process(TDSet *set, const char *selector, Option_t *option,
-                                 Long64_t nentries, Long64_t first, TEventList *evl)
+Long64_t TProofSuperMaster::Process(TDSet *set, const char *selector, Option_t *option,
+                                    Long64_t nentries, Long64_t first, TEventList *evl)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
-   // Returns -1 in case of error, 0 otherwise.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
 
    if (!IsValid()) return -1;
 

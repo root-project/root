@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.h,v 1.22 2006/05/23 04:47:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.h,v 1.23 2006/07/04 23:35:37 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -42,26 +42,28 @@ public:
    enum EAbort { kContinue, kAbortProcess, kAbortFile };
 
 protected:
-   Int_t          fStatus;  //selector status
+   Long64_t       fStatus;  //selector status
    EAbort         fAbort;   //abort status
    TString        fOption;  //option given to TTree::Process
    TObject       *fObject;  //current object if processing object (vs. TTree)
    TList         *fInput;   //list of objects available during processing (on PROOF)
    TSelectorList *fOutput;  //list of objects created during processing (on PROOF)
 
+private:
+   TSelector(const TSelector&);             // not implemented
+   TSelector& operator=(const TSelector&);  // not implemented
+
 public:
    TSelector();
-   TSelector(const TSelector&);
-   TSelector& operator=(const TSelector&);
-
    virtual            ~TSelector();
+
    virtual int         Version() const { return 0; }
    virtual void        Init(TTree *) { }
    virtual void        Begin(TTree *) { }
    virtual void        SlaveBegin(TTree *) { }
    virtual Bool_t      Notify() { return kTRUE; }
    virtual const char *GetOption() const { return fOption; }
-   virtual Int_t       GetStatus() const { return fStatus; }
+   virtual Long64_t    GetStatus() const { return fStatus; }
    virtual Int_t       GetEntry(Long64_t /*entry*/, Int_t /*getall*/ = 0) { return 0; }
    virtual Bool_t      ProcessCut(Long64_t /*entry*/) { return kTRUE; }
    virtual void        ProcessFill(Long64_t /*entry*/) { }
@@ -69,7 +71,7 @@ public:
    virtual void        SetOption(const char *option) { fOption = option; }
    virtual void        SetObject(TObject *obj) { fObject = obj; }
    virtual void        SetInputList(TList *input) { fInput = input; }
-   virtual void        SetStatus(Int_t status) { fStatus = status; }
+   virtual void        SetStatus(Long64_t status) { fStatus = status; }
    virtual TList      *GetOutputList() const { return fOutput; }
    virtual void        SlaveTerminate() { }
    virtual void        Terminate() { }

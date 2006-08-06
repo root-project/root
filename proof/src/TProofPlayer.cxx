@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.86 2006/08/05 11:14:25 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.87 2006/08/05 20:04:47 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -592,8 +592,9 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                                Option_t *option, Long64_t nentries,
                                Long64_t first, TEventList * /*evl*/)
 {
-   // Process specified TDSet on PROOF worker. Returns -1 in case of error and
-   // 0 in case of success.
+   // Process specified TDSet on PROOF worker.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
 
    PDB(kGlobal,1) Info("Process","Enter");
 
@@ -819,8 +820,8 @@ void TProofPlayer::StopFeedback()
 
 //______________________________________________________________________________
 Long64_t TProofPlayer::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
-                               const char * /*selection*/, Option_t * /*option*/,
-                               Long64_t /*nentries*/, Long64_t /*firstentry*/)
+                                  const char * /*selection*/, Option_t * /*option*/,
+                                  Long64_t /*nentries*/, Long64_t /*firstentry*/)
 {
    // Draw (may not be used in this class).
 
@@ -863,8 +864,9 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                      Option_t *option, Long64_t nentries,
                                      Long64_t first, TEventList * /*evl*/)
 {
-   // Process specified TDSet on PROOF. This method runs on a master.
-   // Returns -1 in case error, 0 otherwise.
+   // Process specified TDSet on PROOF.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
 
    PDB(kGlobal,1) Info("Process","Enter");
    fDSet = dset;
@@ -1535,7 +1537,7 @@ Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &m
    // the list, or just added.
    // The boolean merged is set to kFALSE when the object is just added to 'outlist';
    // this happens if the Merge() method does not exist or if a object named as 'obj'
-   // is not already in the list. If the obj is not 'merged' than it should not be 
+   // is not already in the list. If the obj is not 'merged' than it should not be
    // deleted, unless outlist is not owner of its objects.
    // Return 0 on success, -1 on error.
 
@@ -1558,7 +1560,7 @@ Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &m
       return 0;
    }
 
-   // Locate the Merge(TCollection *) method 
+   // Locate the Merge(TCollection *) method
    TMethodCall callEnv;
    if (obj->IsA())
       callEnv.InitWithPrototype(obj->IsA(), "Merge", "TCollection*");
@@ -1914,10 +1916,11 @@ Bool_t TProofPlayerRemote::IsClient() const
 
 //______________________________________________________________________________
 Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
-                               const char *selection, Option_t *option,
-                               Long64_t nentries, Long64_t firstentry)
+                                        const char *selection, Option_t *option,
+                                        Long64_t nentries, Long64_t firstentry)
 {
    // Draw (support for TChain::Draw()).
+   // Returns -1 in case of error or number of selected events in case of success.
 
    TTreeDrawArgsParser info;
    info.Parse(varexp, selection, option);
@@ -2053,8 +2056,8 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
 
 //______________________________________________________________________________
 Long64_t TProofPlayerSlave::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
-                               const char * /*selection*/, Option_t * /*option*/,
-                               Long64_t /*nentries*/, Long64_t /*firstentry*/)
+                                       const char * /*selection*/, Option_t * /*option*/,
+                                       Long64_t /*nentries*/, Long64_t /*firstentry*/)
 {
    // Draw (may not be used in this class).
 
@@ -2072,7 +2075,8 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
                                           Long64_t first, TEventList * /*evl*/)
 {
    // Process specified TDSet on PROOF. Runs on super master.
-   // Returns -1 in case error, 0 otherwise.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
 
    fEventsProcessed = 0;
    PDB(kGlobal,1) Info("Process","Enter");

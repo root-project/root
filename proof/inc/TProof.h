@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.86 2006/07/26 14:28:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.87 2006/07/31 08:20:38 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -443,10 +443,10 @@ public:
 
    Int_t       Ping();
    Int_t       Exec(const char *cmd, Bool_t plusMaster = kFALSE);
-   Int_t       Process(TDSet *set, const char *selector,
+   Long64_t    Process(TDSet *set, const char *selector,
                        Option_t *option = "", Long64_t nentries = -1,
                        Long64_t firstentry = 0, TEventList *evl = 0);
-   Int_t       DrawSelect(TDSet *set, const char *varexp,
+   Long64_t    DrawSelect(TDSet *set, const char *varexp,
                           const char *selection = "",
                           Option_t *option = "", Long64_t nentries = -1,
                           Long64_t firstentry = 0);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.7 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.8 2006/07/19 18:01:38 pcanal Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -44,8 +44,9 @@ TVirtualTreePlayer *TVirtualTreePlayer::TreePlayer(TTree *obj)
    return p;
 }
 
-TVirtualTreePlayer::~TVirtualTreePlayer() 
-{ 
+//______________________________________________________________________________
+TVirtualTreePlayer::~TVirtualTreePlayer()
+{
    // Common destructor.
 
    if (fgCurrent==this) {
@@ -53,7 +54,6 @@ TVirtualTreePlayer::~TVirtualTreePlayer()
       fgCurrent=0;
    }
 }
-
 
 //______________________________________________________________________________
 TVirtualTreePlayer *TVirtualTreePlayer::GetCurrentPlayer()

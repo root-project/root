@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.61 2006/05/24 15:10:47 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.62 2006/05/26 15:13:02 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -77,95 +77,6 @@ TSelectorDraw::TSelectorDraw()
    fForceRead      = 0;
    fWeight         = 1;
    for (Int_t i=0;i<4;i++) {fNbins[i]=0; fVmin[i] = fVmax[i]= 0;}
-}
-
-//______________________________________________________________________________
-TSelectorDraw::TSelectorDraw(const TSelectorDraw& sd) :
-  TSelector(sd),
-  fTree(sd.fTree),
-  fVar1(sd.fVar1),
-  fVar2(sd.fVar2),
-  fVar3(sd.fVar3),
-  fVar4(sd.fVar4),
-  fSelect(sd.fSelect),
-  fManager(sd.fManager),
-  fObject(sd.fObject),
-  fTreeElist(sd.fTreeElist),
-  fOldHistogram(sd.fOldHistogram),
-  fAction(sd.fAction),
-  fDraw(sd.fDraw),
-  fNfill(sd.fNfill),
-  fMultiplicity(sd.fMultiplicity),
-  fDimension(sd.fDimension),
-  fSelectedRows(sd.fSelectedRows),
-  fOldEstimate(sd.fOldEstimate),
-  fForceRead(sd.fForceRead),
-  fWeight(sd.fWeight),
-  fV1(sd.fV1),
-  fV2(sd.fV2),
-  fV3(sd.fV3),
-  fV4(sd.fV4),
-  fW(sd.fW),
-  fVar1Multiple(sd.fVar1Multiple),
-  fVar2Multiple(sd.fVar2Multiple),
-  fVar3Multiple(sd.fVar3Multiple),
-  fVar4Multiple(sd.fVar4Multiple),
-  fSelectMultiple(sd.fSelectMultiple),
-  fCleanElist(sd.fCleanElist),
-  fObjEval(sd.fObjEval)
-{
-   //copy constructor
-   for(Int_t i=0; i<4; i++) {
-      fNbins[i]=sd.fNbins[i];
-      fVmin[i]=sd.fVmin[i];
-      fVmax[i]=sd.fVmax[i];
-   }
-}
-
-//______________________________________________________________________________
-TSelectorDraw& TSelectorDraw::operator=(const TSelectorDraw& sd)
-{
-   //assignement operator
-   if(this!=&sd) {
-      TSelector::operator=(sd);
-      fTree=sd.fTree;
-      fVar1=sd.fVar1;
-      fVar2=sd.fVar2;
-      fVar3=sd.fVar3;
-      fVar4=sd.fVar4;
-      fSelect=sd.fSelect;
-      fManager=sd.fManager;
-      fObject=sd.fObject;
-      fTreeElist=sd.fTreeElist;
-      fOldHistogram=sd.fOldHistogram;
-      fAction=sd.fAction;
-      fDraw=sd.fDraw;
-      fNfill=sd.fNfill;
-      fMultiplicity=sd.fMultiplicity;
-      fDimension=sd.fDimension;
-      fSelectedRows=sd.fSelectedRows;
-      fOldEstimate=sd.fOldEstimate;
-      fForceRead=sd.fForceRead;
-      for(Int_t i=0; i<4; i++) {
-         fNbins[i]=sd.fNbins[i];
-         fVmin[i]=sd.fVmin[i];
-         fVmax[i]=sd.fVmax[i];
-      }
-      fWeight=sd.fWeight;
-      fV1=sd.fV1;
-      fV2=sd.fV2;
-      fV3=sd.fV3;
-      fV4=sd.fV4;
-      fW=sd.fW;
-      fVar1Multiple=sd.fVar1Multiple;
-      fVar2Multiple=sd.fVar2Multiple;
-      fVar3Multiple=sd.fVar3Multiple;
-      fVar4Multiple=sd.fVar4Multiple;
-      fSelectMultiple=sd.fSelectMultiple;
-      fCleanElist=sd.fCleanElist;
-      fObjEval=sd.fObjEval;
-   }
-   return *this;
 }
 
 //______________________________________________________________________________
