@@ -7,9 +7,9 @@
  * Description:
  *  Extended Run Time Type Identification API
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2003  Masaharu Goto
  *
- * Permission to use, copy, modify and distribute this software and its 
+ * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
  * provided that the above copyright notice appear in all copies and
  * that both that copyright notice and this permission notice appear
@@ -28,9 +28,9 @@
 /*********************************************************************
 * class G__CallFunc
 *
-* 
+*
 *********************************************************************/
-class 
+class
 #ifndef __CINT__
 G__EXPORT
 #endif
@@ -98,6 +98,9 @@ G__CallFunc {
   void Exec(void *pobject) { Execute(pobject); }
   long ExecInt(void *pobject) { return G__int(Execute(pobject)); }
   double ExecDouble(void *pobject) { return G__double(Execute(pobject)); }
+#ifdef G__NATIVELONGLONG
+  G__int64 ExecInt64(void *pobject) { return G__Longlong(Execute(pobject)); }
+#endif
 
   G__InterfaceMethod InterfaceMethod() { return pfunc; }
   void SetArgs(const char* args);
