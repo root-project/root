@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.132 2006/07/26 14:28:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.133 2006/08/05 11:14:25 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1195,7 +1195,7 @@ void TProofServ::HandleSocketInputDuringProcess()
             if (fProof)
                fProof->StopProcess(aborted, timeout);
             else
-               if(fPlayer)
+               if (fPlayer)
                   fPlayer->StopProcess(aborted, timeout);
          }
          break;
@@ -2883,7 +2883,6 @@ void TProofServ::HandleProcess(TMessage *mess)
 
          // Create player
          if (IsParallel()) {
-            // NOTE: fProof->SetPlayer(0) should be called after Process()
             p = fProof->MakePlayer();
          } else {
             // sequential mode
@@ -2998,22 +2997,21 @@ void TProofServ::HandleProcess(TMessage *mess)
          }
 
          // Remove aborted queries from the list
-         if (p->GetExitStatus() == TProofPlayer::kAborted)
+         if (p->GetExitStatus() == TProofPlayer::kAborted) {
             RemoveQuery(pq);
-
-         // Keep in memory only light infor about a query
-         if (!(pq->IsDraw())) {
-            if (pqr)
-               fQueries->Add(pqr);
-            // Remove from the fQueries list
-            fQueries->Remove(pq);
-            SafeDelete(pq);
+         } else {
+            // Keep in memory only light infor about a query
+            if (!(pq->IsDraw())) {
+               if (pqr)
+                  fQueries->Add(pqr);
+               // Remove from the fQueries list
+               fQueries->Remove(pq);
+               SafeDelete(pq);
+            }
          }
 
          // Player cleanup
-         if (fProof != 0)
-            // ensure player is no longer referenced
-            fProof->SetPlayer(0);
+         fProof->SetPlayer(0);
          SafeDelete(p);
 
       } // Loop on submitted queries
@@ -3088,6 +3086,9 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Cleanup
       SafeDelete(dset);
       p->GetInputList()->SetOwner();  // Make sure the input list objects are deleted
+
+      // Player cleanup
+      fProof->SetPlayer(0);
       SafeDelete(p);
    }
 
@@ -3901,7 +3902,7 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
                }
             } else {
                Info("HandleWorkerList","all workers are already inactive");
-            } 
+            }
          } else {
             Warning("HandleWorkerList","undefined PROOF session: protocol error?");
          }
@@ -3956,7 +3957,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
       case TProof::kCreateDataSet:
          // list size must be above 0
          {
-            if (type == TProof::kCreateDataSet) { 
+            if (type == TProof::kCreateDataSet) {
                // if not kAppendDataSet
                (*mess) >> dataSetName;
             }
