@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.h,v 1.9 2006/08/01 10:28:45 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.h,v 1.10 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 #include <set>
-
+#include "Reflex/Scope.h"
 
 namespace ROOT {
    namespace Reflex {
@@ -36,24 +36,6 @@ namespace ROOT {
          // 1. Lookup
          static const Type & LookupType( const std::string & nam,
                                          const Scope & current );
-
-         
-         static const Type & LookupTypeQualified( const std::string & nam );
-
-         
-         static const Type & LookupTypeUnqualified( const std::string & nam,
-                                                    const Scope & current );
-
-         static const Type & LookupTypeInScope( const std::string & nam, 
-                                                const Scope & current,
-                                                bool &partial_success,
-                                                std::set<Scope> & lookedAtUsingDir,
-                                                size_t pos_subscope = 0,
-                                                size_t pos_scope_end = std::string::npos );
-  
-           
-         static const Type & LookupTypeInUnknownScope( const std::string & nam,
-                                                       const Scope & current );
 
          static const Scope & LookupScope( const std::string & nam,
                                            const Scope & current );
@@ -88,8 +70,21 @@ namespace ROOT {
          static const Type & AccessControl( const Type & typ,
                                             const Scope & current );
 
-         private:
+      private:
+         NameLookup(const std::string& name, const Scope& current);
 
+         const Type & LookupType();
+         const Type & LookupTypeInScope();
+         const Type & LookupTypeInUnknownScope();
+
+         void FindNextScopePos();
+
+         Scope fCurrentScope; // scope where lookup is carried out
+         const std::string fLookupName; // we're looking for a type / member of this name
+         bool fPartialSuccess; // found part of the qualified name
+         std::set<const Scope> fLookedAtUsingDir; // already checked these using directives
+         size_t fPosNamePart; // start position in fLookupName of name part to look up
+         size_t fPosNamePartLen; // length of name part to look up
       }; // struct  NameLookup
 
    } //namespace Reflex

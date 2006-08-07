@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.6 2006/08/01 10:28:45 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.7 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -17,91 +17,131 @@
 #include "Reflex/Base.h"
 #include "Reflex/Scope.h"
 #include "Reflex/Type.h"
+#include "Reflex/Tools.h"
 #include "Reflex/internal/OwnedMember.h"
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::NameLookup::NameLookup(const std::string& name, const Scope& current):
+   fCurrentScope(current), fLookupName(name), fPartialSuccess(false), 
+   fPosNamePart(0), fPosNamePartLen(std::string::npos) {
+   // Initialize a NameLookup object used internally to keep track of lookup
+   // states.
+   }
+//-------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::Type &
 ROOT::Reflex::NameLookup::LookupType( const std::string & nam, 
                                       const Scope & current ) {
 //-------------------------------------------------------------------------------
-// Lookup up a type name.
-   if ( nam.find("::") == 0 ) {
-      std::set<Scope> lookedAtUsingDir;
-      bool partial_success = false;
-      return LookupTypeInScope( nam.substr(2), Scope::GlobalScope(),  partial_success, lookedAtUsingDir);
-   } else
-      return LookupTypeInUnknownScope( nam, current );
-
+// Lookup up a (possibly scoped) type name appearing in the scope context 
+// current. This is the public interface for type lookup.
+   NameLookup lookup(nam, current);
+   return lookup.LookupType();
 }
 
 
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::Type &
-ROOT::Reflex::NameLookup::LookupTypeInScope( const std::string & nam,
-                                             const Scope & current,
-                                             bool &partial_success,
-                                             std::set<Scope> & lookedAtUsingDir,
-                                             size_t pos_subscope /*= 0*/,
-                                             size_t pos_next_scope /*= npos*/ ) {
+ROOT::Reflex::NameLookup::LookupType() {
 //-------------------------------------------------------------------------------
-// Lookup a type in a scope.
-   if (!current) return Dummy::Type();
-   if (lookedAtUsingDir.find(current) != lookedAtUsingDir.end()) return Dummy::Type();
+// Lookup a type using fLookupName, fCurrentScope.
+   fPartialSuccess = false;
+   fPosNamePart = 0;
+   fPosNamePartLen = std::string::npos;
+   FindNextScopePos();
 
-   if (pos_next_scope == std::string::npos) {
-      pos_next_scope = nam.find("::", pos_subscope);
-      if (pos_next_scope == std::string::npos) pos_next_scope = 0;
-      else                                     pos_next_scope += 2;
-   }
-   std::string scopenam = nam.substr(pos_subscope, pos_next_scope == 0 ? std::string::npos : pos_next_scope - 2 - pos_subscope);
-   size_t pos_current = pos_subscope;
-   pos_subscope = pos_next_scope;
-   if (pos_next_scope) {
-      pos_next_scope = nam.find("::", pos_next_scope);
-      if (pos_next_scope == std::string::npos) pos_next_scope = 0;
-      else                                     pos_next_scope += 2;
-   }
+   if ( fPosNamePart == 2 ) {
+      fLookedAtUsingDir.clear();
+      // ::A...
+      fCurrentScope = Scope::GlobalScope();
+      return LookupTypeInScope();
+   } else
+      // A...
+      return LookupTypeInUnknownScope();
+}
 
-   for ( Type_Iterator it = current.SubType_Begin(); it != current.SubType_End(); ++it ) {
-      if ( (*it).Name() == scopenam ) {
-         partial_success = true;
-         lookedAtUsingDir.clear();
-         if (!pos_subscope) return *it;
-         if (it->IsTypedef())
-            return LookupTypeInScope(nam, it->FinalType(), partial_success, lookedAtUsingDir, pos_subscope, pos_next_scope);
-         else
-            return LookupTypeInScope(nam, *it, partial_success, lookedAtUsingDir, pos_subscope, pos_next_scope);
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::Type &
+ROOT::Reflex::NameLookup::LookupTypeInScope() {
+//-------------------------------------------------------------------------------
+// Lookup a type in fCurrentScope.
+// Checks sub-types, sub-scopes, using directives, and base classes for
+// the name given by fLookupName, fPosNamePart, and fPosNamePartLen.
+// If the name part is found, and another name part follows in fPosNamePart,
+// LookupTypeInScope requests the scope found to lookup the next name
+// part. fPartialMatch reflexts that the left part of the name was matched;
+// even if the trailing part of fLookupName cannot be found, the lookup 
+// cannot continue on declaring scopes and has to fail.
+// A list of lookups performed in namespaces pulled in via using directives is 
+// kept in fLookedAtUsingDir, to prevent infinite loops due to 
+//   namespace A{using namespace B;} namespace B{using namespace A;}
+// loops.
+// The lookup does not take the declaration order into account; the result of
+// parts of the lookup algorithm which depend on the order will be unpredictable.
+
+   if (!fCurrentScope) return Dummy::Type();
+   if (fLookedAtUsingDir.find(fCurrentScope) != fLookedAtUsingDir.end())
+      // prevent inf loop from
+      // ns A { using ns B; } ns B {using ns A;}
+      return Dummy::Type();
+
+   for ( Type_Iterator it = fCurrentScope.SubType_Begin(); it != fCurrentScope.SubType_End(); ++it ) {
+      if ( 0 == fLookupName.compare(fPosNamePart, fPosNamePartLen, (*it).Name() ) ) {
+         fPartialSuccess = true;
+         fLookedAtUsingDir.clear();
+         FindNextScopePos();
+         if (fPosNamePart == std::string::npos) return *it;
+         if (it->IsTypedef()) fCurrentScope = it->FinalType();
+         else fCurrentScope = *it;
+         return LookupTypeInScope();
       }
    }
 
-   for ( Scope_Iterator in = current.SubScope_Begin(); in != current.SubScope_End(); ++in ) {
-      if (in->IsNamespace() && (*in).Name() == scopenam ) {
-         partial_success = true;
-         lookedAtUsingDir.clear();
-         if (!pos_subscope) return Dummy::Type(); // namespace is no a type
-         return LookupTypeInScope(nam, *in, partial_success, lookedAtUsingDir, pos_subscope, pos_next_scope);
+   for ( Scope_Iterator in = fCurrentScope.SubScope_Begin(); in != fCurrentScope.SubScope_End(); ++in ) {
+      // only take namespaces into account - classes were checked as part of SubType
+      if (in->IsNamespace() && 
+         0 == fLookupName.compare(fPosNamePart, fPosNamePartLen, (*in).Name() ) ) {
+         fPartialSuccess = true;
+         fLookedAtUsingDir.clear();
+         FindNextScopePos();
+         if (fPosNamePart == std::string::npos) return Dummy::Type(); // namespace is no a type
+         return LookupTypeInScope();
       }
    }
 
-   lookedAtUsingDir.insert(current);
-   for ( Scope_Iterator si = current.UsingDirective_Begin(); si != current.UsingDirective_End(); ++si ) {
-      const Type & t = LookupTypeInScope( nam, *si, partial_success, lookedAtUsingDir, pos_current, pos_subscope);
-      if (t || partial_success) return t;
+   if (fCurrentScope.UsingDirectiveSize()) {
+      fLookedAtUsingDir.insert(fCurrentScope);
+      Scope storeCurrentScope = fCurrentScope;
+      for ( Scope_Iterator si = storeCurrentScope.UsingDirective_Begin(); si != storeCurrentScope.UsingDirective_End(); ++si ) {
+         fCurrentScope = *si;
+         const Type & t = LookupTypeInScope();
+         if (fPartialSuccess) return t;
+      }
+      fCurrentScope = storeCurrentScope;
    }
 
-   if (pos_current == 0) // only for "BaseClass::whatever", not for "CurrentScope::BaseClass::whatever"!
-      for ( Base_Iterator bi = current.Base_Begin(); bi != current.Base_End(); ++bi ) {
-         if ( (*bi).Name() == scopenam ) {
-            partial_success = true;
-            lookedAtUsingDir.clear();
-            if (!pos_subscope) return bi->ToType();
-            return LookupTypeInScope(nam, bi->ToType().FinalType(), partial_success, lookedAtUsingDir, pos_subscope, pos_next_scope);
+   if (fPosNamePart == 0) // only for "BaseClass...", not for "A::BaseClass..."
+      for ( Base_Iterator bi = fCurrentScope.Base_Begin(); bi != fCurrentScope.Base_End(); ++bi ) {
+         if ( 0 == fLookupName.compare(fPosNamePart, fPosNamePartLen, (*bi).Name() ) ) {
+            fPartialSuccess = true;
+            fLookedAtUsingDir.clear();
+            FindNextScopePos();
+            if (fPosNamePart == std::string::npos) return bi->ToType();
+            fCurrentScope = bi->ToType().FinalType();
+            return LookupTypeInScope();
          }
       }
 
-   for ( Base_Iterator bi = current.Base_Begin(); bi != current.Base_End(); ++bi ) {
-      const Type & t = LookupTypeInScope( nam, bi->ToScope(), partial_success, lookedAtUsingDir, pos_current, pos_subscope );
-      if ( t || partial_success) return t;
+   if (fCurrentScope.BaseSize()) {
+      Scope storeCurrentScope = fCurrentScope;
+      for ( Base_Iterator bi = storeCurrentScope.Base_Begin(); bi != storeCurrentScope.Base_End(); ++bi ) {
+         fCurrentScope = bi->ToScope();
+         const Type & t = LookupTypeInScope();
+         if ( fPartialSuccess) return t;
+      }
+      fCurrentScope = storeCurrentScope;
    }
 
    return Dummy::Type();
@@ -110,16 +150,16 @@ ROOT::Reflex::NameLookup::LookupTypeInScope( const std::string & nam,
 
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::Type &
-ROOT::Reflex::NameLookup::LookupTypeInUnknownScope( const std::string & nam,
-                                                    const Scope & current ) {
+ROOT::Reflex::NameLookup::LookupTypeInUnknownScope() {
 //-------------------------------------------------------------------------------
-// Lookup a type in an unknown scope.
-   bool partial_success = false;
-   std::set<Scope> lookedAtUsingDir;
-   const Type & t = LookupTypeInScope( nam, current, partial_success, lookedAtUsingDir);
-   if ( t || partial_success) return t;
-   if ( ! current.IsTopScope() ) return LookupTypeInUnknownScope( nam, current.DeclaringScope() );
-   return t;
+// Lookup a type in fCurrentScope and its declaring scopes.
+   for (fPartialSuccess = false; !fPartialSuccess; fCurrentScope = fCurrentScope.DeclaringScope()) {
+      fLookedAtUsingDir.clear();
+      const Type & t = LookupTypeInScope();
+      if (fPartialSuccess) return t;
+      if (fCurrentScope.IsTopScope()) break;
+   }
+   return Dummy::Type();
 }
 
 
@@ -191,4 +231,37 @@ const ROOT::Reflex::Type & ROOT::Reflex::NameLookup::AccessControl( const Type &
 
    return typ;
 
+}
+
+//-------------------------------------------------------------------------------
+void 
+ROOT::Reflex::NameLookup::FindNextScopePos() {
+//-------------------------------------------------------------------------------
+// Move fPosNamePart to point to the next scope in fLookupName, updating 
+// fPosNamePartLen. If fPosNamePartLen == std::string::npos, initialize
+// fPosNamePart and fPosNamePartLen. If there is no next scope left, fPosNamePart
+// will be set to std::string::npos and fPosNamePartLen will be set to 0.
+   if (fPosNamePartLen != std::string::npos) {
+      // we know the length, so jump
+      fPosNamePart += fPosNamePartLen + 2;
+      if (fPosNamePart > fLookupName.length()) {
+         // past the string's end?
+         fPosNamePart = std::string::npos;
+         fPosNamePartLen = 0;
+         return;
+      }
+   }
+   else {
+      // uninitialized
+      // set fPosNamePartLen and check that fLookupName doesn't start with '::'
+      if (fLookupName.compare(0, 2, "::") == 0)
+         fPosNamePart = 2;
+      else fPosNamePart = 0;
+   }
+   fPosNamePartLen = Tools::GetFirstScopePosition(fLookupName.substr(fPosNamePart));
+   if (fPosNamePartLen == 0)
+      // no next "::"
+      fPosNamePartLen = fLookupName.length();
+   else fPosNamePartLen -= 2; // no "::"
+   // fPosNamePartLen -= fPosNamePart; No! We already look in substr()
 }
