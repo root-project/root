@@ -1,5 +1,5 @@
 #
-# $Id: Rules.mk,v 1.64 2006/07/14 20:25:36 pcanal Exp $
+# $Id: Rules.mk,v 1.65 2006/07/16 17:18:39 pcanal Exp $
 #
 
 all: tests
@@ -48,17 +48,24 @@ else
 	TESTGOAL = test
 endif
 
+# here we guess the platform
+
+ifeq ($(ARCH),)
+   export ARCH          := $(shell root-config --arch)
+endif
+PLATFORM      = $(ARCH)
+
 ifeq ($(ROOTTEST_LOC),)
 
 ifeq ($(PLATFORM),win32)
-    export ROOTTEST_LOC := $(shell cygpath -u '$(ROOTTEST_HOME)')
-    export ROOTTEST_HOME := $(shell cygpath -m $(ROOTTEST_HOME))
+   export ROOTTEST_LOC := $(shell cygpath -u '$(ROOTTEST_HOME)')
+    export ROOTTEST_HOME2 := $(shell cygpath -m $(ROOTTEST_HOME))
+    override ROOTTEST_HOME := $(ROOTTEST_HOME2)
 else
     export ROOTTEST_LOC := $(ROOTTEST_HOME)
 endif
 
 endif
-
 
 EVENTDIR = $(ROOTTEST_LOC)/root/io/event/
 $(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)  
@@ -104,13 +111,6 @@ ifeq ($(MAKECMDGOALS),cleantest)
      ForceRemoveFiles := $(shell rm -rf main *Dict\.* Event.root *~ $(CLEAN_TARGETS) )
   endif
 endif
-
-# here we guess the platform
-
-ifeq ($(ARCH),)
-   export ARCH          := $(shell root-config --arch)
-endif
-PLATFORM      = $(ARCH)
 
 ifeq ($(ROOTBITS),)
    export ROOTBITS := $(shell root -b -q -n $(ROOTTEST_HOME)/scripts/Bits.C | grep Bits_in_long | awk '{print $$2;}' )
