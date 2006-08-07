@@ -1,4 +1,4 @@
-# @(#)root/gdml:$Name:  $:$Id: ROOTwriter.py,v 1.3 2006/06/13 20:46:53 rdm Exp $
+# @(#)root/gdml:$Name:  $:$Id: ROOTwriter.py,v 1.4 2006/07/10 16:06:09 brun Exp $
 # Author: Witold Pokorski   05/06/2006
 
 from math import *
@@ -70,6 +70,8 @@ class ROOTwriter(object):
 	self.nodes = []
 	self.bnodes = []
 	self.solList = []
+        self.geomgr = ROOT.gGeoManager
+        geomgr.SetAllIndex()
         pass
 
     def rotXYZ(self, r):            
@@ -329,7 +331,7 @@ class ROOTwriter(object):
     def examineVol2(self, volume): #use with geometries containing many volumes
         print ''
 	print '[RETRIEVING VOLUME LIST]'
-	geomgr = ROOT.gGeoManager
+
 	self.bvols = geomgr.GetListOfVolumes()
 	print ''
 	print '[INITIALISING VOLUME USE COUNT]'
@@ -358,10 +360,12 @@ class ROOTwriter(object):
         if volume.GetNodes():
             for node in volume.GetNodes():
                 subvol = node.GetVolume()
-                if subvol not in self.vols:
+
+                #if bit not set, set and save primitive
+                if not subvol.TestAttBit(524288): #value referring to TGeoAtt::kSavePrimitiveAtt (1 << 19)
+                    subvol.SetAttBit(524288) 
                     self.vols.append(subvol)
                     self.examineVol(subvol)
-
                 name = node.GetName()+'in'+volume.GetName()
                 pos = node.GetMatrix().GetTranslation()
                 self.writer.addPosition(name+'pos', pos[0], pos[1], pos[2])
