@@ -1,4 +1,4 @@
-# @(#)root/gdml:$Name:  $:$Id: ROOTwriter.py,v 1.4 2006/07/10 16:06:09 brun Exp $
+# @(#)root/gdml:$Name:  $:$Id: ROOTwriter.py,v 1.5 2006/08/07 14:29:01 brun Exp $
 # Author: Witold Pokorski   05/06/2006
 
 from math import *
@@ -71,7 +71,7 @@ class ROOTwriter(object):
 	self.bnodes = []
 	self.solList = []
         self.geomgr = ROOT.gGeoManager
-        geomgr.SetAllIndex()
+        self.geomgr.SetAllIndex()
         pass
 
     def rotXYZ(self, r):            
