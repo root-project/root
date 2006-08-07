@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.h,v 1.10 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.h,v 1.11 2006/08/07 14:20:07 axel Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -23,7 +23,6 @@ namespace ROOT {
     
       // forward declarations
       class Type;
-      class Scope;
       class Member;
       
       /*
@@ -82,7 +81,7 @@ namespace ROOT {
          Scope fCurrentScope; // scope where lookup is carried out
          const std::string fLookupName; // we're looking for a type / member of this name
          bool fPartialSuccess; // found part of the qualified name
-         std::set<const Scope> fLookedAtUsingDir; // already checked these using directives
+         std::set<Scope> fLookedAtUsingDir; // already checked these using directives
          size_t fPosNamePart; // start position in fLookupName of name part to look up
          size_t fPosNamePartLen; // length of name part to look up
       }; // struct  NameLookup
