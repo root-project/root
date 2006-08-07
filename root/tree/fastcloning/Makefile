@@ -128,5 +128,7 @@ cloneChain.log: CloneTree.root
 cloneChain: cloneChain.log
 	$(TestDiff)
 
+Plot.log: recon-v1r030603p6_700000811_00000-00984_calTuple.root
+
 Plot: Plot.log
 	$(TestDiff)

@@ -11,7 +11,7 @@ void Plot(const char*filename) {
 }
 
 void runPlot(int what=(4|8)) {
-   if ( what&1) Plot("recon-v1r030603p6_700000811_00000-00984_calTuple.root");
+   if (what&1) Plot("recon-v1r030603p6_700000811_00000-00984_calTuple.root");
    if (what&2) Plot("recon-v1r030603p6_700000811_02955-03939_calTuple.root");
 
    if (what&4) {
