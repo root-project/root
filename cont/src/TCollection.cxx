@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.32 2006/02/19 21:02:35 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.33 2006/04/19 08:22:22 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -481,11 +481,13 @@ void TCollection::SetOwner(Bool_t enable)
    // is delete.   The objects might also be deleted or destructed when Clear
    // is called (depending on the collection).
 
-   if (enable) SetBit(kIsOwner);
-   else ResetBit(kIsOwner);
+   if (enable)
+      SetBit(kIsOwner);
+   else
+      ResetBit(kIsOwner);
 }
 
-   //______________________________________________________________________________
+//______________________________________________________________________________
 TIter::TIter(const TIter &iter)
 {
    // Copy a TIter. This involves allocating a new TIterator of the right

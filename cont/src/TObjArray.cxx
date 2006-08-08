@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name: v5-11-02 $:$Id: TObjArray.cxx,v 1.26 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.27 2006/08/08 16:02:44 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -80,23 +80,21 @@ TObjArray::~TObjArray()
 //______________________________________________________________________________
 TObjArray& TObjArray::operator=(const TObjArray &a)
 {
+   // Assignment operator. Note, unsets the kIsOwner flag.
 
-   // Copy of TObjArray a. Note, does not copy the kIsOwner flag.
-
-   if(this != &a) {
-      TSeqCollection::operator=(a);
-
+   if (this != &a) {
       if (IsOwner())
          Delete();
-     
+      SetOwner(kFALSE);
+
       Init(a.fSize, a.fLowerBound);
-     
+
       for (Int_t i = 0; i < fSize; i++)
          fCont[i] = a.fCont[i];
-     
+
       fLast = a.fLast;
       fName = a.fName;
-   } 
+   }
    return *this;
 }
 
@@ -483,7 +481,7 @@ Int_t TObjArray::IndexOf(const TObject *obj) const
          if (!fCont[i])
             return i+fLowerBound;
    }
-   
+
    return fLowerBound-1;
 }
 

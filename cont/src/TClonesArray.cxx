@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.55 2006/08/03 16:52:16 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.56 2006/08/08 16:02:44 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -180,9 +180,7 @@ TClonesArray::TClonesArray(const TClass *cl, Int_t s, Bool_t) : TObjArray(s)
 //______________________________________________________________________________
 TClonesArray::TClonesArray(const TClonesArray& tc): TObjArray(tc)
 {
-   // 
-   // Copy ctor
-   //
+   // Copy ctor.
 
    fKeep = new TObjArray(tc.fSize);
    fClass = tc.fClass;
@@ -193,20 +191,17 @@ TClonesArray::TClonesArray(const TClonesArray& tc): TObjArray(tc)
       fCont[i] = tc.fCont[i]->Clone();
       fKeep->fCont[i] = fCont[i];
    }
-
 }
 
 //______________________________________________________________________________
 TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
 {
-   // 
-   // Assignment operator
-   //
+   // Assignment operator.
 
-   if(this==&tc) return *this;
+   if (this == &tc) return *this;
 
-   if(fClass!=tc.fClass) {
-      Error("operator=","Cannot copy TClonesArray's when classes are different");
+   if (fClass != tc.fClass) {
+      Error("operator=", "cannot copy TClonesArray's when classes are different");
       return *this;
    }
 
@@ -224,8 +219,10 @@ TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
          fCont[i] = 0;
       }
 
+   BypassStreamer(kTRUE);
+
    for (i = 0; i < tc.fSize; i++) {
-      fKeep->fCont[i] = tc.fCont[i]->Clone(); 
+      fKeep->fCont[i] = tc.fCont[i]->Clone();
       fCont[i] = fKeep->fCont[i];
    }
 
