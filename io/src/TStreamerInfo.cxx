@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.239 2006/05/29 13:24:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.240 2006/07/13 05:17:11 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2120,6 +2120,17 @@ void* TStreamerInfo::NewArray(Long_t nElements, void *ary)
    return dataBegin;
 }
 
+
+#define DeleteBasicPointer(addr,element,name)                           \
+   {                                                                    \
+      name **f = (name**)(addr);                                        \
+      int n = element->GetArrayLength() ? element->GetArrayLength() : 1;\
+      for(int j=0;j<n;j++) {                                            \
+         delete [] f[j];                                                \
+         f[j] = 0;                                                      \
+      }                                                                 \
+   }
+
 //______________________________________________________________________________
 void TStreamerInfo::Destructor(void* obj, Bool_t dtorOnly)
 {
@@ -2143,10 +2154,31 @@ void TStreamerInfo::Destructor(void* obj, Bool_t dtorOnly)
       if (ele->GetOffset() == kMissing) continue;
       char* eaddr = p + ele->GetOffset();
 
+
+      Int_t etype = ele->GetType();
+
+      switch(etype) {
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:   DeleteBasicPointer(eaddr,ele,Bool_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:   DeleteBasicPointer(eaddr,ele,Char_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:  DeleteBasicPointer(eaddr,ele,Short_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:    DeleteBasicPointer(eaddr,ele,Int_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kLong:   DeleteBasicPointer(eaddr,ele,Long_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kLong64: DeleteBasicPointer(eaddr,ele,Long64_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat:  DeleteBasicPointer(eaddr,ele,Float_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32: 
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble: DeleteBasicPointer(eaddr,ele,Double_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kUChar:  DeleteBasicPointer(eaddr,ele,UChar_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kUShort: DeleteBasicPointer(eaddr,ele,UShort_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kUInt:   DeleteBasicPointer(eaddr,ele,UInt_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kULong:  DeleteBasicPointer(eaddr,ele,ULong_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64:DeleteBasicPointer(eaddr,ele,ULong64_t);  continue;
+      }
+   
+      
+
       TClass* cle = ele->GetClassPointer();
       if (!cle) continue;
 
-      Int_t etype = ele->GetType();
 
       if (etype == kObjectp || etype == kAnyp) {
          // Destroy an array of pre-allocated objects.
