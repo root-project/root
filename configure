@@ -749,7 +749,6 @@ else
   ac_n= ac_c='\c' ac_t=
 fi
 
-
 ######################################################################
 #
 ### echo %%% Help function
@@ -938,8 +937,7 @@ else
       -*) # in case the first argument wasn't an architecure but an option
           guess_architecture
           ;;
-       *)
-          arch=$1
+       *) arch=$1
 	  logmsg "Architecture set to $arch by user"
           shift
           ;;
@@ -978,16 +976,21 @@ hpuxia64acc)
    checkhpux64="yes" ;;
 esac
 
+# check for (g)make
 case $platform in
-win32|linux|macosx)
-   gnumake="make" ;;
-*)
-   gnumake="gmake" ;;
+win32|linux|macosx) gnumake="make"  ;;
+*)                  gnumake="gmake" ;;
+esac
+
+# check for which
+case $platform in
+macosx) cwhich="type -path" ;;
+*)      cwhich="which"      ;;
 esac
 
 if test "x$platform" = "xmacosx" ; then
    logmsg "Checking Fink directory"
-   finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+   finkdir=`$cwhich fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    logmsg "$finkdir"
 fi
 
@@ -1320,8 +1323,8 @@ if test "x$enable_builtin_freetype" = "x" || \
    test "x$enable_builtin_freetype" = "xno" ; then
 
    checking_msg "freetype-config"
-   if `which freetype-config > /dev/null 2>&1` ; then
-      which freetype-config
+   if `$cwhich freetype-config > /dev/null 2>&1` ; then
+      $cwhich freetype-config
 
       message "Checking for libfreetype version >= 9.3.0"
       ttf2_version=`freetype-config --version | \
@@ -1354,8 +1357,8 @@ if test "x$enable_builtin_pcre" = "x" || \
    test "x$enable_builtin_pcre" = "xno" ; then
 
    checking_msg "pcre-config"
-   if `which pcre-config > /dev/null 2>&1` ; then
-      which pcre-config
+   if `$cwhich pcre-config > /dev/null 2>&1` ; then
+      $cwhich pcre-config
 
       message "Checking for libpcre version >= 3.9"
       pcre_version=`pcre-config --version | \
@@ -1478,11 +1481,11 @@ fi
 if test ! "x$enable_mysql" = "xno"; then
     # Check for MySQL include and library
     checking_msg "mysql_config"
-    mysql_config=`which mysql_config 2> /dev/null`
+    mysql_config=`$cwhich mysql_config 2> /dev/null`
     if test ! "x$mysql_config" = "x" && test -x "$mysql_config" && \
        test "x$mysqlincdir" = "x"    && test "x$mysqllibdir" = "x" && \
        test ! "x$platform" = "xwin32" ; then
-       which mysql_config
+       $cwhich mysql_config
        # we found mysql_config - now check the version number
        message "Checking for libmysqlclient version >= 3.23.*"
        mysql_version=`mysql_config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
@@ -1700,7 +1703,7 @@ if test ! "x$enable_qt" = "xno" || \
     qtlibdir=$found_dir
 
     message "Checking for moc or moc.exe"
-    qtmocexe=`which moc`
+    qtmocexe=`$cwhich moc`
     if test $? -ne 0 ; then
        for i in $QTDIR $QTDIR/bin /usr/local/bin /usr/local/qt/bin /usr/bin \
            /usr/qt3/bin /usr/share/qt3/bin ; do
@@ -2045,7 +2048,7 @@ if test ! "x$enable_pythia6" = "xno" ; then
 	    if test "x$platform" = "xmacosx" ; then
 		check_symbol intel_cpu_indicator "$found_lib" "$found_dir"
 		if test $found_symbol -eq 1 ; then
-		    pythia6lib="$pythia6lib -L`which ifort | sed -e 's|bin/ifort|lib|'` -lifcore -lirc -limf -lifport"
+		    pythia6lib="$pythia6lib -L`$cwhich ifort | sed -e 's|bin/ifort|lib|'` -lifcore -lirc -limf -lifport"
 		fi
             fi
 	fi
@@ -2174,8 +2177,8 @@ if test ! "x$enable_asimage" = "xno" ; then
        # Assume failure
        enable_builtin_afterimage="yes"
        checking_msg "afterimage-config"
-       if `which afterimage-config > /dev/null 2>&1` ; then
-          which afterimage-config
+       if `$cwhich afterimage-config > /dev/null 2>&1` ; then
+          $cwhich afterimage-config
           # we found afterimage-config - now check the version number
           asimage_version=`afterimage-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
           #if test $asimage_version -gt 1003 ; then
@@ -2367,7 +2370,7 @@ fi
 #
 if test ! "x$enable_ruby" = "xno" ; then
     # Check for Ruby include and library
-    myruby=`which ruby 2> /dev/null`
+    myruby=`$cwhich ruby 2> /dev/null`
     if test ! "x$myruby" = "x" && test -x "$myruby" ; then
        rubysysincdir=`ruby -rrbconfig -e 'puts Config::CONFIG["archdir"]'`
        rubysyslibdir=`ruby -rrbconfig -e 'puts Config::CONFIG["libdir"]'`
@@ -2409,10 +2412,10 @@ fi
 if test ! "x$enable_xml" = "xno" ; then
     # Check for xml include and library
     checking_msg "xml2-config"
-    xml2_config=`which xml2-config 2> /dev/null`
+    xml2_config=`$cwhich xml2-config 2> /dev/null`
     if test ! "x$xml2_config" = "x" && test -x "$xml2_config" && \
        test ! "x$platform" = "xwin32" ; then
-       which xml2-config
+       $cwhich xml2-config
        # we found xml2-config - now check the version number
        message "Checking for libxml2 version >= 2.4.x"
        xml2_version=`xml2-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
@@ -3372,12 +3375,11 @@ if test ! "x$enable_mathmore" = "xno"; then
 	    enable_mathmore="no"
 	fi
     fi
-
     if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x") && \
         test ! "x$gslskip" = "xskip"; then
 	checking_msg "gsl-config"
-	if `which gsl-config > /dev/null 2>&1` ; then
-	    which gsl-config
+	if `$cwhich gsl-config > /dev/null 2>&1` ; then
+	    $cwhich gsl-config
             # we found gsl-config - now check the version number
             message "Checking for GSL version >= 1.5"
             gsl_version=`gsl-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
@@ -3496,7 +3498,7 @@ checking_msg "Clarens support"
 
 if test ! "x$enable_clarens" = "xno" ; then
 
-    myxmlrpc=`which xmlrpc-c-config 2> /dev/null`
+    myxmlrpc=`$cwhich xmlrpc-c-config 2> /dev/null`
     if test ! "x$myxmlrpc" = "x" && test -x "$myxmlrpc" ; then
         clarensincdir=`xmlrpc-c-config curl-client --cflags 2> /dev/null`
         clarenslibs=`xmlrpc-c-config curl-client --ldadd 2> /dev/null`
@@ -4225,7 +4227,7 @@ message "Writing $MEMPROBEOUT"
 if test -x /usr/bin/env ; then
    perlexe="/usr/bin/env perl"
 else
-   perlexe=`which perl`
+   perlexe=`$cwhich perl`
 fi
 sed -e "s|@perl@|$perlexe|"                \
    < memprobe.tmp > $MEMPROBEOUT
