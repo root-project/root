@@ -32,21 +32,24 @@ CINTCFLAGS    = -qpic -qchar=signed \
 
 # OS version
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+MACOSX_CPU   := $(shell uname -p)
 
 # Linker:
 LD            = xlC
 LDFLAGS       = $(OPT) -Wl,-bind_at_load
 FORCELINK     = yes
 NEEDFINK      = yes
+MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
+ifeq ($(MACOSX_MINOR),5)
+MACOSX_MINOR  = 4
+endif
 ifeq ($(MACOSX_MINOR),4)
-MACOSXTARGET  = MACOSX_DEPLOYMENT_TARGET=10.4
 SOFLAGS       = $(OPT) -qmkshrobj -undefined dynamic_lookup \
                 -single_module -Wl,-install_name -Wl,$(LIBDIR)/
 FORCELINK     = no
 NEEDFINK      = no
 else
 ifeq ($(MACOSX_MINOR),3)
-MACOSXTARGET  = MACOSX_DEPLOYMENT_TARGET=10.3
 SOFLAGS       = $(OPT) -qmkshrobj -undefined dynamic_lookup \
                 -single_module -Wl,-install_name -Wl,$(LIBDIR)/
 else

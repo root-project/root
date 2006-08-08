@@ -50,8 +50,11 @@ FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 LD            = icpc
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 FORCELINK     = no
+MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
+ifeq ($(MACOSX_MINOR),5) 
+MACOSX_MINOR  = 4
+endif
 ifeq ($(MACOSX_MINOR),4)
-MACOSXTARGET  = MACOSX_DEPLOYMENT_TARGET=10.4
 SOFLAGS       = $(OPT) -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
 endif
