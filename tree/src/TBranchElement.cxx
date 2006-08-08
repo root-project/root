@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.205 2006/07/20 21:52:56 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.206 2006/07/26 13:36:44 rdm Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -1395,19 +1395,31 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
    // See IMPORTANT REMARKS in TTree::GetEntry.
    //
 
-   Int_t nbranches = fBranches.GetEntriesFast();
+   // Remember which entry we are reading.
+   fReadEntry = entry;
+
+   // If our tree has a branch ref, make it remember the entry and
+   // this branch.  This allows a TRef::GetObject() call done during
+   // the following I/O operation, for example in a custom streamer,
+   // to search for the referenced object in the proper element of the
+   // proper branch.
+   TBranchRef* bref = fTree->GetBranchRef();
+   if (bref) {
+      bref->SetParent(this);
+      bref->SetReadEntry(entry);
+   }
 
    Int_t nbytes = 0;
 
    SetupAddresses();
 
+   Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches) {
       // -- Branch has daughters.
       // One must always read the branch counter.
       // In the case when one reads consecutively twice the same entry,
       // the user may have cleared the TClonesArray between the GetEntry calls.
       if ((fType == 3) || (fType == 4)) {
-         fReadEntry = entry;
          Int_t nb = TBranch::GetEntry(entry, getall);
          if (nb < 0) {
             return nb;
@@ -1419,7 +1431,6 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
          case TClassEdit::kMultiSet:
          case TClassEdit::kMap:
          case TClassEdit::kMultiMap:
-            fReadEntry = entry;
             break;
          default:
             for (Int_t i = 0; i < nbranches; ++i) {
@@ -1430,7 +1441,6 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
                }
                nbytes += nb;
             }
-            fReadEntry = entry;
             break;
       }
    } else {
@@ -1447,13 +1457,6 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
          return nb;
       }
       nbytes += nb;
-   }
-
-   // If Tree has a TBranchRef, set the ReadEntry in the TBranchRef.
-   TBranchRef* bref = fTree->GetBranchRef();
-   if (bref) {
-      bref->SetParent(this);
-      bref->SetReadEntry(entry);
    }
 
    if (fTree->Debug() > 0) {

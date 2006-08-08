@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.110 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.111 2006/08/06 16:09:40 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -972,9 +972,10 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    } else {
       buf->SetBufferDisplacement();
    }
+   // Remember which entry we are reading.
+   fReadEntry = entry;
    ReadLeaves(*buf);
    nbytes = buf->Length() - bufbegin;
-   fReadEntry = entry;
    return nbytes;
 }
 
@@ -1030,10 +1031,11 @@ Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/, TClonesArray* li
    } else {
       buf->SetBufferDisplacement();
    }
+   // Remember which entry we are reading.
+   fReadEntry = entry;
    TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(0);
    leaf->ReadBasketExport(*buf, li, nentries);
    nbytes = buf->Length() - bufbegin;
-   fReadEntry = entry;
    return nbytes;
 }
 
