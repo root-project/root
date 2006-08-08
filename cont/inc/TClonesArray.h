@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.13 2006/05/23 04:47:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.14 2006/07/26 13:36:42 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -35,10 +35,6 @@ protected:
    TClass       *fClass;       //!Pointer to the class
    TObjArray    *fKeep;        //!Saved copies of pointers to objects
 
-private:
-   TClonesArray(const TClonesArray&);             // not implemented
-   TClonesArray& operator=(const TClonesArray&);  // not implemented
-
 public:
    enum {
       kForgetBits     = BIT(0),   // Do not create branches for fBits, fUniqueID
@@ -49,7 +45,9 @@ public:
    TClonesArray();
    TClonesArray(const char *classname, Int_t size = 1000, Bool_t call_dtor = kFALSE);
    TClonesArray(const TClass *cl, Int_t size = 1000, Bool_t call_dtor = kFALSE);
+   TClonesArray(const TClonesArray& tc);          
    virtual         ~TClonesArray();
+   TClonesArray& operator=(const TClonesArray& tc);  
    virtual void     Compress();
    virtual void     Clear(Option_t *option="");
    virtual void     Delete(Option_t *option="");

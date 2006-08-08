@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.53 2006/07/13 05:12:43 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.54 2006/08/03 16:52:16 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -175,6 +175,67 @@ TClonesArray::TClonesArray(const TClass *cl, Int_t s, Bool_t) : TObjArray(s)
    fKeep = new TObjArray(s);
 
    BypassStreamer(kTRUE);
+}
+
+//______________________________________________________________________________
+TClonesArray::TClonesArray(const TClonesArray& tc): TObjArray(tc)
+{
+   // 
+   // Copy ctor
+   //
+
+   fKeep = new TObjArray(tc.fSize);
+   fClass = tc.fClass;
+
+   BypassStreamer(kTRUE);
+
+   for (Int_t i = 0; i < fSize; i++) {
+     fCont[i] = tc.fCont[i]->Clone();
+     fKeep->fCont[i] = fCont[i];
+   }
+
+}
+
+//______________________________________________________________________________
+TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
+{
+   // 
+   // Assignment operator
+   //
+
+   if(this==&tc) return *this;
+
+   if(fClass!=tc.fClass) {
+      Error("operator=","Cannot copy TClonesArray's when classes are different");
+      return *this;
+   }
+
+   if (tc.fSize > fSize)
+      Expand(TMath::Max(tc.fSize, GrowBy(fSize)));
+
+   Int_t i;
+   for (i = 0; i < tc.fSize; i++) {
+      if (!fKeep->fCont[i]) {
+         fKeep->fCont[i] = tc.fCont[i]->Clone();
+      } else {
+         // The object exists and we overwrite it
+         fClass->New(tc.fCont[i]->Clone());
+      }
+      fCont[i] = fKeep->fCont[i];
+   }
+
+   for (i = tc.fSize; i < fSize; i++)
+      if (fKeep->fCont[i]) {
+         if (TObject::GetObjectStat() && gObjectTable)
+            gObjectTable->RemoveQuietly(fKeep->fCont[i]);
+         ::operator delete(fKeep->fCont[i]);
+         fKeep->fCont[i] = 0;
+         fCont[i] = 0;
+      }
+
+   fLast = tc.fSize - 1;
+   Changed();
+   return *this;
 }
 
 //______________________________________________________________________________
