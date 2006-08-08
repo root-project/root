@@ -1,4 +1,4 @@
-CLEAN_TARGETS += copiedEvent.* libEvent.* Event.h Event.root Event2.root main *Dict* *~ createfile.out run.out unevenFriend.out \
+CLEAN_TARGETS += copiedEvent* libEvent.* Event.h Event.root Event2.root main *Dict* *~ createfile.out run.out unevenFriend.out \
      treeChainFriend.log $(ALL_LIBRARIES) [a-f][0-4].root treeparent.root treefriend.root *.log
 TEST_TARGETS += friendInChain treefriend ChainFriend unevenFriend treeChainFriend ChainFriendStatus FriendOfFriends FriendsIndices
 
@@ -40,7 +40,7 @@ ChainFriend: ChainFriend.log
 
 #	$(CMDECHO) root.exe -q -b -l Run.C > run.out 2>&1
 
-ChainFriendStatus: testFriend4.cc
+ChainFriendStatus: testFriend4.cc Event.root
 	$(CMDECHO) root.exe -q -b -l testFriend4.cc  > ChainFriendStatus.log 2>&1
 
 FriendOfFriends.log: friendOfFriend_C.$(DllSuf) testFriends_C.$(DllSuf)
