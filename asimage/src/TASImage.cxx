@@ -2058,7 +2058,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       fn = tmpstr;
       ttfont = kTRUE;
    }
-   delete tmpstr;
+   delete [] tmpstr;
 
    if (color) {
       parse_argb_color(color, &text_color);
