@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.88 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.89 2006/08/07 15:27:14 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -1096,6 +1096,9 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
                return -1;
             }
          }
+
+         // Some input parameters may be needed in Terminate
+         fSelector->SetInputList(fInput);
 
          TIter next(fOutput);
          TList *output = fSelector->GetOutputList();

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.154 2006/08/05 11:14:25 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.155 2006/08/06 07:15:00 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1834,9 +1834,15 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   // Add query to the result list in TProofPlayer
                   fPlayer->AddQueryResult(pq);
                   fPlayer->SetCurrentQuery(pq);
-               } else {
+
+                  // Add the unique query tag as TNamed object to the input list
+                  // so that it is available in TSelectors for monitoring
+                  fPlayer->AddInput(new TNamed("PROOF_QueryTag",
+                                    Form("%s:%s",pq->GetTitle(),pq->GetName())));
+ 
+              } else {
                   PDB(kGlobal,2)
-                     Info("Collect:kPROOF_OUTPUTLIST","query result missing");
+                     Info("Collect:kPROOF_OUTPUTOBJECT","query result missing");
                }
             } else if (type > 0) {
                // Read object

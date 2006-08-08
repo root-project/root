@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.133 2006/08/05 11:14:25 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.134 2006/08/07 15:27:14 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -2907,6 +2907,10 @@ void TProofServ::HandleProcess(TMessage *mess)
             p->AddInput(o);
          }
 
+         // Add the unique query tag as TNamed object to the input list
+         // so that it is available in TSelectors for monitoring
+         p->AddInput(new TNamed("PROOF_QueryTag",Form("%s:%s",pq->GetTitle(),pq->GetName())));
+
          // Process
          p->Process(dset, filename, opt, nentries, first);
 
@@ -3088,7 +3092,8 @@ void TProofServ::HandleProcess(TMessage *mess)
       p->GetInputList()->SetOwner();  // Make sure the input list objects are deleted
 
       // Player cleanup
-      fProof->SetPlayer(0);
+      if (IsMaster())
+         fProof->SetPlayer(0);
       SafeDelete(p);
    }
 
