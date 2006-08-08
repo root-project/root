@@ -497,20 +497,20 @@ distclean:: distclean-cintdlls
 
 # remove only .o, .dll, .$(SOEXT)
 clean-cintdlls:
-	for cintdll in $(CINTDLLNAMES); do \
+	@(for cintdll in $(CINTDLLNAMES); do \
 	  rm -f $(CINTDIRDLLSTL)/rootcint_$${cintdll}.o \
 	  $(CINTDIRDLLSTL)/G__cpp_$${cintdll}.o \
-	  metautils/src/stlLoader_$${cintdll}.o; done
-	rm -f $(ALLCINTDLLS) \
+	  metautils/src/stlLoader_$${cintdll}.o; done)
+	@rm -f $(ALLCINTDLLS) \
 	  $(CINTDIRL)/posix/exten.o $(CINTDIRSTL)/posix.dll \
 	  $(CINTDIRL)/posix/G__c_posix.o
 
 # remove generated code, too.
 distclean-cintdlls: clean-cintdlls
-	for cintdll in $(CINTDLLNAMES); do \
+	@(for cintdll in $(CINTDLLNAMES); do \
 	  rm -f $(CINTDIRDLLSTL)/rootcint_$${cintdll}.* \
 	  $(CINTDIRDLLSTL)/G__cpp_$${cintdll}.* \
-	  metautils/src/stlLoader_$${cintdll}.*; done
-	rm -f $(ALLCINTDLLS) \
+	  metautils/src/stlLoader_$${cintdll}.*; done)
+	@rm -f $(ALLCINTDLLS) \
 	  $(CINTDIRL)/posix/G__c_posix.* $(CINTDIRL)/posix/mktypes$(EXEEXT)
 ##### clean - END
