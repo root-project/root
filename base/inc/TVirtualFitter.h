@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v5-11-02 $:$Id: TVirtualFitter.h,v 1.16 2006/03/20 08:22:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.17 2006/05/23 04:47:35 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -57,7 +57,7 @@ protected:
    static TString         fgDefault;   //name of the default fitter ("Minuit","Fumili",etc)
    
    TVirtualFitter(const TVirtualFitter& tvf);
-   TVirtualFitter& operator=(const TVirtualFitter&); // Not implemented
+   TVirtualFitter& operator=(const TVirtualFitter& tvf);
 
 public:
    TVirtualFitter();

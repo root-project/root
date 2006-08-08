@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.25 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Name: v5-11-02 $:$Id: TObjArray.cxx,v 1.26 2006/03/20 21:43:41 pcanal Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -75,6 +75,29 @@ TObjArray::~TObjArray()
    TStorage::Dealloc(fCont);
    fCont = 0;
    fSize = 0;
+}
+
+//______________________________________________________________________________
+TObjArray& TObjArray::operator=(const TObjArray &a)
+{
+
+   // Copy of TObjArray a. Note, does not copy the kIsOwner flag.
+
+   if(this != &a) {
+      TSeqCollection::operator=(a);
+
+      if (IsOwner())
+         Delete();
+     
+      Init(a.fSize, a.fLowerBound);
+     
+      for (Int_t i = 0; i < fSize; i++)
+         fCont[i] = a.fCont[i];
+     
+      fLast = a.fLast;
+      fName = a.fName;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

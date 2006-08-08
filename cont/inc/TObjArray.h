@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.15 2006/05/23 04:47:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.16 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -42,13 +42,11 @@ protected:
    Bool_t        OutOfBoundsError(const char *where, Int_t i) const;
    Int_t         GetAbsLast() const;
 
-private:
-   TObjArray& operator=(const TObjArray&);   // not implemented
-
 public:
    TObjArray(Int_t s = TCollection::kInitCapacity, Int_t lowerBound = 0);
    TObjArray(const TObjArray &a);
    virtual          ~TObjArray();
+   TObjArray& operator=(const TObjArray&); 
    virtual void     Clear(Option_t *option="");
    virtual void     Compress();
    virtual void     Delete(Option_t *option="");

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.14 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.15 2006/07/26 13:36:42 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************

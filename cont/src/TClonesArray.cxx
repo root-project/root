@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.54 2006/08/03 16:52:16 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.55 2006/08/03 16:52:16 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -190,8 +190,8 @@ TClonesArray::TClonesArray(const TClonesArray& tc): TObjArray(tc)
    BypassStreamer(kTRUE);
 
    for (Int_t i = 0; i < fSize; i++) {
-     fCont[i] = tc.fCont[i]->Clone();
-     fKeep->fCont[i] = fCont[i];
+      fCont[i] = tc.fCont[i]->Clone();
+      fKeep->fCont[i] = fCont[i];
    }
 
 }
@@ -214,17 +214,8 @@ TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
       Expand(TMath::Max(tc.fSize, GrowBy(fSize)));
 
    Int_t i;
-   for (i = 0; i < tc.fSize; i++) {
-      if (!fKeep->fCont[i]) {
-         fKeep->fCont[i] = tc.fCont[i]->Clone();
-      } else {
-         // The object exists and we overwrite it
-         fClass->New(tc.fCont[i]->Clone());
-      }
-      fCont[i] = fKeep->fCont[i];
-   }
 
-   for (i = tc.fSize; i < fSize; i++)
+   for (i = 0; i < fSize; i++)
       if (fKeep->fCont[i]) {
          if (TObject::GetObjectStat() && gObjectTable)
             gObjectTable->RemoveQuietly(fKeep->fCont[i]);
@@ -232,6 +223,11 @@ TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
          fKeep->fCont[i] = 0;
          fCont[i] = 0;
       }
+
+   for (i = 0; i < tc.fSize; i++) {
+      fKeep->fCont[i] = tc.fCont[i]->Clone(); 
+      fCont[i] = fKeep->fCont[i];
+   }
 
    fLast = tc.fSize - 1;
    Changed();

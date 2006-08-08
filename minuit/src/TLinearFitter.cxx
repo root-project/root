@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.28 2006/06/20 16:01:16 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.29 2006/07/26 13:36:43 rdm Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -291,6 +291,51 @@ TLinearFitter::TLinearFitter(TFormula *function, Option_t *opt)
 }
 
 //______________________________________________________________________________
+TLinearFitter::TLinearFitter(const TLinearFitter& tlf) :
+   TVirtualFitter(tlf),
+   fParams(tlf.fParams),
+   fParCovar(tlf.fParCovar),
+   fTValues(tlf.fTValues),
+   fParSign(tlf.fParSign),
+   fDesign(tlf.fDesign),
+   fDesignTemp(tlf.fDesignTemp),
+   fDesignTemp2(tlf.fDesignTemp2),
+   fDesignTemp3(tlf.fDesignTemp3),
+   fAtb(tlf.fAtb),
+   fAtbTemp(tlf.fAtbTemp),
+   fAtbTemp2(tlf.fAtbTemp2),
+   fAtbTemp3(tlf.fAtbTemp3),
+   fFunctions(tlf.fFunctions),
+   fY(tlf.fY),
+   fY2(tlf.fY2),
+   fY2Temp(tlf.fY2Temp),
+   fX(tlf.fX),
+   fE(tlf.fE),
+   fInputFunction((TFormula*)tlf.fInputFunction->Clone()),
+   fNpoints(tlf.fNpoints),
+   fNfunctions(tlf.fNfunctions),
+   fFormulaSize(tlf.fFormulaSize),
+   fNdim(tlf.fNdim),
+   fNfixed(tlf.fNfixed),
+   fSpecial(tlf.fSpecial),
+   fIsSet(tlf.fIsSet),
+   fStoreData(tlf.fStoreData),
+   fChisquare(tlf.fChisquare),
+   fH(tlf.fH),
+   fRobust(tlf.fRobust),
+   fFitsample(tlf.fFitsample)
+{
+   // Copy ctor
+
+   fFixedParams=new Bool_t[fNfixed];
+   for(Int_t i=0; i<fNfixed; ++i) 
+     fFixedParams[i]=tlf.fFixedParams[i];
+   strcpy(fFormula,tlf.fFormula);
+
+}
+
+
+//______________________________________________________________________________
 TLinearFitter::~TLinearFitter()
 {
    // Linear fitter cleanup.
@@ -305,6 +350,51 @@ TLinearFitter::~TLinearFitter()
    fFunctions.Delete();
    //delete fFunctions;
 
+}
+
+//______________________________________________________________________________
+TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf) 
+{
+   // Assignment operator
+
+   if(this!=&tlf) {
+     TVirtualFitter::operator=(tlf);
+     fParams=tlf.fParams;
+     fParCovar=tlf.fParCovar;
+     fTValues=tlf.fTValues;
+     fParSign=tlf.fParSign;
+     fDesign=tlf.fDesign;
+     fDesignTemp=tlf.fDesignTemp;
+     fDesignTemp2=tlf.fDesignTemp2;
+     fDesignTemp3=tlf.fDesignTemp3;
+     fAtb=tlf.fAtb;
+     fAtbTemp=tlf.fAtbTemp;
+     fAtbTemp2=tlf.fAtbTemp2;
+     fAtbTemp3=tlf.fAtbTemp3;
+     fFixedParams=new Bool_t[tlf.fNfixed];
+     for(Int_t i=0; i<tlf.fNfixed; ++i) 
+       fFixedParams[i]=tlf.fFixedParams[i];
+     fFunctions=tlf.fFunctions;
+     fY=tlf.fY;
+     fY2=tlf.fY2;
+     fY2Temp=tlf.fY2Temp;
+     fX=tlf.fX;
+     fE=tlf.fE;
+     fInputFunction=(TFormula*)tlf.fInputFunction->Clone();
+     fNpoints=tlf.fNpoints;
+     fNfunctions=tlf.fNfunctions;
+     fFormulaSize=tlf.fFormulaSize;
+     fNdim=tlf.fNdim;
+     fNfixed=tlf.fNfixed;
+     fSpecial=tlf.fSpecial;
+     strcpy(fFormula,tlf.fFormula);
+     fIsSet=tlf.fIsSet;
+     fStoreData=tlf.fStoreData;
+     fChisquare=tlf.fChisquare;
+     fH=tlf.fH;
+     fRobust=tlf.fRobust;
+     fFitsample=tlf.fFitsample;
+   } return *this;
 }
 
 //______________________________________________________________________________

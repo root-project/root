@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.23 2006/05/23 04:47:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.24 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -50,9 +50,6 @@ private:
    static TObjectTable *fgGarbageCollection;  //used by garbage collector
    static Bool_t        fgEmptyingGarbage;    //used by garbage collector
    static Int_t         fgGarbageStack;       //used by garbage collector
-
-   TCollection(const TCollection &);    //private and not-implemented, collections
-   void operator=(const TCollection &); //are too complex to be automatically copied
 
 protected:
    enum { kIsOwner = BIT(14) };

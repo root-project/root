@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.12 2006/05/23 04:47:40 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.13 2006/07/26 13:36:43 rdm Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -213,17 +213,15 @@ private:
    Double_t  CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *index, Int_t *subdat, Int_t start, Int_t end);
    Bool_t    Linf();
 
-private:
-   TLinearFitter(const TLinearFitter&);              // not implemented
-   TLinearFitter& operator=(const TLinearFitter&);   // not implemented
-
 public:
    TLinearFitter();
    TLinearFitter(Int_t ndim, const char *formula, Option_t *opt="D");
    TLinearFitter(Int_t ndim);
    TLinearFitter(TFormula *function, Option_t *opt="D");
+   TLinearFitter(const TLinearFitter& tlf);
    virtual ~TLinearFitter();
 
+   TLinearFitter& operator=(const TLinearFitter& tlf);
    virtual void       AddPoint(Double_t *x, Double_t y, Double_t e=1);
    virtual void       AssignData(Int_t npoints, Int_t xncols, Double_t *x, Double_t *y, Double_t *e=0);
 
