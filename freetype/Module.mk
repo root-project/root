@@ -83,6 +83,10 @@ else
 		if [ $(ARCH) = "linuxx8664gcc" ]; then \
 			FREECC="gcc -m64"; \
 		fi; \
+		if [ $(ARCH) = "macosx64" ]; then \
+			FREECC="gcc -m64"; \
+			FREE_CFLAGS="-m64"; \
+		fi; \
 		if [ $(ARCH) = "sgicc64" ]; then \
 			FREECC="cc"; \
 			FREE_CFLAGS="-64"; \

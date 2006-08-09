@@ -470,7 +470,7 @@ MACOSX_MINOR  = 4
 endif
 CXX           = c++
 CXXFLAGS      = -O2 -pipe -Wall -W -Woverloaded-virtual
-LD            = $(MACOSXTARGET) c++
+LD            = $(MACOSXTARGET) c++ -m64
 LDFLAGS       = -O2 -bind_at_load
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately

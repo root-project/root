@@ -1,10 +1,13 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for MacOS X, using cc (Based on gcc version 2.95.2)
+# Makefile of ROOT for MacOS X, using g++
 
 PLATFORM      = macosx
 
-DEBUGFLAGS    = -g
+#DWARF2       := $(shell gcc --version | sed -n 's,.*build \([0-9]*\).$$,\1,p' |\
+#                  awk '{ if ($$1>=5341) print "dwarf-2" }')
+
+DEBUGFLAGS    = -g$(DWARF2)
 OPTFLAGS      = -O2
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
@@ -18,10 +21,9 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -m64 -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
-                -fsigned-char -fno-common \
-                -I/usr/X11R6/include $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
+                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
 CFLAGS        = -m64 -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
-                -I/usr/X11R6/include $(EXTRA_CFLAGS) $(FINK_CFLAGS)
+                $(EXTRA_CFLAGS) $(FINK_CFLAGS)
 CINTCXXFLAGS  = -m64 -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
@@ -45,7 +47,7 @@ LDFLAGS       = $(OPT) -m64 -bind_at_load
 FORCELINK     = yes
 NEEDFINK      = yes
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
-ifeq ($(MACOSX_MINOR),5) 
+ifeq ($(MACOSX_MINOR),5)
 MACOSX_MINOR  = 4
 endif
 ifeq ($(MACOSX_MINOR),4)

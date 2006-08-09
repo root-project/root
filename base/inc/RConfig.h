@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.90 2006/06/14 18:09:38 pcanal Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.91 2006/06/14 22:16:00 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -308,6 +308,10 @@
 #   endif
 #   if defined(__i386__)
 #      define R__BYTESWAP
+#   endif
+#   if defined(__x86_64__)
+#      define R__BYTESWAP
+#      define R__B64      /* enable when 64 bit machine */
 #   endif
 #endif
 
