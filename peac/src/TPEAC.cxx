@@ -1,4 +1,4 @@
-// @(#)root/peac:$Name:$:$Id:$
+// @(#)root/peac:$Name:  $:$Id: TPEAC.cxx,v 1.1 2005/02/07 18:02:36 rdm Exp $
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 
@@ -134,7 +134,7 @@ TDSet *TPEAC::StartSession(const Char_t *dataset)
    fDataSet   = dataset;
 
    // start proof
-   fProof = gROOT->Proof(TString(purl.GetUrl()), TString("peac:")+sessionid);
+   fProof = TVirtualProof::Open(purl.GetUrl(), Form("peac:%s", sessionid.Data()));
 
    if (!fProof || !fProof->IsValid()) {
       Error("StartSession", "PROOF session could not be started");
