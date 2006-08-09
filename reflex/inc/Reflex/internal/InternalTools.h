@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: InternalTools.h,v 1.2 2006/08/01 15:04:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: InternalTools.h,v 1.3 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,7 +24,8 @@ namespace ROOT {
 
             template < typename CONT > 
                static typename std::vector<TO>::iterator Begin( const CONT & cont ) {
-               return typename std::vector<TO>::iterator((TO*)&cont[0]);
+               if ( ! cont.size()) return End<CONT>(cont);
+               else                return typename std::vector<TO>::iterator((TO*)&cont[0]);
             }
 
             template < typename CONT >
@@ -35,7 +36,8 @@ namespace ROOT {
 
             template < typename CONT > 
                static typename std::vector<TO>::reverse_iterator RBegin( const CONT & cont ) {
-               return typename std::vector<TO>::reverse_iterator(typename std::vector<TO>::iterator((TO*)&cont[cont.size()-1]));
+               if ( ! cont.size()) return REnd<CONT>(cont);
+               else                return typename std::vector<TO>::reverse_iterator(typename std::vector<TO>::iterator((TO*)&cont[cont.size()-1]));
             }
 
             template < typename CONT >
