@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.34 2006/08/01 10:54:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.35 2006/08/09 10:08:14 antcheva Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -208,6 +208,8 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
       buttons[0]->Connect("Clicked()", "TGFileContainer", fFc, "Sort(=kSortByName)");
       buttons[1]->Connect("Clicked()", "TGFileContainer", fFc, "Sort(=kSortByType)");
       buttons[2]->Connect("Clicked()", "TGFileContainer", fFc, "Sort(=kSortBySize)");
+      buttons[3]->Connect("Clicked()", "TGFileContainer", fFc, "Sort(=kSortByOwner)");
+      buttons[4]->Connect("Clicked()", "TGFileContainer", fFc, "Sort(=kSortByGroup)");
       buttons[5]->Connect("Clicked()", "TGFileContainer", fFc, "Sort(=kSortByDate)");
    }
 

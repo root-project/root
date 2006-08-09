@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.40 2006/07/24 16:11:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.41 2006/08/01 10:54:37 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -1050,6 +1050,11 @@ void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
    fColHeader[idx] = new TGTextButton(fHeader, new TGHotString(s), idx,
                                       fNormGC, fFontStruct, kRaisedFrame |
                                       kDoubleBorder | kFixedWidth);
+   TString txt = s;
+   txt.ToLower();
+   if (txt.Contains("modified")) txt += " date";
+   if (txt.Contains("attributes")) txt = "type";
+   fColHeader[idx]->SetToolTipText(Form("Click to sort by %s", txt.Data()));
    fColHeader[idx]->Associate(fHeader);
    fColHeader[idx]->SetTextJustify(hmode | kTextCenterY);
    fSplitHeader[idx]->SetFrame(fColHeader[idx], kTRUE);

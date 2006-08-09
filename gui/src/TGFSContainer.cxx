@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.31 2006/07/24 16:11:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.32 2006/07/27 12:21:56 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -91,6 +91,52 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
       default:
       case kSortByName:
          //--- this is not exactly what I want...
+         type1 = f1->GetType();
+         type2 = f2->GetType();
+
+         //--- use posix macros
+         if (R_ISDIR(type1)) type1 = 1;
+         else                type1 = 6;
+
+         if (R_ISDIR(type2)) type2 = 1;
+         else                type2 = 6;
+
+         if (type1 < type2)  return -1;
+         if (type1 > type2)  return  1;
+         return strcmp(f1->GetItemName()->GetString(),
+                       f2->GetItemName()->GetString());
+
+      case kSortByOwner:
+         if ( f1->GetUid() != f2->GetUid() )
+            if ( f1->GetUid() < f2->GetUid() )
+               return -1;
+            else
+               return +1;
+
+         // else sort by name
+         type1 = f1->GetType();
+         type2 = f2->GetType();
+
+         //--- use posix macros
+         if (R_ISDIR(type1)) type1 = 1;
+         else                type1 = 6;
+
+         if (R_ISDIR(type2)) type2 = 1;
+         else                type2 = 6;
+
+         if (type1 < type2)  return -1;
+         if (type1 > type2)  return  1;
+         return strcmp(f1->GetItemName()->GetString(),
+                       f2->GetItemName()->GetString());
+         
+      case kSortByGroup:
+         if ( f1->GetGid() != f2->GetGid() )
+            if ( f1->GetGid() < f2->GetGid() )
+               return -1;
+            else
+               return +1;
+
+         // else sort by name
          type1 = f1->GetType();
          type2 = f2->GetType();
 
