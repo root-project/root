@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.33 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.34 2006/08/01 10:54:37 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -181,8 +181,8 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
       fOverWR->SetOn(fFileInfo->fOverwrite);
       fMultiSel = 0;
    } else {
-      fMultiSel = new TGCheckButton(fHtop, "&Multi Select", kIDF_MULTISEL);
-      fMultiSel->SetToolTipText("Allow multiple file to be selected");
+      fMultiSel = new TGCheckButton(fHtop, "&Multiple files", kIDF_MULTISEL);
+      fMultiSel->SetToolTipText("Allows multiple file selection when SHIFT is pressed");
       fHtop->AddFrame(fMultiSel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
       fMultiSel->SetOn(fFileInfo->fMultipleSelection);
       fMultiSel->Connect("Toggled(Bool_t)","TGFileInfo",fFileInfo,"SetMultipleSelection(Bool_t)");
@@ -427,23 +427,23 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      char answer[128];
                      strcpy(answer, "(empty)");
                      new TGInputDialog(gClient->GetRoot(), GetMainFrame(),
-                                       "Give a name for the directory",
+                                       "Enter directory name:",
                                        answer/*"(empty)"*/, answer);
 
                      while ( strcmp(answer, "(empty)") == 0 ) {
                         new TGMsgBox(gClient->GetRoot(), GetMainFrame(), "Error",
-                                     "Please introduce a valid directory name",
+                                     "Please enter a valid directory name.",
                                      kMBIconStop, kMBOk);
                         new TGInputDialog(gClient->GetRoot(), GetMainFrame(),
-                                          "Give a name for the directory",
+                                          "Enter directory name:",
                                           answer, answer);
                      }
                      if ( strcmp(answer, "") == 0 )  // Cancel button was pressed
                         break;
 
                      if ( gSystem->MakeDirectory(answer) != 0 )
-                        new TGMsgBox(gClient->GetRoot(), GetMainFrame(),
-                                     "Error", "Directory name already exists!",
+                        new TGMsgBox(gClient->GetRoot(), GetMainFrame(), "Error", 
+                                     Form("Directory name \'%s\' already exists!", answer),
                                      kMBIconStop, kMBOk);
                      else {
                         fFc->DisplayDirectory();
