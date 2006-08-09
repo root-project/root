@@ -4,8 +4,12 @@ EventDict.cxx
 event.par
 stress
 stressLinear
-stressgeom
+stressGeometry
 stressSpectrum
+stressFit
+stressGraphics
+stressShapes
+stressVector
 AclockDict.cxx
 AclockDict.h
 HelloDict.cxx
