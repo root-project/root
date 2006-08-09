@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.12 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.13 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -175,6 +175,7 @@ bool ROOT::Reflex::Type::IsEquivalentTo( const Type & typ ) const {
 
       switch ( t1.TypeType() ) {
       case CLASS:
+      case TYPETEMPLATEINSTANCE:
          if ( t2.IsClass() )           return ( t1.fTypeName == t2.fTypeName ); 
       case FUNDAMENTAL:
          if ( t2.IsFundamental() )     return ( t1.fTypeName == t2.fTypeName );
