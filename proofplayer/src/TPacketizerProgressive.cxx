@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.5 2006/07/01 12:05:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.6 2006/07/26 14:18:04 rdm Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -228,8 +228,12 @@ void TPacketizerProgressive::Init()
    TIter i(fSlaves);
    i.Reset();
    TSlave* slave;
+   // go through the list of slaves and fill fSlaveStats with TSlaveStats
+   // objects which also include appropriate TFileNode objects.
+   // TFileNode objects are also stored in host_map.
    while ((slave = (TSlave*) i.Next())) {
-      PDB(kPacketizer, 3) Info("Init", "adding info for slave %s", slave->GetName());
+      PDB(kPacketizer, 3) 
+         Info("Init", "adding info for slave %s", slave->GetName());
       TSlaveStat* ss = new TSlaveStat(slave);
       fSlaveStats->Add(slave, ss);
 
@@ -249,8 +253,9 @@ void TPacketizerProgressive::Init()
    fDset->Lookup();
 
    // put TDSetElements in the appropriate TFileStat object
-   THashTable slaves_added; // map of slaves that have already been added to the available list
-   TMap nonslaves_added;
+   THashTable slaves_added; // map of slaves that have already 
+                            // been added to the available list
+   TMap nonslaves_added; //map of added non-slave nodes that host needed files
    fDset->Reset();
    TDSetElement* e;
    while ((e = (TDSetElement*) fDset->Next())) {
@@ -262,7 +267,7 @@ void TPacketizerProgressive::Init()
          if (! (fn = (TFileNode*) nonslaves_added.GetValue(&host))) {
             PDB(kPacketizer, 3) Info("Init", "adding info for non-slave %s", host.GetString().Data());
             // the element is on a non-slave host: make a new
-            // THostStat and add it to the list of unallocated non-slaves
+            // TFileNode and add it to the list of unallocated non-slaves
             fn = new TFileNode(host.GetString().Data());
             fUnAllocNonSlaves->Add(fn);
             nonslaves_added.Add(&host, fn);
@@ -300,6 +305,8 @@ TDSetElement *TPacketizerProgressive::BuildPacket(TSlaveStat* stat,
                                                   Long64_t size)
 {
    // Build a packet
+   // size - target size of the packet
+   // BUT the packet size may rise to (size * 2 - 1) !!
 
    TFileStat* fs = stat->GetCurrentFile();
    if (! fs) {
@@ -551,7 +558,7 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
       if (gPerfStats != 0) {
          TFileStat* file = stat->GetCurrentFile();
          gPerfStats->FileEvent(s->GetOrdinal(), s->GetName(), file->GetNode()->GetName(),
-                               file->GetElement()->GetFileName(), kTRUE);
+                               file->GetElement()->GetFileName(), kFALSE);
       }
       stat->SetCurrentElement(0);
       stat->SetCurrentFile(0);
@@ -561,8 +568,8 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
    if (fNewFileSlaves->FindObject(stat)) {
       RecalculatePacketSize(numentries);
       PDB(kPacketizer, 3) Info("GetNextPacket",
-                               "Newly opened file has %lld entries; updated packet size to %lld",
-                               numentries, fPacketSize);
+         "Newly opened file has %lld entries; updated packet size to %lld",
+         numentries, fPacketSize);
       fEntriesSeen += numentries;
       fFilesOpened++;
       stat->GetCurrentElement()->SetNum(numentries);
@@ -573,7 +580,8 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
    if (stat->GetCurrentFile() && ! stat->GetCurrentFile()->IsDone()) {
       if (stat->GetCurrentElement()->GetNum() == -1) {
          // we grabbed an element that hasn't been fully opened yet
-         PDB(kPacketizer, 3) Info("GetNextPacket", "working on a packet that isn't fully opened, waiting");
+         PDB(kPacketizer, 3) Info("GetNextPacket", 
+            "working on a packet that isn't fully opened, waiting");
          return (TDSetElement*) -1;
       }
       return BuildPacket(stat, fPacketSize);
@@ -581,8 +589,9 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
 
    // the slave has finished its TDSetElement
 
+   Int_t foundUnallocatedFile = -1; // important for the packet size
    stat->GetFileNode()->DecSlaveCnt(s->GetName());
-   TFileStat* fs = 0;
+   TFileStat* fs = 0; 
    // try to find an unallocated file first
    if ((fs = GetNextUnAlloc(stat))) {
       PDB(kPacketizer, 3) Info("AssignElement", "giving slave %s unallocated file",
@@ -593,13 +602,8 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
       stat->SetCurrentElement(fs->GetElement());
       fNewFileSlaves->Add(stat);
 
-      if (gPerfStats != 0) {
-         TFileStat* file = stat->GetCurrentFile();
-         gPerfStats->FileEvent(s->GetOrdinal(), s->GetName(), file->GetNode()->GetName(),
-                               file->GetElement()->GetFileName(), kFALSE);
-      }
+      foundUnallocatedFile = 1;
 
-      return BuildPacket(stat, 1);
    // next try to get an active file
    } else if ((fs = GetNextActive(stat))) {
       PDB(kPacketizer, 3) Info("AssignElement", "giving slave %s active file",
@@ -614,13 +618,25 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
          PDB(kPacketizer, 3) Info("AssignElement", "grabbed a packet that isn't fully opened, waiting");
          return (TDSetElement*) -1;
       }
-      return BuildPacket(stat, fPacketSize);
+      foundUnallocatedFile = 0;
    }
 
-   // no more packets
-   PDB(kPacketizer, 3) Info("GetNextPacket", "no more packets available");
-   fSlavesRemaining->Remove(s);
-   return 0;
+   if (foundUnallocatedFile == -1) { // -1 means no more packets
+      // no more packets
+      PDB(kPacketizer, 3) Info("GetNextPacket", "no more packets available");
+      fSlavesRemaining->Remove(s);
+      return 0;
+   } else {
+      if (gPerfStats != 0) {
+         TFileStat* file = stat->GetCurrentFile();
+         gPerfStats->FileEvent(s->GetOrdinal(), s->GetName(), file->GetNode()->GetName(),
+                               file->GetElement()->GetFileName(), kTRUE);
+      }
+      if (foundUnallocatedFile == 1)
+         return BuildPacket(stat, 1);
+      else 
+         return BuildPacket(stat, fPacketSize); 
+   }
 }
 
 //______________________________________________________________________________
