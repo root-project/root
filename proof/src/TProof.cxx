@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.156 2006/08/08 21:27:14 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.157 2006/08/10 10:33:04 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1853,6 +1853,8 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   SafeDelete(obj);
                if (type > 1 && !IsMaster()) {
                   TQueryResult *pq = fPlayer->GetCurrentQuery();
+                  pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
+                  pq->SetInputList(fPlayer->GetInputList(), kFALSE);
                   // If the last object, notify the GUI that the result arrived
                   QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
                }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.6 2006/07/26 14:28:59 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.7 2006/08/05 11:14:25 brun Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -395,6 +395,29 @@ void TQueryResult::Browse(TBrowser *b)
    if (fOutputList)
       b->Add(fOutputList, fOutputList->Class(), "OutputList");
 #endif
+}
+
+//______________________________________________________________________________
+void TQueryResult::SetInputList(TList *in, Bool_t adopt)
+{
+   // Set / change the input list.
+   // The flag 'adopt' determines whether the list is adopted (default)
+   // or cloned.
+
+   SafeDelete(fInputList);
+
+   if (in) {
+      if (!adopt) {
+         fInputList = (TList *) (in->Clone());
+      } else {
+         fInputList = new TList;
+         TIter nxi(in);
+         TObject *o = 0;
+         while ((o = nxi()))
+            fInputList->Add(o);
+      }
+      fInputList->SetOwner(kFALSE);
+   }
 }
 
 //______________________________________________________________________________
