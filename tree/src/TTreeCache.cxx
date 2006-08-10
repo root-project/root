@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.2 2006/06/29 22:15:37 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.3 2006/07/04 12:58:09 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -169,6 +169,7 @@ Bool_t TTreeCache::FillBuffer()
    TFileCacheRead::Prefetch(0,0);
    //store baskets
    for (Int_t i=0;i<fNbranches;i++) {
+      if (fNtot > 2*fBufferSizeMin) break;
       TBranch *b = fBranches[i];
       Int_t nb = b->GetMaxBaskets();
       Int_t *lbaskets   = b->GetBasketBytes();
@@ -188,6 +189,9 @@ Bool_t TTreeCache::FillBuffer()
             if (!elist->ContainsRange(entries[j]+chainOffset,emax+chainOffset)) continue;
          }
          TFileCacheRead::Prefetch(pos,len);
+         //we allow up to twice the default buffer size. When using eventlist in particular
+         //it may happen that the evaluation of fEntryNext is bad, hence this protection
+         if (fNtot > 2*fBufferSizeMin) break;
       }
       if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,fBranches[i]->GetName(),fEntryNext,fNseek,fNtot);
    }
