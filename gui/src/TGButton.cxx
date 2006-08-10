@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.71 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.72 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -394,6 +394,11 @@ void TGTextButton::Init()
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask | kKeyLockMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
       }
    }
    SetWindowName();
@@ -410,6 +415,11 @@ TGTextButton::~TGTextButton()
       main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
       main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
       main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+
+      main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask);
+      main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask);
+      main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask | kKeyLockMask);
+      main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
    }
    if (fLabel) delete fLabel;
    if (fHasOwnFont) {
@@ -433,6 +443,11 @@ void TGTextButton::SetText(TGHotString *new_label)
          main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
          main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
          main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask);
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask);
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask | kKeyLockMask);
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
       }
       delete fLabel;
    }
@@ -444,6 +459,11 @@ void TGTextButton::SetText(TGHotString *new_label)
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask | kKeyLockMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
    }
 
    int max_ascent, max_descent;
@@ -862,6 +882,11 @@ void TGCheckButton::Init()
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask | kKeyLockMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
       }
    }
    SetWindowName();
@@ -1146,6 +1171,11 @@ void TGRadioButton::Init()
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask | kKeyLockMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
       }
    }
 
