@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.89 2006/08/07 15:27:14 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.90 2006/08/08 21:27:14 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -1670,7 +1670,7 @@ TList *TProofPlayerRemote::MergeFeedback()
    // Merge feedback lists.
 
    PDB(kFeedback,1)
-     Info("MergeFeedback","Enter");
+      Info("MergeFeedback","Enter");
 
    if ( fFeedbackLists == 0 ) {
       PDB(kFeedback,1)
@@ -1806,7 +1806,7 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
 
    delete out;
    PDB(kFeedback,1)
-       Info("StoreFeedback","Leave");
+      Info("StoreFeedback","Leave");
 }
 
 //______________________________________________________________________________

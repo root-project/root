@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.155 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.156 2006/08/08 21:27:14 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1840,7 +1840,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   fPlayer->AddInput(new TNamed("PROOF_QueryTag",
                                     Form("%s:%s",pq->GetTitle(),pq->GetName())));
  
-              } else {
+               } else {
                   PDB(kGlobal,2)
                      Info("Collect:kPROOF_OUTPUTOBJECT","query result missing");
                }
