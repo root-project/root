@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.142 2006/07/04 17:36:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.143 2006/07/09 05:27:53 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -92,7 +92,7 @@ ClassImp(TSystem)
 TVirtualMutex* gSystemMutex = 0;
 
 //______________________________________________________________________________
-TSystem::TSystem(const TSystem& ts): TNamed(ts), 
+TSystem::TSystem(const TSystem& ts): TNamed(ts),
      fReadmask(ts.fReadmask), fWritemask(ts.fWritemask), fReadready(ts.fReadready), fWriteready(ts.fWriteready),
      fSignals(ts.fSignals), fNfd(ts.fNfd), fMaxrfd(ts.fMaxrfd), fMaxwfd(ts.fMaxwfd), fSigcnt(ts.fSigcnt),
      fWdpath(ts.fWdpath), fHostname(ts.fHostname), fInsideNotify(ts.fInsideNotify), fBeepFreq(ts.fBeepFreq),
@@ -102,13 +102,13 @@ TSystem::TSystem(const TSystem& ts): TNamed(ts),
      fBuildArch(ts.fBuildArch), fBuildNode(ts.fBuildNode), fBuildDir(ts.fBuildDir), fFlagsDebug(ts.fFlagsDebug),
      fFlagsOpt(ts.fFlagsOpt), fListPaths(ts.fListPaths), fIncludePath(ts.fIncludePath), fLinkedLibs(ts.fLinkedLibs),
      fSoExt(ts.fSoExt), fObjExt(ts.fObjExt), fAclicMode(ts.fAclicMode), fMakeSharedLib(ts.fMakeSharedLib),
-     fMakeExe(ts.fMakeExe), fLinkdefSuffix(ts.fLinkdefSuffix), fCompiled(ts.fCompiled), fHelpers(ts.fHelpers) 
-{ 
+     fMakeExe(ts.fMakeExe), fLinkdefSuffix(ts.fLinkdefSuffix), fCompiled(ts.fCompiled), fHelpers(ts.fHelpers)
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TSystem& TSystem::operator=(const TSystem& ts) 
+TSystem& TSystem::operator=(const TSystem& ts)
 {
    //assignment operator
    if(this!=&ts) {
@@ -127,19 +127,19 @@ TSystem& TSystem::operator=(const TSystem& ts)
       fInsideNotify=ts.fInsideNotify;
       fBeepFreq=ts.fBeepFreq;
       fBeepDuration=ts.fBeepDuration;
-    
+
       fInControl=ts.fInControl;
       fDone=ts.fDone;
       fLevel=ts.fLevel;
       fLastErrorString=ts.fLastErrorString;
-    
+
       fTimers=ts.fTimers;
       fSignalHandler=ts.fSignalHandler;
       fFileHandler=ts.fFileHandler;
       fOnExitList=ts.fOnExitList;
-    
+
       fListLibs=ts.fListLibs;
-    
+
       fBuildArch=ts.fBuildArch;
       fBuildNode=ts.fBuildNode;
       fBuildDir=ts.fBuildDir;
@@ -156,7 +156,7 @@ TSystem& TSystem::operator=(const TSystem& ts)
       fLinkdefSuffix=ts.fLinkdefSuffix;
       fCompiled=ts.fCompiled;
       fHelpers=ts.fHelpers;
-   } 
+   }
    return *this;
 }
 
@@ -836,8 +836,10 @@ int TSystem::mkdir(const char *name, Bool_t recursive)
    // If 'recursive' is true, makes parent directories as needed.
 
    if (recursive) {
-      TString dirname = DirName(name);
-      if (dirname.Length()==0) {
+      TString safeName = name; // local copy in case 'name' is output from
+                               // TSystem::DirName as it uses static buffers
+      TString dirname = DirName(safeName);
+      if (!dirname.Length()) {
          // well we should not have to make the root of the file system!
          // (and this avoid infinite recursions!)
          return -1;
@@ -846,7 +848,7 @@ int TSystem::mkdir(const char *name, Bool_t recursive)
          int res = mkdir(dirname, kTRUE);
          if (res) return res;
       }
-      if (!AccessPathName(name, kFileExists)) {
+      if (!AccessPathName(safeName, kFileExists)) {
          return -1;
       }
    }
@@ -1312,7 +1314,7 @@ int TSystem::Utime(const char *, Long_t, Long_t)
 const char *TSystem::FindFile(const char *, TString&, EAccessMode)
 {
    // Find location of file in a search path. Return value points to TString for
-   // compatibility with Which(const char *, const char *, EAccessMode). 
+   // compatibility with Which(const char *, const char *, EAccessMode).
    // Returns 0 in case file is not found.
 
    AbstractMethod("FindFile");
