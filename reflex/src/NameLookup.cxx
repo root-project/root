@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.7 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.8 2006/08/07 14:20:07 axel Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -153,7 +153,7 @@ const ROOT::Reflex::Type &
 ROOT::Reflex::NameLookup::LookupTypeInUnknownScope() {
 //-------------------------------------------------------------------------------
 // Lookup a type in fCurrentScope and its declaring scopes.
-   for (fPartialSuccess = false; !fPartialSuccess; fCurrentScope = fCurrentScope.DeclaringScope()) {
+   for (fPartialSuccess = false; !fPartialSuccess && fCurrentScope; fCurrentScope = fCurrentScope.DeclaringScope()) {
       fLookedAtUsingDir.clear();
       const Type & t = LookupTypeInScope();
       if (fPartialSuccess) return t;
