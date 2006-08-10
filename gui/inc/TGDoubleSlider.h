@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.12 2006/07/19 12:58:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.13 2006/07/20 01:12:15 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -74,6 +74,10 @@ enum EDoubleSliderScale {
 
 
 class TGDoubleSlider : public TGFrame, public TGWidget {
+
+private:
+   TGDoubleSlider(const TGDoubleSlider&); // Not implemented
+   TGDoubleSlider& operator=(const TGDoubleSlider&); // Not implemented
 
 protected:
    Float_t       fPos;           // logical position between fVmin and fVmax

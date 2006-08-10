@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.78 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.79 2006/08/01 10:54:37 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -648,6 +648,10 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 class TGHeaderFrame : public TGHorizontalFrame {
+private:
+   TGHeaderFrame(const TGHeaderFrame&); // Not implemented
+   TGHeaderFrame& operator=(const TGHeaderFrame&); // Not implemented
+
 protected:
    Int_t              fNColumns;     // number of columns
    TGTextButton     **fColHeader;    // column headers for in detailed mode
