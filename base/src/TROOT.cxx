@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.185 2006/07/17 19:19:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.186 2006/08/06 02:04:12 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1589,6 +1589,13 @@ TClass *TROOT::LoadClass(const char *classname) const
       if (long64name != classname) {
          TClass *res = LoadClass(long64name.c_str());
          if (res) return res;
+      }
+   }
+   if (!dict) {
+      // Try to remove the ROOT typedefs
+      string resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
+      if (resolved != classname) {
+         dict = TClassTable::GetDict(resolved.c_str());
       }
    }
 
