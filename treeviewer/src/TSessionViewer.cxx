@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.69 2006/07/04 23:45:50 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.70 2006/07/05 07:33:36 brun Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -2800,7 +2800,9 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
       case TQueryDescription::kSessionQueryCompleted:
          fBtnSubmit->SetEnabled(submit_en);
          fBtnFinalize->SetEnabled(kTRUE);
-         if (desc->fResult && desc->fResult->IsFinalized())
+         if ((desc->fResult == 0) || (desc->fResult &&
+             (desc->fResult->IsFinalized() ||
+             (desc->fResult->GetDSet() == 0))))
             fBtnFinalize->SetEnabled(kFALSE);
          fBtnStop->SetEnabled(kFALSE);
          fBtnAbort->SetEnabled(kFALSE);
