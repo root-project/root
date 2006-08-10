@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.181 2006/07/26 14:16:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.182 2006/07/28 15:15:01 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1341,8 +1341,29 @@ Int_t TFile::Recover()
    // Attempt to recover file if not correctly closed.
    // The function returns the number of keys that have been recovered.
    // If no keys can be recovered, the file will be declared Zombie by
-   // the calling function.
-
+   // the calling function. This function is automatically called when
+   // opening a file.
+   //
+   // If the file is open in read only mode, the file is not modified.
+   // If open in update mode and the function finds something to recover,
+   //  a new directory header is written to the file. When opening the file gain
+   //  no message from Recover will be reported.
+   // If keys have been recovered, the file is usable and you can safely
+   // read the corresponding objects.
+   // If the file is not usable (a zombie), you can test for this case
+   // with code like:
+   //   TFile f("myfile.root");
+   //   if (f.IsZombie()) {file is unusable)
+   // If the file has been recovered, the bit kRecovered is set in the TFile object in memory.
+   // You can test if the file has been recovered with
+   //   if (f.TestBit(TFile::kRecovered)) {.. the file has been recovered}
+   //
+   // When writing TTrees to a file, it is important to save the Tree header
+   // at regular intervals (see TTree::AutoSave). If a file containing a Tree
+   // is recovered, the last Tree header written to the file will be used.
+   // In this case all the entries in all the branches written before writing
+   // the header are valid entries.
+   
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
