@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.134 2006/08/07 15:27:14 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.135 2006/08/08 21:27:14 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3969,7 +3969,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
             char *fileListPath =
                Form("%s/%s.root", fDataSetDir.Data(), dataSetName.Data());
 
-            // We don't worry about overwriting prvoius dataset here
+            // We would overwrite a dataset if it existed by this name
             TList *fileList =
                (TList *) (mess->ReadObject(TList::Class()));
             // if we started with kAppendDataSet
@@ -3994,9 +3994,14 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
                      newFileList->Add(obj);
                      prevFile = obj;
                   }
-               if (gSystem->AccessPathName(gSystem->DirName(fileListPath)))
+               if (gSystem->AccessPathName(gSystem->DirName(fileListPath))) {
                   //the public dir or it's subdir does not exist
-                  gSystem->mkdir(gSystem->DirName(fileListPath), kTRUE);
+                  TString dirname = gSystem->DirName(fileListPath);
+                  if (gSystem->mkdir(dirname, kTRUE)) 
+                     Error("HandleDataSets", 
+                           "Error creating a datasets subdirectory: %s",
+                           dirname.Data());
+               }
                TFile *f = TFile::Open(fileListPath, "RECREATE");
                if (f) {
                   f->cd();
@@ -4006,7 +4011,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
                   fSocket->Send(kMESS_OK);
                } else {
                   fSocket->Send(kMESS_NOTOK);
-                  Error("HandleSocketInput",
+                  Error("HandleDataSets",
                         "can't open dataset file for writing");
                }
                delete f;
