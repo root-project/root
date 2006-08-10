@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.67 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.68 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -140,13 +140,13 @@ void TGMenuBar::BindKeys(Bool_t on)
    // If on kTRUE bind arrow, popup menu hot keys, otherwise
    // remove key bindings.
 
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Left), 0, on);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Right), 0, on);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Up), 0, on);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Down), 0, on);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Enter), 0, on);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Return), 0, on);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Escape), 0, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Left), kAnyModifier, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Up), kAnyModifier, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Down), kAnyModifier, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Return), kAnyModifier, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier, on);
 
    if (fCurrent && fCurrent->GetMenu()) {
       TGMenuEntry *e;
@@ -158,6 +158,13 @@ void TGMenuBar::BindKeys(Bool_t on)
          }
          if (!hot) continue;
          gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), 0, on);
+         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask, on);
+         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyLockMask, on);
+         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyMod2Mask, on);
+         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask | kKeyLockMask, on);
+         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask | kKeyMod2Mask, on);
+         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyLockMask  | kKeyMod2Mask, on);
+         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask | kKeyLockMask | kKeyMod2Mask, on);
       }
    }
 }
@@ -177,11 +184,21 @@ void TGMenuBar::BindHotKey(Int_t keycode, Bool_t on)
       main->BindKey(this, keycode, kKeyMod1Mask | kKeyShiftMask);
       main->BindKey(this, keycode, kKeyMod1Mask | kKeyLockMask);
       main->BindKey(this, keycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+
+      main->BindKey(this, keycode, kKeyMod1Mask | kKeyMod2Mask);
+      main->BindKey(this, keycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask);
+      main->BindKey(this, keycode, kKeyMod1Mask | kKeyMod2Mask | kKeyLockMask);
+      main->BindKey(this, keycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
    } else {
       main->RemoveBind(this, keycode, kKeyMod1Mask);
       main->RemoveBind(this, keycode, kKeyMod1Mask | kKeyShiftMask);
       main->RemoveBind(this, keycode, kKeyMod1Mask | kKeyLockMask);
       main->RemoveBind(this, keycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+
+      main->RemoveBind(this, keycode, kKeyMod1Mask | kKeyMod2Mask);
+      main->RemoveBind(this, keycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask);
+      main->RemoveBind(this, keycode, kKeyMod1Mask | kKeyMod2Mask | kKeyLockMask);
+      main->RemoveBind(this, keycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
    }
 }
 
