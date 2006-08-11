@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.17 2006/05/24 17:11:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.18 2006/07/09 05:27:53 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -218,14 +218,33 @@ TGeoHMatrix *TGeoPhysicalNode::GetMatrix(Int_t level) const
 //_____________________________________________________________________________
 const char *TGeoPhysicalNode::GetName() const
 {
-// Retreive the name of this physical node
-   static TString name;
-   name = "";
-   for (Int_t level=0;level<fLevel+1; level++) {
-      name += "/";
-      name += GetNode(level)->GetName();
+   // Retrieve the name of this physical node
+   // WARNING: the physical node name is stored into a local static array
+   // It is the user's responsability to copy the returned name in case
+   // the information must be kept.
+   
+   static char *pNodeName=0;
+   static Int_t N = 0;
+   if (!N) {
+      N= 500;
+      pNodeName = new char[N];
+   }
+   pNodeName[0] = 0;
+   Int_t n = 0;
+   
+   for (Int_t level=0;level<=fLevel; level++) {
+      const char *name = GetNode(level)->GetName();
+      Int_t nch = strlen(name);
+      if (n+nch+2 > N) {
+         N = 2*(n+nch+2);
+         delete [] pNodeName;
+         pNodeName = new char[N];
+         return GetName();
+      }
+      sprintf(pNodeName+n,"/%s",name);
+      n += nch+1;
    }    
-   return name.Data();  
+   return pNodeName;
 }
 
 //_____________________________________________________________________________
