@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.5 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.6 2006/05/12 13:45:14 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -241,7 +241,7 @@ namespace ROOT {
 	  The beta of the boost must be <= 1 or a nul Lorentz Vector will be returned	  
       */
       template <class LVector, class BoostVector> 
-      LVector Boost(const LVector & v, const BoostVector & b) { 
+      LVector boost(const LVector & v, const BoostVector & b) { 
 	register double bx = b.X();
 	register double by = b.Y();
 	register double bz = b.Z();
@@ -272,7 +272,7 @@ namespace ROOT {
 	  The beta of the boost must be <= 1 or a nul Lorentz Vector will be returned	  	  
       */
       template <class LVector> 
-      LVector BoostX(const LVector & v, double beta) { 
+      LVector boostX(const LVector & v, double beta) { 
 	if (beta >= 1) {
 	  GenVector_exception e ( 
 				 "Beta Vector supplied to set Boost represents speed >= c");
@@ -294,7 +294,7 @@ namespace ROOT {
 	  The beta of the boost must be <= 1 or a nul Lorentz Vector will be returned	  	  
       */
       template <class LVector> 
-      LVector BoostY(const LVector & v, double beta) { 
+      LVector boostY(const LVector & v, double beta) { 
 	if (beta >= 1) {
 	  GenVector_exception e ( 
 				 "Beta Vector supplied to set Boost represents speed >= c");
@@ -316,7 +316,7 @@ namespace ROOT {
 	  The beta of the boost must be <= 1 or a nul Lorentz Vector will be returned	  	  
       */
       template <class LVector> 
-      LVector BoostZ(const LVector & v, double beta) {
+      LVector boostZ(const LVector & v, double beta) {
 	if (beta >= 1) {
 	  GenVector_exception e ( 
 				 "Beta Vector supplied to set Boost represents speed >= c");

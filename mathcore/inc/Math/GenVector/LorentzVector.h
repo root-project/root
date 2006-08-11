@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.9 2006/02/06 17:22:03 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.10 2006/05/03 13:10:22 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by:    moneta   at Tue May 31 17:06:09 2005
 // Major mods by: fischler at Wed Jul 20   2005
 //
-// Last update: $Id: LorentzVector.h,v 1.9 2006/02/06 17:22:03 moneta Exp $
+// Last update: $Id: LorentzVector.h,v 1.10 2006/05/03 13:10:22 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_LorentzVector 
 #define ROOT_Math_GenVector_LorentzVector  1
@@ -599,6 +599,7 @@ namespace ROOT {
       Scalar phi()   const { return Phi();   }
       Scalar rho()   const { return Rho();   }
       Scalar eta()   const { return Eta();   }
+      Scalar pt()    const { return Pt();    }
       Scalar perp2() const { return Perp2(); }
       Scalar mag2()  const { return M2();    }
       Scalar mag()   const { return M();     }
