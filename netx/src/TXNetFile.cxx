@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.36 2006/07/26 14:43:30 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.37 2006/08/11 20:25:52 brun Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -492,11 +492,12 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
    fOffset += bufferLength;
    fBytesRead += bufferLength;
    fReadCalls++;
-   fgReadCalls++;
 #ifdef WIN32
    SetFileBytesRead(GetFileBytesRead() + bufferLength);
+   //fgReadCalls++; //must be via a function
 #else
    fgBytesRead += bufferLength;
+   fgReadCalls++;
 #endif
 
    if (gMonitoringWriter)
@@ -550,11 +551,12 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       // fOffset += bufferLength;
       fBytesRead += nr;
       fReadCalls++;
-      fgReadCalls++;
 #ifdef WIN32
       SetFileBytesRead(GetFileBytesRead() + nr);
+      //fgReadCalls++; //must be via a function
 #else
       fgBytesRead += nr;
+      fgReadCalls++;
 #endif
 
       if (gMonitoringWriter)
