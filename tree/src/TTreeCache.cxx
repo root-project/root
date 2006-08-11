@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.3 2006/07/04 12:58:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.4 2006/08/10 10:21:25 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -59,6 +59,9 @@ TTreeCache::TTreeCache() : TFileCacheRead(),
    fEntryNext(1),
    fZipBytes(0),
    fNbranches(0),
+   fNReadOk(0),
+   fNReadMiss(0),
+   fNReadPref(0),
    fBranches(0),
    fBrNames(0),
    fOwner(0),
@@ -75,6 +78,9 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->Get
    fEntryNext(0),
    fZipBytes(0),
    fNbranches(0),
+   fNReadOk(0),
+   fNReadMiss(0),
+   fNReadPref(0),
    fBranches(0),
    fBrNames(new TList),
    fOwner(tree),
@@ -188,6 +194,7 @@ Bool_t TTreeCache::FillBuffer()
             if (j<nb-1) emax = entries[j+1]-1;
             if (!elist->ContainsRange(entries[j]+chainOffset,emax+chainOffset)) continue;
          }
+         fNReadPref++;
          TFileCacheRead::Prefetch(pos,len);
          //we allow up to twice the default buffer size. When using eventlist in particular
          //it may happen that the evaluation of fEntryNext is bad, hence this protection
@@ -199,6 +206,33 @@ Bool_t TTreeCache::FillBuffer()
    return kTRUE;
 }
 
+//_____________________________________________________________________________
+Double_t TTreeCache::GetEfficiency()
+{
+   // Give the total efficiency of the cache... defined as the ratio
+   // of blocks found in the cache vs. the number of blocks prefetched
+   // ( it could be more than 1 if we read the same block from the cache more
+   //   than once )
+   // Note: This should eb used at the end of the processing or we will
+   //       get uncomplete stats
+
+   if ( !fNReadPref )
+      return 0;
+
+   return ((Double_t)fNReadOk / (Double_t)fNReadPref);
+}
+
+//_____________________________________________________________________________
+Double_t TTreeCache::GetEfficiencyRel()
+{
+   // This will indicate a sort of relative efficiency... a ratio of the 
+   // reads found in the cache to the number of reads so far
+
+   if ( !fNReadOk && !fNReadMiss )
+      return 0;
+
+   return ((Double_t)fNReadOk / (Double_t)(fNReadOk + fNReadMiss));
+}
 
 //_____________________________________________________________________________
 Int_t TTreeCache::GetLearnEntries()
@@ -228,13 +262,25 @@ Int_t TTreeCache::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    // This function overloads TFileCacheRead::ReadBuffer.
 
    //Is request already in the cache?
-   if (TFileCacheRead::ReadBuffer(buf,pos,len) == 1)
+   if (TFileCacheRead::ReadBuffer(buf,pos,len) == 1){
+      fNReadOk++;
       return 1;
-
+   }
+   
    //not found in cache. Do we need to fill the cache?
    Bool_t bufferFilled = FillBuffer();
-   if (bufferFilled)
-      return TFileCacheRead::ReadBuffer(buf,pos,len);
+   if (bufferFilled) {
+      Int_t res = TFileCacheRead::ReadBuffer(buf,pos,len);
+      
+      if (res == 1)
+	 fNReadOk++;
+      else if (res == 0)
+	 fNReadMiss++;
+      
+      return res;
+   }
+   fNReadMiss++;
+
    return 0;
 }
 
