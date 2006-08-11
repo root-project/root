@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.35 2006/07/09 16:59:47 brun Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.36 2006/07/26 14:43:30 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -491,6 +491,8 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
 
    fOffset += bufferLength;
    fBytesRead += bufferLength;
+   fReadCalls++;
+   fgReadCalls++;
 #ifdef WIN32
    SetFileBytesRead(GetFileBytesRead() + bufferLength);
 #else
@@ -547,6 +549,8 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       // Where should we leave the offset ?
       // fOffset += bufferLength;
       fBytesRead += nr;
+      fReadCalls++;
+      fgReadCalls++;
 #ifdef WIN32
       SetFileBytesRead(GetFileBytesRead() + nr);
 #else

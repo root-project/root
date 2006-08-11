@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.182 2006/07/28 15:15:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.183 2006/08/10 07:08:11 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -58,6 +58,7 @@ TFile *gFile;                 //Pointer to current file
 Long64_t TFile::fgBytesRead  = 0;
 Long64_t TFile::fgBytesWrite = 0;
 Long64_t TFile::fgFileCounter = 0;
+Int_t TFile::fgReadCalls = 0;
 TList *TFile::fgAsyncOpenRequests = 0;
 
 const Int_t kBEGIN = 100;
@@ -84,6 +85,7 @@ TFile::TFile() : TDirectory(), fInfoCache(0)
    fCacheRead     = 0;
    fCacheWrite    = 0;
    fArchiveOffset = 0;
+   fReadCalls     = 0;
    fIsRootFile    = kTRUE;
    fIsArchive     = kFALSE;
    fInitDone      = kFALSE;
@@ -269,6 +271,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fOffset       = 0;
    fCacheRead    = 0;
    fCacheWrite   = 0;
+   fReadCalls    = 0;
    SetBit(kBinaryFile, kTRUE);
 
    fOption.ToUpper();
@@ -1252,6 +1255,8 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
       }
       fBytesRead  += siz;
       fgBytesRead += siz;
+      fReadCalls++;
+      fgReadCalls++;
 
       if (gPerfStats != 0) {
          gPerfStats->FileReadEvent(this, len, double(TTimeStamp())-start);
@@ -2507,10 +2512,21 @@ Long64_t TFile::GetFileBytesWritten()
 }
 
 //______________________________________________________________________________
+Int_t TFile::GetFileReadCalls()
+{
+   // Static function returning the total number of read calls from all files.
+   
+   return fgReadCalls;
+}
+
+//______________________________________________________________________________
 void TFile::SetFileBytesRead(Long64_t bytes) { fgBytesRead = bytes; }
 
 //______________________________________________________________________________
 void TFile::SetFileBytesWritten(Long64_t bytes) { fgBytesWrite = bytes; }
+
+//______________________________________________________________________________
+void TFile::SetFileReadCalls(Int_t readcalls) { fgReadCalls = readcalls; }
 
 //______________________________________________________________________________
 Long64_t TFile::GetFileCounter() { return fgFileCounter; }

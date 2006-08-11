@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.53 2006/06/30 14:24:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.54 2006/07/26 14:16:03 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -60,6 +60,7 @@ protected:
    Int_t            fNbytesInfo;     //Number of bytes for StreamerInfo record
    Int_t            fWritten;        //Number of objects written so far
    Int_t            fNProcessIDs;    //Number of TProcessID written to this file
+   Int_t            fReadCalls;      //Number of read calls ( not counting the cache calls )
    TString          fRealName;       //Effective real file name (not original url)
    TString          fOption;         //File options
    Char_t           fUnits;          //Number of bytes for file pointers
@@ -86,6 +87,7 @@ protected:
    static Long64_t  fgBytesWrite;  //Number of bytes written by all TFile objects
    static Long64_t  fgBytesRead;   //Number of bytes read by all TFile objects
    static Long64_t  fgFileCounter; //Counter for all opened files
+   static Int_t     fgReadCalls;   //Number of bytes read from all TFile objects
 
    virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
    Long64_t      GetRelOffset() const { return fOffset - fArchiveOffset; }
@@ -159,6 +161,7 @@ public:
    Option_t           *GetOption() const { return fOption.Data(); }
    virtual Long64_t    GetBytesRead() const { return fBytesRead; }
    virtual Long64_t    GetBytesWritten() const;
+   virtual Int_t       GetReadCalls() const { return fReadCalls; }
    Int_t               GetVersion() const { return fVersion; }
    Int_t               GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual Int_t       GetNbytesInfo() const {return fNbytesInfo;}
@@ -193,6 +196,7 @@ public:
    virtual void        SetCompressionLevel(Int_t level=1);
    virtual void        SetEND(Long64_t last) { fEND = last; }
    virtual void        SetOption(Option_t *option=">") { fOption = option; }
+   virtual void        SetReadCalls(Int_t readcalls = 0) { fReadCalls = readcalls; }
    virtual void        ShowStreamerInfo();
    virtual Int_t       Sizeof() const;
    void                SumBuffer(Int_t bufsize);
@@ -221,9 +225,11 @@ public:
 
    static Long64_t     GetFileBytesRead();
    static Long64_t     GetFileBytesWritten();
+   static Int_t        GetFileReadCalls();
 
    static void         SetFileBytesRead(Long64_t bytes = 0);
    static void         SetFileBytesWritten(Long64_t bytes = 0);
+   static void         SetFileReadCalls(Int_t readcalls = 0);
 
    static Long64_t     GetFileCounter();
    static void         IncrementFileCounter();
