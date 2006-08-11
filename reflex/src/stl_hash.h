@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: stl_hash.h,v 1.6 2006/03/15 23:12:04 pcanal Exp $
+// @(#)root/reflex:$Name:  $:$Id: stl_hash.h,v 1.7 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -38,6 +38,7 @@
 #define __gnu_cxx              std
 // This is not What we want to do in the end !! FIXME !!
 #define hash_map               map
+#define hash_multimap          multimap
 #endif
 
 #include <cstring>
