@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.12 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.13 2006/08/02 14:14:49 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -14,26 +14,39 @@
 #endif
 
 #include "Reflex/internal/MemberTemplateImpl.h"
+
+#include "Reflex/MemberTemplate.h"
 #include "Reflex/internal/OwnedMember.h"
 
+
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplateImpl::MemberTemplateImpl( const std::string & templateName,
+ROOT::Reflex::MemberTemplateImpl::MemberTemplateImpl( const char * templateName,
                                                       const Scope & scope,
                                                       const std::vector < std::string > & parameterNames,
                                                       const std::vector < std::string > & parameterDefaults )
 //------------------------------------------------------------------------------- 
-// Construct dictionary info for this template member function.
-   : fTemplateName( templateName ),
-     fScope( scope ),
+   : fScope( scope ),
      fTemplateInstances( std::vector < Member >() ),
      fParameterNames( parameterNames ),
      fParameterDefaults( parameterDefaults ),
-     fReqParameters( parameterNames.size() - parameterDefaults.size() ) {}
+     fReqParameters( parameterNames.size() - parameterDefaults.size() ) {
+// Construct dictionary info for this template member function.
+  MemberTemplate mt = MemberTemplate::ByName( templateName, parameterNames.size() );
+  if ( mt.Id() == 0 ) {
+    fMemberTemplateName = new MemberTemplateName( templateName, this );
+  }
+  else {
+    fMemberTemplateName = (MemberTemplateName*)mt.Id();
+    if ( fMemberTemplateName->fMemberTemplateImpl ) delete fMemberTemplateName->fMemberTemplateImpl;
+    fMemberTemplateName->fMemberTemplateImpl = this;
+  }
+}
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::MemberTemplateImpl::~MemberTemplateImpl() {
 //-------------------------------------------------------------------------------
+  if ( fMemberTemplateName->fMemberTemplateImpl == this ) fMemberTemplateName->fMemberTemplateImpl = 0;
 // Destructor.
 }
 
@@ -42,11 +55,39 @@ ROOT::Reflex::MemberTemplateImpl::~MemberTemplateImpl() {
 bool ROOT::Reflex::MemberTemplateImpl::operator == ( const MemberTemplateImpl & mt ) const {
 //-------------------------------------------------------------------------------
 // Equal operator.
-   return ( ( fTemplateName == mt.fTemplateName ) && 
+   return ( ( fMemberTemplateName->fName == mt.fMemberTemplateName->fName ) && 
             ( fParameterNames.size() == mt.fParameterNames.size() ) );
 }
 
 
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateInstance_Begin() const {
+//-------------------------------------------------------------------------------
+   return fTemplateInstances.begin();
+}
+
+                                             
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateInstance_End() const {
+//-------------------------------------------------------------------------------
+   return fTemplateInstances.end();
+}
+
+                                             
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateInstance_RBegin() const {
+//-------------------------------------------------------------------------------
+   return fTemplateInstances.rbegin();
+}
+
+                                             
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateInstance_REnd() const {
+//-------------------------------------------------------------------------------
+   return fTemplateInstances.rend();
+}
+
+                                             
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::Member & ROOT::Reflex::MemberTemplateImpl::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
@@ -61,6 +102,13 @@ size_t ROOT::Reflex::MemberTemplateImpl::TemplateInstanceSize() const {
 //-------------------------------------------------------------------------------
 // Return number of template instances of this family.
    return fTemplateInstances.size();
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::MemberTemplate & ROOT::Reflex::MemberTemplateImpl::ThisMemberTemplate() const {
+//-------------------------------------------------------------------------------
+   return fMemberTemplateName->ThisMemberTemplate();
 }
 
 

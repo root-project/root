@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.h,v 1.8 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.h,v 1.9 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -16,7 +16,7 @@
 #include "Reflex/Kernel.h"
 #include "Reflex/Tools.h"
 #include "Reflex/Builder/TypeBuilder.h"
-#include "Reflex/internal/OwnedMember.h"
+#include "Reflex/Member.h"
 #include "Reflex/Callback.h"
 
 namespace ROOT {
@@ -123,7 +123,7 @@ namespace ROOT {
          Class * fClass;
 
          /** last added MemberAt */
-         OwnedMember fLastMember;    
+         Member fLastMember;    
 
       }; // class ClassBuilderImpl
     

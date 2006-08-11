@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.h,v 1.6 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.h,v 1.7 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,7 +15,7 @@
 // Include files
 #include "Class.h"
 #include "TemplateInstance.h"
-#include "Reflex/internal/OwnedTypeTemplate.h"
+#include "Reflex/TypeTemplate.h"
 #include <string>
 
 

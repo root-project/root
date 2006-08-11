@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.10 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.11 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -16,21 +16,32 @@
 #include "Reflex/internal/TypeTemplateImpl.h"
 
 #include "Reflex/Type.h"
+#include "Reflex/TypeTemplate.h"
 #include "Reflex/internal/OwnedMember.h"
 
+
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplateImpl::TypeTemplateImpl( const std::string & templateName,
+ROOT::Reflex::TypeTemplateImpl::TypeTemplateImpl( const char * templateName,
                                                   const Scope & scop,
                                                   std::vector < std::string > parameterNames,
                                                   std::vector < std::string > parameterDefaults )
 //------------------------------------------------------------------------------- 
-   : fTemplateName( templateName ),
-     fScope( scop ),
+   : fScope( scop ),
      fTemplateInstances( std::vector < Type >() ),
      fParameterNames( parameterNames ),
      fParameterDefaults( parameterDefaults ),
-     fReqParameters( parameterNames.size() - parameterDefaults.size() ) {
+     fReqParameters( parameterNames.size() - parameterDefaults.size()) {
    // Construct the type template family info.
+
+   TypeTemplate tt = TypeTemplate::ByName( templateName, parameterNames.size() );
+   if ( tt.Id() == 0 ) {
+      fTypeTemplateName = new TypeTemplateName( templateName, this );
+   }
+   else {
+      fTypeTemplateName = (TypeTemplateName*)tt.Id();
+      if ( fTypeTemplateName->fTypeTemplateImpl ) delete fTypeTemplateName->fTypeTemplateImpl;
+      fTypeTemplateName->fTypeTemplateImpl = this;
+   }
 }
 
 
@@ -38,9 +49,49 @@ ROOT::Reflex::TypeTemplateImpl::TypeTemplateImpl( const std::string & templateNa
 ROOT::Reflex::TypeTemplateImpl::~TypeTemplateImpl() {
 //-------------------------------------------------------------------------------
 // Destructor.
+   for ( Type_Iterator ti = TemplateInstance_Begin(); ti != TemplateInstance_End(); ++ti ) {
+      ti->Unload();
+   }
+   if ( fTypeTemplateName->fTypeTemplateImpl == this ) fTypeTemplateName->fTypeTemplateImpl = 0;
 }
 
 
+//-------------------------------------------------------------------------------
+bool ROOT::Reflex::TypeTemplateImpl::operator == ( const TypeTemplateImpl & tt ) const {
+//-------------------------------------------------------------------------------
+   return ( ( fTypeTemplateName->fName == tt.fTypeTemplateName->fName ) && 
+            ( fParameterNames.size() == tt.fParameterNames.size() ) );
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_Begin() const {
+//-------------------------------------------------------------------------------
+   return fTemplateInstances.begin();
+}
+
+                                             
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_End() const {
+//-------------------------------------------------------------------------------
+   return fTemplateInstances.end();
+}
+
+                                             
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_RBegin() const {
+//-------------------------------------------------------------------------------
+   return fTemplateInstances.rbegin();
+}
+
+                                             
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_REnd() const {
+//-------------------------------------------------------------------------------
+   return fTemplateInstances.rend();
+}
+
+                                             
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::Type & ROOT::Reflex::TypeTemplateImpl::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
@@ -55,6 +106,13 @@ size_t ROOT::Reflex::TypeTemplateImpl::TemplateInstanceSize() const {
 //-------------------------------------------------------------------------------
 // Return the number of template instances of this family.
    return fTemplateInstances.size();
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::TypeTemplate & ROOT::Reflex::TypeTemplateImpl::ThisTypeTemplate() const {
+//-------------------------------------------------------------------------------
+   return fTypeTemplateName->ThisTypeTemplate();
 }
 
 

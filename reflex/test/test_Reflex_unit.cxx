@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.10 2006/07/14 06:47:25 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.11 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -17,6 +17,9 @@
 #include "src/FunctionMember.h"
 #include "src/Class.h"
 #include "src/ClassTemplateInstance.h"
+
+#include "Reflex/internal/OwnedPropertyList.h"
+#include "Reflex/internal/OwnedMember.h"
 
 // Standard C++ include files
 #include <string>
@@ -56,6 +59,7 @@ class ReflexUnitTest : public CppUnit::TestFixture {
   CPPUNIT_TEST( member );
   CPPUNIT_TEST( tools );
   CPPUNIT_TEST( global_scope );
+  CPPUNIT_TEST( shutdown );
   CPPUNIT_TEST_SUITE_END();
 public:
   void setUp () {}
@@ -81,6 +85,7 @@ public:
   void member();
   void tools();
   void global_scope();
+  void shutdown() { Reflex::Shutdown(); }
   void tearDown() {}
 };
 
@@ -230,7 +235,7 @@ struct AnyStruct {
 
 void ReflexUnitTest::property_list()
 {
-  PropertyList pl = PropertyList(new PropertyListImpl());
+  OwnedPropertyList pl = OwnedPropertyList(new PropertyListImpl());
   
   pl.AddProperty("int", 10);
   CPPUNIT_ASSERT(pl.HasKey("int"));
@@ -274,6 +279,8 @@ void ReflexUnitTest::property_list()
   CPPUNIT_ASSERT_EQUAL(2, any_cast<AnyStruct>(pl.PropertyValue("struct")).i);
   CPPUNIT_ASSERT_EQUAL(2.0, any_cast<AnyStruct>(pl.PropertyValue("struct")).d);
   CPPUNIT_ASSERT_EQUAL(false, any_cast<AnyStruct>(pl.PropertyValue("struct")).b);
+
+  pl.Delete();
 }
 
 struct myInt { int m;};
@@ -446,9 +453,9 @@ void ReflexUnitTest::function_member() {
   params.push_back(Type::ByName("double"));
   params.push_back(Type::ByName("bool"));
   Function fun(Type::ByName("float"),params,typeid(void (void)) );
-  Member fun1 (new FunctionMember("fun1",fun.ThisType(),0,0,"arg1;arg2;arg3",STATIC));
-  Member fun2 (new FunctionMember("fun2",fun.ThisType(),0,0,"arg1;arg2=99.9;arg3=true"));
-  Member fun3 (new FunctionMember("fun3",fun.ThisType(),0,0,"arg1;arg2"));
+  OwnedMember fun1 (new FunctionMember("fun1",fun.ThisType(),0,0,"arg1;arg2;arg3",STATIC));
+  OwnedMember fun2 (new FunctionMember("fun2",fun.ThisType(),0,0,"arg1;arg2=99.9;arg3=true"));
+  OwnedMember fun3 (new FunctionMember("fun3",fun.ThisType(),0,0,"arg1;arg2"));
   CPPUNIT_ASSERT_EQUAL(size_t(3), fun1.FunctionParameterSize() );
   CPPUNIT_ASSERT_EQUAL(string("arg1"), fun1.FunctionParameterNameAt(0) );
   CPPUNIT_ASSERT_EQUAL(string("arg2"), fun1.FunctionParameterNameAt(1) );
@@ -459,6 +466,9 @@ void ReflexUnitTest::function_member() {
   CPPUNIT_ASSERT_EQUAL(string("arg1"), fun3.FunctionParameterNameAt(0) );
   CPPUNIT_ASSERT_EQUAL(string("arg2"), fun3.FunctionParameterNameAt(1) );
   CPPUNIT_ASSERT_EQUAL(string(""),     fun3.FunctionParameterNameAt(2) );
+  fun1.Delete();
+  fun2.Delete();
+  fun3.Delete();
 }
 
 
@@ -467,6 +477,7 @@ void ReflexUnitTest::object_basics() {
   Object o1 = i.Construct();
   Object o2 = o1;
   CPPUNIT_ASSERT(o1 == o2);
+  o1.Destruct();
 }
 
 void ReflexUnitTest::class_type() {

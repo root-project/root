@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeName.h,v 1.7 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeName.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -59,6 +59,9 @@ namespace ROOT {
           * @return pointer to At or 0 if none is found
           */
          static const Type & ByTypeInfo( const std::type_info & ti );
+
+
+         static void CleanUp();
 
 
          

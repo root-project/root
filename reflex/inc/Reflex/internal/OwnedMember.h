@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: OwnedMember.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: OwnedMember.h,v 1.2 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -45,8 +45,9 @@ namespace ROOT {
          
          /** delete info */
          void Delete() {
-            delete fMemberBase;
-            fMemberBase = 0;
+           Member::Delete();
+/*             delete fMemberBase; */
+/*             fMemberBase = 0; */
          }
 
       }; // class OwnedMember

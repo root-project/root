@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.18 2006/08/01 09:36:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.19 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,13 +15,13 @@
 
 #include "Reflex/internal/TypeBase.h"
 
-#include "Reflex/internal/OwnedType.h"
+#include "Reflex/Type.h"
 #include "Reflex/internal/OwnedPropertyList.h"
 #include "Reflex/Object.h"
-#include "Reflex/internal/OwnedScope.h"
+#include "Reflex/Scope.h"
 #include "Reflex/internal/TypeName.h"
-#include "Reflex/internal/OwnedBase.h"
-#include "Reflex/internal/OwnedTypeTemplate.h"
+#include "Reflex/Base.h"
+#include "Reflex/TypeTemplate.h"
 
 #include "Array.h"
 #include "Pointer.h"
@@ -50,7 +50,7 @@ ROOT::Reflex::TypeBase::TypeBase( const char * nam,
      fScope( Scope::__NIRVANA__() ),
      fSize( size ),
      fTypeType( typeTyp ),
-     fPropertyList( OwnedPropertyList()),
+     fPropertyList( OwnedPropertyList( new PropertyListImpl())),
      fBasePosition(Tools::GetBasePosition( nam)),
      fFinalType(0),
      fRawType(0) {
@@ -85,7 +85,9 @@ ROOT::Reflex::TypeBase::~TypeBase( ) {
 //-------------------------------------------------------------------------------
 // Destructor.
    fPropertyList.Delete();
-   if( fTypeName->fTypeBase == this ) fTypeName->fTypeBase = 0;
+   if ( fFinalType ) delete fFinalType;
+   if ( fRawType ) delete fRawType;
+   if ( fTypeName->fTypeBase == this ) fTypeName->fTypeBase = 0;
 }
 
 

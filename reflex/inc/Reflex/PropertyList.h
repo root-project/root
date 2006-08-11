@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyList.h,v 1.9 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyList.h,v 1.10 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -132,7 +132,6 @@ namespace ROOT {
           * @link aggregation
           * @clientCardinality 1
           * @label propertylist impl*/
-         mutable
          PropertyListImpl * fPropertyListImpl;
 
       }; // class Propertylist
@@ -179,8 +178,7 @@ inline ROOT::Reflex::PropertyList::~PropertyList() {
 inline void ROOT::Reflex::PropertyList::AddProperty( const std::string & key,
                                                      const Any & value ) const {
 //-------------------------------------------------------------------------------
-   if ( ! fPropertyListImpl ) fPropertyListImpl = new PropertyListImpl();
-   fPropertyListImpl->AddProperty( key, value );
+   if ( fPropertyListImpl ) fPropertyListImpl->AddProperty( key, value );
 }
 
 
@@ -188,8 +186,7 @@ inline void ROOT::Reflex::PropertyList::AddProperty( const std::string & key,
 inline void ROOT::Reflex::PropertyList::AddProperty( const std::string & key,
                                                      const char* value ) const {
 //-------------------------------------------------------------------------------
-   if ( ! fPropertyListImpl ) fPropertyListImpl = new PropertyListImpl();
-   fPropertyListImpl->AddProperty( key, value );
+   if ( fPropertyListImpl ) fPropertyListImpl->AddProperty( key, value );
 }
 
 

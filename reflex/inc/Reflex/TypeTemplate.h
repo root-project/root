@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplate.h,v 1.9 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplate.h,v 1.10 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -20,8 +20,7 @@ namespace ROOT {
 
       // forward declarations
       class Type;
-      class TypeTemplateImpl;
-      class ClassTemplateInstance;
+      class TypeTemplateName;
 
       /** 
        * @class TypeTemplate TypeTemplate.h Reflex/TypeTemplate.h
@@ -30,13 +29,11 @@ namespace ROOT {
        * @ingroup Ref
        */
       class RFLX_API TypeTemplate {
-         
-         friend class OwnedTypeTemplate;
 
       public:
 
          /** default constructor */
-         TypeTemplate( const TypeTemplateImpl * tti = 0 );
+         TypeTemplate( const TypeTemplateName * typeTemplateName = 0 );
 
 
          /** copy constructor */
@@ -62,6 +59,60 @@ namespace ROOT {
 
 
          /**
+          * ByName will return a type template corresponding to the argument name
+          * @param type template name to lookup
+          * @param nTemplateParams looks up the template family with this number of template parameters
+          *        if it is set to 0, the first occurence of the template family name will be returned
+          * @return corresponding type template to name
+          */
+         static const TypeTemplate & ByName( const std::string & name,
+                                               size_t nTemplateParams = 0 );
+
+
+         /**
+          * Id will return a memory address which is a unique id for this type template
+          * @return unique id of this type template
+          */
+         void * Id() const;
+
+
+         /**
+          * Name will return the Name of the template family and a list of
+          * all currently available instantiations
+          * @return template family Name with all instantiantion
+          */
+         std::string Name( unsigned int mod = 0 ) const;
+
+
+         /**
+          * TemplateInstance_Begin returns the begin iterator of the instance container
+          * @return the begin iterator of the instance container
+          */
+         Type_Iterator TemplateInstance_Begin() const;
+
+
+         /**
+          * TemplateInstance_End returns the end iterator of the instance container
+          * @return the end iterator of the instance container
+          */
+         Type_Iterator TemplateInstance_End() const;
+
+
+         /**
+          * TemplateInstance_RBegin returns the rbegin iterator of the instance container
+          * @return the rbegin iterator of the instance container
+          */
+         Reverse_Type_Iterator TemplateInstance_RBegin() const;
+
+
+         /**
+          * TemplateInstance_Rend returns the rend iterator of the instance container
+          * @return the rend iterator of the instance container
+          */
+         Reverse_Type_Iterator TemplateInstance_REnd() const;
+
+
+         /**
           * TemplateInstanceAt will return a pointer to the nth template instantion
           * @param  nth template instantion
           * @return pointer to nth template instantion
@@ -75,21 +126,6 @@ namespace ROOT {
           * @return number of template instantions
           */
          size_t TemplateInstanceSize() const;
-
-
-         /**
-          * Name will return the Name of the template family and a list of
-          * all currently available instantiations
-          * @return template family Name with all instantiantion
-          */
-         std::string Name( unsigned int mod = 0 ) const;
-
-
-         /**
-          * TemplateParameterSize will return the number of template parameters
-          * @return number of template parameters
-          */
-         size_t TemplateParameterSize() const;
 
 
          /**
@@ -163,6 +199,62 @@ namespace ROOT {
           */
          Reverse_StdString_Iterator TemplateParameterName_REnd() const;
 
+
+         /**
+          * TemplateParameterSize will return the number of template parameters
+          * @return number of template parameters
+          */
+         size_t TemplateParameterSize() const;
+
+
+         /**
+          * TypeTemplateAt will return the nth type template defined
+          * @param nth type template
+          * @return nth type template
+          */
+         static const TypeTemplate & TypeTemplateAt( size_t nth );
+
+      
+         /**
+          * TypeTemplateSize will return the number of type templates defined
+          * @return number of defined type templates
+          */
+         static size_t TypeTemplateSize();
+
+
+         /**
+          * TypeTemplate_Begin returns the begin iterator of the type template container
+          * @return begin iterator of type template container
+          */
+         static TypeTemplate_Iterator TypeTemplate_Begin();
+
+
+         /**
+          * TypeTemplate_End returns the end iterator of the type template container
+          * @return end iterator of type template container
+          */
+         static TypeTemplate_Iterator TypeTemplate_End();
+
+
+         /**
+          * TypeTemplate_Rbegin returns the rbegin iterator of the type template container
+          * @return rbegin iterator of type template container
+          */
+         static Reverse_TypeTemplate_Iterator TypeTemplate_RBegin();
+
+
+         /**
+          * TypeTemplate_Rend returns the rend iterator of the type template container
+          * @return rend iterator of type template container
+          */
+         static Reverse_TypeTemplate_Iterator TypeTemplate_REnd();
+
+
+         /**
+          * Unload will unload the dictionary information of a type template
+          */
+         void Unload() const;
+
       public:
 
          /** 
@@ -180,25 +272,26 @@ namespace ROOT {
           * @clientCardinality 1
           * @label type template impl
           */
-         const TypeTemplateImpl * fTypeTemplateImpl;
+         const TypeTemplateName * fTypeTemplateName;
       
       }; // class TypeTemplate
 
    } // namespace ROOT
 } // namespace Reflex
 
+#include "Reflex/internal/TypeTemplateName.h"
 #include "Reflex/internal/TypeTemplateImpl.h"
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::TypeTemplate::TypeTemplate( const TypeTemplateImpl * tti )
+inline ROOT::Reflex::TypeTemplate::TypeTemplate( const TypeTemplateName * typeTemplateName )
 //------------------------------------------------------------------------------- 
-   : fTypeTemplateImpl( tti ) {}
+   : fTypeTemplateName( typeTemplateName ) {}
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::TypeTemplate::TypeTemplate( const TypeTemplate & rh ) 
 //-------------------------------------------------------------------------------
-   : fTypeTemplateImpl( rh.fTypeTemplateImpl ) {}
+   : fTypeTemplateName( rh.fTypeTemplateName ) {}
 
 
 //-------------------------------------------------------------------------------
@@ -209,7 +302,7 @@ inline ROOT::Reflex::TypeTemplate::~TypeTemplate() {}
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::TypeTemplate::operator bool () const {
 //-------------------------------------------------------------------------------
-   if ( fTypeTemplateImpl ) return true;
+   if ( this->fTypeTemplateName && this->fTypeTemplateName->fTypeTemplateImpl ) return true;
    return false;
 }
 
@@ -217,31 +310,29 @@ inline ROOT::Reflex::TypeTemplate::operator bool () const {
 //-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::TypeTemplate::operator == ( const TypeTemplate & rh ) const {
 //-------------------------------------------------------------------------------
-   if ((*this) && (rh)) return ( fTypeTemplateImpl == rh.fTypeTemplateImpl );
-   return false;
+   return ( fTypeTemplateName == rh.fTypeTemplateName );
+}
+
+
+//-------------------------------------------------------------------------------
+inline void * ROOT::Reflex::TypeTemplate::Id() const {
+//-------------------------------------------------------------------------------
+  return (void*)fTypeTemplateName;
 }
 
 
 //-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::TypeTemplate::TemplateInstanceSize() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->TemplateInstanceSize();
+   if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateInstanceSize();
    return 0;
-}
-
-
-//-------------------------------------------------------------------------------
-inline std::string ROOT::Reflex::TypeTemplate::Name( unsigned int mod ) const {
-//-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->Name( mod );
-   return "";
 }
 
 
 //-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::TypeTemplate::TemplateParameterSize() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->TemplateParameterSize();
+   if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateParameterSize();
    return 0;
 }
 
@@ -249,7 +340,7 @@ inline size_t ROOT::Reflex::TypeTemplate::TemplateParameterSize() const {
 //-------------------------------------------------------------------------------
 inline std::string ROOT::Reflex::TypeTemplate::TemplateParameterDefaultAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->TemplateParameterDefaultAt( nth );
+   if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateParameterDefaultAt( nth );
    return "";
 }
 
@@ -257,7 +348,7 @@ inline std::string ROOT::Reflex::TypeTemplate::TemplateParameterDefaultAt( size_
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterDefault_Begin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->TemplateParameterDefault_Begin();
+   if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateParameterDefault_Begin();
    return Dummy::StdStringCont().begin();
 }
 
@@ -265,7 +356,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplatePara
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterDefault_End() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->TemplateParameterDefault_End();
+   if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateParameterDefault_End();
    return Dummy::StdStringCont().end();
 }
 
@@ -273,7 +364,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplatePara
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterDefault_RBegin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->TemplateParameterDefault_RBegin();
+   if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateParameterDefault_RBegin();
    return Dummy::StdStringCont().rbegin();
 }
 
@@ -281,7 +372,7 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::Temp
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterDefault_REnd() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->TemplateParameterDefault_REnd();
+   if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateParameterDefault_REnd();
    return Dummy::StdStringCont().rend();
 }
 
@@ -289,7 +380,7 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::Temp
 //-------------------------------------------------------------------------------
 inline std::string ROOT::Reflex::TypeTemplate::TemplateParameterNameAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->TemplateParameterNameAt( nth );
+   if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateParameterNameAt( nth );
    return "";
 }
 
@@ -297,7 +388,7 @@ inline std::string ROOT::Reflex::TypeTemplate::TemplateParameterNameAt( size_t n
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterName_Begin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->TemplateParameterName_Begin();
+   if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateParameterName_Begin();
    return Dummy::StdStringCont().begin();
 }
 
@@ -305,7 +396,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplatePara
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterName_End() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->TemplateParameterName_End();
+   if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateParameterName_End();
    return Dummy::StdStringCont().end();
 }
 
@@ -313,7 +404,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::TypeTemplate::TemplatePara
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterName_RBegin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->TemplateParameterName_RBegin();
+   if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateParameterName_RBegin();
    return Dummy::StdStringCont().rbegin();
 }
 
@@ -321,8 +412,23 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::Temp
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::TypeTemplate::TemplateParameterName_REnd() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeTemplateImpl->TemplateParameterName_REnd();
+   if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateParameterName_REnd();
    return Dummy::StdStringCont().rend();
 }
+
+
+//-------------------------------------------------------------------------------
+inline size_t ROOT::Reflex::TypeTemplate::TypeTemplateSize() {
+//-------------------------------------------------------------------------------
+   return TypeTemplateName::TypeTemplateSize();
+}
+
+
+//-------------------------------------------------------------------------------
+inline void ROOT::Reflex::TypeTemplate::Unload() const {
+//-------------------------------------------------------------------------------
+  if ( * this ) delete fTypeTemplateName->fTypeTemplateImpl;
+}
+
 
 #endif // ROOT_Reflex_TypeTemplate

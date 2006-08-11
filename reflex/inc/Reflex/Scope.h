@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.12 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.13 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -41,8 +41,6 @@ namespace ROOT {
        * @ingroup Ref
        */
       class RFLX_API Scope {
-
-         friend class OwnedScope;
 
       public:
 
@@ -749,6 +747,12 @@ namespace ROOT {
 
          
          /**
+          * Unload will unload the dictionary information of a scope
+          */
+         void Unload() const;
+
+
+         /**
           * UsingDirectiveAt will return the nth using directive
           * @param  nth using directive
           * @return nth using directive
@@ -933,13 +937,6 @@ namespace ROOT {
           */
          static Scope & __NIRVANA__();
 
-
-         /** 
-          * @label __GLOBALSCOPE__
-          * @link association
-          */
-         static Scope & __GLOBALSCOPE__();
-
       private:
 
          /**
@@ -1118,6 +1115,13 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::FunctionMember
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->FunctionMember_REnd();
    return Dummy::MemberCont().rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline const ROOT::Reflex::Scope & ROOT::Reflex::Scope::GlobalScope() {
+//-------------------------------------------------------------------------------
+  return ScopeBase::GlobalScope();
 }
 
 
@@ -1466,6 +1470,14 @@ inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::Scope::SubTypeT
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubTypeTemplate_REnd();
    return Dummy::TypeTemplateCont().rend();
+}
+
+
+
+//-------------------------------------------------------------------------------
+inline void ROOT::Reflex::Scope::Unload() const {
+//-------------------------------------------------------------------------------
+  if ( * this ) delete fScopeName->fScopeBase;
 }
 
 

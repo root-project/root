@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.2 2006/08/02 14:14:49 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -22,6 +22,8 @@ namespace ROOT {
       // forward declarations
       class Member;
       class Scope;
+      class MemberTemplate;
+      class MemberTemplateName;
       class FunctionMemberTemplateInstance;
 
       /** 
@@ -35,7 +37,7 @@ namespace ROOT {
       public:
 
          /** default constructor */
-         MemberTemplateImpl( const std::string & templateName,
+         MemberTemplateImpl( const char * templateName,
                              const Scope & scope,
                              const std::vector < std::string > & parameterNames, 
                              const std::vector < std::string > & parameterDefaults = std::vector<std::string>());
@@ -53,6 +55,34 @@ namespace ROOT {
 
 
          /**
+          * TemplateInstance_Begin returns the begin iterator of the instance container
+          * @return the begin iterator of the instance container
+          */
+         Member_Iterator TemplateInstance_Begin() const;
+
+
+         /**
+          * TemplateInstance_End returns the end iterator of the instance container
+          * @return the end iterator of the instance container
+          */
+         Member_Iterator TemplateInstance_End() const;
+
+
+         /**
+          * TemplateInstance_RBegin returns the rbegin iterator of the instance container
+          * @return the rbegin iterator of the instance container
+          */
+         Reverse_Member_Iterator TemplateInstance_RBegin() const;
+
+
+         /**
+          * TemplateInstance_Rend returns the rend iterator of the instance container
+          * @return the rend iterator of the instance container
+          */
+         Reverse_Member_Iterator TemplateInstance_REnd() const;
+
+
+         /**
           * instantion will return a pointer to the nth template instantion
           * @param  nth template instantion
           * @return pointer to nth template instantion
@@ -66,14 +96,6 @@ namespace ROOT {
           * @return number of template instantions
           */
          size_t TemplateInstanceSize() const;
-
-
-         /**
-          * Name will return the Name of the template family and a list of
-          * all currently available instantiations
-          * @return template family Name with all instantiantion
-          */
-         std::string Name( unsigned int mod = 0 ) const;
 
 
          /**
@@ -110,6 +132,13 @@ namespace ROOT {
          Reverse_StdString_Iterator TemplateParameterName_RBegin() const;
          Reverse_StdString_Iterator TemplateParameterName_REnd() const;
 
+
+         /**
+          * Return the member template API class corresponding to this member template impl
+          * @return corresponding member template
+          */
+         const MemberTemplate & ThisMemberTemplate() const;
+
       public:
 
          /** 
@@ -121,14 +150,8 @@ namespace ROOT {
       private:
 
          /**
-          * the Name of the template family 
-          */
-         std::string fTemplateName;
-
-
-         /**
-          * pointer back to the corresponding At
-          * @label MemberAt template At
+          * declaring scope of this member template
+          * @label member template scope
           * @clientCardinality 0..*
           * @supplierCardinality 1
           */
@@ -145,14 +168,14 @@ namespace ROOT {
 
 
          /**
-          * container of FunctionParameterAt names
+          * container of function parameter template names
           */
          mutable
             std::vector < std::string > fParameterNames;
 
 
          /**
-          * FunctionParameterAt default values
+          * function  parameter template default values
           */
          mutable
             std::vector < std::string > fParameterDefaults;
@@ -162,24 +185,18 @@ namespace ROOT {
           * number of required template parameters
           */
          size_t fReqParameters;
-      
+
+         
+         /**
+          * pointer back to the member template name
+          */
+         MemberTemplateName * fMemberTemplateName;
+
+
       }; // class MemberTemplateImpl
 
    } // namespace ROOT
 } // namespace Reflex
-
-
-//-------------------------------------------------------------------------------
-inline std::string ROOT::Reflex::MemberTemplateImpl::Name( unsigned int mod ) const {
-//-------------------------------------------------------------------------------
-   std::string s = "";
-   if ( 0 != ( mod & ( SCOPED | S ))) {
-      std::string sName = fScope.Name(mod);
-      if ( ! fScope.IsTopScope()) s += sName + "::";
-   }
-   s += fTemplateName;
-   return s;  
-}
 
 
 //-------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.10 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.11 2006/07/14 06:47:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -35,6 +35,7 @@ class ReflexSimple1Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testMembers );
   CPPUNIT_TEST( testVirtual );
   CPPUNIT_TEST( unloadLibrary );
+  CPPUNIT_TEST( shutdown );
 
   CPPUNIT_TEST_SUITE_END();
 
@@ -49,6 +50,7 @@ public:
   void testMembers();
   void testVirtual();
   void unloadLibrary();
+  void shutdown() { Reflex::Shutdown(); }
 
   void tearDown() {}
 
@@ -65,6 +67,7 @@ void ReflexSimple1Test::loadLibrary() {
   s_libInstance = LoadLibrary("libtest_ReflexRflx.dll");
 #else
   s_libInstance = dlopen("libtest_ReflexRflx.so", RTLD_NOW);
+  if ( ! s_libInstance ) std::cout << dlerror() << std::endl;
 #endif
   CPPUNIT_ASSERT( s_libInstance );
 }
@@ -237,6 +240,8 @@ void ReflexSimple1Test::testMembers() {
   CPPUNIT_ASSERT(m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
 
+  o.Destruct();
+  CPPUNIT_ASSERT(!o);
 }
 
 void ReflexSimple1Test::testVirtual() {
@@ -268,12 +273,10 @@ void ReflexSimple1Test::unloadLibrary() {
   if (ret == -1) std::cout << "Unload of dictionary library failed. Reason: " << dlerror() << std::endl;
   CPPUNIT_ASSERT(!ret);
 #endif
-  
   //std::cout << "Endless" << std::endl;
   //while (true) {}
 
 }
-
 
 // Class registration on cppunit framework
 CPPUNIT_TEST_SUITE_REGISTRATION(ReflexSimple1Test);

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.15 2006/07/14 06:47:25 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -14,7 +14,7 @@
 
 // Include files
 #include "Reflex/Kernel.h"
-#include "Reflex/internal/OwnedScope.h"
+#include "Reflex/Scope.h"
 #include "Reflex/internal/OwnedPropertyList.h"
 #include <vector>
 #include <typeinfo>

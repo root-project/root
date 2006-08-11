@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.16 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.17 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -90,6 +90,21 @@ const ROOT::Reflex::Scope & ROOT::Reflex::ScopeName::ByName( const std::string &
    }
    return Dummy::Scope();
    // END OF UGLY HACK
+}
+
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::ScopeName::CleanUp() {
+//-------------------------------------------------------------------------------
+  ScopeVec_t::iterator it;
+  for ( it = sScopeVec().begin(); it != sScopeVec().end(); ++it ) {
+    Scope * s = ((ScopeName*)it->Id())->fThisScope;
+    if ( *s ) s->Unload();
+    delete s;
+  }
+  for ( it = sScopeVec().begin(); it != sScopeVec().end(); ++it ) {
+    delete ((ScopeName*)it->Id());
+  }
 }
 
 

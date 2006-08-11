@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: OwnedMemberTemplate.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: OwnedMemberTemplate.h,v 1.2 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -33,8 +33,8 @@ namespace ROOT {
       public:
 
          /** constructor */
-         OwnedMemberTemplate( const MemberTemplateImpl * memberTemplateImpl )
-            : MemberTemplate( memberTemplateImpl ) {}
+         OwnedMemberTemplate( const MemberTemplateName * memberTemplateName )
+            : MemberTemplate( memberTemplateName ) {}
 
 
          /** take ownership */
@@ -44,8 +44,7 @@ namespace ROOT {
          
          /** delete info */
          void Delete() {
-            delete fMemberTemplateImpl;
-            fMemberTemplateImpl = 0;
+            fMemberTemplateName->DeleteMemberTemplate();
          }
 
       }; // class OwnedMemberTemplate

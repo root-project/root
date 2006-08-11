@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.h,v 1.7 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -36,7 +36,7 @@ namespace ROOT {
 
       public:
 
-         /** default constructor */
+         /** constructor */
          ScopeName( const char * name, 
                     ScopeBase * scopeBase );
 
@@ -50,6 +50,9 @@ namespace ROOT {
          static const Scope & ByName( const std::string & name );
 
 
+         static void CleanUp();
+
+
          /**
           * DeleteScope will call the destructor of the ScopeBase this ScopeName is
           * pointing to and aremove it's information from the data structures. The
@@ -59,31 +62,30 @@ namespace ROOT {
 
 
          /**
-          * Name will return a string representation of Name of the At
-          * @return string representation of At
+          * Name will return a string representation of Name of the Scope
+          * @return string representation of the Scope
           */
          const std::string & Name() const;
 
 
          /**
-          * Name_c_str returns a char* pointer to the unqualified At Name
-          * @ return c string to unqualified At Name
+          * Name_c_str returns a char* pointer to the unqualified Scope Name
+          * @return c string to unqualified Scope Name
           */
          const char * Name_c_str() const;
       
       
          /** 
-          * At will return the unqualified Scope object of this ScopeName
+          * ThisScope will return the unqualified Scope object of this ScopeName
           * @return corresponding Scope
           */
          const Scope & ThisScope() const;
 
 
          /**
-          * findAll will return a vector of all scopes currently available
-          * resolvable scopes
-          * @param  nth At defined in the system
-          * @return vector of all available scopes
+          * ScopeAt will return the nth defined scope
+          * @param  nth scope defined in the system
+          * @return nth scope defined in the system
           */
          static const Scope & ScopeAt( size_t nth );
 

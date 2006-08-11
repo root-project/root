@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.14 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.15 2006/08/03 17:45:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -32,16 +32,6 @@ ROOT::Reflex::Scope & ROOT::Reflex::Scope::__NIRVANA__() {
    static Scope s = Scope( new ScopeName( "@N@I@R@V@A@N@A@", 0 ));
    return s;
 }
-
-
-//-------------------------------------------------------------------------------
-ROOT::Reflex::Scope & ROOT::Reflex::Scope::__GLOBALSCOPE__() {
-//-------------------------------------------------------------------------------
-// static wrapper for the global scope.
-   static Scope s = Scope::ByName("");
-   return s;
-}
-
 
 
 //-------------------------------------------------------------------------------
@@ -141,14 +131,6 @@ size_t ROOT::Reflex::Scope::FunctionMemberSize() const {
 // Return number of function members of this scope.
    if ( * this ) return fScopeName->fScopeBase->FunctionMemberSize(); 
    return 0;
-}
-
-
-//-------------------------------------------------------------------------------
-const ROOT::Reflex::Scope & ROOT::Reflex::Scope::GlobalScope() {
-//-------------------------------------------------------------------------------
-// Return global scope representaiton
-   return Scope::__GLOBALSCOPE__();
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.13 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.14 2006/08/07 16:52:19 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -23,6 +23,7 @@
 #include "Reflex/Member.h"
 #include "Reflex/Object.h"
 #include "Reflex/PropertyList.h"
+#include "Reflex/MemberTemplate.h"
 
 #include "Fundamental.h"
 #include "Namespace.h"
@@ -37,7 +38,7 @@ ROOT::Reflex::Reflex::Reflex() {
 // Initialisation of Reflex.Setup of global scope, fundamental types.
 
    /** initialisation of the global namespace */
-   Namespace::InitGlobalNamespace();
+   Namespace::GlobalScope();
 
    // initialising fundamental types
    Fundamental * tb = 0;
@@ -168,6 +169,23 @@ ROOT::Reflex::Reflex::Reflex() {
    new Typedef( "unsigned long long", t, FUNDAMENTAL );
    new Typedef( "unsigned long long int", t, FUNDAMENTAL );
    new Typedef( "long long unsigned int", t, FUNDAMENTAL );
+
+}
+
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::Reflex::Shutdown() {
+//-------------------------------------------------------------------------------
+  TypeName::CleanUp();
+  ScopeName::CleanUp();
+  TypeTemplateName::CleanUp();
+  MemberTemplateName::CleanUp();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Reflex::~Reflex() {
+//-------------------------------------------------------------------------------
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Function.h,v 1.8 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Function.h,v 1.9 2006/08/02 14:14:49 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -14,7 +14,7 @@
 
 // Include files
 #include "Reflex/internal/TypeBase.h"
-#include "Reflex/internal/OwnedType.h"
+#include "Reflex/Type.h"
 
 namespace ROOT {
    namespace Reflex {

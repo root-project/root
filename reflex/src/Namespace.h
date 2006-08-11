@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Namespace.h,v 1.4 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Namespace.h,v 1.5 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -43,7 +43,7 @@ namespace ROOT {
          /**
           * function for initialisation of the global namespace
           */
-         static void InitGlobalNamespace();
+         static const Scope & GlobalScope();
 
       private:
 

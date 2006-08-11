@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.2 2006/08/01 15:04:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.3 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,7 +15,7 @@
 // Include files
 #include "Reflex/Kernel.h"
 
-#include "Reflex/internal/OwnedScope.h"
+#include "Reflex/Scope.h"
 #include "Reflex/internal/OwnedPropertyList.h"
 #include <vector>
 
@@ -155,6 +155,13 @@ namespace ROOT {
          Member_Iterator FunctionMember_End() const;
          Reverse_Member_Iterator FunctionMember_RBegin() const;
          Reverse_Member_Iterator FunctionMember_REnd() const;
+
+
+         /**
+          * GlobalScope will return the global scope representation\
+          * @return global scope
+          */
+         static const Scope & GlobalScope();
 
 
          /** 
@@ -590,7 +597,7 @@ namespace ROOT {
 
          /**
           * pointers to members
-          * @label At members
+          * @label scope members
           * @link aggregationByValue
           * @supplierCardinality 0..*
           * @clientCardinality 1
@@ -600,7 +607,7 @@ namespace ROOT {
 
          /**
           * container with pointers to all data members in this At
-          * @label At datamembers
+          * @label scope datamembers
           * @link aggregationByValue
           * @clientCardinality 1
           * @supplierCardinality 0..*
@@ -610,7 +617,7 @@ namespace ROOT {
 
          /**
           * container with pointers to all function members in this At
-          * @label At functionmembers
+          * @label scope functionmembers
           * @link aggregationByValue
           * @supplierCardinality 0..*
           * @clientCardinality 1
@@ -621,8 +628,8 @@ namespace ROOT {
       private:
 
          /**
-          * pointer to the At Name
-          * @label At Name
+          * pointer to the Scope Name
+          * @label scope name
           * @link aggregation
           * @clientCardinality 1
           * @supplierCardinality 1
@@ -631,7 +638,7 @@ namespace ROOT {
 
 
          /**
-          * At of At
+          * Type of the scope
           * @link aggregationByValue
           * @label At At
           * @clientCardinality 1
@@ -641,7 +648,7 @@ namespace ROOT {
 
 
          /**
-          * pointer to declaring At
+          * pointer to declaring Scope
           * @label declaring At
           * @link aggregationByValue
           * @clientCardinality 1

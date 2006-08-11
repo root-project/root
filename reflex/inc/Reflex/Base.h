@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.10 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.11 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -30,7 +30,6 @@ namespace ROOT {
       class RFLX_API Base {
 
          friend class Class;
-         friend class OwnedBase;
   
       public:
       

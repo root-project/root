@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.cxx,v 1.9 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,7 +15,7 @@
 
 #include "ClassTemplateInstance.h"
 
-#include "Reflex/internal/OwnedScope.h"
+#include "Reflex/Scope.h"
 
 #include "TemplateInstance.h"
 #include "Reflex/Tools.h"
@@ -45,25 +45,25 @@ ClassTemplateInstance( const char * typ,
 
    std::string templateName = Tools::GetTemplateName( typ );
 
-   for ( size_t i = 0; i < s.SubTypeTemplateSize(); ++i ) {
-      TypeTemplate ttl = s.SubTypeTemplateAt( i );
-      if ( ttl.Name(SCOPED) == templateName ) {
-         fTemplateFamily = ttl;
-         break;
-      }
-   }
-  
+//    for ( size_t i = 0; i < s.SubTypeTemplateSize(); ++i ) {
+//       TypeTemplate ttl = s.SubTypeTemplateAt( i );
+//       if ( ttl.Name(SCOPED) == templateName ) {
+//          fTemplateFamily = ttl;
+//          break;
+//       }
+//    }
+
+   fTemplateFamily = TypeTemplate::ByName( templateName, TemplateArgumentSize());
+
    if ( ! fTemplateFamily ) {
       std::vector < std::string > parameterNames = std::vector < std::string > ();
       for ( size_t i = 65; i < 65 + TemplateArgumentSize(); ++i ) {
-         std::ostringstream o; 
-         o << char(i); 
-         parameterNames.push_back("typename " + o.str());      
+         parameterNames.push_back("typename " + char(i));      
       }
-      TypeTemplateImpl * tti = new TypeTemplateImpl( Tools::GetBaseName(templateName),
+      TypeTemplateImpl * tti = new TypeTemplateImpl( templateName.c_str(),
                                                      s,
                                                      parameterNames );
-      fTemplateFamily = TypeTemplate(tti);
+      fTemplateFamily = tti->ThisTypeTemplate();
       s.AddSubTypeTemplate( fTemplateFamily );
    }
   

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: test_Reflex_generate.cxx,v 1.3 2006/01/06 08:34:39 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_generate.cxx,v 1.4 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 #include "Reflex/Reflex.h"
@@ -107,17 +107,25 @@ int main() {
   void* libInstance = 0;  
 #ifdef _WIN32
   libInstance = LoadLibrary("libtest_Class2DictRflx.dll");
+  if ( ! libInstance )  std::cout << "Could not load dictionary. " << std::endl << "Reason: " << GetLastError() << std::endl;
 #else
   libInstance = dlopen("libtest_Class2DictRflx.so", RTLD_LAZY);
+  if ( ! libInstance )  std::cout << "Could not load dictionary. " << std::endl << "Reason: " << dlerror() << std::endl;
 #endif
-  if ( !libInstance ) {
-    std::cout << "Could not load dictionary " << std::endl;
-    return 1;
-  }
 
-  Scope global = Scope::ByName("");
-  generate_namespace( global );
-  // for ( size_t t = 0; t < Type::TypeSize(); t++ ) out << Type::TypeAt(t).Name() << endl; 
+  generate_namespace( Scope::GlobalScope() );
+
+  int ret = 0;
+#if defined (_WIN32)
+  ret = FreeLibrary(libInstance);
+  if (ret == 0) std::cout << "Unload of dictionary library failed." << std::endl << "Reason: " << GetLastError() << std::endl;
+#else
+  ret = dlclose(libInstance);
+  if (ret == -1) std::cout << "Unload of dictionary library failed." << std::endl << "Reason: " << dlerror() << std::endl;
+#endif
+
+  Reflex::Shutdown();
+
   return 0;
 }
 

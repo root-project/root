@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.14 2006/08/01 15:04:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.15 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -16,7 +16,7 @@
 #include "Class.h"
 
 #include "Reflex/Object.h"
-#include "Reflex/internal/OwnedType.h"
+#include "Reflex/Type.h"
 
 #include "DataMember.h"
 #include "FunctionMember.h"
@@ -46,6 +46,15 @@ ROOT::Reflex::Class::Class(  const char *           typ,
      fDestructor( Member()),
      fPathsToBase( PathsToBase()) {}
     
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Class::~Class() {
+//-------------------------------------------------------------------------------
+  for ( PathsToBase::iterator it = fPathsToBase.begin(); it != fPathsToBase.end(); ++it ) {
+    delete it->second;
+  }
+}
+
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Class::AddBase( const Type &   bas,
@@ -367,7 +376,10 @@ void ROOT::Reflex::Class::UpdateMembers2( OMembers & members,
       Type bType = bIter->ToType().FinalType();
       basePath.push_back( bIter->OffsetFP());
       if ( bType ) {
-         pathsToBase[ (dynamic_cast<const Class*>(bType.ToTypeBase()))->ThisScope().Id() ] = new std::vector < OffsetFunction >( basePath );
+         void * id = (dynamic_cast<const Class*>(bType.ToTypeBase()))->ThisScope().Id();
+         PathsToBase::iterator it = pathsToBase.find(id);
+         if ( it != pathsToBase.end()) delete it->second;
+         pathsToBase[ id ] = new std::vector < OffsetFunction >( basePath );
          size_t i = 0;
          for ( i = 0; i < bType.DataMemberSize(); ++i ) {
             Member dm = bType.DataMemberAt(i);

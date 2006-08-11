@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.h,v 1.7 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -14,13 +14,15 @@
 
 // Include files
 #include "Reflex/Kernel.h"
-#include "Reflex/internal/OwnedScope.h"
+#include "Reflex/Scope.h"
 
 namespace ROOT {
    namespace Reflex {
 
       // forward declarations
       class Type;
+      class TypeTemplate;
+      class TypeTemplateName;
       class ClassTemplateInstance;
 
       /** 
@@ -34,7 +36,7 @@ namespace ROOT {
       public:
 
          /** default constructor */
-         TypeTemplateImpl( const std::string & templateName,
+         TypeTemplateImpl( const char * templateName,
                            const Scope & scop,
                            std::vector < std::string > parameterNames, 
                            std::vector < std::string > parameterDefaults = std::vector<std::string>());
@@ -52,6 +54,34 @@ namespace ROOT {
 
 
          /**
+          * TemplateInstance_Begin returns the begin iterator of the instance container
+          * @return the begin iterator of the instance container
+          */
+         Type_Iterator TemplateInstance_Begin() const;
+
+
+         /**
+          * TemplateInstance_End returns the end iterator of the instance container
+          * @return the end iterator of the instance container
+          */
+         Type_Iterator TemplateInstance_End() const;
+
+
+         /**
+          * TemplateInstance_RBegin returns the rbegin iterator of the instance container
+          * @return the rbegin iterator of the instance container
+          */
+         Reverse_Type_Iterator TemplateInstance_RBegin() const;
+
+
+         /**
+          * TemplateInstance_Rend returns the rend iterator of the instance container
+          * @return the rend iterator of the instance container
+          */
+         Reverse_Type_Iterator TemplateInstance_REnd() const;
+
+
+         /**
           * instantion will return a pointer to the nth template instantion
           * @param  nth template instantion
           * @return pointer to nth template instantion
@@ -65,14 +95,6 @@ namespace ROOT {
           * @return number of template instantions
           */
          size_t TemplateInstanceSize() const;
-
-
-         /**
-          * Name will return the Name of the template family and a list of
-          * all currently available instantiations
-          * @return template family Name with all instantiantion
-          */
-         std::string Name( unsigned int mod = 0 ) const;
 
 
          /**
@@ -109,6 +131,13 @@ namespace ROOT {
          Reverse_StdString_Iterator TemplateParameterName_RBegin() const;
          Reverse_StdString_Iterator TemplateParameterName_REnd() const;
 
+
+         /**
+          * Return the member template API class corresponding to this member template impl
+          * @return corresponding member template
+          */
+         const TypeTemplate & ThisTypeTemplate() const;
+
       public:
 
          /** 
@@ -118,12 +147,6 @@ namespace ROOT {
          void AddTemplateInstance( const Type & templateInstance ) const;
 
       private:
-
-         /**
-          * the Name of the template family 
-          */
-         std::string fTemplateName;
-
 
          /**
           * pointer back to the corresponding At
@@ -162,32 +185,17 @@ namespace ROOT {
           * number of required template parameters
           */
          size_t fReqParameters;
+
+
+         /**
+          * pointer back to the template name
+          */
+         TypeTemplateName * fTypeTemplateName;
       
       }; // class TypeTemplateImpl
 
    } // namespace ROOT
 } // namespace Reflex
-
-
-//-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeTemplateImpl::operator == ( const TypeTemplateImpl & tt ) const {
-//-------------------------------------------------------------------------------
-   return ( ( fTemplateName == tt.fTemplateName ) && 
-            ( fParameterNames.size() == tt.fParameterNames.size() ) );
-}
-
-
-//-------------------------------------------------------------------------------
-inline std::string ROOT::Reflex::TypeTemplateImpl::Name( unsigned int mod ) const {
-//-------------------------------------------------------------------------------
-   std::string s = "";
-   if ( 0 != ( mod & ( SCOPED | S ))) {
-      std::string sName = fScope.Name(mod);
-      if (! fScope.IsTopScope()) s += sName + "::";
-   }
-   s += fTemplateName;
-   return s;  
-}
 
 
 //-------------------------------------------------------------------------------

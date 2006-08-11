@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.16 2006/07/14 06:47:25 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.17 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -49,8 +49,6 @@ namespace ROOT {
        * @ingroup Ref
        */
       class RFLX_API Type {
-
-         friend class OwnedType;
 
       public:
 
@@ -992,7 +990,7 @@ namespace ROOT {
           */
          void Unload() const;
 
-
+ 
          /** 
           * UpdateMembers will update the list of Function/Data/Members with all
           * members of base classes currently availabe in the system

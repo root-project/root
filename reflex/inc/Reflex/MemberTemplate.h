@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.h,v 1.11 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.h,v 1.12 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -19,7 +19,7 @@ namespace ROOT {
    namespace Reflex {
 
       // forward declarations
-      class MemberTemplateImpl;
+      class MemberTemplateName;
       class Member;
 
       /** 
@@ -35,7 +35,7 @@ namespace ROOT {
       public:
 
          /** default constructor */
-         MemberTemplate( const MemberTemplateImpl * memberTemplateImpl = 0 );
+         MemberTemplate( const MemberTemplateName * memberTemplateName = 0 );
 
 
          /** copy constructor */
@@ -53,6 +53,110 @@ namespace ROOT {
          operator bool () const;
 
 
+         /** 
+          * operator == will return true if two member templates are the same
+          * @return true if member templates match
+          */
+         bool operator == ( const MemberTemplate & rh ) const;
+
+
+         /**
+          * ByName will return a member template corresponding to the argument name
+          * @param member template name to lookup
+          * @param nTemplateParams looks up the template family with this number of template parameters
+          *        if it is set to 0, the first occurence of the template family name will be returned
+          * @return corresponding member template to name
+          */
+         static const MemberTemplate & ByName( const std::string & name,
+                                               size_t nTemplateParams = 0 );
+
+
+         /**
+          * Id will return a memory address which is a unique id for this member template
+          * @return unique id of this member template
+          */
+         void * Id() const;
+
+
+         /**
+          * MemberTemplateAt will return the nth member template defined
+          * @param nth member template
+          * @return nth member template
+          */
+         static const MemberTemplate & MemberTemplateAt( size_t nth );
+
+      
+         /**
+          * MemberTemplateSize will return the number of member templates defined
+          * @return number of defined member templates
+          */
+         static size_t MemberTemplateSize();
+
+
+         /**
+          * MemberTemplate_Begin returns the begin iterator of the member template container
+          * @return begin iterator of member template container
+          */
+         static MemberTemplate_Iterator MemberTemplate_Begin();
+
+
+         /**
+          * MemberTemplate_End returns the end iterator of the member template container
+          * @return end iterator of member template container
+          */
+         static MemberTemplate_Iterator MemberTemplate_End();
+
+
+         /**
+          * MemberTemplate_Rbegin returns the rbegin iterator of the member template container
+          * @return rbegin iterator of member template container
+          */
+         static Reverse_MemberTemplate_Iterator MemberTemplate_RBegin();
+
+
+         /**
+          * MemberTemplate_Rend returns the rend iterator of the member template container
+          * @return rend iterator of member template container
+          */
+         static Reverse_MemberTemplate_Iterator MemberTemplate_REnd();
+
+
+         /**
+          * Name will return the name of the template family and a list of
+          * all currently available instantiations
+          * @return template family name with all instantiantion
+          */
+         std::string Name( unsigned int mod = 0 ) const;
+
+
+         /**
+          * TemplateInstance_Begin returns the begin iterator of the instance container
+          * @return the begin iterator of the instance container
+          */
+         Member_Iterator TemplateInstance_Begin() const;
+
+
+         /**
+          * TemplateInstance_End returns the end iterator of the instance container
+          * @return the end iterator of the instance container
+          */
+         Member_Iterator TemplateInstance_End() const;
+
+
+         /**
+          * TemplateInstance_RBegin returns the rbegin iterator of the instance container
+          * @return the rbegin iterator of the instance container
+          */
+         Reverse_Member_Iterator TemplateInstance_RBegin() const;
+
+
+         /**
+          * TemplateInstance_Rend returns the rend iterator of the instance container
+          * @return the rend iterator of the instance container
+          */
+         Reverse_Member_Iterator TemplateInstance_REnd() const;
+
+
          /**
           * TemplateInstanceAt will return the nth template instantion
           * @param  nth template instantion
@@ -67,21 +171,6 @@ namespace ROOT {
           * @return number of template instantions
           */
          size_t TemplateInstanceSize() const;
-
-
-         /**
-          * Name will return the name of the template family and a list of
-          * all currently available instantiations
-          * @return template family name with all instantiantion
-          */
-         std::string Name( unsigned int mod = 0 ) const;
-
-
-         /**
-          * TemplateParameterSize will return the number of template parameters
-          * @return number of template parameters
-          */
-         size_t TemplateParameterSize() const;
 
 
          /**
@@ -155,6 +244,13 @@ namespace ROOT {
           */
          Reverse_StdString_Iterator TemplateParameterName_REnd() const;
 
+
+         /**
+          * TemplateParameterSize will return the number of template parameters
+          * @return number of template parameters
+          */
+         size_t TemplateParameterSize() const;
+
       public:
 
          /** 
@@ -171,25 +267,26 @@ namespace ROOT {
           * @clientCardinality 1
           * @supplierCardinality 1
           */
-         const MemberTemplateImpl * fMemberTemplateImpl;
+         const MemberTemplateName * fMemberTemplateName;
       
       }; // class MemberTemplate
 
    } // namespace ROOT
 } // namespace Reflex
 
+#include "Reflex/internal/MemberTemplateName.h"
 #include "Reflex/internal/MemberTemplateImpl.h"
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::MemberTemplate::MemberTemplate( const MemberTemplateImpl * memberTemplateImpl )
+inline ROOT::Reflex::MemberTemplate::MemberTemplate( const MemberTemplateName * memberTemplateName )
 //------------------------------------------------------------------------------- 
-   : fMemberTemplateImpl( memberTemplateImpl ) {}
+   : fMemberTemplateName( memberTemplateName ) {}
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::MemberTemplate::MemberTemplate( const MemberTemplate & rh ) 
 //-------------------------------------------------------------------------------
-   : fMemberTemplateImpl( rh.fMemberTemplateImpl ) {}
+   : fMemberTemplateName( rh.fMemberTemplateName ) {}
 
 
 //-------------------------------------------------------------------------------
@@ -200,31 +297,44 @@ inline ROOT::Reflex::MemberTemplate::~MemberTemplate() {}
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::MemberTemplate::operator bool () const {
 //-------------------------------------------------------------------------------
-   if ( fMemberTemplateImpl ) return true;
+   if ( this->fMemberTemplateName && this->fMemberTemplateName->fMemberTemplateImpl ) return true;
    return false;
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::MemberTemplate::operator == ( const MemberTemplate & rh ) const {
+//-------------------------------------------------------------------------------
+   return ( fMemberTemplateName == rh.fMemberTemplateName );
+}
+
+
+//-------------------------------------------------------------------------------
+inline void * ROOT::Reflex::MemberTemplate::Id() const {
+//-------------------------------------------------------------------------------
+   return (void*)fMemberTemplateName;
+}
+
+
+//-------------------------------------------------------------------------------
+inline size_t ROOT::Reflex::MemberTemplate::MemberTemplateSize() {
+//-------------------------------------------------------------------------------
+   return MemberTemplateName::MemberTemplateSize();
 }
 
 
 //-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::MemberTemplate::TemplateInstanceSize() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->TemplateInstanceSize();
+   if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateInstanceSize();
    return 0;
-}
-
-
-//-------------------------------------------------------------------------------
-inline std::string ROOT::Reflex::MemberTemplate::Name( unsigned int mod ) const {
-//-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->Name( mod );
-   return "";
 }
 
 
 //-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::MemberTemplate::TemplateParameterSize() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->TemplateParameterSize();
+   if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateParameterSize();
    return 0;
 }
 
@@ -232,7 +342,7 @@ inline size_t ROOT::Reflex::MemberTemplate::TemplateParameterSize() const {
 //-------------------------------------------------------------------------------
 inline std::string ROOT::Reflex::MemberTemplate::TemplateParameterDefaultAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->TemplateParameterDefaultAt( nth );
+   if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateParameterDefaultAt( nth );
    return "";
 }
 
@@ -240,7 +350,7 @@ inline std::string ROOT::Reflex::MemberTemplate::TemplateParameterDefaultAt( siz
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplate::TemplateParameterDefault_Begin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->TemplateParameterDefault_Begin();
+   if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateParameterDefault_Begin();
    return Dummy::StdStringCont().begin();
 }
 
@@ -248,7 +358,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplate::TemplatePa
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplate::TemplateParameterDefault_End() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->TemplateParameterDefault_End();
+   if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateParameterDefault_End();
    return Dummy::StdStringCont().end();
 }
 
@@ -256,7 +366,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplate::TemplatePa
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplate::TemplateParameterDefault_RBegin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->TemplateParameterDefault_RBegin();
+   if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateParameterDefault_RBegin();
    return Dummy::StdStringCont().rbegin();
 }
 
@@ -264,7 +374,7 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplate::Te
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplate::TemplateParameterDefault_REnd() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->TemplateParameterDefault_REnd();
+   if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateParameterDefault_REnd();
    return Dummy::StdStringCont().rend();
 }
 
@@ -272,7 +382,7 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplate::Te
 //-------------------------------------------------------------------------------
 inline std::string ROOT::Reflex::MemberTemplate::TemplateParameterNameAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->TemplateParameterNameAt( nth );
+   if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateParameterNameAt( nth );
    return "";
 }
 
@@ -280,7 +390,7 @@ inline std::string ROOT::Reflex::MemberTemplate::TemplateParameterNameAt( size_t
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplate::TemplateParameterName_Begin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->TemplateParameterName_Begin();
+   if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateParameterName_Begin();
    return Dummy::StdStringCont().begin();
 }
 
@@ -288,7 +398,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplate::TemplatePa
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplate::TemplateParameterName_End() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->TemplateParameterName_End();
+   if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateParameterName_End();
    return Dummy::StdStringCont().end();
 }
 
@@ -296,7 +406,7 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplate::TemplatePa
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplate::TemplateParameterName_RBegin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->TemplateParameterName_RBegin();
+   if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateParameterName_RBegin();
    return Dummy::StdStringCont().rbegin();
 }
 
@@ -304,7 +414,7 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplate::Te
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplate::TemplateParameterName_REnd() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fMemberTemplateImpl->TemplateParameterName_REnd();
+   if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateParameterName_REnd();
    return Dummy::StdStringCont().rend();
 }
 

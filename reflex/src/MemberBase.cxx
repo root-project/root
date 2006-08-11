@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.12 2006/08/01 09:36:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.13 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -16,9 +16,9 @@
 #include "Reflex/internal/MemberBase.h"
 
 #include "Reflex/internal/OwnedMember.h"
-#include "Reflex/internal/OwnedScope.h"
-#include "Reflex/internal/OwnedType.h"
-#include "Reflex/internal/OwnedBase.h"
+#include "Reflex/Scope.h"
+#include "Reflex/Type.h"
+#include "Reflex/Base.h"
 #include "Reflex/Object.h"
 #include "Reflex/internal/OwnedPropertyList.h"
 
@@ -36,7 +36,7 @@ ROOT::Reflex::MemberBase::MemberBase( const char *  name,
      fName( name ),
      fScope( Scope() ),
      fMemberType( memberType ),
-     fPropertyList( OwnedPropertyList()) {
+     fPropertyList( OwnedPropertyList(new PropertyListImpl())) {
 // Construct the dictionary info for a member
    fThisMember = new Member(this);
 }
@@ -46,6 +46,7 @@ ROOT::Reflex::MemberBase::MemberBase( const char *  name,
 ROOT::Reflex::MemberBase::~MemberBase() {
 //-------------------------------------------------------------------------------
 // Destructor.
+   delete fThisMember;
    fPropertyList.Delete();
 }
 
@@ -72,7 +73,7 @@ void * ROOT::Reflex::MemberBase::CalculateBaseObject( const Object & obj ) const
          // now we know that the Member type is an inherited one
          std::vector < OffsetFunction > basePath = (dynamic_cast<const Class*>(cl.ToTypeBase()))->PathToBase( DeclaringScope());
          if ( basePath.size() ) {
-            // there is a path described from the object to the class containing the MemberAt
+            // there is a path described from the object to the class containing the Member
             std::vector < OffsetFunction >::iterator pIter;
             for ( pIter = basePath.begin(); pIter != basePath.end(); ++pIter ) {
                mem += (*pIter)(mem);

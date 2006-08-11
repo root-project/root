@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.10 2006/08/01 15:04:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.11 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,7 +24,6 @@ namespace ROOT {
     
       // forward declarations
       class Base;
-      class OwnedBase;
       class Member;
       class MemberTemplate;
       class TypeTemplate;
@@ -48,7 +47,7 @@ namespace ROOT {
 
 
          /** destructor */
-         virtual ~Class() {}
+         virtual ~Class();
 
       
          /**

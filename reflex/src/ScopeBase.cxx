@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.22 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.23 2006/08/03 17:45:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -17,10 +17,10 @@
 
 #include "Reflex/internal/ScopeBase.h"
 
-#include "Reflex/internal/OwnedType.h"
+#include "Reflex/Type.h"
 #include "Reflex/internal/OwnedMember.h"
 #include "Reflex/internal/ScopeName.h"
-#include "Reflex/internal/OwnedTypeTemplate.h"
+#include "Reflex/TypeTemplate.h"
 #include "Reflex/internal/OwnedMemberTemplate.h"
 #include "Reflex/internal/InternalTools.h"
 #include "Reflex/Tools.h"
@@ -47,7 +47,7 @@ ROOT::Reflex::ScopeBase::ScopeBase( const char * scope,
      fSubTypes( std::vector<Type>() ),
      fTypeTemplates( std::vector<TypeTemplate>() ),
      fMemberTemplates( std::vector<OwnedMemberTemplate>() ),
-     fPropertyList( OwnedPropertyList()),
+     fPropertyList( OwnedPropertyList( new PropertyListImpl())),
      fBasePosition( Tools::GetBasePosition( scope )) {
 //-------------------------------------------------------------------------------
 // Construct the dictionary information for a scope.
@@ -96,7 +96,7 @@ ROOT::Reflex::ScopeBase::ScopeBase()
      fSubTypes( std::vector<Type>()),
      fTypeTemplates( std::vector<TypeTemplate>()),
      fMemberTemplates( std::vector<OwnedMemberTemplate>()),
-     fPropertyList( OwnedPropertyList() ),
+     fPropertyList( OwnedPropertyList( new PropertyListImpl()) ),
      fBasePosition( 0 ) {
 //-------------------------------------------------------------------------------
 // Default constructor for the ScopeBase (used at init time for the global scope)
@@ -124,6 +124,11 @@ ROOT::Reflex::ScopeBase & ROOT::Reflex::ScopeBase::operator = ( const ScopeBase 
 ROOT::Reflex::ScopeBase::~ScopeBase( ) {
 //-------------------------------------------------------------------------------
 // Destructor.
+
+   for ( std::vector<OwnedMember>::iterator it = fMembers.begin(); it != fMembers.end(); ++it ) {
+     if ( *it && it->DeclaringScope() == ThisScope()) it->Delete();
+   }
+
    // Informing Scope that I am going away
    if ( fScopeName->fScopeBase == this ) fScopeName->fScopeBase = 0;
 
@@ -132,7 +137,7 @@ ROOT::Reflex::ScopeBase::~ScopeBase( ) {
       fDeclaringScope.RemoveSubScope(ThisScope());
    }
 
-   fPropertyList.ClearProperties();
+   fPropertyList.Delete();
 }
 
 
@@ -233,6 +238,14 @@ size_t ROOT::Reflex::ScopeBase::FunctionMemberSize() const {
 //-------------------------------------------------------------------------------
 // Return number of function members.
    return fFunctionMembers.size();
+}
+
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::Scope & ROOT::Reflex::ScopeBase::GlobalScope() {
+//-------------------------------------------------------------------------------
+  return Namespace::GlobalScope();
 }
 
 

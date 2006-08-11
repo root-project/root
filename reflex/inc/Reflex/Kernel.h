@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.19 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.20 2006/08/01 15:41:24 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -194,6 +194,11 @@ namespace ROOT {
       
          /** default constructor */
          Reflex();
+
+         /** destructor */
+         ~Reflex();
+
+         static void Shutdown();
       
          /** the Name of the package - used for messages */
          static const std::string & Argv0(); // returns "Seal Reflex";

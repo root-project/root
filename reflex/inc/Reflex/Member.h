@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.9 2006/07/03 17:02:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.10 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -433,12 +433,14 @@ namespace ROOT {
 
       private:
 
+         void Delete();
+
          /** the pointer to the member implementation 
           * @link aggregation
           * @supplierCardinality 1
           * @clientCardinality 1..*
           * @label member BaseAt*/
-         const MemberBase * fMemberBase;
+         MemberBase * fMemberBase;
 
       }; // class Member
 
@@ -450,6 +452,12 @@ namespace ROOT {
 #include "Reflex/PropertyList.h"
 #include "Reflex/Type.h"
 #include "Reflex/MemberTemplate.h"
+
+
+inline void ROOT::Reflex::Member::Delete() {
+  delete fMemberBase;
+  fMemberBase = 0;
+}
 
 //-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::Member::operator < ( const Member & rh ) const {

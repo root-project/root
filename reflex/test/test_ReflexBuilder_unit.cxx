@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.10 2006/07/19 13:04:01 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.11 2006/08/02 14:14:49 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -52,6 +52,7 @@ class ReflexBuilderUnitTest : public CppUnit::TestFixture {
   CPPUNIT_TEST( type_template );
   CPPUNIT_TEST( member_template );
   CPPUNIT_TEST( typebuilder );
+  CPPUNIT_TEST( shutdown );
   CPPUNIT_TEST_SUITE_END();
 public:
   void setUp () {}
@@ -76,6 +77,7 @@ public:
   void type_template();
   void member_template();
   void typebuilder();
+  void shutdown();
   void tearDown() {}
 };
 
@@ -795,13 +797,15 @@ void ReflexBuilderUnitTest::type_template() {
   Scope s = Scope::ByName("std");
 
   CPPUNIT_ASSERT( s );
-  CPPUNIT_ASSERT_EQUAL(3, (int)s.SubTypeTemplateSize());
-  CPPUNIT_ASSERT("std::vector" == s.SubTypeTemplateAt(0).Name(SCOPED));
-  CPPUNIT_ASSERT("std::map"    == s.SubTypeTemplateAt(1).Name(SCOPED));
-  CPPUNIT_ASSERT("std::list"   == s.SubTypeTemplateAt(2).Name(SCOPED));
-  CPPUNIT_ASSERT("vector"      == s.SubTypeTemplateAt(0).Name());
-  CPPUNIT_ASSERT("map"         == s.SubTypeTemplateAt(1).Name());
-  CPPUNIT_ASSERT("list"        == s.SubTypeTemplateAt(2).Name());
+  CPPUNIT_ASSERT_EQUAL(4, (int)s.SubTypeTemplateSize());
+  CPPUNIT_ASSERT_EQUAL(std::string("std::vector"), s.SubTypeTemplateAt(0).Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("std::map"),    s.SubTypeTemplateAt(1).Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("std::map"),    s.SubTypeTemplateAt(2).Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("std::list"),   s.SubTypeTemplateAt(3).Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("vector"),      s.SubTypeTemplateAt(0).Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("map"),         s.SubTypeTemplateAt(1).Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("map"),         s.SubTypeTemplateAt(2).Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("list"),        s.SubTypeTemplateAt(3).Name());
 
   TypeTemplate tt0 = s.SubTypeTemplateAt(0);
   CPPUNIT_ASSERT( tt0 );
@@ -823,7 +827,7 @@ void ReflexBuilderUnitTest::type_template() {
   TypeTemplate tt1 = s.SubTypeTemplateAt(1);
   CPPUNIT_ASSERT( tt1 );
   CPPUNIT_ASSERT_EQUAL(4, (int)tt1.TemplateParameterSize());
-  CPPUNIT_ASSERT_EQUAL(3, (int)tt1.TemplateInstanceSize());
+  CPPUNIT_ASSERT_EQUAL(2, (int)tt1.TemplateInstanceSize());
   
   Type tt1i0 = tt1.TemplateInstanceAt(0);
   CPPUNIT_ASSERT( tt1i0 );
@@ -837,11 +841,16 @@ void ReflexBuilderUnitTest::type_template() {
   CPPUNIT_ASSERT("int"   == tt1i1.TemplateArgumentAt(0).Name());
   CPPUNIT_ASSERT("float" == tt1i1.TemplateArgumentAt(1).Name());
 
-  Type tt1i2 = tt1.TemplateInstanceAt(2);
-  CPPUNIT_ASSERT( tt1i2 );
-  CPPUNIT_ASSERT_EQUAL(2, (int)tt1i2.TemplateArgumentSize());
-  CPPUNIT_ASSERT_EQUAL(string("float"), tt1i2.TemplateArgumentAt(0).Name());
-  CPPUNIT_ASSERT_EQUAL(string("std::string"),tt1i2.TemplateArgumentAt(1).Name(SCOPED));
+  TypeTemplate tt2 = s.SubTypeTemplateAt(2);
+  CPPUNIT_ASSERT( tt2 );
+  CPPUNIT_ASSERT_EQUAL(2, (int)tt2.TemplateParameterSize());
+  CPPUNIT_ASSERT_EQUAL(1, (int)tt2.TemplateInstanceSize());
+
+  Type tt2i0 = tt2.TemplateInstanceAt(0);
+  CPPUNIT_ASSERT( tt2i0 );
+  CPPUNIT_ASSERT_EQUAL(2, (int)tt2i0.TemplateArgumentSize());
+  CPPUNIT_ASSERT_EQUAL(string("float"), tt2i0.TemplateArgumentAt(0).Name());
+  CPPUNIT_ASSERT_EQUAL(string("std::string"),tt2i0.TemplateArgumentAt(1).Name(SCOPED));
 
 }
 
@@ -876,16 +885,16 @@ void ReflexBuilderUnitTest::member_template() {
 
   CPPUNIT_ASSERT( t );
   CPPUNIT_ASSERT_EQUAL(3, (int)t.MemberTemplateSize());
-  
+
   MemberTemplate mt0 = t.MemberTemplateAt(0);
-  CPPUNIT_ASSERT("MyMemberTemplateClass::foo" == mt0.Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("MyMemberTemplateClass::foo"), mt0.Name(SCOPED));
   CPPUNIT_ASSERT_EQUAL(1, (int)mt0.TemplateParameterSize());
   CPPUNIT_ASSERT_EQUAL(2, (int)mt0.TemplateInstanceSize());
 
   Member mt0i0 = mt0.TemplateInstanceAt(0);
   CPPUNIT_ASSERT( mt0i0 );
   CPPUNIT_ASSERT( mt0i0.IsTemplateInstance());
-  CPPUNIT_ASSERT("MyMemberTemplateClass::foo<int>" == mt0i0.Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("MyMemberTemplateClass::foo<int>"), mt0i0.Name(SCOPED));
   CPPUNIT_ASSERT_EQUAL(1, (int)mt0i0.TemplateArgumentSize());
   CPPUNIT_ASSERT("int" == mt0i0.TemplateArgumentAt(0).Name());
 
@@ -966,6 +975,11 @@ void ReflexBuilderUnitTest::member_template() {
 
 void ReflexBuilderUnitTest::typebuilder() {
   CPPUNIT_ASSERT_EQUAL(7, int(Tools::MakeVector(1,2,3,4,5,6,7).size()));
+}
+
+
+void ReflexBuilderUnitTest::shutdown() {
+   Reflex::Shutdown();
 }
 
 // Class registration on cppunit framework

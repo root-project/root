@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.22 2006/07/14 06:47:25 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.23 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -175,7 +175,9 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testToTypeFinal );
   CPPUNIT_TEST( testScopeSubFuns );
   CPPUNIT_TEST( testEnums );
+  CPPUNIT_TEST( unloadType );
   CPPUNIT_TEST( unloadLibrary );
+  CPPUNIT_TEST( shutdown );
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -203,8 +205,10 @@ public:
   void testToTypeFinal();
   void testScopeSubFuns() ;
   void testEnums();
+  void unloadType();
 
   void unloadLibrary();
+  void shutdown() { Reflex::Shutdown(); }
   void tearDown() {}
 
 }; // class ReflexSimple2Test
@@ -636,6 +640,7 @@ void ReflexSimple2Test::testDataMembers() {
   CPPUNIT_ASSERT_EQUAL(m20t.Name(), m24t.RawType().Name());
   CPPUNIT_ASSERT_EQUAL(m20t.Name(), m24t.RawType().Name());
 
+  o1.Destruct();
 }
 
 void ReflexSimple2Test::testFunctionMembers() {
@@ -693,6 +698,8 @@ void ReflexSimple2Test::testFunctionMembers() {
   m = t.MemberByName("c");
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL('c',(char)*(int*)m.Invoke(o).Address());
+
+  o.Destruct();
 
 }
 
@@ -791,6 +798,8 @@ void ReflexSimple2Test::testFreeFunctions() {
   int ret = Object_Cast<int>(o.Invoke("funWithManyArgs",argVec));
   CPPUNIT_ASSERT_EQUAL(ret,40);
 
+  o.Destruct();
+
 }
 
 
@@ -816,6 +825,7 @@ void ReflexSimple2Test::testDiamond() {
   Object o = d.Construct(s,values);
   CPPUNIT_ASSERT(o);
   CPPUNIT_ASSERT(*(int*)m.Get(o).Address());
+  o.Destruct();
 
   o = l.Construct(s,values);
   CPPUNIT_ASSERT_EQUAL(std::string("Base"),l.BaseAt(0).Name());
@@ -823,6 +833,7 @@ void ReflexSimple2Test::testDiamond() {
   CPPUNIT_ASSERT_EQUAL(99,*(int*)m.Get(o).Address());
   l.UpdateMembers();
   CPPUNIT_ASSERT_EQUAL(99,*(int*)m.Get(o).Address());
+  o.Destruct();
 }
 
 int countNewOperators(const Type & t) {
@@ -1174,6 +1185,24 @@ void ReflexSimple2Test::testEnums() {
    CPPUNIT_ASSERT(!t2.IsPublic());
    CPPUNIT_ASSERT(!t2.IsProtected());
    CPPUNIT_ASSERT(t2.IsPrivate());
+
+}
+
+
+
+void ReflexSimple2Test::unloadType() {
+
+   Type t0 = Type::ByName("ClassH");
+   t0.UpdateMembers();
+   CPPUNIT_ASSERT(t0);
+   t0.Unload();
+   CPPUNIT_ASSERT(!t0);
+   CPPUNIT_ASSERT_EQUAL(std::string("ClassH"), t0.Name());
+
+   Type t1 = Type::ByName("ClassC");
+   CPPUNIT_ASSERT(t1);
+   Member t1m0 = t1.MemberByName("c");
+   CPPUNIT_ASSERT(t1m0);
 
 }
 
