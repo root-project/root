@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.119 2006/06/01 07:43:59 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.120 2006/06/01 09:50:28 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1299,62 +1299,101 @@ void RootdGets(const char *msg)
    if (!RootdIsOpen())
       Error(ErrFatal, kErrNoAccess, "RootdGets: file %s not open", gFile);
    
-   Int_t num_buf;   // Number of buffers
+   Int_t nbuf;      // Number of buffers
    Int_t len;       // len of the data buffer with the list of buffers
+   Int_t npar;      // compatibility issues
+   Int_t size;      // size of the readv block (all the small reads) 
+   Int_t maxTransz; // blocksize for the transfer
 
-   sscanf(msg, "%d %d", &num_buf, &len);
-   
-   Long64_t *offsets = new Long64_t[num_buf];  // list to be filled
-   Int_t *lens = new Int_t[num_buf];           // list to be filled 
-   char *buf_in = new char[len+1];             // buff coming from the server 
+   npar = sscanf(msg, "%d %d %d", &nbuf, &len, &maxTransz);
+
+   Long64_t *offsets = new Long64_t[nbuf];  // list to be filled
+   Int_t    *lens    = new Int_t[nbuf];     // list to be filled 
+   char     *buf_in  = new char[len+1];     // buff coming from the server 
    
    NetRecvRaw(buf_in, len);
-   buf_in[len+1] = '\0';
+   buf_in[len] = '\0';
    
    char *ptr = buf_in;
-   Int_t total_len = 0;
-   for(Int_t i = 0 ; i < num_buf ; i++) {
+   size = 0;
+   for(Int_t i = 0 ; i < nbuf ; i++) {
       sscanf(ptr, "%llu-%d/", &offsets[i], &lens[i]);
       ptr = strchr(ptr, '/') + 1;
-      total_len += lens[i];
+      size += lens[i];
    }
+   
+   // If the blocksize is not specified the try to send
+   // just a big block
+   if( npar == 2  )
+      maxTransz = size; 
 
-   char *buf_out = new char[total_len];
-   Int_t actual_pos = 0;
+   // We are Ready to begin the transference
+   NetSend(0, kROOTD_GETS);
+
+   char *buf_out  = new char[maxTransz];
+   char *buf_send = new char[maxTransz];
+   Int_t actual_pos = 0; // position for the whole size
+   Int_t buf_pos    = 0; // position in the buffer
    ssize_t siz = 0;
-   for (Int_t i = 0; i < num_buf; i++) {
+
+   for (Int_t i = 0; i < nbuf; i++) {
+      Long64_t left = size - actual_pos;
+      if (left > maxTransz)
+         left = maxTransz;
       
+      Int_t pos = 0; // Position for the disk read
+      while ( pos < lens[i] ) {
 #if defined (R__SEEK64)
-   if (lseek64(gFd, offsets[i], SEEK_SET) < 0)
+         if (lseek64(gFd, offsets[i] + pos, SEEK_SET) < 0)
 #elif defined(WIN32)
-   if (_lseeki64(gFd, offsets[i], SEEK_SET) < 0)
+         if (_lseeki64(gFd, offsets[i] + pos, SEEK_SET) < 0)
 #else
-   if (lseek(gFd, offsets[i], SEEK_SET) < 0)
+         if (lseek(gFd, offsets[i] + pos, SEEK_SET) < 0)
 #endif
-      Error(ErrSys, kErrFileGet, "RootdGets: cannot seek to position %lld in"
-            " file %s", offsets[i], gFile);
-
-      while ((siz = read(gFd, buf_out + actual_pos, lens[i])) < 0 && GetErrno() == EINTR)
-         ResetErrno();
-
-      if (siz != lens[i])
-         break;
+         Error(ErrSys, kErrFileGet, "RootdGets: cannot seek to position %lld in"
+	       " file %s", offsets[i], gFile);
       
-      actual_pos += lens[i];
+	 Int_t readsz = (( buf_pos + (lens[i] - pos) > left )? 
+			 (left - (buf_pos + pos)): lens[i] - pos);
+
+	 if (gDebug > 0 )
+	    ErrorInfo("RootdGets: reading %d bytes out of %d", readsz, lens[i]);
+	 
+	 while ((siz = read(gFd, buf_out + buf_pos, readsz)) < 0 && GetErrno() == EINTR)
+	    ResetErrno();
+	 
+	 if (siz != readsz)
+	    goto end;
+	 
+	 pos += readsz;
+	 buf_pos += readsz;
+	 if ( buf_pos == left ) {
+	    if (gDebug > 0 )
+	       ErrorInfo("RootdGets: Sending %d bytes", left);
+
+	    // Swap buffers
+	    char *buf_tmp = buf_out;
+	    buf_out = buf_send;
+	    buf_send = buf_tmp;
+
+	    NetSendRaw(buf_send, left);
+	    actual_pos += left;
+	    buf_pos = 0;
+	 }
+      }
    }
 
+ end:
    if (siz < 0)
       Error(ErrSys, kErrFileGet, "RootdGets: error reading from file %s", gFile);
 
-   if (actual_pos != total_len)
+   if (actual_pos != size)
       Error(ErrFatal, kErrFileGet, "RootdGets: error reading all requested bytes"
-            " from file %s, got %d of %d",gFile, actual_pos, total_len);
-
-   NetSend(0, kROOTD_GETS);
-   NetSendRaw(buf_out, actual_pos);
+            " from file %s, got %d of %d",gFile, actual_pos, size);
 
    delete [] buf_in;
    delete [] buf_out;
+   delete [] buf_send;
    delete [] lens;
    delete [] offsets;
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.80 2006/06/29 22:15:37 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.81 2006/07/10 14:31:28 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -336,6 +336,8 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
    fOffset += len;
 
    fBytesRead  += len;
+   fReadCalls++;
+   fgReadCalls++;
 #ifdef WIN32
    SetFileBytesRead(GetFileBytesRead() + len);
 #else
@@ -367,7 +369,8 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    if (fProtocol < 17)
       return TFile::ReadBuffers(buf, pos, len, nbuf);
    
-   Int_t   stat, n;
+   Int_t   stat;
+   Int_t   blockSize = 262144;  //Let's say we transfer 256KB at the time
    Bool_t  result = kFALSE;
    EMessageTypes kind;
    TString data_buf;      // buf to put the info
@@ -379,7 +382,8 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    if (gPerfStats != 0) start = TTimeStamp();
 
    // Make the string with a list of offsets and lenghts
-   Int_t total_len = 0;
+   Long64_t total_len = 0;
+   Long64_t actual_pos;
    for(Int_t i = 0; i < nbuf; i++) {
       data_buf += pos[i] + fArchiveOffset;
       data_buf += "-";
@@ -389,14 +393,14 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    }
 
    // Send the command with the lenght of the info and number of buffers
-   if (fSocket->Send(Form("%d %d", nbuf, data_buf.Length()), kROOTD_GETS) < 0) {
+   if (fSocket->Send(Form("%d %d %d", nbuf, data_buf.Length(), blockSize), 
+		     kROOTD_GETS) < 0) {
       Error("ReadBuffers", "error sending kROOTD_GETS command");
       result = kTRUE;
       goto end;
    }
    // Send buffer with the list of offsets and lengths
    if (fSocket->SendRaw(data_buf, data_buf.Length()) < 0) {
-      SetBit(kWriteError);
       Error("ReadBuffers", "error sending buffer");
       result = kTRUE;
       goto end;
@@ -409,18 +413,29 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       goto end;
    }
 
-   // Get the big buffer with everything inside it
-   while ((n = fSocket->RecvRaw(buf, total_len)) < 0
-         && TSystem::GetErrno() == EINTR)
-      TSystem::ResetErrno();
+   actual_pos = 0;
+   while (actual_pos < total_len) {
+      Long64_t left = total_len - actual_pos;
+      if (left > blockSize)
+         left = blockSize;
 
-   if (n != total_len) {
-      Error("ReadBuffers", "error receiving buffer of length %d, got %d", total_len, n);
-      result = kTRUE;
-      goto end;
-   }
+      Int_t n;
+      while ((n = fSocket->RecvRaw(buf + actual_pos, Int_t(left))) < 0 &&
+             TSystem::GetErrno() == EINTR)
+	 TSystem::ResetErrno();
+      
+      if (n != Int_t(left)) {
+         Error("GetBuffers", "error receiving buffer of length %d, got %d",
+               Int_t(left), n);
+         result = kTRUE ;
+	 goto end;
+      }
+      actual_pos += left;
+   } 
 
    fBytesRead  += total_len;
+   fReadCalls++;
+   fgReadCalls++;
 #ifdef WIN32
    SetFileBytesRead(GetFileBytesRead() + total_len);
 #else
@@ -437,9 +452,12 @@ end:
       gApplication->GetSignalHandler()->HandleDelayedSignal();
 
    // If found problems try the generic implementation
-   if (result)
+   if (result) {
+      if (gDebug > 0) 
+	 Info("ReadBuffers", "Couldnt use the specific implementation, calling TFile::ReadBuffers");
       return TFile::ReadBuffers(buf, pos, len, nbuf);
-
+   }
+   
    return result;
 }
 
