@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.icc,v 1.10 2006/06/30 14:45:46 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.icc,v 1.11 2006/07/03 14:30:45 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector_icc
@@ -564,6 +564,20 @@ inline T& SVector<T,D>::operator[](unsigned int i) { return fArray[i]; }
 
 template <class T, unsigned int D>
 inline T& SVector<T,D>::operator()(unsigned int i) { return fArray[i]; }
+//==============================================================================
+// Element access with At()
+//==============================================================================
+template <class T, unsigned int D>
+inline const T& SVector<T,D>::At(unsigned int i) const { 
+   assert(i < D);
+   return fArray[i]; 
+}
+
+template <class T, unsigned int D>
+inline T& SVector<T,D>::At(unsigned int i) { 
+   assert(i < D);
+   return fArray[i]; 
+}
 
 //==============================================================================
 // SubVector

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.24 2006/06/30 14:45:46 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.25 2006/07/03 14:30:44 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -176,8 +176,8 @@ public:
    SMatrix(InputIterator begin, unsigned int size, bool triang = false, bool lower = true);
 
    /**
-      construct a symmetric matrix from a SVector containing the lower (upper)
-      part of a triangular matrix
+      constructor of a symmetrix a matrix from a SVector containing the lower (upper)
+      triangular part. 
    */
 #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
    SMatrix(const SVector<T, D1*(D2+1)/2> & v, bool lower = true );
@@ -345,6 +345,17 @@ public:
    T& operator()(unsigned int i, unsigned int j);
 
    /**
+      read only access to matrix element, with indices starting from 0.
+      Fuction will check index values and it will assert if they are wrong 
+   */ 
+   const T& At(unsigned int i, unsigned int j) const;
+   /**
+      read/write access to matrix element with indices starting from 0.
+      Fuction will check index values and it will assert if they are wrong 
+   */ 
+   T& At(unsigned int i, unsigned int j);
+
+   /**
       addition with a scalar
    */ 
    SMatrix<T,D1,D2,R>&operator+=(const T& rhs);
@@ -411,7 +422,8 @@ public:
    /** @name --- Linear Algebra Functions --- */
 
    /**
-      Invert a square Matrix ( this method change the current matrix)
+      Invert a square Matrix ( this method changes the current matrix).
+      Return true if inversion is successfull.
       The method used for general square matrices is the LU factorization taken from Dinv routine 
       from the CERNLIB (written in C++ from CLHEP authors)
       In case of symmetric matrices Bunch-Kaufman diagonal pivoting method is used
@@ -422,20 +434,24 @@ public:
    /**
       Invert a square Matrix and  returns a new matrix. In case the inversion fails
       the current matrix is returned. 
-      Return ifail = 0 when successfull. 
+      \param ifail . ifail will be set to 0 when inversion is successfull.  
       See ROOT::Math::SMatrix::Invert for the inversion algorithm
    */
    SMatrix<T,D1,D2,R> Inverse(int & ifail ) const;
 
    /**
-      determinant of square Matrix via Dfact. \b Note: this will destroy
-      the contents of the Matrix!
+      determinant of square Matrix via Dfact. 
+      Return true when the calculation is successfull.
+      \param det will contain the calculated determinant value
+      \b Note: this will destroy the contents of the Matrix!
    */
    bool Det(T& det);
 
    /**
-      determinant of square Matrix via Dfact. \b Note: this will preserve
-      the content of the Matrix!
+      determinant of square Matrix via Dfact. 
+      Return true when the calculation is successfull.
+      \param det will contain the calculated determinant value
+      \b Note: this will preserve the content of the Matrix!
    */
    bool Det2(T& det) const;
 

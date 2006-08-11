@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.12 2006/06/30 14:45:46 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.13 2006/07/03 14:30:45 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector
@@ -127,38 +127,38 @@ public:
    SVector(const_iterator begin, const_iterator end);
    
 #endif
-   /// construct setting all elements to the passed scalar value
+   /// construct a vector of size 1 from a single scalar value
    explicit SVector(const T& a1);
-   /// construct a vector of size >=2 from 2 scalar values 
+   /// construct a vector of size 2 from 2 scalar values 
    SVector(const T& a1, const T& a2);
-   /// construct a vector of size >=3 from 3 scalar values 
+   /// construct a vector of size 3 from 3 scalar values 
    SVector(const T& a1, const T& a2, const T& a3);
-   /// construct a vector of size >=4 from 4 scalar values  
+   /// construct a vector of size 4 from 4 scalar values  
    SVector(const T& a1, const T& a2, const T& a3, const T& a4);
-   /// construct a vector of size >=5 from 5 scalar values  
+   /// construct a vector of size 5 from 5 scalar values  
    SVector(const T& a1, const T& a2, const T& a3, const T& a4,
            const T& a5);
-   /// construct a vector of size >=6 from 6 scalar values  
+   /// construct a vector of size 6 from 6 scalar values  
    SVector(const T& a1, const T& a2, const T& a3, const T& a4,
            const T& a5, const T& a6);
-   /// construct a vector of size >=7 from 7 scalar values  
+   /// construct a vector of size 7 from 7 scalar values  
    SVector(const T& a1, const T& a2, const T& a3, const T& a4,
            const T& a5, const T& a6, const T& a7);
-   /// construct a vector of size >=8 from 8 scalar values  
+   /// construct a vector of size 8 from 8 scalar values  
    SVector(const T& a1, const T& a2, const T& a3, const T& a4,
            const T& a5, const T& a6, const T& a7, const T& a8);
-   /// construct a vector of size >=9 from 9 scalar values  
+   /// construct a vector of size 9 from 9 scalar values  
    SVector(const T& a1, const T& a2, const T& a3, const T& a4,
            const T& a5, const T& a6, const T& a7, const T& a8,
            const T& a9);
-   /// construct a vector of size >=10 from 10 scalar values  
+   /// construct a vector of size 10 from 10 scalar values  
    SVector(const T& a1, const T& a2, const T& a3, const T& a4,
            const T& a5, const T& a6, const T& a7, const T& a8,
            const T& a9, const T& a10);
    
    
    
-   /// assignment from a scalar (for size 1 vector)
+   /// assignment from a scalar (only for size 1 vector)
    SVector<T,D>& operator=(const T& a1);
    /// assignment  from Vector Expression
    template <class A>
@@ -246,10 +246,14 @@ public:
    const T& operator[](unsigned int i) const;
    /// read-only access of vector elements. Index starts from 0. 
    const T& operator()(unsigned int i) const;
+   /// read-only access of vector elements with check on index. Index starts from 0.
+   const T& At(unsigned int i) const;
    /// read/write access of vector elements. Index starts from 0. 
    T& operator[](unsigned int i);
    /// read/write access of vector elements. Index starts from 0. 
    T& operator()(unsigned int i);
+   /// read/write access of vector elements with check on index. Index starts from 0.
+   T& At(unsigned int i);
    
    /// self addition with a scalar
    SVector<T,D>& operator+=(const T& rhs);

@@ -119,6 +119,10 @@ int test1() {
   A = SMatrixIdentity();
   cout << "4x3 Identity\n" << A << endl;
 
+  std::vector<float> v(6);
+  for (int i = 0; i <6; ++i) v[i] = double(i+1);
+  SMatrix<float,3,3,MatRepSym<float,3> > s3(v.begin(), v.end() );
+  cout << s3 << endl;
 
     
   return 0;
@@ -400,12 +404,18 @@ int test10() {
   SMatrix<double,3> C(vU,false);
   SMatrix<double,3> D(vL,true);
 
-  std::cout << " C =  " << C << std::endl;
-  std::cout << " D =  " << D << std::endl;
+//   std::cout << " C =  " << C << std::endl;
+//   std::cout << " D =  " << D << std::endl;
 
   iret |= compare( static_cast<int>(C==D), 1 ); 
 
- 
+  SMatrix<double,3, 3, MatRepSym<double,3> > C2(vU,false);
+  SMatrix<double,3, 3, MatRepSym<double,3> > D2(vL,true);
+
+  iret |= compare( static_cast<int>(C==C2), 1 ); 
+  iret |= compare( static_cast<int>(D==D2), 1 ); 
+
+
   return iret;
 }
 

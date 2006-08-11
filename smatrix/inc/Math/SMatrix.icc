@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.24 2006/06/30 14:45:46 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.25 2006/07/03 14:30:45 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -603,6 +603,23 @@ inline const T& SMatrix<T,D1,D2,R>::operator()(unsigned int i, unsigned int j) c
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline T& SMatrix<T,D1,D2,R>::operator()(unsigned int i, unsigned int j) {
+   return fRep(i,j);
+}
+ 
+//==============================================================================
+// Element access with At()
+//==============================================================================
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline const T& SMatrix<T,D1,D2,R>::At(unsigned int i, unsigned int j) const {
+   assert(i < D1);
+   assert(j < D2);
+   return fRep(i,j);
+}
+
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline T& SMatrix<T,D1,D2,R>::At(unsigned int i, unsigned int j) {
+   assert(i < D1);
+   assert(j < D2);
    return fRep(i,j);
 }
 
