@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.8 2005/11/23 11:03:12 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.9 2006/04/27 15:07:57 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -780,7 +780,7 @@ void TClassTree::ScanClasses(Int_t iclass)
    TList *lf = cl->GetListOfMethods();
    if (lf) {
       TIter nextm(lf);
-      char name[100];
+      char name[1000];
       while ((method = (TMethod*) nextm())) {
          // check return type
          strcpy(name,method->GetReturnTypeName());
@@ -823,7 +823,7 @@ void TClassTree::ScanClasses(Int_t iclass)
    const char *source = gSystem->BaseName( gSystem->UnixPathName(cl->GetImplFileName()));
    char *sourceName = gSystem->Which( fSourceDir.Data(), source , kReadPermission );
    if (!sourceName) return;
-   char cname[100];
+   char cname[1000];
    sprintf(cname,"%s::",fCnames[iclass]->Data());
    Int_t ncn = strlen(cname);
        // open source file
@@ -831,7 +831,7 @@ void TClassTree::ScanClasses(Int_t iclass)
    sourceFile.open( sourceName, ios::in );
    Int_t nlines = 0;
    if( sourceFile.good() ) {
-      const Int_t kMAXLEN=500;
+      const Int_t kMAXLEN=1500;
       char line[kMAXLEN];
       while( !sourceFile.eof() ) {
          sourceFile.getline( line, kMAXLEN-1 );
