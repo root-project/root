@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stressVector.cxx,v 1.4 2005/12/08 15:54:03 moneta Exp $
+// @(#)root/test:$Name:  $:$Id: stressVector.cxx,v 1.5 2006/02/06 17:22:45 moneta Exp $
 // Author: Lorenzo Moneta   06/2005 
 ///////////////////////////////////////////////////////////////////////////////////
 //
@@ -400,7 +400,7 @@ int testAnalysis2( const std::vector<V *> & dataV, TStopwatch & tim, double& t, 
     double sum = 0;
     for (unsigned int i = 0; i < n; ++i) { 
       V  & v1 = *(dataV[i]);
-      V v2 = VectorUtil::Boost(v1,bv); 
+      V v2 = VectorUtil::boost(v1,bv); 
       sum += v2.X() + v2.Y() + v2.Z() + v2.T();
     }
     tim.Stop();
@@ -456,7 +456,7 @@ int testAnalysis2( const std::vector<V *> & dataV, TStopwatch & tim, double& t, 
     double sum = 0;
     for (unsigned int i = 0; i < n; ++i) { 
       V  & v1 = *(dataV[i]);
-      V v2 = VectorUtil::BoostX(v1,beta); 
+      V v2 = VectorUtil::boostX(v1,beta); 
       sum += v2.X() + v2.Y() + v2.Z() + v2.T();
     }
     tim.Stop();
