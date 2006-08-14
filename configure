@@ -826,7 +826,7 @@ enable/disable options, prefix with either --enable- or --disable-
   pgsql              PostgreSQL support, requires libpq
   pythia             Pythia5 EG support, requires libPythia
   pythia6            Pythia6 EG support, requires libPythia6
-  python             Python ROOT bindings, requires python >= 2.1
+  python             Python ROOT bindings, requires python >= 2.2
   qt                 Qt graphics backend, requires libqt >= 3
   qtgsi              GSI's Qt integration, requires libqt >= 3
   reflex             Build the libReflex dictionary library
@@ -2310,42 +2310,39 @@ fi
 if test ! "x$enable_python" = "xno" ; then
     # Check for Python include and library
     pythonhdrdirs="\
-        $PYTHONDIR/include/python2.4 $PYTHONDIR/include/python2.3 \
-        $PYTHONDIR/include/python2.2 $PYTHONDIR/include \
-        /Library/Frameworks/Python.framework/Versions/2.4/include/python2.4 \
-        /System/Library/Frameworks/Python.framework/Versions/2.4/include/python2.4 \
-        /Library/Frameworks/Python.framework/Versions/2.3/include/python2.3 \
-        /System/Library/Frameworks/Python.framework/Versions/2.3/include/python2.3 \
-        /usr/local/include/python2.4 /usr/local/include/python2.3 \
-        /usr/local/include/python2.2 \
-        /usr/include/python2.4 /usr/include/python2.3 /usr/include/python2.2"
+        $PYTHONDIR/include \
+        /Library/Frameworks/Python.framework/Versions/Current/include \
+        /System/Library/Frameworks/Python.framework/Versions/Current/include \
+        /usr/local/include /usr/include"
     if test "x$platform" = xwin32 ; then
 	pythonhdrdirs="$pythonhdrdirs \
-        /cygdrive/c/Python24/include /cygdrive/c/Python23/include \
-        /cygdrive/c/Python22/include"
+        /cygdrive/c/Python25/include /cygdrive/c/Python24/include \
+        /cygdrive/c/Python23/include /cygdrive/c/Python22/include"
     fi
-    check_header "Python.h" "$pythonincdir" $pythonhdrdirs
+    check_header "python/Python.h python2.5/Python.h python2.4/Python.h \
+                  python2.3/Python.h python2.2/Python.h Python.h" \
+                  "$pythonincdir" $pythonhdrdirs
     pythoninc=$found_hdr
-    pythonincdir=$found_dir
+    pythonincdir=`dirname $found_dir/$found_hdr`
+    if test "x$platform" = "xwin32"; then
+       if test ! "x$pythonincdir" = "x" ; then
+          pythonincdir=`cygpath -m $pythonincdir`
+       fi
+    fi
 
     pythonlibdirs="\
-        $PYTHONDIR/lib/python2.4/config $PYTHONDIR/lib/python2.3/config \
-        $PYTHONDIR/lib/python2.2/config $PYTHONDIR/lib $PYTHONDIR/libs \
-        /Library/Frameworks/Python.framework/Versions/2.4 \
-        /System/Library/Frameworks/Python.framework/Versions/2.4 \
-        /Library/Frameworks/Python.framework/Versions/2.3 \
-        /System/Library/Frameworks/Python.framework/Versions/2.3 \
-        /usr/local/lib/python2.4/config /usr/local/lib/python2.3/config \
-        /usr/local/lib/python2.2/config \
-        /usr/lib/python2.4/config /usr/lib/python2.3/config \
-        /usr/lib/python2.2/config"
+        $PYTHONDIR/lib $PYTHONDIR/libs \
+        /Library/Frameworks/Python.framework/Versions/Current \
+        /System/Library/Frameworks/Python.framework/Versions/Current \
+        /usr/local/lib /usr/lib \
+        /usr/local/lib/python2.2/config /usr/lib/python2.2/config"
 
     if test "x$platform" = xwin32 ; then
 	pythonlibdirs="$pythonlibdirs \
-        /cygdrive/c/Python24/libs /cygdrive/c/Python23/libs \
-        /cygdrive/c/Python22/libs"
+        /cygdrive/c/Python25/libs /cygdrive/c/Python24/libs \
+        /cygdrive/c/Python23/libs /cygdrive/c/Python22/libs"
     fi
-    check_library "libpython2.5 libpython2.4 libpython2.3 libpython2.2 \
+    check_library "libpython libpython2.5 libpython2.4 libpython2.3 libpython2.2 \
                    python25 python24 python23 \
                    Python" \
         "$enable_shared" "$pythonlibdir" $pythonlibdirs
