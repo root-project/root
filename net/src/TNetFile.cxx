@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.82 2006/08/11 20:33:18 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.83 2006/08/14 10:31:36 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -395,7 +395,7 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 
    // Send the command with the lenght of the info and number of buffers
    if (fSocket->Send(Form("%d %d %d", nbuf, data_buf.Length(), blockSize), 
-		     kROOTD_GETS) < 0) {
+                          kROOTD_GETS) < 0) {
       Error("ReadBuffers", "error sending kROOTD_GETS command");
       result = kTRUE;
       goto end;
@@ -423,13 +423,13 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       Int_t n;
       while ((n = fSocket->RecvRaw(buf + actual_pos, Int_t(left))) < 0 &&
              TSystem::GetErrno() == EINTR)
-	 TSystem::ResetErrno();
+         TSystem::ResetErrno();
       
       if (n != Int_t(left)) {
          Error("GetBuffers", "error receiving buffer of length %d, got %d",
                Int_t(left), n);
          result = kTRUE ;
-	 goto end;
+         goto end;
       }
       actual_pos += left;
    } 
@@ -456,7 +456,7 @@ end:
    // If found problems try the generic implementation
    if (result) {
       if (gDebug > 0) 
-	 Info("ReadBuffers", "Couldnt use the specific implementation, calling TFile::ReadBuffers");
+         Info("ReadBuffers", "Couldnt use the specific implementation, calling TFile::ReadBuffers");
       return TFile::ReadBuffers(buf, pos, len, nbuf);
    }
    

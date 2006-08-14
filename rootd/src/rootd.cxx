@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.120 2006/06/01 09:50:28 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.121 2006/08/11 20:33:18 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1351,35 +1351,35 @@ void RootdGets(const char *msg)
          if (lseek(gFd, offsets[i] + pos, SEEK_SET) < 0)
 #endif
          Error(ErrSys, kErrFileGet, "RootdGets: cannot seek to position %lld in"
-	       " file %s", offsets[i], gFile);
+               " file %s", offsets[i], gFile);
       
-	 Int_t readsz = (( buf_pos + (lens[i] - pos) > left )? 
-			 (left - (buf_pos + pos)): lens[i] - pos);
+         Int_t readsz = (( buf_pos + (lens[i] - pos) > left )? 
+                        (left - (buf_pos + pos)): lens[i] - pos);
 
-	 if (gDebug > 0 )
-	    ErrorInfo("RootdGets: reading %d bytes out of %d", readsz, lens[i]);
+         if (gDebug > 0 )
+            ErrorInfo("RootdGets: reading %d bytes out of %d", readsz, lens[i]);
 	 
-	 while ((siz = read(gFd, buf_out + buf_pos, readsz)) < 0 && GetErrno() == EINTR)
-	    ResetErrno();
+         while ((siz = read(gFd, buf_out + buf_pos, readsz)) < 0 && GetErrno() == EINTR)
+            ResetErrno();
 	 
-	 if (siz != readsz)
-	    goto end;
+         if (siz != readsz)
+            goto end;
 	 
-	 pos += readsz;
-	 buf_pos += readsz;
-	 if ( buf_pos == left ) {
-	    if (gDebug > 0 )
-	       ErrorInfo("RootdGets: Sending %d bytes", left);
+         pos += readsz;
+         buf_pos += readsz;
+         if ( buf_pos == left ) {
+            if (gDebug > 0 )
+               ErrorInfo("RootdGets: Sending %d bytes", left);
 
-	    // Swap buffers
-	    char *buf_tmp = buf_out;
-	    buf_out = buf_send;
-	    buf_send = buf_tmp;
+            // Swap buffers
+            char *buf_tmp = buf_out;
+            buf_out = buf_send;
+            buf_send = buf_tmp;
 
-	    NetSendRaw(buf_send, left);
-	    actual_pos += left;
-	    buf_pos = 0;
-	 }
+            NetSendRaw(buf_send, left);
+            actual_pos += left;
+            buf_pos = 0;
+         }
       }
    }
 
