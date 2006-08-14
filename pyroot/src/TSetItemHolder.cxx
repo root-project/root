@@ -50,7 +50,7 @@ PyObject* PyROOT::TSetItemHolder::FilterArgs( ObjectProxy*& self, PyObject* args
    PyObject* subset = PyTuple_GetSlice( args, 0, nArgs - 1 );
 
 // see whether any of the arguments is a tuple itself
-   int realsize = 0;
+   Py_ssize_t realsize = 0;
    for ( int i = 0; i < nArgs - 1; ++i ) {
       PyObject* item = PyTuple_GetItem( subset, i );
       realsize += PyTuple_Check( item ) ? PyTuple_GET_SIZE( item ) : 1;

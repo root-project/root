@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.28 2006/02/23 18:29:26 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.29 2006/05/28 19:05:24 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <algorithm>
+#include <list>
 
 
 //- data _____________________________________________________________________
@@ -101,7 +102,11 @@ Bool_t PyROOT::Utility::SetSignalPolicy( ESignalPolicy e )
 Bool_t PyROOT::Utility::AddToClass(
       PyObject* pyclass, const char* label, PyCFunction cfunc, int flags )
 {
-   PyMethodDef* pdef = new PyMethodDef;
+// use list for clean-up (.so's are unloaded only at interpreter shutdown)
+   static std::list< PyMethodDef > s_pymeths;
+
+   s_pymeths.push_back( PyMethodDef() );
+   PyMethodDef* pdef = &s_pymeths.back();
    pdef->ml_name  = const_cast< char* >( label );
    pdef->ml_meth  = cfunc;
    pdef->ml_flags = flags;

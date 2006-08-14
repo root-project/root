@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyRootType.cxx,v 1.4 2005/08/10 05:25:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyRootType.cxx,v 1.5 2006/05/28 19:05:24 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -24,10 +24,18 @@ namespace {
          PyObject *etype, *value, *trace;
          PyErr_Fetch( &etype, &value, &trace );         // clears current exception
 
-      // filter for python specials and lookup qualified class
-         std::string atName = PyString_AS_STRING( pyname );
-         if ( atName.size() <= 2 || atName.substr( 0, 2 ) != "__" )
-            attr = MakeRootClassFromString( atName, pyclass );
+      // filter for python specials and lookup qualified class or function
+         std::string name = PyString_AS_STRING( pyname );
+         if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
+            attr = MakeRootClassFromString( name, pyclass );
+
+            if ( ! attr ) {
+               PyErr_Clear();
+            // get class name to look up CINT tag info ... 
+               attr = GetRootGlobalFromString( name /*, tag */ );
+            }
+
+         }
 
       // if failed, then the original error is likely to be more instructive
          if ( ! attr )

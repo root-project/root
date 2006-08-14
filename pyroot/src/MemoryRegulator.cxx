@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.12 2006/01/05 08:09:09 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.13 2006/07/01 21:19:55 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -37,14 +37,14 @@ namespace {
    PyTypeObject PyROOT_NoneType;
 
 //____________________________________________________________________________
-   int AlwaysNullLength( PyObject* )
+   Py_ssize_t AlwaysNullLength( PyObject* )
    {
       return 0;
    }
 
 //____________________________________________________________________________
    PyMappingMethods PyROOT_NoneType_mapping = {
-        (inquiry) AlwaysNullLength,
+        AlwaysNullLength,
         (binaryfunc)             0,
         (objobjargproc)          0
    };

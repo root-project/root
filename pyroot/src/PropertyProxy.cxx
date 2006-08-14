@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.9 2006/04/19 06:20:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.10 2006/07/01 21:19:55 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -29,8 +29,14 @@ namespace {
    {
    // normal getter access
       Long_t address = pyprop->GetAddress( pyobj );
-      if ( PyErr_Occurred() || address == 0 )
+      if ( PyErr_Occurred() )
          return 0;
+
+   // not-initialized or public data accesses through class (e.g. by help())
+      if ( address == 0 ) {
+         Py_INCREF( pyprop );
+         return (PyObject*)pyprop;
+      }
 
    // for fixed size arrays
       void* ptr = (void*)address;
@@ -57,7 +63,7 @@ namespace {
       }
 
       Long_t address = pyprop->GetAddress( pyobj );
-      if ( PyErr_Occurred() )
+      if ( ! address || PyErr_Occurred() )
          return errret;
 
    // for fixed size arrays
@@ -196,7 +202,11 @@ Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
    if ( fProperty & kIsStatic )
       return (Long_t)((G__var_array*)fDMInfo.Handle())->p[fDMInfo.Index()];
 
-// instance attributes; requires object for full address
+// special case: non-static lookup through class
+   if ( ! pyobj )
+      return 0;
+
+// instance attributes; requires valid object for full address
    if ( ! ObjectProxy_Check( pyobj ) ) {
       PyErr_Format( PyExc_TypeError,
          "object instance required for access to property \"%s\"", fDMInfo.Name() );

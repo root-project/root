@@ -36,7 +36,7 @@ PyObject* PyROOT::TFunctionHolder::FilterArgs( ObjectProxy*& self, PyObject* arg
    }
 
 // otherwise, add self as part of the function arguments (means bound member)
-   int sz = PyTuple_GET_SIZE( args );
+   Py_ssize_t sz = PyTuple_GET_SIZE( args );
    PyObject* newArgs = PyTuple_New( sz + 1 );
    for ( int i = 0; i < sz; ++i ) {
       PyObject* item = PyTuple_GET_ITEM( args, i );

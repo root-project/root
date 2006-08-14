@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.17 2005/12/03 04:00:15 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.18 2005/12/07 06:16:16 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -59,7 +59,7 @@ namespace PyROOT {
       virtual PyObject* FromMemory( void* );                                  \
       virtual Bool_t ToMemory( PyObject*, void* );                            \
    private:                                                                   \
-     int fSize;                                                               \
+      Py_ssize_t fSize;                                                       \
    }
 
 // converters for built-ins

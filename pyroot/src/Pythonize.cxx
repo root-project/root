@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.40 2006/07/01 21:19:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.41 2006/07/13 07:48:44 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -104,12 +104,13 @@ namespace {
 //____________________________________________________________________________
    PyObject* PyStyleIndex( PyObject* self, PyObject* index )
    {
-      Long_t idx = PyInt_AsLong( index );
+   // TODO: verify and perhaps fix this to use PyInt_AsSsize_t
+      Py_ssize_t idx = (Py_ssize_t)PyInt_AsLong( index );
       if ( PyErr_Occurred() )
          return 0;
 
       PyObject* pyindex = 0;
-      Long_t size = PySequence_Size( self );
+      Py_ssize_t size = PySequence_Size( self );
       if ( idx >= size || ( idx < 0 && idx <= -size ) ) {
          PyErr_SetString( PyExc_IndexError, "index out of range" );
          return 0;
@@ -316,7 +317,7 @@ namespace {
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:extend" ), &self, &obj ) )
          return 0;
 
-      for ( int i = 0; i < PySequence_Size( obj ); ++i ) {
+      for ( Py_ssize_t i = 0; i < PySequence_Size( obj ); ++i ) {
          PyObject* item = PySequence_GetItem( obj, i );
          PyObject* result = CallPyObjMethod( self, "Add", item );
          Py_XDECREF( result );
@@ -411,8 +412,8 @@ namespace {
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:count" ), &self, &obj ) )
          return 0;
 
-      int count = 0;
-      for ( int i = 0; i < PySequence_Size( self ); ++i ) {
+      Py_ssize_t count = 0;
+      for ( Py_ssize_t i = 0; i < PySequence_Size( self ); ++i ) {
          PyObject* item = PySequence_GetItem( self, i );
          PyObject* found = PyObject_RichCompare( item, obj, Py_EQ );
 
@@ -426,7 +427,8 @@ namespace {
          Py_DECREF( found );
       }
 
-      return PyLong_FromLong( count );
+   // TODO: verify and perhaps fix this to use PyInt_FromSsize_t
+      return PyLong_FromLong( (Long_t)count );
    }
 
 
@@ -465,10 +467,10 @@ namespace {
             (TSeqCollection*)clSeq->DynamicCast( TSeqCollection::Class(), self->GetObject() );
          TSeqCollection* nseq = (TSeqCollection*)clSeq->New();
 
-         int start, stop, step;
+         Py_ssize_t start, stop, step;
          PySlice_GetIndices( index, oseq->GetSize(), &start, &stop, &step );
-         for ( int i = start; i < stop; i += step ) {
-            nseq->Add( oseq->At( i ) );
+         for ( Py_ssize_t i = start; i < stop; i += step ) {
+            nseq->Add( oseq->At( (Int_t)i ) );
          }
 
          return BindRootObject( (void*) nseq, clSeq );
@@ -494,13 +496,14 @@ namespace {
          TSeqCollection* oseq = (TSeqCollection*)self->ObjectIsA()->DynamicCast(
             TSeqCollection::Class(), self->GetObject() );
 
-         int start, stop, step;
+         Py_ssize_t start, stop, step;
          PySlice_GetIndices( (PySliceObject*) index, oseq->GetSize(), &start, &stop, &step );
-         for ( int i = stop - step; i >= start; i -= step ) {
-            oseq->RemoveAt( i );
+         for ( Py_ssize_t i = stop - step; i >= start; i -= step ) {
+            oseq->RemoveAt( (Int_t)i );
          }
 
-         for ( int i = 0; i < PySequence_Size( obj ); ++i ) {
+      // TODO: verify and perhaps fix this to use Py_ssize_t in the loop
+         for ( Py_ssize_t i = 0; i < PySequence_Size( obj ); ++i ) {
             ObjectProxy* item = (ObjectProxy*)PySequence_GetItem( obj, i );
             item->Release();
             oseq->AddAt( (TObject*) item->GetObject(), i + start );
@@ -543,10 +546,10 @@ namespace {
          TSeqCollection* oseq = (TSeqCollection*)self->ObjectIsA()->DynamicCast(
             TSeqCollection::Class(), self->GetObject() );
 
-         int start, stop, step;
+         Py_ssize_t start, stop, step;
          PySlice_GetIndices( index, oseq->GetSize(), &start, &stop, &step );
-         for ( int i = stop - step; i >= start; i -= step ) {
-            oseq->RemoveAt( i );
+         for ( Py_ssize_t i = stop - step; i >= start; i -= step ) {
+            oseq->RemoveAt( (Int_t)i );
          }
 
          Py_INCREF( Py_None );
@@ -569,7 +572,7 @@ namespace {
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OlO:insert" ), &self, &idx, &obj ) )
          return 0;
 
-      int size = PySequence_Size( self );
+      Py_ssize_t size = PySequence_Size( self );
       if ( idx < 0 )
          idx = 0;
       else if ( size < idx )
@@ -587,7 +590,8 @@ namespace {
 
          args = PyTuple_New( 2 );
          PyTuple_SET_ITEM( args, 0, self );
-         PyTuple_SET_ITEM( args, 1, PyLong_FromLong( PySequence_Size( self ) - 1 ) );
+      // TODO: verify and perhaps fix to use PyInt_FromSsize_t
+         PyTuple_SET_ITEM( args, 1, PyLong_FromLong( (Long_t)PySequence_Size( self ) - 1 ) );
       }
 
       return callSelfIndex( args, "RemoveAt" );
@@ -607,7 +611,7 @@ namespace {
       PyObject* result = CallPyObjMethod( self, "Clear" );
       Py_XDECREF( result );
 
-      for ( int i = 0; i < PySequence_Size( tup ); ++i ) {
+      for ( Py_ssize_t i = 0; i < PySequence_Size( tup ); ++i ) {
          PyObject* result = CallPyObjMethod( self, "AddAt", PyTuple_GET_ITEM( tup, i ), 0 );
          Py_XDECREF( result );
       }
@@ -727,10 +731,11 @@ namespace {
          PyObject* nseq = PyObject_CallObject( pyclass, NULL );
          Py_DECREF( pyclass );
  
-         int start, stop, step;
+         Py_ssize_t start, stop, step;
          PySlice_GetIndices( index, PyObject_Length( (PyObject*)self ), &start, &stop, &step );
-         for ( int i = start; i < stop; i += step ) {
-            PyObject* pyidx = PyInt_FromLong( i );
+         for ( Py_ssize_t i = start; i < stop; i += step ) {
+         // TODO: verify and perhaps fix to use PyInt_FromSsize_t
+            PyObject* pyidx = PyInt_FromLong( (Long_t)i );
             CallPyObjMethod( nseq, "push_back", CallPyObjMethod( (PyObject*)self, "_vector__at", pyidx ) );
             Py_DECREF( pyidx );
          }
@@ -752,6 +757,23 @@ namespace {
          Py_XDECREF( end );
       }
       return iter;
+   }
+
+//- pair as sequence to allow tuple unpacking ---------------------------------
+   PyObject* PairUnpack( PyObject*, PyObject* args )
+   {
+      PyObject* self = 0; long idx = -1;
+      if ( ! PyArg_ParseTuple( args, (char*)"O!l|unpack", &ObjectProxy_Type, &self, &idx ) )
+         return 0;
+
+      if ( (int)idx == 0 )
+         return PyObject_GetAttrString( self, "first" );
+      else if ( (int)idx == 1 )
+         return PyObject_GetAttrString( self, "second" );
+
+   // still here? Trigger stop iteration
+      PyErr_SetString( PyExc_IndexError, "out of bounds" );
+      return 0;
    }
 
 //- string behaviour as primitives --------------------------------------------
@@ -795,9 +817,10 @@ namespace {
    PyObject* TObjStringLength( PyObject*, PyObject* args )
    {
       PyObject* data = CallPyObjMethod( PyTuple_GET_ITEM( args, 0 ), "GetName" );
-      int size = PySequence_Size( data );
+      Py_ssize_t size = PySequence_Size( data );
       Py_DECREF( data );
-      return PyInt_FromLong( size );
+   // TODO: verify and perhaps fix to use PyInt_FromSsize_t
+      return PyInt_FromLong( (Long_t)size );
    }
 
 
@@ -1263,7 +1286,7 @@ namespace {
          PyObject* arg2 = BufFac_t::Instance()->PyBuffer_FromMemory(
             (Double_t*)G__int(libp->para[1]), npar );
 
-         PyObject* arg3 = PyList_New(1);
+         PyObject* arg3 = PyList_New( 1 );
          PyList_SetItem( arg3, 0, PyFloat_FromDouble( G__double(libp->para[2]) ) );
 
          PyObject* arg4 = BufFac_t::Instance()->PyBuffer_FromMemory(
@@ -1666,6 +1689,12 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( IsTemplatedSTLClass( name, "list" ) ) {
       Utility::AddToClass( pyclass, "__len__",  "size" );
       Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter );
+
+      return kTRUE;
+   }
+
+   if ( IsTemplatedSTLClass( name, "pair" ) ) {
+      Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) PairUnpack );
 
       return kTRUE;
    }

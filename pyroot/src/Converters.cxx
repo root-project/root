@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.29 2006/04/19 06:20:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.30 2006/07/01 21:19:55 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -81,7 +81,7 @@ Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, G__CallFunc* func
          func->SetArg( (Long_t)PyString_AS_STRING( pyobject )[0] );           \
       else {                                                                  \
          PyErr_Format( PyExc_TypeError,                                       \
-            #type" expected, got string of size %d", PyString_GET_SIZE( pyobject ) );\
+            #type" expected, got string of size "PY_SSIZE_T_FORMAT, PyString_GET_SIZE( pyobject ) );\
          return kFALSE;                                                       \
       }                                                                       \
    } else {                                                                   \
