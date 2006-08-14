@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.4 2006/08/10 10:21:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.5 2006/08/11 20:17:26 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -144,7 +144,7 @@ void TTreeCache::AddBranch(TBranch *b)
 //_____________________________________________________________________________
 Bool_t TTreeCache::FillBuffer()
 {
-   //Fill the cache buffer with the branchse in the cache
+   //Fill the cache buffer with the branches in the cache
 
    if (fNbranches <= 0) return kFALSE;
    TTree *tree = fBranches[0]->GetTree();
@@ -174,8 +174,9 @@ Bool_t TTreeCache::FillBuffer()
    //clear cache buffer
    TFileCacheRead::Prefetch(0,0);
    //store baskets
+   Bool_t mustBreak = kFALSE;
    for (Int_t i=0;i<fNbranches;i++) {
-      if (fNtot > 2*fBufferSizeMin) break;
+      if (mustBreak) break;
       TBranch *b = fBranches[i];
       Int_t nb = b->GetMaxBaskets();
       Int_t *lbaskets   = b->GetBasketBytes();
@@ -198,11 +199,12 @@ Bool_t TTreeCache::FillBuffer()
          TFileCacheRead::Prefetch(pos,len);
          //we allow up to twice the default buffer size. When using eventlist in particular
          //it may happen that the evaluation of fEntryNext is bad, hence this protection
-         if (fNtot > 2*fBufferSizeMin) break;
+         if (fNtot > 2*fBufferSizeMin) {TFileCacheRead::Prefetch(0,0);mustBreak = kTRUE; break;}
       }
       if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,fBranches[i]->GetName(),fEntryNext,fNseek,fNtot);
    }
    fIsLearning = kFALSE;
+   if (mustBreak) return kFALSE;
    return kTRUE;
 }
 
