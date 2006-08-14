@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.121 2006/08/11 20:33:18 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.122 2006/08/14 10:50:15 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1383,7 +1383,7 @@ void RootdGets(const char *msg)
       }
    }
 
- end:
+end:
    if (siz < 0)
       Error(ErrSys, kErrFileGet, "RootdGets: error reading from file %s", gFile);
 
