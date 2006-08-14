@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.81 2006/07/10 14:31:28 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.82 2006/08/11 20:33:18 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -337,11 +337,12 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
 
    fBytesRead  += len;
    fReadCalls++;
-   fgReadCalls++;
 #ifdef WIN32
    SetFileBytesRead(GetFileBytesRead() + len);
+   SetFileReadCalls(GetFileReadCalls() + 1);
 #else
    fgBytesRead += len;
+   fgReadCalls++;
 #endif
 
 end:
@@ -435,11 +436,12 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 
    fBytesRead  += total_len;
    fReadCalls++;
-   fgReadCalls++;
 #ifdef WIN32
    SetFileBytesRead(GetFileBytesRead() + total_len);
+   SetFileReadCalls(GetFileReadCalls() + 1);
 #else
    fgBytesRead += total_len;
+   fgReadCalls++;
 #endif
 
 end:
