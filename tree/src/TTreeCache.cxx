@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.5 2006/08/11 20:17:26 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.6 2006/08/14 08:55:30 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -275,9 +275,9 @@ Int_t TTreeCache::ReadBuffer(char *buf, Long64_t pos, Int_t len)
       Int_t res = TFileCacheRead::ReadBuffer(buf,pos,len);
       
       if (res == 1)
-	 fNReadOk++;
+         fNReadOk++;
       else if (res == 0)
-	 fNReadMiss++;
+         fNReadMiss++;
       
       return res;
    }
