@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.18 2006/07/09 05:27:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.19 2006/08/11 08:23:31 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -224,10 +224,10 @@ const char *TGeoPhysicalNode::GetName() const
    // the information must be kept.
    
    static char *pNodeName=0;
-   static Int_t N = 0;
-   if (!N) {
-      N= 500;
-      pNodeName = new char[N];
+   static Int_t maxNodes = 0;
+   if (!maxNodes) {
+      maxNodes= 500;
+      pNodeName = new char[maxNodes];
    }
    pNodeName[0] = 0;
    Int_t n = 0;
@@ -235,10 +235,10 @@ const char *TGeoPhysicalNode::GetName() const
    for (Int_t level=0;level<=fLevel; level++) {
       const char *name = GetNode(level)->GetName();
       Int_t nch = strlen(name);
-      if (n+nch+2 > N) {
-         N = 2*(n+nch+2);
+      if (n+nch+2 > maxNodes) {
+         maxNodes = 2*(n+nch+2);
          delete [] pNodeName;
-         pNodeName = new char[N];
+         pNodeName = new char[maxNodes];
          return GetName();
       }
       sprintf(pNodeName+n,"/%s",name);
