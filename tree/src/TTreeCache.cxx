@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.6 2006/08/14 08:55:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.7 2006/08/14 10:52:43 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -163,7 +163,6 @@ Bool_t TTreeCache::FillBuffer()
    TEventList *elist = fOwner->GetEventList();
    Long64_t chainOffset = 0;
    if (elist) {
-      fEntryNext = fTree->GetEntries();
       if (fOwner->IsA() ==TChain::Class()) {
          TChain *chain = (TChain*)fOwner;
          Int_t t = chain->GetTreeNumber();
