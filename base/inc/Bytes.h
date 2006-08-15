@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.17 2006/04/23 21:48:03 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.18 2006/06/04 12:35:37 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -219,7 +219,12 @@ inline void tobuf(char *&buf, Float_t x)
 {
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
-   *((UInt_t *)buf) = Rbswap_32(*((UInt_t *)&x));
+   union {
+      volatile UInt_t  i;
+      volatile Float_t f;
+   } u;
+   u.f = x;
+   *((UInt_t *)buf) = Rbswap_32(u.i);
 # else
    union {
       volatile char    c[4];
@@ -241,7 +246,12 @@ inline void tobuf(char *&buf, Double_t x)
 {
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
-   *((ULong64_t *)buf) = Rbswap_64(*((ULong64_t *)&x));
+   union {
+      volatile ULong64_t l;
+      volatile Double_t  d;
+   } u;
+   u.d = x;
+   *((ULong64_t *)buf) = Rbswap_64(u.l);
 # else
    union {
       volatile char     c[8];
@@ -506,10 +516,10 @@ inline Float_t host2net(Float_t xx)
       volatile UInt_t  i;
       volatile Float_t f;
    } u;
-#if defined(R__USEASMSWAP)
-   u.i = Rbswap_32(*((UInt_t *)&xx));
-#else
    u.f = xx;
+#if defined(R__USEASMSWAP)
+   u.i = Rbswap_32(u.i);
+#else
    u.i = (((u.i & 0x000000ffU) << 24) | ((u.i & 0x0000ff00U) <<  8) |
           ((u.i & 0x00ff0000U) >>  8) | ((u.i & 0xff000000U) >> 24));
 #endif
@@ -524,7 +534,8 @@ inline Double_t host2net(Double_t x)
       volatile ULong64_t l;
       volatile Double_t  d;
    } u;
-   u.l = Rbswap_64(*((ULong64_t *)&x));
+   u.d = x;
+   u.l = Rbswap_64(u.l);
    return u.d;
 # else
    char sw[sizeof(Double_t)];
