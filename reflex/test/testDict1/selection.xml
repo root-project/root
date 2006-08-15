@@ -1,6 +1,4 @@
 <lcgdict>
   <class pattern="ROOT::Reflex::*"/>
-  <exclusion>
-    <class name="ROOT::Reflex::Any::Placeholder"/>
-  </exclusion>
+  <enum  pattern="ROOT::Reflex::*"/>
 </lcgdict>

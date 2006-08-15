@@ -14,6 +14,23 @@ namespace xmlTypedefSelection {
 
 namespace testclasses {
 
+
+  static const int staticint = 1;
+
+  class TestFunctionReturnTypes {
+  public:
+
+     int returnFundamental() { return 0; }
+     A returnCompound() { A * a = new A(); return *a; }
+     A * returnPointer1 () { return new A(); }
+     int * returnPointer2 () { return 0; }
+     void returnVoid() {}
+     const int & returnRef1() { return staticint; }
+     A & returnRef2() { A * a = new A(); return *a; }
+  };
+
+
+
    class Outer {
    public:
       class Inner {
@@ -215,8 +232,9 @@ class BadDictionary {
   }
 
   std::vector<const A*> 		* m_vect;
-};
 
+
+}; // namespace testclasses
 
 
 // template instances
