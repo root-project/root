@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.47 2006/07/06 09:39:18 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.48 2006/08/01 10:54:37 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -93,8 +93,10 @@ void TGComboBoxPopup::EndPopup()
 {
    // Ungrab pointer and unmap popup window.
 
-   gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
-   UnmapWindow();
+   if (IsMapped()) {
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+      UnmapWindow();
+   }
 }
 
 //______________________________________________________________________________
