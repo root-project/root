@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.122 2006/08/14 10:50:15 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.123 2006/08/14 10:51:34 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1351,20 +1351,18 @@ void RootdGets(const char *msg)
          if (lseek(gFd, offsets[i] + pos, SEEK_SET) < 0)
 #endif
          Error(ErrSys, kErrFileGet, "RootdGets: cannot seek to position %lld in"
-               " file %s", offsets[i], gFile);
-      
-         Int_t readsz = (( buf_pos + (lens[i] - pos) > left )? 
-                        (left - (buf_pos + pos)): lens[i] - pos);
+            " file %s", offsets[i], gFile);
 
-         if (gDebug > 0 )
-            ErrorInfo("RootdGets: reading %d bytes out of %d", readsz, lens[i]);
-	 
+         Int_t readsz = lens[i] - pos;
+         if( readsz > ( left - buf_pos) )
+            readsz = left - buf_pos;
+
          while ((siz = read(gFd, buf_out + buf_pos, readsz)) < 0 && GetErrno() == EINTR)
             ResetErrno();
-	 
+
          if (siz != readsz)
             goto end;
-	 
+
          pos += readsz;
          buf_pos += readsz;
          if ( buf_pos == left ) {
@@ -1379,6 +1377,9 @@ void RootdGets(const char *msg)
             NetSendRaw(buf_send, left);
             actual_pos += left;
             buf_pos = 0;
+
+            if ( left > (size - actual_pos) ) 
+               left = size - actual_pos;
          }
       }
    }
