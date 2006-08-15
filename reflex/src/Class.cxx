@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.16 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.17 2006/08/15 15:22:52 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -557,10 +557,10 @@ void ROOT::Reflex::Class::GenerateDict( DictionaryGenerator & generator ) const 
       else if ( IsProtected()) generator.AddIntoFree("\", typeid(ROOT::Reflex::ProtectedClass), 0,");
       else if ( IsPrivate()  ) generator.AddIntoFree("\", typeid(ROOT::Reflex::PrivateClass), 0,");
 
-      if (ThisType() == PUBLIC)  generator.AddIntoFree("PUBLIC");
-      if (ThisType() == PRIVATE) generator.AddIntoFree("PRIVATE");
-      if (ThisType() == VIRTUAL) generator.AddIntoFree("VIRTUAL");
-      if (ThisType() == PROTECTED) generator.AddIntoFree("PROTECTED");
+      if (ThisType().IsPublic())  generator.AddIntoFree("PUBLIC");
+      if (ThisType().IsPrivate()) generator.AddIntoFree("PRIVATE");
+      if (ThisType().IsVirtual()) generator.AddIntoFree("VIRTUAL");
+      if (ThisType().IsProtected()) generator.AddIntoFree("PROTECTED");
       generator.AddIntoFree(" | CLASS)\n");
 
       generator.AddIntoClasses("\n// -- Stub functions for class " + ThisType().Name() + "--\n");
