@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.11 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.12 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -27,7 +27,9 @@ namespace ROOT {
       class Member;
       class MemberTemplate;
       class TypeTemplate;
-    
+      class DictionaryGenerator;
+      
+
       /**
        * @class Class Class.h Reflex/Class.h
        * @author Stefan Roiser
@@ -48,8 +50,8 @@ namespace ROOT {
 
          /** destructor */
          virtual ~Class();
+	 
 
-      
          /**
           * operator Scope will return the corresponding scope of this type if
           * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
@@ -112,6 +114,13 @@ namespace ROOT {
                                    void * mem = 0 ) const;
 
 
+         /**
+          * GenerateDict will produce the dictionary information of this type
+          * @param generator a reference to the dictionary generator instance
+          */
+         virtual void GenerateDict(DictionaryGenerator &generator) const;
+	  
+      
          /**
           * nthDataMember will return the nth data MemberAt of the At
           * @param  nth data MemberAt

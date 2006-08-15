@@ -1,4 +1,5 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: DataMember.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
+
+// @(#)root/reflex:$Name:  $:$Id: DataMember.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -18,9 +19,11 @@
 #include "Reflex/Scope.h"
 #include "Reflex/Object.h"
 #include "Reflex/Member.h"
+#include "Reflex/DictionaryGenerator.h"
 
 #include "Reflex/Tools.h"
 #include "Class.h"
+
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::DataMember::DataMember( const char *  nam,
@@ -117,4 +120,101 @@ void ROOT::Reflex::DataMember::Set( const Object & instance,
    else {
       memcpy( mem, value, TypeOf().SizeOf() );
    }
+}
+
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::DataMember::GenerateDict( DictionaryGenerator & generator ) const {
+//-------------------------------------------------------------------------------
+// Generate Dictionary information about itself.
+
+   const Scope & declScope = DeclaringScope();
+
+   if ( declScope.IsUnion() ) {
+
+      // FIXME
+
+   }
+
+   else if ( declScope.IsEnum() ) {
+
+      std::stringstream tmp;
+      tmp << Offset();
+
+      if ( declScope.DeclaringScope().IsNamespace() ) { 
+         generator.AddIntoInstances("\n.AddItem(\"" + Name() + "\", " + tmp.str() + ")");
+      }
+      else { // class, struct
+         generator.AddIntoFree(Name() + "=" + tmp.str());
+      }
+   }
+
+   else { // class, struct
+
+      const Type & rType = TypeOf().RawType();
+        
+      if( TypeOf().IsArray() ) {      
+
+         Type t = TypeOf();
+
+         std::stringstream temp;
+         temp<< t.ArrayLength();
+
+         generator.AddIntoShadow( t.ToType().Name(SCOPED) + " " + Name() + "[" + temp.str() + "];\n");
+	     
+      }
+   
+      else if(TypeOf().IsPointer() && TypeOf().RawType().IsFunction()) {
+     
+         Type t = TypeOf().ToType();
+         generator.AddIntoShadow( t.ReturnType().Name(SCOPED) + "(") ;
+	
+	
+         if(t.DeclaringScope().IsClass() ) {
+            generator.AddIntoShadow(t.DeclaringScope().Name(SCOPED) + "::");
+         }
+	
+         generator.AddIntoShadow("*"+ t.Name()+")(");
+	  
+	
+         for (size_t parameters = 0; parameters<  t.FunctionParameterSize();
+              ++parameters) {
+	       
+            generator.AddIntoShadow(t.FunctionParameterAt(parameters).Name());
+	       
+            if( t.FunctionParameterSize()>parameters ) {
+               generator.AddIntoShadow(",");
+            }	    
+         }
+	
+         generator.AddIntoShadow(");\n");
+	
+      }
+   
+      else {
+         std::string tname = TypeOf().Name(SCOPED);
+         if ( (rType.IsClass() || rType.IsStruct()) && (! rType.IsPublic())) {
+            tname = generator.Replace_colon(rType.Name(SCOPED));
+            if ( rType != TypeOf()) tname = tname + TypeOf().Name(SCOPED).substr(tname.length());
+         }
+         generator.AddIntoShadow( tname + " " + Name() + ";\n" );
+      }
+
+      //register type and get its number
+      std::string typenumber = generator.GetTypeNumber( TypeOf() );
+   
+      generator.AddIntoFree(".AddDataMember(type_" + typenumber + ", \"" + Name() + "\", ") ;
+      generator.AddIntoFree("OffsetOf (__shadow__::" + 
+                            generator.Replace_colon((*this).DeclaringScope().Name(SCOPED)));
+      generator.AddIntoFree(", " + Name() + "), ");
+      
+      if( IsPublic() )    generator.AddIntoFree("PUBLIC");
+      else if( IsPrivate() )   generator.AddIntoFree("PRIVATE");
+      else if( IsProtected() ) generator.AddIntoFree("PROTECTED");
+      if( IsVirtual() )    generator.AddIntoFree(" | VIRTUAL");
+      if( IsArtificial())  generator.AddIntoFree(" | ARTIFICIAL");
+   
+      generator.AddIntoFree(")\n");
+
+   } 
 }

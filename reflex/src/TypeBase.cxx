@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.19 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.20 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -22,6 +22,8 @@
 #include "Reflex/internal/TypeName.h"
 #include "Reflex/Base.h"
 #include "Reflex/TypeTemplate.h"
+#include "Reflex/DictionaryGenerator.h"
+
 
 #include "Array.h"
 #include "Pointer.h"
@@ -38,8 +40,6 @@
 #include "Reflex/Tools.h"
 
 #include "Reflex/Builder/TypeBuilder.h"
-
-#include <iostream>
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::TypeBase::TypeBase( const char * nam, 
@@ -482,4 +482,10 @@ ROOT::Reflex::TYPE ROOT::Reflex::TypeBase::TypeType() const {
 //-------------------------------------------------------------------------------
 // Return the kind of type as an enum.
    return fTypeType;
+}
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::TypeBase::GenerateDict( DictionaryGenerator & /* generator */ ) const {
+//-------------------------------------------------------------------------------
+// Generate Dictionary information about itself.
 }

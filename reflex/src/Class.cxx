@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.15 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.16 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -21,6 +21,7 @@
 #include "DataMember.h"
 #include "FunctionMember.h"
 #include "Reflex/Tools.h"
+#include "Reflex/DictionaryGenerator.h"
 
 #include <typeinfo>
 #include <iostream>
@@ -28,6 +29,7 @@
 #if defined (__linux) || defined (__APPLE__)
 #include <cxxabi.h>
 #endif
+
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Class::Class(  const char *           typ, 
@@ -479,4 +481,135 @@ void ROOT::Reflex::Class::RemoveFunctionMember( const Member & fm ) const {
 //-------------------------------------------------------------------------------
 // Remove function member from this class.
    ScopeBase::RemoveFunctionMember( fm );
+}
+
+
+
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::Class::GenerateDict( DictionaryGenerator & generator ) const {
+//-------------------------------------------------------------------------------
+   // Generate Dictionary information about itself.
+
+   // Selection file usage
+   bool selected = true;
+
+   /*   
+   // selection file used
+   if (generator.fSelections.size() != 0 || generator.fPattern_selections.size() != 0) {
+      selected = false;
+      
+      // normal selection
+      for (unsigned i = 0; i < generator.fSelections.size(); ++i) {
+         if (generator.fSelections.at(i) == (*this).Name(SCOPED)) {
+            selected = true;
+         }
+      }
+
+      // pattern selection
+      for (unsigned i = 0; i < generator.fPattern_selections.size(); ++i) {
+         if ((*this).Name(SCOPED).find(generator.fPattern_selections.at(i)) != std::string::npos) {
+            selected = true;
+         }
+      }
+
+   }
+   // EndOf Selection file usage
+   */
+
+   if (selected == true) {
+      
+      std::string typenumber = generator.GetTypeNumber(ThisType());
+   
+      if (generator.fSelections.size() != 0 || generator.fPattern_selections.size() != 0) {
+         std::cout << "  * selecting class " << (*this).Name(SCOPED) << "\n";
+      }
+   
+      generator.AddIntoInstances("      " + generator.Replace_colon(ThisType().Name(SCOPED)) + "_dict();\n");
+
+      // Outputten only, if inside a namespace 
+      if (ThisType().DeclaringScope().IsTopScope() && (!DeclaringScope().IsNamespace()) ) {
+         generator.AddIntoShadow("\nnamespace " + ThisType().Name() + " {");
+      }
+
+      // new
+      if (ThisType().DeclaringScope().IsClass()) {  
+         generator.AddIntoShadow("};");
+      }
+      
+	   
+	   
+      
+      // begin of the Dictionary-part
+      generator.AddIntoShadow("\nclass " + generator.Replace_colon(ThisType().Name(SCOPED)) + " {\n");
+      generator.AddIntoShadow("public:\n");
+      
+      
+      
+      if ((ThisType().DeclaringScope().IsClass())) {
+         generator.AddIntoFree(";\n}\n");
+      }
+
+      generator.AddIntoFree("\n\n// ------ Dictionary for class " + ThisType().Name() + "\n");
+      generator.AddIntoFree("void " + generator.Replace_colon(ThisType().Name(SCOPED)) + "_dict() {\n");
+      generator.AddIntoFree("ClassBuilder(\"" + ThisType().Name(SCOPED));
+      if      ( IsPublic()   ) generator.AddIntoFree("\", typeid(" + ThisType().Name(SCOPED) + "), sizeof(" + ThisType().Name(SCOPED) + "), ");
+      else if ( IsProtected()) generator.AddIntoFree("\", typeid(ROOT::Reflex::ProtectedClass), 0,");
+      else if ( IsPrivate()  ) generator.AddIntoFree("\", typeid(ROOT::Reflex::PrivateClass), 0,");
+
+      if (ThisType() == PUBLIC)  generator.AddIntoFree("PUBLIC");
+      if (ThisType() == PRIVATE) generator.AddIntoFree("PRIVATE");
+      if (ThisType() == VIRTUAL) generator.AddIntoFree("VIRTUAL");
+      if (ThisType() == PROTECTED) generator.AddIntoFree("PROTECTED");
+      generator.AddIntoFree(" | CLASS)\n");
+
+      generator.AddIntoClasses("\n// -- Stub functions for class " + ThisType().Name() + "--\n");
+
+      
+      for (Member_Iterator mi = (*this).Member_Begin();
+           mi != (*this).Member_End(); ++mi) {
+         (*mi).GenerateDict(generator);      // call Members' own gendict
+      }
+
+      if (ThisType().DeclaringScope().IsTopScope() && (!DeclaringScope().IsNamespace())) {
+         generator.AddIntoShadow("\nnamespace " + ThisType().Name() + " {");
+      }
+
+//       std::stringstream tempcounter;
+//       tempcounter << generator.fMethodCounter;
+//       generator.AddIntoClasses("\nstatic void* method_x" + tempcounter.str());
+//       generator.AddIntoClasses(" ( void*, const std::vector<void*>&, void*)\n{\n");
+//       generator.AddIntoClasses("  static NewDelFunctions s_funcs;\n");
+
+//       generator.AddIntoFree(".AddFunctionMember<void*(void)>(\"__getNewDelFunctions\", method_x" + tempcounter.str());
+//       generator.AddIntoFree(", 0, 0, PUBLIC | ARTIFICIAL)");
+
+//       std::string temp = "NewDelFunctionsT< ::" + ThisType().Name(SCOPED) + " >::";
+//       generator.AddIntoClasses("  s_funcs.fNew         = " + temp + "new_T;\n");
+//       generator.AddIntoClasses("  s_funcs.fNewArray    = " + temp + "newArray_T;\n");
+//       generator.AddIntoClasses("  s_funcs.fDelete      = " + temp + "delete_T;\n");
+//       generator.AddIntoClasses("  s_funcs.fDeleteArray = " + temp + "deleteArray_T;\n");
+//       generator.AddIntoClasses("  s_funcs.fDestructor  = " + temp + "destruct_T;\n");
+//       generator.AddIntoClasses("  return &s_funcs;\n}\n ");     
+
+//       ++generator.fMethodCounter;
+
+      if (ThisType().DeclaringScope().IsTopScope() && (!DeclaringScope().IsNamespace())) {
+         generator.AddIntoShadow("}\n");        // End of top namespace
+      }
+ 
+      // Recursive call
+      this->ScopeBase::GenerateDict(generator);
+      
+      
+      if (!(ThisType().DeclaringScope().IsClass())) {
+         generator.AddIntoShadow("};\n");
+      }
+      
+      
+      if (!(ThisType().DeclaringScope().IsClass())) {
+         generator.AddIntoFree(";\n}\n");
+      }
+
+   }//new type
 }

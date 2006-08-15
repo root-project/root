@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.10 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.11 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -25,6 +25,8 @@ namespace ROOT {
       class PropertyList;
       class Object;
       class MemberTemplate;
+      class DictionaryGenerator;
+      
 
       /**
        * @class Member Member.h Reflex/Member.h
@@ -49,7 +51,7 @@ namespace ROOT {
          /** destructor */
          ~Member();
 
-
+	 
          /**
           * lesser than operator 
           */
@@ -94,6 +96,13 @@ namespace ROOT {
           * @return the declaring type of the member
           */
          const Type & DeclaringType() const;
+
+
+         /**
+          * GenerateDict will produce the dictionary information of this type
+          * @param generator a reference to the dictionary generator instance
+          */
+         void GenerateDict(DictionaryGenerator &generator) const;
 
 
          /** 

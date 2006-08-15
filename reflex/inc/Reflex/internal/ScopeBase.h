@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.3 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.4 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -33,7 +33,9 @@ namespace ROOT {
       class MemberTemplate;
       class OwnedMemberTemplate;
       class Type;
+      class DictionaryGenerator;
 
+      
       /**
        * @class ScopeBase ScopeBase.h Reflex/ScopeBase.h
        * @author Stefan Roiser
@@ -51,8 +53,8 @@ namespace ROOT {
 
          /** destructor */
          virtual ~ScopeBase();
-
-
+	 
+	 
          /** 
           * operator Scope will return the corresponding Scope object
           * @return Scope corresponding to this ScopeBase
@@ -157,6 +159,13 @@ namespace ROOT {
          Reverse_Member_Iterator FunctionMember_REnd() const;
 
 
+         /**
+          * GenerateDict will produce the dictionary information of this type
+          * @param generator a reference to the dictionary generator instance
+          */
+         virtual void GenerateDict(DictionaryGenerator &generator) const;
+	  
+      
          /**
           * GlobalScope will return the global scope representation\
           * @return global scope

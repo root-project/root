@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.13 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.14 2006/08/09 14:08:00 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -20,6 +20,7 @@
 #include "Reflex/Base.h"
 #include "Reflex/MemberTemplate.h"
 #include "Reflex/TypeTemplate.h"
+#include "Reflex/DictionaryGenerator.h"
 
 #include "Enum.h"
 #include "Union.h"
@@ -339,3 +340,12 @@ const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Type::SubTypeTemplateAt( size_t
    if ( * this ) return fTypeName->fTypeBase->SubTypeTemplateAt( nth );
    return Dummy::TypeTemplate();
 }
+
+
+//------------------------------------------------------------------------------
+void ROOT::Reflex::Type::GenerateDict( DictionaryGenerator & generator) const {
+//------------------------------------------------------------------------------
+// Generate Dictionary information about itself.
+   if ( * this ) fTypeName->fTypeBase->GenerateDict( generator );
+}
+

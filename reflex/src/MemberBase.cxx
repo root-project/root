@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.13 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.14 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -21,6 +21,7 @@
 #include "Reflex/Base.h"
 #include "Reflex/Object.h"
 #include "Reflex/internal/OwnedPropertyList.h"
+#include "Reflex/DictionaryGenerator.h"
 
 #include "Reflex/Tools.h"
 #include "Class.h"
@@ -140,4 +141,14 @@ const ROOT::Reflex::Type & ROOT::Reflex::MemberBase::TemplateArgumentAt( size_t 
 // Return the nth template argument (in FunMemTemplInstance)
    return Dummy::Type();
 }
+
+
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::MemberBase::GenerateDict( DictionaryGenerator & /* generator */) const {
+//-------------------------------------------------------------------------------
+// Generate Dictionary information about itself.
+}
+
+   
 

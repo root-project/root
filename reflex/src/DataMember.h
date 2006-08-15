@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: DataMember.h,v 1.6 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: DataMember.h,v 1.7 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -21,6 +21,8 @@ namespace ROOT {
       // forward declarations
       class TypeBase;
       class Type;
+      class DictionaryGenerator;
+
 
       /**
        * @class DataMember DataMember.h Reflex/DataMember.h
@@ -49,8 +51,15 @@ namespace ROOT {
 
          /** Get the MemberAt value (as void*) */
          Object Get( const Object & obj ) const;
-
-
+	 
+	 
+         /**
+          * GenerateDict will produce the dictionary information of this type
+          * @param generator a reference to the dictionary generator instance
+          */
+         virtual void GenerateDict(DictionaryGenerator &generator) const;
+	  
+      
          /** return the Offset of the MemberAt */
          size_t Offset() const;
 

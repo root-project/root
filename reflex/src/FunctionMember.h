@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionMember.h,v 1.6 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionMember.h,v 1.7 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -21,7 +21,9 @@ namespace ROOT {
       // forward declarations
       class Type;
       class Object;
+      class DictionaryGenerator;
 
+      
       /**
        * @class FunctionMember FunctionMember.h Reflex/FunctionMember.h
        * @author Stefan Roiser
@@ -45,7 +47,14 @@ namespace ROOT {
          /** destructor */
          virtual ~FunctionMember() {}
 
-
+	 	 
+         /**
+          * GenerateDict will produce the dictionary information of this type
+          * @param generator a reference to the dictionary generator instance
+          */
+         virtual void GenerateDict(DictionaryGenerator &generator) const;
+	  
+      
          /** return full Name of function MemberAt */
          std::string Name( unsigned int mod = 0 ) const;
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.13 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.14 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -33,6 +33,8 @@ namespace ROOT {
       class ScopeName;
       class TypeTemplate;
       class MemberTemplate;
+      class DictionaryGenerator;
+
 
       /**
        * @class Scope Scope.h Reflex/Scope.h
@@ -54,8 +56,8 @@ namespace ROOT {
 
          /** destructor */
          ~Scope();
-
-
+	 
+	 
          /**
           * inequal operator 
           */
@@ -249,6 +251,13 @@ namespace ROOT {
           */
          Reverse_Member_Iterator FunctionMember_REnd() const;
 
+
+
+         /**
+          * GenerateDict will produce the dictionary information of this type
+          * @param generator a reference to the dictionary generator instance
+          */
+         void GenerateDict(DictionaryGenerator & generator) const;
 
 
          /**

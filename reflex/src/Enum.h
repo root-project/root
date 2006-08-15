@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Enum.h,v 1.7 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Enum.h,v 1.8 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -18,7 +18,11 @@
 
 namespace ROOT {
    namespace Reflex {
-
+      
+      // forward declarations
+      class DictionaryGenerator;
+      
+      
       /**
        * @class Enum Enum.h Reflex/Enum.h
        * @author Stefan Roiser
@@ -37,7 +41,7 @@ namespace ROOT {
 
          /** destructor */
          virtual ~Enum();
-
+	 
 
          /**
           * operator Scope will return the corresponding scope of this type if
@@ -100,6 +104,13 @@ namespace ROOT {
          virtual const Scope & DeclaringScope() const;
 
 
+         /**
+          * GenerateDict will produce the dictionary information of this type
+          * @param generator a reference to the dictionary generator instance
+          */
+         virtual void GenerateDict(DictionaryGenerator &generator) const;
+
+
          /** 
           * IsPrivate will check if the scope access is private
           * @return true if scope access is private
@@ -149,6 +160,9 @@ namespace ROOT {
          virtual Member_Iterator Member_End() const;
          virtual Reverse_Member_Iterator Member_RBegin() const;
          virtual Reverse_Member_Iterator Member_REnd() const;
+
+
+         virtual std::string Name( unsigned int mod = 0 ) const;
 
 
          /**
@@ -238,6 +252,13 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Enum::Member_RBegin()
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Enum::Member_REnd() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::Member_REnd();  
+}
+
+
+//-------------------------------------------------------------------------------
+inline std::string ROOT::Reflex::Enum::Name( unsigned int mod ) const {
+//-------------------------------------------------------------------------------
+   return ScopeBase::Name( mod );
 }
 
 

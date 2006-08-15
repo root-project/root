@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.15 2006/08/03 17:45:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.16 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -475,4 +475,12 @@ void ROOT::Reflex::Scope::RemoveSubTypeTemplate( const TypeTemplate & tt ) const
 //-------------------------------------------------------------------------------
 // Remove type template tt from this scope.
    if ( * this ) fScopeName->fScopeBase->RemoveSubTypeTemplate( tt );
+}
+
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::Scope::GenerateDict( DictionaryGenerator & generator) const {
+//-------------------------------------------------------------------------------
+// Generate Dictionary information about itself.
+   if ( * this ) fScopeName->fScopeBase->GenerateDict(generator);
 }

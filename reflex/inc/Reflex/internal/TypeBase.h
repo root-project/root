@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.2 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -39,7 +39,8 @@ namespace ROOT {
       class ClassTemplateInstance;
       class FunctionMemberTemplateInstance;
       class TypeName;
-
+      class DictionaryGenerator;
+      
       /**
        * @class TypeBase TypeBase.h Reflex/TypeBase.h
        * @author Stefan Roiser
@@ -59,7 +60,7 @@ namespace ROOT {
 
          /** destructor */
          virtual ~TypeBase();
-
+	 
 
          /**
           * operator Scope will return the corresponding scope of this type if
@@ -232,6 +233,13 @@ namespace ROOT {
          virtual Reverse_Member_Iterator FunctionMember_REnd() const;
 
 
+         /**
+          * GenerateDict will produce the dictionary information of this type
+          * @param generator a reference to the dictionary generator instance
+          */
+         virtual void GenerateDict(DictionaryGenerator &generator) const;
+	  
+      
          /**
           * HasBase will check whether this class has a BaseAt class given
           * as argument

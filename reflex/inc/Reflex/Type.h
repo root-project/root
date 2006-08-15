@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.17 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.18 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -41,6 +41,7 @@ namespace ROOT {
       class TypeName;
       class MemberTemplate;
       class TypeTemplate;
+      class DictionaryGenerator;
 
       /**
        * @class Type Type.h Reflex/Type.h
@@ -403,6 +404,13 @@ namespace ROOT {
           * @return reverse end of container of function parameters
           */
          Reverse_Type_Iterator FunctionParameter_REnd() const;
+
+
+         /**
+          * GenerateDict will produce the dictionary information of this type
+          * @param generator a reference to the dictionary generator instance
+          */
+         void GenerateDict( DictionaryGenerator & generator) const;
 
 
          /**

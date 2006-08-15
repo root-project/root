@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.cxx,v 1.8 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Member.cxx,v 1.9 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,8 +24,6 @@
 #include "Class.h"
 
 #include <iostream>
-
-#include "Reflex/internal/OwnedMember.h"
 
 
 //-------------------------------------------------------------------------------
@@ -130,3 +128,10 @@ void ROOT::Reflex::Member::Set( const Object & instance,
 }
 
 
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::Member::GenerateDict( DictionaryGenerator & generator) const {
+//-------------------------------------------------------------------------------
+// Generate Dictionary information about itself.
+   if ( * this ) fMemberBase->GenerateDict( generator );
+}
+                           

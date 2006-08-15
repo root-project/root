@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.10 2006/07/03 17:02:38 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -23,6 +23,7 @@ namespace ROOT {
 
       // forward declarations
       class Object;
+      class DictionaryGenerator;
 
       /**
        * @class MemberBase MemberBase.h Reflex/MemberBase.h
@@ -67,6 +68,13 @@ namespace ROOT {
          const Type & DeclaringType() const;
 
 
+         /**
+          * GenerateDict will produce the dictionary information of this type
+          * @param generator a reference to the dictionary generator instance
+          */
+         virtual void GenerateDict(DictionaryGenerator &generator) const;
+	  
+      
          /** Get the MemberAt value (as void*) */
          virtual Object Get( const Object & obj ) const;
 
