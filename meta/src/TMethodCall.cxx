@@ -1,4 +1,4 @@
-// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.24 2005/11/16 20:10:45 pcanal Exp $
+// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.25 2006/06/14 18:15:30 pcanal Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -137,41 +137,9 @@ TObject *TMethodCall::Clone(const char *) const
 }
 
 //______________________________________________________________________________
-void TMethodCall::Init(TClass *cl, const char *method, const char *params)
+static TClass *R__FindScope(const char *function, UInt_t &pos, G__ClassInfo &cinfo)
 {
-   // Initialize the method invocation environment. Necessary input
-   // information: the class, method name and the parameter string
-   // of the form "\"aap\", 3, 4.35".
-   // To execute the method call TMethodCall::Execute(object,...).
-   // This two step method is much more efficient than calling for
-   // every invocation TInterpreter::Execute(...).
-
-   if (!fFunc)
-      fFunc = new G__CallFunc;
-   else
-      fFunc->Init();
-
-   fClass    = cl;
-   fMetPtr   = 0;
-   fMethod   = method;
-   fParams   = params;
-   fProto    = "";
-   fDtorOnly = kFALSE;
-   fRetType  = kNone;
-
-   R__LOCKGUARD2(gCINTMutex);
-   if (cl)
-      fFunc->SetFunc(cl->GetClassInfo(), (char *)method, (char *)params, &fOffset);
-   else {
-      G__ClassInfo gcl;
-      fFunc->SetFunc(&gcl, (char *)method, (char *)params, &fOffset);
-   }
-}
-
-//______________________________________________________________________________
-static TClass *R__FindClass(const char *function, UInt_t &pos)
-{
-   // Helper function to find the TClass associated with a qualified
+   // Helper function to find the scope associated with a qualified
    // function name
 
    if (function) {
@@ -183,10 +151,11 @@ static TClass *R__FindClass(const char *function, UInt_t &pos)
             case ':':
                if (nested==0) {
                   if (i>2 && function[i-1]==':') {
-                     TString classname(function);
-                     classname[i-1] = 0;
-                     TClass *cl = gROOT->GetClass(classname);
-                     if (cl) pos = i+1;
+                     TString scope(function);
+                     scope[i-1] = 0;
+                     pos = i+1;
+                     TClass *cl = gROOT->GetClass(scope);
+                     if (!cl) cinfo.Init(scope);
                      return cl;
                   }
                }
@@ -195,6 +164,25 @@ static TClass *R__FindClass(const char *function, UInt_t &pos)
       }
    }
    return 0;
+}
+
+//______________________________________________________________________________
+void TMethodCall::Init(TClass *cl, const char *method, const char *params)
+{
+   // Initialize the method invocation environment. Necessary input
+   // information: the class, method name and the parameter string
+   // of the form "\"aap\", 3, 4.35".
+   // To execute the method call TMethodCall::Execute(object,...).
+   // This two step method is much more efficient than calling for
+   // every invocation TInterpreter::Execute(...).
+
+   G__ClassInfo cinfo;
+   if (!cl) {
+      UInt_t pos = 0;
+      cl = R__FindScope(method,pos,cinfo);
+      method = method+pos;
+   }
+   InitImplementation(method,params,0,cl,cinfo);
 }
 
 //______________________________________________________________________________
@@ -208,8 +196,49 @@ void TMethodCall::Init(const char *function, const char *params)
    // every invocation TInterpreter::Execute(...).
 
    UInt_t pos = 0;
-   TClass *cl = R__FindClass(function,pos);
-   Init(cl, function+pos, params);
+   G__ClassInfo cinfo;
+   TClass *cl = R__FindScope(function,pos,cinfo);
+   InitImplementation(function+pos, params, 0, cl, cinfo);
+}
+
+//______________________________________________________________________________
+void TMethodCall::InitImplementation(const char *methodname, const char *params,
+                                     const char *proto, TClass *cl,
+                                     const G__ClassInfo &cinfo) 
+{
+   // This function implements Init and InitWithPrototype.
+
+   // 'methodname' should NOT have any scope information in it.  The scope
+   // information should be passed via the TClass or G__ClassInfo.
+
+   if (!fFunc)
+      fFunc = new G__CallFunc;
+   else
+      fFunc->Init();
+
+   fClass    = cl;
+   fMetPtr   = 0;
+   fMethod   = methodname;
+   fParams   = params ? params : "";
+   fProto    = proto ? proto : "";
+   fDtorOnly = kFALSE;
+   fRetType  = kNone;
+
+   G__ClassInfo *scope = 0;
+   G__ClassInfo global;
+   if (cl) scope = cl->GetClassInfo();
+   else scope = (G__ClassInfo*)&cinfo;
+  
+   R__LOCKGUARD2(gCINTMutex);
+   if (params && params[0]) {
+      fFunc->SetFunc(scope, (char *)methodname, (char *)params, &fOffset);
+   } else if (proto && proto[0]) {
+      fFunc->SetFuncProto(scope, (char *)methodname, (char *)proto, &fOffset);
+   } else {
+      // No parameters
+      fFunc->SetFunc(scope, (char *)methodname, "", &fOffset);
+   }
+
 }
 
 //______________________________________________________________________________
@@ -222,26 +251,13 @@ void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *
    // This two step method is much more efficient than calling for
    // every invocation TInterpreter::Execute(...).
 
-   if (!fFunc)
-      fFunc = new G__CallFunc;
-   else
-      fFunc->Init();
-
-   fClass    = cl;
-   fMetPtr   = 0;
-   fMethod   = method;
-   fParams   = "";
-   fProto    = proto;
-   fDtorOnly = kFALSE;
-   fRetType  = kNone;
-
-   R__LOCKGUARD2(gCINTMutex);
-   if (cl)
-      fFunc->SetFuncProto(cl->GetClassInfo(), (char *)method, (char *)proto, &fOffset);
-   else {
-      G__ClassInfo gcl;
-      fFunc->SetFuncProto(&gcl, (char *)method, (char *)proto, &fOffset);
+   G__ClassInfo cinfo;
+   if (!cl) {
+      UInt_t pos = 0;
+      cl = R__FindScope(method,pos,cinfo);
+      method = method+pos;
    }
+   InitImplementation(method, 0, proto, cl, cinfo);
 }
 
 //______________________________________________________________________________
@@ -255,8 +271,9 @@ void TMethodCall::InitWithPrototype(const char *function, const char *proto)
    // every invocation TInterpreter::Execute(...).
 
    UInt_t pos = 0;
-   TClass *cl = R__FindClass(function,pos);
-   InitWithPrototype(cl, function+pos, proto);
+   G__ClassInfo cinfo;
+   TClass *cl = R__FindScope(function,pos,cinfo);
+   InitImplementation(function+pos, 0, proto, cl, cinfo);
 }
 
 //______________________________________________________________________________

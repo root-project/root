@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.11 2003/08/22 15:13:18 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.12 2005/03/13 15:05:31 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -37,7 +37,7 @@
 class TClass;
 class TFunction;
 class G__CallFunc;
-
+class G__ClassInfo;
 
 class TMethodCall : public TObject {
 
@@ -57,6 +57,8 @@ private:
 
    void Execute(const char *,  const char *, int * /*error*/ = 0) { }    // versions of TObject
    void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
+
+   void InitImplementation(const char *methodname, const char *params, const char *proto, TClass *cl, const G__ClassInfo &cinfo);
 
 public:
    TMethodCall();
