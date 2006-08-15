@@ -15,8 +15,8 @@ UTILSDIRI    := $(UTILSDIR)/inc
 ROOTCINTS    := $(MODDIRS)/rootcint.cxx \
                 $(filter-out %_tmp.cxx,$(wildcard $(MODDIRS)/R*.cxx))
 ROOTCINTO    := $(ROOTCINTS:.cxx=.o)
-ROOTCINTDEP  := $(ROOTCINTO:.o=.d)
 ROOTCINTTMPO := $(ROOTCINTS:.cxx=_tmp.o)
+ROOTCINTDEP  := $(ROOTCINTO:.o=.d) $(ROOTCINTTMPO:.o=.d) 
 ROOTCINTTMPEXE:= $(MODDIRS)/rootcint_tmp$(EXEEXT)
 ROOTCINTEXE  := bin/rootcint$(EXEEXT)
 
