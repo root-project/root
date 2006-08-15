@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.21 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.22 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -72,7 +72,7 @@ protected:
    FontStruct_t        fFontStruct;     // font
    GContext_t          fNormGC;         // drawing context
 
-   void ChangeTab(Int_t tabIndex);
+   void ChangeTab(Int_t tabIndex, Bool_t emit=kTRUE);
 
    static const TGFont *fgDefaultFont;
    static const TGGC   *fgDefaultGC;
@@ -94,10 +94,12 @@ public:
 
    virtual TGCompositeFrame *AddTab(TGString *text);
    virtual TGCompositeFrame *AddTab(const char *text);
+
    virtual void              NewTab(const char *text = "tab");   // *MENU*icon=bld_newtab.png*
-   virtual void              RemoveTab(Int_t tabIndex = -1);     // *MENU*icon=bld_removetab.png*
-   virtual Bool_t            SetTab(Int_t tabIndex);
-   virtual Bool_t            SetTab(const char *name);
+   virtual void              RemoveTab(Int_t tabIndex = -1,
+                                       Bool_t storeRemoved = kTRUE); // *MENU*icon=bld_removetab.png*
+   virtual Bool_t            SetTab(Int_t tabIndex, Bool_t emit = kTRUE);
+   virtual Bool_t            SetTab(const char *name, Bool_t emit = kTRUE);
    virtual void              DrawBorder() { }
 
    TGCompositeFrame *GetContainer() const { return fContainer; }

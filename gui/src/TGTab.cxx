@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.37 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.38 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -308,7 +308,7 @@ TGCompositeFrame *TGTab::AddTab(const char *text)
 }
 
 //______________________________________________________________________________
-void TGTab::RemoveTab(Int_t tabIndex)
+void TGTab::RemoveTab(Int_t tabIndex, Bool_t storeRemoved)
 {
    // Remove container and tab of tab with index tabIndex.
    // Does NOT remove the container contents!
@@ -332,7 +332,8 @@ void TGTab::RemoveTab(Int_t tabIndex)
          RemoveFrame(elTab->fFrame);
          frame->DestroyWindow();
          delete frame;
-         fRemoved->Add(elCont->fFrame);   // delete only in dtor
+         if (storeRemoved)
+            fRemoved->Add(elCont->fFrame);   // delete only in dtor
          RemoveFrame(elCont->fFrame);
          if (tabIndex == fCurrent) {
             // select another tab only if the current is the one we delete
@@ -370,7 +371,7 @@ Bool_t TGTab::IsEnabled(Int_t tabIndex) const
 }
 
 //______________________________________________________________________________
-void TGTab::ChangeTab(Int_t tabIndex)
+void TGTab::ChangeTab(Int_t tabIndex, Bool_t emit)
 {
    // Make tabIdx the current tab. Utility method called by SetTab and
    // HandleButton().
@@ -402,14 +403,16 @@ void TGTab::ChangeTab(Int_t tabIndex)
          xtab += tw;
          count++;
       }
-      SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_TAB), fCurrent, 0);
-      fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_TAB), fCurrent, 0);
-      Selected(fCurrent);
+      if (emit) {
+         SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_TAB), fCurrent, 0);
+         fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_TAB), fCurrent, 0);
+         Selected(fCurrent);
+      }
    }
 }
 
 //______________________________________________________________________________
-Bool_t TGTab::SetTab(Int_t tabIndex)
+Bool_t TGTab::SetTab(Int_t tabIndex, Bool_t emit)
 {
    // Brings the composite frame with the index tabIndex to the
    // front and generate the following event if the front tab has changed:
@@ -431,13 +434,13 @@ Bool_t TGTab::SetTab(Int_t tabIndex)
       return kFALSE;
 
    // change tab and generate event
-   ChangeTab(tabIndex);
+   ChangeTab(tabIndex, emit);
 
    return kTRUE;
 }
 
 //______________________________________________________________________________
-Bool_t TGTab::SetTab(const char *name)
+Bool_t TGTab::SetTab(const char *name, Bool_t emit)
 {
    // Brings the composite frame with the name to the
    // front and generate the following event if the front tab has changed:
@@ -456,7 +459,7 @@ Bool_t TGTab::SetTab(const char *name)
 
       if (name == *(tab->GetText())) {
          // change tab and generate event
-         ChangeTab(count);
+         ChangeTab(count, emit);
          return kTRUE;
       }
       count++;
@@ -500,12 +503,13 @@ TGCompositeFrame *TGTab::GetTabContainer(const char *name) const
    TGCompositeFrame *comp = 0;
 
    TIter next(fList);
+   next();
 
    while ((el = (TGFrameElement *) next())) {
+      tab  = (TGTabElement *) el->fFrame;
+      el   = (TGFrameElement *) next();
       comp = (TGCompositeFrame *) el->fFrame;
-      el = (TGFrameElement *) next();
-      tab = (TGTabElement *)el->fFrame;
-      if (name == *(tab->GetText())) {
+      if (*tab->GetText() == name){
          return comp;
       }
    }
