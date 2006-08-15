@@ -814,8 +814,8 @@ typedef int (*G__IgnoreInclude)();
 /* G__MAXIFUNC and G__MEMDEPTH are not real limit
  * They are depth of one page of function or variable list
  * If the page gets full, more table is allocated. */
-#define G__MAXIFUNC 10
-#define G__MEMDEPTH 10
+#define G__MAXIFUNC 1
+#define G__MEMDEPTH 2
 
 
 /* #define G__HIST     1 */
