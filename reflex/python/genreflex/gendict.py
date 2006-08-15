@@ -1242,7 +1242,7 @@ class genDictionary(object) :
     return self.genMCODecl( 'converter', 'operator '+attrs['name'], attrs, args )    
 #----------------------------------------------------------------------------------
   def genConverterBuild( self, attrs, args ) :
-    return self.genMCOBuild( 'converter', 'operator '+self.genTypeName(attrs['returns'],enum=True,const=True), attrs, args )    
+    return self.genMCOBuild( 'converter', 'operator '+self.genTypeName(attrs['returns'],enum=True,const=False), attrs, args )    
 #----------------------------------------------------------------------------------
   def genConverterDef( self, attrs, args ) :
     # If this is a conversion operator to pointer to function member we will need
