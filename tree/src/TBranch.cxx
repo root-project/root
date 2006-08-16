@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.111 2006/08/06 16:09:40 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.112 2006/08/08 20:56:25 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -401,12 +401,16 @@ void TBranch::AddBasket(TBasket& b, Bool_t ondisk, Long64_t startEntry)
          Warning("AddBasket","The assumption that out-of-order basket only comes from disk based ntuple is false.");
       }
 
-      for(Int_t i=fWriteBasket-1; i>0; --i) {
-         if (fBasketEntry[i] < startEntry) {
-            where = i+1;
-            break;
-         } else if (fBasketEntry[i] == startEntry) {
-            Error("AddBasket","An out-of-order basket matches the entry number of an existing basket.");
+      if (startEntry < fBasketEntry[0]) {
+         where = 0;
+      } else {
+         for(Int_t i=fWriteBasket-1; i>=0; --i) {
+            if (fBasketEntry[i] < startEntry) {
+               where = i+1;
+               break;
+            } else if (fBasketEntry[i] == startEntry) {
+               Error("AddBasket","An out-of-order basket matches the entry number of an existing basket.");
+            }
          }
       }
 
