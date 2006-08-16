@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.h,v 1.9 2005/11/16 17:38:38 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.h,v 1.10 2006/07/03 16:10:44 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -74,10 +74,14 @@ public:
    Double_t        GetErrorXhigh(Int_t bin) const;
    Double_t        GetErrorYlow(Int_t bin)  const;
    Double_t        GetErrorYhigh(Int_t bin) const;
-   Double_t       *GetEXlow()  const {return fEXlow;}
-   Double_t       *GetEXhigh() const {return fEXhigh;}
-   Double_t       *GetEYlow()  const {return fEYlow;}
-   Double_t       *GetEYhigh() const {return fEYhigh;}
+   Double_t       *GetEXlow()   const {return fEXlow;}
+   Double_t       *GetEXhigh()  const {return fEXhigh;}
+   Double_t       *GetEYlow()   const {return fEYlow;}
+   Double_t       *GetEYhigh()  const {return fEYhigh;}
+   Double_t       *GetEXlowd()  const {return fEXlowd;}
+   Double_t       *GetEXhighd() const {return fEXhighd;}
+   Double_t       *GetEYlowd()  const {return fEYlowd;}
+   Double_t       *GetEYhighd() const {return fEYhighd;}
    virtual void    Paint(Option_t *chopt="");
    virtual void    Print(Option_t *chopt="") const;
    virtual void    SavePrimitive(ostream &out, Option_t *option = "");
