@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: TypedefBuilder.h,v 1.6 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypedefBuilder.h,v 1.7 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -14,12 +14,12 @@
 
 // Include files
 #include "Reflex/Builder/TypeBuilder.h"
+#include "Reflex/Type.h"
 
 namespace ROOT{
    namespace Reflex{
 
       // forward declarations
-      class Typedef;
 
       /**
        * @class TypedefBuilderImpl TypedefBuilder.h Reflex/Builder/TypedefBuilderImpl.h
@@ -60,7 +60,7 @@ namespace ROOT{
       private:
 
          /** the typedef currently being built */
-         Typedef * fTypedef;
+         Type fTypedef;
 
       }; // class TypdefBuilderImpl
 

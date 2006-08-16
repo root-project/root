@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.11 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.12 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -229,7 +229,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddTypedef( const Type & typ,
                                                  const char * def ) {
 //-------------------------------------------------------------------------------
 // Add typedef info (internal).
-   new Typedef( def, typ );
+   TypedefTypeBuilder( def, typ );
 }
 
 

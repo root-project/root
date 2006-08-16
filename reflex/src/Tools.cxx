@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.15 2006/07/14 06:47:25 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.16 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -28,22 +28,22 @@
 using namespace ROOT::Reflex;
 
 namespace FTypes {
-   static size_t & Char()       { static size_t t = (size_t)Type::ByName("char").Id();               return t; }
-   static size_t & SigChar()    { static size_t t = (size_t)Type::ByName("signed char").Id();        return t; }
-   static size_t & ShoInt()     { static size_t t = (size_t)Type::ByName("short int").Id();          return t; }
-   static size_t & Int()        { static size_t t = (size_t)Type::ByName("int").Id();                return t; }
-   static size_t & LonInt()     { static size_t t = (size_t)Type::ByName("long int").Id();           return t; }
-   static size_t & UnsChar()    { static size_t t = (size_t)Type::ByName("unsigned char").Id();      return t; }
-   static size_t & UnsShoInt()  { static size_t t = (size_t)Type::ByName("unsigned short int").Id(); return t; }
-   static size_t & UnsInt()     { static size_t t = (size_t)Type::ByName("unsigned int").Id();       return t; }
-   static size_t & UnsLonInt()  { static size_t t = (size_t)Type::ByName("unsigned long int").Id();  return t; }
-   static size_t & Bool()       { static size_t t = (size_t)Type::ByName("bool").Id();               return t; }
-   static size_t & Float()      { static size_t t = (size_t)Type::ByName("float").Id();              return t; }
-   static size_t & Double()     { static size_t t = (size_t)Type::ByName("double").Id();             return t; }
-   static size_t & LonDouble()  { static size_t t = (size_t)Type::ByName("long double").Id();        return t; }
-   static size_t & Void()       { static size_t t = (size_t)Type::ByName("void").Id();               return t; }
-   static size_t & LonLong()    { static size_t t = (size_t)Type::ByName("longlong").Id();           return t; }
-   static size_t & UnsLonLong() { static size_t t = (size_t)Type::ByName("ulonglong").Id();          return t; }
+   static const std::type_info & Char()       { static const std::type_info & t = Type::ByName("char").TypeInfo();               return t; }
+   static const std::type_info & SigChar()    { static const std::type_info & t = Type::ByName("signed char").TypeInfo();        return t; }
+   static const std::type_info & ShoInt()     { static const std::type_info & t = Type::ByName("short int").TypeInfo();          return t; }
+   static const std::type_info & Int()        { static const std::type_info & t = Type::ByName("int").TypeInfo();                return t; }
+   static const std::type_info & LonInt()     { static const std::type_info & t = Type::ByName("long int").TypeInfo();           return t; }
+   static const std::type_info & UnsChar()    { static const std::type_info & t = Type::ByName("unsigned char").TypeInfo();      return t; }
+   static const std::type_info & UnsShoInt()  { static const std::type_info & t = Type::ByName("unsigned short int").TypeInfo(); return t; }
+   static const std::type_info & UnsInt()     { static const std::type_info & t = Type::ByName("unsigned int").TypeInfo();       return t; }
+   static const std::type_info & UnsLonInt()  { static const std::type_info & t = Type::ByName("unsigned long int").TypeInfo();  return t; }
+   static const std::type_info & Bool()       { static const std::type_info & t = Type::ByName("bool").TypeInfo();               return t; }
+   static const std::type_info & Float()      { static const std::type_info & t = Type::ByName("float").TypeInfo();              return t; }
+   static const std::type_info & Double()     { static const std::type_info & t = Type::ByName("double").TypeInfo();             return t; }
+   static const std::type_info & LonDouble()  { static const std::type_info & t = Type::ByName("long double").TypeInfo();        return t; }
+   static const std::type_info & Void()       { static const std::type_info & t = Type::ByName("void").TypeInfo();               return t; }
+   static const std::type_info & LonLong()    { static const std::type_info & t = Type::ByName("longlong").TypeInfo();           return t; }
+   static const std::type_info & UnsLonLong() { static const std::type_info & t = Type::ByName("ulonglong").TypeInfo();          return t; }
 }
 
 //-------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ static std::string splitScopedName( const std::string & nam,
 EFUNDAMENTALTYPE Tools::FundamentalType( const Type & typ ) {
 //-------------------------------------------------------------------------------
 // Return an enum representing the fundamental type passed in.
-   size_t tid = (size_t)typ.FinalType().Id();
+   const std::type_info & tid = typ.FinalType().TypeInfo();
    
    if ( tid == FTypes::Char() )         return kCHAR;
    if ( tid == FTypes::SigChar() )      return kSIGNED_CHAR; 

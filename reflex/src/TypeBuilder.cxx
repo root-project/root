@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.cxx,v 1.12 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.cxx,v 1.13 2006/08/02 06:56:37 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -138,9 +138,16 @@ ROOT::Reflex::Type ROOT::Reflex::TypedefTypeBuilder(const char * nam,
 //-------------------------------------------------------------------------------
 // Construct a typedef type.
    Type ret = Type::ByName(nam);
-   // ret == t checks for the case of "typedef AA AA;" where the non-typedef is only declared
-   if ( ret || ret == t ) return ret;
-   else       return (new Typedef( nam , t ))->ThisType();        
+   if ( ret ) {
+      // ret == t checks for the case of "struct AA{}; typedef AA AA;
+      if ( ret == t ) {
+         return ret;
+      }
+      else {  
+         return ret;
+      }
+   }
+   else return (new Typedef( nam , t ))->ThisType();        
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypedefBuilder.cxx,v 1.8 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypedefBuilder.cxx,v 1.9 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -14,6 +14,7 @@
 #endif
 
 #include "Reflex/Builder/TypedefBuilder.h"
+#include "Reflex/Builder/TypeBuilder.h"
 
 #include "Typedef.h"
 
@@ -25,7 +26,7 @@ ROOT::Reflex::TypedefBuilderImpl::TypedefBuilderImpl( const char * typ,
                                                       const Type & typedefType ) {
 //-------------------------------------------------------------------------------
 // Construct typedef info.
-   fTypedef = new Typedef( typ, typedefType );
+   fTypedef = TypedefTypeBuilder( typ, typedefType );
 }
 
 
@@ -34,7 +35,7 @@ void ROOT::Reflex::TypedefBuilderImpl::AddProperty( const char * key,
                                                     Any value ) {
 //-------------------------------------------------------------------------------
 // Attach a property to this typedef as Any object.
-   fTypedef->Properties().AddProperty( key, value );
+   fTypedef.Properties().AddProperty( key, value );
 }
 
 

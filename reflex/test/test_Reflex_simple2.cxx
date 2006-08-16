@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.23 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.24 2006/08/11 06:32:00 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -175,6 +175,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testToTypeFinal );
   CPPUNIT_TEST( testScopeSubFuns );
   CPPUNIT_TEST( testEnums );
+  CPPUNIT_TEST( fundamentalType );
   CPPUNIT_TEST( unloadType );
   CPPUNIT_TEST( unloadLibrary );
   CPPUNIT_TEST( shutdown );
@@ -205,6 +206,7 @@ public:
   void testToTypeFinal();
   void testScopeSubFuns() ;
   void testEnums();
+  void fundamentalType();
   void unloadType();
 
   void unloadLibrary();
@@ -1188,6 +1190,39 @@ void ReflexSimple2Test::testEnums() {
 
 }
 
+
+
+void ReflexSimple2Test::fundamentalType() {
+
+   Type t0 = Type::ByName("int");
+   CPPUNIT_ASSERT(t0);
+   CPPUNIT_ASSERT_EQUAL(kINT, Tools::FundamentalType(t0));
+
+   Type t1 = Type::ByName("unsigned int");
+   CPPUNIT_ASSERT(t1);
+   CPPUNIT_ASSERT_EQUAL(kUNSIGNED_INT, Tools::FundamentalType(t1));
+
+   Type t2 = Type::ByName("unsigned long int");
+   CPPUNIT_ASSERT(t2);
+   CPPUNIT_ASSERT_EQUAL(kUNSIGNED_LONG_INT, Tools::FundamentalType(t2));
+
+   Type t3 = Type::ByName("long unsigned int");
+   CPPUNIT_ASSERT(t3);
+   CPPUNIT_ASSERT_EQUAL(kUNSIGNED_LONG_INT, Tools::FundamentalType(t3));
+
+   Type t4 = Type::ByName("signed int");
+   CPPUNIT_ASSERT(t4);
+   CPPUNIT_ASSERT_EQUAL(kINT, Tools::FundamentalType(t4));
+
+   Type t5 = Type::ByName("long int");
+   CPPUNIT_ASSERT(t5);
+   CPPUNIT_ASSERT_EQUAL(kLONG_INT, Tools::FundamentalType(t5));
+
+   Type t6 = Type::ByName("Bla::Base");
+   CPPUNIT_ASSERT(t6);
+   CPPUNIT_ASSERT_EQUAL(kNOTFUNDAMENTAL, Tools::FundamentalType(t6));
+
+}
 
 
 void ReflexSimple2Test::unloadType() {
