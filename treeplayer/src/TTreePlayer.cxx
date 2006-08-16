@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name: v5-12-00-patches $:$Id: TTreePlayer.cxx,v 1.221 2006/07/06 08:29:46 brun Exp $
+// @(#)root/treeplayer:$Name: v5-12-00-patches $:$Id: TTreePlayer.cxx,v 1.221.2.1 2006/08/02 19:32:59 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1116,10 +1116,10 @@ static TString R__GetBranchPointerName(TLeaf *leaf)
                   branchname += ".";
                }
                if (strncmp(branchname.Data(),ltitle,branchname.Length())==0) {
-                  branchname[0] = 0;
+                  branchname = "";
                }
             } else {
-               branchname[0] = 0;
+               branchname = "";
             }
             branchname += ltitle;
          }
@@ -1709,7 +1709,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       if (branch->IsA() == TBranchObject::Class()) {
          if (branch->GetListOfBranches()->GetEntriesFast()) {
-            fprintf(fp,"   fChain->SetBranchAddress(\"%s\",(void*)-1);\n",branch->GetName());
+            fprintf(fp,"   fChain->SetBranchAddress(\"%s\",(void*)-1,&b_%s);\n",branch->GetName(),R__GetBranchPointerName(leaf).Data());
             continue;
          }
          strcpy(branchname,branch->GetName());
