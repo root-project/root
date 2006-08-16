@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.17 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.18 2006/08/15 15:41:57 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -52,9 +52,9 @@ ROOT::Reflex::Class::Class(  const char *           typ,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Class::~Class() {
 //-------------------------------------------------------------------------------
-  for ( PathsToBase::iterator it = fPathsToBase.begin(); it != fPathsToBase.end(); ++it ) {
-    delete it->second;
-  }
+   for ( PathsToBase::iterator it = fPathsToBase.begin(); it != fPathsToBase.end(); ++it ) {
+      delete it->second;
+   }
 }
 
 

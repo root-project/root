@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.13 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.14 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -80,14 +80,14 @@ ROOT::Reflex::TypeName::~TypeName() {
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::TypeName::CleanUp() {
 //-------------------------------------------------------------------------------
-  for ( TypeVec_t::iterator it = sTypeVec().begin(); it != sTypeVec().end(); ++it ) {
-    TypeName * tn = (TypeName*)it->Id();
-    Type * t = tn->fThisType;
-    if ( *t ) t->Unload();
-    delete t;
-    delete tn;
-  }
-
+   // Cleanup memory allocations for types.
+   for ( TypeVec_t::iterator it = sTypeVec().begin(); it != sTypeVec().end(); ++it ) {
+      TypeName * tn = (TypeName*)it->Id();
+      Type * t = tn->fThisType;
+      if ( *t ) t->Unload();
+      delete t;
+      delete tn;
+   }
 }
 
 

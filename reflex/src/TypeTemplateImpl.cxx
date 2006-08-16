@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.11 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.12 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -59,6 +59,7 @@ ROOT::Reflex::TypeTemplateImpl::~TypeTemplateImpl() {
 //-------------------------------------------------------------------------------
 bool ROOT::Reflex::TypeTemplateImpl::operator == ( const TypeTemplateImpl & tt ) const {
 //-------------------------------------------------------------------------------
+   // Equal operator.
    return ( ( fTypeTemplateName->fName == tt.fTypeTemplateName->fName ) && 
             ( fParameterNames.size() == tt.fParameterNames.size() ) );
 }
@@ -67,6 +68,7 @@ bool ROOT::Reflex::TypeTemplateImpl::operator == ( const TypeTemplateImpl & tt )
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_Begin() const {
 //-------------------------------------------------------------------------------
+   // Return the begin iterator of the instance container of this type template.
    return fTemplateInstances.begin();
 }
 
@@ -74,6 +76,7 @@ ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_Beg
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_End() const {
 //-------------------------------------------------------------------------------
+   // Return the end iterator of the instance container of this type template.
    return fTemplateInstances.end();
 }
 
@@ -81,6 +84,7 @@ ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_End
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_RBegin() const {
 //-------------------------------------------------------------------------------
+   // Return the rbegin iterator of the instance container of this type template.
    return fTemplateInstances.rbegin();
 }
 
@@ -88,6 +92,7 @@ ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInst
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_REnd() const {
 //-------------------------------------------------------------------------------
+   // Return the rend iterator of the instance container of this type template.
    return fTemplateInstances.rend();
 }
 
@@ -112,6 +117,7 @@ size_t ROOT::Reflex::TypeTemplateImpl::TemplateInstanceSize() const {
 //-------------------------------------------------------------------------------
 const ROOT::Reflex::TypeTemplate & ROOT::Reflex::TypeTemplateImpl::ThisTypeTemplate() const {
 //-------------------------------------------------------------------------------
+   // Return a ref to this type template.
    return fTypeTemplateName->ThisTypeTemplate();
 }
 

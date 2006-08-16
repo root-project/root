@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.17 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateName.cxx,v 1.1 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -115,6 +115,7 @@ void ROOT::Reflex::TypeTemplateName::DeleteTypeTemplate() const {
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::TypeTemplateName::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
+   // Return the name of this type template.
    if ( 0 != ( mod & ( SCOPED | S ))) return fName;
    else                               return Tools::GetBaseName( fName );
 }

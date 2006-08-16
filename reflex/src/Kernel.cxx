@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.15 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.16 2006/08/15 15:05:43 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -176,6 +176,7 @@ ROOT::Reflex::Reflex::Reflex() {
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Reflex::Shutdown() {
 //-------------------------------------------------------------------------------
+   // function to be called at tear down of Reflex, removes all memory allocations
    MemberTemplateName::CleanUp();
    TypeTemplateName::CleanUp();
    TypeName::CleanUp();
@@ -184,8 +185,10 @@ void ROOT::Reflex::Reflex::Shutdown() {
 
 
 //-------------------------------------------------------------------------------
+
 ROOT::Reflex::Reflex::~Reflex() {
 //-------------------------------------------------------------------------------
+   // Destructor
 }
 
 
