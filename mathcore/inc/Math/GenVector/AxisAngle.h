@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.6 2006/05/26 15:10:39 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.7 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -68,8 +68,9 @@ public:
      the x, y, and z components of a unit axis vector, and the angle
      of rotation.
      Precondition:  The first three components are assumed to represent
-     a unit vector.  The angle is assumed to be in the rand (-pi,pi].
-     NO checking or re-adjusting is performed.
+     the rotation axis vector and the 4-th the rotation angle.  
+     The angle is assumed to be in the range (-pi,pi].
+     The axis vector is automatically normalized to be a unit vector  
    */
   template<class IT>
   AxisAngle(IT begin, IT end) { SetComponents(begin,end); }
@@ -139,13 +140,18 @@ public:
   /**
      Set the axis and then the angle given a pair of pointers or iterators
      defining the beginning and end of an array of four Scalars.
-     Precondition:  The axis is assumed to represent a unit vector.
-     NO checking or re-adjusting is performed.
+     Precondition:  The first three components are assumed to represent
+     the rotation axis vector and the 4-th the rotation angle. 
+     The angle is assumed to be in the range (-pi,pi].
+     The axis vector is automatically normalized to be a unit vector  
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
     assert (end==begin+4);
     fAxis.SetCoordinates(begin, begin+3);
+    // re-normalize the vector
+    double tot = fAxis.R();
+    if (tot >  0) fAxis /= tot;
     fAngle = *(begin+3);
   }
 
