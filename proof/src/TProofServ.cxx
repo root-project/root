@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.135 2006/08/08 21:27:14 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.136 2006/08/10 23:28:28 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -363,8 +363,8 @@ void TProofServ::CreateServer()
    ProcessLine("#define ROOT_TGenericClassInfo 0", kTRUE);
 
    // The following libs are also useful to have, make sure they are loaded...
-   gROOT->LoadClass("TMinuit",     "Minuit");
-   gROOT->LoadClass("TPostScript", "Postscript");
+   //gROOT->LoadClass("TMinuit",     "Minuit");
+   //gROOT->LoadClass("TPostScript", "Postscript");
 
    // Load user functions
    const char *logon;
@@ -3997,8 +3997,8 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
                if (gSystem->AccessPathName(gSystem->DirName(fileListPath))) {
                   //the public dir or it's subdir does not exist
                   TString dirname = gSystem->DirName(fileListPath);
-                  if (gSystem->mkdir(dirname, kTRUE)) 
-                     Error("HandleDataSets", 
+                  if (gSystem->mkdir(dirname, kTRUE))
+                     Error("HandleDataSets",
                            "Error creating a datasets subdirectory: %s",
                            dirname.Data());
                }
