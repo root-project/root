@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.36 2005/09/03 07:54:00 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.37 2005/11/16 20:07:50 pcanal Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -391,7 +391,9 @@ extern "C" {
 //______________________________________________________________________________
 char *TClassTable::Next()
 {
-    // Returns next class from sorted class table.
+    // Returns next class from sorted class table. Don't use this iterator
+    // while modifying the class table. The class table can be modified
+    // when making calls like gROOT->GetClass(), etc.
 
    if (fgCursor < fgTally) {
       TClassRec *r = fgSortedTable[fgCursor++];
