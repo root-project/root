@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.58 2006/05/31 09:58:12 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.59 2006/07/26 13:36:43 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -163,9 +163,9 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    ProcessLine("#define ROOT_TGenericClassInfo 0", kTRUE);
 
    // The following libs are also useful to have, make sure they are loaded...
-   gROOT->LoadClass("TMinuit",     "Minuit");
-   gROOT->LoadClass("TPostScript", "Postscript");
-   gROOT->LoadClass("THtml",       "Html");
+   //gROOT->LoadClass("TMinuit",     "Minuit");
+   //gROOT->LoadClass("TPostScript", "Postscript");
+   //gROOT->LoadClass("THtml",       "Html");
 
    // Load user functions
    const char *logon;
