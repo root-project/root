@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.25 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.26 2006/08/16 06:42:35 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -538,6 +538,19 @@ const ROOT::Reflex::Scope & ROOT::Reflex::ScopeBase::SubScopeByName( const std::
       if ( fSubScopes[i].Name() == nam ) return fSubScopes[i];
    }
    return Dummy::Scope();
+}
+
+
+//-------------------------------------------------------------------------------
+size_t ROOT::Reflex::ScopeBase::SubScopeLevel() const {
+//-------------------------------------------------------------------------------
+   size_t level = 0;
+   Scope tmp = ThisScope();
+   while ( ! tmp.IsTopScope()) {
+      tmp = tmp.DeclaringScope();
+      ++level;
+   }
+   return level;
 }
 
 

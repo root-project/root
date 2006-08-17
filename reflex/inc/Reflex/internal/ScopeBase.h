@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.4 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.5 2006/08/15 15:22:52 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -361,6 +361,14 @@ namespace ROOT {
           * @return pointer to nth sub-At
           */
          const Scope & SubScopeAt( size_t nth ) const;
+
+
+         /**
+          * SubScopeLevel will return the number of declaring scopes
+          * this scope lives in.
+          * @return number of declaring scopes above this scope.
+          */ 
+         size_t SubScopeLevel() const;
 
 
          /**

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.25 2006/08/16 14:04:10 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.26 2006/08/17 13:50:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -235,6 +235,7 @@ void ReflexSimple2Test::loadLibrary() {
 void ReflexSimple2Test::testTemplateClass() {
   Type t = Type::ByName("TT::Outer<TT::A<unsigned long> >");
   CPPUNIT_ASSERT(t);
+  CPPUNIT_ASSERT_EQUAL(size_t(2), ((Scope)t).SubScopeLevel());
   int numFuns = 0;
   for (Member_Iterator mi = t.FunctionMember_Begin(); mi != t.FunctionMember_End(); ++mi) {
     if ( ! (*mi).IsArtificial()) ++numFuns;
@@ -484,6 +485,7 @@ void ReflexSimple2Test::testBaseClasses() {
   Type t1 = Type::ByName("ClassH");
   Type t2 = Type::ByName("ClassB");
   CPPUNIT_ASSERT(t1);
+  CPPUNIT_ASSERT_EQUAL(size_t(1), ((Scope)t1).SubScopeLevel());
   CPPUNIT_ASSERT(t2);
   const Base & b = t1.HasBase(t2);
   CPPUNIT_ASSERT(b);
@@ -854,6 +856,8 @@ void ReflexSimple2Test::testOperators() {
    Type t1 = Type::ByName("testclasses::OverloadedOperators::NoOp");
    CPPUNIT_ASSERT(t1);
    CPPUNIT_ASSERT_EQUAL(0,countNewOperators(t1));
+   CPPUNIT_ASSERT_EQUAL((size_t)3, ((Scope)t1).SubScopeLevel());
+   
 
    Type t2 = Type::ByName("testclasses::OverloadedOperators::OpNew");
    CPPUNIT_ASSERT(t2);

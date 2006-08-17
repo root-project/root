@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.12 2006/08/11 06:32:00 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.13 2006/08/17 13:50:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -615,9 +615,11 @@ void ReflexUnitTest::global_scope() {
 
    Scope g = Scope::ByName("");
    CPPUNIT_ASSERT(g);
+   CPPUNIT_ASSERT_EQUAL((size_t)0, g.SubScopeLevel());
    
    Scope g2 = Scope::GlobalScope();
    CPPUNIT_ASSERT(g2);
+   CPPUNIT_ASSERT_EQUAL((size_t)0, g2.SubScopeLevel());
 
    CPPUNIT_ASSERT_EQUAL(g.Id(), g2.Id());
    CPPUNIT_ASSERT_EQUAL(g.Name(), g2.Name());
