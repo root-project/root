@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.113 2006/07/03 16:10:44 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.114 2006/07/06 06:39:15 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -438,7 +438,6 @@ void TCanvas::Init()
    fEventX          = -1;
    fEventY          = -1;
    fContextMenu     = 0;
-   SetBit(kMustCleanup);
 }
 
 

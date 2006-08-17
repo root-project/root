@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.231 2006/06/14 14:21:56 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.232 2006/07/03 16:10:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -176,6 +176,7 @@ TPad::TPad()
    fHNDC    = 1;
 
    fViewer3D = 0;
+   SetBit(kMustCleanup);
 
    // the following line is temporarily disabled. It has side effects
    // when the pad is a TDrawPanelHist or a TFitPanel.
@@ -276,6 +277,7 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    // Set pad parameters and Compute conversion coeeficients
    SetPad(name, title, xlow, ylow, xup, yup, color, bordersize, bordermode);
    Range(0, 0, 1, 1);
+   SetBit(kMustCleanup);
    SetBit(kCanDelete);
 
    padsav->cd();
