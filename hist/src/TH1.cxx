@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.301 2006/08/02 12:54:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.302 2006/08/15 09:52:23 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1579,8 +1579,11 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
                if (!b2) { fSumw2.fArray[bin] = 0; continue;}
                if (binomial) {
                   if (b1 != b2) {
+                     // in the case of binomial statistics c1 and c2 must be 1 otherwise it does not make sense
                      //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
-                     fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);
+                     //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);     // old formula from G. Flucke
+                     // formula which works also for weighted histogram (see http://root.cern.ch/phpBB2/viewtopic.php?t=3753 ) 
+                     fSumw2.fArray[bin] = TMath::Abs( ( (1.-2.*w)*e1*e1 + w*w*e2*e2 )/(b2*b2) );
                   } else {
                      //in case b1=b2 use a simplification of the special algorithm
                      //from TGraphAsymmErrors::BayesDivide calling Efficiency, etc
@@ -2852,6 +2855,19 @@ Double_t TH1::GetEntries() const
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 
    return fEntries;
+}
+
+//______________________________________________________________________________
+Double_t TH1::GetEffectiveEntries() const
+{
+  // number of effective entries of the histogram,
+  // i.e. the number of unweighted entries a histogram would need to 
+  // have the same statistical power as this histogram with possibly 
+  // weighted entries (i.e. <= TH1::GetEntries())
+
+  Stat_t s[kNstat];
+  this->GetStats(s);// s[1] sum of squares of weights, s[0] sum of weights
+  return (s[1] ? s[0]*s[0]/s[1] : 0.);
 }
 
 //______________________________________________________________________________

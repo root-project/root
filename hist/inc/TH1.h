@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.78 2006/07/03 16:10:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.79 2006/08/02 12:54:18 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -213,6 +213,7 @@ public:
    virtual void     GetCenter(Double_t *center) const {fXaxis.GetCenter(center);}
    TDirectory      *GetDirectory() const {return fDirectory;}
    virtual Double_t GetEntries() const;
+   virtual Double_t GetEffectiveEntries() const;
    virtual TF1     *GetFunction(const char *name) const;
    virtual Int_t    GetDimension() const { return fDimension; }
    virtual Double_t GetKurtosis(Int_t axis=1) const;
