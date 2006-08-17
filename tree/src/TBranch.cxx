@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.112 2006/08/08 20:56:25 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.113 2006/08/16 05:46:41 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -46,7 +46,6 @@ R__EXTERN TTree* gTree;
 Int_t TBranch::fgCount = 0;
 
 const Int_t kMaxRAM = 10;
-const Int_t kMaxLen = 512;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -771,37 +770,44 @@ TLeaf* TBranch::FindLeaf(const char* searchname)
 {
    // -- Find the leaf corresponding to the name 'searchname'.
 
-   char leafname[kMaxLen];
-   char leaftitle[kMaxLen];
-   char longname[kMaxLen];
-   char longtitle[kMaxLen];
+   TString leafname;
+   TString leaftitle;
+   TString longname;
+   TString longtitle;
 
    // We allow the user to pass only the last dotted component of the name.
    TIter next(GetListOfLeaves());
    TLeaf* leaf = 0;
    while ((leaf = (TLeaf*) next())) {
-      strcpy(leafname, leaf->GetName());
-      char* dim = (char*) strstr(leafname, "[");
-      if (dim) dim[0] = '\0';
-      if (!strcmp(searchname, leafname)) return leaf;
+      leafname = leaf->GetName();
+      Ssiz_t dim = leafname.First('[');
+      if (dim >= 0) leafname.Remove(dim);
+
+      if (leafname == searchname) return leaf;
+
       // The leaf element contains the branch name in its name, let's use the title.
-      strcpy(leaftitle, leaf->GetTitle());
-      dim = (char*) strstr(leaftitle, "[");
-      if (dim) dim[0] = '\0';
-      if (!strcmp(searchname, leaftitle)) return leaf;
+      leaftitle = leaf->GetTitle();
+      dim = leaftitle.First('[');
+      if (dim >= 0) leaftitle.Remove(dim);
+
+      if (leaftitle == searchname) return leaf;
+
       TBranch* branch = leaf->GetBranch();
       if (branch) {
-         sprintf(longname, "%s.%s", branch->GetName(), leafname);
-         char *dim = (char*) strstr(longname, "[");
-         if (dim) dim[0] = '\0';
-         if (!strcmp(searchname, longname)) return leaf;
+        longname.Form("%s.%s",branch->GetName(),leafname.Data());
+         Ssiz_t dim = longname.First('[');
+         if (dim>=0) longname.Remove(dim);
+         if (longname == searchname) return leaf;
+
          // The leaf element contains the branch name in its name.
-         sprintf(longname, "%s.%s", branch->GetName(), searchname);
-         if (!strcmp(longname, leafname)) return leaf;
-         sprintf(longtitle, "%s.%s", branch->GetName(), leaftitle);
-         dim = (char*) strstr(longtitle, "[");
-         if (dim) dim[0] = '\0';
-         if (!strcmp(searchname, longtitle)) return leaf;
+         longname.Form("%s.%s",branch->GetName(),searchname);
+         if (longname==leafname) return leaf;
+
+         longtitle.Form("%s.%s",branch->GetName(),leaftitle.Data());
+         dim = longtitle.First('[');
+         if (dim>=0) longtitle.Remove(dim);
+         if (longtitle == searchname) return leaf;
+
          // The following is for the case where the branch is only
          // a sub-branch.  Since we do not see it through
          // TTree::GetListOfBranches, we need to see it indirectly.
