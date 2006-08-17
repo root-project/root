@@ -793,7 +793,7 @@ typedef int (*G__IgnoreInclude)();
 #define G__MAXPARA      100  /* Number of argument for G__main(argc,argv)   */
 #define G__MAXARG       100  /* Number of argument for G__init_cint(char *) */
 #define G__MAXFUNCPARA   40  /* Function argument */
-#define G__MAXVARDIM     10  /* Array dimention */
+#define G__MAXVARDIM     10  /* Array dimension */
 #define G__LENPOST       10  /* length of file name extention */
 #define G__MAXBASE       50  /* maximum inheritable class */
 #define G__TAGNEST       20  /* depth of nested class */
@@ -815,7 +815,7 @@ typedef int (*G__IgnoreInclude)();
  * They are depth of one page of function or variable list
  * If the page gets full, more table is allocated. */
 #define G__MAXIFUNC 1
-#define G__MEMDEPTH 2
+#define G__MEMDEPTH 1
 
 
 /* #define G__HIST     1 */
