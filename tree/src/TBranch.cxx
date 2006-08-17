@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.107.2.2 2006/08/06 16:53:26 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.107.2.3 2006/08/16 05:50:36 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -44,7 +44,6 @@ R__EXTERN TTree *gTree;
 Int_t TBranch::fgCount = 0;
 
 const Int_t kMaxRAM = 10;
-const Int_t kMaxLen = 512;
 
 ClassImp(TBranch)
 
@@ -733,29 +732,28 @@ TBranch *TBranch::FindBranch(const char* searchname)
    // Find the branch corresponding to the name 'searchname'.
    // 
 
-   char brname[kMaxLen];
-   char longsearchname[kMaxLen];
+   TString brname;
    TIter next(GetListOfBranches());
 
    // For branches we allow for one level up to be prefixed to the
    // name
 
-   strcpy(longsearchname,GetName());
-   char *dim = (char*)strstr(longsearchname,"[");
-   if (dim) dim[0]='\0';
-   if (longsearchname[strlen(longsearchname)-1] != '.') { 
-      strcat(longsearchname,".");
+   TString longsearchname( GetName() );
+   Ssiz_t dim = longsearchname.First('[');
+   if (dim>=0) longsearchname.Remove(dim);
+   if (longsearchname[longsearchname.Length()-1] != '.') { 
+      longsearchname.Append(".");
    }
-   strcat(longsearchname,searchname);
+   longsearchname += searchname;
 
    TBranch *branch;
    while ((branch = (TBranch*)next())) {
-      strcpy(brname,branch->GetName());
-      dim = (char*)strstr(brname,"[");
-      if (dim) dim[0]='\0';
-      if (!strcmp(searchname,brname)) return branch;
-
-      if (!strcmp(longsearchname,brname)) return branch;
+      brname = branch->GetName();
+      Ssiz_t dim = brname.First('[');
+      if (dim>=0) brname.Remove(dim);
+      
+      if (brname == searchname) return branch;
+      if (longsearchname == brname) return branch;
    }
 
    return 0;
@@ -766,10 +764,10 @@ TLeaf *TBranch::FindLeaf(const char* searchname)
 {
    //  Find the leaf corresponding to the name 'searchname'.
 
-   char leafname[kMaxLen];
-   char leaftitle[kMaxLen];
-   char longname[kMaxLen];
-   char longtitle[kMaxLen];
+   TString leafname;
+   TString leaftitle;
+   TString longname;
+   TString longtitle;
 
    // For leaves we allow for one level up to be prefixed to the
    // name
@@ -777,35 +775,35 @@ TLeaf *TBranch::FindLeaf(const char* searchname)
    TIter next (GetListOfLeaves());
    TLeaf *leaf;
    while ((leaf = (TLeaf*)next())) {
-      strcpy(leafname,leaf->GetName());
-      char *dim = (char*)strstr(leafname,"[");
-      if (dim) dim[0]='\0';
+      leafname = leaf->GetName();
+      Ssiz_t dim = leafname.First('[');
+      if (dim >= 0) leafname.Remove(dim);
 
-      if (!strcmp(searchname,leafname)) return leaf;
+      if (leafname == searchname) return leaf;
 
       // The TLeafElement contains the branch name in its name,
       // let's use the title....
-      strcpy(leaftitle,leaf->GetTitle());
-      dim = (char*)strstr(leaftitle,"[");
-      if (dim) dim[0]='\0';
+      leaftitle = leaf->GetTitle();
+      dim = leaftitle.First('[');
+      if (dim >= 0) leaftitle.Remove(dim);
 
-      if (!strcmp(searchname,leaftitle)) return leaf;
+      if (leaftitle == searchname) return leaf;
 
       TBranch * branch = leaf->GetBranch();
       if (branch) {
-         sprintf(longname,"%s.%s",branch->GetName(),leafname);
-         char *dim = (char*)strstr(longname,"[");
-         if (dim) dim[0]='\0';
-         if (!strcmp(searchname,longname)) return leaf;
+         longname.Form("%s.%s",branch->GetName(),leafname.Data());
+         Ssiz_t dim = longname.First('[');
+         if (dim>=0) longname.Remove(dim);
+         if (longname == searchname) return leaf;
 
          // The TLeafElement contains the branch name in its name
-         sprintf(longname,"%s.%s",branch->GetName(),searchname);
-         if (!strcmp(longname,leafname)) return leaf;
+         longname.Form("%s.%s",branch->GetName(),searchname);
+         if (longname==leafname) return leaf;
 
-         sprintf(longtitle,"%s.%s",branch->GetName(),leaftitle);
-         dim = (char*)strstr(longtitle,"[");
-         if (dim) dim[0]='\0';
-         if (!strcmp(searchname,longtitle)) return leaf;
+         longtitle.Form("%s.%s",branch->GetName(),leaftitle.Data());
+         dim = longtitle.First('[');
+         if (dim>=0) longtitle.Remove(dim);
+         if (longtitle == searchname) return leaf;
 
          // The following is for the case where the branch is only
          // a sub-branch.  Since we do not see it through
@@ -814,7 +812,6 @@ TLeaf *TBranch::FindLeaf(const char* searchname)
          // need refining ...
          if (strstr(searchname,".")
              && !strcmp(searchname,branch->GetName())) return leaf;
-         //printf("found leaf3=%s/%s, branch=%s, i=%d\n",leaf->GetName(),leaf->GetTitle(),branch->GetName(),i);
       }
    }
 

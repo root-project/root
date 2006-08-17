@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.290 2006/06/27 14:36:28 brun Exp $
+// @(#)root/tree:$Name: v5-12-00-patches $:$Id: TTree.cxx,v 1.291 2006/06/28 15:51:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -308,7 +308,6 @@ Int_t    TTree::fgBranchStyle = 1;  //use new TBranch style with TBranchElement
 Long64_t TTree::fgMaxTreeSize = 1900000000;
 
 TTree *gTree;
-const Int_t kMaxLen = 512;
 
 ClassImp(TTree)
 
@@ -1040,23 +1039,23 @@ Int_t TTree::Branch(TCollection *li, Int_t bufsize, Int_t splitlevel, const char
    }
 
    Int_t nch = strlen(name);
-   char branchname[kMaxLen];
+   TString branchname;
    TIter next(li);
 
    while ((obj = next())) {
       if (splitlevel > 1 &&  obj->InheritsFrom(TCollection::Class())
                          && !obj->InheritsFrom(TClonesArray::Class())) {
          TCollection *col = (TCollection*)obj;
-         if (nch) sprintf(branchname,"%s_%s_",name,col->GetName());
-         else     sprintf(branchname,"%s_",col->GetName());
+         if (nch) branchname.Form("%s_%s_",name,col->GetName());
+         else     branchname.Form("%s_",col->GetName());
          Branch(col,bufsize,splitlevel-1,branchname);
       } else {
-         if (nch && name[nch-1] == '_') sprintf(branchname,"%s%s",name,obj->GetName());
+         if (nch && name[nch-1] == '_') branchname.Form("%s%s",name,obj->GetName());
          else {
-            if (nch)  sprintf(branchname,"%s_%s",name,obj->GetName());
-            else      sprintf(branchname,"%s",obj->GetName());
+            if (nch)  branchname.Form("%s_%s",name,obj->GetName());
+            else      branchname.Form("%s",obj->GetName());
          }
-         if (splitlevel > 1) strcat(branchname,".");
+         if (splitlevel > 1) branchname += ".";
          Bronch(branchname,obj->ClassName(),
                 li->GetObjectRef(obj),bufsize,splitlevel-1);
       }
@@ -2792,7 +2791,7 @@ TBranch *TTree::FindBranch(const char* branchname)
    // through the friends tree, let return
    if (kFindBranch & fFriendLockStatus) return 0;
 
-   char name[kMaxLen];
+   TString name;
    TIter next(GetListOfBranches());
 
    // This will allow the branchname to be preceded by
@@ -2806,11 +2805,11 @@ TBranch *TTree::FindBranch(const char* branchname)
    }
    TBranch *branch;
    while ((branch = (TBranch*)next())) {
-      strcpy(name,branch->GetName());
-      char *dim = (char*)strstr(name,"[");
-      if (dim) dim[0]='\0';
-      if (!strcmp(branchname,name)) return branch;
-      if (subbranch && !strcmp(subbranch,name)) return branch;
+      name = branch->GetName();
+      Ssiz_t dim = name.First('[');
+      if (dim>=0) name.Remove(dim);
+      if (name == branchname) return branch;
+      if (subbranch && (name == subbranch)) return branch;
    }
    next.Reset();
    while ((branch = (TBranch*)next())) {
@@ -2837,9 +2836,9 @@ TBranch *TTree::FindBranch(const char* branchname)
          else subbranch ++;
       }
       if (subbranch) {
-         sprintf(name,"%s.%s",t->GetName(),subbranch);
+         name.Form("%s.%s",t->GetName(),subbranch);
       } else {
-         strcpy(name,branchname);
+         name = branchname;
       }
       branch = t->FindBranch(name);
       if (branch) return branch;
@@ -2855,10 +2854,10 @@ TLeaf *TTree::FindLeaf(const char* searchname)
    // through the friends tree, let return
    if (kFindLeaf & fFriendLockStatus) return 0;
 
-   char leafname[kMaxLen];
-   char leaftitle[kMaxLen];
-   char longname[kMaxLen];
-   char longtitle[kMaxLen];
+   TString leafname;
+   TString leaftitle;
+   TString longname;
+   TString longtitle;
 
    // This will allow the branchname to be preceded by
    // the name of this tree.
@@ -2876,35 +2875,35 @@ TLeaf *TTree::FindLeaf(const char* searchname)
    TIter next (GetListOfLeaves());
    TLeaf *leaf;
    while ((leaf = (TLeaf*)next())) {
-      strcpy(leafname,leaf->GetName());
-      char *dim = (char*)strstr(leafname,"[");
-      if (dim) dim[0]='\0';
+      leafname = leaf->GetName();
+      Ssiz_t dim = leafname.First('[');
+      if (dim >= 0) leafname.Remove(dim);
 
-      if (!strcmp(searchname,leafname)) return leaf;
-      if (subsearchname && !strcmp(subsearchname,leafname)) return leaf;
+      if (leafname == searchname) return leaf;
+      if (subsearchname && leafname == subsearchname) return leaf;
 
       // The TLeafElement contains the branch name in its name,
       // let's use the title....
-      strcpy(leaftitle,leaf->GetTitle());
-      dim = (char*)strstr(leaftitle,"[");
-      if (dim) dim[0]='\0';
+      leaftitle = leaf->GetTitle();
+      dim = leaftitle.First('[');
+      if (dim >= 0) leaftitle.Remove(dim);
 
-      if (!strcmp(searchname,leaftitle)) return leaf;
-      if (subsearchname && !strcmp(subsearchname,leaftitle)) return leaf;
+      if (leaftitle == searchname) return leaf;
+      if (subsearchname && leaftitle == subsearchname) return leaf;
 
       TBranch * branch = leaf->GetBranch();
       if (branch) {
-         sprintf(longname,"%s.%s",branch->GetName(),leafname);
-         char *dim = (char*)strstr(longname,"[");
-         if (dim) dim[0]='\0';
-         if (!strcmp(searchname,longname)) return leaf;
-         if (subsearchname && !strcmp(subsearchname,longname)) return leaf;
+         longname.Form("%s.%s",branch->GetName(),leafname.Data());
+         Ssiz_t dim = longname.First('[');
+         if (dim>=0) longname.Remove(dim);
+         if (longname == searchname) return leaf;
+         if (subsearchname && longname == subsearchname) return leaf;
 
-         sprintf(longtitle,"%s.%s",branch->GetName(),leaftitle);
-         dim = (char*)strstr(longtitle,"[");
-         if (dim) dim[0]='\0';
-         if (!strcmp(searchname,longtitle)) return leaf;
-         if (subsearchname && !strcmp(subsearchname,longtitle)) return leaf;
+         longtitle.Form("%s.%s",branch->GetName(),leaftitle.Data());
+         dim = longtitle.First('[');
+         if (dim>=0) longtitle.Remove(dim);
+         if (longtitle == searchname) return leaf;
+         if (subsearchname && longtitle == subsearchname) return leaf;
 
          // The following is for the case where the branch is only
          // a sub-branch.  Since we do not see it through
@@ -2939,9 +2938,9 @@ TLeaf *TTree::FindLeaf(const char* searchname)
          else subsearchname ++;
       }
       if (subsearchname) {
-         sprintf(leafname,"%s.%s",t->GetName(),subsearchname);
+         leafname.Form("%s.%s",t->GetName(),subsearchname);
       } else {
-         strcpy(leafname,searchname);
+         leafname = searchname;
       }
       leaf = t->FindLeaf(leafname);
       if (leaf) return leaf;
@@ -3478,7 +3477,7 @@ TLeaf *TTree::GetLeaf(const char *aname)
 
    //second pass in the list of friends when the leaf name
    //is prefixed by the tree name
-   char strippedArg[2*kMaxLen];
+   TString strippedArg; 
    next.Reset();
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
@@ -3490,12 +3489,12 @@ TLeaf *TTree::GetLeaf(const char *aname)
       if (*subname != '.') continue;
       subname++;
       if (slash) {
-         strncpy(strippedArg,aname,nbch+1);
-         strippedArg[nbch+1] = 0;
+         strippedArg = aname;
+         strippedArg.Remove(nbch+1);
       } else {
-         strippedArg[0] = 0;
+         strippedArg = "";
       }
-      strcat(strippedArg,subname);
+      strippedArg += subname;
       leaf = t->GetLeaf(strippedArg);
       if (leaf) return leaf;
    }
@@ -4737,7 +4736,7 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
       TFriendLock lock(this,kSetBranchStatus);
       TIter nextf(fFriends);
       TFriendElement *fe;
-      char name[kMaxLen];
+      TString name;
       while ((fe = (TFriendElement*)nextf())) {
          TTree *t = fe->GetTree();
          if (t==0) continue;
@@ -4751,9 +4750,9 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
             else subbranch ++;
          }
          if (subbranch) {
-            sprintf(name,"%s.%s",t->GetName(),subbranch);
+            name.Form("%s.%s",t->GetName(),subbranch);
          } else {
-            strcpy(name,bname);
+            name = bname;
          }
          t->SetBranchStatus(name,status, &foundInFriend);
       }
