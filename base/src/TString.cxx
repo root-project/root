@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.48 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.48.2.2 2006/08/17 22:37:40 pcanal Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1710,6 +1710,8 @@ again:
       else
          buflen = n+1;
       Clobber(buflen);
+      /* Reset the counter */
+      va_start(ap,fmt);
       goto again;
    }
    va_end(ap);
