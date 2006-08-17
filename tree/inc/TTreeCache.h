@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.h,v 1.1 2006/06/27 14:36:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.h,v 1.3 2006/08/11 20:17:26 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -36,6 +36,9 @@ protected:
    Long64_t        fEntryNext;   //! next entry number where cache must be filled
    Long64_t        fZipBytes;    //! Total compressed size of branches in cache
    Int_t           fNbranches;   //! Number of branches in the cache
+   Int_t           fNReadOk;     //Number of blocks read and found in the cache
+   Int_t           fNReadMiss;   //Number of blocks read and not found in the chache
+   Int_t           fNReadPref;   //Number of blocks that were prefetched
    TBranch       **fBranches;    //! [fNbranches] List of branches to be stored in the cache
    TList          *fBrNames;     //! list of branch names in the cache
    TTree          *fOwner;       //! pointer to the owner Tree/chain
@@ -52,6 +55,8 @@ public:
    TTreeCache(TTree *tree, Int_t buffersize=0);
    virtual ~TTreeCache();
    void                AddBranch(TBranch *b);
+   Double_t            GetEfficiency();
+   Double_t            GetEfficiencyRel();
    static Int_t        GetLearnEntries();
    Bool_t              FillBuffer();
    TTree              *GetTree() const;
