@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.14 2006/08/09 14:08:00 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.15 2006/08/15 15:22:52 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -148,6 +148,15 @@ const ROOT::Reflex::Member & ROOT::Reflex::Type::FunctionMemberByName( const std
 // Return a function member by name. Signature can be used for overloaded functions.
    if ( * this ) return fTypeName->fTypeBase->FunctionMemberByName( nam, signature );
    return Dummy::Member();
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::Base & ROOT::Reflex::Type::HasBase( const Type & cl ) const {
+//-------------------------------------------------------------------------------
+   // Return base info if type has base cl.
+   if ( * this ) return fTypeName->fTypeBase->HasBase( cl );
+   return Dummy::Base();
 }
 
 

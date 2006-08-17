@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.12 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.13 2006/08/15 15:22:52 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -213,9 +213,9 @@ namespace ROOT {
           * HasBase will check whether this class has a BaseAt class given
           * as argument
           * @param  cl the BaseAt-class to check for
-          * @return true if this class has a BaseAt-class cl, false otherwise
+          * @return the Base info if it is found, an empty base otherwise (can be tested for bool)
           */
-         virtual bool HasBase( const Type & cl ) const;
+         virtual const Base & HasBase( const Type & cl ) const;
 
 
          /**

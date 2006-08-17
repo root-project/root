@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.18 2006/08/15 15:41:57 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.19 2006/08/16 06:42:35 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -243,11 +243,12 @@ const ROOT::Reflex::Type & ROOT::Reflex::Class::DynamicType( const Object & obj 
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::Class::HasBase( const Type & cl ) const {
+const ROOT::Reflex::Base & ROOT::Reflex::Class::HasBase( const Type & cl ) const {
 //-------------------------------------------------------------------------------
 // Return true if this class has a base class of type cl.
    std::vector<Base> v = std::vector<Base>();
-   return HasBase(cl, v);
+   if ( HasBase(cl, v) ) return *v.begin();
+   return Dummy::Base();
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.12 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.13 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -164,7 +164,7 @@ namespace ROOT {
           * @param  cl the BaseAt-class to check for
           * @return true if this class has a BaseAt-class cl, false otherwise
           */
-         virtual bool HasBase( const Type & cl ) const;
+         virtual const Base & HasBase( const Type & cl ) const;
 
 
          /**
@@ -572,10 +572,10 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Typedef::FunctionMemb
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::Typedef::HasBase( const Type & cl ) const {
+inline const ROOT::Reflex::Base & ROOT::Reflex::Typedef::HasBase( const Type & cl ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.HasBase( cl );
-   return false;
+   return Dummy::Base();
 }
 
 

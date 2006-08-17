@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.11 2006/08/02 14:14:49 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.12 2006/08/11 06:32:00 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -355,7 +355,7 @@ void ReflexBuilderUnitTest::inheritancebuilder()
   CPPUNIT_ASSERT(dev1);
   CPPUNIT_ASSERT(dev2);
   CPPUNIT_ASSERT(dia);
-  CPPUNIT_ASSERT(dev.HasBase(base));
+  CPPUNIT_ASSERT((bool)dev.HasBase(base));
   CPPUNIT_ASSERT(dev1.HasBase(base));
   CPPUNIT_ASSERT(dev2.HasBase(base));
   CPPUNIT_ASSERT(dia.HasBase(base));

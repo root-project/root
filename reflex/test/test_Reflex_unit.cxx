@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.11 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.12 2006/08/11 06:32:00 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -148,7 +148,7 @@ void ReflexUnitTest::empty_type() {
   CPPUNIT_ASSERT(!t.DynamicType(Object()));
   CPPUNIT_ASSERT(!t.FunctionMemberAt(0));
   CPPUNIT_ASSERT_EQUAL(0,int(t.FunctionMemberSize()));
-  CPPUNIT_ASSERT(!t.HasBase(Type()));
+  CPPUNIT_ASSERT(!(bool)t.HasBase(Type()));
   CPPUNIT_ASSERT_EQUAL(0, int(t.Id()));
   CPPUNIT_ASSERT_EQUAL(false, t.IsAbstract());
   CPPUNIT_ASSERT_EQUAL(false, t.IsArray());
