@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.cxx,v 1.13 2006/08/02 06:56:37 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.cxx,v 1.14 2006/08/16 14:04:10 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -32,7 +32,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBuilder( const char * n,
                                               unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
 // Construct the type information for a type.
-   Type ret = Type::ByName(n);
+   const Type & ret = Type::ByName(n);
    if ( ret.Id() ) return Type(ret, modifiers);
    else {
       TypeName* tname = new TypeName(n, 0);
@@ -67,7 +67,7 @@ ROOT::Reflex::Type ROOT::Reflex::PointerBuilder( const Type & t,
                                                  const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
 // Construct a pointer type.
-   Type ret = Type::ByName( Pointer::BuildTypeName(t));
+   const Type & ret = Type::ByName( Pointer::BuildTypeName(t));
    if ( ret ) return ret;
    else       return (new Pointer(t, ti))->ThisType();
 }
@@ -79,7 +79,7 @@ ROOT::Reflex::Type ROOT::Reflex::PointerToMemberBuilder( const Type & t,
                                                          const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
 // Construct a pointer type.
-   Type ret = Type::ByName( PointerToMember::BuildTypeName(t,s));
+   const Type & ret = Type::ByName( PointerToMember::BuildTypeName(t,s));
    if ( ret ) return ret;
    else       return (new PointerToMember(t, s, ti))->ThisType();
 }
@@ -102,7 +102,7 @@ ROOT::Reflex::Type ROOT::Reflex::ArrayBuilder( const Type & t,
                                                const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
 // Construct an array type.
-   Type ret = Type::ByName(Array::BuildTypeName(t,n));
+   const Type & ret = Type::ByName(Array::BuildTypeName(t,n));
    if ( ret ) return ret;
    else       return (new Array(t, n, ti))->ThisType();
 }
@@ -114,14 +114,14 @@ ROOT::Reflex::Type ROOT::Reflex::EnumTypeBuilder( const char * nam,
                                                   unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
 // Construct an enum type.
-   Type ret = Type::ByName(nam);
+   const Type & ret = Type::ByName(nam);
    if ( ret ) return ret;
    Enum * e = new Enum(nam, ti, modifiers );
 
    std::vector<std::string> valVec;
    Tools::StringSplit(valVec, values, ";");
 
-   Type int_t = Type::ByName("int");
+   const Type & int_t = Type::ByName("int");
    for (std::vector<std::string>::const_iterator it = valVec.begin(); 
         it != valVec.end(); ++it ) {
       std::string iname, ivalue;
@@ -137,11 +137,12 @@ ROOT::Reflex::Type ROOT::Reflex::TypedefTypeBuilder(const char * nam,
                                                     const Type & t) {
 //-------------------------------------------------------------------------------
 // Construct a typedef type.
-   Type ret = Type::ByName(nam);
+   const Type & ret = Type::ByName(nam);
    if ( ret ) {
       // ret == t checks for the case of "struct AA{}; typedef AA AA;
-      if ( ret == t ) {
-         return ret;
+      
+      if ( ret.FinalType() == t ) {
+         
       }
       else {  
          return ret;
@@ -166,7 +167,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector< Type > v;
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -178,7 +179,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -191,7 +192,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -205,7 +206,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -220,7 +221,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -236,7 +237,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -253,7 +254,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -271,7 +272,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -290,7 +291,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -310,7 +311,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -331,7 +332,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -353,7 +354,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -376,7 +377,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -400,7 +401,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector< Type > v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -425,7 +426,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -451,7 +452,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -478,7 +479,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -507,7 +508,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -537,7 +538,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -568,7 +569,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -600,7 +601,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -633,7 +634,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -667,7 +668,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -702,7 +703,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -738,7 +739,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -775,7 +776,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -813,7 +814,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -852,7 +853,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -892,7 +893,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -933,7 +934,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -975,7 +976,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -1019,7 +1020,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29,
                                            t30);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }
@@ -1064,7 +1065,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29,
                                            t30, t31);
-   Type ret = Type::ByName(Function::BuildTypeName(r,v));
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
    if ( ret ) return ret;
    else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
 }

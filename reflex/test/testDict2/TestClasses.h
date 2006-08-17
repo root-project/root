@@ -64,6 +64,13 @@ namespace testclasses {
       typedef const PMYINT& RPMYINT;
       typedef const PPMYINT * PPPMYINT;
 
+      struct A {};
+      typedef A A;
+      
+      struct B {};
+      typedef B C;
+      typedef C B;
+
    };
 
   typedef int MyInt;

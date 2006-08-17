@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.14 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.15 2006/08/16 06:42:35 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -46,8 +46,8 @@ ROOT::Reflex::MemberTemplateImpl::MemberTemplateImpl( const char * templateName,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::MemberTemplateImpl::~MemberTemplateImpl() {
 //-------------------------------------------------------------------------------
-  if ( fMemberTemplateName->fMemberTemplateImpl == this ) fMemberTemplateName->fMemberTemplateImpl = 0;
 // Destructor.
+   if ( fMemberTemplateName->fMemberTemplateImpl == this ) fMemberTemplateName->fMemberTemplateImpl = 0;
 }
 
 
