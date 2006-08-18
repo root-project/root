@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.48.2.2 2006/08/17 22:37:40 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.50 2006/08/17 22:47:51 pcanal Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1699,8 +1699,8 @@ void TString::Form(const char *va_(fmt), ...)
 
    int n;
    va_list ap;
-   va_start(ap, va_(fmt));
 again:
+   va_start(ap, va_(fmt));
    n = vsnprintf(fData, buflen, va_(fmt), ap);
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
@@ -1710,8 +1710,6 @@ again:
       else
          buflen = n+1;
       Clobber(buflen);
-      /* Reset the counter */
-      va_start(ap,fmt);
       goto again;
    }
    va_end(ap);
