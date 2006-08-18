@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.112 2006/08/04 16:17:28 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.113 2006/08/18 11:16:42 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -49,160 +49,188 @@ enum EFileType { kSource, kInclude, kTree };
 std::set<std::string>  THtml::fgKeywords;
 
 ////////////////////////////////////////////////////////////////////////////////
+// BEGIN_HTML <!-- 
+/* --><p>The THtml class is designed to provide an easy way for documenting 
+classes, code, and code related text files (loke change logs). It generates HTML 
+pages conforming to the XHTML 1.0 transitional specifications; an example of 
+these pages is ROOT's own <a href="http://root.cern.ch/root/html/ClassIndex.html">
+reference guide.</a></p>
+
+Overview:
+<ol><li><a href="#conf">Configuration</a>
+  <ol><li><a href="#conf:input">Input files</a></li>
+  <li><a href="#conf:output">Output directory</a></li>
+  <li><a href="#conf:classdoc">Recognizing class documentation</a></li>
+  <li><a href="#conf:tags">Author, copyright, etc.</a></li>
+  <li><a href="#conf:header">Header and footer</a></li>
+  <li><a href="#conf:search">Links to searches, home page, ViewCVS</a></li>
+  <li><a href="#conf:charset">Charset</a></li>
+  </ol></li>
+  <li><a href="#syntax">Documentation syntax</a>
+  <ol><li><a href="#syntax:classdesc">Class description</a></li>
+  <li><a href="#syntax:classidx">Class index</a></li>
+  <li><a href="#syntax:meth">Method documentation</a></li>
+  <li><a href="#syntax:datamem">Data member documentation</a></li>
+  <li><a href="#syntax:beginhtml">"BEGIN_HTML"/"END_HTML": include 'raw' HTML</a></li>
+  </ol></li>
+  <li><a href="#CSSJS">Style sheet, JavaScript</a></li>
+  <li><a href="#usage">Usage</a></li>
+  <li><a href="#confvar">Configuration variables</a></li>
+</ol>
+
+<h2><a name="conf">Configuration</a></h2>
+
+<h3><a name="conf:input">Input files</a></h3>
+
+<p>In your .rootrc, define Root.Html.SourceDir to point to directories containing 
+.cxx and .h files (see: <a href="http://root.cern.ch/root/html/TEnv.html">TEnv</a>) 
+of the classes you want to document.</p>
+
+<p>Example:</p><pre>
+  Root.Html.SourceDir:  .:src:include
+  Root.Html.Root:       http://root.cern.ch/root/html</pre>
+
+
+<h3><a name="conf:output">Output directory</a></h3>
+
+<p>The output directory can be specified using the Root.Html.OutputDir
+configuration variable (default value: "htmldoc"). If that directory 
+doesn't exist <a href="http://root.cern.ch/root/html/THtml.html">THtml</a>
+will create it.</p>
+
+<p>Example:</p><pre>
+  Root.Html.OutputDir:         htmldoc</pre>
+
+
+<h3><a name="conf:classdoc">Class documentation</a></h3>
+
+<p>The class documentation has to appear in the header file containing the
+class, right in front of its declaration. It is introduced by a string
+defined by Root.Html.Description. See the section on 
+<a href="#syntax">documentation syntax</a> for further details.</p>
+
+<p>Example:</p><pre>
+  Root.Html.Description:       //____________________</pre>
+
+
+<h3><a name="conf:tags">Author, copyright, etc.</a></h3>
+
+<p>During the conversion, 
+<a href="http://root.cern.ch/root/html/THtml.html">THtml</a> will look for 
+some strings ("tags") in the source file, which have to appear right in
+front of e.g. the author's name, copyright notice, etc. These tags can be
+defined with the following environment variables: Root.Html.Author,
+Root.Html.LastUpdate and Root.Html.Copyright.</p>
+
+<p>If the LastUpdate tag is not found, the current date and time are used.
+This is useful when using
+<a href="http://root.cern.ch/root/html/THtml.html#THtml:MakeAll">THtml::MakeAll()</a>'s 
+default option force=kFALSE, in which case 
+<a href="http://root.cern.ch/root/html/THtml.html">THtml</a> generates 
+documentation only for changed classes.</p>
+
+Authors can be a comma separated list of author entries. Each entry has
+one of the following two formats
+<ul><li><tt>Name (non-alpha)</tt>.
+<p><a href="http://root.cern.ch/root/html/THtml.html">THtml</a> will generate an 
+HTML link for <tt>Name</tt>, taking the Root.Html.XWho configuration
+variable (defaults to "http://consult.cern.ch/xwho/people?") and adding 
+all parts of the name with spaces replaces by '+'. Non-alphanumerical 
+characters are printed out behind <tt>Name</tt>.</p>
+
+<p>Example:</p>
+<tt>// Author: Enrico Fermi</tt> appears in the source file.
+<a href="http://root.cern.ch/root/html/THtml.html">THtml</a> will generate the link
+<tt>http://consult.cern.ch/xwho/people?Enrico+Fermi</tt>. This works well for
+people at CERN.</li>
+
+<li><tt>Name &lt;link&gt; Info</tt>.
+<p><a href="http://root.cern.ch/root/html/THtml.html">THtml</a> will generate 
+an HTML link for <tt>Name</tt> as specified by <tt>link</tt> and print 
+<tt>Info</tt> behind <tt>Name</tt>.</p>
+
+<p>Example:</p>
+<tt>// Author: Enrico Fermi &lt;http://www.enricos-home.it&gt;</tt> or<br/>
+<tt>// Author: Enrico Fermi &lt;mailto:enrico@fnal.gov&gt;</tt> in the
+source file. That's world compatible.</li>
+</ul>
+
+<p>Example (with defaults given):</p><pre>
+      Root.Html.Author:     // Author:
+      Root.Html.LastUpdate: // @(#)
+      Root.Html.Copyright:  * Copyright
+      Root.Html.XWho:       http://consult.cern.ch/xwho/people?</pre>
+
+
+<h3><a name="conf:header">Header and footer</a></h3>
+
+<p><a href="http://root.cern.ch/root/html/THtml.html">THtml</a> generates 
+a default header and footer for all pages. You can
+specify your own versions with the configuration variables Root.Html.Header
+and Root.Html.Footer. Both variables default to "", using the standard Root
+versions. If it has a "+" appended, <a href="http://root.cern.ch/root/html/THtml.html">THtml</a> will
+write both versions (user and root) to a file, for the header in the order
+1st root, 2nd user, and for the footer 1st user, 2nd root (the root
+versions containing "&lt;html&gt;" and &lt;/html&gt; tags, resp).</p>
+
+<p>If you want to replace root's header you have to write a file containing
+all HTML elements necessary starting with the &lt;doctype&gt; tag and ending with
+(and including) the &lt;body&gt; tag. If you add your header it will be added
+directly after Root's &lt;body&gt; tag. Any occurrence of the string <tt>%TITLE%</tt>
+in the user's header file will be replaced by
+a sensible, automatically generated title. If the header is generated for a
+class, occurrences of <tt>%CLASS%</tt> will be replaced by the current class's name,
+<tt>%SRCFILE%</tt> and <tt>%INCFILE%</tt> by the name of the source and header file, resp.
+(as given by <a href="http://root.cern.ch/root/html/TClass.html#TClass:GetImplFileLine">TClass::GetImplFileName()</a>,
+<a href="http://root.cern.ch/root/html/TClass.html#TClass:GetImplFileLine">TClass::GetDeclFileName()</a>).
+If the header is not generated for a class, they will be replaced by "".</p>
+
+<p>Root's footer starts with the tag &lt;!--SIGNATURE--&gt;. It includes the
+author(s), last update, copyright, the links to the Root home page, to the
+user home page, to the index file (ClassIndex.html), to the top of the page
+and <tt>this page is automatically generated</tt> infomation. It ends with the
+tags <tt>&lt;/body&gt;&lt;/html&gt;</tt>. If you want to replace it, 
+<a href="http://root.cern.ch/root/html/THtml.html">THtml</a> will search for some
+tags in your footer: Occurrences of the strings <tt>%AUTHOR%</tt>, <tt>%UPDATE%</tt>, and
+<tt>%COPYRIGHT%</tt> are replaced by their
+corresponding values before writing the html file. The <tt>%AUTHOR%</tt> tag will be
+replaced by the exact string that follows Root.Html.Author, no link
+generation will occur.</p>
+
+
+<h3><a href="conf:search">Links to searches, home page, ViewCVS</a></h3>
+
+<p>Additional parameters can be set by Root.Html.Homepage (address of the
+user's home page), Root.Html.SearchEngine (search engine for the class
+documentation), Root.Html.Search (search URL), and a ViewCVS base URL 
+Root.Html.ViewCVS. All default to "".</p>
+
+<p>Examples:</p><pre>
+      Root.Html.Homepage:     http://www.enricos-home.it
+      Root.Html.SearchEngine: http://root.cern.ch/root/Search.phtml
+      Root.Html.Search:       http://www.google.com/search?q=%s+site%3Aroot.cern.ch%2Froot%2Fhtml</pre>
+
+
+<h3><a name="conf:charset">HTML Charset</a></h3>
+
+<p>XHTML 1.0 transitional recommends the specification of the charset in the
+content type meta tag, see e.g. <a href="http://www.w3.org/TR/2002/REC-xhtml1-20020801/">http://www.w3.org/TR/2002/REC-xhtml1-20020801/</a>
+<a href="http://root.cern.ch/root/html/THtml.html">THtml</a> generates it for the HTML output files. It defaults to ISO-8859-1, and
+can be changed using Root.Html.Charset.</p>
+
+<p>Example:</p><pre>
+      Root.Html.Charset:      EUC-JP</pre>
+<!-- no yet transformed into un-pre-->
+*/
+// END_HTML
 //
-// The HyperText Markup Language (HTML) is a simple data format used to
-// create hypertext documents that are portable from one platform to another.
-// HTML documents are SGML documents with generic semantics that are
-// appropriate for representing information from a wide range of domains.
-//
-// The THtml class is designed to provide an easy way for converting ROOT
-// classes, and files as well, into HTML documents. Here are the few rules and
-// suggestions for a configuration, coding and usage.
-//
-//
-// Configuration:
-// -------------
-//
-// (i)   Input files
-//
-// Define Root.Html.SourceDir to point to directories containing .cxx and
-// .h files ( see: TEnv ) of the classes you want to document. Better yet,
-// specify separate Unix.*.Root.Html.SourceDir and WinNT.*.Root.Html.SourceDir.
-// Root.Html.SourcePrefix can hold an additional (relative) path to help THtml
-// find the source files. Its default value is "". Root's class documentation
-// files can be linked in if Root.Html.Root is set to Root's class
-// documentation root. It defaults to "".
-//
-// Examples:
-//   Unix.*.Root.Html.SourceDir:  .:src:include
-//   WinNT.*.Root.Html.SourceDir: .;src;include
-//   Root.Html.SourcePrefix:
-//   Root.Html.Root:              http://root.cern.ch/root/html
-//
-//
-// (ii)  Output directory
-//
-// The output directory can be specified using the Root.Html.OutputDir
-// environment variable ( default value: "htmldoc" ). If it doesn't exist, it
-// will be created.
-//
-// Examples (with defaults given):
-//   Root.Html.OutputDir:         htmldoc
-//
-//
-// (iii) Class documentation
-//
-// The class documentation has to appear in the header file containing the
-// class, right in front of its declaration. It is introduced by a string
-// defined by Root.Html.Description. See below, section "Coding", for
-// further details.
-//
-// Examples (with defaults given):
-//   Root.Html.Description:       //____________________
-//
-//
-// (iv)  Source file information
-//
-// During the conversion, THtml will look for the certain number of user
-// defined strings ("tags") in the source file, which have to appear right in
-// front of e.g. the author's name, copyright notice, etc. These tags can be
-// defined with the following environment variables: Root.Html.Author,
-// Root.Html.LastUpdate and Root.Html.Copyright.
-//
-// If the LastUpdate tag is not found, the current date and time are given.
-// This makes sense if one uses THtml's default option force=kFALSE, in which
-// case THtml generates documentation only for changed classes.
-//
-// Authors can be a comma separated list of author entries. Each entry has
-// one of the following two formats:
-//  * "Name (non-alpha)". THtml will generate an HTML link for Name, taking
-//    the Root.Html.XWho environment variable (defaults to
-//    "http://consult.cern.ch/xwho/people?") and adding all parts of the name
-//    with spaces replaces by '+'. Non-Alphas are printed out behind Name.
-//
-//    Example: "// Author: Enrico Fermi" appears in the source file. THtml
-//    will generate the link
-//    "http://consult.cern.ch/xwho/people?Enrico+Fermi". This works well for
-//    people at CERN.
-//
-//  * "Name <link> Info" THtml will generate a HTML link for Name as specified
-//    by "link" and print Info behind Name.
-//
-//    Example: "// Author: Enrico Fermi <http://www.enricos-home.it>" or
-//    "// Author: Enrico Fermi <mailto:enrico@fnal.gov>" in the
-//    source file. That's world compatible.
-//
-// Examples (with defaults given):
-//       Root.Html.Author:     // Author:
-//       Root.Html.LastUpdate: // @(#)
-//       Root.Html.Copyright:  * Copyright
-//       Root.Html.XWho:       http://consult.cern.ch/xwho/people?
-//
-//
-// (v)   Style
-//
-// THtml generates a default header and footer for all pages. You can
-// specify your own versions with the environment variables Root.Html.Header
-// and Root.Html.Footer. Both variables default to "", using the standard Root
-// versions. If set the parameter to your file and append a "+", THtml will
-// write both versions (user and root) to a file, for the header in the order
-// 1st root, 2nd user, and for the footer 1st user, 2nd root (the root
-// versions containing "<html>" and </html> tags, resp).
-//
-// If you want to replace root's header you have to write a file containing
-// all HTML elements necessary starting with the <DOCTYPE> tag and ending with
-// (and including) the <BODY> tag. If you add your header it will be added
-// directly after Root's <BODY> tag. Any occurrence of the string "%TITLE%"
-// (without the quotation marks) in the user's header file will be replaced by
-// a sensible, automatically generated title. If the header is generated for a
-// class, occurrences of %CLASS% will be replaced by the current class's name,
-// %SRCFILE% and %INCFILE% by the name of the source and header file, resp.
-// (as given by TClass::GetImplFileName(), TClass::GetDeclFileName()).
-// If the header is not generated for a class, they will be replaced by "".
-//
-// Root's footer starts with the tag "<!--SIGNATURE-->". It includes the
-// author(s), last update, copyright, the links to the Root home page, to the
-// user home page, to the index file (ClassIndex.html), to the top of the page
-// and "this page is automatically generated" infomation. It ends with the
-// tags "</body></html>". If you want to replace it, THtml will search for some
-// tags in your footer: Occurrences of the strings "%AUTHOR%", "%UPDATE%", and
-// "%COPYRIGHT%" (without the quotation marks) are replaced by their
-// corresponding values before writing the html file. The %AUTHOR% tag will be
-// replaced by the exact string that follows Root.Html.Author, no link
-// generation will occur.
-//
-//
-// (vi)  Miscellaneous
-//
-// Additional parameters can be set by Root.Html.Homepage (address of the
-// user's home page), Root.Html.SearchEngine (search engine for the class
-// documentation) and Root.Html.Search (search URL). All default to "".
-//
-// Examples:
-//       Root.Html.Homepage:     http://www.enricos-home.it
-//       Root.Html.SearchEngine: http://root.cern.ch/root/Search.phtml
-//       Root.Html.Search:       http://www.google.com/search?q=%s+site%3Aroot.cern.ch%2Froot%2Fhtml
-//
-//
-// (vii) HTML Charset
-//
-// HTML 4.01 transitional recommends the specification of the charset in the
-// content type meta tag, see e.g. BEGIN_HTML<a href="http://www.w3.org/TR/REC-html40/charset.html">http://www.w3.org/TR/REC-html40/charset.html</a>END_HTML
-// THtml generates it for the HTML output files. It defaults to ISO-8859-1, and
-// can be changed using Root.Html.Charset.
-//
-// Example:
-//       Root.Html.Charset:      EUC-JP
-//
-//
-//
-//
+// 
 // Coding rules:
 // ------------
-//
+// 
 // A class description block, which must be placed before the first
 // member function, has a following form:
-//
+// 
 //       ////////////////////////////////////////////////////////////////
 //       //                                                            //
 //       // TMyClass                                                   //
@@ -210,34 +238,34 @@ std::set<std::string>  THtml::fgKeywords;
 //       // This is the description block.                             //
 //       //                                                            //
 //       ////////////////////////////////////////////////////////////////
-//
+// 
 // The environment variable Root.Html.Description ( see: TEnv ) contents
-// the delimiter string ( default value: //_________________ ). It means
+// // the delimiter string ( default value: //_________________ ). It means
 // that you can also write your class description block like this:
-//
+// 
 //       //_____________________________________________________________
 //       // A description of the class starts with the line above, and
 //       // will take place here !
 //       //
-//
+// 
 // Note that EVERYTHING until the first non-commented line is considered
 // as a valid class description block.
-//
+// 
 // A member function description block starts immediately after '{'
 // and looks like this:
-//
+// 
 //       void TWorld::HelloWorldFunc(string *text)
 //       {
 //          // This is an example of description for the
 //          // TWorld member function
-//
+// 
 //          helloWorld.Print( text );
 //       }
-//
+// 
 // Like in a class description block, EVERYTHING until the first
 // non-commented line is considered as a valid member function
 // description block.
-//
+// 
 //   ==> The "Begin_Html" and "End_Html" special keywords <=========
 //       --------------------------------------------
 // You can insert pure html code in your comment lines. During the
@@ -247,7 +275,7 @@ std::set<std::string>  THtml::fgKeywords;
 // and "End_Html" starting/finishing anywhere in the comment lines.
 // Examples of pure html code are given in many Root classes.
 // See for example the classes TDataMember and TMinuit.
-//
+// 
 //   ==> The escape character
 //       --------------------
 // Outside blocks starting with "Begin_Html" and finishing with "End_Html"
@@ -255,31 +283,40 @@ std::set<std::string>  THtml::fgKeywords;
 // to "&lt;" and "&gt;" by using the escape character in front.
 // The default escape character is backslash and can be changed
 // via the member function SetEscape.
-//
-//   ==> The ClassIndex
+// 
+// ==> The ClassIndex
 //       --------------
 // All classes to be documented will have an entry in the ClassIndex.html,
 // showing their name with a link to their documentation page and a miniature
-// description. This discription for e.g. the class MyClass has to be given
+// // description. This discription for e.g. the class MyClass has to be given
 // in MyClass's header as a comment right after ClassDef( MyClass, n ).
-//
-//
-//
+// 
+// 
+// 
+// Shared Files:
+// ------------
+// 
+// The documentation pages share a common set of files: javascript and CSS. They
+// are generated automatically when running MakeAll; they can be generated on 
+// demand by calling CreateJavascript() and CreateStyleSheet(), respectively.
+// 
+// 
+// 
 // Usage:
 // -----
-//
-//     Root> THtml html;                // create a THtml object
-//     Root> html.MakeAll()             // invoke a make for all classes
-//     Root> html.MakeClass("TMyClass") // create a HTML files for that class only
-//     Root> html.MakeIndex()           // creates an index files only
-//     Root> html.MakeTree("TMyClass")  // creates an inheritance tree for a class
-//
-//     Root> html.Convert( hist1.mac, "Histogram example" )
-//
-//
+// 
+//     root[] <a href="http://root.cern.ch/root/html/THtml.html">THtml</a> html;                // create a <a href="http://root.cern.ch/root/html/THtml.html">THtml</a> object
+//     root[] html.MakeAll()             // invoke a make for all classes
+//     root[] html.MakeClass("TMyClass") // create a HTML files for that class only
+//     root[] html.MakeIndex()           // creates an index files only
+//     root[] html.MakeTree("TMyClass")  // creates an inheritance tree for a class
+// 
+//     root[] html.Convert( "hsimple.C", "Histogram example" )
+// 
+// 
 // Environment variables:
 // ---------------------
-//
+// 
 //   Root.Html.OutputDir    (default: htmldoc)
 //   Root.Html.SourceDir    (default: .:src/:include/)
 //   Root.Html.Author       (default: // Author:) - start tag for authors
@@ -291,9 +328,11 @@ std::set<std::string>  THtml::fgKeywords;
 //   Root.Html.Footer       (default: ) - location of user defined footer
 //   Root.Html.Root         (default: ) - URL of Root's class documentation
 //   Root.Html.SearchEngine (default: ) - link to the search engine
+//   Root.Html.Search       (defualt: ) - link to search by replacing "%s" with user input
+//   Root.Html.ViewCVS      (default: ) - URL of ViewCVS base
 //   Root.Html.XWho         (default: http://consult.cern.ch/xwho/people?) - URL stem of CERN's xWho system
 //   Root.Html.Charset      (default: ISO-8859-1) - HTML character set
-//
+// //
 ////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(THtml)
@@ -1081,7 +1120,7 @@ void THtml::Class2Html(Bool_t force)
                << ":Data_Members\"></a>Data Members</h3>" << endl;
          }
 
-         for (Int_t access = 5; access > 0 && !IsNamespace(fCurrentClass); --access) {
+         for (Int_t access = 5; access >= 0 && !IsNamespace(fCurrentClass); --access) {
             if (datamembers[access].GetEntries() == 0)
                continue;
 
@@ -3512,21 +3551,21 @@ void THtml::ExpandKeywords(TString& keyword)
                if (keyword[i] == '<'){
                   if (!strncasecmp(keyword.Data() + i, "<pre>", 5)){
                      if (pre_is_open) {
-                        keyword.Remove(i, 4);
+                        keyword.Remove(i, 5);
                         continue;
                      } else {
                         pre_is_open = kTRUE;
-                        i += 3;
+                        i += 5;
                      }
                      currentType = 0;
                   } else 
-                     if (!strncasecmp(keyword,"</pre>", 6)) {
+                     if (!strncasecmp(keyword.Data() + i,"</pre>", 6)) {
                         if (!pre_is_open) {
-                           keyword.Remove(i, 5);
+                           keyword.Remove(i, 6);
                            continue;
                         } else {
                            pre_is_open = kFALSE;
-                           i += 4;
+                           i += 6;
                         }
                         currentType = 0;
                      }

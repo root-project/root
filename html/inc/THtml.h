@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.24 2006/08/03 21:20:23 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.25 2006/08/04 13:59:09 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -124,8 +124,6 @@ protected:
    void    CreateListOfTypes();
    void    CreateListOfClasses(const char* filter);
    void    CreateSourceOutputStream(std::ofstream& out, const char* extension, TString& filename);
-   void    CreateJavascript();
-   void    CreateStyleSheet();
    void    DescendHierarchy(ofstream &out, TClass* basePtr, 
                   const char **classNames, Int_t numberOfClasses, 
                   Int_t maxLines=0, Int_t depth=1);
@@ -175,6 +173,8 @@ public:
    virtual      ~THtml();
    void          Convert(const char *filename, const char *title, 
                          const char *dirname = "", const char *relpath="../");
+   void          CreateJavascript();
+   void          CreateStyleSheet();
    const char   *GetDeclFileName(TClass* cl) const;
    const char   *GetImplFileName(TClass* cl) const;
    const char   *GetSourceDir()  { return fSourceDir; }
