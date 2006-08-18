@@ -733,6 +733,10 @@ ROOTHELPIN=config/root-help.el.in
 ROOTHELPOUT=build/misc/root-help.el
 HTMLIN=config/html.C.in
 HTMLOUT=macros/html.C
+THISROOTSHIN=config/thisroot.sh
+THISROOTSHOUT=bin/thisroot.sh
+THISROOTCSHIN=config/thisroot.csh
+THISROOTCSHOUT=bin/thisroot.csh
 
 ######################################################################
 #
@@ -4257,6 +4261,16 @@ for opt in $options; do
 done
 sed $sed_args < $HTMLIN > $HTMLOUT
 result done
+
+#---------------------------------------------------------------------
+# bin/thisroot.sh and bin/thisroot.csh
+#
+message "Writing $THISROOTSHOUT"
+cp -f $THISROOTSHIN $THISROOTSHOUT
+result "done"
+message "Writing $THISROOTCSHOUT"
+cp -f $THISROOTCSHIN $THISROOTCSHOUT
+result "done"
 
 #---------------------------------------------------------------------
 # config.status

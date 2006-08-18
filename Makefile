@@ -755,6 +755,8 @@ install: all
            fi; \
 	   $(INSTALL) bin/root-config           $(DESTDIR)$(BINDIR); \
 	   $(INSTALL) bin/memprobe              $(DESTDIR)$(BINDIR); \
+	   $(INSTALL) bin/thisroot.sh           $(DESTDIR)$(BINDIR); \
+	   $(INSTALL) bin/thisroot.csh          $(DESTDIR)$(BINDIR); \
 	   $(INSTALL) $(ALLEXECS)               $(DESTDIR)$(BINDIR); \
 	   echo "Installing libraries in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR); \
@@ -847,6 +849,8 @@ uninstall:
 	   fi; \
 	   rm -f $(DESTDIR)$(BINDIR)/root-config; \
 	   rm -f $(DESTDIR)$(BINDIR)/memprobe; \
+	   rm -f $(DESTDIR)$(BINDIR)/thisroot.sh; \
+	   rm -f $(DESTDIR)$(BINDIR)/thisroot.csh; \
 	   for i in $(ALLEXECS) ; do \
 	      rm -f $(DESTDIR)$(BINDIR)/`basename $$i`; \
 	   done; \
