@@ -135,7 +135,6 @@ static __argb32__ *b = new __argb32__;
 } while (0)
 
 
-
 ClassImp(TASImage)
 ClassImp(TASImagePlugin)
 
