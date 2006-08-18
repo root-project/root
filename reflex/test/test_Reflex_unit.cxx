@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.13 2006/08/17 13:50:30 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.14 2006/08/17 14:45:56 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -59,6 +59,8 @@ class ReflexUnitTest : public CppUnit::TestFixture {
   CPPUNIT_TEST( member );
   CPPUNIT_TEST( tools );
   CPPUNIT_TEST( global_scope );
+  CPPUNIT_TEST(setClassAtts);
+   
   CPPUNIT_TEST( shutdown );
   CPPUNIT_TEST_SUITE_END();
 public:
@@ -85,6 +87,8 @@ public:
   void member();
   void tools();
   void global_scope();
+  void setClassAtts();
+
   void shutdown() { Reflex::Shutdown(); }
   void tearDown() {}
 };
@@ -608,6 +612,27 @@ void ReflexUnitTest::tools() {
   CPPUNIT_ASSERT_EQUAL(std::string("reverse_iterator<std::_Rb_tree_const_iterator<std::pair<std::basic_string<char, std::char_traits<char>, std::allocator<char> > const, std::pair<int, std::vector<float, std::allocator<float> > > > > >"), Tools::GetBaseName(t7));
   CPPUNIT_ASSERT_EQUAL(std::string("std"), Tools::GetScopeName(t7,true));
   CPPUNIT_ASSERT_EQUAL(std::string("reverse_iterator<std::_Rb_tree_const_iterator<std::pair<std::basic_string<char, std::char_traits<char>, std::allocator<char> > const, std::pair<int, std::vector<float, std::allocator<float> > > > > >"), Tools::GetBaseName(t7,true));
+}
+
+
+void ReflexUnitTest::setClassAtts() {
+
+   Type t = Type::ByName("int");
+   CPPUNIT_ASSERT(t);
+   CPPUNIT_ASSERT_EQUAL(size_t(sizeof(int)), t.SizeOf());
+   CPPUNIT_ASSERT_EQUAL(std::string(typeid(int).name()), std::string(t.TypeInfo().name()));
+
+   t.SetSize(99);
+   t.SetTypeInfo(typeid(void));
+
+   CPPUNIT_ASSERT_EQUAL(size_t(99), t.SizeOf());
+   CPPUNIT_ASSERT_EQUAL(std::string(typeid(void).name()), std::string(t.TypeInfo().name()));
+
+   t.SetSize(sizeof(int));
+   t.SetTypeInfo(typeid(int));
+
+   CPPUNIT_ASSERT_EQUAL(size_t(sizeof(int)), t.SizeOf());
+   CPPUNIT_ASSERT_EQUAL(std::string(typeid(int).name()), std::string(t.TypeInfo().name()));
 }
 
 
