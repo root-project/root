@@ -33,7 +33,7 @@ class genDictionary(object) :
     self.cppEnumSelect     = {}
     self.cppFunctionSelect = {}
     self.last_id    = ''
-    self.transtable = string.maketrans('<>&*,: ().$', '__rp__s___d')
+    self.transtable = string.maketrans('<>&*,: ().$-', '__rp__s___dm')
     self.ignoremeth = ('rbegin', 'rend', '_Eq','_Lt', 'value_comp')
     self.x_id       = iter(xrange(sys.maxint))
     self.errors     = 0
