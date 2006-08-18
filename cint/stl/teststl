@@ -1,5 +1,0 @@
-for i in *.h
-do
-	echo $i
-	cint -I. $* $i teststl.c
-done

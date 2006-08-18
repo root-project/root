@@ -1,9 +1,0 @@
-#if !defined(G__MEMORY_DLL) && !defined(G__NOCINTDLL)
-#pragma include_noerr <memory.dll>
-#endif
-
-#ifdef __MAKECINT__
-#include <prec_stl/memory>
-#else
-#include <_memory.h>
-#endif

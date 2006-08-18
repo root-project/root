@@ -1,3 +1,0 @@
-libroot-ldap@libvers@: postinst-has-useless-call-to-ldconfig
-libroot-ldap@libvers@: postrm-has-useless-call-to-ldconfig
-

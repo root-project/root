@@ -1,5 +1,0 @@
-namespace std {
-#include <math.h>
-#pragma include_noerr <stdcxxfunc.dll>
-}
-

@@ -1,5 +1,0 @@
-#define G__STD_IOSTREAM
-namespace std {
-#include <iostream.h>
-}
-#include <_iostream>

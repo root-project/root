@@ -1,3 +1,0 @@
-main() {
-  system("makeit.bat");
-}

@@ -1,4 +1,0 @@
-namespace std {
-#include <limits.h>
-#include <_climits>
-}

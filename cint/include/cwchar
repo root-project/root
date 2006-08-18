@@ -1,4 +1,0 @@
-namespace std {
-#include <cwchar.h>
-}
-

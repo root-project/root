@@ -1,3 +1,0 @@
-namespace std {
-#include <iomanip.h>
-}

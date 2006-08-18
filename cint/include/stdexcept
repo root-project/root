@@ -1,5 +1,0 @@
-// stdexcept
-namespace std {
-#include <_stdexcept>
-}
-
