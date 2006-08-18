@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.24 2005/12/10 16:51:57 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.25 2006/05/26 16:55:04 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -173,6 +173,8 @@
 #pragma link C++ enum TVirtualPerfStats::EEventType;
 #pragma link C++ class TVirtualMonitoringWriter;
 #pragma link C++ class TVirtualMonitoringReader;
+#pragma link C++ class TObjectSpy;
+#pragma link C++ class TObjectRefSpy;
 
 // Insure the creation of the TClass object for pairs that might be
 // inside the cintdlls.
