@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.3 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.4 2006/08/17 13:50:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -697,6 +697,22 @@ namespace ROOT {
           */
          virtual void RemoveSubType( const Type & ty ) const;     
 
+         
+         /**
+          * SetSize will set the size of the type. This function shall
+          * be used with care. It will change the reflection information
+          * of this type.
+          */
+         void SetSize( size_t s ) const;
+
+
+         /**
+          * SetTypeInfo will set the type_info object of this type.
+          * Attention: This will change the reflection information
+          * of this type.
+          */
+         void SetTypeInfo( const std::type_info & ti ) const;
+
       protected:
 
          /**
@@ -712,7 +728,7 @@ namespace ROOT {
 
          /** C++ type_info object */
          mutable
-         const std::type_info * fTypeInfo;
+            const std::type_info * fTypeInfo;
 
       private:
 
@@ -726,8 +742,9 @@ namespace ROOT {
          Scope fScope;
 
 
-         /** size of the At in int */
-         size_t fSize;
+         /** size of the type in int */
+         mutable
+            size_t fSize;
 
 
          /**
@@ -1364,6 +1381,20 @@ inline void ROOT::Reflex::TypeBase::RemoveSubScope( const Scope & /* sc */ ) con
 inline void ROOT::Reflex::TypeBase::RemoveSubType( const Type & /* ty */ ) const {
 //-------------------------------------------------------------------------------
    throw RuntimeError("Function RemoveSubType not callable on this object");
+}
+
+
+//-------------------------------------------------------------------------------
+inline void ROOT::Reflex::TypeBase::SetSize( size_t s ) const {
+//-------------------------------------------------------------------------------
+   fSize = s;
+}
+
+
+//-------------------------------------------------------------------------------
+inline void ROOT::Reflex::TypeBase::SetTypeInfo( const std::type_info & ti ) const {
+//-------------------------------------------------------------------------------
+   fTypeInfo = &ti;
 }
 
 #endif // ROOT_Reflex_TypeBase

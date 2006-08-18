@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.19 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.20 2006/08/17 13:50:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -1117,6 +1117,22 @@ namespace ROOT {
          void RemoveSubType( const Type & ty ) const;
 
 
+         /**
+          * SetSize will set the size of the type. This function shall
+          * be used with care. It will change the reflection information
+          * of this type.
+          */
+         void SetSize( size_t s ) const;
+
+
+         /**
+          * SetTypeInfo will set the type_info object of this type.
+          * Attention: This will change the reflection information
+          * of this type.
+          */
+         void SetTypeInfo( const std::type_info & ti ) const;
+
+
          /** */
          const TypeBase * ToTypeBase() const;
 
@@ -2078,5 +2094,20 @@ inline void ROOT::Reflex::Type::RemoveSubType( const Type & ty ) const {
 //-------------------------------------------------------------------------------
    if ( * this ) fTypeName->fTypeBase->RemoveSubType( ty );
 }
+
+
+//-------------------------------------------------------------------------------
+inline void ROOT::Reflex::Type::SetSize( size_t s ) const {
+//-------------------------------------------------------------------------------
+   if ( * this ) fTypeName->fTypeBase->SetSize( s );
+}
+
+
+//-------------------------------------------------------------------------------
+inline void ROOT::Reflex::Type::SetTypeInfo( const std::type_info & ti ) const {
+//-------------------------------------------------------------------------------
+   if ( * this ) fTypeName->fTypeBase->SetTypeInfo( ti );
+}
+
 
 #endif // ROOT_Reflex_Type
