@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.21 2006/08/18 08:44:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.22 2006/08/18 10:18:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -124,13 +124,13 @@ void TLeaf::Browse(TBrowser* b)
 {
    // Browse the content of this leaf.
 
-   char name[64];
    if (strchr(GetName(), '.')) {
       fBranch->GetTree()->Draw(GetName(), "", b ? b->GetDrawOption() : "");
    } else {
       if ((fBranch->GetListOfLeaves()->GetEntries() > 1) || 
           (strcmp(fBranch->GetName(), GetName()) != 0)) {
-         sprintf(name, "%s.%s", fBranch->GetName(), GetName());
+         TString name;
+         name.Form("%s.%s", fBranch->GetName(), GetName());
          fBranch->GetTree()->Draw(name, "", b ? b->GetDrawOption() : "");
       } else {
          fBranch->GetTree()->Draw(GetName(), "", b ? b->GetDrawOption() : "");

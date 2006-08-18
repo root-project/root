@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.297 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.298 2006/08/17 22:46:41 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1242,7 +1242,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
    TObjArray* blist = branch->GetListOfBranches();
    const char* rdname = 0;
    const char* dname = 0;
-   char branchname[128];
+   TString branchname;
    char** apointer = (char**) addobj;
    TObject* obj = (TObject*) *apointer;
    Bool_t delobj = kFALSE;
@@ -1305,17 +1305,17 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
          code = dm->GetDataType()->GetType();
       }
       // Encode branch name. Use real data member name
-      sprintf(branchname, "%s", rdname);
+      branchname = rdname;
       if (isDot) {
          if (dm->IsaPointer()) {
             // FIXME: This is wrong!  The asterisk is not usually in the front!
-            sprintf(branchname, "%s%s", name, &rdname[1]);
+            branchname.Form("%s%s", name, &rdname[1]);
          } else {
-            sprintf(branchname, "%s%s", name, &rdname[0]);
+            branchname.Form("%s%s", name, &rdname[0]);
          }
       }
       // FIXME: Change this to a string stream.
-      char leaflist[128];
+      TString leaflist;
       Int_t offset = rd->GetThisOffset();
       char* pointer = ((char*) obj) + offset;
       if (dm->IsaPointer()) {
@@ -1331,18 +1331,18 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
             TClonesArray* li = (TClonesArray*) *ppointer;
             if (splitlevel != 2) {
                if (isDot) {
-                  branch1 = new TBranchClones(&branchname[0], pointer, bufsize);
+                  branch1 = new TBranchClones(branchname, pointer, bufsize);
                } else {
                   // FIXME: This is wrong!  The asterisk is not usually in the front!
-                  branch1 = new TBranchClones(&branchname[1], pointer, bufsize);
+                  branch1 = new TBranchClones(&branchname.Data()[1], pointer, bufsize);
                }
                blist->Add(branch1);
             } else {
                if (isDot) {
-                  branch1 = new TBranchObject(&branchname[0], li->ClassName(), pointer, bufsize);
+                  branch1 = new TBranchObject(branchname, li->ClassName(), pointer, bufsize);
                } else {
                   // FIXME: This is wrong!  The asterisk is not usually in the front!
-                  branch1 = new TBranchObject(&branchname[1], li->ClassName(), pointer, bufsize);
+                  branch1 = new TBranchObject(&branchname.Data()[1], li->ClassName(), pointer, bufsize);
                }
                blist->Add(branch1);
             }
@@ -1355,11 +1355,11 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
             }
             branch1 = new TBranchObject(dname, clobj->GetName(), pointer, bufsize, 0);
             if (isDot) {
-               branch1->SetName(&branchname[0]);
+               branch1->SetName(branchname);
             } else {
                // FIXME: This is wrong!  The asterisk is not usually in the front!
                // -- Do not use the first character (*).
-               branch1->SetName(&branchname[1]);
+               branch1->SetName(&branchname.Data()[1]);
             }
             blist->Add(branch1);
          } else {
@@ -1372,11 +1372,11 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
                //check that index is a valid data member name
                //if member is part of an object (eg fA and index=fN)
                //index must be changed from fN to fA.fN
-               char aindex[128];
-               strcpy(aindex, rd->GetName());
-               char* rdot = strrchr(aindex, '.');
-               if (rdot) {
-                  strcpy(rdot + 1, index);
+               TString aindex (rd->GetName());
+               Ssiz_t rdot = aindex.Last('.');
+               if (rdot>=0) {
+                  aindex.Remove(rdot+1);
+                  aindex.Append(index);
                }
                nexti.Reset();
                while ((rdi = (TRealData*) nexti())) {
@@ -1392,32 +1392,32 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
                   // Note that we differentiate between strings and
                   // char array by the fact that there is NO specified
                   // size for a string (see next if (code == 1)
-                  sprintf(leaflist, "%s[%s]/%s", &rdname[0], index, "B");
+                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "B");
                } else if (code == 11) {
-                  sprintf(leaflist, "%s[%s]/%s", &rdname[0], index, "b");
+                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "b");
                } else if (code == 18) {
-                  sprintf(leaflist, "%s[%s]/%s", &rdname[0], index, "O");
+                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "O");
                } else if (code == 2) {
-                  sprintf(leaflist, "%s[%s]/%s", &rdname[0], index, "S");
+                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "S");
                } else if (code == 12) {
-                  sprintf(leaflist, "%s[%s]/%s", &rdname[0], index, "s");
+                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "s");
                } else if (code == 3) {
-                  sprintf(leaflist, "%s[%s]/%s", &rdname[0], index, "I");
+                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "I");
                } else if (code == 13) {
-                  sprintf(leaflist, "%s[%s]/%s", &rdname[0], index, "i");
+                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "i");
                } else if (code == 5) {
-                  sprintf(leaflist, "%s[%s]/%s", &rdname[0], index, "F");
+                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "F");
                } else if ((code == 8) || (code == 9)) {
-                  sprintf(leaflist, "%s[%s]/%s", &rdname[0], index, "D");
+                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "D");
                } else {
-                  Error("BranchOld", "Cannot create branch for rdname: %s code: %d", branchname, code);
-                  leaflist[0] = 0;
+                  Error("BranchOld", "Cannot create branch for rdname: %s code: %d", branchname.Data(), code);
+                  leaflist = "";
                }
             } else {
                // -- We are possibly a character string.
                if (code == 1) {
                   // -- We are a character string.
-                  sprintf(leaflist, "%s/%s", dname, "C");
+                  leaflist.Form("%s/%s", dname, "C");
                } else {
                   // -- Invalid array specification.
                   // FIXME: We need an error message here.
@@ -1425,24 +1425,9 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
                }
             }
             // There are '*' in both the branchname and leaflist, remove them.
-            // FIXME: Using a std::string here.
-            char bname[128];
-            UInt_t cursor = 0;
-            UInt_t pos = 0;
-            // Remove any asterisks in the branch name.
-            for (cursor = 0, pos = 0; cursor < strlen(branchname); ++cursor) {
-               if (branchname[cursor] != '*') {
-                  bname[pos++] = branchname[cursor];
-               }
-            }
-            bname[pos] = '\0';
-            // Remove any asterisks in the leaf specification.
-            for (cursor = 0, pos = 0; cursor < strlen(leaflist); ++cursor) {
-               if (leaflist[cursor] != '*') {
-                  leaflist[pos++] = leaflist[cursor];
-               }
-            }
-            leaflist[pos] = '\0';
+            TString bname( branchname );
+            bname.ReplaceAll("*","");
+            leaflist.ReplaceAll("*","");
             // Add the branch to the tree and indicate that the address
             // is that of a pointer to be dereferenced before using.
             branch1 = new TBranch(bname, *((void**) pointer), leaflist, bufsize);
@@ -1454,28 +1439,28 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
       } else if (dm->IsBasic()) {
          // -- We have a basic type.
          if (code == 1) {
-            sprintf(leaflist, "%s/%s", rdname, "B");
+            leaflist.Form("%s/%s", rdname, "B");
          } else if (code == 11) {
-            sprintf(leaflist, "%s/%s", rdname, "b");
+            leaflist.Form("%s/%s", rdname, "b");
          } else if (code == 18) {
-            sprintf(leaflist, "%s/%s", rdname, "O");
+            leaflist.Form("%s/%s", rdname, "O");
          } else if (code == 2) {
-            sprintf(leaflist, "%s/%s", rdname, "S");
+            leaflist.Form("%s/%s", rdname, "S");
          } else if (code == 12) {
-            sprintf(leaflist, "%s/%s", rdname, "s");
+            leaflist.Form("%s/%s", rdname, "s");
          } else if (code == 3) {
-            sprintf(leaflist, "%s/%s", rdname, "I");
+            leaflist.Form("%s/%s", rdname, "I");
          } else if (code == 13) {
-            sprintf(leaflist, "%s/%s", rdname, "i");
+            leaflist.Form("%s/%s", rdname, "i");
          } else if (code == 5) {
-            sprintf(leaflist, "%s/%s", rdname, "F");
+            leaflist.Form("%s/%s", rdname, "F");
          } else if (code == 8) {
-            sprintf(leaflist, "%s/%s", rdname, "D");
+            leaflist.Form("%s/%s", rdname, "D");
          } else if (code == 9) {
-            sprintf(leaflist, "%s/%s", rdname, "D");
+            leaflist.Form("%s/%s", rdname, "D");
          } else {
-            Error("BranchOld", "Cannot create branch for rdname: %s code: %d", branchname, code);
-            leaflist[0] = 0;
+            Error("BranchOld", "Cannot create branch for rdname: %s code: %d", branchname.Data(), code);
+            leaflist = "";
          }
          branch1 = new TBranch(branchname, pointer, leaflist, bufsize);
          branch1->SetTitle(rdname);
@@ -1745,7 +1730,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
       TObjArray* blist = branch->GetListOfBranches();
       TIter next(sinfo->GetElements());
       TStreamerElement* element = 0;
-      char* bname = new char[1000];
+      TString bname;
       for (id = 0; (element = (TStreamerElement*) next()); ++id) {
          char* pointer = (char*) (*ppointer + element->GetOffset());
          // FIXME: This is not good enough, an STL container can be
@@ -1761,7 +1746,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
          }
          if (dot) {
             if (dotlast) {
-               sprintf(bname, "%s%s", name, element->GetFullName());
+               bname.Form("%s%s", name, element->GetFullName());
             } else {
                // FIXME: We are in the case where we have a top-level
                //        branch name that was created by the branch
@@ -1776,21 +1761,20 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
                   // FIXME: This is also quite bad since classes with two
                   //        or more base classes end up with sub-branches
                   //        that have the same name.
-                  sprintf(bname, "%s", name);
+                  bname = name;
                } else {
-                  sprintf(bname, "%s.%s", name, element->GetFullName());
+                  bname.Form("%s.%s", name, element->GetFullName());
                }
             }
          } else {
             // Note: For a base class element, this results in the branchname
             //       being the name of the base class.
-            sprintf(bname, "%s", element->GetFullName());
+            bname.Form("%s", element->GetFullName());
          }
          TBranchElement* bre = new TBranchElement(bname, sinfo, id, pointer, bufsize, splitlevel - 1);
          bre->SetParentClass(cl);
          blist->Add(bre);
       }
-      delete [] bname;
    }
 
    //

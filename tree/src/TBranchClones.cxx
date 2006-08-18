@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.20 2005/11/16 20:23:33 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.21 2006/07/13 05:26:29 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -58,9 +58,9 @@ TBranchClones::TBranchClones(const char* name, void* pointer, Int_t basketsize, 
 {
    // -- Constructor.
 
-   char leaflist[80];
-   char branchname[80];
-   char branchcount[64];
+   TString leaflist;
+   TString branchname;
+   TString branchcount;
    SetName(name);
    if ((compress == -1) && gTree->GetDirectory()) {
       TFile* bfile = 0;
@@ -87,8 +87,8 @@ TBranchClones::TBranchClones(const char* name, void* pointer, Int_t basketsize, 
    if (basketsize < 100) {
       basketsize = 100;
    }
-   std::sprintf(leaflist, "%s_/I", name);
-   std::sprintf(branchcount, "%s_", name);
+   leaflist.Form("%s_/I", name);
+   branchcount.Form("%s_", name);
    fBranchCount = new TBranch(branchcount, &fN, leaflist, basketsize);
    fBranchCount->SetBit(kIsClone);
    TLeaf* leafcount = (TLeaf*) fBranchCount->GetListOfLeaves()->UncheckedAt(0);
@@ -153,12 +153,12 @@ TBranchClones::TBranchClones(const char* name, void* pointer, Int_t basketsize, 
          itype = "i";
       }
 
-      sprintf(leaflist, "%s[%s]/%s", member->GetName(), branchcount, itype);
+      leaflist.Form("%s[%s]/%s", member->GetName(), branchcount.Data(), itype);
       Int_t comp = compress;
       if (type == 5) {
          comp--;
       }
-      sprintf(branchname, "%s.%s", name, rd->GetName());
+      branchname.Form("%s.%s", name, rd->GetName());
       TBranch* branch  = new TBranch(branchname, this, leaflist, basketsize, comp);
       branch->SetBit(kIsClone);
       TObjArray* leaves = branch->GetListOfLeaves();
@@ -214,8 +214,8 @@ Int_t TBranchClones::Fill()
    fEntries++;
    if (fN > fNdataMax) {
       fNdataMax = fList->GetSize();
-      char branchcount[64];
-      sprintf(branchcount, "%s_", GetName());
+      TString branchcount;
+      branchcount.Form("%s_", GetName());
       TLeafI* leafi = (TLeafI*) fBranchCount->GetLeaf(branchcount);
       leafi->SetMaximum(fNdataMax);
       for (i = 0; i < nbranches; i++) {
@@ -382,7 +382,7 @@ void TBranchClones::Streamer(TBuffer& b)
       if (!cl->GetListOfRealData()) {
          cl->BuildRealData();
       }
-      char branchname[80];
+      TString branchname;
       TRealData* rd = 0;
       TIter next(cl->GetListOfRealData());
       while ((rd = (TRealData*) next())) {
@@ -394,7 +394,7 @@ void TBranchClones::Streamer(TBuffer& b)
          if (!membertype->GetType()) {
             continue;
          }
-         std::sprintf(branchname, "%s.%s", GetName(), rd->GetName());
+         branchname.Form("%s.%s", GetName(), rd->GetName());
          branch = (TBranch*) fBranches.FindObject(branchname);
          if (!branch) {
             continue;
