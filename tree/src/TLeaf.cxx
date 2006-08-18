@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.19 2006/07/13 05:30:48 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.20 2006/07/13 17:50:42 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -67,18 +67,8 @@ TLeaf::TLeaf(const char* name, const char *)
       return;
    }
 
-   if (fLeafCount || strchr(name, '[')) {
-      Int_t len = strlen(name);
-      if (len) {
-         char* newname = new char[len+1];
-         strcpy(newname, name);
-         char* bracket = strchr(newname, '[');
-         *bracket = 0;
-         SetName(newname);
-         delete [] newname;
-         newname = 0;
-      }
-   }
+   char *bracket = strchr(name, '[');
+   if (bracket) fName.ReplaceAll(bracket,"");
 }
 
 //______________________________________________________________________________
