@@ -9,6 +9,8 @@
  ************************************************************************
  * Copyright(c) 1999       Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
+ * For the licensing terms see the file COPYING
+ *
  ************************************************************************/
 
 #ifndef G__SSTREAM_H

@@ -1,4 +1,11 @@
-//$Id: rflx_gendict.h,v 1.1 2005/11/16 14:58:14 roiser Exp $
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+//$Id: rflx_gendict.h,v 1.2 2006/07/26 13:00:35 axel Exp $
 
 #ifndef RFLX_GENDICT_H
 #define RFLX_GENDICT_H 1

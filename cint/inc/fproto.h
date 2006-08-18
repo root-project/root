@@ -9,13 +9,8 @@
  ************************************************************************
  * Copyright(c) 1995~2005  Masaharu Goto 
  *
- * Permission to use, copy, modify and distribute this software and its 
- * documentation for any purpose is hereby granted without fee,
- * provided that the above copyright notice appear in all copies and
- * that both that copyright notice and this permission notice appear
- * in supporting documentation.  The author makes no
- * representations about the suitability of this software for any
- * purpose.  It is provided "as is" without express or implied warranty.
+ * For the licensing terms see the file COPYING
+ *
  ************************************************************************/
 
 #ifndef G__FPROTO_H
@@ -622,17 +617,6 @@ extern void G__asm_tovalue_F G__P((G__value *result));
 extern void G__asm_tovalue_D G__P((G__value *result));
 extern void G__asm_tovalue_U G__P((G__value *result));
 
-#ifdef G__EXCEPTIONWRAPPER
-/*********************************************************************
-* G__ExceptionWrapper
-*********************************************************************/
-extern int G__ExceptionWrapper G__P((G__InterfaceMethod funcp
-				     ,G__value* result7
-				     ,char* funcname
-				     ,struct G__param *libp
-				     ,int hash));
-#endif
-
 extern int G__gen_linksystem G__P((char* headerfile));
 
 extern void G__smart_shl_unload G__P((int allsl));
@@ -781,6 +765,8 @@ void G__setmemtestbreak G__P((int n,int m));
 #endif
 
 void G__clear_errordictpos();
+
+void G__CurrentCall(int, void*, int);
 
 #ifdef __cplusplus
 }

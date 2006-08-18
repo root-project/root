@@ -1,4 +1,11 @@
-//$Id: rflx_gensrc.cxx,v 1.18 2006/01/24 15:19:06 axel Exp $
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+//$Id: rflx_gensrc.cxx,v 1.20 2006/07/26 13:00:35 axel Exp $
 
 #include "rflx_gensrc.h"
 #include "rflx_tools.h"

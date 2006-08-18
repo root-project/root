@@ -9,13 +9,8 @@
  ************************************************************************
  * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
- * Permission to use, copy, modify and distribute this software and its 
- * documentation for any purpose is hereby granted without fee,
- * provided that the above copyright notice appear in all copies and
- * that both that copyright notice and this permission notice appear
- * in supporting documentation.  The author makes no
- * representations about the suitability of this software for any
- * purpose.  It is provided "as is" without express or implied warranty.
+ * For the licensing terms see the file COPYING
+ *
  ************************************************************************/
 
 #include <stdio.h>
@@ -162,7 +157,8 @@ int gen_systypes()
   fp=fopen(filename,"w");
   testdup(fp,"G__SYSTYPES_H");
 
-  INT_TYPEDEF_PREFER_INT(fp,ssize_t,"ssize_t");
+/* see v6_init.cxx, G__platformMacro
+  INT_TYPEDEF_PREFER_INT(fp,ssize_t,"ssize_t"); */
   INT_TYPEDEF_PREFER_INT(fp,pid_t,"pid_t");
   UINT_TYPEDEF_PREFER_INT(fp,pid_t,"pid_t");
   fprintf(fp,"typedef void* ptr_t;\n");

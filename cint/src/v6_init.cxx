@@ -9,13 +9,8 @@
  ************************************************************************
  * Copyright(c) 1995~2005  Masaharu Goto 
  *
- * Permission to use, copy, modify and distribute this software and its 
- * documentation for any purpose is hereby granted without fee,
- * provided that the above copyright notice appear in all copies and
- * that both that copyright notice and this permission notice appear
- * in supporting documentation.  The author makes no
- * representations about the suitability of this software for any
- * purpose.  It is provided "as is" without express or implied warranty.
+ * For the licensing terms see the file COPYING
+ *
  ************************************************************************/
 
 #include "common.h"
@@ -590,6 +585,7 @@ int G__main(int argc,char **argv)
   G__memanalysis();
 #endif
 
+  G__free_ifunc_table(&G__ifunc);
   G__ifunc.allifunc = 0;
   G__ifunc.next = (struct G__ifunc_table *)NULL;
 #ifdef G__NEWINHERIT
@@ -2118,6 +2114,23 @@ void G__platformMacro()
 #endif
   
   sprintf(temp,"int& G__cintv6=*(int*)(%ld);",(long)(&G__cintv6)); G__exec_text(temp);
+
+  // setup size_t, ssize_t
+  int size_t_type = 0;
+  if (sizeof(size_t) == G__INTALLOC)
+     size_t_type = 'i';
+  else if (sizeof(size_t) == G__LONGALLOC)
+     size_t_type = 'l';
+  else if (sizeof(size_t) == G__LONGLONGALLOC)
+     size_t_type = 'n';
+  else G__fprinterr(G__serr, "On your platform, size_t has a weird size of %d which is not handled yet!\n",
+     sizeof(size_t));
+
+  G__search_typename2("size_t",size_t_type - 1,-1,0,-1);
+  G__setnewtype(-1,NULL,0);
+
+  G__search_typename2("ssize_t",size_t_type,-1,0,-1);
+  G__setnewtype(-1,NULL,0);
 }
 
 /******************************************************************

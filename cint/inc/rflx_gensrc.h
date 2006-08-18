@@ -1,4 +1,11 @@
-//$Id: rflx_gensrc.h,v 1.6 2006/01/16 18:14:48 axel Exp $
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+//$Id: rflx_gensrc.h,v 1.8 2006/07/26 13:00:35 axel Exp $
 
 #ifndef RFLX_GENSRC_H
 #define RFLX_GENSRC_H 1

@@ -9,13 +9,8 @@
  ************************************************************************
  * Copyright(c) 1995~2002  Masaharu Goto 
  *
- * Permission to use, copy, modify and distribute this software and its 
- * documentation for any purpose is hereby granted without fee,
- * provided that the above copyright notice appear in all copies and
- * that both that copyright notice and this permission notice appear
- * in supporting documentation.  The author makes no
- * representations about the suitability of this software for any
- * purpose.  It is provided "as is" without express or implied warranty.
+ * For the licensing terms see the file COPYING
+ *
  ************************************************************************/
 
 #include "common.h"
@@ -1158,7 +1153,7 @@ void G__va_arg_copyvalue(int t,void *p,G__value *pval,int objsize)
 #endif
   case 'c':
   case 'b':
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(G__WIN32)
     *(int*)(p) = (int)G__int(*pval);
 #else
     *(char*)(p) = (char)G__int(*pval);
@@ -1166,7 +1161,7 @@ void G__va_arg_copyvalue(int t,void *p,G__value *pval,int objsize)
     break;
   case 'r':
   case 's':
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(G__WIN32)
     *(int*)(p) = (int)G__int(*pval);
 #else
     *(short*)(p) = (short)G__int(*pval);
@@ -1182,7 +1177,7 @@ void G__va_arg_copyvalue(int t,void *p,G__value *pval,int objsize)
     break;
   case 'f':
 #define G__OLDIMPLEMENTATION2235
-#if defined(__GNUC__) 
+#if defined(__GNUC__) || defined(G__WIN32)
     *(double*)(p) = (double)G__double(*pval);
 #else
     *(float*)(p) = (float)G__double(*pval);
@@ -1231,7 +1226,7 @@ void G__va_arg_put(G__va_arg_buf *pbuf,G__param *libp,int n)
     type = libp->para[i].type;
     if(isupper(type)) objsize = G__LONGALLOC;
     else              objsize = G__sizeof(&libp->para[i]);
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(G__WIN32)
     switch(libp->para[i].type) {
     case 'c': case 'b': case 's': case 'r': objsize = sizeof(int); break;
     case 'f': objsize = sizeof(double); break;

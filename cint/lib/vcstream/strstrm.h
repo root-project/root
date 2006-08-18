@@ -8,7 +8,8 @@
  *  Stub file for making iostream library
  ************************************************************************
  * Copyright(c) 1996       Osamu Kotanigawa
- * Author                  Osamu Kotanigawa
+ *
+ * For the licensing terms see the file COPYING
  *
  ************************************************************************/
 

@@ -9,13 +9,8 @@
  ************************************************************************
  * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
  *
- * Permission to use, copy, modify and distribute this software and its
- * documentation for any purpose is hereby granted without fee,
- * provided that the above copyright notice appear in all copies and
- * that both that copyright notice and this permission notice appear
- * in supporting documentation. The author makes no
- * representations about the suitability of this software for any
- * purpose.  It is provided "as is" without express or implied warranty.
+ * For the licensing terms see the file COPYING
+ *
  ************************************************************************/
 
 #ifndef G__CI_H
@@ -25,10 +20,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_V6      60010013
-#define G__CINTVERSIONSTR_V6  "6.1.13, June 8, 2006"
-#define G__CINTVERSION_V5      501600013
-#define G__CINTVERSIONSTR_V5  "5.16.13, June 8, 2006"
+#define G__CINTVERSION_V6      60010014
+#define G__CINTVERSIONSTR_V6  "6.1.14, August 18, 2006"
+#define G__CINTVERSION_V5      50160014
+#define G__CINTVERSIONSTR_V5  "5.16.14, August 18, 2006"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -2104,9 +2099,6 @@ extern G__EXPORT void G__loadlonglong(int* ptag,int* ptype,int which);
 extern G__EXPORT int G__isanybase(int basetagnum,int derivedtagnum,long pobject);
 extern G__EXPORT int G__pop_tempobject(void);
 extern G__EXPORT char* G__stripfilename(char* filename);
-/* C++:
-void G__CurrentCall(int call_type, void* call_ifunc, int* ifunc_idx) - see v6_newlink.cxx
-*/
 
 #else /* G__MULTITHREADLIBCINT */
 

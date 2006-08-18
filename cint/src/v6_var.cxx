@@ -3831,12 +3831,12 @@ G__value G__getvariable(char *item,int *known2
         break;
 
       case 'N': /* G__int64 */
-        G__GET_PVAR(G__int64,G__letLonglong,long
+        G__GET_PVAR(G__int64,G__letLonglong,G__int64
                     ,tolower(var->type[ig15])
                     ,var->type[ig15])
         break;
       case 'M': /* G__uint64 */
-        G__GET_PVAR(G__uint64,G__letULonglong,long
+        G__GET_PVAR(G__uint64,G__letULonglong,G__uint64
                     ,tolower(var->type[ig15])
                     ,var->type[ig15])
         break;

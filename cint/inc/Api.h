@@ -10,13 +10,8 @@
  ************************************************************************
  * Copyright(c) 1995~1999  Masaharu Goto 
  *
- * Permission to use, copy, modify and distribute this software and its 
- * documentation for any purpose is hereby granted without fee,
- * provided that the above copyright notice appear in all copies and
- * that both that copyright notice and this permission notice appear
- * in supporting documentation.  The author makes no
- * representations about the suitability of this software for any
- * purpose.  It is provided "as is" without express or implied warranty.
+ * For the licensing terms see the file COPYING
+ *
  ************************************************************************/
 
 #ifndef G__API_H
@@ -36,7 +31,6 @@
 #include "G__ci.h"
 #ifndef __MAKECINT__
 #include "common.h"
-extern "C" G__EXPORT void G__CurrentCall(int, const void*, const int&);
 #else
 struct G__friendtag ;
 typedef int (*G__InterfaceMethod)();
@@ -63,6 +57,11 @@ typedef int (*G__InterfaceMethod)();
 #include "Typedf.h"
 #include "Token.h"
 
+#ifndef __CINT__
+struct G__includepath;
+#endif
+
+namespace Cint {
 
 /*********************************************************************
 * $xxx object resolution function, pointer to a class object
@@ -138,10 +137,6 @@ G__SourceFileInfo {
 /*********************************************************************
 * G__IncludePathInfo
 *********************************************************************/
-#ifndef __CINT__
-struct G__includepath;
-#endif
-
 class 
 #ifndef __CINT__
 G__EXPORT
@@ -217,6 +212,10 @@ private:
    bool (*fNeedTypedefShadow)(G__ClassInfo &cl); // func deciding whether the shadow is a tyepdef
 };
 #endif
+ 
+} // namespace Cint
+
+using namespace Cint;
 
 #ifdef __MAKECINT__
 #pragma link off class $G__value;

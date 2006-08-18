@@ -1,3 +1,10 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
 
 // begin_html <h2>These are the most frequently used <a href="http://doc.trolltech.com/3.3/mainclasses.html">Qt classes</a>. </h2>
 // <center>including the <a href="http://doc.trolltech.com/3.3/dialogs.html">Standard Qt Dialogs</a></center>  end_html

@@ -10,13 +10,8 @@
  * Author                  Masaharu Goto
  * Copyright(c) 1995~1999  Masaharu Goto (cint@pcroot.cern.ch)
  *
- * Permission to use, copy, modify and distribute this software and its 
- * documentation for non-commercial purpose is hereby granted without fee,
- * provided that the above copyright notice appear in all copies and
- * that both that copyright notice and this permission notice appear
- * in supporting documentation.  The author makes no
- * representations about the suitability of this software for any
- * purpose.  It is provided "as is" without express or implied warranty.
+ * For the licensing terms see the file COPYING
+ *
  ************************************************************************/
 #include <stdio.h>
 #include <limits.h>
@@ -207,7 +202,8 @@ int gen_stdio()
 #endif
 
   INT_TYPEDEF_PREFER_LONG(fp,fpos_t,"fpos_t");
-  UINT_TYPEDEF_PREFER_INT(fp,size_t,"size_t");
+/* see v6_init.cxx, G__platformMacro
+  UINT_TYPEDEF_PREFER_INT(fp,size_t,"size_t"); */
   fprintf(fp,"#define \t_IOFBF (%d)\n",_IOFBF);
   fprintf(fp,"#define \t_IOLBF (%d)\n",_IOLBF);
   fprintf(fp,"#define \t_IONBF (%d)\n",_IONBF);
@@ -450,7 +446,8 @@ int gen_stdlib()
   fprintf(fp,"   long int rem;\n");
   fprintf(fp,"} ldiv_t;\n");
 #endif
-  UINT_TYPEDEF_PREFER_INT(fp,size_t,"size_t");
+/* see v6_init.cxx, G__platformMacro
+  UINT_TYPEDEF_PREFER_INT(fp,size_t,"size_t"); */
   fprintf(fp,"#define \tEXIT_FAILURE (%d)\n",EXIT_FAILURE);
   fprintf(fp,"#define \tEXIT_SUCCESS (%d)\n",EXIT_SUCCESS);
   fprintf(fp,"#define \tMB_CUR_MAX (%ld)\n",(long)MB_CUR_MAX);
@@ -548,7 +545,8 @@ int gen_stddef()
 #else
   INT_TYPEDEF_PREFER_LONG(fp,ptrdiff_t,"ptrdiff_t");
 #endif
-  UINT_TYPEDEF_PREFER_INT(fp,size_t,"size_t");
+/* see v6_init.cxx, G__platformMacro
+  UINT_TYPEDEF_PREFER_INT(fp,size_t,"size_t"); */
 
 #ifndef G__NONANSI
   UINT_TYPEDEF_PREFER_INT(fp,wchar_t,"wchar_t");
