@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.37 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.38 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -315,8 +315,9 @@ protected:
    virtual void AddFrameBefore(TGFrame *f, TGLayoutHints *l = 0,
                                TGPopupMenu *before = 0);
 
-   virtual void BindKeys(Bool_t on = kTRUE);
    virtual void BindHotKey(Int_t keycode, Bool_t on = kTRUE);
+   virtual void BindKeys(Bool_t on = kTRUE);
+           void BindMenu(TGPopupMenu* subMenu, Bool_t on);
 
 private:
    TGMenuBar(const TGMenuBar&);             // not implemented

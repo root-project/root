@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.68 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.69 2006/08/10 15:36:58 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -149,25 +149,37 @@ void TGMenuBar::BindKeys(Bool_t on)
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier, on);
 
    if (fCurrent && fCurrent->GetMenu()) {
-      TGMenuEntry *e;
-      TIter next(fCurrent->GetMenu()->GetListOfEntries());
-      while ((e = (TGMenuEntry*)next())) {
-         Int_t hot = 0;
-         if (e->GetLabel()) {
-            hot = e->GetLabel()->GetHotChar();
-         }
-         if (!hot) continue;
-         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), 0, on);
-         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask, on);
-         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyLockMask, on);
-         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyMod2Mask, on);
-         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask | kKeyLockMask, on);
-         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask | kKeyMod2Mask, on);
-         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyLockMask  | kKeyMod2Mask, on);
-         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask | kKeyLockMask | kKeyMod2Mask, on);
-      }
+      BindMenu(fCurrent->GetMenu(), on);
    }
 }
+
+//______________________________________________________________________________
+void TGMenuBar::BindMenu(TGPopupMenu* subMenu, Bool_t on) 
+{
+   // If on kTRUE bind subMenu hot keys, otherwise remove key bindings.
+
+   TGMenuEntry *e;
+   TIter next(subMenu->GetListOfEntries());
+   
+   while ((e = (TGMenuEntry*)next())) {
+      Int_t hot = 0;
+      if ( e->GetType() == kMenuPopup )
+         BindMenu(e->GetPopup(), on);
+      if (e->GetLabel()) {
+         hot = e->GetLabel()->GetHotChar();
+      }
+      if (!hot) continue;
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), 0, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyLockMask, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyMod2Mask, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask | kKeyLockMask, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask | kKeyMod2Mask, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyLockMask  | kKeyMod2Mask, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask | kKeyLockMask | kKeyMod2Mask, on);
+   }
+}
+
 
 //______________________________________________________________________________
 void TGMenuBar::BindHotKey(Int_t keycode, Bool_t on)
@@ -519,28 +531,39 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
 
             TGMenuEntry *ce = 0;
 
-            TIter next2(menu->GetListOfEntries());
+            TGPopupMenu* currentMenu = fCurrent->GetMenu();
+            TGMenuEntry* currentEntry = currentMenu->GetCurrent();
+            while ( currentEntry ) {
+               if ( currentEntry->GetType() == kMenuPopup )
+                  currentMenu = currentEntry->GetPopup();
+               if ( currentEntry != currentMenu->GetCurrent() )
+                  currentEntry = currentMenu->GetCurrent();
+               else
+                  currentEntry = 0;
+            }
+
+            TIter next2(currentMenu->GetListOfEntries());
 
             while ((ce = (TGMenuEntry*)next2())) {
                UInt_t hot = 0;
                if (ce->GetLabel()) hot = ce->GetLabel()->GetHotChar();
                if (!hot || (hot != keysym)) continue;
 
-               menu->Activate(ce);
+               currentMenu->Activate(ce);
                if (ce->GetType() != kMenuPopup) {
                   gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
                   fCurrent->SetState(kFALSE);
-                  menu->fStick = kFALSE;
+                  currentMenu->fStick = kFALSE;
                   Event_t ev;
                   ev.fType = kButtonRelease;
-                  ev.fWindow = menu->GetId();
+                  ev.fWindow = currentMenu->GetId();
                   fCurrent = 0;
-                  return menu->HandleButton(&ev);
+                  return currentMenu->HandleButton(&ev);
                }
                else {
-                  gVirtualX->TranslateCoordinates(menu->fId,
+                  gVirtualX->TranslateCoordinates(currentMenu->fId,
                                  (ce->fPopup->GetParent())->GetId(),
-                                  ce->fEx+menu->fMenuWidth, ce->fEy,
+                                  ce->fEx+currentMenu->fMenuWidth, ce->fEy,
                                   ax, ay, wdummy);
                   ce->fPopup->PlaceMenu(ax-5, ay-1, kFALSE, kFALSE);
                }
@@ -985,6 +1008,9 @@ void TGPopupMenu::PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_poi
    // grab_pointer is true the pointer will be grabbed, which means that
    // all pointer events will go to the popup menu, independent of in
    // which window the pointer is.
+
+   void *ud;
+   EndMenu(ud);
 
    Int_t  rx, ry;
    UInt_t rw, rh;
