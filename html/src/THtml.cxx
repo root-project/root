@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.111 2006/08/04 13:59:09 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.112 2006/08/04 16:17:28 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2137,13 +2137,12 @@ void THtml::Convert(const char *filename, const char *title,
    if (!*dirname) {
       gSystem->ExpandPathName(fOutputDir);
       dir = gSystem->ConcatFileName(fOutputDir, "examples");
-
-      // create directory if necessary
-      if (gSystem->AccessPathName(dir))
-         gSystem->MakeDirectory(dir);
    } else
       dir = dirname;
 
+   // create directory if necessary
+   if (gSystem->AccessPathName(dir))
+      gSystem->MakeDirectory(dir);
 
    // find a file
    char *realFilename =
@@ -3452,7 +3451,10 @@ void THtml::ExpandKeywords(TString& keyword)
          } else if (keyword[i] == '.') {
             scoping = kMember;
             ++i;
-         } else currentType = 0;
+         } else {
+            currentType = 0;
+            scoping = kNada;
+         }
          if (i >= keyword.Length()) 
             break;
       } else currentType = 0;
