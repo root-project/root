@@ -887,7 +887,13 @@ int G__search_tagname(const char *tagname,int type)
 
     G__struct.memfunc[i]->comment[0].filenum = -1;
 
-    G__struct.memfunc[i]->allifunc = 1;
+    { 
+       struct G__ifunc_table *store_ifunc;
+       store_ifunc = G__p_ifunc;
+       G__p_ifunc = G__struct.memfunc[i];
+       G__memfunc_next();
+       G__p_ifunc = store_ifunc;
+    }
 #endif
 
     /***********************************************************
@@ -1706,7 +1712,7 @@ void G__define_struct(char type)
          * If struct size can not be divided by G__DOUBLEALLOC
          * the size is aligned.
          ********************************************/
-        if(1==G__struct.memvar[G__tagnum]->allvar
+        if((1==G__struct.memvar[G__tagnum]->allvar && G__struct.memvar[G__tagnum]->next==0)
            && 0==G__struct.baseclass[G__tagnum]->basen
            ) {
           /* this is still questionable, inherit0.c */

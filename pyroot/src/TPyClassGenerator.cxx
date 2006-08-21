@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.7 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.8 2006/07/01 21:19:55 brun Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
@@ -24,8 +24,8 @@ namespace {
    int PyCtorCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
       G__ifunc_table* ifunc = 0;
-      int index = 0;
-      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, index );
+      long index = 0;
+      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
 
       PyObject* args = PyTuple_New( 0 );
       PyObject* result =  PyObject_Call( (PyObject*)ifunc->userparam[index], args, NULL );
@@ -60,8 +60,8 @@ namespace {
       Py_INCREF( self );
 
       G__ifunc_table* ifunc = 0;
-      int index = 0;
-      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, index );
+      long index = 0;
+      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
 
       PyObject* args = PyTuple_New( 1 + libp->paran );
       PyTuple_SetItem( args, 0, self );

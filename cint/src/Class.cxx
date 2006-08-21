@@ -805,7 +805,7 @@ void* G__ClassInfo::New()
       defaultconstructor
 	=(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
       if(defaultconstructor) {
-	G__CurrentCall(G__DELETEFREE, this, tagnum);
+	G__CurrentCall(G__DELETEFREE, this, &tagnum);
 	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
 	G__CurrentCall(G__NOP, 0, 0);
 	p = (void*)G__int(buf);
@@ -857,7 +857,7 @@ void* G__ClassInfo::New(int n)
 	=(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
       if(defaultconstructor) {
 	if(n) G__cpp_aryconstruct = n;
-	G__CurrentCall(G__DELETEFREE, this, tagnum);
+	G__CurrentCall(G__DELETEFREE, this, &tagnum);
 	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
 	G__CurrentCall(G__NOP, 0, 0);
 	G__cpp_aryconstruct = 0;
@@ -929,7 +929,7 @@ void* G__ClassInfo::New(void *arena)
 	=(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
       if(defaultconstructor) {
 	G__setgvp((long)arena);
-	G__CurrentCall(G__DELETEFREE, this, tagnum);
+	G__CurrentCall(G__DELETEFREE, this, &tagnum);
 #ifdef G__ROOT
         G__exec_alloc_lock();
 #endif
@@ -989,7 +989,7 @@ void* G__ClassInfo::New(int n, void *arena)
       if(defaultconstructor) {
 	G__cpp_aryconstruct = n;
 	G__setgvp((long)arena);
-	G__CurrentCall(G__DELETEFREE, this, tagnum);
+	G__CurrentCall(G__DELETEFREE, this, &tagnum);
 	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
 	G__CurrentCall(G__NOP, 0, 0);
 	G__setgvp((long)G__PVOID);

@@ -161,7 +161,7 @@ static char** G__extra_include = 0; /*  [G__MAXFILENAME] = NULL;  */
 static int   s_CurrentCallType = 0;
 static void* s_CurrentCall  = 0;
 static int   s_CurrentIndex = 0;
-void G__CurrentCall(int call_type, void* call_ifunc, int ifunc_idx)
+void G__CurrentCall(int call_type, void* call_ifunc, long *ifunc_idx)
 {
   switch( call_type )   {
   case G__NOP:
@@ -172,22 +172,21 @@ void G__CurrentCall(int call_type, void* call_ifunc, int ifunc_idx)
   case G__SETMEMFUNCENV:
     s_CurrentCallType = call_type;
     s_CurrentCall     = call_ifunc;
-    s_CurrentIndex    = ifunc_idx;
+    s_CurrentIndex    = *ifunc_idx;
     break;
   case G__DELETEFREE:
     s_CurrentCallType = call_type;
     s_CurrentCall     = call_ifunc;
-    s_CurrentIndex    = ifunc_idx;
+    s_CurrentIndex    = *ifunc_idx;
     break;
   case G__RECMEMFUNCENV:
-    assert(0);
-    //if ( call_ifunc) *(void**)call_ifunc = s_CurrentCall;
-    //if ( ifunc_idx)  *ifunc_idx = s_CurrentIndex;
+    if ( call_ifunc) *(void**)call_ifunc = s_CurrentCall;
+    if ( ifunc_idx)  *ifunc_idx = s_CurrentIndex;
     break;
   case G__RETURN:
     assert(0);
-    //if ( call_ifunc) *(void**)call_ifunc = 0;
-    //if ( ifunc_idx)  *ifunc_idx  = s_CurrentCallType;
+    if ( call_ifunc) *(void**)call_ifunc = 0;
+    if ( ifunc_idx)  *ifunc_idx  = s_CurrentCallType;
     break;
   }
 }
@@ -459,7 +458,8 @@ int G__call_cppfunc(G__value *result7,G__param *libp,G__ifunc_table *ifunc,int i
     int store_asm_noverflow = G__asm_noverflow;
     G__suspendbytecode();
 
-    G__CurrentCall(G__SETMEMFUNCENV, ifunc, ifn);
+    long lifn = ifn;
+    G__CurrentCall(G__SETMEMFUNCENV, ifunc, &lifn);
 #ifdef G__EXCEPTIONWRAPPER
     G__ExceptionWrapper((G__InterfaceMethod)cppfunc,result7,(char*)ifunc,libp,ifn);
 #else

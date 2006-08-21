@@ -2067,7 +2067,7 @@ extern G__EXPORT int G__clearfilebusy G__P((int));
 /* earlier in this file: G__call_setup_funcs */
 /* earlier in this file: G__cint_version */
 /* earlier in this file: G__clearstack */
-extern G__EXPORT void G__CurrentCall(int, void*, int);
+extern G__EXPORT void G__CurrentCall(int, void*, long*);
 extern G__EXPORT int G__close_inputfiles G__P((void));
 extern G__EXPORT int G__const_resetnoerror G__P((void));
 extern G__EXPORT int G__const_setnoerror G__P((void));

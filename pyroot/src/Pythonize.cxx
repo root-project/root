@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.41 2006/07/13 07:48:44 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.42 2006/08/14 00:21:56 rdm Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -1229,8 +1229,8 @@ namespace {
 
    // retrieve function information
       G__ifunc_table* ifunc = 0;
-      int index = 0;
-      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, index );
+      long index = 0;
+      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
 
       CallInfo_t* ci = (CallInfo_t*)ifunc->userparam[index];
 
@@ -1272,8 +1272,8 @@ namespace {
 
    // retrieve function information
       G__ifunc_table* ifunc = 0;
-      int index = 0;
-      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, index );
+      long index = 0;
+      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
 
       PyObject* pyfunc = (PyObject*)ifunc->userparam[index];
 

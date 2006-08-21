@@ -399,11 +399,12 @@ G__value G__CallFunc::Execute(void *pobject)
   G__store_struct_offset = (long)pobject;
   SetFuncType();
   // Call function
-  G__CurrentCall(G__SETMEMFUNCENV, method.ifunc(), method.Index());
+  long index = method.Index();
+  G__CurrentCall(G__SETMEMFUNCENV, method.ifunc(), &index);
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) {
     if(pfunc == G__DLL_direct_globalfunc) 
-      ret = (*pfunc)(&result,(char*)method.ifunc(),&para,method.Index());
+       ret = (*pfunc)(&result,(char*)method.ifunc(),&para,method.Index());
     else 
       ret = (*pfunc)(&result,(char*)bytecode,&para,0);
   }
