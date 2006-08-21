@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.25 2006/08/04 13:59:09 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.26 2006/08/18 15:51:03 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -25,13 +25,7 @@
 #ifndef __CINT__
 #include "TCint.h"
 #include "Api.h"
-#undef G__FPROTO_H
-#include "fproto.h"
 #endif
-//#include "Type.h"
-//#include "G__ci.h"
-//#include "Typedf.h"
-//#include "Class.h"
 
 #ifndef ROOT_TROOT
 #include "TROOT.h"
@@ -80,9 +74,7 @@ protected:
       kNumSourceInfos
    };
 
-   typedef std::map<std::string /*method name*/, Int_t > MethodCount_t;
-
-   TString        fXwho;            // by default http://xwho.cern.ch/WHO/people?
+   TString        fXwho;            // URL for name lookup
    TString        fSourcePrefix;    // prefix to relative source path
    TString        fSourceDir;       // source path
    TString        fOutputDir;       // output directory
@@ -91,14 +83,14 @@ protected:
    TString        fLineExpanded;    // current line with links
    TString        fLineStripped;    // current line without surrounding spaces
    TClass        *fCurrentClass;    // current class context of sources being parsed
-   MethodCount_t  fMethodNames;     // current class's method names
+   std::map<std::string /*method name*/, Int_t > fMethodNames;     // current class's method names
    EDocContext    fDocContext;      // current context of parsed sources for documenting
    std::list<EParseContext> fParseContext; // current context of parsed sources
    std::set<UInt_t> fExtraLinesWithAnchor; // lines that need an additional anchor
    TString        fSourceInfo[kNumSourceInfos];// author, last changed, ...
    TString        fCounter;         // counter string
-   Bool_t         fEscFlag;         // Flag to mark the symbol must be written "as is"
-   char           fEsc;             // The special symbol ("backslash" by default) to mark "the next symbol should not be converted"
+   Bool_t         fEscFlag;         // state flag to mark the next character must be written "as is"
+   char           fEsc;             // char to mark the next character must be written "as is"
    Int_t          fHierarchyLines;  // counter for no. lines in hierarchy
    Int_t          fNumberOfClasses; // Number of known classes
    const char   **fClassNames;      // Names of known classes
