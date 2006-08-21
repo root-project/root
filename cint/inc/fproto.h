@@ -766,8 +766,6 @@ void G__setmemtestbreak G__P((int n,int m));
 
 void G__clear_errordictpos();
 
-void G__CurrentCall(int, void*, int);
-
 #ifdef __cplusplus
 }
 #endif

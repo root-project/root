@@ -61,8 +61,6 @@ typedef int (*G__InterfaceMethod)();
 struct G__includepath;
 #endif
 
-namespace Cint {
-
 /*********************************************************************
 * $xxx object resolution function, pointer to a class object
 *
@@ -105,6 +103,18 @@ typedef void (*G__pMethodUpdateClassInfo)(char *item,long tagnum);
 G__EXPORT void G__InitUpdateClassInfo(G__pMethodUpdateClassInfo pmethod);
 }
 
+#ifdef G__EXCEPTIONWRAPPER
+/*********************************************************************
+* G__ExceptionWrapper
+*********************************************************************/
+extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
+				   ,G__value* result7
+				   ,char* funcname
+				   ,struct G__param *libp
+				   ,int hash);
+#endif
+
+namespace Cint {
 /*********************************************************************
 * G__SourceFileInfo
 *********************************************************************/
@@ -159,17 +169,6 @@ G__IncludePathInfo {
   struct G__includepath *p;
 #endif
 };
-
-#ifdef G__EXCEPTIONWRAPPER
-/*********************************************************************
-* G__ExceptionWrapper
-*********************************************************************/
-extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
-				   ,G__value* result7
-				   ,char* funcname
-				   ,struct G__param *libp
-				   ,int hash);
-#endif
 
 
 /*********************************************************************
