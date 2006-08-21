@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.7 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.8 2006/05/15 09:45:03 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -21,17 +21,19 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TProofCondor.h"
+
+#include "TCondor.h"
+#include "TList.h"
+#include "TMap.h"
+#include "TMessage.h"
+#include "TMonitor.h"
+#include "TProofNodeInfo.h"
+#include "TProofResourcesStatic.h"
+#include "TProofServ.h"
+#include "TSlave.h"
+#include "TSocket.h"
 #include "TString.h"
 #include "TTimer.h"
-#include "TList.h"
-#include "TSlave.h"
-#include "TCondor.h"
-#include "TMap.h"
-#include "TProofServ.h"
-#include "TSocket.h"
-#include "TMonitor.h"
-#include "TProofResourcesStatic.h"
-#include "TProofNodeInfo.h"
 
 ClassImp(TProofCondor)
 
@@ -107,6 +109,7 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
       TListIter next(workerList);
       TObject *to;
       TProofNodeInfo *worker;
+      int nSlavesDone = 0;
       while ((to = next())) {
          // Get the next worker from the list
          worker = (TProofNodeInfo *)to;
@@ -116,7 +119,7 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
          const Char_t *workdir = worker->GetWorkDir().Data();
          Int_t perfidx = worker->GetPerfIndex();
 
-         gSystem->Sleep(100);
+         gSystem->Sleep(10 /* ms */);
          TCondorSlave* csl = fCondor->Claim(worker->GetNodeName().Data(), jobad);
          if (csl) {
             csl->fPerfIdx = perfidx;
@@ -127,6 +130,14 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
             claims.Add(csl);
             ord++;
          }
+                 
+         // Notify claim creation
+         nSlavesDone++;
+         TMessage m(kPROOF_SERVERSTARTED);
+         m << TString("Creating COD Claim") << workerList->GetSize()
+         << nSlavesDone << (csl != 0);
+         gProofServ->GetSocket()->Send(m);
+
       } // end while (worker loop)
 
       // Cleanup
@@ -160,6 +171,8 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
       }
    }
 
+   int nClaims = claims.GetSize();
+   int nClaimsDone = 0;
    while (claims.GetSize() > 0) {
       TCondorSlave* c = 0;
 
@@ -273,14 +286,8 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
 
          // add slave to appropriate list
          if (trial<ntries) {
-            // Finalize server startup (to be optmized)
-            if (slave->IsValid()) {
-               slave->SetupServ(TSlave::kSlave,0);
-            }
-
             if (slave->IsValid()) {
                fSlaves->Add(slave);
-               fAllMonitor->Add(slave->GetSocket());
                if (trial == 1) {
                   claims.Remove(c);
                } else {
@@ -288,6 +295,11 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
                   delete dynamic_cast<TTimer*>(p->Value());
                   delete p;
                }
+               nClaimsDone++;
+               TMessage m(kPROOF_SERVERSTARTED);
+               m << TString("Opening connections to workers") << nClaims
+                 << nClaimsDone << kTRUE;
+               gProofServ->GetSocket()->Send(m);
             } else {
                if (trial == 1) {
                   TTimer* timer = new TTimer(delay);
@@ -302,20 +314,16 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
                idx++;
             }
          } else {
-            // Finalize server startup (to be optmized)
-            if (slave->IsValid()) {
-               slave->SetupServ(TSlave::kSlave,0);
-            }
-
             fSlaves->Add(slave);
-            if (slave->IsValid()) {
-               fAllMonitor->Add(slave->GetSocket());
-            } else {
-               fBadSlaves->Add(slave);
-            }
             TPair *p = dynamic_cast<TPair*>(claims.Remove(c));
             delete dynamic_cast<TTimer*>(p->Value());
             delete p;
+            
+            nClaimsDone++;
+            TMessage m(kPROOF_SERVERSTARTED);
+            m << TString("Opening connections to workers") << nClaims
+              << nClaimsDone << slave->IsValid();
+            gProofServ->GetSocket()->Send(m);
          }
 
          if (idx>=claims.GetSize()) {
@@ -325,6 +333,35 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
       }
    }
 
+   if (!parallel) {
+      // Here we finalize the server startup: in this way the bulk
+      // of remote operations are almost parallelized
+      TIter nxsl(fSlaves);
+      TSlave *sl = 0;
+      int nSlavesDone = 0, nSlaves = fSlaves->GetSize();
+      while ((sl = (TSlave *) nxsl())) {
+
+         // Finalize setup of the server
+         if (sl->IsValid()) {
+            sl->SetupServ(TSlave::kSlave, 0);
+         }
+         
+         if (sl->IsValid()) {
+            fAllMonitor->Add(sl->GetSocket());
+         } else {
+            fBadSlaves->Add(sl);
+         }
+
+         // Notify end of startup operations
+         nSlavesDone++;
+         TMessage m(kPROOF_SERVERSTARTED);
+         m << TString("Setting up worker servers") << nSlaves
+           << nSlavesDone << sl->IsValid();
+         gProofServ->GetSocket()->Send(m);
+      }
+   }
+   
+   
    if (parallel) {
       SafeDelete(startedsl);
       SafeDelete(nextsl);
