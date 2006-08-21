@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.38 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.39 2006/08/15 10:06:51 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -452,12 +452,13 @@ Bool_t TGTab::SetTab(const char *name, Bool_t emit)
    TGTabElement *tab = 0;
 
    TIter next(fList);
+   next();           // skip first container
 
-   while (next()) {
-      el = (TGFrameElement *) next();
+   while ((el = (TGFrameElement *) next())) {
+      next();        // skip tab containter
       tab = (TGTabElement *)el->fFrame;
 
-      if (name == *(tab->GetText())) {
+      if (*(tab->GetText()) == name) {
          // change tab and generate event
          ChangeTab(count, emit);
          return kTRUE;
