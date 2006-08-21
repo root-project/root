@@ -1,4 +1,4 @@
-// @(#)root/build:$Name:  $:$Id: mainroot.cxx,v 1.3 2006/03/23 14:00:18 rdm Exp $
+// @(#)root/build:$Name:  $:$Id: mainroot.cxx,v 1.4 2006/07/30 11:22:59 rdm Exp $
 // Author: Axel Naumann   21/03/06
 
 /*************************************************************************
@@ -18,8 +18,14 @@ extern "C" {
 #include "def.h"
 }
 
+#ifndef WIN32
+#include <unistd.h>
+#else
+extern "C" int unlink(const char *FILENAME);
+#endif
+
 extern "C" int main_orig(int argc, char **argv);
-extern "C" int unlink (const char *FILENAME);
+
 
 int rootBuild = 0;
 
