@@ -1,4 +1,4 @@
-// @(#)root/build:$Name:  $:$Id: mainroot.cxx,v 1.4 2006/07/30 11:22:59 rdm Exp $
+// @(#)root/build:$Name:  $:$Id: mainroot.cxx,v 1.5 2006/08/21 09:55:11 rdm Exp $
 // Author: Axel Naumann   21/03/06
 
 /*************************************************************************
@@ -8,6 +8,22 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+// ROOT wrapper around ROOT's mkdepend incarnation + wrapper script,
+// known as depends.sh in earlier days.
+// If the first(!) argument is '-R' it triggers a few special
+// routines:
+//  * dependencies for .d files use $(wildcard ...), so gmake doesn't
+//    bail out if one of the dependencies doesn't exist.
+//  * files starting with '/G__' and ending on ".cxx" are assumed to be 
+//    dictionaries. rmkdepend generates rules for these dictionaries 
+//    covering the .o file, the .d file, and the .cxx file itself, 
+//    so the dictionaries get re-egenerated when an included header 
+//    file gets changed.
+//  * the detection / wildcarding of a dictionary file can be changed 
+//    by specifying -R=[tag]%[ext] as parameter to -R. The default is 
+//    "-R=/G__%.cxx".
+//  * remove output file if we encounter an error.
 
 #include <string>
 
@@ -108,15 +124,27 @@ else
 
 int main(int argc, char **argv)
 {
-   if (argc<3 || strcmp(argv[1], "-R"))
+   if (argc<3 || (strcmp(argv[1], "-R") && strncmp(argv[1], "-R=", 3)))
       return main_orig(argc, argv);
 
    rootBuild = 1;
    int skip = 2;
    const char* outname = argv[2]+skip;
    while (outname[0] == ' ') outname = argv[2] + (++skip);
-   if (outname)
-      isDict = (strstr(outname, "/G__") != 0 && strstr(outname, ".cxx"));
+   if (outname) {
+      const char* dicttag = "/G__%.cxx";
+      if (argv[1][2] == '=')
+         dicttag = argv[1] + 3;
+      std::string sDictTag(dicttag);
+      std::string sDictExt;
+      size_t posExt = sDictTag.find('%');
+      if (posExt != std::string::npos) {
+         sDictExt = sDictTag.substr(posExt + 1);
+         sDictTag.erase(posExt);
+      }
+      isDict = (strstr(outname, sDictTag.c_str()) != 0 
+         && (!sDictExt.length() || strstr(outname, sDictExt.c_str())));
+   }
 
    argv[1] = argv[0]; // keep program name
    int ret = main_orig(argc-1, &argv[1]);
