@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.16 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.17 2006/08/15 15:22:52 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -484,3 +484,14 @@ void ROOT::Reflex::Scope::GenerateDict( DictionaryGenerator & generator) const {
 // Generate Dictionary information about itself.
    if ( * this ) fScopeName->fScopeBase->GenerateDict(generator);
 }
+
+#ifdef CINTREFLEX_CHECK_INT_CONV
+bool ROOT::Reflex::Scope::operator&&(const Scope &right) const
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Scope::operator&&(const Type &right) const 
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Scope::operator||(const Scope &right) const 
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Scope::operator||(const Type &right) const 
+{ return operator bool() && (bool)right; }
+#endif

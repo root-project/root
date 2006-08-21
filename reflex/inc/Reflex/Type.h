@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.20 2006/08/17 13:50:30 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.21 2006/08/18 12:18:49 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -113,6 +113,24 @@ namespace ROOT {
           * @return true if Type is implemented 
           */
          operator bool () const;
+#define CINTREFLEX_CHECK_INT_CONV
+#ifdef CINTREFLEX_CHECK_INT_CONV
+      // To prevent any un-authorized use as the old type
+         bool operator!() const { return !operator bool(); }
+         bool operator&&(bool right) const { return operator bool() && right; }
+         bool operator&&(int right) const { return operator bool() && right; }
+         bool operator&&(long right) const { return operator bool() && right; }
+         bool operator&&(const Scope &right) const;
+         bool operator&&(const Type &right) const;
+         bool operator||(bool right) const { return operator bool() || right; }
+         bool operator||(int right) const { return operator bool() || right; }
+         bool operator||(long right) const { return operator bool() || right; }
+         bool operator||(const Scope &right) const;
+         bool operator||(const Type &right) const;
+      private:
+         operator int () const;
+#endif
+      public:
 
 
          /**
@@ -2094,6 +2112,21 @@ inline void ROOT::Reflex::Type::RemoveSubType( const Type & ty ) const {
 //-------------------------------------------------------------------------------
    if ( * this ) fTypeName->fTypeBase->RemoveSubType( ty );
 }
+
+#ifdef CINTREFLEX_CHECK_INT_CONV
+inline bool operator&&(bool b, const ROOT::Reflex::Type & rh) {
+   return b && rh.operator bool();
+}
+inline bool operator&&(int i, const ROOT::Reflex::Type & rh) {
+   return i && rh.operator bool();
+}
+inline bool operator||(bool b, const ROOT::Reflex::Type & rh) {
+   return b && rh.operator bool();
+}
+inline bool operator||(int i, const ROOT::Reflex::Type & rh) {
+   return i && rh.operator bool();
+}
+#endif
 
 
 //-------------------------------------------------------------------------------

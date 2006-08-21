@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.15 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.16 2006/08/17 13:50:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -358,3 +358,13 @@ void ROOT::Reflex::Type::GenerateDict( DictionaryGenerator & generator) const {
    if ( * this ) fTypeName->fTypeBase->GenerateDict( generator );
 }
 
+#ifdef CINTREFLEX_CHECK_INT_CONV
+bool ROOT::Reflex::Type::operator&&(const Scope &right) const
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Type::operator&&(const Type &right) const 
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Type::operator||(const Scope &right) const 
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Type::operator||(const Type &right) const 
+{ return operator bool() && (bool)right; }
+#endif
