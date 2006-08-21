@@ -2817,7 +2817,7 @@ static void G__x8664_vararg_epilog(FILE *fp, int ifn, G__ifunc_table *ifunc)
                   fprintf(fp, "(%s&) u[0].lval", typestring);
                } else {
  	          if (G__globalcomp == G__CPPLINK) {
-                     fprintf(fp, "(%s) u[0].lval", typestring);
+                     fprintf(fp, "*(%s*) u[0].lval", typestring);
                   } else {
                      fprintf(fp, "(%s*) u[0].lval", typestring);
                   }
