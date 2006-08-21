@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: 3DConversions.cxx,v 1.5 2006/06/16 09:26:01 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: 3DConversions.cxx,v 1.6 2006/08/16 10:29:59 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler and Walter Brown Thurs July 7, 2005
 //
-// Last update: $Id: 3DConversions.cxx,v 1.5 2006/06/16 09:26:01 moneta Exp $
+// Last update: $Id: 3DConversions.cxx,v 1.6 2006/08/16 10:29:59 moneta Exp $
 //
 
 // TODO - For now, all conversions are grouped in this one compilation unit.
@@ -55,11 +55,12 @@ void convert( Rotation3D const & from, AxisAngle   & to)
    const double  uY = m[kXZ] - m[kZX];
    const double  uX = m[kZY] - m[kYZ];
 
+
    // in case of rotaiton of an angle PI, the rotation matrix is symmetric and 
    // uX = uY = uZ  = 0. Use then conversion through the quaternion
-   if ( uX < 8.*std::numeric_limits<double>::epsilon() &&
-        uY < 8.*std::numeric_limits<double>::epsilon() && 
-        uZ < 8.*std::numeric_limits<double>::epsilon() ) { 
+   if ( std::fabs( uX ) < 8.*std::numeric_limits<double>::epsilon() &&
+        std::fabs( uY ) < 8.*std::numeric_limits<double>::epsilon() && 
+        std::fabs( uZ ) < 8.*std::numeric_limits<double>::epsilon() ) { 
       Quaternion tmp;
       convert (from,tmp); 
       convert (tmp,to); 
@@ -68,6 +69,7 @@ void convert( Rotation3D const & from, AxisAngle   & to)
 
    AxisAngle::AxisVector u;
 
+   u.SetCoordinates( uX, uY, uZ );
    
    static const double pi=3.14159265358979323;
    
@@ -80,6 +82,8 @@ void convert( Rotation3D const & from, AxisAngle   & to)
    } else {
       angle = std::acos( cosdelta );
    }
+
+
    //to.SetAngle(angle);
    to.SetComponents(u, angle);
    to.Rectify();

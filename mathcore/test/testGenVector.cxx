@@ -12,9 +12,12 @@
 #include "Math/AxisAngle.h"
 #include "Math/EulerAngles.h"
 
+#include "Math/VectorUtil.h"
+
 #include <iostream>
 
 using namespace ROOT::Math;
+using namespace ROOT::Math::VectorUtil;
 
 
 
@@ -319,9 +322,58 @@ int testTransform3D() {
   if (iret == 0) std::cout << "\t\tOK\n"; 
   else std::cout << "\t\tFAILED\n"; 
 
-  return 0; 
+  return iret; 
 }
 
+
+int testVectorUtil() { 
+
+  std::cout << "testing VectorUtil  \t:\t"; 
+   int iret = 0;
+
+   // test new perp functions
+   XYZVector v(1.,2.,3.); 
+
+   XYZVector vx = ProjVector(v,XYZVector(3,0,0) );
+   iret |= compare(vx.X(), v.X(),"x",1 );
+   iret |= compare(vx.Y(), 0,"y",1 );
+   iret |= compare(vx.Z(), 0,"z",1 );
+
+   XYZVector vpx = PerpVector(v,XYZVector(2,0,0) );
+   iret |= compare(vpx.X(), 0,"x",1 );
+   iret |= compare(vpx.Y(), v.Y(),"y",1 );
+   iret |= compare(vpx.Z(), v.Z(), "z",1 );
+
+   double perpy = Perp(v, XYZVector(0,2,0) );  
+   iret |= compare(perpy, std::sqrt( v.Mag2() - v.y()*v.y()),"perpy" );
+
+   XYZPoint  u(1,1,1); 
+   XYZPoint  un = u/u.R(); 
+   
+
+   XYZVector vl = ProjVector(v,u);
+   XYZVector vl2 = XYZVector(un) * ( v.Dot(un ) ); 
+
+   iret |= compare(vl.X(), vl2.X(),"x",1 );
+   iret |= compare(vl.Y(), vl2.Y(),"y",1 );
+   iret |= compare(vl.Z(), vl2.Z(),"z",1 );
+
+   XYZVector vp = PerpVector(v,u);
+   XYZVector vp2 = v - XYZVector ( un * ( v.Dot(un ) ) ); 
+   iret |= compare(vp.X(), vp2.X(),"x",10 );
+   iret |= compare(vp.Y(), vp2.Y(),"y",10 );
+   iret |= compare(vp.Z(), vp2.Z(),"z",10 );
+
+   double perp = Perp(v,u);
+   iret |= compare(perp, vp.R(),"perp",1 );
+   double perp2 = Perp2(v,u);
+   iret |= compare(perp2, vp.Mag2(),"perp2",1 );
+
+  if (iret == 0) std::cout << "\t\tOK\n"; 
+  else std::cout << "\t\tFAILED\n"; 
+  return iret; 
+
+}
 
 int main() { 
 
@@ -332,6 +384,8 @@ int main() {
   iret |= testRotations3D(); 
 
   iret |= testTransform3D();
+
+  iret |= testVectorUtil();
 
 
   if (iret !=0) std::cout << "\nTest GenVector FAILED!!!!!!!!!\n";

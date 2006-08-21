@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.6 2006/05/12 13:45:14 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.7 2006/08/11 15:34:38 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -130,6 +130,66 @@ namespace ROOT {
       double Angle( const  Vector1 & v1, const Vector2 & v2) { 
 	return std::acos( CosTheta(v1, v2) ); 
       }
+
+      /**
+	 Find the projection of v along the given direction u. 
+	 \param v  Vector v for which the propjection is to be found  
+	 \param u  Vector specifying the direction
+	 \return   Vector projection (same type of v)
+         \f[ \vec{proj} = \frac{ \vec{v}  \cdot \vec{u} }{|\vec{u}|}\vec{u} \f]
+         Precondition is that Vector1 implements Dot function and Vector2 implements X(),Y() and Z()
+      */ 
+      template <class Vector1, class Vector2> 
+      Vector1 ProjVector( const  Vector1 & v, const Vector2 & u) { 
+         double magU2 = u.X()*u.X() + u.Y()*u.Y() + u.Z()*u.Z();
+         if (magU2 == 0) return Vector1(0,0,0);
+         double d = v.Dot(u)/magU2;
+         return Vector1( u.X() * d, u.Y() * d, u.Z() * d);
+      }
+
+      /**
+	 Find the vector component of v perpendicular to the given direction of u   
+	 \param v  Vector v for which the perpendicular component is to be found  
+	 \param u  Vector specifying the direction
+	 \return   Vector component of v which is perpendicular to u  
+         \f[ \vec{perp} = \vec{v} -  \frac{ \vec{v}  \cdot \vec{u} }{|\vec{u}|}\vec{u} \f]
+         Precondition is that Vector1 implements Dot function and Vector2 implements X(),Y() and Z()
+      */ 
+      template <class Vector1, class Vector2> 
+      Vector1 PerpVector( const  Vector1 & v, const Vector2 & u) { 
+         return v - ProjVector(v,u);
+      }
+
+      /**
+	 Find the magnitude square of the vector component of v perpendicular to the given direction of u   
+	 \param v  Vector v for which the perpendicular component is to be found  
+	 \param u  Vector specifying the direction
+	 \return   square value of the component of v which is perpendicular to u  
+         \f[ perp = | \vec{v} -  \frac{ \vec{v}  \cdot \vec{u} }{|\vec{u}|}\vec{u} |^2 \f]
+         Precondition is that Vector1 implements Dot function and Vector2 implements X(),Y() and Z()
+      */ 
+      template <class Vector1, class Vector2> 
+      double Perp2( const  Vector1 & v, const Vector2 & u) { 
+         double magU2 = u.X()*u.X() + u.Y()*u.Y() + u.Z()*u.Z();
+         double prjvu = v.Dot(u);
+         double magV2 = v.Dot(v);
+         return magU2 > 0.0 ? magV2-prjvu*prjvu/magU2 : magV2;	
+      }
+
+      /**
+	 Find the magnitude of the vector component of v perpendicular to the given direction of u   
+	 \param v  Vector v for which the perpendicular component is to be found  
+	 \param u  Vector specifying the direction
+	 \return   value of the component of v which is perpendicular to u  
+         \f[ perp = | \vec{v} -  \frac{ \vec{v}  \cdot \vec{u} }{|\vec{u}|}\vec{u} | \f]
+         Precondition is that Vector1 implements Dot function and Vector2 implements X(),Y() and Z()
+      */ 
+      template <class Vector1, class Vector2> 
+      double Perp( const  Vector1 & v, const Vector2 & u) { 
+         return std::sqrt(Perp2(v,u) );
+      }
+
+      
 
       // Lorentz Vector functions
 
