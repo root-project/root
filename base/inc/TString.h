@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.44 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.45 2006/05/26 15:13:01 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -198,6 +198,7 @@ private:
 
    void           Clone();          // Make self a distinct copy
    void           Clone(Ssiz_t nc); // Make self a distinct copy w. capacity nc
+   void           Form(const char *fmt, va_list ap);
 
 protected:
    char          *fData;          // ref. counted data (TStringRef is in front)
@@ -218,8 +219,8 @@ public:
 
    TString();                       // Null string
    TString(Ssiz_t ic);              // Suggested capacity
-   TString(const TString &s):       // Copy constructor
-     fData(s.fData) { Pref()->AddReference(); }
+   TString(const TString &s) :      // Copy constructor
+      fData(s.fData) { Pref()->AddReference(); }
 
    TString(const char *s);              // Copy to embedded null
    TString(const char *s, Ssiz_t n);    // Copy past any embedded nulls
@@ -379,6 +380,7 @@ public:
    static Ssiz_t  GetInitialCapacity();
    static Ssiz_t  GetResizeIncrement();
    static Ssiz_t  GetMaxWaste();
+   static TString Format(const char *fmt, ...);
 
    ClassDef(TString,1)  //Basic string class
 };

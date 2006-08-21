@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.50 2006/08/17 22:47:51 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.51 2006/08/18 09:14:41 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1689,7 +1689,7 @@ TObjArray *TString::Tokenize(const TString &delim) const
 }
 
 //______________________________________________________________________________
-void TString::Form(const char *va_(fmt), ...)
+void TString::Form(const char *fmt, va_list ap)
 {
    // Formats a string using a printf style format descriptor.
    // Existing string contents will be overwritten.
@@ -1698,10 +1698,8 @@ void TString::Form(const char *va_(fmt), ...)
    Clobber(buflen);
 
    int n;
-   va_list ap;
 again:
-   va_start(ap, va_(fmt));
-   n = vsnprintf(fData, buflen, va_(fmt), ap);
+   n = vsnprintf(fData, buflen, fmt, ap);
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
    if (n == -1 || n >= buflen) {
@@ -1712,9 +1710,35 @@ again:
       Clobber(buflen);
       goto again;
    }
-   va_end(ap);
 
    Pref()->fNchars = strlen(fData);
+}
+
+//______________________________________________________________________________
+void TString::Form(const char *va_(fmt), ...)
+{
+   // Formats a string using a printf style format descriptor.
+   // Existing string contents will be overwritten.
+
+   va_list ap;
+   va_start(ap, va_(fmt));
+   Form(va_(fmt), ap);
+   va_end(ap);
+}
+
+//______________________________________________________________________________
+TString TString::Format(const char *va_(fmt), ...)
+{
+   // Static method which formats a string using a printf style format
+   // descriptor and return a TString. Same as TString::From() but it is
+   // not needed to first create a TString.
+
+   va_list ap;
+   va_start(ap, va_(fmt));
+   TString str;
+   str.Form(va_(fmt), ap);
+   va_end(ap);
+   return str;
 }
 
 //---- Global String Handling Functions ----------------------------------------
