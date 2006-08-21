@@ -484,14 +484,3 @@ void ROOT::Reflex::Scope::GenerateDict( DictionaryGenerator & generator) const {
 // Generate Dictionary information about itself.
    if ( * this ) fScopeName->fScopeBase->GenerateDict(generator);
 }
-
-#ifdef CINTREFLEX_CHECK_INT_CONV
-bool ROOT::Reflex::Scope::operator&&(const Scope &right) const
-{ return operator bool() && (bool)right; }
-bool ROOT::Reflex::Scope::operator&&(const Type &right) const 
-{ return operator bool() && (bool)right; }
-bool ROOT::Reflex::Scope::operator||(const Scope &right) const 
-{ return operator bool() && (bool)right; }
-bool ROOT::Reflex::Scope::operator||(const Type &right) const 
-{ return operator bool() && (bool)right; }
-#endif

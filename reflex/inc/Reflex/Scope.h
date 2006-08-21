@@ -69,24 +69,6 @@ namespace ROOT {
           * @return true if Scope is implemented
           */
          operator bool () const;
-#define CINTREFLEX_CHECK_INT_CONV
-#ifdef CINTREFLEX_CHECK_INT_CONV
-      // To prevent any un-authorized use as the old type
-         bool operator!() const { return !operator bool(); }
-         bool operator&&(bool right) const { return operator bool() && right; }
-         bool operator&&(int right) const { return operator bool() && right; }
-         bool operator&&(long right) const { return operator bool() && right; }
-         bool operator&&(const Scope &right) const;
-         bool operator&&(const Type &right) const;
-         bool operator||(bool right) const { return operator bool() || right; }
-         bool operator||(int right) const { return operator bool() || right; }
-         bool operator||(long right) const { return operator bool() || right; }
-         bool operator||(const Scope &right) const;
-         bool operator||(const Type &right) const;
-      private:
-         operator int () const;
-      public:
-#endif
 
 
          /** 
@@ -1607,17 +1589,5 @@ inline void ROOT::Reflex::Scope::RemoveUsingDirective( const Scope & ud ) const 
    if ( * this ) fScopeName->fScopeBase->RemoveUsingDirective( ud );
 }
 
-inline bool operator&&(bool b, const ROOT::Reflex::Scope & rh) {
-   return b && rh.operator bool();
-}
-inline bool operator&&(int i, const ROOT::Reflex::Scope & rh) {
-   return i && rh.operator bool();
-}
-inline bool operator||(bool b, const ROOT::Reflex::Scope & rh) {
-   return b && rh.operator bool();
-}
-inline bool operator||(int i, const ROOT::Reflex::Scope & rh) {
-   return i && rh.operator bool();
-}
 
 #endif // ROOT_Reflex_Scope

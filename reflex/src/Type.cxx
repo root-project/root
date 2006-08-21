@@ -358,13 +358,3 @@ void ROOT::Reflex::Type::GenerateDict( DictionaryGenerator & generator) const {
    if ( * this ) fTypeName->fTypeBase->GenerateDict( generator );
 }
 
-#ifdef CINTREFLEX_CHECK_INT_CONV
-bool ROOT::Reflex::Type::operator&&(const Scope &right) const
-{ return operator bool() && (bool)right; }
-bool ROOT::Reflex::Type::operator&&(const Type &right) const 
-{ return operator bool() && (bool)right; }
-bool ROOT::Reflex::Type::operator||(const Scope &right) const 
-{ return operator bool() && (bool)right; }
-bool ROOT::Reflex::Type::operator||(const Type &right) const 
-{ return operator bool() && (bool)right; }
-#endif
