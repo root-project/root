@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.cxx,v 1.5 2006/06/22 08:36:27 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.cxx,v 1.1 2006/08/22 09:45:32 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2006  
 
  /**********************************************************************
@@ -33,7 +33,7 @@ double VectorUtil::Phi_0_2pi(double angle) {
    return angle;
 }
 
-double VectorUtil::Phi_mpi_pi(Double_t angle) {
+double VectorUtil::Phi_mpi_pi(double angle) {
    // returns phi angle in the interval (-PI,PI]
    
    if ( angle <= M_PI && angle > -M_PI ) return angle;
