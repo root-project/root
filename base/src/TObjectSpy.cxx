@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TObjectSpy.cxx,v 1.1 2006/08/18 17:34:46 rdm Exp $
 // Author: Matevz Tadel   16/08/2006
 
 /*************************************************************************
@@ -36,7 +36,7 @@ TObjectSpy::TObjectSpy(TObject *obj) : fObj(obj)
    // RecusiveRemove() operation, GetObject() will return 0.
 
    gROOT->GetListOfCleanups()->Add(this);
-   if (!fObj->TestBit(kMustCleanup))
+   if (fObj && !fObj->TestBit(kMustCleanup))
       Error("TObjectSpy", "spied object must have the kMustCleanup bit set");
 }
 
@@ -57,6 +57,16 @@ void TObjectSpy::RecursiveRemove(TObject *obj)
    if (obj == fObj) fObj = 0;
 }
 
+//______________________________________________________________________________
+void TObjectSpy::SetObject(TObject *obj)
+{
+   // Set obj as the spy target.
+
+   fObj = obj;
+   if (fObj && !fObj->TestBit(kMustCleanup))
+      Error("TObjectRefSpy", "spied object must have the kMustCleanup bit set");
+}
+
 
 //______________________________________________________________________________
 TObjectRefSpy::TObjectRefSpy(TObject *&obj) : fObj(obj)
@@ -66,7 +76,7 @@ TObjectRefSpy::TObjectRefSpy(TObject *&obj) : fObj(obj)
    // RecusiveRemove() operation, GetObject() will return 0.
 
    gROOT->GetListOfCleanups()->Add(this);
-   if (!fObj->TestBit(kMustCleanup))
+   if (fObj && !fObj->TestBit(kMustCleanup))
       Error("TObjectRefSpy", "spied object must have the kMustCleanup bit set");
 }
 

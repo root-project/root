@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TObjectSpy.h,v 1.1 2006/08/18 17:34:46 rdm Exp $
 // Author: Matevz Tadel   16/08/2006
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
 
    virtual void  RecursiveRemove(TObject *obj);
    TObject      *GetObject() const { return fObj; }
-   void          SetObject(TObject *obj) { fObj = obj; }
+   void          SetObject(TObject *obj);
 
    ClassDef(TObjectSpy, 0);  // Spy object pointer for deletion
 };
