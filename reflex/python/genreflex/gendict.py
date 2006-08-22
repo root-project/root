@@ -589,6 +589,18 @@ class genDictionary(object) :
     if 'context' in attrs and self.checkAccessibleType(self.xref[attrs['context']]) : return attrs['id']
     return 0
 #----------------------------------------------------------------------------------
+  def funPtrPos(self, name) :
+    if name.find(')(') != -1 :
+      opp = 0
+      clp = 0
+      pos = -2
+      for str in name.split(')('):
+        opp += str.count('<')
+        clp += str.count('>')
+        pos += len(str) + 2
+        if ( opp == clp ) : return pos
+    return 0
+#----------------------------------------------------------------------------------
   def genClassShadow(self, attrs, inner = 0 ) :
     inner_shadows = {}
     bases = self.getBases( attrs['id'] )
@@ -660,8 +672,9 @@ class genDictionary(object) :
           mType = self.xref[a.get('type')]
           if mType and self.isUnnamedType(mType['attrs'].get('name')) :
             t = self.genClassShadow(mType['attrs'], inner+1)[:-2]
+          fPPos = self.funPtrPos(t)
           if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
-          elif t.find(')(') != -1 and t.find('<') == -1 : c += indent + '  %s;\n' % ( t.replace(')(', ' %s)('%a['name']))
+          elif fPPos              : c += indent + '  %s;\n'    % ( t[:fPPos] + a['name'] + t[fPPos:] )
           else                    : c += indent + '  %s %s;\n' % ( t, a['name'] )
       c += indent + '};\n'
     return c    
