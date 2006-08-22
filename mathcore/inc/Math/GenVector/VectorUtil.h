@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.7 2006/08/11 15:34:38 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.8 2006/08/21 16:38:02 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -49,6 +49,7 @@ namespace ROOT {
     
     
     namespace VectorUtil { 
+
     
       // methods for 3D vectors 
 
@@ -446,6 +447,21 @@ namespace ROOT {
 		    m(3,0)*v.x() + m(3,1)*v.y() + m(3,2)*v.z() + m(3,3)* v.t() );
       return vret; 
     }
+
+
+
+       // non-template utility functions for all objects
+
+
+       /** 
+           Return a phi angle in the interval [0,2*PI)
+        */ 
+       double Phi_0_2pi(double phi);
+       /** 
+           Returns phi angle in the interval [-PI,PI)
+       */
+       double  Phi_mpi_pi(double phi);
+
 
 
     }  // end namespace Vector Util
