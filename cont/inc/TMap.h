@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.19 2006/05/23 04:47:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.20 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -67,6 +67,8 @@ public:
    const THashTable *GetTable() const { return fTable; }
    TObject          *GetValue(const char *keyname) const;
    TObject          *GetValue(const TObject *key) const;
+   TObject          *operator()(const char *keyname) const { return GetValue(keyname); }
+   TObject          *operator()(const TObject *key) const { return GetValue(key); }
    TIterator        *MakeIterator(Bool_t dir = kIterForward) const;
    void              Print(Option_t *wildcard="") const;
    void              Print(Option_t *wildcard, Option_t *option) const;
@@ -100,6 +102,7 @@ public:
    Bool_t                IsFolder() const { return kTRUE;}
    virtual void          Browse(TBrowser *b);
    const char           *GetName() const { return fKey->GetName(); }
+   const char           *GetTitle() const { return fKey->GetTitle(); }
    ULong_t               Hash() const { return fKey->Hash(); }
    Bool_t                IsEqual(const TObject *obj) const { return fKey->IsEqual(obj); }
    TObject              *Key() const { return fKey; }
