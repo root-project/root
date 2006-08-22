@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.16 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.17 2006/08/08 16:02:44 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -46,7 +46,7 @@ public:
    TObjArray(Int_t s = TCollection::kInitCapacity, Int_t lowerBound = 0);
    TObjArray(const TObjArray &a);
    virtual          ~TObjArray();
-   TObjArray& operator=(const TObjArray&); 
+   TObjArray& operator=(const TObjArray&);
    virtual void     Clear(Option_t *option="");
    virtual void     Compress();
    virtual void     Delete(Option_t *option="");
@@ -72,7 +72,7 @@ public:
    virtual TObject *Remove(TObject *obj);
 
    TObject         *At(Int_t idx) const;
-   TObject         *UncheckedAt(Int_t i) const { return fCont[i]; }
+   TObject         *UncheckedAt(Int_t i) const { return fCont[i-fLowerBound]; }
    TObject         *Before(const TObject *obj) const;
    TObject         *After(const TObject *obj) const;
    TObject         *First() const;
