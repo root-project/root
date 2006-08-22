@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.261 2006/05/29 13:28:58 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.262 2006/07/19 15:15:41 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2722,6 +2722,7 @@ void THistPainter::PaintContour(Option_t *option)
    for (ipoly=first;ipoly<ncontour;ipoly++) {polysort[k] = ipoly; k++;}
    // we can now draw sorted contours
    contListNb = 0;
+   fH->SetFillStyle(1001);
    for (k=0;k<ncontour;k++) {
       ipoly = polysort[k];
       if (np[ipoly] == 0) continue;
