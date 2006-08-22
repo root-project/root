@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.186 2006/08/06 02:04:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.187 2006/08/10 21:56:21 pcanal Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -385,7 +385,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBrowsers    = new TList;
    fSpecials    = new TList;
    fBrowsables  = new TList;
-   fCleanups    = new TList;
+   fCleanups    = new THashList;
    fMessageHandlers = new TList;
    fSecContexts = new TList;
    fProofs      = new TList;
