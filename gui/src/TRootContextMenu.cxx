@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.14 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.15 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -45,7 +45,7 @@
 #include "TRootCanvas.h"
 #include "TRootBrowser.h"
 #include "TClassMenuItem.h"
-
+#include "TObjectSpy.h"
 
 enum EContextMenu {
    kToggleStart       = 1000, // first id of toggle menu items
@@ -383,9 +383,9 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
    // Handle context menu messages.
    
-   TVirtualPad *savedPad = 0;
+   TObjectSpy savedPad;
    if (GetContextMenu()->GetSelectedPad()) {
-      savedPad = (TVirtualPad *) gPad;
+      savedPad.SetObject(gPad);
       gPad = GetContextMenu()->GetSelectedPad();
    }
 
@@ -457,7 +457,7 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          break;
    }
 
-   if (savedPad && savedPad->TestBit(kNotDeleted)) gPad = savedPad;
+   if (savedPad.GetObject()) gPad = (TVirtualPad*) savedPad.GetObject();
 
    return kTRUE;
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.15 2006/05/26 09:01:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.16 2006/07/09 05:27:53 brun Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 #include "TClassMenuItem.h"
 #include "TBrowser.h"
 #include "TClass.h"
+#include "TObjectSpy.h"
 
 ClassImp(TContextMenu)
 
@@ -238,30 +239,32 @@ void TContextMenu::Action(TObject *object, TToggle *toggle)
    // Action to be performed when this toggle menu item is selected.
 
    if (object && toggle) {
-      TVirtualPad *savedPad = 0;
+      TObjectSpy savePad;
 
       gROOT->SetSelectedPrimitive(object);
-      if (fSelectedPad) {
-         savedPad = (TVirtualPad *) gPad;
-         if (savedPad) fSelectedPad->cd();
+      if (fSelectedPad && gPad) {
+         savePad.SetObject(gPad);
+         fSelectedPad->cd();
       }
+      TObjectRefSpy fsp((TObject*&) fSelectedPad);
+      TObjectRefSpy fsc((TObject*&) fSelectedCanvas);
 
       gROOT->SetFromPopUp(kTRUE);
       toggle->Toggle();
-      if (fSelectedCanvas && fSelectedCanvas->GetPadSave()->TestBit(kNotDeleted))
+      if (fSelectedCanvas && fSelectedCanvas->GetPadSave())
          fSelectedCanvas->GetPadSave()->Modified();
-      if (fSelectedPad && fSelectedPad->TestBit(kNotDeleted))
+      if (fSelectedPad)
          fSelectedPad->Modified();
       gROOT->SetFromPopUp(kFALSE);
 
-      if (fSelectedPad && savedPad) {
-         if (savedPad->TestBit(kNotDeleted)) savedPad->cd();
-      }
+      if (savePad.GetObject())
+         ((TVirtualPad*)savePad.GetObject())->cd();
 
-      if (fSelectedCanvas && fSelectedCanvas->TestBit(kNotDeleted))
+      if (fSelectedCanvas) {
          fSelectedCanvas->Update();
-      if (fSelectedCanvas && fSelectedCanvas->GetPadSave()->TestBit(kNotDeleted))
-         fSelectedCanvas->GetPadSave()->Update();
+         if (fSelectedCanvas->GetPadSave())
+            fSelectedCanvas->GetPadSave()->Update();
+      }
    }
 
    if (fBrowser) fBrowser->Refresh();
@@ -341,37 +344,37 @@ void TContextMenu::Execute(TObject *object, TFunction *method, const char *param
    // Execute method with specified arguments for specified object.
 
    if (method) {
-      TVirtualPad *savedPad = 0;
+      TObjectSpy savePad;
 
       gROOT->SetSelectedPrimitive(object);
-      if (fSelectedPad) {
-         savedPad = (TVirtualPad *) gPad;
-         if (savedPad) fSelectedPad->cd();
+      if (fSelectedPad && gPad) {
+         savePad.SetObject(gPad);
+         fSelectedPad->cd();
       }
+      TObjectRefSpy fsp((TObject*&) fSelectedPad);
+      TObjectRefSpy fsc((TObject*&) fSelectedCanvas);
 
       gROOT->SetFromPopUp(kTRUE);
-//      if (fSelectedCanvas) fSelectedCanvas->GetPadSave()->cd();
       if (object) {
          object->Execute((char *) method->GetName(), params);
       } else {
          char *cmd = Form("%s(%s);", method->GetName(),params);
          gROOT->ProcessLine(cmd);
       }
-      if (fSelectedCanvas && fSelectedCanvas->GetPadSave()->TestBit(kNotDeleted))
+      if (fSelectedCanvas && fSelectedCanvas->GetPadSave())
          fSelectedCanvas->GetPadSave()->Modified();
-      if (fSelectedPad && fSelectedPad->TestBit(kNotDeleted))
+      if (fSelectedPad)
          fSelectedPad->Modified();
-      gROOT->SetFromPopUp( kFALSE );
+      gROOT->SetFromPopUp(kFALSE);
 
-      if (fSelectedPad && savedPad) {
-//         fSelectedPad->Modified();
-         if (savedPad->TestBit(kNotDeleted)) savedPad->cd();
-      }
+      if (savePad.GetObject())
+         ((TVirtualPad*)savePad.GetObject())->cd();
 
-      if (fSelectedCanvas && fSelectedCanvas->TestBit(kNotDeleted))
+      if (fSelectedCanvas) {
          fSelectedCanvas->Update();
-      if (fSelectedCanvas && fSelectedCanvas->GetPadSave()->TestBit(kNotDeleted))
-         fSelectedCanvas->GetPadSave()->Update();
+         if (fSelectedCanvas->GetPadSave())
+            fSelectedCanvas->GetPadSave()->Update();
+      }
    }
 
    if (fBrowser) fBrowser->Refresh();
@@ -383,16 +386,17 @@ void TContextMenu::Execute(TObject *object, TFunction *method, TObjArray *params
    // Execute method with specified arguments for specified object.
 
    if (method) {
-      TVirtualPad *savedPad = 0;
+      TObjectSpy savePad;
 
       gROOT->SetSelectedPrimitive(object);
-      if (fSelectedPad) {
-         savedPad = (TVirtualPad *) gPad;
-         if (savedPad) fSelectedPad->cd();
+      if (fSelectedPad && gPad) {
+         savePad.SetObject(gPad);
+         fSelectedPad->cd();
       }
+      TObjectRefSpy fsp((TObject*&) fSelectedPad);
+      TObjectRefSpy fsc((TObject*&) fSelectedCanvas);
 
       gROOT->SetFromPopUp(kTRUE);
-//      if (fSelectedCanvas) fSelectedCanvas->GetPadSave()->cd();
       if (object) {
          object->Execute((TMethod*)method, params);
       } else {
@@ -406,17 +410,20 @@ void TContextMenu::Execute(TObject *object, TFunction *method, TObjArray *params
          char *cmd = Form("%s(%s);", method->GetName(), args.Data());
          gROOT->ProcessLine(cmd);
       }
-      if (fSelectedCanvas && fSelectedCanvas->GetPadSave()->TestBit(kNotDeleted))
+      if (fSelectedCanvas && fSelectedCanvas->GetPadSave())
          fSelectedCanvas->GetPadSave()->Modified();
-      gROOT->SetFromPopUp( kFALSE );
+      if (fSelectedPad)
+         fSelectedPad->Modified();
+      gROOT->SetFromPopUp(kFALSE);
 
-      if (fSelectedPad && savedPad) {
-//         fSelectedPad->Modified();
-         if (savedPad->TestBit(kNotDeleted)) savedPad->cd();
-      }
+      if (savePad.GetObject())
+         ((TVirtualPad*)savePad.GetObject())->cd();
 
-      if (fSelectedCanvas && fSelectedCanvas->TestBit(kNotDeleted))
+      if (fSelectedCanvas) {
          fSelectedCanvas->Update();
+         if (fSelectedCanvas->GetPadSave())
+            fSelectedCanvas->GetPadSave()->Update();
+      }
    }
    if (fBrowser) fBrowser->Refresh();
 }
