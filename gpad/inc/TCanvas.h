@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.37 2006/03/28 16:43:04 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.38 2006/07/03 16:10:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -73,6 +73,7 @@ protected:
    TObject      *fSelected;        //!Currently selected object
    Int_t         fSelectedX;       //!X of selected object
    Int_t         fSelectedY;       //!Y of selected object
+   Bool_t        fSelectedChanged; //!True if selected object changed during Pick
    TString       fSelectedOpt;     //!Drawing option of selected object
    TPad         *fSelectedPad;     //!Pad containing currently selected object
    TPad         *fPadSave;         //!Pointer to saved pad in HandleInput
@@ -150,6 +151,7 @@ public:
    Int_t             GetEventY() const { return fEventY; }
    Color_t           GetHighLightColor() const { return fHighLightColor; }
    TVirtualPad      *GetPadSave() const { return fPadSave; }
+   void              ClearPadSave() { fPadSave = 0; }
    TObject          *GetSelected() const {return fSelected;}
    Int_t             GetSelectedX() const {return fSelectedX;}
    Int_t             GetSelectedY() const {return fSelectedY;}
