@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.51 2006/08/18 09:14:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.52 2006/08/21 14:19:03 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1688,14 +1688,34 @@ TObjArray *TString::Tokenize(const TString &delim) const
    return arr;
 }
 
+// Once ported everywhere to be moved to Varargs.h
+#if !defined(R__VA_COPY)
+#  if defined(__GNUC__)
+#     define R__VA_COPY(to, from) __va_copy((to), (from))
+#  elif defined(__va_copy)
+#     define R__VA_COPY(to, from) __va_copy((to), (from))
+#  elif defined(va_copy)
+#     define R__VA_COPY(to, from) va_copy((to), (from))
+#  elif defined (R__VA_COPY_AS_ARRAY)
+#     define R__VA_COPY(to, from) memmove((to), (from), sizeof(va_list))
+#  elif defined(_WIN32)
+#     define R__VA_COPY(to, from) (*(to) = *(from))
+#  else
+#     define R__VA_COPY(to, from) ((to) = (from))
+#  endif
+#endif
+
 //______________________________________________________________________________
 void TString::Form(const char *fmt, va_list ap)
 {
    // Formats a string using a printf style format descriptor.
    // Existing string contents will be overwritten.
 
-   Ssiz_t buflen = 20 * strlen(va_(fmt));    // pick a number, any number
+   Ssiz_t buflen = 20 * strlen(fmt);    // pick a number, any number
    Clobber(buflen);
+
+   va_list sap;
+   R__VA_COPY(sap, ap);
 
    int n;
 again:
@@ -1708,8 +1728,11 @@ again:
       else
          buflen = n+1;
       Clobber(buflen);
+      va_end(ap);
+      R__VA_COPY(ap, sap);
       goto again;
    }
+   va_end(sap);
 
    Pref()->fNchars = strlen(fData);
 }
