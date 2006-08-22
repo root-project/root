@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.27 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.28 2006/08/10 06:33:54 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -90,40 +90,11 @@ TSelector::TSelector() : TObject()
 }
 
 //______________________________________________________________________________
-TSelector::TSelector(const TSelector& sel) :
-   TObject(sel),
-   fStatus(sel.fStatus),
-   fAbort(sel.fAbort),
-   fOption(sel.fOption),
-   fObject(sel.fObject),
-   fInput(sel.fInput),
-   fOutput(sel.fOutput)
-{
-   // Copy ctor
-}
-
-//______________________________________________________________________________
 TSelector::~TSelector()
 {
    // Selector destructor.
 
    delete fOutput;
-}
-
-//______________________________________________________________________________
-TSelector& TSelector::operator=(const TSelector& sel)
-{
-   // Assignment operator
-
-   if(this!=&sel) {
-      TObject::operator=(sel);
-      fStatus=sel.fStatus;
-      fAbort=sel.fAbort;
-      fOption=sel.fOption;
-      fObject=sel.fObject;
-      fInput=sel.fInput;
-      fOutput=sel.fOutput;
-   } return *this;
 }
 
 //______________________________________________________________________________

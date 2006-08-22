@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.h,v 1.24 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.h,v 1.25 2006/08/10 06:33:54 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -49,9 +49,9 @@ protected:
    TList         *fInput;   //list of objects available during processing (on PROOF)
    TSelectorList *fOutput;  //list of objects created during processing (on PROOF)
 
-public:
-   TSelector(const TSelector&);             
-   TSelector& operator=(const TSelector&);
+private:
+   TSelector(const TSelector&);            // not implemented
+   TSelector& operator=(const TSelector&); // not implemented
 
 public:
    TSelector();
