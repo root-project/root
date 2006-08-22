@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.232 2006/07/03 16:10:44 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.233 2006/08/17 09:14:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -466,6 +466,10 @@ void TPad::Clear(Option_t *option)
    if (!IsEditable()) return;
 
    if (!fPadPaint) {
+      if (fCanvas->GetSelectedPad() == this && fCanvas->GetSelected() != this) {
+         fCanvas->SetSelected(this);
+         fCanvas->Selected(this, this, kButton1Down);
+      }
       SafeDelete(fView);
       if (fPrimitives) fPrimitives->Clear(option);
       delete fFrame; fFrame = 0;
@@ -860,6 +864,11 @@ void TPad::Close(Option_t *)
       if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Remove(this);
 
       if (gPad == this) fMother->cd();
+
+      if (fCanvas->GetPadSave() == this)
+        fCanvas->ClearPadSave();
+      if (fCanvas->GetSelectedPad() == this)
+        fCanvas->SetSelectedPad(0);
    }
 
    fMother = 0;
