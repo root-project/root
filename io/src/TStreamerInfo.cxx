@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.240 2006/07/13 05:17:11 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.241 2006/08/08 19:07:49 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -453,7 +453,7 @@ void TStreamerInfo::BuildCheck()
          info = (TStreamerInfo*) array->At(fClassVersion);
       } else {
          Int_t ninfos = array->GetEntriesFast();
-         for (Int_t i = 0; i < ninfos; ++i) {
+         for (Int_t i = -1; i < ninfos; ++i) {
             info = (TStreamerInfo*) array->UncheckedAt(i);
             if (!info) {
                continue;
@@ -542,11 +542,11 @@ void TStreamerInfo::BuildCheck()
             if (fClass->IsForeign()) {
                // Find an empty slot.
                Int_t ninfos = array->GetEntriesFast();
-               Int_t slot = 3; // Start of Class version 2.
+               Int_t slot = 2; // Start of Class version 2.
                while ((slot < ninfos) && (array->UncheckedAt(slot) != 0)) {
                   ++slot;
                }
-               fClassVersion = slot - 1;
+               fClassVersion = slot;
             } else {
                Bool_t warn = !fClass->TestBit(TClass::kWarned);
                if (warn && (fOldVersion <= 2)) {
