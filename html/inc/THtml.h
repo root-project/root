@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.26 2006/08/18 15:51:03 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.27 2006/08/21 16:02:48 rdm Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -92,6 +92,7 @@ protected:
    Bool_t         fEscFlag;         // state flag to mark the next character must be written "as is"
    char           fEsc;             // char to mark the next character must be written "as is"
    Int_t          fHierarchyLines;  // counter for no. lines in hierarchy
+   TString        fClassFilter;     // filter used for buidling known classes
    Int_t          fNumberOfClasses; // Number of known classes
    const char   **fClassNames;      // Names of known classes
    Int_t          fNumberOfFileNames;// Number of names of files for known classes

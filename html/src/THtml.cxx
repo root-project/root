@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.114 2006/08/18 15:51:03 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.115 2006/08/21 16:02:48 rdm Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1411,9 +1411,8 @@ void THtml::BeautifyLine(std::ostream &sOut, const char* relpath /*="../"*/)
                context == kNothingSpecialMoveOn)) {
                   sOut << "*/";
                   context = kNothingSpecialMoveOn;
-                  fParseContext.pop_back();
-                  if (fParseContext.empty())
-                     fParseContext.push_back(kCode);
+                  if (fParseContext.size()>1)
+                     fParseContext.pop_back();
 
                   i += 1;
             }
@@ -2281,7 +2280,7 @@ void THtml::Convert(const char *filename, const char *title,
    tempFile << "<pre>" << endl;
 
    fParseContext.clear();
-   fParseContext.push_back(kCode);
+   fParseContext.push_back(kCComment); // so we can find "BEGIN_HTML"/"END_HTML" in plain text
    fDocContext = kIgnore;
    fLineNo = 0;
 
@@ -2297,9 +2296,28 @@ void THtml::Convert(const char *filename, const char *title,
       ExpandKeywords(fLineExpanded);
       fLineStripped = fLine.Strip(TString::kBoth);
 
-      BeautifyLine(tempFile, relpath);
-
+      if ((fParseContext.back() == kBeginEndHtml 
+         || fParseContext.back() == kBeginEndHtmlInCComment))
+         if (kNPOS == fLine.Index("Begin_Html", 0, TString::kIgnoreCase)
+            || kNPOS != fLine.Index("\"Begin_Html", 0, TString::kIgnoreCase))
+            // no replacement if in begin/end help block
+            tempFile << fLine << std::endl;
+         else {
+            fParseContext.push_back(kCode); // hide "BEGIN_HTML"
+            BeautifyLine(tempFile, relpath);
+            fParseContext.pop_back();
+         }
+      else
+         if (kNPOS == fLine.Index("End_Html", 0, TString::kIgnoreCase)
+            || kNPOS != fLine.Index("\"End_Html", 0, TString::kIgnoreCase))
+            BeautifyLine(tempFile, relpath);
+         else {
+            Ssiz_t posEndHtml = fLine.Index("End_Html", 0, TString::kIgnoreCase);
+            fLine.Remove(posEndHtml,8); // hide "BEGIN_HTML"
+            BeautifyLine(tempFile, relpath);
+         }
    }
+
    tempFile << "</pre>" << endl;
 
 
@@ -2931,6 +2949,9 @@ void THtml::CreateListOfClasses(const char* filter)
 {
 // Create the list of all known classes
 
+   if (fClassFilter == filter)
+      return;
+
    // get total number of classes
    Int_t totalNumberOfClasses = gClassTable->Classes();
 
@@ -2939,6 +2960,8 @@ void THtml::CreateListOfClasses(const char* filter)
    if (fFileNames) delete [] fFileNames;
    fClassNames = new const char *[totalNumberOfClasses];
    fFileNames = new char *[totalNumberOfClasses];
+
+   fClassFilter = filter;
 
    // start from begining
    gClassTable->Init();
@@ -3573,9 +3596,8 @@ void THtml::ExpandKeywords(TString& keyword)
                   } else if (fParseContext.back() == kCComment && !commentIsCPP
                      && keyword.Length() > i + 1 
                      && keyword[i] == '*' && keyword[i+1] == '/') {
-                     fParseContext.pop_back();
-                     if (fParseContext.empty())
-                        fParseContext.push_back(kCode);
+                     if (fParseContext.size()>1)
+                        fParseContext.pop_back();
 
                      currentType = 0;
                      keyword.Insert(i + 2, "</span>");
@@ -3586,9 +3608,8 @@ void THtml::ExpandKeywords(TString& keyword)
             if (closeString) {
                keyword.Insert(i, "</span>");
                i += 7;
-               fParseContext.pop_back();
-               if (fParseContext.empty())
-                  fParseContext.push_back(kCode);
+               if (fParseContext.size()>1)
+                  fParseContext.pop_back();
 
                currentType = 0;
             }
@@ -3650,7 +3671,8 @@ void THtml::ExpandKeywords(TString& keyword)
                   i += 22;
                }
             }
-            fParseContext.pop_back();
+            if (fParseContext.size()>1)
+               fParseContext.pop_back();
             if (fParseContext.back() != kCComment)
                fParseContext.push_back(kCComment);
             pre_is_open = kTRUE;
@@ -3808,9 +3830,8 @@ void THtml::ExpandKeywords(TString& keyword)
    if (fParseContext.back() == kString) {
       keyword += "</span>";
       i += 7;
-      fParseContext.pop_back();
-      if (fParseContext.empty())
-         fParseContext.push_back(kCode);
+      if (fParseContext.size()>1)
+         fParseContext.pop_back();
       currentType = 0;
    }
    // clean up, no CPP comment across lines
@@ -3818,9 +3839,8 @@ void THtml::ExpandKeywords(TString& keyword)
       keyword += "</span>";
       i += 7;
       if (fParseContext.back() == kCComment) {// and not BeginEndHtml
-         fParseContext.pop_back();
-         if (fParseContext.empty())
-            fParseContext.push_back(kCode);
+         if (fParseContext.size()>1)
+            fParseContext.pop_back();
       }
       currentType = 0;
    }
