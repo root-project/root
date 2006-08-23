@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.115 2006/08/21 16:02:48 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.116 2006/08/22 14:07:21 rdm Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -60,6 +60,7 @@ Overview:
 <ol style="list-style-type: upper-roman;"><li><a href="#conf">Configuration</a>
   <ol><li><a href="#conf:input">Input files</a></li>
   <li><a href="#conf:output">Output directory</a></li>
+  <li><a href="#conf:liblink">Linking other documentation</a></li>
   <li><a href="#conf:classdoc">Recognizing class documentation</a></li>
   <li><a href="#conf:tags">Author, copyright, etc.</a></li>
   <li><a href="#conf:header">Header and footer</a></li>
@@ -101,8 +102,32 @@ will create it.</p>
 <p>Example:</p><pre>
   Root.Html.OutputDir:         htmldoc</pre>
 
+<h4><a name="conf:liblink">I.3 Linking other documentation</a></h4>
 
-<h4><a name="conf:classdoc">I.3 Recognizing class documentation</a></h4>
+<p>When trying to document a class, THtml searches for a source file in 
+the directories set via SetSourceDir(). If it cannot find it, it assumes
+that this class must have been documented before. Based on the library
+this class is defined in, it checks the configuration variable
+<tt>Root.Html.LibName</tt>, and creates a link using its value.</p>
+
+<p>Example:<br/>
+If a class MyClass is defined in class mylibs/libMyLib.so, and .rootrc
+contains</p><pre>
+  Root.Html.MyLib: ../mylib/</pre>
+<p>THtml will create a link to "../mylib/MyClass.html".</p>
+
+<p>The library name association can be set up using the rootmap facility.
+For the library in the example above, which contains a dictionary 
+generated from the linkdef MyLinkdef.h, the command to generate the
+rootmap file is</p>
+<pre>  $ rlibmap -f -r rootmap -l mylib/libMyLib.so -d libCore.so -c MyLinkdef.h</pre>
+<p>Here, <tt>-r</tt> specifies that the entries for libMyLib should be updated,
+<tt>-l</tt> specifies the library we're dealing with, <tt>-d</tt> its 
+dependencies, and <tt>-c</tt> its linkdef. The rootmap file must be within
+one of the <tt>LD_LIBRARY_PATH</tt> (or <tt>PATH</tt> for Windows) directories
+when ROOT is started, otherwise ROOT will not use it.</p>
+
+<h4><a name="conf:classdoc">I.4 Recognizing class documentation</a></h4>
 
 <p>The class documentation has to appear in the header file containing the
 class, right in front of its declaration. It is introduced by a string
@@ -113,7 +138,7 @@ defined by Root.Html.Description. See the section on
   Root.Html.Description:       //____________________</pre>
 
 
-<h4><a name="conf:tags">I.4 Author, copyright, etc.</a></h4>
+<h4><a name="conf:tags">I.5 Author, copyright, etc.</a></h4>
 
 <p>During the conversion, 
 <a href="http://root.cern.ch/root/html/THtml.html">THtml</a> will look for 
@@ -162,7 +187,7 @@ source file. That's world compatible.</li>
       Root.Html.XWho:       http://consult.cern.ch/xwho/people?</pre>
 
 
-<h4><a name="conf:header">I.5 Header and footer</a></h4>
+<h4><a name="conf:header">I.6 Header and footer</a></h4>
 
 <p><a href="http://root.cern.ch/root/html/THtml.html">THtml</a> generates 
 a default header and footer for all pages. You can
@@ -198,7 +223,7 @@ replaced by the exact string that follows Root.Html.Author, no link
 generation will occur.</p>
 
 
-<h4><a name="conf:search">I.6 Links to searches, home page, ViewCVS</a></h4>
+<h4><a name="conf:search">I.7 Links to searches, home page, ViewCVS</a></h4>
 
 <p>Additional parameters can be set by Root.Html.Homepage (address of the
 user's home page), Root.Html.SearchEngine (search engine for the class
@@ -211,7 +236,7 @@ Root.Html.ViewCVS. All default to "".</p>
       Root.Html.Search:       http://www.google.com/search?q=%s+site%3Aroot.cern.ch%2Froot%2Fhtml</pre>
 
 
-<h4><a name="conf:charset">I.7 HTML Charset</a></h4>
+<h4><a name="conf:charset">I.8 HTML Charset</a></h4>
 
 <p>XHTML 1.0 transitional recommends the specification of the charset in the
 content type meta tag, see e.g. <a href="http://www.w3.org/TR/2002/REC-xhtml1-20020801/">http://www.w3.org/TR/2002/REC-xhtml1-20020801/</a>
@@ -1298,13 +1323,16 @@ void THtml::AnchorFromLine(TString& anchor) {
    // Create an anchor from the given line, by hashing it and
    // convertig the hash into a custom base64 string.
 
-   const char base64String[65] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_.";
+   const char base64String[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.";
 
    // use hash of line instead of e.g. line number.
    // advantages: more stable (lines can move around, we still find them back),
    // no need for keeping a line number context
    UInt_t hash = ::Hash(fLineStripped);
    anchor.Remove(0);
+   // force first letter to be [A-Za-z], to be id compatible
+   anchor += base64String[hash % 52];
+   hash /= 52;
    while (hash) {
       anchor += base64String[hash % 64];
       hash /= 64;
@@ -2061,7 +2089,7 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
       out << "<table><tr><td width=\"10%\"></td><td width=\"70%\">Inheritance Chart:</td></tr>";
       out << "<tr class=\"inhtree\"><td width=\"10%\"></td><td width=\"70%\">";
 
-      out << "<table class=\"inhtree\" width=\"100%\"><tr><td>" << endl;
+      out << "<table class=\"inhtree\"><tr><td>" << endl;
       out << "<table width=\"100%\" border=\"0\" ";
       out << "cellpadding =\"0\" cellspacing=\"2\"><tr>" << endl;
    } else {
@@ -3222,6 +3250,7 @@ void THtml::CreateJavascript() {
       << "            if (val=='false') val=false;" << endl
       << "            else if (val=='true') val=true;" << endl
       << "            var el=document.getElementById(what);" << endl
+      << "            if (!el) return;" << endl
       << "            el[mem]=val;" << endl
       << "            CBChanged(el);" << endl
       << "         }" << endl
@@ -3357,7 +3386,7 @@ void THtml::CreateStyleSheet() {
          << "}" << std::endl
          << "" << std::endl
          << "div.funcdoc {" << std::endl
-         << "   width: 100%;" << std::endl
+         << "   width: 97%;" << std::endl
          << "   border-bottom: solid 3px #cccccc;" << std::endl
          << "   border-left: solid 1px #cccccc;" << std::endl
          << "   margin-bottom: 1em;" << std::endl
@@ -3390,7 +3419,7 @@ void THtml::CreateStyleSheet() {
          << "   font-weight: bolder;" << std::endl
          << "}" << std::endl
          << "div.classdescr {" << std::endl
-         << "	width: 100%;" << std::endl
+         << "	width: 97%;" << std::endl
          << "	margin-left: 0.3em;" << std::endl
          << "	padding-left: 1em;" << std::endl
          << "	margin-bottom: 2em;" << std::endl
@@ -3413,7 +3442,7 @@ void THtml::CreateStyleSheet() {
          << "table.inhtree {" << std::endl
          << "   background-color: White;" << std::endl
          << "   border: solid 1px Black;" << std::endl
-         << "   width: 100%;" << std::endl
+         << "   width: 97%;" << std::endl
          << "}" << std::endl
          << "table.libinfo {" << std::endl
          << "   background-color: White;" << std::endl
@@ -3984,9 +4013,31 @@ void THtml::GetHtmlFileName(TClass * classPtr, TString& filename)
 
    const char *colon = strchr(cFilename, ':');
    if (colon)
+      // old version, where source file name is prepended by "TAG:"
       varName += TString(cFilename, colon - cFilename);
    else
-      varName += "Root";
+      // New version, check class's libname.
+      // If libname is dir/libMyLib.so, check Root.Html.MyLib
+      // If libname is myOtherLib.so.2.3, check Root.Html.myOtherLib
+      // (i.e. remove directories, "lib" prefix, and any "extension")
+      if (classPtr->GetSharedLibs()) {
+         // first one is the class's lib
+         TString libname(classPtr->GetSharedLibs());
+         Ssiz_t posSpace = libname.First(' ');
+         if (posSpace != kNPOS)
+            libname.Remove(posSpace, libname.Length());
+         TString libnameBase = gSystem->BaseName(libname);
+         if (libnameBase.BeginsWith("lib"))
+            libnameBase.Remove(0, 3);
+         Ssiz_t posExt = libnameBase.First('.');
+         if (posExt != '.')
+            libnameBase.Remove(posExt, libnameBase.Length());
+         if (libnameBase.Length())
+            varName += libnameBase;
+         else
+            varName += "Root";
+      } else
+         varName += "Root";
 
    filename = cFilename;
    TString htmlFileName;
@@ -4521,7 +4572,7 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title,
           "<meta name=\"description\" content=\"ROOT - An Object Oriented Framework For Large Scale Data Analysis.\" />"
           << endl;
       out << "<link rel=\"stylesheet\" type=\"text/css\" href=\"" << dir << "ROOT.css\" id=\"ROOTstyle\" />" << endl;
-      out << "<script type=\"text/javascript\" src=\"ROOT.js\"></script>" << endl;
+      out << "<script type=\"text/javascript\" src=\"" << dir << "ROOT.js\"></script>" << endl;
       out << "</head>" << endl;
 
       out << "<body  onload=\"javascript:SetValuesFromCookie();\">" << endl;
