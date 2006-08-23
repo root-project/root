@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.302 2006/08/15 09:52:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.303 2006/08/17 09:30:48 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2860,14 +2860,14 @@ Double_t TH1::GetEntries() const
 //______________________________________________________________________________
 Double_t TH1::GetEffectiveEntries() const
 {
-  // number of effective entries of the histogram,
-  // i.e. the number of unweighted entries a histogram would need to 
-  // have the same statistical power as this histogram with possibly 
-  // weighted entries (i.e. <= TH1::GetEntries())
+   // number of effective entries of the histogram,
+   // i.e. the number of unweighted entries a histogram would need to 
+   // have the same statistical power as this histogram with possibly 
+   // weighted entries (i.e. <= TH1::GetEntries())
 
-  Stat_t s[kNstat];
-  this->GetStats(s);// s[1] sum of squares of weights, s[0] sum of weights
-  return (s[1] ? s[0]*s[0]/s[1] : 0.);
+   Stat_t s[kNstat];
+   this->GetStats(s);// s[1] sum of squares of weights, s[0] sum of weights
+   return (s[1] ? s[0]*s[0]/s[1] : 0.);
 }
 
 //______________________________________________________________________________
