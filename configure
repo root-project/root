@@ -3376,6 +3376,17 @@ if test ! "x$enable_mathmore" = "xno"; then
 	    enable_mathmore="no"
 	fi
     fi
+    # skip cygwin gsl-config when in pure Win32 mode
+    if test "x$platform" = "xwin32"; then
+        case `$cwhich gsl-config` in
+            /bin/*|/usr/bin/*)
+	        if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
+                    gslskip="skip"
+                    enable_mathmore="no"
+                fi
+                ;;
+        esac
+    fi
     if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x") && \
         test ! "x$gslskip" = "xskip"; then
 	checking_msg "gsl-config"
