@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.52 2006/08/21 14:19:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.53 2006/08/22 17:19:55 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1698,7 +1698,7 @@ TObjArray *TString::Tokenize(const TString &delim) const
 #     define R__VA_COPY(to, from) va_copy((to), (from))
 #  elif defined (R__VA_COPY_AS_ARRAY)
 #     define R__VA_COPY(to, from) memmove((to), (from), sizeof(va_list))
-#  elif defined(_WIN32)
+#  elif defined(_WIN32) && _MSC_VER < 1310
 #     define R__VA_COPY(to, from) (*(to) = *(from))
 #  else
 #     define R__VA_COPY(to, from) ((to) = (from))
