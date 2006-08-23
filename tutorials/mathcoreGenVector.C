@@ -75,7 +75,13 @@ int compare( double v1, double v2, const char* name, double Scale = 1.0) {
     std::cout << ".";
   else { 
     int pr = std::cout.precision (18);
-    std::cout << "\nDiscrepancy in " << name << "() : " << v1 << " != " << v2 << " discr = " << int(delta/d/eps) 
+    int discr; 
+    if (d != 0) 
+       discr = int(delta/d/eps); 
+    else 
+       discr = int(delta/eps);
+
+    std::cout << "\nDiscrepancy in " << name << "() : " << v1 << " != " << v2 << " discr = " << discr 
               << "   (Allowed discrepancy is " << eps  << ")\n";
     std::cout.precision (pr);
     nfail = nfail + 1;
@@ -643,6 +649,27 @@ int testRotation() {
   if (ok == 0) std::cout << "\t OK " << std::endl;
   else  std::cout << std::endl;
 
+
+  std::cout << "Test Rotations by a PI angle :  ";
+  ok = 0;
+
+  double b[4] = { 6,8,10,3.14159265358979323 };
+  AxisAngle  arPi(b,b+4 );
+  Rotation3D rPi(arPi);
+  AxisAngle  a1(rPi);
+  ok+= compare(arPi.Axis().X(), a1.Axis().X(),"x"); 
+  ok+= compare(arPi.Axis().Y(), a1.Axis().Y(),"y"); 
+  ok+= compare(arPi.Axis().Z(), a1.Axis().Z(),"z");   
+  ok+= compare(arPi.Angle(), a1.Angle(),"angle");   
+
+  EulerAngles ePi(rPi);
+  EulerAngles e1(a1);
+  ok+= compare(ePi.Phi(), e1.Phi(),"phi");   
+  ok+= compare(ePi.Theta(), e1.Theta(),"theta");   
+  ok+= compare(ePi.Psi(), e1.Psi(),"ps1");   
+
+  if (ok == 0) std::cout << "\t\t OK " << std::endl;
+  else  std::cout << std::endl;
 
   std::cout << "Test Inversions :               "; 
   ok = 0; 
