@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.51 2006/05/05 08:00:31 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.52 2006/08/23 14:39:40 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -502,7 +502,8 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
             if (!box.IsEmpty()) {
                // Test transformed box with camera
                box.Transform(TGLMatrix(buffer.fLocalMaster));
-               Bool_t ofInterest = CurrentCamera().OfInterest(box, logical->IgnoreSizeForOfInterest());
+               Bool_t ofInterest = CurrentCamera().OfInterest
+                  (box, logical ? logical->IgnoreSizeForOfInterest() : kTRUE);
 
                // For external PID request children if physical of interest
                if (addChildren &&!fInternalPIDs) {
