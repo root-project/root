@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.81 2006/08/02 12:54:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.82 2006/08/05 05:16:03 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1528,9 +1528,9 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
 
    // Save old bin contents into a new array
    Double_t entries = fEntries;
-   Double_t *oldBins   = new Double_t[nbins];
-   Double_t *oldCount  = new Double_t[nbins];
-   Double_t *oldErrors = new Double_t[nbins];
+   Double_t *oldBins   = new Double_t[nbins+1];
+   Double_t *oldCount  = new Double_t[nbins+1];
+   Double_t *oldErrors = new Double_t[nbins+1];
    Int_t bin, i;
    Double_t *cu1 = GetW();
    Double_t *er1 = GetW2();
