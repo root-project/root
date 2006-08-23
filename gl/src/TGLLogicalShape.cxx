@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.12 2006/05/23 04:47:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.13 2006/05/24 14:49:21 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 //////////////////////////////////////////////////////////////////////////
@@ -104,4 +104,22 @@ void TGLLogicalShape::InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y)
    if (fExternalObj) {
       menu.Popup(x, y, fExternalObj);
    }
+}
+
+//______________________________________________________________________________
+void TGLLogicalShape::ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*)
+{
+   // Virtual method called-back after a secondary selection hit
+   // is recorded (see TGLViewer::HandleButton(), Ctrl-Button1).
+   // The ptr argument holds the GL pick-record of the closest hit.
+   //
+   // This base-class implementation simply prints out the result.
+
+   Int_t n = ptr[0];
+   printf("TGLLogicalShape::ProcessSelection %d names on the stack (z1=%g, z2=%g).\n",
+          n, Float_t(ptr[1])/0x7fffffff, Float_t(ptr[2])/0x7fffffff);
+   ptr += 3;
+   printf("  Names: ");
+   for (Int_t j=0; j<n; ++j, ++ptr) printf ("%d ", *ptr);
+   printf("\n");
 }

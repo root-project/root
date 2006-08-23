@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h,v 1.9 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h,v 1.10 2006/03/08 21:09:42 brun Exp $
 // Author: Olivier Couet 05/10/2004
 
 /*************************************************************************
@@ -74,6 +74,8 @@ public:
    virtual Bool_t DoSelect(const TGLRect &){return kFALSE;}
 
    virtual void PrintObjects(){}
+   virtual void ResetCameras(){}
+   virtual void ResetCamerasAfterNextUpdate(){}
 
    static  TVirtualViewer3D *Viewer3D(TVirtualPad *pad = 0, Option_t *type = "");
 

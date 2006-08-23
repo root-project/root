@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.12 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.13 2006/01/26 11:59:41 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -58,7 +58,7 @@ TGLOrthoCamera::~TGLOrthoCamera()
 }
 
 //______________________________________________________________________________
-void TGLOrthoCamera::Setup(const TGLBoundingBox & box)
+void TGLOrthoCamera::Setup(const TGLBoundingBox & box, Bool_t reset)
 {
    // Setup camera limits suitible to view the world volume defined by 'box'
    // and call Reset() to initialise camera.
@@ -108,7 +108,8 @@ void TGLOrthoCamera::Setup(const TGLBoundingBox & box)
          break;
       }
    }
-   Reset();
+   if (reset)
+      Reset();
 }
 
 //______________________________________________________________________________

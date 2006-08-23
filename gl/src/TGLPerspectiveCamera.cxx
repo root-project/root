@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.15 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.16 2006/02/23 16:44:52 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -60,7 +60,7 @@ TGLPerspectiveCamera::~TGLPerspectiveCamera()
 }
 
 //______________________________________________________________________________
-void TGLPerspectiveCamera::Setup(const TGLBoundingBox & box)
+void TGLPerspectiveCamera::Setup(const TGLBoundingBox & box, Bool_t reset)
 {
    // Setup camera limits suitible to view the world volume defined by 'box'
    // and call Reset() to initialise camera.
@@ -83,7 +83,8 @@ void TGLPerspectiveCamera::Setup(const TGLBoundingBox & box)
    fDollyDefault *= 1.2;
    fDollyMax = fDollyDefault * 7.0;
 
-   Reset();
+   if (reset)
+      Reset();
 }
 
 //______________________________________________________________________________

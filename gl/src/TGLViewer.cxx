@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.50 2006/04/20 10:41:28 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.51 2006/05/05 08:00:31 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -89,7 +89,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fOrthoZOYCamera(TGLOrthoCamera::kZOY),
    fCurrentCamera(&fPerspectiveCameraXOZ),
    fInternalRebuild(kFALSE),
-   fPostSceneBuildSetup(kTRUE),
+   fPostSceneBuildSetup(kFALSE),
    fAcceptedAllPhysicals(kTRUE),
    fForceAcceptAll(kFALSE),
    fInternalPIDs(kFALSE),
@@ -110,7 +110,10 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fIsPrinting(kFALSE),
    fGLWindow(0),
    fGLDevice(-1),
-   fPadEditor(0)
+   fPadEditor(0),
+   fResetCamerasOnUpdate(kTRUE),
+   fResetCamerasOnNextUpdate(kFALSE),
+   fResetCameraOnDoubleClick(kTRUE)
 {
    // Construct the viewer object, with following arguments:
    //    'pad' - external pad viewer is bound to
@@ -133,7 +136,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fOrthoZOYCamera(TGLOrthoCamera::kZOY),
    fCurrentCamera(&fPerspectiveCameraXOZ),
    fInternalRebuild(kFALSE),
-   fPostSceneBuildSetup(kTRUE),
+   fPostSceneBuildSetup(kFALSE),
    fAcceptedAllPhysicals(kTRUE),
    fForceAcceptAll(kFALSE),
    fInternalPIDs(kFALSE),
@@ -154,7 +157,10 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fIsPrinting(kFALSE),
    fGLWindow(0),
    fGLDevice(fPad->GetGLDevice()),
-   fPadEditor(0)
+   fPadEditor(0),
+   fResetCamerasOnUpdate(kTRUE),
+   fResetCamerasOnNextUpdate(kFALSE),
+   fResetCameraOnDoubleClick(kTRUE)
 {
    //gl-embedded viewer's ctor
    // Construct the viewer object, with following arguments:
@@ -221,6 +227,7 @@ void TGLViewer::BeginScene()
       // Reset camera interest to ensure we respond to
       // new scene range
       CurrentCamera().ResetInterest();
+      fPostSceneBuildSetup = kTRUE;
 
       // External rebuilds could potentially invalidate all logical and
       // physical shapes - including any modified physicals
@@ -272,7 +279,8 @@ void TGLViewer::EndScene()
    fScene.ReleaseLock(TGLScene::kModifyLock);
 
    if (fPostSceneBuildSetup) {
-      PostSceneBuildSetup();
+      PostSceneBuildSetup(fResetCamerasOnNextUpdate || fResetCamerasOnUpdate);
+      fResetCamerasOnNextUpdate = kFALSE;
 
       // We leave fPostSceneBuildSetup set true as we want
       // another full setup after first internal rebuild
@@ -494,7 +502,7 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
             if (!box.IsEmpty()) {
                // Test transformed box with camera
                box.Transform(TGLMatrix(buffer.fLocalMaster));
-               Bool_t ofInterest = CurrentCamera().OfInterest(box);
+               Bool_t ofInterest = CurrentCamera().OfInterest(box, logical->IgnoreSizeForOfInterest());
 
                // For external PID request children if physical of interest
                if (addChildren &&!fInternalPIDs) {
@@ -836,11 +844,11 @@ void TGLViewer::InitGL()
 }
 
 //______________________________________________________________________________
-void TGLViewer::PostSceneBuildSetup()
+void TGLViewer::PostSceneBuildSetup(Bool_t resetCameras)
 {
    // Perform post scene (re)build setup
 
-   SetupCameras();
+   SetupCameras(resetCameras);
    fScene.SetupClips();
 
    // Set default reference to scene center
@@ -848,7 +856,7 @@ void TGLViewer::PostSceneBuildSetup()
 }
 
 //______________________________________________________________________________
-void TGLViewer::SetupCameras()
+void TGLViewer::SetupCameras(Bool_t reset)
 {
    // Setup cameras for current scene bounding box
    if (fScene.IsLocked()) {
@@ -859,13 +867,21 @@ void TGLViewer::SetupCameras()
    // Setup cameras if scene box is not empty
    const TGLBoundingBox & box =  fScene.BoundingBox();
    if (!box.IsEmpty()) {
-      fPerspectiveCameraYOZ.Setup(box);
-      fPerspectiveCameraXOZ.Setup(box);
-      fPerspectiveCameraXOY.Setup(box);
-      fOrthoXOYCamera.Setup(box);
-      fOrthoXOZCamera.Setup(box);
-      fOrthoZOYCamera.Setup(box);
+      fPerspectiveCameraYOZ.Setup(box, reset);
+      fPerspectiveCameraXOZ.Setup(box, reset);
+      fPerspectiveCameraXOY.Setup(box, reset);
+      fOrthoXOYCamera.Setup(box, reset);
+      fOrthoXOZCamera.Setup(box, reset);
+      fOrthoZOYCamera.Setup(box, reset);
    }
+}
+
+//______________________________________________________________________________
+void TGLViewer::ResetCurrentCamera()
+{
+   // Resets position/rotation of current camera to default values.
+
+   CurrentCamera().Reset();
 }
 
 //______________________________________________________________________________
@@ -1183,7 +1199,7 @@ void TGLViewer::SwapBuffers() const
 }
 
 //______________________________________________________________________________
-void TGLViewer::RequestSelect(UInt_t x, UInt_t y)
+Bool_t TGLViewer::RequestSelect(UInt_t x, UInt_t y)
 {
    // Post request for select draw of viewer, picking objects round the WINDOW
    // point (x,y).
@@ -1193,16 +1209,16 @@ void TGLViewer::RequestSelect(UInt_t x, UInt_t y)
    // in the other (drawing) thread - see TGLViewer::Select()
    // Removed when gVirtualGL removed
    if (!fScene.TakeLock(TGLScene::kSelectLock)) {
-      return;
+      return kFALSE;
    }
 
    // TODO: Check only the GUI thread ever enters here & DoSelect.
    // Then TVirtualGL and TGLKernel can be obsoleted.
-   TGLRect selectRect(x, y, 3, 3); // TODO: Constant somewhere
+   TGLRect selectRect(x, y, 3, 3); // TODO: Constant somewhere. If changed also change/make available in TPointSet3DGL.cxx
    if (fGLDevice == -1)
-      gVirtualGL->SelectViewer(this, &selectRect);
+      return gVirtualGL->SelectViewer(this, &selectRect);
    else
-      gGLManager->SelectViewer(this, &selectRect);
+      return gGLManager->SelectViewer(this, &selectRect);
 }
 
 //______________________________________________________________________________
@@ -1233,18 +1249,22 @@ Bool_t TGLViewer::DoSelect(const TGLRect & rect)
    // Release select lock on scene before invalidation
    fScene.ReleaseLock(TGLScene::kSelectLock);
 
-   if (changed) {
-      RequestDraw(TGLDrawFlags::kLODHigh);
-
-      // Inform external client selection has been modified
-      SelectionChanged();
-
-      // Selection change can potentially turn off current clip as editing (manipulated)
-      // ojbect - so broadcast this change as well
-      ClipChanged();
-   }
-
    return changed;
+}
+
+//______________________________________________________________________________
+void TGLViewer::ApplySelection()
+{
+   fScene.ApplySelection();
+
+   RequestDraw(TGLDrawFlags::kLODHigh);
+
+   // Inform external client selection has been modified
+   SelectionChanged();
+
+   // Selection change can potentially turn off current clip as editing (manipulated)
+   // ojbect - so broadcast this change as well
+   ClipChanged();
 }
 
 //______________________________________________________________________________
@@ -1742,9 +1762,19 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
          // LEFT mouse button
          case(kButton1): {
             if (event->fState & kKeyShiftMask) {
-               RequestSelect(event->fX, event->fY);
+               if (RequestSelect(event->fX, event->fY)) {
+                  ApplySelection();
+               }
 
                // TODO: If no selection start a box select
+            } else if (event->fState & kKeyControlMask) {
+               fScene.ActivateSecSelect();
+               RequestSelect(event->fX, event->fY);
+               if (fScene.GetNSecHits() > 0) {
+                  TGLLogicalShape& lshape = const_cast<TGLLogicalShape&>
+                     (fScene.GetSelectionResult()->GetLogical());
+                  lshape.ProcessSelection(fScene.GetHitRecord(0).second, this, &fScene);
+               }
             } else {
                fAction = kCameraRotate;
                grabPointer = kTRUE;
@@ -1762,12 +1792,13 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
             // Shift + Right mouse - select+context menu
             if (event->fState & kKeyShiftMask) {
                RequestSelect(event->fX, event->fY);
-               const TGLPhysicalShape * selected = fScene.GetSelected();
+               const TGLPhysicalShape * selected = fScene.GetSelectionResult();
                if (selected) {
                   if (!fContextMenu) {
                      fContextMenu = new TContextMenu("glcm", "GL Viewer Context Menu");
                   }
                   selected->InvokeContextMenu(*fContextMenu, event->fX, event->fY);
+                  // MT-TODO: Find a way to request redraw after dialog has finished.
                }
             } else {
                fAction = kCameraDolly;
@@ -1822,8 +1853,10 @@ Bool_t TGLViewer::HandleDoubleClick(Event_t *event)
    // Reset interactive camera mode on button double
    // click (unless mouse wheel)
    if (event->fCode != kButton4 && event->fCode != kButton5) {
-      CurrentCamera().Reset();
-      RequestDraw();
+      if (fResetCameraOnDoubleClick) {
+         ResetCurrentCamera();
+         RequestDraw();
+      }
    }
    return kTRUE;
 }
@@ -1920,6 +1953,10 @@ Bool_t TGLViewer::HandleKey(Event_t *event)
       break;
    case kKey_Right:
       redraw = CurrentCamera().Truck(fViewport.CenterX(), fViewport.CenterY(), 5, 0);
+      break;
+   case kKey_Home:
+      ResetCurrentCamera();
+      RequestDraw();
       break;
    // Toggle debugging mode
    case kKey_D:

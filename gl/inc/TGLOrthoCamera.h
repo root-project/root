@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.10 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.11 2006/02/23 16:44:51 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -61,7 +61,7 @@ public:
    TGLOrthoCamera(EType type);
    virtual ~TGLOrthoCamera();
 
-   virtual void   Setup(const TGLBoundingBox & box);
+   virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE);
    virtual void   Reset();
    virtual Bool_t Dolly(Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);

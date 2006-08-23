@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.13 2006/05/23 04:47:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.14 2006/05/24 14:49:21 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -99,14 +99,18 @@ Bool_t TGLDrawable::SetCached(Bool_t cached)
 }
 
 //______________________________________________________________________________
-Bool_t TGLDrawable::ShouldCache(const TGLDrawFlags & /*flags*/) const
+Bool_t TGLDrawable::ShouldCache(const TGLDrawFlags & flags) const
 {
    // Returns kTRUE if draws should be display list cache
    // kFALSE otherwise
-
+   //
    // Default is to ignore flags and use internal bool. In some cases
    // shapes may want to override and constrain caching to certain
-   // styles/LOD found in flags
+   // styles/LOD found in flags. If secondary selection is enabled
+   // return false as different render-path is usually taken by the
+   // rendering object.
+
+   if (flags.SecSelection()) return kFALSE;
    return fCached;
 }
 

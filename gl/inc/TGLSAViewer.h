@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.12 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.13 2006/06/29 12:16:26 couet Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -76,7 +76,8 @@ private:
    static const Int_t fgInitW;
    static const Int_t fgInitH;
 
-   static const char * fgHelpText;
+   static const char * fgHelpText1;
+   static const char * fgHelpText2;
 
    void CreateMenus();
    void CreateFrames();
@@ -89,7 +90,7 @@ private:
 
 protected:
    // Overloadable 
-   virtual void PostSceneBuildSetup();
+   virtual void PostSceneBuildSetup(Bool_t resetCameras);
    virtual void SelectionChanged(); // *SIGNAL*
    virtual void ClipChanged();      // *SIGNAL*
 

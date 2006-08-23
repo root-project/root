@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.h $
+// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.h,v 1.1 2006/02/20 11:10:06 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -36,6 +36,7 @@ public:
    TGLPolyMarker(const TBuffer3D & buffer);
 
    virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
+   virtual Bool_t   IgnoreSizeForOfInterest() const { return kTRUE; }
 
 private:
    void DrawStars()const;

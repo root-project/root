@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawFlags.cxx,v 1.1 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  27/01/2006
 
 /*************************************************************************
@@ -20,8 +20,9 @@
 ClassImp(TGLDrawFlags)
 
 //______________________________________________________________________________
-TGLDrawFlags::TGLDrawFlags(EStyle style, Short_t LOD) :
-   fStyle(style), fLOD(LOD)
+TGLDrawFlags::TGLDrawFlags(EStyle style, Short_t LOD, Bool_t sel, Bool_t secSel) :
+   fStyle(style), fLOD(LOD),
+   fSelection(sel), fSecSelection(secSel)
 {
 }
 

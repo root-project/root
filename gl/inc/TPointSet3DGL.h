@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.h,v 1.3 2006/04/07 09:20:43 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.h,v 1.4 2006/05/09 19:08:44 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -22,16 +22,22 @@ class TPointSet3DGL : public TGLObject
 {
 protected:
    virtual void DirectDraw(const TGLDrawFlags & flags) const;
+   void RenderPoints(const TGLDrawFlags & flags) const;
+   void RenderCrosses(const TGLDrawFlags & flags) const;
 
 public:
-   TPointSet3DGL();
+   TPointSet3DGL() : TGLObject() {}
 
    virtual Bool_t SetModel(TObject* obj);
    virtual void   SetBBox();
 
-   virtual Bool_t ShouldCache(const TGLDrawFlags & /*flags*/) const { return false; }
+   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
 
-  ClassDef(TPointSet3DGL,1)  // GL renderer for TPointSet3D
+   virtual Bool_t ShouldCache(const TGLDrawFlags & flags) const;
+   virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
+   virtual void   ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*);
+
+   ClassDef(TPointSet3DGL,1)  // GL renderer for TPointSet3D
 };
 
 #endif

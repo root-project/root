@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawFlags.h,v 1.2 2006/02/09 09:56:20 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawFlags.h,v 1.3 2006/05/08 14:01:08 rdm Exp $
 // Author:  Richard Maunder  27/01/2006
 
 /*************************************************************************
@@ -38,15 +38,22 @@ private:
    // Fields
    EStyle  fStyle;
    Short_t fLOD;
+   Bool_t  fSelection;
+   Bool_t  fSecSelection;
 
 public:
-   TGLDrawFlags(EStyle style = kFill, Short_t LOD = kLODHigh);
+   TGLDrawFlags(EStyle style = kFill, Short_t LOD = kLODHigh,
+                Bool_t sel = kFALSE, Bool_t secSel = kFALSE);
    virtual ~TGLDrawFlags();
 
    EStyle  Style() const          { return fStyle; }
    void    SetStyle(EStyle style) { fStyle = style; }
    Short_t LOD() const            { return fLOD; }
    void    SetLOD(Short_t LOD)    { fLOD = LOD; }
+   Bool_t  Selection() const              { return fSelection; }
+   void    SetSelection(Bool_t sel)       { fSelection = sel; }
+   Bool_t  SecSelection() const           { return fSecSelection; }
+   void    SetSecSelection(Bool_t secSel) { fSecSelection = secSel; }
 
    ClassDef(TGLDrawFlags,0) // GL draw flags wrapper class
 };

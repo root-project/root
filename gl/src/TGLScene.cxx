@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.41 2006/04/07 09:20:43 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.42 2006/05/08 14:01:30 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -64,6 +64,13 @@ TGLScene::TGLScene() :
    fInSmartRefresh(kFALSE),
    fBoundingBox(), fBoundingBoxValid(kFALSE),
    fSelectedPhysical(0),
+   fSelectionResult(0),
+   fNPrimHits(-1),
+   fNSecHits(-1),
+   fTrySecSelect(kFALSE),
+   fTriedSecSelect(kFALSE),
+   fSelectBuffer(4096),
+   fSortedHits(),
    fClipPlane(0), fClipBox(0), fCurrentClip(0),
    fTransManip(), fScaleManip(), fRotateManip()
 {
@@ -275,7 +282,8 @@ UInt_t TGLScene::DestroyPhysicals(Bool_t incModified, const TGLCamera * camera)
          if (incModified || (!incModified && !physical->IsModified())) {
             // and no camera is passed, or it is no longer of interest
             // to camera
-            if (!camera || (camera && !camera->OfInterest(physical->BoundingBox()))) {
+            Bool_t ignoreSize = physical->GetLogical().IgnoreSizeForOfInterest();
+            if (!camera || (camera && !camera->OfInterest(physical->BoundingBox(), ignoreSize))) {
 
                // Then we can destroy it - remove from map
                fPhysicalShapes.erase(physicalShapeIt++);
@@ -1004,18 +1012,37 @@ Bool_t TGLScene::Select(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
    //
    // Arguments are passed on to Draw(), with unlimted time
    //
-   // Returns kTRUE if selection changed, kFALSE if not
+   // Returns kTRUE if selected object is different then currently selected
+   // fSelectedPhysical. The result is stored in fSelectionResult member.
+   // One still has to call ApplySelection() to activate this change.
+   //
+   // If secondary-selection is activated (by calling
+   // ActivateSecSelect() prior requesting the selection another
+   // selection pass is done on selected object if it supports
+   // secondary selection. The secondary select records are then available in:
+   // fTriedSecSelect, fNSecHits, fSelectBuffer and fSortedHits.
+
    Bool_t changed = kFALSE;
    if (fLock != kSelectLock) {
       Error("TGLScene::Select", "expected SelectLock");
    }
 
-   // Create the select buffer. This will work as we have a flat set of physical shapes.
+   fSelectionResult =  0;
+   fNPrimHits       = -1;
+   fNSecHits        = -1;
+   fTriedSecSelect  =  kFALSE;
+   Bool_t trySecSel =  fTrySecSelect;
+   fTrySecSelect    =  kFALSE;
+
+   // Check size of the select buffer. This will work as we have a flat set of physical shapes.
    // We only ever load a single name in TGLPhysicalShape::DirectDraw so any hit record always
    // has same 4 GLuint format
-   static std::vector<GLuint> selectBuffer;
-   selectBuffer.resize(fPhysicalShapes.size()*4);
-   glSelectBuffer(selectBuffer.size(), &selectBuffer[0]);
+   if (fPhysicalShapes.size()*4 > fSelectBuffer.size())
+      fSelectBuffer.resize(fPhysicalShapes.size()*4);
+   glSelectBuffer(fSelectBuffer.size(), &fSelectBuffer[0]);
+
+   TGLDrawFlags selFlags(sceneFlags.Style(), sceneFlags.LOD());
+   selFlags.SetSelection(kTRUE);
 
    // Enter picking mode
    glRenderMode(GL_SELECT);
@@ -1023,17 +1050,17 @@ Bool_t TGLScene::Select(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
    glPushName(0);
 
    // Draw out scene at best quality, no timelimit, no axes/reference
-   Draw(camera, sceneFlags, 0.0, TGLViewer::kAxesNone, 0, kTRUE); // Select draw
+   Draw(camera, selFlags, 0.0, TGLViewer::kAxesNone, 0, kTRUE); // Select draw
 
    // Retrieve the hit count and return to render
-   Int_t hits = glRenderMode(GL_RENDER);
+   fNPrimHits = glRenderMode(GL_RENDER);
 
-   if (hits < 0) {
+   if (fNPrimHits < 0) {
       Error("TGLScene::Select", "selection buffer overflow");
       return changed;
    }
 
-   if (hits > 0) {
+   if (fNPrimHits > 0) {
       // Every hit record has format (GLuint per item) - format is:
       //
       // no of names in name block (1 always)
@@ -1042,61 +1069,96 @@ Bool_t TGLScene::Select(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
       // name(s) (1 always)
 
       // Sort the hits by minimum depth (closest part of object)
-      static std::vector<std::pair<UInt_t, Int_t> > sortedHits;
-      sortedHits.resize(hits);
+      fSortedHits.resize(fNPrimHits);
       Int_t i;
-      for (i = 0; i < hits; i++) {
-         assert(selectBuffer[i * 4] == 1); // expect a single name per record
-         sortedHits[i].first = selectBuffer[i * 4 + 1]; // hit object minimum depth
-         sortedHits[i].second = selectBuffer[i * 4 + 3]; // hit object name
+      for (i = 0; i < fNPrimHits; i++) {
+         assert(fSelectBuffer[i * 4] == 1); // expect a single name per record
+         fSortedHits[i].first  =  fSelectBuffer[4*i + 1]; // hit object minimum depth
+         fSortedHits[i].second = &fSelectBuffer[4*i];     // hit record
       }
-      std::sort(sortedHits.begin(), sortedHits.end());
+      std::sort(fSortedHits.begin(), fSortedHits.end());
 
       // Find first (closest) non-transparent object in the hit stack
-      TGLPhysicalShape * selected = 0;
-      for (i = 0; i < hits; i++) {
-         selected = FindPhysical(sortedHits[i].second);
-         if (!selected->IsTransparent()) {
+      for (i = 0; i < fNPrimHits; i++) {
+         fSelectionResult = FindPhysical(fSortedHits[i].second[3]);
+         if (!fSelectionResult->IsTransparent()) {
             break;
          }
       }
       // If we failed to find a non-transparent object use the first
       // (closest) transparent one
-      if (selected->IsTransparent()) {
-         selected = FindPhysical(sortedHits[0].second);
+      if (fSelectionResult->IsTransparent()) {
+         fSelectionResult = FindPhysical(fSortedHits[0].second[3]);
       }
-      assert(selected);
+      assert(fSelectionResult);
 
       // Swap any selection
-      if (selected != fSelectedPhysical) {
-         if (fSelectedPhysical) {
-            fSelectedPhysical->Select(kFALSE);
+      if (fSelectionResult != fSelectedPhysical) {
+         changed = kTRUE;
+      }
+
+
+      TGLLogicalShape& log = const_cast<TGLLogicalShape&>(fSelectionResult->GetLogical());
+      if(trySecSel && log.SupportsSecondarySelect()) {
+         fTriedSecSelect = kTRUE;
+
+         DrawList_t  drawlist_tmp;
+         drawlist_tmp.push_back(fSelectionResult);
+         fDrawList.swap(drawlist_tmp);
+
+         glRenderMode(GL_SELECT);
+         glInitNames();
+         glPushName(0);
+         selFlags.SetSecSelection(kTRUE);
+         Draw(camera, selFlags, 0.0, TGLViewer::kAxesNone, 0, kTRUE); 
+         fNSecHits = glRenderMode(GL_RENDER);
+
+         fDrawList.swap(drawlist_tmp);
+
+         if (fNSecHits < 0) {
+            Error("TGLScene::Select", "selection buffer overflow");
+            return changed;
          }
-         fSelectedPhysical = selected;
-         fSelectedPhysical->Select(kTRUE);
 
-         changed = kTRUE;
+         if (fNSecHits > 0) {
+            fSortedHits.resize(fNSecHits);
+
+            UInt_t *ptr = &fSelectBuffer[0];
+            for (Int_t i = 0; i < fNSecHits; i++) {
+               fSortedHits[i].first  = ptr[1]; // hit object minimum depth
+               fSortedHits[i].second = ptr;    // pointer to hit entry 
+               // printf("hit %d,  z1=%u, z2=%u, names=%u\n", i, ptr[1], ptr[2], ptr[0]); 
+               ptr += 3 + ptr[0];
+            }
+
+            std::sort(fSortedHits.begin(), fSortedHits.end());
+         }
       }
 
-      // Attach current manipulator to the selected physical
-      // Always do this as manip can be swapped to clip object
-      fCurrentManip->Attach(fSelectedPhysical);
-
-   } else { // 0 hits
-      if (fSelectedPhysical) {
-         fSelectedPhysical->Select(kFALSE);
-         fSelectedPhysical = 0;
-         changed = kTRUE;
-      }
-      // If no selection, manip is bound to nothing - this happens even if
-      // it previous was attached to a clip object
-      if (fCurrentManip->GetAttached()) {
-         fCurrentManip->Attach(0);
+   } else { // 0 prim-hits
+      if (fSelectedPhysical || fCurrentManip->GetAttached()) {
          changed = kTRUE;
       }
    }
 
    return changed;
+}
+
+//______________________________________________________________________________
+void TGLScene::ApplySelection()
+{
+   // Makes result of last selection (fSelectionResult) the currently
+   // selected object (fSelectedPhysical).
+
+   if (fSelectedPhysical) {
+      fSelectedPhysical->Select(kFALSE);
+   }
+   fSelectedPhysical = fSelectionResult;
+   if (fSelectedPhysical) {
+      fSelectedPhysical->Select(kTRUE);
+   }
+   // Always attach current manipulator as manip can be swapped to clip object
+   fCurrentManip->Attach(fSelectedPhysical);
 }
 
 //______________________________________________________________________________

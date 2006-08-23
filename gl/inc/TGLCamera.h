@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.19 2006/02/23 16:44:51 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.20 2006/02/26 16:08:10 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -107,7 +107,7 @@ public:
    void SetViewport(const TGLRect & viewport);
 
    // Camera manipulation interface (GL coord - origin bottom left)
-   virtual void   Setup(const TGLBoundingBox & box) = 0;
+   virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE) = 0;
    virtual void   Reset() = 0;
    // virtual void   Frame(const TGLBoundingBox & box) = 0; // TODO
    // virtual void   Frame(const TGLRec & rect) = 0; // TODO
@@ -145,7 +145,7 @@ public:
    void WindowToViewport(TGLVertex3 & vertex)        const { vertex.Y() = fViewport.Height() - vertex.Y(); }
 
    // Cameras expanded-frustum interest box
-   Bool_t OfInterest(const TGLBoundingBox & box) const;
+   Bool_t OfInterest(const TGLBoundingBox & box, Bool_t checkSize) const;
    Bool_t UpdateInterest(Bool_t force);
    void   ResetInterest();
 

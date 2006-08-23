@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.8 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.9 2006/01/26 11:59:41 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -56,7 +56,7 @@ public:
    TGLPerspectiveCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis);
    virtual ~TGLPerspectiveCamera();
 
-   virtual void   Setup(const TGLBoundingBox & box);
+   virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE);
    virtual void   Reset();
    virtual Bool_t Dolly(Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);

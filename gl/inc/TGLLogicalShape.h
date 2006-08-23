@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.13 2006/05/15 11:01:13 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.14 2006/05/23 04:47:37 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -19,6 +19,9 @@
 class TBuffer3D;
 class TObject;
 class TContextMenu;
+
+class TGLViewer;
+class TGLScene;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -79,8 +82,13 @@ public:
    void   StrongRef(Bool_t strong) const { fRefStrong = strong; }
    TObject *GetExternal()const{return fExternalObj;}
 
+   virtual Bool_t IgnoreSizeForOfInterest() const { return kFALSE; }
+
    // Override in sub-classes that do direct object rendering (e.g. TGLObject).
-   virtual Bool_t KeepDuringSmartRefresh() const { return false; }
+   virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
+   // Override in sub-classes that support secondary selection (e.g. TPointSet3DGL). 
+   virtual Bool_t SupportsSecondarySelect() const { return kFALSE; }
+   virtual void   ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*);
 
    ClassDef(TGLLogicalShape,0) // a logical (non-placed, local frame) drawable object
 };

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.20 2006/06/30 06:35:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.21 2006/07/10 13:19:19 rdm Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -48,7 +48,7 @@
 #include "TGLOutput.h"
 #include "TGLKernel.h"
 
-const char * TGLSAViewer::fgHelpText = "\
+const char * TGLSAViewer::fgHelpText1 = "\
 DIRECT SCENE INTERACTIONS\n\n\
    Press:\n\
    \tw          --- wireframe mode\n\
@@ -56,7 +56,8 @@ DIRECT SCENE INTERACTIONS\n\n\
    \tt          --- outline mode\n\
    \tj          --- ZOOM in\n\
    \tk          --- ZOOM out\n\
-   \tArrow Keys --- PAN (TRUCK) across scene\n\n\
+   \tArrow Keys --- PAN (TRUCK) across scene\n\
+   \tHome       --- reset current camera\n\n\
    You can ROTATE (ORBIT) the scene by holding the left mouse button and moving\n\
    the mouse (perspective camera only).\n\n\
    You can PAN (TRUCK) the camera using the middle mouse button or arrow keys.\n\n\
@@ -67,6 +68,8 @@ DIRECT SCENE INTERACTIONS\n\n\
    SELECT the viewer with Shift+Left mouse button click on a free space.\n\n\
    MOVE a selected shape using Shift+Mid mouse drag.\n\n\
    Invoke the CONTEXT menu with Shift+Right mouse click.\n\n\
+   Secondary selection and direct render object interaction is initiated\n\
+   by Control+Left mouse click. Only few classes support this option.\n\n\
 CAMERA\n\n\
    The \"Camera\" menu is used to select the different projections from \n\
    the 3D world onto the 2D viewport. There are three perspective cameras:\n\n\
@@ -79,7 +82,9 @@ CAMERA\n\n\
    \tOrthographic (XOZ)\n\
    \tOrthographic (ZOY)\n\n\
    In each case the first axis is placed horizontal, the second vertical e.g.\n\
-   XOY means X horizontal, Y vertical.\n\n\
+   XOY means X horizontal, Y vertical.\n\n";
+
+const char * TGLSAViewer::fgHelpText2 = "\
 SHAPES COLOR AND MATERIAL\n\n\
    The selected shape's color can be modified in the Shapes-Color tabs.\n\
    Shape's color is specified by the percentage of red, green, blue light\n\
@@ -420,7 +425,8 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
          }
          case kGLHelpViewer: {
             TRootHelpDialog * hd = new TRootHelpDialog(fFrame, "Help on GL Viewer...", 600, 400);
-            hd->SetText(fgHelpText);
+            hd->AddText(fgHelpText1);
+            hd->AddText(fgHelpText2);
             hd->Popup();
             break;
          }
@@ -556,13 +562,13 @@ void TGLSAViewer::ClipChanged()
 }
 
 //______________________________________________________________________________
-void TGLSAViewer::PostSceneBuildSetup()
+void TGLSAViewer::PostSceneBuildSetup(Bool_t resetCameras)
 {
    // Do setup work required after a scene build has completed.
    // Synconise the viewer GUI with new clips, guides etc
    
    // Do base work first
-   TGLViewer::PostSceneBuildSetup();
+   TGLViewer::PostSceneBuildSetup(resetCameras);
 
    // Now synconise the GUI-removed
 }

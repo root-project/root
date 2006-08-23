@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLObject.cxx,v 1.2 2006/04/07 09:20:43 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLObject.cxx,v 1.3 2006/05/09 19:08:44 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -31,29 +31,28 @@
 ClassImp(TGLObject)
 
 //______________________________________________________________________________
-Bool_t TGLObject::SetModelCheckClass(TObject* obj, const Text_t* classname)
+Bool_t TGLObject::SetModelCheckClass(TObject* obj, TClass* cls)
 {
    // Checks if obj is of proper class and sets the model.
    // Protected helper for subclasses.
 
-   if(obj->InheritsFrom(classname) == false) {
-      Warning("TGLObject::set_model", "object of wrong class passed.");
+   if(obj->InheritsFrom(cls) == kFALSE) {
+      Warning("TGLObject::SetModelCheckClass", "object of wrong class passed.");
       return false;
    }
    fExternalObj = obj;
    fID          = reinterpret_cast<ULong_t>(obj);
 
-   return true;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
 void TGLObject::SetAxisAlignedBBox(Float_t xmin, Float_t xmax,
-                                      Float_t ymin, Float_t ymax,
-                                      Float_t zmin, Float_t zmax)
+                                   Float_t ymin, Float_t ymax,
+                                   Float_t zmin, Float_t zmax)
 {
    // Set axis-aligned bounding-box.
    // Protected helper for subclasses.
-
 
    fBoundingBox.SetAligned(TGLVertex3(xmin, ymin, zmin),
                            TGLVertex3(xmax, ymax, zmax));

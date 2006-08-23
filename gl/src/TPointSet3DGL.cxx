@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.cxx,v 1.5 2006/04/12 15:49:07 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.cxx,v 1.6 2006/05/09 19:08:44 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TPointSet3DGL.h"
 #include "TPointSet3D.h"
 
+#include <TGLDrawFlags.h>
 #include <GL/gl.h>
 
 //______________________________________________________________________
@@ -26,15 +27,11 @@
 ClassImp(TPointSet3DGL)
 
 //______________________________________________________________________________
-TPointSet3DGL::TPointSet3DGL() : TGLObject()
-{}
-
-//______________________________________________________________________________
 Bool_t TPointSet3DGL::SetModel(TObject* obj)
 {
    // Set model.
 
-   return SetModelCheckClass(obj, "TPointSet3D");
+   return SetModelCheckClass(obj, TPointSet3D::Class());
 }
 
 //______________________________________________________________________________
@@ -46,39 +43,173 @@ void TPointSet3DGL::SetBBox()
 }
 
 //______________________________________________________________________________
-void TPointSet3DGL::DirectDraw(const TGLDrawFlags & /*flags*/) const
+Bool_t TPointSet3DGL::ShouldCache(const TGLDrawFlags & flags) const
+{
+   // Override from TGLDrawable.
+   // To account for large point-sizes we modify the projection matrix
+   // during selection and thus we need a direct draw.
+
+   if (flags.Selection()) return kFALSE;
+   return fCached;
+}
+
+//______________________________________________________________________________
+void TPointSet3DGL::DirectDraw(const TGLDrawFlags & flags) const
 {
    // Direct GL rendering for TPointSet3D.
 
-   // printf("TPointSet3DGL::DirectDraw Style %d, LOD %d\n", flags.Style(), flags.LOD());
+   //printf("TPointSet3DGL::DirectDraw Style %d, LOD %d\n", flags.Style(), flags.LOD());
+   //printf("  sel=%d, secsel=%d\n", flags.Selection(), flags.SecSelection());
 
    TPointSet3D& q = * (TPointSet3D*) fExternalObj;
 
-   if (q.GetN() <= 0) return;
+   if (q.Size() <= 0) return;
 
-   Int_t qms = q.GetMarkerStyle();
-
-   glPushAttrib(GL_POINT_BIT | GL_ENABLE_BIT);
+   glPushAttrib(GL_POINT_BIT | GL_LINE_BIT | GL_ENABLE_BIT);
 
    glDisable(GL_LIGHTING);
 
-   if (qms == 20 || qms == 21) {  // 20 ~ full scalable circle; 21 ~ fs square
-      glEnable(GL_BLEND);
-      glPointSize(q.GetMarkerSize());
-   }
-   if (q.GetMarkerStyle() == 20) {
+   Int_t ms = q.GetMarkerStyle();
+   if (ms != 2 && ms != 3 && ms != 5 && ms != 28)
+      RenderPoints(flags);
+   else
+      RenderCrosses(flags);
+
+
+   glPopAttrib();
+}
+
+//______________________________________________________________________________
+void TPointSet3DGL::RenderPoints(const TGLDrawFlags & flags) const
+{
+   // Render markers as circular or square points.
+
+   TPointSet3D& q = * (TPointSet3D*) fExternalObj;
+
+   Float_t size = 5*q.GetMarkerSize();
+   Int_t  style = q.GetMarkerStyle();
+   if (style == 4 || style == 20 || style == 24) {
+      if (style == 4 || style == 24)
+         glEnable(GL_BLEND);
       glEnable(GL_POINT_SMOOTH);
    } else {
       glDisable(GL_POINT_SMOOTH);
+      if      (style == 1) size = 1;
+      else if (style == 6) size = 2;
+      else if (style == 7) size = 3;
+   }
+   glPointSize(size);
+
+   // During selection extend picking region for large point-sizes.
+   static const Int_t sPickRadius = 3; // Hardcoded also in TGLViewer::RequestSelect()
+   Bool_t changePM = kFALSE;
+   if (flags.Selection() && size > sPickRadius) {
+      changePM = kTRUE;
+      glMatrixMode(GL_PROJECTION);
+      glPushMatrix();
+      Float_t pm[16];
+      glGetFloatv(GL_PROJECTION_MATRIX, pm);
+      Float_t scale = (Float_t) sPickRadius / size;
+      for (Int_t i=0; i<=12; i+=4) {
+         pm[i] *= scale; pm[i+1] *= scale;
+      }
+      glLoadMatrixf(pm);
    }
 
-   glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-   glVertexPointer(3, GL_FLOAT, 0, q.GetP());
-   glEnableClientState(GL_VERTEX_ARRAY);
+   if (flags.SecSelection()) {
 
-   glDrawArrays(GL_POINTS, 0, q.GetN());
+      const Float_t* p = q.GetP();
+      const Int_t    n = q.Size();
+      glPushName(0);
+      for (Int_t i=0; i<n; ++i, p+=3) {
+         glLoadName(i);
+         glBegin(GL_POINTS);
+         glVertex3fv(p);
+         glEnd();
+      }
+      glPopName();
 
-   glPopClientAttrib();
+   } else {
 
-   glPopAttrib();
+      glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+      glVertexPointer(3, GL_FLOAT, 0, q.GetP());
+      glEnableClientState(GL_VERTEX_ARRAY);
+
+      { // Circumvent bug in ATI's linux drivers.
+         Int_t nleft = q.Size();
+         Int_t ndone = 0;
+         const Int_t maxChunk = 8192;
+         while (nleft > maxChunk) {
+            glDrawArrays(GL_POINTS, ndone, maxChunk);
+            nleft -= maxChunk;
+            ndone += maxChunk;
+         }
+         glDrawArrays(GL_POINTS, ndone, nleft);
+      }
+
+      glPopClientAttrib();
+
+   }
+
+   if (changePM) {
+      glPopMatrix();
+      glMatrixMode(GL_MODELVIEW);
+   }
+}
+
+//______________________________________________________________________________
+void TPointSet3DGL::RenderCrosses(const TGLDrawFlags & flags) const
+{
+   // Render markers as crosses.
+
+   TPointSet3D& q = * (TPointSet3D*) fExternalObj;
+
+   const Float_t* p = q.GetP();
+   const Float_t  d = 5*q.GetMarkerSize();
+   const Int_t    n = q.Size();
+
+   if (q.GetMarkerStyle() == 28) {
+      glEnable(GL_BLEND);
+      glEnable(GL_LINE_SMOOTH);
+      glLineWidth(2);
+   } else {
+      glDisable(GL_LINE_SMOOTH);
+   }
+
+   if (flags.SecSelection()) {
+
+      glPushName(0);
+      for (Int_t i=0; i<n; ++i, p+=3) {
+         glLoadName(i);
+         glBegin(GL_LINES);
+         glVertex3f(p[0]-d, p[1], p[2]); glVertex3f(p[0]+d, p[1], p[2]);
+         glVertex3f(p[0], p[1]-d, p[2]); glVertex3f(p[0], p[1]+d, p[2]);
+         glVertex3f(p[0], p[1], p[2]-d); glVertex3f(p[0], p[1], p[2]+d);
+         glEnd();
+      }
+      glPopName();
+
+   } else {
+
+      glBegin(GL_LINES);
+      for (Int_t i=0; i<n; ++i, p+=3) {
+         glVertex3f(p[0]-d, p[1], p[2]); glVertex3f(p[0]+d, p[1], p[2]);
+         glVertex3f(p[0], p[1]-d, p[2]); glVertex3f(p[0], p[1]+d, p[2]);
+         glVertex3f(p[0], p[1], p[2]-d); glVertex3f(p[0], p[1], p[2]+d);
+      }
+      glEnd();
+
+   }
+}
+
+//______________________________________________________________________________
+void TPointSet3DGL::ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*)
+{
+   // Processes secondary selection from TGLViewer.
+   // Calls TPointSet3D::PointSelected(Int_t) with index of selected
+   // point as an argument.
+
+   if (ptr[0] < 2) return;
+   TPointSet3D& q = * (TPointSet3D*) fExternalObj;
+   q.PointSelected(ptr[4]);
 }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLObject.h,v 1.2 2006/04/07 09:20:43 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLObject.h,v 1.3 2006/05/09 19:08:44 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -17,18 +17,17 @@
 #include "TGLLogicalShape.h"
 #endif
 
-
 class TGLObject : public TGLLogicalShape
 {
 protected:
    // Abstract method from TGLDrawable:
    // virtual void DirectDraw(const TGLDrawFlags & flags) const;
 
-   Bool_t SetModelCheckClass(TObject* obj, const Text_t* classname);
+   Bool_t SetModelCheckClass(TObject* obj, TClass* cls);
 
    void   SetAxisAlignedBBox(Float_t xmin, Float_t xmax,
-                                Float_t ymin, Float_t ymax,
-                                Float_t zmin, Float_t zmax);
+                             Float_t ymin, Float_t ymax,
+                             Float_t zmin, Float_t zmax);
    void   SetAxisAlignedBBox(const Float_t* p);
 
 public:
@@ -37,7 +36,7 @@ public:
 
    virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
 
-   virtual Bool_t KeepDuringSmartRefresh() const { return true; }
+   virtual Bool_t KeepDuringSmartRefresh() const { return kTRUE; }
 
    virtual Bool_t SetModel(TObject* obj) = 0;
    virtual void   SetBBox() = 0;

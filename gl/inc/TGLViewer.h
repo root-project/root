@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.28 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.29 2006/04/10 09:23:31 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -180,7 +180,7 @@ private:
 
    // Cameras
    void        SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height);
-   void        SetupCameras();
+   void        SetupCameras(Bool_t reset);
    TGLCamera & CurrentCamera() const { return *fCurrentCamera; }
 
    // Lights
@@ -199,8 +199,13 @@ protected:
    TClass*          FindDirectRendererClass(TClass* cls);
    TGLLogicalShape* AttemptDirectRenderer(TObject* id);
 
+   // Camera-reset behaviour
+   Bool_t           fResetCamerasOnUpdate;     // reposition camera on each update
+   Bool_t           fResetCamerasOnNextUpdate; // reposition camera on next update
+   Bool_t           fResetCameraOnDoubleClick; // reposition camera on double-click
+
    // Overloadable 
-   virtual void PostSceneBuildSetup();
+   virtual void PostSceneBuildSetup(Bool_t resetCameras);
    virtual void SelectionChanged(); // *SIGNAL*
    virtual void ClipChanged();      // *SIGNAL*
 
@@ -222,7 +227,9 @@ public:
    virtual void   CloseComposite();
    virtual void   AddCompositeOp(UInt_t operation);
    virtual void   PrintObjects();
-   
+   virtual void   ResetCameras()                { SetupCameras(kTRUE); }
+   virtual void   ResetCamerasAfterNextUpdate() { fResetCamerasOnNextUpdate = kTRUE; }
+
    Int_t   GetDev()const{return fGLDevice;}
    Bool_t  GetSmartRefresh() const           { return fSmartRefresh; }
    void    SetSmartRefresh(Bool_t smart_ref) { fSmartRefresh = smart_ref; }
@@ -252,8 +259,16 @@ public:
    // Can be removed when TGLManager is used
    void RequestDraw(Short_t LOD = TGLDrawFlags::kLODMed); // Cross thread draw request
    void DoDraw();
-   void RequestSelect(UInt_t x, UInt_t y); // Cross thread select request
+   Bool_t RequestSelect(UInt_t x, UInt_t y); // Cross thread select request
    Bool_t DoSelect(const TGLRect & rect); // Window coords origin top left
+   void   ApplySelection();
+
+   // Camera-reset
+   void   ResetCurrentCamera();
+   Bool_t GetResetCamerasOnUpdate() const       { return fResetCamerasOnUpdate; }
+   void   SetResetCamerasOnUpdate(Bool_t v)     { fResetCamerasOnUpdate = v; }
+   Bool_t GetResetCameraOnDoubleClick() const   { return fResetCameraOnDoubleClick; }
+   void   SetResetCameraOnDoubleClick(Bool_t v) { fResetCameraOnDoubleClick = v; }
 
    // Interaction - events to ExecuteEvent are passed on to these
    Bool_t HandleEvent(Event_t *ev);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.22 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.23 2006/04/07 09:20:43 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -288,7 +288,8 @@ TGLDrawFlags TGLPhysicalShape::CalcDrawFlags(const TGLCamera & camera, const TGL
 
    if (lodAxes == TGLDrawable::kLODAxesNone) {
       // Shape doesn't support LOD along any axes return special unsupported LOD draw/cache flag
-      return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODUnsupported);
+      return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODUnsupported,
+                          sceneFlags.Selection(), sceneFlags.SecSelection());
    }
 
    if (lodAxes == TGLDrawable::kLODAxesAll) {
@@ -315,7 +316,8 @@ TGLDrawFlags TGLPhysicalShape::CalcDrawFlags(const TGLCamera & camera, const TGL
       // on longest of projection of 4 edges of BBox along LOD axis. However this would
       // probably be more costly than just using whole BB projection (as for all axes)
       Error("TGLScene::CalcPhysicalLOD", "LOD calculation for single axis not implemented presently");
-      return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODMed);;
+      return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODMed,
+                          sceneFlags.Selection(), sceneFlags.SecSelection()); 
    }
 
    // Find largest of the projected diagonals
@@ -328,7 +330,8 @@ TGLDrawFlags TGLPhysicalShape::CalcDrawFlags(const TGLCamera & camera, const TGL
 
    // Pixel or less?
    if (largestDiagonal <= 1.0) {
-      return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODPixel);
+      return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODPixel,
+                          sceneFlags.Selection(), sceneFlags.SecSelection());
    }
 
    // TODO: Get real screen size - assuming 2000 pixel screen at present
@@ -354,7 +357,8 @@ TGLDrawFlags TGLPhysicalShape::CalcDrawFlags(const TGLCamera & camera, const TGL
       shapeLOD = 100;
    }
 
-   return TGLDrawFlags(sceneFlags.Style(), shapeLOD);
+   return TGLDrawFlags(sceneFlags.Style(), shapeLOD,
+                       sceneFlags.Selection(), sceneFlags.SecSelection());
 }
 
 //______________________________________________________________________________

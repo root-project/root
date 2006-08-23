@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.24 2006/02/21 16:39:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.25 2006/04/07 08:43:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -113,7 +113,14 @@ private:
 //   UInt_t                 fLastDrawLOD;      //! last LOD for the scene draw
 
    // Selection
-   TGLPhysicalShape     * fSelectedPhysical; //! current selected physical shape
+   TGLPhysicalShape                         * fSelectedPhysical; //! current selected physical shape
+   TGLPhysicalShape                         * fSelectionResult;  //! physical shape found by last Select
+   Int_t                                      fNPrimHits;        //! number of primary selection hits
+   Int_t                                      fNSecHits;         //! number of secondary selection hits
+   Bool_t                                     fTrySecSelect;     //! flag controlling if secondary selection should be tried
+   Bool_t                                     fTriedSecSelect;   //! flag reporting if secondary selection was actually tried
+   std::vector<UInt_t>                        fSelectBuffer;     //! buffer holding GL selection result
+   std::vector<std::pair<UInt_t, UInt_t*> >   fSortedHits;       //! depth-sorted selection result
 
    // Clipping
    TGLClipPlane         * fClipPlane;
@@ -189,10 +196,20 @@ public:
    TGLLogicalShape *        FindLogicalSmartRefresh(ULong_t ID) const;
 
    // Selected Object
-   const TGLPhysicalShape * GetSelected() const { return fSelectedPhysical; }
-   Bool_t                   SetSelectedColor(const Float_t rgba[17]);
-   Bool_t                   SetColorOnSelectedFamily(const Float_t rgba[17]);
-   Bool_t                   SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale);
+   TGLPhysicalShape         * GetSelected()         const { return fSelectedPhysical; }
+   TGLPhysicalShape         * GetSelectionResult()  const { return fSelectionResult; }
+   Int_t                      GetNPrimHits()        const { return fNPrimHits; }
+   Int_t                      GetNSecHits()         const { return fNSecHits; }
+   Bool_t                     GetTrySecSelect()     const { return fTrySecSelect; }
+   void                       ActivateSecSelect()         { fTrySecSelect = kTRUE; }
+   Bool_t                     GetTriedSecSelect()   const { return fTriedSecSelect; }
+   std::pair<UInt_t, UInt_t*> GetHitRecord(Int_t i) const { return fSortedHits[i]; }
+
+   void                       ApplySelection();
+
+   Bool_t                     SetSelectedColor(const Float_t rgba[17]);
+   Bool_t                     SetColorOnSelectedFamily(const Float_t rgba[17]);
+   Bool_t                     SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale);
 
    // Clipping
    void  SetupClips();
