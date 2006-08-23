@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.32 2006/03/03 14:26:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.33 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -768,10 +768,10 @@ void TGeoTorus::SetPoints(Double_t *points) const
    Double_t dpin = 360./(n-1);
    Double_t dpout = fDphi/(n-1);
    Double_t co,so,ci,si;
-   Bool_t havermin = (fRmin==0)?kFALSE:kTRUE;
+   Bool_t havermin = (fRmin<TGeoShape::Tolerance())?kFALSE:kTRUE;
    Int_t i,j;
    Int_t indx = 0;
-   // loop outer mesh -> n*n points [0, 3*n*n-1]
+   // loop outer mesh -> n*(n-1) points [0, 3*n*(n-1)-1]
    for (i=0; i<n; i++) {
       phout = (fPhi1+i*dpout)*TMath::DegToRad();
       co = TMath::Cos(phout);
@@ -787,7 +787,7 @@ void TGeoTorus::SetPoints(Double_t *points) const
    }     
     
    if (havermin) {
-    // loop inner mesh -> n*n points [3*n*n, 6*n*n-1]
+    // loop inner mesh -> n*(n-1) points [3*n*(n-1), 6*n*(n-1)]
       for (i=0; i<n; i++) {
          phout = (fPhi1+i*dpout)*TMath::DegToRad();
          co = TMath::Cos(phout);
@@ -802,7 +802,7 @@ void TGeoTorus::SetPoints(Double_t *points) const
          }
       }  
    } else {
-      if (fDphi!=360.) {
+      if (fDphi<360.) {
       // just add extra 2 points on the centers of the 2 phi cuts [3*n*n, 3*n*n+1]
          points[indx++] = fR*TMath::Cos(fPhi1*TMath::DegToRad());
          points[indx++] = fR*TMath::Sin(fPhi1*TMath::DegToRad());
@@ -824,10 +824,10 @@ void TGeoTorus::SetPoints(Float_t *points) const
    Double_t dpin = 360./(n-1);
    Double_t dpout = fDphi/(n-1);
    Double_t co,so,ci,si;
-   Bool_t havermin = (fRmin==0)?kFALSE:kTRUE;
+   Bool_t havermin = (fRmin<TGeoShape::Tolerance())?kFALSE:kTRUE;
    Int_t i,j;
    Int_t indx = 0;
-   // loop outer mesh -> n*n points [0, n*n-1]
+   // loop outer mesh -> n*(n-1) points [0, 3*n*(n-1)-1]
    // plane i = 0, n-1  point j = 0, n-1  ipoint = n*i + j
    for (i=0; i<n; i++) {
       phout = (fPhi1+i*dpout)*TMath::DegToRad();
@@ -844,7 +844,7 @@ void TGeoTorus::SetPoints(Float_t *points) const
    }     
     
    if (havermin) {
-      // loop inner mesh -> n*n points [n*n, 2*n*n-1]
+    // loop inner mesh -> n*(n-1) points [3*n*(n-1), 6*n*(n-1)]
       // plane i = 0, n-1  point j = 0, n-1  ipoint = n*n + n*i + j
       for (i=0; i<n; i++) {
          phout = (fPhi1+i*dpout)*TMath::DegToRad();
@@ -860,7 +860,7 @@ void TGeoTorus::SetPoints(Float_t *points) const
          }
       }  
    } else {
-      if (fDphi!=360.) {
+      if (fDphi<360.) {
       // just add extra 2 points on the centers of the 2 phi cuts [n*n, n*n+1]
       // ip1 = n*(n-1) + 0;
       // ip2 = n*(n-1) + 1
@@ -880,6 +880,8 @@ Int_t TGeoTorus::GetNmeshVertices() const
 // Return number of vertices of the mesh representation
    Int_t n = gGeoManager->GetNsegments()+1;
    Int_t numPoints = n*(n-1);
+   if (fRmin>TGeoShape::Tolerance()) numPoints *= 2;
+   else if (fDphi<360.)              numPoints += 2;
    return numPoints;
 }
 
