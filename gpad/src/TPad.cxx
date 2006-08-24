@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.233 2006/08/17 09:14:24 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.234 2006/08/22 18:27:02 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -466,14 +466,11 @@ void TPad::Clear(Option_t *option)
    if (!IsEditable()) return;
 
    if (!fPadPaint) {
-      if (fCanvas->GetSelectedPad() == this && fCanvas->GetSelected() != this) {
-         fCanvas->SetSelected(this);
-         fCanvas->Selected(this, this, kButton1Down);
-      }
       SafeDelete(fView);
       if (fPrimitives) fPrimitives->Clear(option);
       delete fFrame; fFrame = 0;
    }
+   fCanvas->Cleared(this);
 
    cd();
 
@@ -866,9 +863,9 @@ void TPad::Close(Option_t *)
       if (gPad == this) fMother->cd();
 
       if (fCanvas->GetPadSave() == this)
-        fCanvas->ClearPadSave();
+         fCanvas->ClearPadSave();
       if (fCanvas->GetSelectedPad() == this)
-        fCanvas->SetSelectedPad(0);
+         fCanvas->SetSelectedPad(0);
    }
 
    fMother = 0;
@@ -4284,6 +4281,7 @@ void TPad::RecursiveRemove(TObject *obj)
    // Recursively remove object from a pad and its subpads.
 
    if (obj == fCanvas->GetSelected()) fCanvas->SetSelected(0);
+   if (obj == fCanvas->GetClickSelected()) fCanvas->SetClickSelected(0);
    if (obj == fView) fView = 0;
    Int_t nold = fPrimitives->GetSize();
    fPrimitives->RecursiveRemove(obj);

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.38 2006/07/03 16:10:44 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.39 2006/08/22 18:26:23 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -71,9 +71,9 @@ protected:
    Int_t         fEventY;          //!Last Y mouse position in canvas
    Int_t         fCanvasID;        //!Canvas identifier
    TObject      *fSelected;        //!Currently selected object
+   TObject      *fClickSelected;   //!Currently click-selected object
    Int_t         fSelectedX;       //!X of selected object
    Int_t         fSelectedY;       //!Y of selected object
-   Bool_t        fSelectedChanged; //!True if selected object changed during Pick
    TString       fSelectedOpt;     //!Drawing option of selected object
    TPad         *fSelectedPad;     //!Pad containing currently selected object
    TPad         *fPadSave;         //!Pointer to saved pad in HandleInput
@@ -153,6 +153,7 @@ public:
    TVirtualPad      *GetPadSave() const { return fPadSave; }
    void              ClearPadSave() { fPadSave = 0; }
    TObject          *GetSelected() const {return fSelected;}
+   TObject          *GetClickSelected() const {return fClickSelected;}
    Int_t             GetSelectedX() const {return fSelectedX;}
    Int_t             GetSelectedY() const {return fSelectedY;}
    Option_t         *GetSelectedOpt() const {return fSelectedOpt.Data();}
@@ -192,6 +193,7 @@ public:
    virtual void      Picked(TPad *selpad, TObject *selected, Int_t event);             // *SIGNAL*
    virtual void      ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *selected); // *SIGNAL*
    virtual void      Selected(TVirtualPad *pad, TObject *obj, Int_t event);            // *SIGNAL*
+   virtual void      Cleared(TVirtualPad *pad);                                        // *SIGNAL*
    virtual void      Closed();                                                         // *SIGNAL*
    void              RaiseWindow() { fCanvasImp->RaiseWindow(); }
    virtual void      Resize(Option_t *option="");
@@ -207,6 +209,7 @@ public:
    void              SetCanvasSize(UInt_t ww, UInt_t wh); // *MENU*
    void              SetHighLightColor(Color_t col) { fHighLightColor = col; }
    void              SetSelected(TObject *obj);
+   void              SetClickSelected(TObject *obj) { fClickSelected = obj; }
    void              SetSelectedPad(TPad *pad) { fSelectedPad = pad; }
    void              Show() { fCanvasImp->Show(); }
    virtual void      Size(Float_t xsizeuser=0, Float_t ysizeuser=0);

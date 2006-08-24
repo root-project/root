@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.115 2006/08/17 09:14:24 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.116 2006/08/22 18:26:23 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -151,10 +151,11 @@ void TCanvas::Constructor()
    fUpdating  = kFALSE;
    fUseGL     = kFALSE;
 
-   fContextMenu = 0;
-   fSelected    = 0;
-   fSelectedPad = 0;
-   fPadSave     = 0;
+   fContextMenu   = 0;
+   fSelected      = 0;
+   fClickSelected = 0;
+   fSelectedPad   = 0;
+   fPadSave       = 0;
    SetBit(kAutoExec);
    SetBit(kShowEditor);
    SetBit(kShowToolBar);
@@ -431,10 +432,10 @@ void TCanvas::Init()
    fUpdating        = kFALSE;
    fRetained        = kTRUE;
    fSelected        = 0;
+   fClickSelected   = 0;
    fSelectedX       = 0;
    fSelectedY       = 0;
    fSelectedPad     = 0;
-   fSelectedChanged = kFALSE;
    fPadSave         = 0;
    fEvent           = -1;
    fEventX          = -1;
@@ -623,8 +624,18 @@ void TCanvas::Clear(Option_t *option)
       TPad::Clear(option);   //Remove primitives from pad
    }
 
-   fSelected    = 0;
-   fSelectedPad = 0;
+   fSelected      = 0;
+   fClickSelected = 0;
+   fSelectedPad   = 0;
+}
+
+
+//______________________________________________________________________________
+void TCanvas::Cleared(TVirtualPad *pad)
+{
+   // emit pad Cleared signal
+
+   Emit("Cleared(TVirtualPad*)", (Long_t)pad);
 }
 
 
@@ -1020,9 +1031,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    //  Handle input events, like button up/down in current canvas.
 
    TPad    *pad;
-
-   TObjectSpy prevSelPad(fSelectedPad);
-   TObjectSpy prevSelObj(fSelected);
+   TPad    *prevSelPad = (TPad*) fSelectedPad;
+   TObject *prevSelObj = fSelected;
 
    fPadSave = (TPad*)gPad;
    cd();        // make sure this canvas is the current canvas
@@ -1035,10 +1045,10 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
    case kMouseMotion:
       // highlight object tracked over
-      pad = Pick(px, py, prevSelObj.GetObject());
+      pad = Pick(px, py, prevSelObj);
       if (!pad) return;
 
-      EnterLeave((TPad*)prevSelPad.GetObject(), prevSelObj.GetObject());
+      EnterLeave(prevSelPad, prevSelObj);
 
       gPad = pad;   // don't use cd() we will use the current
                     // canvas via the GetCanvas member and not via
@@ -1063,7 +1073,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          TPad    *spad = fSelectedPad;
          fSelected     = 0;
          fSelectedPad  = 0;
-         EnterLeave((TPad*)prevSelPad.GetObject(), prevSelObj.GetObject());
+         EnterLeave(prevSelPad, prevSelObj);
          fSelected     = sobj;
          fSelectedPad  = spad;
          if (!fDoubleBuffer) FeedbackMode(kFALSE);
@@ -1076,7 +1086,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
    case kButton1Down:
       // find pad in which input occured
-      pad = Pick(px, py, prevSelObj.GetObject());
+      pad = Pick(px, py, prevSelObj);
       if (!pad) return;
 
       gPad = pad;   // don't use cd() because we won't draw in pad
@@ -1141,7 +1151,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
    case kButton2Down:
       // find pad in which input occured
-      pad = Pick(px, py, prevSelObj.GetObject());
+      pad = Pick(px, py, prevSelObj);
       if (!pad) return;
 
       gPad = pad;   // don't use cd() because we won't draw in pad
@@ -1185,7 +1195,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
    case kButton3Down:
       // popup context menu
-      pad = Pick(px, py, prevSelObj.GetObject());
+      pad = Pick(px, py, prevSelObj);
       if (!pad) return;
 
       if (!fDoubleBuffer) FeedbackMode(kFALSE);
@@ -1217,11 +1227,11 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       break;
    case 7:
       // Try to select
-      pad = Pick(px, py, prevSelObj.GetObject());
+      pad = Pick(px, py, prevSelObj);
 
       if (!pad) return;
 
-      EnterLeave((TPad*)prevSelPad.GetObject(), prevSelObj.GetObject());
+      EnterLeave(prevSelPad, prevSelObj);
 
       gPad = pad;   // don't use cd() we will use the current
                     // canvas via the GetCanvas member and not via
@@ -1235,7 +1245,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       //5 and 6
       if (event == 5 || event == 6)
       {
-         pad = Pick(px, py, prevSelObj.GetObject());
+         pad = Pick(px, py, prevSelObj);
          if (!pad) return;
 
          gPad = pad;
@@ -1249,12 +1259,6 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    if (event != kMouseLeave) { // signal was already emitted for this event
       ProcessedEvent(event, px, py, fSelected);  // emit signal
       DrawEventStatus(event, px, py, fSelected);
-   }
-
-   // Restore selected pad/selected object if Selected signal was not emitted.
-   if (fSelectedChanged == kFALSE) {
-      fSelectedPad = (TPad*)prevSelPad.GetObject();
-      fSelected    = prevSelObj.GetObject();
    }
 }
 
@@ -1340,7 +1344,6 @@ TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
    fSelected    = 0;
    fSelectedOpt = "";
    fSelectedPad = 0;
-   fSelectedChanged = kFALSE;
 
    TPad *pad = Pick(px, py, pickobj);
    if (!pad) return 0;
@@ -1361,10 +1364,10 @@ TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
 
    if ((fEvent == kButton1Down) || (fEvent == kButton2Down) || (fEvent == kButton3Down)) {
       if (fSelected && !fSelected->InheritsFrom("TView")) {
+         fClickSelected = fSelected;
          Selected(fSelectedPad, fSelected, fEvent);  // emit signal
          fSelectedX = px;
          fSelectedY = py;
-         fSelectedChanged = kTRUE;
       }
    }
    return pad;
