@@ -1,19 +1,10 @@
-/* @(#)root/zip:$Name$:$Id$ */
-
-/*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+/* @(#)root/zip:$Name:  $:$Id: ZIP.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $ */
+/* Author: */
 /*
 
  Copyright (C) 1990-1993 Mark Adler, Richard B. Wales, Jean-loup Gailly,
  Kai Uwe Rommel and Igor Mandrichenko.
- Permission is granted to any individual or institution to use, copy, or
- redistribute this software so long as all of the original files are included,
- that it is not sold for profit, and that this copyright notice is retained.
+ For conditions of distribution and use, see copyright notice in zlib.h
 
 */
 

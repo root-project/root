@@ -1,12 +1,10 @@
-/* @(#)root/zip:$Name:  $:$Id: Trees.h,v 1.1 2003/08/22 10:08:27 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: ZTrees.h,v 1.1 2004/03/17 19:01:17 brun Exp $ */
 /* Author: */
 /*
 
  Copyright (C) 1990-1993 Mark Adler, Richard B. Wales, Jean-loup Gailly,
  Kai Uwe Rommel and Igor Mandrichenko.
- Permission is granted to any individual or institution to use, copy, or
- redistribute this software so long as all of the original files are included,
- that it is not sold for profit, and that this copyright notice is retained.
+ For conditions of distribution and use, see copyright notice in zlib.h
 
 */
 

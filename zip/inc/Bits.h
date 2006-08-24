@@ -1,14 +1,17 @@
-/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.10 2006/06/25 10:23:51 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.11 2006/06/25 14:08:35 pcanal Exp $ */
 /* Author: */
 /*
 
  Copyright (C) 1990-1993 Mark Adler, Richard B. Wales, Jean-loup Gailly,
  Kai Uwe Rommel and Igor Mandrichenko.
- Permission is granted to any individual or institution to use, copy, or
- redistribute this software so long as all of the original files are included,
- that it is not sold for profit, and that this copyright notice is retained.
+ For conditions of distribution and use, see copyright notice in zlib.h
 
 */
+/*
+ * Changed for ROOT. Functions names have a R__ prepended to differentiate
+ * them from function names in later versions of zlib.
+ */
+
 #include "zlib.h"
 
 /*
@@ -407,7 +410,7 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
 {
   int err;
   int method   = Z_DEFLATED;
-  
+
   if (R__ZipMode != 0) {
     z_stream stream;
     *irep = 0;
