@@ -270,6 +270,19 @@ TYPE_PROCEDURE);
 ****************************************************/
 # elif defined(G__WIN32)
   handle = LoadLibrary(path);
+  if (!handle) {
+     void* msg;
+     DWORD lasterr = ::GetLastError();
+     ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+        FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL,
+        lasterr,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR) &msg,
+        0, NULL );
+     G__fprinterr(G__serr,"%s: %s", path, (char*)msg);
+     ::LocalFree(msg);
+  }
 /****************************************************
 * VMS
 ****************************************************/
