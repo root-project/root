@@ -30,11 +30,7 @@ extern "C" {
 ****************************************************/
 #if defined(G__OSFDLL)
 typedef void* G__SHLHANDLE;
-#if defined(G__ROOT) && defined(_AIX) && defined(G__AIXDLFCN)
-#include <aixdlfcn.h>
-#else
 #include <dlfcn.h>
-#endif
 #define TYPE_PROCEDURE 1
 #define TYPE_DATA 2
 #ifndef RTLD_LAZY
