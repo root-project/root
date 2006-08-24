@@ -473,13 +473,11 @@ void G__scratch_globals_upto(G__dictposition *dictpos)
   G__UnlockCriticalSection();
 }
 
-
 /***********************************************************************
-* void G__destroy_upto()
+* void G__destroy_upto_vararray()
 *
 ***********************************************************************/
-/* destroy local variable and free memory*/
-int G__destroy_upto(G__var_array *var,int global
+static int G__destroy_upto_vararray(G__var_array *var,int global
                     ,G__var_array *dictpos,int ig15)
 {
   int itemp=0,itemp1=0;
@@ -495,23 +493,6 @@ int G__destroy_upto(G__var_array *var,int global
   int cpplink;
   int i,size;
   long address;
-  
-  /*******************************************
-   * If there are any sub var array list,
-   * destroy it too.
-   *******************************************/
-  if(var->next) {
-    if(var->allvar==G__MEMDEPTH) {
-      /* Never true */
-      if(G__destroy_upto(var->next,global,dictpos,0)) return(1);
-      free((void*)var->next);
-      var->next=NULL;
-    }
-    else {
-      fprintf(stderr,"!!!Fatal Error: Interpreter memory overwritten by illegal access.!!!\n");
-      fprintf(stderr,"!!!Terminate session!!!\n");
-    }
-  }
   
   for(itemp=var->allvar-1;itemp>=remain;itemp--) {
 
@@ -652,6 +633,50 @@ int G__destroy_upto(G__var_array *var,int global
   var->allvar = remain;
   return(0);
   
+}
+
+
+/***********************************************************************
+* void G__destroy_upto()
+*
+***********************************************************************/
+/* destroy local variable and free memory*/
+int G__destroy_upto(G__var_array *var,int global
+                    ,G__var_array *dictpos,int ig15)
+{
+
+   if (!var) return 0;
+   G__var_array *tail = var;
+   G__var_array *prev = 0;
+
+  /*******************************************
+   * If there are any sub var array list,
+   * destroy it too.
+   *******************************************/
+   while (tail->next) {
+      if(tail->allvar!=G__MEMDEPTH) {
+        fprintf(stderr,"!!!Fatal Error: Interpreter memory overwritten by illegal access.!!!\n");
+        fprintf(stderr,"!!!Terminate session!!!\n");
+      }
+      // make tail->next point to prev instead
+      G__var_array *next = tail->next;
+      tail->next = prev;
+      prev = tail;
+      tail = next;
+   }
+   tail->next = prev;
+
+   int ret = 0;
+   do {
+      int remain = 0;
+      if (!tail->next) remain = ig15;
+      ret += G__destroy_upto_vararray(tail, global, dictpos, remain);
+      G__var_array *next = tail->next;
+      if (next) free(tail);
+      tail = next;
+   } while (tail);
+
+   return ret;
 }
 
 
