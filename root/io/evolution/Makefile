@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.log *.xml
+CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.log *.xml arr.root
 TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -71,4 +71,17 @@ foreign310: foreign310.log
 	$(TestDiff)
 
 Missing: Missing.log
+	$(TestDiff)
+
+fixarr1_C.$(DllSuf) : fixarr.h
+fixarr2_C.$(DllSuf) : fixarr.h
+fixarr3_C.$(DllSuf) : fixarr.h
+ 
+fixarr.log: fixarr1_C.$(DllSuf) fixarr2_C.$(DllSuf) fixarr3_C.$(DllSuf)
+	$(CMDECHO) ( root.exe -q -b -l fixarr1.C+ && \
+		root.exe -q -b -l fixarr2.C+ && \
+		root.exe -q -b -l fixarr3.C+ ) \
+		 > fixarr.log 2>&1
+
+fixarr: fixarr.log
 	$(TestDiff)
