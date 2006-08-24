@@ -835,7 +835,7 @@ enable/disable options, prefix with either --enable- or --disable-
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
   mathcore           Build the new libMathCore math library
-  mathmore           Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)
+  mathmore           Build the new libMathMore extended math library, requires GSL (vers. >= 1.5)
   minuit2            Build the new libMinuit2 minimizer library
   monalisa           Monalisa monitoring support, requires libapmoncpp
   mysql              MySQL support, requires libmysqlclient
@@ -3397,28 +3397,86 @@ check_explicit "$enable_shadowpw" "$enable_shadowpw_explicit" \
 #
 if test ! "x$enable_mathmore" = "xno"; then
     # Check for GSL include and library
-    gslflags=
-    gsllibs=
-    gsllibdir=
-    gslskip=no
-    if test ! "x$platform" = "xsolaris" ; then
+    gslskip=
+    hasmathmore="define"
+    check_header "gsl/gsl_version.h" "$gslincdir" $GSL $GSL/include \
+	$GSL/api /usr/local/include /usr/include /opt/gsl/include \
+	$finkdir/include
+
+    # check for gsl version >= 1.5
+    if test ! "x$found_dir" = "x"; then
+	message "Checking for GSL version >= 1.5"
+	gsl_version=`grep "define GSL" $found_dir/gsl/gsl_version.h | sed 's/^.*"\([0-9]\.[0-9]\)"/\1/' |  awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
+	if test $gsl_version -lt 1005; then
+	    gslskip="skip"
+	    result "no"
+            enable_mathmore="no"
+	else
+	    result "ok"
+	    gslinc=$found_hdr
+	    gslincdir=$found_dir
+	    gslflags=-I$gslincdir
+	fi
+    fi
+
+    if test ! "x$gslflags" = "x"; then
+	#check for the library now
+	gsllibdir0=$gsllibdir
+	check_library "libgsl gslML gsl" "no" "$gsllibdir" \
+	    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
+	    $finkdir/lib
+
+	if test ! "x$found_lib" = "x"; then
+	    gsllibs=$found_lib
+	    gsllibdir=$found_dir
+	    # in case of shared libs (gsllibdir is not empty) need gslcblas
+	    # assume libgslcblas is in same dir as libgsl
+	    if test ! "x$gsllibdir" = "x"; then
+		check_library "libgslcblas gslcblas" "$enable_shared" "$gsllibdir0" \
+		    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
+		    $finkdir/lib
+		if test ! "x$found_lib" = "x"; then
+		    gsllibs="$gsllibs $found_lib"
+		    gsllibdir=$found_dir
+		else
+		    #cblas not found
+		    gsllibs=""
+		fi
+	    fi
+	fi
+    fi
+    #
+    # if gslincdir not specified look for gsl-config
+    #
+    # gsl-config check does not work on Solaris so lets skip it
+    if test "x$platform" = "xsolaris"; then
+	if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
+	    gslskip="skip"
+	    enable_mathmore="no"
+	fi
+    fi
+    # skip cygwin gsl-config when in pure Win32 mode
+    if test "x$platform" = "xwin32"; then
+        case `$cwhich gsl-config` in
+            /bin/*|/usr/bin/*)
+	        if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
+                    gslskip="skip"
+                    enable_mathmore="no"
+                fi
+                ;;
+        esac
+    fi
+    if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x") && \
+        test ! "x$gslskip" = "xskip"; then
 	checking_msg "gsl-config"
 	if `$cwhich gsl-config > /dev/null 2>&1` ; then
-            # skip cygwin gsl-config when in pure Win32 mode
-	    if test "x$platform" = "xwin32"; then
-		case `$cwhich gsl-config` in
-		    /bin/*|/usr/bin/*)
-			gslskip="no"
-			enable_mathmore="no"
-			;;
-		esac
-	    fi
 	    $cwhich gsl-config
             # we found gsl-config - now check the version number
             message "Checking for GSL version >= 1.5"
             gsl_version=`gsl-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
             if test $gsl_version -lt 1005 ; then
                 result "no (`gsl-config --version`)"
+                enable_mathmore="no"
             else
 	        # We've found `gsl-config' - use that to get the compiler
 	        # and linker flags
@@ -3426,53 +3484,10 @@ if test ! "x$enable_mathmore" = "xno"; then
 	        gslflags=`gsl-config --cflags`
 	        gsllibs=`gsl-config --libs`
 		gsllibdir=""
-		gslskip=yes
             fi
-	fi
-    fi
-    if test "x$gslskip" = "xno" ; then
-	check_header "gsl/gsl_version.h" "$gslincdir" $GSL $GSL/include \
-	    $GSL/api /usr/local/include /usr/include /opt/gsl/include \
-	    $finkdir/include
-
-        # check for gsl version >= 1.5
-	if test ! "x$found_dir" = "x"; then
-	    message "Checking for GSL version >= 1.5"
-	    gsl_version=`grep "define GSL" $found_dir/gsl/gsl_version.h | sed 's/^.*"\([0-9]\.[0-9]\)"/\1/' |  awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
-	    if test $gsl_version -lt 1005; then
-		result "no"
-	    else
-		result "ok"
-		gslinc=$found_hdr
-		gslincdir=$found_dir
-		gslflags=-I$gslincdir
-	    fi
-	fi
-
-	#check for the library now
-	gsllibdir0=$gsllibdir
-	check_library "libgsl gslML gsl" "$enable_shared" "$gsllibdir" \
-	    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
-	    $finkdir/lib
-
-	if test ! "x$found_lib" = "x"; then
-	    gsllibs=$found_lib
-	    gsllibdir=$found_dir
-	    # in case of shared libs (gsllibdir is not empty)
-	    # need gslcblas assume libgslcblas is in same dir as libgsl
-	    if test ! "x$gsllibdir" = "x"; then
-		check_library "libgslcblas gslcblas" "$enable_shared" \
-		    "$gsllibdir0" $GSL $GSL/lib $GSL/.libs /usr/local/lib \
-		    /usr/lib /opt/gsl/lib $finkdir/lib
-		if test ! "x$found_lib" = "x"; then
-		    gsllibs="$gsllibs $found_lib"
-		    gsllibdir=$found_dir
-		else
-		    #cblas not found
-		    enable_mathmore=no
-		    gsllibs=""
-		fi
-	    fi
+        else
+	    enable_mathmore="no"
+	    result "not found"
 	fi
     fi
 fi
