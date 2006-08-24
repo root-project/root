@@ -41,6 +41,8 @@ extern void G__setcopyflag G__P((int flag));
 #define G__NUM_STDBOTH 3
 
 
+static void G__unredirectoutput(FILE **sout,FILE **serr,FILE **sin,char *keyword,char *pipefile);
+
 #ifdef G__BORLANDCC5
 void G__decrement_undo_index(int *pi);
 void G__increment_undo_index(int *pi);
@@ -58,7 +60,6 @@ void G__rewinddictionary(void);
 void G__UnlockCriticalSection(void);
 void G__LockCriticalSection(void); 
 int G__IsBadCommand(char *com);
-static void G__unredirectoutput(FILE **sout,FILE **serr,FILE **sin,char *keyword,char *pipefile);
 static void G__redirectoutput(char *com,FILE **psout,FILE **pserr,FILE **psin,int asemicolumn,char *keyword,char *pipefile);
 void G__cancel_undo_position(void);
 static int G__atevaluate(G__value buf);
@@ -1208,32 +1209,37 @@ static void G__redirectoutput(char *com
         /* open redirect file */
 #ifdef G__REDIRECTIO
         switch(mode) {
-        case G__NUM_STDOUT: /* stdout */
+        case G__NUM_STDOUT:  /* stdout */
+        case G__NUM_STDBOTH:  /* stdout and stderr */
           *psout = G__sout;
 #ifndef G__WIN32
           if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
 #endif
           G__sout = freopen(filename,openmode,G__sout);
-          G__redirect_on();
-          break;
+          if (!G__sout) {
+             FILE* donttouch=0;
+             G__sout = *psout;             
+             G__unredirectoutput(psout, &donttouch, &donttouch, "", "");
+             G__fprinterr(G__serr, "Error: cannot open pipe output file %s!\n",
+                          filename);
+          } else
+             G__redirect_on();
+          if (mode == G__NUM_STDOUT) 
+             break;
         case G__NUM_STDERR: /* stderr */
           *pserr = G__serr;
 #ifndef G__WIN32
           if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
 #endif
           G__serr = freopen(filename,openmode,G__serr);
+          if (!G__serr) {
+             FILE* donttouch=0;
+             G__serr = *pserr;
+             G__unredirectoutput(&donttouch, pserr, &donttouch, "", "");
+             G__fprinterr(G__serr, "Error: cannot open error pipe output file %s!\n",
+                          filename);
+          }
           /*DEBUG G__dumpfile = G__serr; */
-          break;
-        case G__NUM_STDBOTH: /* stdout + stderr */
-          *psout = G__sout;
-          *pserr = G__serr;
-#ifndef G__WIN32
-          if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
-          if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
-#endif
-          G__sout = freopen(filename,openmode,G__sout);
-          G__serr = freopen(filename,"a",G__serr);
-          G__redirect_on();
           break;
         }
 #else
@@ -1293,6 +1299,13 @@ static void G__redirectoutput(char *com
         if (!strlen(stdinsav)) strcpy(stdinsav,ttyname(STDIN_FILENO));
 #endif
         G__sin = freopen(filename,"r",G__sin);
+        if (!G__sin) {
+           FILE* donttouch = 0;
+           G__sin = *psin;
+           G__unredirectoutput(&donttouch, &donttouch, psin, "", "");
+           G__fprinterr(G__serr, "Error: cannot open input pipe from file %s!\n",
+                        filename);
+        }
       }
     }
   }
