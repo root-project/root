@@ -52,11 +52,15 @@ namespace testclasses {
 
    class DataMembers {
 
+      typedef int(*MYFUNPTR)(const std::vector<double>&, const std::vector<double>&);
+
       int i;
       int* pi;
       int** ppi;
       int pa[5];
       int paa[5][5];
+      MYFUNPTR fPtr2;
+      int (*fPtr)(int,char,bool);
 
    };
 
