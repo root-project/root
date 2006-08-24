@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Pointer.cxx,v 1.10 2006/08/02 13:25:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Pointer.cxx,v 1.11 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -40,5 +40,24 @@ std::string ROOT::Reflex::Pointer::BuildTypeName( const Type & pointerType,
                                                   unsigned int mod ) {
 //-------------------------------------------------------------------------------
 // Build the pointer type name.
-   return pointerType.Name( mod ) + "*";
+   if ( ! pointerType.IsFunction() ) return pointerType.Name( mod ) + "*";
+   // function pointer and pointer to function members
+   else {
+      std::string s = pointerType.ReturnType().Name(mod);
+      s += " (";
+      const Scope & decl = pointerType.DeclaringScope();
+      if ( decl ) s += decl.Name(SCOPED) + ":: ";
+      s += "*)(";
+      if ( pointerType.FunctionParameterSize() ) {
+         Type_Iterator pend = pointerType.FunctionParameter_End();
+         for ( Type_Iterator ti = pointerType.FunctionParameter_Begin();
+               ti != pend; ) {
+            s += ti->Name( mod );
+            if ( ++ti != pend ) s += ", ";
+         }
+      }
+      else s += "void";
+      s += ")";
+      return s;
+   }
 }
