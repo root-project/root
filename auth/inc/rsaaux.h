@@ -1,5 +1,5 @@
-/* @(#)root/auth:$Name:  $:$Id: TAuthenticate.h,v 1.3 2006/01/17 14:12:48 rdm Exp $*/
-/* Author: Martin Nicolay  22/11/1988
+/* @(#)root/auth:$Name:  $:$Id: rsaaux.h,v 1.2 2006/08/24 16:28:32 rdm Exp $ */
+/* Author: Martin Nicolay  22/11/1988 */
 
 /******************************************************************************
 Copyright (C) 2006 Martin Nicolay <m.nicolay@osm-gmbh.de>
