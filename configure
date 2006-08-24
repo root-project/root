@@ -18,6 +18,7 @@ found_lib=no
 found_dir=no
 found_hdr=no
 show_pkglist=no
+fail_on_missing=no
 noact="no"
 nohowto="no"
 logfile=config.log
@@ -82,7 +83,8 @@ options="                    \
 # This sets all options to "yes" - we turn off those we don't want
 # on per default explictly afterwards.
 #
-for c in $options ; do eval $c="yes" ; done
+for c in $options ; do eval ${c}="yes" ; done
+for c in $options ; do eval ${c}_explicit="no" ; done
 
 enable_afs=no
 enable_explicitlink=no
@@ -645,6 +647,21 @@ EOF
 }
 
 #_____________________________________________________________________
+check_explicit()
+{
+    feat=$1 ; shift
+    expl=$1 ; shift
+    emsg=$1 ; shift
+
+    if test "x$fail_on_missing" = "xno" ; then return 0 ; fi
+    if test "x$expl" = "xno" ; then return 0 ; fi
+    if test ! "x$feat" = "xyes" ; then
+	result $emsg
+	exit 1
+    fi
+}
+
+#_____________________________________________________________________
 guess_architecture () {
     # Try to guess the architecture of the host system
     # Note, that there's no attempt at guessing the compiler.
@@ -1028,6 +1045,7 @@ if test $# -gt 0 ; then
       #
       --no-create)             noact="yes"           ;;
       --nohowto)               nohowto="yes"         ;;
+      --fail-on-missing)       fail_on_missing="yes" ;;
       --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
       --with-alien-incdir=*)   alienincdir=$optarg   ; enable_alien="yes"   ;;
       --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
@@ -1098,7 +1116,8 @@ if test $# -gt 0 ; then
       #
       --enable-*)
 	f=`echo $1 | sed -e 's/--//' -e 's/-/_/g'`
-	eval $f=yes
+	eval ${f}=yes
+	eval ${f}_explicit=yes
 	for c in $options ; do
 	   if test "x$c" = "x$f" ; then
 	      f=""
@@ -1110,7 +1129,8 @@ if test $# -gt 0 ; then
 	;;
       --disable-*)
 	f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/g'`
-	eval $f=no
+	eval ${f}=no
+	eval ${f}_explicit=no
 	for c in $options ; do
 	   if test "x$c" = "x$f" ; then
 	      f=""
@@ -1461,6 +1481,8 @@ if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
         enable_opengl="no"
     fi
 fi
+check_explicit "$enable_opengl" "$enable_opengl_explicit" \
+     "Explicitly required OpenGL dependencies not fulfilled"
 
 ######################################################################
 #
@@ -1542,6 +1564,8 @@ if test ! "x$enable_mysql" = "xno"; then
        fi
     fi
 fi
+check_explicit "$enable_mysql" "$enable_mysql_explicit" \
+     "Explicitly required MySQL dependencies not fulfilled"
 
 ######################################################################
 #
@@ -1576,6 +1600,8 @@ if test ! "x$enable_oracle" = "xno"; then
         enable_oracle="no"
     fi
 fi
+check_explicit "$enable_oracle" "$enable_oracle_explicit" \
+     "Explicitly required Oracle dependencies not fulfilled"
 
 ######################################################################
 #
@@ -1609,6 +1635,8 @@ if test ! "x$enable_pgsql" = "xno"; then
         enable_pgsql="no"
     fi
 fi
+check_explicit "$enable_pgsql" "$enable_pgsql_explicit" \
+     "Explicitly required PostGreSQL dependencies not fulfilled"
 
 ######################################################################
 #
@@ -1647,6 +1675,8 @@ if test ! "x$enable_sapdb" = "xno"; then
         enable_sapdb="no"
     fi
 fi
+check_explicit "$enable_sapdb" "$enable_sapdb_explicit" \
+     "Explicitly required SapDB dependencies not fulfilled"
 
 ######################################################################
 #
@@ -1683,6 +1713,8 @@ if test ! "x$enable_odbc" = "xno"; then
         fi
     fi
 fi
+check_explicit "$enable_odbc" "$enable_odbc_explicit" \
+     "Explicitly required ODBC dependencies not fulfilled"
 
 ######################################################################
 #
@@ -1742,6 +1774,8 @@ if test ! "x$enable_qt" = "xno" || \
         fi
     fi
 fi
+check_explicit "$enable_qt" "$enable_qt_explicit" \
+     "Explicitly required Qt dependencies not fulfilled"
 
 ######################################################################
 #
@@ -1827,6 +1861,8 @@ if test ! "x$enable_rfio" = "xno" ; then
         esac
     fi
 fi
+check_explicit "$enable_rfio" "$enable_rfio_explicit" \
+     "Explicitly required Castor dependencies not fulfilled"
 
 ######################################################################
 #
@@ -1855,6 +1891,8 @@ if test ! "x$enable_gfal" = "xno"; then
         enable_gfal="no"
     fi
 fi
+check_explicit "$enable_gfal" "$enable_gfal_explicit" \
+     "Explicitly required GFAL dependencies not fulfilled"
 
 ######################################################################
 #
@@ -1901,6 +1939,8 @@ if test ! "x$enable_monalisa" = "xno"; then
         enable_monalisa="no"
     fi
 fi
+check_explicit "$enable_monalisa" "$enable_monalisa_explicit" \
+     "Explicitly required MonaLisa dependencies not fulfilled"
 
 ######################################################################
 #
@@ -1929,6 +1969,8 @@ if test ! "x$enable_fftw3" = "xno"; then
         enable_fftw3="no"
     fi
 fi
+check_explicit "$enable_fftw3" "$enable_fftw3_explicit" \
+     "Explicitly required FFT in the West dependencies not fulfilled"
 
 ######################################################################
 #
@@ -1979,6 +2021,8 @@ if test ! "x$enable_cern" = "xno"; then
         cernlibdir="$packlibdir $kernlibdir"
     fi
 fi
+check_explicit "$enable_cern" "$enable_cern_explicit" \
+     "Explicitly required CernLib dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2000,6 +2044,8 @@ if test ! "x$enable_pythia" = "xno"; then
         enable_pythia=no
     fi
 fi
+check_explicit "$enable_pythia" "$enable_pythia_explicit" \
+     "Explicitly required Pythia5 dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2058,6 +2104,8 @@ if test ! "x$enable_pythia6" = "xno" ; then
 	fi
     fi
 fi
+check_explicit "$enable_pythia6" "$enable_pythia6_explicit" \
+     "Explicitly required Pythia6 dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2078,6 +2126,8 @@ if test ! "x$enable_venus" = "xno" ; then
         enable_venus=no
     fi
 fi
+check_explicit "$enable_venus" "$enable_venus_explicit" \
+     "Explicitly required Venus dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2113,6 +2163,8 @@ if test ! "x$enable_dcache" = "xno" ; then
         enable_dcache="no"
     fi
 fi
+check_explicit "$enable_dcache" "$enable_dcache_explicit" \
+     "Explicitly required dCache dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2139,6 +2191,8 @@ if test ! "x$enable_chirp" = "xno" ; then
         enable_chirp="no"
     fi
 fi
+check_explicit "$enable_chirp" "$enable_chirp_explicit" \
+     "Explicitly required Chirp dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2164,6 +2218,8 @@ if test ! "x$enable_alien" = "xno" ; then
         enable_alien="no"
     fi
 fi
+check_explicit "$enable_alien" "$enable_alien_explicit" \
+     "Explicitly required AliEn dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2262,6 +2318,8 @@ if test ! "x$enable_asimage" = "xno" ; then
    message "Checking whether to build included libAfterImage"
    result "$enable_builtin_afterimage"
 fi
+check_explicit "$enable_asimage" "$enable_asimage_explicit" \
+     "Explicitly required AfterImage dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2304,6 +2362,8 @@ if test ! "x$enable_ldap" = "xno"; then
         enable_ldap="no"
     fi
 fi
+check_explicit "$enable_ldap" "$enable_ldap_explicit" \
+     "Explicitly required LDAP dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2362,6 +2422,8 @@ if test ! "x$enable_python" = "xno" ; then
         esac
     fi
 fi
+check_explicit "$enable_python" "$enable_python_explicit" \
+     "Explicitly required Python dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2400,6 +2462,8 @@ if test ! "x$enable_ruby" = "xno" ; then
         enable_explicitlink="yes"
     fi
 fi
+check_explicit "$enable_ruby" "$enable_ruby_explicit" \
+     "Explicitly required Ruby dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2477,6 +2541,8 @@ if test ! "x$enable_xml" = "xno" ; then
        fi
     fi
 fi
+check_explicit "$enable_xml" "$enable_xml_explicit" \
+     "Explicitly required Xml dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2549,6 +2615,8 @@ else
     buildxrd="no"
     hasxrd="#"
 fi
+check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \
+     "Explicitly required Xrootd dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2894,6 +2962,8 @@ if test "x$enable_globus" = "xyes"; then
       fi
    fi
 fi
+check_explicit "$enable_globus" "$enable_globus_explicit" \
+     "Explicitly required Globus dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2997,6 +3067,8 @@ else
     sslincdir=$ssl_incdir
     sslextracflags="-DR__SSL -DOPENSSL_NO_KRB5"
 fi
+check_explicit "$enable_ssl" "$enable_ssl_explicit" \
+     "Explicitly required SSL dependencies not fulfilled"
 
 ######################################################################
 #
@@ -3108,6 +3180,8 @@ if test ! "x$enable_srp" = "xno" ; then
         havesrp="srp"
     fi
 fi
+check_explicit "$enable_srp" "$enable_srp_explicit" \
+     "Explicitly required SRP dependencies not fulfilled"
 
 ######################################################################
 #
@@ -3145,6 +3219,8 @@ if test ! "x$enable_afs" = "xno" ; then
         enable_afs="no"
     fi
 fi
+check_explicit "$enable_afs" "$enable_afs_explicit" \
+     "Explicitly required Afs dependencies not fulfilled"
 
 ######################################################################
 #
@@ -3247,6 +3323,8 @@ if test ! "x$enable_krb5" = "xno" ; then
         havekrb5="krb5"
     fi
 fi
+check_explicit "$enable_krb5" "$enable_krb5_explicit" \
+     "Explicitly required Kerberos5 dependencies not fulfilled"
 
 ######################################################################
 #
@@ -3298,7 +3376,7 @@ fi
 checking_msg "shadow passwords"
 
 if test "x$enable_shadowpw" = "x"; then
-   if test -f "/etc/shadow"; then
+   if test -f "/etc/shadow" ; then
       enable_shadowpw="yes"
    else
       enable_shadowpw="no"
@@ -3310,6 +3388,8 @@ if test "x$enable_shadowpw" = "xyes"; then
 fi
 
 result $enable_shadowpw
+check_explicit "$enable_shadowpw" "$enable_shadowpw_explicit" \
+     "Explicitly required Shadow passwords dependencies not fulfilled"
 
 ######################################################################
 #
@@ -3317,87 +3397,28 @@ result $enable_shadowpw
 #
 if test ! "x$enable_mathmore" = "xno"; then
     # Check for GSL include and library
-    gslskip=
-    hasmathmore="define"
-    check_header "gsl/gsl_version.h" "$gslincdir" $GSL $GSL/include \
-	$GSL/api /usr/local/include /usr/include /opt/gsl/include \
-	$finkdir/include
-
-    # check for gsl version >= 1.5
-    if test ! "x$found_dir" = "x"; then
-	message "Checking for GSL version >= 1.5"
-	gsl_version=`grep "define GSL" $found_dir/gsl/gsl_version.h | sed 's/^.*"\([0-9]\.[0-9]\)"/\1/' |  awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
-	if test $gsl_version -lt 1005; then
-	    gslskip="skip"
-	    result "no"
-            enable_mathmore="no"
-	else
-	    result "ok"
-	    gslinc=$found_hdr
-	    gslincdir=$found_dir
-	    gslflags=-I$gslincdir
-	fi
-    fi
-
-    if test ! "x$gslflags" = "x"; then
-	#check for the library now
-	gsllibdir0=$gsllibdir
-	check_library "libgsl gslML gsl" "no" "$gsllibdir" \
-	    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
-	    $finkdir/lib
-
-	if test ! "x$found_lib" = "x"; then
-	    gsllibs=$found_lib
-	    gsllibdir=$found_dir
-	    # in case of shared libs (gsllibdir is not empty) need gslcblas
-	    # assume libgslcblas is in same dir as libgsl
-	    if test ! "x$gsllibdir" = "x"; then
-		check_library "libgslcblas gslcblas" "$enable_shared" "$gsllibdir0" \
-		    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
-		    $finkdir/lib
-		if test ! "x$found_lib" = "x"; then
-		    gsllibs="$gsllibs $found_lib"
-		    gsllibdir=$found_dir
-		else
-		    #cblas not found
-		    gsllibs=""
-		fi
-	    fi
-	fi
-
-    fi
-    #
-    # if gslincdir not specified look for gsl-config
-    #
-    # gsl-config check does not work on Solaris so lets skip it
-    if test "x$platform" = "xsolaris"; then
-	if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
-	    gslskip="skip"
-	    enable_mathmore="no"
-	fi
-    fi
-    # skip cygwin gsl-config when in pure Win32 mode
-    if test "x$platform" = "xwin32"; then
-        case `$cwhich gsl-config` in
-            /bin/*|/usr/bin/*)
-	        if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
-                    gslskip="skip"
-                    enable_mathmore="no"
-                fi
-                ;;
-        esac
-    fi
-    if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x") && \
-        test ! "x$gslskip" = "xskip"; then
+    gslflags=
+    gsllibs=
+    gsllibdir=
+    gslskip=no
+    if test ! "x$platform" = "xsolaris" ; then
 	checking_msg "gsl-config"
 	if `$cwhich gsl-config > /dev/null 2>&1` ; then
+            # skip cygwin gsl-config when in pure Win32 mode
+	    if test "x$platform" = "xwin32"; then
+		case `$cwhich gsl-config` in
+		    /bin/*|/usr/bin/*)
+			gslskip="no"
+			enable_mathmore="no"
+			;;
+		esac
+	    fi
 	    $cwhich gsl-config
             # we found gsl-config - now check the version number
             message "Checking for GSL version >= 1.5"
             gsl_version=`gsl-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
             if test $gsl_version -lt 1005 ; then
                 result "no (`gsl-config --version`)"
-                enable_mathmore="no"
             else
 	        # We've found `gsl-config' - use that to get the compiler
 	        # and linker flags
@@ -3405,10 +3426,53 @@ if test ! "x$enable_mathmore" = "xno"; then
 	        gslflags=`gsl-config --cflags`
 	        gsllibs=`gsl-config --libs`
 		gsllibdir=""
+		gslskip=yes
             fi
-        else
-	    enable_mathmore="no"
-	    result "not found"
+	fi
+    fi
+    if test "x$gslskip" = "xno" ; then
+	check_header "gsl/gsl_version.h" "$gslincdir" $GSL $GSL/include \
+	    $GSL/api /usr/local/include /usr/include /opt/gsl/include \
+	    $finkdir/include
+
+        # check for gsl version >= 1.5
+	if test ! "x$found_dir" = "x"; then
+	    message "Checking for GSL version >= 1.5"
+	    gsl_version=`grep "define GSL" $found_dir/gsl/gsl_version.h | sed 's/^.*"\([0-9]\.[0-9]\)"/\1/' |  awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
+	    if test $gsl_version -lt 1005; then
+		result "no"
+	    else
+		result "ok"
+		gslinc=$found_hdr
+		gslincdir=$found_dir
+		gslflags=-I$gslincdir
+	    fi
+	fi
+
+	#check for the library now
+	gsllibdir0=$gsllibdir
+	check_library "libgsl gslML gsl" "$enable_shared" "$gsllibdir" \
+	    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
+	    $finkdir/lib
+
+	if test ! "x$found_lib" = "x"; then
+	    gsllibs=$found_lib
+	    gsllibdir=$found_dir
+	    # in case of shared libs (gsllibdir is not empty)
+	    # need gslcblas assume libgslcblas is in same dir as libgsl
+	    if test ! "x$gsllibdir" = "x"; then
+		check_library "libgslcblas gslcblas" "$enable_shared" \
+		    "$gsllibdir0" $GSL $GSL/lib $GSL/.libs /usr/local/lib \
+		    /usr/lib /opt/gsl/lib $finkdir/lib
+		if test ! "x$found_lib" = "x"; then
+		    gsllibs="$gsllibs $found_lib"
+		    gsllibdir=$found_dir
+		else
+		    #cblas not found
+		    enable_mathmore=no
+		    gsllibs=""
+		fi
+	    fi
 	fi
     fi
 fi
@@ -3420,6 +3484,9 @@ else
     result "no"
     hasmathmore="undef"
 fi
+check_explicit "$enable_mathmore" "$enable_mathmore_explicit" \
+     "Explicitly required MathMore dependencies not fulfilled"
+
 
 ######################################################################
 #
@@ -3433,6 +3500,8 @@ else
     enable_mathcore=""
     result "no"
 fi
+check_explicit "$enable_mathmore" "$enable_mathmore_explicit" \
+     "Explicitly required MathMore dependencies not fulfilled"
 
 ######################################################################
 #
@@ -3532,6 +3601,8 @@ if test "x$enable_clarens" = "xyes" ; then
 else
     result "no"
 fi
+check_explicit "$enable_clarens" "$enable_clarens_explicit" \
+     "Explicitly required Clarens dependencies not fulfilled"
 
 ######################################################################
 #
@@ -3556,6 +3627,8 @@ else
 fi
 
 result "$buildpeac"
+check_explicit "$enable_peac" "$enable_peac_explicit" \
+     "Explicitly required Peac dependencies not fulfilled"
 
 ######################################################################
 #
@@ -3640,7 +3713,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_xml"     = "xyes" && pkglist="$pkglist root-plugin-xml"
     test "x$enable_xrootd"  = "xyes" && pkglist="$pkglist root-xrootd root-plugin-netx"
 
-    pkglist="$pkglist root-plugin-fumili libroot-minuit libroot-mlp root-plugin-proof root-plugin-xproof root-plugin-sql libroot-quadp root-proofd root-rootd root-doc root-bin libroot root-common ttf-root-installer"
+    pkglist="$pkglist root-plugin-fumili libroot-minuit libroot-mlp libroot-tmva root-plugin-proof root-plugin-xproof root-plugin-sql libroot-quadp root-proofd root-rootd root-doc root-bin libroot root-common ttf-root-installer"
     # If we're called from the package preparation script, then
     # print out the package list and exit
     result "packages: $pkglist"

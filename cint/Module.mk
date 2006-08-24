@@ -407,12 +407,12 @@ ifneq ($(subst build/unix/makelib.sh,,$(MAKELIB)),$(MAKELIB))
 endif
 
 $(CINTDIRSTL)/%.dll: $(CINTDIRDLLSTL)/G__cpp_%.o
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $(@:.dll=.$(SOEXT)) $^
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $^
 	$(CINTDLLSOEXTCMD)
 	-rm -f $< $(<:.o=.cxx) $(<:.o=.c) $(<:.o=.h) $(<:.o=.d)
 
 $(CINTDIRDLLS)/%.dll: $(CINTDIRL)/G__c_%.o
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $(@:.dll=.$(SOEXT)) $^
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $^
 	$(CINTDLLSOEXTCMD)
 	-rm -f $< $(<:.o=.cxx) $(<:.o=.c) $(<:.o=.h) $(<:.o=.d)
 

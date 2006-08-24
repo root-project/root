@@ -10,26 +10,31 @@
 %define _sysconfdir     /etc
 %define _defaultdocdir  %_prefix/share/doc/root-%ver
 %define _unpackaged_files_terminate_build  0
+%define _icontheme      %_prefix/share/icons/hicolor/48x48
 
 ######################################################################
 #
 # Header 
 #
-Name:         root
-Version:      %{ver}
-Release:      %{rel}
-License:      GNU Lesser General Public License
-Packager:     Christian Holm Christensen <cholm@nbi.dk>
-Distribution: Applications/Physics
-Vendor:       ROOT Team
-URL:          http://root.cern.ch
-Source:       ftp://root.cern.ch/root/root_v%{ver}.source.tar.gz
-Group:        Applications/Physics
-BuildRoot:    /tmp/rootrpm
-Summary:      Numerical data analysis framework (OO)
-BuildRequires: XFree86-devel, pcre-devel, freetype-devel, openssl-devel
+Name:          root
+Version:       %{ver}
+Release:       %{rel}
+License:       GNU Lesser General Public License
+Packager:      Christian Holm Christensen <cholm@nbi.dk>
+Distribution:  Applications/Physics
+Vendor:        ROOT Team
+URL:           http://root.cern.ch
+Source:        ftp://root.cern.ch/root/root_v%{ver}.source.tar.gz
+Group:         Applications/Physics
+BuildRoot:     /tmp/rootrpm
+Summary:       Numerical data analysis framework (OO)
+BuildRequires: XFree86-devel
+BuildRequires: pcre-devel
+BuildRequires: freetype-devel
+BuildRequires: openssl-devel
+BuildRequires: gsl-devel
 @builddepends@
-Requires:     @pkglist@
+Requires:      @pkglist@
 #
 # Over all description - not used, but required
 #
@@ -60,30 +65,14 @@ ROOT web-site: http://root.cern.ch
 #
 %build
 sovers=`echo %ver | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
-./configure --enable-table				\
-	    --enable-ruby				\
-	    --enable-qt					\
-	    --enable-pythia				\
-	    --enable-xrootd				\
-	    --enable-shared				\
-	    --enable-soversion				\
-	    --enable-explicitlink			\
-    	    --enable-mathmore				\
-            --enable-mathcore                           \
-            --enable-minuit2                            \
-	    --disable-rpath				\
-	    --disable-afs				\
-	    --disable-srp				\
-	    --disable-builtin-freetype			\
-	    --disable-builtin-pcre			\
-	    --disable-builtin-gsl			\
-	    --prefix=%_prefix 				\
-	    --libdir=%_prefix/lib/root/${sovers}	\
-	    --mandir=%_prefix/share/man/man1		\
-	    --docdir=%_defaultdocdir			\
-	    --cintincdir=%_prefix/lib/root/${sovers}/cint \
-	    --etcdir=%_sysconfdir/root			\
-            --with-sys-iconpath=%_datadir/pixmaps 	
+./configure @confargs@						\
+	    --prefix=%_prefix 					\
+	    --libdir=%_prefix/lib/root/${sovers}		\
+	    --mandir=%_prefix/share/man/man1			\
+	    --docdir=%_defaultdocdir				\
+	    --cintincdir=%_prefix/lib/root/${sovers}/cint 	\
+	    --etcdir=%_sysconfdir/root				\
+            --with-sys-iconpath=%_datadir/pixmaps 		
 
 # Usage of external afterimage disabled until such a time when ROOT can use 
 # the normal libAfterImage
@@ -102,6 +91,20 @@ make cintdlls
 rm -rf ${RPM_BUILD_ROOT}
 make install DESTDIR=${RPM_BUILD_ROOT}
 find ${RPM_BUILD_ROOT} -name "CVS" | xargs rm -fr 
+
+# Install desktop entry and icon 
+mkdir -p ${RPM_BUILD_ROOT}/%{_prefix}/share/applications
+mkdir -p ${RPM_BUILD_ROOT}/%{_prefix}/share/pixmaps
+mkdir -p ${RPM_BUILD_ROOT}/%{_icontheme}/apps
+mkdir -p ${RPM_BUILD_ROOT}/%{_icontheme}/mimetypes
+sed 's,@prefix@,%{_prefix},' < build/package/debian/root-bin.desktop.in \
+	> ${RPM_BUILD_ROOT}/%{_prefix}/share/applications/root-bin.desktop
+cp build/package/debian/root-bin.xpm \
+	${RPM_BUILD_ROOT}/%{_prefix}/share/pixmaps/root-bin.xpm
+cp build/package/debian/root-bin.png \
+	${RPM_BUILD_ROOT}/%{_icontheme}/apps/root-bin.png
+cp build/package/debian/application-x-root.png \
+	${RPM_BUILD_ROOT}/%{_icontheme}/mimetypes/application-x-root.png
 
 # Make links from version specific directory to `normal' libary dir
 sovers=`echo %ver | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
@@ -133,10 +136,14 @@ cp -a etc/daemons/rootd.rc.d \
     ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d/rootd
 cp -a etc/daemons/proofd.rc.d \
     ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d/proofd
-
-# Make the empty proof log file 
-mkdir -p ${RPM_BUILD_ROOT}/%{_prefix}/share/root/proof/log
-touch ${RPM_BUILD_ROOT}/%{_prefix}/share/root/proof/log/proof.log 
+if test -f etc/daemons/xrootd.rc.d ; then 
+    cp -a etc/daemons/xrootd.rc.d \
+	${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d/xrootd
+fi
+if test -f etc/daemons/olbd.rc.d ; then 
+    cp -a etc/daemons/olbd.rc.d \
+	${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d/olbd
+fi
 
 # Make package lists 
 mkdir -p rpm
@@ -146,33 +153,75 @@ echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/rootd" \
     >> rpm/root-rootd.install
 echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/proofd" \
     >> rpm/root-proofd.install
-
-
-# This is to discover weather the man pages are compressed before they
-# are moved into the packages - ugly hack, but there's no 2 ways about it
-EXT=
-comp=$(echo "%{__os_install_post}" | sed -n 's/[[:space:]]*\([^[:space:]]*compress[^[:space:]]*\).*/\1/p')
-if test "x$comp" = "x" ; then 
-    :
-else
-    EXT=$(grep -e '^[[:space:]]*COMPRESS_EXT=' $comp  | sed 's/^\([[:space:]]*COMPRESS_EXT=\)\(.*\)/\2/')
+touch rpm/ttf-root-installer.install
+if test -f rpm/root-xrootd.install ; then 
+    echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/xrootd" \
+	>> rpm/root-xrootd.install
+    echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/olbd" \
+	>> rpm/root-xrootd.install
 fi
+
+# Make the empty proof log file 
+mkdir -p ${RPM_BUILD_ROOT}/%{_prefix}/share/root/proof/log
+touch ${RPM_BUILD_ROOT}/%{_prefix}/share/root/proof/log/proof.log 
+
 # Now fix up the file lists
 for i in rpm/*.install ; do 
     if test ! -f $i ; then continue ; fi
     echo "Fixing $i"
-    sed -e "s/\.1$/.1${EXT}/g" \
-	-e "s,%_sysconfdir,%config %_sysconfdir," \
+    # -e "s/\.1$/.1${EXT}/g" 
+    sed -e "s,%_sysconfdir,%config %_sysconfdir," \
 	-e "s,%_defaultdocdir,%doc %_defaultdocdir," \
 	< $i > $i.tmp
     mv $i.tmp $i
 done
 
-# Remove bad files 
-rm -f ${RPM_BUILD_ROOT}%{_sysconfdir}/root/rootd		\
-      ${RPM_BUILD_ROOT}%{_prefix}/include/root/config.h		\
-      ${RPM_BUILD_ROOT}%{_prefix}/lib/root/libAfterImage.a	\
-      ${RPM_BUILD_ROOT}%{_prefix}/share/man/man1/rlibmap.1
+# Remove bad files - this is to quiet RPM about installed but unpackaged files
+rm -f ${RPM_BUILD_ROOT}%{_sysconfdir}/root/rootd			\
+      ${RPM_BUILD_ROOT}%{_prefix}/include/root/config.h			\
+      ${RPM_BUILD_ROOT}%{_prefix}/lib/root/${sovers}/libAfterImage.a	\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/man/man1/rlibmap.1		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/BlackChancery.ttf	\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/LICENSE		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/arial.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/arialbd.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/arialbi.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/ariali.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/ariblk.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/comic.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/comicbd.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/cour.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/courbd.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/courbi.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/couri.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/georgia.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/georgiab.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/georgiai.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/georgiaz.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/impact.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/monotype.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/times.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/timesbd.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/timesbi.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/timesi.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/trebuc.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/trebucbd.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/trebucbi.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/trebucit.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/verdana.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/verdanab.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/verdanai.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/verdanaz.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/webdings.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/wingding.ttf		\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/man/man1/xproofd.1*		\
+      ${RPM_BUILD_ROOT}%{_sysconfdir}/root/proof/*.sample		\
+      ${RPM_BUILD_ROOT}%{_sysconfdir}/root/proof/.cvsignore		\
+      ${RPM_BUILD_ROOT}%{_prefix}/bin/thisroot*				\
+      ${RPM_BUILD_ROOT}%{_prefix}/include/root/*.cw			\
+      ${RPM_BUILD_ROOT}%{_prefix}/include/root/*.pri			
+rm -rf ${RPM_BUILD_ROOT}%{_sysconfdir}/root/daemons
+rm -rf ${RPM_BUILD_ROOT}%{_sysconfdir}/root/proof/utils
 
 # -------------------------------------------------------------------
 # Clean up

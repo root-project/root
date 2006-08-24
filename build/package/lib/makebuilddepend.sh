@@ -16,7 +16,7 @@ if test "x$1" = "xrpm" ; then
 # Input the build dependencies of the libafterimage-dev package
 #	    *asimage)	echo -n ", AfterStep-devel"			;;
 	    *asimage)							;;
-	    *castor)	echo "BuildRequires: CASTOR-client"		;;
+	    *castor)	echo "BuildRequires: castor-devel"		;;
 	    *chirp)							;;
 	    *clarens)							;;
 	    *dcache)							;;
@@ -36,17 +36,18 @@ if test "x$1" = "xrpm" ; then
 		cat <<EOF
 %if %{?_vendor} 
 %if %{_vendor} == "MandrakeSoft"
-BuildRequires: MySQL-devel
+BuildRequires: MySQL-devel >= 4.1.0
 %else
-BuildRequires: mysql-devel
+BuildRequires: mysql-devel >= 4.1.0
 %endif
 %else
-BuildRequires: mysql-devel
+BuildRequires: mysql-devel >= 4.1.0
 %endif
 EOF
 		;;
 	    *netx)							;;
 	    *oracle)    echo "BuildRequires: oracle-instantclient-devel";;
+	    *odbc)      echo "BuildRequires: unixODBC-devel >= 2.2.11"  ;;
 	    *peac)							;;
 	    *pgsql)	echo "BuildRequires: postgresql-devel"		;;
 	    *proof)							;;
@@ -75,6 +76,7 @@ EOF
 	    *maxdb)	echo "BuildRequires: libsqlod75-dev"		;;
 	    *sql)							;;
 	    *srp)							;;
+	    *tmva)							;;
 	    *venus)							;;
 	    *xml)	echo "BuildRequires: libxml2-devel"		;;
 	    root-proofd)						;;
@@ -116,7 +118,7 @@ for i in $* ; do
 	*gl)		echo -n ", libglu1-mesa-dev | libglu1-xorg-dev | xlibmesa-glu-dev |  libglu-dev"	;;
 	*globus)	echo -n ", globus"				;;
 	*hbook)		echo -n ", libpacklib1-dev [!kfreebsd-i386], g77|fortran-compiler" ;;
-	*krb5)		echo -n ", libkrb5-dev|heimdal-dev"		;;
+	*krb5)		echo -n ", libkrb5-dev|heimdal-dev,krb5-user|heimdal-clients"		;;
 	*ldap)		echo -n ", libldap2-dev | libldap-dev"		;;
 	*oracle)    	echo -n ", oracle-instantclient-devel"		;;
 	*mathmore)    	echo -n ", libgsl0-dev"				;;
@@ -125,7 +127,7 @@ for i in $* ; do
 	*mlp)								;;
 	*mysql)		echo -n ", libmysqlclient15-dev | libmysqlclient14-dev | libmysqlclient12-dev| libmysqlclient-dev" ;;
 	*netx)								;;
-	*odbc)		echo -n ", libiodbc2-dev"			;;
+	*odbc)		echo -n ", libiodbc2-dev | unixodbc-dev"	;;
 	*peac)								;;
 	*pgsql)		echo -n ", postgresql-dev | libpq-dev"		;;
 	*proof)								;;
@@ -139,6 +141,7 @@ for i in $* ; do
 	*maxdb)		echo -n ", libsqlod75-dev [i386 ia64 amd64]"	;;
 	*sql)								;;
 	*srp)		echo -n ", libsrputil-dev"			;;
+        *tmva)								;;
 	*venus)		echo -n ", libvenus-dev"			;;
 	*xml)		echo -n ", libxml2-dev"				;;
 	root-proofd)							;;

@@ -80,7 +80,7 @@ startit()
 
 stopit() 
 {
-    start-stop-daemon --user $USER --stop --quiet --pidfile \
+    start-stop-daemon --user $USER --stop --oknodo --quiet --pidfile \
 	/var/run/$NAME.pid --exec $DAEMON
     if test $? -ne 0 ; then 
 	echo "Failed" 

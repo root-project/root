@@ -116,7 +116,7 @@ endif # $(BIN)
 binlist:
 ifneq ($(BIN),)
 	@for f in $(PKGEXECS)  ; do echo $$f ; done >> $(OUT)/$(SBIN).install
-	@for f in $(PKGMANS)  ; do echo $$f ; done >> $(OUT)/$(SBIN).install
+	@for f in $(PKGMANS)  ; do echo $$f\* ; done >> $(OUT)/$(SBIN).install
 endif
 
 #

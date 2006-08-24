@@ -65,7 +65,7 @@ startit ()
 }
 stopit ()
 {
-    start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+    start-stop-daemon --stop --oknodo --quiet --pidfile /var/run/$NAME.pid \
 	--exec $DAEMON
     if test $? -ne 0 ; then 
 	echo "Failed" 

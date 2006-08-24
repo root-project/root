@@ -4,7 +4,7 @@ Mon, 21 Feb 2005 16:28:37 +0100.
 Copyright:
 
 Upstream Authors: The ROOT Team consiting of Rene Brun
-<Rene.Brun@cern.ch> and Fons Rademarkers <Fons.Rademarkers@cern.ch>,
+<Rene.Brun@cern.ch> and Fons Rademakers <Fons.Rademakers@cern.ch>,
 and Christian Holm Christensen <cholm@nbi.dk>
 
 License:
@@ -32,5 +32,6 @@ On Debian systems, the complete text of the GNU Lesser General Public
 License, version 2.1, can be found in
 /usr/share/common-licenses/LGPL-2.1. 
 
-Please also refer to /usr/share/ttf-root-installer/root/LICENSE.fonts
-for the licensing terms of the fonts themselves. 
+Please also refer to
+/usr/share/doc/ttf-root-installer/root/LICENSE.fonts for the licensing
+terms of the fonts themselves.  

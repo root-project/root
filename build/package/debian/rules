@@ -47,16 +47,21 @@ PREFIX		= /usr
 SYSCONFDIR	= /etc
 PKGDOCDIR	= $(PREFIX)/share/doc/root
 CINTDIR		= $(PREFIX)/lib/root/$(SOVERS)/cint
-CONFOPTIONS	:=--enable-explicitlink				\
+ICONTHEME	= $(PREFIX)/share/icons/hicolor/48x48
+CONFOPTIONS	:=--enable-cintex				\
+		  --enable-explicitlink				\
 		  --enable-fftw3				\
 		  --enable-qt					\
 		  --enable-qtgsi				\
 		  --enable-mathcore				\
 		  --enable-mathmore				\
 		  --enable-minuit2				\
+		  --enable-pgsql				\
 		  --enable-odbc					\
+		  --enable-reflex				\
 		  --enable-roofit				\
 		  --enable-ruby					\
+		  --enable-shadowpw				\
 		  --enable-shared				\
 		  --enable-soversion				\
 		  --enable-table				\
@@ -66,7 +71,6 @@ CONFOPTIONS	:=--enable-explicitlink				\
 		  --disable-srp					\
 		  --disable-builtin-afterimage			\
 		  --disable-builtin-freetype			\
-		  --disable-builtin-gsl				\
 		  --disable-builtin-pcre			\
 		  --disable-builtin-zlib			\
 		  --disable-alien				\
@@ -80,6 +84,7 @@ CONFOPTIONS	:=--enable-explicitlink				\
 		  --disable-pythia6				\
 		  --disable-rfio				\
 		  --disable-venus				\
+		  --fail-on-missing				\
 		  $(SAPDB)					\
 		  $(HBOOK)					\
 		  $(BUILDOPT)					
@@ -90,6 +95,8 @@ CONFOPTIONS	:=--enable-explicitlink				\
 #		  --enable-cintex	libroot
 #		  --enable-reflex	libroot
 #		  --with-globus=/opt/globus
+#		  --disable-builtin-gsl				
+#		  --disable-builtin				\
 
 VERSION		:= $(shell cat build/version_number | tr '/' '.')
 MAJOR   	:= $(shell echo $(VERSION) | tr '.' ' ' | cut -f1 -d' ')
@@ -106,6 +113,7 @@ PLUGINS		:= libroot-ldap 		\
 		   libroot-minuit 		\
 		   libroot-mlp	 		\
 		   libroot-quadp 		\
+		   libroot-tmva	 		\
 		   root-doc 			\
 		   root-plugin-asimage 		\
 		   root-plugin-fftw3 		\
@@ -146,8 +154,10 @@ PLUGINLIST	:= $(filter-out $(EXTRAS) $(ESSENTIALS), $(PKGLIST))
 EXTRALIST	:= $(filter-out $(PLUGINS) $(ESSENTIALS), $(PKGLIST))
 PLUGINLIST	:= $(PLUGINLIST:libroot%=libroot%-dev)
 EXTRALIST	:= $(EXTRALIST:libroot%=libroot%-dev)
-PLUGINLIST	:= $(PLUGINLIST:%=%,)
-EXTRALIST	:= $(EXTRALIST:%=%,)
+PLUGINHEAD	:= $(filter-out $(lastword $(PLUGINLIST)), $(PLUGINLIST))
+PLUGINLIST	:= $(PLUGINHEAD:%=%,) $(lastword $(PLUGINLIST))
+EXTRAHEAD	:= $(filter-out $(lastword $(EXTRALIST)), $(EXTRALIST))
+EXTRALIST	:= $(EXTRAHEAD:%=%,) $(lastword $(EXTRALIST))
 TEMPLATES	:= $(wildcard debian/*.in)
 SPKGLIST	:= $(filter-out root-doc root-common ttf-root-installer, $(PKGLIST:libroot%=libroot%$(SOVERS))) $(filter libroot%, $(PKGLIST:libroot%=libroot%-dev))
 IPKGLIST	:= root-doc ttf-root-installer root-common root
@@ -250,6 +260,7 @@ build-indep-stamp:  configure-stamp
 clean:  $(TEMPLATES:%.in=%)
 	dh_testdir
 	dh_testroot
+	debconf-updatepo --podir=build/package/debian/po
 	-rm -f build-arch-stamp build-indep-stamp build-arch-cint-stamp \
 		config.status configure-stamp config.log
 	-rm -rf minuit2/src/Minuit-1_7_6
@@ -264,12 +275,16 @@ clean:  $(TEMPLATES:%.in=%)
 	-rm -f  etc/daemons/olbd.rc.d
 	-rm -f  etc/daemons/xrootd.rc.d
 	-rm -f  qtgsi/src/G__QtGSI.cxx qtgsi/src/G__QtGSI.h
-	-rm -f  qt/moc_*.cxx
+	-rm -f  qt/src/moc_*.cxx
+	-rm -f  G__genreflex_rootcint.h
 	-find . -name ".#*" | xargs rm -rf
+	-find . \( -name "G__*.cxx" -or -name "G__*.h" \) \
+		-and -not -name "G__ci.h" -and -not -name G__postprocess.h \
+		| xargs rm -rf
 
 	# Add here commands to clean up after the build process.
 	-$(MAKE) distclean 
-	build/unix/makecintdlls.sh clean
+	build/unix/makecintdll.sh clean
 	rm -rf bin lib include 			\
 		system.rootrc 			\
 		config/Makefile.config 		\
@@ -285,7 +300,12 @@ clean:  $(TEMPLATES:%.in=%)
 		freetype/src/freetype-2.1.3	\
 		cint/lib/posix/a.out		\
 		cint/include/*.so*		\
-		cint/include/*.dll		
+		cint/include/*.dll		\
+		cint/include/sys/*.so*		\
+		cint/include/sys/*.dll		\
+		cint/stl/*.so*			\
+		cint/stl/*.dll			\
+		pcre/src/pcre-6.4		
 	dh_clean 
 
 pkglists:
@@ -329,6 +349,19 @@ install-arch:
 	# $(DTMP).
 	$(MAKE) install DESTDIR=$(CURDIR)/$(DTMP)
 
+	# Install desktop entry and icon 
+	mkdir -p $(DTMP)/$(PREFIX)/share/applications
+	mkdir -p $(DTMP)/$(PREFIX)/share/pixmaps
+	mkdir -p $(DTMP)/$(ICONTHEME)/apps
+	mkdir -p $(DTMP)/$(ICONTHEME)/mimetypes
+	-cp debian/root-bin.desktop $(DTMP)/$(PREFIX)/share/applications
+	-cp build/package/debian/root-bin.xpm \
+		$(DTMP)/$(PREFIX)/share/pixmaps/root-bin.xpm
+	-cp build/package/debian/root-bin.png \
+		$(DTMP)/$(ICONTHEME)/apps/root-bin.png
+	-cp build/package/debian/application-x-root.png \
+		$(DTMP)/$(ICONTHEME)/mimetypes/application-x-root.png
+
 	# Make root-config output '/usr/lib/root' instead of 
 	# '/usr/lib/root/<version>' 
 	sed 's,$(PREFIX)/lib/root/$(SOVERS),$(PREFIX)/lib/root,' \
@@ -337,42 +370,49 @@ install-arch:
 
 	# Make default ZIP mode be new library (system library)
 	sed 's,Root\.ZipMode:.*,Root.ZipMode: 1,' \
-		< $(DTMP)/etc/root/system.rootrc  > rootrc.tmp 
-	mv rootrc.tmp $(DTMP)/etc/root/system.rootrc
+		< $(DTMP)$(SYSCONFDIR)/root/system.rootrc  > rootrc.tmp 
+	mv rootrc.tmp $(DTMP)$(SYSCONFDIR)/root/system.rootrc
 
 	# Rename proofserv, xrdgsiproxy, and xrdpwdadmin in /usr/bin 
 	# to end in `.bin' and make wrapper script in /usr/bin 
 	for i in proofserv xrdgsiproxy xrdpwdadmin ; do 		\
-	  if test -f $(DTMP)/$(PREFIX)/bin/$$i && 			\
+	  if test -f $(DTMP)$(PREFIX)/bin/$$i && 			\
 	     test -f build/package/common/$$i.in ; then 		\
-	    mv $(DTMP)/$(PREFIX)/bin/$$i 				\
-	      $(DTMP)/$(PREFIX)/bin/$$i.bin ; 			\
+	    mv $(DTMP)$(PREFIX)/bin/$$i 				\
+	      $(DTMP)$(PREFIX)/bin/$$i.bin ; 			\
 	    sed -e 's,@prefix@,$(PREFIX),g'				\
 		-e 's,@libvers@,$(SOVERS),g'				\
 		< build/package/common/$$i.in				\
-		> $(DTMP)/$(PREFIX)/bin/$$i	; 			\
-	    chmod 755 $(DTMP)/$(PREFIX)/bin/$$i ; fi ; done 
+		> $(DTMP)$(PREFIX)/bin/$$i	; 			\
+	    chmod 755 $(DTMP)$(PREFIX)/bin/$$i ; fi ; done 
 
 	# Make the empty proof log file 
-	mkdir -p $(DTMP)/$(PREFIX)/share/root/proof/log
-	touch $(DTMP)/$(PREFIX)/share/root/proof/log/proof.log 
+	mkdir -p $(DTMP)$(PREFIX)/share/root/proof/log
+	touch $(DTMP)$(PREFIX)/share/root/proof/log/proof.log 
 
+	# Let usr/include/root/cfortran.h point to usr/include/cfortran.h
+	rm -rf $(DTMP)$(PREFIX)/include/root/cfortran.h 
+	(cd $(DTMP)$(PREFIX)/include/root && ln -s ../cfortran.h cfortran.h)
 
 	# Remove some unwanted files 
-	rm -rf $(DTMP)/$(PREFIX)/share/doc/root/INSTALL 
-	rm -rf $(DTMP)/$(PREFIX)/share/doc/root/LICENSE
-	rm -rf $(DTMP)/$(PREFIX)/share/root/fonts/LICENSE
-	rm -rf $(DTMP)/$(PREFIX)/lib/root/$(SOVERS)/cint/lib/posix/a.out
+	rm -rf $(DTMP)$(PREFIX)/share/doc/root/INSTALL 
+	rm -rf $(DTMP)$(PREFIX)/share/doc/root/LICENSE
+	rm -rf $(DTMP)$(PREFIX)/share/doc/root/cfortran.doc
+	rm -rf $(DTMP)$(PREFIX)/share/root/fonts/LICENSE
+	rm -rf $(DTMP)$(PREFIX)/lib/root/$(SOVERS)/cint/lib/posix/a.out
+	rm -rf $(DTMP)$(PREFIX)/lib/root/$(SOVERS)/cint/lib/posix/mktypes
+	rm -rf $(DTMP)$(PREFIX)/lib/root/$(SOVERS)/cint/lib/dll_stl/setup
+	rm -rf $(DTMP)$(CINTDIR)/include/makehpib
 
 	# Remove MacOSX service descriptions 
-	rm -rf $(DTMP)/$(SYSCONFDIR)/root/*.plist
+	rm -rf $(DTMP)$(SYSCONFDIR)/root/*.plist
 
 	# Remove Xinetd and Red Hat Init scripts from /etc 
-	rm -rf $(DTMP)/$(SYSCONFDIR)/root/*.xinetd
-	rm -rf $(DTMP)/$(SYSCONFDIR)/root/proofd
-	rm -rf $(DTMP)/$(SYSCONFDIR)/root/rootd
-	rm -rf $(DTMP)/$(SYSCONFDIR)/root/xrootd
-	rm -rf $(DTMP)/$(SYSCONFDIR)/root/olbd 
+	rm -rf $(DTMP)$(SYSCONFDIR)/root/*.xinetd
+	rm -rf $(DTMP)$(SYSCONFDIR)/root/proofd
+	rm -rf $(DTMP)$(SYSCONFDIR)/root/rootd
+	rm -rf $(DTMP)$(SYSCONFDIR)/root/xrootd
+	rm -rf $(DTMP)$(SYSCONFDIR)/root/olbd 
 
 	# Remove sample configurations for PROOF 
 	rm -rf $(DTMP)/$(PREFIX)/share/root/proof/etc/*.sample
@@ -381,6 +421,21 @@ install-arch:
 	find $(DTMP) -name "CVS" | xargs rm -fr
 	find $(DTMP) -name ".cvsignore" | xargs rm -fr
 
+	# Fix some permissions 
+	-find $(DTMP)$(CINTDIR) -perm 755 -and -not -type d | xargs chmod a-x 
+	-chmod a+x $(DTMP)$(CINTDIR)/lib/pthread/setup
+	-chmod a-x $(DTMP)$(PREFIX)/lib/root/$(SOVERS)/*.py
+	# -chmod a+x $(DTMP)$(PREFIX)/lib/root/$(SOVERS)/GDMLROOT.py
+
+	# Remove she-bang line from a python scripts
+	-for i in $(DTMP)/$(PREFIX)/lib/root/$(SOVERS)/*.py ; do \
+	  sed -e 's,#!/usr/bin/env python[0-9.]*,#,' \
+	      -e 's,#!/usr/bin/python[0-9.]*,#,' \
+		< $$i > $$i.tmp ; \
+	  mv $$i.tmp $$i ; \
+	done 
+
+	# Make file lists
 	mkdir -p $(DTMP)/$(PREFIX)/lib/root
 	./debian/rules pkglists
 
@@ -411,19 +466,6 @@ install-arch:
 	  mkdir -p debian/$$b/usr/share/lintian/overrides/ ; \
 	  cp  $$i debian/$$b/usr/share/lintian/overrides/$$b ; \
 	done 
-
-	# Fix some permissions 
-	-find debian/libroot$(SOVERS)/$(CINTDIR) \
-		-perm 755 -and -not -type d | xargs chmod a-x 
-	-chmod a+x debian/libroot$(SOVERS)/$(CINTDIR)/lib/pthread/setup
-	-chmod a+x debian/libroot$(SOVERS)/$(CINTDIR)/include/makehpib
-	-chmod a-x \
-	  debian/libroot-python-dev/$(PREFIX)/lib/root/$(SOVERS)/ROOT.py
-	# Install desktop entry and icon 
-	mkdir -p debian/root-bin/usr/share/applications
-	cp debian/root-bin.desktop debian/root-bin/usr/share/applications
-	mkdir -p debian/root-bin/usr/share/icons
-	-cp build/package/debian/root-bin.png debian/root-bin/usr/share/icons
 
 	# This is for alternatives registration, if one want's to install
         # Richard Kreckels cint package next to ROOT
@@ -475,6 +517,8 @@ binary-arch: build-arch install-arch
 	$(MAKE) -f debian/rules DH_OPTIONS=-s binary-common
 	dh_python -plibroot-python-dev \
 		$(PREFIX)/lib/root/$(SOVERS) $(PREFIX)/lib/root
+	dh_python -plibroot-dev \
+		$(PREFIX)/lib/root/$(SOVERS)/python/genreflex
 	dh_makeshlibs -V $(patsubst %, -p%, $(filter libroot%$(SOVERS),$(SPKGLIST)))
 	dh_installdeb -s
 	dh_shlibdeps -s $(SPKGLIST:%=-L%) \

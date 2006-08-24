@@ -43,6 +43,7 @@ start() {
 }
 
 stop() {
+    	test ! -f /var/lock/subsys/proofd && return 0 || true
         echo -n $"Stopping $prog: "
         killproc proofd
         RETVAL=$?

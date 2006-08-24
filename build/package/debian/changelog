@@ -1,3 +1,86 @@
+root (5.13.01-3) experimental; urgency=low
+
+  * Fixed reference to CINT copyright statement and license.
+  * Fixed some problems in the xrootd build.
+  * Fixed a bug in some reflex code.
+  * Added 32x32 xpm icon.
+  * Make sure python scripts do not contain a she-bang. 
+  * RSA and ALICE license issues have been solved, but Fons hasn't 
+    uploaded the new files yet.  The Krb5 export restriction is still
+    unresolved.   The old Zip license issue should have been solved,
+    but the change to the license statement has been put in CVS yet. 
+    Hence, the copyright file contains the old license and coppyright
+    statements. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 23 Aug 2006 16:45:47 +0200
+
+root (5.13.01-2) experimental; urgency=low
+
+  * Added the package `libroot-tmva', to avoid bad dependencies.
+  * Fixed problem with PostGreSQL plugin missing
+  * Permanently fixed man page problems in RPMs (added glob star to all
+    man pages in the file lists).
+  * Some other minor fixes.
+  * Better desktop integration for both RPMs and DEBs.
+  * Added `-fail-on-missing' to make the building fail if a dependency
+    isn't found.
+  * Added third-party copyrights and licenses to the copyright file.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 21 Aug 2006 17:00:57 +0200
+
+root (5.13.01-1) experimental; urgency=low
+
+  * New upstream version
+  * Added TMVA to the libroot package. 
+  * Also put GDML files into the libroot-python package.
+  * Upstream should have fixed a number of copyright statements.
+  * It seems that the RSA problem persists - sigh!
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 31 Jul 2006 15:42:12 +0200
+
+root (5.11.03-6) experimental; urgency=low
+
+  * Fixes to allow compilation with prefix != /usr for RPMs 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 11 May 2006 09:02:43 +0200
+
+root (5.11.03-5) experimental; urgency=low
+
+  * Fixed to RPM building.  Make sure SYSV init scripts is installed.
+  * Make sure we use the same configure arguments when we make the spec file,
+    as are used by the spec file.
+  * Add this changelog to the spec file.
+  * Build-depend on GSL.
+  * Build more packages by default.
+  * Fixes to RPM SYSV init scripts
+  * Fixed to ttf-root-installer RPM post install and pre remove scripts.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon,  8 May 2006 16:48:47 +0200
+
+root (5.11.03-4) experimental; urgency=low
+
+  * Fixes to RPM creation.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sun,  7 May 2006 14:18:37 +0200
+
+root (5.11.03-3) experimental; urgency=low
+
+  * Added libraries libReflex and libCintex to libroot, and the
+    corresponding headers and development libraries to libroot-dev.
+    The Python scripts are added to libroot-dev.  This means, that
+    ROOT now always build-depends and depends on Python.
+  * Added gccxml as a Suggests to libroot-dev for `rootcint -gccxml'.
+  * The library libCintex is temporary.
+  * Added krb5-user | heimdal-clients as build-dependency for 
+    root-plugin-krb5.  The configure script need to know where kinit is. 
+    The same packages are also added as run-time dependency.
+  * Fixed root-rootd and root-xrootd and root-proofd to not bark when
+    upgrading and the servers are not running.  Thanks to Kevin.
+  * Fixed some minor mistakes in `ttf-root-installer.copyright'.  Again,
+    Thanks to Kevin. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 25 Apr 2006 02:19:39 +0200
+
 root (5.11.03-2) experimental; urgency=low
 
   * Minor fixes.  Typos in the font generation script, lingering temp file,

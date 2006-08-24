@@ -93,7 +93,7 @@ startito ()
 
 stopitx() 
 {
-    start-stop-daemon --user $USER --stop --quiet --pidfile \
+    start-stop-daemon --user $USER --stop --oknodo --quiet --pidfile \
 	/var/run/$XNAME.pid --exec $XDAEMON 
     if test $? -ne 0 ; then 
 	echo "Failed" 
@@ -102,7 +102,7 @@ stopitx()
 }
 stopito()
 {
-    start-stop-daemon --user $USER --stop --quiet --pidfile \
+    start-stop-daemon --user $USER --stop --oknodo --quiet --pidfile \
 	/var/run/$ONAME.pid --exec $ODAEMON 
     if test $? -ne 0 ; then 
 	echo "Failed" 

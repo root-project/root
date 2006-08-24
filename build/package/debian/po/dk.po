@@ -15,8 +15,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-21 10:20+0100\n"
+"Report-Msgid-Bugs-To: cholm@nbi.dk\n"
+"POT-Creation-Date: 2006-08-20 19:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,13 +26,14 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../ttf-root-installer.templates:3
-msgid "These fonts are not free."
+#: ../ttf-root-installer.templates:1001
+#, fuzzy
+msgid "These fonts are not free"
 msgstr "Disse fonte er ikke frie."
 
 #. Type: note
 #. Description
-#: ../ttf-root-installer.templates:3
+#: ../ttf-root-installer.templates:1001
 msgid ""
 "These fonts were provided by Microsoft \"in the interest of cross-platform "
 "compatibility\". This is no longer the case, but they are still available "
@@ -44,7 +45,7 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../ttf-root-installer.templates:3
+#: ../ttf-root-installer.templates:1001
 msgid ""
 "You are free to download these fonts and use them for your own use, but you "
 "may not redistribute them in modified form, including changes to the file "
@@ -56,13 +57,13 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../ttf-root-installer.templates:14
+#: ../ttf-root-installer.templates:2001
 msgid "Directory holding MS fonts (if already downloaded):"
 msgstr "Katalog hvor MS fontene er (hvis allerede hentet):"
 
 #. Type: string
 #. Description
-#: ../ttf-root-installer.templates:14
+#: ../ttf-root-installer.templates:2001
 msgid ""
 "If you have already downloaded Microsoft's TrueType Core Fonts from the ROOT "
 "FTP server (ftp://root.cern.ch/root/ttf/ttf-fonts.tar.gz), type the name of "
@@ -74,7 +75,7 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../ttf-root-installer.templates:14
+#: ../ttf-root-installer.templates:2001
 msgid ""
 "If you haven't yet downloaded these fonts, leave this blank and the fonts "
 "will be downloaded for you. Approximately 1.6 MB will need to be downloaded."
@@ -84,7 +85,7 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../ttf-root-installer.templates:14
+#: ../ttf-root-installer.templates:2001
 msgid ""
 "If you are not connected to the internet or do not wish to download these "
 "fonts now, enter \"none\" to abort."
@@ -94,13 +95,14 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../ttf-root-installer.templates:28
-msgid "Font files not found."
+#: ../ttf-root-installer.templates:3001
+#, fuzzy
+msgid "Font files not found"
 msgstr "Font filerne er ikke fundet"
 
 #. Type: note
 #. Description
-#: ../ttf-root-installer.templates:28
+#: ../ttf-root-installer.templates:3001
 msgid ""
 "The directory you entered either did not exist, or did not contain the "
 "Microsoft TrueType Core Fonts for ROOT. Please re-enter the directory "
@@ -112,13 +114,13 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../ttf-root-installer.templates:35
+#: ../ttf-root-installer.templates:4001
 msgid "Where should these files be be archived (optional):"
 msgstr "Hvor skal disse filer arkiveres? (optional):"
 
 #. Type: string
 #. Description
-#: ../ttf-root-installer.templates:35
+#: ../ttf-root-installer.templates:4001
 msgid ""
 "If you would like to keep a permanent archive of the compressed Microsoft "
 "Core fonts, enter the directory where you'd like them stored.  If you leave "

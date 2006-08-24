@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: makedebdir.sh,v 1.13 2006/02/28 16:38:23 rdm Exp $
+# $Id: makedebdir.sh,v 1.14 2006/04/21 16:29:33 rdm Exp $
 #
 # Make the debian packaging directory 
 #
@@ -61,9 +61,11 @@ done
 # cp -a build/package/debian/* debian/
 find debian -name "CVS" | xargs -r rm -frv 
 rm -fr debian/root-bin.png
+rm -fr debian/application-x-root.png
 chmod a+x debian/rules 
 chmod a+x build/package/lib/*
-
+# Make sure we rebuild debian/control
+touch debian/control.in
 
 ### echo %%% Make skeleton control file 
 # cat build/package/debian/control.in build/package/common/*.control \

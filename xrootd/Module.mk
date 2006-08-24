@@ -151,6 +151,9 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		if [ ! "x$(SSLINCDIR)" = "x" ] ; then \
 		   xopt="$$xopt --with-ssl-incdir=$(SSLINCDIR)"; \
 		fi; \
+		if [ ! "x$(SHADOWFLAGS)" = "x" ] ; then \
+		   xopt="$$xopt --enable-shadowpw"; \
+		fi; \
 		xopt="$$xopt --disable-krb4 --enable-echo --no-arch-subdirs --disable-mon"; \
 		cd xrootd; \
 		echo "Options to Xrootd-configure: $$xopt $(XRDDBG)"; \

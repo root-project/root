@@ -23,8 +23,8 @@ Description: Numerical data analysis framework - shared runtime libraries
 Package: libroot-dev
 Section: libdevel
 Architecture: any
-Depends: ${shlibs:Depends}, zlib1g-dev, libssl-dev, comerr-dev, libkrb5-dev, libx11-dev, libfreetype6-dev, libpcre3-dev, libxpm-dev, g++ | c++-compiler
-Suggests: root-bin
+Depends: ${shlibs:Depends}, zlib1g-dev, libssl-dev, comerr-dev, libkrb5-dev, libx11-dev, libfreetype6-dev, libpcre3-dev, libxpm-dev, g++ | c++-compiler, ${python:Depends}, cfortran
+Suggests: root-bin, gccxml
 Replaces: root-cint
 Conflicts: root-cint
 Description: Header files for ROOT

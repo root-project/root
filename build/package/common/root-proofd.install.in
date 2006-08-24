@@ -1,7 +1,7 @@
 @prefix@/share/root/proof/
 @prefix@/bin/proofserv
 @prefix@/bin/proofserv.bin
-@prefix@/share/man/man1/proofserv.1
+@prefix@/share/man/man1/proofserv.1*
 @prefix@/share/root/proof/log/
 
 

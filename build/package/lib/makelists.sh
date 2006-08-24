@@ -35,9 +35,9 @@ for d in * ; do
     case $d in 		
 	auth)       lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
 	base)       lib=libroot             ; dev=libroot-dev; bin=root-bin
-	            extra="ALLLIBS=/usr/lib/root/libCore.so" ;;  	
+	            extra="ALLLIBS=${prefix}/lib/root/libCore.so" ;;  	
 	cint)	    lib=libroot             ; dev=libroot-dev; bin=root-bin
-	    	    extra="ALLLIBS=/usr/lib/root/libCint.so" ;;  	
+	    	    extra="ALLLIBS=${prefix}/lib/root/libCint.so" ;;  	
 	clib|cont|eg|foam|g3d|ged*|geom*|gpad|graf|gui*|hist*|html)
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
 	mathcore|matrix|meta*|net|newdelete|physics|postscript|rint)
@@ -46,6 +46,10 @@ for d in * ; do
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
 	smatrix|splot|xml)    
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
+	reflex)     lib=libroot		    ; dev=libroot-dev; 
+	    	    bin=libroot-dev         ;;
+	cintex)     lib=libroot		    ; dev=libroot-dev; 
+	    	    bin=libroot-dev         ;;
 	globusauth) lib=root-plugin-globus  ; dev=$lib       ; bin=$lib ;;  
 	qtroot)     lib=root-plugin-qt      ; dev=$lib       ; bin=$lib ;;
 	pythia)     lib=root-plugin-pythia5 ; dev=$lib       ; bin=$lib ;;  
@@ -59,7 +63,7 @@ for d in * ; do
 	            xrdlibs=
 	    	    extra="ALLLIBS= NOVERS=1" ;;     
 	pyroot)     lib=libroot-python      ; dev=${lib}-dev ; bin=$lib ;;  
-	clarens|ldap|mlp|quadp|roofit|ruby|mathmore|minuit)
+	clarens|ldap|mlp|quadp|roofit|ruby|mathmore|minuit|tmva)
 	            lib=libroot-$d          ; dev=${lib}-dev ; bin=$lib ;;  
 	build|freetype|win*|main) continue ;; 			
 	proofx)     lib=root-plugin-xproof  ; dev=$lib       ; bin=$lib ;;  
@@ -92,11 +96,12 @@ for i in build/package/common/*.install.in ; do
 	lib*)     b=$outdir/${b}${sovers} ;;
 	*)        b=$outdir/${b}          ;; 
     esac
-    sed -e "s|@prefix@|${prefix}|g" 		\
-	-e "s|@sysconfdir@|${sysconfdir}|g"	\
-	-e "s|@pkgdocdir@|${pkgdocdir}|g"	\
-	-e "s|@version@|${sovers}|g"		\
-	< $i > ${b}.tmp
+    grep -v "^#" $i | 					\
+	sed -e "s|@prefix@|${prefix}|g" 		\
+	    -e "s|@sysconfdir@|${sysconfdir}|g"		\
+	    -e "s|@pkgdocdir@|${pkgdocdir}|g"		\
+	    -e "s|@version@|${sovers}|g"		\
+	> ${b}.tmp
     if test -f ${b}.install ; then 
 	cat ${b}.tmp  ${b}.install > ${b}.tmp2
 	mv  ${b}.tmp2 ${b}.install 

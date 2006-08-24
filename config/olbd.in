@@ -44,6 +44,7 @@ start() {
 }
 
 stop() {
+	[ ! -f /var/lock/subsys/olbd ] && return 0 || true 
         echo -n $"Stopping $prog: "
         killproc olbd
         RETVAL=$?

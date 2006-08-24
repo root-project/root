@@ -44,6 +44,7 @@ start() {
 }
 
 stop() {
+    	test ! -f /var/lock/subsys/rootd && return 0 || true
         echo -n $"Stopping $prog: "
         killproc rootd
         RETVAL=$?

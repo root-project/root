@@ -2,4 +2,5 @@
   section="Apps/Science" \
   title="ROOT" \
   longtitle="ROOT's Object Oriented Technologies" \
-  command="@prefix@/bin/root" 
+  command="@prefix@/bin/root" \
+  icon="@prefix@/share/pixmaps/root-bin.xpm"

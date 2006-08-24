@@ -1,6 +1,6 @@
 Template: ttf-root-installer/blurb
 Type: note
-_Description: These fonts are not free.
+_Description: These fonts are not free
  These fonts were provided by Microsoft "in the interest of cross-platform
  compatibility". This is no longer the case, but they are still available
  from third parties.
@@ -25,7 +25,7 @@ _Description: Directory holding MS fonts (if already downloaded):
 
 Template: ttf-root-installer/baddldir
 Type: note
-_Description: Font files not found.
+_Description: Font files not found
  The directory you entered either did not exist, or did not contain the
  Microsoft TrueType Core Fonts for ROOT. Please re-enter the directory
  containing the Microsoft font files or enter "none" to abort.

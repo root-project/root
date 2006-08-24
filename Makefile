@@ -829,6 +829,8 @@ install: all
 	   echo "Installing Emacs Lisp library in $(DESTDIR)$(ELISPDIR)"; \
 	   $(INSTALLDIR)                          $(DESTDIR)$(ELISPDIR); \
 	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
+	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
+	   $(INSTALLDATA) gdml/*.py               $(DESTDIR)$(LIBDIR); \
 	   rm -rf $(DESTDIR)$(DATADIR)/CVS; \
 	fi
 
