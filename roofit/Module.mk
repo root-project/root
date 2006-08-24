@@ -1,5 +1,5 @@
 # ROOT Module.mk for roofit module
-# Copyright (c) 2005 Wouter Verkerke
+# Copyright (c) 2005 Wouter Verkerke & Fons Rademakers
 #
 # Author: Wouter Verkerke, 18/4/2005
 

@@ -1,9 +1,17 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.9 2005/09/05 07:25:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.10 2005/11/18 16:55:07 couet Exp $
 // Author: Christian Stratowa 30/09/2001
+
+/*************************************************************************
+ * Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 /******************************************************************************
 * Copyright(c) 2001-    , Dr. Christian Stratowa, Vienna, Austria.            *
-* Author: Christian Stratowa with help from Rene Brun.                                                 *
+* Author: Christian Stratowa with help from Rene Brun.                        *
 *                                                                             *
 * Algorithms for smooth regression adapted from:                              *
 * R: A Computer Language for Statistical Data Analysis                        *
@@ -13,10 +21,6 @@
 * R is free software, for licensing see the GNU General Public License        *
 * http://www.ci.tuwien.ac.at/R-project/welcome.html                           *
 *                                                                             *
-* Based on: "The ROOT System", All rights reserved.                           *
-* Authors: Rene Brun and Fons Rademakers.                                     *
-* For the licensing terms of "The ROOT System" see $ROOTSYS/AA_LICENSE.       *
-* For the list of contributors to "The ROOT System" see $ROOTSYS/AA_CREDITS.  *
 ******************************************************************************/
 
 

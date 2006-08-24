@@ -1,13 +1,13 @@
-// @(#)root/table:$Name:  $:$Id: TDataSetIter.h,v 1.4 2005/09/09 04:57:59 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TDataSetIter.h,v 1.5 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
-// ***********************************************************************
-// * C++ class library to create and manipulate the datasets hierarchy
-// * Copyright(c) 1997~2001  [BNL] Brookhaven National Laboratory
-// * All rights reserved
-// * Author                  Valery Fine  (fine.gov)
-// * Copyright(c) 1997~2001  Valery Fine  (fine.gov)
-// ***********************************************************************
+/*************************************************************************
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TDataSetIter
 #define ROOT_TDataSetIter
