@@ -1,10 +1,17 @@
-// @(#)root/eg:$Name:  $:$Id: TVirtualMCDecayer.h,v 1.2 2006/04/24 07:56:53 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TVirtualMCDecayer.h,v 1.1 2006/05/23 06:53:46 brun Exp $
 // Author: Andreas Morsch  13/04/2002
-   
+
+/*************************************************************************
+ * Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
+ * Copyright (C) 1998-1999, ALICE Experiment at CERN.                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TVirtualMCDecayer
 #define ROOT_TVirtualMCDecayer
-/* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. *
- * See cxx source for full Copyright notice                               */
 
 // Abstract base class for particle decays.
 // Clients are the transport code and the primary particle generators
@@ -28,11 +35,5 @@ public:
    virtual void    ReadDecayTable()                           =0;
    ClassDef(TVirtualMCDecayer,1) // Particle Decayer Base Class
 };
-#endif //ROOT_TVirtualMCDecayer
 
-
-
-
-
-
-
+#endif

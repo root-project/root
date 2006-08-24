@@ -1,8 +1,17 @@
-// @(#)root/mc:$Name:  $:$Id: TPDGCode.h,v 1.2 2002/04/26 08:46:10 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TPDGCode.h,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Author: Andreas Morsch 13/04/2002
-   
+
+/*************************************************************************
+ * Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
+ * Copyright (C) 2002, ALICE Experiment at CERN.                         *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TPDGCode
-#define ROOT_TPDGCode 
+#define ROOT_TPDGCode
 //
 // Enumeration of the constants for the PDG particle IDs.
 //
@@ -25,7 +34,7 @@ typedef enum {kRootino=0,kDown=1,kDownBar=-1,kUp=2,kUpBar=-2,kStrange=3,
 	  kLambda0Bar=-3122,kSigmaMinus=3112,kSigmaBarPlus=-3112,
 	  kSigmaPlus=3222,kSigmaBarMinus=-3222,kSigma0=3212,
 	  kSigma0Bar=-3212}
-PDG_t;	  
+PDG_t;
 
 /*
    "a(2)(1320)-",     -215

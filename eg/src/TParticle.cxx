@@ -1,5 +1,13 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.15 2006/05/23 04:47:36 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.16 2006/05/24 14:40:29 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TView.h"
 #include "TVirtualPad.h"
@@ -64,7 +72,7 @@ TParticle::TParticle(Int_t pdg,       Int_t status,
 }
 
 //______________________________________________________________________________
-TParticle::TParticle(const TParticle &p) : 
+TParticle::TParticle(const TParticle &p) :
   TObject(p), TAttLine(p), TAtt3D(p), fPdgCode(p.fPdgCode), fStatusCode(p.fStatusCode),
   fWeight(p.fWeight), fCalcMass(p.fCalcMass), fPx(p.fPx), fPy(p.fPy), fPz(p.fPz),
   fE(p.fE), fVx(p.fVx), fVy(p.fVy), fVz(p.fVz), fVt(p.fVt), fPolarTheta(p.fPolarTheta),
@@ -94,22 +102,22 @@ TParticle& TParticle::operator=(const TParticle &p)
       fDaughter[0]=p.fDaughter[0];
       fDaughter[1]=p.fDaughter[1];
       fWeight=p.fWeight;
-    
+
       fCalcMass=p.fCalcMass;
-    
+
       fPx=p.fPx;
       fPy=p.fPy;
       fPz=p.fPz;
       fE=p.fE;
-    
+
       fVx=p.fVx;
       fVy=p.fVy;
       fVz=p.fVz;
       fVt=p.fVt;
-    
+
       fPolarTheta=p.fPolarTheta;
       fPolarPhi=p.fPolarPhi;
-    
+
       fParticlePDG=p.fParticlePDG;
    }
    return   *this;
@@ -266,7 +274,7 @@ void TParticle::SetPdgCode(Int_t pdg)
    //change the PDG code for this particle
    //Get a new pointer to a TParticlePDG from TDatabasePDG
    //Recompute the mass
-   
+
    fPdgCode = pdg;
    fParticlePDG = TDatabasePDG::Instance()->GetParticle(pdg);
    if (fParticlePDG) {
@@ -342,7 +350,7 @@ void TParticle::Streamer(TBuffer &R__b)
       fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode);
       R__b.CheckByteCount(R__s, R__c, TParticle::IsA());
       //====end of old versions
-      
+
    } else {
       TParticle::Class()->WriteBuffer(R__b,this);
    }

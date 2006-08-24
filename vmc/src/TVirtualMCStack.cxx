@@ -1,5 +1,14 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCStack.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCStack.cxx,v 1.2 2003/09/23 14:03:15 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
+
+/*************************************************************************
+ * Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
+ * Copyright (C) 2002, ALICE Experiment at CERN.                         *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TVirtualMCStack.h"
 
@@ -11,10 +20,10 @@
 ClassImp(TVirtualMCStack)
 
 //_____________________________________________________________________________
-TVirtualMCStack::TVirtualMCStack() 
+TVirtualMCStack::TVirtualMCStack()
   : TObject()
 {}
 
 //_____________________________________________________________________________
-TVirtualMCStack::~TVirtualMCStack() 
+TVirtualMCStack::~TVirtualMCStack()
 {}

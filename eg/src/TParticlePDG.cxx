@@ -1,5 +1,13 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.10 2006/05/23 04:47:36 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.11 2006/05/24 14:40:29 brun Exp $
 // Author: Pasha Murat   12/02/99
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TDecayChannel.h"
 #include "TParticlePDG.h"
@@ -115,7 +123,7 @@ TParticlePDG::TParticlePDG(const TParticlePDG& pdg) :
   fParticleClass(pdg.fParticleClass),
   fTrackingCode(pdg.fTrackingCode),
   fAntiParticle(pdg.fAntiParticle)
-{ 
+{
    //copy constructor
 }
 
@@ -145,7 +153,7 @@ TParticlePDG& TParticlePDG::operator=(const TParticlePDG& pdg)
       fParticleClass=pdg.fParticleClass;
       fTrackingCode=pdg.fTrackingCode;
       fAntiParticle=pdg.fAntiParticle;
-   } 
+   }
    return *this;
 }
 
@@ -160,9 +168,9 @@ TParticlePDG::~TParticlePDG() {
 
 
 //______________________________________________________________________________
-Int_t TParticlePDG::AddDecayChannel(Int_t        Type, 
+Int_t TParticlePDG::AddDecayChannel(Int_t        Type,
                                     Double_t     BranchingRatio,
-                                    Int_t        NDaughters, 
+                                    Int_t        NDaughters,
                                     Int_t*       DaughterPdgCode)
 {
    // add new decay channel, Particle owns those...
@@ -178,10 +186,10 @@ Int_t TParticlePDG::AddDecayChannel(Int_t        Type,
 }
 
 //_____________________________________________________________________________
-TDecayChannel* TParticlePDG::DecayChannel(Int_t i) 
-{ 
+TDecayChannel* TParticlePDG::DecayChannel(Int_t i)
+{
    //return pointer to decay channel object at index i
-   return (TDecayChannel*) fDecayList->At(i); 
+   return (TDecayChannel*) fDecayList->At(i);
 }
 
 //_____________________________________________________________________________
@@ -203,7 +211,7 @@ void TParticlePDG::PrintDecayChannel(TDecayChannel* dc, Option_t* option) const
            dc->MatrixElementCode(),
            dc->BranchingRatio(),
            dc->NDaughters());
-    
+
       for (int i=0; i<dc->NDaughters(); i++) {
          int ic = dc->DaughterPdgCode(i);
          TParticlePDG* p = db->GetParticle(ic);

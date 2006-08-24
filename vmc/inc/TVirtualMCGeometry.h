@@ -1,5 +1,14 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.8 2006/05/13 20:57:20 brun Exp $
-// Authors: ... 25/06/2002
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.9 2006/06/26 15:35:38 brun Exp $
+// Authors: Alice collaboration 25/06/2002
+
+/*************************************************************************
+ * Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
+ * Copyright (C) 2002, ALICE Experiment at CERN.                         *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TVirtualMCGeometry
 #define ROOT_TVirtualMCGeometry
@@ -22,7 +31,7 @@ public:
    // Standard constructor
    TVirtualMCGeometry(const char *name, const char *title);
 
-   // Default constructor	      
+   // Default constructor
    TVirtualMCGeometry();
 
    // Destructor
@@ -59,8 +68,8 @@ public:
                      Double_t z, Double_t dens, Double_t radl, Double_t absl,
                      Double_t* buf, Int_t nwbuf) = 0;
 
-   // Define mixture or compound 
-   // with a number kmat composed by the basic nlmat materials defined 
+   // Define mixture or compound
+   // with a number kmat composed by the basic nlmat materials defined
    // by arrays a, z and wmat
    //
    // If nlmat > 0 then wmat contains the proportion by
@@ -83,7 +92,7 @@ public:
    // nmat      material number
    // isvol     sensitive volume flag
    // ifield    magnetic field:
-   //                  - ifield = 0 if no magnetic field; 
+   //                  - ifield = 0 if no magnetic field;
    //                  - ifield = -1 if user decision in guswim;
    //                  - ifield = 1 if tracking performed with g3rkuta;
    //                  - ifield = 2 if tracking
@@ -123,7 +132,7 @@ public:
    // functions from GGEOM
    // ------------------------------------------------
    //
-   
+
    // Create a new volume
    // name   Volume name
    // shape  Volume type
@@ -207,7 +216,7 @@ public:
                          const char *konly, Double_t *upar, Int_t np) = 0;
 
    // Helper function for resolving MANY.
-   // Specify the ONLY volume that overlaps with the 
+   // Specify the ONLY volume that overlaps with the
    // specified MANY and has to be substracted.
    // (Geant4 only)
    virtual void  Gsbool(const char* onlyVolName, const char* manyVolName) = 0;
@@ -257,8 +266,8 @@ public:
    // get methods
    // ------------------------------------------------
    //
-   
-   
+
+
    // Return the unique numeric identifier for volume name volName
    virtual Int_t VolId(const Text_t* volName) const = 0;
 

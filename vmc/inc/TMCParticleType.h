@@ -1,23 +1,30 @@
-// @(#)root/mc:$Name:  $:$Id: TMCParticleType.h,v 1.4 2003/02/26 13:30:14 brun Exp $
-// Author: Alice collaboration  
+// @(#)root/vmc:$Name:  $:$Id: TMCParticleType.h,v 1.1 2003/09/23 14:01:15 brun Exp $
+// Author: Alice collaboration
 
-/* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. */
+/*************************************************************************
+ * Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
+ * Copyright (C) 1998-1999, ALICE Experiment at CERN.                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TMCParticleType
 #define ROOT_TMCParticleType
 
-// 
+//
 // List of MonteCarlo particle types
-// (used when adding user own particles to MC) 
+// (used when adding user own particles to MC)
 //
 
 #include "Rtypes.h"
-   
+
 enum TMCParticleType
 {
   kPTGamma,          // particle tracked as gamma
   kPTElectron,       // particle tracked as electron
-  kPTNeutron,        // particle tracked as neutron 
+  kPTNeutron,        // particle tracked as neutron
   kPTHadron,         // particle tracked as hadron
   kPTMuon,           // particle tracked as muon
   kPTGeantino,       // particle tracked as geantino
@@ -25,6 +32,6 @@ enum TMCParticleType
   kPTOpticalPhoton,  // particle tracked as light photon
   kPTIon,            // particle tracked as heavy ion
   kPTUndefined       // unknown particle type
-};  
+};
 
-#endif //ROOT_TMCParticleType
+#endif

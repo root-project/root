@@ -1,13 +1,22 @@
-// @(#)root/vmc:$Name:  $:$Id: TMCProcess.h,v 1.4 2003/02/26 13:30:14 brun Exp $
-// Author: Alice collaboration  
+// @(#)root/vmc:$Name:  $:$Id: TMCProcess.h,v 1.1 2003/07/15 09:56:58 brun Exp $
+// Author: Alice collaboration
+
+/*************************************************************************
+ * Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
+ * Copyright (C) 2002, ALICE Experiment at CERN.                         *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TMCProcess
 #define ROOT_TMCProcess
-// 
+//
 // List of MonteCarlo processes
 //
 #include "Rtypes.h"
-   
+
 const Int_t kMaxMCProcess = 35;
 
 enum TMCProcess
@@ -39,14 +48,14 @@ enum TMCProcess
 
   kPTOFlimit,           // exceeded time of flight cut
   kPPhotoFission,       // nuclear photofission
-	     	
+
   kPRayleigh,           // Rayleigh scattering
 
-  kPNull,               // no mechanism is active, usually at the entrance 
+  kPNull,               // no mechanism is active, usually at the entrance
                         // of a new volume
   kPStop,               // particle has fallen below energy threshold
                         // and tracking stops
-  
+
   kPLightAbsorption,    // Cerenkov photon absorption
   kPLightScattering,    // Cerenkov photon reflection/refraction
   kStepMax,             // step limited by STEMAX
@@ -56,7 +65,7 @@ enum TMCProcess
   kPLightReflection,    // Cerenkov photon reflection
   kPLightRefraction,    // Cerenkov photon refraction
   kPSynchrotron,        // synchrotron radiation generation
-  
+
   kPTransportation,     // Transportation
 
   kPNoProcess           // unknown process

@@ -1,5 +1,13 @@
-// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.cxx,v 1.3 2005/09/04 11:42:05 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.cxx,v 1.4 2006/05/15 07:27:03 brun Exp $
 // Author: Pasha Murat   12/02/99
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TDecayChannel.h"
 #include "TParticlePDG.h"

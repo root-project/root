@@ -1,5 +1,13 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.23 2006/05/15 07:27:03 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.24 2006/05/16 06:18:27 brun Exp $
 // Author: Pasha Murat   12/02/99
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifdef HAVE_CONFIG
 #include "config.h"

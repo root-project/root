@@ -1,5 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.9 2006/05/26 09:07:18 brun Exp $
-// -*- mode: C++ -*-
+// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.10 2006/05/27 20:31:54 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -15,8 +14,8 @@
 //                                                                      //
 // TGenerator                                                           //
 //                                                                      //
-// Is an base class, that defines the interface of ROOT to various  	//
-// event generators. Every event generator should inherit from   	//
+// Is an base class, that defines the interface of ROOT to various    	//
+// event generators. Every event generator should inherit from       	//
 // TGenerator or its subclasses.                                        //
 //                                                                      //
 // Derived class can overload the member  function GenerateEvent        //
@@ -151,14 +150,14 @@ protected:
    Float_t       fPtCut;        //!Pt cut. Do not show primaries below
    Bool_t        fShowNeutrons; //!display neutrons if true
    TObjArray    *fParticles;    //->static container of the primary particles
-   
+
    TGenerator(const TGenerator& tg) :
    TNamed(tg), fPtCut(tg.fPtCut), fShowNeutrons(tg.fShowNeutrons),fParticles(tg.fParticles) { }
    TGenerator& operator=(const TGenerator& tg) {
       if(this!=&tg) {
          TNamed::operator=(tg); fPtCut=tg.fPtCut; fShowNeutrons=tg.fShowNeutrons;
          fParticles=tg.fParticles;
-      } 
+      }
       return *this;
    }
 

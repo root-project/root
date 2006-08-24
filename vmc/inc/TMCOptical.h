@@ -1,13 +1,22 @@
-// @(#)root/vmc:$Name:  $:$Id: TMCOptical.h,v 1.1 2005/05/17 12:49:05 brun Exp $
-// Author: Alice collaboration  
+// @(#)root/vmc:$Name:  $:$Id: TMCOptical.h,v 1.2 2005/05/19 08:58:54 brun Exp $
+// Author: Alice collaboration
+
+/*************************************************************************
+ * Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
+ * Copyright (C) 2002, ALICE Experiment at CERN.                         *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TMCOptical
 #define ROOT_TMCOptical
-// 
+//
 // Enums for setting of optical photon physics
 //
 #include "Rtypes.h"
-   
+
 enum EMCOpSurfaceModel
 {
    kGlisur,                      // original GEANT3 model

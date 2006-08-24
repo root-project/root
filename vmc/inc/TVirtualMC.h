@@ -1,5 +1,14 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.18 2006/05/23 04:47:42 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.19 2006/06/26 15:35:38 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
+
+/*************************************************************************
+ * Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
+ * Copyright (C) 2002, ALICE Experiment at CERN.                         *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TVirtualMC
 #define ROOT_TVirtualMC
@@ -35,13 +44,13 @@ public:
    //        supports geometry defined with TGeo
    TVirtualMC(const char *name, const char *title,
               Bool_t isRootGeometrySupported = kFALSE);
-	      
-   // Default constructor	      
+
+   // Default constructor
    TVirtualMC();
-   
+
    // Destructor
    virtual ~TVirtualMC();
-   
+
    // Copy constructor
    TVirtualMC(const TVirtualMC &mc) : TNamed(mc), fApplication(mc.fApplication),
      fStack(mc.fStack), fDecayer(mc.fDecayer), fRandom(mc.fRandom) {}
@@ -63,22 +72,22 @@ public:
    // functions from GCONS
    // ------------------------------------------------
    //
-   
-   // Return parameters for material specified by material number imat 
+
+   // Return parameters for material specified by material number imat
    virtual void  Gfmate(Int_t imat, char *name, Float_t &a, Float_t &z,
                         Float_t &dens, Float_t &radl, Float_t &absl,
                         Float_t* ubuf, Int_t& nbuf) = 0;
 
-   //  Return parameters for material specified by material number imat 
+   //  Return parameters for material specified by material number imat
    // (in double precision)
    virtual void  Gfmate(Int_t imat, char *name, Double_t &a, Double_t &z,
                         Double_t &dens, Double_t &radl, Double_t &absl,
                         Double_t* ubuf, Int_t& nbuf) = 0;
-   
+
    // Check the parameters of a tracking medium
    virtual void  Gckmat(Int_t imed, char* name) = 0;
 
-   
+
    // Define a material
    // kmat   number assigned to the material
    // name   material name
@@ -102,8 +111,8 @@ public:
                      Double_t z, Double_t dens, Double_t radl, Double_t absl,
                      Double_t* buf, Int_t nwbuf) = 0;
 
-   // Define mixture or compound 
-   // with a number kmat composed by the basic nlmat materials defined 
+   // Define mixture or compound
+   // with a number kmat composed by the basic nlmat materials defined
    // by arrays a, z and wmat
    //
    // If nlmat > 0 then wmat contains the proportion by
@@ -126,10 +135,10 @@ public:
    // nmat      material number
    // isvol     sensitive volume flag
    // ifield    magnetic field:
-   //                  - ifield = 0 if no magnetic field; 
+   //                  - ifield = 0 if no magnetic field;
    //                  - ifield = -1 if user decision in guswim;
    //                  - ifield = 1 if tracking performed with g3rkuta;
-   //                  - ifield = 2 if tracking performed with g3helix; 
+   //                  - ifield = 2 if tracking performed with g3helix;
    //                  - ifield = 3 if tracking performed with g3helx3.
    // fieldm    max. field value (kilogauss)
    // tmaxfd    max. angle due to field (deg/step)
@@ -161,13 +170,13 @@ public:
    virtual void  Matrix(Int_t& krot, Double_t thetaX, Double_t phiX,
                      Double_t thetaY, Double_t phiY, Double_t thetaZ,
                      Double_t phiZ) = 0;
-		     
+
    // Change the value of cut or mechanism param
    // to a new value parval for tracking medium itmed.
    // In Geant3, the  data  structure JTMED contains the standard tracking
    // parameters (CUTS and flags to control the physics processes)  which
-   // are used  by default for all tracking media. 
-   // It is possible to redefine individually with this funstion any of these 
+   // are used  by default for all tracking media.
+   // It is possible to redefine individually with this funstion any of these
    // parameters for a given tracking medium.
    //  itmed   tracking medium number
    //  param   is a character string (variable name)
@@ -208,7 +217,7 @@ public:
    // The new volume created will be medium number numed.
    virtual void  Gsdvn2(const char *name, const char *mother, Int_t ndiv,
                          Int_t iaxis, Double_t c0i, Int_t numed) = 0;
-			 
+
    // Create a new volume by dividing an existing one
    // Divide mother into divisions called name along
    // axis iaxis in steps of step. If not exactly divisible
@@ -219,7 +228,7 @@ public:
    // (If 0, no protection tests are performed in Geant3)
    virtual void  Gsdvt(const char *name, const char *mother, Double_t step,
                          Int_t iaxis, Int_t numed, Int_t ndvmx) = 0;
-			 
+
    // Create a new volume by dividing an existing one
    // Divides mother into divisions called name along
    // axis iaxis starting at coordinate value c0 with step
@@ -230,12 +239,12 @@ public:
    // (If 0, no protection tests are performed in Geant3)
    virtual void  Gsdvt2(const char *name, const char *mother, Double_t step,
                          Int_t iaxis, Double_t c0, Int_t numed, Int_t ndvmx) = 0;
-			 
+
    // Flag volume name whose contents will have to be ordered
    // along axis iax, by setting the search flag to -iax
    // (Geant3 only)
    virtual void  Gsord(const char *name, Int_t iax) = 0;
-   
+
    // Position a volume into an existing one.
    // It positions a previously defined volume in the mother.
    //   name   Volume name
@@ -260,9 +269,9 @@ public:
    virtual void  Gsposp(const char *name, Int_t nr, const char *mother,
                          Double_t x, Double_t y, Double_t z, Int_t irot,
                          const char *konly, Double_t *upar, Int_t np) = 0;
-			 
+
    // Helper function for resolving MANY.
-   // Specify the ONLY volume that overlaps with the 
+   // Specify the ONLY volume that overlaps with the
    // specified MANY and has to be substracted.
    // (Geant4 only)
    virtual void  Gsbool(const char* onlyVolName, const char* manyVolName) = 0;
@@ -290,7 +299,7 @@ public:
    // and material properties for optical physics
    // ------------------------------------------------
    //
-   
+
    // Define the optical surface
    // name           surface name
    // model          selection of model (see #EMCOpSurfaceModel values)
@@ -303,7 +312,7 @@ public:
                          EMCOpSurfaceType surfaceType,
                          EMCOpSurfaceFinish surfaceFinish,
                          Double_t sigmaAlpha);
-			 
+
    // Define the optical surface border
    // name        border surface name
    // vol1Name    first volume name
@@ -345,7 +354,7 @@ public:
    virtual void  SetMaterialProperty(
                          Int_t itmed, const char* propertyName,
                          Double_t value);
-			 
+
    // Define optical surface property via a table of values
    // surfaceName   optical surface name
    // propertyName  property name
@@ -361,7 +370,7 @@ public:
    // functions for access to geometry
    // ------------------------------------------------
    //
-   
+
    // Return the transformation matrix between the volume specified by
    // the path volumePath and the top or master volume.
    virtual Bool_t GetTransformation(const TString& volumePath,
@@ -403,20 +412,20 @@ public:
                         Double_t psi = 0, Double_t u0 = 10, Double_t v0 = 10,
                         Double_t ul = 0.01, Double_t vl = 0.01) = 0;
 
-   // Write out the geometry of the detector in EUCLID file format 
+   // Write out the geometry of the detector in EUCLID file format
    // filnam  file name - will be with the extension .euc                 *
-   // topvol  volume name of the starting node              
+   // topvol  volume name of the starting node
    // number  copy number of topvol (relevant for gsposp)
-   // nlevel  number of  levels in the tree structure 
-   //                to be written out, starting from topvol 
+   // nlevel  number of  levels in the tree structure
+   //                to be written out, starting from topvol
    // (Geant3 only)
-   virtual void  WriteEuclid(const char* filnam, const char* topvol, 
+   virtual void  WriteEuclid(const char* filnam, const char* topvol,
                              Int_t number, Int_t nlevel) = 0;
 
    // Set geometry from Root (built via TGeo)
    virtual void  SetRootGeometry() = 0;
 
-   // 
+   //
    // get methods
    // ------------------------------------------------
    //
@@ -458,18 +467,18 @@ public:
 
    // Set process control
    virtual Bool_t   SetProcess(const char* flagName, Int_t flagValue) = 0;
-   
+
    // Set a user defined particle
    // Function is ignored if particle with specified pdg
    // already exists and error report is printed.
    virtual Bool_t   DefineParticle(Int_t pdg, const char* name,
                         TMCParticleType pType,
                         Double_t mass, Double_t charge, Double_t lifetime) = 0;
-			
+
    // Set a user defined ion.
    virtual Bool_t   DefineIon(const char* name, Int_t Z, Int_t A,
                         Int_t Q, Double_t excEnergy, Double_t mass = 0.) = 0;
-   
+
    // Calculate X-sections
    // (Geant3 only)
    virtual Double_t Xsec(char*, Double_t, Int_t, Int_t) = 0;
@@ -478,7 +487,7 @@ public:
    // particle table usage
    // ------------------------------------------------
    //
-   
+
    // Return MC specific code from a PDG and pseudo ENDF code (pdg)
    virtual Int_t   IdFromPDG(Int_t pdg) const =0;
 
@@ -489,19 +498,19 @@ public:
    // get methods
    // ------------------------------------------------
    //
-   
+
    // Return name of the particle specified by pdg.
    virtual TString   ParticleName(Int_t pdg) const = 0;
 
    // Return mass of the particle specified by pdg.
    virtual Double_t  ParticleMass(Int_t pdg) const = 0;
-   
+
    // Return charge (in e units) of the particle specified by pdg.
    virtual Double_t  ParticleCharge(Int_t pdg) const = 0;
-   
+
    // Return life time of the particle specified by pdg.
    virtual Double_t  ParticleLifeTime(Int_t pdg) const = 0;
-   
+
    // Return VMC type of the particle specified by pdg.
    virtual TMCParticleType ParticleMCType(Int_t pdg) const = 0;
 
@@ -515,13 +524,13 @@ public:
    // action methods
    // ------------------------------------------------
    //
-   
+
    // Stop the transport of the current particle and skip to the next
    virtual void StopTrack() = 0;
-   
+
    // Stop simulation of the current event and skip to the next
    virtual void StopEvent() = 0;
-   
+
    // Stop simulation of the current event and set the abort run flag to true
    virtual void StopRun() = 0;
 
@@ -529,13 +538,13 @@ public:
    // set methods
    // ------------------------------------------------
    //
-   
+
    // Set the maximum step allowed till the particle is in the current medium
    virtual void SetMaxStep(Double_t) = 0;
-   
+
    // Set the maximum number of steps till the particle is in the current medium
    virtual void SetMaxNStep(Int_t) = 0;
-   
+
    // Force the decays of particles to be done with Pythia
    // and not with the Geant routines.
    virtual void SetUserDecay(Int_t pdg) = 0;
@@ -547,22 +556,22 @@ public:
    // tracking volume(s)
    // ------------------------------------------------
    //
-   
-   // Return the current volume ID and copy number 
+
+   // Return the current volume ID and copy number
    virtual Int_t    CurrentVolID(Int_t& copyNo) const =0;
-   
+
    // Return the current volume off upward in the geometrical tree
    // ID and copy number
    virtual Int_t    CurrentVolOffID(Int_t off, Int_t& copyNo) const =0;
-  
+
    // Return the current volume name
    virtual const char* CurrentVolName() const =0;
-   
+
    // Return the current volume off upward in the geometrical tree
    // name and copy number'
    // if name=0 no name is returned
    virtual const char* CurrentVolOffName(Int_t off) const =0;
-   
+
    // Return the path in geometry tree for the current volume
    virtual const char* CurrentVolPath() = 0;
 
@@ -576,12 +585,12 @@ public:
 
    // Return the number of the current event
    virtual Int_t    CurrentEvent() const =0;
-   
+
    // Computes coordinates xd in daughter reference system
    // from known coordinates xm in mother reference system.
-   // xm    coordinates in mother reference system (input) 
-   // xd    coordinates in daughter reference system (output) 
-   // iflag 
+   // xm    coordinates in mother reference system (input)
+   // xd    coordinates in daughter reference system (output)
+   // iflag
    // - IFLAG = 1  convert coordinates
    // - IFLAG = 2  convert direction cosines
    virtual void     Gmtod(Float_t* xm, Float_t* xd, Int_t iflag) = 0;
@@ -591,24 +600,24 @@ public:
 
    // Computes coordinates xm in mother reference system
    // from known coordinates xd in daughter reference system.
-   // xd    coordinates in daughter reference system (input) 
-   // xm    coordinates in mother reference system (output) 
-   // iflag 
+   // xd    coordinates in daughter reference system (input)
+   // xm    coordinates in mother reference system (output)
+   // iflag
    // - IFLAG = 1  convert coordinates
    // - IFLAG = 2  convert direction cosines
    virtual void     Gdtom(Float_t* xd, Float_t* xm, Int_t iflag)= 0 ;
 
    // The same as previous but in double precision
    virtual void     Gdtom(Double_t* xd, Double_t* xm, Int_t iflag)= 0 ;
-   
+
    // Return the maximum step length in the current medium
    virtual Double_t MaxStep() const =0;
-   
+
    // Return the maximum number of steps allowed in the current medium
    virtual Int_t    GetMaxNStep() const = 0;
-   
+
    // Return the number of the current medium
-   // Deprecated - replaced with CurrentMedium(), to be removed   
+   // Deprecated - replaced with CurrentMedium(), to be removed
    virtual Int_t    GetMedium() const = 0;
 
    //
@@ -634,18 +643,18 @@ public:
    // currently being transported
    virtual void     TrackMomentum(Double_t &px, Double_t &py, Double_t &pz, Double_t &etot) const =0;
 
-   // Return the length in centimeters of the current step (in cm) 
+   // Return the length in centimeters of the current step (in cm)
    virtual Double_t TrackStep() const =0;
-   
+
    // Return the length of the current track from its origin (in cm)
    virtual Double_t TrackLength() const =0;
 
    // Return the current time of flight of the track being transported
    virtual Double_t TrackTime() const =0;
-   
+
    // Return the energy lost in the current step
    virtual Double_t Edep() const =0;
-   
+
    //
    // get methods
    // tracking particle
@@ -655,13 +664,13 @@ public:
 
    // Return the PDG of the particle transported
    virtual Int_t    TrackPid() const =0;
-   
+
    // Return the charge of the track currently transported
    virtual Double_t TrackCharge() const =0;
-   
+
    // Return the mass of the track currently transported
    virtual Double_t TrackMass() const =0;
-   
+
    // Return the total energy of the current track
    virtual Double_t Etot() const =0;
 
@@ -669,19 +678,19 @@ public:
    // get methods - track status
    // ------------------------------------------------
    //
-   
+
    // Return true when the track performs the first step
    virtual Bool_t   IsNewTrack() const =0;
-    
+
    // Return true if the track is not at the boundary of the current volume
    virtual Bool_t   IsTrackInside() const =0;
-    
+
    // Return true if this is the first step of the track in the current volume
    virtual Bool_t   IsTrackEntering() const =0;
 
    // Return true if this is the last step of the track in the current volume
    virtual Bool_t   IsTrackExiting() const =0;
-    
+
    // Return true if the track is out of the setup
    virtual Bool_t   IsTrackOut() const =0;
 
@@ -701,20 +710,20 @@ public:
    // get methods - secondaries
    // ------------------------------------------------
    //
-   
+
    // Return the number of secondary particles generated in the current step
    virtual Int_t    NSecondaries() const=0;
-   
+
    // Return the parameters of the secondary track number isec produced
    // in the current step
    virtual void     GetSecondary(Int_t isec, Int_t& particleId,
    		       TLorentzVector& position, TLorentzVector& momentum) =0;
 
-   // Return the VMC code of the process that has produced the secondary 
+   // Return the VMC code of the process that has produced the secondary
    // particles in the current step
    virtual TMCProcess ProdProcess(Int_t isec) const =0;
-   
-   // Return the array of the VMC code of the processes active in the current 
+
+   // Return the array of the VMC code of the processes active in the current
    // step
    virtual Int_t    StepProcesses(TArrayI &proc) const = 0;
 
@@ -727,12 +736,12 @@ public:
    // !!! to be removed with move to TGeo
    // ------------------------------------------------
    //
-   
+
    // Set/modify the drawing options.
    // Deprecated - G3 only
    virtual void Gdopt(const char*,const char*) = 0;
-   
-   // This function allows subtractions (via boolean operation) of BOX shape 
+
+   // This function allows subtractions (via boolean operation) of BOX shape
    // from any part of the detector, therefore showing its inner contents
    // Deprecated - G3 only
    virtual void SetClipBox(const char*,Double_t=-9999,Double_t=0, Double_t=-9999,
@@ -740,10 +749,10 @@ public:
 
    // Deprecated - G3 only
    virtual void DefaultRange() = 0;
-   
+
    // Deprecated - G3 only
-   virtual void Gdhead(Int_t, const char*, Double_t=0) = 0;   
-   
+   virtual void Gdhead(Int_t, const char*, Double_t=0) = 0;
+
    // Deprecated - G3 only
    virtual void Gdman(Double_t, Double_t, const char*) = 0;
 
@@ -755,17 +764,17 @@ public:
 
    // Initialize MC
    virtual void Init() = 0;
-   
+
    // Initialize MC physics
    virtual void BuildPhysics() = 0;
-   
+
    // Process one event
    virtual void ProcessEvent() = 0;
-   
+
    // Process one  run and return true if run has finished successfully,
    // return false in other cases (run aborted by user)
    virtual Bool_t ProcessRun(Int_t nevent) = 0;
-   
+
    // Set switches for lego transport
    virtual void InitLego() = 0;
 
@@ -774,13 +783,13 @@ public:
    // Set methods
    // ------------------------------------------------
    //
-   
+
    // Set the particle stack
    virtual void SetStack(TVirtualMCStack* stack);
-   
+
    // Set the external decayer
    virtual void SetExternalDecayer(TVirtualMCDecayer* decayer);
-   
+
    // Set the random number generator
    virtual void SetRandom(TRandom* random);
 
@@ -789,13 +798,13 @@ public:
     // Get methods
     // ------------------------------------------------
     //
-    
+
     // Return the particle stack
     virtual TVirtualMCStack*   GetStack() const   { return fStack; }
-    
+
     // Return the external decayer
     virtual TVirtualMCDecayer* GetDecayer() const { return fDecayer; }
-    
+
     // Return the random number generator
     virtual TRandom*           GetRandom() const  { return fRandom; }
 

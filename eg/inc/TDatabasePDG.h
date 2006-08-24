@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.11 2006/05/16 06:18:27 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.12 2006/05/23 04:47:36 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -8,6 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #ifndef ROOT_TDatabasePDG
 #define ROOT_TDatabasePDG
 
@@ -28,27 +29,27 @@ protected:
    THashList* fParticleList;               // list of PDG particles
    TObjArray* fListOfClasses;              // list of classes (leptons etc.)
 
-   TDatabasePDG(const TDatabasePDG& db) 
+   TDatabasePDG(const TDatabasePDG& db)
      : TNamed(db), fParticleList(db.fParticleList),
      fListOfClasses(db.fListOfClasses) { }
 
    TDatabasePDG& operator=(const TDatabasePDG& db)
      {if(this!=&db) {TNamed::operator=(db); fParticleList=db.fParticleList;
      fListOfClasses=db.fListOfClasses;} return *this;}
-  
+
 public:
 
    TDatabasePDG();
    virtual ~TDatabasePDG();
- 
+
    static TDatabasePDG*  Instance();
 
-   virtual TParticlePDG*   AddParticle(const char*  Name, 
+   virtual TParticlePDG*   AddParticle(const char*  Name,
                                        const char*  Title,
-                                       Double_t     Mass, 
+                                       Double_t     Mass,
                                        Bool_t       Stable,
-                                       Double_t     DecayWidth, 
-                                       Double_t     Charge, 
+                                       Double_t     DecayWidth,
+                                       Double_t     Charge,
                                        const char*  ParticleClass,
                                        Int_t        PdgCode,
                                        Int_t        Anti=-1,
@@ -59,12 +60,12 @@ public:
    virtual Int_t  ConvertIsajetToPdg(Int_t isaNumber);
 
    virtual TParticlePDG* AddAntiParticle(const char* Name, Int_t PdgCode);
-                                
+
    TParticlePDG  *GetParticle(Int_t pdgCode) const;
    TParticlePDG  *GetParticle(const char *name) const;
 
    TParticleClassPDG* GetParticleClass(const char* name) {
-      if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable(); 
+      if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
       return (TParticleClassPDG*) fListOfClasses->FindObject(name);
    }
 

@@ -1,5 +1,14 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.cxx,v 1.3 2004/02/10 13:46:37 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.cxx,v 1.4 2006/05/13 20:57:20 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
+
+/*************************************************************************
+ * Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
+ * Copyright (C) 2002, ALICE Experiment at CERN.                         *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TVirtualMCApplication.h"
 #include "TError.h"
@@ -14,8 +23,8 @@ ClassImp(TVirtualMCApplication)
 TVirtualMCApplication* TVirtualMCApplication::fgInstance = 0;
 
 //_____________________________________________________________________________
-TVirtualMCApplication::TVirtualMCApplication(const char *name, 
-                                             const char *title) 
+TVirtualMCApplication::TVirtualMCApplication(const char *name,
+                                             const char *title)
   : TNamed(name,title)
 {
 //
@@ -23,17 +32,17 @@ TVirtualMCApplication::TVirtualMCApplication(const char *name,
 //
 
    if (fgInstance) {
-      Fatal("TVirtualMCApplication", 
+      Fatal("TVirtualMCApplication",
             "Attempt to create two instances of singleton.");
    }
-      
+
    fgInstance = this;
 }
 
 //_____________________________________________________________________________
 TVirtualMCApplication::TVirtualMCApplication()
   : TNamed()
-{    
+{
    //
    // Default constructor
    //
@@ -41,11 +50,11 @@ TVirtualMCApplication::TVirtualMCApplication()
 }
 
 //_____________________________________________________________________________
-TVirtualMCApplication::~TVirtualMCApplication() 
+TVirtualMCApplication::~TVirtualMCApplication()
 {
    //
-   // Destructor  
+   // Destructor
    //
-  
+
    fgInstance = 0;
 }
