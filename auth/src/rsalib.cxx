@@ -1,37 +1,46 @@
-/* Author: */
+/* @(#)root/auth:$Name:  $:$Id: TAuthenticate.h,v 1.3 2006/01/17 14:12:48 rdm Exp $*/
+/* Author: Martin Nicolay  22/11/1988
+
+/******************************************************************************
+Copyright (C) 2006 Martin Nicolay <m.nicolay@osm-gmbh.de>
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later
+version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free
+Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA  02110-1301  USA
+******************************************************************************/
 
 /*******************************************************************************
- *									       *
- *	Copyright (c) Martin Nicolay,  22. Nov. 1988			       *
- *									       *
- *	Wenn diese (oder sinngemaess uebersetzte) Copyright-Angabe enthalten   *
- *	bleibt, darf diese Source fuer jeden nichtkomerziellen Zweck weiter    *
- *	verwendet werden.						       *
- *									       *
- *	martin@trillian.megalon.de					       *
- *									       *
- *       ftp://ftp.funet.fi/pub/crypt/cryptography/asymmetric/rsa               *
- *									       *
- *       Simple RSA public key code.                                            *
- *       Adaptation in library for ROOT by G. Ganis, July 2003                  *
- *       (gerardo.ganis@cern.ch)                                                *
- *									       *
- *       rsa funtions of public interest                                        *
- *									       *
- *******************************************************************************/
+*                                            									       *
+*       Simple RSA public key code.                                            *
+*       Adaptation in library for ROOT by G. Ganis, July 2003                  *
+*       (gerardo.ganis@cern.ch)                                                *
+*									                                                    *
+*******************************************************************************/
 
 #include	<stdio.h>
 #include	<string.h>
 #include	<ctype.h>
 #include	<stdlib.h>
-#include        <errno.h>
+#include <errno.h>
 
 #include	"rsaaux.h"
 #include	"rsalib.h"
 
 static int	g_clear_siz;            /* clear-text blocksize	        */
 static int	g_enc_siz;              /* encoded blocksize            */
-                                        /* g_clear_siz < g_enc_siz      */
+                                    /* g_clear_siz < g_enc_siz      */
 
 int gLog = 0;
 int kMAXT = 100;
@@ -122,7 +131,7 @@ int rsa_genrsa(rsa_NUMBER p1, rsa_NUMBER p2, rsa_NUMBER *n, rsa_NUMBER *e, rsa_N
 
 int rsa_encode_size(rsa_NUMBER n)
 {
-   // Returns length unit block of output 
+   // Returns length unit block of output
 
    return ( n_bitlen( &n) + 7) / 8;
 }
