@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.121 2006/05/17 16:37:25 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.122 2006/06/19 16:15:45 pcanal Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2806,7 +2806,7 @@ TString TFormula::GetExpFormula() const
          }
 
          //constants, variables x,y,z,t, pi
-         if ((optype<=149 && optype>=140) || (optype == 40)) {
+         if ((optype<=149 && optype>=140 && optype!=145) || (optype == 40)) {
             tab[spos]=fExpr[i];
             ismulti[spos]=kFALSE;
             spos++;
@@ -2832,11 +2832,13 @@ TString TFormula::GetExpFormula() const
 
          //Functions
          int offset = 0;
+         TString funcname = fExpr[i];
          if((optype>9  && optype<16) ||
             (optype>20 && optype<23) ||
             (optype>29 && optype<34) ||
             (optype>40 && optype<44) ||
-            (optype>69 && optype<76)) {
+            (optype>69 && optype<76) ||
+            (optype==145)) {
             //Functions with the format func(x)
             offset = -1;
          }
@@ -2846,9 +2848,30 @@ TString TFormula::GetExpFormula() const
             //Functions with the format func(x,y)
             offset = -2;
          }
+         if(optype==145) {
+            int param = (fOper[i] & kTFOperMask);
+            int fno   = param / 1000;
+            int nargs = param % 1000;
+            offset = -nargs;
+            // The function name contains return type and parameters types we need
+            // to trim them.
+            for(int i=0, depth=0;i<funcname.Length();++i) {
+               switch (funcname[i]) {
+                  case '<': ++depth; break;
+                  case '>': --depth; break;
+                  case ' ': if (depth==0) {
+                              funcname.Remove(0,i+1);
+                              i = funcname.Length();
+                              break;
+                            }
+               }
+            }
+            Ssiz_t ind = funcname.First('(');
+            funcname.Remove(ind);
+         }
          if (offset<0 && (spos+offset>=0)) {
-            tab[spos+offset]=fExpr[i]+("("+tab[spos+offset]);
-            for (j=optype+1; j<0; j++){
+            tab[spos+offset]=funcname+("("+tab[spos+offset]);
+            for (j=offset+1; j<0; j++){
                tab[spos+offset]+=","+tab[spos+j];
             }
             tab[spos+offset]+=")";
