@@ -1,3 +1,10 @@
+root (5.13.01-4) experimental; urgency=low
+
+  * copyrights fixed by Fons.
+  * Try to fix TBrowser option.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 24 Aug 2006 19:44:28 +0200
+
 root (5.13.01-3) experimental; urgency=low
 
   * Fixed reference to CINT copyright statement and license.

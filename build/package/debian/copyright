@@ -58,6 +58,15 @@ but they have different copyright holders, as listed below:
        Copyright (c) 2002 Sasha Vasko <sasha@aftercode.net>
        Copyright (c) 1998, 1999 Ethan Fischer <allanon@crystaltokyo.com>
 
+  auth/inc/rsaaux.h	
+  auth/inc/rsadef.h	
+  auth/inc/rsafun.h	
+  auth/inc/rsalib.h	
+  auth/src/rsaaux.cxx	
+  auth/src/rsafun.cxx	
+  auth/src/rsalib.cxx: 
+    Copyright (C) 2006 Martin Nicolay <m.nicolay@osm-gmbh.de>
+
   base/inc/Byteswap.h
     Copyright (C) 1997 Free Software Foundation, Inc.
 
@@ -76,6 +85,10 @@ but they have different copyright holders, as listed below:
 
   clib/inc/mmprivate.h
     Copyright 1990, 1991, 1992 Free Software Foundation 
+
+  eg/inc/TVirtualMCDecayer.h
+    Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
+    Copyright (C) 1998-1999, ALICE Experiment at CERN.
 
   gl/inc/gl2ps.h
     Copyright (C) 1999-2005 Christophe Geuzaine <geuz@geuz.org>
@@ -133,6 +146,14 @@ but they have different copyright holders, as listed below:
     Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.
     Copyright (C) 2001 [BNL] Brookhaven National Laboratory.
 
+  eg/inc/TVirtualMCDecayer.h
+  eg/inc/TVirtualMCDecayer.cxx
+
+  vmc/
+    Copyright (C) 2006, Rene Brun and Fons Rademakers.
+    Copyright(c) 1998-1999, 2002, 2003, ALICE Experiment at CERN, All
+    rights reserved. 
+
   win32gdk/gdk
     Various files are copyright of different parties.  The copyright
     statements is summarised below.
@@ -160,23 +181,6 @@ The following files and directories are not licensed under the GNU
 Lesser General Public License, but carry their own license and
 copyright statements.  These are reproduced below. 
 
-
-  auth/inc/rsaaux.h	
-  auth/inc/rsadef.h	
-  auth/inc/rsafun.h	
-  auth/inc/rsalib.h	
-  auth/src/rsaaux.cxx	
-  auth/src/rsafun.cxx	
-  auth/src/rsalib.cxx: 
-    Copyright (c) Martin Nicolay,  22. Nov. 1988
-    Wenn diese (oder sinngemaess uebersetzte) Copyright-Angabe
-    enthalten bleibt, darf diese Source fuer jeden nichtkomerziellen
-    Zweck weiter verwendet werden.
-   
-    martin@trillian.megalon.de 
-  
-    ftp://ftp.funet.fi/pub/crypt/cryptography/asymmetric/rsa
-  
   build/rmkdepend/def.h
   build/rmkdepend/imakemdep.h
     Copyright (c) 1993, 1994  X Consortium
@@ -304,15 +308,6 @@ copyright statements.  These are reproduced below.
 
     This software is provided "as is" without express or implied
     warranty.
-
-  eg/inc/TVirtualMCDecayer.h
-  eg/inc/TVirtualMCDecayer.cxx
-  vmc/inc/TGeoMCGeometry.h	
-  vmc/inc/TMCParticleType.h	
-  vmc/src/TVirtualMC.cxx					
-    Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights
-    reserved. 
-    License is unclear. 
 	
   krb5auth/inc/Krb5Auth.h
   krb5auth/src/Krb5Auth.cxx 
@@ -607,20 +602,6 @@ copyright statements.  These are reproduced below.
     3. This notice may not be removed or altered from any source
        distribution.
   
-    Except:
-
-  zip/inc/Bits.h
-  zip/inc/ZDeflate.h
-  zip/inc/ZIP.h	
-  zip/inc/ZTrees.h	
-    Copyright (C) 1990-1993 Mark Adler, Richard B. Wales, Jean-loup
-    Gailly, Kai Uwe Rommel and Igor Mandrichenko.
-  
-    Permission is granted to any individual or institution to use, copy,
-    or redistribute this software so long as all of the original files
-    are included, that it is not sold for profit, and that this
-    copyright notice is retained.
-
 Local Variables:
   mode: text
 End:
