@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.17 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.19 2006/08/21 15:25:35 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -151,6 +151,16 @@ ROOT::Reflex::Scope::LookupType( const std::string & nam ) const {
 // Lookup a type from this scope.
    if ( * this ) return fScopeName->fScopeBase->LookupType( nam, *this );
    return Dummy::Type();
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::Scope &
+ROOT::Reflex::Scope::LookupScope( const std::string & nam ) const {
+//-------------------------------------------------------------------------------
+// Lookup a scope from this scope.
+   if ( * this ) return fScopeName->fScopeBase->LookupScope( nam, *this );
+   return Dummy::Scope();
 }
 
 
@@ -484,3 +494,14 @@ void ROOT::Reflex::Scope::GenerateDict( DictionaryGenerator & generator) const {
 // Generate Dictionary information about itself.
    if ( * this ) fScopeName->fScopeBase->GenerateDict(generator);
 }
+
+#ifdef REFLEX_CINT_MERGE
+bool ROOT::Reflex::Scope::operator&&(const Scope &right) const
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Scope::operator&&(const Type &right) const 
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Scope::operator||(const Scope &right) const 
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Scope::operator||(const Type &right) const 
+{ return operator bool() && (bool)right; }
+#endif

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.26 2006/08/16 06:42:35 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.27 2006/08/17 14:45:56 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -276,6 +276,16 @@ ROOT::Reflex::ScopeBase::LookupType( const std::string & nam,
 //-------------------------------------------------------------------------------
    // Lookup a type name from this scope.
    return NameLookup::LookupType( nam, current );
+}
+
+
+//-------------------------------------------------------------------------------
+const ROOT::Reflex::Scope &
+ROOT::Reflex::ScopeBase::LookupScope( const std::string & nam,
+                                      const Scope & current ) const {
+//-------------------------------------------------------------------------------
+   // Lookup a scope name from this scope.
+   return NameLookup::LookupScope( nam, current );
 }
 
 
@@ -774,7 +784,7 @@ void ROOT::Reflex::ScopeBase::AddUsingDirective( const Scope & ud ) const {
 void ROOT::Reflex::ScopeBase::RemoveUsingDirective( const Scope & ud ) const {
 //-------------------------------------------------------------------------------
    // Remove using directive ud from this scope.
-   for ( Scope_Iterator it = UsingDirective_Begin(); it != UsingDirective_End(); ++ it ) {
+   for ( Scope_Cont_Type_t::iterator it = fUsingDirectives.begin(); it != fUsingDirectives.end(); ++ it ) {
       if ( *it == ud ) {
          fUsingDirectives.erase( it ); 
          break;

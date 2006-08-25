@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.8 2006/08/07 14:20:07 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.9 2006/08/10 14:31:58 axel Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -37,13 +37,36 @@ ROOT::Reflex::NameLookup::LookupType( const std::string & nam,
 // Lookup up a (possibly scoped) type name appearing in the scope context 
 // current. This is the public interface for type lookup.
    NameLookup lookup(nam, current);
-   return lookup.LookupType();
+   return lookup.Lookup< Type >();
 }
 
+const ROOT::Reflex::Scope & 
+ROOT::Reflex::NameLookup::LookupScope( const std::string & nam,
+                                         const Scope & current ) {
+//-------------------------------------------------------------------------------
+// Lookup up a (possibly scoped) scope name appearing in the scope context 
+// current. This is the public interface for scope lookup.
+   NameLookup lookup(nam, current);
+   return lookup.Lookup< Scope >();
+}
+
+/*
+const ROOT::Reflex::Member & LookupMember( const std::string & nam,
+                                           const Scope & current ) {
+//-------------------------------------------------------------------------------
+// Lookup up a (possibly scoped) member name appearing in the scope context 
+// current. This is the public interface for member lookup.
+   NameLookup lookup(nam, current);
+
+   // this will not work, member lookup is too different from type lookup...
+   return lookup.Lookup<Member>();
+}
+*/
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type &
-ROOT::Reflex::NameLookup::LookupType() {
+template< class T >
+const T &
+ROOT::Reflex::NameLookup::Lookup() {
 //-------------------------------------------------------------------------------
 // Lookup a type using fLookupName, fCurrentScope.
    fPartialSuccess = false;
@@ -55,16 +78,17 @@ ROOT::Reflex::NameLookup::LookupType() {
       fLookedAtUsingDir.clear();
       // ::A...
       fCurrentScope = Scope::GlobalScope();
-      return LookupTypeInScope();
+      return LookupInScope< T >();
    } else
       // A...
-      return LookupTypeInUnknownScope();
+      return LookupInUnknownScope< T >();
 }
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type &
-ROOT::Reflex::NameLookup::LookupTypeInScope() {
+template< class T >
+const T &
+ROOT::Reflex::NameLookup::LookupInScope() {
 //-------------------------------------------------------------------------------
 // Lookup a type in fCurrentScope.
 // Checks sub-types, sub-scopes, using directives, and base classes for
@@ -81,11 +105,11 @@ ROOT::Reflex::NameLookup::LookupTypeInScope() {
 // The lookup does not take the declaration order into account; the result of
 // parts of the lookup algorithm which depend on the order will be unpredictable.
 
-   if (!fCurrentScope) return Dummy::Type();
+   if (!fCurrentScope) return Dummy::Get< T >();
    if (fLookedAtUsingDir.find(fCurrentScope) != fLookedAtUsingDir.end())
       // prevent inf loop from
       // ns A { using ns B; } ns B {using ns A;}
-      return Dummy::Type();
+      return Dummy::Get< T >();
 
    for ( Type_Iterator it = fCurrentScope.SubType_Begin(); it != fCurrentScope.SubType_End(); ++it ) {
       if ( 0 == fLookupName.compare(fPosNamePart, fPosNamePartLen, (*it).Name() ) ) {
@@ -95,7 +119,7 @@ ROOT::Reflex::NameLookup::LookupTypeInScope() {
          if (fPosNamePart == std::string::npos) return *it;
          if (it->IsTypedef()) fCurrentScope = it->FinalType();
          else fCurrentScope = *it;
-         return LookupTypeInScope();
+         return LookupInScope< T >();
       }
    }
 
@@ -107,7 +131,7 @@ ROOT::Reflex::NameLookup::LookupTypeInScope() {
          fLookedAtUsingDir.clear();
          FindNextScopePos();
          if (fPosNamePart == std::string::npos) return Dummy::Type(); // namespace is no a type
-         return LookupTypeInScope();
+         return LookupInScope< T >();
       }
    }
 
@@ -116,7 +140,7 @@ ROOT::Reflex::NameLookup::LookupTypeInScope() {
       Scope storeCurrentScope = fCurrentScope;
       for ( Scope_Iterator si = storeCurrentScope.UsingDirective_Begin(); si != storeCurrentScope.UsingDirective_End(); ++si ) {
          fCurrentScope = *si;
-         const Type & t = LookupTypeInScope();
+         const T & t = LookupInScope< T >();
          if (fPartialSuccess) return t;
       }
       fCurrentScope = storeCurrentScope;
@@ -130,7 +154,7 @@ ROOT::Reflex::NameLookup::LookupTypeInScope() {
             FindNextScopePos();
             if (fPosNamePart == std::string::npos) return bi->ToType();
             fCurrentScope = bi->ToType().FinalType();
-            return LookupTypeInScope();
+            return LookupInScope< T >();
          }
       }
 
@@ -138,28 +162,29 @@ ROOT::Reflex::NameLookup::LookupTypeInScope() {
       Scope storeCurrentScope = fCurrentScope;
       for ( Base_Iterator bi = storeCurrentScope.Base_Begin(); bi != storeCurrentScope.Base_End(); ++bi ) {
          fCurrentScope = bi->ToScope();
-         const Type & t = LookupTypeInScope();
+         const T & t = LookupInScope< T >();
          if ( fPartialSuccess) return t;
       }
       fCurrentScope = storeCurrentScope;
    }
 
-   return Dummy::Type();
+   return Dummy::Get< T >();
 }
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type &
-ROOT::Reflex::NameLookup::LookupTypeInUnknownScope() {
+template< class T >
+const T &
+ROOT::Reflex::NameLookup::LookupInUnknownScope() {
 //-------------------------------------------------------------------------------
 // Lookup a type in fCurrentScope and its declaring scopes.
    for (fPartialSuccess = false; !fPartialSuccess && fCurrentScope; fCurrentScope = fCurrentScope.DeclaringScope()) {
       fLookedAtUsingDir.clear();
-      const Type & t = LookupTypeInScope();
+      const T & t = LookupInScope< T >();
       if (fPartialSuccess) return t;
       if (fCurrentScope.IsTopScope()) break;
    }
-   return Dummy::Type();
+   return Dummy::Get< T >();
 }
 
 

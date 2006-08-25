@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.16 2006/08/17 14:45:56 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.18 2006/08/21 15:25:34 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -69,6 +69,24 @@ namespace ROOT {
           * @return true if Scope is implemented
           */
          operator bool () const;
+
+#ifdef REFLEX_CINT_MERGE
+      // To prevent any un-authorized use as the old type
+         bool operator!() const { return !operator bool(); }
+         bool operator&&(bool right) const { return operator bool() && right; }
+         bool operator&&(int right) const { return operator bool() && right; }
+         bool operator&&(long right) const { return operator bool() && right; }
+         bool operator&&(const Scope &right) const;
+         bool operator&&(const Type &right) const;
+         bool operator||(bool right) const { return operator bool() || right; }
+         bool operator||(int right) const { return operator bool() || right; }
+         bool operator||(long right) const { return operator bool() || right; }
+         bool operator||(const Scope &right) const;
+         bool operator||(const Type &right) const;
+      private:
+         operator int () const;
+      public:
+#endif
 
 
          /** 
@@ -351,6 +369,14 @@ namespace ROOT {
           * @return if a matching type is found return it, otherwise return empty type
           */
          const Type & LookupType( const std::string & nam ) const;
+
+
+         /**
+          * LookupScope will lookup a scope in the current scope
+          * @param nam the string representation of the scope to lookup
+          * @return if a matching scope is found return it, otherwise return empty scope
+          */
+         const Scope & LookupScope( const std::string & nam ) const;
 
 
          /**
@@ -1589,5 +1615,19 @@ inline void ROOT::Reflex::Scope::RemoveUsingDirective( const Scope & ud ) const 
    if ( * this ) fScopeName->fScopeBase->RemoveUsingDirective( ud );
 }
 
+#ifdef REFLEX_CINT_MERGE
+inline bool operator&&(bool b, const ROOT::Reflex::Scope & rh) {
+   return b && rh.operator bool();
+}
+inline bool operator&&(int i, const ROOT::Reflex::Scope & rh) {
+   return i && rh.operator bool();
+}
+inline bool operator||(bool b, const ROOT::Reflex::Scope & rh) {
+   return b && rh.operator bool();
+}
+inline bool operator||(int i, const ROOT::Reflex::Scope & rh) {
+   return i && rh.operator bool();
+}
+#endif
 
 #endif // ROOT_Reflex_Scope

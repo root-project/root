@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.20 2006/08/01 15:41:24 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.21 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -136,47 +136,47 @@ namespace ROOT {
       class MemberTemplate;
 
       typedef std::vector<std::string> StdString_Cont_Type_t;
-      typedef StdString_Cont_Type_t::iterator StdString_Iterator;
-      typedef StdString_Cont_Type_t::reverse_iterator Reverse_StdString_Iterator;
+      typedef StdString_Cont_Type_t::const_iterator StdString_Iterator;
+      typedef StdString_Cont_Type_t::const_reverse_iterator Reverse_StdString_Iterator;
 
       typedef std::vector< Type > Type_Cont_Type_t;
-      typedef Type_Cont_Type_t::iterator Type_Iterator;
-      typedef Type_Cont_Type_t::reverse_iterator Reverse_Type_Iterator;
+      typedef Type_Cont_Type_t::const_iterator Type_Iterator;
+      typedef Type_Cont_Type_t::const_reverse_iterator Reverse_Type_Iterator;
 
       typedef std::vector< Base > Base_Cont_Type_t;
-      typedef Base_Cont_Type_t::iterator Base_Iterator;
-      typedef Base_Cont_Type_t::reverse_iterator Reverse_Base_Iterator;
+      typedef Base_Cont_Type_t::const_iterator Base_Iterator;
+      typedef Base_Cont_Type_t::const_reverse_iterator Reverse_Base_Iterator;
 
       typedef std::vector< Scope > Scope_Cont_Type_t;
-      typedef Scope_Cont_Type_t::iterator Scope_Iterator;
-      typedef Scope_Cont_Type_t::reverse_iterator Reverse_Scope_Iterator;
+      typedef Scope_Cont_Type_t::const_iterator Scope_Iterator;
+      typedef Scope_Cont_Type_t::const_reverse_iterator Reverse_Scope_Iterator;
 
       typedef std::vector< Object > Object_Cont_Type_t;
-      typedef Object_Cont_Type_t::iterator Object_Iterator;
-      typedef Object_Cont_Type_t::reverse_iterator Reverse_Object_Iterator;
+      typedef Object_Cont_Type_t::const_iterator Object_Iterator;
+      typedef Object_Cont_Type_t::const_reverse_iterator Reverse_Object_Iterator;
 
       typedef std::vector< Member > Member_Cont_Type_t;
-      typedef Member_Cont_Type_t::iterator Member_Iterator;
-      typedef Member_Cont_Type_t::reverse_iterator Reverse_Member_Iterator;
+      typedef Member_Cont_Type_t::const_iterator Member_Iterator;
+      typedef Member_Cont_Type_t::const_reverse_iterator Reverse_Member_Iterator;
 
       typedef std::vector< TypeTemplate > TypeTemplate_Cont_Type_t;
-      typedef TypeTemplate_Cont_Type_t::iterator TypeTemplate_Iterator;
-      typedef TypeTemplate_Cont_Type_t::reverse_iterator Reverse_TypeTemplate_Iterator;
+      typedef TypeTemplate_Cont_Type_t::const_iterator TypeTemplate_Iterator;
+      typedef TypeTemplate_Cont_Type_t::const_reverse_iterator Reverse_TypeTemplate_Iterator;
 
       typedef std::vector< MemberTemplate > MemberTemplate_Cont_Type_t;
-      typedef MemberTemplate_Cont_Type_t::iterator MemberTemplate_Iterator;
-      typedef MemberTemplate_Cont_Type_t::reverse_iterator Reverse_MemberTemplate_Iterator;
+      typedef MemberTemplate_Cont_Type_t::const_iterator MemberTemplate_Iterator;
+      typedef MemberTemplate_Cont_Type_t::const_reverse_iterator Reverse_MemberTemplate_Iterator;
 
 
       namespace Dummy {
-         RFLX_API StdString_Cont_Type_t & StdStringCont();
-         RFLX_API Type_Cont_Type_t & TypeCont();        
-         RFLX_API Base_Cont_Type_t & BaseCont();
-         RFLX_API Scope_Cont_Type_t & ScopeCont();
-         RFLX_API Object_Cont_Type_t & ObjectCont();
-         RFLX_API Member_Cont_Type_t & MemberCont();
-         RFLX_API TypeTemplate_Cont_Type_t & TypeTemplateCont();
-         RFLX_API MemberTemplate_Cont_Type_t & MemberTemplateCont();
+         RFLX_API const StdString_Cont_Type_t & StdStringCont();
+         RFLX_API const Type_Cont_Type_t & TypeCont();        
+         RFLX_API const Base_Cont_Type_t & BaseCont();
+         RFLX_API const Scope_Cont_Type_t & ScopeCont();
+         RFLX_API const Object_Cont_Type_t & ObjectCont();
+         RFLX_API const Member_Cont_Type_t & MemberCont();
+         RFLX_API const TypeTemplate_Cont_Type_t & TypeTemplateCont();
+         RFLX_API const MemberTemplate_Cont_Type_t & MemberTemplateCont();
          RFLX_API const Object & Object();
          RFLX_API const Type & Type();
          RFLX_API const TypeTemplate & TypeTemplate();
@@ -185,6 +185,8 @@ namespace ROOT {
          RFLX_API const Member & Member();
          RFLX_API const MemberTemplate & MemberTemplate();
          RFLX_API const Scope & Scope();
+         template< class T >
+         RFLX_API const T & Get();
       }
 
 

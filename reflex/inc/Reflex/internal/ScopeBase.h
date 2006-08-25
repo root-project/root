@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.5 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.6 2006/08/17 14:45:56 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -256,6 +256,16 @@ namespace ROOT {
           */
          const Type & LookupType( const std::string & nam,
                                   const Scope & current ) const;
+
+
+         /**
+          * LookupType will lookup a scope in the current scope
+          * @param nam the string representation of the scope to lookup
+          * @param current the current scope
+          * @return if a matching scope is found return it, otherwise return empty scope
+          */
+         const Scope & LookupScope( const std::string & nam,
+                                    const Scope & current ) const;
 
 
          /**
