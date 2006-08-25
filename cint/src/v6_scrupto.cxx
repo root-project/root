@@ -673,6 +673,7 @@ int G__destroy_upto(G__var_array *var,int global
       ret += G__destroy_upto_vararray(tail, global, dictpos, remain);
       G__var_array *next = tail->next;
       if (next) free(tail);
+      else tail->next = 0;
       tail = next;
    } while (tail);
 
