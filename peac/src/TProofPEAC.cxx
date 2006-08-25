@@ -1,4 +1,4 @@
-// @(#)root/peac:$Name:  $:$Id: TProofPEAC.cxx,v 1.3 2005/05/26 13:40:07 rdm Exp $
+// @(#)root/peac:$Name:  $:$Id: TProofPEAC.cxx,v 1.4 2006/02/28 16:49:36 rdm Exp $
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 
@@ -68,7 +68,7 @@ TProofPEAC::~TProofPEAC()
 }
 
 //------------------------------------------------------------------------------
-Bool_t TProofPEAC::StartSlaves()
+Bool_t TProofPEAC::StartSlaves(Bool_t,Bool_t)
 {
 
    if (IsMaster()) {

@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Name:  $:$Id: TRuby.h,v 1.0 2004/04/27 14:44:02 brun Exp $
+// @(#)root/ruby:$Name:  $:$Id: TRuby.h,v 1.1 2004/05/30 18:17:00 brun Exp $
 // Author:  Elias Athanasopoulos, May 2004
 
 #ifndef ROOT_TRuby
@@ -13,6 +13,7 @@ class TRuby {
 private:
   static bool Initialize();
 public:
+  virtual ~TRuby() { }
   // execute a Ruby statement (e.g. "require 'ruby'")
   static void Exec(const char *cmd);
 

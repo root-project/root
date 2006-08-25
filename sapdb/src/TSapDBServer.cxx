@@ -1,4 +1,4 @@
-// @(#)root/sapdb:$Name:  $:$Id: TSapDBServer.cxx,v 1.2 2003/08/06 21:31:24 rdm Exp $
+// @(#)root/sapdb:$Name:  $:$Id: TSapDBServer.cxx,v 1.3 2006/05/31 14:45:41 rdm Exp $
 // Author: Mark Hemberger & Fons Rademakers   03/08/2001
 
 /*************************************************************************
@@ -408,7 +408,7 @@ Int_t TSapDBServer::printSQLError(SQLHDBC hdbc, SQLHSTMT hstmt)
             512, &usederrortxt);
 
    printf ("SQL state: %s\n", sqlstate);
-   printf ("SQL code:  %ld\n", sqlcode);
+   printf ("SQL code:  %ld\n", long(sqlcode));
    printf ("SQL Errortext:\n%s\n\n", errortxt);
 
    return 0;

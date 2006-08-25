@@ -1,4 +1,4 @@
-// @(#)root/peac:$Name:$:$Id:$
+// @(#)root/peac:$Name:  $:$Id: TProofPEAC.h,v 1.1 2005/02/07 18:02:36 rdm Exp $
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 
@@ -45,7 +45,7 @@ private:
    TTimer         *fHeartbeatTimer; //timer for sending heartbeat to local manager
 
 protected:
-   virtual Bool_t  StartSlaves();
+   virtual Bool_t  StartSlaves(Bool_t parallel=kTRUE,Bool_t attach=kFALSE);
    TString         GetJobAd();
 
 public:
