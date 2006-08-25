@@ -249,12 +249,8 @@ char *G__input(char *prompt)
 /****************************************************************
 *  Support libraries for GNU readline completion
 *
-*  Inter face to readline completion
+*  Interface to readline completion
 *
-*   Copyright of source code bolow and GNU readline library 
-*  belongs to Free Software Foundation. Refer to GNU GENERAL 
-*  PUBLIC LICENSE and GNU LIBRARY GENERAL PUBLIC LICENSE.
-* 
 ****************************************************************/
 
 #ifdef G__GNUREADLINE
