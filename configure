@@ -2445,9 +2445,9 @@ if test ! "x$enable_ruby" = "xno" ; then
 
     if test "x$arch" = "xwin32" || \
        test "x$enable_shared" = "xno" ; then
-        check_library_options="libruby-static libruby1.8-static"
+        check_library_options="libruby-static libruby1.8-static libruby1.9-static"
     else
-        check_library_options="libruby libruby1.8 libruby18"
+        check_library_options="libruby libruby1.8 libruby18 libruby1.9 libruby19"
     fi
     check_library "$check_library_options" \
         "$enable_shared" "$rubylibdir" $RUBYDIR $RUBYDIR/lib \
