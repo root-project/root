@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.cxx,v 1.1 2006/02/20 11:10:06 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.cxx,v 1.2 2006/05/31 07:48:56 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -29,11 +29,14 @@ ClassImp(TGLPolyMarker)
 TGLPolyMarker::TGLPolyMarker(const TBuffer3D & buffer) :
    TGLLogicalShape(buffer),
    fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()),
-   fStyle(7)
+   fStyle(7),
+   fSize(1.)
 {
    //TAttMarker is not TObject descendant, so I need dynamic_cast
-   if (TAttMarker *realObj = dynamic_cast<TAttMarker *>(buffer.fID))
+   if (TAttMarker *realObj = dynamic_cast<TAttMarker *>(buffer.fID)) {
       fStyle = realObj->GetMarkerStyle();
+      fSize  = realObj->GetMarkerSize() / 2.;
+   }
 }
 
 //______________________________________________________________________________
@@ -47,8 +50,8 @@ void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
    const Double_t *vertices = &fVertices[0];
    UInt_t size = fVertices.size();
    Int_t stacks = 6, slices = 6;
-   Float_t pointSize = 6.f;
-   Double_t topRadius = 5.;
+   Float_t pointSize  = fSize;
+   Double_t topRadius = fSize;
 
    switch (fStyle) {
    case 27:
@@ -57,7 +60,7 @@ void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
       for (UInt_t i = 0; i < size; i += 3) {
          glPushMatrix();
          glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
-         gluSphere(fgQuad.Get(), 5., slices, stacks);
+         gluSphere(fgQuad.Get(), fSize, slices, stacks);
          glPopMatrix();
       }
       break;
@@ -67,7 +70,7 @@ void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
       for (UInt_t i = 0; i < size; i += 3) {
          glPushMatrix();
          glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
-         gluCylinder(fgQuad.Get(), 5., topRadius, 5., 4, 1);
+         gluCylinder(fgQuad.Get(), fSize, topRadius, fSize, 4, 1);
          glPopMatrix();
       }
       break;
@@ -76,7 +79,7 @@ void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
          glPushMatrix();
          glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
          glRotated(180, 1., 0., 0.);
-         gluCylinder(fgQuad.Get(), 5., 0., 5., 4, 1);
+         gluCylinder(fgQuad.Get(), fSize, 0., fSize, 4, 1);
          glPopMatrix();
       }
       break;
@@ -91,7 +94,7 @@ void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
    }
    break;
    case 6:
-      pointSize = 3.f;
+      //pointSize = 3.f;
    case 7:
       glPointSize(pointSize);
       glBegin(GL_POINTS);
@@ -107,29 +110,30 @@ void TGLPolyMarker::DrawStars()const
 {
    // Draw stars
    glDisable(GL_LIGHTING);
-   
+   const Double_t diag = TMath::Sqrt(2 * fSize * fSize) / 2;
+
    for (UInt_t i = 0; i < fVertices.size(); i += 3) {
       Double_t x = fVertices[i];
       Double_t y = fVertices[i + 1];
       Double_t z = fVertices[i + 2];
       glBegin(GL_LINES);
       if (fStyle == 2 || fStyle == 3) {
-         glVertex3d(x - 2., y, z);
-         glVertex3d(x + 2., y, z);
-         glVertex3d(x, y, z - 2.);
-         glVertex3d(x, y, z + 2.);
-         glVertex3d(x, y - 2., z);
-         glVertex3d(x, y + 2., z);
+         glVertex3d(x - fSize, y, z);
+         glVertex3d(x + fSize, y, z);
+         glVertex3d(x, y, z - fSize);
+         glVertex3d(x, y, z + fSize);
+         glVertex3d(x, y - fSize, z);
+         glVertex3d(x, y + fSize, z);
       }
       if(fStyle != 2) {
-         glVertex3d(x - 1.4, y - 1.4, z - 1.4);
-         glVertex3d(x + 1.4, y + 1.4, z + 1.4);
-         glVertex3d(x - 1.4, y - 1.4, z + 1.4);
-         glVertex3d(x + 1.4, y + 1.4, z - 1.4);
-         glVertex3d(x - 1.4, y + 1.4, z - 1.4);
-         glVertex3d(x + 1.4, y - 1.4, z + 1.4);
-         glVertex3d(x - 1.4, y + 1.4, z + 1.4);
-         glVertex3d(x + 1.4, y - 1.4, z - 1.4);
+         glVertex3d(x - diag, y - diag, z - diag);
+         glVertex3d(x + diag, y + diag, z + diag);
+         glVertex3d(x - diag, y - diag, z + diag);
+         glVertex3d(x + diag, y + diag, z - diag);
+         glVertex3d(x - diag, y + diag, z - diag);
+         glVertex3d(x + diag, y - diag, z + diag);
+         glVertex3d(x - diag, y + diag, z + diag);
+         glVertex3d(x + diag, y - diag, z - diag);
       }
       glEnd();
    }
