@@ -2595,6 +2595,9 @@ G__EXPORT void G__SetCppCintApiPointers(
 #ifdef gets
 #undef gets
 #endif
+#ifdef tmpfile
+#undef tmpfile
+#endif
 #define printf  G__printf
 #define fprintf G__fprintf
 #define fputc   G__fputc
@@ -2605,6 +2608,7 @@ G__EXPORT void G__SetCppCintApiPointers(
 #define fgets   G__fgets
 #define gets    G__gets
 #define system  G__system
+#define tmpfile G__tmpfile
 
 #ifdef G__FIX1
 int G__printf (char* fmt,...);
@@ -2618,6 +2622,7 @@ int G__puts G__P((char *string));
 char *G__fgets G__P((char *string,int n,FILE *fp));
 char *G__gets G__P((char *buffer));
 int G__system G__P((char *com));
+FILE *G__tmpfile(void);
 
 #ifdef G__SPECIALSTDIO
 

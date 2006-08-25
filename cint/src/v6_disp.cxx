@@ -2385,6 +2385,18 @@ int G__system(char *com)
 
 }
 
+/**************************************************************************
+* G__tmpfile()
+**************************************************************************/
+FILE *G__tmpfile() {
+   char dirname[MAX_PATH];
+   char filename[MAX_PATH];
+   if (!::GetTempPath(MAX_PATH, dirname)) return 0;
+   if (!::GetTempFileName(dirname, "cint_", 0, filename)) return 0;
+   return fopen(filename, "w+bTD"); // write and read (but write first), binary, temp, and delete when closed
+}
+
+
 #else /* G__WIN32 */
 
 /**************************************************************************
