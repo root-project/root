@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.8 2006/05/24 17:11:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.9 2006/07/09 05:27:53 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -10,16 +10,53 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-// Full description with examples and pictures
+// 
+// TGeoElement      - base class for chemical elements
+// TGeoElementRN    - class representing a radionuclide
+// TGeoElemIter     - iterator for decay branches
+// TGeoDecayChannel - a decay channel for a radionuclide
+// TGeoElementTable - table of elements
 //
-//
-//
-//
+////////////////////////////////////////////////////////////////////////////////
+
+#include "Riostream.h"
+
 #include"TObjArray.h"
 #include "TGeoManager.h"
 #include"TGeoElement.h"
 
 // statics and globals
+static const Int_t kMaxElem  = 110;
+static const Int_t kMaxLevel = 8;
+static const Int_t kMaxDecay = 15;
+
+static const char kElName[kMaxElem][3] = {
+          "H ","He","Li","Be","B ","C ","N ","O ","F ","Ne","Na","Mg",
+          "Al","Si","P ","S ","Cl","Ar","K ","Ca","Sc","Ti","V ","Cr",
+          "Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr",
+          "Rb","Sr","Y ","Zr","Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd",
+          "In","Sn","Sb","Te","I ","Xe","Cs","Ba","La","Ce","Pr","Nd",
+          "Pm","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu","Hf",
+          "Ta","W ","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po",
+          "At","Rn","Fr","Ra","Ac","Th","Pa","U ","Np","Pu","Am","Cm",
+          "Bk","Cf","Es","Fm","Md","No","Lr","Rf","Db","Sg","Bh","Hs",
+          "Mt","Ds" };
+
+static const char *kDecayName[kMaxDecay+1] = {
+   "2BetaMinus", "BetaMinus", "NeutronEm", "ProtonEm", "Alpha", "ECF", 
+   "ElecCapt", "IsoTrans", "I", "SpontFiss", "2ProtonEm", "2NeutronEm",
+   "2Alpha", "Carbon12", "Carbon14", "Stable" };
+
+static const Int_t kDecayDeltaA[kMaxDecay] = {
+              0,           0,          -1,         -1,       -4,
+            -99,           0,           0,        -99,      -99,
+             -2,          -2,          -8,        -12,      -14 };
+
+static const Int_t kDecayDeltaZ[kMaxDecay] = { 
+              2,           1,           0,         -1,       -2,   
+            -99,          -1,           0,        -99,      -99,
+             -2,           0,          -4,         -6,       -6 };
+static const char kLevName[kMaxLevel]=" mnpqrs";
 
 ClassImp(TGeoElement)
 
@@ -44,6 +81,511 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Double_t 
    fA = a;
 }
 
+ClassImp(TGeoElementRN)
+
+//______________________________________________________________________________
+TGeoElementRN::TGeoElementRN()
+{
+// Default constructor
+   TObject::SetBit(kElementChecked,kFALSE);
+   fENDFcode = 0;
+   fIso      = 0;
+   fLevel    = 0;
+   fDeltaM   = 0;
+   fHalfLife = 0;
+   fNatAbun  = 0;
+   fTH_F     = 0;
+   fTG_F     = 0;
+   fTH_S     = 0;
+   fTG_S     = 0;
+   fStatus   = 0;
+   fDecays   = 0;
+}   
+
+//______________________________________________________________________________
+TGeoElementRN::TGeoElementRN(Int_t A, Int_t Z, Int_t iso, Double_t level, 
+	      Double_t deltaM, Double_t halfLife, const char* JP,
+	      Double_t natAbun, Double_t th_f, Double_t tg_f, Double_t th_s,
+	      Double_t tg_s, Int_t status)
+              :TGeoElement("", JP, Z, A)
+{
+// Constructor.
+   TObject::SetBit(kElementChecked,kFALSE);
+   fENDFcode = ENDF(A,Z,iso);
+   fIso      = iso;
+   fLevel    = level;
+   fDeltaM   = deltaM;
+   fHalfLife = halfLife;
+   fTitle    = JP;
+   if (!fTitle.Length()) fTitle = "?";
+   fNatAbun  = natAbun;
+   fTH_F     = th_f;
+   fTG_F     = tg_f;
+   fTH_S     = th_s;
+   fTG_S     = tg_s;
+   fStatus   = status;
+   fDecays   = 0;
+   MakeName(A,Z,iso);
+   if ((TMath::Abs(fHalfLife)<1.e-30) || fHalfLife<-1) Warning("ctor","Element %s has T1/2=%g [s]", fName.Data(), fHalfLife);
+}     
+
+//______________________________________________________________________________
+TGeoElementRN::TGeoElementRN(const TGeoElementRN& elem) : TGeoElement(elem),
+               fENDFcode(elem.fENDFcode),
+               fIso(elem.fIso),
+               fLevel(elem.fLevel),
+               fDeltaM(elem.fDeltaM),
+               fHalfLife(elem.fHalfLife),
+               fNatAbun(elem.fNatAbun),
+               fTH_F(elem.fTH_F),
+               fTG_F(elem.fTG_F),
+               fTH_S(elem.fTH_S),
+               fTG_S(elem.fTG_S),
+               fStatus(elem.fStatus),
+               fDecays(NULL)
+{
+// Copy constructor
+   Error("cpy ctor", "Not to use !");
+}   
+
+//______________________________________________________________________________
+TGeoElementRN::~TGeoElementRN()
+{
+// Destructor.
+   if (fDecays) {
+      fDecays->Delete();
+      delete fDecays;
+   }   
+}
+
+//______________________________________________________________________________
+TGeoElementRN &TGeoElementRN::operator=(const TGeoElementRN&)
+{
+// Assignment
+   Error("operator=", "Not to use !");
+   return *this;
+}   
+
+//______________________________________________________________________________
+void TGeoElementRN::AddDecay(Int_t decay, Int_t diso, Double_t branchingRatio, Double_t qValue)
+{
+// Adds a decay mode for this element.
+   if (branchingRatio<1E-20) {
+      TString decayName;
+      TGeoDecayChannel::DecayName(decay, decayName);
+      Warning("AddDecay", "Decay %s of %s has BR=0. Not added.", decayName.Data(),fName.Data());
+      return;
+   }   
+   TGeoDecayChannel *dc = new TGeoDecayChannel(decay,diso,branchingRatio, qValue);
+   dc->SetParent(this);
+   if (!fDecays) fDecays = new TObjArray(5);
+   fDecays->Add(dc);
+}   
+
+//______________________________________________________________________________
+void TGeoElementRN::AddDecay(TGeoDecayChannel *dc)
+{
+// Adds a decay channel to the list of decays.
+   dc->SetParent(this);
+   if (!fDecays) fDecays = new TObjArray(5);
+   fDecays->Add(dc);
+}   
+
+//______________________________________________________________________________
+Int_t TGeoElementRN::GetNdecays() const
+{
+// Get number of decay chanels of this element.
+   if (!fDecays) return 0;
+   return fDecays->GetEntriesFast();
+}   
+
+//______________________________________________________________________________
+Bool_t TGeoElementRN::CheckDecays() const
+{
+// Check if all decay chain of the element is OK.
+   if (TObject::TestBit(kElementChecked)) return kTRUE;
+   TObject *oelem = (TObject*)this;
+   TGeoDecayChannel *dc;
+   TGeoElementRN *elem;
+   TGeoElementTable *table = GetElementTable();
+   TString decayName;
+   if (!table) {
+      Error("CheckDecays", "Element table not present");
+      return kFALSE;
+   }   
+   Bool_t resultOK = kTRUE;
+   if (!fDecays) {
+      oelem->SetBit(kElementChecked,kTRUE);
+      return resultOK;
+   }   
+   Double_t br = 0.;
+   Int_t decayResult = 0;
+   TIter next(fDecays);
+   while ((dc=(TGeoDecayChannel*)next())) {
+      br += dc->BranchingRatio();
+      decayResult = DecayResult(dc);
+      if (decayResult) {
+         elem = table->GetElementRN(decayResult);
+         if (!elem) {
+            TGeoDecayChannel::DecayName(dc->Decay(),decayName);
+            Error("CheckDecays", "Element after decay %s of %s not found in DB", decayName.Data(),fName.Data());
+            return kFALSE;
+         }
+         dc->SetDaughter(elem);
+         resultOK = elem->CheckDecays();
+      }
+   }
+   if (TMath::Abs(br-100) > 1.E-3) {
+      Warning("CheckDecays", "BR for decays of element %s sum-up = %f", fName.Data(), br);
+      resultOK = kFALSE;
+   }
+   oelem->SetBit(kElementChecked,kTRUE);
+   return resultOK;   
+}      
+
+//______________________________________________________________________________
+Int_t TGeoElementRN::DecayResult(TGeoDecayChannel *dc) const
+{
+// Returns ENDF code of decay result.
+   Int_t da, dz, diso;
+   dc->DecayShift(da, dz, diso);
+   if (da == -99 || dz == -99) return 0;
+   return ENDF(Int_t(fA)+da,fZ+dz,fIso+diso);
+}
+   
+//______________________________________________________________________________
+void TGeoElementRN::MakeName(Int_t a, Int_t z, Int_t iso)
+{
+// Generate a default name for the element.
+   fName = "";
+   if (z==0 && a==1) {
+      fName = "neutron";
+      return;
+   }
+   if (z>=1 && z<= kMaxElem) fName += Form("%3d-%s-",z,kElName[z-1]);
+   else fName = "?? -?? -";
+   if (a>=1 && a<=999) fName += Form("%3.3d",a);
+   else fName += "??";
+   if (iso>0 && iso<kMaxLevel) fName += Form("%c", kLevName[iso]);
+   fName.ReplaceAll(" ","");
+}
+
+//______________________________________________________________________________
+void TGeoElementRN::Print(Option_t *option) const
+{
+// Print info about the element;
+   printf("\n%-12s ",fName.Data());
+   printf("ENDF=%d; ",fENDFcode);
+   printf("A=%d; ",(Int_t)fA);
+   printf("Z=%d; ",fZ);
+   printf("Iso=%d; ",fIso);
+   printf("Level=%g[MeV]; ",fLevel);
+   printf("Dmass=%g[MeV]; ",fDeltaM);
+   if (fHalfLife>0) printf("Hlife=%g[s]\n",fHalfLife);
+   else printf("Hlife=INF\n");
+   printf("%13s"," ");
+   printf("J/P=%s; ",fTitle.Data());
+   printf("Abund=%g; ",fNatAbun);
+   printf("Htox=%g; ",fTH_F);
+   printf("Itox=%g; ",fTG_F);
+   printf("Stat=%d\n",fStatus);
+   if(!fDecays) return;
+   printf("Decay modes:\n");
+   TIter next(fDecays);
+   TGeoDecayChannel *dc;
+   while ((dc=(TGeoDecayChannel*)next())) dc->Print(option);
+}
+
+//______________________________________________________________________________
+TGeoElementRN *TGeoElementRN::ReadElementRN(const char *line, Int_t &ndecays)
+{
+// Create element from line record.
+   Int_t a,z,iso,status;
+   Double_t level, deltaM, halfLife, natAbun, th_f, tg_f, th_s, tg_s;
+   char name[20],jp[20];
+   sscanf(&line[0], "%s%d%d%d%lg%lg%lg%s%lg%lg%lg%lg%lg%d%d", name,&a,&z,&iso,&level,&deltaM,
+          &halfLife,jp,&natAbun,&th_f,&tg_f,&th_s,&tg_s,&status,&ndecays);
+   TGeoElementRN *elem = new TGeoElementRN(a,z,iso,level,deltaM,halfLife,
+                                           jp,natAbun,th_f,tg_f,th_s,tg_s,status);
+   return elem;                                        
+}
+
+//______________________________________________________________________________
+void TGeoElementRN::SavePrimitive(ostream &out, Option_t *option)
+{
+// Save primitive for RN elements.
+   if (!strcmp(option,"h")) {
+      // print a header if requested
+      out << "#====================================================================================================================================" << endl;
+      out << "#   Name      A    Z   ISO    LEV[MeV]  DM[MeV]   T1/2[s]        J/P     ABUND[%]    HTOX      ITOX      HTOX      ITOX    STAT NDCY" << endl;
+      out << "#====================================================================================================================================" << endl;
+   }
+   out << setw(11) << fName.Data();
+   out << setw(5) << (Int_t)fA;
+   out << setw(5) << fZ;    
+   out << setw(5) << fIso;
+   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fLevel;
+   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fDeltaM;
+   out << setw(10) << setiosflags(ios::scientific) << setprecision(3) << fHalfLife;
+   out << setw(13) << fTitle.Data();
+   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fNatAbun;
+   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fTH_F;
+   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fTG_F;
+   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fTH_S;
+   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fTG_S;
+   out << setw(5) << fStatus;
+   Int_t ndecays = 0;
+   if (fDecays) ndecays = fDecays->GetEntries();
+   out << setw(5) << ndecays;
+   out << endl;
+   if (fDecays) {
+      TIter next(fDecays);
+      TGeoDecayChannel *dc;
+      while ((dc=(TGeoDecayChannel*)next())) dc->SavePrimitive(out);
+   }   
+}
+
+
+ClassImp(TGeoDecayChannel)
+
+//______________________________________________________________________________
+const char *TGeoDecayChannel::GetName() const
+{
+// Returns name of decay.
+   static TString name = "";
+   name = "";
+   if (!fDecay) return kDecayName[kMaxDecay];
+   for (Int_t i=0; i<kMaxDecay; i++) {
+      if (1<<i & fDecay) {   
+         if (name.Length()) name += "+";
+         name += kDecayName[i];
+      }
+   }
+   return name.Data();
+}
+
+//______________________________________________________________________________
+void TGeoDecayChannel::DecayName(UInt_t decay, TString &name)
+{
+// Returns decay name.
+   if (!decay) {
+      name = kDecayName[kMaxDecay];
+      return;
+   }
+   name = "";
+   for (Int_t i=0; i<kMaxDecay; i++) {
+      if (1<<i & decay) {   
+         if (name.Length()) name += "+";
+         name += kDecayName[i];
+      }
+   }      
+}
+
+//______________________________________________________________________________
+Int_t TGeoDecayChannel::GetIndex() const
+{
+// Get index of this channel in the list of decays of the parent nuclide.
+   return fParent->Decays()->IndexOf(this);
+}   
+
+//______________________________________________________________________________
+void TGeoDecayChannel::Print(Option_t *) const
+{
+// Prints decay info.
+   TString name;
+   DecayName(fDecay, name);
+   printf("%-20s Diso: %3d BR: %9.3f%% Qval: %g\n", name.Data(),fDiso,fBranchingRatio,fQvalue);
+}
+
+//______________________________________________________________________________
+TGeoDecayChannel *TGeoDecayChannel::ReadDecay(const char *line)
+{
+// Create element from line record.
+   char name[80];
+   Int_t decay,diso;
+   Double_t branchingRatio, qValue;
+   sscanf(&line[0], "%s%d%d%lg%lg", name,&decay,&diso,&branchingRatio,&qValue);
+   TGeoDecayChannel *dc = new TGeoDecayChannel(decay,diso,branchingRatio,qValue);
+   return dc;
+}
+
+//______________________________________________________________________________
+void TGeoDecayChannel::SavePrimitive(ostream &out, Option_t *)
+{
+// Save primitive for decays.
+   TString decayName;
+   DecayName(fDecay, decayName);
+   out << setw(50) << decayName.Data();
+   out << setw(10) << fDecay;
+   out << setw(10) << fDiso;
+   out << setw(12) << setiosflags(ios::fixed) << setprecision(6) << fBranchingRatio;
+   out << setw(12) << setiosflags(ios::fixed) << setprecision(6) << fQvalue;
+   out << endl;
+}     
+   
+//______________________________________________________________________________
+void TGeoDecayChannel::DecayShift(Int_t &dA, Int_t &dZ, Int_t &dI) const
+{
+// Returns variation in A, Z and Iso after decay.
+   dA=dZ=0;
+   dI=fDiso;
+   for(Int_t i=0; i<kMaxDecay; ++i) {
+      if(1<<i & fDecay) {
+         if(kDecayDeltaA[i] == -99 || kDecayDeltaZ[i] == -99 ) {
+            dA=dZ=-99; 
+            return;
+         }
+         dA += kDecayDeltaA[i];
+         dZ += kDecayDeltaZ[i];
+      }
+   }   
+}
+
+ClassImp(TGeoElemIter)
+
+//______________________________________________________________________________
+TGeoElemIter::TGeoElemIter(TGeoElementRN *top, Double_t limit) 
+          : fTop(top), fElem(top), fBranch(0), fLevel(0), fLimitRatio(limit), fRatio(1.)
+{
+// Default constructor.
+   fBranch = new TObjArray(10);
+}
+
+//______________________________________________________________________________
+TGeoElemIter::TGeoElemIter(const TGeoElemIter &iter)
+             :fTop(iter.fTop), 
+              fElem(iter.fElem), 
+              fBranch(0), 
+              fLevel(iter.fLevel), 
+              fLimitRatio(iter.fLimitRatio),
+              fRatio(iter.fRatio)
+{
+// Copy ctor.
+   if (iter.fBranch) {
+      fBranch = new TObjArray(10);
+      for (Int_t i=0; i<fLevel; i++) fBranch->Add(iter.fBranch->At(i));
+   }
+}
+
+//______________________________________________________________________________
+TGeoElemIter::~TGeoElemIter()
+{
+// Destructor.
+   if (fBranch) delete fBranch;
+}
+   
+//______________________________________________________________________________
+TGeoElemIter &TGeoElemIter::operator=(const TGeoElemIter &iter)
+{
+// Assignment.
+   if (&iter == this) return *this;
+   fTop   = iter.fTop;
+   fElem  = iter.fElem;
+   fLevel = iter.fLevel;
+   if (iter.fBranch) {
+      fBranch = new TObjArray(10);
+      for (Int_t i=0; i<fLevel; i++) fBranch->Add(iter.fBranch->At(i));
+   }
+   fLimitRatio = iter.fLimitRatio;
+   fRatio = iter.fRatio;
+   return *this;
+}   
+ 
+//______________________________________________________________________________
+TGeoElementRN *TGeoElemIter::operator()()
+{
+// () operator.
+   return Next();
+}
+
+//______________________________________________________________________________
+TGeoElementRN *TGeoElemIter::Up()
+{
+// Go upwards from the current location until the next branching.
+   TGeoDecayChannel *dc;
+   Int_t ind, nd;
+   while (fLevel) {
+      dc = (TGeoDecayChannel*)fBranch->At(fLevel-1);
+      ind = dc->GetIndex();
+      nd = dc->Parent()->GetNdecays();
+      fRatio /= 0.01*dc->BranchingRatio();
+      fElem = dc->Parent();
+      fBranch->RemoveAt(--fLevel);
+      ind++;
+      while (ind<nd) {
+         if (Down(ind++)) return (TGeoElementRN*)fElem;
+      }   
+   }
+   fElem = NULL;
+   return NULL;
+}      
+
+//______________________________________________________________________________
+TGeoElementRN *TGeoElemIter::Down(Int_t ibranch)
+{
+// Go downwards from current level via ibranch as low in the tree as possible.
+// Return value flags if the operation was successful.
+   Int_t i, nd;
+   TGeoDecayChannel *dc = (TGeoDecayChannel*)fElem->Decays()->At(ibranch);
+   if (!dc->Daughter()) return NULL;
+   Double_t br = 0.01*fRatio*dc->BranchingRatio();
+   if (br < fLimitRatio) return NULL;
+   // Go down on the branch as deep as possible.
+   while (1) {
+      fLevel++;
+      fRatio = br;
+      fBranch->Add(dc);
+      fElem = dc->Daughter();
+      nd = fElem->GetNdecays();
+      if (!nd) return (TGeoElementRN*)fElem;
+      i = 0;
+      while (i<nd) {
+         dc = (TGeoDecayChannel*)fElem->Decays()->At(i);
+         br = 0.01*fRatio*dc->BranchingRatio();
+         if (br >= fLimitRatio && dc->Daughter()) break;
+         i++;
+      } 
+      // Check if this was the max depth.
+      if (i==nd) return (TGeoElementRN*)fElem;  
+   }   
+}   
+
+//______________________________________________________________________________
+TGeoElementRN *TGeoElemIter::Next()
+{
+// Return next element.
+   if (!fElem) return NULL;
+   // Check if this is the first iteration.
+   if (!fLevel) {
+      Int_t nd = fElem->GetNdecays();
+      for (Int_t i=0; i<nd; i++) if (Down(i)) return (TGeoElementRN*)fElem;
+      fElem = NULL;
+      return NULL;
+   }
+   // We are already at some level, go up first.
+   return Up();
+}      
+
+//______________________________________________________________________________
+void TGeoElemIter::Print(Option_t */*option*/) const
+{
+// Print info about the current decay branch.
+   TGeoElementRN *elem;
+   TGeoDecayChannel *dc;
+   TString indent = "";
+   printf("=== Chain with %g %%\n", 100*fRatio);
+   for (Int_t i=0; i<fLevel; i++) {
+      dc = (TGeoDecayChannel*)fBranch->At(i);      
+      elem = dc->Parent();
+      printf("%s%s (%g%% %s) T1/2=%g\n", indent.Data(), elem->GetName(),dc->BranchingRatio(),dc->GetName(),elem->HalfLife());
+      indent += " ";
+      if (i==fLevel-1) {
+         elem = dc->Daughter();
+         printf("%s%s\n", indent.Data(), elem->GetName());
+      }
+   }      
+}
+    
 ClassImp(TGeoElementTable)
 
 //______________________________________________________________________________
@@ -59,6 +601,7 @@ TGeoElementTable::TGeoElementTable()
 // default constructor
    fNelements = 0;
    fList      = 0;
+   fListRN    = 0;
 }
 
 //______________________________________________________________________________
@@ -67,14 +610,17 @@ TGeoElementTable::TGeoElementTable(Int_t /*nelements*/)
 // constructor
    fNelements = 0;
    fList = new TObjArray(128);
+   fListRN    = 0;
    BuildDefaultElements();
+//   BuildElementsRN();
 }
 
 //______________________________________________________________________________
 TGeoElementTable::TGeoElementTable(const TGeoElementTable& get) :
   TObject(get),
   fNelements(get.fNelements),
-  fList(get.fList)
+  fList(get.fList),
+  fListRN(get.fListRN)
 { 
    //copy constructor
 }
@@ -87,6 +633,7 @@ TGeoElementTable& TGeoElementTable::operator=(const TGeoElementTable& get)
       TObject::operator=(get);
       fNelements=get.fNelements;
       fList=get.fList;
+      fListRN=get.fListRN;
    } 
    return *this;
 }
@@ -99,19 +646,37 @@ TGeoElementTable::~TGeoElementTable()
       fList->Delete();
       delete fList;
    }
+   if (fListRN) {
+      fListRN->Delete();
+      delete fListRN;
+   }
 }
 
 //______________________________________________________________________________
 void TGeoElementTable::AddElement(const char *name, const char *title, Int_t z, Double_t a)
 {
 // Add an element to the table.
+   if (!fList) fList = new TObjArray(128);
    fList->AddAt(new TGeoElement(name,title,z,a), fNelements++);
 }
+
+//______________________________________________________________________________
+void TGeoElementTable::AddElementRN(TGeoElementRN *elem)
+{
+// Add a radionuclide to the table and map it.
+   if (!fListRN) fListRN = new TObjArray(3600);
+   if (HasRNElements() && GetElementRN(elem->ENDFCode())) return;
+//   elem->Print();
+   fListRN->Add(elem);
+   fNelementsRN++;
+   fElementsRN.insert(ElementRNMap_t::value_type(elem->ENDFCode(), elem));
+}   
 
 //______________________________________________________________________________
 void TGeoElementTable::BuildDefaultElements()
 {
 // Creates the default element table
+   if (HasDefaultElements()) return;
    AddElement("VACUUM","VACUUM"   ,0, 0.0);
    AddElement("H"   ,"HYDROGEN"   ,1, 1.00794);
    AddElement("HE"  ,"HELIUM"     ,2, 4.002602);
@@ -225,6 +790,76 @@ void TGeoElementTable::BuildDefaultElements()
    AddElement("UUN" ,"UNUNNILIUM" ,110 ,269.0);
    AddElement("UUU" ,"UNUNUNIUM"  ,111 ,272.0);
    AddElement("UUB" ,"UNUNBIUM"   ,112 ,277.0);
+   
+   TObject::SetBit(kETDefaultElements,kTRUE);
+}
+
+//______________________________________________________________________________
+void TGeoElementTable::ImportElementsRN()
+{
+// Creates the list of radionuclides.
+   if (HasRNElements()) return;
+   TGeoElementRN *elem;
+   FILE *fp = fopen(gSystem->ExpandPathName("$ROOTSYS/etc/RadioNuclides.txt"), "r");
+   if (!fp) {
+      Error("ImportElementsRN","File RadioNuclides.txt not found");
+      return;
+   }      
+   char line[150];
+   Int_t ndecays = 0;
+   Int_t i;
+   while (fgets(&line[0],140,fp)) {
+      if (line[0]=='#') continue;
+      elem = TGeoElementRN::ReadElementRN(line, ndecays);
+      for (i=0; i<ndecays; i++) {
+         fgets(&line[0],140,fp);
+         TGeoDecayChannel *dc = TGeoDecayChannel::ReadDecay(line);
+         elem->AddDecay(dc);
+      }
+      AddElementRN(elem);
+//      elem->Print();
+   }      
+   TObject::SetBit(kETRNElements,kTRUE);
+   CheckTable();
+}   
+
+//______________________________________________________________________________
+Bool_t TGeoElementTable::CheckTable() const
+{
+// Checks status of element table.
+   if (!HasRNElements()) return HasDefaultElements();
+   TGeoElementRN *elem;
+   Bool_t result = kTRUE;
+   TIter next(fListRN);
+   while ((elem=(TGeoElementRN*)next())) {
+      if (!elem->CheckDecays()) result = kFALSE;
+   }
+   return result;
+}      
+
+//______________________________________________________________________________
+void TGeoElementTable::ExportElementsRN(const char *filename)
+{
+// Export radionuclides in a file.
+   if (!HasRNElements()) return;
+   TString sname = filename;
+   if (!sname.Length()) sname = "RadioNuclides.txt";
+   ofstream out;
+   out.open(sname.Data(), ios::out);
+   if (!out.good()) {
+      Error("ExportElementsRN", "Cannot open file %s", sname.Data());
+      return;
+   }   
+   
+   TGeoElementRN *elem;
+   TIter next(fListRN);
+   Int_t i=0;
+   while ((elem=(TGeoElementRN*)next())) {
+      if ((i%48)==0) elem->SavePrimitive(out,"h");
+      else elem->SavePrimitive(out);
+      i++;
+   }  
+   out.close();    
 }
 
 //______________________________________________________________________________
@@ -243,3 +878,24 @@ TGeoElement *TGeoElementTable::FindElement(const char *name)
    }
    return 0;
 }      
+
+//______________________________________________________________________________
+TGeoElementRN *TGeoElementTable::GetElementRN(Int_t ENDFcode) const
+{
+// Retreive a radionuclide by ENDF code.
+   if (!HasRNElements()) {
+      TGeoElementTable *table = (TGeoElementTable*)this;
+      table->ImportElementsRN();
+      if (!fListRN) return 0;
+   }   
+   ElementRNMap_t::const_iterator it = fElementsRN.find(ENDFcode);
+   if (it != fElementsRN.end()) return it->second;
+   return 0;
+}
+
+//______________________________________________________________________________
+TGeoElementRN *TGeoElementTable::GetElementRN(Int_t a, Int_t z, Int_t iso) const
+{
+// Retreive a radionuclide by a, z, and isomeric state.
+   return GetElementRN(TGeoElementRN::ENDF(a,z,iso));   
+}

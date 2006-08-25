@@ -1,6 +1,6 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.4 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.5 2006/05/23 04:47:36 brun Exp $
 // Author: Andrei Gheata   17/06/04
-
+// Added support for radionuclides: Mihaela Gheata 24/08/2006
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -20,6 +20,8 @@
 #include "TObjArray.h"
 #endif
 
+#include <map>
+
 class TGeoElementTable;
 
 /*************************************************************************
@@ -29,16 +31,15 @@ class TGeoElementTable;
 
 class TGeoElement : public TNamed
 {
+protected:
    enum EGeoElement {
       kElemUsed    =   BIT(17),
-      kElemDefined =   BIT(18)
+      kElemDefined =   BIT(18),
+      kElementChecked = BIT(19)
    };
 
-protected:
    Int_t                    fZ;          // Z of material
    Double_t                 fA;          // A of material
-
-// methods
 
 public:
    // constructors
@@ -47,6 +48,7 @@ public:
    // destructor
    virtual ~TGeoElement()             {;}
    // methods
+   virtual Int_t            ENDFCode()    const { return 0;}
    Int_t                    Z() const {return fZ;}
    Double_t                 A() const {return fA;}
    Bool_t                   IsDefined() const {return TObject::TestBit(kElemDefined);}   
@@ -60,6 +62,175 @@ public:
 };
 
 /*************************************************************************
+ * TGeoElementRN - a radionuclide.
+ *
+ *************************************************************************/
+class TGeoDecayChannel;
+
+class TGeoElementRN : public TGeoElement
+{
+protected:
+   Int_t                    fENDFcode; // ENDF element code
+   Int_t                    fIso;      // Isomer number
+   Double_t                 fLevel;    // Isomeric level
+   Double_t                 fDeltaM;   // Mass excess
+   Double_t                 fHalfLife; // Half life
+   Double_t                 fNatAbun;  // Natural Abundance
+//   char                     fJP[11];   // Spin-parity
+   Double_t                 fTH_F;     // Hynalation toxicity
+   Double_t                 fTG_F;     // Ingestion toxicity
+   Double_t                 fTH_S;     // Hynalation toxicity
+   Double_t                 fTG_S;     // Ingestion toxicity
+   Int_t                    fStatus;   // Status code
+
+   TObjArray               *fDecays;   // List of decay modes
+   
+   void                     MakeName(Int_t a, Int_t z, Int_t iso);
+
+   TGeoElementRN(const TGeoElementRN& elem); 
+   TGeoElementRN& operator=(const TGeoElementRN& elem); 
+public:
+   TGeoElementRN();
+   TGeoElementRN(Int_t A, Int_t Z, Int_t iso, Double_t level, 
+	      Double_t deltaM, Double_t halfLife, const char* JP,
+	      Double_t natAbun, Double_t th_f, Double_t tg_f, Double_t th_s,
+	      Double_t tg_s, Int_t status); 
+   virtual ~TGeoElementRN();
+
+   void                     AddDecay(Int_t decay, Int_t diso, Double_t branchingRatio, Double_t qValue);
+   void                     AddDecay(TGeoDecayChannel *dc);
+   static Int_t             ENDF(Int_t a, Int_t z, Int_t iso) {return 10000*z+10*a+iso;}
+
+   // Getters
+   virtual Int_t            ENDFCode()    const { return fENDFcode;   }
+   Int_t                    MassNo()      const { return (Int_t)fA;   }
+   Int_t                    AtomicNo()    const { return fZ;          }
+   Int_t                    IsoNo()       const { return fIso;        }
+   Double_t                 Level()       const { return fLevel;      }    
+   Double_t                 MassEx()      const { return fDeltaM;     }   
+   Double_t                 HalfLife()    const { return fHalfLife;   }
+   Double_t                 NatAbun()     const { return fNatAbun;    }  
+   const char*              PJ()          const { return fTitle.Data();}   
+   Double_t                 TH_F()        const { return fTH_F;       }     
+   Double_t                 TG_F()        const { return fTG_F;       }     
+   Double_t                 TH_S()        const { return fTH_S;       }     
+   Double_t                 TG_S()        const { return fTG_S;       }     
+   Double_t                 Status()      const { return fStatus;     }
+   Bool_t                   Stable()      const { return !fDecays;    }
+   TObjArray               *Decays()      const { return fDecays;     }
+   Int_t                    GetNdecays()  const;
+
+   // Utilities
+   Bool_t                   CheckDecays() const;
+   Int_t                    DecayResult(TGeoDecayChannel *dc) const;
+   virtual void             Print(Option_t *option = "") const;
+   static TGeoElementRN    *ReadElementRN(const char *record, Int_t &ndecays);
+   virtual void             SavePrimitive(ostream &out, Option_t *option = "");
+  
+   ClassDef(TGeoElementRN, 1)           // radionuclides
+};
+
+/*************************************************************************
+ * TGeoDecayChannel - a decay channel.
+ *
+ *************************************************************************/
+
+class TGeoDecayChannel : public TObject
+{
+private:
+   UInt_t                   fDecay;          // Decay mode
+   Int_t                    fDiso;           // Delta isomeric number
+   Double_t                 fBranchingRatio; // Branching Ratio
+   Double_t                 fQvalue;         // Qvalue in GeV
+   TGeoElementRN           *fParent;         // Parent element
+   TGeoElementRN           *fDaughter;       // Daughter element
+public:
+   enum ENuclearDecayMode {
+      kBitMask32  = 0xffffffff,
+      k2BetaMinus   = BIT(0),
+      kBetaMinus    = BIT(1),
+      kNeutronEm    = BIT(2), 
+      kProtonEm     = BIT(3),
+      kAlpha        = BIT(4),
+      kECF          = BIT(5),
+      kElecCapt     = BIT(6),
+      kIsoTrans     = BIT(7),
+      kI            = BIT(8),
+      kSpontFiss    = BIT(9),
+      k2P           = BIT(10),
+      k2N           = BIT(11),
+      k2A           = BIT(12),
+      kCarbon12     = BIT(13),
+      kCarbon14     = BIT(14)
+   };
+   TGeoDecayChannel() : fDecay(0), fDiso(0), fBranchingRatio(0), fQvalue(0), fParent(0), fDaughter(0) {}
+   TGeoDecayChannel(Int_t decay, Int_t diso, Double_t branchingRatio, Double_t qValue)
+                  : fDecay(decay), fDiso(diso), fBranchingRatio(branchingRatio), fQvalue(qValue), fParent(0), fDaughter(0) {}
+   virtual ~TGeoDecayChannel() {}
+
+   // Getters
+   Int_t                    GetIndex()       const;
+   virtual const char      *GetName()        const;
+   UInt_t                   Decay()          const {return fDecay;}
+   Double_t                 BranchingRatio() const {return fBranchingRatio;}
+   Double_t                 Qvalue()         const {return fQvalue;}
+   Int_t                    DeltaIso()       const {return fDiso;}
+   TGeoElementRN           *Daughter()       const {return fDaughter;}
+   TGeoElementRN           *Parent()         const {return fParent;}
+   static void              DecayName(UInt_t decay, TString &name);
+   // Setters
+   void                     SetParent(TGeoElementRN *parent) {fParent = parent;}
+   void                     SetDaughter(TGeoElementRN *daughter) {fDaughter = daughter;}
+   // Services
+   virtual void             Print(Option_t *opt = " ") const;
+   static TGeoDecayChannel *ReadDecay(const char *record);
+   virtual void             SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void             DecayShift(Int_t &dA, Int_t &dZ, Int_t &dI) const ;
+
+   ClassDef(TGeoDecayChannel,1)    // Decay channel for Elements
+};
+
+/*************************************************************************
+ * TGeoElemIter - iterator for decay chains.
+ *
+ *************************************************************************/
+
+class TGeoElemIter
+{
+private:
+   const TGeoElementRN     *fTop;            // Top element of the iteration
+   const TGeoElementRN     *fElem;           // Current element
+   TObjArray               *fBranch;         // Current branch
+   Int_t                    fLevel;          // Current level
+   Double_t                 fLimitRatio;     // Minimum cumulative branching ratio
+   Double_t                 fRatio;          // Current ratio
+
+protected:
+   TGeoElemIter() : fTop(0), fElem(0), fBranch(0), fLevel(0), fLimitRatio(0), fRatio(0) {}
+   TGeoElementRN           *Down(Int_t ibranch);
+   TGeoElementRN           *Up();
+
+public:
+   TGeoElemIter(TGeoElementRN *top, Double_t limit=1.e-4);
+   TGeoElemIter(const TGeoElemIter &iter); 
+   virtual ~TGeoElemIter();
+   
+   TGeoElemIter   &operator=(const TGeoElemIter &iter);
+   TGeoElementRN  *operator()();
+   TGeoElementRN           *Next();
+
+   TObjArray               *GetBranch(Int_t &nlevel) const {nlevel=fLevel; return fBranch;}
+   const TGeoElementRN     *GetTop() const                 {return fTop;}
+   const TGeoElementRN     *GetElement() const             {return fElem;}
+   Int_t                    GetLevel() const               {return fLevel;}
+   Double_t                 GetRatio() const               {return fRatio;}
+   virtual void             Print(Option_t *option="") const;
+   void                     SetLimitRatio(Double_t limit)  {fLimitRatio = limit;}
+   
+   ClassDef(TGeoElemIter,0)    // Iterator for radionuclide chains.
+};
+
+/*************************************************************************
  * TGeoElementTable - table of elements 
  *
  *************************************************************************/
@@ -68,10 +239,14 @@ class TGeoElementTable : public TObject
 {
 private:
 // data members
-   Int_t                    fNelements;  // number of elements
-   TObjArray               *fList;       // list of elements
-
-   void                     BuildDefaultElements();
+   Int_t                    fNelements;    // number of elements
+   Int_t                    fNelementsRN;  // number of RN elements
+   TObjArray               *fList;         // list of elements
+   TObjArray               *fListRN;       // list of RN elements
+   // Map of radionuclides
+   typedef std::map<Int_t, TGeoElementRN *>   ElementRNMap_t;
+   typedef ElementRNMap_t::iterator           ElementRNMapIt_t;
+   ElementRNMap_t           fElementsRN; //! map of RN elements with ENDF key
 
 protected:
    TGeoElementTable(const TGeoElementTable&); 
@@ -84,13 +259,28 @@ public:
    // destructor
    virtual ~TGeoElementTable();
    // methods
-   
+
+   enum EGeoETStatus {
+      kETDefaultElements = BIT(14),
+      kETRNElements      = BIT(15)
+   };      
    void                     AddElement(const char *name, const char *title, Int_t z, Double_t a);
+   void                     AddElementRN(TGeoElementRN *elem);
+   void                     BuildDefaultElements();
+   void                     ImportElementsRN();
+   Bool_t                   CheckTable() const;
    TGeoElement             *FindElement(const char *name);
    TGeoElement             *GetElement(Int_t z) {return (TGeoElement*)fList->At(z);}
-   Int_t                    GetNelements() const {return fNelements;}
+   TGeoElementRN           *GetElementRN(Int_t ENDFcode) const;
+   TGeoElementRN           *GetElementRN(Int_t a, Int_t z, Int_t iso=0) const;
+   Bool_t                   HasDefaultElements() const {return TObject::TestBit(kETDefaultElements);}
+   Bool_t                   HasRNElements() const {return TObject::TestBit(kETRNElements);}
 
-   ClassDef(TGeoElementTable, 2)              // table of elements
+   Int_t                    GetNelements() const {return fNelements;}
+   Int_t                    GetNelementsRN() const {return fNelementsRN;}
+   void                     ExportElementsRN(const char *filename="");
+
+   ClassDef(TGeoElementTable,3)              // table of elements
 };
 
 #endif
