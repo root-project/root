@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.5 2006/05/23 04:47:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.6 2006/08/25 09:44:35 brun Exp $
 // Author: Andrei Gheata   17/06/04
 // Added support for radionuclides: Mihaela Gheata 24/08/2006
 /*************************************************************************
@@ -166,7 +166,11 @@ public:
    TGeoDecayChannel() : fDecay(0), fDiso(0), fBranchingRatio(0), fQvalue(0), fParent(0), fDaughter(0) {}
    TGeoDecayChannel(Int_t decay, Int_t diso, Double_t branchingRatio, Double_t qValue)
                   : fDecay(decay), fDiso(diso), fBranchingRatio(branchingRatio), fQvalue(qValue), fParent(0), fDaughter(0) {}
+   TGeoDecayChannel(const TGeoDecayChannel &dc) : TObject(dc),fDecay(dc.fDecay),fDiso(dc.fDiso),fBranchingRatio(dc.fBranchingRatio),
+                                                  fQvalue(dc.fQvalue),fParent(dc.fParent),fDaughter(dc.fDaughter) {}
    virtual ~TGeoDecayChannel() {}
+
+   TGeoDecayChannel& operator=(const TGeoDecayChannel& dc);
 
    // Getters
    Int_t                    GetIndex()       const;

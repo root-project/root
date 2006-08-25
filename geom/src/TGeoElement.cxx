@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.10 2006/08/25 09:44:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.11 2006/08/25 14:17:33 rdm Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -347,6 +347,23 @@ void TGeoElementRN::SavePrimitive(ostream &out, Option_t *option)
 
 
 ClassImp(TGeoDecayChannel)
+
+//______________________________________________________________________________
+TGeoDecayChannel& TGeoDecayChannel::operator=(const TGeoDecayChannel& dc)
+{
+// Assignment.
+   //assignment operator
+   if(this!=&dc) {
+      TObject::operator=(dc);
+      fDecay          = dc.fDecay;
+      fDiso           = dc.fDiso;
+      fBranchingRatio = dc.fBranchingRatio;
+      fQvalue         = dc.fQvalue;
+      fParent         = dc.fParent;
+      fDaughter       = dc.fDaughter;
+   } 
+   return *this;
+}   
 
 //______________________________________________________________________________
 const char *TGeoDecayChannel::GetName() const
