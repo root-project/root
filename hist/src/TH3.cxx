@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.81 2006/06/16 13:47:57 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.82 2006/08/01 07:13:36 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -735,11 +735,22 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
    Int_t ipar;
    char name[80], title[80];
    TH2D *hlist[25];
+   const TArrayD *xbins = fXaxis.GetXbins();
+   const TArrayD *ybins = fYaxis.GetXbins();
    for (ipar=0;ipar<npar;ipar++) {
       sprintf(name,"%s_%d",GetName(),ipar);
       sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
-      hlist[ipar] = new TH2D(name,title, nbinsx, fXaxis.GetXmin(), fXaxis.GetXmax()
-         , nbinsy, fYaxis.GetXmin(), fYaxis.GetXmax());
+      if (xbins->fN == 0) {
+         hlist[ipar] = new TH2D(name, title,
+                                nbinsx, fXaxis.GetXmin(), fXaxis.GetXmax(),
+                                nbinsy, fYaxis.GetXmin(), fYaxis.GetXmax());
+      } else {
+         hlist[ipar] = new TH2D(name, title,
+                                nbinsx, xbins->fArray,
+                                nbinsy, ybins->fArray);
+      }
+      hlist[ipar]->GetXaxis()->SetTitle(fXaxis.GetTitle());
+      hlist[ipar]->GetYaxis()->SetTitle(fYaxis.GetTitle());
    }
    sprintf(name,"%s_chi2",GetName());
    TH2D *hchi2 = new TH2D(name,"chisquare", nbinsx, fXaxis.GetXmin(), fXaxis.GetXmax()
