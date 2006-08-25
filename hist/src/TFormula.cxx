@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.122 2006/06/19 16:15:45 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.123 2006/08/24 16:53:27 pcanal Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2850,7 +2850,7 @@ TString TFormula::GetExpFormula() const
          }
          if(optype==145) {
             int param = (fOper[i] & kTFOperMask);
-            int fno   = param / 1000;
+            //int fno   = param / 1000;
             int nargs = param % 1000;
             offset = -nargs;
             // The function name contains return type and parameters types we need

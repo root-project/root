@@ -478,7 +478,7 @@ void G__scratch_globals_upto(G__dictposition *dictpos)
 *
 ***********************************************************************/
 static int G__destroy_upto_vararray(G__var_array *var,int global
-                    ,G__var_array *dictpos,int ig15)
+                                    ,G__var_array * /*dictpos*/,int ig15)
 {
   int itemp=0,itemp1=0;
   
