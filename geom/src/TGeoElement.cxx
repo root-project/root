@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.9 2006/07/09 05:27:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.10 2006/08/25 09:44:35 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -567,7 +567,7 @@ TGeoElementRN *TGeoElemIter::Next()
 }      
 
 //______________________________________________________________________________
-void TGeoElemIter::Print(Option_t */*option*/) const
+void TGeoElemIter::Print(Option_t *) const
 {
 // Print info about the current decay branch.
    TGeoElementRN *elem;
