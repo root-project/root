@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.5 2006/06/30 07:34:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.6 2006/06/30 14:24:48 rdm Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -11,15 +11,17 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TFileCacheWrite : a cache when writing files on the network          //
+// TFileCacheWrite : a cache when writing files over the network        //
 //                                                                      //
 // A caching system to speed up network I/O, i.e. when there is         //
 // no operating system caching support (like the buffer cache for       //
 // local disk I/O). The cache makes sure that every I/O is done with    //
 // a (large) fixed length buffer thereby avoiding many small I/O's.     //
 // Currently the write cache system is used by the classes TNetFile,    //
-// TRFIOFile and TWebFile.                                              //
-// The write cache is automativally created when writing a remote file. //
+// TXNetFile and TWebFile (via TFile::WriteBuffers()).                  //
+//                                                                      //
+// The write cache is automatically created when writing a remote file  //
+// (created in TFile::Open()).                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -60,21 +62,6 @@ TFileCacheWrite::TFileCacheWrite(TFile *file, Int_t buffersize)
    fBuffer      = new char[fBufferSize];
    if (file) file->SetCacheWrite(this);
    if (gDebug > 0) Info("TFileCacheWrite","Creating a write cache with buffersize=%d bytes",buffersize);
-}
-
-//______________________________________________________________________________
-TFileCacheWrite::TFileCacheWrite(const TFileCacheWrite &pf) : TObject(pf)
-{
-   // Copy Constructor.
-}
-
-//______________________________________________________________________________
-TFileCacheWrite& TFileCacheWrite::operator=(const TFileCacheWrite& pf)
-{
-   // Assignment.
-
-   if (this != &pf) TObject::operator=(pf);
-   return *this;
 }
 
 //_____________________________________________________________________________

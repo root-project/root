@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.h,v 1.1 2006/06/27 14:36:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.h,v 1.2 2006/06/29 22:15:36 rdm Exp $
 // Author: Rene Brun   19/05/2006
 
 /*************************************************************************
@@ -35,7 +35,7 @@ protected:
    char         *fBuffer;         //[fBufferSize] buffer of contiguous prefetched blocks
    Bool_t        fRecursive;      //flag to avoid recursive calls
 
-protected:
+private:
    TFileCacheWrite(const TFileCacheWrite &);            //cannot be copied
    TFileCacheWrite& operator=(const TFileCacheWrite &);
 

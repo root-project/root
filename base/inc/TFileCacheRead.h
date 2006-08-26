@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheRead.h,v 1.2 2006/06/29 22:15:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheRead.h,v 1.3 2006/07/04 12:58:09 brun Exp $
 // Author: Rene Brun   19/05/2006
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 class TFileCacheRead : public TObject {
 
 protected:
-   Int_t         fBufferSizeMin;  //Original size of fBuffer 
+   Int_t         fBufferSizeMin;  //Original size of fBuffer
    Int_t         fBufferSize;     //Allocated size of fBuffer (at a given time)
    Int_t         fBufferLen;      //Current buffer length (<= fBufferSize)
    Int_t         fNseek;          //Number of blocks to be prefetched
@@ -47,7 +47,7 @@ protected:
    char         *fBuffer;         //[fBufferSize] buffer of contiguous prefetched blocks
    Bool_t        fIsSorted;       //True if fSeek array is sorted
 
-protected:
+private:
    TFileCacheRead(const TFileCacheRead &);            //cannot be copied
    TFileCacheRead& operator=(const TFileCacheRead &);
 

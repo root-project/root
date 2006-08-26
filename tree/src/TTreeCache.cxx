@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.7 2006/08/14 10:52:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.8 2006/08/14 12:51:40 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -95,27 +95,12 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->Get
 }
 
 //______________________________________________________________________________
-TTreeCache::TTreeCache(const TTreeCache &pf) : TFileCacheRead(pf)
-{
-   // Copy Constructor.
-}
-
-//______________________________________________________________________________
 TTreeCache::~TTreeCache()
 {
    // destructor. (in general called by the TFile destructor
 
    delete [] fBranches;
    if (fBrNames) {fBrNames->Delete(); delete fBrNames;}
-}
-
-//______________________________________________________________________________
-TTreeCache& TTreeCache::operator=(const TTreeCache& pf)
-{
-   // Assignment.
-
-   if (this != &pf) TFileCacheRead::operator=(pf);
-   return *this;
 }
 
 //_____________________________________________________________________________
@@ -226,7 +211,7 @@ Double_t TTreeCache::GetEfficiency()
 //_____________________________________________________________________________
 Double_t TTreeCache::GetEfficiencyRel()
 {
-   // This will indicate a sort of relative efficiency... a ratio of the 
+   // This will indicate a sort of relative efficiency... a ratio of the
    // reads found in the cache to the number of reads so far
 
    if ( !fNReadOk && !fNReadMiss )
@@ -267,17 +252,17 @@ Int_t TTreeCache::ReadBuffer(char *buf, Long64_t pos, Int_t len)
       fNReadOk++;
       return 1;
    }
-   
+
    //not found in cache. Do we need to fill the cache?
    Bool_t bufferFilled = FillBuffer();
    if (bufferFilled) {
       Int_t res = TFileCacheRead::ReadBuffer(buf,pos,len);
-      
+
       if (res == 1)
          fNReadOk++;
       else if (res == 0)
          fNReadMiss++;
-      
+
       return res;
    }
    fNReadMiss++;

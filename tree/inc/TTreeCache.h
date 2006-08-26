@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.h,v 1.2 2006/06/29 22:15:37 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.h,v 1.3 2006/08/11 20:17:26 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -46,7 +46,7 @@ protected:
    Bool_t          fIsLearning;  //! true if cache is in learning mode
    static  Int_t fgLearnEntries; //Number of entries used for learning mode
 
-protected:
+private:
    TTreeCache(const TTreeCache &);            //this class cannot be copied
    TTreeCache& operator=(const TTreeCache &);
 

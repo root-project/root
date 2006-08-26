@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.2 2006/06/29 22:15:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.3 2006/07/04 12:58:09 brun Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -11,15 +11,14 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TFileCacheRead : a cache when reading files on the network           //
+// TFileCacheRead : a cache when reading files over the network         //
 //                                                                      //
 // A caching system to speed up network I/O, i.e. when there is         //
 // no operating system caching support (like the buffer cache for       //
 // local disk I/O). The cache makes sure that every I/O is done with    //
 // a (large) fixed length buffer thereby avoiding many small I/O's.     //
 // Currently the read cache system is used by the classes TNetFile,     //
-// TRFIOFile and TWebFile.                                              //
-// One creates a read cache via  TFile::SetCacheRead.                   //
+// TXNetFile and TWebFile (via TFile::ReadBuffers()).                   //
 //                                                                      //
 // When processing TTree, TChain, a specialized class TTreeCache that   //
 // derives from this class is automatically created.                    //
@@ -83,21 +82,6 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
    fBuffer      = new char[fBufferSize];
    fIsSorted    = kFALSE;
    if (file) file->SetCacheRead(this);
-}
-
-//______________________________________________________________________________
-TFileCacheRead::TFileCacheRead(const TFileCacheRead &pf) : TObject(pf)
-{
-   // Copy Constructor.
-}
-
-//______________________________________________________________________________
-TFileCacheRead& TFileCacheRead::operator=(const TFileCacheRead& pf)
-{
-   // Assignment.
-
-   if (this != &pf) TObject::operator=(pf);
-   return *this;
 }
 
 //_____________________________________________________________________________
