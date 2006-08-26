@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.183 2006/08/10 07:08:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.184 2006/08/11 20:25:52 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1368,7 +1368,7 @@ Int_t TFile::Recover()
    // is recovered, the last Tree header written to the file will be used.
    // In this case all the entries in all the branches written before writing
    // the header are valid entries.
-   
+
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
@@ -1661,7 +1661,7 @@ void TFile::UseCache(Int_t /*maxCacheSize*/, Int_t /*pageSize*/)
 {
    // Dummy function kept for backward compatibility.
    // The read  cache is now managed by TFileCacheRead
-   // The write cache is now managed by TFileCacheRead
+   // The write cache is now managed by TFileCacheWrite
    // Both caches are created automatically by the system.
 
 }
@@ -2515,7 +2515,7 @@ Long64_t TFile::GetFileBytesWritten()
 Int_t TFile::GetFileReadCalls()
 {
    // Static function returning the total number of read calls from all files.
-   
+
    return fgReadCalls;
 }
 
