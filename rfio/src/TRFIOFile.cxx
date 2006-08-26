@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.35 2006/07/10 13:01:13 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.36 2006/07/24 16:26:28 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 //    rfio:/afs/cern.ch/user/r/rdm/galice.root                           //
 //         where galice.root is a symlink of the type /shift/.../...     //
 //    rfio:na49db1:/data1/raw.root                                       //
+//    rfio:/castor/cern.ch/user/r/rdm/test.root                          //
 //                                                                       //
 // If Castor 2.1 is used the file names can be given also in the         //
 // following ways:                                                       //
@@ -66,29 +67,34 @@ struct dirent {
 };
 #endif
 
+//#include <rfio_api.h>    // prototypes don't have "const char*" ?!?
 
 extern "C" {
-   int   rfio_open(const char *filepath, int flags, int mode);
-   int   rfio_close(int s);
-   int   rfio_read(int s, void *ptr, int size);
-   int   rfio_write(int s, const void *ptr, int size);
-   int   rfio_lseek(int s, int offset, int how);
-   int   rfio_access(const char *filepath, int mode);
-   int   rfio_unlink(const char *filepath);
-   int   rfio_parse(const char *name, char **host, char **path);
-   int   rfio_stat(const char *path, struct stat *statbuf);
-   int   rfio_fstat(int s, struct stat *statbuf);
-   void  rfio_perror(const char *msg);
-   char *rfio_serror();
-   int   rfiosetopt(int opt, int *pval, int len);
-   int   rfio_mkdir(const char *path, int mode);
-   int   rfio_rmdir (const char *path);
-   void *rfio_opendir(const char *dirpath);
-   int   rfio_closedir(void *dirp);
-   void *rfio_readdir(void *dirp);
+   int     rfio_open(const char *path, int flags, int mode);
+   int     rfio_open64(const char *path, int flags, int mode);
+   int     rfio_close(int s);
+   int     rfio_read(int s, void *ptr, int size);
+   int     rfio_write(int s, const void *ptr, int size);
+   off_t   rfio_lseek(int s, off_t offset, int how);
+   off64_t rfio_lseek64(int s, off64_t offset, int how);
+   int     rfio_access(const char *path, int mode);
+   int     rfio_unlink(const char *path);
+   int     rfio_parse(const char *name, char **host, char **path);
+   int     rfio_stat(const char *path, struct stat *statbuf);
+   int     rfio_stat64(const char *path, struct stat64 *statbuf);
+   int     rfio_fstat(int s, struct stat *statbuf);
+   int     rfio_fstat64(int s, struct stat64 *statbuf);
+   void    rfio_perror(const char *msg);
+   char   *rfio_serror();
+   int     rfiosetopt(int opt, int *pval, int len);
+   int     rfio_mkdir(const char *path, int mode);
+   int     rfio_rmdir (const char *path);
+   void   *rfio_opendir(const char *dirpath);
+   int     rfio_closedir(void *dirp);
+   void   *rfio_readdir(void *dirp);
 #ifdef R__WIN32
-   int  *C__serrno(void);
-   int  *C__rfio_errno (void);
+   int    *C__serrno(void);
+   int    *C__rfio_errno (void);
 #endif
 };
 
@@ -268,7 +274,7 @@ Int_t TRFIOFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
    // Interface to system open. All arguments like in POSIX open.
 
-   Int_t ret = ::rfio_open((char *)pathname, flags, (Int_t) mode);
+   Int_t ret = ::rfio_open64(pathname, flags, (Int_t) mode);
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
    return ret;
@@ -318,7 +324,7 @@ Long64_t TRFIOFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 
    if (whence == SEEK_SET && offset == fOffset) return offset;
 
-   Long64_t ret = ::rfio_lseek(fd, offset, whence);
+   Long64_t ret = ::rfio_lseek64(fd, offset, whence);
 
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
@@ -335,9 +341,9 @@ Int_t TRFIOFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
    // Interface to TSystem:GetPathInfo(). Generally implemented via
    // stat() or fstat().
 
-   struct stat statbuf;
+   struct stat64 statbuf;
 
-   if (::rfio_fstat(fd, &statbuf) >= 0) {
+   if (::rfio_fstat64(fd, &statbuf) >= 0) {
       if (id)
          *id = (statbuf.st_dev << 24) + statbuf.st_ino;
       if (size)
@@ -485,9 +491,9 @@ Int_t TRFIOSystem::GetPathInfo(const char *path, FileStat_t &buf)
 
    TUrl url(path);
 
-   struct stat sbuf;
+   struct stat64 sbuf;
 
-   if (path && ::rfio_stat(url.GetFile(), &sbuf) >= 0) {
+   if (path && ::rfio_stat64(url.GetFile(), &sbuf) >= 0) {
 
       buf.fDev    = sbuf.st_dev;
       buf.fIno    = sbuf.st_ino;

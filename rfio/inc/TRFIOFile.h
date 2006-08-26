@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.13 2006/07/10 13:01:12 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.14 2006/07/24 16:26:28 rdm Exp $
 // Author: Fons Rademakers  20/01/99 + Giulia Taurelli  29/06/2006
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 //    rfio:/afs/cern.ch/user/r/rdm/galice.root                           //
 //         where galice.root is a symlink of the type /shift/.../...     //
 //    rfio:na49db1:/data1/raw.root                                       //
+//    rfio:/castor/cern.ch/user/r/rdm/test.root                          //
 //                                                                       //
 // If Castor 2.1 is used the file names can be given also in the         //
 // following ways:                                                       //
