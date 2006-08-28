@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.h,v 1.1 2004/06/13 16:26:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPerfStats.h,v 1.2 2005/02/07 18:02:37 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -45,9 +45,8 @@ class TList;
 class TPerfEvent : public TObject {
 
 public:
-   TString     fEvtNode;   // node on which the event was generated
-   TTimeStamp  fTimeStamp; // time offset from start of run
-
+   TString                       fEvtNode;   // node on which the event was generated
+   TTimeStamp                    fTimeStamp; // time offset from start of run
    TVirtualPerfStats::EEventType fType;
    TString                       fSlaveName;
    TString                       fNodeName;

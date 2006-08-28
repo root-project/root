@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.5 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.6 2006/06/21 16:18:26 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -35,8 +35,8 @@ ClassImp(TVirtualProof)
 TVirtualProof *TVirtualProof::Open(const char *cluster, const char *conffile,
                                    const char *confdir, Int_t loglevel)
 {
-   // Start a PROOF session on a specific cluster. If cluster is 0
-   // (the default) then the PROOF Session Viewer GUI pops up; 0 is returned.
+   // Start a PROOF session on a specific cluster. If cluster is 0 (the
+   // default) then the PROOF Session Viewer GUI pops up and 0 is returned.
    // If cluster is "" (empty string) then we connect to a PROOF session
    // on the localhost ("proof://localhost"). The appropriate instance of
    // TVirtualProofMgr is created, if not yet existing. The instantiated
@@ -147,7 +147,7 @@ Int_t TVirtualProof::Reset(const char *url, const char *usr)
    // in the form
    //                "[proof://][user@]master.url[:port]"
    // If 'user' has the privileges it can also ask to reset the entry of a
-   // different user specified by 'usr'; use 'usr'=='*' to reset all the 
+   // different user specified by 'usr'; use 'usr'=='*' to reset all the
    // sessions know remotely.
    // 'Reset' means that all the PROOF sessions owned by the user at this
    // master are terminated or killed, any other client connections (from other
