@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.18 2006/05/10 14:06:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.19 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -56,16 +56,16 @@ struct Lbc_t {
 };
 
 static struct Lbc_t gLbc[] = {
-   { "Root",        "/",                     "hdisk_t.xpm",         1000, 0, 0 },
-   { "Floppy",      "/floppy",               "fdisk_t.xpm",         2000, 1, 0 },
-   { "CD-ROM",      "/cdrom",                "cdrom_t.xpm",         3000, 1, 0 },
-   { "Home",        "$HOME",                 "home_t.xpm",          4000, 1, 0 },
+   { "Root",        "/",                "hdisk_t.xpm",         1000, 0, 0 },
+   { "Floppy",      "/floppy",          "fdisk_t.xpm",         2000, 1, 0 },
+   { "CD-ROM",      "/cdrom",           "cdrom_t.xpm",         3000, 1, 0 },
+   { "Home",        "$HOME",            "home_t.xpm",          4000, 1, 0 },
 #ifndef ROOTPREFIX
-   { "RootSys",     "$ROOTSYS",              "root_t.xpm",          5000, 1, 0 },
+   { "RootSys",     "$ROOTSYS",		"root_t.xpm",          5000, 1, 0 },
 #else
-   { ROOTPREFIX,    ROOTPREFIX,              "root_t.xpm",          5000, 1, 0 },
+   { ROOTPREFIX,    ROOTPREFIX,         "root_t.xpm",          5000, 1, 0 },
 #endif
-   { 0,             0,                       0,                     6000, 0, 0 }
+   { 0,             0,                  0,                     6000, 0, 0 }
 };
 
 
@@ -241,7 +241,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
 #ifndef ROOTPREFIX
    const char *rootSys = gSystem->Getenv("ROOTSYS");
 #else
-   const char *rootSys = ROOTPREFIX;
+   // const char *rootSys = ROOTPREFIX;
 #endif
 
    for (i = 0; gLbc[i].fPath != 0; ++i) {
@@ -257,20 +257,34 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
          }
       }
 #ifndef ROOTPREFIX
+      // Below should _only_ be called if the prefix isn't set at build
+      // time. The code below expands the occurance of `$ROOTSYS' in
+      // the table above.  However, in the case of prefix being set at
+      // build time, we do not need to expand the prefix, as it is
+      // already known, so the entries in the table above are actually
+      // fully expanded. 
       if (strstr(gLbc[i].fPath, "$ROOTSYS") != 0) {
-#else
-      if (strstr(gLbc[i].fPath, ROOTPREFIX) != 0) {
-#endif
+	  // Get the size of the prefix template
+	 const int plen = 8;
          if (rootSys) {
             int hlen = strlen(rootSys);
-            p = new char[hlen + strlen(gLbc[i].fPath) - 3];
+	    // Allocate enough memory to hold prefix (hlen), and
+	    // what's in the path (strlen(gLbc[i].fPath)) minus the
+	    // prefix template size, and one character for terminating
+	    // null. 
+	    int blen = hlen + strlen(gLbc[i].fPath) - plen + 1;
+            p = new char[blen];
             strcpy(p, rootSys);
-            strcat(p, &gLbc[i].fPath[8]);
+            strcat(p, &(gLbc[i].fPath[plen]));
+	    // Figure out where to put the terminating NULL 
+	    int npos = hlen + strlen(&(gLbc[i].fPath[plen]));
+	    p[npos] = '\0';
             gLbc[i].fPath = p;
          } else {
             gLbc[i].fFlags = 0;
          }
       }
+#endif
       if (gSystem->AccessPathName(gLbc[i].fPath, kFileExists) == 0)
          gLbc[i].fFlags = 1;
    }
