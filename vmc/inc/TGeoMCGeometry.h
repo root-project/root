@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.9 2006/05/13 20:57:20 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.10 2006/08/24 16:31:21 rdm Exp $
 // Authors: Al;ice collaboration 25/06/2002
 
 /*************************************************************************
@@ -98,18 +98,18 @@ public:
    // Returns the material parameters for the volume specified by
    // the volume name.
    virtual Bool_t GetMaterial(const TString& volumeName,
-	 	         TString& name, Int_t& imat,
-		         Double_t& a, Double_t& z, Double_t& density,
-		         Double_t& radl, Double_t& inter, TArrayD& par);
+                         TString& name, Int_t& imat,
+                         Double_t& a, Double_t& z, Double_t& density,
+                         Double_t& radl, Double_t& inter, TArrayD& par);
 
    // Returns the medium parameters for the volume specified by the
    // volume name.
    virtual Bool_t GetMedium(const TString& volumeName,
                          TString& name, Int_t& imed,
-		         Int_t& nmat, Int_t& isvol, Int_t& ifield,
-		         Double_t& fieldm, Double_t& tmaxfd, Double_t& stemax,
-		         Double_t& deemax, Double_t& epsil, Double_t& stmin,
-		         TArrayD& par);
+                         Int_t& nmat, Int_t& isvol, Int_t& ifield,
+                         Double_t& fieldm, Double_t& tmaxfd, Double_t& stemax,
+                         Double_t& deemax, Double_t& epsil, Double_t& stmin,
+                         TArrayD& par);
    // functions for drawing
    //virtual void  DrawOneSpec(const char* name);
    //virtual void  Gsatt(const char* name, const char* att, Int_t val);
