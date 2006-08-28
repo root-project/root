@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.82 2006/08/01 07:13:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.83 2006/08/25 10:49:11 couet Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -49,6 +49,7 @@ TH3::TH3()
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
    SetBinsLength(27);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -69,6 +70,7 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
    fNcells      = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -90,6 +92,7 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    fNcells      = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -111,6 +114,7 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    fNcells      = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________

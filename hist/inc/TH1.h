@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.79 2006/08/02 12:54:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.80 2006/08/17 09:30:48 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -104,6 +104,7 @@ protected:
     static Int_t  fgBufferSize;     //!default buffer size for automatic histograms
     static Bool_t fgAddDirectory;   //!flag to add histograms to the directory
     static Bool_t fgStatOverflows;  //!flag to use under/overflows in statistics
+    static Bool_t fgDefaultSumw2;   //!flag to call TH1::Sumw2 automatically at histogram creation time
 
 private:
    Int_t   AxisChoice(Option_t *axis) const;
@@ -211,6 +212,7 @@ public:
    virtual Double_t GetCellContent(Int_t binx, Int_t biny) const;
    virtual Double_t GetCellError(Int_t binx, Int_t biny) const;
    virtual void     GetCenter(Double_t *center) const {fXaxis.GetCenter(center);}
+   static  Bool_t   GetDefaultSumw2();
    TDirectory      *GetDirectory() const {return fDirectory;}
    virtual Double_t GetEntries() const;
    virtual Double_t GetEffectiveEntries() const;
@@ -296,6 +298,7 @@ public:
    virtual void     SetContour(Int_t nlevels, const Double_t *levels=0);
    virtual void     SetContourLevel(Int_t level, Double_t value);
    static  void     SetDefaultBufferSize(Int_t buffersize=1000);
+   static  void     SetDefaultSumw2(Bool_t sumw2=kTRUE);
    virtual void     SetDirectory(TDirectory *dir);
    virtual void     SetEntries(Double_t n) {fEntries = n;};
    virtual void     SetError(const Double_t *error);

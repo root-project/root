@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.96 2006/06/26 09:46:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.97 2006/07/03 12:12:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -61,6 +61,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
    if (nbinsy <= 0) nbinsy = 1;
    fYaxis.Set(nbinsy,ylow,yup);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -75,6 +76,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    if (nbinsy <= 0) nbinsy = 1;
    fYaxis.Set(nbinsy,ylow,yup);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -90,6 +92,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -105,6 +108,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -120,6 +124,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor.
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.303 2006/08/17 09:30:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.304 2006/08/23 09:00:21 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -437,6 +437,7 @@ const Int_t kNstat = 11;
 
 Int_t  TH1::fgBufferSize   = 1000;
 Bool_t TH1::fgAddDirectory = kTRUE;
+Bool_t TH1::fgDefaultSumw2 = kTRUE;
 Bool_t TH1::fgStatOverflows= kFALSE;
 
 extern void H1InitGaus();
@@ -570,6 +571,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    if (xbins) fXaxis.Set(nbins,xbins);
    else       fXaxis.Set(nbins,0,1);
    fNcells = fXaxis.GetNbins()+2;
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -595,6 +597,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    if (xbins) fXaxis.Set(nbins,xbins);
    else       fXaxis.Set(nbins,0,1);
    fNcells = fXaxis.GetNbins()+2;
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2840,10 +2843,22 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
 //______________________________________________________________________________
 Int_t TH1::GetDefaultBufferSize()
 {
+   // static function
    // return the default buffer size for automatic histograms
    // the parameter fgBufferSize may be changed via SetDefaultBufferSize
 
    return fgBufferSize;
+}
+
+
+//______________________________________________________________________________
+Bool_t TH1::GetDefaultSumw2()
+{
+   // static function
+   // return kTRUE if TH1::Sumw2 must be called when creating new histograms.
+   // see TH1::SetDefaultSumw2.
+
+   return fgDefaultSumw2;
 }
 
 
@@ -4728,6 +4743,18 @@ void TH1::SetDefaultBufferSize(Int_t buffersize)
    fgBufferSize = buffersize;
 }
 
+
+//______________________________________________________________________________
+void TH1::SetDefaultSumw2(Bool_t sumw2)
+{
+   // static function.
+   // When this static function is called with sumw2=kTRUE, all new
+   // histograms will automatically activate the storage
+   // of the sum of squares of errors, ie TH1::Sumw2 is automatically called.
+
+   fgDefaultSumw2 = sumw2;
+}
+
 //______________________________________________________________________________
 void TH1::SetTitle(const char *title)
 {
@@ -6469,8 +6496,7 @@ void TH1::SetStats(Bool_t stats)
 //______________________________________________________________________________
 void TH1::Sumw2()
 {
-   //   -*-*-*Create structure to store sum of squares of weights*-*-*-*-*-*-*-*
-   //         ===================================================
+   // Create structure to store sum of squares of weights*-*-*-*-*-*-*-*
    //
    //     if histogram is already filled, the sum of squares of weights
    //     is filled with the existing bin contents
@@ -6478,9 +6504,10 @@ void TH1::Sumw2()
    //     The error per bin will be computed as sqrt(sum of squares of weight)
    //     for each bin.
    //
-   //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //  This function is automatically called when the histogram is created
+   //  if the static function TH1::SetDefaultSumw2 has been called before.
 
-   if (fSumw2.fN) {
+   if (!fgDefaultSumw2 && fSumw2.fN) {
       Warning("Sumw2","Sum of squares of weights structure already created");
       return;
    }
@@ -6820,6 +6847,7 @@ TH1C::TH1C(): TH1(), TArrayC()
 
    fDimension = 1;
    SetBinsLength(3);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -6835,6 +6863,7 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    TArrayC::Set(fNcells);
 
    if (xlow >= xup) SetBuffer(fgBufferSize);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -6848,6 +6877,7 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    //
    fDimension = 1;
    TArrayC::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -6861,6 +6891,7 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    //
    fDimension = 1;
    TArrayC::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7050,6 +7081,7 @@ TH1S::TH1S(): TH1(), TArrayS()
 
    fDimension = 1;
    SetBinsLength(3);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7065,6 +7097,7 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    TArrayS::Set(fNcells);
 
    if (xlow >= xup) SetBuffer(fgBufferSize);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7078,6 +7111,7 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    //
    fDimension = 1;
    TArrayS::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7091,6 +7125,7 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    //
    fDimension = 1;
    TArrayS::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7279,6 +7314,7 @@ TH1I::TH1I(): TH1(), TArrayI()
 
    fDimension = 1;
    SetBinsLength(3);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7294,6 +7330,7 @@ TH1I::TH1I(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    TArrayI::Set(fNcells);
 
    if (xlow >= xup) SetBuffer(fgBufferSize);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7307,6 +7344,7 @@ TH1I::TH1I(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    //
    fDimension = 1;
    TArrayI::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7508,6 +7546,7 @@ TH1F::TH1F(): TH1(), TArrayF()
 
    fDimension = 1;
    SetBinsLength(3);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7523,6 +7562,7 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    TArrayF::Set(fNcells);
 
    if (xlow >= xup) SetBuffer(fgBufferSize);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7536,6 +7576,7 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    //
    fDimension = 1;
    TArrayF::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7549,6 +7590,7 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    //
    fDimension = 1;
    TArrayF::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7565,6 +7607,7 @@ TH1F::TH1F(const TVectorF &v)
       SetBinContent(i+1,v(i+ivlow));
    }
    TArrayF::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7733,6 +7776,7 @@ TH1D::TH1D(): TH1(), TArrayD()
 
    fDimension = 1;
    SetBinsLength(3);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7748,6 +7792,7 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    TArrayD::Set(fNcells);
 
    if (xlow >= xup) SetBuffer(fgBufferSize);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7761,6 +7806,7 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    //
    fDimension = 1;
    TArrayD::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7774,6 +7820,7 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    //
    fDimension = 1;
    TArrayD::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -7790,6 +7837,7 @@ TH1D::TH1D(const TVectorD &v)
       SetBinContent(i+1,v(i+ivlow));
    }
    TArrayD::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
