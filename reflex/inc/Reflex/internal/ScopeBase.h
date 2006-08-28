@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.6 2006/08/17 14:45:56 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.7 2006/08/25 10:16:02 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -818,14 +818,14 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::DataMember_End() c
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::DataMember_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fDataMembers.rbegin();
+   return ((const std::vector<Member>&)fDataMembers).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::DataMember_REnd() const {
 //-------------------------------------------------------------------------------
-   return fDataMembers.rend();
+   return ((const std::vector<Member>&)fDataMembers).rend();
 }
 
 
@@ -846,14 +846,14 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::FunctionMember_End
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::FunctionMember_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fFunctionMembers.rbegin();
+   return ((const std::vector<Member>&)fFunctionMembers).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::FunctionMember_REnd() const {
 //-------------------------------------------------------------------------------
-   return fFunctionMembers.rend();
+   return ((const std::vector<Member>&)fFunctionMembers).rend();
 }
 
 
@@ -874,14 +874,14 @@ inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeBase::SubScope_End() cons
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeBase::SubScope_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fSubScopes.rbegin();
+   return ((const std::vector<Scope>&)fSubScopes).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeBase::SubScope_REnd() const {
 //-------------------------------------------------------------------------------
-   return fSubScopes.rend();
+   return ((const std::vector<Scope>&)fSubScopes).rend();
 }
 
 
@@ -902,14 +902,14 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ScopeBase::SubType_End() const 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::SubType_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fSubTypes.rbegin();
+   return ((const std::vector<Type>&)fSubTypes).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::SubType_REnd() const {
 //-------------------------------------------------------------------------------
-   return fSubTypes.rend();
+   return ((const std::vector<Type>&)fSubTypes).rend();
 }
 
 
@@ -930,14 +930,14 @@ inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::ScopeBase::SubTypeTempl
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::ScopeBase::SubTypeTemplate_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fTypeTemplates.rbegin();
+   return ((const std::vector<TypeTemplate>&)fTypeTemplates).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::ScopeBase::SubTypeTemplate_REnd() const {
 //-------------------------------------------------------------------------------
-   return fTypeTemplates.rend();
+   return ((const std::vector<TypeTemplate>&)fTypeTemplates).rend();
 }
 
 
@@ -1087,14 +1087,14 @@ inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeBase::UsingDirective_End(
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeBase::UsingDirective_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fUsingDirectives.rbegin();
+   return ((const std::vector<Scope>&)fUsingDirectives).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeBase::UsingDirective_REnd() const {
 //-------------------------------------------------------------------------------
-   return fUsingDirectives.rend();
+   return ((const std::vector<Scope>&)fUsingDirectives).rend();
 }
 
 

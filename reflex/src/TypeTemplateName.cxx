@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplateName.cxx,v 1.1 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateName.cxx,v 1.2 2006/08/16 06:42:36 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -166,7 +166,7 @@ ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::TypeTemplateName::TypeTemplate
 ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::TypeTemplateName::TypeTemplate_RBegin() {
 //-------------------------------------------------------------------------------
    // Return the RBegin iterator of the type template collection
-   return sTypeTemplateVec().rbegin();
+   return ((const std::vector<TypeTemplate>&)sTypeTemplateVec()).rbegin();
 }
 
 
@@ -174,7 +174,7 @@ ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::TypeTemplateName::Type
 ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::TypeTemplateName::TypeTemplate_REnd() {
 //-------------------------------------------------------------------------------
    // Return the rend iterator of the type template collection
-   return sTypeTemplateVec().rend();
+   return ((const std::vector<TypeTemplate>&)sTypeTemplateVec()).rend();
 }
 
 

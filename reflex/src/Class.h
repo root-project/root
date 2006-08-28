@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.13 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.14 2006/08/17 13:50:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -672,14 +672,14 @@ inline ROOT::Reflex::Base_Iterator ROOT::Reflex::Class::Base_End() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::Class::Base_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fBases.rbegin();
+   return ((const std::vector<Base>&)fBases).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::Class::Base_REnd() const {
 //-------------------------------------------------------------------------------
-   return fBases.rend();
+   return ((const std::vector<Base>&)fBases).rend();
 }
 
 

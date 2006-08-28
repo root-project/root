@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.18 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.19 2006/08/16 06:42:35 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -163,7 +163,7 @@ ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeName::Scope_End() {
 ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeName::Scope_RBegin() {
 //-------------------------------------------------------------------------------
 // Return the rbegin iterator of the scope collection.
-   return sScopeVec().rbegin();
+   return ((const std::vector<Scope>&)sScopeVec()).rbegin();
 }
 
 
@@ -171,7 +171,7 @@ ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeName::Scope_RBegin() {
 ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeName::Scope_REnd() {
 //-------------------------------------------------------------------------------
 // Return the rend iterator of the scope collection.
-   return sScopeVec().rend();
+   return ((const std::vector<Scope>&)sScopeVec()).rend();
 }
 
 

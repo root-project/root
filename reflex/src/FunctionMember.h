@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionMember.h,v 1.7 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionMember.h,v 1.8 2006/08/15 15:22:52 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -158,14 +158,14 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::FunctionMember::FunctionPa
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterDefault_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fParameterDefaults.rbegin();
+   return ((const std::vector<std::string>&)fParameterDefaults).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterDefault_REnd() const {
 //-------------------------------------------------------------------------------
-   return fParameterDefaults.rend();
+   return ((const std::vector<std::string>&)fParameterDefaults).rend();
 }
 
 
@@ -186,14 +186,14 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::FunctionMember::FunctionPa
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterName_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fParameterNames.rbegin();
+   return ((const std::vector<std::string>&)fParameterNames).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterName_REnd() const {
 //-------------------------------------------------------------------------------
-   return fParameterNames.rend();
+   return ((const std::vector<std::string>&)fParameterNames).rend();
 }
 
 

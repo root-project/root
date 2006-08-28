@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Function.h,v 1.9 2006/08/02 14:14:49 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Function.h,v 1.10 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -154,14 +154,14 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Function::FunctionParameter_End
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Function::FunctionParameter_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fParameters.rbegin();
+   return ((const std::vector<Type>&)fParameters).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Function::FunctionParameter_REnd() const {
 //-------------------------------------------------------------------------------
-   return fParameters.rend();
+   return ((const std::vector<Type>&)fParameters).rend();
 }
 
 

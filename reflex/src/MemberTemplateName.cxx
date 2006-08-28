@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateName.cxx,v 1.1 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateName.cxx,v 1.2 2006/08/17 11:49:49 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -166,7 +166,7 @@ ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::MemberTemplateName::MemberTe
 ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::MemberTemplateName::MemberTemplate_RBegin() {
 //-------------------------------------------------------------------------------
    // Return the RBegin iterator of the member template collection
-   return sMemberTemplateVec().rbegin();
+   return ((const std::vector<MemberTemplate>&)sMemberTemplateVec()).rbegin();
 }
 
 
@@ -174,7 +174,7 @@ ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::MemberTemplateName::
 ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::MemberTemplateName::MemberTemplate_REnd() {
 //-------------------------------------------------------------------------------
    // Return the rend iterator of the member template collection
-   return sMemberTemplateVec().rend();
+   return ((const std::vector<MemberTemplate>&)sMemberTemplateVec()).rend();
 }
 
 

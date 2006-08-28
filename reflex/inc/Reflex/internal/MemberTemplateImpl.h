@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.2 2006/08/02 14:14:49 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.3 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -231,14 +231,14 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplateImpl::Templa
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefault_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fParameterDefaults.rbegin();
+   return ((const std::vector<std::string>&)fParameterDefaults).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefault_REnd() const {
 //-------------------------------------------------------------------------------
-   return fParameterDefaults.rend();
+   return ((const std::vector<std::string>&)fParameterDefaults).rend();
 }
 
 
@@ -267,14 +267,14 @@ inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplateImpl::Templa
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterName_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fParameterNames.rbegin();
+   return ((const std::vector<std::string>&)fParameterNames).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterName_REnd() const {
 //-------------------------------------------------------------------------------
-   return fParameterNames.rend();
+   return ((const std::vector<std::string>&)fParameterNames).rend();
 }
 
 #endif // ROOT_Reflex_MemberTemplateImpl

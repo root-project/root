@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TemplateInstance.h,v 1.6 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TemplateInstance.h,v 1.7 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -122,14 +122,14 @@ inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TemplateInstance::TemplateArgum
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TemplateInstance::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
-   return fTemplateArguments.rbegin();
+   return ((const std::vector<Type>&)fTemplateArguments).rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TemplateInstance::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
-   return fTemplateArguments.rend();
+   return ((const std::vector<Type>&)fTemplateArguments).rend();
 }
 
 

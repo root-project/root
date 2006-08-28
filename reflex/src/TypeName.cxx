@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.14 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.15 2006/08/16 06:42:36 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -176,7 +176,7 @@ ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeName::Type_End() {
 ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeName::Type_RBegin() {
 //-------------------------------------------------------------------------------
 // Return rbegin iterator of the type container.
-   return sTypeVec().rbegin();
+   return ((const std::vector<Type>&)sTypeVec()).rbegin();
 }
 
 
@@ -184,7 +184,7 @@ ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeName::Type_RBegin() {
 ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeName::Type_REnd() {
 //-------------------------------------------------------------------------------
 // Return rend iterator of the type container.
-   return sTypeVec().rend();
+   return ((const std::vector<Type>&)sTypeVec()).rend();
 }
 
 

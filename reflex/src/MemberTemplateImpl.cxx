@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.15 2006/08/16 06:42:35 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.16 2006/08/17 11:49:49 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -80,7 +80,7 @@ ROOT::Reflex::Member_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateInstance
 ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateInstance_RBegin() const {
 //-------------------------------------------------------------------------------
    // Return the rbegin iterator of the instance container of this member template.
-   return fTemplateInstances.rbegin();
+   return ((const std::vector<Member>&)fTemplateInstances).rbegin();
 }
 
                                              
@@ -88,7 +88,7 @@ ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::MemberTemplateImpl::Template
 ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateInstance_REnd() const {
 //-------------------------------------------------------------------------------
    // Return the rend iterator of the instance container of this member template.
-   return fTemplateInstances.rend();
+   return ((const std::vector<Member>&)fTemplateInstances).rend();
 }
 
                                              

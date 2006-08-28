@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.12 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.13 2006/08/16 06:42:36 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -85,7 +85,7 @@ ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_End
 ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_RBegin() const {
 //-------------------------------------------------------------------------------
    // Return the rbegin iterator of the instance container of this type template.
-   return fTemplateInstances.rbegin();
+   return ((const std::vector<Type>&)fTemplateInstances).rbegin();
 }
 
                                              
@@ -93,7 +93,7 @@ ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInst
 ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInstance_REnd() const {
 //-------------------------------------------------------------------------------
    // Return the rend iterator of the instance container of this type template.
-   return fTemplateInstances.rend();
+   return ((const std::vector<Type>&)fTemplateInstances).rend();
 }
 
                                              
