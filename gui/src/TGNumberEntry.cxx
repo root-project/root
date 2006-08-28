@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.29 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.30 2006/08/23 16:50:32 antcheva Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1107,7 +1107,7 @@ void TGNumberEntryField::SetNumber(Double_t val)
    case kNESReal:
       {
          char text[256];
-         sprintf(text, "%.15g", val);
+         sprintf(text, "%g", val);
          SetText(text);
          break;
       }
