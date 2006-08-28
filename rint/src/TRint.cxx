@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.59 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.60 2006/08/16 08:42:35 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -178,13 +178,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    }
 
    // Execute logon macro
-   logon = gEnv->GetValue("Rint.Logon", (char*)0);
-   if (logon && !NoLogOpt()) {
-      char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
-      if (mac)
-         ProcessFile(logon);
-      delete [] mac;
-   }
+   ExecLogon();
 
    // Save current interpreter context
    gInterpreter->SaveContext();
@@ -222,6 +216,55 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 TRint::~TRint()
 {
    // Destructor.
+}
+
+//______________________________________________________________________________
+void TRint::ExecLogon()
+{
+   // Execute logon macro's. There are three levels of logon macros that
+   // will be executed: the system logon etc/system.rootlogon.C, the global
+   // user logon ~/.rootlogon.C and the local ./.rootlogon.C. For backward
+   // compatibility also the logon macro as specified by the Rint.Logon
+   // environment setting, by default ./rootlogon.C, will be executed.
+   // No logon macros will be executed when the system is started with
+   // the -n option.
+
+   if (NoLogOpt()) return;
+
+   TString name = ".rootlogon.C";
+   TString sname = "system";
+   sname += name;
+#ifdef ROOTETCDIR
+   char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
+#else
+   TString etc = gRootDir;
+#ifdef WIN32
+   etc += "\\etc";
+#else
+   etc += "/etc";
+#endif
+   char *s = gSystem->ConcatFileName(etc, sname);
+#endif
+   if (!gSystem->AccessPathName(s, kReadPermission)) {
+      ProcessFile(s);
+      delete [] s;
+   }
+   s = gSystem->ConcatFileName(gSystem->HomeDirectory(), name);
+   if (!gSystem->AccessPathName(s, kReadPermission)) {
+      ProcessFile(s);
+      delete [] s;
+   }
+   if (!gSystem->AccessPathName(name, kReadPermission))
+      ProcessFile(name);
+
+   // execute also the logon macro specified by "Rint.Logon"
+   const char *logon = gEnv->GetValue("Rint.Logon", (char*)0);
+   if (logon) {
+      char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
+      if (mac)
+         ProcessFile(logon);
+      delete [] mac;
+   }
 }
 
 //______________________________________________________________________________
