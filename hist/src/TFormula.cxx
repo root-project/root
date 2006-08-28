@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.123 2006/08/24 16:53:27 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.124 2006/08/25 10:07:34 rdm Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2860,9 +2860,9 @@ TString TFormula::GetExpFormula() const
                   case '<': ++depth; break;
                   case '>': --depth; break;
                   case ' ': if (depth==0) {
-                              funcname.Remove(0,i+1);
-                              i = funcname.Length();
-                              break;
+                               funcname.Remove(0,i+1);
+                               i = funcname.Length();
+                               break;
                             }
                }
             }
