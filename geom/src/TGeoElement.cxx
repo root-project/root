@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.11 2006/08/25 14:17:33 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.10 2006/08/25 09:44:35 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -26,11 +26,11 @@
 #include"TGeoElement.h"
 
 // statics and globals
-static const Int_t kMaxElem  = 110;
-static const Int_t kMaxLevel = 8;
-static const Int_t kMaxDecay = 15;
+static const Int_t gMaxElem  = 110;
+static const Int_t gMaxLevel = 8;
+static const Int_t gMaxDecay = 15;
 
-static const char kElName[kMaxElem][3] = {
+static const char gElName[gMaxElem][3] = {
           "H ","He","Li","Be","B ","C ","N ","O ","F ","Ne","Na","Mg",
           "Al","Si","P ","S ","Cl","Ar","K ","Ca","Sc","Ti","V ","Cr",
           "Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr",
@@ -42,21 +42,21 @@ static const char kElName[kMaxElem][3] = {
           "Bk","Cf","Es","Fm","Md","No","Lr","Rf","Db","Sg","Bh","Hs",
           "Mt","Ds" };
 
-static const char *kDecayName[kMaxDecay+1] = {
+static const char *gDecayName[gMaxDecay+1] = {
    "2BetaMinus", "BetaMinus", "NeutronEm", "ProtonEm", "Alpha", "ECF", 
    "ElecCapt", "IsoTrans", "I", "SpontFiss", "2ProtonEm", "2NeutronEm",
    "2Alpha", "Carbon12", "Carbon14", "Stable" };
 
-static const Int_t kDecayDeltaA[kMaxDecay] = {
+static const Int_t gDecayDeltaA[gMaxDecay] = {
               0,           0,          -1,         -1,       -4,
             -99,           0,           0,        -99,      -99,
              -2,          -2,          -8,        -12,      -14 };
 
-static const Int_t kDecayDeltaZ[kMaxDecay] = { 
+static const Int_t gDecayDeltaZ[gMaxDecay] = { 
               2,           1,           0,         -1,       -2,   
             -99,          -1,           0,        -99,      -99,
              -2,           0,          -4,         -6,       -6 };
-static const char kLevName[kMaxLevel]=" mnpqrs";
+static const char gLevName[gMaxLevel]=" mnpqrs";
 
 ClassImp(TGeoElement)
 
@@ -104,9 +104,9 @@ TGeoElementRN::TGeoElementRN()
 
 //______________________________________________________________________________
 TGeoElementRN::TGeoElementRN(Int_t A, Int_t Z, Int_t iso, Double_t level, 
-	      Double_t deltaM, Double_t halfLife, const char* JP,
-	      Double_t natAbun, Double_t th_f, Double_t tg_f, Double_t th_s,
-	      Double_t tg_s, Int_t status)
+               Double_t deltaM, Double_t halfLife, const char* JP,
+               Double_t natAbun, Double_t th_f, Double_t tg_f, Double_t th_s,
+               Double_t tg_s, Int_t status)
               :TGeoElement("", JP, Z, A)
 {
 // Constructor.
@@ -262,11 +262,11 @@ void TGeoElementRN::MakeName(Int_t a, Int_t z, Int_t iso)
       fName = "neutron";
       return;
    }
-   if (z>=1 && z<= kMaxElem) fName += Form("%3d-%s-",z,kElName[z-1]);
+   if (z>=1 && z<= gMaxElem) fName += Form("%3d-%s-",z,gElName[z-1]);
    else fName = "?? -?? -";
    if (a>=1 && a<=999) fName += Form("%3.3d",a);
    else fName += "??";
-   if (iso>0 && iso<kMaxLevel) fName += Form("%c", kLevName[iso]);
+   if (iso>0 && iso<gMaxLevel) fName += Form("%c", gLevName[iso]);
    fName.ReplaceAll(" ","");
 }
 
@@ -371,11 +371,11 @@ const char *TGeoDecayChannel::GetName() const
 // Returns name of decay.
    static TString name = "";
    name = "";
-   if (!fDecay) return kDecayName[kMaxDecay];
-   for (Int_t i=0; i<kMaxDecay; i++) {
+   if (!fDecay) return gDecayName[gMaxDecay];
+   for (Int_t i=0; i<gMaxDecay; i++) {
       if (1<<i & fDecay) {   
          if (name.Length()) name += "+";
-         name += kDecayName[i];
+         name += gDecayName[i];
       }
    }
    return name.Data();
@@ -386,14 +386,14 @@ void TGeoDecayChannel::DecayName(UInt_t decay, TString &name)
 {
 // Returns decay name.
    if (!decay) {
-      name = kDecayName[kMaxDecay];
+      name = gDecayName[gMaxDecay];
       return;
    }
    name = "";
-   for (Int_t i=0; i<kMaxDecay; i++) {
+   for (Int_t i=0; i<gMaxDecay; i++) {
       if (1<<i & decay) {   
          if (name.Length()) name += "+";
-         name += kDecayName[i];
+         name += gDecayName[i];
       }
    }      
 }
@@ -446,14 +446,14 @@ void TGeoDecayChannel::DecayShift(Int_t &dA, Int_t &dZ, Int_t &dI) const
 // Returns variation in A, Z and Iso after decay.
    dA=dZ=0;
    dI=fDiso;
-   for(Int_t i=0; i<kMaxDecay; ++i) {
+   for(Int_t i=0; i<gMaxDecay; ++i) {
       if(1<<i & fDecay) {
-         if(kDecayDeltaA[i] == -99 || kDecayDeltaZ[i] == -99 ) {
+         if(gDecayDeltaA[i] == -99 || gDecayDeltaZ[i] == -99 ) {
             dA=dZ=-99; 
             return;
          }
-         dA += kDecayDeltaA[i];
-         dZ += kDecayDeltaZ[i];
+         dA += gDecayDeltaA[i];
+         dZ += gDecayDeltaZ[i];
       }
    }   
 }
@@ -584,7 +584,7 @@ TGeoElementRN *TGeoElemIter::Next()
 }      
 
 //______________________________________________________________________________
-void TGeoElemIter::Print(Option_t *) const
+void TGeoElemIter::Print(Option_t */*option*/) const
 {
 // Print info about the current decay branch.
    TGeoElementRN *elem;

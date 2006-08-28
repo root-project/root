@@ -92,9 +92,9 @@ protected:
 public:
    TGeoElementRN();
    TGeoElementRN(Int_t A, Int_t Z, Int_t iso, Double_t level, 
-	      Double_t deltaM, Double_t halfLife, const char* JP,
-	      Double_t natAbun, Double_t th_f, Double_t tg_f, Double_t th_s,
-	      Double_t tg_s, Int_t status); 
+         Double_t deltaM, Double_t halfLife, const char* JP,
+         Double_t natAbun, Double_t th_f, Double_t tg_f, Double_t th_s,
+         Double_t tg_s, Int_t status); 
    virtual ~TGeoElementRN();
 
    void                     AddDecay(Int_t decay, Int_t diso, Double_t branchingRatio, Double_t qValue);
