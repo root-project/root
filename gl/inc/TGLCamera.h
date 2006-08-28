@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.20 2006/02/26 16:08:10 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.21 2006/08/23 14:39:40 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -145,7 +145,7 @@ public:
    void WindowToViewport(TGLVertex3 & vertex)        const { vertex.Y() = fViewport.Height() - vertex.Y(); }
 
    // Cameras expanded-frustum interest box
-   Bool_t OfInterest(const TGLBoundingBox & box, Bool_t checkSize) const;
+   Bool_t OfInterest(const TGLBoundingBox & box, Bool_t ignoreSize) const;
    Bool_t UpdateInterest(Bool_t force);
    void   ResetInterest();
 

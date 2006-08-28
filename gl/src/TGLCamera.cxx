@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.30 2006/03/20 10:20:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.31 2006/08/23 14:39:40 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -514,7 +514,7 @@ TGLVector3 TGLCamera::ViewportDeltaToWorld(const TGLVertex3 & worldRef, Double_t
 }
 
 //______________________________________________________________________________
-Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box, Bool_t checkSize) const
+Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box, Bool_t ignoreSize) const
 {
    // Calculate if the an object defined by world frame bounding box
    // is 'of interest' to the camera. This is defined as box:
@@ -573,7 +573,7 @@ Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box, Bool_t checkSize) const
       }
 
 //      if ((lengthRatio > 0.001) || (volumeRatio > 0.0001)) {
-      if (checkSize == kFALSE || (lengthRatio > 0.0001) || (volumeRatio > 0.0001)) {
+      if (ignoreSize || (lengthRatio > 0.0001) || (volumeRatio > 0.0001)) {
 
          interest = fInterestBox.Overlap(box) != kOutside;
       }
