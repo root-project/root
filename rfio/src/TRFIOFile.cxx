@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.36 2006/07/24 16:26:28 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.37 2006/08/26 16:37:44 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
@@ -53,6 +53,12 @@ defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) ||          \
 defined(R__MACOSX) || defined(R__HURD) || defined(R__OBSD)
 #define HAS_DIRENT
 #endif
+#else
+#define off64_t __int64
+#define fstat64 _fstati64
+#define lseek64 _lseeki64
+#define open64 open
+#define stat64 _stati64
 #endif
 
 #ifdef HAS_DIRENT
