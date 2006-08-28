@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.247 2006/05/19 07:30:04 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.248 2006/06/25 15:29:34 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -316,6 +316,7 @@ const char *help =
 #include <time.h>
 #include <string>
 #include <vector>
+#include <sstream>
 #include <map>
 #include <fstream>
 
@@ -1923,7 +1924,14 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
              (m.Property() & G__BIT_ISARRAY)) {
 
          } else if (m.Property() & G__BIT_ISARRAY) {
-
+            std::stringstream fullIdx;
+            for (int dim = 0; dim < m.ArrayDim(); ++dim) {
+               (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<" 
+                  << m.MaxIndex(dim) << "; ++R__i" << dim << " )" << std::endl;
+               fullIdx << "[R__i" << dim << "]";
+            }
+            (*dictSrcOut) << "         { TString R__str; R__str.Streamer(R__b); " 
+               << m.Name() << fullIdx.str() << " = R__str.Data();}" << std::endl;
          } else {
             (*dictSrcOut) << "      { TString R__str; R__str.Streamer(R__b); ";
             if (m.Property() & G__BIT_ISPOINTER)
@@ -1937,7 +1945,15 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
          if (m.Property() & G__BIT_ISPOINTER)
             (*dictSrcOut) << "      { TString R__str; if (*" << m.Name() << ") R__str = (*"
                 << m.Name() << ")->c_str(); R__str.Streamer(R__b);}" << std::endl;
-         else
+         else if (m.Property() & G__BIT_ISARRAY) {
+            std::stringstream fullIdx;
+            for (int dim = 0; dim < m.ArrayDim(); ++dim) {
+               (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<" 
+                  << m.MaxIndex(dim) << "; ++R__i" << dim << " )" << std::endl;
+               fullIdx << "[R__i" << dim << "]";
+            }
+            (*dictSrcOut) << "         { TString R__str(" << m.Name() << fullIdx.str() << ".c_str()); R__str.Streamer(R__b);}" << std::endl;
+         } else
             (*dictSrcOut) << "      { TString R__str = " << m.Name() << ".c_str(); R__str.Streamer(R__b);}" << std::endl;
       }
       return 1;
