@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.35 2006/08/09 10:08:14 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.36 2006/08/09 16:11:01 antcheva Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -336,7 +336,12 @@ TGFileDialog::~TGFileDialog()
    // Delete file dialog.
 
    if (IsZombie()) return;
-   delete fOk; delete fCancel; delete fOverWR;
+   delete fOk; delete fCancel; 
+   if (fOverWR) delete fOverWR;
+   if (fMultiSel) {
+      fMultiSel->Disconnect("Toggled(Bool_t)");
+      delete fMultiSel;
+   }
    delete fName;
    delete fTypes;
    delete fFv; delete fFc;
