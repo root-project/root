@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.304 2006/08/23 09:00:21 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.305 2006/08/28 13:34:52 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -437,7 +437,7 @@ const Int_t kNstat = 11;
 
 Int_t  TH1::fgBufferSize   = 1000;
 Bool_t TH1::fgAddDirectory = kTRUE;
-Bool_t TH1::fgDefaultSumw2 = kTRUE;
+Bool_t TH1::fgDefaultSumw2 = kFALSE;
 Bool_t TH1::fgStatOverflows= kFALSE;
 
 extern void H1InitGaus();
