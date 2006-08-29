@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: makemsi.cxx,v 1.1 2006/05/11 12:06:44 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: makemsi.cxx,v 1.2 2006/05/17 22:12:24 rdm Exp $
 // Author: Axel Naumann 2006-05-09
 
 /*************************************************************************
@@ -211,7 +211,7 @@ void MSIDir::Write(ostream& out) const {
    out << "      <Component Id=\"EnvVars\" Guid=\"{0E85B756-F20C-4213-A292-4AD80A5FE21A}\">" << std::endl;
    out << "         <Environment Id=\"ROOTSYS\" Name=\"ROOTSYS\" Action=\"set\" Part=\"all\" Value=\"[INSTALLLOCATION]\" />" << std::endl;
    out << "         <Environment Id=\"PATHROOT\" Name=\"PATH\" Action=\"set\" Part=\"first\" Value=\"[INSTALLLOCATION]bin\" />" << std::endl;
-   out << "         <Environment Id=\"PATHPY\" Name=\"PYTHONPATH\" Action=\"set\" Part=\"first\" Value=\"[INSTALLLOCATION]pybin\" />" << std::endl;
+   out << "         <Environment Id=\"PATHPY\" Name=\"PYTHONPATH\" Action=\"set\" Part=\"first\" Value=\"[INSTALLLOCATION]bin\" />" << std::endl;
    out << "      </Component>" << std::endl;
    out << "      <Directory Id=\"DesktopFolder\">" << std::endl;
    out << "         <Component Id=\"DesktopIcon\" Guid=\"{BF68C3D3-D9AC-488d-A73F-1C732466DBF7}\">" << std::endl;
