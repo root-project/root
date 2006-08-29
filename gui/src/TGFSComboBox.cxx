@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.19 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.20 2006/08/28 15:10:46 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -265,20 +265,20 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
       // fully expanded. 
       if (strstr(gLbc[i].fPath, "$ROOTSYS") != 0) {
 	  // Get the size of the prefix template
-	 const int plen = 8;
+         const int plen = 8;
          if (rootSys) {
             int hlen = strlen(rootSys);
 	    // Allocate enough memory to hold prefix (hlen), and
 	    // what's in the path (strlen(gLbc[i].fPath)) minus the
 	    // prefix template size, and one character for terminating
 	    // null. 
-	    int blen = hlen + strlen(gLbc[i].fPath) - plen + 1;
+            int blen = hlen + strlen(gLbc[i].fPath) - plen + 1;
             p = new char[blen];
             strcpy(p, rootSys);
             strcat(p, &(gLbc[i].fPath[plen]));
 	    // Figure out where to put the terminating NULL 
-	    int npos = hlen + strlen(&(gLbc[i].fPath[plen]));
-	    p[npos] = '\0';
+            int npos = hlen + strlen(&(gLbc[i].fPath[plen]));
+            p[npos] = '\0';
             gLbc[i].fPath = p;
          } else {
             gLbc[i].fFlags = 0;
