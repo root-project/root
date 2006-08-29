@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.8 2006/08/21 16:38:02 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.9 2006/08/22 09:45:32 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -454,11 +454,11 @@ namespace ROOT {
 
 
        /** 
-           Return a phi angle in the interval [0,2*PI)
+           Return a phi angle in the interval (0,2*PI]
         */ 
        double Phi_0_2pi(double phi);
        /** 
-           Returns phi angle in the interval [-PI,PI)
+           Returns phi angle in the interval (-PI,PI]
        */
        double  Phi_mpi_pi(double phi);
 
