@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.45 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.46 2006/08/21 14:19:03 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 #endif
 
 #include <string>
+#include <stdarg.h>
 
 #ifdef R__GLOBALSTL
 namespace std { using ::string; }
