@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.21 2006/07/10 13:19:19 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.22 2006/08/23 14:39:40 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -364,7 +364,7 @@ TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
 TGLSAViewer::~TGLSAViewer()
 {
    // Destroy standalone viewer object
-   delete fGLArea;
+   //delete fGLArea; ok we have a leak, but crashes otherwise when leaving the viewer
    delete fHelpMenu;
    delete fCameraMenu;
    delete fFileSaveMenu;
