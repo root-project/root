@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.14 2006/05/19 20:42:49 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.15 2006/05/22 04:53:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -98,9 +98,6 @@ TMatrixTSym<Element>::TMatrixTSym(EMatrixCreatorsOp1 op,const TMatrixTSym<Elemen
   // Example: TMatrixTSym<Element> a(10,12); ...; TMatrixTSym<Element> b(TMatrixT::kTransposed, a);
   // Supported operations are: kZero, kUnit, kTransposed, kInverted and kAtA.
 
-   R__ASSERT(this != &prototype);
-   this->Invalidate();
-
    R__ASSERT(prototype.IsValid());
 
    switch(op) {
@@ -149,9 +146,6 @@ TMatrixTSym<Element>::TMatrixTSym(EMatrixCreatorsOp1 op,const TMatrixTSym<Elemen
 template<class Element>
 TMatrixTSym<Element>::TMatrixTSym(EMatrixCreatorsOp1 op,const TMatrixT<Element> &prototype)
 {
-   R__ASSERT(dynamic_cast<TMatrixT<Element> *>(this) != &prototype);
-   this->Invalidate();
-
    R__ASSERT(prototype.IsValid());
 
    switch(op) {
@@ -309,14 +303,14 @@ void TMatrixTSym<Element>::Plus(const TMatrixTSym<Element> &a,const TMatrixTSym<
          return;
       }
 
-      if (this == &a) {
-         Error("Plus","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("Plus","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
-         Error("Plus","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("Plus","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -345,14 +339,14 @@ void TMatrixTSym<Element>::Minus(const TMatrixTSym<Element> &a,const TMatrixTSym
          return;
       }
 
-      if (this == &a) {
-         Error("Minus","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("Minus","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
-         Error("Minus","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("Minus","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -1430,7 +1424,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::operator=(const TMatrixTSym<Element>
       return *this;
    }
 
-   if (this != &source) {
+   if (this->GetMatrixArray() != source.GetMatrixArray()) {
       TObject::operator=(source);
       memcpy(this->GetMatrixArray(),source.fElements,this->fNelems*sizeof(Element));
    }

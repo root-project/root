@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.19 2006/05/19 04:44:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.20 2006/06/02 05:11:20 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -116,7 +116,6 @@ TMatrixT<Element>::TMatrixT(EMatrixCreatorsOp1 op,const TMatrixT<Element> &proto
 // Example: TMatrixT<Element> a(10,12); ...; TMatrixT<Element> b(TMatrixT::kTransposed, a);
 // Supported operations are: kZero, kUnit, kTransposed, kInverted and kAtA.
 
-   R__ASSERT(this != &prototype);
    this->Invalidate();
 
    R__ASSERT(prototype.IsValid());
@@ -512,14 +511,14 @@ void TMatrixT<Element>::Plus(const TMatrixT<Element> &a,const TMatrixT<Element> 
          return;
       }
 
-      if (this == &a) {
-         Error("Plus","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("Plus","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
-         Error("Plus","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("Plus","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -548,16 +547,16 @@ void TMatrixT<Element>::Plus(const TMatrixT<Element> &a,const TMatrixTSym<Elemen
          return;
       }
 
-      if (this == &a) {
-         Error("Plus","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("Plus","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixT<Element> *>(&b)) {
-          Error("Plus","this == &b");
-          this->Invalidate();
-          return;
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("Plus","this->GetMatrixArray() == b.GetMatrixArray()");
+         this->Invalidate();
+         return;
       }
    }
 
@@ -580,18 +579,18 @@ void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixT<Element>
 
    if (gMatrixCheck) {
       if (!AreCompatible(a,b)) {
-         Error("Minus","matrices not compatible");
+         Error("Plus","matrices not compatible");
          return;
       }
 
-      if (this == &a) {
-         Error("Minus","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("Plus","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
-         Error("Minus","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("Plus","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -620,14 +619,14 @@ void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixTSym<Eleme
          return;
       }
 
-      if (this == &a) {
-         Error("Minus","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("Minus","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixT<Element> *>(&b)) {
-         Error("Minus","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("Minus","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -657,14 +656,14 @@ void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixT<Element> 
          return;
       }
 
-      if (this == &a) {
-         Error("Mult","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("Mult","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
-         Error("Mult","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("Mult","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -711,14 +710,14 @@ void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixT<Elemen
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixT<Element> *>(&a)) {
-         Error("Mult","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("Mult","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
-        return;
+         return;
       }
 
-      if (this == &b) {
-         Error("Mult","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("Mult","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -766,14 +765,14 @@ void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixTSym<Elemen
          return;
       }
 
-      if (this == &a) {
-         Error("Mult","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("Mult","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixT<Element> *>(&b)) {
-         Error("Mult","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("Mult","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -821,14 +820,14 @@ void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixTSym<Ele
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixT<Element> *>(&a)) {
-         Error("Mult","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("Mult","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixT<Element> *>(&b)) {
-         Error("Mult","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("Mult","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -875,14 +874,14 @@ void TMatrixT<Element>::TMult(const TMatrixT<Element> &a,const TMatrixT<Element>
          return;
       }
 
-      if (this == &a) {
-         Error("TMult","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("TMult","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
-         Error("TMult","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("TMult","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -928,14 +927,14 @@ void TMatrixT<Element>::TMult(const TMatrixT<Element> &a,const TMatrixTSym<Eleme
          return;
       }
 
-      if (this == &a) {
-         Error("TMult","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("TMult","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixT<Element> *>(&b)) {
-         Error("TMult","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("TMult","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -981,14 +980,14 @@ void TMatrixT<Element>::MultT(const TMatrixT<Element> &a,const TMatrixT<Element>
          return;
       }
 
-      if (this == &a) {
-         Error("MultT","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("MultT","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
-         Error("MultT","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("MultT","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -1035,14 +1034,14 @@ void TMatrixT<Element>::MultT(const TMatrixTSym<Element> &a,const TMatrixT<Eleme
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixT<Element> *>(&a)) {
-         Error("MultT","this == &a");
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+         Error("MultT","this->GetMatrixArray() == a.GetMatrixArray()");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
-         Error("MultT","this == &b");
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+         Error("MultT","this->GetMatrixArray() == b.GetMatrixArray()");
          this->Invalidate();
          return;
       }
@@ -1514,7 +1513,7 @@ TMatrixT<Element> &TMatrixT<Element>::Transpose(const TMatrixT<Element> &source)
    R__ASSERT(this->IsValid());
    R__ASSERT(source.IsValid());
 
-   if (this == &source) {
+   if (this->GetMatrixArray() == source.GetMatrixArray()) {
       Element *ap = this->GetMatrixArray();
       if (this->fNrows == this->fNcols && this->fRowLwb == this->fColLwb) {
          for (Int_t i = 0; i < this->fNrows; i++) {
@@ -1778,7 +1777,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixT<Element> &source)
       return *this;
    }
 
-   if (this != &source) {
+   if (this->GetMatrixArray() != source.GetMatrixArray()) {
       TObject::operator=(source);
       memcpy(fElements,source.GetMatrixArray(),this->fNelems*sizeof(Element));
       this->fTol = source.GetTol();
@@ -1798,7 +1797,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTSym<Element> &sour
       return *this;
    }
 
-   if ((TMatrixTBase<Element> *)this != (TMatrixTBase<Element> *)&source) {
+   if (this->GetMatrixArray() != source.GetMatrixArray()) {
       TObject::operator=(source);
       memcpy(fElements,source.GetMatrixArray(),this->fNelems*sizeof(Element));
       this->fTol = source.GetTol();
@@ -1820,7 +1819,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTSparse<Element> &s
       return *this;
    }
 
-   if ((TMatrixTBase<Element> *)this != (TMatrixTBase<Element> *)&source) {
+   if (this->GetMatrixArray() != source.GetMatrixArray()) {
       TObject::operator=(source);
       memset(fElements,0,this->fNelems*sizeof(Element));
 
@@ -2034,7 +2033,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixT<Element> &source
    // Check for A *= A;
    const Element *sp;
    TMatrixT<Element> tmp;
-   if (this == &source) {
+   if (this->GetMatrixArray() == source.GetMatrixArray()) {
       tmp.ResizeTo(source);
       tmp = source;
       sp = tmp.GetMatrixArray();
@@ -2097,7 +2096,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTSym<Element> &sou
    // Check for A *= A;
    const Element *sp;
    TMatrixT<Element> tmp;
-   if ((TMatrixTBase<Element> *)this == (TMatrixTBase<Element> *)&source) {
+   if (this->GetMatrixArray() == source.GetMatrixArray()) {
       tmp.ResizeTo(source);
       tmp = source;
       sp = tmp.GetMatrixArray();

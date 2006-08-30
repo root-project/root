@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.7 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.8 2006/05/22 04:53:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -146,7 +146,6 @@ TMatrixTSparse<Element>::TMatrixTSparse(EMatrixCreatorsOp1 op,const TMatrixTSpar
   // Create a matrix applying a specific operation to the prototype.
   // Supported operations are: kZero, kUnit, kTransposed and kAtA
 
-   R__ASSERT(this != &prototype);
    this->Invalidate();
 
    R__ASSERT(prototype.IsValid());
@@ -413,13 +412,13 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
          return;
       }
 
-      if (this == &a) {
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("AMultB","this = &a");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("AMultB","this = &b");
          this->Invalidate();
          return;
@@ -533,13 +532,13 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
          return;
       }
 
-      if (this == &a) {
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("AMultB","this = &a");
          this->Invalidate();
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&b)) {
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("AMultB","this = &b");
          this->Invalidate();
          return;
@@ -636,13 +635,13 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixTS
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&a)) {
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("AMultB","this = &a");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("AMultB","this = &b");
          this->Invalidate();
          return;
@@ -740,13 +739,13 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
          return;
       }
 
-      if (this == &a) {
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("APlusB","this = &a");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("APlusB","this = &b");
          this->Invalidate();
          return;
@@ -833,13 +832,13 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
          return;
       }
 
-      if (this == &a) {
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("APlusB","this = &a");
          this->Invalidate();
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&b)) {
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("APlusB","this = &b");
          this->Invalidate();
          return;
@@ -911,13 +910,13 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
          return;
       }
 
-      if (this == &a) {
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("AMinusB","this = &a");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("AMinusB","this = &b");
          this->Invalidate();
          return;
@@ -1004,13 +1003,13 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
           return;
       }
 
-      if (this == &a) {
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("AMinusB","this = &a");
          this->Invalidate();
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&b)) {
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("AMinusB","this = &b");
          this->Invalidate();
          return;
@@ -1082,13 +1081,13 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTS
          return;
       }
 
-      if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&a)) {
+      if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("AMinusB","this = &a");
          this->Invalidate();
          return;
       }
 
-      if (this == &b) {
+      if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("AMinusB","this = &b");
          this->Invalidate();
          return;
@@ -2098,7 +2097,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator=(const TMatrixTSparse
       return *this;
    }
 
-   if (this != &source) {
+   if (this->GetMatrixArray() != source.GetMatrixArray()) {
       TObject::operator=(source);
 
       const Element * const sp = source.GetMatrixArray();
@@ -2122,7 +2121,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator=(const TMatrixT<Eleme
       return *this;
    }
 
-   if (this != (TMatrixTSparse<Element> *)&source) {
+   if (this->GetMatrixArray() != source.GetMatrixArray()) {
       TObject::operator=(source);
 
       const Element * const sp = source.GetMatrixArray();

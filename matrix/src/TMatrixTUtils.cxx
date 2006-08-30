@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.4 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.5 2006/06/03 20:19:43 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -142,7 +142,7 @@ void TMatrixTRow<Element>::operator=(const TMatrixTRow_const<Element> &mr)
 // Assignment operator
 
    const TMatrixTBase<Element> *mt = mr.GetMatrix();
-   if (this->fMatrix == mt && this->fRowInd == mr.GetRowIndex()) return;
+   if (this->fMatrix->GetMatrixArray() == mt->GetMatrixArray() && this->fRowInd == mr.GetRowIndex()) return;
 
    R__ASSERT(this->fMatrix->IsValid());
    R__ASSERT(mt->IsValid());
@@ -334,7 +334,7 @@ void TMatrixTColumn<Element>::operator=(const TMatrixTColumn_const<Element> &mc)
 // Assignment operator
 
    const TMatrixTBase<Element> *mt = mc.GetMatrix();
-   if (this->fMatrix == mt && this->fColInd == mc.GetColIndex()) return;
+   if (this->fMatrix->GetMatrixArray() == mt->GetMatrixArray() && this->fColInd == mc.GetColIndex()) return;
 
    R__ASSERT(this->fMatrix->IsValid());
    R__ASSERT(mt->IsValid());
@@ -695,7 +695,7 @@ void TMatrixTFlat<Element>::operator=(const TMatrixTFlat_const<Element> &mf)
 // Assignment operator
 
    const TMatrixTBase<Element> *mt = mf.GetMatrix();
-   if (this->fMatrix == mt) return;
+   if (this->fMatrix->GetMatrixArray() == mt->GetMatrixArray()) return;
 
    R__ASSERT(this->fMatrix->IsValid());
    R__ASSERT(mt->IsValid());
@@ -1008,7 +1008,7 @@ void TMatrixTSub<Element>::operator=(const TMatrixTBase<Element> &m)
    R__ASSERT(this->fMatrix->IsValid());
    R__ASSERT(m.IsValid());
 
-   if (this->fMatrix == &m) return;
+   if (this->fMatrix->GetMatrixArray() == m.GetMatrixArray()) return;
 
    if (this->fNrowsSub != m.GetNrows() || this->fNcolsSub != m.GetNcols()) {
       Error("operator=(const TMatrixTBase<Element> &)","sub matrices and matrix have different size");
@@ -1178,7 +1178,7 @@ void TMatrixTSub<Element>::operator*=(const TMatrixT<Element> &source)
    // Check for A *= A;
    const Element *sp;
    TMatrixT<Element> tmp;
-   if (this->fMatrix == &source) {
+   if (this->fMatrix->GetMatrixArray() == source.GetMatrixArray()) {
       tmp.ResizeTo(source);
       tmp = source;
       sp = tmp.GetMatrixArray();
@@ -1237,7 +1237,7 @@ void TMatrixTSub<Element>::operator*=(const TMatrixTSym<Element> &source)
    // Check for A *= A;
    const Element *sp;
    TMatrixTSym<Element> tmp;
-   if ((TMatrixTSym<Element> *)this->fMatrix == &source) {
+   if (this->fMatrix->GetMatrixArray() == source.GetMatrixArray()) {
       tmp.ResizeTo(source);
       tmp = source;
       sp = tmp.GetMatrixArray();

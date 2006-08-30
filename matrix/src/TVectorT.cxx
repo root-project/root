@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.16 2006/06/06 05:16:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.17 2006/07/17 05:54:35 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -667,7 +667,7 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TVectorT<Element> &source)
       return *this;
    }
 
-   if (this != &source) {
+   if (this->GetMatrixArray() != source.GetMatrixArray()) {
       TObject::operator=(source);
       memcpy(fElements,source.GetMatrixArray(),fNrows*sizeof(Element));
    }
