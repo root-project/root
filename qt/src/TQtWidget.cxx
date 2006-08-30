@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.76 2006/05/05 01:16:54 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.81 2006/08/22 23:33:32 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -124,12 +124,6 @@ ClassImp(TQtWidget)
 ////////////////////////////////////////////////////////////////////////////////
 
 //_____________________________________________________________________________
-TCanvas  *TQtWidget::Canvas()
-{
-   return GetCanvas();
-};
-
-//_____________________________________________________________________________
 TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedded):QWidget(parent,name,f)
           ,fBits(0),fCanvas(0),fPixmapID(this),fPaint(TRUE),fSizeChanged(FALSE)
           ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
@@ -183,6 +177,31 @@ TQtWidget::~TQtWidget()
   } else {
       fCanvas = 0;
   }
+}
+
+//_____________________________________________________________________________
+TCanvas  *TQtWidget::Canvas()
+{
+   return GetCanvas();
+};
+//_____________________________________________________________________________
+TCanvas   *TQtWidget::Canvas(TQtWidget *widget)
+{
+    // static: return TCanvas by TQtWidget pointer
+   return widget ? widget->Canvas() : 0 ;
+}
+
+//_____________________________________________________________________________
+TQtWidget *TQtWidget::Canvas(const TCanvas *canvas)
+{
+   // static: return the TQtWidget backend for TCanvas *canvas object
+   return canvas ? Canvas(canvas->GetCanvasID()) : 0;
+}
+//_____________________________________________________________________________
+TQtWidget *TQtWidget::Canvas(Int_t id)
+{
+   // static: return TQtWidget by TCanvas id
+   return dynamic_cast<TQtWidget *>(TGQt::iwid(id));
 }
 
 //_____________________________________________________________________________
@@ -333,6 +352,7 @@ void TQtWidget::customEvent(QCustomEvent *e)
          fSizeChanged=FALSE;
          fPaint = FALSE;
          setUpdatesEnabled( FALSE );
+         break;
       }
    case kFORCESIZE:
    default:
@@ -528,13 +548,14 @@ void TQtWidget::resizeEvent(QResizeEvent *e)
          // real resize event
          fSizeChanged=TRUE;
          stretchWidget(e);
-      }
+      } else {
 #else
-      fSizeChanged=TRUE;
-      fPaint = kTRUE;
-      exitSizeEvent();
+      {
+         fSizeChanged=TRUE;
+         fPaint = kTRUE;
+         exitSizeEvent();
 #endif
-   }
+      } }
 }
 //____________________________________________________________________________
 void TQtWidget::SetSaveFormat(const char *format)
