@@ -1,3 +1,4 @@
+// Author: Valeri Fine   28/06/2004
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2004 by Valeri Fine.                                    *
@@ -9,8 +10,10 @@
 
 #ifndef ROOT_TQtRConfig
 #define ROOT_TQtRConfig
-
 #include "RConfig.h"
+#ifndef __CINT__
+#  include "qglobal.h"
+#endif
 
 // defined the CPP symbols to create the different versions
 #ifdef R__QTX11
@@ -34,9 +37,6 @@
 #endif
 
 #if defined(R__WIN32)
-# ifndef GDK_WIN32
-//#  define R__QTGUITHREAD
-# endif
 # define R__QTWIN32
 #endif
 
@@ -46,7 +46,13 @@
 
 #ifndef ROOT_VALID_QT_VERSION
 // The least Qt version the ROOT package can work with
-#define ROOT_VALID_QT_VERSION "3.2.0"
+#  ifndef __CINT__
+#    if QT_VERSION < 0x40000
+#      define ROOT_VALID_QT_VERSION "3.2.0"
+#    else
+#      define ROOT_VALID_QT_VERSION "4.1.2"
+#    endif
+#  endif
 #endif
 
 #endif /*ROOT_TQTCONFIG*/
