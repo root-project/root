@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.16 2006/07/11 10:34:23 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.17 2006/07/17 12:36:49 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -399,8 +399,6 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
                sqltype = kSQL_BINARY;
             else
                sqltype = kSQL_VARCHAR;
-            data_length = fields[nfield].max_length;
-            if (data_length==0) data_length = -1;
             data_size = data_length;
             break;
          case MYSQL_TYPE_SET:

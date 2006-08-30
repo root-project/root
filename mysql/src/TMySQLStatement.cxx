@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.6 2006/06/30 06:36:35 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.7 2006/07/17 12:36:49 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 
 #include "TMySQLStatement.h"
 #include "TDataType.h"
+#include "TDatime.h"
 #include "snprintf.h"
 
 ClassImp(TMySQLStatement)
@@ -124,7 +125,6 @@ Bool_t TMySQLStatement::Process()
       return kTRUE;
    }
 
-
    if (mysql_stmt_execute(fStmt)) 
       CheckErrNo("Process",kTRUE, kFALSE);
 
@@ -185,7 +185,7 @@ Bool_t TMySQLStatement::StoreResult()
       MYSQL_FIELD *fields = mysql_fetch_fields(meta);
 
       for (int n=0;n<count;n++) {
-         SetSQLParamType(n, fields[n].type, true, fields[n].length);
+         SetSQLParamType(n, fields[n].type, (fields[n].flags & UNSIGNED_FLAG) == 0, fields[n].length);
          if (fields[n].name!=0) {
             fBuffer[n].fFieldName = new char[strlen(fields[n].name)+1];
             strcpy(fBuffer[n].fFieldName, fields[n].name);
@@ -357,6 +357,26 @@ const char* TMySQLStatement::ConvertToString(Int_t npar)
       case MYSQL_TYPE_DOUBLE:
          snprintf(buf,100,"%f",*((double*) addr));
          break;
+      case MYSQL_TYPE_DATETIME:
+      case MYSQL_TYPE_TIMESTAMP: {
+         MYSQL_TIME* tm = (MYSQL_TIME*) addr;
+         snprintf(buf,100,"%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
+                  tm->year, tm->month,  tm->day,
+                  tm->hour, tm->minute, tm->second);
+         break;
+      }
+      case MYSQL_TYPE_TIME: {
+         MYSQL_TIME* tm = (MYSQL_TIME*) addr;
+         snprintf(buf,100,"%2.2d:%2.2d:%2.2d",
+                  tm->hour, tm->minute, tm->second);
+         break;
+      }
+      case MYSQL_TYPE_DATE: {
+         MYSQL_TIME* tm = (MYSQL_TIME*) addr;
+         snprintf(buf,100,"%4.4d-%2.2d-%2.2d",
+                  tm->year, tm->month,  tm->day);
+         break;
+      }
       default:
          return 0;
    }
@@ -372,7 +392,7 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
 
    void* addr = fBuffer[npar].fMem;
    bool sig = fBuffer[npar].fSign;
-
+   
    if (addr==0) return 0;
 
    switch(fBind[npar].buffer_type) {
@@ -399,14 +419,41 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
          return *((double*) addr);
          break;
       case MYSQL_TYPE_STRING:
-      case MYSQL_TYPE_VAR_STRING: {
-         const char* str = (const char*) addr;
-         if ((str==0) || (*str==0)) return 0;
+      case MYSQL_TYPE_VAR_STRING: 
+      case MYSQL_TYPE_BLOB: {
+         char* str = (char*) addr;
+         ULong_t len = fBuffer[npar].fResLength;
+         if ((str==0) || (*str==0) || (len==0)) return 0;
+         Int_t size = fBuffer[npar].fSize;
+         if (1.*len<size) str[len] = 0; else
+                          str[size-1] = 0;
          long double buf = 0;
          sscanf(str,"%Lf",&buf);
          return buf;
          break;
       }
+      case MYSQL_TYPE_DATETIME:
+      case MYSQL_TYPE_TIMESTAMP: {
+         MYSQL_TIME* tm = (MYSQL_TIME*) addr;
+         TDatime rtm(tm->year, tm->month,  tm->day, 
+                  tm->hour, tm->minute, tm->second);
+         return rtm.Get();
+         break;
+      }
+      case MYSQL_TYPE_DATE: {
+         MYSQL_TIME* tm = (MYSQL_TIME*) addr;
+         TDatime rtm(tm->year, tm->month,  tm->day, 0, 0, 0);
+         return rtm.GetDate();
+         break;            
+      }
+      case MYSQL_TYPE_TIME: {
+         MYSQL_TIME* tm = (MYSQL_TIME*) addr;
+         TDatime rtm(2000, 1, 1, tm->hour, tm->minute, tm->second);
+         return rtm.GetTime();
+         break;
+      }
+
+      
       default:
          return 0;
    }
@@ -510,8 +557,16 @@ const char *TMySQLStatement::GetString(Int_t npar)
    CheckGetField("GetString", 0);
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
-       (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING))
-      return (const char*) fBuffer[npar].fMem;
+      (fBind[npar].buffer_type==MYSQL_TYPE_BLOB) || 
+      (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING)) {
+         if (fBuffer[npar].fResNull) return 0;
+         char* str = (char*) fBuffer[npar].fMem;
+         ULong_t len = fBuffer[npar].fResLength;
+         Int_t size = fBuffer[npar].fSize;
+         if (1.*len<size) str[len] = 0; else
+                          str[size-1] = 0;
+         return str;
+      }
 
    return ConvertToString(npar);
 }
@@ -542,6 +597,11 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
       case MYSQL_TYPE_DOUBLE:   allocsize = sizeof(double); break;
       case MYSQL_TYPE_STRING:   allocsize = sqlsize > 256 ? sqlsize : 256; break;
       case MYSQL_TYPE_VAR_STRING: allocsize = sqlsize > 256 ? sqlsize : 256; break;
+      case MYSQL_TYPE_BLOB:     allocsize = sqlsize >= 65500 ? sqlsize + 10 : 65510; break;
+      case MYSQL_TYPE_TIME:
+      case MYSQL_TYPE_DATE:
+      case MYSQL_TYPE_TIMESTAMP:
+      case MYSQL_TYPE_DATETIME: allocsize = sizeof(MYSQL_TIME); break;
       default: SetError(-1,"Nonsupported SQL type","SetSQLParamType"); return kFALSE;
    }
 
