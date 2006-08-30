@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.116 2006/08/22 14:07:21 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.117 2006/08/23 22:25:00 rdm Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -975,13 +975,20 @@ void THtml::Class2Html(Bool_t force)
          TString classFileName(fCurrentClass->GetName());
          NameSpace2FileName(classFileName);
 
-         classFile << " - <a href=\"src/" << classFileName <<
-             ".h.html\"";
-         classFile << ">header file</a>";
+         const char* headerFileName = GetDeclFileName(fCurrentClass);
+         if (headerFileName && !headerFileName[0])
+            headerFileName = 0;
+         const char* sourceFileName = GetImplFileName(fCurrentClass);
+         if (sourceFileName && !sourceFileName[0])
+            sourceFileName = 0;
 
-         classFile << " - <a href=\"src/" << classFileName <<
-             ".cxx.html\"";
-         classFile << ">source file</a>";
+         if (headerFileName)
+            classFile << " - <a href=\"src/" << classFileName
+                      << ".h.html\"" << classFile << ">header file</a>";
+
+         if (sourceFileName)
+            classFile << " - <a href=\"src/" << classFileName
+                      << ".cxx.html\"" << classFile << ">source file</a>";
 
          if (!IsNamespace(fCurrentClass)) {
             // make a link to the inheritance tree (postscript)
@@ -989,9 +996,9 @@ void THtml::Class2Html(Bool_t force)
             classFile << ">inheritance tree (.pdf)</a>";
          }
          const char* viewCVSLink = gEnv->GetValue("Root.Html.ViewCVS","");
-         const char* headerFileName = GetDeclFileName(fCurrentClass);
-         const char* sourceFileName = GetImplFileName(fCurrentClass);
-         if (viewCVSLink && viewCVSLink[0] && (headerFileName || sourceFileName )) {
+         if (viewCVSLink && !viewCVSLink[0])
+            viewCVSLink = 0;
+         if (viewCVSLink && (headerFileName || sourceFileName)) {
             classFile << "<br />";
             if (headerFileName)
                classFile << "<a href=\"" << viewCVSLink << headerFileName << "\">viewCVS header</a>";
@@ -2213,7 +2220,10 @@ void THtml::ClassTree(TVirtualPad * psCanvas, TClass * classPtr,
          // TCanvas already prints pdf being saved
          // Printf(formatStr, "", "", filename);
          classPtr->Draw("same");
+         Int_t saveErrorIgnoreLevel = gErrorIgnoreLevel;
+         gErrorIgnoreLevel = kWarning;
          psCanvas->SaveAs(filename);
+         gErrorIgnoreLevel = saveErrorIgnoreLevel;
       } else
          Printf(formatStr, "-no change-", "", filename.Data());
    }
@@ -2980,6 +2990,7 @@ void THtml::CreateListOfClasses(const char* filter)
    if (fClassFilter == filter)
       return;
 
+   Info("CreateListOfClasses", "Initializing list of known classes - this might take a while...");
    // get total number of classes
    Int_t totalNumberOfClasses = gClassTable->Classes();
 
@@ -3113,6 +3124,8 @@ void THtml::CreateListOfClasses(const char* filter)
    // quick sort
    SortNames(fClassNames, fNumberOfClasses, kCaseInsensitive);
    SortNames((const char **) fFileNames, fNumberOfFileNames);
+
+   Info("CreateListOfClasses", "Initializing list of known classes - DONE.");
 
 }
 
@@ -3565,7 +3578,7 @@ void THtml::ExpandKeywords(TString& keyword)
    static Bool_t pre_is_open = kFALSE;
    // we set parse context to kCComment even for CPP comment, and note it here:
    Bool_t commentIsCPP = kFALSE;
-   TClass* currentType = 0;
+   std::list<TClass*> currentType;
 
    enum {
       kNada,
@@ -3575,33 +3588,62 @@ void THtml::ExpandKeywords(TString& keyword)
    } scoping = kNada;
 
    Ssiz_t i;
+   currentType.push_back(0);
    for (i = 0; i < keyword.Length(); ++i) {
-      if (!currentType)
+      if (!currentType.back())
          scoping = kNada;
 
       // skip until start of the word
       if (fParseContext.back() == kCode || fParseContext.back() == kCComment) {
-         if (!strncmp(keyword.Data() + i, "::", 2)) {
-            scoping = kScope;
-            i += 2;
-         } else if (!strncmp(keyword.Data() + i, "->", 2)) {
-            scoping = kMember;
-            i += 2;
-         } else if (keyword[i] == '.') {
-            scoping = kMember;
-            ++i;
-         } else {
-            currentType = 0;
-            scoping = kNada;
+         if (currentType.back())
+            switch (keyword[i]) {
+               case ':':
+                  if (keyword[i + 1] == ':') {
+                     scoping = kScope;
+                     i += 1;
+                     continue;
+                  }
+                  break;
+               case '-':
+                  if (keyword[i + 1] == '>') {
+                     scoping = kMember;
+                     i += 1;
+                     continue;
+                  }
+                  break;
+               case '.':
+                  if (keyword[i + 1] != '.') {
+                     // prevent "..."
+                     scoping = kMember;
+                     continue;
+                  }
+                  break;
+            }
+         switch (keyword[i]) {
+            case '(':
+               currentType.push_back(0);
+               scoping = kNada;
+               continue;
+               break;
+            case ')':
+               if (currentType.size() > 1)
+                  currentType.pop_back();
+               scoping = kMember;
+               continue;
+               break;
          }
          if (i >= keyword.Length()) 
             break;
-      } else currentType = 0;
+      } else // code or comment
+         currentType.back() = 0;
 
       if (!IsWord(keyword[i])){
          if (fParseContext.back() != kBeginEndHtml && fParseContext.back() != kBeginEndHtmlInCComment) {
-            Bool_t closeString = !fEscFlag && fParseContext.back() == kString && 
-               ( keyword[i] == '"' || keyword[i] == '\'');
+            Bool_t closeString = fParseContext.back() == kString && 
+               ( keyword[i] == '"' || keyword[i] == '\'' 
+                 && (i > 1 && keyword[i - 2] == '\'' 
+                 || i > 2 && keyword[i - 2] == '\\' && (i > 1 && keyword[i - 3] == '\'')))
+               && i > 0 && keyword[i - 1] != '\\';
             if (!fEscFlag)
                if (fParseContext.back() == kCode || fParseContext.back() == kCComment)
                   if (keyword.Length() > i + 1 && keyword[i] == '"' || 
@@ -3613,13 +3655,14 @@ void THtml::ExpandKeywords(TString& keyword)
                      keyword.Insert(i, "<span class=\"string\">");
                      i += 21;
                      fParseContext.push_back(kString);
-                     currentType = 0;
+                     currentType.back() = 0;
+                     closeString = kFALSE;
                   } else if (fParseContext.back() != kCComment && 
                      keyword.Length() > i + 1 && keyword[i] == '/' && 
                      (keyword[i+1] == '/' || keyword[i+1] == '*')) {
                      fParseContext.push_back(kCComment);
                      commentIsCPP = keyword[i+1] == '/';
-                     currentType = 0;
+                     currentType.back() = 0;
                      keyword.Insert(i, "<span class=\"comment\">");
                      i += 23;
                   } else if (fParseContext.back() == kCComment && !commentIsCPP
@@ -3628,7 +3671,7 @@ void THtml::ExpandKeywords(TString& keyword)
                      if (fParseContext.size()>1)
                         fParseContext.pop_back();
 
-                     currentType = 0;
+                     currentType.back() = 0;
                      keyword.Insert(i + 2, "</span>");
                      i += 9;
                   }
@@ -3640,7 +3683,7 @@ void THtml::ExpandKeywords(TString& keyword)
                if (fParseContext.size()>1)
                   fParseContext.pop_back();
 
-               currentType = 0;
+               currentType.back() = 0;
             }
             --i; // i already moved by ReplaceSpecialChar
          } else
@@ -3655,7 +3698,7 @@ void THtml::ExpandKeywords(TString& keyword)
                         pre_is_open = kTRUE;
                         i += 5;
                      }
-                     currentType = 0;
+                     currentType.back() = 0;
                   } else 
                      if (!strncasecmp(keyword.Data() + i,"</pre>", 6)) {
                         if (!pre_is_open) {
@@ -3665,7 +3708,7 @@ void THtml::ExpandKeywords(TString& keyword)
                            pre_is_open = kFALSE;
                            i += 6;
                         }
-                        currentType = 0;
+                        currentType.back() = 0;
                      }
                } // i = '<'
          continue;
@@ -3709,7 +3752,7 @@ void THtml::ExpandKeywords(TString& keyword)
             i += 4;
          }
          // we're in a begin/end_html block, just keep what we have
-         currentType = 0;
+         currentType.back() = 0;
          continue;
       }
       if (fParseContext.back() == kCComment 
@@ -3722,7 +3765,7 @@ void THtml::ExpandKeywords(TString& keyword)
          pre_is_open = kFALSE;
          keyword.Replace(i, word.Length(), "</pre>");
          i += 5;
-         currentType = 0;
+         currentType.back() = 0;
          continue;
       }
 
@@ -3733,7 +3776,7 @@ void THtml::ExpandKeywords(TString& keyword)
          i += 22 + word.Length();
          keyword.Insert(i, "</span>");
          i += 7 - 1; // -1 for ++i
-         currentType = 0;
+         currentType.back() = 0;
          continue;
       }
 
@@ -3746,10 +3789,16 @@ void THtml::ExpandKeywords(TString& keyword)
       TClass* subClass = 0;
       TDataMember *datamem = 0;
       TMethod *meth = 0;
-      TClass* lookupScope = currentType;
       const char* globalTypeName = 0;
+      if (!currentType.size()) {
+         Warning("ExpandKeywords", "type context is empty!");
+         currentType.push_back(0);
+      }
+      TClass* lookupScope = currentType.back();
+      Bool_t describe = kFALSE;
+      TString description;
 
-      if (!lookupScope)
+      if (!lookupScope && scoping == kNada)
          lookupScope = fCurrentClass;
 
       if (scoping == kNada) {
@@ -3767,6 +3816,7 @@ void THtml::ExpandKeywords(TString& keyword)
                else // hack to prevent current THtml obj from showing up - we only want gHtml
                   if (subClass == THtml::Class() && word != "gHtml")
                      subClass = 0;
+               describe = (subClass || subType);
             }
          }
          if (!subType && !subClass) {
@@ -3783,12 +3833,15 @@ void THtml::ExpandKeywords(TString& keyword)
             subClassName += word;
             subClass = GetClass(subClassName);
          }
-         if (!subClass)
+         if (!subClass) {
+            // also try A::B::c()
             datamem = lookupScope->GetDataMember(word);
-         if (!subClass && !datamem)
-            meth = lookupScope->GetMethodAllAny(word);
+            if (!datamem)
+               meth = lookupScope->GetMethodAllAny(word);
+            describe = (datamem || meth);
+         }
       }
-
+      // create the link
       TString link;
       if (subType) {
          link = "./ListOfTypes.html";
@@ -3798,47 +3851,84 @@ void THtml::ExpandKeywords(TString& keyword)
             mangledWord = word;
          else 
             mangledWord = globalTypeName;
+         if (describe)
+            description = mangledWord;
          NameSpace2FileName(mangledWord);
          link += mangledWord;
-         currentType = 0;
+         currentType.back() = 0;
       } else if (subClass) {
          GetHtmlFileName(subClass, link);
-         if (!link.BeginsWith("http://") && !link.BeginsWith("https://"))
+         if (link.Length() && !link.BeginsWith("http://") && !link.BeginsWith("https://"))
             link.Prepend("./");
-         currentType = subClass;
+         currentType.back() = subClass;
+         if (describe)
+            description = subClass->GetName();
       } else if (datamem || meth) {
          TClass* scope = datamem ? datamem->GetClass() : meth->GetClass();
          GetHtmlFileName(scope, link);
-         if (!link.BeginsWith("http://") && !link.BeginsWith("https://"))
-            link.Prepend("./");
-         link += "#";
-         TString mangledName(scope->GetName());
-         NameSpace2FileName(mangledName);
-         link += mangledName;
-         link += ":";
-         if (datamem) {
-            mangledName = datamem->GetName();
-            if (datamem->GetDataType())
-               currentType = 0;
-            else
-               currentType = GetClass(datamem->GetTypeName());
-         } else {
-            mangledName = meth->GetName();
-            const char* retTypeName = meth->GetReturnTypeName();
-            if (retTypeName)
-               if (gROOT->GetType(retTypeName))
-                  currentType = 0;
-               else
-                  currentType = GetClass(retTypeName);
+         if (link.Length()) {
+            if (!link.BeginsWith("http://") && !link.BeginsWith("https://"))
+               link.Prepend("./");
+            link += "#";
+            TString mangledName(scope->GetName());
+            NameSpace2FileName(mangledName);
+            link += mangledName;
+            link += ":";
+            if (datamem) {
+               mangledName = datamem->GetName();
+               if (datamem->GetTypeName())
+                  currentType.back() = GetClass(datamem->GetTypeName());
+               if (describe) {
+                  description = datamem->GetFullTypeName();
+                  description += " ";
+                  if (datamem->GetClass()) {
+                     description += datamem->GetClass()->GetName();
+                     description += "::";
+                  }
+                  description += datamem->GetName();
+               }
+            } else {
+               mangledName = meth->GetName();
+               TString retTypeName = meth->GetReturnTypeName();
+               if (retTypeName.BeginsWith("const "))
+                  retTypeName.Remove(0,6);
+               Ssiz_t pos=0;
+               while (IsWord(retTypeName[pos])) ++pos;
+               retTypeName.Remove(pos, retTypeName.Length());
+               if (retTypeName.Length())
+                  currentType.back() = GetClass(retTypeName);
+               if (describe && meth->GetClass()) {
+                  TIter iMeth(meth->GetClass()->GetListOfMethods());
+                  TMethod* mCand = 0;
+                  description = "";
+                  while ((mCand = (TMethod*)iMeth()))
+                     if (!strcmp(mCand->GetName(), meth->GetName())) {
+                        if (description.Length()) {
+                           description += " or overloads";
+                           break;
+                        }
+                        description = mCand->GetPrototype();
+                     }
+                  Ssiz_t pos = 0;
+                  while (pos < description.Length())
+                     ReplaceSpecialChars(description, pos);
+               }
+            }
+            NameSpace2FileName(mangledName);
+            link += mangledName;
          }
-         NameSpace2FileName(mangledName);
-         link += mangledName;
       } else
-         currentType = 0;
+         currentType.back() = 0;
 
       if (link.Length()) {
          link.Prepend("<a href=\"");
-         link += "\">";
+         link += "\"";
+         if (description.Length()) {
+            link += " title=\"";
+            link += description;
+            link += "\"";
+         }
+         link += ">";
          keyword.Insert(i, link);
          i += link.Length();
       }
@@ -3861,7 +3951,7 @@ void THtml::ExpandKeywords(TString& keyword)
       i += 7;
       if (fParseContext.size()>1)
          fParseContext.pop_back();
-      currentType = 0;
+      currentType.back() = 0;
    }
    // clean up, no CPP comment across lines
    if (commentIsCPP) {
@@ -3871,7 +3961,7 @@ void THtml::ExpandKeywords(TString& keyword)
          if (fParseContext.size()>1)
             fParseContext.pop_back();
       }
-      currentType = 0;
+      currentType.back() = 0;
    }
 
 }
@@ -4042,9 +4132,11 @@ void THtml::GetHtmlFileName(TClass * classPtr, TString& filename)
    filename = cFilename;
    TString htmlFileName;
    if (!filename.Length() ||
-       !gSystem->FindFile(fSourceDir, filename, kReadPermission))
+      !gSystem->FindFile(fSourceDir, filename, kReadPermission)) {
       htmlFileName = gEnv->GetValue(varName, "");
-   else
+      if ((!htmlFileName || !htmlFileName[0]) && varName != "Root.Html.Root")
+         htmlFileName = gEnv->GetValue("Root.Html.Root", "");
+   } else
       htmlFileName = "./";
 
    if (htmlFileName.Length()) {
@@ -4063,7 +4155,7 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
 {
 //*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      =================================
-   if(!name1) return 0;
+   if(!name1 || !name1[0]) return 0;
    // no doc for internal classes
    if (strstr(name1,"ROOT::")==name1) {
       Bool_t ret = kTRUE;
@@ -4073,28 +4165,12 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
       if (ret) return 0;
    }
 
-   Int_t n = strlen(name1);
-   if (!n) return 0;
-   char *name = new char[n + 1];
-   strcpy(name, name1);
-   char *t = name + n - 1;
-   while (*t == ' ') {
-      *t = 0;
-      if (t == name)
-         break;
-      t--;
-   }
-   t = name;
-   while (*t == ' ')
-      t++;
-
-   TClass *cl=gROOT->GetClass(t, load);
+   TClass *cl=gROOT->GetClass(name1, load);
    // hack to get rid of prec_stl types
    // TClassEdit checks are far too slow...
    if (cl && GetDeclFileName(cl) &&
        strstr(GetDeclFileName(cl),"prec_stl/"))
-      cl = 0;   
-   delete [] name;
+      cl = 0;
    if (cl && GetDeclFileName(cl) && GetDeclFileName(cl)[0])
       return cl;
    return 0;
@@ -4454,14 +4530,14 @@ void THtml::ReplaceSpecialChars(ostream & out, const char *string)
 //______________________________________________________________________________
 void THtml::SetDeclFileName(TClass* cl, const char* filename)
 {
-   // Explicitely set a decl file name for TClass cl.
+   // Explicitly set a decl file name for TClass cl.
    fGuessedDeclFileNames[cl] = filename;
 }
 
 //______________________________________________________________________________
 void THtml::SetImplFileName(TClass* cl, const char* filename)
 {
-   // Explicitely set a impl file name for TClass cl.
+   // Explicitly set a impl file name for TClass cl.
    fGuessedImplFileNames[cl] = filename;
 }
 
