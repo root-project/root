@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.13 2005/10/18 18:53:42 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.14 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -195,7 +195,11 @@ public:
    void     EnableSignalEvents  (UInt_t f);
    void     DisableSignalEvents (UInt_t f);
    Bool_t   IsSignalEventEnabled(UInt_t f) const;
-     
+   
+   static TCanvas   *Canvas(TQtWidget *widget);
+   static TQtWidget *Canvas(const TCanvas *canvas);
+   static TQtWidget *Canvas(Int_t id);
+
 public slots:
    virtual void cd();
    virtual void cd(int subpadnumber);
