@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.46 2006/08/21 14:19:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.47 2006/08/29 12:30:35 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -36,12 +36,15 @@
 #include "TRefCnt.h"
 #endif
 
+#ifndef ROOT_Varargs
+#include  "VarArgs.h"
+#endif
+
 #ifndef ROOT_Riosfwd
 #include "Riosfwd.h"
 #endif
 
 #include <string>
-#include <stdarg.h>
 
 #ifdef R__GLOBALSTL
 namespace std { using ::string; }
