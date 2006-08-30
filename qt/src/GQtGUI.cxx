@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.26 2006/06/28 09:30:58 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.27 2006/07/05 07:04:16 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -134,7 +134,10 @@ static QtGContext   &qtcontext(GContext_t context) { return *(QtGContext *)conte
 QColor &TGQt::QtColor(ULong_t pixel)
 {
    // Look up the color table and return the reference to the QColor object.
-   // Add a new entry if the object witht he "oixel" color value was not found
+   // Add a new entry if the object with the "pixel" color value was not found
+   // Add the special treatment for the pixel "0"
+   static QColor black("black");
+   if (pixel == 0) pixel = black.pixel();
    COLORMAP::iterator colorIterator;
    //   QColor *color = fColorMap[pixel];
    if ((colorIterator = fColorMap.find(pixel)) != fColorMap.end()) {
@@ -142,12 +145,22 @@ QColor &TGQt::QtColor(ULong_t pixel)
       return *c;
    } else {
       // this is a new color (red x green x blue)
+      // this is a new color (blue x green x red)
+      
       ColorStruct_t newColor;
+#ifdef R__WIN32      
       newColor.fRed  =  (pixel & 255);
       pixel = pixel >> 8;
       newColor.fGreen = (pixel & 255);
       pixel = pixel >> 8;
       newColor.fBlue   = (pixel & 255);
+#else      
+      newColor.fBlue  =  (pixel & 255);
+      pixel = pixel >> 8;
+      newColor.fGreen = (pixel & 255);
+      pixel = pixel >> 8;
+      newColor.fRed   = (pixel & 255);
+#endif
       Colormap_t cmap=0; // fake map
       gVirtualX->AllocColor(cmap, newColor);
       return QtColor(newColor.fPixel);
@@ -831,7 +844,10 @@ Bool_t TGQt::AllocColor(Colormap_t /*cmap*/, ColorStruct_t &color)
    if (color.fRed>256 || color.fGreen>256 || color.fBlue>256 ){
       cFactor = 257;
    }
-   QColor *thisColor = new QColor(color.fRed/cFactor,color.fGreen/cFactor,color.fBlue/cFactor);
+   QColor *thisColor = new QColor(
+          (color.fRed   >> (cFactor > 1? 8:0))  & 255
+         ,(color.fGreen >> (cFactor > 1? 8:0))  & 255     // /cFactor
+         ,(color.fBlue  >> (cFactor > 1? 8:0))  & 255);   // /cFactor);
    color.fPixel = thisColor->pixel();
 //   color.fPixel = (ULong_t)new QColor(color.fRed/257,color.fGreen,color.fBlue);
    // Add the color to the cash
@@ -1196,7 +1212,7 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
       win =  fQClientGuard.Create(pWidget,"tooltip", Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WStyle_NoBorder | Qt::WStyle_Tool | Qt::WX11BypassWM );
       win->setFrameStyle(QFrame::PopupPanel | QFrame::Plain);
    } else {
-      win =  fQClientGuard.Create(pWidget,"Other", Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WX11BypassWM );
+      win =  fQClientGuard.Create(pWidget,"Other", Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WX11BypassWM | (wtype & kOwnBackground ? Qt::WNoAutoErase : 0));
       if (!pWidget) {
            win->setFrameStyle( QFrame::PopupPanel | QFrame::Plain );
 //         printf(" 2 TGQt::CreateWindow %p parent = %p \n", win,pWidget);
@@ -1218,7 +1234,7 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
 #endif
   }
 
-   // printf(" TQt::CreateWindow %p parent = %p \n", win,pWidget);
+  //  fprintf(stderr," TQt::CreateWindow %p parent = %p  %s \n", win,pWidget,(const char*)win->name());
 
    if (QClientFilter()) {
       win->installEventFilter(QClientFilter());
@@ -1231,13 +1247,13 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
          {
             //        win->setPaletteBackgroundPixmap(*(QPixmap *)attr->fBackgroundPixmap);
          }
-         if ((attr->fMask & kWABackPixel)) {
-            win->setPaletteBackgroundColor(QtColor(attr->fBackgroundPixel));
-         }
-         if ( attr->fMask & kWAEventMask) {
-            // Long_t     fEventMask;            // set of events that should be saved
-            win->SetAttributeEventMask(attr->fEventMask);
-         }
+      if ((attr->fMask & kWABackPixel)) {
+          win->setPaletteBackgroundColor(QtColor(attr->fBackgroundPixel));
+       }
+      if ( attr->fMask & kWAEventMask) {
+          // Long_t     fEventMask;            // set of events that should be saved
+          win->SetAttributeEventMask(attr->fEventMask);
+      }
    }
    MoveResizeWindow(rootwid(win),x,y,w,h);
    return rootwid(win);
@@ -1699,7 +1715,7 @@ void         TGQt::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *at
    if ( attr->fMask & kWABackPixel) {
       // background pixel
       f.setPaletteBackgroundColor(QtColor(attr->fBackgroundPixel));
-      f.setEraseColor(QtColor(attr->fBackgroundPixel));
+//      f.setEraseColor(QtColor(attr->fBackgroundPixel));
    }
    if ( attr->fMask & kWABorderPixmap) {
       // fBorderPixmap;         // border of the window
