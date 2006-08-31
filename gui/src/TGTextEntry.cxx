@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.45 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.46 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1366,7 +1366,6 @@ Bool_t TGTextEntry::HandleFocusChange(Event_t *event)
    if (!IsEnabled()) return kTRUE;
 
    // check this when porting to Win32
-   if ((event->fCode == kNotifyNormal) && (event->fState != kNotifyPointer)) {
       if (event->fType == kFocusIn) {
          fCursorOn = kTRUE;
          if (!fCurBlink) fCurBlink = new TBlinkTimer(this, 500);
@@ -1380,7 +1379,6 @@ Bool_t TGTextEntry::HandleFocusChange(Event_t *event)
          gBlinkingEntry = 0;
       }
       fClient->NeedRedraw(this);
-   }
    return kTRUE;
 }
 

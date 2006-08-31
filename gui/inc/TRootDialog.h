@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootDialog.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootDialog.h,v 1.2 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   20/02/98
 
 /*************************************************************************
@@ -54,6 +54,8 @@ public:
 
    virtual void CloseWindow();
    virtual void Popup();
+
+   void TabPressed();
 
    ClassDef(TRootDialog,0)  //Native GUI method argument prompt dialog box
 };

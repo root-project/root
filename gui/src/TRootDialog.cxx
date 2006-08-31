@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.6 2004/09/13 09:10:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.7 2006/04/11 06:56:27 antcheva Exp $
 // Author: Fons Rademakers   20/02/98
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TGButton.h"
 #include "TObjString.h"
 
+extern TGTextEntry *gBlinkingEntry;
 
 ClassImp(TRootDialog)
 
@@ -74,6 +75,8 @@ void TRootDialog::Add(const char *argname, const char *value, const char *type)
    TGLabel      *l = new TGLabel(this, argname);
    TGTextBuffer *b = new TGTextBuffer(20); b->AddText(0, value);
    TGTextEntry  *t = new TGTextEntry(this, b);
+
+   t->Connect("TabPressed()", "TRootDialog", this, "TabPressed()");
 
    t->Associate(fMenu);
    t->Resize(260, t->GetDefaultHeight());
@@ -236,4 +239,34 @@ void TRootDialog::CloseWindow()
 
    // Send Cancel button message to context menu eventhandler
    SendMessage(fMenu, MK_MSG(kC_COMMAND, kCM_BUTTON), 3, 0);
+}
+
+//______________________________________________________________________________
+void TRootDialog::TabPressed()
+{
+   Bool_t setNext = kFALSE;
+   TIter next(fWidgets);
+
+   while ( TObject* obj = next() ) {
+      if ( obj->IsA() == TGTextEntry::Class() ) {
+         TGTextEntry *entry = (TGTextEntry*) obj;
+         if ( entry == gBlinkingEntry ) {
+            setNext = kTRUE;
+         } else if ( setNext ) {
+            entry->SetFocus();
+            entry->End();
+            return;
+         }
+      }
+   }
+
+   next.Reset();
+   while ( TObject* obj = next() ) {
+      if ( obj->IsA() == TGTextEntry::Class() ) {
+         TGTextEntry *entry = (TGTextEntry*) obj;
+         entry->SetFocus();
+         entry->End();
+         return;
+      }
+   }
 }
