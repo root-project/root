@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.2 2006/06/14 08:33:23 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.3 2006/06/19 09:10:25 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -9,24 +9,29 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGLPainterAlgorithms
-#define ROOT_TGLPainterAlgorithms
+#ifndef ROOT_TGLPlotPainter
+#define ROOT_TGLPlotPainter
 
-#include <utility>
+#include <vector>
 
 #ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
 #endif
-#ifndef ROOT_TArcBall
-#include "TArcBall.h"
+#ifndef ROOT_TGLPlotBox
+#include "TGLPlotBox.h"
 #endif
-#ifndef ROOT_TGLUtil
-#include "TGLUtil.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
 #endif
 #ifndef ROOT_TPoint
 #include "TPoint.h"
 #endif
+#ifndef ROOT_TGLUtil
+#include "TGLUtil.h"
+#endif
 
+class TGLPlotCoordinates;
+class TGLOrthoCamera;
 class TString;
 class TColor;
 class TAxis;
@@ -36,142 +41,166 @@ class TH1;
    TGLPlotPainter class defines interface to different plot painters.
 */
 
-enum EGLCoordType {
-   kGLCartesian,
-   kGLPolar,
-   kGLCylindrical,
-   kGLSpherical
-};
-
-enum EGLPlotType {
-   kGLLegoPlot,
-   kGLSurfacePlot,
-   kGLBoxPlot,
-   kGLTF3Plot,
-   kGLStackPlot,
-   kGLDefaultPlot
-};
-
 class TGLPlotPainter : public TVirtualGLPainter {
+private:
+   Int_t          fGLContext;
+   const TColor  *fPadColor;
+
+protected:
+   TH1                  *fHist;
+   TAxis                *fXAxis;
+   TAxis                *fYAxis;
+   TAxis                *fZAxis;
+
+   TGLPlotCoordinates   *fCoord;
+   TGLOrthoCamera       *fCamera;
+   TGLSelectionBuffer    fSelection;
+   Bool_t                fUpdateSelection;
+   Bool_t                fSelectionPass;
+   Int_t                 fSelectedPart;
+   TPoint                fMousePosition;
+   mutable Double_t      fXOZSectionPos;
+   mutable Double_t      fYOZSectionPos;
+   mutable Double_t      fXOYSectionPos;
+   TGLPlotBox            fBackBox;
+
+   std::vector<Double_t> fZLevels;
+
 public:
-   virtual void     SetGLContext(Int_t context) = 0;
-   //Shows info about an object under cursor.
-   virtual char    *GetObjectInfo(Int_t px, Int_t py) = 0;
+   TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t context = -1,
+                  Bool_t xoySelectable = kFALSE);
+
+   virtual void     Paint();
+   //Checks, if mouse cursor is above plot.
+   virtual Bool_t   PlotSelected(Int_t px, Int_t py);
    //Init geometry does plot's specific initialization.
-   //Such initialization can be done one time in constructor,
-   //without any InitGeometry call. But in case of pad,
-   //user can change something interactivly and
-   //painter should know about it to change its state.
    virtual Bool_t   InitGeometry() = 0;
-   virtual void     StartRotation(Int_t px, Int_t py) = 0;
-   virtual void     Rotate(Int_t px, Int_t py) = 0;
-   virtual void     StopRotation() = 0;
+
    virtual void     StartPan(Int_t px, Int_t py) = 0;
-   //Pan function is already declared in TVirtualGLPainter
-   virtual void     StopPan() = 0;
-   virtual void     ZoomIn() = 0;
-   virtual void     ZoomOut() = 0;
-   virtual void     SetLogX(Bool_t logX) = 0;
-   virtual void     SetLogY(Bool_t logY) = 0;
-   virtual void     SetLogZ(Bool_t logZ) = 0;
-   virtual void     SetCoordType(EGLCoordType type) = 0;
-   //Add string option, it can be a digit in "lego" or "surf"
-   //options, and it can be some others options - "e".
+   //Pan function is already declared in TVirtualGLPainter.
+
+   //Add string option, it can be a digit in "lego" or "surf".
    virtual void     AddOption(const TString &stringOption) = 0;
-   //Used by GLpad
-   virtual void     SetPadColor(TColor *color) = 0;
-   //Used by GLpad
-   virtual void     SetFrameColor(TColor *color) = 0;
-   //Function to process additional events (some key presses etc.)
+   //Function to process additional events (key presses, mouse clicks.)
    virtual void     ProcessEvent(Int_t event, Int_t px, Int_t py) = 0;
+   //Used by GLpad
+   void             SetGLContext(Int_t context);
+   void             SetPadColor(const TColor *color);
+   virtual void     SetFrameColor(const TColor *frameColor);
+   //Camera is external to painter, if zoom was changed, or camera
+   //was rotated, selection must be invalidated.
+   void             InvalidateSelection();
+
+protected:
+   Int_t            GetGLContext()const;
+   const TColor    *GetPadColor()const;
+   Bool_t           MakeGLContextCurrent()const;
+   //
+   void             MoveSection(Int_t px, Int_t py);
+   void             DrawSections()const;
+   virtual void     DrawSectionX()const = 0;
+   virtual void     DrawSectionY()const = 0;
+   virtual void     DrawSectionZ()const = 0;
+
+   virtual void     InitGL()const = 0;
+   virtual void     ClearBuffers()const = 0;
+   virtual void     DrawPlot()const = 0;
+
+   void             PrintPlot()const;
+   //
 
    ClassDef(TGLPlotPainter, 0) //Base for gl plots
 };
 
-/*
-   Auxilary class, which holds info about plot's back box and
-   sizes.
-*/
+class TGLPlotCoordinates {
+private:
+   EGLCoordType    fCoordType;
 
-class TGLPlotFrame {
-   friend class TGL2DAxisPainter;
+   Rgl::BinRange_t fXBins;
+   Rgl::BinRange_t fYBins;
+   Rgl::BinRange_t fZBins;
 
-protected:
-   typedef std::pair<Double_t, Double_t> Range_t;
-   typedef std::pair<Int_t, Int_t>       BinRange_t;
+   Double_t        fXScale;
+   Double_t        fYScale;
+   Double_t        fZScale;
 
-   TGLVertex3            fFrame[8];
-   static const Int_t    fFramePlanes[][4];
-   static const Double_t fFrameNormals[][3];
-   static const Int_t    fBackPairs[][2];
+   Rgl::Range_t    fXRange;
+   Rgl::Range_t    fYRange;
+   Rgl::Range_t    fZRange;
 
-   Bool_t          fLogX;
-   Bool_t          fLogY;
-   Bool_t          fLogZ;
-   Double_t        fScaleX;
-   Double_t        fScaleY;
-   Double_t        fScaleZ;
+   Rgl::Range_t    fXRangeScaled;
+   Rgl::Range_t    fYRangeScaled;
+   Rgl::Range_t    fZRangeScaled;
 
-   Int_t           fFrontPoint;
-   TGLVertex3      f2DAxes[8];
+   Bool_t          fXLog;
+   Bool_t          fYLog;
+   Bool_t          fZLog;
 
-   TArcBall        fArcBall;
-   Int_t           fViewport[4];
-
-   TPoint          fMousePosition;
-   TGLVector3      fPan;
-
-   Double_t        fZoom;
-   Double_t        fFrustum[4];
-   Double_t        fShift;
-
-   Double_t        fCenter[3];
+   Bool_t          fModified;
    Double_t        fFactor;
 
-   TGLPlotFrame(Bool_t logX, Bool_t logY, Bool_t logZ);
-   virtual ~TGLPlotFrame();
+public:
+   TGLPlotCoordinates();
 
-   void CalculateGLCameraParams(const Range_t &x, const Range_t &y, const Range_t &z);
-   void FindFrontPoint();
-   void SetTransformation();
-   void SetCamera();
+   void         SetCoordType(EGLCoordType type);
+   EGLCoordType GetCoordType()const;
 
-protected:
-   
-   static void   AdjustShift(const TPoint &start, const TPoint &finish, TGLVector3 &shiftVec, const Int_t *viewport);
+   void   SetXLog(Bool_t xLog);
+   Bool_t GetXLog()const;
 
-   ClassDef(TGLPlotFrame, 0) //Auxilary class
+   void   SetYLog(Bool_t yLog);
+   Bool_t GetYLog()const;
+
+   void   SetZLog(Bool_t zLog);
+   Bool_t GetZLog()const;
+
+   void   ResetModified();
+   Bool_t Modified()const;
+
+   Bool_t SetRanges(const TH1 *hist, Bool_t errors = kFALSE, Bool_t zBins = kFALSE);
+
+   Int_t  GetNXBins()const;
+   Int_t  GetNYBins()const;
+   Int_t  GetNZBins()const;
+
+   const Rgl::BinRange_t &GetXBins()const;
+   const Rgl::BinRange_t &GetYBins()const;
+   const Rgl::BinRange_t &GetZBins()const;
+
+   const Rgl::Range_t    &GetXRange()const;
+   Double_t               GetXLength()const;
+   const Rgl::Range_t    &GetYRange()const;
+   Double_t               GetYLength()const;
+   const Rgl::Range_t    &GetZRange()const;
+   Double_t               GetZLength()const;
+
+   const Rgl::Range_t    &GetXRangeScaled()const;
+   const Rgl::Range_t    &GetYRangeScaled()const;
+   const Rgl::Range_t    &GetZRangeScaled()const;
+
+   Double_t GetXScale()const{return fXScale;}
+   Double_t GetYScale()const{return fYScale;}
+   Double_t GetZScale()const{return fZScale;}
+
+   Int_t    GetFirstXBin()const{return fXBins.first;}
+   Int_t    GetLastXBin()const{return fXBins.second;}
+   Int_t    GetFirstYBin()const{return fYBins.first;}
+   Int_t    GetLastYBin()const{return fYBins.second;}
+   Int_t    GetFirstZBin()const{return fZBins.first;}
+   Int_t    GetLastZBin()const{return fZBins.second;}
+
+   Double_t GetFactor()const;
+
+private:
+   Bool_t SetRangesCartesian(const TH1 *hist, Bool_t errors, Bool_t zBins);
+   Bool_t SetRangesPolar(const TH1 *hist);
+   Bool_t SetRangesCylindrical(const TH1 *hist);
+   Bool_t SetRangesSpherical(const TH1 *hist);
+
+   TGLPlotCoordinates(const TGLPlotCoordinates &);
+   TGLPlotCoordinates &operator = (const TGLPlotCoordinates &);
+
+   ClassDef(TGLPlotCoordinates, 0)//Auxilary class, holds plot dimensions.
 };
-
-class TGLQuadric;
-
-namespace RootGL
-{
-   typedef std::pair<Double_t, Double_t> Range_t;
-   typedef std::pair<Int_t, Int_t>       BinRange_t;
-
-   Bool_t FindAxisRange(const TAxis *axis, Bool_t log, BinRange_t &bins, Range_t &range);
-   Bool_t FindAxisRange(TH1 *hist, Bool_t log, const BinRange_t &xBins, const BinRange_t &yBins, 
-                        Range_t &zRange, Double_t &factor, Bool_t errors = kFALSE);
-   void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin, 
-                     Double_t yMax, Double_t zMin, Double_t zMax);
-   void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2, 
-                        const TGLVertex3 &v3, const TGLVertex3 &v4);
-   void DrawQuadFilled(const TGLVertex3 &v0, const TGLVertex3 &v1, const TGLVertex3 &v2,
-                       const TGLVertex3 &v3, const TGLVertex3 &normal);
-   void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax, 
-                     Double_t zMin, Double_t zMax, Int_t frontPoint);
-   void DrawBoxFrontTextured(Double_t x1, Double_t x2, Double_t y1, Double_t y2, Double_t z1, 
-                             Double_t z2, Double_t texMin, Double_t texMax, Int_t frontPoint);
-   void DrawTrapezoid(const Double_t ver[][2], Double_t zMin, Double_t zMax, Bool_t needNormals = kTRUE);
-   void DrawTrapezoid(const Double_t ver[][3]);
-   void DrawTrapezoidTextured(const Double_t ver[][2], Double_t zMin, Double_t zMax,
-                              Double_t texMin, Double_t texMax);
-   void DrawTrapezoidTextured(const Double_t ver[][3], Double_t texMin, Double_t texMax);
-   void DrawTrapezoidTextured2(const Double_t ver[][2], Double_t zMin, Double_t zMax,
-                               Double_t texMin, Double_t texMax);
-   void DrawError(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax, Double_t zMin, Double_t zMax);
-   
-}
 
 #endif

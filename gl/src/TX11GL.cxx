@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.19 2006/06/06 11:49:01 couet Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.20 2006/06/07 18:43:33 brun Exp $
 // Author: Timur Pocheptsov (TX11GLManager) / Valeriy Onuchin (TX11GL)
 
 /*************************************************************************
@@ -692,8 +692,15 @@ void TX11GLManager::PanObject(TVirtualGLPainter *o, Int_t x, Int_t y)
 }
 
 //______________________________________________________________________________
-TObject *TX11GLManager::Select(TVirtualGLPainter *painter, Int_t px, Int_t py)
+Bool_t TX11GLManager::PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py)
 {
-   //return object at mouse position px,py
-   return painter->Select(px, py);
+   //Analog of TObject::DistancetoPrimitive
+   return plot->PlotSelected(px, py);
+}
+
+//______________________________________________________________________________
+char *TX11GLManager::GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py)
+{
+   //Analog of TObject::GetObjectInfo
+   return plot->GetPlotInfo(px, py);
 }

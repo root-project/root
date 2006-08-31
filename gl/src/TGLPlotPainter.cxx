@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.2 2006/06/14 08:33:23 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.3 2006/06/19 09:10:25 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -8,214 +8,894 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#include <algorithm>
 
-#include "TError.h"
-#include "TPoint.h"
+#include <cstdio>
+
+#include "TVirtualPS.h"
 #include "TStyle.h"
+#include "TError.h"
 #include "TAxis.h"
 #include "TMath.h"
 #include "TH1.h"
 
-
 #include "TGLPlotPainter.h"
+#include "TGLOrthoCamera.h"
 #include "TGLIncludes.h"
-#include "TGLQuadric.h"
-#include "TGLUtil.h"
+#include "TGLOutput.h"
+#include "gl2ps.h"
 
 ClassImp(TGLPlotPainter)
-ClassImp(TGLPlotFrame)
-
-const Int_t TGLPlotFrame::fFramePlanes[][4] = {
-                                               {0, 4, 5, 1},
-                                               {1, 5, 6, 2},
-                                               {2, 6, 7, 3},
-                                               {0, 3, 7, 4},
-                                               {0, 1, 2, 3}
-                                              };
-
-const Double_t TGLPlotFrame::fFrameNormals[][3] = {
-                                                   { 0., 1., 0.},
-                                                   {-1., 0., 0.},
-                                                   { 0.,-1., 0.},
-                                                   { 1., 0., 0.},
-                                                   { 0., 0., 1.}
-                                                  };
-
-const Int_t TGLPlotFrame::fBackPairs[][2] = {
-                                             {2, 1},
-                                             {3, 2},
-                                             {0, 3},
-                                             {1, 0}
-                                            };
 
 //______________________________________________________________________________
-TGLPlotFrame::TGLPlotFrame(Bool_t logX, Bool_t logY, Bool_t logZ)
-                : fLogX(logX),
-                  fLogY(logY),
-                  fLogZ(logZ),
-                  fScaleX(1.),
-                  fScaleY(1.),
-                  fScaleZ(1.),
-                  fFrontPoint(0),
-                  fViewport(),
-                  fZoom(1.),
-                  fFrustum(),
-                  fShift(0.),
-                  fCenter(),
-                  fFactor(1.)
+TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, 
+                               Int_t context, Bool_t xoy)
+                  : fGLContext(context),
+                    fPadColor(0),
+                    fHist(hist),
+                    fXAxis(hist->GetXaxis()),
+                    fYAxis(hist->GetYaxis()),
+                    fZAxis(hist->GetZaxis()),
+                    fCoord(coord),
+                    fCamera(camera),
+                    fUpdateSelection(kTRUE),
+                    fSelectionPass(kFALSE),
+                    fSelectedPart(0),
+                    fXOZSectionPos(0.),
+                    fYOZSectionPos(0.),
+                    fXOYSectionPos(0.),
+                    fBackBox(xoy)
 {
+   //TGLPlotPainter's ctor.
+   if (MakeGLContextCurrent())
+      fCamera->SetViewport(GetGLContext());
 }
 
 //______________________________________________________________________________
-TGLPlotFrame::~TGLPlotFrame()
+void TGLPlotPainter::Paint()
 {
+   //Draw lego.
+   if (!MakeGLContextCurrent())
+      return;
+
+   InitGL();
+   //Save material/light properties in a stack.
+   glPushAttrib(GL_LIGHTING_BIT);
+
+   fCamera->SetViewport(GetGLContext());
+   if (fCamera->ViewportChanged())
+      fUpdateSelection = kTRUE;
+   //glOrtho etc.
+   fCamera->SetCamera();
+   //Clear buffer (possibly, with pad's background color).
+   ClearBuffers();
+   //Set light.
+   const Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
+   glLightfv(GL_LIGHT0, GL_POSITION, pos);
+   //Set transformation - shift and rotate the scene.
+   fCamera->Apply();
+   fBackBox.FindFrontPoint();
+   if (gVirtualPS)
+      PrintPlot();
+   DrawPlot();
+   //Restore material properties from stack.
+   glPopAttrib();
+   glFlush();
+   //LegoPainter work is now finished, axes are drawn by axis painter.
+   //Here changes are possible in future, if we have real 3d axis painter.
+   gGLManager->ReadGLBuffer(GetGLContext());
+   //Select pixmap/DIB
+   if (fCoord->GetCoordType() == kGLCartesian) {
+      gGLManager->SelectOffScreenDevice(GetGLContext());
+      //Draw axes into pixmap/DIB
+      Int_t viewport[] = {fCamera->GetX(), fCamera->GetY(), fCamera->GetWidth(), fCamera->GetHeight()};
+      Rgl::DrawAxes(fBackBox.GetFrontPoint(), viewport, fBackBox.Get2DBox(), fCoord, fXAxis, fYAxis, fZAxis);
+   }
+   gGLManager->Flush(GetGLContext());
 }
 
 //______________________________________________________________________________
-void TGLPlotFrame::AdjustShift(const TPoint &p1, const TPoint &p2, TGLVector3 &shiftVec, 
-                               const Int_t *viewport)
+void TGLPlotPainter::PrintPlot()const
 {
-   //Extract gl matrices.
+   // Generate PS using gl2ps
+   using namespace std;
+
+   TGLOutput::StartEmbeddedPS();
+   FILE *output = fopen(gVirtualPS->GetName(), "a");
+   Int_t gl2psFormat = GL2PS_EPS;
+   Int_t gl2psSort   = GL2PS_BSP_SORT;
+   Int_t buffsize    = 0;
+   Int_t state       = GL2PS_OVERFLOW;
+
+   while (state == GL2PS_OVERFLOW) {
+      buffsize += 1024*1024;
+      gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
+                      gl2psFormat, gl2psSort, GL2PS_USE_CURRENT_VIEWPORT
+                      | GL2PS_POLYGON_OFFSET_FILL | GL2PS_SILENT
+                      | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL
+                      | 0,
+                      GL_RGBA, 0, NULL,0, 0, 0,
+                      buffsize, output, NULL);
+      DrawPlot();
+      state = gl2psEndPage();
+   }
+   
+   fclose(output);
+   TGLOutput::CloseEmbeddedPS();
+   glFlush();
+}
+
+//______________________________________________________________________________
+Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
+{
+   // Plot selected.
+
+   if (!MakeGLContextCurrent())
+      return kFALSE;
+   //Read color buffer content to find selected object
+   if (fUpdateSelection) {
+      fSelectionPass = kTRUE;
+      fCamera->SetCamera();
+      TGLDisableGuard lightGuard(GL_LIGHTING);
+      glClearColor(0.f, 0.f, 0.f, 0.f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      fCamera->Apply();
+      DrawPlot();
+      glFlush();
+      fSelection.ReadColorBuffer(fCamera->GetWidth(), fCamera->GetHeight());
+      fSelectionPass = kFALSE;
+      fUpdateSelection = kFALSE;
+   }
+   //Convert from window top-bottom into gl bottom-top.
+   py = fCamera->GetHeight() - py;
+   //Y is a number of a row, x - column.
+   std::swap(px, py);
+   Int_t newSelected(Rgl::ColorToObjectID(fSelection.GetPixelColor(px, py)));
+
+   if (newSelected != fSelectedPart) {
+      //New object was selected (or surface deselected) - re-paint.
+      fSelectedPart = newSelected;
+      gGLManager->MarkForDirectCopy(GetGLContext(), kTRUE);
+      Paint();
+      gGLManager->MarkForDirectCopy(GetGLContext(), kFALSE);
+   }
+
+   return fSelectedPart ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
+void TGLPlotPainter::SetGLContext(Int_t context)
+{
+   //One plot can be painted in several gl contexts.
+   fGLContext = context;
+}
+
+//______________________________________________________________________________
+void TGLPlotPainter::SetPadColor(const TColor *c)
+{
+   //Used in a pad.
+   fPadColor = c;
+}
+
+//______________________________________________________________________________
+void TGLPlotPainter::SetFrameColor(const TColor *c)
+{
+   //Set plot's back box color.
+   fBackBox.SetFrameColor(c);
+}
+
+//______________________________________________________________________________
+void TGLPlotPainter::InvalidateSelection()
+{
+   //Selection must be updated.
+   fUpdateSelection = kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TGLPlotPainter::GetGLContext()const
+{
+   //Get gl context.
+   return fGLContext;
+}
+
+//______________________________________________________________________________
+const TColor *TGLPlotPainter::GetPadColor()const
+{
+   //Get pad color.
+   return fPadColor;
+}
+
+//______________________________________________________________________________
+Bool_t TGLPlotPainter::MakeGLContextCurrent()const
+{
+   //Make gl context current.
+   return fGLContext != -1 && gGLManager->MakeCurrent(fGLContext);
+}
+
+//______________________________________________________________________________
+void TGLPlotPainter::MoveSection(Int_t px, Int_t py)
+{
+   //Create dynamic profile using selected plane
+   const TGLVertex3 *frame = fBackBox.Get3DBox();
+   const Int_t frontPoint  = fBackBox.GetFrontPoint();
+
+   if (fSelectedPart == 1) {
+      fXOYSectionPos = frame[0].Z();
+      fSelectedPart = 6;
+   } else if (fSelectedPart == 2) {
+      if (frontPoint == 2) {
+         fXOZSectionPos = frame[0].Y();
+         fSelectedPart = 4;
+      } else if (!frontPoint) {
+         fXOZSectionPos = frame[2].Y();
+         fSelectedPart = 4;
+      } else if (frontPoint == 1) {
+         fYOZSectionPos = frame[0].X();
+         fSelectedPart = 5;
+      } else if (frontPoint == 3) {
+         fYOZSectionPos = frame[1].X();
+         fSelectedPart = 5;
+      }
+   } else if (fSelectedPart == 3) {
+      if (frontPoint == 2) {
+         fYOZSectionPos = frame[0].X();
+         fSelectedPart = 5;
+      } else if (!frontPoint) {
+         fYOZSectionPos = frame[1].X();
+         fSelectedPart = 5;
+      } else if (frontPoint == 1) {
+         fXOZSectionPos = frame[2].Y();
+         fSelectedPart = 4;
+      } else if (frontPoint == 3) {
+         fXOZSectionPos = frame[0].Y();
+         fSelectedPart = 4;
+      }
+   }
+
    Double_t mv[16] = {0.};
    glGetDoublev(GL_MODELVIEW_MATRIX, mv);
    Double_t pr[16] = {0.};
    glGetDoublev(GL_PROJECTION_MATRIX, pr);
-   //Adjust pan vector.
-   TGLVertex3 start, end;
-   gluUnProject(p1.fX, p1.fY, 1., mv, pr, viewport, &start.X(), &start.Y(), &start.Z());
-   gluUnProject(p2.fX, p2.fY, 1., mv, pr, viewport, &end.X(), &end.Y(), &end.Z());
-   shiftVec += (start - end) /= 2.;
+   Int_t vp[4] = {0};
+   glGetIntegerv(GL_VIEWPORT, vp);
+   Double_t winVertex[3] = {0.};
+
+   if (fSelectedPart == 6)
+      gluProject(0., 0., fXOYSectionPos, mv, pr, vp, &winVertex[0], &winVertex[1], &winVertex[2]);
+   else
+      gluProject(fSelectedPart == 5 ? fYOZSectionPos : 0., 
+                 fSelectedPart == 4 ? fXOZSectionPos : 0., 
+                 0., mv, pr, vp, 
+                 &winVertex[0], &winVertex[1], &winVertex[2]);
+   winVertex[0] += px - fMousePosition.fX;
+   winVertex[1] += py - fMousePosition.fY;
+   Double_t newPoint[3] = {0.};
+   gluUnProject(winVertex[0], winVertex[1], winVertex[2], mv, pr, vp,
+                newPoint, newPoint + 1, newPoint + 2);
+
+   if (fSelectedPart == 4)
+      fXOZSectionPos = newPoint[1];
+   else if (fSelectedPart == 5)
+      fYOZSectionPos = newPoint[0];
+   else
+      fXOYSectionPos = newPoint[2];
 }
 
 //______________________________________________________________________________
-void TGLPlotFrame::CalculateGLCameraParams(const Range_t &x, const Range_t &y, const Range_t &z)
+void TGLPlotPainter::DrawSections()const
 {
-   //Finds the maximum dimension and adjust scale coefficients
-   const Double_t xRange = x.second - x.first;
-   const Double_t yRange = y.second - y.first;
-   const Double_t zRange = z.second - z.first;
-   const Double_t maxDim = TMath::Max(TMath::Max(xRange, yRange), zRange);
+   //Draw sections (if any).
+   const TGLVertex3 *frame = fBackBox.Get3DBox();
+   
+   if (fXOZSectionPos > frame[0].Y()) {
+      if (fXOZSectionPos > frame[2].Y())
+         fXOZSectionPos = frame[2].Y();
+      const TGLVertex3 v1(frame[0].X(), fXOZSectionPos, frame[0].Z());
+      const TGLVertex3 v2(frame[4].X(), fXOZSectionPos, frame[4].Z());
+      const TGLVertex3 v3(frame[5].X(), fXOZSectionPos, frame[5].Z());
+      const TGLVertex3 v4(frame[1].X(), fXOZSectionPos, frame[1].Z());
 
-   fScaleX = maxDim / xRange;
-   fScaleY = maxDim / yRange;
-   fScaleZ = maxDim / zRange;
+      if (fSelectionPass)
+         Rgl::ObjectIDToColor(4);
+      else if (fSelectedPart == 4)
+         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gBlueEmission);
+  
+      glEnable(GL_POLYGON_OFFSET_FILL);
+      glPolygonOffset(1.f, 1.f);
+      Rgl::DrawQuadFilled(v1, v2, v3, v4, TGLVector3(0., 1., 0.));
+      glDisable(GL_POLYGON_OFFSET_FILL);
+      //Zlevels here.
+      if (!fSelectionPass) {
+         if (fSelectedPart == 4)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gNullEmission);
+         const TGLDisableGuard lightGuard(GL_LIGHTING);
+         const TGLEnableGuard  blendGuard(GL_BLEND);
+         const TGLEnableGuard  lineSmooth(GL_LINE_SMOOTH);
+         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+         glDepthMask(GL_FALSE);
+         DrawSectionX();
+         //Draw z-levels
+         const TGLEnableGuard stippleGuard(GL_LINE_STIPPLE);//[1-1]
+         const UShort_t stipple = 0x5555;
+         glLineStipple(1, stipple);
 
-   const Double_t xMin = x.first * fScaleX, xMax = x.second * fScaleX;
-   const Double_t yMin = y.first * fScaleY, yMax = y.second * fScaleY;
-   const Double_t zMin = z.first * fScaleZ/*z.first > 0. ? 0. : z.first * fScaleZ*/, zMax = z.second * fScaleZ;
+         glColor3d(0., 0., 0.);
+         glBegin(GL_LINES);
+         for (UInt_t i = 0; i < fZLevels.size(); ++i) {
+            glVertex3d(fBackBox.Get3DBox()[1].X(), fXOZSectionPos, fZLevels[i]);
+            glVertex3d(fBackBox.Get3DBox()[0].X(), fXOZSectionPos, fZLevels[i]);
+         }
+         glEnd();
+         glDepthMask(GL_TRUE);
+      }
+   }
 
-   fFrame[0].Set(xMin, yMin, zMin);
-   fFrame[1].Set(xMax, yMin, zMin);
-   fFrame[2].Set(xMax, yMax, zMin);
-   fFrame[3].Set(xMin, yMax, zMin);
-   fFrame[4].Set(xMin, yMin, zMax);
-   fFrame[5].Set(xMax, yMin, zMax);
-   fFrame[6].Set(xMax, yMax, zMax);
-   fFrame[7].Set(xMin, yMax, zMax);
+   if (fYOZSectionPos > frame[0].X()) {
+      if (fYOZSectionPos > frame[1].X())
+         fYOZSectionPos = frame[1].X();
+      TGLVertex3 v1(fYOZSectionPos, frame[0].Y(), frame[0].Z());
+      TGLVertex3 v2(fYOZSectionPos, frame[3].Y(), frame[3].Z());
+      TGLVertex3 v3(fYOZSectionPos, frame[7].Y(), frame[7].Z());
+      TGLVertex3 v4(fYOZSectionPos, frame[4].Y(), frame[4].Z());
+      
+      if (fSelectionPass) {
+         Rgl::ObjectIDToColor(5);
+      } else if (fSelectedPart == 5)
+         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gBlueEmission);
+      
+      glEnable(GL_POLYGON_OFFSET_FILL);
+      glPolygonOffset(1.f, 1.f);
+      Rgl::DrawQuadFilled(v1, v2, v3, v4, TGLVector3(1., 0., 0.));
+      glDisable(GL_POLYGON_OFFSET_FILL);
 
-   fCenter[0] = x.first + xRange / 2;
-   fCenter[1] = y.first + yRange / 2;
-   fCenter[2] = z.first + zRange / 2;
+      if (!fSelectionPass) {
+         if (fSelectedPart == 5)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gNullEmission);
+         const TGLDisableGuard lightHuard(GL_LIGHTING);
+         const TGLEnableGuard blendGuard(GL_BLEND);
+         const TGLEnableGuard lineSmooth(GL_LINE_SMOOTH);
+         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+         glDepthMask(GL_FALSE);
+         DrawSectionY();
+         //Draw z-levels
+         const TGLEnableGuard stippleGuard(GL_LINE_STIPPLE);//[1-1]
+         glLineStipple(1, 0x5555);
 
-   fFrustum[0] = maxDim;
-   fFrustum[1] = maxDim;
-   fFrustum[2] = -100 * maxDim;
-   fFrustum[3] = 100 * maxDim;
-   fShift = maxDim * 1.5;
+         glColor3d(0., 0., 0.);
+         glBegin(GL_LINES);
+         for (UInt_t i = 0; i < fZLevels.size(); ++i) {
+            glVertex3d(fYOZSectionPos, fBackBox.Get3DBox()[3].Y(), fZLevels[i]);
+            glVertex3d(fYOZSectionPos, fBackBox.Get3DBox()[0].Y(), fZLevels[i]);
+         }
+         glEnd();
+         glDepthMask(GL_TRUE);
+      }
+   }
+
+   if (fXOYSectionPos > frame[0].Z()) {
+      if (fXOYSectionPos > frame[4].Z())
+         fXOYSectionPos = frame[4].Z();
+      TGLVertex3 v1(frame[0].X(), frame[0].Y(), fXOYSectionPos);
+      TGLVertex3 v2(frame[1].X(), frame[1].Y(), fXOYSectionPos);
+      TGLVertex3 v3(frame[2].X(), frame[2].Y(), fXOYSectionPos);
+      TGLVertex3 v4(frame[3].X(), frame[3].Y(), fXOYSectionPos);
+      
+      if (fSelectionPass) {
+         Rgl::ObjectIDToColor(6);
+      } else if (fSelectedPart == 6)
+         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gBlueEmission);
+      
+      glEnable(GL_POLYGON_OFFSET_FILL);
+      glPolygonOffset(1.f, 1.f);
+      //if (fSelectionPass || fSelectedPart == 6)
+      Rgl::DrawQuadFilled(v1, v2, v3, v4, TGLVector3(0., 0., 1.));
+      glDisable(GL_POLYGON_OFFSET_FILL);
+
+      if (!fSelectionPass) {
+         if (fSelectedPart == 6)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gNullEmission);
+         const TGLDisableGuard lightGuard(GL_LIGHTING);
+         const TGLEnableGuard blendGuard(GL_BLEND);
+         const TGLEnableGuard lineSmooth(GL_LINE_SMOOTH);
+         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+         glDepthMask(GL_FALSE);
+         DrawSectionZ();
+         glDepthMask(GL_TRUE);
+      }
+   }
+}
+
+ClassImp(TGLPlotCoordinates)
+
+//______________________________________________________________________________
+TGLPlotCoordinates::TGLPlotCoordinates()
+                        : fCoordType(kGLCartesian),
+                          fXScale(1.),
+                          fYScale(1.),
+                          fZScale(1.),
+                          fXLog(kFALSE),
+                          fYLog(kFALSE),
+                          fZLog(kFALSE),
+                          fModified(kFALSE)
+{
+   //Constructor.
+}
+
+//______________________________________________________________________________
+void TGLPlotCoordinates::SetCoordType(EGLCoordType type)
+{
+   //If coord type was changed, plot must reset sections (if any),
+   //set fModified.
+   if (fCoordType != type) {
+      fModified = kTRUE;
+      fCoordType = type;
+   }
+}
+
+//______________________________________________________________________________
+EGLCoordType TGLPlotCoordinates::GetCoordType()const
+{
+   // Get coordinates type.
+
+   return fCoordType;
+}
+
+//______________________________________________________________________________
+void TGLPlotCoordinates::SetXLog(Bool_t xLog)
+{
+   //If log changed, sections must be reset, 
+   //set fModified.
+   if (fXLog != xLog) {
+      fXLog = xLog;
+      fModified = kTRUE;
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGLPlotCoordinates::GetXLog()const
+{
+   // Get X log.
+
+   return fXLog;
+}
+
+//______________________________________________________________________________
+void TGLPlotCoordinates::SetYLog(Bool_t yLog)
+{
+   //If log changed, sections must be reset, 
+   //set fModified.
+   if (fYLog != yLog) {
+      fYLog = yLog;
+      fModified = kTRUE;
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGLPlotCoordinates::GetYLog()const
+{
+   // Get Y log.
+
+   return fYLog;
+}
+
+//______________________________________________________________________________
+void TGLPlotCoordinates::SetZLog(Bool_t zLog)
+{
+   //If log changed, sections must be reset, 
+   //set fModified.
+   if (fZLog != zLog) {
+      fZLog = zLog;
+      fModified = kTRUE;
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGLPlotCoordinates::GetZLog()const
+{
+   // Get Z log.
+
+   return fZLog;
+}
+
+//______________________________________________________________________________
+void TGLPlotCoordinates::ResetModified()
+{
+   // Reset modified.
+
+   fModified = kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLPlotCoordinates::Modified()const
+{
+   // Modified.
+
+   return fModified;
+}
+
+//______________________________________________________________________________
+Bool_t TGLPlotCoordinates::SetRanges(const TH1 *hist, Bool_t errors, Bool_t zBins)
+{
+   //Set bin ranges, ranges.
+   switch (fCoordType) {
+   case kGLPolar:
+      return SetRangesPolar(hist);
+   case kGLCylindrical:
+      return SetRangesCylindrical(hist);
+   case kGLSpherical:
+      return SetRangesSpherical(hist);
+   case kGLCartesian:
+   default:
+      return SetRangesCartesian(hist, errors, zBins);
+   }
+}
+
+//______________________________________________________________________________
+Int_t TGLPlotCoordinates::GetNXBins()const
+{
+   //Number of X bins.
+   return fXBins.second - fXBins.first + 1;
+}
+
+//______________________________________________________________________________
+Int_t TGLPlotCoordinates::GetNYBins()const
+{
+   //Number of Y bins.
+   return fYBins.second - fYBins.first + 1;
+}
+
+//______________________________________________________________________________
+Int_t TGLPlotCoordinates::GetNZBins()const
+{
+   //Number of Z bins.
+   return fZBins.second - fZBins.first + 1;
+}
+
+//______________________________________________________________________________
+const Rgl::BinRange_t &TGLPlotCoordinates::GetXBins()const
+{
+   //X bins range.
+   return fXBins;
+}
+
+//______________________________________________________________________________
+const Rgl::BinRange_t &TGLPlotCoordinates::GetYBins()const
+{
+   //Y bins range.
+   return fYBins;
+}
+
+//______________________________________________________________________________
+const Rgl::BinRange_t &TGLPlotCoordinates::GetZBins()const
+{
+   //Z bins range.
+   return fZBins;
+}
+
+//______________________________________________________________________________
+const Rgl::Range_t &TGLPlotCoordinates::GetXRange()const
+{
+   //X range.
+   return fXRange;
+}
+
+//______________________________________________________________________________
+Double_t TGLPlotCoordinates::GetXLength()const
+{
+   //X length.
+   return fXRange.second - fXRange.first;
+}
+
+//______________________________________________________________________________
+const Rgl::Range_t &TGLPlotCoordinates::GetYRange()const
+{
+   //Y range.
+   return fYRange;
+}
+
+//______________________________________________________________________________
+Double_t TGLPlotCoordinates::GetYLength()const
+{
+   //Y length.
+   return fYRange.second - fYRange.first;
+}
+
+
+//______________________________________________________________________________
+const Rgl::Range_t &TGLPlotCoordinates::GetZRange()const
+{
+   //Z range.
+   return fZRange;
+}
+
+//______________________________________________________________________________
+Double_t TGLPlotCoordinates::GetZLength()const
+{
+   //Z length.
+   return fZRange.second - fZRange.first;
+}
+
+
+//______________________________________________________________________________
+const Rgl::Range_t &TGLPlotCoordinates::GetXRangeScaled()const
+{
+   //Scaled range.
+   return fXRangeScaled;
+}
+
+//______________________________________________________________________________
+const Rgl::Range_t &TGLPlotCoordinates::GetYRangeScaled()const
+{
+   //Scaled range.
+   return fYRangeScaled;
+}
+
+//______________________________________________________________________________
+const Rgl::Range_t &TGLPlotCoordinates::GetZRangeScaled()const
+{
+   //Scaled range.
+   return fZRangeScaled;
+}
+
+//______________________________________________________________________________
+Double_t TGLPlotCoordinates::GetFactor()const
+{
+   // Get factor.
+
+   return fFactor;
 }
 
 namespace {
 
-   bool Compare(const TGLVertex3 &v1, const TGLVertex3 &v2)
-   {
-      return v1.Z() < v2.Z();
+   Bool_t FindAxisRange(const TAxis *axis, Bool_t log, Rgl::BinRange_t &bins, Rgl::Range_t &range);
+   Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins, 
+                        const Rgl::BinRange_t &yBins, Rgl::Range_t &zRange, 
+                        Double_t &factor, Bool_t errors);
+
+}
+
+//______________________________________________________________________________
+Bool_t TGLPlotCoordinates::SetRangesCartesian(const TH1 *hist, Bool_t errors, Bool_t zAsBins)
+{
+   //Set bin ranges, ranges, etc.
+   Rgl::BinRange_t xBins;
+   Rgl::Range_t    xRange;
+   const TAxis *xAxis = hist->GetXaxis();
+   if (!FindAxisRange(xAxis, fXLog, xBins, xRange)) {
+      Error("TGLPlotCoordinates::SetRangesCartesian", "Cannot set X axis to log scale");
+      return kFALSE;
    }
 
-}
-
-//______________________________________________________________________________
-void TGLPlotFrame::FindFrontPoint()
-{
-   //Convert 3d points into window coordinate system
-   //and find the nearest.
-   Double_t mvMatrix[16] = {0.};
-   glGetDoublev(GL_MODELVIEW_MATRIX, mvMatrix);
-   Double_t prMatrix[16] = {0.};
-   glGetDoublev(GL_PROJECTION_MATRIX, prMatrix);
-
-   const Double_t zMin = fFrame[0].Z();
-   const Double_t zMax = fFrame[4].Z();
-
-   for (Int_t i = 0; i < 4; ++i) {
-      gluProject(fFrame[i].X(), fFrame[i].Y(), zMin, mvMatrix, prMatrix, fViewport,
-                 &f2DAxes[i].X(), &f2DAxes[i].Y(), &f2DAxes[i].Z());
-      gluProject(fFrame[i].X(), fFrame[i].Y(), zMax, mvMatrix, prMatrix, fViewport,
-                 &f2DAxes[i + 4].X(), &f2DAxes[i + 4].Y(), &f2DAxes[i + 4].Z());
+   Rgl::BinRange_t yBins;
+   Rgl::Range_t    yRange;
+   const TAxis *yAxis = hist->GetYaxis();
+   if (!FindAxisRange(yAxis, fYLog, yBins, yRange)) {
+      Error("TGLPlotCoordinates::SetRangesCartesian", "Cannot set Y axis to log scale");
+      return kFALSE;
    }
 
-   fFrontPoint = std::min_element(f2DAxes, f2DAxes + 4, ::Compare) - f2DAxes;
-}
+   Rgl::BinRange_t zBins;
+   Rgl::Range_t zRange;
+   Double_t factor = 1.;
 
-//______________________________________________________________________________
-void TGLPlotFrame::SetTransformation()
-{
-   //Applies rotations and translations before drawing
-   glTranslated(0., 0., -fShift);
-   glMultMatrixd(fArcBall.GetRotMatrix());
-   glRotated(45., 1., 0., 0.);
-   glRotated(-45., 0., 1., 0.);
-   glRotated(-90., 0., 1., 0.);
-   glRotated(-90., 1., 0., 0.);
-   glTranslated(-fPan[0], -fPan[1], -fPan[2]);
-   glTranslated(-fCenter[0] * fScaleX, -fCenter[1] * fScaleY, -fCenter[2] * fScaleZ);
-}
-
-//______________________________________________________________________________
-void TGLPlotFrame::SetCamera()
-{
-   //Viewport and projection.
-   glViewport(fViewport[0], fViewport[1], fViewport[2], fViewport[3]);
-
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glOrtho(
-           -fFrustum[0] * fZoom,
-            fFrustum[0] * fZoom, 
-           -fFrustum[1] * fZoom, 
-            fFrustum[1] * fZoom, 
-            fFrustum[2], 
-            fFrustum[3]
-          );
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
-}
-
-namespace RootGL
-{
-
-   namespace {
-
-      Double_t FindMinBinWidth(const TAxis *axis)
-      {
-         Int_t currBin = axis->GetFirst();
-         Double_t width = axis->GetBinWidth(currBin);
-
-         if (!axis->IsVariableBinSize())//equal bins
-            return width;
-
-         ++currBin;
-         //variable size bins
-         for (const Int_t lastBin = axis->GetLast(); currBin <= lastBin; ++currBin)
-            width = TMath::Min(width, axis->GetBinWidth(currBin));
-
-         return width;
+   if (zAsBins) {
+      if (!FindAxisRange(hist->GetZaxis(), fZLog, zBins, zRange)) {
+         Error("TGLPlotCoordinates::SetRangesCartesian", "Cannot set Z axis to log scale");
+         return kFALSE;
       }
+   } else if (!FindAxisRange(hist, fZLog, xBins, yBins, zRange, factor, errors)) {
+      Error("TGLPlotCoordinates::SetRangesCartesian", 
+            "Log scale is requested for Z, but maximum less or equal 0. (%f)", zRange.second);
+      return kFALSE;
+   }
 
+   //Finds the maximum dimension and adjust scale coefficients
+   const Double_t x = xRange.second - xRange.first;
+   const Double_t y = yRange.second - yRange.first;
+   const Double_t z = zRange.second - zRange.first;
+
+   if (!x || !y || !z) {
+      Error("TGLPlotCoordinates::SetRangesCartesian", "Zero axis range.");
+      return kFALSE;
+   }
+
+   if (xRange != fXRange || yRange != fYRange || zRange != fZRange ||
+       xBins != fXBins || yBins != fYBins || zBins != fZBins || fFactor != factor)
+   {
+      fModified = kTRUE;
+   }
+
+   fXRange = xRange, fXBins = xBins, fYRange = yRange, fYBins = yBins, fZRange = zRange, fZBins = zBins;
+   fFactor = factor;
+
+   const Double_t maxDim = TMath::Max(TMath::Max(x, y), z);
+   fXScale = maxDim / x;
+   fYScale = maxDim / y;
+   fZScale = maxDim / z;
+   fXRangeScaled.first = fXRange.first * fXScale, fXRangeScaled.second = fXRange.second * fXScale;
+   fYRangeScaled.first = fYRange.first * fYScale, fYRangeScaled.second = fYRange.second * fYScale;
+   fZRangeScaled.first = fZRange.first * fZScale, fZRangeScaled.second = fZRange.second * fZScale;
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLPlotCoordinates::SetRangesPolar(const TH1 *hist)
+{
+   //Set bin ranges, ranges, etc.
+   Rgl::BinRange_t xBins;
+   Rgl::Range_t phiRange;
+   const TAxis *xAxis = hist->GetXaxis();
+   FindAxisRange(xAxis, kFALSE, xBins, phiRange);
+   if (xBins.second - xBins.first + 1 > 360) {
+      Error("TGLPlotCoordinates::SetRangesPolar", "To many PHI sectors");
+      return kFALSE;
+   }
+
+   Rgl::BinRange_t yBins;
+   Rgl::Range_t roRange;
+   const TAxis *yAxis = hist->GetYaxis();
+   FindAxisRange(yAxis, kFALSE, yBins, roRange);
+
+   Rgl::Range_t zRange;
+   Double_t factor = 1.;
+   if (!FindAxisRange(hist, fZLog, xBins, yBins, zRange, factor, kFALSE))
+   {
+      Error("TGLPlotCoordinates::SetRangesPolar", 
+            "Log scale is requested for Z, but maximum less or equal 0. (%f)", zRange.second);
+      return kFALSE;
+   }
+
+   const Double_t z = zRange.second - zRange.first;
+   if (!z || !(phiRange.second - phiRange.first) || !(roRange.second - roRange.first)) {
+      Error("TGLPlotCoordinates::SetRangesPolar", "Zero axis range.");
+      return kFALSE;
+   }
+
+   if (phiRange != fXRange || roRange != fYRange || zRange != fZRange ||
+       xBins != fXBins || yBins != fYBins || fFactor != factor)
+   {
+      fModified = kTRUE;
+      fXRange = phiRange, fXBins = xBins;
+      fYRange = roRange,  fYBins = yBins;
+      fZRange = zRange;
+      fFactor = factor;
+   }
+
+   const Double_t maxDim = TMath::Max(2., z);
+   fXScale = maxDim / 2.;
+   fYScale = maxDim / 2.;
+   fZScale = maxDim / z;
+   fXRangeScaled.first = -fXScale, fXRangeScaled.second = fXScale;
+   fYRangeScaled.first = -fYScale, fYRangeScaled.second = fYScale;
+   fZRangeScaled.first = fZRange.first * fZScale, fZRangeScaled.second = fZRange.second * fZScale;
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLPlotCoordinates::SetRangesCylindrical(const TH1 *hist)
+{
+   // Set ranges cylindrical.
+
+   Rgl::BinRange_t xBins, yBins;
+   Rgl::Range_t angleRange, heightRange, radiusRange;
+   const TAxis *xAxis = hist->GetXaxis();
+   const TAxis *yAxis = hist->GetYaxis();
+   Double_t factor = 1.;
+
+   FindAxisRange(xAxis, kFALSE, xBins, angleRange);
+   if (xBins.second - xBins.first + 1 > 360) {
+      Error("TGLPlotCoordinates::SetRangesCylindrical", "To many PHI sectors");
+      return kFALSE;
+   }
+   if (!FindAxisRange(yAxis, fYLog, yBins, heightRange)) {
+      Error("TGLPlotCoordinates::SetRangesCylindrical", "Cannot set Y axis to log scale");
+      return kFALSE;
+   }
+   FindAxisRange(hist, kFALSE, xBins, yBins, radiusRange, factor, kFALSE);
+
+   const Double_t x = angleRange.second  - angleRange.first;
+   const Double_t y = heightRange.second - heightRange.first;
+   const Double_t z = radiusRange.second - radiusRange.first;
+
+   if (!x || !y || !z) {
+      Error("TGLPlotCoordinates::SetRangesCylindrical", "Zero axis range.");
+      return kFALSE;
+   }
+
+   if (angleRange != fXRange  || heightRange != fYRange || 
+       radiusRange != fZRange || xBins != fXBins || 
+       yBins != fYBins || fFactor != factor) 
+   {
+      fModified = kTRUE;
+      fXRange = angleRange,  fXBins = xBins;
+      fYRange = heightRange, fYBins = yBins;
+      fZRange = radiusRange;
+      fFactor = factor;
+   }
+
+   const Double_t maxDim = TMath::Max(2., y);
+   fXScale = maxDim / 2.;
+   fYScale = maxDim / y;
+   fZScale = maxDim / 2.;
+   fXRangeScaled.first = -fXScale, fXRangeScaled.second = fXScale;
+   fYRangeScaled.first = fYRange.first * fYScale, fYRangeScaled.second = fYRange.second * fYScale;
+   fZRangeScaled.first = -fZScale, fZRangeScaled.second = fZScale;
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLPlotCoordinates::SetRangesSpherical(const TH1 *hist)
+{
+   // Set ranges spherical.
+
+   Rgl::BinRange_t xBins;
+   Rgl::Range_t phiRange;
+   FindAxisRange(hist->GetXaxis(), kFALSE, xBins, phiRange);
+   if (xBins.second - xBins.first + 1 > 360) {
+      Error("TGLPlotCoordinates::SetRangesSpherical", "To many PHI sectors");
+      return kFALSE;
+   }
+
+   Rgl::BinRange_t yBins;
+   Rgl::Range_t thetaRange;
+   FindAxisRange(hist->GetYaxis(), kFALSE, yBins, thetaRange);
+   if (yBins.second - yBins.first + 1 > 180) {
+      Error("TGLPlotCoordinates::SetRangesSpherical", "To many THETA sectors");
+      return kFALSE;
+   }
+
+   Rgl::Range_t radiusRange;
+   Double_t factor = 1.;
+   FindAxisRange(hist, kFALSE, xBins, yBins, radiusRange, factor, kFALSE);
+
+   if (xBins != fXBins || yBins != fYBins || 
+       phiRange != fXRange || thetaRange != fYRange || 
+       radiusRange != fZRange || fFactor != factor)
+   {
+      fModified = kTRUE;
+      fXBins    = xBins;
+      fYBins    = yBins;
+      fXRange   = phiRange;
+      fYRange   = thetaRange, 
+      fZRange   = radiusRange;
+      fFactor   = factor;
+   }
+
+   fXScale = 1.;
+   fYScale = 1.;
+   fZScale = 1.;
+   fXRangeScaled.first = -fXScale, fXRangeScaled.second = fXScale;
+   fYRangeScaled.first = -fYScale, fYRangeScaled.second = fYScale;
+   fZRangeScaled.first = -fZScale, fZRangeScaled.second = fZScale;
+
+   return kTRUE;
+}
+
+namespace {
+
+   //______________________________________________________________________________
+   Double_t FindMinBinWidth(const TAxis *axis)
+   {
+      // Find minimal bin width.
+
+      Int_t currBin = axis->GetFirst();
+      Double_t width = axis->GetBinWidth(currBin);
+
+      if (!axis->IsVariableBinSize())//equal bins
+         return width;
+
+      ++currBin;
+      //variable size bins
+      for (const Int_t lastBin = axis->GetLast(); currBin <= lastBin; ++currBin)
+         width = TMath::Min(width, axis->GetBinWidth(currBin));
+
+      return width;
    }
 
    //______________________________________________________________________________
-   Bool_t FindAxisRange(const TAxis *axis, Bool_t log, BinRange_t &bins, Range_t &range)
+   Bool_t FindAxisRange(const TAxis *axis, Bool_t log, Rgl::BinRange_t &bins, Rgl::Range_t &range)
    {
       //"Generic" function, can be used for X/Y/Z axis.
       //[low edge of first ..... up edge of last]
@@ -259,8 +939,9 @@ namespace RootGL
    }
 
    //______________________________________________________________________________
-   Bool_t FindAxisRange(TH1 *hist, Bool_t logZ, const BinRange_t &xBins, const BinRange_t &yBins, 
-                        Range_t &zRange, Double_t &factor, Bool_t errors)
+   Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins, 
+                        const Rgl::BinRange_t &yBins, Rgl::Range_t &zRange, 
+                        Double_t &factor, Bool_t errors)
    {
       //First, look through hist to find minimum and maximum values.
       const Bool_t minimum = hist->GetMinimumStored() != -1111;
@@ -325,560 +1006,6 @@ namespace RootGL
       }
 
       return kTRUE;
-   }
-
-   //______________________________________________________________________________
-   void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin, 
-                     Double_t yMax, Double_t zMin, Double_t zMax)
-   {
-      //Cylinder for lego3.
-      GLUquadric *quad = quadric->Get();
-
-      if (quad) {
-         if (zMin > zMax)
-            std::swap(zMin, zMax);
-         const Double_t xCenter = xMin + (xMax - xMin) / 2;
-         const Double_t yCenter = yMin + (yMax - yMin) / 2;
-         const Double_t radius = TMath::Min((xMax - xMin) / 2, (yMax - yMin) / 2);
-
-         glPushMatrix();
-         glTranslated(xCenter, yCenter, zMin);
-         gluCylinder(quad, radius, radius, zMax - zMin, 40, 1);
-         glPopMatrix();
-         glPushMatrix();
-         glTranslated(xCenter, yCenter, zMax);
-         gluDisk(quad, 0., radius, 40, 1);
-         glPopMatrix();
-         glPushMatrix();
-         glTranslated(xCenter, yCenter, zMin);
-         glRotated(180., 0., 1., 0.);
-         gluDisk(quad, 0., radius, 40, 1);
-         glPopMatrix();
-      }
-   }
-
-   //______________________________________________________________________________
-   void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2, 
-                        const TGLVertex3 &v3, const TGLVertex3 &v4)
-   {
-      //Outline.
-      glBegin(GL_LINE_LOOP);
-      glVertex3dv(v1.CArr());
-      glVertex3dv(v2.CArr());
-      glVertex3dv(v3.CArr());
-      glVertex3dv(v4.CArr());
-      glEnd();
-   }
-
-   //______________________________________________________________________________
-   void DrawQuadFilled(const TGLVertex3 &v0, const TGLVertex3 &v1, const TGLVertex3 &v2,
-                       const TGLVertex3 &v3, const TGLVertex3 &normal)
-   {
-      //Draw quad face.
-      glBegin(GL_POLYGON);
-      glNormal3dv(normal.CArr());
-      glVertex3dv(v0.CArr());
-      glVertex3dv(v1.CArr());
-      glVertex3dv(v2.CArr());
-      glVertex3dv(v3.CArr());
-      glEnd();
-   }
-
-   const Int_t    gBoxFrontQuads[][4] = {{0, 1, 2, 3}, {4, 0, 3, 5}, {4, 5, 6, 7}, {7, 6, 2, 1}};
-   const Double_t gBoxFrontNormals[][3] = {{-1., 0., 0.}, {0., -1., 0.}, {1., 0., 0.}, {0., 1., 0.}};
-   const Int_t    gBoxFrontPlanes[][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 0}};
-
-   //______________________________________________________________________________
-   void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax, 
-                     Double_t zMin, Double_t zMax, Int_t fp)
-   {
-      //Draws lego's bar as a 3d box
-      if (zMax < zMin) 
-         std::swap(zMax, zMin);
-      //Top and bottom are always drawn.
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., 1.);
-      glVertex3d(xMax, yMin, zMax);
-      glVertex3d(xMax, yMax, zMax);
-      glVertex3d(xMin, yMax, zMax);
-      glVertex3d(xMin, yMin, zMax);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., -1.);
-      glVertex3d(xMax, yMin, zMin);
-      glVertex3d(xMin, yMin, zMin);
-      glVertex3d(xMin, yMax, zMin);
-      glVertex3d(xMax, yMax, zMin);
-      glEnd();
-      //Draw two visible front planes.
-      const Double_t box[][3] = {{xMin, yMin, zMax}, {xMin, yMax, zMax}, {xMin, yMax, zMin}, {xMin, yMin, zMin},
-                                 {xMax, yMin, zMax}, {xMax, yMin, zMin}, {xMax, yMax, zMin}, {xMax, yMax, zMax}};
-      const Int_t *verts = gBoxFrontQuads[gBoxFrontPlanes[fp][0]];
-
-      glBegin(GL_POLYGON);
-      glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][0]]);
-      glVertex3dv(box[verts[0]]);
-      glVertex3dv(box[verts[1]]);
-      glVertex3dv(box[verts[2]]);
-      glVertex3dv(box[verts[3]]);
-      glEnd();
-      
-      verts = gBoxFrontQuads[gBoxFrontPlanes[fp][1]];
-
-      glBegin(GL_POLYGON);
-      glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][1]]);
-      glVertex3dv(box[verts[0]]);
-      glVertex3dv(box[verts[1]]);
-      glVertex3dv(box[verts[2]]);
-      glVertex3dv(box[verts[3]]);
-      glEnd();
-   }
-
-   //______________________________________________________________________________
-   void DrawBoxFrontTextured(Double_t x1, Double_t x2, Double_t y1, Double_t y2, Double_t z1, 
-                             Double_t z2, Double_t texMin, Double_t texMax, Int_t frontPoint)
-   {
-      //Draws lego's bar as a textured box
-      if (z2 < z1) {
-         std::swap(z2, z1);
-         std::swap(texMin, texMax);
-      }
-
-      //Top and bottom are always drawn.
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., 1.);
-      glTexCoord1d(texMax); glVertex3d(x2, y1, z2);
-      glTexCoord1d(texMax); glVertex3d(x2, y2, z2);
-      glTexCoord1d(texMax); glVertex3d(x1, y2, z2);
-      glTexCoord1d(texMax); glVertex3d(x1, y1, z2);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., -1.);
-      glTexCoord1d(texMin); glVertex3d(x2, y1, z1);
-      glTexCoord1d(texMin); glVertex3d(x1, y1, z1);
-      glTexCoord1d(texMin); glVertex3d(x1, y2, z1);
-      glTexCoord1d(texMin); glVertex3d(x2, y2, z1);
-      glEnd();
-
-      const Double_t box[][3] = {{x1, y1, z2}, {x1, y2, z2}, {x1, y2, z1}, {x1, y1, z1},
-                                 {x2, y1, z2}, {x2, y1, z1}, {x2, y2, z1}, {x2, y2, z2}};
-      const Double_t z[] = {texMax, texMax, texMin, texMin, texMax, texMin, texMin, texMax};
-      const Int_t *verts = gBoxFrontQuads[gBoxFrontPlanes[frontPoint][0]];
-
-      glBegin(GL_POLYGON);
-      glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[frontPoint][0]]);
-      glTexCoord1d(z[verts[0]]), glVertex3dv(box[verts[0]]);
-      glTexCoord1d(z[verts[1]]), glVertex3dv(box[verts[1]]);
-      glTexCoord1d(z[verts[2]]), glVertex3dv(box[verts[2]]);
-      glTexCoord1d(z[verts[3]]), glVertex3dv(box[verts[3]]);
-      glEnd();
-      
-      verts = gBoxFrontQuads[gBoxFrontPlanes[frontPoint][1]];
-
-      glBegin(GL_POLYGON);
-      glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[frontPoint][1]]);
-      glTexCoord1d(z[verts[0]]), glVertex3dv(box[verts[0]]);
-      glTexCoord1d(z[verts[1]]), glVertex3dv(box[verts[1]]);
-      glTexCoord1d(z[verts[2]]), glVertex3dv(box[verts[2]]);
-      glTexCoord1d(z[verts[3]]), glVertex3dv(box[verts[3]]);
-      glEnd();
-   }
-
-   namespace {
-      
-      void CylindricalNormal(const Double_t *v, Double_t *normal)
-      {
-         const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1]);
-         if (n > 0.) {
-            normal[0] = v[0] / n;
-            normal[1] = v[1] / n;
-            normal[2] = 0.;
-         } else {
-            normal[0] = v[0];
-            normal[1] = v[1];
-            normal[2] = 0.;
-         }
-      }
-
-      void CylindricalNormalInv(const Double_t *v, Double_t *normal)
-      {
-         const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1]);
-         if (n > 0.) {
-            normal[0] = -v[0] / n;
-            normal[1] = -v[1] / n;
-            normal[2] = 0.;
-         } else {
-            normal[0] = -v[0];
-            normal[1] = -v[1];
-            normal[2] = 0.;
-         }
-      }
-
-   }
-
-
-   void DrawTrapezoid(const Double_t ver[][2], Double_t zMin, Double_t zMax, Bool_t color)
-   {
-      //In polar coordinates, box became trapezoid.
-      //Four faces need normal calculations.
-      if (zMin > zMax)
-         std::swap(zMin, zMax);
-      //top
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., 1.);
-      glVertex3d(ver[0][0], ver[0][1], zMax);
-      glVertex3d(ver[1][0], ver[1][1], zMax);
-      glVertex3d(ver[2][0], ver[2][1], zMax);
-      glVertex3d(ver[3][0], ver[3][1], zMax);
-      glEnd();
-      //bottom
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., -1.);
-      glVertex3d(ver[0][0], ver[0][1], zMin);
-      glVertex3d(ver[3][0], ver[3][1], zMin);
-      glVertex3d(ver[2][0], ver[2][1], zMin);
-      glVertex3d(ver[1][0], ver[1][1], zMin);
-      glEnd();
-      //
-
-      Double_t trapezoid[][3] = {{ver[0][0], ver[0][1], zMin}, {ver[1][0], ver[1][1], zMin},
-                                 {ver[2][0], ver[2][1], zMin}, {ver[3][0], ver[3][1], zMin},
-                                 {ver[0][0], ver[0][1], zMax}, {ver[1][0], ver[1][1], zMax},
-                                 {ver[2][0], ver[2][1], zMax}, {ver[3][0], ver[3][1], zMax}};
-      Double_t normal[3] = {0.};
-      glBegin(GL_POLYGON);
-      CylindricalNormal(trapezoid[1], normal), glNormal3dv(normal), glVertex3dv(trapezoid[1]);
-      CylindricalNormal(trapezoid[2], normal), glNormal3dv(normal), glVertex3dv(trapezoid[2]);
-      CylindricalNormal(trapezoid[6], normal), glNormal3dv(normal), glVertex3dv(trapezoid[6]);
-      CylindricalNormal(trapezoid[5], normal), glNormal3dv(normal), glVertex3dv(trapezoid[5]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      CylindricalNormalInv(trapezoid[0], normal), glNormal3dv(normal), glVertex3dv(trapezoid[0]);
-      CylindricalNormalInv(trapezoid[4], normal), glNormal3dv(normal), glVertex3dv(trapezoid[4]);
-      CylindricalNormalInv(trapezoid[7], normal), glNormal3dv(normal), glVertex3dv(trapezoid[7]);
-      CylindricalNormalInv(trapezoid[3], normal), glNormal3dv(normal), glVertex3dv(trapezoid[3]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      if (color) {
-         TMath::Normal2Plane(trapezoid[0], trapezoid[1], trapezoid[5], normal);
-         glNormal3dv(normal);
-      }
-      glVertex3dv(trapezoid[0]);
-      glVertex3dv(trapezoid[1]);
-      glVertex3dv(trapezoid[5]);
-      glVertex3dv(trapezoid[4]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      if (color) {
-         TMath::Normal2Plane(trapezoid[3], trapezoid[7], trapezoid[6], normal);
-         glNormal3dv(normal);
-      }
-      glVertex3dv(trapezoid[3]);
-      glVertex3dv(trapezoid[7]);
-      glVertex3dv(trapezoid[6]);
-      glVertex3dv(trapezoid[2]);
-      glEnd();
-   }
-
-   namespace {
-
-      void SphericalNormal(const Double_t *v, Double_t *normal)
-      {
-         const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-         if (n > 0.) {
-            normal[0] = v[0] / n;
-            normal[1] = v[1] / n;
-            normal[2] = v[2] / n;
-         } else {
-            normal[0] = v[0];
-            normal[1] = v[1];
-            normal[2] = v[2];
-         }
-      }
-
-      void SphericalNormalInv(const Double_t *v, Double_t *normal)
-      {
-         const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-         if (n > 0.) {
-            normal[0] = -v[0] / n;
-            normal[1] = -v[1] / n;
-            normal[2] = -v[2] / n;
-         } else {
-            normal[0] = -v[0];
-            normal[1] = -v[1];
-            normal[2] = -v[2];
-         }
-      }
-
-   }
-
-   //______________________________________________________________________________
-   void DrawTrapezoid(const Double_t ver[][3])
-   {
-      Double_t normal[3] = {0.};
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[0], ver[1], ver[2], normal);
-      glNormal3dv(normal);
-      glVertex3dv(ver[0]);
-      glVertex3dv(ver[1]);
-      glVertex3dv(ver[2]);
-      glVertex3dv(ver[3]);
-      glEnd();
-      //bottom
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[4], ver[7], ver[6], normal);
-      glNormal3dv(normal);
-      glVertex3dv(ver[4]);
-      glVertex3dv(ver[7]);
-      glVertex3dv(ver[6]);
-      glVertex3dv(ver[5]);
-      glEnd();
-      //
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[0], ver[3], ver[7], normal);
-      glNormal3dv(normal);
-      glVertex3dv(ver[0]);
-      glVertex3dv(ver[3]);
-      glVertex3dv(ver[7]);
-      glVertex3dv(ver[4]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      SphericalNormal(ver[3], normal), glNormal3dv(normal), glVertex3dv(ver[3]);
-      SphericalNormal(ver[2], normal), glNormal3dv(normal), glVertex3dv(ver[2]);
-      SphericalNormal(ver[6], normal), glNormal3dv(normal), glVertex3dv(ver[6]);
-      SphericalNormal(ver[7], normal), glNormal3dv(normal), glVertex3dv(ver[7]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[5], ver[6], ver[2], normal);
-      glNormal3dv(normal);
-      glVertex3dv(ver[5]);
-      glVertex3dv(ver[6]);
-      glVertex3dv(ver[2]);
-      glVertex3dv(ver[1]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      SphericalNormalInv(ver[0], normal), glNormal3dv(normal), glVertex3dv(ver[0]);
-      SphericalNormalInv(ver[4], normal), glNormal3dv(normal), glVertex3dv(ver[4]);
-      SphericalNormalInv(ver[5], normal), glNormal3dv(normal), glVertex3dv(ver[5]);
-      SphericalNormalInv(ver[1], normal), glNormal3dv(normal), glVertex3dv(ver[1]);
-      glEnd();
-   }
-
-   //______________________________________________________________________________
-   void DrawTrapezoidTextured(const Double_t ver[][2], Double_t zMin, Double_t zMax,
-                              Double_t texMin, Double_t texMax)
-   {
-      //In polar coordinates, box became trapezoid.
-      //Four faces need normal calculations.
-      if (zMin > zMax) {
-         std::swap(zMin, zMax);
-         std::swap(texMin, texMax);
-      }
-
-      const Double_t trapezoid[][3] = {{ver[0][0], ver[0][1], zMin}, {ver[1][0], ver[1][1], zMin},
-                                       {ver[2][0], ver[2][1], zMin}, {ver[3][0], ver[3][1], zMin},
-                                       {ver[0][0], ver[0][1], zMax}, {ver[1][0], ver[1][1], zMax},
-                                       {ver[2][0], ver[2][1], zMax}, {ver[3][0], ver[3][1], zMax}};
-      //top
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., 1.);
-      glTexCoord1d(texMax), glVertex3dv(trapezoid[4]);
-      glTexCoord1d(texMax), glVertex3dv(trapezoid[5]);
-      glTexCoord1d(texMax), glVertex3dv(trapezoid[6]);
-      glTexCoord1d(texMax), glVertex3dv(trapezoid[7]);
-      glEnd();
-      //bottom
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., -1.);
-      glTexCoord1d(texMin), glVertex3dv(trapezoid[0]);
-      glTexCoord1d(texMin), glVertex3dv(trapezoid[3]);
-      glTexCoord1d(texMin), glVertex3dv(trapezoid[2]);
-      glTexCoord1d(texMin), glVertex3dv(trapezoid[1]);
-      glEnd();
-      //
-      glBegin(GL_POLYGON);
-      Double_t normal[3] = {};
-      CylindricalNormal(trapezoid[1], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[1]);
-      CylindricalNormal(trapezoid[2], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[2]);
-      CylindricalNormal(trapezoid[6], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[6]);
-      CylindricalNormal(trapezoid[5], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[5]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      CylindricalNormalInv(trapezoid[0], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[0]);
-      CylindricalNormalInv(trapezoid[4], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[4]);
-      CylindricalNormalInv(trapezoid[7], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[7]);
-      CylindricalNormalInv(trapezoid[3], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[3]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(trapezoid[0], trapezoid[1], trapezoid[5], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(texMin), glVertex3dv(trapezoid[0]);
-      glTexCoord1d(texMin), glVertex3dv(trapezoid[1]);
-      glTexCoord1d(texMax), glVertex3dv(trapezoid[5]);
-      glTexCoord1d(texMax), glVertex3dv(trapezoid[4]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(trapezoid[3], trapezoid[7], trapezoid[6], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(texMin), glVertex3dv(trapezoid[3]);
-      glTexCoord1d(texMax), glVertex3dv(trapezoid[7]);
-      glTexCoord1d(texMax), glVertex3dv(trapezoid[6]);
-      glTexCoord1d(texMin), glVertex3dv(trapezoid[2]);
-      glEnd();
-   }
-
-   //______________________________________________________________________________
-   void DrawTrapezoidTextured(const Double_t ver[][3], Double_t texMin, Double_t texMax)
-   {
-      Double_t normal[3] = {};
-      if (texMin > texMax)
-         std::swap(texMin, texMax);
-      const Double_t tex[] = {texMin, texMin, texMax, texMax, texMin, texMin, texMax, texMax};
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[0], ver[1], ver[2], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[0]), glVertex3dv(ver[0]);
-      glTexCoord1d(tex[1]), glVertex3dv(ver[1]);
-      glTexCoord1d(tex[2]), glVertex3dv(ver[2]);
-      glTexCoord1d(tex[3]), glVertex3dv(ver[3]);
-      glEnd();
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[4], ver[7], ver[6], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[4]), glVertex3dv(ver[4]);
-      glTexCoord1d(tex[7]), glVertex3dv(ver[7]);
-      glTexCoord1d(tex[6]), glVertex3dv(ver[6]);
-      glTexCoord1d(tex[5]), glVertex3dv(ver[5]);
-      glEnd();
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[0], ver[3], ver[7], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[0]), glVertex3dv(ver[0]);
-      glTexCoord1d(tex[3]), glVertex3dv(ver[3]);
-      glTexCoord1d(tex[7]), glVertex3dv(ver[7]);
-      glTexCoord1d(tex[4]), glVertex3dv(ver[4]);
-      glEnd();
-      glBegin(GL_POLYGON);
-      SphericalNormal(ver[3], normal), glNormal3dv(normal), glTexCoord1d(tex[3]), glVertex3dv(ver[3]);
-      SphericalNormal(ver[2], normal), glNormal3dv(normal), glTexCoord1d(tex[2]), glVertex3dv(ver[2]);
-      SphericalNormal(ver[6], normal), glNormal3dv(normal), glTexCoord1d(tex[6]), glVertex3dv(ver[6]);
-      SphericalNormal(ver[7], normal), glNormal3dv(normal), glTexCoord1d(tex[7]), glVertex3dv(ver[7]);
-      glEnd();
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[5], ver[6], ver[2], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[5]), glVertex3dv(ver[5]);
-      glTexCoord1d(tex[6]), glVertex3dv(ver[6]);
-      glTexCoord1d(tex[2]), glVertex3dv(ver[2]);
-      glTexCoord1d(tex[1]), glVertex3dv(ver[1]);
-      glEnd();
-      glBegin(GL_POLYGON);
-      SphericalNormalInv(ver[0], normal), glNormal3dv(normal), glTexCoord1d(tex[0]), glVertex3dv(ver[0]);
-      SphericalNormalInv(ver[4], normal), glNormal3dv(normal), glTexCoord1d(tex[4]), glVertex3dv(ver[4]);
-      SphericalNormalInv(ver[5], normal), glNormal3dv(normal), glTexCoord1d(tex[5]), glVertex3dv(ver[5]);
-      SphericalNormalInv(ver[1], normal), glNormal3dv(normal), glTexCoord1d(tex[1]), glVertex3dv(ver[1]);
-      glEnd();
-   }
-
-   //______________________________________________________________________________
-   void DrawTrapezoidTextured2(const Double_t ver[][2], Double_t zMin, Double_t zMax,
-                               Double_t texMin, Double_t texMax)
-   {
-      //In polar coordinates, box became trapezoid.
-      if (zMin > zMax) {
-         std::swap(zMin, zMax);
-         std::swap(texMin, texMax);
-      }
-
-      const Double_t trapezoid[][3] = {{ver[0][0], ver[0][1], zMin}, {ver[1][0], ver[1][1], zMin},
-                                       {ver[2][0], ver[2][1], zMin}, {ver[3][0], ver[3][1], zMin},
-                                       {ver[0][0], ver[0][1], zMax}, {ver[1][0], ver[1][1], zMax},
-                                       {ver[2][0], ver[2][1], zMax}, {ver[3][0], ver[3][1], zMax}};
-      const Double_t tex[] = {texMin, texMax, texMax, texMin, texMin, texMax, texMax, texMin};
-      //top
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., 1.);
-      glTexCoord1d(tex[4]), glVertex3dv(trapezoid[4]);
-      glTexCoord1d(tex[5]), glVertex3dv(trapezoid[5]);
-      glTexCoord1d(tex[6]), glVertex3dv(trapezoid[6]);
-      glTexCoord1d(tex[7]), glVertex3dv(trapezoid[7]);
-      glEnd();
-      //bottom
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., -1.);
-      glTexCoord1d(tex[0]), glVertex3dv(trapezoid[0]);
-      glTexCoord1d(tex[3]), glVertex3dv(trapezoid[3]);
-      glTexCoord1d(tex[2]), glVertex3dv(trapezoid[2]);
-      glTexCoord1d(tex[1]), glVertex3dv(trapezoid[1]);
-      glEnd();
-      //
-      glBegin(GL_POLYGON);
-      Double_t normal[3] = {};
-      CylindricalNormal(trapezoid[1], normal), glNormal3dv(normal), glTexCoord1d(tex[1]), glVertex3dv(trapezoid[1]);
-      CylindricalNormal(trapezoid[2], normal), glNormal3dv(normal), glTexCoord1d(tex[2]), glVertex3dv(trapezoid[2]);
-      CylindricalNormal(trapezoid[6], normal), glNormal3dv(normal), glTexCoord1d(tex[6]), glVertex3dv(trapezoid[6]);
-      CylindricalNormal(trapezoid[5], normal), glNormal3dv(normal), glTexCoord1d(tex[5]), glVertex3dv(trapezoid[5]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      CylindricalNormalInv(trapezoid[0], normal), glNormal3dv(normal), glTexCoord1d(tex[0]), glVertex3dv(trapezoid[0]);
-      CylindricalNormalInv(trapezoid[4], normal), glNormal3dv(normal), glTexCoord1d(tex[4]), glVertex3dv(trapezoid[4]);
-      CylindricalNormalInv(trapezoid[7], normal), glNormal3dv(normal), glTexCoord1d(tex[7]), glVertex3dv(trapezoid[7]);
-      CylindricalNormalInv(trapezoid[3], normal), glNormal3dv(normal), glTexCoord1d(tex[3]), glVertex3dv(trapezoid[3]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(trapezoid[0], trapezoid[1], trapezoid[5], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[0]), glVertex3dv(trapezoid[0]);
-      glTexCoord1d(tex[1]), glVertex3dv(trapezoid[1]);
-      glTexCoord1d(tex[5]), glVertex3dv(trapezoid[5]);
-      glTexCoord1d(tex[4]), glVertex3dv(trapezoid[4]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(trapezoid[3], trapezoid[7], trapezoid[6], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[3]), glVertex3dv(trapezoid[3]);
-      glTexCoord1d(tex[7]), glVertex3dv(trapezoid[7]);
-      glTexCoord1d(tex[6]), glVertex3dv(trapezoid[6]);
-      glTexCoord1d(tex[2]), glVertex3dv(trapezoid[2]);
-      glEnd();
-   }
-
-   void DrawError(Double_t xMin, Double_t xMax, Double_t yMin, 
-                  Double_t yMax, Double_t zMin, Double_t zMax)
-   {
-      const Double_t xWid = xMax - xMin;
-      const Double_t yWid = yMax - yMin;
-
-      glBegin(GL_LINES);
-      glVertex3d(xMin + xWid / 2, yMin + yWid / 2, zMin);
-      glVertex3d(xMin + xWid / 2, yMin + yWid / 2, zMax);
-      glEnd();
-
-      glBegin(GL_LINES);
-      glVertex3d(xMin + xWid / 2, yMin, zMin);
-      glVertex3d(xMin + xWid / 2, yMax, zMin);
-      glEnd();
-
-      glBegin(GL_LINES);
-      glVertex3d(xMin, yMin + yWid / 2, zMin);
-      glVertex3d(xMax, yMin + yWid / 2, zMin);
-      glEnd();
    }
 
 }

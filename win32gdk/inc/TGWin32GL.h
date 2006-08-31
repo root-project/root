@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.10 2006/03/09 11:18:31 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.11 2006/06/06 11:49:01 couet Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -46,12 +46,12 @@ public:
 
 class TGWin32GLManager : public TGLManager {
 private:
-	class TGWin32GLImpl;
-	TGWin32GLImpl *fPimpl;
+   class TGWin32GLImpl;
+   TGWin32GLImpl *fPimpl;
 
 public:
-	TGWin32GLManager();
-	~TGWin32GLManager();
+   TGWin32GLManager();
+   ~TGWin32GLManager();
 
    //All public functions are TGLManager's final-overriders
 
@@ -89,7 +89,9 @@ public:
    void     DrawViewer(TVirtualViewer3D *glv);
    Bool_t   SelectViewer(TVirtualViewer3D *viewer, const TGLRect *selRect);
    Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox);
-   TObject *Select(TVirtualGLPainter *painter, Int_t px, Int_t py);
+
+   Bool_t   PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py);
+   char    *GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py);
 
    void     PaintSingleObject(TVirtualGLPainter *);
    void     PanObject(TVirtualGLPainter *o, Int_t x, Int_t y);
@@ -97,12 +99,12 @@ public:
 
 private:
    struct TGLContext;
-	Bool_t   CreateDIB(TGLContext &ctx)const;
+   Bool_t   CreateDIB(TGLContext &ctx)const;
 
    TGWin32GLManager(const TGWin32GLManager &);
    TGWin32GLManager &operator = (const TGWin32GLManager &);
 
-	ClassDef(TGWin32GLManager, 0)
+   ClassDef(TGWin32GLManager, 0)
 };
 
 #endif

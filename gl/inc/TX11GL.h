@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.12 2006/03/09 11:18:30 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.13 2006/06/06 11:49:01 couet Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -96,7 +96,9 @@ public:
    //
    Bool_t   SelectViewer(TVirtualViewer3D *viewer, const TGLRect *selRect);
    Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox);
-   TObject *Select(TVirtualGLPainter *painter, Int_t px, Int_t py);
+   //
+   Bool_t   PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py);
+   char    *GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py);
    //
    void     PaintSingleObject(TVirtualGLPainter *);
    void     PanObject(TVirtualGLPainter *o, Int_t x, Int_t y);
@@ -114,6 +116,7 @@ private:
 
    ClassDef(TX11GLManager, 0) //X11-specific version of TGLManager
 };
+
 
 
 #endif

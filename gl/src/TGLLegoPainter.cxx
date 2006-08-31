@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.2 2006/06/14 08:33:23 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.3 2006/06/19 09:10:25 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -8,188 +8,61 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#include <iostream>
 #include <algorithm>
 #include <cctype>
 
 #include "Buttons.h"
-#include "TString.h"
-#include "TStyle.h"
 #include "TColor.h"
-#include "TError.h"
-#include "TMath.h"
+#include "TClass.h"
+#include "TStyle.h"
 #include "TAxis.h"
+#include "TMath.h"
 #include "TH1.h"
 
 #include "TGLLegoPainter.h"
-#include "TGLAxisPainter.h"
+#include "TGLOrthoCamera.h"
 #include "TGLIncludes.h"
 
 ClassImp(TGLLegoPainter)
 
-const Float_t      TGLLegoPainter::fRedEmission[] = {1.f, 0.f,  0.f, 1.f};
-const Float_t   TGLLegoPainter::fOrangeEmission[] = {1.f, 0.4f, 0.f, 1.f};
-const Float_t    TGLLegoPainter::fGreenEmission[] = {0.f, 1.f,  0.f, 1.f};
-const Float_t     TGLLegoPainter::fNullEmission[] = {0.f, 0.f,  0.f, 1.f};
-
-namespace {
-   //Must be in TGLUtil.h!
-   const UChar_t gDefTexture[] =
-   {
-      //R    G    B    A
-      128, 0,   255, 200,
-      169, 4,   240, 200,
-      199, 73,  255, 200,
-      222, 149, 253, 200,
-      255, 147, 201, 200,
-      255, 47,  151, 200,
-      232, 0,   116, 200,
-      253, 0,   0,   200,
-      255, 62,  62,  200,
-      217, 111, 15,  200,
-      242, 151, 28,  200,
-      245, 172, 73,  200,
-      251, 205, 68,  200,
-      255, 255, 21,  200,
-      255, 255, 128, 200,
-      255, 255, 185, 200
-   };
-
-}
-
 //______________________________________________________________________________
-TGLLegoPainter::TGLLegoPainter(TH1 *hist, TGLAxisPainter *axisPainter, Int_t ctx, EGLCoordType type, 
-                               Bool_t logX, Bool_t logY, Bool_t logZ)
-                  : TGLPlotFrame(logX, logY, logZ),
-                    fHist(hist),
-                    fGLContext(ctx),
-                    fCoordType(type),
-                    fMinZ(0.),
+TGLLegoPainter::TGLLegoPainter(TH1 *hist, TGLOrthoCamera *cam, TGLPlotCoordinates *coord, Int_t ctx)
+                  : TGLPlotPainter(hist, cam, coord, ctx, kFALSE),
                     fLegoType(kColorSimple),
-                    fSelectionPass(kFALSE),
-                    fUpdateSelection(kTRUE),
-                    fSelectedBin(-1, -1),
-                    fSelectionMode(kSelectionSimple),
-                    fSelectedPlane(0),
-                    fPadColor(0),
-                    fFrameColor(0),
-                    fXOZProfilePos(0.),
-                    fYOZProfilePos(0.),
-                    fIsMoving(kFALSE),
-                    fAxisPainter(axisPainter),
-                    fTextureName(0),
-                    fTexture(gDefTexture, gDefTexture + sizeof gDefTexture),
+                    fMinZ(0.),
                     fDrawErrors(kFALSE)
 {
-   //
-   if (MakeGLContextCurrent()) {
-      gGLManager->ExtractViewport(fGLContext, fViewport);
-      fArcBall.SetBounds(fViewport[2], fViewport[3]);
-   }
+   //Ctor.
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::Paint()
+char *TGLLegoPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
-   //
-   if (!MakeGLContextCurrent())
-      return;
-
-   InitGL();
-   //Save material/light properties in a stack.
-   glPushAttrib(GL_LIGHTING_BIT);
-   //I have to extract viewport each time,
-   //because, for example, pad size can be changed
-   //and Paint is called. If sizes were changed, 
-   //selection buffer must be updated.
-   const Int_t oldW = fViewport[2];
-   const Int_t oldH = fViewport[3];
-   gGLManager->ExtractViewport(fGLContext, fViewport);
-
-   if (oldW != fViewport[2] || oldH != fViewport[3]) {
-      fArcBall.SetBounds(fViewport[2], fViewport[3]);
-      fUpdateSelection = kTRUE;
-   }
-   //glOrtho etc.
-   SetCamera();
-   //Clear buffer (possibly, with pad's background color).
-   ClearBuffers();
-   
-   const Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
-   glLightfv(GL_LIGHT0, GL_POSITION, pos);
-   //Set transformation - shift and rotate the scene.
-   SetTransformation();
-   FindFrontPoint();
-   DrawPlot();
-   //Restore material properties from stack.
-   glPopAttrib();//(*)
-   glFlush();
-   //LegoPainter work is now finished, axes are drawn by axis painter.
-   //Here changes are possible in future, if we have real 3d axis painter.
-   gGLManager->ReadGLBuffer(fGLContext);
-   if (fCoordType == kGLCartesian)
-      fAxisPainter->Paint(fGLContext);
-   gGLManager->Flush(fGLContext);
-   /*
-   //In future will be (starting from (*)):
-      fAxisPainter->Paint(fGLContext);
-      glFlush();
-      gGLManager->Flush(fGLContext);
-   */
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::SetGLContext(Int_t ctx)
-{
-   //Called from TGLPadHistPainter (one painter can be in different pads).
-   fGLContext = ctx;
-}
-
-//______________________________________________________________________________
-char *TGLLegoPainter::GetObjectInfo(Int_t px, Int_t py)
-{
-   //This function is used by pad to show 
-   //info in a status bar. It can be:
-   //-bin number and content (selected bin is highlighted)
-   //-TH name (back box planes are selected)
-   //During rotation or shifting, this functions should
-   //return immediately.
-   if (fIsMoving)
-      return "Moving ...";
-   //Convert from window top-bottom into gl bottom-top.
-   py = fViewport[3] - py;
-   //Y is a number of a row, x - column.
-   std::swap(px, py);
-   Selection_t newSelected(ColorToObject(fSelection.GetPixelColor(px, py)));
+   //Obtain bin's info (i, j, value).
    fBinInfo = "";
 
-   if (newSelected.first >= 0 && newSelected.second >= 0) {
-      //There is a bin under cursor, show its info.
-      fBinInfo.Form(
-                    "(binx = %d; biny = %d; binc = %f)", 
-                    newSelected.first + fBinsX.first, 
-                    newSelected.second + fBinsY.first, 
-                    fHist->GetBinContent(newSelected.first + fBinsX.first, newSelected.second + fBinsY.first)
-                   );
-      return (Char_t *)fBinInfo.Data();
-   } else if (fSelectedPlane) {
-      //Back plane or profile plane is selected.
-      if (fHist->Class())
-         fBinInfo += fHist->Class()->GetName();
-      fBinInfo += "::";
-      fBinInfo += fHist->GetName();
-
-      return (Char_t *)fBinInfo.Data();
+   if (fSelectedPart) {
+      if (fSelectedPart < 6) {
+         if (fHist->Class())
+            fBinInfo += fHist->Class()->GetName();
+         fBinInfo += "::";
+         fBinInfo += fHist->GetName();
+      } else {
+         const Int_t binI = (fSelectedPart - 6) / fCoord->GetNYBins() + fCoord->GetFirstXBin();
+         const Int_t binJ = (fSelectedPart - 6) % fCoord->GetNYBins() + fCoord->GetFirstYBin();
+         fBinInfo.Form("(binx = %d; biny = %d; binc = %f)", binI, binJ, 
+                       fHist->GetBinContent(binI, binJ));
+      }
    }
 
-   return " ";
+   return (Char_t *)fBinInfo.Data();
 }
 
 //______________________________________________________________________________
 Bool_t TGLLegoPainter::InitGeometry()
 {
-   //Dispatch method.
-   switch (fCoordType) {
+   //Select method.
+   switch (fCoord->GetCoordType()) {
    case kGLCartesian:
       return InitGeometryCartesian();
    case kGLPolar:
@@ -206,113 +79,102 @@ Bool_t TGLLegoPainter::InitGeometry()
 //______________________________________________________________________________
 Bool_t TGLLegoPainter::InitGeometryCartesian()
 {
-   //Find bin ranges for X and Y axes,
-   //axes ranges for X, Y and Z.
-   //Function returns false, if logarithmic scale for
-   //some axis was requested, but we cannot
-   //find correct range.
-   using RootGL::FindAxisRange;
-   BinRange_t xBins;
-   Range_t xRange;
-   const TAxis *xAxis = fHist->GetXaxis();
-   if (!FindAxisRange(xAxis, fLogX, xBins, xRange)) {
-      Error("TGLLegoPainter::InitGeometryCartesian", "Cannot set X axis to log scale");
+   //Geometry for lego in cartesian coords.
+   if (!fCoord->SetRanges(fHist, fDrawErrors, kFALSE))
       return kFALSE;
-   }
-   BinRange_t yBins;
-   Range_t yRange;
-   const TAxis *yAxis = fHist->GetYaxis();
-   if (!FindAxisRange(yAxis, fLogY, yBins, yRange)) {
-      Error("TGLLegoPainter::InitGeometryCartesian", "Cannot set Y axis to log scale");
-      return kFALSE;
-   }
-   Range_t zRange;
-   Double_t factor = 1.;
-   if (!FindAxisRange(fHist, fLogZ, xBins, yBins, zRange, factor, fDrawErrors))
-   {
-      Error("TGLLegoPainter::InitGeometryCartesian", 
-            "Log scale is requested for Z, but maximum less or equal 0. (%f)", zRange.second);
-      return kFALSE;
-   }
 
-   CalculateGLCameraParams(xRange, yRange, zRange);
-   fAxisPainter->SetRanges(xRange, yRange, zRange);
-
-   if (xBins != fBinsX || yBins != fBinsY || xRange != fRangeX || yRange != fRangeY 
-       || zRange != fRangeZ || factor != fFactor) {
-      fUpdateSelection = kTRUE;
-      fXOZProfilePos = fFrame[0].Y();
-      fYOZProfilePos = fFrame[0].X();
-   }
-
-   fBinsX = xBins, fBinsY = yBins, fRangeX = xRange, fRangeY = yRange, fRangeZ = zRange, fFactor = factor;
+   fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
+   fCamera->SetViewVolume(fBackBox.Get3DBox());
 
    //Find bin edges
-   const Int_t nX = fBinsX.second - fBinsX.first + 1;
-   const Double_t barWidth = fHist->GetBarWidth();
-   const Double_t barOffset = fHist->GetBarOffset();
+   const Int_t nX = fCoord->GetNXBins();
+   const Double_t barWidth = fHist->GetBarWidth(), barOffset = fHist->GetBarOffset();
+   const TGLVertex3 *frame = fBackBox.Get3DBox();
    fXEdges.resize(nX);
 
-   if (fLogX)
-      for (Int_t i = 0, ir = fBinsX.first; i < nX; ++i, ++ir) {
-         const Double_t xWidth = xAxis->GetBinWidth(ir);
-         Double_t low = xAxis->GetBinLowEdge(ir) + xWidth * barOffset;
-         fXEdges[i].first  = TMath::Log10(low) * fScaleX;
-         fXEdges[i].second = TMath::Log10(low + xWidth * barWidth) * fScaleX;;
-         if (fXEdges[i].second > fFrame[1].X())
-            fXEdges[i].second = fFrame[1].X();
-         if (fXEdges[i].first < fFrame[0].X())
-            fXEdges[i].first = fFrame[0].X();
-         if (fXEdges[i].second < fFrame[0].X())
-            fXEdges[i].second = fFrame[0].X();
+   if (fCoord->GetXLog()) {
+      for (Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
+         const Double_t xWidth = fXAxis->GetBinWidth(ir);
+         Double_t low = fXAxis->GetBinLowEdge(ir) + xWidth * barOffset;
+         fXEdges[i].first  = TMath::Log10(low) * fCoord->GetXScale();
+         fXEdges[i].second = TMath::Log10(low + xWidth * barWidth) * fCoord->GetXScale();
+         if (fXEdges[i].second > frame[1].X())
+            fXEdges[i].second = frame[1].X();
+         if (fXEdges[i].first < frame[0].X())
+            fXEdges[i].first = frame[0].X();
+         if (fXEdges[i].second < frame[0].X())
+            fXEdges[i].second = frame[0].X();
       }
-   else
-      for (Int_t i = 0, ir = fBinsX.first; i < nX; ++i, ++ir) {
-         const Double_t xWidth = xAxis->GetBinWidth(ir);
-         fXEdges[i].first  = (xAxis->GetBinLowEdge(ir) + xWidth * barOffset) * fScaleX;
-         fXEdges[i].second = fXEdges[i].first + xWidth * barWidth * fScaleX;
-         if (fXEdges[i].second > fFrame[1].X())
-            fXEdges[i].second = fFrame[1].X();
-         if (fXEdges[i].first < fFrame[0].X())
-            fXEdges[i].first = fFrame[0].X();
-         if (fXEdges[i].second < fFrame[0].X())
-            fXEdges[i].second = fFrame[0].X();
+   } else {
+      for (Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
+         const Double_t xWidth = fXAxis->GetBinWidth(ir);
+         fXEdges[i].first  = (fXAxis->GetBinLowEdge(ir) + xWidth * barOffset) * fCoord->GetXScale();
+         fXEdges[i].second = fXEdges[i].first + xWidth * barWidth * fCoord->GetXScale();
+         if (fXEdges[i].second > frame[1].X())
+            fXEdges[i].second = frame[1].X();
+         if (fXEdges[i].first < frame[0].X())
+            fXEdges[i].first = frame[0].X();
+         if (fXEdges[i].second < frame[0].X())
+            fXEdges[i].second = frame[0].X();
       }
+   }
 
-   const Int_t nY = fBinsY.second - fBinsY.first + 1;
+   const Int_t nY = fCoord->GetNYBins();
    fYEdges.resize(nY);
 
-   if (fLogY)
-      for (Int_t j = 0, jr = fBinsY.first; j < nY; ++j, ++jr) {
-         const Double_t yWidth = yAxis->GetBinWidth(jr);
-         Double_t low = yAxis->GetBinLowEdge(jr) + yWidth * barOffset;
-         fYEdges[j].first  = TMath::Log10(low) * fScaleY;
-         fYEdges[j].second = TMath::Log10(low + yWidth * barWidth) * fScaleY;
-         if (fYEdges[j].second > fFrame[2].Y())
-            fYEdges[j].second = fFrame[2].Y();
-         if (fYEdges[j].first < fFrame[0].Y())
-            fYEdges[j].first = fFrame[0].Y();
-         if (fYEdges[j].second < fFrame[0].Y())
-            fYEdges[j].second = fFrame[0].Y();
+   if (fCoord->GetYLog()) {
+      for (Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
+         const Double_t yWidth = fYAxis->GetBinWidth(jr);
+         Double_t low = fYAxis->GetBinLowEdge(jr) + yWidth * barOffset;
+         fYEdges[j].first  = TMath::Log10(low) * fCoord->GetYScale();
+         fYEdges[j].second = TMath::Log10(low + yWidth * barWidth) * fCoord->GetYScale();
+         if (fYEdges[j].second > frame[2].Y())
+            fYEdges[j].second = frame[2].Y();
+         if (fYEdges[j].first < frame[0].Y())
+            fYEdges[j].first = frame[0].Y();
+         if (fYEdges[j].second < frame[0].Y())
+            fYEdges[j].second = frame[0].Y();
       }
-   else
-      for (Int_t j = 0, jr = fBinsY.first; j < nY; ++j, ++jr) {
-         const Double_t yWidth = yAxis->GetBinWidth(jr);
-         fYEdges[j].first  = (yAxis->GetBinLowEdge(jr) + yWidth * barOffset) * fScaleY;
-         fYEdges[j].second = fYEdges[j].first + yWidth * barWidth * fScaleY;
-         if (fYEdges[j].second > fFrame[2].Y())
-            fYEdges[j].second = fFrame[2].Y();
-         if (fYEdges[j].first < fFrame[0].Y())
-            fYEdges[j].first = fFrame[0].Y();
-         if (fYEdges[j].second < fFrame[0].Y())
-            fYEdges[j].second = fFrame[0].Y();
+   } else {
+      for (Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
+         const Double_t yWidth = fYAxis->GetBinWidth(jr);
+         fYEdges[j].first  = (fYAxis->GetBinLowEdge(jr) + yWidth * barOffset) * fCoord->GetYScale();
+         fYEdges[j].second = fYEdges[j].first + yWidth * barWidth * fCoord->GetYScale();
+         if (fYEdges[j].second > frame[2].Y())
+            fYEdges[j].second = frame[2].Y();
+         if (fYEdges[j].first < frame[0].Y())
+            fYEdges[j].first = frame[0].Y();
+         if (fYEdges[j].second < frame[0].Y())
+            fYEdges[j].second = frame[0].Y();
       }
+   }
 
-   fMinZ = fFrame[0].Z();
-   if (fMinZ < 0. && !fLogZ)
-      fFrame[4].Z() > 0. ? fMinZ = 0. : fMinZ = fFrame[4].Z();
+   fMinZ = frame[0].Z();
+   if (fMinZ < 0.)
+      frame[4].Z() > 0. ? fMinZ = 0. : fMinZ = frame[4].Z();
 
-   fAxisPainter->SetZLevels(fZLevels);
+   if (fCoord->Modified()) {
+      fUpdateSelection = kTRUE;
+      fXOZSectionPos = frame[0].Y();
+      fYOZSectionPos = frame[0].X();
+      fXOYSectionPos = frame[0].Z();
+      fCoord->ResetModified();
+      Rgl::SetZLevels(fZAxis, fCoord->GetZRange().first, fCoord->GetZRange().second, fCoord->GetZScale(), fZLevels);
+   }
+
+   fMinMaxVal.first  = fHist->GetBinContent(fCoord->GetFirstXBin(), fCoord->GetFirstYBin());
+   fMinMaxVal.second = fMinMaxVal.first;
+
+   for (Int_t i = fCoord->GetFirstXBin(), e = fCoord->GetLastXBin(); i <= e; ++i) {
+      for (Int_t j = fCoord->GetFirstYBin(), e1 = fCoord->GetLastYBin(); j <= e1; ++j) {
+         Double_t val = fHist->GetBinContent(i, j);
+         fMinMaxVal.first  = TMath::Min(fMinMaxVal.first, val);
+         fMinMaxVal.second = TMath::Max(fMinMaxVal.second, val);
+      }
+   }
+
+   ClampZ(fMinMaxVal.first);
+   ClampZ(fMinMaxVal.second);
    
    return kTRUE;
 }
@@ -320,137 +182,122 @@ Bool_t TGLLegoPainter::InitGeometryCartesian()
 //______________________________________________________________________________
 Bool_t TGLLegoPainter::InitGeometryPolar()
 {
-   //Find bin ranges for X and Y axes.
-   //Find range for Z axis.
-   //X is mapped to the polar angle,
-   //Y to polar radius.
-   //Z is Z.
-   using RootGL::FindAxisRange;
-   BinRange_t xBins;
-   Range_t phiRange;
-   const TAxis *xAxis = fHist->GetXaxis();
-   if (!FindAxisRange(xAxis, kFALSE, xBins, phiRange)) {
-      Error("TGLLegoPainter::InitGeometryPolar", "Cannot set X axis to log scale");
+   //Geometry for lego in polar coords.
+   if (!fCoord->SetRanges(fHist, kFALSE, kFALSE))
       return kFALSE;
-   }
-   if (xBins.second - xBins.first + 1 > 360) {
-      Error("TGLLegoPainter::InitGeometryPolar", "To many PHI sectors");
-      return kFALSE;
-   }
-   BinRange_t yBins;
-   Range_t roRange;
-   const TAxis *yAxis = fHist->GetYaxis();
-   if (!FindAxisRange(yAxis, kFALSE, yBins, roRange)) {
-      Error("TGLLegoPainter::InitGeometryPolar", "Cannot set Y axis to log scale");
-      return kFALSE;
-   }
-   Range_t zRange;
-   Double_t factor = 1.;
-   if (!FindAxisRange(fHist, fLogZ, xBins, yBins, zRange, factor))
-   {
-      Error("TGLLegoPainter::InitGeometryPolar", 
-            "Log scale is requested for Z, but maximum less or equal 0. (%f)", zRange.second);
-      return kFALSE;
-   }
 
-   CalculateGLCameraParams(Range_t(-1., 1.), Range_t(-1., 1.), zRange);
+   fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
+   fCamera->SetViewVolume(fBackBox.Get3DBox());
 
-   if (xBins != fBinsX || yBins != fBinsY || phiRange != fRangeX || roRange != fRangeY || zRange != fRangeZ)
+   if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
-
-   fBinsX = xBins, fBinsY = yBins, fRangeX = phiRange, fRangeY = roRange, fRangeZ = zRange;
-
-   const Int_t nY = yBins.second - yBins.first + 1;
-   fYEdges.resize(nY);
-   const Double_t yLow = roRange.first;
-   const Double_t maxRadius = roRange.second - roRange.first;
-
-   for (Int_t j = 0, jr = yBins.first; j < nY; ++j, ++jr) {
-      fYEdges[j].first = ((yAxis->GetBinLowEdge(jr)) - yLow) / maxRadius * fScaleY;
-      fYEdges[j].second = ((yAxis->GetBinUpEdge(jr)) - yLow) / maxRadius * fScaleY;
+      fCoord->ResetModified();
    }
 
-   const Int_t nX = xBins.second - xBins.first + 1;
+   const Int_t nY = fCoord->GetNYBins();//yBins.second - yBins.first + 1;
+   fYEdges.resize(nY);
+
+   for (Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
+      fYEdges[j].first = ((fYAxis->GetBinLowEdge(jr)) - fCoord->GetYRange().first) / 
+                           fCoord->GetYLength() * fCoord->GetYScale();
+      fYEdges[j].second = ((fYAxis->GetBinUpEdge(jr)) - fCoord->GetYRange().first) / 
+                           fCoord->GetYLength() * fCoord->GetYScale();
+   }
+
+   const Int_t nX = fCoord->GetNXBins();
    fCosSinTableX.resize(nX + 1);
-   const Double_t fullAngle = xAxis->GetXmax() - xAxis->GetXmin();
-   const Double_t phiLow = xAxis->GetXmin();
+   const Double_t fullAngle = fXAxis->GetXmax() - fXAxis->GetXmin();
+   const Double_t phiLow = fXAxis->GetXmin();
    Double_t angle = 0;
-   for (Int_t i = 0, ir = xBins.first; i < nX; ++i, ++ir) {
-      angle = (xAxis->GetBinLowEdge(ir) - phiLow) / fullAngle * TMath::TwoPi();
-      fCosSinTableX[i].first = TMath::Cos(angle);
+   for (Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
+      angle = (fXAxis->GetBinLowEdge(ir) - phiLow) / fullAngle * TMath::TwoPi();
+      fCosSinTableX[i].first  = TMath::Cos(angle);
       fCosSinTableX[i].second = TMath::Sin(angle);
    }
-   angle = (xAxis->GetBinUpEdge(fBinsX.second) - phiLow) / fullAngle * TMath::TwoPi();
-   fCosSinTableX[nX].first = TMath::Cos(angle);
+   angle = (fXAxis->GetBinUpEdge(fCoord->GetLastXBin()) - phiLow) / fullAngle * TMath::TwoPi();
+   fCosSinTableX[nX].first  = TMath::Cos(angle);
    fCosSinTableX[nX].second = TMath::Sin(angle);
 
-   fMinZ = fFrame[0].Z();
-   if (fMinZ < 0. && !fLogZ)
-      fFrame[4].Z() > 0. ? fMinZ = 0. : fMinZ = fFrame[4].Z();
+   fMinZ = fBackBox.Get3DBox()[0].Z();
+   if (fMinZ < 0.)
+      fBackBox.Get3DBox()[4].Z() > 0. ? fMinZ = 0. : fMinZ = fBackBox.Get3DBox()[4].Z();
 
+   fMinMaxVal.first  = fHist->GetBinContent(fCoord->GetFirstXBin(), fCoord->GetFirstYBin());
+   fMinMaxVal.second = fMinMaxVal.first;
+
+   for (Int_t i = fCoord->GetFirstXBin(), e = fCoord->GetLastXBin(); i <= e; ++i) {
+      for (Int_t j = fCoord->GetFirstYBin(), e1 = fCoord->GetLastYBin(); j <= e1; ++j) {
+         Double_t val = fHist->GetBinContent(i, j);
+         fMinMaxVal.first  = TMath::Min(fMinMaxVal.first, val);
+         fMinMaxVal.second = TMath::Max(fMinMaxVal.second, val);
+      }
+   }
+
+   ClampZ(fMinMaxVal.first);
+   ClampZ(fMinMaxVal.second);
+   
    return kTRUE;
 }
 
 //______________________________________________________________________________
 Bool_t TGLLegoPainter::InitGeometryCylindrical()
 {
-   //Find bin ranges for X and Y axes.
-   //Find range for Z axis.
-   //X is mapped to the azimuth,
-   //Y is height.
-   //Z is radius.
-   using RootGL::FindAxisRange;
-   BinRange_t xBins, yBins;
-   Range_t angleRange, heightRange, radiusRange;
-   const TAxis *xAxis = fHist->GetXaxis();
-   const TAxis *yAxis = fHist->GetYaxis();
-   Double_t factor = 1.;
-
-   FindAxisRange(xAxis, kFALSE, xBins, angleRange);
-   if (xBins.second - xBins.first + 1 > 360) {
-      Error("TGLLegoPainter::InitGeometryCylindrical", "To many PHI sectors");
+   //Geometry for lego in cylindrical coords.
+   if (!fCoord->SetRanges(fHist, kFALSE, kFALSE))
       return kFALSE;
-   }
-   if (!FindAxisRange(yAxis, fLogY, yBins, heightRange)) {
-      Error("TGLLegoPainter::InitGeometryCylindrical", "Cannot set Y axis to log scale");
-      return kFALSE;
-   }
-   FindAxisRange(fHist, kFALSE, xBins, yBins, radiusRange, factor);
 
-   CalculateGLCameraParams(Range_t(-1., 1.), Range_t(-1., 1.), heightRange);
+   fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
+   fCamera->SetViewVolume(fBackBox.Get3DBox());
 
-   const Int_t nY = yBins.second - yBins.first + 1;
+   const Int_t nY = fCoord->GetNYBins();
    fYEdges.resize(nY);
 
-   if (fLogY)
-      for (Int_t j = 0, jr = yBins.first; j < nY; ++j, ++jr) {
-         fYEdges[j].first  = TMath::Log10(yAxis->GetBinLowEdge(jr)) * fScaleZ;
-         fYEdges[j].second = TMath::Log10(yAxis->GetBinUpEdge(jr))  * fScaleZ;
+   if (fCoord->GetYLog()) {
+      for (Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
+         fYEdges[j].first  = TMath::Log10(fYAxis->GetBinLowEdge(jr)) * fCoord->GetYScale();
+         fYEdges[j].second = TMath::Log10(fYAxis->GetBinUpEdge(jr))  * fCoord->GetYScale();
       }
-   else
-      for (Int_t j = 0, jr = yBins.first; j < nY; ++j, ++jr) {
-         fYEdges[j].first  = yAxis->GetBinLowEdge(jr) * fScaleZ;
-         fYEdges[j].second = yAxis->GetBinUpEdge(jr)  * fScaleZ;
+   } else {
+      for (Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
+         fYEdges[j].first  = fYAxis->GetBinLowEdge(jr) * fCoord->GetYScale();
+         fYEdges[j].second = fYAxis->GetBinUpEdge(jr)  * fCoord->GetYScale();
       }
+   }
 
-   const Int_t nX = xBins.second - xBins.first + 1;
+   const Int_t nX = fCoord->GetNXBins();
    fCosSinTableX.resize(nX + 1);
-   const Double_t fullAngle = xAxis->GetXmax() - xAxis->GetXmin();
-   const Double_t phiLow = xAxis->GetXmin();
+   const Double_t fullAngle = fXAxis->GetXmax() - fXAxis->GetXmin();
+   const Double_t phiLow    = fXAxis->GetXmin();
    Double_t angle = 0.;
-   for (Int_t i = 0, ir = xBins.first; i < nX; ++i, ++ir) {
-      angle = (xAxis->GetBinLowEdge(ir) - phiLow) / fullAngle * TMath::TwoPi();
-      fCosSinTableX[i].first = TMath::Cos(angle);
+   for (Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
+      angle = (fXAxis->GetBinLowEdge(ir) - phiLow) / fullAngle * TMath::TwoPi();
+      fCosSinTableX[i].first  = TMath::Cos(angle);
       fCosSinTableX[i].second = TMath::Sin(angle);
    }
-   angle = (xAxis->GetBinUpEdge(fBinsX.second) - phiLow) / fullAngle * TMath::TwoPi();
-   fCosSinTableX[nX].first = TMath::Cos(angle);
+   angle = (fXAxis->GetBinUpEdge(fCoord->GetLastXBin()) - phiLow) / fullAngle * TMath::TwoPi();
+   fCosSinTableX[nX].first  = TMath::Cos(angle);
    fCosSinTableX[nX].second = TMath::Sin(angle);
 
-   if (xBins != fBinsX || yBins != fBinsY || angleRange != fRangeX || heightRange != fRangeY || radiusRange != fRangeZ)
+   if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
+      fCoord->ResetModified();
+   }
 
-   fBinsX = xBins, fBinsY = yBins, fRangeX = angleRange, fRangeY = heightRange, fRangeZ = radiusRange;
+   fMinZ = fCoord->GetZRange().first;
+   if (fMinZ < 0.)
+      fCoord->GetZRange().second > 0. ? fMinZ = 0. : fMinZ = fCoord->GetZRange().second;
+
+   
+   fMinMaxVal.first  = fHist->GetBinContent(fCoord->GetFirstXBin(), fCoord->GetFirstYBin());
+   fMinMaxVal.second = fMinMaxVal.first;
+
+   for (Int_t i = fCoord->GetFirstXBin(), e = fCoord->GetLastXBin(); i <= e; ++i) {
+      for (Int_t j = fCoord->GetFirstYBin(), e1 = fCoord->GetLastYBin(); j <= e1; ++j) {
+         Double_t val = fHist->GetBinContent(i, j);
+         fMinMaxVal.first  = TMath::Min(fMinMaxVal.first, val);
+         fMinMaxVal.second = TMath::Max(fMinMaxVal.second, val);
+      }
+   }
 
    return kTRUE;
 }
@@ -458,227 +305,96 @@ Bool_t TGLLegoPainter::InitGeometryCylindrical()
 //______________________________________________________________________________
 Bool_t TGLLegoPainter::InitGeometrySpherical()
 {
-   //Find bin ranges for X and Y axes.
-   //Find range for Z axis.
-   //X is mapped to the theta,
-   //Y is phi,
-   //Z is radius.
-   using RootGL::FindAxisRange;
-   BinRange_t xBins, yBins;
-   Range_t phiRange, thetaRange, radiusRange;
-   const TAxis *xAxis = fHist->GetXaxis();
-   const TAxis *yAxis = fHist->GetYaxis();
-   Double_t factor = 1.;
-
-   FindAxisRange(xAxis, kFALSE, xBins, phiRange);
-   if (xBins.second - xBins.first + 1 > 360) {
-      Error("TGLLegoPainter::InitGeometrySpherical", "To many PHI sectors");
+   //Geometry for lego in spherical coords.
+   if (!fCoord->SetRanges(fHist, kFALSE, kFALSE))
       return kFALSE;
-   }
-   FindAxisRange(yAxis, kFALSE, yBins, thetaRange);
-   if (yBins.second - yBins.first + 1 > 180) {
-      Error("TGLLegoPainter::InitGeometrySpherical", "To many THETA sectors");
-      return kFALSE;
-   }
-   FindAxisRange(fHist, kFALSE, xBins, yBins, radiusRange, factor);
 
-   CalculateGLCameraParams(Range_t(-1., 1.), Range_t(-1., 1.), Range_t(-1., 1.));
+   fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
+   fCamera->SetViewVolume(fBackBox.Get3DBox());
 
-   const Int_t nY = yBins.second - yBins.first + 1;
+   const Int_t nY = fCoord->GetNYBins();
    fCosSinTableY.resize(nY + 1);
-   const Double_t fullTheta = yAxis->GetXmax() - yAxis->GetXmin();
-   const Double_t thetaLow = yAxis->GetXmin();
+   const Double_t fullTheta = fYAxis->GetXmax() - fYAxis->GetXmin();
+   const Double_t thetaLow  = fYAxis->GetXmin();
    Double_t angle = 0.;
-   for (Int_t j = 0, jr = yBins.first; j < nY; ++j, ++jr) {
-      angle = (yAxis->GetBinLowEdge(jr) - thetaLow) / fullTheta * TMath::Pi();
+   for (Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
+      angle = (fYAxis->GetBinLowEdge(jr) - thetaLow) / fullTheta * TMath::Pi();
       fCosSinTableY[j].first = TMath::Cos(angle);
       fCosSinTableY[j].second = TMath::Sin(angle);
    }
-   angle = (yAxis->GetBinUpEdge(fBinsY.second) - thetaLow) / fullTheta * TMath::Pi();
+   angle = (fYAxis->GetBinUpEdge(fCoord->GetLastYBin()) - thetaLow) / fullTheta * TMath::Pi();
    fCosSinTableY[nY].first = TMath::Cos(angle);
    fCosSinTableY[nY].second = TMath::Sin(angle);
 
-   const Int_t nX = xBins.second - xBins.first + 1;
+   const Int_t nX = fCoord->GetNXBins();
    fCosSinTableX.resize(nX + 1);
-   const Double_t fullPhi = xAxis->GetXmax() - xAxis->GetXmin();
-   const Double_t phiLow = xAxis->GetXmin();
+   const Double_t fullPhi = fXAxis->GetXmax() - fXAxis->GetXmin();
+   const Double_t phiLow  = fXAxis->GetXmin();
 
-   for (Int_t i = 0, ir = xBins.first; i < nX; ++i, ++ir) {
-      angle = (xAxis->GetBinLowEdge(ir) - phiLow) / fullPhi * TMath::TwoPi();
-      fCosSinTableX[i].first = TMath::Cos(angle);
+   for (Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
+      angle = (fXAxis->GetBinLowEdge(ir) - phiLow) / fullPhi * TMath::TwoPi();
+      fCosSinTableX[i].first  = TMath::Cos(angle);
       fCosSinTableX[i].second = TMath::Sin(angle);
    }
-   angle = (xAxis->GetBinUpEdge(fBinsX.second) - phiLow) / fullPhi * TMath::TwoPi();
-   fCosSinTableX[nX].first = TMath::Cos(angle);
+
+   angle = (fXAxis->GetBinUpEdge(fCoord->GetLastXBin()) - phiLow) / fullPhi * TMath::TwoPi();
+   fCosSinTableX[nX].first  = TMath::Cos(angle);
    fCosSinTableX[nX].second = TMath::Sin(angle);
+   
+   fMinZ = fCoord->GetZRange().first;
+   if (fMinZ < 0.)
+      fCoord->GetZRange().second > 0. ? fMinZ = 0. : fMinZ = fCoord->GetZRange().second;
 
-   if (xBins != fBinsX || yBins != fBinsY || phiRange != fRangeX || thetaRange != fRangeY || radiusRange != fRangeZ)
-      fUpdateSelection = kTRUE;
+   fMinMaxVal.first  = fHist->GetBinContent(fCoord->GetFirstXBin(), fCoord->GetFirstYBin());
+   fMinMaxVal.second = fMinMaxVal.first;
 
-   fBinsX = xBins, fBinsY = yBins, fRangeX = phiRange, fRangeY = thetaRange, fRangeZ = radiusRange;
+   for (Int_t i = fCoord->GetFirstXBin(), e = fCoord->GetLastXBin(); i <= e; ++i) {
+      for (Int_t j = fCoord->GetFirstYBin(), e1 = fCoord->GetLastYBin(); j <= e1; ++j) {
+         Double_t val = fHist->GetBinContent(i, j);
+         fMinMaxVal.first  = TMath::Min(fMinMaxVal.first, val);
+         fMinMaxVal.second = TMath::Max(fMinMaxVal.second, val);
+      }
+   }
+
 
    return kTRUE;
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::StartRotation(Int_t px, Int_t py)
-{
-   //Rotation started.
-   fArcBall.Click(TPoint(px, py));
-   //GetObjectInfo must be disabled (in a pad).
-   fIsMoving = kTRUE;
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::Rotate(Int_t px, Int_t py)
-{
-   //Rotation.
-   //Selection buffer must be updated.
-   fArcBall.Drag(TPoint(px, py));
-   fUpdateSelection = kTRUE;
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::StopRotation()
-{
-   //Rotation is finished.
-   fIsMoving = kFALSE;
-}
-
-//______________________________________________________________________________
 void TGLLegoPainter::StartPan(Int_t px, Int_t py)
 {
-   //User clicks right mouse button (in a pad).
+   //User clicks on a lego with middle mouse button (middle for pad).
    fMousePosition.fX = px;
-   fMousePosition.fY = fViewport[3] - py;
-   //Disable GetObjectInfo.
-   fIsMoving = kTRUE;
+   fMousePosition.fY = fCamera->GetHeight() - py;
+   fCamera->StartPan(px, py);
 }
 
 //______________________________________________________________________________
 void TGLLegoPainter::Pan(Int_t px, Int_t py)
 {
-   //User's moving mouse cursor, with right mouse button pressed (for pad).
-   //Calculate 3d shift related to 2d mouse movement.
+   //Move lego or section.
    if (!MakeGLContextCurrent())
       return;
 
-   //Convert py into bottom-top orientation.
-   py = fViewport[3] - py;
-
-   if (fSelectedPlane < 2)//Shift lego.
-      AdjustShift(fMousePosition, TPoint(px, py), fPan, fViewport);
-   else if (fSelectedPlane >= 2 && fSelectedPlane <= 5)
-      MoveDynamicProfile(px, py);
+   if (fSelectedPart > 5 || fSelectedPart == 1)
+      fCamera->Pan(px, py);
+   else if (fSelectedPart > 0) {
+      //Convert py into bottom-top orientation.
+      py = fCamera->GetHeight() - py;
+      MoveSection(px, py);
+   }
 
    fMousePosition.fX = px, fMousePosition.fY = py;
    fUpdateSelection = kTRUE;
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::StopPan()
-{
-   //Right mouse button was released (in a pad).
-   //Enable GetObjectInfo.
-   fIsMoving = kFALSE;
-}
-
-//______________________________________________________________________________
-TObject *TGLLegoPainter::Select(Int_t px, Int_t py)
-{
-   //
-   if (!MakeGLContextCurrent())
-      return 0;
-   //Read color buffer content, to find selected object
-   if (fUpdateSelection) {
-      SetSelectionMode();
-      fSelectionPass = kTRUE;
-      SetCamera();
-      glDisable(GL_LIGHTING);
-      glClearColor(0.f, 0.f, 0.f, 0.f);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      SetTransformation();
-      DrawPlot();
-      glFlush();
-      fSelection.ReadColorBuffer(fViewport[2], fViewport[3]);
-      fSelectionPass = kFALSE;
-      fUpdateSelection = kFALSE;
-      glEnable(GL_LIGHTING);
-   }
-   //Convert from window top-bottom into gl bottom-top.
-   py = fViewport[3] - py;
-   //Y is a number of a row, x - column.
-   std::swap(px, py);
-   Selection_t newSelected(ColorToObject(fSelection.GetPixelColor(px, py)));
-
-   if (newSelected != fSelectedBin) {
-      //New object was selected (or lego deselected) - re-paint.
-      fSelectedBin = newSelected;
-      gGLManager->MarkForDirectCopy(fGLContext, kTRUE);
-      Paint();
-      gGLManager->MarkForDirectCopy(fGLContext, kFALSE);
-   }
-   //If cursor is in the lego's area, TH object will be selected.
-   return fSelectedBin.first != -1 || fSelectedPlane ? fHist : 0;
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::ZoomIn()
-{
-   //+Zoom
-   fZoom /= 1.2;
-   fUpdateSelection = kTRUE;
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::ZoomOut()
-{
-   //-Zoom
-   fZoom *= 1.2;
-   fUpdateSelection = kTRUE;
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::SetLogX(Bool_t log)
-{
-   //X logarithmic scale.
-   fCoordType == kGLCartesian ? fLogX = log : fLogX = kFALSE;
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::SetLogY(Bool_t log)
-{
-   //Y logarithmic scale.
-   fCoordType == kGLCartesian || fCoordType == kGLCylindrical ? fLogY = log : fLogY = kFALSE;
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::SetLogZ(Bool_t log)
-{
-   //Z logarithmic scale.
-   fCoordType == kGLCartesian || fCoordType == kGLPolar ? fLogZ = log : fLogZ = kFALSE;
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::SetCoordType(EGLCoordType type)
-{
-   //kGLCartesian or kGLPolar etc.
-   if (type != fCoordType) {
-      fUpdateSelection = kTRUE;
-      if (type == kGLCartesian) {
-         //Reset profiles.
-         fBinsX = BinRange_t(0, 0);
-      }
-   }
-   fCoordType = type;
-}
-
-//______________________________________________________________________________
 void TGLLegoPainter::AddOption(const TString &option)
 {
-   //Set lego type from the string option.
-   const Ssiz_t legoPos = option.Index("lego");
-   if (legoPos + 4 < option.Length() && std::isdigit(option[legoPos + 4])) {
+   //Parse additional options.
+   using namespace std;
+   const Ssiz_t legoPos = option.Index("lego");//"lego" _already_ _exists_ in a string.
+   if (legoPos + 4 < option.Length() && isdigit(option[legoPos + 4])) {
       switch (option[legoPos + 4] - '0') {
       case 1:
          fLegoType = kColorSimple;
@@ -689,135 +405,67 @@ void TGLLegoPainter::AddOption(const TString &option)
       case 3:
          fLegoType = kCylindricBars;
          break;
+      default:
+         fLegoType = kColorSimple;
+         break;
       }
    } else
       fLegoType = kColorSimple;
    //check 'e' option 
-   fDrawErrors = option.Index("e", legoPos + 4) != kNPOS;
+   Ssiz_t ePos = option.Index("e");
+   if (ePos == legoPos + 1)
+      ePos = option.Index("e", legoPos + 4);
+   fDrawErrors = ePos != kNPOS ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::SetPadColor(TColor *c)
+void TGLLegoPainter::InitGL()const
 {
-   //Used only in a pad.
-   fPadColor = c;
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::SetFrameColor(TColor *c)
-{
-   //Used only in a pad.
-   fFrameColor = c;
-}
-
-
-//______________________________________________________________________________
-void TGLLegoPainter::InitGL()
-{
-   //Common gl initialization.
+   //Initialize some gl state variables.
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
-   //For lego, back polygons are culled (but not for dynamic profiles).
+   //For lego, back polygons are culled (but not for sections).
    glEnable(GL_CULL_FACE);
    glCullFace(GL_BACK);
 
-   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
 
 //______________________________________________________________________________
-TGLLegoPainter::Selection_t TGLLegoPainter::ColorToObject(const UChar_t *color)
+void TGLLegoPainter::DrawPlot()const
 {
-   //"Object" is a bin number ([xBin, yBin]),
-   //plane (2 - left, 3 - right, 1 - bottom, 4 - XOZ dynamic profile, 
-   //5 - YOZ dynamic profile). Function returns bin number pair or
-   //sets fPlaneSelected (in this case, number pair will be [-1, -1] - 
-   //no bin was selected). 
-   const Int_t nY = fBinsY.second - fBinsY.first + 1;
-   const Int_t nBins = nY * (fBinsX.second - fBinsX.first + 1);
-   Selection_t selected(-1, -1);
-
-   if (fSelectionMode == kSelectionSimple) {
-      //Simple mode - hist can be selected only
-      //as whole, bins/planes/profiles can not be selected.
-      if (color[0])
-         fSelectedPlane = 1;
-   } else {
-      if (Int_t selectedNum = color[0] | (color[1] << 8) | (color[2] << 16)) {
-         //Remove additional 1 (look at EncodeToColor definition).
-         selectedNum -= 1;
-         if (selectedNum < nBins) {//Bin was selected.
-            fSelectedPlane = 0;    //deselect plane (if it was selected)
-            selected.first = selectedNum / nY;
-            selected.second = selectedNum % nY;
-         } else {
-            selectedNum -= nBins;
-            if (fSelectedPlane != selectedNum) {
-               fSelectedPlane = selectedNum;
-               //Selection changed, re-paint.
-               gGLManager->MarkForDirectCopy(fGLContext, kTRUE);
-               Paint();
-               gGLManager->MarkForDirectCopy(fGLContext, kFALSE);
-            }
-         }
-      } else if (fSelectedPlane) {
-         //Selection changed, re-paint.
-         fSelectedPlane = 0;
-         gGLManager->MarkForDirectCopy(fGLContext, kTRUE);
-         Paint();
-         gGLManager->MarkForDirectCopy(fGLContext, kFALSE);
-      }
-   }
-
-   return selected;
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::EncodeToColor(Int_t i, Int_t j)const
-{
-   //In a simple mode, all lego (with it's frame) is white (in a black color buffer)
-   if (fSelectionMode == kSelectionSimple)
-      glColor3ub(255, 255, 255);
-   else {
-      //Two bin indicies are converted into a number, this number is encoded
-      //as r, g, b values. + 1  after j => for bin [0, 0] 
-      //(to distinguish from black color buffer).
-      const Int_t code = i * (fBinsY.second - fBinsY.first + 1) + j + 1;
-      glColor3ub(code & 0xff, (code & 0xff00) >> 8, (code & 0xff0000) >> 16);
-   }
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::DrawPlot()
-{
-   //Select actual drawing function.
-   switch (fCoordType) {
+   //Select method corresponding to coordinate system.
+   switch (fCoord->GetCoordType()) {
+   case kGLCartesian:
+      return DrawLegoCartesian();
    case kGLPolar:
       return DrawLegoPolar();
    case kGLCylindrical:
       return DrawLegoCylindrical();
    case kGLSpherical:
       return DrawLegoSpherical();
-   case kGLCartesian:
-   default:
-      DrawLegoCartesian();
+   default:;
    }
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::DrawLegoCartesian()
+void TGLLegoPainter::DrawLegoCartesian()const
 {
-   //Draws lego in a cartesian system.
-   //Draw back box (possibly, with dynamic profiles).
-   DrawFrame();
+   //Lego in cartesian system.
+   if (fCoord->GetCoordType() == kGLCartesian) {
+      fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels);
+      const TGLDisableGuard cullGuard(GL_CULL_FACE);
+      DrawSections();
+   }
 
    if (!fSelectionPass) {
       glEnable(GL_POLYGON_OFFSET_FILL);//[0
       glPolygonOffset(1.f, 1.f);
       SetLegoColor();
-      if (fXOZProfilePos > fFrame[0].Y() || fYOZProfilePos > fFrame[0].X()) {
-         //Lego is semi-transparent during dynamic profiling
-         glEnable(GL_BLEND);
+      if (fXOZSectionPos > fBackBox.Get3DBox()[0].Y() || fYOZSectionPos> fBackBox.Get3DBox()[0].X()) {
+         //Lego is semi-transparent if we have any sections.
+         glEnable(GL_BLEND);//[1
          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       }
    }
@@ -827,92 +475,89 @@ void TGLLegoPainter::DrawLegoCartesian()
    //Only in cartesian.
    const Int_t nX = fXEdges.size();
    const Int_t nY = fYEdges.size();
-   Int_t iInit = 0, jInit = 0, irInit = fBinsX.first, jrInit = fBinsY.first;
-   const Int_t addI = fFrontPoint == 2 || fFrontPoint == 1 ? 1 : (iInit = nX - 1, irInit = fBinsX.second, -1);
-   const Int_t addJ = fFrontPoint == 2 || fFrontPoint == 3 ? 1 : (jInit = nY - 1, jrInit = fBinsY.second, -1);
+   const Int_t frontPoint = fBackBox.GetFrontPoint();
+   Int_t iInit = 0, jInit = 0, irInit = fCoord->GetFirstXBin(), jrInit = fCoord->GetFirstYBin();
+   const Int_t addI = frontPoint == 2 || frontPoint == 1 ? 1 : (iInit = nX - 1, irInit = fCoord->GetLastXBin(), -1);
+   const Int_t addJ = frontPoint == 2 || frontPoint == 3 ? 1 : (jInit = nY - 1, jrInit = fCoord->GetLastYBin(), -1);
 
    if (fLegoType == kColorLevel && !fSelectionPass)
-      Enable1DTexture();
+      if (!PreparePalette() || !fPalette.EnableTexture())
+         fLegoType = kColorSimple;         
 
    for(Int_t i = iInit, ir = irInit; addI > 0 ? i < nX : i >= 0; i += addI, ir += addI) {
       for(Int_t j = jInit, jr = jrInit; addJ > 0 ? j < nY : j >= 0; j += addJ, jr += addJ) {
-         Double_t zMax = fHist->GetCellContent(ir, jr) * fFactor;
+         Double_t zMax = fHist->GetCellContent(ir, jr) * fCoord->GetFactor();
          if (!ClampZ(zMax))
             continue;
+
+         const Int_t binID = 6 + i * fCoord->GetNYBins() + j;
+
          if (fSelectionPass)
-            EncodeToColor(i, j);
-         else if(fSelectedBin == Selection_t(i, j))
-            glMaterialfv(GL_FRONT, GL_EMISSION, fOrangeEmission);
+            Rgl::ObjectIDToColor(binID);
+         else if(fSelectedPart == binID)
+            glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
          
          if (fLegoType == kCylindricBars) {
-            RootGL::DrawCylinder(&fQuadric, fXEdges[i].first, fXEdges[i].second, fYEdges[j].first,
-                                 fYEdges[j].second, fMinZ, zMax);
+            Rgl::DrawCylinder(&fQuadric, fXEdges[i].first, fXEdges[i].second, fYEdges[j].first,
+                              fYEdges[j].second, fMinZ, zMax);
          } else if (fLegoType == kColorLevel && !fSelectionPass) {
-            const Double_t zRange = fRangeZ.second - fRangeZ.first;
-            RootGL::DrawBoxFrontTextured(fXEdges[i].first, fXEdges[i].second, fYEdges[j].first, 
-                                         fYEdges[j].second, fMinZ, zMax, (fMinZ - fRangeZ.first) / zRange, 
-                                         (zMax  - fRangeZ.first) / zRange, fFrontPoint);
+            Rgl::DrawBoxFrontTextured(fXEdges[i].first, fXEdges[i].second, fYEdges[j].first, 
+                                      fYEdges[j].second, fMinZ, zMax, fPalette.GetTexCoord(fMinZ), 
+                                      fPalette.GetTexCoord(zMax), frontPoint);
          } else {
-            RootGL::DrawBoxFront(fXEdges[i].first, fXEdges[i].second, fYEdges[j].first, 
-                                 fYEdges[j].second, fMinZ, zMax, fFrontPoint);
+            Rgl::DrawBoxFront(fXEdges[i].first, fXEdges[i].second, fYEdges[j].first, 
+                              fYEdges[j].second, fMinZ, zMax, frontPoint);
          } 
 
-         if (!fSelectionPass && fSelectedBin == Selection_t(i, j))
-            glMaterialfv(GL_FRONT, GL_EMISSION, fNullEmission);
+         if (!fSelectionPass && fSelectedPart == binID)
+            glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
       }
    }
 
    if (fLegoType == kColorLevel && !fSelectionPass)
-      Disable1DTexture();
+      fPalette.DisableTexture();
 
    //Draw outlines for non-cylindrical bars.         
    if (!fSelectionPass) {
       glDisable(GL_POLYGON_OFFSET_FILL);//0]
-      RootGL::TGLDisableGuard lightGuard(GL_LIGHTING);//[2 - 2]
-      if (fXOZProfilePos <= fFrame[0].Y() && fYOZProfilePos <= fFrame[0].X())
+      const TGLDisableGuard lightGuard(GL_LIGHTING);//[2 - 2]
+      if (fXOZSectionPos <= fBackBox.Get3DBox()[0].Y() && fYOZSectionPos <= fBackBox.Get3DBox()[0].X())
          glColor3d(0., 0., 0.);
       else
          glColor4d(0., 0., 0., 0.4);
       glPolygonMode(GL_FRONT, GL_LINE);//[3
 
-      glEnable(GL_BLEND);
+      const TGLEnableGuard blendGuard(GL_BLEND);//[4-4] + 1]
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      glEnable(GL_LINE_SMOOTH);
+      const TGLEnableGuard smoothGuard(GL_LINE_SMOOTH);//[5-5]
       glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
       for(Int_t i = iInit, ir = irInit; addI > 0 ? i < nX : i >= 0; i += addI, ir += addI) {
          for(Int_t j = jInit, jr = jrInit; addJ > 0 ? j < nY : j >= 0; j += addJ, jr += addJ) {
-            Double_t zMax = fHist->GetCellContent(ir, jr) * fFactor;
+            Double_t zMax = fHist->GetCellContent(ir, jr) * fCoord->GetFactor();
             if (!ClampZ(zMax))
                continue;
             if (fLegoType != kCylindricBars) {
-               RootGL::DrawBoxFront(
-                                    fXEdges[i].first, fXEdges[i].second, 
-                                    fYEdges[j].first, fYEdges[j].second, 
-                                    fMinZ, zMax, fFrontPoint
-                                   );
+               Rgl::DrawBoxFront(fXEdges[i].first, fXEdges[i].second, fYEdges[j].first, 
+                                 fYEdges[j].second, fMinZ, zMax, frontPoint);
             }
             if (fDrawErrors && zMax > 0.) {
-               Double_t errorZMax = (fHist->GetCellContent(ir, jr) + fHist->GetCellError(ir, jr))* fFactor;
+               Double_t errorZMax = (fHist->GetCellContent(ir, jr) + fHist->GetCellError(ir, jr)) * fCoord->GetFactor();
                ClampZ(errorZMax);
-               RootGL::DrawError(fXEdges[i].first, fXEdges[i].second, fYEdges[j].first, 
-                                 fYEdges[j].second, zMax, errorZMax);
+               Rgl::DrawError(fXEdges[i].first, fXEdges[i].second, fYEdges[j].first, 
+                              fYEdges[j].second, zMax, errorZMax);
             }
          }
       }
 
-      glDisable(GL_BLEND);
-      glDisable(GL_LINE_SMOOTH);
       glPolygonMode(GL_FRONT, GL_FILL);//3]
    }
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::DrawLegoPolar()
+void TGLLegoPainter::DrawLegoPolar()const
 {
-   //Draws lego in a polar system.
-   //No back box, no profiles.
-   //Bars are drawn as trapezoids.
+   //Lego in polar system.
    const Int_t nX = fCosSinTableX.size() - 1;
    const Int_t nY = fYEdges.size();
 
@@ -924,12 +569,13 @@ void TGLLegoPainter::DrawLegoPolar()
 
    Double_t points[4][2] = {};
 
-   if (!fSelectionPass && fLegoType == kColorLevel)
-      Enable1DTexture();
+   if (fLegoType == kColorLevel && !fSelectionPass)
+      if (!PreparePalette() || !fPalette.EnableTexture())
+         fLegoType = kColorSimple;         
 
-   for(Int_t i = 0, ir = fBinsX.first; i < nX; ++i, ++ir) {
-      for(Int_t j = 0, jr = fBinsY.first; j < nY; ++j, ++jr) {
-         Double_t zMax = fHist->GetCellContent(ir, jr) * fFactor;
+   for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
+      for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
+         Double_t zMax = fHist->GetCellContent(ir, jr);
          if (!ClampZ(zMax))
             continue;
          points[0][0] = fYEdges[j].first  * fCosSinTableX[i].first;
@@ -940,45 +586,42 @@ void TGLLegoPainter::DrawLegoPolar()
          points[2][1] = fYEdges[j].second * fCosSinTableX[i + 1].second;
          points[3][0] = fYEdges[j].first  * fCosSinTableX[i + 1].first;
          points[3][1] = fYEdges[j].first  * fCosSinTableX[i + 1].second;
+
+         const Int_t binID = 6 + i * fCoord->GetNYBins() + j;
+
          if (fSelectionPass)
-            EncodeToColor(i, j);
-         else if(fSelectedBin == Selection_t(i, j))
-            glMaterialfv(GL_FRONT, GL_EMISSION, fOrangeEmission);
+            Rgl::ObjectIDToColor(binID);
+         else if(fSelectedPart == binID)
+            glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
 
-         if (fLegoType == kColorLevel && !fSelectionPass) {
-            const Double_t zRange = fRangeZ.second - fRangeZ.first;
-            RootGL::DrawTrapezoidTextured(
-                                          points, fMinZ, zMax, 
-                                          (fMinZ - fRangeZ.first) / zRange, 
-                                          (zMax  - fRangeZ.first) / zRange
-                                         );
-
-         }
+         if (fLegoType == kColorLevel && !fSelectionPass)
+            Rgl::DrawTrapezoidTextured(points, fMinZ, zMax, fPalette.GetTexCoord(fMinZ), 
+                                       fPalette.GetTexCoord(zMax));
          else
-            RootGL::DrawTrapezoid(points, fMinZ, zMax);
+            Rgl::DrawTrapezoid(points, fMinZ, zMax);
 
-         if(fSelectedBin == Selection_t(i, j))
-            glMaterialfv(GL_FRONT, GL_EMISSION, fNullEmission);
+         if (!fSelectionPass && fSelectedPart == binID)
+            glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
       }
    }
 
    if (fLegoType == kColorLevel && !fSelectionPass)
-      Disable1DTexture();
+      fPalette.DisableTexture();
 
    //Draw otulines.
    if (!fSelectionPass) {
       glDisable(GL_POLYGON_OFFSET_FILL);//0]
-      RootGL::TGLDisableGuard lightGuard(GL_LIGHTING);//[2-2]
+      const TGLDisableGuard lightGuard(GL_LIGHTING);//[2-2]
       glColor3d(0., 0., 0.);
       glPolygonMode(GL_FRONT, GL_LINE);//[3
-      glEnable(GL_BLEND);
+      const TGLEnableGuard blendGuard(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      glEnable(GL_LINE_SMOOTH);
+      const TGLEnableGuard smoothGuard(GL_LINE_SMOOTH);
       glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-      for(Int_t i = 0, ir = fBinsX.first; i < nX; ++i, ++ir) {
-         for(Int_t j = 0, jr = fBinsY.first; j < nY; ++j, ++jr) {
-            Double_t zMax = fHist->GetCellContent(ir, jr) * fFactor;
+      for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
+         for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
+            Double_t zMax = fHist->GetCellContent(ir, jr);
             if (!ClampZ(zMax))
                continue;
             points[0][0] = fYEdges[j].first  * fCosSinTableX[i].first;
@@ -989,27 +632,24 @@ void TGLLegoPainter::DrawLegoPolar()
             points[2][1] = fYEdges[j].second * fCosSinTableX[i + 1].second;
             points[3][0] = fYEdges[j].first  * fCosSinTableX[i + 1].first;
             points[3][1] = fYEdges[j].first  * fCosSinTableX[i + 1].second;
-            RootGL::DrawTrapezoid(points, fMinZ, zMax, kFALSE);
+            Rgl::DrawTrapezoid(points, fMinZ, zMax, kFALSE);
          }
       }
-
-      glDisable(GL_BLEND);
-      glDisable(GL_LINE_SMOOTH);
 
       glPolygonMode(GL_FRONT, GL_FILL);//3]
    }
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::DrawLegoCylindrical()
+void TGLLegoPainter::DrawLegoCylindrical()const
 {
-   //
+   //Lego in cylindrical system.
    const Int_t nX = fCosSinTableX.size() - 1;
    const Int_t nY = fYEdges.size();
-   const Double_t rRange = fRangeZ.second - fRangeZ.first;
    Double_t legoR = gStyle->GetLegoInnerR();
    if (legoR > 1. || legoR < 0.)
       legoR = 0.5;
+   const Double_t rRange = fCoord->GetZLength();
 
    if (!fSelectionPass) {
       SetLegoColor();
@@ -1018,22 +658,19 @@ void TGLLegoPainter::DrawLegoCylindrical()
    }
 
    Double_t points[4][2] = {};
-   const Double_t sc = (1 - legoR) * fScaleX;
-   Double_t zMax = 0, zMin = 0, zVal = 0;
+   const Double_t sc = (1 - legoR) * fCoord->GetXScale();
+   legoR *= fCoord->GetXScale();
 
-   if (!fSelectionPass && fLegoType == kColorLevel)
-      Enable1DTexture();
+   if (fLegoType == kColorLevel && !fSelectionPass)
+      if (!PreparePalette() || !fPalette.EnableTexture())
+         fLegoType = kColorSimple;         
 
-   for(Int_t i = 0, ir = fBinsX.first; i < nX; ++i, ++ir) {
-      for(Int_t j = 0, jr = fBinsY.first; j < nY; ++j, ++jr) {
-         zVal = fHist->GetCellContent(ir, jr) * fFactor;
-         if (zVal >= 0.) {
-            zMin = legoR * fScaleX;
-            zMax = legoR * fScaleX + zVal / rRange * sc;
-         } else {
-            zMax = legoR * fScaleX;
-            zMin = legoR * fScaleX + zVal / rRange * sc;
-         }
+   for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
+      for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
+         Double_t zMin = legoR + (fMinZ - fCoord->GetZRange().first) / rRange * sc;
+         Double_t zMax = legoR + (fHist->GetCellContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc;
+         if (zMin > zMax)
+            std::swap(zMin, zMax);
 
          points[0][0] = fCosSinTableX[i].first * zMin;
          points[0][1] = fCosSinTableX[i].second * zMin;
@@ -1044,52 +681,45 @@ void TGLLegoPainter::DrawLegoCylindrical()
          points[3][0] = fCosSinTableX[i + 1].first * zMin;
          points[3][1] = fCosSinTableX[i + 1].second * zMin;
 
+         const Int_t binID = 6 + i * fCoord->GetNYBins() + j;
+
          if (fSelectionPass)
-            EncodeToColor(i, j);
-         else if(fSelectedBin == Selection_t(i, j))
-            glMaterialfv(GL_FRONT, GL_EMISSION, fOrangeEmission);
+            Rgl::ObjectIDToColor(binID);
+         else if(fSelectedPart == binID)
+            glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
 
-         if (fLegoType == kColorLevel && !fSelectionPass) {
-            const Double_t zRange = fRangeZ.second - fRangeZ.first;
-            RootGL::DrawTrapezoidTextured2(
-                                           points, fYEdges[j].first, fYEdges[j].second, 
-                                           (fMinZ - fRangeZ.first) / zRange, 
-                                           (zVal  - fRangeZ.first) / zRange
-                                          );
-         }
-         else
-            RootGL::DrawTrapezoid(points, fYEdges[j].first, fYEdges[j].second);
+         if (fLegoType == kColorLevel && !fSelectionPass){
+            Rgl::DrawTrapezoidTextured2(points, fYEdges[j].first, fYEdges[j].second,
+                                        fPalette.GetTexCoord(fMinZ), fPalette.GetTexCoord(fHist->GetCellContent(ir, jr)));
+         }else
+            Rgl::DrawTrapezoid(points, fYEdges[j].first, fYEdges[j].second);
 
-         if(fSelectedBin == Selection_t(i, j))
-            glMaterialfv(GL_FRONT, GL_EMISSION, fNullEmission);
+         if (!fSelectionPass && fSelectedPart == binID)
+            glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
       }
    }
 
-   if (!fSelectionPass && fLegoType == kColorLevel)
-      Disable1DTexture();
+   if (fLegoType == kColorLevel && !fSelectionPass)
+      fPalette.DisableTexture();
 
    //Draw otulines.
    if (!fSelectionPass) {
       glDisable(GL_POLYGON_OFFSET_FILL);//0]
-      RootGL::TGLDisableGuard lightGuard(GL_LIGHTING);//[2-2]
+      const TGLDisableGuard lightGuard(GL_LIGHTING);//[2-2]
       glColor3d(0., 0., 0.);
       glPolygonMode(GL_FRONT, GL_LINE);//[3
 
-      glEnable(GL_BLEND);
+      const TGLEnableGuard blendGuard(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      glEnable(GL_LINE_SMOOTH);
+      const TGLEnableGuard smoothGuard(GL_LINE_SMOOTH);
       glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-      for(Int_t i = 0, ir = fBinsX.first; i < nX; ++i, ++ir) {
-         for(Int_t j = 0, jr = fBinsY.first; j < nY; ++j, ++jr) {
-            zVal = fHist->GetCellContent(ir, jr) * fFactor;
-            if (zVal >= 0.) {
-               zMin = legoR * fScaleX;
-               zMax = legoR * fScaleX + zVal / rRange * sc;
-            } else {
-               zMax = legoR * fScaleX;
-               zMin = legoR * fScaleX + zVal / rRange * sc;
-            }
+      for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
+         for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
+            Double_t zMin = legoR + (fMinZ - fCoord->GetZRange().first) / rRange * sc;
+            Double_t zMax = legoR + (fHist->GetCellContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc;
+            if (zMin > zMax)
+               std::swap(zMin, zMax);
 
             points[0][0] = fCosSinTableX[i].first * zMin;
             points[0][1] = fCosSinTableX[i].second * zMin;
@@ -1099,23 +729,21 @@ void TGLLegoPainter::DrawLegoCylindrical()
             points[2][1] = fCosSinTableX[i + 1].second * zMax;
             points[3][0] = fCosSinTableX[i + 1].first * zMin;
             points[3][1] = fCosSinTableX[i + 1].second * zMin;
-            RootGL::DrawTrapezoid(points, fYEdges[j].first, fYEdges[j].second);
+            Rgl::DrawTrapezoid(points, fYEdges[j].first, fYEdges[j].second);
          }
       }
 
-      glDisable(GL_BLEND);
-      glDisable(GL_LINE_SMOOTH);
       glPolygonMode(GL_FRONT, GL_FILL);//3]
    }
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::DrawLegoSpherical()
+void TGLLegoPainter::DrawLegoSpherical()const
 {
-   //
+   //Lego in spherical system.
    const Int_t nX = fCosSinTableX.size() - 1;
    const Int_t nY = fCosSinTableY.size() - 1;
-   const Double_t rRange = fRangeZ.second - fRangeZ.first;
+   const Double_t rRange = fCoord->GetZLength();
    Double_t legoR = gStyle->GetLegoInnerR();
    if (legoR > 1. || legoR < 0.)
       legoR = 0.5;
@@ -1127,22 +755,18 @@ void TGLLegoPainter::DrawLegoSpherical()
    }
 
    Double_t points[8][3] = {};
-   const Double_t sc = (1 - legoR) * fScaleX;
-   Double_t zMax = 0, zMin = 0, zVal = 0;
+   const Double_t sc = 1 - legoR;
 
-   if (!fSelectionPass && fLegoType == kColorLevel)
-      Enable1DTexture();
+   if (fLegoType == kColorLevel && !fSelectionPass)
+      if (!PreparePalette() || !fPalette.EnableTexture())
+         fLegoType = kColorSimple;         
 
-   for(Int_t i = 0, ir = fBinsX.first; i < nX; ++i, ++ir) {
-      for(Int_t j = 0, jr = fBinsY.first; j < nY; ++j, ++jr) {
-         zVal = fHist->GetCellContent(ir, jr) * fFactor;
-         if (zVal >= 0.) {
-            zMin = legoR * fScaleX;
-            zMax = legoR * fScaleX + zVal / rRange * sc;
-         } else {
-            zMax = legoR * fScaleX;
-            zMin = legoR * fScaleX + zVal / rRange * sc;
-         }
+   for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
+      for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
+         Double_t zMin = legoR + (fMinZ - fCoord->GetZRange().first) / rRange * sc;
+         Double_t zMax = legoR + (fHist->GetCellContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc;
+         if (zMin > zMax)
+            std::swap(zMin, zMax);
 
          points[4][0] = zMin * fCosSinTableY[j].second * fCosSinTableX[i].first;
          points[4][1] = zMin * fCosSinTableY[j].second * fCosSinTableX[i].second;
@@ -1169,51 +793,43 @@ void TGLLegoPainter::DrawLegoSpherical()
          points[3][1] = zMax * fCosSinTableY[j + 1].second * fCosSinTableX[i].second;
          points[3][2] = zMax * fCosSinTableY[j + 1].first;
 
+         const Int_t binID = 6 + i * fCoord->GetNYBins() + j;
          
          if (fSelectionPass)
-            EncodeToColor(i, j);
-         else if(fSelectedBin == Selection_t(i, j))
-            glMaterialfv(GL_FRONT, GL_EMISSION, fOrangeEmission);
-         if (fLegoType == kColorLevel && !fSelectionPass) {
-            const Double_t zRange = fRangeZ.second - fRangeZ.first;
-            RootGL::DrawTrapezoidTextured(
-                                          points, 
-                                          (fMinZ - fRangeZ.first) / zRange, 
-                                          (zVal  - fRangeZ.first) / zRange
-                                         );
-         }
+            Rgl::ObjectIDToColor(binID);
+         else if(fSelectedPart == binID)
+            glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
+         if (fLegoType == kColorLevel && !fSelectionPass)
+            Rgl::DrawTrapezoidTextured(points, fPalette.GetTexCoord(fMinZ), 
+                                       fPalette.GetTexCoord(fHist->GetCellContent(ir, jr)));
          else
-            RootGL::DrawTrapezoid(points);
+            Rgl::DrawTrapezoid(points);
 
-         if(fSelectedBin == Selection_t(i, j))
-            glMaterialfv(GL_FRONT, GL_EMISSION, fNullEmission);
+         if(fSelectedPart == binID)
+            glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
       }
    }
 
-   if (!fSelectionPass && fLegoType == kColorLevel)
-      Disable1DTexture();
+   if (fLegoType == kColorLevel && !fSelectionPass)
+      fPalette.DisableTexture();
 
    //Draw otulines.
    if (!fSelectionPass) {
       glDisable(GL_POLYGON_OFFSET_FILL);//0]
-      RootGL::TGLDisableGuard lightGuard(GL_LIGHTING);//[2-2]
+      const TGLDisableGuard lightGuard(GL_LIGHTING);//[2-2]
       glColor3d(0., 0., 0.);
       glPolygonMode(GL_FRONT, GL_LINE);//[3
-      glEnable(GL_BLEND);
+      const TGLEnableGuard blendGuard(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      glEnable(GL_LINE_SMOOTH);
+      const TGLEnableGuard smoothGuard(GL_LINE_SMOOTH);
       glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-      for(Int_t i = 0, ir = fBinsX.first; i < nX; ++i, ++ir) {
-         for(Int_t j = 0, jr = fBinsY.first; j < nY; ++j, ++jr) {
-            zVal = fHist->GetCellContent(ir, jr) * fFactor;
-            if (zVal >= 0.) {
-               zMin = legoR * fScaleX;
-               zMax = legoR * fScaleX + zVal / rRange * sc;
-            } else {
-               zMax = legoR * fScaleX;
-               zMin = legoR * fScaleX + zVal / rRange * sc;
-            }
+      for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
+         for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
+            Double_t zMin = legoR + (fMinZ - fCoord->GetZRange().first) / rRange * sc;
+            Double_t zMax = legoR + (fHist->GetCellContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc;
+            if (zMin > zMax)
+               std::swap(zMin, zMax);
 
             points[4][0] = zMin * fCosSinTableY[j].second * fCosSinTableX[i].first;
             points[4][1] = zMin * fCosSinTableY[j].second * fCosSinTableX[i].second;
@@ -1239,332 +855,69 @@ void TGLLegoPainter::DrawLegoSpherical()
             points[3][0] = zMax * fCosSinTableY[j + 1].second * fCosSinTableX[i].first;
             points[3][1] = zMax * fCosSinTableY[j + 1].second * fCosSinTableX[i].second;
             points[3][2] = zMax * fCosSinTableY[j + 1].first;
-            RootGL::DrawTrapezoid(points);
+            Rgl::DrawTrapezoid(points);
          }
       }
 
-      glDisable(GL_BLEND);
-      glDisable(GL_LINE_SMOOTH);
       glPolygonMode(GL_FRONT, GL_FILL);//3]
    }
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::SetLegoColor()
+void TGLLegoPainter::SetLegoColor()const
 {
-   //Set color for lego.
+   //Set lego's color.
    Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.15f};
 
    if (fLegoType != kColorLevel && fHist->GetFillColor() != kWhite)
-      if (TColor *c = gROOT->GetColor(fHist->GetFillColor()))
+      if (const TColor *c = gROOT->GetColor(fHist->GetFillColor()))
          c->GetRGB(diffColor[0], diffColor[1], diffColor[2]);
-   
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, diffColor);
-   const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
-   glMaterialfv(GL_FRONT, GL_SPECULAR, specColor);
-   glMaterialf(GL_FRONT, GL_SHININESS, 70.f);
-}
 
-Bool_t TGLLegoPainter::MakeGLContextCurrent()const
-{
-   //Make the gl context current.
-   return fGLContext != -1 && gGLManager->MakeCurrent(fGLContext);
+   glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffColor);
+   const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
+   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specColor);
+   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 70.f);
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::ClearBuffers()
+void TGLLegoPainter::ClearBuffers()const
 {
-   //Clears gl buffers (possibly with pad's background color).
+   //Clear buffer with pad's color.
    Float_t rgb[3] = {1.f, 1.f, 1.f};
-   if (fPadColor)
-      fPadColor->GetRGB(rgb[0], rgb[1], rgb[2]);
+   if (const TColor *color = GetPadColor())
+      color->GetRGB(rgb[0], rgb[1], rgb[2]);
    glClearColor(rgb[0], rgb[1], rgb[2], 1.);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::SetSelectionMode()
+void TGLLegoPainter::DrawSectionX()const
 {
-   //Number of bins + 5 must be less then 2^24 (5 == 3 back planes + 2 dynamic profiles).
-   //2 ^ 24 == r g b in a glColor3ub (ub for unsigned char). Number of bits supposed 
-   //== 8.
-   if (unsigned((fBinsX.second - fBinsX.first) * (fBinsY.second - fBinsY.first)) > (1u<<24) - 5) {
-      fSelectionMode = kSelectionSimple;
-      fSelectedPlane = 0;
-      fSelectedBin   = Selection_t(-1, -1);
-   } else
-      fSelectionMode = kSelectionFull;
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::DrawFrame()
-{
-   //Draw back box for lego.
-   //This box is not written into
-   //OpenGL's depth buffer, to avoid some visual artifacts.
-   if (!fSelectionPass) {
-      glEnable(GL_BLEND);//[0
-      glDepthMask(GL_FALSE);//[1
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   }
-
-   //Back plane is partially transparent to make its color smoother.
-   Float_t backColor[] = {0.9f, 0.9f, 0.9f, 0.85f};
-   if (fFrameColor)
-      fFrameColor->GetRGB(backColor[0], backColor[1], backColor[2]);
-   //Planes are encoded as number of bins + plane number (1,2,3)
-   const Int_t selectionBase = fBinsX.second - fBinsX.first + 1;
-
-   if (!fSelectionPass) {
-      glMaterialfv(GL_FRONT, GL_DIFFUSE, backColor);
-      if (fSelectedPlane == 1)
-         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, fRedEmission);
-   } else
-      EncodeToColor(selectionBase, 1);//bottom plane
-
-   RootGL::DrawQuadFilled(fFrame[0], fFrame[1], fFrame[2], fFrame[3], TGLVertex3(0., 0., 1.));
-
-   if (!fSelectionPass) {
-      if (fSelectedPlane == 1)
-         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, fNullEmission);
-   }
-
-   //Left plane, encoded as 2 + number of bins in a selection buffer.
-   if (!fSelectionPass) {
-      if (fSelectedPlane == 2)
-         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, fGreenEmission);
-   } else
-      EncodeToColor(selectionBase, 2);
-   DrawBackPlane(fBackPairs[fFrontPoint][0]);
-   if (!fSelectionPass) {
-      if (fSelectedPlane == 2)
-         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, fNullEmission);
-   }
-
-   //Right plane, encoded as 3 in a selection buffer.
-   if (!fSelectionPass) {
-      glMaterialfv(GL_FRONT, GL_DIFFUSE, backColor);
-      if (fSelectedPlane == 3)
-         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, fGreenEmission);
-   } else
-      EncodeToColor(selectionBase, 3);
-   DrawBackPlane(fBackPairs[fFrontPoint][1]);
-
-   if (!fSelectionPass) {
-      if (fSelectedPlane == 3)
-         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, fNullEmission);
-      glDepthMask(GL_TRUE);//1]
-      glDisable(GL_BLEND);//0]
-   }
-
-   DrawProfiles();
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::DrawBackPlane(Int_t plane)const
-{
-   //Draw back plane with number 'plane'
-   const Int_t *vertInd = fFramePlanes[plane];
-   TGLVertex3 normal(fFrameNormals[plane][0], fFrameNormals[plane][1], fFrameNormals[plane][2]);
-   RootGL::DrawQuadFilled(fFrame[vertInd[0]], fFrame[vertInd[1]], fFrame[vertInd[2]], fFrame[vertInd[3]], normal);
-   //antialias back plane outline
-   if (!fSelectionPass) {
-      using namespace RootGL;
-      TGLEnableGuard lineGuard(GL_LINE_SMOOTH);
-      TGLEnableGuard blendGuard(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-      TGLDisableGuard depthGuard(GL_DEPTH_TEST);
-      TGLDisableGuard lightGuard(GL_LIGHTING);
-      glColor3d(0., 0., 0.);
-      DrawQuadOutline(fFrame[vertInd[0]], fFrame[vertInd[1]], fFrame[vertInd[2]], fFrame[vertInd[3]]);
-      DrawGrid(plane);
-   }
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::DrawProfiles()
-{
-   //Draw static profiles ("shadows") and
-   //dynamic profile (if any).
-   using namespace RootGL;
-   const Int_t selectionBase = fBinsX.second - fBinsX.first + 1;
-
-   if (fXOZProfilePos > fFrame[0].Y()) {
-      if (fXOZProfilePos > fFrame[2].Y())
-         fXOZProfilePos = fFrame[2].Y();
-      TGLDisableGuard cullGuard(GL_CULL_FACE);
-      TGLVertex3 v1(fFrame[0].X(), fXOZProfilePos, fFrame[0].Z());
-      TGLVertex3 v2(fFrame[1].X(), fXOZProfilePos, fFrame[1].Z());
-      TGLVertex3 v3(fFrame[5].X(), fXOZProfilePos, fFrame[5].Z());
-      TGLVertex3 v4(fFrame[4].X(), fXOZProfilePos, fFrame[4].Z());
-
-      if (fSelectionPass) {
-         EncodeToColor(selectionBase, 4);
-      } else {
-         glDisable(GL_LIGHTING);
-
-         if (fSelectedPlane == 4) {
-            TGLEnableGuard blendGuard(GL_BLEND);
-            TGLEnableGuard lineSmooth(GL_LINE_SMOOTH);
-            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glLineWidth(3.f);
-            glColor3d(0., 0.6, 1.);
-            DrawQuadOutline(v1, v2, v3, v4);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glLineWidth(1.f);
-         }
-         glColor3d(0.6, 0.6, 0.6);
-      }
-  
-      RootGL::DrawQuadFilled(v1, v2, v3, v4, TGLVertex3(0., 1., 0.));
-      TGLDisableGuard depth(GL_DEPTH_TEST);
-      DrawProfileX();
-      if (!fSelectionPass)
-         glEnable(GL_LIGHTING);
-   }
-
-   if (fYOZProfilePos > fFrame[0].X()) {
-      if (fYOZProfilePos > fFrame[1].X())
-         fYOZProfilePos = fFrame[1].X();
-      TGLDisableGuard cullGuard(GL_CULL_FACE);
-      TGLVertex3 v1(fYOZProfilePos, fFrame[0].Y(), fFrame[0].Z());
-      TGLVertex3 v2(fYOZProfilePos, fFrame[3].Y(), fFrame[3].Z());
-      TGLVertex3 v3(fYOZProfilePos, fFrame[7].Y(), fFrame[7].Z());
-      TGLVertex3 v4(fYOZProfilePos, fFrame[4].Y(), fFrame[4].Z());
-      if (fSelectionPass) {
-         EncodeToColor(selectionBase, 5);
-      } else {
-         glDisable(GL_LIGHTING);
-         if (fSelectedPlane == 5) {
-            TGLEnableGuard blendGuard(GL_BLEND);
-            TGLEnableGuard lineSmooth(GL_LINE_SMOOTH);
-            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glLineWidth(3.f);
-            glColor3d(0., 0.6, 1.);
-            DrawQuadOutline(v1, v2, v3, v4);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glLineWidth(1.f);
-         }
-         glColor3d(0.6, 0.6, 0.6);
-      }
-
-      RootGL::DrawQuadFilled(v1, v2, v3, v4, TGLVertex3(1., 0., 0.));
-      TGLDisableGuard depth(GL_DEPTH_TEST);
-      DrawProfileY();
-      if (!fSelectionPass)
-         glEnable(GL_LIGHTING);
-   }
-
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::MoveDynamicProfile(Int_t px, Int_t py)
-{
-   //Create dynamic profile using selected plane
-   if (fSelectedPlane == 2) {
-      if (fFrontPoint == 2) {
-         fXOZProfilePos = fFrame[0].Y();//0.;
-         fSelectedPlane = 4;
-      } else if (!fFrontPoint) {
-         fXOZProfilePos = fFrame[2].Y();
-         fSelectedPlane = 4;
-      } else if (fFrontPoint == 1) {
-         fYOZProfilePos = fFrame[0].X();
-         fSelectedPlane = 5;
-      } else if (fFrontPoint == 3) {
-         fYOZProfilePos = fFrame[1].X();
-         fSelectedPlane = 5;
-      }
-   } else if (fSelectedPlane == 3) {
-      if (fFrontPoint == 2) {
-         fYOZProfilePos = fFrame[0].X();
-         fSelectedPlane = 5;
-      } else if (!fFrontPoint) {
-         fYOZProfilePos = fFrame[1].X();
-         fSelectedPlane = 5;
-      } else if (fFrontPoint == 1) {
-         fXOZProfilePos = fFrame[2].Y();
-         fSelectedPlane = 4;
-      } else if (fFrontPoint == 3) {
-         fXOZProfilePos = fFrame[0].Y();
-         fSelectedPlane = 4;
-      }
-   }
-
-   Double_t mvMatrix[16] = {0.};
-   glGetDoublev(GL_MODELVIEW_MATRIX, mvMatrix);
-   Double_t prMatrix[16] = {0.};
-   glGetDoublev(GL_PROJECTION_MATRIX, prMatrix);
-   Double_t winVertex[3] = {0.};//The third is a dummy
-   gluProject(
-              fSelectedPlane == 5 ? fYOZProfilePos : 0., 
-              fSelectedPlane == 4 ? fXOZProfilePos : 0., 
-              0., mvMatrix, prMatrix, fViewport, 
-              &winVertex[0], &winVertex[1], &winVertex[2]
-             );
-   winVertex[0] += px - fMousePosition.fX;
-   winVertex[1] += py - fMousePosition.fY;
-   Double_t newPoint[3] = {0.};//The third is a dummy
-   gluUnProject(winVertex[0], winVertex[1], winVertex[2], mvMatrix, prMatrix, fViewport,
-                newPoint, newPoint + 1, newPoint + 2);
-
-   if (fSelectedPlane == 4)
-      fXOZProfilePos = newPoint[1];
-   else
-      fYOZProfilePos = newPoint[0];
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::DrawProfileX()
-{
-   const Int_t nX = fBinsX.second - fBinsX.first + 1;
-   const Int_t nY = fBinsY.second - fBinsY.first + 1;
+   //XOZ plane parallel section.
    Int_t binY = -1;
 
-   for (Int_t i = 0; i < nY; ++i)
-      if (fYEdges[i].first <= fXOZProfilePos && fXOZProfilePos <= fYEdges[i].second) {
+   for (Int_t i = 0, e = fYEdges.size(); i < e; ++i) {
+      if (fYEdges[i].first <= fXOZSectionPos && fXOZSectionPos <= fYEdges[i].second) {
          binY = i;
          break;
       }
+   }
    
    if (binY >= 0) {
-      binY += fBinsY.first;
-      RootGL::TGLEnableGuard blendGuard(GL_BLEND);
-      RootGL::TGLEnableGuard lineSmooth(GL_LINE_SMOOTH);
-      glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-      //Draw a grid on the profile's plane.
-      glPushAttrib(GL_LINE_BIT);//[0
-      glEnable(GL_LINE_STIPPLE);//[1
-      //Dot lines
-      const UShort_t stipple = 0x5555;
-      glLineStipple(1, stipple);
-      glColor3d(0., 0., 0.);
-      for (UInt_t i = 0; i < fZLevels.size(); ++i) {
-         glBegin(GL_LINES);
-         glVertex3d(fFrame[0].X(), fXOZProfilePos, fZLevels[i] * fScaleZ);
-         glVertex3d(fFrame[1].X(), fXOZProfilePos, fZLevels[i] * fScaleZ);
-         glEnd();
-      }
-      glDisable(GL_LINE_STIPPLE);//1]
-      glPopAttrib();//0]
+      binY += fCoord->GetFirstYBin();
       glColor3d(1., 0., 0.);
       glLineWidth(3.f);
       //Draw 2d hist on the profile's plane.
-      for (Int_t i = 0, ir = fBinsX.first; i < nX; ++i, ++ir) {
-         Double_t zMax = fHist->GetBinContent(ir, binY);
+      for (UInt_t i = 0, ir = fCoord->GetFirstXBin(), e = fXEdges.size(); i < e; ++i, ++ir) {
+         Double_t zMax = fHist->GetBinContent(Int_t(ir), binY);
          if (!ClampZ(zMax))
             continue;
 
          glBegin(GL_LINE_LOOP);
-         glVertex3d(fXEdges[i].first,  fXOZProfilePos, fMinZ);
-         glVertex3d(fXEdges[i].first,  fXOZProfilePos, zMax);
-         glVertex3d(fXEdges[i].second, fXOZProfilePos, zMax);
-         glVertex3d(fXEdges[i].second, fXOZProfilePos, fMinZ);
+         glVertex3d(fXEdges[i].first,  fXOZSectionPos, fMinZ);
+         glVertex3d(fXEdges[i].first,  fXOZSectionPos, zMax);
+         glVertex3d(fXEdges[i].second, fXOZSectionPos, zMax);
+         glVertex3d(fXEdges[i].second, fXOZSectionPos, fMinZ);
          glEnd();
       }
 
@@ -1573,51 +926,33 @@ void TGLLegoPainter::DrawProfileX()
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::DrawProfileY()
+void TGLLegoPainter::DrawSectionY()const
 {
-   const Int_t nX = fBinsX.second - fBinsX.first + 1;
-   const Int_t nY = fBinsY.second - fBinsY.first + 1;
+   //YOZ plane parallel section.
    Int_t binX = -1;
 
-   for (Int_t i = 0; i < nX; ++i)
-      if (fXEdges[i].first <= fYOZProfilePos && fYOZProfilePos <= fXEdges[i].second) {
+   for (Int_t i = 0, e = fXEdges.size(); i < e; ++i) {
+      if (fXEdges[i].first <= fYOZSectionPos && fYOZSectionPos <= fXEdges[i].second) {
          binX = i;
          break;
       }
+   }
    
    if (binX >= 0) {
-      binX += fBinsX.first;
-      RootGL::TGLEnableGuard blendGuard(GL_BLEND);
-      RootGL::TGLEnableGuard lineSmooth(GL_LINE_SMOOTH);
-      glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-      //Draw a grid on the profile's plane.
-      glPushAttrib(GL_LINE_BIT);//[0
-      glEnable(GL_LINE_STIPPLE);//[1
-      //Dot lines
-      const UShort_t stipple = 0x5555;
-      glLineStipple(1, stipple);
-      glColor3d(0., 0., 0.);
-      for (UInt_t i = 0; i < fZLevels.size(); ++i) {
-         glBegin(GL_LINES);
-         glVertex3d(fYOZProfilePos, fFrame[0].Y(), fZLevels[i] * fScaleZ);
-         glVertex3d(fYOZProfilePos, fFrame[2].Y(), fZLevels[i] * fScaleZ);
-         glEnd();
-      }
-      glDisable(GL_LINE_STIPPLE);//1]
-      glPopAttrib();//0]
+      binX += fCoord->GetFirstXBin();//fBinsX.first;
       glColor3d(1., 0., 0.);
       glLineWidth(3.f);
       //Draw 2d hist on the profile's plane.
-      for (Int_t i = 0, ir = fBinsY.first; i < nY; ++i, ++ir) {
+      for (UInt_t i = 0, ir = fCoord->GetFirstYBin(), e = fYEdges.size(); i < e; ++i, ++ir) {
          Double_t zMax = fHist->GetBinContent(binX, ir);
          if (!ClampZ(zMax))
             continue;
 
          glBegin(GL_LINE_LOOP);
-         glVertex3d(fYOZProfilePos, fYEdges[i].first,  fMinZ);
-         glVertex3d(fYOZProfilePos, fYEdges[i].first,   zMax);
-         glVertex3d(fYOZProfilePos, fYEdges[i].second,  zMax);
-         glVertex3d(fYOZProfilePos, fYEdges[i].second, fMinZ);
+         glVertex3d(fYOZSectionPos, fYEdges[i].first,  fMinZ);
+         glVertex3d(fYOZSectionPos, fYEdges[i].first,   zMax);
+         glVertex3d(fYOZSectionPos, fYEdges[i].second,  zMax);
+         glVertex3d(fYOZSectionPos, fYEdges[i].second, fMinZ);
          glEnd();
       }
 
@@ -1626,11 +961,19 @@ void TGLLegoPainter::DrawProfileY()
 }
 
 //______________________________________________________________________________
+void TGLLegoPainter::DrawSectionZ()const
+{
+   //Empty. No such sections for lego.
+}
+
+//______________________________________________________________________________
 void TGLLegoPainter::ProcessEvent(Int_t event, Int_t, Int_t)
 {
-   if (event == kButton1Double && (fXOZProfilePos > fFrame[0].Y() || fYOZProfilePos > fFrame[0].X())) {
-      fXOZProfilePos = fFrame[0].Y();
-      fYOZProfilePos = fFrame[0].X();
+   //Remove all sections and repaint.
+   const TGLVertex3 *frame = fBackBox.Get3DBox();
+   if (event == kButton1Double && (fXOZSectionPos > frame[0].Y() || fYOZSectionPos > frame[0].X())) {
+      fXOZSectionPos = frame[0].Y();
+      fYOZSectionPos = frame[0].X();
       gGLManager->PaintSingleObject(this);
    }
 }
@@ -1638,75 +981,46 @@ void TGLLegoPainter::ProcessEvent(Int_t event, Int_t, Int_t)
 //______________________________________________________________________________
 Bool_t TGLLegoPainter::ClampZ(Double_t &zVal)const
 {
-   if (fLogZ)
+   //Clamp z value.
+   if (fCoord->GetZLog())
       if (zVal <= 0.)
          return kFALSE;
       else 
-         zVal = TMath::Log10(zVal) * fScaleZ;
+         zVal = TMath::Log10(zVal) * fCoord->GetZScale();
    else 
-      zVal *= fScaleZ;
+      zVal *= fCoord->GetZScale();
 
-   if (zVal > fFrame[4].Z())
-      zVal = fFrame[4].Z();
-   else if (zVal < fFrame[0].Z())
-      zVal = fFrame[0].Z();
+   const TGLVertex3 *frame = fBackBox.Get3DBox();
+
+   if (zVal > frame[4].Z())
+      zVal = frame[4].Z();
+   else if (zVal < frame[0].Z())
+      zVal = frame[0].Z();
 
    return kTRUE;
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::Enable1DTexture()
+Bool_t TGLLegoPainter::PreparePalette()const
 {
-   //Enable 1D texture.
-   //Must be in TGLTexture1D class in TGLUtil.
-   glEnable(GL_TEXTURE_1D);
-   
-   if (!glIsTexture(fTextureName)) {
-      glGenTextures(1, &fTextureName);
+   //Initialize color palette.
+   UInt_t paletteSize = fHist->GetContour();
+   if (!paletteSize && !(paletteSize = gStyle->GetNumberContours()))
+      paletteSize = 20;
+
+   Bool_t rez = fPalette.GeneratePalette(paletteSize, fMinMaxVal);
+
+   if (!rez || !fHist->TestBit(TH1::kUserContour))
+      return rez;
+
+   fColorLevels.resize(paletteSize);
+
+   for (UInt_t i = 0; i < paletteSize; ++i) {
+      fColorLevels[i] = fHist->GetContourLevelPad(i);
+      ClampZ(fColorLevels[i]);
    }
 
-   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-   glBindTexture(GL_TEXTURE_1D, fTextureName);
-   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-   glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, fTexture.size() / 4, 0,
-                GL_RGBA, GL_UNSIGNED_BYTE, &fTexture[0]);
-   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-}
+   fPalette.SetContours(&fColorLevels);
 
-//______________________________________________________________________________
-void TGLLegoPainter::Disable1DTexture()
-{
-   //Disable 1D texture.
-   //Must be in TGLTexture1D class in TGLUtil.
-   glDisable(GL_TEXTURE_1D);
-   glDeleteTextures(1, &fTextureName);
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::DrawGrid(Int_t plane)const
-{
-   //Grid at XOZ or YOZ back plane
-   //Under win32 glPushAttrib does not help with GL_LINE_STIPPLE enable bit
-   glPushAttrib(GL_LINE_BIT);//[0
-   //Dot lines
-   RootGL::TGLEnableGuard stippleGuard(GL_LINE_STIPPLE);//[1-1]
-   const UShort_t stipple = 0x5555;
-   glLineStipple(1, stipple);
-   Double_t lineCaps[][4] = {
-      {fFrame[0].X(), fFrame[0].Y(), fFrame[1].X(), fFrame[1].Y()},
-      {fFrame[1].X(), fFrame[1].Y(), fFrame[2].X(), fFrame[2].Y()}, 
-      {fFrame[2].X(), fFrame[2].Y(), fFrame[3].X(), fFrame[3].Y()},
-      {fFrame[0].X(), fFrame[0].Y(), fFrame[3].X(), fFrame[3].Y()}
-   };
-
-   for (UInt_t i = 0; i < fZLevels.size(); ++i) {
-      glBegin(GL_LINES);
-      glVertex3d(lineCaps[plane][0], lineCaps[plane][1], fZLevels[i] * fScaleZ);
-      glVertex3d(lineCaps[plane][2], lineCaps[plane][3], fZLevels[i] * fScaleZ);
-      glEnd();
-   }
- 
-   glPopAttrib();//0]
+   return kTRUE;
 }

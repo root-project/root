@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.11 2006/02/23 16:44:51 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.12 2006/08/23 14:39:40 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -14,6 +14,10 @@
 
 #ifndef ROOT_TGLCamera
 #include "TGLCamera.h"
+#endif
+
+#ifndef ROOT_TArcBall
+#include "TArcBall.h"
 #endif
 
 //////////////////////////////////////////////////////////////////////////
@@ -51,6 +55,14 @@ private:
 
    static   UInt_t   fgZoomDeltaSens;
 
+   //Stuff for TGLPlotPainter.
+   Double_t       fShift;
+   Double_t       fOrthoBox[4];
+   TGLVertex3     fCenter;
+   TArcBall       fArcBall;
+   TPoint         fMousePos;
+   Bool_t         fVpChanged;
+
    // Methods
    void Init();
 
@@ -58,6 +70,7 @@ public:
 
    // TODO: Convert this so define by pair of vectors as per perspective 
    // camera
+   TGLOrthoCamera();
    TGLOrthoCamera(EType type);
    virtual ~TGLOrthoCamera();
 
@@ -71,6 +84,23 @@ public:
 
    // External scripting control
    void Configure(Double_t left, Double_t right, Double_t top, Double_t bottom);
+
+   //Stuff for TGLPlotPainter.
+   void   SetViewport(Int_t context);
+   void   SetViewVolume(const TGLVertex3 *box);
+   void   StartRotation(Int_t px, Int_t py);
+   void   RotateCamera(Int_t px, Int_t py);
+   void   StartPan(Int_t px, Int_t py);
+   void   Pan(Int_t px, Int_t py);
+   void   ZoomIn();
+   void   ZoomOut();
+   void   SetCamera()const;
+   void   Apply()const;
+   Bool_t ViewportChanged()const{return fVpChanged;}
+   Int_t  GetX()const;
+   Int_t  GetY()const;
+   Int_t  GetWidth()const;
+   Int_t  GetHeight()const;
 
    ClassDef(TGLOrthoCamera,0) // an orthogonal view camera
 };

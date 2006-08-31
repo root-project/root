@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.28 2006/02/23 16:44:51 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.29 2006/06/13 15:43:39 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -54,6 +54,23 @@ enum EManipType
    kManipScale,
    kManipRotate
 };
+
+enum EGLCoordType {
+   kGLCartesian,
+   kGLPolar,
+   kGLCylindrical,
+   kGLSpherical
+};
+
+enum EGLPlotType {
+   kGLLegoPlot,
+   kGLSurfacePlot,
+   kGLBoxPlot,
+   kGLTF3Plot,
+   kGLStackPlot,
+   kGLDefaultPlot
+};
+
 
 // TODO: Split these into own h/cxx files - too long now!
 
@@ -211,6 +228,7 @@ class TGLVector3 : public TGLVertex3
 public:
    TGLVector3();
    TGLVector3(Double_t x, Double_t y, Double_t z);
+   TGLVector3(const Double_t *src);
    TGLVector3(const TGLVector3 & other);
    virtual ~TGLVector3();
 
@@ -830,35 +848,32 @@ public:
    ClassDef(TGLUtil,0) // Wrapper class for misc GL pieces
 };
 
-namespace RootGL {
+class TGLEnableGuard {
+private:
+   Int_t fCap;
 
-   class TGLEnableGuard {
-   private:
-      Int_t fCap;
+public:
+   TGLEnableGuard(Int_t cap);
+   ~TGLEnableGuard();
 
-   public:
-      TGLEnableGuard(Int_t cap);
-      ~TGLEnableGuard();
+private:
+   TGLEnableGuard(const TGLEnableGuard &);
+   TGLEnableGuard &operator = (const TGLEnableGuard &);
+};
 
-   private:
-      TGLEnableGuard(const TGLEnableGuard &);
-      TGLEnableGuard &operator = (const TGLEnableGuard &);
-   };
+class TGLDisableGuard {
+private:
+   Int_t fCap;
 
-   class TGLDisableGuard {
-   private:
-      Int_t fCap;
+public:
+   TGLDisableGuard(Int_t cap);
+   ~TGLDisableGuard();
 
-   public:
-      TGLDisableGuard(Int_t cap);
-      ~TGLDisableGuard();
+private:
+   TGLDisableGuard(const TGLDisableGuard &);
+   TGLDisableGuard &operator = (const TGLDisableGuard &);
+};
 
-   private:
-      TGLDisableGuard(const TGLDisableGuard &);
-      TGLDisableGuard &operator = (const TGLDisableGuard &);
-   };
-
-}
 
 class TGLSelectionBuffer {
    std::vector<UChar_t> fBuffer;
@@ -877,6 +892,118 @@ private:
    TGLSelectionBuffer &operator = (const TGLSelectionBuffer &);
 
    ClassDef(TGLSelectionBuffer, 0)//Holds color buffer content for selection
-}; 
+};
+
+template<class T>
+class TGL2DArray : public std::vector<T> {
+private:
+   Int_t fRowLen;
+   Int_t fMaxRow;
+   typedef typename std::vector<T>::size_type size_type;
+
+public:
+   TGL2DArray() : fRowLen(0), fMaxRow(0){}
+   void SetMaxRow(Int_t max)
+   {
+      fMaxRow = max;
+   }
+   void SetRowLen(Int_t len)
+   {
+      fRowLen = len;
+   }
+   const T *operator [] (size_type ind)const
+   {
+      return &std::vector<T>::operator [](ind * fRowLen);
+   }
+   T *operator [] (size_type ind)
+   {
+      return &std::vector<T>::operator [] (ind * fRowLen);
+   }
+};
+
+class TGLPlotCoordinates;
+class TGLQuadric;
+class TAxis;
+
+namespace Rgl {
+
+   extern const Float_t gRedEmission[];
+   extern const Float_t gGreenEmission[];
+   extern const Float_t gBlueEmission[];
+   extern const Float_t gOrangeEmission[];
+   extern const Float_t gWhiteEmission[];
+   extern const Float_t gGrayEmission[];
+   extern const Float_t gNullEmission[];
+
+   typedef std::pair<Int_t, Int_t> BinRange_t;
+   typedef std::pair<Double_t, Double_t> Range_t;
+
+   void ObjectIDToColor(Int_t objectID);
+   Int_t ColorToObjectID(const UChar_t *color);
+   void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2, 
+                        const TGLVertex3 &v3, const TGLVertex3 &v4);
+   void DrawQuadFilled(const TGLVertex3 &v0, const TGLVertex3 &v1, 
+                       const TGLVertex3 &v2, const TGLVertex3 &v3, 
+                       const TGLVector3 &normal);
+   void DrawSmoothFace(const TGLVertex3 &v1, const TGLVertex3 &v2, 
+                       const TGLVertex3 &v3, const TGLVector3 &norm1, 
+                       const TGLVector3 &norm2, const TGLVector3 &norm3);
+   void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax, 
+                     Double_t zMin, Double_t zMax, Int_t fp);
+
+   void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin, 
+                             Double_t yMax, Double_t zMin, Double_t zMax, 
+                             Double_t tMin, Double_t tMax, Int_t front);
+
+   void DrawTrapezoidTextured(const Double_t ver[][2], Double_t zMin, Double_t zMax,
+                              Double_t tMin, Double_t tMax);
+   void DrawTrapezoidTextured(const Double_t ver[][3], Double_t texMin, Double_t texMax);
+   void DrawTrapezoidTextured2(const Double_t ver[][2], Double_t zMin, Double_t zMax,
+                               Double_t tMin, Double_t tMax);
+
+   void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin, 
+                     Double_t yMax, Double_t zMin, Double_t zMax);
+   void DrawSphere(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin, 
+                   Double_t yMax, Double_t zMin, Double_t zMax);
+   void DrawError(Double_t xMin, Double_t xMax, Double_t yMin, 
+                  Double_t yMax, Double_t zMin, Double_t zMax);
+   void DrawTrapezoid(const Double_t ver[][2], Double_t zMin, Double_t zMax, Bool_t color = kTRUE);
+   void DrawTrapezoid(const Double_t ver[][3]);
+   void DrawAxes(Int_t frontPoint, const Int_t *viewport, const TGLVertex3 *box2D, 
+                 const TGLPlotCoordinates *plotCoord, TAxis *xAxis, TAxis *yAxis, 
+                 TAxis *zAxis);
+   void SetZLevels(TAxis *zAxis, Double_t zMin, Double_t zMax, 
+                   Double_t zScale, std::vector<Double_t> &zLevels);
+
+   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3, 
+                         Double_t t1, Double_t t2, Double_t t3, const TGLVector3 &norm1, 
+                         const TGLVector3 &norm2, const TGLVector3 &norm3);
+   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3, 
+                         Double_t t1, Double_t t2, Double_t t3, Double_t z, const TGLVector3 &planeNormal);
+}
+
+class TGLLevelPalette {
+private:
+   std::vector<UChar_t>         fTexels;
+   const std::vector<Double_t> *fContours;
+   UInt_t                       fPaletteSize;
+   mutable UInt_t               fTexture;
+   Int_t                        fMaxPaletteSize;
+   Rgl::Range_t                 fZRange;
+
+public:
+   TGLLevelPalette();
+
+   Bool_t GeneratePalette(UInt_t paletteSize, const Rgl::Range_t &zRange);
+
+   void   SetContours(const std::vector<Double_t> *contours);
+
+   Bool_t EnableTexture()const;
+   void   DisableTexture()const;
+
+   Double_t       GetTexCoord(Double_t z)const;
+
+   const UChar_t *GetColour(Double_t z)const;
+};
 
 #endif // ROOT_TGLUtil

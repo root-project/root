@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.13 2006/06/06 11:49:01 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.14 2006/06/13 15:43:39 couet Exp $
 // Author: Valeriy Onuchin(TGWin32GL)/ Timur Pocheptsov (TGWin32GLManager)
 
 /*************************************************************************
@@ -623,7 +623,13 @@ void TGWin32GLManager::PanObject(TVirtualGLPainter *o, Int_t x, Int_t y)
 }
 
 //______________________________________________________________________________
-TObject *TGWin32GLManager::Select(TVirtualGLPainter *painter, Int_t px, Int_t py)
+Bool_t TGWin32GLManager::PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py)
 {
-    return painter->Select(px, py);
+    return plot->PlotSelected(px, py);
+}
+
+//______________________________________________________________________________
+char *TGWin32GLManager::GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py)
+{
+    return plot->GetPlotInfo(px, py);
 }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.13 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.14 2006/08/23 14:39:40 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -9,12 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
-#include "TGLOrthoCamera.h"
-#include "TGLUtil.h"
-#include "TGLIncludes.h"
-
+#include "TVirtualGL.h"
 #include "TMath.h"
+
+#include "TGLOrthoCamera.h"
+#include "TGLIncludes.h"
+#include "TGLUtil.h"
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -49,6 +50,20 @@ TGLOrthoCamera::TGLOrthoCamera(EType type) :
    // kZOY : Z Horz. / Y Vert (looking towards +X, Y up)
    // 
    Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
+}
+
+//______________________________________________________________________________
+TGLOrthoCamera::TGLOrthoCamera() :
+   fType(kXOY), fZoomMin(0.01), fZoomDefault(0.78), fZoomMax(1000.0), 
+   fVolume(TGLVertex3(-100.0, -100.0, -100.0), TGLVertex3(100.0, 100.0, 100.0)),
+   fZoom(1.0), fTruck(0.0, 0.0, 0.0), fShift(0.), fCenter(),
+   fVpChanged(kFALSE)
+{
+   // Construct orthographic camera.
+   fOrthoBox[0] = 1.;
+   fOrthoBox[1] = 1.;
+   fOrthoBox[2] = -1.;
+   fOrthoBox[3] = 1.;
 }
 
 //______________________________________________________________________________
@@ -309,4 +324,155 @@ void TGLOrthoCamera::Configure(Double_t left, Double_t right,
       fTruck.Y() = top - bottom;
    }
    fCacheDirty = kTRUE;
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::SetViewport(Int_t context)
+{
+   //Setup viewport, if it was changed, plus reset arcball.
+   Int_t vp[4] = {0};
+   gGLManager->ExtractViewport(context, vp);
+   if (vp[2] != Int_t(fViewport.Width()) || vp[3] != Int_t(fViewport.Height()) || 
+       vp[0] != fViewport.X() || vp[1] != fViewport.Y()) 
+   {
+      fVpChanged = kTRUE;
+      fArcBall.SetBounds(vp[2], vp[3]);
+      fViewport.Set(vp[0], vp[1], vp[2], vp[3]);
+   } else
+      fVpChanged = kFALSE;
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::SetViewVolume(const TGLVertex3 *box)
+{
+   //'box' is the TGLPlotPainter's back box's coordinates.
+   fCenter[0] = (box[0].X() + box[1].X()) / 2;
+   fCenter[1] = (box[0].Y() + box[2].Y()) / 2;
+   fCenter[2] = (box[0].Z() + box[4].Z()) / 2;
+   const Double_t maxDim = box[1].X() - box[0].X();
+   fOrthoBox[0] = maxDim;
+   fOrthoBox[1] = maxDim;
+   fOrthoBox[2] = -100 * maxDim;//100?
+   fOrthoBox[3] = 100 * maxDim;
+   fShift = maxDim * 1.5;
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::StartRotation(Int_t px, Int_t py)
+{
+   //User clicks somewhere (px, py).
+   fArcBall.Click(TPoint(px, py));
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::RotateCamera(Int_t px, Int_t py)
+{
+   //Mouse movement.
+   fArcBall.Drag(TPoint(px, py));
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::StartPan(Int_t px, Int_t py)
+{
+   //User clicks somewhere (px, py).
+   fMousePos.fX = px;
+   fMousePos.fY = fViewport.Height() - py;
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::Pan(Int_t px, Int_t py)
+{
+   //Pan camera.
+   py = fViewport.Height() - py;
+   //Extract gl matrices.
+   Double_t mv[16] = {0.};
+   glGetDoublev(GL_MODELVIEW_MATRIX, mv);
+   Double_t pr[16] = {0.};
+   glGetDoublev(GL_PROJECTION_MATRIX, pr);
+   Int_t vp[] = {0, 0, fViewport.Width(), fViewport.Height()};
+   //Adjust pan vector.
+   TGLVertex3 start, end;
+   gluUnProject(fMousePos.fX, fMousePos.fY, 1., mv, pr, vp, &start.X(), &start.Y(), &start.Z());
+   gluUnProject(px, py, 1., mv, pr, vp, &end.X(), &end.Y(), &end.Z());
+   fTruck += (start - end) /= 2.;
+   fMousePos.fX = px;
+   fMousePos.fY = py;
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::SetCamera()const
+{
+   //Viewport and projection.
+   glViewport(0, 0, fViewport.Width(), fViewport.Height());
+
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   glOrtho(
+           -fOrthoBox[0] * fZoom,
+            fOrthoBox[0] * fZoom, 
+           -fOrthoBox[1] * fZoom, 
+            fOrthoBox[1] * fZoom, 
+            fOrthoBox[2], 
+            fOrthoBox[3]
+          );
+
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::Apply()const
+{
+   //Applies rotations and translations before drawing
+   glTranslated(0., 0., -fShift);
+   glMultMatrixd(fArcBall.GetRotMatrix());
+   glRotated(45., 1., 0., 0.);
+   glRotated(-45., 0., 1., 0.);
+   glRotated(-90., 0., 1., 0.);
+   glRotated(-90., 1., 0., 0.);
+   glTranslated(-fTruck[0], -fTruck[1], -fTruck[2]);
+   glTranslated(-fCenter[0], -fCenter[1], -fCenter[2]);
+}
+
+//______________________________________________________________________________
+Int_t TGLOrthoCamera::GetX()const
+{
+   //viewport[0]
+   return fViewport.X();
+}
+
+//______________________________________________________________________________
+Int_t TGLOrthoCamera::GetY()const
+{
+   //viewport[1]
+   return fViewport.Y();
+}
+
+
+//______________________________________________________________________________
+Int_t TGLOrthoCamera::GetWidth()const
+{
+   //viewport[2]
+   return Int_t(fViewport.Width());
+}
+
+//______________________________________________________________________________
+Int_t TGLOrthoCamera::GetHeight()const
+{
+   //viewport[3]
+   return Int_t(fViewport.Height());
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::ZoomIn()
+{
+   //Zoom in.
+   fZoom /= 1.2;
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::ZoomOut()
+{
+   //Zoom out.
+   fZoom *= 1.2;
 }

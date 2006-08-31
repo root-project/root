@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.h,v 1.2 2006/06/14 08:33:23 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.h,v 1.3 2006/06/19 09:10:25 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -12,126 +12,64 @@
 #ifndef ROOT_TGLLegoPainter
 #define ROOT_TGLLegoPainter
 
-#include <utility>
-#include <vector>
-
 #ifndef ROOT_TGLPlotPainter
 #include "TGLPlotPainter.h"
 #endif
-
 #ifndef ROOT_TGLQuadric
 #include "TGLQuadric.h"
 #endif
-
-#ifndef ROOT_TArcBall
-#include "TArcBall.h"
-#endif
-
 #ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
 #endif
-
-#ifndef ROOT_TPoint
-#include "TPoint.h"
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
-class TGLAxisPainter;
+class TGLOrthoCamera;
+class TAxis;
+class TH1;
 
 /*
    TGLLegoPainter. The concrete implementation of abstract TGLPlotPainter.
 */
 
-class TGLLegoPainter : public TGLPlotPainter, public TGLPlotFrame {
+class TGLLegoPainter : public TGLPlotPainter {
 private:
    enum ELegoType {
       kColorSimple,
       kColorLevel,
       kCylindricBars
    };
-
-   enum ESelectionType {
-      kSelectionSimple,//Histogramm can be selected as a whole object.
-      kSelectionFull  //All parts are selectable.
-   };
-
-   typedef std::pair<Int_t, Int_t>       Selection_t;
-   typedef std::pair<Double_t, Double_t> CosSin_t;
-
-   TH1                  *fHist;
-   Int_t                 fGLContext;
-   EGLCoordType          fCoordType;
-
-   BinRange_t            fBinsX;
-   BinRange_t            fBinsY;
-   Range_t               fRangeX;
-   Range_t               fRangeY;
-   Range_t               fRangeZ;
-   Double_t              fMinZ;
    //Bars, cylinders or textured bars.
-   ELegoType             fLegoType;
+   mutable ELegoType     fLegoType;
+   Double_t              fMinZ;
+   Rgl::Range_t          fMinMaxVal;//For texture coordinates generation.
 
-   TGLSelectionBuffer    fSelection;
-   Bool_t                fSelectionPass;
-   Bool_t                fUpdateSelection;
-   Selection_t           fSelectedBin;
-   ESelectionType        fSelectionMode;
-   Int_t                 fSelectedPlane;   
+   std::vector<Rgl::Range_t>  fXEdges;
+   std::vector<Rgl::Range_t>  fYEdges;
 
-   TColor               *fPadColor;
-   TColor               *fFrameColor;
-
-   Double_t              fXOZProfilePos;
-   Double_t              fYOZProfilePos;
-   Bool_t                fIsMoving;
-
-   std::vector<Range_t>  fXEdges;
-   std::vector<Range_t>  fYEdges;
+   typedef std::pair<Double_t, Double_t> CosSin_t;
    std::vector<CosSin_t> fCosSinTableX;
    std::vector<CosSin_t> fCosSinTableY;
-
    TString               fBinInfo;
-   TGLAxisPainter       *fAxisPainter;
-
-   std::vector<Double_t> fZLevels;
-
-   //Temporary stuff here, must be in TGLTexture1D
-   UInt_t                fTextureName;
-   std::vector<UChar_t>  fTexture;
-   TGLQuadric            fQuadric;
-
+   mutable TGLQuadric    fQuadric;
    Bool_t                fDrawErrors;
 
-   void         Enable1DTexture();
-   void         Disable1DTexture();
+   mutable TGLLevelPalette       fPalette;
+   mutable std::vector<Double_t> fColorLevels;
 
    TGLLegoPainter(const TGLLegoPainter &);
    TGLLegoPainter &operator = (const TGLLegoPainter &);
 
 public:
-   TGLLegoPainter(TH1 *hist, TGLAxisPainter *axisPainter, Int_t ctx = -1, EGLCoordType type = kGLCartesian, 
-                  Bool_t logX = kFALSE, Bool_t logY = kFALSE, Bool_t logZ = kFALSE);
+   TGLLegoPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t ctx = -1);
 
-   //TGLPlotPainter's final-verriders
-   void         Paint();
-   void         SetGLContext(Int_t ctx);
-   char        *GetObjectInfo(Int_t px, Int_t py);
+   //TGLPlotPainter's final-overriders
+   char        *GetPlotInfo(Int_t px, Int_t py);
    Bool_t       InitGeometry();
-   void         StartRotation(Int_t px, Int_t py);
-   void         StopRotation();
-   void         Rotate(Int_t px, Int_t py);
    void         StartPan(Int_t px, Int_t py);
    void         Pan(Int_t px, Int_t py);
-   void         StopPan();
-   TObject     *Select(Int_t px, Int_t py);
-   void         ZoomIn();
-   void         ZoomOut();
-   void         SetLogX(Bool_t logX);
-   void         SetLogY(Bool_t logY);
-   void         SetLogZ(Bool_t logZ);
-   void         SetCoordType(EGLCoordType type);
    void         AddOption(const TString &stringOption);
-   void         SetPadColor(TColor *padColor);
-   void         SetFrameColor(TColor *frameColor);
    void         ProcessEvent(Int_t event, Int_t px, Int_t py);
 
 private:
@@ -140,35 +78,24 @@ private:
    Bool_t       InitGeometryPolar();
    Bool_t       InitGeometryCylindrical();
    Bool_t       InitGeometrySpherical();
+   //Overriders
+   void         InitGL()const;
+   void         DrawPlot()const;
+   void         ClearBuffers()const;
 
-   void         InitGL();
-   Selection_t  ColorToObject(const UChar_t *color);
-   void         EncodeToColor(Int_t i, Int_t j)const;
-   void         DrawPlot();
-   void         DrawLegoCartesian();
-   void         DrawLegoPolar();
-   void         DrawLegoCylindrical();
-   void         DrawLegoSpherical();
+   void         DrawLegoCartesian()const;
+   void         DrawLegoPolar()const;
+   void         DrawLegoCylindrical()const;
+   void         DrawLegoSpherical()const;
 
-   void         SetLegoColor();
-   void         ClearBuffers();
-   Bool_t       MakeGLContextCurrent()const;
+   void         SetLegoColor()const;
 
-   void         SetSelectionMode();
+   void         DrawSectionX()const;
+   void         DrawSectionY()const;
+   void         DrawSectionZ()const;
 
-   void         DrawFrame();
-   void         DrawBackPlane(Int_t plane)const;
-   void         DrawGrid(Int_t plane)const;
-   void         MoveDynamicProfile(Int_t px, Int_t py);
-   void         DrawProfiles();
-   void         DrawProfileX();
-   void         DrawProfileY();
    Bool_t       ClampZ(Double_t &zVal)const;
-
-   static const Float_t    fRedEmission[];
-   static const Float_t    fOrangeEmission[];
-   static const Float_t    fGreenEmission[];
-   static const Float_t    fNullEmission[];
+   Bool_t       PreparePalette()const;
 
    ClassDef(TGLLegoPainter, 0)//Lego painter
 };

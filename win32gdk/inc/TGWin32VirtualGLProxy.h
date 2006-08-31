@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.18 2006/03/09 11:18:31 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.19 2006/06/06 11:49:01 couet Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -149,13 +149,13 @@ public:
    void     DrawViewer(TVirtualViewer3D *vv);
    Bool_t   SelectViewer(TVirtualViewer3D *viewer, const TGLRect *selRect);
    Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox);
-   TObject *Select(TVirtualGLPainter *painter, Int_t px, Int_t py);
    void     PaintSingleObject(TVirtualGLPainter *);
    void     PanObject(TVirtualGLPainter *o, Int_t x, Int_t y);
    void     PrintViewer(TVirtualViewer3D *vv);
+   Bool_t   PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py);
+   char    *GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py);
 
    static TGLManager *ProxyObject();
    static TGLManager *RealObject();
 };
-
 #endif

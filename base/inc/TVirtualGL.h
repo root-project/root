@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.31 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.32 2006/06/06 11:49:01 couet Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -180,13 +180,17 @@ public:
 R__EXTERN TVirtualGL *(*gPtr2VirtualGL)();
 #endif
 
+//TVirtualGLPainter is the base for histogramm painters.
+
 class TVirtualGLPainter {
 public:
    virtual ~TVirtualGLPainter(){}
 
    virtual void     Paint() = 0;
    virtual void     Pan(Int_t px, Int_t py) = 0;
-   virtual TObject *Select(Int_t px, Int_t py) = 0;
+   virtual Bool_t   PlotSelected(Int_t px, Int_t py) = 0;
+   //Used by status bar in a canvas.
+   virtual char    *GetPlotInfo(Int_t px, Int_t py) = 0;
 
    ClassDef(TVirtualGLPainter, 0); // Interface for OpenGL painter
 };
@@ -241,12 +245,14 @@ public:
    //
    virtual Bool_t   SelectViewer(TVirtualViewer3D *viewer, const TGLRect *selRect) = 0;
    virtual Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox) = 0;
-   virtual TObject *Select(TVirtualGLPainter *painter, Int_t px, Int_t py) = 0;
    //
    virtual void     PaintSingleObject(TVirtualGLPainter *) = 0;
    virtual void     PanObject(TVirtualGLPainter *o, Int_t x, Int_t y) = 0;
    //EPS/PDF output
    virtual void     PrintViewer(TVirtualViewer3D *vv) = 0;
+
+   virtual Bool_t   PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py) = 0;
+   virtual char    *GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py) = 0;
 
    static TGLManager *&Instance();
 
