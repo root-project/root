@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.154 2006/07/04 17:36:37 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.155 2006/08/09 01:30:28 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1239,16 +1239,30 @@ int TUnixSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
    // file will be overwritten. Returns 0 when successful, -1 in case
    // of failure, -2 in case the file already exists and overwrite was false.
 
-   if (AccessPathName(f, kReadPermission))
-      return -1;
-
    if (!AccessPathName(t) && !overwrite)
       return -2;
 
-   int ret = Exec(Form("cp -f %s %s", f, t));
-   if (ret)
+   FILE* from = fopen(f, "r");
+   if (!from)
       return -1;
-   return 0;
+
+   FILE* to   = fopen(t, "w");
+   if (!to) return -2;
+
+   const int bufsize = 1024;
+   char buf[bufsize];
+   int ret = 0;
+   while (!ret && !feof(from)) {
+      size_t numread    = fread (buf, sizeof(char), bufsize, from);
+      size_t numwritten = fwrite(buf, sizeof(char), numread, to);
+      if (numread != numwritten)
+         ret = -3;
+   }
+   
+   fclose(from);
+   fclose(to);
+
+   return ret;
 }
 
 //______________________________________________________________________________
