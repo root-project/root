@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.8 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.9 2006/03/20 21:43:44 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 
 #include "TTreeFormula.h"
 #include "TFormLeafInfo.h"
+#include <ctype.h>
 
 namespace ROOT {
 
