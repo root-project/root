@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.cc,v 1.18 2005/06/20 15:44:53 wverkerke Exp $
+ *    File: $Id: RooHtml.cc,v 1.20 2006/08/19 00:41:56 bondioli Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,6 +27,7 @@
 #include "TClass.h"
 #include "TSystem.h"
 #include "TObjString.h"
+#include "RVersion.h"
 
 #include <ctype.h>
 #include "Riostream.h"
@@ -193,7 +194,12 @@ void RooHtml::MakeIndexNew(const char *filter)
 
    // create an index
    CreateIndex( classNames, nOK);
+
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,12,00)
+   CreateIndexByTopic( fileNames, nOK         );
+#else
    CreateIndexByTopic( fileNames, nOK, maxLen );
+#endif
 
    // free allocated memory
    delete [] classNames;

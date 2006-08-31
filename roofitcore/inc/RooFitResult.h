@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.rdl,v 1.23 2006/07/03 15:37:11 wverkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.26 2006/08/19 00:39:58 bondioli Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,11 +23,9 @@
 #include "RooFitCore/RooArgList.hh"
 
 #include "RVersion.h"
-#ifndef __CINT__
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,00,00)
 #include "TMatrixFfwd.h"
 #include "TRootIOCtor.h"
-#endif
 #else
 class TMatrixF;
 #endif
