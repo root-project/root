@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.224 2006/08/06 07:15:01 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.225 2006/08/16 16:52:08 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2602,7 +2602,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       }
       delete timer;
       //we must reset the cache
-      if (tpf) tpf->SetEntryRange(0,fTree->GetEntries());
+      if (tpf) tpf->SetEntryRange(0,0);
    }
 
    if (selector->Version() != 0 || selector->GetStatus() != -1) {

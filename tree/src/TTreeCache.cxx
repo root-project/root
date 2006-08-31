@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.8 2006/08/14 12:51:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.9 2006/08/26 16:28:32 rdm Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -100,7 +100,7 @@ TTreeCache::~TTreeCache()
    // destructor. (in general called by the TFile destructor
 
    delete [] fBranches;
-   if (fBrNames) {fBrNames->Delete(); delete fBrNames;}
+   if (fBrNames) {fBrNames->Delete(); delete fBrNames; fBrNames=0;}
 }
 
 //_____________________________________________________________________________
@@ -141,6 +141,7 @@ Bool_t TTreeCache::FillBuffer()
    // to the real one
    fEntryNext = entry + tree->GetEntries()*fBufferSizeMin/fZipBytes;
 
+   if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
 
    //check if owner has a TEventList set. If yes we optimize for this special case
@@ -280,11 +281,11 @@ void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
    fEntryMin  = emin;
    fEntryMax  = emax;
    fEntryNext  = fEntryMin + fgLearnEntries;
+   if (gDebug > 0) printf("SetEntryRange: fEntryMin=%lld, fEntryMax=%lld, fEntryNext=%lld\n",fEntryMin,fEntryMax,fEntryNext);
    fIsLearning = kTRUE;
    fNbranches  = 0;
    fZipBytes   = 0;
    if (fBrNames) fBrNames->Delete();
-   if (gDebug > 0) printf("SetEntryRange: fEntryMin=%lld, fEntryMax=%lld, fEntryNext=%lld\n",fEntryMin,fEntryMax,fEntryNext);
 
 }
 
