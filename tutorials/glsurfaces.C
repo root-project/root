@@ -57,22 +57,23 @@
    c2->Divide(2, 2);
 
    c2->cd(1);
-   TF2 *fun1 = new TF2("fun1","x * x - y * y - 1", -6., 6., -6., 6.);
-   fun1->SetFillColor(kRed);
-   fun1->Draw("glsurf2");
+   TF2 *fun1 = new TF2("fun1","1000*((sin(x)/x)*(sin(y)/y))+200", -6., 6., -6., 6.);
+   fun1->SetNpx(30);
+   fun1->SetNpy(30);
+   fun1->SetFillColor(kGreen);
+   fun1->Draw("glsurf3");
 
    c2->cd(2);
-   TF2 *fun2 = new TF2("fun2","x * x + y * y - 1", -6., 6., -6., 6.);
-   fun2->SetFillColor(kGreen);
-   fun2->Draw("glsurf1");
+   TF2 *fun2 = new TF2("fun2","cos(y)*sin(x)+cos(x)*sin(y)", -6., 6., -6., 6.);
+   fun2->Draw("glsurf1cyl");
 
    c2->cd(3);
    TF2 *fun3 = new TF2("fun3","sin(x) / x * cos(y) * y", -6., 6., -6., 6.);
-   fun3->SetFillColor(kWhite);
-   fun3->Draw("glsurf");
+   fun3->Draw("glsurfpol");
 
    c2->cd(4);
    TF3 *fun4 = new TF3("TF3 sample","sin(x * x + y * y + z * z - 4)", -2.5, 2.5, -2.5, 2.5, -2.5, 2.5);
-   fun4->SetFillColor(kMagenta);
+   Int_t colInd = TColor::GetColor(1.f, 0.5f, 0.f);
+   fun4->SetFillColor(colInd);
    fun4->Draw("gl");//tf3 option
 }
