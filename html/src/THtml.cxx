@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.117 2006/08/23 22:25:00 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.118 2006/08/30 15:22:33 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2064,9 +2064,11 @@ void THtml::ClassDescription(ofstream & out)
    for (Int_t si = 0; si < (Int_t) kNumSourceInfos; ++si)
       fSourceInfo[si].Remove(0);
 
+   fExtraLinesWithAnchor.clear();
    LocateMethodsInSource(out);
    LocateMethodsInHeaderInline(out);
    LocateMethodsInHeaderClassDecl(out);
+   fExtraLinesWithAnchor.clear();
 
    // write classFile footer
    TDatime date;
