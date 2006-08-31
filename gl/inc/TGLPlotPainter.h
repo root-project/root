@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.3 2006/06/19 09:10:25 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.4 2006/08/31 13:42:14 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -141,6 +141,7 @@ private:
 
 public:
    TGLPlotCoordinates();
+   virtual ~TGLPlotCoordinates();
 
    void         SetCoordType(EGLCoordType type);
    EGLCoordType GetCoordType()const;
