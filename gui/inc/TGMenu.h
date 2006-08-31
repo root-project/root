@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.38 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.39 2006/08/18 15:54:05 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -36,7 +36,6 @@
 #ifndef ROOT_TGWidget
 #include "TGWidget.h"
 #endif
-
 
 //--- Menu entry status mask
 
@@ -305,12 +304,17 @@ class TGMenuBar : public TGHorizontalFrame {
 friend class TGPopupMenu;
 
 protected:
-   TGMenuTitle  *fCurrent;       // current menu title
-   TList        *fTitles;        // list of menu titles
-   Cursor_t      fDefaultCursor; // right pointing cursor
-   Bool_t        fStick;         // stick mode (popup menu stays sticked on screen)
-   TList        *fTrash;         // garbage
-   Bool_t        fKeyNavigate;   // kTRUE if arrow key navigation is on
+   TGMenuTitle   *fCurrent;            // current menu title
+   TList         *fTitles;             // list of menu titles
+   Cursor_t       fDefaultCursor;      // right pointing cursor
+   Bool_t         fStick;              // stick mode (popup menu stays sticked on screen)
+   TList         *fTrash;              // garbage
+   Bool_t         fKeyNavigate;        // kTRUE if arrow key navigation is on
+   TGPopupMenu   *fMenuMore;           // extra >> menu
+   TGLayoutHints *fMenuBarMoreLayout;  // layout of the extra menu
+   Bool_t         fWithExt;            // indicates whether the >> menu is shown or not
+   TList         *fOutLayouts;         // keeps trace of layouts of hidden menus
+   TList         *fNeededSpace;        // keeps trace of space needed for hidden menus
 
    virtual void AddFrameBefore(TGFrame *f, TGLayoutHints *l = 0,
                                TGPopupMenu *before = 0);
@@ -339,10 +343,13 @@ public:
    virtual TGPopupMenu *GetPopup(const char *s);
    virtual TGPopupMenu *RemovePopup(const char *s);
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual Bool_t HandleKey(Event_t *event);
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual Bool_t  HandleButton(Event_t *event);
+   virtual Bool_t  HandleMotion(Event_t *event);
+   virtual Bool_t  HandleKey(Event_t *event);
+   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void    Layout();
+           void    PopupConnection();
+   TGFrameElement* GetLastOnLeft();
 
    ClassDef(TGMenuBar,0)  // Menu bar class
 };

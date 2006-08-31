@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.69 2006/08/10 15:36:58 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.70 2006/08/18 15:54:05 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -39,6 +39,9 @@
 #include "TList.h"
 #include "Riostream.h"
 #include "KeySymbols.h"
+
+#include "TQConnection.h"
+#include "TParameter.h"
 
 const TGGC   *TGPopupMenu::fgDefaultGC = 0;
 const TGGC   *TGPopupMenu::fgDefaultSelectedGC = 0;
@@ -99,6 +102,15 @@ TGMenuBar::TGMenuBar(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
                        kNone, kNone);
 
    fKeyNavigate = kFALSE;
+
+   fMenuMore = new TGPopupMenu(gClient->GetRoot());
+   fMenuMore->AddLabel("Hidden Menus");
+   fMenuMore->AddSeparator();
+   fMenuBarMoreLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
+
+   fWithExt = kFALSE;
+   fOutLayouts = new TList();
+   fNeededSpace = new TList();
 }
 
 //______________________________________________________________________________
@@ -131,8 +143,153 @@ TGMenuBar::~TGMenuBar()
    // delete TGMenuTitles
    if (fTitles && !MustCleanup()) fTitles->Delete();
    delete fTitles;
+
+   delete fOutLayouts;
+   fNeededSpace->Delete();
+   delete fNeededSpace;
+   delete fMenuMore;
+   delete fMenuBarMoreLayout;
 }
 
+//______________________________________________________________________________
+void TGMenuBar::Layout()
+{
+   // Clculates whether the >> menu must be shown or not and 
+   // which menu titles are hidden. 
+
+   if (GetDefaultWidth() > GetWidth()) {
+      while (!(GetDefaultWidth() < GetWidth() || 
+               GetList()->GetSize() <= 1)) {
+         TGFrameElement* entry = GetLastOnLeft();
+         TGMenuTitle* menuTitle = (TGMenuTitle*) entry->fFrame;
+         fNeededSpace->AddLast(new TParameter<Int_t>("", menuTitle->GetWidth() + 
+                                                         entry->fLayout->GetPadLeft() + 
+                                                         entry->fLayout->GetPadRight() ) );
+         fOutLayouts->AddLast( entry->fLayout );
+         fMenuMore->AddPopup( menuTitle->GetName(), menuTitle->GetMenu() );
+         menuTitle->GetMenu()->Connect("PoppedUp()", "TGMenuBar", this, "PopupConnection()");
+         RemovePopup( menuTitle->GetName() );
+      }
+   }
+
+   if (fNeededSpace->GetSize() > 0) {
+      Int_t neededWidth = ((TParameter<Int_t>*) fNeededSpace->Last())->GetVal();
+      Bool_t fit = kFALSE;
+      if (fNeededSpace->GetSize() > 1)
+         fit = GetDefaultWidth() + neededWidth + 5 < GetWidth();
+      else 
+         fit = GetDefaultWidth() + neededWidth - 7 < GetWidth();
+      while (fit) {
+         TGMenuEntry* menu = (TGMenuEntry*) fMenuMore->GetListOfEntries()->Last();
+         TGLayoutHints* layout = (TGLayoutHints*) fOutLayouts->Last();
+         ULong_t  hints = layout->GetLayoutHints();
+         TGPopupMenu* beforeMenu = 0;
+         if (hints & kLHintsRight) {
+            TGFrameElement* entry = GetLastOnLeft();
+            TGMenuTitle* beforeMenuTitle = (TGMenuTitle*) entry->fFrame;
+            beforeMenu = beforeMenuTitle->GetMenu();
+         }
+
+         menu->GetPopup()->Disconnect("PoppedUp()", this, "PopupConnection()");
+         AddPopup( menu->GetName(), menu->GetPopup(), layout, beforeMenu );
+         fOutLayouts->Remove( fOutLayouts->Last() );
+         fNeededSpace->Remove( fNeededSpace->Last() );
+         fMenuMore->DeleteEntry(menu);
+
+         if (fNeededSpace->GetSize() > 0) {
+            neededWidth = ((TParameter<Int_t>*)fNeededSpace->Last())->GetVal();
+            if (fNeededSpace->GetSize() > 1)
+               fit = GetDefaultWidth() + neededWidth + 5 < GetWidth();
+            else 
+               fit = GetDefaultWidth() + neededWidth - 7 < GetWidth();
+         } else 
+            fit = kFALSE;
+      }
+   }
+
+   if (fNeededSpace->GetSize() > 0) {
+      if (!fWithExt) {
+         AddPopup(">>", fMenuMore, fMenuBarMoreLayout,
+                  ((TGMenuTitle*)((TGFrameElement*)GetList()->First())->fFrame)->GetMenu());
+         fWithExt = kTRUE;
+      }
+   } else {
+      RemovePopup(">>");
+      fWithExt = kFALSE;
+   }
+
+   MapSubwindows();
+   TGHorizontalFrame::Layout();
+}
+
+//______________________________________________________________________________
+TGFrameElement* TGMenuBar::GetLastOnLeft()
+{
+   // Returns the last visible menu title on the left of the '>>' 
+   // in the menu bar.
+
+   TIter next(GetList());
+   while (TGFrameElement *entry = (TGFrameElement*) next()) {
+   
+      TGMenuTitle* menuTitle = (TGMenuTitle*) entry->fFrame;
+      TGLayoutHints* tmpLayout = (TGLayoutHints*) entry->fLayout;
+      ULong_t  hints = tmpLayout->GetLayoutHints();
+
+      if (hints & kLHintsRight && menuTitle->GetMenu() != fMenuMore) {
+         return entry;
+      }
+   }
+
+   return ((TGFrameElement*)GetList()->Last());
+}
+
+//______________________________________________________________________________
+void TGMenuBar::PopupConnection()
+{
+   // Connects the corresponding cascaded menu to the proper slots,
+   // according to the highlighted menu entry in '>>' menu.
+
+   // Disconnect all previous signals
+   TList* slots = fMenuMore->GetListOfSignals();
+   TIter next (slots);
+   while (TList* connlist = (TList*) next()) {
+   
+      const char* signal_name = connlist->GetName();
+      TIter next2(connlist);
+      while (TQConnection* conn = (TQConnection*) next2()) {
+         const char* slot_name = conn->GetName();
+         void* receiver = conn->GetReceiver();
+         fMenuMore->Disconnect(signal_name, receiver, slot_name);
+      }
+   }
+   fMenuMore->fMsgWindow = 0;
+
+   // Check wheter the current entry is a menu or not (just in case)
+   TGMenuEntry* currentEntry = fMenuMore->GetCurrent();
+   if (currentEntry->GetType() != kMenuPopup) return;
+
+   // Connect the corresponding active signals to the >> menu
+   TGPopupMenu* currentMenu = currentEntry->GetPopup();
+
+   slots = currentMenu->GetListOfSignals();
+   TIter next3 (slots);
+   while (TList* connlist = (TList*) next3()) {
+   
+      const char* signal_name = connlist->GetName();
+      if (strcmp(signal_name, "Activated(int)") == 0) {
+         TIter next2(connlist);
+         while (TQConnection* conn = (TQConnection*) next2()) {
+
+            const char* slot_name = conn->GetName();
+            const char* class_name = conn->GetClassName();
+            void* receiver = conn->GetReceiver();
+            fMenuMore->Connect(signal_name, class_name, receiver, slot_name);
+         }
+      }
+   }
+
+   fMenuMore->fMsgWindow = currentMenu->fMsgWindow;
+}
 
 //______________________________________________________________________________
 void TGMenuBar::BindKeys(Bool_t on)
