@@ -82,15 +82,21 @@ ifeq ($(MACOSX_MINOR),4)
 ifeq (g95,$(findstring g95,$(ROOTBUILD)))
 F77           = g95
 F77LIBS       = -L`$(F77) -print-search-dirs | awk '/^install:/{print $$2}'` \
-                -lf95 -L$(FINK_DIR)/lib -lg2c
+                -lf95
 else
 F77           = gfortran
-F77LIBS       = -L$(FINK_DIR)/lib/gcc4/lib -lgfortran -lgfortranbegin \
-                -L$(FINK_DIR)/lib -lg2c
+F77LIBS       = -L$(FINK_DIR)/lib/gcc4/lib -lgfortran -lgfortranbegin
 endif
 else
 F77           = g77
-F77LIBS       = -lg2c
+F77LIBS       =
+endif
+
+# We add libg2c only in case of ppc because then we probably have cernlib
+# compiled with g77. In case of Intel Mac it should be compiled with the
+# same fortran we use.
+ifeq ($(MACOSX_CPU),powerpc)
+F77LIBS += -L$(FINK_DIR)/lib -lg2c
 endif
 
 ifeq ($(shell find $(FINK_DIR)/bin -name $(F77)),)

@@ -475,7 +475,7 @@ LDFLAGS       = -O2 -bind_at_load
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
 DllSuf        = dylib
-SOFLAGS       = -dynamiclib -single_module -undefined dynamic_lookup
+SOFLAGS       = -m64 -dynamiclib -single_module -undefined dynamic_lookup
 endif
 
 ifeq ($(ARCH),macosxxlc)

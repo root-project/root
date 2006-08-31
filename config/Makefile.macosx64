@@ -51,16 +51,16 @@ ifeq ($(MACOSX_MINOR),5)
 MACOSX_MINOR  = 4
 endif
 ifeq ($(MACOSX_MINOR),4)
-SOFLAGS       = $(OPT) -dynamiclib -single_module \
+SOFLAGS       = $(OPT) -m64 -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
 FORCELINK     = no
 NEEDFINK      = no
 else
 ifeq ($(MACOSX_MINOR),3)
-SOFLAGS       = $(OPT) -dynamiclib -single_module \
+SOFLAGS       = $(OPT) -m64 -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
 else
-SOFLAGS       = $(OPT) -dynamiclib -single_module \
+SOFLAGS       = $(OPT) -m64 -dynamiclib -single_module \
                 -undefined suppress -install_name $(LIBDIR)/
 endif
 endif
@@ -77,15 +77,22 @@ ifeq ($(MACOSX_MINOR),4)
 ifeq (g95,$(findstring g95,$(ROOTBUILD)))
 F77           = g95
 F77LIBS       = -L`$(F77) -print-search-dirs | awk '/^install:/{print $$2}'` \
-                -lf95 -L$(FINK_DIR)/lib -lg2c
+                -lf95
 else
 F77           = gfortran
-F77LIBS       = -L$(FINK_DIR)/lib/gcc4/lib -lgfortran -lgfortranbegin \
-                -L$(FINK_DIR)/lib -lg2c
+F77LIBS       = -L$(FINK_DIR)/lib/gcc4/lib -lgfortran -lgfortranbegin
 endif
 else
 F77           = g77
-F77LIBS       = -lg2c
+F77LIBS       =
+endif
+F77FLAGS      = -m64
+
+# We add libg2c only in case of ppc because then we probably have cernlib
+# compiled with g77. In case of Intel Mac it should be compiled with the
+# same fortran we use.
+ifeq ($(MACOSX_CPU),powerpc) 
+F77LIBS += -L$(FINK_DIR)/lib -lg2c
 endif
 
 ifeq ($(shell find $(FINK_DIR)/bin -name $(F77)),)
