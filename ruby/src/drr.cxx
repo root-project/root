@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.4 2004/06/03 13:07:19 brun Exp $
+// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.5 2006/03/20 22:44:19 brun Exp $
 // Author:  Elias Athanasopoulos, May 2004
 
 /*  dynamic ruby-root
@@ -40,6 +40,11 @@
 #if defined(linux) || defined(sun)
   #include "dlfcn.h"
 #endif
+
+#if ((R__RUBY_MAJOR<1) || (R__RUBY_MAJOR==1)&&(R__RUBY_MINOR<=9))
+#  define rb_frame_this_func rb_frame_last_func
+#endif
+
 
 VALUE cTObject;
 
@@ -174,7 +179,8 @@ void * rr_parse_void (VALUE o)
             RRGRAB(o, void *, res);
             return res;
         default:
-            rb_fatal ("Failed convertion of %d to void *.\n", CLASS_OF(o));
+            rb_fatal ("Failed convertion of %d to void *.\n",
+                      STR2CSTR(CLASS_OF(o)));
             break;
       }
 
@@ -808,7 +814,7 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
     
     /* Grab class, method name and instance pointer.  */
     rklass = rb_class_of (self);
-    char *methname = rb_id2name (rb_frame_last_func());
+    char *methname = rb_id2name (rb_frame_this_func());
     TObject *caller = drr_grab_object (self);
     
     rb_scan_args (argc, argv, "0*", &inargs);
