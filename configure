@@ -699,6 +699,7 @@ guess_architecture () {
         sunos:sun*:6*)         arch=solarisCC5      ;;
         sunos:sun*:5*)         arch=solarisCC5      ;;
         sunos:sun*:4*)         arch=solaris         ;;
+        sunos:i86pc:5*)        arch=solarisCC5      ;;
         cygwin_*:*86:*)        arch=win32           ;;
         cygwin_*:pentium:*)    arch=win32           ;;
         cygwin_*:ia64)         arch=win32           ;;
