@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.185 2006/08/26 16:27:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.186 2006/08/28 13:34:11 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -462,9 +462,9 @@ void TFile::Init(Bool_t create)
 
       if (fIsArchive) return;
 
-      TUrl furl(((fRealName != "") ? fRealName.Data() : GetName()), kTRUE);
-      furl.SetAnchor(fArchive->GetMemberName());
-      SetName(furl.GetUrl());
+      // Make sure the anchor is in the name
+      if (!strchr(GetName(),'#'))
+         SetName(Form("%s#%s", GetName(), fArchive->GetMemberName()));
 
       if (fArchive->SetCurrentMember() != -1)
          fArchiveOffset = fArchive->GetMemberFilePosition();
