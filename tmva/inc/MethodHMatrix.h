@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: MethodHMatrix.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $    
-// Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodHMatrix.h,v 1.2 2006/05/23 13:03:15 brun Exp $
+// Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -21,9 +21,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany                                                *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -39,7 +39,7 @@
 //                                                                      //
 // MethodHMatrix                                                        //
 //                                                                      //
-// H-Matrix method, which is implemented as a simple comparison of      // 
+// H-Matrix method, which is implemented as a simple comparison of      //
 // chi-squared estimators for signal and background, taking into        //
 // account the linear correlations between the input variables          //
 //                                                                      //
@@ -61,24 +61,24 @@ namespace TMVA {
 
    public:
 
-      MethodHMatrix( TString jobName, 
-                     vector<TString>* theVariables, 
-                     TTree* theTree = 0, 
+      MethodHMatrix( TString jobName,
+                     std::vector<TString>* theVariables,
+                     TTree* theTree = 0,
                      TString theOption = "",
                      TDirectory* theTargetDir = 0 );
 
-      MethodHMatrix( vector<TString> *theVariables, 
-                     TString theWeightFile,  
+      MethodHMatrix( std::vector<TString> *theVariables,
+                     TString theWeightFile,
                      TDirectory* theTargetDir = NULL );
 
       virtual ~MethodHMatrix( void );
-    
+
       // training method
       virtual void Train( void );
 
       // write weights to file
       virtual void WriteWeightsToFile( void );
-  
+
       // read weights from file
       virtual void ReadWeightsFromFile( void );
 
@@ -95,7 +95,7 @@ namespace TMVA {
       // returns chi2 estimator for given type (signal or background)
       Double_t GetChi2( Event *e, Type ) const;
 
-      // arrays of input evt vs. variable 
+      // arrays of input evt vs. variable
       TMatrixD* fInvHMatrixS; // inverse H-matrix (signal)
       TMatrixD* fInvHMatrixB; // inverse H-matrix (background)
       TVectorD* fVecMeanS;    // vector of mean values (signal)
@@ -104,10 +104,10 @@ namespace TMVA {
       Bool_t    fNormaliseInputVars; // normalise input variables
 
       // default initialisation method called by all constructors
-      void InitHMatrix( void ); 
+      void InitHMatrix( void );
 
       ClassDef(MethodHMatrix,0) // H-Matrix method, a simple comparison of chi-squared estimators for signal and background
-         }; 
+   };
 
 } // namespace TMVA
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.197 2006/06/28 10:03:14 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.198 2006/07/13 05:32:56 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -121,11 +121,10 @@ public:
 
 //______________________________________________________________________________
 TTreeFormula::TTreeFormula(): TFormula(), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
-                              fDimensionSetup(0),
-                              fDidBooleanOptimization(kFALSE)
+   fDidBooleanOptimization(kFALSE), fDimensionSetup(0)
+
 {
-//*-*-*-*-*-*-*-*-*-*-*Tree Formula default constructor*-*-*-*-*-*-*-*-*-*
-//*-*                  ================================
+   // Tree Formula default constructor
 
    fTree       = 0;
    fLookupType = 0;
@@ -152,7 +151,7 @@ TTreeFormula::TTreeFormula(): TFormula(), fQuickLoad(kFALSE), fNeedLoading(kTRUE
 //______________________________________________________________________________
 TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    :TFormula(), fTree(tree), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
-    fDimensionSetup(0), fDidBooleanOptimization(kFALSE)
+    fDidBooleanOptimization(kFALSE), fDimensionSetup(0)
 {
    // Normal TTree Formula Constuctor
 
@@ -163,12 +162,13 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
 TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree,
                            const std::vector<std::string>& aliases)
    :TFormula(), fTree(tree), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
-    fDimensionSetup(0), fAliasesUsed(aliases), fDidBooleanOptimization(kFALSE)
+    fDidBooleanOptimization(kFALSE), fDimensionSetup(0), fAliasesUsed(aliases)
 {
    // Constructor used during the expansion of an alias
    Init(name,expression);
 }
 
+//______________________________________________________________________________
 void TTreeFormula::Init(const char*name, const char* expression)
 {
    // Initialiation called from the constructors.
@@ -1184,7 +1184,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                TClass * inside_cl = clones->GetClass();
                if (1 || inside_cl) cl = inside_cl;
 
-            } 
+            }
             else if (!useCollectionObject && cl && cl->GetCollectionProxy() ) {
 
                // We are NEVER (for now!) interested in the ClonesArray object but only
@@ -1272,7 +1272,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                      break;
                   case TMethodCall::kOther:
                      {
-                        TString return_type = 
+                        TString return_type =
                           gInterpreter->TypeName(method->GetMethod()->GetReturnTypeName());
                         leafinfo = new TFormLeafInfoMethod(cl,method);
                         cl = (return_type == "void") ? 0 : gROOT->GetClass(return_type.Data());
@@ -1742,7 +1742,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                if ( !needClass && mustderef )   {
                   maininfo->SetBranch(leaf->GetBranch());
                   char *ptr = (char*)maininfo->GetValuePointer(leaf,0);
-                  TFormLeafInfoReference* refInfo = 0; 
+                  TFormLeafInfoReference* refInfo = 0;
                   if ( !maininfo->IsReference() )  {
                      for( TFormLeafInfo* inf = maininfo->fNext; inf; inf = inf->fNext )  {
                         if ( inf->IsReference() )  {
@@ -3295,15 +3295,15 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             Double_t result = leaf->GetValue(real_instance);
             return result;
          }
-         case kMethod:     { 
-            TT_EVAL_INIT; 
+         case kMethod:     {
+            TT_EVAL_INIT;
             ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->SetBranch(leaf->GetBranch());
             return GetValueFromMethod(0,leaf);
          }
-         case kDataMember: { 
-            TT_EVAL_INIT; 
+         case kDataMember: {
+            TT_EVAL_INIT;
             ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->SetBranch(leaf->GetBranch());
-            return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValue(leaf,real_instance); 
+            return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValue(leaf,real_instance);
          }
          case kIndexOfEntry: return fTree->GetReadEntry();
          case kEntries:      return fTree->GetEntries();

@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: Reader.h,v 1.2 2006/05/23 13:03:15 brun Exp $ 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: Reader.h,v 1.3 2006/05/31 14:01:33 rdm Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -27,7 +27,7 @@
  * (http://tmva.sourceforge.net/license.txt)                                      *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Reader.h,v 1.2 2006/05/23 13:03:15 brun Exp $        
+ * $Id: Reader.h,v 1.3 2006/05/31 14:01:33 rdm Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Reader
@@ -59,43 +59,44 @@
 #include <vector>
 #include <string>
 #include <math.h>
-#include "Riostream.h"
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
 
-using namespace std;
 
 namespace TMVA {
 
    class Reader : public TObject {
 
    public:
-      
+
       // STL types
-      Reader ( vector<string>&  varNames, Bool_t verbose = 0 );
+      Reader ( std::vector<string>&  varNames, Bool_t verbose = 0 );
       Reader ( const string     varNames, Bool_t verbose = 0 );  // format: "var1:var2:..."
 
       // Root types
-      Reader ( vector<TString>& varNames, Bool_t verbose = 0 );
+      Reader ( std::vector<TString>& varNames, Bool_t verbose = 0 );
       Reader ( const TString    varNames, Bool_t verbose = 0 );  // format: "var1:var2:..."
 
       virtual ~Reader( void );
-  
-      Bool_t   BookMVA    ( Types::MVA method, TString filename );
-      Double_t EvaluateMVA( vector<Double_t>&, Types::MVA method, Double_t aux = 0 );    
 
-      // accessors 
+      Bool_t   BookMVA    ( Types::MVA method, TString filename );
+      Double_t EvaluateMVA( std::vector<Double_t>&, Types::MVA method, Double_t aux = 0 );
+
+      // accessors
       Bool_t   Verbose( void ) const  { return fVerbose; }
       void     SetVerbose( Bool_t v ) { fVerbose = v; }
-  
+
    private:
-  
+
       // Init Reader class
       void Init( void );
 
       // vector of input variables
-      vector<TString>* fInputVars;
+      std::vector<TString>* fInputVars;
 
       // vector of methods
-      vector<MethodBase*> fMethods;
+      std::vector<MethodBase*> fMethods;
 
       // Decode Constructor string (or TString) and fill variable name vector
       void DecodeVarNames( const string varNames );
@@ -104,7 +105,7 @@ namespace TMVA {
       Bool_t fVerbose;
 
       ClassDef(Reader,0) // Interpret the trained MVAs in an analysis context
-         };
+   };
 
 }
 

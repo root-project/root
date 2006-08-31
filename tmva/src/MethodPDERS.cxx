@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodPDERS.cxx,v 1.6 2006/05/23 09:53:10 stelzer Exp $
+// @(#)root/tmva $Id: MethodPDERS.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -36,33 +36,33 @@
 /*
   This is a generalization of the above Likelihood methods to <i>N</i><sub>var</sub>
   dimensions, where <i>N</i><sub>var</sub> is the number of input variables
-  used in the MVA. If the multi-dimensional probability density functions 
-  (PDFs) for signal and background were known, this method contains the entire 
-  physical information, and is therefore optimal. Usually, kernel estimation 
-  methods are used to approximate the PDFs using the events from the 
+  used in the MVA. If the multi-dimensional probability density functions
+  (PDFs) for signal and background were known, this method contains the entire
+  physical information, and is therefore optimal. Usually, kernel estimation
+  methods are used to approximate the PDFs using the events from the
   training sample. <br><p></p>
-   
+
   A very simple probability density estimator (PDE) has been suggested
   in <a href="http://arxiv.org/abs/hep-ex/0211019">hep-ex/0211019</a>. The
-  PDE for a given test event is obtained from counting the (normalized) 
-  number of signal and background (training) events that occur in the 
-  "vicinity" of the test event. The volume that describes "vicinity" is 
-  user-defined. A <a href="http://arxiv.org/abs/hep-ex/0211019">search 
-  method based on binary-trees</a> is used to effectively reduce the 
+  PDE for a given test event is obtained from counting the (normalized)
+  number of signal and background (training) events that occur in the
+  "vicinity" of the test event. The volume that describes "vicinity" is
+  user-defined. A <a href="http://arxiv.org/abs/hep-ex/0211019">search
+  method based on binary-trees</a> is used to effectively reduce the
   selection time for the range search. Three different volume definitions
   are optional: <br><p></p>
   <ul>
   <li><u>MinMax:</u>
-  the volume is defined in each dimension with respect 
+  the volume is defined in each dimension with respect
   to the full variable range found in the training sample. </li>
   <li><u>RMS:</u>
-  the volume is defined in each dimensions with respect 
+  the volume is defined in each dimensions with respect
   to the RMS estimated from the training sample. </li>
   <li><u>Adaptive:</u>
-  a volume element is defined in each dimensions with 
-  respect to the RMS estimated from the training sample. The overall 
-  scale of the volume element is then determined for each event so 
-  that the total number of events confined in the volume be within 
+  a volume element is defined in each dimensions with
+  respect to the RMS estimated from the training sample. The overall
+  scale of the volume element is then determined for each event so
+  that the total number of events confined in the volume be within
   a user-defined range.</li>
   </ul><p></p>
   The adaptive range search is used by default.
@@ -76,6 +76,7 @@
 #include "TFile.h"
 #include "TObjString.h"
 #include "TMath.h"
+#include "Riostream.h"
 #include <stdexcept>
 
 namespace TMVA {
@@ -95,13 +96,13 @@ TMVA::MethodPDERS::MethodPDERS( TString jobName, vector<TString>* theVariables,
    // standard constructor for the PDERS method
    // format and syntax of option string: "VolumeRangeMode:options"
    // where:
-   //    VolumeRangeMode - all methods defined in private enum "VolumeRangeMode" 
+   //    VolumeRangeMode - all methods defined in private enum "VolumeRangeMode"
    //    options         - deltaFrac in case of VolumeRangeMode=MinMax/RMS
    //                    - nEventsMin/Max, maxVIterations, scale for VolumeRangeMode=Adaptive
    //
    // MethodPDERS also has an implementation of a simple kernel estimater
    // (adaptive Gaussian); at present this cannot yet be switched on via options;
-   // you must change it in the source file via the flag: 
+   // you must change it in the source file via the flag:
    // TMVA_MethodPDERS_UseKernelEstimate
 
    InitPDERS();
@@ -322,7 +323,7 @@ Double_t TMVA::MethodPDERS::GetVolumeContentForRoot( Double_t scale )
 //_______________________________________________________________________
 Float_t TMVA::MethodPDERS::RScalc( TMVA::Event *e )
 {
-   // computes event weight by counting number of signal and background 
+   // computes event weight by counting number of signal and background
    // events (of reference sample) that are found within given volume
    // defined by the event
 

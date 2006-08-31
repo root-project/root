@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: MethodTMlpANN.h,v 1.7 2006/05/23 09:53:10 stelzer Exp $ 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodTMlpANN.h,v 1.2 2006/05/23 13:03:15 brun Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -19,9 +19,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -29,7 +29,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodTMlpANN.h,v 1.7 2006/05/23 09:53:10 stelzer Exp $ 
+ * $Id: MethodTMlpANN.h,v 1.2 2006/05/23 13:03:15 brun Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodTMlpANN
@@ -40,7 +40,7 @@
 // MethodTMlpANN                                                        //
 //                                                                      //
 // Implementation of interface for Root-integrated artificial neural    //
-// network: TMultiLayerPerceptron                                       //  
+// network: TMultiLayerPerceptron                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -54,27 +54,27 @@
 namespace TMVA {
 
    class MethodTMlpANN : public MethodBase, MethodANNBase {
-  
+
    public:
-  
-      MethodTMlpANN( TString jobName, 
-                     vector<TString>* theVariables,  
-                     TTree* theTree = 0, 
-                     TString theOption = "3000:N-1:N-2", 
+
+      MethodTMlpANN( TString jobName,
+                     std::vector<TString>* theVariables,
+                     TTree* theTree = 0,
+                     TString theOption = "3000:N-1:N-2",
                      TDirectory* theTargetDir = 0 );
 
-      MethodTMlpANN( vector<TString> *theVariables, 
-                     TString theWeightFile,  
+      MethodTMlpANN( std::vector<TString> *theVariables,
+                     TString theWeightFile,
                      TDirectory* theTargetDir = NULL );
 
       virtual ~MethodTMlpANN( void );
-    
+
       // training method
       virtual void Train( void );
 
       // write weights to file
       virtual void WriteWeightsToFile( void );
-  
+
       // read weights from file
       virtual void ReadWeightsFromFile( void );
 
@@ -83,7 +83,7 @@ namespace TMVA {
 
       // calculate the MVA value ...
       // - here it is just a dummy, as it is done in the overwritten
-      // - PrepareEvaluationtree... ugly but necessary due to the strucure 
+      // - PrepareEvaluationtree... ugly but necessary due to the strucure
       //   of TMultiLayerPercepton in ROOT grr... :-(
       virtual Double_t GetMvaValue( Event * /*e*/ ) { return 0; }
 
@@ -103,11 +103,11 @@ namespace TMVA {
       TString fHiddenLayer; // string containig the hidden layer structure
       Int_t   fNcycles;     // number of training cylcles
       TTree*  fTestTree;    // TestTree
-  
+
       void InitTMlpANN( void );
 
       ClassDef(MethodTMlpANN,0) // Implementation of interface for TMultiLayerPerceptron
-         };
+   };
 
 } // namespace TMVA
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.113 2006/08/16 05:46:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.114 2006/08/17 22:46:41 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -740,7 +740,7 @@ TBranch* TBranch::FindBranch(const char* name)
    // We allow the user to pass only the last dotted component of the name.
    std::string longnm(GetName());
    std::size_t dim = longnm.find_first_of("[");
-   if (dim != string::npos) {
+   if (dim != std::string::npos) {
       longnm.erase(dim);
    }
    if (longnm[longnm.size()-1] != '.') {
@@ -752,7 +752,7 @@ TBranch* TBranch::FindBranch(const char* name)
    while ((branch = (TBranch*) next())) {
       std::string brname(branch->GetName());
       std::size_t dim = brname.find_first_of("[");
-      if (dim != string::npos) {
+      if (dim != std::string::npos) {
          brname.erase(dim);
       }
       if (name == brname) {

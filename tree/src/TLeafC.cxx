@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.18 2006/05/12 17:00:30 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.19 2006/06/02 15:34:12 pcanal Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 
 #include "TLeafC.h"
 #include "TBranch.h"
+#include "Riostream.h"
 
 ClassImp(TLeafC)
 
@@ -109,7 +110,7 @@ void TLeafC::Import(TClonesArray *list, Int_t n)
 void TLeafC::PrintValue(Int_t) const
 {
    // Prints leaf value.
-   
+
    char *value = (char*)GetValuePointer();
    printf("%s",value);
 }
@@ -152,7 +153,7 @@ void TLeafC::ReadValue(ifstream &s)
 
    string temp;
    s >> temp;
-   if ( TestBit(kNewValue) && 
+   if ( TestBit(kNewValue) &&
         (temp.size()+1 > ((UInt_t)fNdata))) {
       // Grow buffer if needed and we created the buffer.
       fNdata = temp.size() + 1;

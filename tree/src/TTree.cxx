@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.298 2006/08/17 22:46:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.299 2006/08/18 18:46:35 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3080,7 +3080,7 @@ TBranch* TTree::FindBranch(const char* branchname)
    while ((branch = (TBranch*) next())) {
       std::string name(branch->GetName());
       std::size_t dim = name.find_first_of("[");
-      if (dim != string::npos) {
+      if (dim != std::string::npos) {
          name.erase(dim);
       }
       if (branchname == name) {
@@ -3841,7 +3841,7 @@ TLeaf* TTree::GetLeaf(const char* aname)
 
    //second pass in the list of friends when the leaf name
    //is prefixed by the tree name
-   TString strippedArg; 
+   TString strippedArg;
    next.Reset();
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();

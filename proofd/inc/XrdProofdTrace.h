@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdTrace.h,v 1.2 2006/03/01 15:46:33 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdTrace.h,v 1.3 2006/04/18 10:34:35 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -38,7 +38,9 @@
 //#define NODEBUG
 #ifndef NODEBUG
 
-#include <Riostream.h>
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
 #include "XrdOuc/XrdOucTrace.hh"
 
 #define PRINT(x) \

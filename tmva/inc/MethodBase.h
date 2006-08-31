@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: MethodBase.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodBase.h,v 1.2 2006/05/23 13:03:15 brun Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,9 +16,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -38,7 +38,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
 
 #ifndef ROOT_TMVA_PDF
 #include "TMVA/PDF.h"
@@ -64,15 +66,15 @@ namespace TMVA {
 
       // default constructur
       MethodBase( TString jobName,
-                  vector<TString>* theVariables, 
-                  TTree* theTree = 0, 
-                  TString theOption = "", 
+                  std::vector<TString>* theVariables,
+                  TTree* theTree = 0,
+                  TString theOption = "",
                   TDirectory* theBaseDir = 0 );
 
-      // constructor used for Testing + Application of the MVA, only (no training), 
+      // constructor used for Testing + Application of the MVA, only (no training),
       // using given weight file
-      MethodBase( vector<TString> *theVariables, 
-                  TString weightFile, 
+      MethodBase( std::vector<TString> *theVariables,
+                  TString weightFile,
                   TDirectory* theBaseDir = NULL  );
 
       // default destructur
@@ -83,7 +85,7 @@ namespace TMVA {
 
       // write weights to file
       virtual void WriteWeightsToFile( void ) = 0;
-  
+
       // read weights from file
       virtual void ReadWeightsFromFile( void ) = 0;
 
@@ -97,8 +99,8 @@ namespace TMVA {
       virtual void TestInit(TTree* theTestTree);
 
       // indivudual initialistion for testing of each method
-      // overload this one for individual initialisation of the testing, 
-      // it is then called automatically within the global "TestInit" 
+      // overload this one for individual initialisation of the testing,
+      // it is then called automatically within the global "TestInit"
       virtual void TestInitLocal(TTree *  /*testTree*/) {
          return ;
       }
@@ -120,13 +122,13 @@ namespace TMVA {
       void    SetJobName   ( TString jobName )    { fJobName = jobName; }
 
       TString GetWeightFileExtension( void ) const            { return fFileExtension; }
-      void    SetWeightFileExtension( TString fileExtension ) { fFileExtension = fileExtension; } 
+      void    SetWeightFileExtension( TString fileExtension ) { fFileExtension = fileExtension; }
 
       TString GetWeightFileDir( void ) const      { return fFileDir; }
       void    SetWeightFileDir( TString fileDir );
 
-      vector<TString>*  GetInputVars( void ) const { return fInputVars; }
-      void              SetInputVars( vector<TString>* theInputVars ) { fInputVars = theInputVars; }
+      std::vector<TString>*  GetInputVars( void ) const { return fInputVars; }
+      void                   SetInputVars( std::vector<TString>* theInputVars ) { fInputVars = theInputVars; }
 
       void     SetWeightFileName( void );
       void     SetWeightFileName( TString );
@@ -137,11 +139,11 @@ namespace TMVA {
 
       // variables (and private menber functions) for the Evaluation:
       // get the effiency. It fills a histogram for efficiency/vs/bkg
-      // and returns the one value fo the efficiency demanded for 
+      // and returns the one value fo the efficiency demanded for
       // in the TString argument. (Watch the string format)
       virtual Double_t  GetEfficiency   ( TString , TTree *);
       virtual Double_t  GetSignificance ( void );
-      virtual Double_t  GetOptimalSignificance( Double_t SignalEvents, Double_t BackgroundEvents, 
+      virtual Double_t  GetOptimalSignificance( Double_t SignalEvents, Double_t BackgroundEvents,
                                                 Double_t & optimal_significance_value  ) const;
       virtual Double_t  GetSeparation   ( void );
       virtual Double_t  GetmuTransform  ( TTree * );
@@ -163,8 +165,8 @@ namespace TMVA {
       // main normalization method is in Tools
       Double_t Norm       ( Int_t ivar,  Double_t x ) const;
       Double_t Norm       ( TString var, Double_t x ) const;
-  
-      // member functions for the "evaluation" 
+
+      // member functions for the "evaluation"
       // accessors
       Bool_t   IsOK     ( void  )  const { return fIsOK; }
 
@@ -181,7 +183,7 @@ namespace TMVA {
    public:
 
       // static pointer to this object
-      static MethodBase* GetThisBase( void ) { return fgThisBase; }  
+      static MethodBase* GetThisBase( void ) { return fgThisBase; }
 
    protected:
 
@@ -196,12 +198,12 @@ namespace TMVA {
       TTree*           fTrainingTree;   // training tree
       TString          fTestvar;        // variable used in evauation, etc (mostly the MVA)
       TString          fTestvarPrefix;  // 'MVA_' prefix of MVA variable
-      vector<TString>* fInputVars;      // vector of input variables used in MVA
+      std::vector<TString>* fInputVars; // vector of input variables used in MVA
       TString          fOptions;        // options string
       TDirectory*      fBaseDir;        // base director, needed to know where to jump back from localDir
       TDirectory*      fLocalTDir;      // local directory, used to save monitoring histograms
 
-      // series of sanity checks on input tree (eg, do all the variables really 
+      // series of sanity checks on input tree (eg, do all the variables really
       // exist in tree, etc)
       Bool_t CheckSanity( TTree* theTree = 0 );
 
@@ -218,7 +220,7 @@ namespace TMVA {
       Bool_t    fIsOK;                  // status of sanity checks
       TH1*      fHistS_plotbin;         // MVA plots used for graphics representation (signal)
       TH1*      fHistB_plotbin;         // MVA plots used for graphics representation (background)
-      TH1*      fHistS_highbin;         // MVA plots used for efficiency calculations (signal)    
+      TH1*      fHistS_highbin;         // MVA plots used for efficiency calculations (signal)
       TH1*      fHistB_highbin;              // MVA plots used for efficiency calculations (background)
       TH1*      fEffS;                  // efficiency plot (signal)
       TH1*      fEffB;                  // efficiency plot (background)
@@ -250,7 +252,7 @@ namespace TMVA {
       Double_t  fXmin;                  // minimum (signal and background)
       Double_t  fXmax;                  // maximum (signal and background)
 
-      // verbose flag (debug messages) 
+      // verbose flag (debug messages)
       Bool_t    fVerbose;
 
    protected:
@@ -267,15 +269,15 @@ namespace TMVA {
 
    public:
 
-      // for root finder 
+      // for root finder
       static Double_t IGetEffForRoot( Double_t );  // interface
       Double_t GetEffForRoot( Double_t );          // implementation
 
    private:
 
       // normalization
-      vector<Double_t>* fXminNorm;      // minimum of input variables
-      vector<Double_t>* fXmaxNorm;      // maximum of input variables
+      std::vector<Double_t>* fXminNorm;      // minimum of input variables
+      std::vector<Double_t>* fXmaxNorm;      // maximum of input variables
 
       // this carrier
       static MethodBase* fgThisBase;
@@ -284,7 +286,7 @@ namespace TMVA {
       void Init( void );
 
       ClassDef(MethodBase,0)  //Virtual base class for all TMVA method
-         };
+   };
 } // namespace TMVA
 
 #endif

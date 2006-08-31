@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafB.cxx,v 1.16 2006/06/02 15:34:12 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafB.cxx,v 1.17 2006/07/13 05:31:13 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 
 #include "TLeafB.h"
 #include "TBranch.h"
+#include "Riostream.h"
 
 ClassImp(TLeafB)
 
@@ -194,7 +195,7 @@ void TLeafB::SetAddress(void *addr)
             //         actually is.  If the current length of the
             //         varying length array is less than it has been
             //         in the past, then reallocate the value buffer
-            //         to the larger of either the calculated new size 
+            //         to the larger of either the calculated new size
             //         or the maximum size it has ever been.
             //
             //      2) The second condition checks if the new value

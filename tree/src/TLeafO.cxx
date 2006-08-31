@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafO.cxx,v 1.2 2005/02/11 18:40:09 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafO.cxx,v 1.3 2006/06/02 15:34:12 pcanal Exp $
 // Author: Philippe Canal  20/1/05
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 
 #include "TLeafO.h"
 #include "TBranch.h"
+#include "Riostream.h"
 
 ClassImp(TLeafO)
 

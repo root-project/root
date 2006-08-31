@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF12.h,v 1.2 2005/04/29 20:34:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF12.h,v 1.3 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   05/04/2003
 
 /*************************************************************************
@@ -8,12 +8,9 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// ---------------------------------- TF12.h
 
 #ifndef ROOT_TF12
 #define ROOT_TF12
-
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -26,7 +23,9 @@
 #ifndef ROOT_TF2
 #include "TF2.h"
 #endif
-#include "Riostream.h"
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
 
 class TF12 : public TF1 {
 
@@ -47,7 +46,7 @@ public:
    virtual Double_t GetXY() const {return fXY;}
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetXY(Double_t xy);  // *MENU*
-   
+
    ClassDef(TF12,1)  //Projection of a TF2 along x or y
 };
 

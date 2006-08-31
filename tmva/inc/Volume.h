@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: Volume.h,v 1.6 2006/05/23 09:53:11 stelzer Exp $
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: Volume.h,v 1.2 2006/05/23 13:03:15 brun Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,9 +16,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany                                                *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Volume.h,v 1.6 2006/05/23 09:53:11 stelzer Exp $    
+ * $Id: Volume.h,v 1.2 2006/05/23 13:03:15 brun Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Volume
@@ -42,14 +42,18 @@
 // nvar-dimensional variable space                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
-#include <vector>
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
+#ifndef ROOT_Rtypes
 #include "Rtypes.h"
+#endif
+#include <vector>
 #include "time.h"
 
 
 namespace TMVA {
-  
+
    class Volume {
 
    public:
@@ -66,9 +70,9 @@ namespace TMVA {
       // destructor
       virtual ~Volume( void );
 
-      // destruct the volue 
+      // destruct the volue
       void Delete       ( void );
-      // "scale" the volume by multiplying each upper and lower boundary by "f" 
+      // "scale" the volume by multiplying each upper and lower boundary by "f"
       void Scale        ( Double_t f );
       // "scale" the volume by symmetrically blowing up the interval in each dimension
       void ScaleInterval( Double_t f );

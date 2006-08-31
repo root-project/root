@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: MethodVariable.cxx,v 1.6 2006/05/23 09:53:10 stelzer Exp $
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodVariable.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
@@ -16,9 +16,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -28,34 +28,35 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//                                                                      
-// Wrapper class for a single variable "MVA"; this is required for      
-// the evaluation of the single variable discrimination performance     
+//
+// Wrapper class for a single variable "MVA"; this is required for
+// the evaluation of the single variable discrimination performance
 //_______________________________________________________________________
 
+#include "Riostream.h"
 #include "TMVA/MethodVariable.h"
 #include <algorithm>
 
 ClassImp(TMVA::MethodVariable)
- 
+
 //_______________________________________________________________________
-TMVA::MethodVariable::MethodVariable( TString jobName, vector<TString>* theVariables,  
-                                      TTree* theTree, TString theOption, 
+TMVA::MethodVariable::MethodVariable( TString jobName, vector<TString>* theVariables,
+                                      TTree* theTree, TString theOption,
                                       TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
    // standard constructor
-   // option string contains variable name - but not only ! 
+   // option string contains variable name - but not only !
    // there is a "Var_" prefix, which is useful in the context of later root plotting
    // so, remove this part
 
    fMethodName    = "Variable";
    fTestvarPrefix ="";
-   fTestvar       = fTestvarPrefix+GetMethodName(); 
+   fTestvar       = fTestvarPrefix+GetMethodName();
    if (Verbose())
       cout << "--- " << GetName() << " <verbose>: uses as discriminating variable just "
            << fOptions << " as specified in the option" << endl;
-  
+
    if (0 == theTree->FindBranch(fOptions)) {
       cout << "--- " << GetName() << ": variable " << fOptions <<" not found "<<endl;
       theTree->Print();
@@ -66,7 +67,7 @@ TMVA::MethodVariable::MethodVariable( TString jobName, vector<TString>* theVaria
       fMethodName += fOptions;
       fTestvar    =  fOptions;
       if (Verbose())
-         cout << "--- " << GetName() << " <verbose>: sucessfully initialized as " 
+         cout << "--- " << GetName() << " <verbose>: sucessfully initialized as "
               << GetMethodName() <<endl;
    }
 }
@@ -83,7 +84,7 @@ void TMVA::MethodVariable::Train( void )
    // no training required
 
    // default sanity checks
-   if (!CheckSanity()) { 
+   if (!CheckSanity()) {
       cout << "--- " << GetName() << ": Error: sanity check failed" << endl;
       exit(1);
    }
@@ -99,11 +100,11 @@ Double_t TMVA::MethodVariable::GetMvaValue( TMVA::Event *e )
 
 //_______________________________________________________________________
 void  TMVA::MethodVariable::WriteWeightsToFile( void )
-{  
+{
    // nothing to write
    cout << "--- " << GetName() << ": no weights to write " << endl;
 }
-  
+
 //_______________________________________________________________________
 void  TMVA::MethodVariable::ReadWeightsFromFile( void )
 {

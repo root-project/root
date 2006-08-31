@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticBase.h,v 1.2 2006/05/23 13:03:15 brun Exp $    
+// @(#)root/tmva $Id: GeneticBase.h,v 1.3 2006/05/31 14:01:33 rdm Exp $
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -13,9 +13,9 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany                                                *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -41,20 +41,22 @@
 #include <string>
 
 #include <stdio.h>
-#include "Riostream.h"
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
 
 #ifndef ROOT_TMVA_GeneticPopulation
 #include "TMVA/GeneticPopulation.h"
 #endif
 
 namespace TMVA {
-   
+
    typedef std::pair<Double_t,Double_t>   LowHigh_t;
-  
+
    class GeneticBase {
 
    public:
-    
+
       GeneticBase() {}
       GeneticBase(Int_t populationSize, std::vector < TMVA::LowHigh_t * > ranges);
       virtual ~GeneticBase() {}
@@ -71,14 +73,14 @@ namespace TMVA {
                                     std::vector < Double_t > results);
       virtual void Evolution();
       void Finalize();
-      
-      GeneticPopulation& GetGeneticPopulation() { return fPopulation; } 
+
+      GeneticPopulation& GetGeneticPopulation() { return fPopulation; }
       Double_t GetSpread() const { return fSpread; }
 
       void SetSpread(Double_t s) { fSpread = s; }
 
    protected:
-    
+
       // contains and controls the "individual"
       GeneticPopulation fPopulation;
 
@@ -100,7 +102,7 @@ namespace TMVA {
       Bool_t fFirstTime;        // if true its the first time, so no evolution yet
 
       ClassDef(GeneticBase, 0)  // Base definition for genetic algorithm
-         };
+   };
 
 } // namespace TMVA
 

@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: Event.h,v 1.2 2006/05/23 13:03:15 brun Exp $     
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: Event.h,v 1.3 2006/05/31 14:01:33 rdm Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,9 +16,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany                                                *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -39,14 +39,20 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#include "Riostream.h"
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
+#ifndef ROOT_TVector
 #include "TVector.h"
+#endif
+#ifndef ROOT_TTree
 #include "TTree.h"
+#endif
 
 // an Event coordinate
 // simple enough for any event with one weight and 1 to n characterising variables,
 // categorised as signal or background
-// but could also be inherited from and extened if needed 
+// but could also be inherited from and extened if needed
 
 namespace TMVA {
 
@@ -55,16 +61,16 @@ namespace TMVA {
    ostream& operator << (ostream& os, const Event* event);
 
    class Event {
-    
+
       friend ostream& operator << (ostream& os, const Event& event);
       friend ostream& operator << (ostream& os, const Event* event);
-    
+
    public:
-    
+
       // default constructor
       Event() : fWeight( 1 ), fType( -1 ) {};
       // constructor specifying the event variables
-      Event( std::vector<Double_t> &v, Double_t w = 1 , Int_t t=-1) 
+      Event( std::vector<Double_t> &v, Double_t w = 1 , Int_t t=-1)
          : fVar( v ), fWeight( w ), fType( t ) {}
       // constructor reading the Event from the ROOT tree
       Event( TTree* tree, Int_t ievt, std::vector<TString>* fInputVars );
@@ -99,7 +105,7 @@ namespace TMVA {
       std::vector<Double_t>  fVar;     // the vector of event variables
       Double_t               fWeight;  // event weight
       Int_t                  fType;    // event type (sigal=1 bkg = 0)
-  
+
       ClassDef(Event,0); //Variables of an event as used for the Binary Tree
    };
 

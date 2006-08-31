@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.h,v 1.1  Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.h,v 1.1 2006/05/18 16:12:09 couet Exp $
 // Author: Sebastian Boser, 02/02/06
 
 /*************************************************************************
@@ -12,17 +12,39 @@
 #ifndef ROOT_TGraphPolar
 #define ROOT_TGraphPolar
 
+#ifndef ROOT_TGraph
 #include "TGraph.h"
+#endif
+#ifndef ROOT_TGraphErrors
 #include "TGraphErrors.h"
+#endif
+#ifndef ROOT_TH1
 #include "TH1.h"
+#endif
+#ifndef ROOT_TCanvas
 #include "TCanvas.h"
+#endif
+#ifndef ROOT_TEllipse
 #include "TEllipse.h"
+#endif
+#ifndef ROOT_TLine
 #include "TLine.h"
+#endif
+#ifndef ROOT_TLatex
 #include "TLatex.h"
+#endif
+#ifndef ROOT_TGaxis
 #include "TGaxis.h"
+#endif
+#ifndef ROOT_TFrame
 #include "TFrame.h"
-#include "Riostream.h"
+#endif
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
 
 const Double_t kPi = TMath::Pi();
 
@@ -62,7 +84,7 @@ public:
    Double_t GetLabelOffset() { return fLabelOffset; };
    void PaintCircle(Double_t x, Double_t y, Double_t r,
                     Double_t phimin, Double_t phimax, Double_t theta);
-    
+
    ClassDef(TGraphPolargram,0); // Polar axis
 };
 
@@ -89,7 +111,7 @@ public:
    void ExecuteEvent(Int_t event, Int_t px, Int_t py);
    void SetMaxRadial(Double_t maximum = 1); //*MENU*
    void SetMinRadial(Double_t minimum = 0); //*MENU*
-   void SetMaximum(Double_t maximum = 1) {SetMaxRadial(maximum);} ; 
+   void SetMaximum(Double_t maximum = 1) {SetMaxRadial(maximum);} ;
    void SetMinimum(Double_t minimum = 0) {SetMinRadial(minimum);} ;
    void SetMaxPolar(Double_t maximum = 6.28318530717958623); //*MENU*
    void SetMinPolar(Double_t minimum = 0); //*MENU*

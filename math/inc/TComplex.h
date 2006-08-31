@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TComplex.h,v 1.5 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TComplex.h,v 1.6 2005/12/24 17:06:27 rdm Exp $
 // Author: Federico Carminati   22/04/2004
 
 /*************************************************************************
@@ -18,9 +18,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_Riosfwd
 #include "Riosfwd.h"
-//#include "Riostream.h"
+#endif
+#ifndef ROOT_TMath
 #include "TMath.h"
+#endif
 
 
 class TComplex {

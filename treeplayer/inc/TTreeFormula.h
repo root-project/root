@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.49 2006/02/22 06:59:15 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.50 2006/05/14 07:38:51 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -60,17 +60,20 @@ class TBranchElement;
 class TAxis;
 class TTreeFormulaManager;
 
+
 class TTreeFormula : public TFormula {
 
+friend class TTreeFormulaManager;
+
 protected:
-   enum { 
+   enum {
       kIsCharacter = BIT(12),
       kMissingLeaf = BIT(15) // true if some of the needed leaves are missing in the current TTree
    };
-   enum { 
-      kDirect, kDataMember, kMethod, 
+   enum {
+      kDirect, kDataMember, kMethod,
       kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc, kSum };
-   enum { 
+   enum {
       kAlias           = 200,
       kAliasString     = 201,
       kAlternate       = 202,
@@ -93,26 +96,25 @@ protected:
    TObjArray   fBranches;         //!  List of branches to read.  Similar to fLeaces but duplicates are zeroed out.
    Bool_t      fQuickLoad;        //!  If true, branch GetEntry is only called when the entry number changes.
    Bool_t      fNeedLoading;      //!  If true, the current entry has not been loaded yet.
-   
 
-   Int_t         fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
-   Int_t         fFixedSizes[kMAXCODES][kMAXFORMDIM];  //Physical sizes of lower dimensions for each leaf
-   UChar_t       fHasMultipleVarDim[kMAXCODES];        //True if the corresponding variable is an array with more than one variable dimension.
+   Int_t       fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
+   Int_t       fFixedSizes[kMAXCODES][kMAXFORMDIM];  //Physical sizes of lower dimensions for each leaf
+   UChar_t     fHasMultipleVarDim[kMAXCODES];        //True if the corresponding variable is an array with more than one variable dimension.
 
    //the next line should have a mutable in front. See GetNdata()
-   Int_t         fCumulSizes[kMAXCODES][kMAXFORMDIM];  //Accumulated sizes of lower dimensions for each leaf after variable dimensions has been calculated
-   Int_t         fIndexes[kMAXCODES][kMAXFORMDIM];     //Index of array selected by user for each leaf
+   Int_t       fCumulSizes[kMAXCODES][kMAXFORMDIM];  //Accumulated sizes of lower dimensions for each leaf after variable dimensions has been calculated
+   Int_t       fIndexes[kMAXCODES][kMAXFORMDIM];     //Index of array selected by user for each leaf
    TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM];  //Pointer to a variable index.
 
-   virtual Double_t   GetValueFromMethod(Int_t i, TLeaf *leaf) const;
-   virtual void*      GetValuePointerFromMethod(Int_t i, TLeaf *leaf) const;
-   Int_t       GetRealInstance(Int_t instance, Int_t codeindex);
+   TAxis                    *fAxis;           //! pointer to histogram axis if this is a string
+   Bool_t                    fDidBooleanOptimization;  //! True if we executed one boolean optimization since the last time instance number 0 was evaluated
+   TTreeFormulaManager      *fManager;        //! The dimension coordinator.
 
    // Helper members and function used during the construction and parsing
    TList                    *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
    std::vector<std::string>  fAliasesUsed;    //! List of aliases used during the parsing of the expression.
 
-   TTreeFormula(const char *name, const char *formula, TTree *tree, const std::vector<string>& aliases);
+   TTreeFormula(const char *name, const char *formula, TTree *tree, const std::vector<std::string>& aliases);
    void Init(const char *name, const char *formula);
    Bool_t      BranchHasMethod(TLeaf* leaf, TBranch* branch, const char* method,const char* params, Long64_t readentry) const;
    Int_t       DefineAlternate(const char* expression);
@@ -126,24 +128,19 @@ protected:
    Int_t       RegisterDimensions(Int_t code, TLeaf *leaf);
    Int_t       RegisterDimensions(const char *size, Int_t code);
 
+   virtual Double_t  GetValueFromMethod(Int_t i, TLeaf *leaf) const;
+   virtual void*     GetValuePointerFromMethod(Int_t i, TLeaf *leaf) const;
+   Int_t             GetRealInstance(Int_t instance, Int_t codeindex);
 
-   TAxis      *fAxis;           //! pointer to histogram axis if this is a string
+   void              LoadBranches();
+   Bool_t            LoadCurrentDim();
+   void              ResetDimensions();
 
-   Bool_t      fDidBooleanOptimization;  //! True if we executed one boolean optimization since the last time instance number 0 was evaluated
-   void        LoadBranches();
+   virtual Bool_t    IsLeafInteger(Int_t code) const;
+   virtual Bool_t    IsString(Int_t oper) const;
+   virtual Bool_t    IsLeafString(Int_t code) const;
 
-   TTreeFormulaManager *fManager; //! The dimension coordinator.
-   friend class TTreeFormulaManager;
-
-   void       ResetDimensions();
-   Bool_t     LoadCurrentDim();
-   
-   virtual Bool_t     IsLeafInteger(Int_t code) const;
-
-   virtual Bool_t     IsString(Int_t oper) const;
-   virtual Bool_t     IsLeafString(Int_t code) const;
-
-   void  Convert(UInt_t fromVersion);
+   void              Convert(UInt_t fromVersion);
 
 private:
    // Not implemented yet
@@ -171,7 +168,7 @@ public:
    //GetNdata should probably be const.  However it need to cache some information about the actual dimension
    //of arrays, so if GetNdata is const, the variables fUsedSizes and fCumulUsedSizes need to be declared
    //mutable.  We will be able to do that only when all the compilers supported for ROOT actually implemented
-   //the mutable keyword. 
+   //the mutable keyword.
    //NOTE: Also modify the code in PrintValue which current goes around this limitation :(
    virtual Bool_t      IsInteger() const;
            Bool_t      IsQuickLoad() const { return fQuickLoad; }

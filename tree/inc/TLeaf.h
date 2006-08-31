@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.12 2006/05/23 04:47:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.13 2006/07/13 05:30:47 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -30,7 +30,9 @@
 #ifndef ROOT_TClonesArray
 #include "TClonesArray.h"
 #endif
-#include "Riostream.h"
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
 
 class TBrowser;
 

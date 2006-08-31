@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.22 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.23 2006/04/19 08:22:25 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -34,6 +34,7 @@
 #include "TStyle.h"
 
 #include <algorithm>
+using namespace std;
 
 
 ClassImp(TProofDraw)

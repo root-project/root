@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: MethodVariable.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodVariable.h,v 1.2 2006/05/23 13:03:15 brun Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -27,7 +27,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodVariable.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $
+ * $Id: MethodVariable.h,v 1.2 2006/05/23 13:03:15 brun Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodVariable
@@ -52,20 +52,20 @@ namespace TMVA {
 
    public:
 
-      MethodVariable( TString jobName, 
-                      vector<TString>* theVariables, 
-                      TTree* theTree = 0, 
+      MethodVariable( TString jobName,
+                      std::vector<TString>* theVariables,
+                      TTree* theTree = 0,
                       TString theOption = "Variable",
                       TDirectory* theTargetDir = 0 );
-  
+
       virtual ~MethodVariable( void );
-    
+
       // training method
       virtual void Train( void );
 
       // write weights to file
       virtual void WriteWeightsToFile( void );
-  
+
       // read weights from file
       virtual void ReadWeightsFromFile( void );
 
@@ -79,8 +79,8 @@ namespace TMVA {
 
    private:
 
-      ClassDef(MethodVariable,0) // Wrapper class for a single variable "MVA" 
-         };
+      ClassDef(MethodVariable,0) // Wrapper class for a single variable "MVA"
+   };
 
 } // namespace TMVA
 

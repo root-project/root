@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBase.cxx,v 1.11 2006/05/23 09:53:10 stelzer Exp $
+// @(#)root/tmva $Id: MethodBase.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodBase.cxx,v 1.11 2006/05/23 09:53:10 stelzer Exp $
+ * $Id: MethodBase.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -35,32 +35,32 @@
 //
 // MethodBase hosts several specific evaluation methods
 //
-// The kind of MVA that provides optimal performance in an analysis strongly 
-// depends on the particular application. The evaluation factory provides a 
-// number of numerical benchmark results to directly assess the performance 
+// The kind of MVA that provides optimal performance in an analysis strongly
+// depends on the particular application. The evaluation factory provides a
+// number of numerical benchmark results to directly assess the performance
 // of the MVA training on the independent test sample. These are:
 // <ul>
-//   <li> The <i>signal efficiency</i> at three representative background efficiencies 
+//   <li> The <i>signal efficiency</i> at three representative background efficiencies
 //        (which is 1 &minus; rejection).</li>
-//   <li> The <i>significance</I> of an MVA estimator, defined by the difference 
-//        between the MVA mean values for signal and background, divided by the 
+//   <li> The <i>significance</I> of an MVA estimator, defined by the difference
+//        between the MVA mean values for signal and background, divided by the
 //        quadratic sum of their root mean squares.</li>
-//   <li> The <i>separation</i> of an MVA <i>x</i>, defined by the integral 
+//   <li> The <i>separation</i> of an MVA <i>x</i>, defined by the integral
 //        &frac12;&int;(S(x) &minus; B(x))<sup>2</sup>/(S(x) + B(x))dx, where
-//        S(x) and B(x) are the signal and background distributions, respectively. 
+//        S(x) and B(x) are the signal and background distributions, respectively.
 //        The separation is zero for identical signal and background MVA shapes,
 //        and it is one for disjunctive shapes.
 //   <li> <a name="mu_transform">
-//        The average, &int;x &mu;(S(x))dx, of the signal &mu;-transform. 
+//        The average, &int;x &mu;(S(x))dx, of the signal &mu;-transform.
 //        The &mu;-transform of an MVA denotes the transformation that yields
 //        a uniform background distribution. In this way, the signal distributions
 //        S(x) can be directly compared among the various MVAs. The stronger S(x)
 //        peaks towards one, the better is the discrimination of the MVA. The
-//        &mu;-transform is  
+//        &mu;-transform is
 //        <a href=http://tel.ccsd.cnrs.fr/documents/archives0/00/00/29/91/index_fr.html>documented here</a>.
 // </ul>
-// The MVA standard output also prints the linear correlation coefficients between 
-// signal and background, which can be useful to eliminate variables that exhibit too 
+// The MVA standard output also prints the linear correlation coefficients between
+// signal and background, which can be useful to eliminate variables that exhibit too
 // strong correlations.
 //_______________________________________________________________________
 
@@ -73,6 +73,7 @@
 #include "TSpline.h"
 #include "TMatrix.h"
 #include "TMath.h"
+#include "Riostream.h"
 
 #include "TMVA/MethodBase.h"
 #include "TMVA/Event.h"
@@ -96,7 +97,7 @@ TMVA::MethodBase::MethodBase( TString jobName,
                               vector<TString>* theVariables,
                               TTree*  theTree,
                               TString theOption,
-                              TDirectory*  theBaseDir) 
+                              TDirectory*  theBaseDir)
    : fJobName      ( jobName ),
      fTrainingTree ( theTree ),
      fInputVars    ( theVariables ),
@@ -126,7 +127,7 @@ TMVA::MethodBase::MethodBase( TString jobName,
    }
    fOptions = opt;
 
-   for (Int_t i=0; i<list->GetSize(); i++) list->At(i)->Delete(); 
+   for (Int_t i=0; i<list->GetSize(); i++) list->At(i)->Delete();
    delete list;
 
    // default extension for weight files
@@ -150,7 +151,7 @@ TMVA::MethodBase::MethodBase( vector<TString> *theVariables,
      fWeightFile   ( weightFile ),
      fVerbose      ( kTRUE )
 {
-   // constructor used for Testing + Application of the MVA, 
+   // constructor used for Testing + Application of the MVA,
    // only (no training), using given WeightFiles
 
    this->Init();
@@ -239,7 +240,7 @@ void TMVA::MethodBase::InitNorm( TTree* theTree )
 //_______________________________________________________________________
 void TMVA::MethodBase::SetWeightFileName( void )
 {
-   // build weight file name 
+   // build weight file name
    fWeightFile =  fFileDir + "/" + fJobName + "_" + fMethodName + "." + fFileExtension;
 }
 
@@ -280,7 +281,7 @@ Bool_t TMVA::MethodBase::CheckSanity( TTree* theTree )
 void TMVA::MethodBase::AppendToMethodName( TString methodNameSuffix )
 {
    // appends a suffix to the standard method name
-   // to this is useful to run several instances of the same 
+   // to this is useful to run several instances of the same
    // method, e.g., to test different configuration sets
 
    fMethodName += "_";
@@ -384,7 +385,7 @@ void TMVA::MethodBase::SetXmaxNorm( TString var, Double_t x )
 //_______________________________________________________________________
 void TMVA::MethodBase::TestInit(TTree* theTestTree)
 {
-   // initialisation of MVA testing 
+   // initialisation of MVA testing
 
    //  fTestTree       = theTestTree;
    fHistS_plotbin  = fHistB_plotbin = 0;
@@ -673,17 +674,17 @@ Double_t TMVA::MethodBase::GetSeparation( void )
 
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBase::GetOptimalSignificance(Double_t SignalEvents, 
-                                                  Double_t BackgroundEvents, 
+Double_t TMVA::MethodBase::GetOptimalSignificance(Double_t SignalEvents,
+                                                  Double_t BackgroundEvents,
                                                   Double_t & optimal_significance_value  ) const
 {
-   // plot significance, S/Sqrt(S^2 + B^2), curve for given number 
+   // plot significance, S/Sqrt(S^2 + B^2), curve for given number
    // of signal and background events; returns cut for optimal significance
-   // also returned via reference is the optimal significance 
+   // also returned via reference is the optimal significance
 
    if (Verbose()) cout << "--- " << GetName() << ": Get optimal significance ..." << endl;
-  
-   Double_t optimal_significance(0);    
+
+   Double_t optimal_significance(0);
    Double_t effS(0),effB(0),significance(0);
    TH1F *temp_histogram = new TH1F("temp", "temp", fNbinsH, fXmin, fXmax );
 
@@ -697,7 +698,7 @@ Double_t TMVA::MethodBase::GetOptimalSignificance(Double_t SignalEvents,
 
    cout << "--- " << GetName() << ": using ratio SignalEvents/BackgroundEvents = "
         << SignalEvents/BackgroundEvents << endl;
-    
+
    if ((fEffS == 0) || (fEffB == 0)) {
       cout<<"--- "<< GetName() <<": efficiency histograms empty !"<<endl;
       cout<<"--- "<< GetName() <<": no optimal cut, return 0"<<endl;
@@ -707,10 +708,10 @@ Double_t TMVA::MethodBase::GetOptimalSignificance(Double_t SignalEvents,
    for (Int_t bin=1; bin<=fNbinsH; bin++) {
       effS = fEffS->GetBinContent( bin );
       effB = fEffB->GetBinContent( bin );
-    
+
       // put significance into a histogram
       significance = sqrt(SignalEvents) * ( effS )/sqrt( effS + ( BackgroundEvents / SignalEvents) * effB  );
-    
+
       temp_histogram->SetBinContent(bin,significance);
    }
 
@@ -718,12 +719,12 @@ Double_t TMVA::MethodBase::GetOptimalSignificance(Double_t SignalEvents,
    optimal_significance = temp_histogram->GetBinCenter( temp_histogram->GetMaximumBin() );
    optimal_significance_value = temp_histogram->GetBinContent( temp_histogram->GetMaximumBin() );
 
-   // delete  
-   temp_histogram->Delete();  
-  
+   // delete
+   temp_histogram->Delete();
+
    cout << "--- " << GetName() << ": optimal cut at      : " << optimal_significance << endl;
    cout << "--- " << GetName() << ": optimal significance: " << optimal_significance_value << endl;
-  
+
    return optimal_significance;
 }
 
@@ -859,7 +860,7 @@ Double_t TMVA::MethodBase::IGetEffForRoot( Double_t theCut )
 Double_t TMVA::MethodBase::GetEffForRoot( Double_t theCut )
 {
    // returns efficiency as function of cut
-  
+
    Double_t retval;
 
    // retrieve the class object

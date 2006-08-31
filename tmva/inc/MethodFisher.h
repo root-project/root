@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: MethodFisher.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $
-// Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodFisher.h,v 1.2 2006/05/23 13:03:15 brun Exp $
+// Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -20,9 +20,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -30,7 +30,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodFisher.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $          
+ * $Id: MethodFisher.h,v 1.2 2006/05/23 13:03:15 brun Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodFisher
@@ -62,24 +62,24 @@ namespace TMVA {
 
    public:
 
-      MethodFisher( TString jobName, 
-                    vector<TString>* theVariables, 
-                    TTree* theTree = 0, 
+      MethodFisher( TString jobName,
+                    std::vector<TString>* theVariables,
+                    TTree* theTree = 0,
                     TString theOption = "Fisher",
                     TDirectory* theTargetDir = 0 );
 
-      MethodFisher( vector<TString> *theVariables, 
-                    TString theWeightFile,  
+      MethodFisher( std::vector<TString> *theVariables,
+                    TString theWeightFile,
                     TDirectory* theTargetDir = NULL );
 
       virtual ~MethodFisher( void );
-    
+
       // training method
       virtual void Train( void );
 
       // write weights to file
       virtual void WriteWeightsToFile( void );
-  
+
       // read weights from file
       virtual void ReadWeightsFromFile( void );
 
@@ -95,13 +95,13 @@ namespace TMVA {
    protected:
 
    private:
-  
-      Int_t fNevt; // total number of events 
-      Int_t fNsig; // number of signal events 
+
+      Int_t fNevt; // total number of events
+      Int_t fNsig; // number of signal events
       Int_t fNbgd; // number of background events
 
       // event matrices: (first index: variable, second index: event)
-      TMatrixF *fSig; // variables for signal 
+      TMatrixF *fSig; // variables for signal
       TMatrixF *fBgd; // variables for background
 
       // Initialization and allocation
@@ -137,10 +137,10 @@ namespace TMVA {
       TMatrixD *fCov;   // full covariance matrix
 
       // discriminating power
-      vector<Double_t> *fDiscrimPow;
+      std::vector<Double_t> *fDiscrimPow;
 
       // Fisher coefficients
-      vector<Double_t> *fFisherCoeff;
+      std::vector<Double_t> *fFisherCoeff;
       Double_t fF0;
 
       // method to be used (Fisher or Mahalanobis)
@@ -149,7 +149,7 @@ namespace TMVA {
       // default initialisation called by all constructors
       void InitFisher( void );
 
-      ClassDef(MethodFisher,0) //Analysis of Fisher discriminant (Fisher or Mahalanobis approach) 
+      ClassDef(MethodFisher,0) //Analysis of Fisher discriminant (Fisher or Mahalanobis approach)
          };
 
 } // namespace TMVA
