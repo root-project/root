@@ -3,11 +3,10 @@
    // The commands used are exactly the same as with a normal pad. 
    // The only command to add is: gStyle->SetCanvasPreferGL(true);
 
-   gROOT->Reset();
+   gStyle->SetPalette(0);
    
    // after this command all legos surfaces (surf/srf1/surf2/surf4/tf3 options)
    // are automatically rendered with OpenGL.
-//   gStyle->SetCanvasPreferGL(true);
 
    TCanvas *c1 = new TCanvas("glc1","Surfaces Drawing Options",200,10,700,900);
    c1->SetFillColor(42);

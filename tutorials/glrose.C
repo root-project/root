@@ -1,5 +1,7 @@
 void glrose()
 {
+  //Define and set user's palette,
+   //use polar system.
    const Int_t paletteSize = 10;
    Float_t rgb[paletteSize * 3] = 
       {0.80f, 0.55f, 0.40f, 
@@ -19,11 +21,21 @@ void glrose()
       palette[i] = TColor::GetColor(rgb[i * 3], rgb[i * 3 + 1], rgb[i * 3 + 2]);
 
    gStyle->SetPalette(paletteSize, palette);
-   gStyle->SetCanvasPreferGL(true);
+
+   TCanvas *cnv = new TCanvas("glc", "Surface sample", 200, 10, 600, 550);
+
+   TPaveLabel *title = new TPaveLabel(0.04, 0.86, 0.96, 0.98, "\"glsurf2pol\" option + user defined palette.");
+   title->SetFillColor(32);
+   title->Draw();
+
+   TPad *rosePad  = new TPad("box", "box", 0.04, 0.04, 0.96, 0.8);   
+   rosePad->Draw();
+
 
    TF2 *fun = new TF2("a", "cos(y)*sin(x)+cos(x)*sin(y)", -6, 6, -6, 6);
    fun->SetContour(paletteSize);
    fun->SetNpx(30);
    fun->SetNpy(30);
+   rosePad->cd();
    fun->Draw("glsurf2pol");
 }
