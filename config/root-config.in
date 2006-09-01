@@ -349,7 +349,7 @@ win32)
 	  auxcflags="-MDd"
    fi
    VC_MAJOR=`unset VS_UNICODE_OUTPUT; cl.exe 2>&1 | awk '{ if (NR==1) print $8 }' | cut -d'.' -f1`
-   if test "$VC_MAJOR" != "" && $VC_MAJOR -gt 13; then
+   if test "$VC_MAJOR" != "" && test $VC_MAJOR -gt 13; then
       auxcflags="$auxcflags -EHs -GR"
    else
       auxcflags="$auxcflags -GR -GX -G5"
