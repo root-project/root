@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.87 2006/07/09 05:27:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.88 2006/08/23 15:37:23 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1098,12 +1098,12 @@ void TGeoVolume::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    // check if we need to save shape/volume
    Bool_t mustDraw = kFALSE;
-   if (strstr(option,"ogl") || strstr(option,"x3d")) mustDraw = kTRUE;
-   if (!strlen(option) || mustDraw) {
+   if (fGeoManager->GetGeomPainter()->GetTopVolume()==this) mustDraw = kTRUE;
+   if (!strlen(option)) {
       fGeoManager->SetAllIndex();
       out << "   new TGeoManager(\"" << fGeoManager->GetName() << "\", \"" << fGeoManager->GetTitle() << "\");" << endl << endl;
-      if (mustDraw) out << "   Bool_t mustDraw = kTRUE;" << endl;
-      else          out << "   Bool_t mustDraw = kFALSE;" << endl;
+//      if (mustDraw) out << "   Bool_t mustDraw = kTRUE;" << endl;
+//      else          out << "   Bool_t mustDraw = kFALSE;" << endl;
       out << "   Double_t dx,dy,dz;" << endl;
       out << "   Double_t dx1, dx2, dy1, dy2;" << endl;
       out << "   Double_t vert[20], par[20];" << endl;
@@ -1140,7 +1140,10 @@ void TGeoVolume::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       SavePrimitive(out, "d");
       out << endl << "   // CLOSE GEOMETRY" << endl;
       out << "   gGeoManager->CloseGeometry();" << endl;
-      out << "   if (mustDraw) gGeoManager->GetTopVolume()->Draw();" << endl;
+      if (mustDraw) {
+         if (!IsRaytracing()) out << "   gGeoManager->GetTopVolume()->Draw();" << endl;
+         else                 out << "   gGeoManager->GetTopVolume()->Raytrace();" << endl;
+      }
       return;
    }
    // check if we need to save shape/volume
@@ -1160,6 +1163,8 @@ void TGeoVolume::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (fLineStyle != 1) out << "   " << GetPointerName() << "->SetLineStyle(" << fLineStyle << ");" << endl;
       if (!IsVisible() && !IsAssembly()) out << "   " << GetPointerName() << "->SetVisibility(kFALSE);" << endl;
       if (!IsVisibleDaughters()) out << "   " << GetPointerName() << "->VisibleDaughters(kFALSE);" << endl;
+      if (IsVisContainers()) out << "   " << GetPointerName() << "->SetVisContainers(kTRUE);" << endl;
+      if (IsVisLeaves()) out << "   " << GetPointerName() << "->SetVisLeaves(kTRUE);" << endl;
       SetAttBit(TGeoAtt::kSavePrimitiveAtt);
    }   
    // check if we need to save the media
