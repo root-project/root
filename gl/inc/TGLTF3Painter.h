@@ -34,8 +34,6 @@ private:
    std::vector<TriFace_t> fMesh;
    TF3 *fF3;
 
-   Bool_t fSelectionPass;
-
 public:
    TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
                  Int_t glContext = -1);
