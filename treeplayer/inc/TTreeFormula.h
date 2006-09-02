@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.50 2006/05/14 07:38:51 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.51 2006/08/31 11:05:20 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -136,6 +136,7 @@ protected:
    Bool_t            LoadCurrentDim();
    void              ResetDimensions();
 
+   virtual TClass*   EvalClass(Int_t oper) const;
    virtual Bool_t    IsLeafInteger(Int_t code) const;
    virtual Bool_t    IsString(Int_t oper) const;
    virtual Bool_t    IsLeafString(Int_t code) const;

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.198 2006/07/13 05:32:56 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.199 2006/08/31 11:05:20 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1790,7 +1790,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
       return -1;
    }
 
-   if (IsLeafString(code)) {
+   static TClassRef StdString = gROOT->GetClass("string");
+   TClass *objClass = EvalClass(code);
+   if (IsLeafString(code) || objClass == TString::Class() || objClass == StdString) {
+
+      TFormLeafInfo *last = 0;
       if (fLookupType[code]==kDirect && leaf->InheritsFrom("TLeafElement")) {
          TBranchElement * br = (TBranchElement*)leaf->GetBranch();
          if (br->GetType()==31) {
@@ -1802,6 +1806,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             Int_t offset;
             info->GetStreamerElement(element->GetName(),offset);
             clonesinfo->fNext = new TFormLeafInfo(cl,offset+br->GetOffset(),element);
+            last = clonesinfo->fNext;
             fDataMembers.AddAtAndExpand(clonesinfo,code);
             fLookupType[code]=kDataMember;
 
@@ -1829,13 +1834,32 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             Int_t offset;
             info->GetStreamerElement(element->GetName(),offset);
             collectioninfo->fNext = new TFormLeafInfo(cl,offset+br->GetOffset(),element);
+            last = collectioninfo->fNext;
             fDataMembers.AddAtAndExpand(collectioninfo,code);
             fLookupType[code]=kDataMember;
 
          } else {
-            fDataMembers.AddAtAndExpand(new TFormLeafInfoDirect(br),code);
+            last = new TFormLeafInfoDirect(br);
+            fDataMembers.AddAtAndExpand(last,code);
             fLookupType[code]=kDataMember;
+         }         
+      }
+
+      const char *funcname = 0;
+      if (objClass == TString::Class()) {
+         funcname = "Data";
+      } else if (objClass == StdString) {
+         funcname = "c_str";
+      }
+      if (funcname) {
+         if (last==0) {
+            last = (TFormLeafInfo*)fDataMembers.At(code);
+            // Improbable case
+            if (!last) return action;
+            while (last->fNext) { last = last->fNext; }
          }
+         TMethodCall *method = new TMethodCall(objClass, funcname, "");
+         last->fNext = new TFormLeafInfoMethod(objClass,method);
       }
       return kDefinedString;
    }
@@ -2508,7 +2532,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
          }
       }
 
-      // Now that we have clean-up the expression, let's compare it to the content
+      // Now that we have cleaned-up the expression, let's compare it to the content
       // of the leaf!
 
       Int_t res = ParseWithLeaf(leaf,leftover,final,paran_level,castqueue,useLeafCollectionObject,name);
@@ -3078,16 +3102,26 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
 //______________________________________________________________________________
 TClass* TTreeFormula::EvalClass() const
 {
-//*-*-*-*-*-*-*-*-*-*-*Evaluate the class of this treeformula*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================================
+//  Evaluate the class of this treeformula
 //
 //  If the 'value' of this formula is a simple pointer to an object,
 //  this function returns the TClass corresponding to its type.
 
    if (fNoper != 1 || fNcodes <=0 ) return 0;
 
-   TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
-   switch(fLookupType[0]) {
+   return EvalClass(0);
+}
+
+//______________________________________________________________________________
+TClass* TTreeFormula::EvalClass(Int_t oper) const
+{
+//  Evaluate the class of the operation oper
+//
+//  If the 'value' in the requested operation is a simple pointer to an object,
+//  this function returns the TClass corresponding to its type.
+
+   TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(oper);
+   switch(fLookupType[oper]) {
       case kDirect: {
          if (leaf->IsA()==TLeafObject::Class()) {
             return ((TLeafObject*)leaf)->GetClass();
@@ -3114,7 +3148,7 @@ TClass* TTreeFormula::EvalClass() const
       }
       case kMethod: return 0; // kMethod is deprecated so let's no waste time implementing this.
       case kDataMember: {
-         TObject *obj = fDataMembers.UncheckedAt(0);
+         TObject *obj = fDataMembers.UncheckedAt(oper);
          if (!obj) return 0;
          return ((TFormLeafInfo*)obj)->GetClass();
       }
