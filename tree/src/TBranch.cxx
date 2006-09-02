@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.107.2.3 2006/08/16 05:50:36 pcanal Exp $
+// @(#)root/tree:$Name: v5-12-00-patches $:$Id: TBranch.cxx,v 1.107.2.4 2006/08/17 22:29:49 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -178,6 +178,15 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
       fBasketEntry[i] = 0;
       fBasketSeek[i]  = 0;
    }
+
+//*-*-  Create the first basket
+   fTree       = gTree;
+   fDirectory  = fTree->GetDirectory();
+   fFileName   = "";
+
+   TBasket *basket = fTree->CreateBasket(this);
+   fBaskets.AddAt(basket,0);
+
 //*-*- Decode the leaflist (search for : as separator)
    char * varcur  = (char*)leaflist;
    char * var     = varcur;
@@ -256,13 +265,6 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
    delete [] leafname;
    delete [] leaftype;
 
-//*-*-  Create the first basket
-   fTree       = gTree;
-   fDirectory  = fTree->GetDirectory();
-   fFileName   = "";
-
-   TBasket *basket = fTree->CreateBasket(this);
-   fBaskets.AddAt(basket,0);
 }
 
 //______________________________________________________________________________
