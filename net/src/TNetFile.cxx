@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.83 2006/08/14 10:31:36 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.84 2006/08/14 10:46:21 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -369,7 +369,7 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    // If it's an old version of the protocol try the default TFile::ReadBuffers
    if (fProtocol < 17)
       return TFile::ReadBuffers(buf, pos, len, nbuf);
-   
+
    Int_t   stat;
    Int_t   blockSize = 262144;  //Let's say we transfer 256KB at the time
    Bool_t  result = kFALSE;
@@ -394,7 +394,7 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    }
 
    // Send the command with the lenght of the info and number of buffers
-   if (fSocket->Send(Form("%d %d %d", nbuf, data_buf.Length(), blockSize), 
+   if (fSocket->Send(Form("%d %d %d", nbuf, data_buf.Length(), blockSize),
                           kROOTD_GETS) < 0) {
       Error("ReadBuffers", "error sending kROOTD_GETS command");
       result = kTRUE;
@@ -424,7 +424,7 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       while ((n = fSocket->RecvRaw(buf + actual_pos, Int_t(left))) < 0 &&
              TSystem::GetErrno() == EINTR)
          TSystem::ResetErrno();
-      
+
       if (n != Int_t(left)) {
          Error("GetBuffers", "error receiving buffer of length %d, got %d",
                Int_t(left), n);
@@ -432,7 +432,7 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
          goto end;
       }
       actual_pos += left;
-   } 
+   }
 
    fBytesRead  += total_len;
    fReadCalls++;
@@ -455,11 +455,11 @@ end:
 
    // If found problems try the generic implementation
    if (result) {
-      if (gDebug > 0) 
+      if (gDebug > 0)
          Info("ReadBuffers", "Couldnt use the specific implementation, calling TFile::ReadBuffers");
       return TFile::ReadBuffers(buf, pos, len, nbuf);
    }
-   
+
    return result;
 }
 
@@ -824,37 +824,6 @@ TNetSystem::TNetSystem(const char *url, Bool_t ftpowner)
 
    fFTPOwner = ftpowner;
    Create(url);
-}
-
-//______________________________________________________________________________
-TNetSystem::TNetSystem(const TNetSystem& ns) :
-  TSystem(ns),
-  fDir(ns.fDir),
-  fDirp(ns.fDirp),
-  fFTP(ns.fFTP),
-  fHost(ns.fHost),
-  fFTPOwner(ns.fFTPOwner),
-  fUser(ns.fUser),
-  fPort(ns.fPort)
-{
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TNetSystem& TNetSystem::operator=(const TNetSystem& ns)
-{
-   //assignement operator
-   if(this!=&ns) {
-      TSystem::operator=(ns);
-      fDir=ns.fDir;
-      fDirp=ns.fDirp;
-      fFTP=ns.fFTP;
-      fHost=ns.fHost;
-      fFTPOwner=ns.fFTPOwner;
-      fUser=ns.fUser;
-      fPort=ns.fPort;
-   }
-   return *this;
 }
 
 //______________________________________________________________________________

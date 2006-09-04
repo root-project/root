@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.155 2006/08/09 01:30:28 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.156 2006/08/31 13:40:56 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -38,7 +38,6 @@
 #include "TObjString.h"
 #include "Riostream.h"
 #include "TVirtualMutex.h"
-#include "TUrl.h"
 #include "TObjArray.h"
 
 //#define G__OLDEXPAND
@@ -1226,7 +1225,7 @@ Bool_t TUnixSystem::AccessPathName(const char *path, EAccessMode mode)
    if (helper)
       return helper->AccessPathName(path, mode);
 
-   if (::access(TUrl(path, kTRUE).GetFile(), mode) == 0)
+   if (::access(StripOffProto(path, "file:"), mode) == 0)
       return kFALSE;
    fLastErrorString = GetError();
    return kTRUE;
@@ -1258,7 +1257,7 @@ int TUnixSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
       if (numread != numwritten)
          ret = -3;
    }
-   
+
    fclose(from);
    fclose(to);
 
@@ -1541,7 +1540,7 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
 {
    // Find location of file "wfil" in a search path.
    // The search path is specified as a : separated list of directories.
-   // Return value is pointing to wfile for compatibility with 
+   // Return value is pointing to wfile for compatibility with
    // Which(const char*,const char*,EAccessMode) version
 
    if (gEnv->GetValue("Root.ShowPath", 0))
@@ -1576,7 +1575,7 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
       if (posEndOfPart) {
          name.Append(ptr, posEndOfPart - ptr);
          ptr = posEndOfPart + 1; // skip ':'
-      } else { 
+      } else {
          name.Append(ptr);
          ptr += strlen(ptr);
       }
@@ -3377,7 +3376,7 @@ int TUnixSystem::UnixMakedir(const char *dir)
    // -1 if the directory could not be created (either already exists or
    // illegal path name).
 
-   return ::mkdir(TUrl(dir, kTRUE).GetFile(), 0755);
+   return ::mkdir(StripOffProto(dir, "file:"), 0755);
 }
 
 //______________________________________________________________________________
@@ -3387,7 +3386,7 @@ void *TUnixSystem::UnixOpendir(const char *dir)
 
    struct stat finfo;
 
-   TString edir = TUrl(dir, kTRUE).GetFile();
+   const char *edir = StripOffProto(dir, "file:");
 
    if (stat(edir, &finfo) < 0)
       return 0;
@@ -3440,7 +3439,7 @@ int TUnixSystem::UnixFilestat(const char *fpath, FileStat_t &buf)
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
-   TString path = TUrl(fpath, kTRUE).GetFile();
+   const char *path = StripOffProto(fpath, "file:");
 
 #if defined(R__SEEK64)
    struct stat64 sbuf;

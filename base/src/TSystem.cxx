@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.143 2006/07/09 05:27:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.144 2006/08/10 23:27:36 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -90,75 +90,6 @@ Bool_t TProcessEventTimer::ProcessEvents()
 ClassImp(TSystem)
 
 TVirtualMutex* gSystemMutex = 0;
-
-//______________________________________________________________________________
-TSystem::TSystem(const TSystem& ts): TNamed(ts),
-     fReadmask(ts.fReadmask), fWritemask(ts.fWritemask), fReadready(ts.fReadready), fWriteready(ts.fWriteready),
-     fSignals(ts.fSignals), fNfd(ts.fNfd), fMaxrfd(ts.fMaxrfd), fMaxwfd(ts.fMaxwfd), fSigcnt(ts.fSigcnt),
-     fWdpath(ts.fWdpath), fHostname(ts.fHostname), fInsideNotify(ts.fInsideNotify), fBeepFreq(ts.fBeepFreq),
-     fBeepDuration(ts.fBeepDuration), fInControl(ts.fInControl), fDone(ts.fDone), fLevel(ts.fLevel),
-     fLastErrorString(ts.fLastErrorString), fTimers(ts.fTimers), fSignalHandler(ts.fSignalHandler),
-     fFileHandler(ts.fFileHandler), fOnExitList(ts.fOnExitList), fListLibs(ts.fListLibs),
-     fBuildArch(ts.fBuildArch), fBuildNode(ts.fBuildNode), fBuildDir(ts.fBuildDir), fFlagsDebug(ts.fFlagsDebug),
-     fFlagsOpt(ts.fFlagsOpt), fListPaths(ts.fListPaths), fIncludePath(ts.fIncludePath), fLinkedLibs(ts.fLinkedLibs),
-     fSoExt(ts.fSoExt), fObjExt(ts.fObjExt), fAclicMode(ts.fAclicMode), fMakeSharedLib(ts.fMakeSharedLib),
-     fMakeExe(ts.fMakeExe), fLinkdefSuffix(ts.fLinkdefSuffix), fCompiled(ts.fCompiled), fHelpers(ts.fHelpers)
-{
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TSystem& TSystem::operator=(const TSystem& ts)
-{
-   //assignment operator
-   if(this!=&ts) {
-      TNamed::operator=(ts);
-      fReadmask=ts.fReadmask;
-      fWritemask=ts.fWritemask;
-      fReadready=ts.fReadready;
-      fWriteready=ts.fWriteready;
-      fSignals=ts.fSignals;
-      fNfd=ts.fNfd;
-      fMaxrfd=ts.fMaxrfd;
-      fMaxwfd=ts.fMaxwfd;
-      fSigcnt=ts.fSigcnt;
-      fWdpath=ts.fWdpath;
-      fHostname=ts.fHostname;
-      fInsideNotify=ts.fInsideNotify;
-      fBeepFreq=ts.fBeepFreq;
-      fBeepDuration=ts.fBeepDuration;
-
-      fInControl=ts.fInControl;
-      fDone=ts.fDone;
-      fLevel=ts.fLevel;
-      fLastErrorString=ts.fLastErrorString;
-
-      fTimers=ts.fTimers;
-      fSignalHandler=ts.fSignalHandler;
-      fFileHandler=ts.fFileHandler;
-      fOnExitList=ts.fOnExitList;
-
-      fListLibs=ts.fListLibs;
-
-      fBuildArch=ts.fBuildArch;
-      fBuildNode=ts.fBuildNode;
-      fBuildDir=ts.fBuildDir;
-      fFlagsDebug=ts.fFlagsDebug;
-      fFlagsOpt=ts.fFlagsOpt;
-      fListPaths=ts.fListPaths;
-      fIncludePath=ts.fIncludePath;
-      fLinkedLibs=ts.fLinkedLibs;
-      fSoExt=ts.fSoExt;
-      fObjExt=ts.fObjExt;
-      fAclicMode=ts.fAclicMode;
-      fMakeSharedLib=ts.fMakeSharedLib;
-      fMakeExe=ts.fMakeExe;
-      fLinkdefSuffix=ts.fLinkdefSuffix;
-      fCompiled=ts.fCompiled;
-      fHelpers=ts.fHelpers;
-   }
-   return *this;
-}
 
 //______________________________________________________________________________
 TSystem::TSystem(const char *name, const char *title) : TNamed(name, title)

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.26 2006/05/30 15:27:52 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.27 2006/05/31 15:26:06 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -101,14 +101,14 @@ private:
    TString     fUser;        // Remote user
    Int_t       fPort;        // Remote port
 
+   TNetSystem(const TNetSystem&);             // not implemented
+   TNetSystem& operator=(const TNetSystem&);  // not implemented
+
    void       *GetDirPtr() const { return fDirp; }
 
 protected:
    void        Create(const char *url, TSocket *sock = 0);
    void        InitRemoteEntity(const char *url);
-
-   TNetSystem(const TNetSystem&);
-   TNetSystem& operator=(const TNetSystem&);
 
 public:
    TNetSystem(Bool_t ftpowner = kTRUE);

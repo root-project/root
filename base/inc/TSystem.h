@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.56 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.57 2006/07/04 17:36:37 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -235,15 +235,20 @@ protected:
    TSeqCollection  *fCompiled;         //List of shared libs from compiled macros to be deleted
    TSeqCollection  *fHelpers;          //List of helper classes for alternative file/directory access
 
-   TSystem(const TSystem&);
-   TSystem& operator=(const TSystem&);
-
    TSystem               *FindHelper(const char *path, void *dirptr = 0);
    virtual Bool_t         ConsistentWith(const char *path, void *dirptr = 0);
    virtual const char    *ExpandFileName(const char *fname);
    virtual void           SigAlarmInterruptsSyscalls(Bool_t) { }
    virtual const char    *GetLinkedLibraries();
    virtual void           DoBeep(Int_t /*freq*/=-1, Int_t /*duration*/=-1) const { printf("\a"); fflush(stdout); }
+
+   static const char *StripOffProto(const char *path, const char *proto) {
+      return !strncmp(path, proto, strlen(proto)) ? path + strlen(proto) : path;
+   }
+
+private:
+   TSystem(const TSystem&);              // not implemented
+   TSystem& operator=(const TSystem&);   // not implemented
 
 public:
    TSystem(const char *name = "Generic", const char *title = "Generic System");

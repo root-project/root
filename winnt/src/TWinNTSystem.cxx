@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.144 2006/07/05 04:49:05 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.145 2006/07/11 09:05:02 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -39,7 +39,6 @@
 #include "TGWin32Command.h"
 #include "TInterpreter.h"
 #include "TObjString.h"
-#include "TUrl.h"
 
 #include <sys/utime.h>
 #include <sys/timeb.h>
@@ -1652,11 +1651,11 @@ int  TWinNTSystem::MakeDirectory(const char *name)
 #ifdef WATCOM
    // It must be as follows
    if (!name) return 0;
-   return ::mkdir(TUrl(name, kTRUE).GetFile());
+   return ::mkdir(StripOffProto(name, "file:"));
 #else
    // but to be in line with TUnixSystem I did like this
    if (!name) return 0;
-   return ::_mkdir(TUrl(name, kTRUE).GetFile());
+   return ::_mkdir(StripOffProto(name, "file:"));
 #endif
 }
 
@@ -1780,7 +1779,7 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
       return helper->OpenDirectory(fdir);
    }
 
-   TString dir = TUrl(fdir, kTRUE).GetFile();
+   const char *dir = StripOffProto(fdir, "file:");
 
    char *entry = new char[strlen(dir)+3];
    struct _stati64 finfo;
@@ -2075,7 +2074,7 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
    if (mode==kExecutePermission)
       // cannot test on exe - use read instead
       mode=kReadPermission;
-   if (::_access(TUrl(path, kTRUE).GetFile(), mode) == 0)
+   if (::_access(StripOffProto(path, "file:"), mode) == 0)
       return kFALSE;
    fLastErrorString = GetError();
    return kTRUE;
@@ -2139,7 +2138,7 @@ int TWinNTSystem::GetPathInfo(const char *path, FileStat_t &buf)
    struct _stati64 sbuf;
 
    // Remove trailing backslashes
-   char *newpath = StrDup(TUrl(path, kTRUE).GetFile());
+   char *newpath = StrDup(StripOffProto(path, "file:"));
    int l = strlen(newpath);
    while (l > 1) {
       if (newpath[--l] != '\\' || newpath[--l] != '/') {
