@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.123 2006/06/14 18:15:30 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.124 2006/07/17 19:19:11 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -163,6 +163,8 @@ TCint::~TCint()
       G__close_inputfiles();
    }
 
+   free(fDictPos.ptype);
+   free(fDictPosGlobals.ptype);
    delete fMapfile;
 }
 

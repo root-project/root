@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.60 2006/08/16 08:42:35 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.61 2006/08/28 14:43:47 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -247,13 +247,13 @@ void TRint::ExecLogon()
 #endif
    if (!gSystem->AccessPathName(s, kReadPermission)) {
       ProcessFile(s);
-      delete [] s;
    }
+   delete [] s;
    s = gSystem->ConcatFileName(gSystem->HomeDirectory(), name);
    if (!gSystem->AccessPathName(s, kReadPermission)) {
       ProcessFile(s);
-      delete [] s;
    }
+   delete [] s;
    if (!gSystem->AccessPathName(name, kReadPermission))
       ProcessFile(name);
 
