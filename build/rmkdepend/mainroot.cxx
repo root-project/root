@@ -1,4 +1,4 @@
-// @(#)root/build:$Name:  $:$Id: mainroot.cxx,v 1.5 2006/08/21 09:55:11 rdm Exp $
+// @(#)root/build:$Name:  $:$Id: mainroot.cxx,v 1.6 2006/08/21 12:31:37 rdm Exp $
 // Author: Axel Naumann   21/03/06
 
 /*************************************************************************
@@ -15,14 +15,14 @@
 // routines:
 //  * dependencies for .d files use $(wildcard ...), so gmake doesn't
 //    bail out if one of the dependencies doesn't exist.
-//  * files starting with '/G__' and ending on ".cxx" are assumed to be 
-//    dictionaries. rmkdepend generates rules for these dictionaries 
-//    covering the .o file, the .d file, and the .cxx file itself, 
+//  * output files starting with '/G__' and ending on ".d" are assumed to
+//    be dictionaries. rmkdepend generates rules for these dictionaries 
+//    covering the .d file, and the .cxx file itself, 
 //    so the dictionaries get re-egenerated when an included header 
 //    file gets changed.
 //  * the detection / wildcarding of a dictionary file can be changed 
 //    by specifying -R=[tag]%[ext] as parameter to -R. The default is 
-//    "-R=/G__%.cxx".
+//    "-R=/G__%.d".
 //  * remove output file if we encounter an error.
 
 #include <string>
@@ -45,10 +45,11 @@ extern "C" int main_orig(int argc, char **argv);
 
 int rootBuild = 0;
 
-int isDict = 0;
-int newFile = 0;
-std::string currentDependencies;
-std::string currentFileBase;
+static int isDict = 0;
+static int newFile = 0;
+static int openWildcard = 0;
+static std::string currentDependencies;
+static std::string currentFileBase;
 
 extern "C"
 void ROOT_newFile()
@@ -58,15 +59,15 @@ void ROOT_newFile()
 
 void ROOT_flush()
 {
-   if (!currentFileBase.empty()) {
+   if (openWildcard) {
       fwrite(")\n", 2, 1, stdout); // closing "$(wildcard"
-      bool haveOldNonDict = !isDict;
-      if (haveOldNonDict) {
-         currentFileBase += "o";
-         fwrite(currentFileBase.c_str(), currentFileBase.length(), 1, stdout);
-         currentDependencies += '\n';
-         fwrite(currentDependencies.c_str(), currentDependencies.length(), 1, stdout);
-      }
+      openWildcard = 0;
+   }
+   if (!currentFileBase.empty()) {
+      currentFileBase += "o";
+      fwrite(currentFileBase.c_str(), currentFileBase.length(), 1, stdout);
+      currentDependencies += '\n';
+      fwrite(currentDependencies.c_str(), currentDependencies.length(), 1, stdout);
    }
    currentFileBase.clear();
    currentDependencies.clear();
@@ -106,8 +107,10 @@ else
    buf[0] = ' ';
    if (isDict) {
       posColon[1]=0;
+      char s = posColon[4]; // sove char that will be overwritten by \0 of "cxx"
       strcat(posColon, "cxx");
       fwrite(buf, (posColon - buf)+4, 1, stdout); // .cxx
+      posColon[4] = s;
    }
 
    posColon[1]='d';
@@ -120,6 +123,7 @@ else
    }
    fwrite(": $(wildcard ", 13, 1, stdout);
    fwrite(posColon + 4, len - (posColon + 4 - buf), 1, stdout);
+   openWildcard = 1;
 }
 
 int main(int argc, char **argv)
@@ -132,7 +136,7 @@ int main(int argc, char **argv)
    const char* outname = argv[2]+skip;
    while (outname[0] == ' ') outname = argv[2] + (++skip);
    if (outname) {
-      const char* dicttag = "/G__%.cxx";
+      const char* dicttag = "/G__%.d";
       if (argv[1][2] == '=')
          dicttag = argv[1] + 3;
       std::string sDictTag(dicttag);
