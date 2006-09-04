@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.99 2006/07/26 13:55:34 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.100 2006/08/01 10:54:37 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1011,6 +1011,8 @@ void TRootBrowser::CreateBrowser(const char *name)
    TGTextEntry *dropt_entry = fDrawOption->GetTextEntry();
    dropt_entry->SetToolTipText("Object Draw Option", 300);
    fDrawOption->Resize(80, 10);
+   TGListBox *lb = fDrawOption->GetListBox();
+   lb->Resize(lb->GetWidth(), 120);
    Int_t dropt = 1;
    fDrawOption->AddEntry("", dropt++);
    fDrawOption->AddEntry("same", dropt++);
@@ -1018,6 +1020,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fDrawOption->AddEntry("lego", dropt++);
    fDrawOption->AddEntry("colz", dropt++);
    fDrawOption->AddEntry("alp", dropt++);
+   fDrawOption->AddEntry("text", dropt++);
 
    fToolBar->AddFrame(fDrawOption, new TGLayoutHints(kLHintsCenterY | kLHintsRight | kLHintsExpandY,2,2,2,0));
    fToolBar->AddFrame(new TGLabel(fToolBar,"Option"),
@@ -1121,6 +1124,8 @@ void TRootBrowser::CreateBrowser(const char *name)
    SetClassHints("Browser", "Browser");
 
    SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
+   SetWMSizeHints(600, 350, 10000, 10000, 2, 2);
+   SetIconName("ROOT Browser");
 
    fListLevel = 0;
    fTreeLock  = kFALSE;
