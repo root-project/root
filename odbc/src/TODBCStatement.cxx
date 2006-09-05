@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.8 2006/06/02 14:02:03 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.9 2006/06/25 18:43:24 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -25,6 +25,11 @@
 #include "Riostream.h"
 
 #include <sqlext.h>
+
+#define kSqlTime      123781
+#define kSqlDate      123782
+#define kSqlTimestamp 123783
+#define kSqlBinary    123784
 
 
 ClassImp(TODBCStatement)
@@ -397,7 +402,10 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
    SQLSMALLINT sqlctype = 0;
    switch (sqltype) {
       case SQL_CHAR:
-      case SQL_VARCHAR: sqlctype = SQL_C_CHAR; break;
+      case SQL_VARCHAR:   sqlctype = SQL_C_CHAR; break;
+      case SQL_BINARY:   
+      case SQL_LONGVARBINARY: 
+      case SQL_VARBINARY: sqlctype = SQL_C_BINARY; break;
       case SQL_LONGVARCHAR: Info("BindColumn","BIG VARCHAR not supported yet"); return kFALSE; break;
 
       case SQL_DECIMAL:   sqlctype = SQL_C_DOUBLE; break;
@@ -409,6 +417,9 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
       case SQL_DOUBLE:    sqlctype = SQL_C_DOUBLE; break;
       case SQL_TINYINT:   sqlctype = SQL_C_STINYINT; break;
       case SQL_BIGINT:    sqlctype = SQL_C_SBIGINT; break;
+      case SQL_TYPE_DATE: sqlctype = SQL_C_TYPE_DATE; break;
+      case SQL_TYPE_TIME: sqlctype = SQL_C_TYPE_TIME; break;
+      case SQL_TYPE_TIMESTAMP: sqlctype = SQL_C_TYPE_TIMESTAMP; break;
       default: {
          SetError(-1, Form("SQL type %d not supported",sqltype), "BindColumn");
          return kFALSE;
@@ -429,6 +440,10 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
       case SQL_C_FLOAT:    elemsize = sizeof(float); break;
       case SQL_C_DOUBLE:   elemsize = sizeof(double); break;
       case SQL_C_CHAR:     elemsize = size; break;
+      case SQL_C_BINARY:   elemsize = size; break;
+      case SQL_C_TYPE_DATE: elemsize = sizeof(DATE_STRUCT); break;
+      case SQL_C_TYPE_TIME: elemsize = sizeof(TIME_STRUCT); break;
+      case SQL_C_TYPE_TIMESTAMP: elemsize = sizeof(TIMESTAMP_STRUCT); break;
 
       default: {
          SetError(-1, Form("SQL C Type %d is not supported",sqlctype), "BindColumn");
@@ -484,6 +499,10 @@ Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
       case kDouble_t:   sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE;   elemsize = sizeof(double); break;
       case kDouble32_t: sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE;   elemsize = sizeof(double); break;
       case kCharStar:   sqltype = SQL_CHAR;    sqlctype = SQL_C_CHAR;     elemsize = size; break;
+      case kSqlBinary:  sqltype = SQL_BINARY;  sqlctype = SQL_C_BINARY;   elemsize = size; break;
+      case kSqlDate:    sqltype = SQL_TYPE_DATE; sqlctype = SQL_C_TYPE_DATE; elemsize = sizeof(DATE_STRUCT); break;
+      case kSqlTime:    sqltype = SQL_TYPE_TIME; sqlctype = SQL_C_TYPE_TIME; elemsize = sizeof(TIME_STRUCT); break;
+      case kSqlTimestamp: sqltype = SQL_TYPE_TIMESTAMP; sqlctype = SQL_C_TYPE_TIMESTAMP; elemsize = sizeof(TIMESTAMP_STRUCT); break;
       default: {
          SetError(-1, Form("Root type %d is not supported", roottype), "BindParam");
          return kFALSE;
@@ -556,6 +575,25 @@ long double TODBCStatement::ConvertToNumeric(Int_t npar)
       case SQL_C_STINYINT: return *((signed char*) addr); break;
       case SQL_C_FLOAT:    return *((float*) addr); break;
       case SQL_C_DOUBLE:   return *((double*) addr); break;
+      case SQL_C_TYPE_DATE: {
+         DATE_STRUCT* dt = (DATE_STRUCT*) addr;
+         TDatime rtm(dt->year, dt->month,  dt->day, 0, 0, 0);
+         return rtm.GetDate();
+         break;            
+      }
+      case SQL_C_TYPE_TIME: {
+         TIME_STRUCT* tm = (TIME_STRUCT*) addr;
+         TDatime rtm(2000, 1, 1, tm->hour, tm->minute, tm->second);
+         return rtm.GetTime();
+         break;
+      }
+      case SQL_C_TYPE_TIMESTAMP: {
+         TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr; 
+         TDatime rtm(tm->year, tm->month,  tm->day, 
+                     tm->hour, tm->minute, tm->second);
+         return rtm.Get();
+         break;
+      }
    }
    return 0;
 }
@@ -582,6 +620,25 @@ const char* TODBCStatement::ConvertToString(Int_t npar)
       case SQL_C_UTINYINT:snprintf(buf,100,"%u",*((unsigned char*) addr)); break;
       case SQL_C_FLOAT:   snprintf(buf,100,"%f",*((float*) addr)); break;
       case SQL_C_DOUBLE:  snprintf(buf,100,"%f",*((double*) addr)); break;
+      case SQL_C_TYPE_DATE: {
+         DATE_STRUCT* dt = (DATE_STRUCT*) addr;
+         snprintf(buf,100,"%4.4d-%2.2d-%2.2d", 
+                  dt->year, dt->month,  dt->day);
+         break;
+      }
+      case SQL_C_TYPE_TIME: {
+         TIME_STRUCT* tm = (TIME_STRUCT*) addr;
+         snprintf(buf,100,"%2.2d:%2.2d:%2.2d",
+                  tm->hour, tm->minute, tm->second);
+         break;
+      }
+      case SQL_C_TYPE_TIMESTAMP: {
+         TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr; 
+         snprintf(buf,100,"%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
+                  tm->year, tm->month,  tm->day,
+                  tm->hour, tm->minute, tm->second);
+         break;
+      }
       default: return 0;
    }
 
@@ -717,6 +774,121 @@ const char* TODBCStatement::GetString(Int_t npar)
 }
 
 //______________________________________________________________________________
+Bool_t TODBCStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
+{
+   // return parameter as binary data 
+
+   mem = 0;
+   size = 0;
+
+   void* addr = GetParAddr(npar);
+   if (addr==0) return kFALSE;
+
+   if ((fBuffer[npar].fBsqlctype==SQL_C_BINARY) || 
+       (fBuffer[npar].fBsqlctype==SQL_C_CHAR)) {
+           
+      // first check if data length is null
+      int len = fBuffer[npar].fBlenarray[fBufferCounter];
+
+      if ((len == SQL_NULL_DATA) || (len==0)) return kTRUE;
+
+      size = len;
+
+      if (fBuffer[npar].fBstrbuffer==0)
+         fBuffer[npar].fBstrbuffer = new char[size];
+
+      memcpy(fBuffer[npar].fBstrbuffer, addr, size);
+
+      mem = fBuffer[npar].fBstrbuffer;
+      
+      return kTRUE;
+   }
+
+   return kFALSE;
+}
+
+
+//______________________________________________________________________________
+Bool_t TODBCStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
+{
+   // return field value as date
+   
+   void* addr = GetParAddr(npar);
+   if (addr==0) return kFALSE;
+
+   if (fBuffer[npar].fBsqlctype!=SQL_C_TYPE_DATE) return kFALSE;
+   
+   DATE_STRUCT* dt = (DATE_STRUCT*) addr;
+   year = dt->year;
+   month = dt->month;
+   day = dt->day; 
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TODBCStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
+{
+   // return field value as time
+   
+   void* addr = GetParAddr(npar);
+   if (addr==0) return kFALSE;
+
+   if (fBuffer[npar].fBsqlctype!=SQL_C_TYPE_TIME) return kFALSE;
+     
+   TIME_STRUCT* tm = (TIME_STRUCT*) addr;
+   hour = tm->hour;
+   min = tm->minute;
+   sec = tm->second; 
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TODBCStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
+{
+   // return field value as date & time
+   
+   void* addr = GetParAddr(npar);
+   if (addr==0) return kFALSE;
+
+   if (fBuffer[npar].fBsqlctype!=SQL_C_TYPE_TIMESTAMP) return kFALSE;
+     
+   TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr;
+
+   year = tm->year;
+   month = tm->month;
+   day = tm->day;
+   hour = tm->hour;
+   min = tm->minute;
+   sec = tm->second;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TODBCStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac)
+{
+   // return field value as time stamp
+
+   void* addr = GetParAddr(npar);
+   if (addr==0) return kFALSE;
+
+   if (fBuffer[npar].fBsqlctype!=SQL_C_TYPE_TIMESTAMP) return kFALSE;
+     
+   TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr;
+
+   year = tm->year;
+   month = tm->month;
+   day = tm->day;
+   hour = tm->hour;
+   min = tm->minute;
+   sec = tm->second;
+   frac = tm->fraction;
+   return kTRUE;
+}
+
+
+//______________________________________________________________________________
 Bool_t TODBCStatement::SetNull(Int_t npar)
 {
    // Set NULL as parameter value
@@ -845,6 +1017,103 @@ Bool_t TODBCStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
       *((char*) addr) = 0;
       fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NTS;
    }
+
+   return kTRUE;
+}
+ 
+//______________________________________________________________________________
+Bool_t TODBCStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize)
+{
+   //set parameter value as binary data
+   
+   void* addr = GetParAddr(npar, kSqlBinary, maxsize);
+   if (addr==0) return kFALSE;
+
+   if (size>fBuffer[npar].fBelementsize) 
+      size = fBuffer[npar].fBelementsize;
+      
+   memcpy(addr, mem, size);
+   fBuffer[npar].fBlenarray[fBufferCounter] = size;
+ 
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TODBCStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
+{
+   // set parameter value as date 
+
+   void* addr = GetParAddr(npar, kSqlDate);
+   if (addr==0) return kFALSE;
+
+   DATE_STRUCT* dt = (DATE_STRUCT*) addr;
+   dt->year = year;
+   dt->month = month;
+   dt->day = day;
+ 
+   fBuffer[npar].fBlenarray[fBufferCounter] = 0;
+
+   return kTRUE;
+}
+ 
+//______________________________________________________________________________
+Bool_t TODBCStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
+{
+   // set parameter value as time 
+
+   void* addr = GetParAddr(npar, kSqlTime);
+   if (addr==0) return kFALSE;
+
+   TIME_STRUCT* tm = (TIME_STRUCT*) addr;
+   tm->hour = hour;
+   tm->minute = min;
+   tm->second = sec;
+
+   fBuffer[npar].fBlenarray[fBufferCounter] = 0;
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TODBCStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec)
+{
+   // set parameter value as date & time 
+
+   void* addr = GetParAddr(npar, kSqlTimestamp);
+   if (addr==0) return kFALSE;
+
+   TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr;
+   tm->year = year;
+   tm->month = month;
+   tm->day = day;
+   tm->hour = hour;
+   tm->minute = min;
+   tm->second = sec;
+   tm->fraction = 0;
+
+   fBuffer[npar].fBlenarray[fBufferCounter] = 0;
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TODBCStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac)
+{
+   // set parameter value as timestamp
+
+   void* addr = GetParAddr(npar, kSqlTimestamp);
+   if (addr==0) return kFALSE;
+
+   TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr;
+   tm->year = year;
+   tm->month = month;
+   tm->day = day;
+   tm->hour = hour;
+   tm->minute = min;
+   tm->second = sec;
+   tm->fraction = frac;
+
+   fBuffer[npar].fBlenarray[fBufferCounter] = 0;
 
    return kTRUE;
 }
