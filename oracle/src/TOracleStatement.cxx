@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.cxx,v 1.4 2006/06/22 08:18:57 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.cxx,v 1.5 2006/06/25 18:43:24 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 
@@ -24,8 +24,9 @@
 ClassImp(TOracleStatement)
 
 //______________________________________________________________________________
-TOracleStatement::TOracleStatement(Connection* conn, Statement* stmt, Int_t niter, Bool_t errout) :
+TOracleStatement::TOracleStatement(Environment* env, Connection* conn, Statement* stmt, Int_t niter, Bool_t errout) :
    TSQLStatement(errout),
+   fEnv(env),
    fConn(conn),
    fStmt(stmt),
    fResult(0),
@@ -34,7 +35,8 @@ TOracleStatement::TOracleStatement(Connection* conn, Statement* stmt, Int_t nite
    fBufferSize(0),
    fNumIterations(niter),
    fIterCounter(0),
-   fWorkingMode(0)
+   fWorkingMode(0),
+   fTimeFmt("MM/DD/YYYY, HH24:MI:SS")
 {
    // Normal constructor of TOracleStatement class
    // On creation time specifies buffer length, which should be
@@ -106,18 +108,18 @@ void TOracleStatement::Close(Option_t *)
       }                                                 \
    }
 
-#define CheckGetField(method)                             \
+#define CheckGetField(method, defres)                   \
    {                                                    \
       ClearError();                                     \
       if (!IsResultSet()) {                             \
          SetError(-1,"There is no result set for statement", method); \
-         return 0;                                      \
+         return defres;                                 \
       }                                                 \
       if ((npar<0) || (npar>=fBufferSize)) {                                     \
          TString errmsg("Invalid parameter number ");   \
          errmsg+= npar;                                 \
          SetError(-1,errmsg.Data(),method);             \
-         return 0;                                      \
+         return defres;                                 \
       }                                                 \
    }
 
@@ -133,6 +135,7 @@ void TOracleStatement::SetBufferSize(Int_t size)
     fBuffer = new TBufferRec[size];
     for (Int_t n=0;n<fBufferSize;n++) {
        fBuffer[n].strbuf = 0;
+       fBuffer[n].strbufsize = -1;
        fBuffer[n].namebuf = 0;
     }
 }
@@ -350,6 +353,111 @@ Bool_t TOracleStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 }
 
 //______________________________________________________________________________
+Bool_t TOracleStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize)
+{
+   // set parameter value as binary data
+   
+   CheckSetPar("SetBinary");
+
+   try {
+
+      // this is when NextIteration is called first time
+      if (fIterCounter==1) 
+         fStmt->setMaxParamSize(npar+1, maxsize);
+         
+      Bytes buf((unsigned char*) mem, size);
+
+      fStmt->setBytes(npar+1, buf);
+      
+      return kTRUE;
+
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetBinary");
+   }
+   return kFALSE;
+}   
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
+{
+   // Set date value for parameter npar
+
+   CheckSetPar("SetDate");
+
+   try {
+      Date tm = fStmt->getDate(npar+1);
+      int o_year;
+      unsigned int o_month, o_day, o_hour, o_minute, o_second; 
+      tm.getDate(o_year, o_month, o_day, o_hour, o_minute, o_second);
+      tm.setDate(year, month, day, o_hour, o_minute, o_second);
+      fStmt->setDate(npar+1, tm);
+      return kTRUE;
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetDate");
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
+{
+   // Set time value for parameter npar
+
+   CheckSetPar("SetTime");
+   
+   try {
+      Date tm = fStmt->getDate(npar+1);
+      int o_year;
+      unsigned int o_month, o_day, o_hour, o_minute, o_second; 
+      tm.getDate(o_year, o_month, o_day, o_hour, o_minute, o_second);
+      tm.setDate(o_year, o_month, o_day, hour, min, sec);
+      fStmt->setDate(npar+1, tm);
+      return kTRUE;
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetTime");
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec)
+{
+   // Set date & time value for parameter npar
+
+   CheckSetPar("SetDatime");
+
+   try {
+      Date tm(fEnv, year, month, day, hour, min, sec);
+      fStmt->setDate(npar+1, tm);
+      return kTRUE;
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetDatime");
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac)
+{
+   // Set date & time value for parameter npar
+
+   CheckSetPar("SetTimestamp");
+
+   try {
+      Timestamp tm(fEnv, year, month, day, hour, min, sec, frac);
+      fStmt->setTimestamp(npar+1, tm);
+      return kTRUE;
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetTimestamp");
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 Bool_t TOracleStatement::NextIteration()
 {
    // Add next iteration for statement with parameters
@@ -413,7 +521,7 @@ const char* TOracleStatement::GetFieldName(Int_t npar)
 {
    // Return field name in result set 
     
-   CheckGetField("GetFieldName");
+   CheckGetField("GetFieldName", 0);
 
    if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
 
@@ -446,11 +554,12 @@ Bool_t TOracleStatement::NextResultRow()
    if (fResult==0) return kFALSE;
 
    try {
-      for (int n=0;n<fBufferSize;n++)
-        if (fBuffer[n].strbuf) {
+      for (int n=0;n<fBufferSize;n++) {
+        if (fBuffer[n].strbuf) 
            delete[] fBuffer[n].strbuf;
-           fBuffer[n].strbuf = 0;
-        }
+        fBuffer[n].strbuf = 0;
+        fBuffer[n].strbufsize = -1;
+      }
       if (!fResult->next()) {
          fWorkingMode = 0;
          CloseBuffer();
@@ -469,7 +578,7 @@ Bool_t TOracleStatement::IsNull(Int_t npar)
 {
    // Checks if fieled value in result set is NULL  
     
-   CheckGetField("IsNull");
+   CheckGetField("IsNull", kFALSE);
 
    try {
       return fResult->isNull(npar+1);
@@ -485,7 +594,7 @@ Int_t TOracleStatement::GetInt(Int_t npar)
 {
    // return field value as integer
     
-   CheckGetField("GetInt");
+   CheckGetField("GetInt", 0);
 
    Int_t res = 0;
 
@@ -504,7 +613,7 @@ UInt_t TOracleStatement::GetUInt(Int_t npar)
 {
    // return field value as unsigned integer
 
-   CheckGetField("GetUInt");
+   CheckGetField("GetUInt", 0);
 
    UInt_t res = 0;
 
@@ -524,7 +633,7 @@ Long_t TOracleStatement::GetLong(Int_t npar)
 {
    // return field value as long integer
 
-   CheckGetField("GetLong");
+   CheckGetField("GetLong", 0);
 
    Long_t res = 0;
 
@@ -543,7 +652,7 @@ Long64_t TOracleStatement::GetLong64(Int_t npar)
 {
    // return field value as 64-bit integer
 
-   CheckGetField("GetLong64");
+   CheckGetField("GetLong64", 0);
 
    Long64_t res = 0;
 
@@ -562,7 +671,7 @@ ULong64_t TOracleStatement::GetULong64(Int_t npar)
 {
    // return field value as unsigned 64-bit integer
 
-   CheckGetField("GetULong64");
+   CheckGetField("GetULong64", 0);
 
    ULong64_t res = 0;
 
@@ -581,7 +690,7 @@ Double_t TOracleStatement::GetDouble(Int_t npar)
 {
    // return field value as double
 
-   CheckGetField("GetDouble");
+   CheckGetField("GetDouble", 0.);
 
    Double_t res = 0;
 
@@ -600,7 +709,7 @@ const char* TOracleStatement::GetString(Int_t npar)
 {
    // return field value as string
 
-   CheckGetField("GetString");
+   CheckGetField("GetString", 0);
 
    if (fBuffer[npar].strbuf!=0) return fBuffer[npar].strbuf;
 
@@ -612,7 +721,7 @@ const char* TOracleStatement::GetString(Int_t npar)
       std::string res;
 
       switch (datatype) {
-        case 2: { //NUMBER
+        case SQLT_NUM: { // oracle numeric NUMBER
            int prec = (*fFieldInfo)[npar].getInt(MetaData::ATTR_PRECISION);
            int scale = (*fFieldInfo)[npar].getInt(MetaData::ATTR_SCALE);
 
@@ -626,25 +735,30 @@ const char* TOracleStatement::GetString(Int_t npar)
            }
            break;
         }
-        case 1:  // VARCHAR2
-        case 12: // DATE
-        case 96:  // CHAR
+        case SQLT_CHR:  // character string
+        case SQLT_VCS:  // variable character string
+        case SQLT_AFC: // ansi fixed char
+        case SQLT_AVC: // ansi var char
            res = fResult->getString(npar+1);
            break;
-        case 187: // TIMESTAMP
-        case 188: // TIMESTAMP WITH TIMEZONE
-        case 232: // TIMESTAMP WITH LOCAL TIMEZONE
-           res = (fResult->getTimestamp(npar+1)).toText("MM/DD/YYYY, HH24:MI:SS",0);
+        case SQLT_DAT:  // Oracle native DATE type
+           res = (fResult->getDate(npar+1)).toText(fTimeFmt.Data());
+           break;
+        case SQLT_TIMESTAMP:     // TIMESTAMP
+        case SQLT_TIMESTAMP_TZ:  // TIMESTAMP WITH TIMEZONE
+        case SQLT_TIMESTAMP_LTZ: // TIMESTAMP WITH LOCAL TIMEZONE
+           res = (fResult->getTimestamp(npar+1)).toText(fTimeFmt.Data(), 0);
            break;
         default:
            res = fResult->getString(npar+1);
-           Info("getString","Type %d may not be supported");
+           Info("getString","Type %d may not be supported", datatype);
       }
 
       int len = res.length();
 
       if (len>0) {
           fBuffer[npar].strbuf = new char[len+1];
+          fBuffer[npar].strbufsize = len+1;
           strcpy(fBuffer[npar].strbuf, res.c_str());
       }
 
@@ -655,4 +769,144 @@ const char* TOracleStatement::GetString(Int_t npar)
    }
 
    return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
+{
+   // Return field value as binary array 
+
+   mem = 0;
+   size = 0;
+
+   CheckGetField("GetBinary", kFALSE);
+
+   if (fBuffer[npar].strbufsize>=0) {
+      mem = fBuffer[npar].strbuf; 
+      size = fBuffer[npar].strbufsize;
+      return kTRUE;
+   }
+
+   try {
+      if (fResult->isNull(npar+1)) return kTRUE;
+      
+      Blob parblob = fResult->getBlob(npar+1);
+      
+      parblob.open(OCCI_LOB_READONLY);
+      
+      size = parblob.length();
+      
+      fBuffer[npar].strbufsize = size;
+      
+      if (size>0) {
+         mem = malloc(size); 
+         
+         fBuffer[npar].strbuf = (char*) mem;
+      
+         Stream* parstream = parblob.getStream();
+         
+         char* buf = (char*) mem;
+         
+         /*int len = */ parstream->readBuffer(buf, size);
+         
+         parblob.closeStream(parstream);
+      }
+      
+      parblob.close();
+      
+      return kTRUE;
+         
+   } catch (SQLException &oraex) {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetBinary");
+   }
+   
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
+{
+   // return field value as date
+   
+   Int_t hour, min, sec;
+   
+   return GetDatime(npar, year, month, day, hour, min, sec);
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
+{
+   // return field value as time
+    
+   Int_t year, month, day;
+
+   return GetDatime(npar, year, month, day, hour, min, sec);
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
+{
+   // return field value as date & time
+    
+   CheckGetField("GetDatime", kFALSE);
+
+   try {
+      if (!fResult->isNull(npar+1)) {
+         int datatype = (*fFieldInfo)[npar].getInt(MetaData::ATTR_DATA_TYPE);
+         
+         if (datatype!=SQLT_DAT) return kFALSE;
+          
+         Date tm = fResult->getDate(npar+1);
+         int o_year;
+         unsigned int o_month, o_day, o_hour, o_minute, o_second; 
+         tm.getDate(o_year, o_month, o_day, o_hour, o_minute, o_second);
+         year = (Int_t) o_year;
+         month = (Int_t) o_month;
+         day = (Int_t) o_day;
+         hour = (Int_t) o_hour;
+         min = (Int_t) o_minute;
+         sec = (Int_t) o_second;
+         return kTRUE;
+      }
+   } catch (SQLException &oraex) {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetDatime");
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac)
+{
+   // return field value as date & time
+    
+   CheckGetField("GetTimestamp", kFALSE);
+
+   try {
+      if (!fResult->isNull(npar+1)) {
+         int datatype = (*fFieldInfo)[npar].getInt(MetaData::ATTR_DATA_TYPE);
+
+         if ((datatype!=SQLT_TIMESTAMP) && 
+             (datatype!=SQLT_TIMESTAMP_TZ) && 
+             (datatype!=SQLT_TIMESTAMP_LTZ)) return kFALSE;
+
+         Timestamp tm = fResult->getTimestamp(npar+1);
+         int o_year;
+         unsigned int o_month, o_day, o_hour, o_minute, o_second, o_frac; 
+         tm.getDate(o_year, o_month, o_day);
+         tm.getTime(o_hour, o_minute, o_second, o_frac);
+         year = (Int_t) o_year;
+         month = (Int_t) o_month;
+         day = (Int_t) o_day;
+         hour = (Int_t) o_hour;
+         min = (Int_t) o_minute;
+         sec = (Int_t) o_second;
+         frac = (Int_t) o_frac;
+         return kTRUE;  
+      }
+   } catch (SQLException &oraex) {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetTimestamp");
+   }
+
+   return kFALSE;
 }

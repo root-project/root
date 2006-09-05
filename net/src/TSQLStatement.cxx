@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStatement.cxx,v 1.3 2006/06/02 14:02:03 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStatement.cxx,v 1.4 2006/06/25 18:43:24 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -162,6 +162,40 @@
 //       }
 //    }    
 //
+// 4. Working with date/time parameters
+// ====================================
+// Current implementation supports date, time, date&time and timestamp 
+// data (all time intervals not supported yet). To set or get date/time values,
+// following methods should be used:
+//   SetTime()/GetTime() - only time (hour:min:sec), 
+//   SetDate()/GetDate() - only date (year-month-day), 
+//   SetDatime()/GetDatime() - date and time 
+//   SetTimestamp()/GetTimestamp() - timestamp with seconds fraction
+// For some of these methods TDatime type can be used as parameter / return value.
+// Be aware, that TDatime supports only dates after 1995-01-01.
+// There are also methods to get separately year, month, day, hour, minutes and seconds.
+//
+// Different SQL databases has different treatement of date/time types.
+// For instance, MySQL has all correspondent types (TIME, DATE, DATETIME and TIMESTAMP),
+// Oracle native driver supports only DATE (which is actually date and time) and TIMESTAMP
+// ODBC interface provides access for time, date and timestamps.
+// Therefore, one should use correct methods to access such data.
+// For instance, in MySQL SQL type 'DATE' is only date (one should use GetDate() to 
+// access such data), while in Oracle it is date and time. Therefore, 
+// to get complete data from 'DATE' column in Oracle, one should use GetDatime() method.
+//
+// The only difference of timestamp from date/time, that it has fractional
+// seconds part. Be aware, that fractional part can has different meaning 
+// (actual value) in different SQL plugins.
+//
+// 5. Binary data
+// ==============
+// Most of modern data bases support just binary data, which is
+// typically has SQL type name 'BLOB'. To access data in such
+// columns, GetBinary()/SetBinary() methods should be used. 
+// Current implementation supposed, that complete content of the 
+// column must be retrieved at once. Therefore very big data of 
+// gigabytes size may cause a problem.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -209,3 +243,142 @@ void TSQLStatement::SetError(Int_t code, const char* msg, const char* method)
    if ((method!=0) && fErrorOut)
       Error(method,"Code: %d  Msg: %s", code, (msg ? msg : "No message"));
 }
+
+//______________________________________________________________________________
+Bool_t TSQLStatement::SetDate(Int_t npar, const TDatime& tm)
+{
+   // set only date value for specified parameter from TDatime object
+   
+   return SetDate(npar, tm.GetYear(), tm.GetMonth(), tm.GetDay());
+}
+
+//______________________________________________________________________________
+Bool_t TSQLStatement::SetTime(Int_t npar, const TDatime& tm)
+{
+   // set only time value for specified parameter from TDatime object
+   
+   return SetTime(npar, tm.GetHour(), tm.GetMinute(), tm.GetSecond());
+}
+
+//______________________________________________________________________________
+Bool_t TSQLStatement::SetDatime(Int_t npar, const TDatime& tm)
+{
+   // set date & time value for specified parameter from TDatime object
+   
+   return SetDatime(npar, tm.GetYear(), tm.GetMonth(), tm.GetDay(),
+                          tm.GetHour(), tm.GetMinute(), tm.GetSecond());
+}
+
+//______________________________________________________________________________
+Bool_t TSQLStatement::SetTimestamp(Int_t npar, const TDatime& tm)
+{
+   // set timestamp value for specified parameter from TDatime object
+   
+   return SetTimestamp(npar, tm.GetYear(), tm.GetMonth(), tm.GetDay(),
+                             tm.GetHour(), tm.GetMinute(), tm.GetSecond(), 0);
+}
+
+//______________________________________________________________________________
+TDatime TSQLStatement::GetDatime(Int_t npar)
+{
+   // return value of parameter in form of TDatime
+   // Be aware, that TDatime does not allow dates before 1995-01-01 
+   
+   Int_t year, month, day, hour, min, sec;
+   
+   if (!GetDatime(npar, year, month, day, hour, min, sec))
+     return TDatime();
+   
+   if (year<1995) {
+      SetError(-1, "Date before year 1995 does not supported by TDatime type", "GetDatime");
+      return TDatime();
+   }
+   
+   return TDatime(year, month, day, hour, min, sec);
+}
+
+//______________________________________________________________________________
+Int_t TSQLStatement::GetYear(Int_t npar)
+{
+   // return year value for parameter (if applicable) 
+   
+   Int_t year, month, day, hour, min, sec, frac;
+   if (GetDate(npar, year, month, day)) return year;
+   if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return year;
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TSQLStatement::GetMonth(Int_t npar)
+{
+   // return month value for parameter (if applicable) 
+
+   Int_t year, month, day, hour, min, sec, frac;
+   if (GetDate(npar, year, month, day)) return month;
+   if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return month;
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TSQLStatement::GetDay(Int_t npar)
+{
+   // return day value for parameter (if applicable) 
+
+   Int_t year, month, day, hour, min, sec, frac;
+   if (GetDate(npar, year, month, day)) return day;
+   if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return day;
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TSQLStatement::GetHour(Int_t npar)
+{
+   // return hours value for parameter (if applicable) 
+
+   Int_t year, month, day, hour, min, sec, frac;
+   if (GetTime(npar, hour, min, sec)) return hour;
+   if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return hour;
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TSQLStatement::GetMinute(Int_t npar)
+{
+   // return minutes value for parameter (if applicable) 
+
+   Int_t year, month, day, hour, min, sec, frac;
+   if (GetTime(npar, hour, min, sec)) return min;
+   if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return min;
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TSQLStatement::GetSecond(Int_t npar)
+{
+   // return seconds value for parameter (if applicable) 
+
+   Int_t year, month, day, hour, min, sec, frac;
+   if (GetTime(npar, hour, min, sec)) return sec;
+   if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return sec;
+   return 0;
+}
+
+//______________________________________________________________________________
+TDatime TSQLStatement::GetTimestamp(Int_t npar)
+{
+   // return value of parameter in form of TDatime
+   // Be aware, that TDatime does not allow dates before 1995-01-01 
+   
+   Int_t year, month, day, hour, min, sec, frac;
+   
+   if (!GetTimestamp(npar, year, month, day, hour, min, sec, frac))
+     return TDatime();
+   
+   if (year<1995) {
+      SetError(-1, "Date before year 1995 does not supported by TDatime type", "GetTimestamp");
+      return TDatime();
+   }
+   
+   return TDatime(year, month, day, hour, min, sec);
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStatement.h,v 1.4 2006/06/02 14:02:03 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStatement.h,v 1.5 2006/06/25 18:43:24 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -17,6 +17,9 @@
 #endif
 #ifndef ROOT_TString
 #include "TString.h"
+#endif
+#ifndef ROOT_TDatime
+#include "TDatime.h"
 #endif
 
 class TSQLStatement : public TObject {
@@ -48,6 +51,16 @@ public:
    virtual Bool_t      SetULong64(Int_t, ULong64_t) { return kFALSE; }
    virtual Bool_t      SetDouble(Int_t, Double_t) { return kFALSE; }
    virtual Bool_t      SetString(Int_t, const char*, Int_t = 256) { return kFALSE; }
+   virtual Bool_t      SetDate(Int_t, Int_t, Int_t, Int_t) { return kFALSE; }
+           Bool_t      SetDate(Int_t, const TDatime&);
+   virtual Bool_t      SetTime(Int_t, Int_t, Int_t, Int_t) { return kFALSE; }
+           Bool_t      SetTime(Int_t, const TDatime&);
+   virtual Bool_t      SetDatime(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t) { return kFALSE; }
+           Bool_t      SetDatime(Int_t, const TDatime&);
+   virtual Bool_t      SetTimestamp(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t = 0) { return kFALSE; }
+           Bool_t      SetTimestamp(Int_t, const TDatime&);
+   virtual void        SetTimeFormating(const char*) {}
+   virtual Bool_t      SetBinary(Int_t, void*, Long_t, Long_t = 0x1000) { return kFALSE; }
 
    virtual Bool_t      Process() = 0;
    virtual Int_t       GetNumAffectedRows() { return 0; }
@@ -65,6 +78,20 @@ public:
    virtual ULong64_t   GetULong64(Int_t) { return 0; }
    virtual Double_t    GetDouble(Int_t) { return 0.; }
    virtual const char *GetString(Int_t) { return 0; }
+   virtual Bool_t      GetBinary(Int_t, void* &, Long_t&) { return kFALSE; }
+
+   virtual Bool_t      GetDate(Int_t, Int_t&, Int_t&, Int_t&) { return kFALSE; }
+   virtual Bool_t      GetTime(Int_t, Int_t&, Int_t&, Int_t&) { return kFALSE; }
+   virtual Bool_t      GetDatime(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&) { return kFALSE; }
+           TDatime     GetDatime(Int_t);
+           Int_t       GetYear(Int_t);
+           Int_t       GetMonth(Int_t);
+           Int_t       GetDay(Int_t);
+           Int_t       GetHour(Int_t);
+           Int_t       GetMinute(Int_t);
+           Int_t       GetSecond(Int_t);
+   virtual Bool_t      GetTimestamp(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&) { return kFALSE; }
+           TDatime     GetTimestamp(Int_t);
 
    virtual Bool_t      IsError() const { return GetErrorCode()!=0; }
    virtual Int_t       GetErrorCode() const;

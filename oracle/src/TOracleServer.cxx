@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.12 2006/06/22 08:18:57 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.13 2006/06/25 18:43:24 brun Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -120,8 +120,10 @@ TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
 
    try {
       oracle::occi::Statement *stmt = fConn->createStatement(sql);
-
-      return new TOracleStatement(fConn, stmt, niter, fErrorOut);
+      
+      Blob parblob(fConn);
+      
+      return new TOracleStatement(fEnv, fConn, stmt, niter, fErrorOut);
 
    } CatchError("Statement")
 

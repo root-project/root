@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.h,v 1.3 2006/06/02 14:02:03 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.h,v 1.4 2006/06/25 18:43:24 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include <occi.h>
 using namespace oracle::occi;
 #else
+class Environment;
 class Connection;
 class Statement;
 class ResultSet;
@@ -32,9 +33,11 @@ protected:
 
    struct TBufferRec {
       char* strbuf;
+      Long_t strbufsize;
       char* namebuf;
    };
 
+   Environment           *fEnv;         // enviroment 
    Connection            *fConn;        // connection to Oracle
    Statement             *fStmt;        // executed statement
    ResultSet             *fResult;      // query result (rows)
@@ -44,6 +47,7 @@ protected:
    Int_t                  fNumIterations;  // size of internal statement buffer
    Int_t                  fIterCounter; //counts nextiteration calls and process iterations, if required
    Int_t                  fWorkingMode; // 1 - settingpars, 2 - getting results
+   TString                fTimeFmt;     // format for date to string conversion, default "MM/DD/YYYY, HH24:MI:SS" 
 
    Bool_t      IsParSettMode() const { return fWorkingMode==1; }
    Bool_t      IsResultSet() const { return (fWorkingMode==2) && (fResult!=0); }
@@ -52,7 +56,7 @@ protected:
    void        CloseBuffer();
    
 public:
-   TOracleStatement(Connection* conn, Statement* stmt, Int_t niter, Bool_t errout = kTRUE);
+   TOracleStatement(Environment* env, Connection* conn, Statement* stmt, Int_t niter, Bool_t errout = kTRUE);
    virtual ~TOracleStatement();
 
    virtual void        Close(Option_t * = "");
@@ -68,6 +72,12 @@ public:
    virtual Bool_t      SetULong64(Int_t npar, ULong64_t value);
    virtual Bool_t      SetDouble(Int_t npar, Double_t value);
    virtual Bool_t      SetString(Int_t npar, const char* value, Int_t maxsize = 256);
+   virtual Bool_t      SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize = 0x1000);
+   virtual Bool_t      SetDate(Int_t npar, Int_t year, Int_t month, Int_t day);
+   virtual Bool_t      SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec);
+   virtual Bool_t      SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec);
+   virtual Bool_t      SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac = 0);
+   virtual void        SetTimeFormating(const char* fmt) { fTimeFmt = fmt; }
 
    virtual Bool_t      NextIteration();
 
@@ -87,8 +97,13 @@ public:
    virtual ULong64_t   GetULong64(Int_t npar);
    virtual Double_t    GetDouble(Int_t npar);
    virtual const char *GetString(Int_t npar);
+   virtual Bool_t      GetBinary(Int_t npar, void* &mem, Long_t& size);
+   virtual Bool_t      GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day);
+   virtual Bool_t      GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec);
+   virtual Bool_t      GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec);
+   virtual Bool_t      GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac);
 
-   ClassDef(TOracleStatement, 0); // Statement class for Oracle
+   ClassDef(TOracleStatement, 0); // SQL statement class for Oracle
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleRow.cxx,v 1.4 2006/04/12 20:53:45 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleRow.cxx,v 1.5 2006/04/12 21:21:20 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -119,7 +119,7 @@ void TOracleRow::GetRowData()
       fDataType = (*fFieldInfo)[field].getInt(MetaData::ATTR_DATA_TYPE);
 
       switch (fDataType) {
-        case 2: //NUMBER
+        case SQLT_NUM: //NUMBER
            fPrecision = (*fFieldInfo)[field].getInt(MetaData::ATTR_PRECISION);
            fScale = (*fFieldInfo)[field].getInt(MetaData::ATTR_SCALE);
 
@@ -132,14 +132,18 @@ void TOracleRow::GetRowData()
            }
            break;
         
-        case 1:  // VARCHAR2
-        case 12: // DATE
-        case 96:  // CHAR
+        case SQLT_CHR:  // character string
+        case SQLT_VCS:  // variable character string
+        case SQLT_AFC: // ansi fixed char
+        case SQLT_AVC: // ansi var char
            res = fResult->getString(field+1);
            break;
-        case 187: // TIMESTAMP
-        case 188: // TIMESTAMP WITH TIMEZONE
-        case 232: // TIMESTAMP WITH LOCAL TIMEZONE
+        case SQLT_DAT:  // Oracle native DATE type
+           res = (fResult->getDate(field+1)).toText("MM/DD/YYYY, HH24:MI:SS");
+           break;
+        case SQLT_TIMESTAMP:     // TIMESTAMP
+        case SQLT_TIMESTAMP_TZ:  // TIMESTAMP WITH TIMEZONE
+        case SQLT_TIMESTAMP_LTZ: // TIMESTAMP WITH LOCAL TIMEZONE
            res = (fResult->getTimestamp(field+1)).toText("MM/DD/YYYY, HH24:MI:SS",0);
            break;
         default:
