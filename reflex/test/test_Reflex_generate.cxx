@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_generate.cxx,v 1.4 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_generate.cxx,v 1.5 2006/08/11 06:32:00 roiser Exp $
 // Author: Stefan Roiser 2004
 
 #include "Reflex/Reflex.h"
@@ -104,12 +104,13 @@ void generate_namespace(const Scope& ns, const string& indent = "" ) {
 
 int main() {
 
-  void* libInstance = 0;  
+  std::cerr << "Hello World" << std::endl;
+
 #ifdef _WIN32
-  libInstance = LoadLibrary("libtest_Class2DictRflx.dll");
+  HMODULE libInstance = LoadLibrary("libtest_Class2DictRflx.dll");
   if ( ! libInstance )  std::cout << "Could not load dictionary. " << std::endl << "Reason: " << GetLastError() << std::endl;
 #else
-  libInstance = dlopen("libtest_Class2DictRflx.so", RTLD_LAZY);
+  void * libInstance = dlopen("libtest_Class2DictRflx.so", RTLD_LAZY);
   if ( ! libInstance )  std::cout << "Could not load dictionary. " << std::endl << "Reason: " << dlerror() << std::endl;
 #endif
 

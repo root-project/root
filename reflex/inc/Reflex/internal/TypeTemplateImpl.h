@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.h,v 1.2 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.h,v 1.3 2006/08/28 16:03:54 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -149,8 +149,8 @@ namespace ROOT {
       private:
 
          /**
-          * pointer back to the corresponding At
-          * @label At template At
+          * pointer back to the corresponding scope
+          * @label type template scope
           * @clientCardinality 0..*
           * @supplierCardinality 1
           */
@@ -168,14 +168,14 @@ namespace ROOT {
 
 
          /**
-          * container of FunctionParameterAt names
+          * container of template parameter names
           */
          mutable
             std::vector < std::string > fParameterNames;
 
 
          /**
-          * FunctionParameterAt default values
+          * template parameter default values
           */
          mutable
             std::vector < std::string > fParameterDefaults;
@@ -189,6 +189,10 @@ namespace ROOT {
 
          /**
           * pointer back to the template name
+          * @label type template name
+          * @link aggregation
+          * @clientCardinality 1
+          * @supplierCardinality 1
           */
          TypeTemplateName * fTypeTemplateName;
       

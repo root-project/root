@@ -8,7 +8,7 @@ class ClassG: public ClassF {
   ClassG() : fG('g') {}
   virtual ~ClassG() {}
   int g() { return fG; }
-  void setG(int v) { fG = v; }
+  void setG(int v = 11) { fG = v; }
  private:
   int fG;
 };

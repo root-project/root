@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.12 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.13 2006/08/16 14:04:10 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -149,17 +149,22 @@ ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * nam,
 {
 //-------------------------------------------------------------------------------
 // Construct a class information (internal).
-   Type c = Type::ByName(nam);
+
+   std::string nam2(nam);
+
+   const Type & c = Type::ByName(nam2);
    if ( c ) { 
+      // We found a typedef to a class with the same name
+      if ( c.IsTypedef() ) nam2 += " @HIDDEN@";
       // Class already exists. Check if it was a class.
-      if (! c.IsClass() ) throw RuntimeError("Attempt to replace a non-Class At with a Class At"); 
+      else if (! c.IsClass() ) throw RuntimeError("Attempt to replace a non-class type with a class"); 
    }
 
-   if ( Tools::IsTemplated( nam))  fClass = new ClassTemplateInstance( nam,
-                                                                       size,
-                                                                       ti,
-                                                                       modifiers );                    
-   else                             fClass = new Class( nam, 
+   if ( Tools::IsTemplated( nam ))  fClass = new ClassTemplateInstance( nam2.c_str(),
+                                                                        size,
+                                                                        ti,
+                                                                        modifiers );                    
+   else                             fClass = new Class( nam2.c_str(), 
                                                         size, 
                                                         ti, 
                                                         modifiers );
@@ -240,22 +245,24 @@ void ROOT::Reflex::ClassBuilderImpl::AddEnum( const char * nam,
                                               unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
 // Add enum info (internal).  
-   Enum * e = new Enum(nam, *ti, modifiers);
 
-   std::vector<std::string> valVec = std::vector<std::string>();
-   Tools::StringSplit(valVec, values, ";");
+   EnumTypeBuilder(nam, values, *ti, modifiers);
+//    Enum * e = new Enum(nam, *ti, modifiers);
 
-   for (std::vector<std::string>::const_iterator it = valVec.begin(); 
-        it != valVec.end(); ++it ) {
-      std::string name = "";
-      std::string value = "";
-      Tools::StringSplitPair(name, value, *it, "=");
-      unsigned long int valInt = atol(value.c_str());
-      e->AddDataMember( Member( new DataMember( name.c_str(),
-                                                Type::ByName("int"),
-                                                valInt,
-                                                0 )));
-   }
+//    std::vector<std::string> valVec = std::vector<std::string>();
+//    Tools::StringSplit(valVec, values, ";");
+
+//    for (std::vector<std::string>::const_iterator it = valVec.begin(); 
+//         it != valVec.end(); ++it ) {
+//       std::string name = "";
+//       std::string value = "";
+//       Tools::StringSplitPair(name, value, *it, "=");
+//       unsigned long int valInt = atol(value.c_str());
+//       e->AddDataMember( Member( new DataMember( name.c_str(),
+//                                                 Type::ByName("int"),
+//                                                 valInt,
+//                                                 0 )));
+//    }
 }
 
 

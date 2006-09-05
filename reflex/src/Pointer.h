@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Pointer.h,v 1.13 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Pointer.h,v 1.14 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -60,9 +60,9 @@ namespace ROOT {
       private:
 
          /**
-          * pointer to the Type the Pointer points to
-          * @label pointer At
-          * @link aggregationByValue
+          * The Type the Pointer points to
+          * @label pointer type
+          * @link aggregation
           * @supplierCardinality 1
           * @clientCardinality 1
           */

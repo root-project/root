@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.19 2006/08/16 06:42:35 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.20 2006/08/17 13:50:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -247,32 +247,35 @@ const ROOT::Reflex::Base & ROOT::Reflex::Class::HasBase( const Type & cl ) const
 //-------------------------------------------------------------------------------
 // Return true if this class has a base class of type cl.
    std::vector<Base> v = std::vector<Base>();
-   if ( HasBase(cl, v) ) return *v.begin();
-   return Dummy::Base();
+   return HasBase(cl, v);
 }
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::Class::HasBase( const Type & cl,  
-                                   std::vector< Base > & path ) const {
+const ROOT::Reflex::Base & ROOT::Reflex::Class::HasBase( const Type & cl,  
+                                                         std::vector< Base > & path ) const {
 //-------------------------------------------------------------------------------
 // Return true if this class has a base class of type cl. Return also the path
 // to this type.
    for ( size_t i = 0; i < BaseSize(); ++i ) {
+      const Base & lb = BaseAt( i );
       // is the final BaseAt class one of the current class ?
-      if ( BaseAt( i ).ToType().FinalType().Id() == cl.Id() ) { 
+      if ( lb.ToType().FinalType().Id() == cl.Id() ) { 
          // remember the path to this class
-         path.push_back( BaseAt( i )); 
-         return true; 
+         path.push_back( lb ); 
+         return lb; 
       }
       // if searched BaseAt class is not direct BaseAt look in the bases of this one
-      else if ( BaseAt( i ) && BaseAt( i ).BaseClass()->HasBase( cl, path )) {
-         // if successfull remember path
-         path.push_back( BaseAt( i )); 
-         return true; 
+      else {
+         const Base & b = lb.BaseClass()->HasBase( cl, path );
+         if ( b ) {                                              
+            // if successfull remember path
+            path.push_back( lb ); 
+            return b; 
+         }
       }
    }
-   return false;
+   return Dummy::Base();
 }
 
 
@@ -560,8 +563,8 @@ void ROOT::Reflex::Class::GenerateDict( DictionaryGenerator & generator ) const 
 
       if (ThisType().IsPublic())  generator.AddIntoFree("PUBLIC");
       if (ThisType().IsPrivate()) generator.AddIntoFree("PRIVATE");
-      if (ThisType().IsVirtual()) generator.AddIntoFree("VIRTUAL");
       if (ThisType().IsProtected()) generator.AddIntoFree("PROTECTED");
+      if (ThisType().IsVirtual()) generator.AddIntoFree(" | VIRTUAL");
       generator.AddIntoFree(" | CLASS)\n");
 
       generator.AddIntoClasses("\n// -- Stub functions for class " + ThisType().Name() + "--\n");

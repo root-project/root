@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Function.h,v 1.10 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Function.h,v 1.11 2006/08/28 16:03:54 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -95,20 +95,20 @@ namespace ROOT {
       private:
 
          /** 
-          * vector of FunctionParameterAt types 
-          * @label FunctionParameterAt types
-          * @link aggregationByValue
-          * @supplierCardinality 0..*
+          * container of parameter types 
+          * @label function parameter types
+          * @link aggregation
           * @clientCardinality 1
+          * @supplierCardinality 0..*
           */
          mutable
             std::vector < Type > fParameters;
 
 
          /**
-          * characteristics of return At
-          * @label return At
-          * @link aggregationByValue
+          * return type
+          * @label return type
+          * @link aggregation
           * @supplierCardinality 1
           * @clientCardinality 1
           */

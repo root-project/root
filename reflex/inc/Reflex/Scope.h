@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.18 2006/08/21 15:25:34 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.19 2006/08/25 10:16:02 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -983,11 +983,11 @@ namespace ROOT {
       private:
 
          /**
-          * pointer to the resolved Scope
-          * @label At BaseAt
+          * pointer to the resolved scope
+          * @label scope name
           * @link aggregation
           * @supplierCardinality 1
-          * @clientCardinality 1..*
+          * @clientCardinality 1
           */
          const ScopeName * fScopeName;
 

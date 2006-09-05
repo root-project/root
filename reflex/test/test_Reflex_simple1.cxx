@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.11 2006/07/14 06:47:25 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.12 2006/08/11 06:32:00 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -127,14 +127,14 @@ void ReflexSimple1Test::testMembers() {
   CPPUNIT_ASSERT(o.Address());
 
   CPPUNIT_ASSERT_EQUAL(1, int(t.DataMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(14, int(t.FunctionMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(15, int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(28, int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(29, int(t.MemberSize()));
 
   t.UpdateMembers();
 
   CPPUNIT_ASSERT_EQUAL(1, int(t.DataMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(14, int(t.FunctionMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(15, int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(28, int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(29, int(t.MemberSize()));
 
   m = t.DataMemberAt(0);
   CPPUNIT_ASSERT(m);
@@ -186,58 +186,58 @@ void ReflexSimple1Test::testMembers() {
 
   m = t.FunctionMemberAt(6);
   CPPUNIT_ASSERT(m);
-  CPPUNIT_ASSERT_EQUAL(std::string("ClearProperties"), m.Name());
-  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::ClearProperties"), m.Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("AddProperty"), m.Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::AddProperty"), m.Name(SCOPED));
   CPPUNIT_ASSERT(!m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
 
   m = t.FunctionMemberAt(7);
   CPPUNIT_ASSERT(m);
-  CPPUNIT_ASSERT_EQUAL(std::string("RemoveProperty"), m.Name());
-  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::RemoveProperty"), m.Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("AddProperty"), m.Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::AddProperty"), m.Name(SCOPED));
   CPPUNIT_ASSERT(!m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
 
   m = t.FunctionMemberAt(8);
+  CPPUNIT_ASSERT(m);
+  CPPUNIT_ASSERT_EQUAL(std::string("ClearProperties"), m.Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::ClearProperties"), m.Name(SCOPED));
+  CPPUNIT_ASSERT(!m.IsConstructor());
+  CPPUNIT_ASSERT(!m.IsDestructor());
+
+  m = t.FunctionMemberAt(9);
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("HasKey"), m.Name());
   CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::HasKey"), m.Name(SCOPED));
   CPPUNIT_ASSERT(!m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
 
-  m = t.FunctionMemberAt(9);
-  CPPUNIT_ASSERT(m);
-  CPPUNIT_ASSERT_EQUAL(std::string("PropertySize"), m.Name());
-  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::PropertySize"), m.Name(SCOPED));
-  CPPUNIT_ASSERT(!m.IsConstructor());
-  CPPUNIT_ASSERT(!m.IsDestructor());
-
   m = t.FunctionMemberAt(10);
   CPPUNIT_ASSERT(m);
-  CPPUNIT_ASSERT_EQUAL(std::string("PropertyKeys"), m.Name());
-  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::PropertyKeys"), m.Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("Key_Begin"), m.Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::Key_Begin"), m.Name(SCOPED));
   CPPUNIT_ASSERT(!m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
 
   m = t.FunctionMemberAt(11);
   CPPUNIT_ASSERT(m);
-  CPPUNIT_ASSERT_EQUAL(std::string("PropertyAsString"), m.Name());
-  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::PropertyAsString"), m.Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("Key_End"), m.Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::Key_End"), m.Name(SCOPED));
   CPPUNIT_ASSERT(!m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
 
   m = t.FunctionMemberAt(12);
   CPPUNIT_ASSERT(m);
-  CPPUNIT_ASSERT_EQUAL(std::string("PropertyValue"), m.Name());
-  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::PropertyValue"), m.Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("Key_RBegin"), m.Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::Key_RBegin"), m.Name(SCOPED));
   CPPUNIT_ASSERT(!m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
 
   m = t.FunctionMemberAt(13);
   CPPUNIT_ASSERT(m);
-  CPPUNIT_ASSERT_EQUAL(std::string("PropertyList"), m.Name());
-  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::PropertyList"), m.Name(SCOPED));
-  CPPUNIT_ASSERT(m.IsConstructor());
+  CPPUNIT_ASSERT_EQUAL(std::string("Key_REnd"), m.Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::Key_REnd"), m.Name(SCOPED));
+  CPPUNIT_ASSERT(!m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
 
   o.Destruct();

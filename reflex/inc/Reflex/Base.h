@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.11 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.12 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -136,9 +136,9 @@ namespace ROOT {
          /**
           * pointer to base class
           * @label base bype
-          * @link aggregationByValue
+          * @link aggregation
           * @supplierCardinality 1
-          * @clientCardinality 0..*
+          * @clientCardinality 1
           */
          Type fBaseType;
 
@@ -147,8 +147,8 @@ namespace ROOT {
           * back link to the class corresponding to the base
           * @label base class
           * @link aggregation
-          * @supplierCardinality 1
-          * @clientCardinality 0..1
+          * @clientCardinality 1
+          * @supplierCardinality 0..1
           **/
          mutable
             const Class * fBaseClass;

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.cxx,v 1.15 2006/08/17 11:49:49 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.cxx,v 1.16 2006/08/24 09:34:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -114,9 +114,16 @@ ROOT::Reflex::Type ROOT::Reflex::EnumTypeBuilder( const char * nam,
                                                   unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
 // Construct an enum type.
-   const Type & ret = Type::ByName(nam);
-   if ( ret ) return ret;
-   Enum * e = new Enum(nam, ti, modifiers );
+
+   std::string nam2(nam);
+
+   const Type & ret = Type::ByName(nam2);
+   if ( ret ) {
+      if ( ret.IsTypedef() ) nam2 += " @HIDDEN@";
+      else return ret;
+   }
+
+   Enum * e = new Enum(nam2.c_str(), ti, modifiers );
 
    std::vector<std::string> valVec;
    Tools::StringSplit(valVec, values, ";");
@@ -139,11 +146,13 @@ ROOT::Reflex::Type ROOT::Reflex::TypedefTypeBuilder(const char * nam,
 // Construct a typedef type.
    const Type & ret = Type::ByName(nam);
    // Check for typedef AA AA;
-   if ( ret == t ) return t;
+   if ( ret == t && ! t.IsTypedef() ) 
+      if ( t ) t.ToTypeBase()->HideName();
+      else ((TypeName*)t.Id())->HideName();
    // We found the typedef type
    else if ( ret ) return ret;
    // Create a new typedef
-   else return (new Typedef( nam , t ))->ThisType();        
+   return (new Typedef( nam , t ))->ThisType();        
 }
 
 

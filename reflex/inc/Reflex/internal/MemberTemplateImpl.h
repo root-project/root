@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.3 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.4 2006/08/28 16:03:54 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -151,16 +151,19 @@ namespace ROOT {
 
          /**
           * declaring scope of this member template
+          * @link aggregation
           * @label member template scope
-          * @clientCardinality 0..*
+          * @clientCardinality 1
           * @supplierCardinality 1
           */
          Scope fScope;
 
 
          /** 
-          * pointer to the class template instances
-          * @clientCardinality 0..1
+          * the class template instances
+          * @link aggregation
+          * @supplierCardinality 1..*
+          * @clientCardinality 1
           * @label template instances
           */
          mutable
@@ -189,6 +192,10 @@ namespace ROOT {
          
          /**
           * pointer back to the member template name
+          * @link aggregation
+          * @label member template name
+          * @supplierCardinality 1
+          * @clientCardinality 1
           */
          MemberTemplateName * fMemberTemplateName;
 

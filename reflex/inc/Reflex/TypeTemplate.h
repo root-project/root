@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplate.h,v 1.10 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplate.h,v 1.11 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -268,7 +268,7 @@ namespace ROOT {
          /** 
           * pointer to the type template implementation
           * @link aggregation
-          * @supplierCardinality 0..1
+          * @supplierCardinality 1
           * @clientCardinality 1
           * @label type template impl
           */

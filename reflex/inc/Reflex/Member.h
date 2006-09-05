@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.11 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.12 2006/08/15 15:22:51 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -444,11 +444,13 @@ namespace ROOT {
 
          void Delete();
 
-         /** the pointer to the member implementation 
+         /** 
+          * the pointer to the member implementation 
           * @link aggregation
           * @supplierCardinality 1
-          * @clientCardinality 1..*
-          * @label member BaseAt*/
+          * @clientCardinality 0..1
+          * @label member base
+          */
          MemberBase * fMemberBase;
 
       }; // class Member

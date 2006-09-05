@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.21 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.22 2006/08/17 13:50:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -225,7 +225,7 @@ void ROOT::Reflex::TypeBase::Destruct( void * instance,
 const ROOT::Reflex::Type & ROOT::Reflex::TypeBase::DynamicType( const Object & /* obj */ ) const {
 //-------------------------------------------------------------------------------
 // Return the dynamic type info of this type.
-   throw RuntimeError("This function can only be called on Class/Struct");
+   throw RuntimeError("Type::DynamicType can only be called on Class/Struct");
    return Dummy::Type();
 }
 
@@ -288,6 +288,13 @@ const ROOT::Reflex::Base & ROOT::Reflex::TypeBase::HasBase( const Type & /* cl *
 //-------------------------------------------------------------------------------
    // Return base info if type has base cl.
    return Dummy::Base();
+}
+
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::TypeBase::HideName() const {
+//-------------------------------------------------------------------------------
+   fTypeName->HideName();
 }
 
 

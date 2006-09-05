@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplateName.cxx,v 1.2 2006/08/16 06:42:36 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateName.cxx,v 1.3 2006/08/28 16:03:54 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,7 +24,7 @@
 #include <vector>
 
 //-------------------------------------------------------------------------------
-typedef __gnu_cxx::hash_multimap < const char *, ROOT::Reflex::TypeTemplate > Name2TypeTemplate_t;
+typedef __gnu_cxx::hash_multimap < const std::string *, ROOT::Reflex::TypeTemplate > Name2TypeTemplate_t;
 typedef std::vector< ROOT::Reflex::TypeTemplate > TypeTemplateVec_t;
 
 
@@ -54,7 +54,7 @@ ROOT::Reflex::TypeTemplateName::TypeTemplateName( const char * name,
      fTypeTemplateImpl( typeTemplateImpl ) {
    // Constructor.
    fThisTypeTemplate = new TypeTemplate( this );
-   sTypeTemplates().insert(std::make_pair<const char * const, TypeTemplate>(fName.c_str(),*fThisTypeTemplate));
+   sTypeTemplates().insert(std::make_pair<const std::string * const, TypeTemplate>( &fName, *fThisTypeTemplate));
    sTypeTemplateVec().push_back( * fThisTypeTemplate );
 }
 
@@ -72,12 +72,11 @@ const ROOT::Reflex::TypeTemplate & ROOT::Reflex::TypeTemplateName::ByName( const
 //-------------------------------------------------------------------------------
    // Lookup a type template by its name.
    typedef Name2TypeTemplate_t::iterator IT;
-   const char * cname = name.c_str();
-   IT lower = sTypeTemplates().find(cname);
+   IT lower = sTypeTemplates().find(&name);
    if ( lower != sTypeTemplates().end()) {
       if ( ! nTemplateParams ) return lower->second;
       else {
-         std::pair<IT,IT> bounds = sTypeTemplates().equal_range(cname);
+         std::pair<IT,IT> bounds = sTypeTemplates().equal_range(&name);
          for ( IT it = bounds.first; it != bounds.second; ++it ) {
             if ( it->second.TemplateParameterSize() == nTemplateParams ) {
                return it->second;

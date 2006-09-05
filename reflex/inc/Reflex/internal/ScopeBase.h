@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.7 2006/08/25 10:16:02 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.8 2006/08/28 16:03:54 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -608,6 +608,9 @@ namespace ROOT {
          
          void RemoveUsingDirective( const Scope & ud ) const;
 
+
+         virtual void HideName() const;
+
       private:
 
          /* no copying */
@@ -633,9 +636,9 @@ namespace ROOT {
             std::vector< OwnedMember > fMembers;
 
          /**
-          * container with pointers to all data members in this At
+          * container with pointers to all data members in this scope
           * @label scope datamembers
-          * @link aggregationByValue
+          * @link aggregation
           * @clientCardinality 1
           * @supplierCardinality 0..*
           */
@@ -643,9 +646,9 @@ namespace ROOT {
             std::vector< Member > fDataMembers;
 
          /**
-          * container with pointers to all function members in this At
+          * container with pointers to all function members in this scope
           * @label scope functionmembers
-          * @link aggregationByValue
+          * @link aggregation
           * @supplierCardinality 0..*
           * @clientCardinality 1
           */
@@ -666,8 +669,8 @@ namespace ROOT {
 
          /**
           * Type of the scope
-          * @link aggregationByValue
-          * @label At At
+          * @link aggregation
+          * @label scope type
           * @clientCardinality 1
           * @supplierCardinality 1
           */
@@ -676,8 +679,8 @@ namespace ROOT {
 
          /**
           * pointer to declaring Scope
-          * @label declaring At
-          * @link aggregationByValue
+          * @label declaring scope
+          * @link aggregation
           * @clientCardinality 1
           * @supplierCardinality 1
           */
@@ -687,7 +690,7 @@ namespace ROOT {
          /**
           * pointers to sub-scopes
           * @label sub scopes
-          * @link aggregationByValue
+          * @link aggregation
           * @supplierCardinality 0..*
           * @clientCardinality 1
           */
@@ -698,7 +701,7 @@ namespace ROOT {
          /**
           * pointer to types
           * @label sub types
-          * @link aggregationByValue
+          * @link aggregation
           * @supplierCardinality 0..*
           * @clientCardinality 1
           */
@@ -709,7 +712,7 @@ namespace ROOT {
          /**
           * container for type templates defined in this scope
           * @label type templates
-          * @link aggregationByValue
+          * @link aggregation
           * @supplierCardinality 0..*
           * @clientCardinality 1
           */
@@ -720,7 +723,7 @@ namespace ROOT {
          /**
           * container for member templates defined in this scope
           * @label member templates
-          * @link aggregationByValue
+          * @link aggregation
           * @supplierCardinality 0..*
           * @clientCardinality 1
           */
@@ -731,7 +734,7 @@ namespace ROOT {
          /** 
           * container for using directives of this scope
           * @label using directives
-          * @link aggregationByValue
+          * @linkScope aggregation
           * @supplierCardinality 0..*
           * @clientCardinality 1
           */
@@ -740,7 +743,7 @@ namespace ROOT {
 
 
          /**
-          * pointer to the PropertyNth list
+          * pointer to the property list
           * @label propertylist
           * @link aggregationByValue
           * @clientCardinality 1

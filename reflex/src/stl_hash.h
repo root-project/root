@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: stl_hash.h,v 1.7 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: stl_hash.h,v 1.8 2006/08/11 06:40:29 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -39,6 +39,11 @@
 // This is not What we want to do in the end !! FIXME !!
 #define hash_map               map
 #define hash_multimap          multimap
+namespace std {
+   inline size_t distance(std::string * _l, std::string * _r) {
+      return _r - _l;
+   }
+}
 #endif
 
 #include <cstring>
@@ -63,6 +68,20 @@ namespace __gnu_cxx {
       bool operator( )( const Key& k1, const Key& k2 ) const { return strcmp(k1 ,k2) < 0; }
    };
 
+   template<> class hash_compare< const std::string *> {
+      typedef const std::string * Key;
+   public:
+      static const size_t bucket_size = 4;
+      static const size_t min_buckets = 8;
+      size_t operator( )( const Key& k ) const { return __gnu_cxx_hash_string(k->c_str());}
+      bool operator( )( const Key& k1, const Key& k2 ) const { return *k1 < *k2; }
+   };
+
+   /*
+   inline size_t hash_value( const std::string * s ) {
+     return hash_value(s->c_str());
+   }
+   */
 } // namespace __gnu_cxx  
 
 #endif // __ICC, __ECC, _WIN32
@@ -71,13 +90,30 @@ namespace __gnu_cxx {
 
 #if defined (__GNUC__)
 
+namespace __gnu_cxx {
+   
+   template<> struct hash<const std::string *> {
+      size_t operator()(const std::string * __s) const {
+         return __stl_hash_string(__s->c_str()); 
+      }
+   };
+}
+
 namespace std {
 
    template<> struct equal_to< const char * >
-      : public binary_function<const char *, const char *, bool> {
-      bool operator()(const char * const & _Left,
-                      const char * const & _Right) const {
+      : public binary_function< const char *, const char *, bool > {
+      bool operator()( const char * const & _Left, 
+                       const char * const & _Right ) const {
          return strcmp(_Left, _Right) == 0;
+      }
+   };
+
+   template<> struct equal_to< const std::string * > 
+      : public binary_function< const std::string *, const std::string *, bool > {
+      bool operator()( const std::string * const & _Left, 
+                       const std::string * const & _Right ) const {
+         return *_Left == *_Right; 
       }
    };
 

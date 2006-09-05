@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: Any.h,v 1.8 2006/05/31 21:00:39 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Any.h,v 1.9 2006/07/05 07:09:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // See http://www.boost.org/libs/any for Documentation.
@@ -51,9 +51,23 @@ namespace ROOT {
          /** Copy Constructor */
          Any(const Any & other)
             : fContent( other.fContent ? other.fContent->Clone() : 0 ) {}
-      
+
+         /** Dtor */
          ~Any() {
             delete fContent;
+         }
+
+         /** Clear the content */
+         void Clear() {
+            if ( ! Empty() ) {
+               delete fContent;
+               fContent = 0;
+            }
+         }
+
+         /** bool operator */
+         operator bool () {
+            return ! Empty();
          }
       
          /** Modifier */

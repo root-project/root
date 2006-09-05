@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.13 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.14 2006/08/17 13:50:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -367,8 +367,8 @@ namespace ROOT {
 
          /**
           * pointer to the type of the typedef
-          * @label typedef Type
-          * @link aggregationByValue
+          * @label typedef type
+          * @link aggregation
           * @supplierCardinality 1
           * @clientCardinality 1
           */

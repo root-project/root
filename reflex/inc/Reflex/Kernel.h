@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.21 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.22 2006/08/25 10:16:02 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -126,6 +126,7 @@ namespace ROOT {
    namespace Reflex {
 
       // forward declarations
+      class Any;
       class Type;
       class Base;
       class Scope;
@@ -177,6 +178,7 @@ namespace ROOT {
          RFLX_API const Member_Cont_Type_t & MemberCont();
          RFLX_API const TypeTemplate_Cont_Type_t & TypeTemplateCont();
          RFLX_API const MemberTemplate_Cont_Type_t & MemberTemplateCont();
+         RFLX_API Any & Any();
          RFLX_API const Object & Object();
          RFLX_API const Type & Type();
          RFLX_API const TypeTemplate & TypeTemplate();

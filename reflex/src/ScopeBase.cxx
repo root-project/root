@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.27 2006/08/17 14:45:56 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.28 2006/08/25 10:16:03 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -247,6 +247,13 @@ const ROOT::Reflex::Scope & ROOT::Reflex::ScopeBase::GlobalScope() {
 //-------------------------------------------------------------------------------
    // Return a ref to the global scope.
    return Namespace::GlobalScope();
+}
+
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::ScopeBase::HideName() const {
+//-------------------------------------------------------------------------------
+   fScopeName->HideName();
 }
 
 
@@ -708,10 +715,10 @@ void ROOT::Reflex::ScopeBase::AddSubType( const char * type,
    TypeBase * tb = 0;
    switch ( typeType ) {
    case CLASS:
-      tb = new Class(type,size,ti,modifiers,STRUCT);
+      tb = new Class(type,size,ti,modifiers);
       break;
    case STRUCT:
-      tb = new Class(type,size,ti,modifiers);
+      tb = new Class(type,size,ti,modifiers,STRUCT);
       break;
    case ENUM:
       tb = new Enum(type,ti,modifiers);

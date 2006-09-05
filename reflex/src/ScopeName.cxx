@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.19 2006/08/16 06:42:35 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.20 2006/08/28 16:03:54 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -27,7 +27,7 @@
 
 
 //-------------------------------------------------------------------------------
-typedef __gnu_cxx::hash_map < const char *, ROOT::Reflex::Scope > Name2Scope_t;
+typedef __gnu_cxx::hash_map < const std::string *, ROOT::Reflex::Scope > Name2Scope_t;
 typedef std::vector< ROOT::Reflex::Scope > ScopeVec_t;
 
 //-------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ ROOT::Reflex::ScopeName::ScopeName( const char * name,
 //-------------------------------------------------------------------------------
 // Create the scope name dictionary info.
    fThisScope = new Scope(this);
-   sScopes() [ fName.c_str() ] = *fThisScope;
+   sScopes() [ &fName ] = *fThisScope;
    sScopeVec().push_back(*fThisScope);
    //---Build recursively the declaring scopeNames
    if( fName != "@N@I@R@V@A@N@A@" ) {
@@ -78,7 +78,8 @@ const ROOT::Reflex::Scope & ROOT::Reflex::ScopeName::ByName( const std::string &
 //-------------------------------------------------------------------------------
 // Lookup a scope by fully qualified name.
    size_t pos =  name.substr(0,2) == "::" ?  2 : 0;
-   Name2Scope_t::iterator it = sScopes().find(name.substr(pos).c_str());
+   const std::string & k = name.substr(pos);
+   Name2Scope_t::iterator it = sScopes().find(&k);
    if (it != sScopes().end() ) return it->second;
    //else                        return Dummy::Scope();
    // HERE STARTS AN UGLY HACK WHICH HAS TO BE UNDONE ASAP
@@ -115,6 +116,17 @@ void ROOT::Reflex::ScopeName::DeleteScope() const {
 // Delete the scope base information.
    delete fScopeBase;
    fScopeBase = 0;
+}
+
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::ScopeName::HideName() {
+//-------------------------------------------------------------------------------
+   if ( fName[fName.length()] != '@' ) {
+      sScopes().erase(&fName);
+      fName += " @HIDDEN@";
+      sScopes()[&fName] = this;
+   }
 }
 
 

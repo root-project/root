@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.4 2006/08/17 13:50:30 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.5 2006/08/18 12:18:49 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -713,6 +713,9 @@ namespace ROOT {
           */
          void SetTypeInfo( const std::type_info & ti ) const;
 
+
+         virtual void HideName() const;
+
       protected:
 
          /**
@@ -735,8 +738,8 @@ namespace ROOT {
          /**
           * The Scope of the Type
           * @label type scope
-          * @link aggregationByValue
-          * @clientCardinality 0..1
+          * @link aggregation
+          * @clientCardinality 1
           * @supplierCardinality 1
           */
          Scope fScope;
@@ -749,8 +752,8 @@ namespace ROOT {
 
          /**
           * TYPE (kind) of the Type
-          * @link aggregationByValue
-          * @label TypeType
+          * @link aggregation
+          * @label type type
           * @clientCardinality 1
           * @supplierCardinality 1
           */
@@ -776,8 +779,8 @@ namespace ROOT {
          /**
           * the final type excluding typedefs
           * @label final typedef type
-          * @link aggrgationByValue
-          * @supplierCardinality 1
+          * @link aggregation
+          * @supplierCardinality 0..1
           * @clientCardinality 1
           */
          mutable
@@ -786,9 +789,9 @@ namespace ROOT {
 
          /**
           * the raw type excluding pointers, typedefs and arrays
-          * @alabel raw type
-          * @link aggegationByValue
-          * @supplierCardinality 1
+          * @label raw type
+          * @link aggregation
+          * @supplierCardinality 0..1
           * @clientCardinality 1
           */
          mutable

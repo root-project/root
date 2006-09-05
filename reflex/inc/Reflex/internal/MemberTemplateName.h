@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateName.h,v 1.1 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -144,13 +144,21 @@ namespace ROOT {
 
          /**
           * Pointer to the implementation of the member template
+          * @link aggregation
+          * @supplierCardinality 1
+          * @clientCardinality 0..1
+          * @label member template impl
           */
          mutable 
             MemberTemplateImpl * fMemberTemplateImpl;
 
 
          /**
-          * This member template
+          * pointer back to the member temlate
+          * @label this member template
+          * @link aggregation
+          * @clientCardinality 1
+          * @supplierCardinality 1
           */
          MemberTemplate * fThisMemberTemplate;
 

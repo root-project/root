@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateName.cxx,v 1.2 2006/08/17 11:49:49 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateName.cxx,v 1.3 2006/08/28 16:03:54 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,7 +24,7 @@
 #include <vector>
 
 //-------------------------------------------------------------------------------
-typedef __gnu_cxx::hash_multimap < const char *, ROOT::Reflex::MemberTemplate > Name2MemberTemplate_t;
+typedef __gnu_cxx::hash_multimap < const std::string *, ROOT::Reflex::MemberTemplate > Name2MemberTemplate_t;
 typedef std::vector< ROOT::Reflex::MemberTemplate > MemberTemplateVec_t;
 
 
@@ -54,7 +54,7 @@ ROOT::Reflex::MemberTemplateName::MemberTemplateName( const char * name,
      fMemberTemplateImpl( memberTemplateImpl ) {
    // Constructor.
    fThisMemberTemplate = new MemberTemplate( this );
-   sMemberTemplates().insert(std::make_pair<const char* const,MemberTemplate>(fName.c_str(),*fThisMemberTemplate));
+   sMemberTemplates().insert(std::make_pair<const std::string * const,MemberTemplate>( &fName, *fThisMemberTemplate));
    sMemberTemplateVec().push_back( * fThisMemberTemplate );
 }
 
@@ -72,12 +72,11 @@ const ROOT::Reflex::MemberTemplate & ROOT::Reflex::MemberTemplateName::ByName( c
 //-------------------------------------------------------------------------------
    // Lookup a member template by its name.
    typedef Name2MemberTemplate_t::iterator IT;
-   const char * cname = name.c_str();
-   IT lower = sMemberTemplates().find(cname);
+   IT lower = sMemberTemplates().find(&name);
    if ( lower != sMemberTemplates().end()) {
       if ( ! nTemplateParams ) return lower->second;
       else {
-         std::pair<IT,IT> bounds = sMemberTemplates().equal_range(cname);
+         std::pair<IT,IT> bounds = sMemberTemplates().equal_range(&name);
          for ( IT it = bounds.first; it != bounds.second; ++it ) {
             if ( it->second.TemplateParameterSize() == nTemplateParams ) {
                return it->second;

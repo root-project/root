@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.h,v 1.2 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -61,6 +61,9 @@ namespace ROOT {
          void DeleteScope() const;
 
 
+         void HideName();
+
+
          /**
           * Name will return a string representation of Name of the Scope
           * @return string representation of the Scope
@@ -115,9 +118,9 @@ namespace ROOT {
 
          /**
           * pointer to the resolved Scope
-          * @label At BaseAt
+          * @label scope base
           * @link aggregation
-          * @supplierCardinality 1
+          * @supplierCardinality 0..1
           * @clientCardinality 1
           */
          mutable

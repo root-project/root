@@ -236,6 +236,11 @@ namespace testclasses {
 
    } // ns FwUnnamedNSType
 
+   struct Base { virtual ~Base() {} };
+   struct DerivedA : public Base {};
+   struct DerivedB : public Base {};
+
+
 } // namespace testclasses
 
 
@@ -261,6 +266,7 @@ namespace {
          testclasses::TemplFun tf;
          tf.foooo(a);
       }
+      std::vector<testclasses::Base*> mv1;
       testclasses::testTemplInt<1> mi1;
       testclasses::testTemplInt<-1> mim1;
       testclasses::ConvOp::ConversionOperatorT<int> m1;

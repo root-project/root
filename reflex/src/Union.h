@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Union.h,v 1.7 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Union.h,v 1.8 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -102,6 +102,9 @@ namespace ROOT {
          virtual const Scope & DeclaringScope() const;
 
 
+         virtual void HideName() const;
+	  
+      
          /** 
           * IsPrivate will check if the scope access is private
           * @return true if scope access is private
@@ -306,6 +309,14 @@ inline size_t ROOT::Reflex::Union::DataMemberSize() const {
 inline const ROOT::Reflex::Scope & ROOT::Reflex::Union::DeclaringScope() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DeclaringScope();
+}
+
+
+//-------------------------------------------------------------------------------
+inline void ROOT::Reflex::Union::HideName() const {
+//-------------------------------------------------------------------------------
+   TypeBase::HideName();
+   ScopeBase::HideName();
 }
 
 

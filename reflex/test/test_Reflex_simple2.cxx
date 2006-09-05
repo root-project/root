@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.26 2006/08/17 13:50:30 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.27 2006/08/17 14:45:56 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -11,6 +11,9 @@
 #include <iostream>
 #ifdef _WIN32
   #include<windows.h>
+#ifdef CONST
+#undef CONST
+#endif
 #else
   #include<dlfcn.h>
 #endif
@@ -177,6 +180,8 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testEnums );
   CPPUNIT_TEST( fundamentalType );
   CPPUNIT_TEST( unloadType );
+  CPPUNIT_TEST( iterateVector );
+
   CPPUNIT_TEST( unloadLibrary );
   CPPUNIT_TEST( shutdown );
   CPPUNIT_TEST_SUITE_END();
@@ -208,6 +213,7 @@ public:
   void testEnums();
   void fundamentalType();
   void unloadType();
+  void iterateVector();
 
   void unloadLibrary();
   void shutdown() { Reflex::Shutdown(); }
@@ -515,6 +521,7 @@ void ReflexSimple2Test::testDataMembers() {
   CPPUNIT_ASSERT_EQUAL(std::string("ClassM::fM"),t1.DataMemberAt(6).Name(S));
   CPPUNIT_ASSERT_EQUAL(std::string("ClassE::fE"),t1.DataMemberAt(7).Name(S));
   CPPUNIT_ASSERT_EQUAL(std::string("ClassC::fC"),t1.DataMemberAt(8).Name(S));
+  CPPUNIT_ASSERT_EQUAL(std::string("private fC"),t1.DataMemberAt(8).Name(Q));
 
   Member m1;
   char val;
@@ -649,6 +656,7 @@ void ReflexSimple2Test::testDataMembers() {
   o1.Destruct();
 }
 
+
 void ReflexSimple2Test::testFunctionMembers() {
 
   Type t;
@@ -676,6 +684,21 @@ void ReflexSimple2Test::testFunctionMembers() {
   m = t.MemberByName("g");
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL('g',(char)*(int*)m.Invoke(o).Address());
+
+
+  m = t.MemberByName("setG");
+  CPPUNIT_ASSERT(m);
+  CPPUNIT_ASSERT_EQUAL(size_t(0), m.FunctionParameterSize(true));
+  CPPUNIT_ASSERT_EQUAL(size_t(1), m.FunctionParameterSize());
+  CPPUNIT_ASSERT_EQUAL(std::string("v"), *m.FunctionParameterName_Begin());
+  CPPUNIT_ASSERT_EQUAL(*m.FunctionParameterName_Begin(), *(m.FunctionParameterName_REnd()-1));
+  CPPUNIT_ASSERT_EQUAL(*m.FunctionParameterName_RBegin(), *(m.FunctionParameterName_End()-1));
+  CPPUNIT_ASSERT_EQUAL(std::string("11"), *m.FunctionParameterDefault_Begin());
+  CPPUNIT_ASSERT_EQUAL(*m.FunctionParameterDefault_Begin(), *(m.FunctionParameterDefault_REnd()-1));
+  CPPUNIT_ASSERT_EQUAL(*m.FunctionParameterDefault_RBegin(), *(m.FunctionParameterDefault_End()-1));
+  CPPUNIT_ASSERT_EQUAL(std::string("11"), *(m.FunctionParameterDefault_RBegin()));
+  CPPUNIT_ASSERT_EQUAL(std::string("11"), *(m.FunctionParameterDefault_REnd()-1));
+  CPPUNIT_ASSERT_EQUAL(typeid(ROOT::Reflex::StubFunction).name(), typeid(m.Stubfunction()).name());
 
   m = t.MemberByName("f");
   CPPUNIT_ASSERT(m);
@@ -997,7 +1020,14 @@ void ReflexSimple2Test::testTypedefInClass() {
   CPPUNIT_ASSERT(t0m2);
   CPPUNIT_ASSERT(t0m2.TypeOf().IsClass());
   CPPUNIT_ASSERT(t0m2.TypeOf().IsTemplateInstance());
-  CPPUNIT_ASSERT_EQUAL(std::string("std::vector<int>"), t0m2.TypeOf().Name(SCOPED));
+  const Type & tt0m2 = t0m2.TypeOf();
+  CPPUNIT_ASSERT_EQUAL(std::string("std::vector<int>"), tt0m2.Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("int"), tt0m2.TemplateArgument_Begin()->Name());
+  CPPUNIT_ASSERT_EQUAL(tt0m2.TemplateArgument_Begin()->Name(), (tt0m2.TemplateArgument_REnd()-1)->Name());
+  CPPUNIT_ASSERT_EQUAL(tt0m2.TemplateArgument_RBegin()->Name(), (tt0m2.TemplateArgument_End()-1)->Name());
+  TypeTemplate tt0 = tt0m2.TemplateFamily();
+  CPPUNIT_ASSERT(tt0);
+  CPPUNIT_ASSERT_EQUAL(std::string("vector"), tt0.Name());
   Member t0m3 = t0.DataMemberByName("m_mv");
   CPPUNIT_ASSERT(t0m3);
   CPPUNIT_ASSERT(t0m3.TypeOf().IsTypedef());
@@ -1034,6 +1064,17 @@ void ReflexSimple2Test::testConstMembers() {
   Type t = Type::ByName("testclasses::ConstNonConstMembers");
   CPPUNIT_ASSERT(t);
   CPPUNIT_ASSERT(t.IsClass());
+  CPPUNIT_ASSERT(t.IsPublic());
+  CPPUNIT_ASSERT(!t.IsProtected());
+  CPPUNIT_ASSERT(!t.IsPrivate());
+  CPPUNIT_ASSERT(!t.IsAbstract());
+  CPPUNIT_ASSERT( !t.BaseAt(t.BaseSize()));
+  CPPUNIT_ASSERT( (*t.DataMember_Begin()) == (*(t.DataMember_REnd()-1)));
+  CPPUNIT_ASSERT( (*(t.DataMember_End()-1)) == (*t.DataMember_RBegin()));
+  CPPUNIT_ASSERT( (*t.FunctionMember_Begin()) == (*(t.FunctionMember_REnd()-1)));
+  CPPUNIT_ASSERT( (*(t.FunctionMember_End()-1)) == (*t.FunctionMember_RBegin()));
+  CPPUNIT_ASSERT( (*t.Member_Begin()) == (*(t.Member_REnd()-1)));
+  CPPUNIT_ASSERT( (*(t.Member_End()-1)) == (*t.Member_RBegin()));
   Member m0 = t.FunctionMemberByName("foo",Type::ByName("int (int)"));
   CPPUNIT_ASSERT(m0);
   CPPUNIT_ASSERT(! m0.TypeOf().IsConst());
@@ -1149,9 +1190,14 @@ void ReflexSimple2Test::testScopeSubFuns() {
    Type t = s.SubTypeByName("Outer");
    CPPUNIT_ASSERT(t);
    CPPUNIT_ASSERT_EQUAL(std::string("testclasses::Outer"), t.Name(S));
-   t = s.SubTypeByName("Outer::Inner");
-   CPPUNIT_ASSERT(t);
-   CPPUNIT_ASSERT_EQUAL(std::string("testclasses::Outer::Inner"), t.Name(S));
+   Type t1 = s.SubTypeByName("Outer::Inner");
+   CPPUNIT_ASSERT(t1);
+   CPPUNIT_ASSERT_EQUAL(std::string("testclasses::Outer::Inner"), t1.Name(S));
+   CPPUNIT_ASSERT_EQUAL(size_t(1), t1.SubScopeSize());
+   CPPUNIT_ASSERT( (Type)t1 == (Type)t.SubScopeAt(0));
+   CPPUNIT_ASSERT_EQUAL(t.SubScope_Begin()->Name(), (t.SubScope_REnd()-1)->Name());
+   CPPUNIT_ASSERT_EQUAL(t.SubScope_RBegin()->Name(), (t.SubScope_End()-1)->Name());
+
 
    TypeTemplate tt = s.SubTypeTemplateByName("WithTypedefMemberT");
    CPPUNIT_ASSERT(tt);
@@ -1187,6 +1233,21 @@ void ReflexSimple2Test::testEnums() {
    CPPUNIT_ASSERT(!t1.IsPublic());
    CPPUNIT_ASSERT(t1.IsProtected());
    CPPUNIT_ASSERT(!t1.IsPrivate());
+   CPPUNIT_ASSERT_EQUAL(std::string("PA"), t1.DataMember_Begin()->Name());
+   CPPUNIT_ASSERT_EQUAL(std::string("PC"), t1.DataMemberAt(t1.DataMemberSize()-1).Name());
+   CPPUNIT_ASSERT_EQUAL(std::string("PA"), t1.Member_Begin()->Name()); 
+   CPPUNIT_ASSERT_EQUAL(t1.DataMember_Begin()->Name(), (t1.DataMember_REnd()-1)->Name());
+   CPPUNIT_ASSERT_EQUAL(t1.DataMember_RBegin()->Name(), (t1.DataMember_End()-1)->Name());
+   CPPUNIT_ASSERT_EQUAL(t1.Member_Begin()->Name(), (t1.Member_REnd()-1)->Name());
+   CPPUNIT_ASSERT_EQUAL(t1.Member_RBegin()->Name(), (t1.Member_End()-1)->Name());
+   Member m0 = t1.DataMemberByName("PB");
+   CPPUNIT_ASSERT(m0);
+   Member m1 = t1.MemberByName("PB");
+   CPPUNIT_ASSERT(m1);
+   CPPUNIT_ASSERT( m0 == m1 );
+   CPPUNIT_ASSERT( s == t1.DeclaringScope());
+   CPPUNIT_ASSERT( t1.Properties());
+  
 
    Type t2 = s.SubTypeByName("privateEnum");
    CPPUNIT_ASSERT(t2);
@@ -1246,6 +1307,41 @@ void ReflexSimple2Test::unloadType() {
    CPPUNIT_ASSERT(t1m0);
 
 }
+
+
+void ReflexSimple2Test::iterateVector() {
+
+
+   std::vector<int> v;
+   v.push_back(1);
+   v.push_back(2);
+   v.push_back(3);
+   v.push_back(4);
+   v.push_back(5);
+   v.push_back(6);
+
+
+   Type t = Type::ByName("std::vector<int>");
+   CPPUNIT_ASSERT(t);
+   Object o = Object( t, &v );
+
+   size_t vsize = Object_Cast<size_t>(o.Invoke("size"));
+
+   Type templParType0 = t.TemplateArgumentAt(0);
+   CPPUNIT_ASSERT(templParType0);
+   CPPUNIT_ASSERT_EQUAL(std::string("int"), templParType0.Name());
+
+   std::vector<void*> params;
+   Type polParType;
+
+   for ( size_t i = 0; i < vsize; ++i ) {
+      params.clear();
+      params.push_back(&i);
+      CPPUNIT_ASSERT_EQUAL(v[i], Object_Cast<int>(o.Invoke("at",params)));
+   }
+
+}
+
 
 
 void ReflexSimple2Test::unloadLibrary() {

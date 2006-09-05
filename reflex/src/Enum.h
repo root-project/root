@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Enum.h,v 1.8 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Enum.h,v 1.9 2006/08/15 15:22:52 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -111,6 +111,9 @@ namespace ROOT {
          virtual void GenerateDict(DictionaryGenerator &generator) const;
 
 
+         virtual void HideName() const;
+	  
+      
          /** 
           * IsPrivate will check if the scope access is private
           * @return true if scope access is private
@@ -304,6 +307,14 @@ inline size_t ROOT::Reflex::Enum::DataMemberSize() const {
 inline const ROOT::Reflex::Scope & ROOT::Reflex::Enum::DeclaringScope() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DeclaringScope();
+}
+
+
+//-------------------------------------------------------------------------------
+inline void ROOT::Reflex::Enum::HideName() const {
+//-------------------------------------------------------------------------------
+   TypeBase::HideName();
+   ScopeBase::HideName();
 }
 
 

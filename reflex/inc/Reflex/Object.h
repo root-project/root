@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Object.h,v 1.7 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Object.h,v 1.8 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -227,15 +227,19 @@ namespace ROOT {
          void Set2( const std::string & dm,
                     const void * value ) const;
 
-         /** the At of the object 
-          * @link aggregationByValue
-          * @clientCardinality 0..*
+         /** 
+          * the type of the object 
+          * @link aggregation
+          * @clientCardinality 1
           * @supplierCardinality 1
-          * @label object At*/
+          * @label object type
+          **/
          Type fType;
 
 
-         /** the Address of the object */
+         /** 
+          * the address of the object 
+          */
          mutable
             void * fAddress;
 

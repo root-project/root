@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.12 2006/08/11 06:32:00 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.13 2006/08/17 13:50:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -52,6 +52,7 @@ class ReflexBuilderUnitTest : public CppUnit::TestFixture {
   CPPUNIT_TEST( type_template );
   CPPUNIT_TEST( member_template );
   CPPUNIT_TEST( typebuilder );
+  CPPUNIT_TEST( hiddentypes );
   CPPUNIT_TEST( shutdown );
   CPPUNIT_TEST_SUITE_END();
 public:
@@ -77,6 +78,8 @@ public:
   void type_template();
   void member_template();
   void typebuilder();
+  void hiddentypes();
+
   void shutdown();
   void tearDown() {}
 };
@@ -975,6 +978,60 @@ void ReflexBuilderUnitTest::member_template() {
 
 void ReflexBuilderUnitTest::typebuilder() {
   CPPUNIT_ASSERT_EQUAL(7, int(Tools::MakeVector(1,2,3,4,5,6,7).size()));
+}
+
+
+void ReflexBuilderUnitTest::hiddentypes() {
+
+   TypeBuilder("MyType",0);
+   const Type & t0 = Type::ByName("MyType");
+   CPPUNIT_ASSERT( t0.Id() );
+   CPPUNIT_ASSERT_EQUAL(std::string("MyType"), t0.Name());
+   CPPUNIT_ASSERT( !t0 );
+   const Scope & s0 = Scope::ByName("MyType");
+   CPPUNIT_ASSERT( !s0.Id());
+   CPPUNIT_ASSERT( ! s0 );
+
+   TypedefTypeBuilder("MyType", t0);
+   const Type & t1 = Type::ByName("MyType");
+   CPPUNIT_ASSERT( t1 );
+   CPPUNIT_ASSERT( t1.IsTypedef());
+   CPPUNIT_ASSERT_EQUAL(std::string("MyType"), t1.Name());
+   CPPUNIT_ASSERT( t0 != t1 );
+   CPPUNIT_ASSERT( ! t1.FinalType() );
+   CPPUNIT_ASSERT( t1.ToType() == t0 );
+   CPPUNIT_ASSERT_EQUAL( std::string("MyType @HIDDEN@"), t0.Name());
+   const Scope & s1 = Scope::ByName("MyType");
+   CPPUNIT_ASSERT( !s1 ); // should be different once a typedef is a scope
+
+   const Type & t2 = Type::ByName("MyType @HIDDEN@");
+   CPPUNIT_ASSERT( t2.Id());
+   CPPUNIT_ASSERT( t0 == t2);
+   const Scope & s2a = Scope::ByName("MyType");
+   CPPUNIT_ASSERT( ! s2a );
+   const Scope & s2 = Scope::ByName("MyType @HIDDEN@");
+   CPPUNIT_ASSERT( ! s2.Id());
+   CPPUNIT_ASSERT( ! s2 );
+
+   size_t nt = Type::TypeSize();
+   TypedefTypeBuilder("MyType", t0 );
+   CPPUNIT_ASSERT_EQUAL(nt, Type::TypeSize());
+
+   ClassBuilder("MyType", typeid(void), 0, 0 );
+   const Type & t3 = Type::ByName("MyType");
+   CPPUNIT_ASSERT( t3 == t1 );
+   CPPUNIT_ASSERT( t0 );
+   CPPUNIT_ASSERT( t3.FinalType() == t0 );
+   CPPUNIT_ASSERT( t3 == t1 );
+   CPPUNIT_ASSERT( t3.FinalType() == t2 );
+   const Scope & s3 = Scope::ByName("MyType");
+   CPPUNIT_ASSERT( s3 );
+   CPPUNIT_ASSERT( s3.IsClass());
+   CPPUNIT_ASSERT_EQUAL( std::string("MyType @HIDDEN@"), s3.Name());
+   const Scope & s4 = Scope::ByName("MyType @HIDDEN@");
+   CPPUNIT_ASSERT( s4 );
+   CPPUNIT_ASSERT( s4.IsClass());
+
 }
 
 

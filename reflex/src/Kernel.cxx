@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.17 2006/08/16 06:42:35 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.18 2006/08/25 10:16:02 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,6 +24,7 @@
 #include "Reflex/Object.h"
 #include "Reflex/PropertyList.h"
 #include "Reflex/MemberTemplate.h"
+#include "Reflex/Any.h"
 
 #include "Fundamental.h"
 #include "Namespace.h"
@@ -48,18 +49,18 @@ ROOT::Reflex::Reflex::Reflex() {
    tb = new Fundamental( "char", 
                          sizeof( char ), 
                          typeid( char ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
 
    // signed integer types [3.9.1.2]
    tb = new Fundamental( "signed char", 
                          sizeof( signed char ), 
                          typeid( signed char ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
 
    tb = new Fundamental( "short int", 
                          sizeof( short int ), 
                          typeid( short int ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
    t = tb->ThisType();
    new Typedef( "short", t, FUNDAMENTAL );
    new Typedef( "signed short", t, FUNDAMENTAL );
@@ -70,7 +71,7 @@ ROOT::Reflex::Reflex::Reflex() {
    tb = new Fundamental( "int", 
                          sizeof( int ), 
                          typeid( int ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
    t = tb->ThisType();
    new Typedef( "signed", t, FUNDAMENTAL );
    new Typedef( "signed int", t, FUNDAMENTAL );
@@ -78,7 +79,7 @@ ROOT::Reflex::Reflex::Reflex() {
    tb = new Fundamental( "long int", 
                          sizeof( long int ), 
                          typeid( long int ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
    t = tb->ThisType();
    new Typedef( "long", t, FUNDAMENTAL );
    new Typedef( "signed long", t, FUNDAMENTAL );
@@ -90,12 +91,12 @@ ROOT::Reflex::Reflex::Reflex() {
    tb = new Fundamental( "unsigned char", 
                          sizeof( unsigned char ), 
                          typeid( unsigned char ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
 
    tb = new Fundamental( "unsigned short int", 
                          sizeof( unsigned short int ), 
                          typeid( unsigned short int ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
    t = tb->ThisType();
    new Typedef( "unsigned short", t, FUNDAMENTAL );
    new Typedef( "short unsigned int", t, FUNDAMENTAL );
@@ -103,14 +104,14 @@ ROOT::Reflex::Reflex::Reflex() {
    tb = new Fundamental( "unsigned int", 
                          sizeof( unsigned int ), 
                          typeid( unsigned int ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
    t = tb->ThisType();
    new Typedef( "unsigned", t, FUNDAMENTAL );
 
    tb = new Fundamental( "unsigned long int", 
                          sizeof( unsigned long int ), 
                          typeid( unsigned long int ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
    t = tb->ThisType();
    new Typedef( "unsigned long", t, FUNDAMENTAL );
    new Typedef( "long unsigned", t, FUNDAMENTAL );
@@ -120,42 +121,42 @@ ROOT::Reflex::Reflex::Reflex() {
      tb = new Fundamental( "w_chart", 
      sizeof( w_chart ), 
      & typeid( w_chart ));
-     tb->Properties().AddProperty( "desc", "fundamental type" );
+     tb->Properties().AddProperty( "Description", "fundamental type" );
    */
 
    // bool [3.9.1.6]
    tb = new Fundamental( "bool", 
                          sizeof( bool ), 
                          typeid( bool ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
 
    // floating point types [3.9.1.8]
    tb = new Fundamental( "float", 
                          sizeof( float ), 
                          typeid( float ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
 
    tb = new Fundamental( "double", 
                          sizeof( double ), 
                          typeid( double ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
 
    tb = new Fundamental( "long double", 
                          sizeof( long double ), 
                          typeid( long double ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
 
    // void [3.9.1.9]
    tb = new Fundamental( "void", 
                          0, 
                          typeid( void ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
 
    // non fundamental types but also supported at initialisation
    tb = new Fundamental( "longlong", 
                          sizeof( longlong ), 
                          typeid( longlong ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
    t = tb->ThisType();
    new Typedef( "long long", t, FUNDAMENTAL );
    new Typedef( "long long int", t, FUNDAMENTAL );
@@ -163,7 +164,7 @@ ROOT::Reflex::Reflex::Reflex() {
    tb = new Fundamental( "ulonglong", 
                          sizeof( ulonglong ), 
                          typeid( ulonglong ));
-   tb->Properties().AddProperty( "desc", "fundamental type" );
+   tb->Properties().AddProperty( "Description", "fundamental type" );
    t = tb->ThisType();
    new Typedef( "long long unsigned", t, FUNDAMENTAL );
    new Typedef( "unsigned long long", t, FUNDAMENTAL );
@@ -253,6 +254,16 @@ const ROOT::Reflex::MemberTemplate_Cont_Type_t & ROOT::Reflex::Dummy::MemberTemp
 //-------------------------------------------------------------------------------
 // static wrapper for an empty container of MemberTemplates.
    return Get< MemberTemplate_Cont_Type_t >();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Any & ROOT::Reflex::Dummy::Any() {
+//-------------------------------------------------------------------------------
+   // static wrapper for an empty Any object 
+   static ROOT::Reflex::Any i;
+   if ( i ) i.Clear();
+   return i;
 }
 
 

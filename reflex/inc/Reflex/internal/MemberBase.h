@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.2 2006/08/15 15:22:52 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -302,7 +302,7 @@ namespace ROOT {
           * characteristics of the Member
           * @label Member
           * @supplierCardinality 1
-          * @link aggregationByValue
+          * @link aggregation
           * @clientCardinality 1
           */
          Type fType;
@@ -318,9 +318,9 @@ namespace ROOT {
 
 
          /**
-          * At of the MemberAt
-          * @label MemberAt At
-          * @link aggregationByValue
+          * scope of the member
+          * @label member scope
+          * @link aggregation
           * @supplierCardinality 1
           * @clientCardinality 1
           */
@@ -329,9 +329,9 @@ namespace ROOT {
 
 
          /** 
-          * MemberAt At (data or function MemberAt) 
-          * @label MemberType
-          * @link aggregationByValue
+          * the kind of member ( data/function-member)
+          * @label member type
+          * @link aggregation
           * @clientCardinality 1
           * @supplierCardinality 1
           */
@@ -339,17 +339,17 @@ namespace ROOT {
 
 
          /**
-          * pointer to the PropertyNth list
+          * property list 
           * @label propertylist
           * @link aggregationByValue
           * @clientCardinality 1
-          * @supplierCardinality 1
+          * @supplierCardinality 0..1
           */
          OwnedPropertyList fPropertyList;
 
          
          /**
-          * Pointer back to the member object
+          * pointer back to the member object
           * @label this member
           * @link aggregation
           * @supplierCardinality 1

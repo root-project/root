@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.14 2006/08/17 13:50:30 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.h,v 1.15 2006/08/28 16:03:54 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -119,6 +119,9 @@ namespace ROOT {
           * @param generator a reference to the dictionary generator instance
           */
          virtual void GenerateDict(DictionaryGenerator &generator) const;
+
+
+         virtual void HideName() const;
 	  
       
          /**
@@ -225,8 +228,8 @@ namespace ROOT {
           * @param  path optionally the path to the BaseAt can be retrieved
           * @return true if this class has a BaseAt-class cl, false otherwise
           */
-         bool HasBase( const Type & cl,
-                       std::vector< Base > & path ) const;
+         const Base & HasBase( const Type & cl,
+                               std::vector< Base > & path ) const;
 
 
          /**
@@ -563,9 +566,9 @@ namespace ROOT {
       private:
 
          /**
-          * pointer to BaseAt class info
+          * container of base classes
           * @label class bases
-          * @link aggregationByValue
+          * @link aggregation
           * @clientCardinality 1
           * @supplierCardinality 0..*
           */
@@ -591,7 +594,9 @@ namespace ROOT {
          /**
           * short cut to constructors
           * @label constructors
-          * @link aggregationByValue
+          * @link aggregation
+          * @clientCardinality 1
+          * @supplierCardinality 1..*
           */
          mutable
             std::vector < Member > fConstructors;
@@ -600,7 +605,9 @@ namespace ROOT {
          /**
           * short cut to destructor
           * @label destructor
-          * @link aggregationByValue
+          * @link aggregation
+          * @clientCardinality 1
+          * @supplierCardinality 1
           */
          mutable
             Member fDestructor;
@@ -786,6 +793,14 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Class::FunctionMember
 inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Class::FunctionMember_REnd() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::FunctionMember_REnd();
+}
+
+
+//-------------------------------------------------------------------------------
+inline void ROOT::Reflex::Class::HideName() const {
+//-------------------------------------------------------------------------------
+   TypeBase::HideName();
+   ScopeBase::HideName();
 }
 
 
