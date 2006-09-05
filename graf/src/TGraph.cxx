@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.190 2006/05/24 16:44:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.191 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3480,44 +3480,50 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
    Double_t rx = (x2ndc-x1ndc)/(rx2-rx1);
    Double_t ry = (y2ndc-y1ndc)/(ry2-ry1);
 
-   // The first part of the filled area is made of the graph points
-   for (i=0; i<n; i++) {
-      xf[i] = rx*(x[i]-rx1)+x1ndc;
-      yf[i] = ry*(y[i]-ry1)+y1ndc;
+   // The first part of the filled area is made of the graph points.
+   // Make sure that two adjacent points are different. 
+   xf[0] = rx*(x[0]-rx1)+x1ndc;
+   yf[0] = ry*(y[0]-ry1)+y1ndc;
+   nf = 0;
+   for (i=1; i<n; i++) {
+      if (x[i]==x[i-1] && y[i]==y[i-1]) continue;
+      nf++;
+      xf[nf] = rx*(x[i]-rx1)+x1ndc;
+      yf[nf] = ry*(y[i]-ry1)+y1ndc;
    }
-   nf = n-1;
 
    // For each graph points a shifted points is computed to build up
-   // the second part of the filled area.
-   a = TMath::ATan((y[1]-y[0])/(x[1]-x[0]));
+   // the second part of the filled area. First and last points are
+   // treated as special cases, outside of the loop.
+   a = TMath::ATan((yf[1]-yf[0])/(xf[1]-xf[0]));
    if (xf[0]<=xf[1]) {
-      xt[0] = rx*(x[0]-rx1)+x1ndc-w*TMath::Sin(a);
-      yt[0] = ry*(y[0]-ry1)+y1ndc+w*TMath::Cos(a); 
+      xt[0] = xf[0]-w*TMath::Sin(a);
+      yt[0] = yf[0]+w*TMath::Cos(a); 
    } else {
-      xt[0] = rx*(x[0]-rx1)+x1ndc+w*TMath::Sin(a);
-      yt[0] = ry*(y[0]-ry1)+y1ndc-w*TMath::Cos(a); 
+      xt[0] = xf[0]+w*TMath::Sin(a);
+      yt[0] = yf[0]-w*TMath::Cos(a); 
    }
-
-   a = TMath::ATan((y[n-1]-y[n-2])/(x[n-1]-x[n-2]));
-   if (xf[n-1]>=xf[n-2]) {
-      xt[n-1] = rx*(x[n-1]-rx1)+x1ndc-w*TMath::Sin(a);
-      yt[n-1] = ry*(y[n-1]-ry1)+y1ndc+w*TMath::Cos(a); 
+  
+   a = TMath::ATan((yf[nf]-yf[nf-1])/(xf[nf]-xf[nf-1]));
+   if (xf[nf]>=xf[nf-1]) {
+      xt[nf] = xf[nf]-w*TMath::Sin(a);
+      yt[nf] = yf[nf]+w*TMath::Cos(a); 
    } else {
-      xt[n-1] = rx*(x[n-1]-rx1)+x1ndc+w*TMath::Sin(a);
-      yt[n-1] = ry*(y[n-1]-ry1)+y1ndc-w*TMath::Cos(a); 
+      xt[nf] = xf[nf]+w*TMath::Sin(a);
+      yt[nf] = yf[nf]-w*TMath::Cos(a); 
    }
 
    Double_t xi0,yi0,xi1,yi1,xi2,yi2;
-   for (i=1; i<n-1; i++) {
-      xi0 = rx*(x[i]-rx1)+x1ndc;
-      yi0 = ry*(y[i]-ry1)+y1ndc;
-      xi1 = rx*(x[i+1]-rx1)+x1ndc;
-      yi1 = ry*(y[i+1]-ry1)+y1ndc;
-      xi2 = rx*(x[i-1]-rx1)+x1ndc;
-      yi2 = ry*(y[i-1]-ry1)+y1ndc;
+   for (i=1; i<nf; i++) {
+      xi0 = xf[i];
+      yi0 = yf[i];
+      xi1 = xf[i+1];
+      yi1 = yf[i+1];
+      xi2 = xf[i-1];
+      yi2 = yf[i-1];
       a1  = TMath::ATan((yi1-yi0)/(xi1-xi0));
-      a2  = TMath::ATan((yi0-yi2)/(xi0-xi2));
       if (xi1<xi0) a1 = a1+3.14159;
+      a2  = TMath::ATan((yi0-yi2)/(xi0-xi2));
       if (xi0<xi2) a2 = a2+3.14159;
       x1 = xi0-w*TMath::Sin(a1);
       y1 = yi0+w*TMath::Cos(a1); 
@@ -3528,46 +3534,41 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
       a3 = TMath::ATan((ym-yi0)/(xm-xi0));
       x3 = xi0-w*TMath::Sin(a3+1.57079);
       y3 = yi0+w*TMath::Cos(a3+1.57079);
-      if (w>0) {
-         if(x3<TMath::Min(x1,x2) || y3<TMath::Min(y1,y2)) {
-            x3 = xi0-w*TMath::Sin(a3-1.57079);
-            y3 = yi0+w*TMath::Cos(a3-1.57079);
-         }
-         if (x3>TMath::Max(x1,x2)) {
-            x3 = xi0-w*TMath::Sin(a3+1.57079);
-            y3 = yi0+w*TMath::Cos(a3+1.57079);
-         }
-      } else {
-         if (x3>TMath::Max(x1,x2) || y3>TMath::Max(y1,y2)) {
-            x3 = xi0+w*TMath::Sin(a3+1.57079);
-            y3 = yi0-w*TMath::Cos(a3+1.57079);
-         }
-         if (x3<TMath::Min(x1,x2)) {
-            x3 = xi0-w*TMath::Sin(a3+1.57079);
-            y3 = yi0+w*TMath::Cos(a3+1.57079);
-         }
+      // Rotate (x3,y3) by PI around (xi0,yi0) if it is not on the (xm,ym) side.
+      if ((xm-xi0)*(x3-xi0)<0 && (ym-yi0)*(y3-yi0)<0) {
+         x3 = 2*xi0-x3; 
+         y3 = 2*yi0-y3;
+      }
+      if ((xm==x1) && (ym==y1)) {
+         x3 = xm;
+         y3 = ym;
       }
       xt[i] = x3;
       yt[i] = y3;
    }
 
    // Close the polygon if the first and last points are the same
-   if (xf[n-1]==xf[0] && yf[n-1]==yf[0]) {
-      xm = (xt[n-1]+xt[0])*0.5;
-      ym = (yt[n-1]+yt[0])*0.5;
+   if (xf[nf]==xf[0] && yf[nf]==yf[0]) {
+      xm = (xt[nf]+xt[0])*0.5;
+      ym = (yt[nf]+yt[0])*0.5;
       a3 = TMath::ATan((ym-yf[0])/(xm-xf[0]));
       x3 = xf[0]+w*TMath::Sin(a3+1.57079);
       y3 = yf[0]-w*TMath::Cos(a3+1.57079);
-      xt[n-1] = x3;
-      xt[0]   = x3;
-      yt[n-1] = y3;
-      yt[0]   = y3;
+      if ((xm-xf[0])*(x3-xf[0])<0 && (ym-yf[0])*(y3-yf[0])<0) {
+         x3 = 2*xf[0]-x3; 
+         y3 = 2*yf[0]-y3;
+      }
+      xt[nf] = x3;
+      xt[0]  = x3;
+      yt[nf] = y3;
+      yt[0]  = y3;
    }
 
    // Find the crossing segments and remove the useless ones
    Double_t xc, yc, c1, b1, c2, b2;
    Bool_t cross = kFALSE;
-   for (i=n-1; i>0; i--) {
+   Int_t nf2 = nf;
+   for (i=nf2; i>0; i--) {
       for (j=i-1; j>0; j--) {
          if(xt[i-1]==xt[i] || xt[j-1]==xt[j]) continue;
          c1  = (yt[i-1]-yt[i])/(xt[i-1]-xt[i]);
