@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.14 2006/05/26 16:55:04 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.15 2006/06/27 14:36:27 brun Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -73,7 +73,9 @@ public:
                   { return (fSubFile) ? fSubFile->GetSize() : -1; }
    Bool_t      cd(const char *path)
                   { return (fSubFile) ? fSubFile->cd(path) : kFALSE; }
-   const char  *GetPath() const
+   TFileCacheRead    *GetCacheRead()  const { return (fSubFile) ? fSubFile->GetCacheRead() : 0; }
+   TFileCacheWrite   *GetCacheWrite() const { return (fSubFile) ? fSubFile->GetCacheWrite() : 0; }
+         const char  *GetPath() const
                   { return (fSubFile) ? fSubFile->GetPath() : 0; }
    TObject     *Get(const char *namecycle)
                   { return (fSubFile) ? fSubFile->Get(namecycle) : 0; }
@@ -90,7 +92,9 @@ public:
    void         Init(Bool_t create);
 
    TFile::EAsyncOpenStatus GetAsyncOpenStatus() { return (fSubFileHandle) ? TFile::GetAsyncOpenStatus(fSubFileHandle):TFile::kAOSNotAsync; }
-
+   void         SetCacheRead(TFileCacheRead *cache)   { if (fSubFile)fSubFile->SetCacheRead(cache); }
+   void         SetCacheWrite(TFileCacheWrite *cache) { if (fSubFile)fSubFile->SetCacheWrite(cache);} 
+   
    void         UseCache(Int_t maxCacheSize = 10, Int_t pageSize = 0)
                   { if (fSubFile) fSubFile->UseCache(maxCacheSize, pageSize); }
 
