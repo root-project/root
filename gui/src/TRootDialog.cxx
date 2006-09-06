@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.7 2006/04/11 06:56:27 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.8 2006/08/31 14:59:11 antcheva Exp $
 // Author: Fons Rademakers   20/02/98
 
 /*************************************************************************
@@ -244,6 +244,8 @@ void TRootDialog::CloseWindow()
 //______________________________________________________________________________
 void TRootDialog::TabPressed()
 {
+   // Handle Tab keyboard navigation in this dialog.
+
    Bool_t setNext = kFALSE;
    TIter next(fWidgets);
 
