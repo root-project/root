@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name: v5-12-00-patches $:$Id: TBranch.cxx,v 1.107.2.4 2006/08/17 22:29:49 pcanal Exp $
+// @(#)root/tree:$Name: v5-12-00-patches $:$Id: TBranch.cxx,v 1.107.2.5 2006/09/02 05:17:05 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -179,13 +179,13 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
       fBasketSeek[i]  = 0;
    }
 
-//*-*-  Create the first basket
+   // Note: We must initialize our fTree data member
+   //       before creating our leaves, because the
+   //       leaf constructors use it to find their
+   //       counter branch if they have one.
    fTree       = gTree;
    fDirectory  = fTree->GetDirectory();
    fFileName   = "";
-
-   TBasket *basket = fTree->CreateBasket(this);
-   fBaskets.AddAt(basket,0);
 
 //*-*- Decode the leaflist (search for : as separator)
    char * varcur  = (char*)leaflist;
@@ -265,6 +265,15 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
    delete [] leafname;
    delete [] leaftype;
 
+   // Create the first basket.
+   //
+   // Note: We cannot do this until we have created the leaves,
+   //       otherwise we do not know the fEntryOffsetLen which
+   //       compensates for variable-sized leaves, like varying
+   //       length arrays.
+   //
+   TBasket *basket = fTree->CreateBasket(this);
+   fBaskets.AddAt(basket,0);
 }
 
 //______________________________________________________________________________
