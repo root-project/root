@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.18 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.19 2006/05/23 04:47:35 brun Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -159,6 +159,7 @@ public:
       { timespec_t value = {fSec,fNanoSec}; return value; }
    time_t       GetSec() const { return fSec; }
    Int_t        GetNanoSec() const { return fNanoSec; }
+   Double_t     GetValue() const { return fSec + 1e-9 * fNanoSec; }
 
    const char  *AsString(const Option_t *option="") const;
    void         Copy(TTimeStamp &ts) const;
@@ -178,7 +179,7 @@ public:
 
    void         Print(const Option_t *option="") const;
 
-   operator double() const { return fSec + 1e-9 * fNanoSec; }
+   operator double() const { return GetValue(); }
 
    // Utility functions
    static Int_t   GetZoneOffset();
