@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.31 2006/06/28 10:03:14 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.32 2006/07/13 05:32:25 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -456,7 +456,7 @@ Bool_t TFormLeafInfo::Update()
       }
       fClass = new_class;
    }
-   if (fElement) {
+   if (fElement && fClass) {
       TClass *cl = fClass;
       // We have to drill down the element name within the class.
       Int_t offset,i;
@@ -501,6 +501,7 @@ Bool_t TFormLeafInfo::Update()
             if (i<nchname) *current++ = fElementName[i];
          }
       }
+      delete [] work;
    }
    if (fNext) fNext->Update();
    if (fCounter) fCounter->Update();
