@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.3 2006/03/01 15:46:33 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.4 2006/06/02 15:14:35 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -42,6 +42,11 @@ int XrdProofdResponse::Send()
 {
    // Auxilliary Send method
 
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
+
    fResp.status = static_cast<kXR_unt16>(htons(kXR_ok));
    fResp.dlen   = 0;
    TRACES(RSP, (int *)fLink<< ": sending OK");
@@ -56,6 +61,11 @@ int XrdProofdResponse::Send(XResponseType rcode)
 {
    // Auxilliary Send method
 
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
+
    fResp.status        = static_cast<kXR_unt16>(htons(rcode));
    fResp.dlen          = 0;
    TRACES(RSP, (int *)fLink<< ": sending OK; status = "<<rcode);
@@ -69,6 +79,11 @@ int XrdProofdResponse::Send(XResponseType rcode)
 int XrdProofdResponse::Send(const char *msg)
 {
    // Auxilliary Send method
+
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
 
    fResp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
    fRespIO[1].iov_base = (caddr_t)msg;
@@ -86,6 +101,11 @@ int XrdProofdResponse::Send(XResponseType rcode, void *data, int dlen)
 {
    // Auxilliary Send method
 
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
+
    fResp.status        = static_cast<kXR_unt16>(htons(rcode));
    fRespIO[1].iov_base = (caddr_t)data;
    fRespIO[1].iov_len  = dlen;
@@ -101,6 +121,11 @@ int XrdProofdResponse::Send(XResponseType rcode, void *data, int dlen)
 int XrdProofdResponse::Send(XResponseType rcode, int info, char *data)
 {
    // Auxilliary Send method
+
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
 
    kXR_int32 xbuf = static_cast<kXR_int32>(htonl(info));
    int dlen = 0;
@@ -130,6 +155,11 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
 {
    // Auxilliary Send method
 
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
+
    kXR_int32 xbuf = static_cast<kXR_int32>(htonl(acode));
    int nn = 2;
 
@@ -158,6 +188,11 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
                             kXR_int32 cid, void *data, int dlen )
 {
    // Auxilliary Send method
+
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
 
    kXR_int32 xbuf = static_cast<kXR_int32>(htonl(acode));
    kXR_int32 xcid = static_cast<kXR_int32>(htonl(cid));
@@ -193,6 +228,11 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
 {
    // Auxilliary Send method
 
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
+
    kXR_int32 xbuf = static_cast<kXR_int32>(htonl(acode));
    kXR_int32 xinf = static_cast<kXR_int32>(htonl(info));
    int hlen = sizeof(xbuf) + sizeof(xinf);
@@ -215,6 +255,11 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
 int XrdProofdResponse::Send(kXR_int32 int1, kXR_int32 int2, void *data, int dlen )
 {
    // Auxilliary Send method
+
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
 
    kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
    kXR_int32 i2 = static_cast<kXR_int32>(htonl(int2));
@@ -247,6 +292,11 @@ int XrdProofdResponse::Send(kXR_int32 int1, void *data, int dlen )
 {
    // Auxilliary Send method
 
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
+
    kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
    int ilen = sizeof(i1);
    int nn = 2;
@@ -275,6 +325,11 @@ int XrdProofdResponse::Send(void *data, int dlen)
 {
    // Auxilliary Send method
 
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
+
    fResp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
    fRespIO[1].iov_base = (caddr_t)data;
    fRespIO[1].iov_len  = dlen;
@@ -290,6 +345,11 @@ int XrdProofdResponse::Send(void *data, int dlen)
 int XrdProofdResponse::Send(struct iovec *IOResp, int iornum, int iolen)
 {
    // Auxilliary Send method
+
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
 
    int i, dlen = 0;
 
@@ -312,6 +372,11 @@ int XrdProofdResponse::Send(XErrorCode ecode, const char *msg)
 {
    // Auxilliary Send method
 
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
+
    int dlen;
    kXR_int32 erc = static_cast<kXR_int32>(htonl(ecode));
 
@@ -333,6 +398,11 @@ int XrdProofdResponse::Send(XErrorCode ecode, const char *msg)
 int XrdProofdResponse::Send(XPErrorCode ecode, const char *msg)
 {
    // Auxilliary Send method
+
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
 
    int dlen;
    kXR_int32 erc = static_cast<kXR_int32>(htonl(ecode));
