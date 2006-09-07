@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.38 2006/08/11 20:51:41 brun Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.39 2006/08/14 10:31:36 brun Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -263,14 +263,6 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
          }
       }
    }
-   // set the Endpoint Url we are now connected to
-   fEndpointUrl = fClient->GetClientConn()->GetCurrentUrl().GetUrl().c_str();
-
-   // check equivalence of initial and end-point Url to see whether we have
-   // been redirected
-   if (fEndpointUrl.GetPort() != fUrl.GetPort() ||
-       strcmp(fEndpointUrl.GetHostFQDN(), fUrl.GetHostFQDN()))
-      SetBit(TFile::kRedirected);
 
    return;
 
@@ -404,7 +396,12 @@ Bool_t TXNetFile::Open(Option_t *option, Bool_t doitparallel)
       create = kTRUE;
    } else if (create) {
       openOpt |= kXR_new;
-      openOpt |= kXR_mkpath;
+      Bool_t mkpath = (gEnv->GetValue("XNet.Mkpath", 0) == 1) ? kTRUE : kFALSE;
+      char *p = strstr(fUrl.GetOptions(), "mkpath=");
+      if (p)
+         mkpath = (*(p + strlen("mkpath=")) == '1') ? kTRUE : kFALSE;
+      if (mkpath)
+         openOpt |= kXR_mkpath;
    }
    if (read)
       openOpt |= kXR_open_read;
@@ -664,6 +661,13 @@ void TXNetFile::Init(Bool_t create)
          TFile::Init(create);
          // Restore requested behaviour
          fClient->UseCache(usecachesave);
+         // Set the Endpoint Url we are now connected to
+         fEndpointUrl = fClient->GetClientConn()->GetCurrentUrl().GetUrl().c_str();
+         // Check equivalence of initial and end-point Url to see whether we have
+         // been redirected
+         if (fEndpointUrl.GetPort() != fUrl.GetPort() ||
+            strcmp(fEndpointUrl.GetHostFQDN(), fUrl.GetHostFQDN()))
+            SetBit(TFile::kRedirected);
       } else {
          if (gDebug > 0)
             Info("Init","open request failed!");
@@ -946,10 +950,6 @@ void TXNetFile::SetEnv()
    Int_t garbCollTh = gEnv->GetValue("XNet.StartGarbageCollectorThread",
                                       DFLT_STARTGARBAGECOLLECTORTHREAD);
    EnvPutInt(NAME_STARTGARBAGECOLLECTORTHREAD, garbCollTh);
-
-   // Whether to use a separate thread for reading
-   Int_t goAsync = gEnv->GetValue("XNet.GoAsynchronous", DFLT_GOASYNC);
-   EnvPutInt(NAME_GOASYNC, goAsync);
 
    // Read ahead size
    Int_t rAheadsiz = gEnv->GetValue("XNet.ReadAheadSize",

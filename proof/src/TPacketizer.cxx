@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.35 2006/07/01 12:05:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.36 2006/07/26 14:18:04 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -769,10 +769,6 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       } else {
 
          Error("ValidateFiles", "cannot get entries for %s (", e->GetFileName() );
-
-         // disable element
-         if (dset->Remove(e) == -1)
-            Error("ValidateFiles", "removing of not-registered element %p failed", e);
          //
          // Need to fix this with a user option to allow incomplete file sets (rdm)
          //
@@ -782,6 +778,10 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
             m << TString(Form("Cannot get entries for file: %s - skipping", e->GetFileName()));
             gProofServ->GetSocket()->Send(m);
          }
+
+         // disable element
+         if (dset->Remove(e) == -1)
+            Error("ValidateFiles", "removing of not-registered element %p failed", e);
       }
 
       workers.Add(slave); // Ready for the next job

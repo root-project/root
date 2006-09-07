@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.136 2006/08/10 23:28:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.137 2006/08/16 14:50:56 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3585,6 +3585,13 @@ Int_t TProofServ::HandleCache(TMessage *mess)
    Bool_t all = kFALSE;
    TMessage msg;
 
+   // Notification message
+   TMessage notm(kPROOF_MESSAGE);
+   TString noth = Form("worker-%s-%s", fOrdinal.Data(), fSessionTag.Data());
+   if (IsMaster())
+      noth.ReplaceAll("worker", "master");
+   Bool_t notln = kTRUE;
+
    TString package, pdir, ocwd;
    (*mess) >> type;
    switch (type) {
@@ -3665,6 +3672,10 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
             // check for BUILD.sh and execute
             if (!gSystem->AccessPathName(pdir + "/PROOF-INF/BUILD.sh")) {
+               // Notify the upper level
+               notm.Reset();
+               notm << TString(Form("%s: building %s ...", noth.Data(), package.Data())) << notln;
+               fSocket->Send(notm);
                if (gSystem->Exec("PROOF-INF/BUILD.sh"))
                   status = -1;
             }
@@ -3672,6 +3683,14 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             gSystem->ChangeDirectory(ocwd);
 
          }
+
+         if (status) {
+            // Notify the upper level
+            notm.Reset();
+            notm << TString(Form("%s: failure building %s ...", noth.Data(), package.Data())) << notln;
+            fSocket->Send(notm);
+         }
+
          fPackageLock->Unlock();
          // if built successful propagate to slaves
          if (!status) {
