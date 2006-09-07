@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.199 2006/08/31 11:05:20 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.200 2006/09/02 07:47:29 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -31,6 +31,8 @@
 #include "TAxis.h"
 #include "TError.h"
 #include "TVirtualCollectionProxy.h"
+#include "TString.h"
+#include "TTimeStamp.h"
 
 #include "TVirtualRefProxy.h"
 #include "TTreeFormulaManager.h"
@@ -1790,79 +1792,44 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
       return -1;
    }
 
-   static TClassRef StdString = gROOT->GetClass("string");
+   static TClassRef stdStringClass = gROOT->GetClass("string");
    TClass *objClass = EvalClass(code);
-   if (IsLeafString(code) || objClass == TString::Class() || objClass == StdString) {
+   if (IsLeafString(code) || objClass == TString::Class() || objClass == stdStringClass) {
 
-      TFormLeafInfo *last = 0;
-      if (fLookupType[code]==kDirect && leaf->InheritsFrom("TLeafElement")) {
-         TBranchElement * br = (TBranchElement*)leaf->GetBranch();
-         if (br->GetType()==31) {
-            // sub branch of a TClonesArray
-            TStreamerInfo *info = br->GetInfo();
-            TClass* cl = info->GetClass();
-            TStreamerElement *element = (TStreamerElement *)info->GetElems()[br->GetID()];
-            TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, element, kTRUE);
-            Int_t offset;
-            info->GetStreamerElement(element->GetName(),offset);
-            clonesinfo->fNext = new TFormLeafInfo(cl,offset+br->GetOffset(),element);
-            last = clonesinfo->fNext;
-            fDataMembers.AddAtAndExpand(clonesinfo,code);
-            fLookupType[code]=kDataMember;
+      if ( SwitchToFormLeafInfo(code) ) {
 
-         } else if (br->GetType()==41) {
-            // sub branch of a Collection
+         TFormLeafInfo *last = (TFormLeafInfo*)fDataMembers.At(code);
+         // Improbable case
+         if (!last) return action;
+         while (last->fNext) { last = last->fNext; }
 
-            TBranchElement *count = br->GetBranchCount();
-            TFormLeafInfo* collectioninfo;
-            if ( count->GetID() >= 0 ) {
-               TStreamerElement *collectionElement =
-                  (TStreamerElement *)count->GetInfo()->GetElems()[count->GetID()];
-               TClass *collectionCl = collectionElement->GetClassPointer();
-
-               collectioninfo =
-                  new TFormLeafInfoCollection(collectionCl, 0, collectionElement, kTRUE);
-            } else {
-               TClass *collectionCl = gROOT->GetClass(count->GetClassName());
-               collectioninfo =
-                  new TFormLeafInfoCollection(collectionCl, 0, collectionCl, kTRUE);
-            }
-
-            TStreamerInfo *info = br->GetInfo();
-            TClass* cl = info->GetClass();
-            TStreamerElement *element = (TStreamerElement *)info->GetElems()[br->GetID()];
-            Int_t offset;
-            info->GetStreamerElement(element->GetName(),offset);
-            collectioninfo->fNext = new TFormLeafInfo(cl,offset+br->GetOffset(),element);
-            last = collectioninfo->fNext;
-            fDataMembers.AddAtAndExpand(collectioninfo,code);
-            fLookupType[code]=kDataMember;
-
-         } else {
-            last = new TFormLeafInfoDirect(br);
-            fDataMembers.AddAtAndExpand(last,code);
-            fLookupType[code]=kDataMember;
-         }         
-      }
-
-      const char *funcname = 0;
-      if (objClass == TString::Class()) {
-         funcname = "Data";
-      } else if (objClass == StdString) {
-         funcname = "c_str";
-      }
-      if (funcname) {
-         if (last==0) {
-            last = (TFormLeafInfo*)fDataMembers.At(code);
-            // Improbable case
-            if (!last) return action;
-            while (last->fNext) { last = last->fNext; }
+         const char *funcname = 0;
+         if (objClass == TString::Class()) {
+            funcname = "Data";
+         } else if (objClass == stdStringClass) {
+            funcname = "c_str";
          }
-         TMethodCall *method = new TMethodCall(objClass, funcname, "");
-         last->fNext = new TFormLeafInfoMethod(objClass,method);
+         if (funcname) {
+            TMethodCall *method = new TMethodCall(objClass, funcname, "");
+            last->fNext = new TFormLeafInfoMethod(objClass,method);
+         }
       }
       return kDefinedString;
    }
+
+   if (objClass == TTimeStamp::Class() && SwitchToFormLeafInfo(code) ) {
+
+      TFormLeafInfo *last = (TFormLeafInfo*)fDataMembers.At(code);
+      // Improbable case
+      if (!last) return action;
+      while (last->fNext) { last = last->fNext; }
+
+      TMethodCall *method = new TMethodCall(objClass, "AsDouble", "");
+      last->fNext = new TFormLeafInfoMethod(objClass,method);
+
+      return kDefinedVariable;
+   }
+   
    return action;
 }
 //______________________________________________________________________________
@@ -4767,4 +4734,78 @@ void TTreeFormula::Convert(UInt_t oldversion)
       }
    }
 
+}
+
+//______________________________________________________________________________
+Bool_t TTreeFormula::SwitchToFormLeafInfo(Int_t code) 
+{
+   // Convert the underlying lookup method from the direct technique 
+   // (dereferencing the address held by the branch) to the method using 
+   // TFormLeafInfo.  This is in particular usefull in the case where we 
+   // need to append an additional TFormLeafInfo (for example to call a 
+   // method).
+   // Return false if the switch was unsuccessfull (basically in the
+   // case of an old style split tree).
+
+   TFormLeafInfo *last = 0;
+   TLeaf *leaf = (TLeaf*)fLeaves.At(code);
+   if (!leaf) return kFALSE;
+
+   if (fLookupType[code]==kDirect) {
+      if (leaf->InheritsFrom("TLeafElement")) {
+         TBranchElement * br = (TBranchElement*)leaf->GetBranch();
+         if (br->GetType()==31) {
+            // sub branch of a TClonesArray
+            TStreamerInfo *info = br->GetInfo();
+            TClass* cl = info->GetClass();
+            TStreamerElement *element = (TStreamerElement *)info->GetElems()[br->GetID()];
+            TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, element, kTRUE);
+            Int_t offset;
+            info->GetStreamerElement(element->GetName(),offset);
+            clonesinfo->fNext = new TFormLeafInfo(cl,offset+br->GetOffset(),element);
+            last = clonesinfo->fNext;
+            fDataMembers.AddAtAndExpand(clonesinfo,code);
+            fLookupType[code]=kDataMember;
+
+         } else if (br->GetType()==41) {
+            // sub branch of a Collection
+
+            TBranchElement *count = br->GetBranchCount();
+            TFormLeafInfo* collectioninfo;
+            if ( count->GetID() >= 0 ) {
+               TStreamerElement *collectionElement =
+                  (TStreamerElement *)count->GetInfo()->GetElems()[count->GetID()];
+               TClass *collectionCl = collectionElement->GetClassPointer();
+
+               collectioninfo =
+                  new TFormLeafInfoCollection(collectionCl, 0, collectionElement, kTRUE);
+            } else {
+               TClass *collectionCl = gROOT->GetClass(count->GetClassName());
+               collectioninfo =
+                  new TFormLeafInfoCollection(collectionCl, 0, collectionCl, kTRUE);
+            }
+
+            TStreamerInfo *info = br->GetInfo();
+            TClass* cl = info->GetClass();
+            TStreamerElement *element = (TStreamerElement *)info->GetElems()[br->GetID()];
+            Int_t offset;
+            info->GetStreamerElement(element->GetName(),offset);
+            collectioninfo->fNext = new TFormLeafInfo(cl,offset+br->GetOffset(),element);
+            last = collectioninfo->fNext;
+            fDataMembers.AddAtAndExpand(collectioninfo,code);
+            fLookupType[code]=kDataMember;
+
+         } else {
+            last = new TFormLeafInfoDirect(br);
+            fDataMembers.AddAtAndExpand(last,code);
+            fLookupType[code]=kDataMember;
+         }
+      } else {
+         //last = new TFormLeafInfoDirect(br);
+         //fDataMembers.AddAtAndExpand(last,code);
+         //fLookupType[code]=kDataMember;
+         return kFALSE;
+      }
+   }
+   return kTRUE;
 }

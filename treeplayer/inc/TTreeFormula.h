@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.51 2006/08/31 11:05:20 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.52 2006/09/02 07:47:29 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -140,6 +140,7 @@ protected:
    virtual Bool_t    IsLeafInteger(Int_t code) const;
    virtual Bool_t    IsString(Int_t oper) const;
    virtual Bool_t    IsLeafString(Int_t code) const;
+   virtual Bool_t    SwitchToFormLeafInfo(Int_t code);
 
    void              Convert(UInt_t fromVersion);
 
