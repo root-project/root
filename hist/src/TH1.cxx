@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.306 2006/08/28 14:54:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.307 2006/09/06 15:17:27 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4827,7 +4827,7 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
          nn2 = nn - ik - 1;
          // do all elements beside the first and last point for median 3
          //  and first two and last 2 for median 5
-         for  (ii = nn1; ii <= nn2; ii++)  {
+         for  (ii = nn1; ii < nn2; ii++)  {
             for  (jj = 0; jj < 3; jj++)   {
                hh[jj] = yy[ii + jj - 1];
             }
