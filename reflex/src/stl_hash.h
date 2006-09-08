@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: stl_hash.h,v 1.8 2006/08/11 06:40:29 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: stl_hash.h,v 1.9 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -94,7 +94,11 @@ namespace __gnu_cxx {
    
    template<> struct hash<const std::string *> {
       size_t operator()(const std::string * __s) const {
+#if defined (__INTEL_COMPILER) && (__INTEL_COMPILER<=800)
+         return hash_value(*__s); 
+#else
          return __stl_hash_string(__s->c_str()); 
+#endif
       }
    };
 }
