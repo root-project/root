@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.194 2006/07/07 14:59:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.195 2006/07/13 05:17:11 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2420,6 +2420,15 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignore)
    TStreamerInfo *sinfo = GetCurrentStreamerInfo();
    if (sinfo) {
       if (sinfo->GetOffsets()) {
+         // -- Warn the user that what he is doing cannot work.
+         // Note: The reason is that TStreamerInfo::Build() examines
+         // the kIgnoreTObjectStreamer bit and sets the TStreamerElement
+         // type for the TObject base class streamer element it creates
+         // to -1 as a flag.  Later on the TStreamerInfo::Compile()
+         // member function sees the flag and does not insert the base
+         // class element into the compiled streamer info.  None of this
+         // machinery works correctly if we are called after the streamer
+         // info has already been built and compiled.
          Error("IgnoreTObjectStreamer","Must be called before the creation of StreamerInfo");
          return;
       }

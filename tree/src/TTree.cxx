@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.299 2006/08/18 18:46:35 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.300 2006/08/31 11:05:20 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1741,6 +1741,17 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
          if (isBase) {
             TClass* clbase = element->GetClassPointer();
             if ((clbase == TObject::Class()) && cl->CanIgnoreTObjectStreamer()) {
+               // Note: TStreamerInfo::Compile() leaves this element
+               //       out of the compiled info, although it does
+               //       exists in the non-compiled info.  We must
+               //       account for the fact that this element is
+               //       missing in the compiled streamer info by
+               //       making sure that we do not consume an id
+               //       number for it.
+               // FIXME: The test that TStreamerInfo::Compile() uses
+               //        is element->GetType() < 0, so that is what
+               //        we should do as well.
+               --id;
                continue;
             }
          }

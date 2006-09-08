@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.241 2006/08/08 19:07:49 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.242 2006/08/22 22:06:34 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -229,7 +229,14 @@ void TStreamerInfo::Build()
          } else {
             clm->GetStreamerInfo();
             if ((clm == TObject::Class()) && fClass->CanIgnoreTObjectStreamer()) {
+               // -- An ignored TObject base class.
+               // Note: The TClass kIgnoreTObjectStreamer == BIT(15), but
+               // the TStreamerInfo kIgnoreTobjectStreamer == BIT(13) which
+               // is confusing.
                SetBit(kIgnoreTObjectStreamer);
+               // Flag the element to be ignored by setting its type to -1.
+               // This flag will be used later by Compile() to prevent this
+               // element from being inserted into the compiled info.
                element->SetType(-1);
             }
             if (!clm->IsLoaded()) {
@@ -579,6 +586,9 @@ void TStreamerInfo::BuildCheck()
          }
       }
    }
+   // FIXME: This code can never execute because Build() calls
+   // TStreamerElement::Class()->IgnoreTObjectStreamer()
+   // so our bits are never saved to the file.
    if (TestBit(kIgnoreTObjectStreamer)) {
       fClass->IgnoreTObjectStreamer();
    }
@@ -1288,6 +1298,14 @@ void TStreamerInfo::Compile()
          break;
       }
       if (element->GetType() < 0) {
+         // -- Skip an ignored TObject base class.
+         // Note: The only allowed negative value here is -1,
+         // and signifies that Build() has found a TObject
+         // base class and TClass::IgnoreTObjectStreamer() was
+         // called.  In this case the compiled version of the
+         // elements omits the TObject base class element,
+         // which has to be compensated for by TTree::Bronch()
+         // when it is making branches for a split object.
          continue;
       }
       Int_t asize = element->GetSize();
@@ -2297,7 +2315,9 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       atype = i;
       aleng = len;
    } else        {
-      if (i < 0) {printf("NULL\n"); return;}
+      if (i < 0) {
+         printf("NULL\n"); return;
+      }
       ladd  = pointer + fOffset[i];
       atype = fNewType[i];
       aleng = fLength[i];
