@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.cxx,v 1.10 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.cxx,v 1.11 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -22,13 +22,13 @@
 #include "stl_hash.h"
 
 /** the Key container */
-typedef std::vector< std::string > Keys;
+typedef std::vector< std::string > Keys_t;
 
 //-------------------------------------------------------------------------------
-Keys & sKeys() {
+Keys_t & sKeys() {
 //-------------------------------------------------------------------------------
    // Wrapper for static keys container.
-   static Keys k;
+   static Keys_t k;
    return k;
 }
 
@@ -127,7 +127,7 @@ size_t ROOT::Reflex::PropertyListImpl::KeyByName( const std::string & key,
                                               bool allocateNew ) {
 //-------------------------------------------------------------------------------
 // Return a key by it's name.
-   Keys::iterator it = std::find( sKeys().begin(), sKeys().end(), key );
+   Keys_t::iterator it = std::find( sKeys().begin(), sKeys().end(), key );
    if ( it != sKeys().end() ) {
       return std::distance(sKeys().begin(), it) + 1;
    }

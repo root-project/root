@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.20 2006/08/28 16:03:54 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.21 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -122,6 +122,7 @@ void ROOT::Reflex::ScopeName::DeleteScope() const {
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::ScopeName::HideName() {
 //-------------------------------------------------------------------------------
+// Append the string " @HIDDEN@" to a scope name.
    if ( fName[fName.length()] != '@' ) {
       sScopes().erase(&fName);
       fName += " @HIDDEN@";

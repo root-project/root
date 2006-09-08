@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyList.cxx,v 1.10 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyList.cxx,v 1.11 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -31,6 +31,7 @@ std::ostream & ROOT::Reflex::operator<<( std::ostream & s,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::StdString_Iterator ROOT::Reflex::PropertyList::Key_Begin() {
 //-------------------------------------------------------------------------------
+// Return the begin iterator of the keys container.
    return PropertyListImpl::Key_Begin();
 }
 
@@ -38,6 +39,7 @@ ROOT::Reflex::StdString_Iterator ROOT::Reflex::PropertyList::Key_Begin() {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::StdString_Iterator ROOT::Reflex::PropertyList::Key_End() {
 //-------------------------------------------------------------------------------
+// Return the end iterator of the keys container.
    return PropertyListImpl::Key_End();
 }
 
@@ -45,6 +47,7 @@ ROOT::Reflex::StdString_Iterator ROOT::Reflex::PropertyList::Key_End() {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::PropertyList::Key_RBegin() {
 //-------------------------------------------------------------------------------
+// Return the rbegin iterator of the keys container.
    return PropertyListImpl::Key_RBegin();
 }
 
@@ -52,6 +55,7 @@ ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::PropertyList::Key_RBegin(
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::PropertyList::Key_REnd() {
 //-------------------------------------------------------------------------------
+// Return the rend iterator of the keys container.
    return PropertyListImpl::Key_REnd();
 }
 
@@ -59,6 +63,7 @@ ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::PropertyList::Key_REnd() 
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::PropertyList::KeysAsString() {
 //-------------------------------------------------------------------------------
+// Return all keys as one string concatenation.
    return PropertyListImpl::KeysAsString();
 }
 
@@ -66,6 +71,7 @@ std::string ROOT::Reflex::PropertyList::KeysAsString() {
 //-------------------------------------------------------------------------------
 const std::string & ROOT::Reflex::PropertyList::KeyAt( size_t nth ) {
 //-------------------------------------------------------------------------------
+// Return key at position nth.
    return PropertyListImpl::KeyAt( nth );
 }
 
@@ -74,6 +80,8 @@ const std::string & ROOT::Reflex::PropertyList::KeyAt( size_t nth ) {
 size_t ROOT::Reflex::PropertyList::KeyByName( const std::string & key,
                                               bool allocateNew ) {
 //-------------------------------------------------------------------------------
+// Return the position of a Key. If allocateNew is set to true allocate a new key
+// if necessary.
    return PropertyListImpl::KeyByName( key, allocateNew );
 }
 
@@ -81,6 +89,7 @@ size_t ROOT::Reflex::PropertyList::KeyByName( const std::string & key,
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::PropertyList::KeySize() {
 //-------------------------------------------------------------------------------
+// Return the number of all allocated keys.
    return PropertyListImpl::KeySize();
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.22 2006/08/17 13:50:30 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.23 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -294,6 +294,7 @@ const ROOT::Reflex::Base & ROOT::Reflex::TypeBase::HasBase( const Type & /* cl *
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::TypeBase::HideName() const {
 //-------------------------------------------------------------------------------
+// Append the string " @HIDDEN@" to a type name.
    fTypeName->HideName();
 }
 

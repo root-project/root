@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.28 2006/08/25 10:16:03 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.29 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -49,7 +49,7 @@ ROOT::Reflex::ScopeBase::ScopeBase( const char * scope,
      fMemberTemplates( std::vector<OwnedMemberTemplate>() ),
      fPropertyList( OwnedPropertyList( new PropertyListImpl())),
      fBasePosition( Tools::GetBasePosition( scope )) {
-   //-------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------
    // Construct the dictionary information for a scope.
    std::string sname(scope);
 
@@ -253,6 +253,7 @@ const ROOT::Reflex::Scope & ROOT::Reflex::ScopeBase::GlobalScope() {
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::ScopeBase::HideName() const {
 //-------------------------------------------------------------------------------
+// Append the string " @HIDDEN@" to a scope name.
    fScopeName->HideName();
 }
 
@@ -270,7 +271,7 @@ bool ROOT::Reflex::ScopeBase::IsTopScope() const {
 const ROOT::Reflex::Member & 
 ROOT::Reflex::ScopeBase::LookupMember( const std::string & nam,
                                        const Scope & current ) const {
-   //------------------------------------------------------------------------------- 
+//------------------------------------------------------------------------------- 
    // Lookup a member name from this scope.
    return NameLookup::LookupMember( nam, current );
 }
