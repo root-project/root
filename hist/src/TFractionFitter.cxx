@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.13 2006/02/19 17:06:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.14 2006/05/17 16:37:25 couet Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
 // with additions by Bran Wijngaarden <dwijngaa@hef.kun.nl>
 
@@ -647,7 +647,7 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
 
             result -= prediction;
             Double_t found = fData->GetBinContent(bin);
-            if (found > 0)
+            if (found > 0 && prediction > 0)
                result += found*TMath::Log(prediction);
          }
       }
