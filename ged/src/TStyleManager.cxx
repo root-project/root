@@ -18,6 +18,9 @@
 //       them to macros, apply a style on the selected object or on     //
 //       all canvases, change gStyle.                                   //
 //                                                                      //
+//  Activate the style manager by selecting Edit menu / Style...        //
+//      in the canvas window.                                           //
+//                                                                      //
 //  The Style Manager interface is composed of two parts:               //
 //  - the top level interface that manages a list of styles;            //
 //  - the style editor, which deals with the current style settings.    //
