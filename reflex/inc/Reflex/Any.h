@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Any.h,v 1.9 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Any.h,v 1.10 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // See http://www.boost.org/libs/any for Documentation.
@@ -98,6 +98,11 @@ namespace ROOT {
             return fContent ? fContent->TypeInfo() : typeid( void );
          }
 
+         /** Adress */
+         void* Address() const {
+            return fContent ? fContent->Address() : 0;
+         }
+
       private:  // or public: ?
       
          /**
@@ -118,6 +123,9 @@ namespace ROOT {
         
             /** Query */
             virtual Placeholder * Clone() const = 0;
+
+            /** Query */
+            virtual void * Address() const = 0;
         
          };
       
@@ -140,6 +148,11 @@ namespace ROOT {
             /** Clone */
             virtual Placeholder * Clone() const {
                return new Holder( fHeld );
+            }
+
+            /** Address */
+            virtual void * Address() const {
+               return (void*)(&fHeld);
             }
         
             /** representation */

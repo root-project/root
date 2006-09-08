@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.23 2006/08/21 15:25:34 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.24 2006/08/25 10:16:02 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -1189,14 +1189,14 @@ inline ROOT::Reflex::Type & ROOT::Reflex::Type::operator = ( const Type & rh ) {
 //-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::Type::operator == ( const Type & rh ) const {
 //-------------------------------------------------------------------------------
-   return ( fTypeName == rh.fTypeName );
+   return ( fTypeName == rh.fTypeName && fModifiers == rh.fModifiers );
 }
 
 
 //-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::Type::operator != ( const Type & rh ) const {
 //-------------------------------------------------------------------------------
-   return ( fTypeName != rh.fTypeName );
+   return ( fTypeName != rh.fTypeName || fModifiers != rh.fModifiers );
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.15 2006/08/18 12:17:36 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.16 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -59,7 +59,8 @@ class ReflexUnitTest : public CppUnit::TestFixture {
   CPPUNIT_TEST( member );
   CPPUNIT_TEST( tools );
   CPPUNIT_TEST( global_scope );
-  CPPUNIT_TEST(setClassAtts);
+  CPPUNIT_TEST( setClassAtts );
+  CPPUNIT_TEST( object_value );
    
   CPPUNIT_TEST( shutdown );
   CPPUNIT_TEST_SUITE_END();
@@ -88,6 +89,7 @@ public:
   void tools();
   void global_scope();
   void setClassAtts();
+  void object_value();
 
   void shutdown() { Reflex::Shutdown(); }
   void tearDown() {}
@@ -366,7 +368,7 @@ void ReflexUnitTest::reference_type() {
   CPPUNIT_ASSERT(frt.IsFundamental());
   CPPUNIT_ASSERT_EQUAL(string("fundamental"), frt.Name());
   CPPUNIT_ASSERT_EQUAL(string("fundamental&"), frt.Name(Q));
-  CPPUNIT_ASSERT(f.ThisType() == d.TypeOf());
+  CPPUNIT_ASSERT(f.ThisType().Id() == d.TypeOf().Id());
 }
 
 void ReflexUnitTest::array_type() {
@@ -671,6 +673,57 @@ void ReflexUnitTest::global_scope() {
 
 }
 
+void ReflexUnitTest::object_value() {
+  //---Primitives
+  bool  t = true;   bool b = false; 
+  char  c = -99;    unsigned char uc = 99;
+  short s = -999;   unsigned short us = 999;
+  int   i = -9999;  unsigned int ui = 9999;
+  long  l = -99999; unsigned long ul = 99999;
+  float f = 1.12F;  double d = 1.12; long double ld = 1.12;
+
+  ValueObject vt(t), vb(b), vc(c), vuc(uc), vs(s), vus(us), vi(i), vui(ui), vl(l), vul(ul), vf(f), vd(d), vld(ld);
+  CPPUNIT_ASSERT( t  == vt.Value<bool>() );
+  CPPUNIT_ASSERT( b  == vb.Value<bool>() );
+  CPPUNIT_ASSERT( c  == vc.Value<char>() );
+  CPPUNIT_ASSERT( uc == vuc.Value<unsigned char>() );
+  CPPUNIT_ASSERT( i  == vi.Value<int>() );
+  CPPUNIT_ASSERT( ui == vui.Value<unsigned int>() );
+  CPPUNIT_ASSERT( l  == vl.Value<long>() );
+  CPPUNIT_ASSERT( ul == vul.Value<unsigned long>() );
+  CPPUNIT_ASSERT( f  == vf.Value<float>() );
+  CPPUNIT_ASSERT( d  == vd.Value<double>() );
+  CPPUNIT_ASSERT( ld == vld.Value<long double>() );
+
+
+  //---Pointers
+  char*  pc = "Hello";
+  char** ppc = &pc;
+  string* ps = new string(pc);
+  const int* cpi = &i;
+  int const * pci = &i;
+  int * const ipc = &i;
+  ValueObject vpc(pc), vppc(ppc), vps(ps), vcpi(cpi), vpci(pci), vipc(ipc);
+
+  CPPUNIT_ASSERT( pc  == vpc.Address() );
+  CPPUNIT_ASSERT( ppc  == vppc.Address() );
+  CPPUNIT_ASSERT( ps  == vps.Address() );
+  CPPUNIT_ASSERT( cpi  == vcpi.Address() );
+  CPPUNIT_ASSERT( pci  == vpci.Address() );
+  CPPUNIT_ASSERT( ipc  == vipc.Address() );
+
+  //---Classes and structs
+  string str("Hello");
+  ValueObject vstr(str);
+  CPPUNIT_ASSERT( str  == vstr.Value<string>() );
+
+  //---Copies
+  ValueObject vvi = vi;
+  CPPUNIT_ASSERT( i  == vvi.Value<int>() );
+  ValueObject vvstr = vstr;
+  CPPUNIT_ASSERT( str  == vvstr.Value<string>() );
+
+}
 // Class registration on cppunit framework
 CPPUNIT_TEST_SUITE_REGISTRATION(ReflexUnitTest);
 

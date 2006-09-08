@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.18 2006/08/21 15:25:35 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.19 2006/08/25 10:16:03 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -165,9 +165,10 @@ bool ROOT::Reflex::Type::IsEquivalentTo( const Type & typ ) const {
 //-------------------------------------------------------------------------------
 // Check if two types are equivalent. It will compare the information of the type
 // depending on the TypeType.
+   if ( *this == typ ) return true;
+
    Type t1 = *this;
    Type t2 = typ;
-   if (!t1.Id() & !t2.Id()) return true;
 
    unsigned int mod1 = t1.fModifiers;
    unsigned int mod2 = t2.fModifiers;

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.20 2006/08/17 13:50:30 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.21 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -25,6 +25,7 @@
 
 #include <typeinfo>
 #include <iostream>
+#include <sstream>
 #include <algorithm>
 #if defined (__linux) || defined (__APPLE__)
 #include <cxxabi.h>
@@ -147,7 +148,7 @@ ROOT::Reflex::Object ROOT::Reflex::Class::CastObject( const Type & to,
 
     
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object ROOT::Reflex::Class::Construct( const Type & signature, 
+ROOT::Reflex::Object ROOT::Reflex::Class::Construct( const Type & sig, 
                                                      const std::vector < void * > & args, 
                                                      void * mem ) const {
 //------------------------------------------------------------------------------- 
@@ -155,28 +156,20 @@ ROOT::Reflex::Object ROOT::Reflex::Class::Construct( const Type & signature,
 // can be given as the first argument. Furhter arguments are a vector of memory 
 // addresses for non default constructors and a memory address for in place construction.
    static Type defSignature = Type::ByName("void (void)");
-   Type signature2 = signature;
-  
-   Member constructor = Member();
-   if ( !signature &&  fConstructors.size() > 1 ) 
-      signature2 = defSignature; 
+   Type signature = ( !sig &&  fConstructors.size() > 1 ) ? defSignature : sig;
   
    for (size_t i = 0; i < fConstructors.size(); ++ i) {
-      if ( !signature2 || fConstructors[i].TypeOf().Id() == signature2.Id()) {
-         constructor = fConstructors[i];
-         break;
+      if ( !signature || fConstructors[i].TypeOf().Id() == signature.Id()) {
+         Member constructor = fConstructors[i];
+         if ( mem == 0 ) mem = Allocate();
+         Object obj = Object( ThisType(), mem );
+         constructor.Invoke( obj, args );
+         return obj;
       }
    }
-  
-   if ( constructor.TypeOf() ) {
-      // no memory Address passed -> Allocate memory for class
-      if ( mem == 0 ) mem = Allocate();
-      Object obj = Object( ThisType(), mem );
-      constructor.Invoke( obj, args );
-      return obj;
-   }
-        
-   throw RuntimeError("No suitable constructor found");
+   std::stringstream s;
+   s << "No suitable constructor found with signature '" << signature.Name() << "'";
+   throw RuntimeError( s.str() );
 }
 
     

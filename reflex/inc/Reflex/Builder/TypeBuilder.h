@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.11 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.12 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -472,15 +472,15 @@ namespace ROOT{
 
 
       /**
-       * getType will return a pointer to a Type (create it if necessery) 
-       * representating the At of the template FunctionParameterAt
-       * @return pointer to Type
+       * getType will return a reference to a Type (create it if necessery) 
+       * representating the type of the template parameter
+       * @return reference to Type
        */
       template < typename T > 
-         Type GetType() {
-         return TypeDistiller<T>::Get();
+      const Type& GetType() {
+         static Type t =  TypeDistiller<T>::Get();
+         return t;
       }
-
 
       /** 
        * @struct FuntionDistiller TypeBuilder.h Reflex/Builder/TypeBuilder.h
