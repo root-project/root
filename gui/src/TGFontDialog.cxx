@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.18 2006/06/30 14:08:36 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.19 2006/07/11 09:05:01 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers + Valeriy Onuchin  23/04/03
 
 /*************************************************************************
@@ -20,14 +20,7 @@
 
 **************************************************************************/
 
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <stdlib.h>
-
 #include "TGFontDialog.h"
-#include "TCanvas.h"
-#include "TROOT.h"
 #include "TString.h"
 #include "TError.h"
 #include "TGColorSelect.h"
