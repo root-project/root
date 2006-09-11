@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: v5-10-00c $:$Id: Object.h,v 1.4 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ValueObject.h,v 1.1 2006/09/08 20:41:29 roiser Exp $
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
