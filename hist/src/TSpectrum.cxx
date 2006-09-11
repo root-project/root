@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.47 2006/06/26 10:51:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.48 2006/06/28 13:11:47 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -253,7 +253,14 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option, Doub
 //   threshold: (default=0.05)  peaks with amplitude less than             //
 //       threshold*highest_peak are discarded.  0<threshold<1              //
 //                                                                         //
-//   if option is not equal to "goff" (goff is the default), then          //
+//   By default, the background is removed before deconvolution.           //
+//   Specify "noBackground" to not remove the background.                  //
+//                                                                         //
+//   By default the source spectrum is replaced by a new spectrum          //
+//   calculated using the Markov chain method.                             //
+//   Specify "noMarkov" to not apply the Markov algorithm.                 //
+//                                                                         //
+//   if option does not include "goff" (goff is the default), then         //
 //   a polymarker object is created and added to the list of functions of  //
 //   the histogram. The histogram is drawn with the specified option and   //
 //   the polymarker object drawn on top of the histogram.                  //
@@ -275,6 +282,18 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option, Doub
       Warning("Search","threshold must 0<threshold<1, threshol=0.05 assumed");
       threshold = 0.05;
    }
+   TString opt = option;
+   opt.ToLower();
+   Bool_t background = kTRUE;
+   if (opt.Contains("nobackground")) {
+      background = kFALSE;
+      opt.ReplaceAll("nobackground","");
+   }
+   Bool_t markov = kTRUE;
+   if (opt.Contains("nomarkov")) {
+      markov = kFALSE;
+      opt.ReplaceAll("nomarkov","");
+   }
    if (dimension == 1) {
       Int_t first = hin->GetXaxis()->GetFirst();
       Int_t last  = hin->GetXaxis()->GetLast();
@@ -288,7 +307,7 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option, Doub
          if (sigma < 1) sigma = 1;
          if (sigma > 8) sigma = 8;
       }
-      npeaks = SearchHighRes(source, dest, size, sigma, 100*threshold, kTRUE, fgIterations, kTRUE, fgAverageWindow);
+      npeaks = SearchHighRes(source, dest, size, sigma, 100*threshold, background, fgIterations, markov, fgAverageWindow);
 
       //TH1 * hnew = (TH1 *) hin->Clone("markov");
       //for (i = 0; i < size; i++)
@@ -301,7 +320,7 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option, Doub
       delete [] source;
       delete [] dest;
       
-      if (strstr(option, "goff"))
+      if (opt.Contains("goff"))
          return npeaks;
       if (!npeaks) return 0;
       TPolyMarker * pm = (TPolyMarker*)hin->GetListOfFunctions()->FindObject("TPolyMarker");
@@ -314,7 +333,9 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option, Doub
       pm->SetMarkerStyle(23);
       pm->SetMarkerColor(kRed);
       pm->SetMarkerSize(1.3);
-      ((TH1*)hin)->Draw(option);
+      opt.ReplaceAll(" ","");
+      opt.ReplaceAll(",","");
+      ((TH1*)hin)->Draw(opt.Data());
       return npeaks;
    }
    return 0;
