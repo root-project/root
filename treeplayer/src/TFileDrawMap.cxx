@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.6 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.7 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -574,7 +574,8 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
          TLeaf *leaf;
          while ((leaf = (TLeaf*)nextb())) {
             TBranch *branch = leaf->GetBranch();
-            color = (Int_t)(branch->IsA()->GetUniqueID()%20);
+            color = branch->GetFillColor();
+            if (color == 0) color = 1;
             box.SetFillColor(color);
             Int_t nbaskets = branch->GetMaxBaskets();
             for (Int_t i=0;i<nbaskets;i++) {
