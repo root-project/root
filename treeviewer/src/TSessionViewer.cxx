@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.70 2006/07/05 07:33:36 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.71 2006/08/10 13:54:10 brun Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -1447,7 +1447,7 @@ void TSessionFrame::UpdatePackages()
       else
          pict = fClient->GetPicture("package.xpm");
       TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
-                                    package->fId, package->fName, pict);
+                                    package->fId, package->fPathName, pict);
       fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Layout();
@@ -1473,7 +1473,7 @@ void TSessionFrame::OnUploadPackages()
          if (fViewer->GetActDesc()->fProof->UploadPackage(name.Data()) != 0)
             Error("Submit", "Upload package failed");
          else {
-            TObject *o = fViewer->GetActDesc()->fPackages->FindObject(name);
+            TObject *o = fViewer->GetActDesc()->fPackages->FindObject(gSystem->BaseName(name));
             if (!o) continue;
             TPackageDescription *package =
                dynamic_cast<TPackageDescription *>(o);
@@ -1484,6 +1484,7 @@ void TSessionFrame::OnUploadPackages()
             }
          }
       }
+      UpdatePackages();
    }
    fLBPackages->Layout();
    fClient->NeedRedraw(fLBPackages->GetContainer());
@@ -1501,11 +1502,12 @@ void TSessionFrame::OnEnablePackages()
       fViewer->GetActDesc()->fProof->IsValid()) {
       TObject *obj;
       TList selected;
+      fBtnEnable->SetState(kButtonDisabled);
       fLBPackages->GetSelectedEntries(&selected);
       TIter next(&selected);
       while ((obj = next())) {
          TString name = obj->GetTitle();
-         TObject *o = fViewer->GetActDesc()->fPackages->FindObject(name);
+         TObject *o = fViewer->GetActDesc()->fPackages->FindObject(gSystem->BaseName(name));
          if (!o) continue;
          TPackageDescription *package =
             dynamic_cast<TPackageDescription *>(o);
@@ -1527,6 +1529,8 @@ void TSessionFrame::OnEnablePackages()
             ((TGIconLBEntry *)obj)->SetPicture(fClient->GetPicture("package_add.xpm"));
          }
       }
+      UpdatePackages();
+      fBtnEnable->SetState(kButtonUp);
    }
    fLBPackages->Layout();
    fClient->NeedRedraw(fLBPackages->GetContainer());
@@ -1551,16 +1555,18 @@ void TSessionFrame::OnDisablePackages()
          if (fViewer->GetActDesc()->fProof->ClearPackage(name) != 0)
             Error("Submit", "Clear package failed");
          else {
-            TObject *o = fViewer->GetActDesc()->fPackages->FindObject(name);
+            TObject *o = fViewer->GetActDesc()->fPackages->FindObject(gSystem->BaseName(name));
             if (!o) continue;
             TPackageDescription *package =
                dynamic_cast<TPackageDescription *>(o);
             if (package) {
                package->fEnabled = kFALSE;
-               ((TGIconLBEntry *)obj)->SetPicture(fClient->GetPicture("package_delete.xpm"));
+               package->fUploaded = kFALSE;
+               ((TGIconLBEntry *)obj)->SetPicture(fClient->GetPicture("package.xpm"));
             }
          }
       }
+      UpdatePackages();
    }
    fLBPackages->Layout();
    fClient->NeedRedraw(fLBPackages->GetContainer());
@@ -1598,19 +1604,40 @@ void TSessionFrame::OnBtnAddClicked()
    if (fViewer->IsBusy())
       return;
    TGFileInfo fi;
+   TPackageDescription *package;
+   TGIconLBEntry *entry;
    fi.fFileTypes = pkgtypes;
    new TGFileDialog(fClient->GetRoot(), fViewer, kFDOpen, &fi);
-   if (!fi.fFilename) return;
-   TPackageDescription *package = new TPackageDescription;
-   package->fName = gSystem->UnixPathName(fi.fFilename);
-   package->fId   = fViewer->GetActDesc()->fPackages->GetEntries();
-   package->fUploaded = kFALSE;
-   package->fEnabled = kFALSE;
-   fViewer->GetActDesc()->fPackages->Add((TObject *)package);
-   TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
-                              package->fId, package->fName,
-                              fClient->GetPicture("package.xpm"));
-   fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
+   if (fi.fMultipleSelection && fi.fFileNamesList) {
+      TObjString *el;
+      TIter next(fi.fFileNamesList);
+      while ((el = (TObjString *) next())) {
+         package = new TPackageDescription;
+         package->fName = gSystem->BaseName(gSystem->UnixPathName(el->GetString()));
+         package->fPathName = gSystem->UnixPathName(el->GetString());
+         package->fId   = fViewer->GetActDesc()->fPackages->GetEntries();
+         package->fUploaded = kFALSE;
+         package->fEnabled = kFALSE;
+         fViewer->GetActDesc()->fPackages->Add((TObject *)package);
+         entry = new TGIconLBEntry(fLBPackages->GetContainer(),
+                                   package->fId, package->fPathName,
+                                   fClient->GetPicture("package.xpm"));
+         fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
+      }
+   }
+   else if (fi.fFilename) {
+      package = new TPackageDescription;
+      package->fName = gSystem->BaseName(gSystem->UnixPathName(fi.fFilename));
+      package->fPathName = gSystem->UnixPathName(fi.fFilename);
+      package->fId   = fViewer->GetActDesc()->fPackages->GetEntries();
+      package->fUploaded = kFALSE;
+      package->fEnabled = kFALSE;
+      fViewer->GetActDesc()->fPackages->Add((TObject *)package);
+      entry = new TGIconLBEntry(fLBPackages->GetContainer(),
+                                package->fId, package->fPathName,
+                                fClient->GetPicture("package.xpm"));
+      fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
+   }
    fLBPackages->Layout();
    fClient->NeedRedraw(fLBPackages->GetContainer());
 }
@@ -1638,7 +1665,7 @@ void TSessionFrame::OnBtnRemoveClicked()
       else
          pict = fClient->GetPicture("package.xpm");
       TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
-                                    package->fId, package->fName, pict);
+                                    package->fId, package->fPathName, pict);
       fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Layout();
@@ -1672,7 +1699,7 @@ void TSessionFrame::OnBtnUpClicked()
       else
          pict = fClient->GetPicture("package.xpm");
       TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
-                                    package->fId, package->fName, pict);
+                                    package->fId, package->fPathName, pict);
       fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Select(pos-1);
@@ -1708,7 +1735,7 @@ void TSessionFrame::OnBtnDownClicked()
       else
          pict = fClient->GetPicture("package.xpm");
       TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
-                                    package->fId, package->fName, pict);
+                                    package->fId, package->fPathName, pict);
       fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Select(pos+1);
@@ -4538,17 +4565,19 @@ void TSessionViewer::UpdateListOfPackages()
    if (fActDesc->fConnected && fActDesc->fAttached &&
        fActDesc->fProof && fActDesc->fProof->IsValid() &&
        fActDesc->fProof->IsParallel()) {
-      fActDesc->fPackages->Clear();
+      //fActDesc->fPackages->Clear();
       TList *packlist = fActDesc->fProof->GetListOfEnabledPackages();
       if(packlist) {
          TIter nextenabled(packlist);
          while ((packname = (TObjString *)nextenabled())) {
             package = new TPackageDescription;
             package->fName = packname->GetName();
+            package->fName += ".par";
+            package->fPathName = package->fName;
             package->fId   = fActDesc->fPackages->GetEntries();
             package->fUploaded = kTRUE;
             package->fEnabled = kTRUE;
-            if (!fActDesc->fPackages->FindObject(packname->GetName())) {
+            if (!fActDesc->fPackages->FindObject(package->fName)) {
                fActDesc->fPackages->Add((TObject *)package);
             }
          }
@@ -4559,10 +4588,12 @@ void TSessionViewer::UpdateListOfPackages()
          while ((packname = (TObjString *)nextpack())) {
             package = new TPackageDescription;
             package->fName = packname->GetName();
+            package->fName += ".par";
+            package->fPathName = package->fName;
             package->fId   = fActDesc->fPackages->GetEntries();
             package->fUploaded = kTRUE;
             package->fEnabled = kFALSE;
-            if (!fActDesc->fPackages->FindObject(packname->GetName())) {
+            if (!fActDesc->fPackages->FindObject(package->fName)) {
                fActDesc->fPackages->Add((TObject *)package);
             }
          }

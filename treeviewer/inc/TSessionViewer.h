@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.32 2006/06/02 23:32:40 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.33 2006/07/04 10:16:52 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -179,6 +179,7 @@ class TPackageDescription : public TObject {
 
 public:
    TString        fName;         // package name
+   TString        fPathName;     // full path name of package
    Int_t          fId;           // package id
    Bool_t         fUploaded;     // package has been uploaded
    Bool_t         fEnabled;      // package has been enabled
