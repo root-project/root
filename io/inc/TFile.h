@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.54 2006/07/26 14:16:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.55 2006/08/11 20:25:52 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -88,6 +88,7 @@ protected:
    static Long64_t  fgBytesRead;   //Number of bytes read by all TFile objects
    static Long64_t  fgFileCounter; //Counter for all opened files
    static Int_t     fgReadCalls;   //Number of bytes read from all TFile objects
+   static Bool_t    fgReadInfo;    //if true (default) ReadStreamerInfo is called when opening a file
 
    virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
    Long64_t      GetRelOffset() const { return fOffset - fArchiveOffset; }
@@ -230,6 +231,7 @@ public:
    static void         SetFileBytesRead(Long64_t bytes = 0);
    static void         SetFileBytesWritten(Long64_t bytes = 0);
    static void         SetFileReadCalls(Int_t readcalls = 0);
+   static void         SetReadStreamerInfo(Bool_t readinfo=kTRUE);
 
    static Long64_t     GetFileCounter();
    static void         IncrementFileCounter();

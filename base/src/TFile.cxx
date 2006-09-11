@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.186 2006/08/28 13:34:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.187 2006/08/31 09:44:54 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -58,8 +58,9 @@ TFile *gFile;                 //Pointer to current file
 Long64_t TFile::fgBytesRead  = 0;
 Long64_t TFile::fgBytesWrite = 0;
 Long64_t TFile::fgFileCounter = 0;
-Int_t TFile::fgReadCalls = 0;
-TList *TFile::fgAsyncOpenRequests = 0;
+Int_t    TFile::fgReadCalls = 0;
+Bool_t   TFile::fgReadInfo = kTRUE;
+TList   *TFile::fgAsyncOpenRequests = 0;
 
 const Int_t kBEGIN = 100;
 
@@ -644,7 +645,7 @@ void TFile::Init(Bool_t create)
       Int_t lenIndex = gROOT->GetListOfStreamerInfo()->GetSize()+1;
       if (lenIndex < 5000) lenIndex = 5000;
       fClassIndex = new TArrayC(lenIndex);
-      if (fSeekInfo > fBEGIN) ReadStreamerInfo();
+      if (fgReadInfo && fSeekInfo > fBEGIN) ReadStreamerInfo();
    }
 
    // Count number of TProcessIDs in this file
@@ -2083,6 +2084,8 @@ void TFile::ReadStreamerInfo()
    // Read the list of StreamerInfo from this file.
    // The key with name holding the list of TStreamerInfo objects is read.
    // The corresponding TClass objects are updated.
+   // Note that this function is not called if the static member fgReadInfo is falsse.
+   //  (see TFile::SetReadStreamerInfo)
 
    TList *list = GetStreamerInfoList();
    if (!list) {
@@ -2115,6 +2118,21 @@ void TFile::ReadStreamerInfo()
    fClassIndex->fArray[0] = 0;
    list->Clear();  //this will delete all TStreamerInfo objects with kCanDelete bit set
    delete list;
+}
+
+//______________________________________________________________________________
+void TFile::SetReadStreamerInfo(Bool_t readinfo)
+{
+   // static function to set fgReadInfo.
+   // If fgReadInfo is true (default) TFile::ReadStreamerInfo is called
+   //  when opening the file.
+   // It may be interesting to set fgReadInfo to false to speedup the file
+   // opening time or in case libraries containing classes referenced
+   // by the file have not yet been loaded.
+   // if fgReadInfo is false, one can still read the StreamerInfo with
+   //    myfile.ReadStreamerInfo();
+   
+   fgReadInfo = readinfo;
 }
 
 //______________________________________________________________________________
