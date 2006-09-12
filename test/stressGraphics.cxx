@@ -148,7 +148,7 @@ void stressGraphics(Int_t verbose)
       return;
    }
    gErrorIgnoreLevel = 0;
-			   
+   
    // Read the reference file "stressGraphics.ref"
    FILE *sg = fopen("stressGraphics.ref","r");
    char line[80];
@@ -277,13 +277,14 @@ void StatusPrint(Int_t id, const TString &title, Int_t res, Int_t ref, Int_t err
       if (TMath::Abs(res-ref)<=err) {
          for (Int_t i = nch; i < 63; i++) header += '.';
          cout << header <<  " OK" << endl;
+         gSystem->Unlink(Form("sg%2.2d.ps",id));
       } else {
          for (Int_t i = nch; i < 59; i++) header += '.';
          cout << header << " FAILED" << endl;
          cout << "          Result    = "  << res << endl;
          cout << "          Reference = "  << ref << endl;
          cout << "          Error     = "  << TMath::Abs(res-ref) 
-	                                   << " (was " << err << ")"<< endl;
+                                           << " (was " << err << ")"<< endl;
       }
    } else {
       printf("%3d %8d %5d\n",id,res,err);
@@ -345,7 +346,7 @@ void EndTest(const TString &title)
 
    StatusPrint(gTestNum, title, AnalysePS(fileName),
                                 gRefNb[gTestNum-1],
-	                        gErrNb[gTestNum-1]);
+                                gErrNb[gTestNum-1]);
 
    if (gC) {delete gC; gC=0;}
    return;
@@ -1425,8 +1426,8 @@ void tgraph2d1()
       for (Int_t j=0; j<npy; j++) {
          z = sin(sqrt(x*x+y*y))+1;
          dt->SetPoint(k,x,y,z);
-	 k++;
-	 y = y+dy;
+         k++;
+         y = y+dy;
       }
        x = x+dx;
        y = -P;
