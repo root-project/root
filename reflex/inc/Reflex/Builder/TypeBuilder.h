@@ -400,7 +400,7 @@ namespace ROOT{
          static Type Get() {
             Type t = Type::ByTypeInfo(typeid(T));
             if ( t ) return Type( t, CONST );
-            else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),CONST);
+            else return Type(TypeDistiller<T>::Get(),CONST);
          }
       };
 
@@ -411,7 +411,7 @@ namespace ROOT{
          static Type Get() {
             Type t = Type::ByTypeInfo(typeid(T));
             if ( t ) return Type( t, VOLATILE );
-            else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),VOLATILE);
+            else return Type(TypeDistiller<T>::Get(),VOLATILE);
          }
       };
 
@@ -422,7 +422,7 @@ namespace ROOT{
          static Type Get() {
             Type t = Type::ByTypeInfo(typeid(T));
             if ( t ) return Type( t, CONST | VOLATILE );
-            else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),CONST|VOLATILE);
+            else return Type(TypeDistiller<T>::Get(),CONST|VOLATILE);
          }
       };
 
@@ -433,7 +433,7 @@ namespace ROOT{
          static Type Get() {
             Type t = Type::ByTypeInfo(typeid(T));
             if ( t ) return Type( t, REFERENCE );
-            else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),REFERENCE);
+            else return Type(TypeDistiller<T>::Get(),REFERENCE);
          }
       };
 
@@ -444,7 +444,7 @@ namespace ROOT{
          static Type Get() {
             Type t = Type::ByTypeInfo(typeid(T));
             if ( t ) return Type( t, CONST | REFERENCE );
-            else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),CONST|REFERENCE);
+            else return Type(TypeDistiller<T>::Get(),CONST|REFERENCE);
          }
       };
 
@@ -455,7 +455,7 @@ namespace ROOT{
          static Type Get() {
             Type t = Type::ByTypeInfo(typeid(T));
             if ( t ) return Type( t, VOLATILE | REFERENCE );
-            else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),VOLATILE|REFERENCE);
+            else return Type(TypeDistiller<T>::Get(),VOLATILE|REFERENCE);
          }
       };
 
@@ -466,7 +466,7 @@ namespace ROOT{
          static Type Get() {
             Type t = Type::ByTypeInfo(typeid(T));
             if ( t ) return Type( t, CONST | VOLATILE | REFERENCE );
-            else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),CONST|VOLATILE|REFERENCE);
+            else return Type(TypeDistiller<T>::Get(),CONST|VOLATILE|REFERENCE);
          }
       };
 

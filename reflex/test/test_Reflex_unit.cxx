@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.16 2006/09/05 17:13:15 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.17 2006/09/08 20:41:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -531,7 +531,7 @@ void ReflexUnitTest::type_template() {
   Namespace _n("mmm");
   ClassTemplateInstance _cti("mmm::template<int,float,dummy>",
                              1,
-                             typeid(int),
+                             typeid(UnknownType),
                              0);
 
   Scope s = Scope::ByName("mmm");
@@ -720,8 +720,13 @@ void ReflexUnitTest::object_value() {
   //---Copies
   ValueObject vvi = vi;
   CPPUNIT_ASSERT( i  == vvi.Value<int>() );
-  ValueObject vvstr = vstr;
+  ValueObject vvstr;
+  vvstr = vstr;
   CPPUNIT_ASSERT( str  == vvstr.Value<string>() );
+  vvi = 99;
+  CPPUNIT_ASSERT( 99  == vvi.Value<int>() );
+  vvi = vstr;
+  CPPUNIT_ASSERT( str  == vvi.Value<string>() );
 
 }
 // Class registration on cppunit framework

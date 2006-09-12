@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Object.h,v 1.9 2006/09/05 17:13:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Object.h,v 1.10 2006/09/08 20:41:29 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -222,6 +222,7 @@ namespace ROOT {
          const Type & TypeOf() const;
 
       private:
+
          friend class ValueObject;
 
          /** */

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ValueObject.h,v 1.1 2006/09/08 20:41:29 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ValueObject.h,v 1.2 2006/09/11 14:10:12 roiser Exp $
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -32,7 +32,10 @@ namespace ROOT {
       public:
 
          /** constructor */
-         template <typename T> ValueObject( const T& v);
+         ValueObject();
+
+         /** constructor */
+         template <typename T> explicit ValueObject( T& v);
          
          /** constructor */
          ValueObject( const ValueObject& o);
@@ -42,6 +45,8 @@ namespace ROOT {
 
          /** get the actual value */
          template<typename T> const T& Value();
+
+         template<typename T> ValueObject& operator =(const T&);
 
       private:
 
@@ -54,8 +59,13 @@ namespace ROOT {
 
 
 //-------------------------------------------------------------------------------
+inline ROOT::Reflex::ValueObject::ValueObject() {
+//-------------------------------------------------------------------------------
+}
+
+//-------------------------------------------------------------------------------
 template <typename T> 
-inline ROOT::Reflex::ValueObject::ValueObject( const T& v) 
+inline ROOT::Reflex::ValueObject::ValueObject( T& v) 
    : Object( GetType<T>(), 0 ), 
      fValue(v)  {
 //-------------------------------------------------------------------------------
@@ -71,6 +81,17 @@ inline ROOT::Reflex::ValueObject::ValueObject( const ValueObject& o)
 //-------------------------------------------------------------------------------
    if ( TypeOf().IsPointer() ) fAddress = *(void**)fValue.Address();
    else                        fAddress = fValue.Address();
+}
+
+//-------------------------------------------------------------------------------
+template < typename T >
+inline ROOT::Reflex::ValueObject& ROOT::Reflex::ValueObject::operator=( const T& v)  {
+//-------------------------------------------------------------------------------
+  fValue = Any(v);
+  fType = GetType<T>();
+  if ( TypeOf().IsPointer() ) fAddress = *(void**)fValue.Address();
+  else                        fAddress = fValue.Address();
+  return *this;
 }
 
 
