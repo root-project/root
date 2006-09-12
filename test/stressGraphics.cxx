@@ -63,6 +63,7 @@ void     tlatex2        ();
 void     tlatex3        ();
 void     tlatex4        ();
 void     tlatex5        ();
+void     transpad       ();
 void     tgaxis1        ();
 void     tgaxis2        ();
 void     tgaxis3        ();
@@ -94,8 +95,8 @@ void     cleanup        ();
 Int_t    gVerbose;
 Int_t    gTestNum;
 TCanvas *gC;
-Int_t    gRefNb[32];
-Int_t    gErrNb[32];
+Int_t    gRefNb[33];
+Int_t    gErrNb[33];
 Bool_t   gOptionR;
 TH2F    *gH2;
 TFile   *gFile;
@@ -193,6 +194,7 @@ void stressGraphics(Int_t verbose)
    tlatex3     ();
    tlatex4     ();
    tlatex5     ();
+   transpad    ();
    if (!gOptionR) {
       cout << "******************************************************************" <<endl;
       cout << "*  Starting High Level 2D Primitives - S T R E S S               *" <<endl;
@@ -847,6 +849,61 @@ void tlatex5()
    y -= step ; l.DrawLatex(x1, y, "#odot")           ; l.DrawText(x2, y, "#odot");
 
    EndTest("TLatex 5 (Mathematical Symbols)");
+}
+
+
+//______________________________________________________________________________
+void transpad()
+{
+   // Transparent pad.
+
+   StartTest(700,500);
+
+   TPad *pad1 = new TPad("pad1","",0,0,1,1);
+   TPad *pad2 = new TPad("pad2","",0,0,1,1);
+   pad2->SetFillStyle(4000); //will be transparent
+   pad1->Draw();
+   pad1->cd();
+
+   TH1F *ht1 = new TH1F("ht1","ht1",100,-3,3);
+   TH1F *ht2 = new TH1F("ht2","ht2",100,-3,3);
+   TRandom r;
+   for (Int_t i=0;i<100000;i++) {
+      Double_t x1 = r.Gaus(-1,0.5);
+      Double_t x2 = r.Gaus(1,1.5);
+      if (i <1000) ht1->Fill(x1);
+      ht2->Fill(x2);
+   }
+   ht1->Draw();
+   pad1->Update(); //this will force the generation of the "stats" box
+   TPaveStats *ps1 = (TPaveStats*)ht1->GetListOfFunctions()->FindObject("stats");
+   ps1->SetX1NDC(0.4); ps1->SetX2NDC(0.6);
+   pad1->Modified();
+   gC->cd();
+   
+   //compute the pad range with suitable margins
+   Double_t ymin = 0;
+   Double_t ymax = 2000;
+   Double_t dy = (ymax-ymin)/0.8; //10 per cent margins top and bottom
+   Double_t xmin = -3;
+   Double_t xmax = 3;
+   Double_t dx = (xmax-xmin)/0.8; //10 per cent margins left and right
+   pad2->Range(xmin-0.1*dx,ymin-0.1*dy,xmax+0.1*dx,ymax+0.1*dy);
+   pad2->Draw();
+   pad2->cd();
+   ht2->SetLineColor(kRed);
+   ht2->Draw("sames");
+   pad2->Update();
+   TPaveStats *ps2 = (TPaveStats*)ht2->GetListOfFunctions()->FindObject("stats");
+   ps2->SetX1NDC(0.65); ps2->SetX2NDC(0.85);
+   ps2->SetTextColor(kRed);
+   
+   // draw axis on the right side of the pad
+   TGaxis *axis = new TGaxis(xmax,ymin,xmax,ymax,ymin,ymax,50510,"+L");
+   axis->SetLabelColor(kRed);
+   axis->Draw();
+      
+   EndTest("Transparent pad");
 }
 
 
