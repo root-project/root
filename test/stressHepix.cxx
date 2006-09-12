@@ -5,15 +5,15 @@
 
 void runTest(const char *atest, int estimate) {
    printf("Running test : %s, (takes %d seconds on the ref machine)\n",atest,estimate);
-   gSystem->Exec(Form("%s >>stressHepix.log"));
+   gSystem->Exec(Form("%s >>stressHepix.log",atest));
 }
 
 int main(int argc, char **argv)
 {
    TApplication theApp("App", &argc, argv);
    printf("\n\nStarting stressHepix benchmark\n");
-   printf("It takes %d seconds on a  800 rootmarks ref machine (P IV 2.8 GHz)\n",11+26+77+116+138);
-   printf("It takes %d seconds on a 1400 rootmarks ref machine (AMD64/280)\n\n",17+14+40+70+90);
+   printf("It takes %d seconds on a  800 rootmarks reference machine (P IV 2.8 GHz)\n",11+26+77+116+138);
+   printf("It takes %d seconds on a 1500 rootmarks machine (AMD64/280)\n\n",6+18+50+43+101);
    if (gSystem->AccessPathName("atlas.root")) {
       printf("\nPreparing geometry files from http://root.cern.ch\n\n");
       gSystem->Exec("stressGeometry >stressHepix.log");
