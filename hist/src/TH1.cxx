@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.307 2006/09/06 15:17:27 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.308 2006/09/08 17:24:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4806,7 +4806,7 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
    // based on algorithm 353QH twice presented by J. Friedman
    // in Proc.of the 1974 CERN School of Computing, Norway, 11-24 August, 1974.
 
-   Int_t ii, jj, ik, jk, kk, nn1, nn2;
+   Int_t ii, jj, ik, jk, kk, nn2;
    Double_t hh[6] = {0,0,0,0,0,0};
    Double_t *yy = new Double_t[nn];
    Double_t *zz = new Double_t[nn];
@@ -4823,11 +4823,10 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
       for  (kk = 1; kk <= 3; kk++)  {
          ik = 0;
          if  (kk == 2)  ik = 1;
-         nn1 = ik + 2;
          nn2 = nn - ik - 1;
          // do all elements beside the first and last point for median 3
          //  and first two and last 2 for median 5
-         for  (ii = nn1; ii < nn2; ii++)  {
+         for  (ii = ik + 1; ii < nn2; ii++)  {
             for  (jj = 0; jj < 3; jj++)   {
                hh[jj] = yy[ii + jj - 1];
             }
@@ -4838,77 +4837,7 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
             // first point
             hh[0] = 3*yy[1] - 2*yy[2];
             hh[1] = yy[0];
-            hh[2] = yy[2];
-            zz[0] = TMath::Median(3, hh);
-            // last point
-            hh[0] = yy[nn - 2];
-            hh[1] = yy[nn - 1];
-            hh[2] = 3*yy[nn - 2] - 2*yy[nn - 3];
-            zz[nn - 1] = TMath::Median(3, hh);
-         }
-         if  (kk == 2)  {   //  median 5
-            //  first point remains the same
-            zz[0] = yy[0];
-            for  (ii = 0; ii < 3; ii++) {
-               hh[ii] = yy[ii];
-            }
-            zz[1] = TMath::Median(3, hh);
-            // last two points
-            for  (ii = 0; ii < 3; ii++) {
-               hh[ii] = yy[nn +nn2 -1 + ii];
-            }
-            zz[nn - 2] = TMath::Median(3, hh);
-            zz[nn - 1] = yy[nn - 1];
-         }
-      }
-
-      // quadratic interpolation for flat segments
-      nn2 = nn2 - 2;
-      for (ii = nn1; ii <= nn2; ii++) {
-         if  (zz[ii - 1] != zz[ii]) continue;
-         if  (zz[ii] != zz[ii + 1]) continue;
-         hh[0] = zz[ii - 2] - zz[ii];
-         hh[1] = zz[ii + 2] - zz[ii];
-         if  (hh[0] * hh[1] < 0) continue;
-         jk = 0;
-         if  ( TMath::Abs(hh[1]) > TMath::Abs(hh[0]) ) jk = -1;
-         yy[ii] = -0.5*zz[ii - 2*jk] + zz[ii - jk]/0.75 + zz[ii + 2*jk] /6.;
-         yy[ii + jk] = 0.5*(zz[ii + 2*jk] - zz[ii - 2*jk]) + zz[ii - jk];
-      }
-
-      // running means
-      for  (ii = 1; ii < nn - 1; ii++) {
-         rr[ii] = 0.25*yy[ii - 1] + 0.5*yy[ii] + 0.25*yy[ii + 1];
-      }
-      rr[0] = yy[0];
-      rr[nn - 1] = yy[nn - 1];
-
-      // now do the same for residuals
-
-      for  (ii = 0; ii < nn; ii++)  {
-         yy[ii] = xx[ii] - rr[ii];
-      }
-
-      //  do 353 i.e. running median 3, 5, and 3 in a single loop
-      for  (kk = 1; kk <= 3; kk++)  {
-         ik = 0;
-         if  (kk == 2)  ik = 1;
-         nn1 = ik + 1;
-         nn2 = nn - ik - 1;
-         // do all elements beside the first and last point for median 3
-         //  and first two and last 2 for median 5
-         for  (ii = nn1; ii <= nn2; ii++)  {
-            for  (jj = 0; jj < 3; jj++) {
-               hh[jj] = yy[ii + jj - 1];
-            }
-            zz[ii] = TMath::Median(3 + 2*ik, hh);
-         }
-
-         if  (kk == 1)  {   // first median 3
-            // first point
-            hh[0] = 3*yy[1] - 2*yy[2];
-            hh[1] = yy[0];
-            hh[2] = yy[2];
+            hh[2] = yy[1];
             zz[0] = TMath::Median(3, hh);
             // last point
             hh[0] = yy[nn - 2];
@@ -4933,21 +4862,88 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
       }
 
       // quadratic interpolation for flat segments
-      nn2 = nn2 - 1;
-      for (ii = nn1 + 1; ii <= nn2; ii++) {
+      for (ii = 2; ii < (nn - 2); ii++) {
          if  (zz[ii - 1] != zz[ii]) continue;
          if  (zz[ii] != zz[ii + 1]) continue;
          hh[0] = zz[ii - 2] - zz[ii];
          hh[1] = zz[ii + 2] - zz[ii];
          if  (hh[0] * hh[1] < 0) continue;
-         jk = 0;
+         jk = 1;
          if  ( TMath::Abs(hh[1]) > TMath::Abs(hh[0]) ) jk = -1;
-         yy[ii] = -0.5*zz[ii - 2*jk] + zz[ii - jk]/0.75 + zz[ii + 2*jk]/6.;
-         yy[ii + jk] = 0.5*(zz[ii + 2*jk] - zz[ii - 2*jk]) + zz[ii - jk];
+         yy[ii] = -0.5*zz[ii - 2*jk] + zz[ii]/0.75 + zz[ii + 2*jk] /6.;
+         yy[ii + jk] = 0.5*(zz[ii + 2*jk] - zz[ii - 2*jk]) + zz[ii];
       }
 
       // running means
-      for  (ii = 1; ii <= nn - 1; ii++) {
+      for  (ii = 1; ii < nn - 1; ii++) {
+         rr[ii] = 0.25*yy[ii - 1] + 0.5*yy[ii] + 0.25*yy[ii + 1];
+      }
+      rr[0] = yy[0];
+      rr[nn - 1] = yy[nn - 1];
+
+      // now do the same for residuals
+
+      for  (ii = 0; ii < nn; ii++)  {
+         yy[ii] = xx[ii] - rr[ii];
+      }
+
+      //  do 353 i.e. running median 3, 5, and 3 in a single loop
+      for  (kk = 1; kk <= 3; kk++)  {
+         ik = 0;
+         if  (kk == 2)  ik = 1;
+         nn2 = nn - ik - 1;
+         // do all elements beside the first and last point for median 3
+         //  and first two and last 2 for median 5
+         for  (ii = ik + 1; ii < nn2; ii++)  {
+            for  (jj = 0; jj < 3; jj++) {
+               hh[jj] = yy[ii + jj - 1];
+            }
+            zz[ii] = TMath::Median(3 + 2*ik, hh);
+         }
+
+         if  (kk == 1)  {   // first median 3
+            // first point
+            hh[0] = 3*yy[1] - 2*yy[2];
+            hh[1] = yy[0];
+            hh[2] = yy[1];
+            zz[0] = TMath::Median(3, hh);
+            // last point
+            hh[0] = yy[nn - 2];
+            hh[1] = yy[nn - 1];
+            hh[2] = 3*yy[nn - 2] - 2*yy[nn - 3];
+            zz[nn - 1] = TMath::Median(3, hh);
+         }
+         if  (kk == 2)  {   //  median 5
+            //  first point remains the same
+            zz[0] = yy[0];
+            for  (ii = 0; ii < 3; ii++) {
+               hh[ii] = yy[ii];
+            }
+            zz[1] = TMath::Median(3, hh);
+            // last two points
+            for  (ii = 0; ii < 3; ii++) {
+               hh[ii] = yy[nn - 3 + ii];
+            }
+            zz[nn - 2] = TMath::Median(3, hh);
+            zz[nn - 1] = yy[nn - 1];
+         }
+      }
+
+      // quadratic interpolation for flat segments
+      for (ii = 2; ii < (nn - 2); ii++) {
+         if  (zz[ii - 1] != zz[ii]) continue;
+         if  (zz[ii] != zz[ii + 1]) continue;
+         hh[0] = zz[ii - 2] - zz[ii];
+         hh[1] = zz[ii + 2] - zz[ii];
+         if  (hh[0] * hh[1] < 0) continue;
+         jk = 1;
+         if  ( TMath::Abs(hh[1]) > TMath::Abs(hh[0]) ) jk = -1;
+         yy[ii] = -0.5*zz[ii - 2*jk] + zz[ii]/0.75 + zz[ii + 2*jk]/6.;
+         yy[ii + jk] = 0.5*(zz[ii + 2*jk] - zz[ii - 2*jk]) + zz[ii];
+      }
+
+      // running means
+      for  (ii = 1; ii < (nn - 1); ii++) {
          zz[ii] = 0.25*yy[ii - 1] + 0.5*yy[ii] + 0.25*yy[ii + 1];
       }
       zz[0] = yy[0];
