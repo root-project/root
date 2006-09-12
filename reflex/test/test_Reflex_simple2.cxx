@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.27 2006/08/17 14:45:56 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.28 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -783,6 +783,7 @@ void ReflexSimple2Test::testFreeFunctions() {
 
   s = t.DeclaringScope();
   CPPUNIT_ASSERT(s);
+  CPPUNIT_ASSERT(s.IsTopScope());
   CPPUNIT_ASSERT_EQUAL(1,int(s.DataMemberSize()));
   CPPUNIT_ASSERT_EQUAL(8,int(s.FunctionMemberSize()));
   m = s.MemberByName("function5");
@@ -941,6 +942,9 @@ void ReflexSimple2Test::testTypedef() {
 
 
 void ReflexSimple2Test::testCppSelection() {
+
+   Type t00 = Type::ByName("ns::TestTemplatedSelectionClass<int,int>");
+   CPPUNIT_ASSERT(t00);
 
   Scope g = Scope::ByName("");
   CPPUNIT_ASSERT(g);

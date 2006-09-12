@@ -87,6 +87,10 @@ class genDictionary(object) :
       if ns['name'].find('.') != -1:
         self.unnamedNamespaces.append(ns['id'])
 #----------------------------------------------------------------------------------
+# This function is not used anymore, because it had a problem with templated types
+# showing up as members of a scope in the gccxml generated output. If gccxml puts
+# templated types as members this function should be resurrected for performance
+# reasons. It shall be called from self.parse instead of 'for col in [self.class...'
   def collectCppSelections(self, ns) :
     for m in ns.get('members').split():
       xm = self.xref[m]
@@ -104,14 +108,40 @@ class genDictionary(object) :
       if xelem in ('Function',):
         self.cppFunctionSelect[cname[len(self.selectionname)+2:]] = m
 #----------------------------------------------------------------------------------
+  def inScope(self, item, ctxt):
+    ictxt = item.get('context')
+    if ictxt :
+      if ictxt == ctxt : return 1
+      else             : return self.inScope(self.xref[ictxt]['attrs'], ctxt)
+    return 0
+#----------------------------------------------------------------------------------
+  def addCppClassSelect(self, key, value ) : self.cppClassSelect[key] = value
+  def addCppStructSelect(self, key, value ) : self.cppClassSelect[key] = value
+  def addCppFunctionSelect(self, key, value ) : self.cppFunctionSelect[key] = value
+  def addCppVariableSelect(self, key, value ) : self.cppVariableSelect[key] = value
+  def addCppEnumerationSelect(self, key, value ) : self.cppEnumSelect[key] = value  
+#----------------------------------------------------------------------------------
   def parse(self, file) :
     p = xml.parsers.expat.ParserCreate()
     p.StartElementHandler = self.start_element
     f = open(file)
     p.ParseFile(f)
     f.close()
-    for n in self.namespaces:
-      if self.genTypeName(n['id']) == self.selectionname : self.collectCppSelections(n)
+    cppselid = '';
+    cppsellen = len(self.selectionname)+2
+    # get the id of the selection namespace
+    for n in self.namespaces: 
+      if self.genTypeName(n['id']) == self.selectionname :
+        cppselid = n.get('id')
+        break
+    # for all classes, variables etc. check if they are in the seleciton ns and add them if
+    for col in [self.classes, self.variables, self.enums, self.functions ]:
+      for it in col:
+        if self.inScope(it, cppselid) :
+          cid = it['id']
+          funname = 'addCpp'+self.xref[cid]['elem']+'Select'
+          if funname in dir(self):
+            self.__class__.__dict__[funname](self, self.genTypeName(cid)[cppsellen:], cid)
     self.tryCppSelections()
     self.findUnnamedNamespace()
 #----------------------------------------------------------------------------------
