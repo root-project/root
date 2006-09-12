@@ -62,7 +62,7 @@
 #include "TVectorD.h"
 #include "TMatrixD.h"
 
-Int_t stressFit(const char *theFitter="Minuit");
+Int_t stressFit(const char *theFitter="Minuit", Int_t N=2000);
 Int_t    gVerbose      = -1;
 Double_t gAbsTolerance = 0.005;
 
@@ -597,7 +597,7 @@ Bool_t RunTrigoFletcher()
 }
 
 //______________________________________________________________________________
-Int_t stressFit(const char *theFitter)
+Int_t stressFit(const char *theFitter, Int_t N)
 {
   TVirtualFitter::SetDefaultFitter(theFitter);
   
@@ -622,7 +622,6 @@ Int_t stressFit(const char *theFitter)
   Bool_t okGoldStein2    = kTRUE;
   Bool_t okTrigoFletcher = kTRUE;
   Int_t i;
-  Int_t N = 2000;
   for (i = 0; i < N; i++)  okWood          = RunWood4();
   StatusPrint(1,"Wood",okWood);
   for (i = 0; i < N; i++) okRosenBrock    = RunRosenBrock();
@@ -680,8 +679,11 @@ Int_t stressFit(const char *theFitter)
 int main(int argc,const char *argv[]) 
 {
   gBenchmark = new TBenchmark();
-  if (argc > 1)  stressFit(argv[1]);
-  else           stressFit("Minuit");  //default is Minuit
+  const char *fitter = "Minuit";
+  if (argc > 1)  fitter = argv[1];
+  Int_t N = 2000;
+  if (argc > 2) N = atoi(argv[2]);
+  stressFit(fitter,N);  //default is Minuit
   return 0;
 }
 

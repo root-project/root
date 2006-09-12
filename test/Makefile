@@ -113,6 +113,10 @@ STRESSFITO    = stressFit.$(ObjSuf)
 STRESSFITS    = stressFit.$(SrcSuf)
 STRESSFIT     = stressFit$(ExeSuf)
 
+STRESSHEPIXO  = stressHepix.$(ObjSuf)
+STRESSHEPIXS  = stressHepix.$(SrcSuf)
+STRESSHEPIX   = stressHepix$(ExeSuf)
+
 STRESSSPO     = stressSpectrum.$(ObjSuf)
 STRESSSPS     = stressSpectrum.$(SrcSuf)
 STRESSSP      = stressSpectrum$(ExeSuf)
@@ -141,13 +145,14 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) $(STRESSSHAPESO) \
                 $(TCOLLBMO) $(STRESSGEOMETRYO) $(STRESSLO) $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
-                $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO) $(STRESSFITO)
+                $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO) $(STRESSFITO) \
+                $(STRESSHEPIXO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) $(STRESSSHAPES) \
                 $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) $(TESTBITS) $(CTORTURE) $(QPRANDOM) \
-                $(THREADS) $(STRESSSP) $(STRESSVEC) $(STRESSFIT)
+                $(THREADS) $(STRESSSP) $(STRESSVEC) $(STRESSFIT) $(STRESSHEPIX)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
@@ -308,6 +313,15 @@ endif
 		@echo "$@ done"
 
 $(STRESSFIT):   $(STRESSFITO)
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+else
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+endif
+		@echo "$@ done"
+		@echo "$@ done"
+
+$(STRESSHEPIX):   $(STRESSHEPIXO)
 ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else

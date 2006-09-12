@@ -235,7 +235,9 @@ void stress2(Int_t np2) {
    Int_t ngoodRef  = 163;
    Int_t nghostRef = 8;
    char sok[20];
-   if (nfound == nfoundRef && ngood == ngoodRef && nghost == nghostRef) {
+   if (  TMath::Abs(nfound - nfoundRef) < 5
+      && TMath::Abs(ngood - ngoodRef) < 5
+      && TMath::Abs(nghost - nghostRef) < 5)  {
       sprintf(sok,"OK");
    } else {
       sprintf(sok,"failed");
