@@ -4,7 +4,7 @@
 #include <TStopwatch.h>
 
 void runTest(const char *atest, int estimate) {
-   printf("Running test : %s, (takes %d seconds on the ref machine)\n",atest,estimate);
+   printf("Running : %s, (takes %d seconds on the ref machine)\n",atest,estimate);
    gSystem->Exec(Form("%s >>stressHepix.log",atest));
 }
 
@@ -12,8 +12,11 @@ int main(int argc, char **argv)
 {
    TApplication theApp("App", &argc, argv);
    printf("\n\nStarting stressHepix benchmark\n");
-   printf("It takes %d seconds on a  800 rootmarks reference machine (P IV 2.8 GHz)\n",11+26+77+116+138);
-   printf("It takes %d seconds on a 1500 rootmarks machine (AMD64/280)\n\n",6+18+50+43+101);
+   printf("Takes %d seconds on a  500 rootmarks machine (IBM Thinkpad centrino 1.4GHz VC++7.1)\n\n",56+41+70+209+182);
+   printf("Takes %d seconds on a  800 rootmarks reference machine (P IV 2.8 GHz, SLC3 gcc3.2.3)\n",11+26+77+116+138);
+   printf("Takes %d seconds on a  924 rootmarks machine (MacBookPro 1.8GHz gcc4.0.1)\n",10+31+47+80+126);
+   printf("Takes %d seconds on a 1056 rootmarks machine (MacBookPro 1.8GHz icc9.1)\n",8+26+38+75+106);
+   printf("Takes %d seconds on a 1550 rootmarks machine (AMD64/280, FC5 gcc4.1)\n\n",6+18+50+43+101);
    if (gSystem->AccessPathName("atlas.root")) {
       printf("\nPreparing geometry files from http://root.cern.ch\n\n");
       gSystem->Exec("stressGeometry >stressHepix.log");
