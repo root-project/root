@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.262 2006/07/19 15:15:41 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.263 2006/08/22 12:23:27 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -6473,7 +6473,7 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
    else                     fShowOption = option+2;
    if (!gROOT->GetMakeDefCanvas()) return;
    (gROOT->GetMakeDefCanvas())();
-   gPad->SetName(Form("c_projection_%d",fShowProjection));
+   gPad->SetName(Form("%x_c_projection_%d",fH,fShowProjection));
    gPad->SetGrid();
 }
 
@@ -6506,7 +6506,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 
    // Create or set the new canvas proj x
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_projection_%d",fShowProjection));
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("%x_c_projection_%d",fH,fShowProjection));
    if (c) {
       c->Clear();
    } else {
@@ -6558,7 +6558,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 
    // Create or set the new canvas proj y
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_projection_%d",fShowProjection));
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("%x_c_projection_%d",fH,fShowProjection));
    if(c) {
       c->Clear();
    } else {
