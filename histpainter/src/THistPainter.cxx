@@ -6456,22 +6456,24 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 //______________________________________________________________________________
 void THistPainter::SetShowProjection(const char *option,Int_t nbins)
 {
-   // Set projection onto X
+   // Set projection.
 
    if (fShowProjection) return;
    TString opt = option;
    opt.ToLower();
-   if (opt.Contains("x"))  fShowProjection = 1+100*nbins;
-   if (opt.Contains("y"))  fShowProjection = 2+100*nbins;
-   if (opt.Contains("z"))  fShowProjection = 3+100*nbins;
-   if (opt.Contains("xy")) fShowProjection = 4+100*nbins;
-   if (opt.Contains("yx")) fShowProjection = 5+100*nbins;
-   if (opt.Contains("xz")) fShowProjection = 6+100*nbins;
-   if (opt.Contains("zx")) fShowProjection = 7+100*nbins;
-   if (opt.Contains("yz")) fShowProjection = 8+100*nbins;
-   if (opt.Contains("zy")) fShowProjection = 9+100*nbins;
-   if (fShowProjection < 4) fShowOption = option+1;
-   else                     fShowOption = option+2;
+   Int_t projection = 0;
+   if (opt.Contains("x"))  projection = 1;
+   if (opt.Contains("y"))  projection = 2;
+   if (opt.Contains("z"))  projection = 3;
+   if (opt.Contains("xy")) projection = 4;
+   if (opt.Contains("yx")) projection = 5;
+   if (opt.Contains("xz")) projection = 6;
+   if (opt.Contains("zx")) projection = 7;
+   if (opt.Contains("yz")) projection = 8;
+   if (opt.Contains("zy")) projection = 9;
+   if (projection < 4) fShowOption = option+1;
+   else                fShowOption = option+2;
+   fShowProjection = projection+100*nbins;
    if (!gROOT->GetMakeDefCanvas()) return;
    (gROOT->GetMakeDefCanvas())();
    gPad->SetName(Form("%x_c_projection_%d",fH,fShowProjection));
