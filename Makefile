@@ -484,7 +484,7 @@ rootcint:       all-cint all-utils
 
 rootlibs:       rootcint compiledata $(ALLLIBS)
 
-rootexecs:      rootlibs $(ALLEXECS)
+rootexecs:      rootlibs cintdlls $(ALLEXECS)
 
 compiledata:    $(COMPILEDATA)
 

@@ -303,12 +303,13 @@ ifneq ($(PLATFORM),win32)
   CINTINCDLLNAMES += posix ipc
 endif
 # ".dll", not ".$(SOEXT)"!
-CINTDLLS = $(addsuffix .dll,$(addprefix $(CINTDIRSTL)/,$(CINTSTLDLLNAMES)) $(addprefix $(CINTDIRDLLS)/,$(CINTINCDLLNAMES)))
+CINTDLLS = $(addsuffix .dll,$(addprefix $(CINTDIRSTL)/,$(CINTSTLDLLNAMES)) \
+                            $(addprefix $(CINTDIRDLLS)/,$(CINTINCDLLNAMES)))
+CINTDLLS := $(subst /ipc.dll,/sys/ipc.$(SOEXT),\
+            $(subst /posix.dll,/posix.$(SOEXT),$(CINTDLLS)))
+
 CINTDLLNAMES = $(CINTSTLDLLNAMES) $(CINTINCDLLNAMES)
 
-#$(subst $(CINTDIRSTL)/ipc.dll,$(CINTDIRDLLS)/sys/ipc.$(SOEXT),\
-#  $(subst $(CINTDIRSTL)/posix.dll,$(CINTDIRDLLS)/posix.$(SOEXT),\
-#  $(addprefix $(CINTDIRSTL)/,$(addsuffix .dll,$(CINTDLLNAMES)))))
 
 # these need dictionaries
 ifneq ($(findstring vector,$(CINTDLLS)),)
@@ -409,13 +410,10 @@ endif
 $(CINTDIRSTL)/%.dll: $(CINTDIRDLLSTL)/G__cpp_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $^
 	$(CINTDLLSOEXTCMD)
-	-rm -f $< $(<:.o=.cxx) $(<:.o=.c) $(<:.o=.h) $(<:.o=.d)
 
 $(CINTDIRDLLS)/%.dll: $(CINTDIRL)/G__c_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $^
 	$(CINTDLLSOEXTCMD)
-	-rm -f $< $(<:.o=.cxx) $(<:.o=.c) $(<:.o=.h) $(<:.o=.d)
-
 
 metautils/src/stlLoader_%.o: metautils/src/stlLoader.cc
 	$(CXX) $(OPT) $(CINTCXXFLAGS) $(INCDIRS) -DWHAT=\"$*\" $(CXXOUT)$@ -c $<
@@ -446,7 +444,7 @@ $(CINTDIRL)/G__c_posix.c: $(CINTDIRDLLS)/sys/types.h cint/lib/posix/exten.h
 
 $(CINTDIRDLLS)/posix.$(SOEXT): $(CINTDIRL)/G__c_posix.o metautils/src/stlLoader_posix.o \
 	                      $(CINTDIRL)/posix/exten.o
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $^
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ "$^"
 
 $(CINTDIRDLLS)/sys/types.h: $(CINTDIRL)/posix/mktypes$(EXEEXT)
 	(cd $(dir $<) && \
@@ -479,7 +477,6 @@ else
 	mv -f $@ $(basename $@).so
 endif
 endif
-	-rm -f $< $(<:.o=.cxx) $(<:.o=.c) $(<:.o=.h) $(<:.o=.d)
 ##### dictionaries - END
 
 ##### configcint.h
@@ -497,11 +494,11 @@ distclean:: distclean-cintdlls
 
 # remove only .o, .dll, .$(SOEXT)
 clean-cintdlls:
-	@(for cintdll in $(CINTDLLNAMES); do \
+	(for cintdll in $(CINTDLLNAMES); do \
 	  rm -f $(CINTDIRDLLSTL)/rootcint_$${cintdll}.o \
 	  $(CINTDIRDLLSTL)/G__cpp_$${cintdll}.o \
 	  metautils/src/stlLoader_$${cintdll}.o; done)
-	@rm -f $(ALLCINTDLLS) \
+	rm -f $(ALLCINTDLLS) \
 	  $(CINTDIRL)/posix/exten.o $(CINTDIRSTL)/posix.dll \
 	  $(CINTDIRL)/posix/G__c_posix.o
 
