@@ -10,6 +10,8 @@ stressFit
 stressGraphics
 stressShapes
 stressVector
+stressHepix
+stressHepix.log
 AclockDict.cxx
 AclockDict.h
 HelloDict.cxx
