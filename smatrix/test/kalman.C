@@ -15,13 +15,20 @@ const int nx = 9;
 const int ny = 7;
 const Int_t n=nx*ny;
 
-void kalman(std::string machine = "kalman",int sym=1,int cut =6) {
+void kalman(std::string machine = "",int sym=1,int cut =6) {
 
   cout << "loading lib smatrix" << std::endl; 
   gSystem->Load("libSmatrix");
 
-  kalman_do(machine.c_str(),sym,cut);
-  //kalman_do("kalman_win7.1",sym,cut);
+  std::string fname = "kalman";
+  if (machine != "" )
+     fname = "kalman_" + machine;
+ 
+     
+  kalman_do(fname.c_str(),sym,cut);
+//   kalman_do("kalman_slc3_5.10b_cand",sym,cut);
+//   kalman_do("kalman_win32_5.10b_cand",sym,cut);
+//   kalman_do("kalman_macg5_5.10b_cand",sym,cut);
 }   
 
 int read_data(const char *  machine, double * s, double * ss, double * t) { 
