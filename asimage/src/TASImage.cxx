@@ -333,7 +333,8 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    // a file. If the filename ends with extension consisting of digits
    // only, it will attempt to find the file with this extension stripped
    // off. On success this extension will be used to load subimage from
-   // the file with that number. Subimage is supported only for GIF files.
+   // the file with that number. Subimage is supported only for XCF, GIF, BMP, 
+   // ICO and CUR files.
    //
    // It is also possible to put XPM raw string (see also SetImageBuffer) as
    // the first input parameter ("filename"), such string  is returned by
