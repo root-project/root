@@ -1,4 +1,4 @@
-// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.25 2006/06/14 18:15:30 pcanal Exp $
+// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.26 2006/08/15 03:51:27 pcanal Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -229,6 +229,8 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
    if (cl) scope = cl->GetClassInfo();
    else scope = (G__ClassInfo*)&cinfo;
   
+   if (!scope) return;
+
    R__LOCKGUARD2(gCINTMutex);
    if (params && params[0]) {
       fFunc->SetFunc(scope, (char *)methodname, (char *)params, &fOffset);
