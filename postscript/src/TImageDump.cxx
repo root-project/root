@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.17 2006/05/29 12:41:18 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.18 2006/05/31 07:48:56 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -118,13 +118,45 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       return;
    }
 
+   static Double_t x[4], y[4];
    Int_t ix1 = x1 < x2 ? gPad->XtoAbsPixel(x1) : gPad->XtoAbsPixel(x2);
    Int_t ix2 = x1 < x2 ? gPad->XtoAbsPixel(x2) : gPad->XtoAbsPixel(x1);
    Int_t iy1 = y1 < y2 ? gPad->YtoAbsPixel(y1) : gPad->YtoAbsPixel(y2);
    Int_t iy2 = y1 < y2 ? gPad->YtoAbsPixel(y2) : gPad->YtoAbsPixel(y1);
 
+   Int_t fillis = fFillStyle/1000;
+   Int_t fillsi = fFillStyle%1000;
+
    TColor *col = gROOT->GetColor(fFillColor);
-   fImage->DrawBox(ix1, iy1, ix2, iy2, col->AsHexString(), 1, TVirtualX::kFilled);
+   TColor *linecol = gROOT->GetColor(fLineColor);
+
+   if (fillis == 3 || fillis == 2) {
+      if (fillsi > 99) {
+         x[0] = x1;   y[0] = y1;
+         x[1] = x2;   y[1] = y1;
+         x[2] = x2;   y[2] = y2;
+         x[3] = x1;   y[3] = y2;
+         return;
+      }
+      if (fillsi > 0 && fillsi < 26) {
+         x[0] = x1;   y[0] = y1;
+         x[1] = x2;   y[1] = y1;
+         x[2] = x2;   y[2] = y2;
+         x[3] = x1;   y[3] = y2;
+         DrawPS(-4, &x[0], &y[0]);
+      }
+      if (fillsi == -3) {
+         // fill style = -3 ... which is NEVER used now
+      }
+   }
+
+   if (fillis == 1) {
+      fImage->DrawBox(ix1, iy1, ix2, iy2, col->AsHexString(), 1, TVirtualX::kFilled);
+   }
+
+   if (fillis == 0) {
+      fImage->DrawBox(ix1, iy1, ix2, iy2, linecol->AsHexString(), 1, TVirtualX::kHollow);
+   }
 }
 
 //______________________________________________________________________________
@@ -340,8 +372,8 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    // This function defines a path with xw and yw and draw it according the
    // value of nn:
    //
-   //  If nn>0 a line is drawn.
-   //  If nn<0 a closed polygon is drawn.
+   //  If nn > 0 a line is drawn.
+   //  If nn < 0 a closed polygon is drawn.
 
    if (!gPad || !fImage || !nn) {
       return;
