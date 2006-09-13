@@ -1,15 +1,14 @@
 int fillCol=20;
 std::string systemName; 
-bool drawSingleGraph = false; 
 int topX=10;
 int topY=50;
 
 
-void matrixOperations_do(std::string type = "", bool clhep=false); 
+void matrixOperations_do(std::string type = "", bool clhep=false, bool drawSingleGraph = false ); 
 
-void matrixOperations(std::string type = "",bool clhep=false) { 
+void matrixOperations(std::string type = "",bool clhep=false, bool drawSingleGraph = false ) { 
 
-  matrixOperations_do(type,clhep); 
+  matrixOperations_do(type,clhep,drawSingleGraph); 
 //   matrixOperations_do("slc3_ia32_gcc323"); 
 //   matrixOperations_do("win32_vc71"); 
 
@@ -56,14 +55,14 @@ if (h4!= 0) {
 if (h5!= 0) { 
    h5->SetLineColor(6);
    h5->SetMarkerColor(6);
-   h5->SetMarkerStyle(24);
+   h5->SetMarkerStyle(29);
    h5->SetLineWidth(2);
  mg->Add(h5);
  }
 if (h6!= 0) { 
    h6->SetLineColor(7);
    h6->SetMarkerColor(7);
-   h6->SetMarkerStyle(25);
+   h6->SetMarkerStyle(3);
    h6->SetLineWidth(2);
  mg->Add(h6);
  }
@@ -99,8 +98,8 @@ TGraphErrors * hd = h1;
     tleg->AddEntry(h2, "TMatrix", "p");
     if (h3 != 0) tleg->AddEntry(h3, "SMatrix_sym", "p");
     if (h4 != 0) tleg->AddEntry(h4, "TMatrix_sym", "p");
-    if (h5 != 0) tleg->AddEntry(h5, "HepMatrix", "l");
-    if (h6 != 0) tleg->AddEntry(h6, "HepMatrix_sym", "l");
+    if (h5 != 0) tleg->AddEntry(h5, "HepMatrix", "p");
+    if (h6 != 0) tleg->AddEntry(h6, "HepMatrix_sym", "p");
     tleg->Draw();
 
 
@@ -140,7 +139,7 @@ void GetData(std::string s,double * x, double * y, double * ey) {
 
 
 
-void matrixOperations_do(std::string type, bool clhep) { 
+void matrixOperations_do(std::string type, bool clhep, bool drawSingleGraph) { 
 
 
    systemName = type;
@@ -289,8 +288,9 @@ void matrixOperations_do(std::string type, bool clhep) {
    c1->Modified();
 
    if (drawSingleGraph) { 
-     c2 = new TCanvas("c2","Matrix Operations",200,10,700,500);
-     DrawData(g12,g22,g32,g42,"matrix product: A * B + C");
+     std::string c2Name = "c2_" + type; 
+     c2 = new TCanvas(c2Name.c_str(),"Matrix Operations",200,10,700,600);
+     DrawData("A * M * A^{T}",g15,g25,g35,g45,g55,g65);
      c2->SetRightMargin(0.028);
      c2->Update();
    }
