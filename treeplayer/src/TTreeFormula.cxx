@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.200 2006/09/02 07:47:29 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.201 2006/09/07 07:31:35 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1817,17 +1817,68 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
       return kDefinedString;
    }
 
-   if (objClass == TTimeStamp::Class() && SwitchToFormLeafInfo(code) ) {
-
-      TFormLeafInfo *last = (TFormLeafInfo*)fDataMembers.At(code);
-      // Improbable case
-      if (!last) return action;
-      while (last->fNext) { last = last->fNext; }
-
+   if (objClass) {
       TMethodCall *method = new TMethodCall(objClass, "AsDouble", "");
-      last->fNext = new TFormLeafInfoMethod(objClass,method);
+      if (method->IsValid()
+         && (method->ReturnType() == TMethodCall::kLong || method->ReturnType() == TMethodCall::kDouble)
+         && SwitchToFormLeafInfo(code) ) {
 
-      return kDefinedVariable;
+         TFormLeafInfo *last = (TFormLeafInfo*)fDataMembers.At(code);
+         // Improbable case
+         if (!last) return action;
+         while (last->fNext) { last = last->fNext; }
+
+         last->fNext = new TFormLeafInfoMethod(objClass,method);
+
+         return kDefinedVariable;
+      }
+      delete method;
+      method = new TMethodCall(objClass, "AsString", "");
+      if (method->IsValid() 
+          && method->ReturnType() == TMethodCall::kString
+          && SwitchToFormLeafInfo(code) ) {
+
+         TFormLeafInfo *last = (TFormLeafInfo*)fDataMembers.At(code);
+         // Improbable case
+         if (!last) return action;
+         while (last->fNext) { last = last->fNext; }
+
+         last->fNext = new TFormLeafInfoMethod(objClass,method);
+
+         return kDefinedString;
+      }
+      if (method->IsValid() 
+          && method->ReturnType() == TMethodCall::kOther) {
+
+         TClass *rcl = 0;
+         TFunction *f = method->GetMethod();
+         if (f) rcl = gROOT->GetClass(gInterpreter->TypeName(f->GetReturnTypeName()));
+         if ((rcl == TString::Class() || rcl == stdStringClass)
+             && SwitchToFormLeafInfo(code) ) {
+
+            TFormLeafInfo *last = (TFormLeafInfo*)fDataMembers.At(code);
+            // Improbable case
+            if (!last) return action;
+            while (last->fNext) { last = last->fNext; }
+
+            last->fNext = new TFormLeafInfoMethod(objClass,method);
+            last = last->fNext;
+            objClass = rcl;
+
+            const char *funcname = 0;
+            if (objClass == TString::Class()) {
+               funcname = "Data";
+            } else if (objClass == stdStringClass) {
+               funcname = "c_str";
+            }
+            if (funcname) {
+               method = new TMethodCall(objClass, funcname, "");
+               last->fNext = new TFormLeafInfoMethod(objClass,method);
+            }
+            return kDefinedString;
+         }
+      }
+      delete method;
    }
    
    return action;

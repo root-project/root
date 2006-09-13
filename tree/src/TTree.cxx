@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.300 2006/08/31 11:05:20 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.301 2006/09/08 06:56:24 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2752,6 +2752,23 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //     tree->Draw("event.@fTracks.size()");
    //  will plot the size of the collection refered to by fTracks (i.e the number
    //  of Track objects).
+   //
+   //     Drawing 'objects'
+   //     =================
+   //
+   //  When a class has a member function named AsDouble or AsString, requesting
+   //  to directly draw the object will imply a call to one of the 2 functions.
+   //  If both AsDouble and AsString are present, AsDouble will be used.
+   //  AsString can return either a char*, a std::string or a TString.s
+   //  For example, the following
+   //     tree->Draw("event.myTTimeStamp");
+   //  will draw the same histogram as 
+   //     tree->Draw("event.myTTimeStamp.AsDouble()");
+   //  In addition, when the object is a type TString or std::string, TTree::Draw
+   //  will call respectively TString::Data and std::string::c_str()
+   // 
+   //  If the object is a TBits, the histogram will contain the index of the bit
+   //  that are turned on.
    //
    //     Special functions and variables
    //     ===============================
