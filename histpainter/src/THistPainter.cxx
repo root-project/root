@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.263 2006/08/22 12:23:27 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.264 2006/09/13 08:17:56 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -350,6 +350,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    //     come here if we have a lego/surface in the pad
    TView *view = gPad->GetView();
+
    if (!fShowProjection && view && view->TestBit(kCannotRotate) == 0) {
       view->ExecuteRotateView(event, px, py);
       return;
@@ -6629,7 +6630,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    Double_t cx    = (pxmax-pxmin)/(uxmax-uxmin);
    Double_t cy    = (pymax-pymin)/(uymax-uymin);
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_projection_%d",fShowProjection));
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("%x_c_projection_%d",fH,fShowProjection));
    if(!c) {   
       fShowProjection = 0;
       return;
