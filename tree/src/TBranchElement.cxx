@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.207 2006/08/08 20:56:25 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.208 2006/08/17 22:46:41 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -247,7 +247,7 @@ TBranchElement::TBranchElement(const char* bname, TStreamerInfo* sinfo, Int_t id
          countname = bname;
          Ssiz_t dot = countname.Last('.');
          if (dot>=0) {
-            countname.Remove(dot);
+            countname.Remove(dot+1);
          } else {
             countname = "";
          }
@@ -2386,7 +2386,35 @@ void TBranchElement::ReadLeaves(TBuffer& b)
          // FIXME: This should probably be < 60 instead.
          if (fStreamerType > 40 && fStreamerType < 55) {
             Int_t atype = fStreamerType - 40;
-            Int_t n = (Int_t)fBranchCount->GetValue(0,0);
+            Int_t n;
+            if (fBranchCount==0) {
+               // Missing fBranchCount.  let's attempts to recover.
+
+               TString countname( GetName() );
+               Ssiz_t dot = countname.Last('.');
+               if (dot>=0) {
+                  countname.Remove(dot+1);
+               } else {
+                  countname = "";
+               }
+               TString counter( GetTitle() );
+               Ssiz_t loc = counter.Last('[');
+               if (loc>=0) {
+                  counter.Remove(0,loc+1);
+               }
+               loc = counter.Last(']');
+               if (loc>=0) {
+                  counter.Remove(loc);
+               }
+               countname += counter;
+               SetBranchCount((TBranchElement *)fTree->GetBranch(countname));
+            }
+            if (fBranchCount) {
+               n = (Int_t)fBranchCount->GetValue(0,0);
+            } else {
+               Warning("ReadLeaves","Missing fBranchCount for %s.  Data will not be read correctly by the MakeClass mode.",GetName());
+               n = 0;
+            }
             fNdata = n;
             Char_t isArray;
             b >> isArray;
@@ -3121,7 +3149,10 @@ void TBranchElement::SetBasketSize(Int_t buffsize)
 void TBranchElement::SetBranchCount(TBranchElement* brOfCounter)
 {
    // -- Set the branch counter for this branch.
+
    fBranchCount = brOfCounter;
+   if (fBranchCount==0) return;
+
    TLeafElement* leafOfCounter  = (TLeafElement*) brOfCounter->GetListOfLeaves()->At(0);
    TLeafElement* leaf = (TLeafElement*) GetListOfLeaves()->At(0);
    if (leafOfCounter && leaf) {
