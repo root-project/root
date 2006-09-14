@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.13 2006/08/17 13:50:30 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.14 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -318,15 +318,15 @@ void ReflexBuilderUnitTest::propertybuilder()
   Type t = Type::ByName("b::foo");  
   CPPUNIT_ASSERT(t);
   CPPUNIT_ASSERT(t.IsClass());
-  CPPUNIT_ASSERT(t.Properties().HasKey("foo_p0"));
+  CPPUNIT_ASSERT(t.Properties().HasProperty("foo_p0"));
   CPPUNIT_ASSERT_EQUAL(string("value"), 
                        string(any_cast<const char*>(t.Properties().PropertyValue("foo_p0"))));
   CPPUNIT_ASSERT_EQUAL(100.0, any_cast<double>(t.Properties().PropertyValue("foo_p1")));
-  CPPUNIT_ASSERT(t.MemberByName("f").Properties().HasKey("p0"));
-  CPPUNIT_ASSERT(t.MemberByName("f").Properties().HasKey("p1"));
+  CPPUNIT_ASSERT(t.MemberByName("f").Properties().HasProperty("p0"));
+  CPPUNIT_ASSERT(t.MemberByName("f").Properties().HasProperty("p1"));
   CPPUNIT_ASSERT(t.MemberByName("v").Properties().PropertySize() == 0);
-  CPPUNIT_ASSERT(t.MemberByName("d").Properties().HasKey("p0"));
-  CPPUNIT_ASSERT(t.MemberByName("d").Properties().HasKey("p1"));
+  CPPUNIT_ASSERT(t.MemberByName("d").Properties().HasProperty("p0"));
+  CPPUNIT_ASSERT(t.MemberByName("d").Properties().HasProperty("p1"));
   CPPUNIT_ASSERT_EQUAL(true, any_cast<bool>(t.MemberByName("d").Properties().PropertyValue("p1")));
 }
 

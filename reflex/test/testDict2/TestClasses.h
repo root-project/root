@@ -240,6 +240,9 @@ namespace testclasses {
    struct DerivedA : public Base {};
    struct DerivedB : public Base {};
 
+   class MyClass {};
+   struct MyStruct {};
+
 
 } // namespace testclasses
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.28 2006/09/05 17:13:15 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.29 2006/09/12 11:03:11 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -181,6 +181,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( fundamentalType );
   CPPUNIT_TEST( unloadType );
   CPPUNIT_TEST( iterateVector );
+  CPPUNIT_TEST( testClasses );
 
   CPPUNIT_TEST( unloadLibrary );
   CPPUNIT_TEST( shutdown );
@@ -214,6 +215,7 @@ public:
   void fundamentalType();
   void unloadType();
   void iterateVector();
+  void testClasses();
 
   void unloadLibrary();
   void shutdown() { Reflex::Shutdown(); }
@@ -1343,6 +1345,21 @@ void ReflexSimple2Test::iterateVector() {
       params.push_back(&i);
       CPPUNIT_ASSERT_EQUAL(v[i], Object_Cast<int>(o.Invoke("at",params)));
    }
+
+}
+
+
+void ReflexSimple2Test::testClasses() {
+
+   const Type & t0 = Type::ByName("testclasses::MyClass");
+   CPPUNIT_ASSERT(t0);
+   CPPUNIT_ASSERT(!t0.IsStruct());
+   CPPUNIT_ASSERT(t0.IsClass());
+
+   const Type & t1 = Type::ByName("testclasses::MyStruct");
+   CPPUNIT_ASSERT(t1);
+   CPPUNIT_ASSERT(t1.IsClass());
+   //CPPUNIT_ASSERT(t1.IsStruct());
 
 }
 

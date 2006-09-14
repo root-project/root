@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_generate.cxx,v 1.5 2006/08/11 06:32:00 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_generate.cxx,v 1.6 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 #include "Reflex/Reflex.h"
@@ -26,7 +26,7 @@ void generate_visibility( const Member& m, const string& indent, Visibility& v )
   }
 }
 void generate_comment( const Member& m ) {
-  if ( m.Properties().HasKey("comment") ) {
+  if ( m.Properties().HasProperty("comment") ) {
     cout << "  //" << m.Properties().PropertyAsString("comment");
   }
 }
