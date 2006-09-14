@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.10 2006/08/25 09:44:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.13 2006/08/28 11:41:12 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "Riostream.h"
 
 #include"TObjArray.h"
+#include "TF1.h"
 #include "TGeoManager.h"
 #include"TGeoElement.h"
 
@@ -99,6 +100,7 @@ TGeoElementRN::TGeoElementRN()
    fTH_S     = 0;
    fTG_S     = 0;
    fStatus   = 0;
+   fRatio    = 0;
    fDecays   = 0;
 }   
 
@@ -125,6 +127,7 @@ TGeoElementRN::TGeoElementRN(Int_t A, Int_t Z, Int_t iso, Double_t level,
    fTG_S     = tg_s;
    fStatus   = status;
    fDecays   = 0;
+   fRatio    = 0;
    MakeName(A,Z,iso);
    if ((TMath::Abs(fHalfLife)<1.e-30) || fHalfLife<-1) Warning("ctor","Element %s has T1/2=%g [s]", fName.Data(), fHalfLife);
 }     
@@ -142,6 +145,7 @@ TGeoElementRN::TGeoElementRN(const TGeoElementRN& elem) : TGeoElement(elem),
                fTH_S(elem.fTH_S),
                fTG_S(elem.fTG_S),
                fStatus(elem.fStatus),
+               fRatio(NULL),
                fDecays(NULL)
 {
 // Copy constructor
@@ -156,6 +160,7 @@ TGeoElementRN::~TGeoElementRN()
       fDecays->Delete();
       delete fDecays;
    }   
+   if (fRatio) delete fRatio;
 }
 
 //______________________________________________________________________________
@@ -252,6 +257,29 @@ Int_t TGeoElementRN::DecayResult(TGeoDecayChannel *dc) const
    if (da == -99 || dz == -99) return 0;
    return ENDF(Int_t(fA)+da,fZ+dz,fIso+diso);
 }
+
+//______________________________________________________________________________
+void TGeoElementRN::FillPopulation(TObjArray *population, Double_t precision, Double_t factor)
+{
+// Fills the input array with the set of RN elements resulting from the decay of
+// this one. All element in the list will contain the time evolution of their
+// proportion by number with respect to this element. The proportion can be 
+// retrieved via the method TGeoElementRN::Ratio().
+// The precision represent the minimum cumulative branching ratio for 
+// which decay products are still taken into account.
+  TGeoElementRN *elem;
+   TGeoElemIter next(this, precision);
+   TGeoBatemanSol s(this);
+   s.Normalize(factor);
+   AddRatio(s);
+   if (!population->FindObject(this)) population->Add(this);
+   while ((elem=next())) {
+      TGeoBatemanSol ratio(next.GetBranch());
+      ratio.Normalize(factor);
+      elem->AddRatio(ratio);
+      if (!population->FindObject(elem)) population->Add(elem);
+   }
+}
    
 //______________________________________________________________________________
 void TGeoElementRN::MakeName(Int_t a, Int_t z, Int_t iso)
@@ -345,6 +373,23 @@ void TGeoElementRN::SavePrimitive(ostream &out, Option_t *option)
    }   
 }
 
+//______________________________________________________________________________
+void TGeoElementRN::AddRatio(TGeoBatemanSol &ratio)
+{
+// Adds a proportion ratio to the existing one.
+   if (!fRatio) fRatio = new TGeoBatemanSol(ratio);
+   else         *fRatio += ratio;
+}   
+
+//______________________________________________________________________________
+void TGeoElementRN::ResetRatio()
+{
+// Clears the existing ratio.
+   if (fRatio) {
+      delete fRatio;
+      fRatio = 0;
+   }   
+}
 
 ClassImp(TGeoDecayChannel)
 
@@ -518,10 +563,11 @@ TGeoElementRN *TGeoElemIter::operator()()
 //______________________________________________________________________________
 TGeoElementRN *TGeoElemIter::Up()
 {
-// Go upwards from the current location until the next branching.
+// Go upwards from the current location until the next branching, then down.
    TGeoDecayChannel *dc;
    Int_t ind, nd;
    while (fLevel) {
+      // Current decay channel
       dc = (TGeoDecayChannel*)fBranch->At(fLevel-1);
       ind = dc->GetIndex();
       nd = dc->Parent()->GetNdecays();
@@ -542,29 +588,15 @@ TGeoElementRN *TGeoElemIter::Down(Int_t ibranch)
 {
 // Go downwards from current level via ibranch as low in the tree as possible.
 // Return value flags if the operation was successful.
-   Int_t i, nd;
    TGeoDecayChannel *dc = (TGeoDecayChannel*)fElem->Decays()->At(ibranch);
    if (!dc->Daughter()) return NULL;
    Double_t br = 0.01*fRatio*dc->BranchingRatio();
    if (br < fLimitRatio) return NULL;
-   // Go down on the branch as deep as possible.
-   while (1) {
-      fLevel++;
-      fRatio = br;
-      fBranch->Add(dc);
-      fElem = dc->Daughter();
-      nd = fElem->GetNdecays();
-      if (!nd) return (TGeoElementRN*)fElem;
-      i = 0;
-      while (i<nd) {
-         dc = (TGeoDecayChannel*)fElem->Decays()->At(i);
-         br = 0.01*fRatio*dc->BranchingRatio();
-         if (br >= fLimitRatio && dc->Daughter()) break;
-         i++;
-      } 
-      // Check if this was the max depth.
-      if (i==nd) return (TGeoElementRN*)fElem;  
-   }   
+   fLevel++;
+   fRatio = br;
+   fBranch->Add(dc);
+   fElem = dc->Daughter();
+   return (TGeoElementRN*)fElem;
 }   
 
 //______________________________________________________________________________
@@ -573,13 +605,8 @@ TGeoElementRN *TGeoElemIter::Next()
 // Return next element.
    if (!fElem) return NULL;
    // Check if this is the first iteration.
-   if (!fLevel) {
-      Int_t nd = fElem->GetNdecays();
-      for (Int_t i=0; i<nd; i++) if (Down(i)) return (TGeoElementRN*)fElem;
-      fElem = NULL;
-      return NULL;
-   }
-   // We are already at some level, go up first.
+   Int_t nd = fElem->GetNdecays();
+   for (Int_t i=0; i<nd; i++) if (Down(i)) return (TGeoElementRN*)fElem;
    return Up();
 }      
 
@@ -916,3 +943,280 @@ TGeoElementRN *TGeoElementTable::GetElementRN(Int_t a, Int_t z, Int_t iso) const
 // Retreive a radionuclide by a, z, and isomeric state.
    return GetElementRN(TGeoElementRN::ENDF(a,z,iso));   
 }
+
+ClassImp(TGeoBatemanSol)
+
+//______________________________________________________________________________
+TGeoBatemanSol::TGeoBatemanSol(TGeoElementRN *elem)
+               :TObject(), TAttLine(), TAttFill(), TAttMarker(),
+                fElem(elem),
+                fElemTop(elem),
+                fCsize(10),
+                fNcoeff(0),
+                fFactor(1.),
+                fCoeff(NULL)
+{
+// Default ctor.
+   fCoeff = new BtCoef_t[fCsize];
+   fNcoeff = 1;
+   fCoeff[0].cn = 1.;
+   Double_t t12 = elem->HalfLife();
+   if (t12 == 0.) t12 = 1.e-30;
+   if (elem->Stable()) fCoeff[0].lambda = 0.;
+   else                fCoeff[0].lambda = 1./t12;
+}
+
+//______________________________________________________________________________
+TGeoBatemanSol::TGeoBatemanSol(const TObjArray *chain)
+               :TObject(), TAttLine(), TAttFill(), TAttMarker(),
+                fElem(NULL),
+                fElemTop(NULL),
+                fCsize(0),
+                fNcoeff(0),
+                fFactor(1.),
+                fCoeff(NULL)
+{
+// Default ctor.
+   TGeoDecayChannel *dc = (TGeoDecayChannel*)chain->At(0);
+   if (dc) fElemTop = dc->Parent();
+   dc = (TGeoDecayChannel*)chain->At(chain->GetEntriesFast()-1);
+   if (dc) {
+      fElem = dc->Daughter();
+      fCsize = chain->GetEntriesFast()+1;
+      fCoeff = new BtCoef_t[fCsize];
+      FindSolution(chain);
+   }   
+}
+
+//______________________________________________________________________________
+TGeoBatemanSol::TGeoBatemanSol(const TGeoBatemanSol& other)
+               :TObject(other), TAttLine(other), TAttFill(other), TAttMarker(other),
+                fElem(other.fElem),
+                fElemTop(other.fElemTop),
+                fCsize(other.fCsize),
+                fNcoeff(other.fNcoeff),
+                fFactor(other.fFactor),
+                fCoeff(NULL)
+{
+// Copy constructor.
+   if (fCsize) {
+      fCoeff = new BtCoef_t[fCsize];
+      for (Int_t i=0; i<fNcoeff; i++) {
+         fCoeff[i].cn = other.fCoeff[i].cn;
+         fCoeff[i].lambda = other.fCoeff[i].lambda;
+      }
+   }
+}
+
+//______________________________________________________________________________
+TGeoBatemanSol::~TGeoBatemanSol()
+{
+// Destructor.
+   if (fCoeff) delete [] fCoeff;
+}
+
+//______________________________________________________________________________
+TGeoBatemanSol& TGeoBatemanSol::operator=(const TGeoBatemanSol& other)
+{
+// Assignment.
+   if (this == &other) return *this;
+   TObject::operator=(other);
+   TAttLine::operator=(other);
+   TAttFill::operator=(other);
+   TAttMarker::operator=(other);
+   fElem = other.fElem;
+   fElemTop = other.fElemTop;
+   if (fCoeff) delete [] fCoeff;
+   fCoeff = 0;
+   fCsize = other.fCsize;
+   fNcoeff = other.fNcoeff;
+   fFactor = other.fFactor;
+   if (fCsize) {
+      fCoeff = new BtCoef_t[fCsize];
+      for (Int_t i=0; i<fNcoeff; i++) {
+         fCoeff[i].cn = other.fCoeff[i].cn;
+         fCoeff[i].lambda = other.fCoeff[i].lambda;
+      }
+   } 
+   return *this;
+}
+
+//______________________________________________________________________________
+TGeoBatemanSol& TGeoBatemanSol::operator+=(const TGeoBatemanSol& other)
+{
+// Addition of other solution.
+   if (other.GetElement() != fElem) {
+      Error("operator+=", "Cannot add 2 solutions for different elements");
+      return *this;
+   }
+   Int_t i,j;
+   BtCoef_t *coeff = fCoeff;
+   Int_t ncoeff = fNcoeff + other.fNcoeff;
+   if (ncoeff > fCsize) {
+      fCsize = ncoeff;
+      coeff = new BtCoef_t[ncoeff];
+      for (i=0; i<fNcoeff; i++) {
+         coeff[i].cn = fCoeff[i].cn;
+         coeff[i].lambda = fCoeff[i].lambda;
+      }
+      delete [] fCoeff;
+      fCoeff = coeff;
+   }   
+   ncoeff = fNcoeff;
+   for (j=0; j<other.fNcoeff; j++) {
+      for (i=0; i<fNcoeff; i++) { 
+         if (coeff[i].lambda == other.fCoeff[j].lambda) {
+            coeff[i].cn += fFactor * other.fCoeff[j].cn;
+            break;
+         }
+      }
+      if (i == fNcoeff) {
+         coeff[ncoeff].cn = fFactor * other.fCoeff[j].cn;
+         coeff[ncoeff].lambda = other.fCoeff[j].lambda;
+         ncoeff++;
+      }
+   }              
+   fNcoeff = ncoeff;
+   return *this;
+}
+//______________________________________________________________________________
+Double_t TGeoBatemanSol::Concentration(Double_t time) const
+{
+// Find concentration of the element at a given time.
+   Double_t conc = 0.;
+   for (Int_t i=0; i<fNcoeff; i++) 
+      conc += fCoeff[i].cn * TMath::Exp(-fCoeff[i].lambda * time);
+   return conc;   
+}   
+
+//______________________________________________________________________________
+void TGeoBatemanSol::Draw(Option_t *option)
+{
+// Draw the solution of Bateman equation versus time.
+   if (!fNcoeff) return;
+   Double_t tlo, thi;
+   Int_t i;
+   // Try to find the optimum range in time.
+   tlo = 0.;
+   Double_t lambdamin = fCoeff[0].lambda;
+   TString formula = "";
+   for (i=0; i<fNcoeff; i++) {
+      formula += Form("%g*exp(-%g*x)",fCoeff[i].cn, fCoeff[i].lambda);
+      if (i < fNcoeff-1) formula += "+";
+      if (fCoeff[i].lambda < lambdamin &&
+          fCoeff[i].lambda > 0.) lambdamin = fCoeff[i].lambda;
+   }
+   thi = 10./lambdamin;
+   formula += ";time[s]";
+   formula += Form(";N_%s/N_%s_0",fElem->GetName(),fElemTop->GetName());
+   // Create a function
+   TF1 *func = new TF1(Form("conc%s",fElem->GetName()), formula.Data(), tlo,thi);
+   func->SetLineColor(fLineColor);
+   func->SetLineStyle(fLineStyle);
+   func->SetLineWidth(fLineWidth);
+   func->SetMarkerColor(fMarkerColor);
+   func->SetMarkerStyle(fMarkerStyle);
+   func->SetMarkerSize(fMarkerSize);
+   func->Draw(option);
+}      
+                           
+//______________________________________________________________________________
+void TGeoBatemanSol::FindSolution(const TObjArray *array)
+{
+// Find the solution for the Bateman equations corresponding to the decay
+// chain described by an array ending with element X. 
+// A->B->...->X 
+// Cn = SUM [Ain * exp(-LMBDi*t)];   
+//      Cn    - concentration Nx/Na
+//      n     - order of X in chain (A->B->X => n=3)
+//      LMBDi - decay constant for element of order i in the chain
+//      Ain = LMBD1*...*LMBD(n-1) * br1*...*br(n-1)/(LMBD1-LMBDi)...(LMBDn-LMBDi)
+//      bri   - branching ratio for decay Ei->Ei+1
+   fNcoeff = 0;
+   if (!array || !array->GetEntriesFast()) return;
+   Int_t n = array->GetEntriesFast();
+   TGeoDecayChannel *dc = (TGeoDecayChannel*)array->At(n-1);
+   TGeoElementRN *elem = dc->Daughter();
+   if (elem != fElem) {
+      Error("FindSolution", "Last element in the list must be %s\n", fElem->GetName());
+      return;
+   }
+   Int_t i,j;
+   Int_t order = n+1;
+   if (!fCoeff) {
+      fCsize = order;
+      fCoeff = new BtCoef_t[fCsize];
+   }
+   if (fCsize < order) {
+      delete [] fCoeff;
+      fCsize = order;
+      fCoeff = new BtCoef_t[fCsize];
+   }         
+      
+   Double_t *lambda = new Double_t[order];
+   Double_t *br     = new Double_t[n];
+   Double_t halflife;
+   for (i=0; i<n; i++) {
+      dc = (TGeoDecayChannel*)array->At(i);
+      elem = dc->Parent();
+      br[i] = 0.01 * dc->BranchingRatio();
+      halflife = elem->HalfLife();
+      if (halflife==0.) halflife = 1.e-30;
+      if (elem->Stable()) lambda[i] = 0.;
+      else                lambda[i] = 1./halflife;
+      if (i==n-1) {
+         elem = dc->Daughter();
+         halflife = elem->HalfLife();
+         if (halflife==0.) halflife = 1.e-30;
+         if (elem->Stable()) lambda[n] = 0.;
+         else                lambda[n] = 1./halflife;
+      }
+   }
+   // Check if we have equal lambdas
+   for (i=0; i<order-1; i++) {
+      for (j=i+1; j<order; j++) {
+         if (lambda[j] == lambda[i]) lambda[j] += 0.001*lambda[j];
+      }
+   }
+   Double_t ain;
+   Double_t pdlambda, plambdabr=1.;
+   for (j=0; j<n; j++) plambdabr *= lambda[j]*br[j];
+   for (i=0; i<order; i++) {
+      pdlambda = 1.;
+      for (j=0; j<n+1; j++) {
+         if (j == i) continue;
+         pdlambda *= lambda[j] - lambda[i];
+      }
+      if (pdlambda == 0.) {
+         Error("FindSolution", "pdlambda=0 !!!");
+         delete [] lambda;
+         delete [] br;
+         return;
+      }
+      ain = plambdabr/pdlambda;
+      fCoeff[i].cn = ain;
+      fCoeff[i].lambda = lambda[i];
+   }
+   fNcoeff = order;
+   Normalize(fFactor);
+}
+
+//______________________________________________________________________________
+void TGeoBatemanSol::Normalize(Double_t factor)
+{
+// Normalize all coefficients with a given factor.
+   for (Int_t i=0; i<fNcoeff; i++) fCoeff[i].cn *= factor;
+}
+
+//______________________________________________________________________________
+void TGeoBatemanSol::Print(Option_t */*option*/) const
+{
+// Print concentration evolution.
+   TString formula = Form("N[%s]/N[%s] = ", fElem->GetName(), fElemTop->GetName());
+   for (Int_t i=0; i<fNcoeff; i++) {
+      if (i == fNcoeff-1) formula += Form("%g*exp(-%g*t)", fCoeff[i].cn, fCoeff[i].lambda);
+      else                formula += Form("%g*exp(-%g*t) + ", fCoeff[i].cn, fCoeff[i].lambda);
+   }
+   printf("%s\n", formula.Data());
+}
+   

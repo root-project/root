@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: LinkDef1.h,v 1.14 2006/05/02 18:25:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: LinkDef1.h,v 1.15 2006/08/25 09:44:35 brun Exp $
 // Author : Andrei Gheata 10/06/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -27,6 +27,7 @@
 #pragma link C++ class TGeoElementRN+;
 #pragma link C++ class TGeoDecayChannel+;
 #pragma link C++ class TGeoElemIter+;
+#pragma link C++ class TGeoBatemanSol+;
 #pragma link C++ class TGeoElementTable+;
 #pragma link C++ class TGeoMaterial+;
 #pragma link C++ class TGeoMixture+;

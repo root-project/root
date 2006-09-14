@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.21 2006/06/11 12:56:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.22 2006/07/03 16:10:43 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -77,6 +77,10 @@ public:
    virtual ~TGeoMaterial();
    // methods
    static  Double_t         Coulomb(Double_t z);
+   // radioactive mixture evolution
+   virtual TGeoMaterial    *DecayMaterial(Double_t time, Double_t precision=0.001);
+   virtual void             FillMaterialEvolution(TObjArray *population, Double_t precision=0.001);
+   // getters & setters
    virtual Int_t            GetByteCount() const {return sizeof(this);}
    virtual Double_t         GetA() const       {return fA;}
    virtual Double_t         GetZ()  const      {return fZ;}
@@ -144,6 +148,9 @@ public:
    void                     DefineElement(Int_t iel, Double_t a, Double_t z, Double_t weight);
    void                     DefineElement(Int_t iel, TGeoElement *elem, Double_t weight);
    void                     DefineElement(Int_t iel, Int_t z, Int_t natoms);
+   // radioactive mixture evolution
+   virtual TGeoMaterial    *DecayMaterial(Double_t time, Double_t precision=0.001);
+   virtual void             FillMaterialEvolution(TObjArray *population, Double_t precision=0.001);
    // getters
    virtual Int_t            GetByteCount() const {return 48+12*fNelements;}
    virtual TGeoElement     *GetElement(Int_t i=0) const;

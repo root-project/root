@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.6 2006/08/25 09:44:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.8 2006/08/28 11:41:12 brun Exp $
 // Author: Andrei Gheata   17/06/04
 // Added support for radionuclides: Mihaela Gheata 24/08/2006
 /*************************************************************************
@@ -14,6 +14,18 @@
 
 #ifndef ROOT_TNamed
 #include "TNamed.h"
+#endif
+
+#ifndef ROOT_TAttLine
+#include "TAttLine.h"
+#endif
+
+#ifndef ROOT_TAttFill
+#include "TAttFill.h"
+#endif
+
+#ifndef ROOT_TAttMarker
+#include "TAttMarker.h"
 #endif
 
 #ifndef ROOT_TObjArray
@@ -52,6 +64,7 @@ public:
    Int_t                    Z() const {return fZ;}
    Double_t                 A() const {return fA;}
    Bool_t                   IsDefined() const {return TObject::TestBit(kElemDefined);}   
+   virtual Bool_t           IsRadioNuclide() const {return kFALSE;}
    Bool_t                   IsUsed() const {return TObject::TestBit(kElemUsed);}
    void                     SetDefined(Bool_t flag=kTRUE) {TObject::SetBit(kElemDefined,flag);}                    
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kElemUsed,flag);}                    
@@ -66,6 +79,7 @@ public:
  *
  *************************************************************************/
 class TGeoDecayChannel;
+class TGeoBatemanSol;
 
 class TGeoElementRN : public TGeoElement
 {
@@ -82,6 +96,7 @@ protected:
    Double_t                 fTH_S;     // Hynalation toxicity
    Double_t                 fTG_S;     // Ingestion toxicity
    Int_t                    fStatus;   // Status code
+   TGeoBatemanSol          *fRatio;    // Time evolution of proportion by number
 
    TObjArray               *fDecays;   // List of decay modes
    
@@ -99,35 +114,40 @@ public:
 
    void                     AddDecay(Int_t decay, Int_t diso, Double_t branchingRatio, Double_t qValue);
    void                     AddDecay(TGeoDecayChannel *dc);
+   void                     AddRatio(TGeoBatemanSol &ratio);
+   void                     ResetRatio();
    static Int_t             ENDF(Int_t a, Int_t z, Int_t iso) {return 10000*z+10*a+iso;}
 
    // Getters
-   virtual Int_t            ENDFCode()    const { return fENDFcode;   }
-   Int_t                    MassNo()      const { return (Int_t)fA;   }
-   Int_t                    AtomicNo()    const { return fZ;          }
-   Int_t                    IsoNo()       const { return fIso;        }
-   Double_t                 Level()       const { return fLevel;      }    
-   Double_t                 MassEx()      const { return fDeltaM;     }   
-   Double_t                 HalfLife()    const { return fHalfLife;   }
-   Double_t                 NatAbun()     const { return fNatAbun;    }  
-   const char*              PJ()          const { return fTitle.Data();}   
-   Double_t                 TH_F()        const { return fTH_F;       }     
-   Double_t                 TG_F()        const { return fTG_F;       }     
-   Double_t                 TH_S()        const { return fTH_S;       }     
-   Double_t                 TG_S()        const { return fTG_S;       }     
-   Double_t                 Status()      const { return fStatus;     }
-   Bool_t                   Stable()      const { return !fDecays;    }
-   TObjArray               *Decays()      const { return fDecays;     }
+   virtual Int_t            ENDFCode()    const {return fENDFcode;}
+   virtual Bool_t           IsRadioNuclide() const {return kTRUE;}
+   Int_t                    MassNo()      const {return (Int_t)fA;}
+   Int_t                    AtomicNo()    const {return fZ;}
+   Int_t                    IsoNo()       const {return fIso;}
+   Double_t                 Level()       const {return fLevel;}    
+   Double_t                 MassEx()      const {return fDeltaM;}   
+   Double_t                 HalfLife()    const {return fHalfLife;}
+   Double_t                 NatAbun()     const {return fNatAbun;}  
+   const char*              PJ()          const {return fTitle.Data();}   
+   Double_t                 TH_F()        const {return fTH_F;}     
+   Double_t                 TG_F()        const {return fTG_F;}     
+   Double_t                 TH_S()        const {return fTH_S;}     
+   Double_t                 TG_S()        const {return fTG_S;}     
+   Double_t                 Status()      const {return fStatus;}
+   Bool_t                   Stable()      const {return !fDecays;}
+   TObjArray               *Decays()      const {return fDecays;}
    Int_t                    GetNdecays()  const;
+   TGeoBatemanSol          *Ratio()       const {return fRatio;}
 
    // Utilities
    Bool_t                   CheckDecays() const;
    Int_t                    DecayResult(TGeoDecayChannel *dc) const;
+   void                     FillPopulation(TObjArray *population, Double_t precision=0.001, Double_t factor=1.);
    virtual void             Print(Option_t *option = "") const;
    static TGeoElementRN    *ReadElementRN(const char *record, Int_t &ndecays);
    virtual void             SavePrimitive(ostream &out, Option_t *option = "");
   
-   ClassDef(TGeoElementRN, 1)           // radionuclides
+   ClassDef(TGeoElementRN, 2)           // radionuclides class
 };
 
 /*************************************************************************
@@ -195,6 +215,47 @@ public:
 };
 
 /*************************************************************************
+ * TGeoBatemanSol -Class representing the Bateman solution for a decay branch
+ *
+ *************************************************************************/
+
+class TGeoBatemanSol : public TObject, public TAttLine, public TAttFill, public TAttMarker
+{
+private:
+   typedef struct {
+      Double_t   cn;     // Concentration for element 'i': Ni/Ntop
+      Double_t   lambda; // Decay coef. for element 'i'
+   } BtCoef_t;     
+   TGeoElementRN           *fElem;            // Referred RN element
+   TGeoElementRN           *fElemTop;         // Top RN element
+   Int_t                    fCsize;           // Size of the array of coefficients
+   Int_t                    fNcoeff;          // Number of coefficients
+   Double_t                 fFactor;          // Constant factor that applies to all coefficients
+   BtCoef_t                *fCoeff;           //[fNcoeff] Array of coefficients
+public:
+   TGeoBatemanSol() : TObject(), TAttLine(), TAttFill(), TAttMarker(), fElem(NULL), fElemTop(NULL), fCsize(0), fNcoeff(0), fFactor(1.), fCoeff(NULL) {}
+   TGeoBatemanSol(TGeoElementRN *elem);
+   TGeoBatemanSol(const TObjArray *chain);
+   TGeoBatemanSol(const TGeoBatemanSol& other);
+   ~TGeoBatemanSol();
+
+   TGeoBatemanSol& operator=(const TGeoBatemanSol& other);
+   TGeoBatemanSol& operator+=(const TGeoBatemanSol& other);
+   
+   Double_t                 Concentration(Double_t time) const;
+   virtual void             Draw(Option_t *option="");
+   TGeoElementRN           *GetElement()    const {return fElem;}
+   TGeoElementRN           *GetTopElement() const {return fElemTop;}
+   Int_t                    GetNcoeff()     const  {return fNcoeff;}
+   virtual void             Print(Option_t *option = "") const;
+   void                     SetFactor(Double_t factor) {fFactor = factor;}
+   void                     FindSolution(const TObjArray *array);
+   void                     Normalize(Double_t factor);
+
+   ClassDef(TGeoBatemanSol,1)       // Solution for the Bateman equation
+};   
+   
+/*************************************************************************
  * TGeoElemIter - iterator for decay chains.
  *
  *************************************************************************/
@@ -223,7 +284,7 @@ public:
    TGeoElementRN  *operator()();
    TGeoElementRN           *Next();
 
-   TObjArray               *GetBranch(Int_t &nlevel) const {nlevel=fLevel; return fBranch;}
+   TObjArray               *GetBranch() const              {return fBranch;}
    const TGeoElementRN     *GetTop() const                 {return fTop;}
    const TGeoElementRN     *GetElement() const             {return fElem;}
    Int_t                    GetLevel() const               {return fLevel;}
@@ -277,6 +338,7 @@ public:
    TGeoElement             *GetElement(Int_t z) {return (TGeoElement*)fList->At(z);}
    TGeoElementRN           *GetElementRN(Int_t ENDFcode) const;
    TGeoElementRN           *GetElementRN(Int_t a, Int_t z, Int_t iso=0) const;
+   TObjArray               *GetElementsRN() const {return fListRN;}
    Bool_t                   HasDefaultElements() const {return TObject::TestBit(kETDefaultElements);}
    Bool_t                   HasRNElements() const {return TObject::TestBit(kETRNElements);}
 
