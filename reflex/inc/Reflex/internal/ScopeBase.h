@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.8 2006/08/28 16:03:54 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.9 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -947,7 +947,9 @@ inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::ScopeBase::SubT
 //-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::ScopeBase::IsClass() const {
 //-------------------------------------------------------------------------------
-   return ( fScopeType == CLASS || fScopeType == TYPETEMPLATEINSTANCE );
+   return ( fScopeType == CLASS || 
+            fScopeType == TYPETEMPLATEINSTANCE ||
+            fScopeType == STRUCT );
 }
 
 

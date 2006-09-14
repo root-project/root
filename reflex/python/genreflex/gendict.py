@@ -569,7 +569,7 @@ class genDictionary(object) :
     bases = self.getBases( attrs['id'] )
     if 'members' in attrs : members = string.split(attrs['members'])
     mod = self.genModifier(attrs,None)
-    mod += ' | ' + self.xref[attrs['id']]['elem'].upper()
+    typ = self.xref[attrs['id']]['elem'].upper()
     if attrs.has_key('abstract') : mod += ' | ABSTRACT'
     if self.vtables :
       if attrs['id'] in self.vtables : mod += ' | VIRTUAL'
@@ -585,11 +585,11 @@ class genDictionary(object) :
       cid = getContainerId(clf)[0]
     notAccessibleType = self.checkAccessibleType(self.xref[attrs['id']])
     if self.isUnnamedType(clf) : 
-      sc += '  ClassBuilder("%s", typeid(Unnamed%s), sizeof(%s), %s)' % ( cls, self.xref[attrs['id']]['elem'], '__shadow__::'+ string.translate(str(clf),self.transtable),mod )
+      sc += '  ClassBuilder("%s", typeid(Unnamed%s), sizeof(%s), %s, %s)' % ( cls, self.xref[attrs['id']]['elem'], '__shadow__::'+ string.translate(str(clf),self.transtable), mod, typ )
     elif notAccessibleType :
-      sc += '  ClassBuilder("%s", typeid(%s%s), sizeof(%s), %s)' % ( cls, self.xref[notAccessibleType]['attrs']['access'].title(), self.xref[attrs['id']]['elem'], '__shadow__::'+ string.translate(str(clf),self.transtable),mod )
+      sc += '  ClassBuilder("%s", typeid(%s%s), sizeof(%s), %s, %s)' % ( cls, self.xref[notAccessibleType]['attrs']['access'].title(), self.xref[attrs['id']]['elem'], '__shadow__::'+ string.translate(str(clf),self.transtable), mod, typ )
     else :
-      sc += '  ClassBuilder("%s", typeid(%s), sizeof(%s), %s)' % (cls, cls, cls, mod)
+      sc += '  ClassBuilder("%s", typeid(%s), sizeof(%s), %s, %s)' % (cls, cls, cls, mod, typ)
     if 'extra' in attrs :
       for pname, pval in attrs['extra'].items() :
         if pname not in ('name','pattern','n_name','file_name','file_pattern') :

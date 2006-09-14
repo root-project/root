@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.13 2006/08/16 14:04:10 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.14 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -31,10 +31,11 @@
 ROOT::Reflex::ClassBuilder::ClassBuilder( const char * nam, 
                                           const std::type_info & ti,
                                           size_t size,
-                                          unsigned int modifiers ) 
+                                          unsigned int modifiers, 
+                                          TYPE typ ) 
 //-------------------------------------------------------------------------------
 // ClassBuilder constructor. 
-  : fClassBuilderImpl( nam, ti, size, modifiers ) { }
+  : fClassBuilderImpl( nam, ti, size, modifiers, typ ) { }
 
 
 //-------------------------------------------------------------------------------
@@ -143,7 +144,8 @@ ROOT::Reflex::ClassBuilder::AddEnum( const char * nam,
 ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * nam, 
                                                   const std::type_info & ti, 
                                                   size_t size, 
-                                                  unsigned int modifiers )
+                                                  unsigned int modifiers, 
+                                                  TYPE typ )
    : fClass( 0 ),
      fLastMember( 0 )
 {
@@ -167,7 +169,8 @@ ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * nam,
    else                             fClass = new Class( nam2.c_str(), 
                                                         size, 
                                                         ti, 
-                                                        modifiers );
+                                                        modifiers,
+                                                        typ );
 }
 
     

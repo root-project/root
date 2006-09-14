@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.29 2006/09/05 17:13:15 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.30 2006/09/08 20:54:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -155,6 +155,7 @@ ROOT::Reflex::ScopeBase::operator const ROOT::Reflex::Type & () const {
    // Conversion operator to Type.
    switch ( fScopeType ) {
    case CLASS:
+   case STRUCT:
    case TYPETEMPLATEINSTANCE:
    case UNION:
    case ENUM:
@@ -452,6 +453,9 @@ std::string ROOT::Reflex::ScopeBase::ScopeTypeAsString() const {
    switch ( fScopeType ) {
    case CLASS:
       return "CLASS";
+      break;
+   case STRUCT:
+      return "STRUCT";
       break;
    case TYPETEMPLATEINSTANCE:
       return "TYPETEMPLATEINSTANCE";

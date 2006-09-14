@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.h,v 1.9 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.h,v 1.10 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -39,7 +39,8 @@ namespace ROOT {
          ClassBuilderImpl( const char * nam, 
                            const std::type_info & ti, 
                            size_t size, 
-                           unsigned int modifiers = 0 );
+                           unsigned int modifiers = 0,
+                           TYPE typ = CLASS );
 
 
          /** destructor */
@@ -142,7 +143,9 @@ namespace ROOT {
          ClassBuilder( const char * nam,
                        const std::type_info & ti,
                        size_t size,
-                       unsigned int modifiers = 0 );
+                       unsigned int modifiers = 0, 
+                       TYPE typ = CLASS );
+
 
          /** destructor */
          virtual ~ClassBuilder() {}
@@ -251,12 +254,14 @@ namespace ROOT {
          public:
       
          /** constructor */
-         ClassBuilderT( unsigned int modifiers = 0 );
+         ClassBuilderT( unsigned int modifiers = 0, 
+                        TYPE typ = CLASS );
 
 
          /** constructor */
          ClassBuilderT( const char* nam, 
-                        unsigned int modifiers = 0 );
+                        unsigned int modifiers = 0,
+                        TYPE typ = CLASS );
 
 
          /** 
@@ -438,20 +443,23 @@ ROOT::Reflex::ClassBuilder::AddProperty( const char * key,
 
 //-------------------------------------------------------------------------------
 template <class C>
-inline ROOT::Reflex::ClassBuilderT<C>::ClassBuilderT( unsigned int modifiers ) 
+inline ROOT::Reflex::ClassBuilderT<C>::ClassBuilderT( unsigned int modifiers,
+                                                      TYPE typ ) 
 //-------------------------------------------------------------------------------
    : fClassBuilderImpl( Tools::Demangle(typeid(C)).c_str(),
                         typeid(C),
                         sizeof(C),
-                        modifiers ) { }
+                        modifiers,
+                        typ ) { }
     
 
 //-------------------------------------------------------------------------------
 template <class C>
 inline ROOT::Reflex::ClassBuilderT<C>::ClassBuilderT( const char * nam, 
-                                                      unsigned int modifiers )
+                                                      unsigned int modifiers,
+                                                      TYPE typ )
 //-------------------------------------------------------------------------------
-   : fClassBuilderImpl( nam, typeid(C), sizeof(C), modifiers ) { }
+   : fClassBuilderImpl( nam, typeid(C), sizeof(C), modifiers, typ ) { }
 
     
 //-------------------------------------------------------------------------------
