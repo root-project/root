@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.264 2006/09/13 08:17:56 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.266 2006/09/13 15:33:31 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1029,6 +1029,7 @@ void THistPainter::Paint(Option_t *option)
    //    "LIST"   : Generate a list of TGraph objects for each contour
    //    "FB"     : With LEGO or SURFACE, suppress the Front-Box
    //    "BB"     : With LEGO or SURFACE, suppress the Back-Box
+   //    "A"      : With LEGO or SURFACE, suppress the axis
    //    "SCAT"   : Draw a scatter-plot (default)
    //    "TEXT"   : Draw bin contents as text (format set via gStyle->SetPaintTextFormat)
    //    "TEXTnn" : Draw bin contents as text at angle nn (0 < nn < 90)
@@ -3540,9 +3541,21 @@ void THistPainter::PaintHist(Option_t *)
 void THistPainter::PaintH3(Option_t *option)
 {
    // Control function to draw a 3-D histogram.
+   //
+   //  The following options are supported:
+   //
+   //    "   "   : Draw a 3D scatter plot.
+   //    "BOX"   : A box is drawn for each cell with volume proportional to the
+   //              content's absolute value.
+   //    "LEGO"  : Same as "BOX".
+   //    "ISO"   : Draw an iso surface. (See: THistPainter::PaintH3Iso()).
+   //    "FB"    : Suppress the Front-Box.
+   //    "BB"    : Suppress the Back-Box.
+   //    "A"     : Suppress the axis.
 
    char *cmd;
-   if (fH->GetDrawOption() && strstr(fH->GetDrawOption(),"box")) {
+   if (fH->GetDrawOption() && (strstr(fH->GetDrawOption(),"box") 
+                           ||  strstr(fH->GetDrawOption(),"lego"))) {
       cmd = Form("TMarker3DBox::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
    } else if (fH->GetDrawOption() && strstr(fH->GetDrawOption(),"iso")) {
       PaintH3Iso();
