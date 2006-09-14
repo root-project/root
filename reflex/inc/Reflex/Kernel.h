@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.22 2006/08/25 10:16:02 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.23 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -292,6 +292,10 @@ namespace ROOT {
          FUNCTIONMEMBER,
          UNRESOLVED
       };
+
+
+      /** the max unsigned int */
+      size_t NPos();
 
 
       /**

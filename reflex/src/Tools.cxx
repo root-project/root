@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.16 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.17 2006/08/16 14:04:10 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -271,6 +271,19 @@ void Tools::StringSplit( std::vector < std::string > & splitValues,
   
    StringStrip( str2 );
    if ( str2.length()) { splitValues.push_back( str2 ); }
+}
+
+
+//-------------------------------------------------------------------------------
+std::string Tools::StringVec2String( const std::vector<std::string> & vec ) {
+//-------------------------------------------------------------------------------
+   std::string s = "";
+   StdString_Iterator lastbutone = vec.end()-1;
+   for( StdString_Iterator it = vec.begin(); it != vec.end(); ++it) {
+      s += *it;
+      if (it != lastbutone ) s += ", "; 
+   }
+   return s;
 }
 
 

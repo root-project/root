@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyList.h,v 1.11 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyList.h,v 1.12 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -102,11 +102,23 @@ namespace ROOT {
 
       
          /**
-          * HasKey will return true if the property list contains the key
-          * @param  key the property key
-          * @return nth property key
+          * HasKey is deprecated. Use HasProperty instead with exactly the same functionality
+          * The reason for deprecating this function is the misleading name. The function checks
+          * if a given property (with a key) is attached to this item.
           */
-         bool HasKey( const std::string & key ) const;
+         bool HasKey( const std::string & key ) const
+#if defined(__GNUC__)
+            __attribute__((deprecated))
+#endif
+            ;
+
+
+         /**
+          * HasProperty will return true if the property list contains a valid property with key
+          * @param  key the property key
+          * @return true if key exists and property for key is valid
+          */
+         bool HasProperty( const std::string & key ) const;
 
 
          /**
@@ -207,11 +219,26 @@ namespace ROOT {
 
          
          /**
-          * PropertySize will return the number of properties attached
-          * to this item
+          * PropertyCount will return the number of properties attached
+          * to this item. Attention!! Don't use the return value of this function for
+          * iteration over the properties. Use KeySize() instead.
           * @return number of properties
           */
-         size_t PropertySize() const;
+         size_t PropertyCount() const;
+
+
+         /**
+          * This function is deprecated, use PropertyCount instead. The reason is, that
+          * XSize() functions in Reflex usually return the size of a container while this
+          * function now returns only the number of properties attached. The container it
+          * self can be larger, because it may have holes
+          */
+         size_t PropertySize() const
+#if defined(__GNUC__)
+            __attribute__((deprecated))
+#endif
+            ;
+
 
 
          /**
@@ -337,10 +364,17 @@ inline void ROOT::Reflex::PropertyList::ClearProperties() const {
 
 
 //-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::PropertyList::HasProperty(const std::string & key) const {
+//-------------------------------------------------------------------------------
+   if ( fPropertyListImpl ) return fPropertyListImpl->HasProperty( key );
+   return false;
+}
+
+
+//-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::PropertyList::HasKey(const std::string & key) const {
 //-------------------------------------------------------------------------------
-   if ( fPropertyListImpl ) return fPropertyListImpl->HasKey( key );
-   return false;
+   return HasProperty( key );
 }
 
 
@@ -380,10 +414,17 @@ inline std::string ROOT::Reflex::PropertyList::PropertyKeys() const {
 
 
 //-------------------------------------------------------------------------------
+inline size_t ROOT::Reflex::PropertyList::PropertyCount() const {
+//-------------------------------------------------------------------------------
+   if ( fPropertyListImpl ) return fPropertyListImpl->PropertyCount();
+   return 0;
+}
+
+
+//-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::PropertyList::PropertySize() const {
 //-------------------------------------------------------------------------------
-   if ( fPropertyListImpl ) return fPropertyListImpl->PropertySize();
-   return 0;
+   return PropertyCount();
 }
 
 

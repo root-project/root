@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.h,v 1.2 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -91,11 +91,12 @@ namespace ROOT {
 
       
          /**
-          * HasKey will return true if the PropertyNth list contains the key
-          * @param  key the PropertyNth key
-          * @return nth PropertyNth key
+          * HasProperty will return true if the property list contains a key "key" and 
+          * the property for this key is valid
+          * @param  key to look for 
+          * @return true if a valid property for key exists
           */
-         bool HasKey( const std::string & key ) const;
+         bool HasProperty( const std::string & key ) const;
 
 
          /**
@@ -196,11 +197,11 @@ namespace ROOT {
 
 
          /**
-          * PropertySize will return the number of properties attached
+          * PropertyCount will return the number of properties attached
           * to this item
           * @return number of properties
           */
-         size_t PropertySize() const;
+         size_t PropertyCount() const;
 
 
          /**
@@ -298,8 +299,8 @@ inline void ROOT::Reflex::PropertyListImpl::AddProperty( size_t key,
                                                          const Any & value ) {
 //-------------------------------------------------------------------------------
    if ( ! fProperties ) fProperties = new Properties();
-   if ( key > fProperties->size() ) fProperties->resize( key, Dummy::Any());
-   fProperties->at( key-1 ) = value;
+   if ( key >= fProperties->size() ) fProperties->resize( key+1, Dummy::Any());
+   (*fProperties)[key] = value;
 }
 
 
@@ -320,14 +321,6 @@ inline void ROOT::Reflex::PropertyListImpl::AddProperty( size_t key,
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::PropertyListImpl::PropertySize() const {
-//-------------------------------------------------------------------------------
-   if ( fProperties ) return fProperties->size();
-   return 0;
-}
-
-
-//-------------------------------------------------------------------------------
 inline void ROOT::Reflex::PropertyListImpl::RemoveProperty( const std::string & key ) {
 //-------------------------------------------------------------------------------
    RemoveProperty( PropertyKey( key ));
@@ -337,9 +330,7 @@ inline void ROOT::Reflex::PropertyListImpl::RemoveProperty( const std::string & 
 //-------------------------------------------------------------------------------
 inline void ROOT::Reflex::PropertyListImpl::RemoveProperty( size_t key ) {
 //------------------------------------------------------------------------------- 
-  if ( fProperties && key && key <= fProperties->size()) {
-     fProperties->at(key).Swap(Dummy::Any());
-   }
+  if ( fProperties ) fProperties->at(key).Swap(Dummy::Any());
 }
 
 #endif // ROOT_Reflex_PropertyListImpl

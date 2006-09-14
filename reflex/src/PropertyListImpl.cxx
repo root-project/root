@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.cxx,v 1.11 2006/09/05 17:13:15 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.cxx,v 1.12 2006/09/08 20:54:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,6 +15,7 @@
 
 #include "Reflex/internal/PropertyListImpl.h"
 #include "Reflex/Any.h"
+#include "Reflex/Tools.h"
 
 #include <sstream>
 
@@ -41,8 +42,7 @@ std::ostream & ROOT::Reflex::operator<<( std::ostream & s,
    if ( p.fProperties ) {
       for ( size_t i = 0; i < p.fProperties->size(); ++i ) {
          Any & a = p.PropertyValue( i );
-         if ( a )
-            s << sKeys().at(i) << " : " << a << std::endl;
+         if ( a ) s << sKeys()[i] << " : " << a << std::endl;
       }
    }
    return s;
@@ -59,12 +59,12 @@ void ROOT::Reflex::PropertyListImpl::ClearProperties() {
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::PropertyListImpl::HasKey( const std::string & key ) const {
+bool ROOT::Reflex::PropertyListImpl::HasProperty( const std::string & key ) const {
 //-------------------------------------------------------------------------------
    // Return true if property has key.
-   if ( std::find( sKeys().begin(), sKeys().end(), key ) != sKeys().end() ) 
-      return true;
-   return false;
+   size_t i = KeyByName(key);
+   if ( i == NPos() ) return false;
+   else               return PropertyValue( i );
 }
 
 
@@ -104,13 +104,7 @@ ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::PropertyListImpl::Key_REn
 std::string ROOT::Reflex::PropertyListImpl::KeysAsString() {
 //-------------------------------------------------------------------------------
 // Return a string containing all property keys.
-   std::string s = "";
-   StdString_Iterator lastbutone = sKeys().end()-1;
-   for( StdString_Iterator it = sKeys().begin(); it != sKeys().end(); ++it) {
-      s += *it;
-      if (it != lastbutone ) s += ", "; 
-   }
-   return s;
+   return Tools::StringVec2String(sKeys());
 }
 
 
@@ -124,18 +118,18 @@ const std::string & ROOT::Reflex::PropertyListImpl::KeyAt( size_t nth ) {
 
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::PropertyListImpl::KeyByName( const std::string & key,
-                                              bool allocateNew ) {
+                                                  bool allocateNew ) {
 //-------------------------------------------------------------------------------
 // Return a key by it's name.
    Keys_t::iterator it = std::find( sKeys().begin(), sKeys().end(), key );
    if ( it != sKeys().end() ) {
-      return std::distance(sKeys().begin(), it) + 1;
+      return std::distance(sKeys().begin(), it);
    }
    else if ( allocateNew ) {
       sKeys().push_back(key);
-      return sKeys().size();
+      return sKeys().size() - 1;
    }
-   return 0;
+   return NPos();
 }
 
 
@@ -162,9 +156,10 @@ std::string
 ROOT::Reflex::PropertyListImpl::PropertyAsString( size_t key ) const {
 //-------------------------------------------------------------------------------
    // Return a string representation of the property with key.
-   if ( fProperties && key ) {
+   Any & a = PropertyValue( key );
+   if ( a ) {
       std::ostringstream o;
-      o << PropertyValue( key );
+      o << a;
       return o.str();
    }
    return "";
@@ -177,7 +172,7 @@ size_t ROOT::Reflex::PropertyListImpl::PropertyKey( const std::string & key,
                                                     bool allocateNew ) const {
 //-------------------------------------------------------------------------------
    // return the index of property key, allocate a new one if allocateNew = true
-   return KeyByName(key, allocateNew);
+   return KeyByName( key, allocateNew );
 }
 
 
@@ -185,7 +180,26 @@ size_t ROOT::Reflex::PropertyListImpl::PropertyKey( const std::string & key,
 std::string ROOT::Reflex::PropertyListImpl::PropertyKeys() const {
 //-------------------------------------------------------------------------------
 // Return a string containing all property keys.
-   return KeysAsString();
+   std::vector<std::string> kv;
+   for ( size_t i = 0; i < KeySize(); ++i ) {
+      if ( PropertyValue(i)) kv.push_back(KeyAt(i));
+   }
+   return Tools::StringVec2String(kv);
+}
+
+
+//-------------------------------------------------------------------------------
+size_t ROOT::Reflex::PropertyListImpl::PropertyCount() const {
+//-------------------------------------------------------------------------------
+// Returns the number of properties attached to this item. Don't use the output
+// for iteration. Use KeySize() instead.
+   size_t s = 0;
+   if ( fProperties ) {
+      for ( size_t i = 0; i < fProperties->size(); ++i ) {
+         if ( PropertyValue( i ) ) ++s;
+      }
+   }
+   return s;
 }
 
 
@@ -203,7 +217,7 @@ ROOT::Reflex::Any &
 ROOT::Reflex::PropertyListImpl::PropertyValue( size_t key ) const {
 //-------------------------------------------------------------------------------
    // Return property as Any object
-   if ( fProperties && key && key <= fProperties->size()) return fProperties->at( key - 1 );
+   if ( fProperties ) return fProperties->at( key );
    return Dummy::Any();
 }
 

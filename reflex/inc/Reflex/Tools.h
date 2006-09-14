@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.h,v 1.11 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.h,v 1.12 2006/08/01 10:28:45 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -96,6 +96,16 @@ namespace ROOT {
           * @param str a reference to a string to be stripped
           */
          RFLX_API void StringStrip(std::string & str);
+
+
+         /**
+          * StringVec2String will take a vector of strings and return the
+          * vector containees concatenated by commas
+          * @param vec the vector to be converted
+          * @return string of comma concatenated containees 
+          */
+         RFLX_API std::string StringVec2String( const std::vector<std::string> & vec );
+
 
          RFLX_API std::string BuildTypeName( Type & t, 
                                              unsigned int modifiers );
