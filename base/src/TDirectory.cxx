@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.87 2006/07/13 05:08:04 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.88 2006/07/14 19:49:59 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -499,9 +499,19 @@ void TDirectory::Close(Option_t *)
    // Save the directory key list and header
    Save();
 
+   Bool_t fast = kTRUE;
+   TObjLink *lnk = fList->FirstLink();
+   while (lnk) {
+      if (lnk->GetObject()->IsA() == TDirectory::Class()) {fast = kFALSE;break;}
+      lnk = lnk->Next();
+   }
    // Delete objects from directory list, this in turn, recursively closes all
    // sub-directories (that were allocated on the heap)
-   fList->Delete("slow");
+   // if this dir contains subdirs, we must use the slow option for Delete!
+   // we must avoid "slow" as much as possible, in particular Delete("slow")
+   // with a large number of objects (eg >10^5) would take for ever.
+   if (fast) fList->Delete();
+   else      fList->Delete("slow");
 
    // Delete keys from key list (but don't delete the list header)
    if (fKeys) {
