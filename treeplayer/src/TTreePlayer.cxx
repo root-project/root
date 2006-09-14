@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.226 2006/08/31 11:09:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.227 2006/09/13 05:08:35 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1342,6 +1342,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    char aprefix[128];
    TObjArray branches(100);
    TObjArray mustInit(100);
+   TObjArray mustInitArr(100); 
+   mustInitArr.SetOwner(kFALSE);
    Int_t *leafStatus = new Int_t[nleaves];
    for (l=0;l<nleaves;l++) {
       Int_t kmax = 0;
@@ -1511,6 +1513,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          } else {
             if (kmax) fprintf(fp,"   %-14s %s%s[kMax%s];   //[%s]\n",leaf->GetTypeName(), stars, branchname,blen,leafcountName);
             else      fprintf(fp,"   %-14s %s%s[%d];   //[%s]\n",leaf->GetTypeName(), stars, branchname,len,leafcountName);
+         }
+         if (stars[0]=='*') {
+            TNamed *n;
+            if (kmax) n = new TNamed(branchname, Form("kMax%s",blen));
+            else n = new TNamed(branchname, Form("%d",len));
+            mustInitArr.Add(n);
          }
       } else {
          if (strstr(branchname,"[")) len = 1;
@@ -1693,6 +1701,15 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          }
          fprintf(fp,"   %s = 0;\n",branchname );
       }
+   }
+   if (mustInitArr.Last()) {
+      TIter next(&mustInitArr);
+      TNamed *info;
+      fprintf(fp,"   // Set array pointer\n");
+      while( (info = (TNamed*)next()) ) {
+         fprintf(fp,"   for(int i=0; i<%s; ++i) %s[i] = 0;\n",info->GetTitle(),info->GetName());
+      }
+      fprintf(fp,"\n");
    }
    fprintf(fp,"   // Set branch addresses and branch pointers\n");
    fprintf(fp,"   if (!tree) return;\n");
