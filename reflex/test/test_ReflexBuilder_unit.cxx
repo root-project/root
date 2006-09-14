@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.14 2006/09/05 17:13:15 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.15 2006/09/14 12:57:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -324,7 +324,7 @@ void ReflexBuilderUnitTest::propertybuilder()
   CPPUNIT_ASSERT_EQUAL(100.0, any_cast<double>(t.Properties().PropertyValue("foo_p1")));
   CPPUNIT_ASSERT(t.MemberByName("f").Properties().HasProperty("p0"));
   CPPUNIT_ASSERT(t.MemberByName("f").Properties().HasProperty("p1"));
-  CPPUNIT_ASSERT(t.MemberByName("v").Properties().PropertySize() == 0);
+  CPPUNIT_ASSERT(t.MemberByName("v").Properties().PropertyCount() == 0);
   CPPUNIT_ASSERT(t.MemberByName("d").Properties().HasProperty("p0"));
   CPPUNIT_ASSERT(t.MemberByName("d").Properties().HasProperty("p1"));
   CPPUNIT_ASSERT_EQUAL(true, any_cast<bool>(t.MemberByName("d").Properties().PropertyValue("p1")));

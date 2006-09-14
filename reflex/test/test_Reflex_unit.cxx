@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.18 2006/09/12 13:06:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.19 2006/09/14 12:57:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -244,13 +244,13 @@ void ReflexUnitTest::property_list()
   OwnedPropertyList pl = OwnedPropertyList(new PropertyListImpl());
 
   CPPUNIT_ASSERT(pl);
-  CPPUNIT_ASSERT_EQUAL((size_t)0, pl.PropertySize());
+  CPPUNIT_ASSERT_EQUAL((size_t)0, pl.PropertyCount());
   CPPUNIT_ASSERT_EQUAL((size_t)1, PropertyList::KeySize());
   CPPUNIT_ASSERT_EQUAL(std::string("Description"), *PropertyList::Key_Begin());
   CPPUNIT_ASSERT_EQUAL(std::string("Description"), *(PropertyList::Key_REnd()-1));
 
   pl.AddProperty("Description", "some blabla");
-  CPPUNIT_ASSERT_EQUAL((size_t)1, pl.PropertySize());
+  CPPUNIT_ASSERT_EQUAL((size_t)1, pl.PropertyCount());
   CPPUNIT_ASSERT_EQUAL((size_t)1, PropertyList::KeySize());
 
   CPPUNIT_ASSERT_EQUAL(NPos(), pl.PropertyKey("int"));
@@ -261,19 +261,19 @@ void ReflexUnitTest::property_list()
   CPPUNIT_ASSERT(pl.HasProperty("int"));
   CPPUNIT_ASSERT_EQUAL(10, any_cast<int>(pl.PropertyValue("int")));
   CPPUNIT_ASSERT_EQUAL(string("10"), pl.PropertyAsString("int"));
-  CPPUNIT_ASSERT_EQUAL((size_t)2, pl.PropertySize());
+  CPPUNIT_ASSERT_EQUAL((size_t)2, pl.PropertyCount());
 
   pl.AddProperty("double", 10.8);
   CPPUNIT_ASSERT(pl.HasProperty("double"));
   CPPUNIT_ASSERT_EQUAL(10.8, any_cast<double>(pl.PropertyValue("double")));
   CPPUNIT_ASSERT_EQUAL(string("10.8"), pl.PropertyAsString("double"));
-  CPPUNIT_ASSERT_EQUAL((size_t)3, pl.PropertySize());
+  CPPUNIT_ASSERT_EQUAL((size_t)3, pl.PropertyCount());
 
   pl.AddProperty("char*", "this is a char*" );
   CPPUNIT_ASSERT(pl.HasProperty("char*"));
   CPPUNIT_ASSERT(!strcmp("this is a char*",any_cast<const char*>(pl.PropertyValue("char*"))));
   CPPUNIT_ASSERT_EQUAL(string("this is a char*"), pl.PropertyAsString("char*"));
-  CPPUNIT_ASSERT_EQUAL((size_t)4, pl.PropertySize());
+  CPPUNIT_ASSERT_EQUAL((size_t)4, pl.PropertyCount());
   CPPUNIT_ASSERT_EQUAL((size_t)4, PropertyList::KeySize());
   CPPUNIT_ASSERT_EQUAL(std::string("char*"), *(PropertyList::Key_End()-1));
 
@@ -291,17 +291,17 @@ void ReflexUnitTest::property_list()
   }
   CPPUNIT_ASSERT_EQUAL(string("no return value"), s2);
   CPPUNIT_ASSERT_EQUAL(std::string("string"), *PropertyList::Key_RBegin());
-  CPPUNIT_ASSERT_EQUAL((size_t)5, pl.PropertySize());
+  CPPUNIT_ASSERT_EQUAL((size_t)5, pl.PropertyCount());
   CPPUNIT_ASSERT_EQUAL(string("Description, int, double, char*, string"), pl.PropertyKeys());
   
   pl.RemoveProperty("char*");
   CPPUNIT_ASSERT(!pl.HasProperty("char*"));
-  CPPUNIT_ASSERT_EQUAL((size_t)4, pl.PropertySize());
+  CPPUNIT_ASSERT_EQUAL((size_t)4, pl.PropertyCount());
 
   OwnedPropertyList pl2 = OwnedPropertyList(new PropertyListImpl());
   
   CPPUNIT_ASSERT(pl2);
-  CPPUNIT_ASSERT_EQUAL((size_t)0, pl2.PropertySize());
+  CPPUNIT_ASSERT_EQUAL((size_t)0, pl2.PropertyCount());
   CPPUNIT_ASSERT_EQUAL((size_t)5, PropertyList::KeySize());
   CPPUNIT_ASSERT(!pl2.HasProperty("string"));
 
