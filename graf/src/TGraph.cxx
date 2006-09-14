@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.191 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.192 2006/09/05 09:39:39 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1068,7 +1068,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    //   created by ROOT.
    //
    //   The list of fit options is given in parameter option.
-   //      option = "W"  Set all errors to 1
+   //      option = "W" Set all weights to 1; ignore error bars
    //             = "U" Use a User specified fitting algorithm (via SetFCN)
    //             = "Q" Quiet mode (minimum printing)
    //             = "V" Verbose mode (default is between Q and V)

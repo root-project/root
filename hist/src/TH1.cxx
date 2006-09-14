@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.308 2006/09/08 17:24:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.309 2006/09/12 06:36:58 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2229,7 +2229,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //      Fit this histogram with function f1.
 //
 //      The list of fit options is given in parameter option.
-//         option = "W"  Set all errors to 1
+//         option = "W" Set all weights to 1; ignore error bars
 //                = "I" Use integral of function in bin instead of value at bin center
 //                = "L" Use Loglikelihood method (default is chisquare method)
 //                = "LL" Use Loglikelihood method and bin contents are not integers)

@@ -538,7 +538,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //  created by ROOT.
    //
    //  The list of fit options is given in parameter option.
-   //     option = "W"  Set all errors to 1
+   //     option = "W" Set all weights to 1; ignore error bars
    //            = "U" Use a User specified fitting algorithm (via SetFCN)
    //            = "Q" Quiet mode (minimum printing)
    //            = "V" Verbose mode (default is between Q and V)
