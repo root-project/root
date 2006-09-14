@@ -462,6 +462,7 @@ skip:
 		@true;
 
 include $(patsubst %,%/Module.mk,$(MODULES))
+include cint/cintdlls.mk # include after all the others
 
 -include MyRules.mk            # allow local rules
 
