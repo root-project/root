@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.29 2006/09/12 11:03:11 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.30 2006/09/14 12:57:55 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -1359,7 +1359,7 @@ void ReflexSimple2Test::testClasses() {
    const Type & t1 = Type::ByName("testclasses::MyStruct");
    CPPUNIT_ASSERT(t1);
    CPPUNIT_ASSERT(t1.IsClass());
-   //CPPUNIT_ASSERT(t1.IsStruct());
+   CPPUNIT_ASSERT(t1.IsStruct());
 
 }
 
