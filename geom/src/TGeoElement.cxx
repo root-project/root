@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.13 2006/08/28 11:41:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.14 2006/09/14 17:22:12 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 #include "Riostream.h"
 
 #include"TObjArray.h"
-#include "TF1.h"
+//#include "TF1.h"
 #include "TGeoManager.h"
 #include"TGeoElement.h"
 
@@ -611,7 +611,7 @@ TGeoElementRN *TGeoElemIter::Next()
 }      
 
 //______________________________________________________________________________
-void TGeoElemIter::Print(Option_t */*option*/) const
+void TGeoElemIter::Print(Option_t * /*option*/) const
 {
 // Print info about the current decay branch.
    TGeoElementRN *elem;
@@ -1110,14 +1110,14 @@ void TGeoBatemanSol::Draw(Option_t *option)
    formula += ";time[s]";
    formula += Form(";N_%s/N_%s_0",fElem->GetName(),fElemTop->GetName());
    // Create a function
-   TF1 *func = new TF1(Form("conc%s",fElem->GetName()), formula.Data(), tlo,thi);
-   func->SetLineColor(fLineColor);
-   func->SetLineStyle(fLineStyle);
-   func->SetLineWidth(fLineWidth);
-   func->SetMarkerColor(fMarkerColor);
-   func->SetMarkerStyle(fMarkerStyle);
-   func->SetMarkerSize(fMarkerSize);
-   func->Draw(option);
+   //TF1 *func = new TF1(Form("conc%s",fElem->GetName()), formula.Data(), tlo,thi);
+   //func->SetLineColor(fLineColor);
+   //func->SetLineStyle(fLineStyle);
+   //func->SetLineWidth(fLineWidth);
+   //func->SetMarkerColor(fMarkerColor);
+   //func->SetMarkerStyle(fMarkerStyle);
+   //func->SetMarkerSize(fMarkerSize);
+   //func->Draw(option);
 }      
                            
 //______________________________________________________________________________
@@ -1209,7 +1209,7 @@ void TGeoBatemanSol::Normalize(Double_t factor)
 }
 
 //______________________________________________________________________________
-void TGeoBatemanSol::Print(Option_t */*option*/) const
+void TGeoBatemanSol::Print(Option_t * /*option*/) const
 {
 // Print concentration evolution.
    TString formula = Form("N[%s]/N[%s] = ", fElem->GetName(), fElemTop->GetName());
