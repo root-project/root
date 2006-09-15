@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.35 2006/06/11 12:56:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.36 2006/06/23 11:55:15 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -35,9 +35,9 @@ class TVirtualGeoTrack;
 class TParticle;
 class TObjArray;
 class TH2F;
+class TGeoBatemanSol;
 
 class TVirtualGeoPainter : public TObject {
-
 
 protected:
    static TVirtualGeoPainter   *fgGeoPainter; //Pointer to class painter
@@ -76,6 +76,7 @@ public:
    virtual void       DefaultColors() = 0;
    virtual Int_t      DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py) = 0;
    virtual void       Draw(Option_t *option="") = 0;
+   virtual void       DrawBatemanSol(TGeoBatemanSol *sol, Option_t *option="") = 0;
    virtual void       DrawShape(TGeoShape *shape, Option_t *option="") = 0;
    virtual void       DrawOnly(Option_t *option="") = 0;
    virtual void       DrawOverlap(void *ovlp, Option_t *option="") = 0;

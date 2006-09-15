@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.8 2006/08/28 11:41:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.9 2006/09/14 17:22:12 brun Exp $
 // Author: Andrei Gheata   17/06/04
 // Added support for radionuclides: Mihaela Gheata 24/08/2006
 /*************************************************************************
@@ -244,6 +244,7 @@ public:
    
    Double_t                 Concentration(Double_t time) const;
    virtual void             Draw(Option_t *option="");
+   void                     GetCoeff(Int_t i, Double_t &cn, Double_t &lambda) {cn=fCoeff[i].cn; lambda=fCoeff[i].lambda;}
    TGeoElementRN           *GetElement()    const {return fElem;}
    TGeoElementRN           *GetTopElement() const {return fElemTop;}
    Int_t                    GetNcoeff()     const  {return fNcoeff;}

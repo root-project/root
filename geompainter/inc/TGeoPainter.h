@@ -37,6 +37,7 @@ class TGeoPhysicalNode;
 class TGeoChecker;
 class TGeoOverlap;
 class TH2F;
+class TGeoBatemanSol;
 
 class TGeoPainter : public TVirtualGeoPainter {
 private:
@@ -93,6 +94,7 @@ public:
    virtual void       DefaultColors();
    virtual Int_t      DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py);
    virtual void       Draw(Option_t *option="");
+   virtual void       DrawBatemanSol(TGeoBatemanSol *sol, Option_t *option="");
    virtual void       DrawOverlap(void *ovlp, Option_t *option="");
    virtual void       DrawCurrentPoint(Int_t color);
    virtual void       DrawOnly(Option_t *option="");

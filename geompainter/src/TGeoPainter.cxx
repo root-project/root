@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.90 2006/06/13 12:28:44 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.91 2006/06/23 11:55:15 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,6 +17,7 @@
 #include "TPad.h"
 #include "TCanvas.h"
 #include "TH2F.h"
+#include "TF1.h"
 #include "TPluginManager.h"
 #include "TVirtualPadEditor.h"
 
@@ -602,6 +603,41 @@ void TGeoPainter::Draw(Option_t *option)
 // Draw method.
    DrawVolume(fGeoManager->GetTopVolume(), option);
 }
+
+//______________________________________________________________________________
+void TGeoPainter::DrawBatemanSol(TGeoBatemanSol *sol, Option_t *option)
+{
+// Draw the time evolution of a radionuclide.
+   Int_t ncoeff = sol->GetNcoeff();
+   if (!ncoeff) return;
+   Double_t tlo, thi;
+   Double_t cn=0., lambda=0.;
+   Int_t i;
+   // Try to find the optimum range in time.
+   tlo = 0.;
+   sol->GetCoeff(0, cn, lambda);
+   Double_t lambdamin = lambda;
+   TString formula = "";
+   for (i=0; i<ncoeff; i++) {
+      sol->GetCoeff(i, cn, lambda);
+      formula += Form("%g*exp(-%g*x)",cn, lambda);
+      if (i < ncoeff-1) formula += "+";
+      if (lambda < lambdamin &&
+          lambda > 0.) lambdamin = lambda;
+   }
+   thi = 10./lambdamin;
+   formula += ";time[s]";
+   formula += Form(";N_%s/N_%s_0",sol->GetElement()->GetName(),sol->GetTopElement()->GetName());
+   // Create a function
+   TF1 *func = new TF1(Form("conc%s",sol->GetElement()->GetName()), formula.Data(), tlo,thi);
+   func->SetLineColor(sol->GetLineColor());
+   func->SetLineStyle(sol->GetLineStyle());
+   func->SetLineWidth(sol->GetLineWidth());
+   func->SetMarkerColor(sol->GetMarkerColor());
+   func->SetMarkerStyle(sol->GetMarkerStyle());
+   func->SetMarkerSize(sol->GetMarkerSize());
+   func->Draw(option);
+}   
 
 //______________________________________________________________________________
 void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)

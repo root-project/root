@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.14 2006/09/14 17:22:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.15 2006/09/14 17:39:29 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 #include "Riostream.h"
 
 #include"TObjArray.h"
-//#include "TF1.h"
+#include "TVirtualGeoPainter.h"
 #include "TGeoManager.h"
 #include"TGeoElement.h"
 
@@ -1093,31 +1093,8 @@ Double_t TGeoBatemanSol::Concentration(Double_t time) const
 void TGeoBatemanSol::Draw(Option_t *option)
 {
 // Draw the solution of Bateman equation versus time.
-   if (!fNcoeff) return;
-   Double_t tlo, thi;
-   Int_t i;
-   // Try to find the optimum range in time.
-   tlo = 0.;
-   Double_t lambdamin = fCoeff[0].lambda;
-   TString formula = "";
-   for (i=0; i<fNcoeff; i++) {
-      formula += Form("%g*exp(-%g*x)",fCoeff[i].cn, fCoeff[i].lambda);
-      if (i < fNcoeff-1) formula += "+";
-      if (fCoeff[i].lambda < lambdamin &&
-          fCoeff[i].lambda > 0.) lambdamin = fCoeff[i].lambda;
-   }
-   thi = 10./lambdamin;
-   formula += ";time[s]";
-   formula += Form(";N_%s/N_%s_0",fElem->GetName(),fElemTop->GetName());
-   // Create a function
-   //TF1 *func = new TF1(Form("conc%s",fElem->GetName()), formula.Data(), tlo,thi);
-   //func->SetLineColor(fLineColor);
-   //func->SetLineStyle(fLineStyle);
-   //func->SetLineWidth(fLineWidth);
-   //func->SetMarkerColor(fMarkerColor);
-   //func->SetMarkerStyle(fMarkerStyle);
-   //func->SetMarkerSize(fMarkerSize);
-   //func->Draw(option);
+   if (!gGeoManager) return;
+   gGeoManager->GetGeomPainter()->DrawBatemanSol(this, option);
 }      
                            
 //______________________________________________________________________________
