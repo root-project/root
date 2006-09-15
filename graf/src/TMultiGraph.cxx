@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.32 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.33 2006/07/08 20:28:08 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -523,9 +523,9 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 
    if (linear){
       if (fitOption.Robust)
-         grFitter->ExecuteCommand("FitMultiGraph", &h, 0);
+         fitResult = grFitter->ExecuteCommand("FitMultiGraph", &h, 0);
       else
-         grFitter->ExecuteCommand("FitMultiGraph", 0, 0);
+         fitResult = grFitter->ExecuteCommand("FitMultiGraph", 0, 0);
    } else {
 
       //Int_t special = f1->GetNumber();

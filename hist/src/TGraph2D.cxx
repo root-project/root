@@ -511,7 +511,7 @@ Int_t TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
    // Predefined functions such as gaus, expo and poln are automatically
    // created by ROOT.
    // fname can also be a formula, accepted by the linear fitter (linear parts divided
-   // by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
+   // by "++" sign), for example "x++sin(y)" for fitting "[0]*x+[1]*sin(y)"
 
 
    char *linear;
@@ -779,9 +779,9 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 
       if (linear){
          if (fitOption.Robust)
-            grFitter->ExecuteCommand("FitGraph2D", &h, 0);
+            fitResult = grFitter->ExecuteCommand("FitGraph2D", &h, 0);
          else
-            grFitter->ExecuteCommand("FitGraph2D", 0, 0);
+            fitResult = grFitter->ExecuteCommand("FitGraph2D", 0, 0);
       } else {
          // Some initialisations
          if (!fitOption.Verbose) {

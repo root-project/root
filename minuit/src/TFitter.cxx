@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.42 2006/05/13 21:49:17 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.43 2006/07/20 07:23:35 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -112,9 +112,24 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
 //NOTE, that the intervals are approximate for nonlinear(in parameters) models
 
    TF1 *f = (TF1*)fUserFunc;
-   Int_t npar = f->GetNpar();
-   Double_t *grad = new Double_t[npar];
+   Int_t npar = f->GetNumberFreeParameters();
+   Int_t npar_real = f->GetNpar();
+   Double_t *grad = new Double_t[npar_real];
    Double_t *sum_vector = new Double_t[npar];
+   Bool_t *fixed=0;
+   Double_t al, bl;
+   if (npar_real != npar){
+      fixed = new Bool_t[npar_real];
+
+      for (Int_t ipar=0; ipar<npar_real; ipar++){
+         fixed[ipar]=0;
+         f->GetParLimits(ipar,al,bl);
+         if (al*bl != 0 && al >= bl) {
+            //this parameter is fixed
+            fixed[ipar]=1;
+         }
+      }
+   }
    Double_t c=0;
 
    Double_t *matr = GetCovarianceMatrix();
@@ -122,24 +137,55 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
       return;
    Double_t t = TMath::StudentQuantile(cl, f->GetNDF());   
    Double_t chidf = TMath::Sqrt(f->GetChisquare()/f->GetNDF());
-
+   Int_t igrad, ifree=0;
    for (Int_t ipoint=0; ipoint<n; ipoint++){
       c=0;
       f->GradientPar(x+ndim*ipoint, grad);
       //multiply the covariance matrix by gradient
       for (Int_t irow=0; irow<npar; irow++){
          sum_vector[irow]=0;
-         for (Int_t icol=0; icol<npar; icol++)
-            sum_vector[irow]+=matr[irow*npar+icol]*grad[icol];
+         igrad = 0;
+         for (Int_t icol=0; icol<npar; icol++){
+            igrad = 0;
+            ifree=0;
+            if (fixed) {
+               //find the free parameter #icol
+               while (ifree<icol+1){
+                  if (fixed[igrad]==0) ifree++;
+                  igrad++;
+               }
+               igrad--;
+               //now the [igrad] element of gradient corresponds to [icol] element of cov.matrix
+            } else {
+               igrad = icol;
+            }
+            sum_vector[irow]+=matr[irow*npar_real+icol]*grad[igrad];
+         }
       }
-      for (Int_t i=0; i<npar; i++)
-         c+=grad[i]*sum_vector[i];
+      igrad = 0;
+      for (Int_t i=0; i<npar; i++){
+         igrad = 0; ifree=0;
+         if (fixed) {
+            //find the free parameter #icol
+            while (ifree<i+1){
+               if (fixed[igrad]==0) ifree++;
+               igrad++;
+            }
+            igrad--;
+         } else {
+            igrad = i;
+         }
+         c+=grad[igrad]*sum_vector[i];
+      }
+      
       c=TMath::Sqrt(c);
       ci[ipoint]=c*t*chidf;
    }
 
    delete [] grad;
    delete [] sum_vector;
+   if (fixed) 
+      delete [] fixed;
 }
 
 //______________________________________________________________________________

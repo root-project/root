@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.125 2006/08/28 07:42:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.126 2006/09/15 12:33:35 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2438,7 +2438,7 @@ Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 }
 
 //______________________________________________________________________________
-Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
+Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================
@@ -2464,9 +2464,12 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
    char *string_calc[gMAXSTRINGFOUND];
    Int_t precalculated = 0;
    Int_t precalculated_str = 0;
+   Double_t *params;
 
-   if (params) {
-      for (j=0;j<fNpar;j++) fParams[j] = params[j];
+   if (uparams) {
+      params = const_cast<Double_t*>(uparams);
+   } else {
+      params = fParams;
    }
    pos  = 0;
    pos2 = 0;
@@ -2478,7 +2481,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
 
       switch(opcode) {
 
-         case kParameter  : { pos++; tab[pos-1] = fParams[ oper & kTFOperMask ]; continue; }
+         case kParameter  : { pos++; tab[pos-1] = params[ oper & kTFOperMask ]; continue; }
          case kConstant   : { pos++; tab[pos-1] = fConst[ oper & kTFOperMask ]; continue; }
          case kVariable   : { pos++; tab[pos-1] = x[ oper & kTFOperMask ]; continue; }
          case kStringConst: { pos2++;tab2[pos2-1] = (char*)fExpr[i].Data(); pos++; tab[pos-1] = 0; continue; }
@@ -2624,7 +2627,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
          #define R__EXPO(var)                                                 \
          {                                                                    \
             pos++; int param = (oper & kTFOperMask);                          \
-            tab[pos-1] = TMath::Exp(fParams[param]+fParams[param+1]*x[var]);  \
+            tab[pos-1] = TMath::Exp(params[param]+params[param+1]*x[var]);  \
             continue;                                                         \
          }
          // case kexpo:
@@ -2632,13 +2635,13 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
          case kyexpo: R__EXPO(1);
          case kzexpo: R__EXPO(2);
          case kxyexpo:{ pos++; int param = (oper & kTFOperMask);
-                        tab[pos-1] = TMath::Exp(fParams[param]+fParams[param+1]*x[0]+fParams[param+2]*x[1]);
+                        tab[pos-1] = TMath::Exp(params[param]+params[param+1]*x[0]+params[param+2]*x[1]);
                         continue;  }
 
          #define R__GAUS(var)                                                    \
          {                                                                       \
             pos++; int param = (oper & kTFOperMask);                             \
-            tab[pos-1] = fParams[param]*TMath::Gaus(x[var],fParams[param+1],fParams[param+2],IsNormalized()); \
+            tab[pos-1] = params[param]*TMath::Gaus(x[var],params[param+1],params[param+2],IsNormalized()); \
             continue;                                                            \
          }
 
@@ -2648,24 +2651,24 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
          case kzgaus: R__GAUS(2);
          case kxygaus: {pos++; int param = (oper & kTFOperMask);
                         Double_t intermede1;
-                        if (fParams[param+2] == 0) {
+                        if (params[param+2] == 0) {
                            intermede1=1e10;
                         } else {
-                           intermede1=Double_t((x[0]-fParams[param+1])/fParams[param+2]);
+                           intermede1=Double_t((x[0]-params[param+1])/params[param+2]);
                         }
                         Double_t intermede2;
-                        if (fParams[param+4] == 0) {
+                        if (params[param+4] == 0) {
                            intermede2=1e10;
                         } else {
-                           intermede2=Double_t((x[1]-fParams[param+3])/fParams[param+4]);
+                           intermede2=Double_t((x[1]-params[param+3])/params[param+4]);
                         }
-                        tab[pos-1] = fParams[param]*TMath::Exp(-0.5*(intermede1*intermede1+intermede2*intermede2));
+                        tab[pos-1] = params[param]*TMath::Exp(-0.5*(intermede1*intermede1+intermede2*intermede2));
                         continue; }
 
          #define R__LANDAU(var)                                                                  \
          {                                                                                       \
             pos++; const int param = (oper & kTFOperMask);                                       \
-            tab[pos-1] = fParams[param]*TMath::Landau(x[var],fParams[param+1],fParams[param+2],IsNormalized()); \
+            tab[pos-1] = params[param]*TMath::Landau(x[var],params[param+1],params[param+2],IsNormalized()); \
             continue;                                                                            \
          }
          // case klandau:
@@ -2673,9 +2676,9 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
          case kylandau: R__LANDAU(1);
          case kzlandau: R__LANDAU(2);
          case kxylandau: { pos++; int param = oper&0x7fffff /* ActionParams[i] */ ;
-                           Double_t intermede1=TMath::Landau(x[0], fParams[param+1], fParams[param+2],IsNormalized());
-                           Double_t intermede2=TMath::Landau(x[1], fParams[param+2], fParams[param+3],IsNormalized());
-                           tab[pos-1] = fParams[param]*intermede1*intermede2;
+                           Double_t intermede1=TMath::Landau(x[0], params[param+1], params[param+2],IsNormalized());
+                           Double_t intermede2=TMath::Landau(x[1], params[param+2], params[param+3],IsNormalized());
+                           tab[pos-1] = params[param]*intermede1*intermede2;
                            continue;
          }
 
@@ -2686,7 +2689,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
             Int_t inter = param/100; /* arrondit */                            \
             Int_t int1= param-inter*100-1; /* aucune simplification ! (sic) */ \
             for (j=0 ;j<inter+1;j++) {                                         \
-               tab[pos-1] += intermede*fParams[j+int1];                        \
+               tab[pos-1] += intermede*params[j+int1];                        \
                intermede *= x[var];                                            \
             }                                                                  \
             continue;                                                          \
@@ -3838,7 +3841,7 @@ Double_t TFormula::EvalPrimitive4(const Double_t *x, const Double_t *params)
 
 
 //______________________________________________________________________________
-Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
+Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
 {
    //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                  =====================
@@ -3854,7 +3857,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
    //*-*
    //*-*
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
+   const Double_t  *pdata[3] = {x,(uparams!=0)?uparams:fParams, fConst};
    //
    Int_t i,j,pos,pos2; // ,inter,inter2,int1,int2;
    //    Float_t aresult;
@@ -3866,9 +3869,18 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
    Int_t precalculated = 0;
    Int_t precalculated_str = 0;
 
-   if (params) {
-      for (j=0;j<fNpar;j++) fParams[j] = params[j];
+   Double_t *params;
+
+   if (uparams) {
+      //for (j=0;j<fNpar;j++) fParams[j] = params[j];
+      params = const_cast<Double_t*>(uparams);
+   } else {
+      params = fParams;
    }
+
+   //if (params) {
+   // for (j=0;j<fNpar;j++) fParams[j] = params[j];
+   //}
    pos  = 0;
    pos2 = 0;
    //   for (i=0; i<fNoper; ++i) {
@@ -3996,7 +4008,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
 #define R__EXPO(var)                                                         \
          {                                                                   \
            pos++; int param = (oper & kTFOperMask);                          \
-           tab[pos-1] = TMath::Exp(fParams[param]+fParams[param+1]*x[var]);  \
+           tab[pos-1] = TMath::Exp(params[param]+params[param+1]*x[var]);  \
            continue;                                                         \
          }
          // case kexpo:
@@ -4004,7 +4016,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
          case kyexpo: R__EXPO(1);
          case kzexpo: R__EXPO(2);
          case kxyexpo:{  pos++; int param = (oper & kTFOperMask);
-            tab[pos-1] = TMath::Exp(fParams[param]+fParams[param+1]*x[0]+fParams[param+2]*x[1]);
+            tab[pos-1] = TMath::Exp(params[param]+params[param+1]*x[0]+params[param+2]*x[1]);
             continue;  }
 #ifdef R__GAUS
 #undef R__GAUS
@@ -4012,8 +4024,8 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
 #define R__GAUS(var)                                                                           \
                      {                                                                         \
                      pos++; int param = (oper & kTFOperMask);                                  \
-                     tab[pos-1] = fParams[param]*TMath::Gaus(x[var],fParams[param+1],          \
-                                                             fParams[param+2],IsNormalized()); \
+                     tab[pos-1] = params[param]*TMath::Gaus(x[var],params[param+1],          \
+                                                             params[param+2],IsNormalized()); \
                      continue;                                                                 \
                      }
 
@@ -4023,24 +4035,24 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
          case kzgaus: R__GAUS(2);
          case kxygaus: { pos++; int param = (oper & kTFOperMask);
             Double_t intermede1;
-            if (fParams[param+2] == 0) {
+            if (params[param+2] == 0) {
                intermede1=1e10;
             } else {
-               intermede1=Double_t((x[0]-fParams[param+1])/fParams[param+2]);
+               intermede1=Double_t((x[0]-params[param+1])/params[param+2]);
             }
             Double_t intermede2;
-            if (fParams[param+4] == 0) {
+            if (params[param+4] == 0) {
                intermede2=1e10;
             } else {
-               intermede2=Double_t((x[1]-fParams[param+3])/fParams[param+4]);
+               intermede2=Double_t((x[1]-params[param+3])/params[param+4]);
             }
-            tab[pos-1] = fParams[param]*TMath::Exp(-0.5*(intermede1*intermede1+intermede2*intermede2));
+            tab[pos-1] = params[param]*TMath::Exp(-0.5*(intermede1*intermede1+intermede2*intermede2));
             continue; }
 
 #define R__LANDAU(var)                                                                  \
                       {                                                                                       \
                       pos++; const int param = (oper & kTFOperMask);                                       \
-                      tab[pos-1] = fParams[param]*TMath::Landau(x[var],fParams[param+1],fParams[param+2],IsNormalized()); \
+                      tab[pos-1] = params[param]*TMath::Landau(x[var],params[param+1],params[param+2],IsNormalized()); \
                       continue;                                                                            \
                       }
                       // case klandau:
@@ -4048,9 +4060,9 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
          case kylandau: R__LANDAU(1);
          case kzlandau: R__LANDAU(2);
          case kxylandau: { pos++; int param = oper&0x7fffff /* ActionParams[i] */ ;
-            Double_t intermede1=TMath::Landau(x[0], fParams[param+1], fParams[param+2],IsNormalized());
-            Double_t intermede2=TMath::Landau(x[1], fParams[param+2], fParams[param+3],IsNormalized());
-            tab[pos-1] = fParams[param]*intermede1*intermede2;
+            Double_t intermede1=TMath::Landau(x[0], params[param+1], params[param+2],IsNormalized());
+            Double_t intermede2=TMath::Landau(x[1], params[param+2], params[param+3],IsNormalized());
+            tab[pos-1] = params[param]*intermede1*intermede2;
             continue;
                         }
 
@@ -4061,7 +4073,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
                         Int_t inter = param/100; /* arrondit */                            \
                         Int_t int1= param-inter*100-1; /* aucune simplification ! (sic) */ \
                         for (j=0 ;j<inter+1;j++) {                                         \
-                        tab[pos-1] += intermede*fParams[j+int1];                           \
+                        tab[pos-1] += intermede*params[j+int1];                           \
                         intermede *= x[var];                                               \
                         }                                                                  \
                         continue;                                                          \

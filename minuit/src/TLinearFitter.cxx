@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.30 2006/08/08 16:02:44 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.31 2006/08/10 10:30:04 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TMultiGraph.h"
 #include "TRandom.h"
 #include "TObjString.h"
+#include "TF1.h"
 
 
 ClassImp(TLinearFitter)
@@ -687,14 +688,15 @@ void TLinearFitter::ComputeTValues()
 }
 
 //______________________________________________________________________________
-void TLinearFitter::Eval()
+Int_t TLinearFitter::Eval()
 {
    // Perform the fit and evaluate the parameters
+   // Returns 0 if the fit is ok, 1 if there are errors
 
    Double_t e;
    if (fFunctions.IsEmpty()&&(!fInputFunction)&&(fSpecial<200)){
       Error("TLinearFitter::Eval", "The formula hasn't been set");
-      return;
+      return 1;
    }
    //
    fParams.ResizeTo(fNfunctions);
@@ -721,7 +723,7 @@ void TLinearFitter::Eval()
             ((TF1*)fInputFunction)->SetNDF(0);
             ((TF1*)fInputFunction)->SetNumberFitPoints(0);
          }
-         return;
+         return 1;
       }
    }
    //
@@ -780,7 +782,7 @@ void TLinearFitter::Eval()
       fParCovar.Zero();
       fTValues.Zero();
       fParSign.Zero();
-      return;
+      return 1;
    }
    fParams=coef;
    fParCovar=chol.Invert();
@@ -814,6 +816,7 @@ void TLinearFitter::Eval()
          }
       }
    }
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -833,6 +836,8 @@ void TLinearFitter::FixParameter(Int_t ipar)
       Error("FixParameter", "no free parameters left");
       return;
    }
+   if (!fFixedParams)
+      fFixedParams = new Bool_t[fNfunctions];
    fFixedParams[ipar] = 1;
    fNfixed++;
 }
@@ -850,7 +855,11 @@ void TLinearFitter::FixParameter(Int_t ipar, Double_t parvalue)
       Error("FixParameter", "no free parameters left");
       return;
    }
+   if(!fFixedParams)
+      fFixedParams = new Bool_t[fNfunctions];
    fFixedParams[ipar] = 1;
+   if (fParams.GetNoElements()<fNfunctions)
+      fParams.ResizeTo(fNfunctions);
    fParams(ipar) = parvalue;
    fNfixed++;
 }
@@ -912,8 +921,9 @@ void TLinearFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *
          //multiply the covariance matrix by gradient
          for (Int_t irow=0; irow<fNfunctions; irow++){
             sum_vector[irow]=0;
-            for (Int_t icol=0; icol<fNfunctions; icol++)
+            for (Int_t icol=0; icol<fNfunctions; icol++){
                sum_vector[irow]+=fParCovar(irow,icol)*grad[icol];
+            }
          }
          for (Int_t i=0; i<fNfunctions; i++)
             c+=grad[i]*sum_vector[i];
@@ -1399,6 +1409,15 @@ void TLinearFitter::SetFormula(TFormula *function)
    fY2=0;
    for (Int_t i=0; i<size; i++)
       fFixedParams[i]=0;
+   //check if any parameters are fixed
+   Double_t al,bl;
+   for (Int_t i=0;i<fNfunctions;i++) {
+      ((TF1*)function)->GetParLimits(i,al,bl);
+      if (al*bl != 0 && al >= bl) {
+         FixParameter(i, function->GetParameter(i));
+      }
+   }
+
    fIsSet=kFALSE;
    fChisquare=0;
 
@@ -1425,18 +1444,18 @@ Int_t TLinearFitter::ExecuteCommand(const char *command, Double_t *args, Int_t /
    //To use in TGraph::Fit and TH1::Fit().
 
    if (!strcmp(command, "FitGraph")){
-      if (args)      GraphLinearFitter(args[0]);
-      else           GraphLinearFitter(0);
+      if (args)      return GraphLinearFitter(args[0]);
+      else           return GraphLinearFitter(0);
    }
    if (!strcmp(command, "FitGraph2D")){
-      if (args)      Graph2DLinearFitter(args[0]);
-      else           Graph2DLinearFitter(0);
+      if (args)      return Graph2DLinearFitter(args[0]);
+      else           return Graph2DLinearFitter(0);
    }
    if (!strcmp(command, "FitMultiGraph")){
-      if (args)      MultiGraphLinearFitter(args[0]);
-      else           MultiGraphLinearFitter(0);
+      if (args)     return  MultiGraphLinearFitter(args[0]);
+      else          return  MultiGraphLinearFitter(0);
    }
-   if (!strcmp(command, "FitHist"))       HistLinearFitter();
+   if (!strcmp(command, "FitHist"))       return HistLinearFitter();
 //   if (!strcmp(command, "FitMultiGraph")) MultiGraphLinearFitter();
 
    return 0;
@@ -1464,7 +1483,7 @@ void TLinearFitter::PrintResults(Int_t level, Double_t /*amin*/) const
 }
 
 //______________________________________________________________________________
-void TLinearFitter::GraphLinearFitter(Double_t h)
+Int_t TLinearFitter::GraphLinearFitter(Double_t h)
 {
    //Used in TGraph::Fit().
 
@@ -1478,6 +1497,7 @@ void TLinearFitter::GraphLinearFitter(Double_t h)
    Double_t *y=grr->GetY();
    Double_t e;
 
+   Int_t fitResult = 0;
    //set the fitting formula
    SetDim(1);
    SetFormula(f1);
@@ -1497,11 +1517,10 @@ void TLinearFitter::GraphLinearFitter(Double_t h)
    }
 
    if (fitOption.Robust){
-      EvalRobust(h);
-      return;
+      return EvalRobust(h);
    }
 
-   Eval();
+   fitResult = Eval();
 
    //calculate the precise chisquare
    if (!fitOption.Nochisq){
@@ -1520,10 +1539,11 @@ void TLinearFitter::GraphLinearFitter(Double_t h)
       fChisquare=sumtotal;
       f1->SetChisquare(fChisquare);
    }
+   return fitResult;
 }
 
 //______________________________________________________________________________
-void TLinearFitter::Graph2DLinearFitter(Double_t h)
+Int_t TLinearFitter::Graph2DLinearFitter(Double_t h)
 {
    //Minimisation function for a TGraph2D
    StoreData(kFALSE);
@@ -1546,7 +1566,7 @@ void TLinearFitter::Graph2DLinearFitter(Double_t h)
    //Double_t fymax = f2->GetYmax();
    Double_t x[2];
    Double_t z, e;
-
+   Int_t fitResult=0;
    SetDim(2);
    SetFormula(f2);
 
@@ -1562,8 +1582,6 @@ void TLinearFitter::Graph2DLinearFitter(Double_t h)
          continue;
       }
       z   = gz[bin];
-      //if (gre && !fitOption.W1) e  = gr->GetErrorZ(bin);
-      //else e = 1;
       e=gr->GetErrorZ(bin);
       if (e<0 || fitOption.W1)
          e=1;
@@ -1571,11 +1589,10 @@ void TLinearFitter::Graph2DLinearFitter(Double_t h)
    }
 
    if (fitOption.Robust){
-      EvalRobust(h);
-      return;
+      return EvalRobust(h);
    }
 
-   Eval();
+   fitResult = Eval();
 
    if (!fitOption.Nochisq){
       Double_t temp, temp2, sumtotal=0;
@@ -1589,10 +1606,6 @@ void TLinearFitter::Graph2DLinearFitter(Double_t h)
 
          temp=f2->Eval(x[0], x[1]);
          temp2=(z-temp)*(z-temp);
-         //if (gre && !fitOption.W1)
-         //   e=gr->GetErrorZ(bin);
-         //else
-         //   e=1;
          e=gr->GetErrorZ(bin);
          if (e<0 || fitOption.W1)
             e=1;
@@ -1603,10 +1616,11 @@ void TLinearFitter::Graph2DLinearFitter(Double_t h)
       fChisquare=sumtotal;
       f2->SetChisquare(fChisquare);
    }
+   return fitResult;
 }
 
 //______________________________________________________________________________
-void TLinearFitter::MultiGraphLinearFitter(Double_t h)
+Int_t TLinearFitter::MultiGraphLinearFitter(Double_t h)
 {
    //Minimisation function for a TMultiGraph
    Int_t n, i;
@@ -1616,7 +1630,7 @@ void TLinearFitter::MultiGraphLinearFitter(Double_t h)
    TMultiGraph *mg     = (TMultiGraph*)grFitter->GetObjectFit();
    TF1 *f1   = (TF1*)grFitter->GetUserFunc();
    Foption_t fitOption = grFitter->GetFitOption();
-
+   Int_t fitResult=0;
    SetDim(1);
 
    if (fitOption.Robust){
@@ -1641,11 +1655,10 @@ void TLinearFitter::MultiGraphLinearFitter(Double_t h)
    }
 
    if (fitOption.Robust){
-      EvalRobust(h);
-      return;
+      return EvalRobust(h);
    }
 
-   Eval();
+   fitResult = Eval();
 
    //calculate the chisquare
    if (!fitOption.Nochisq){
@@ -1671,10 +1684,11 @@ void TLinearFitter::MultiGraphLinearFitter(Double_t h)
       fChisquare=sumtotal;
       f1->SetChisquare(fChisquare);
    }
+   return fitResult;
 }
 
 //______________________________________________________________________________
-void TLinearFitter::HistLinearFitter()
+Int_t TLinearFitter::HistLinearFitter()
 {
    // Minimization function for H1s using a Chisquare method.
 
@@ -1687,9 +1701,8 @@ void TLinearFitter::HistLinearFitter()
 
    TH1 *hfit = (TH1*)GetObjectFit();
    TF1 *f1   = (TF1*)GetUserFunc();
-
+   Int_t fitResult;
    Foption_t fitOption = GetFitOption();
-   //   printf("%s\n", f1->GetName());
    SetDim(hfit->GetDimension());
    SetFormula(f1);
 
@@ -1724,7 +1737,7 @@ void TLinearFitter::HistLinearFitter()
       }
    }
 
-   Eval();
+   fitResult = Eval();
 
    if (!fitOption.Nochisq){
       Double_t temp, temp2, sumtotal=0;
@@ -1755,10 +1768,11 @@ void TLinearFitter::HistLinearFitter()
       fChisquare=sumtotal;
       f1->SetChisquare(fChisquare);
    }
+   return fitResult;
 }
 
 //______________________________________________________________________________
-void TLinearFitter::EvalRobust(Double_t h)
+Int_t TLinearFitter::EvalRobust(Double_t h)
 {
    //Finds the parameters of the fitted function in case data contains
    //outliers.
@@ -1852,7 +1866,7 @@ void TLinearFitter::EvalRobust(Double_t h)
       delete [] index;
       delete [] bestindex;
       delete [] residuals;
-      return;
+      return 0;
    }
    //if n is large, the dataset should be partitioned
    Int_t indsubdat[5];
@@ -1947,7 +1961,7 @@ void TLinearFitter::EvalRobust(Double_t h)
    delete [] residuals;
    delete [] index;
 
-   return;
+   return 0;
 }
 
 //____________________________________________________________________________

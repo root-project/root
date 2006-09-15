@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.309 2006/09/12 06:36:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.310 2006/09/14 12:46:33 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1151,7 +1151,9 @@ Double_t TH1::Chi2TestX(const TH1 *h, Double_t &chi2, Int_t &ndf, Option_t *opti
       i_start = fXaxis.GetFirst();
       i_end   = fXaxis.GetLast();
    }
+
    ndf = i_end-i_start-constraint;
+
 
    if(opt.Contains("O")) {
       i_end = nbins1+1;
@@ -2589,7 +2591,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
    hFitter->SetCache(np,psize);
 
    if (linear){
-      hFitter->ExecuteCommand("FitHist", 0, 0);
+      fitResult = hFitter->ExecuteCommand("FitHist", 0, 0);
    } else {
       //   - If case of a predefined function, then compute initial values of parameters
       if (fitOption.Bound) special = 0;

@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.13 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.14 2006/08/08 16:02:44 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -201,10 +201,10 @@ private:
 
    void AddToDesign(Double_t *x, Double_t y, Double_t e);
    void ComputeTValues();
-   void GraphLinearFitter(Double_t h);
-   void Graph2DLinearFitter(Double_t h);
-   void HistLinearFitter();
-   void MultiGraphLinearFitter(Double_t h);
+   Int_t GraphLinearFitter(Double_t h);
+   Int_t Graph2DLinearFitter(Double_t h);
+   Int_t HistLinearFitter();
+   Int_t MultiGraphLinearFitter(Double_t h);
 
    //robust fitting functions:
    Int_t     Partition(Int_t nmini, Int_t *indsubdat);
@@ -228,8 +228,8 @@ public:
    virtual void       Clear(Option_t *option="");
    virtual void       ClearPoints();
    virtual void       Chisquare();
-   virtual void       Eval();
-   virtual void       EvalRobust(Double_t h=-1);
+   virtual Int_t      Eval();
+   virtual Int_t      EvalRobust(Double_t h=-1);
    virtual Int_t      ExecuteCommand(const char *command, Double_t *args, Int_t nargs);
    virtual void       FixParameter(Int_t ipar);
    virtual void       FixParameter(Int_t ipar, Double_t parvalue);

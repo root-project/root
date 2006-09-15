@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.192 2006/09/05 09:39:39 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.193 2006/09/14 12:46:32 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1362,9 +1362,9 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
    if (linear){
       if (fitOption.Robust)
-         grFitter->ExecuteCommand("FitGraph", &h, 0);
+         fitResult = grFitter->ExecuteCommand("FitGraph", &h, 0);
       else
-         grFitter->ExecuteCommand("FitGraph", 0, 0);
+         fitResult = grFitter->ExecuteCommand("FitGraph", 0, 0);
    } else {
 
       //Int_t special = f1->GetNumber();

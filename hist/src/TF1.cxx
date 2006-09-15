@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.127 2006/06/16 15:40:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.128 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1644,6 +1644,7 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
       if (integ < 0) {intNegative++; integ = -integ;}
       integral[i+1] = integral[i] + integ;
    }
+
    if (intNegative > 0)
       Warning("GetQuantiles","function:%s has %d negative values: abs assumed",
       GetName(),intNegative);
@@ -1973,7 +1974,9 @@ void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
    //if the errors have not been computed, step=eps is used
    //default value of eps = 0.01
    //Method is the same as in Derivative() function
-   
+   //
+   //If a paramter is fixed, the gradient on this parameter = 0
+
    if(eps< 1e-10 || eps > 1) {
       Warning("Derivative","parameter esp=%g out of allowed range[1e-10,1], reset to 0.01",eps);
       eps = 0.01;
@@ -1997,23 +2000,32 @@ void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
          errorsComputed=kTRUE;
    }
 
+   Double_t al, bl;
+   Double_t f1, f2, g1, g2, h2, d0, d2;
    for (Int_t ipar=0; ipar<fNpar; ipar++){
 
       func->InitArgs(x, params);
+
+      ((TF1*)this)->GetParLimits(ipar,al,bl);
+      if (al*bl != 0 && al >= bl) {
+         //this parameter is fixed
+         grad[ipar]=0;
+         continue;
+      }
+
       if (errorsComputed)
          h = eps*func->GetParError(ipar);
       else 
          h=eps;
-      params[ipar] = fParams[ipar]+h;     Double_t f1 = func->EvalPar(x,params);
-      params[ipar] = fParams[ipar]-h;     Double_t f2 = func->EvalPar(x,params);
-      
-      params[ipar] = fParams[ipar]+h/2;   Double_t g1 = func->EvalPar(x,params);
-      params[ipar] = fParams[ipar]-h/2;   Double_t g2 = func->EvalPar(x,params);
-      
+      params[ipar] = fParams[ipar]+h;     f1 = func->EvalPar(x,params);
+      params[ipar] = fParams[ipar]-h;     f2 = func->EvalPar(x,params);
+      params[ipar] = fParams[ipar]+h/2;   g1 = func->EvalPar(x,params);
+      params[ipar] = fParams[ipar]-h/2;   g2 = func->EvalPar(x,params);
+
       //compute the central differences
-      Double_t h2    = 1/(2.*h);
-      Double_t d0    = f1 - f2;
-      Double_t d2    = 2*(g1 - g2);
+      h2    = 1/(2.*h);
+      d0    = f1 - f2;
+      d2    = 2*(g1 - g2);
       
       grad[ipar] = h2*(4*d2 - d0)/3.;
       params[ipar]=fParams[ipar];  
@@ -3208,6 +3220,7 @@ Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params,
    fnc.SetParameter(fNpar+1,n);
    fgAbsValue = kFALSE;
    Double_t res = fnc.Integral(a,b,params,epsilon)/norm;
+
    return res;
 }
 
