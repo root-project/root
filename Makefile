@@ -443,7 +443,7 @@ endif
 ##### TARGETS #####
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata importcint \
-                version html changelog install uninstall showbuild cintdlls \
+                version html changelog install uninstall showbuild \
                 static map debian redhat skip $(POSTBIN) \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,map-%,$(MODULES)) \
@@ -462,7 +462,7 @@ skip:
 		@true;
 
 include $(patsubst %,%/Module.mk,$(MODULES))
-include cint/cintdlls.mk # include after all the others
+include cint/cintdlls.mk
 
 -include MyRules.mk            # allow local rules
 
@@ -485,7 +485,7 @@ rootcint:       all-cint all-utils
 
 rootlibs:       rootcint compiledata $(ALLLIBS)
 
-rootexecs:      rootlibs cintdlls $(ALLEXECS)
+rootexecs:      rootlibs $(ALLEXECS)
 
 compiledata:    $(COMPILEDATA)
 

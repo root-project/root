@@ -3,28 +3,11 @@
 #
 # Author: Axel Naumann, 2006-09-14
 
-MODDIR       := cint
-MODDIRS      := $(MODDIR)/src
-MODDIRI      := $(MODDIR)/inc
+.PHONY: cintdlls distclean-cintdlls clean-cintdlls
 
-CINTDIR      := $(MODDIR)
-CINTDIRS     := $(CINTDIR)/src
-CINTDIRI     := $(CINTDIR)/inc
-CINTDIRM     := $(CINTDIR)/main
-CINTDIRT     := $(CINTDIR)/tool
-CINTDIRL     := $(CINTDIR)/lib
-CINTDIRDLLS  := $(CINTDIR)/include
-CINTDIRSTL   := $(CINTDIR)/stl
-CINTDIRDLLSTL:= $(CINTDIRL)/dll_stl
-
-CINTCONF     := include/configcint.h
-CINTCONFMK   := $(MODDIR)/configcint.mk
-
-CINTCXXFLAGS += -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY
-
-# no: string valarray, limits iterator pair vectorbool
+# no: string valarray limits iterator pair vectorbool
 CINTSTLDLLNAMES = vector list deque map map2 set multimap multimap2 multiset \
-           stack queue exception complex
+                  stack queue exception complex
 CINTINCDLLNAMES = stdfunc stdcxxfunc
 ifneq ($(PLATFORM),win32)
 # FIX THEM!
@@ -33,13 +16,13 @@ endif
 # ".dll", not ".$(SOEXT)"!
 CINTDLLS = $(addsuffix .dll,$(addprefix $(CINTDIRSTL)/,$(CINTSTLDLLNAMES)) \
                             $(addprefix $(CINTDIRDLLS)/,$(CINTINCDLLNAMES)))
-CINTDLLS := $(subst /ipc.dll,/sys/ipc.$(SOEXT),\
+CINTDLLS := $(subst /ipc.dll,/sys/ipc.$(SOEXT), \
             $(subst /posix.dll,/posix.$(SOEXT),$(CINTDLLS)))
 
 CINTDLLNAMES = $(CINTSTLDLLNAMES) $(CINTINCDLLNAMES)
 
-
 # these need dictionaries
+CINTDICTDLLS =
 ifneq ($(findstring vector,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libvectorDict.$(SOEXT)
 $(CINTDIRSTL)/vector.dll: metautils/src/stlLoader_vector.o
@@ -77,8 +60,10 @@ CINTDICTDLLS += lib/libvalarrayDict.$(SOEXT)
 $(CINTDIRSTL)/valarray.dll: metautils/src/stlLoader_valarray.o
 endif
 
-
 ALLCINTDLLS = $(CINTDLLS) $(CINTDICTDLLS)
+
+# used in the main Makefile
+ALLLIBS    += $(ALLCINTDLLS)
 
 cintdlls: $(ALLCINTDLLS)
 
@@ -107,10 +92,9 @@ $(CINTDIRL)/G__c_stdfunc.c:		$(CINTDIRL)/stdstrct/stdfunc.h
 $(CINTDIRL)/G__c_posix.c:		$(CINTDIRL)/posix/exten.h
 $(CINTDIRL)/G__c_ipc.c:			$(CINTDIRL)/ipc/ipcif.h
 
-
 FAVOR_SYSINC := -I-
 ifeq ($(PLATFORM),sgi)
-   FAVOR_SYSINC=
+   FAVOR_SYSINC =
 endif
 CINTDLLINCDIRS := -I. -I$(CINTDIRDLLSTL) $(FAVOR_SYSINC)
 ifeq ($(GCC_MAJOR),4)
@@ -146,23 +130,21 @@ $(CINTDIRDLLS)/%.dll: $(CINTDIRL)/G__c_%.o
 metautils/src/stlLoader_%.o: metautils/src/stlLoader.cc
 	$(CXX) $(OPT) $(CINTCXXFLAGS) $(INCDIRS) -DWHAT=\"$*\" $(CXXOUT)$@ -c $<
 
-$(CINTDIRDLLSTL)/G__cpp_%.cxx: $(ORDER_) $(CINTTMP)
+$(CINTDIRDLLSTL)/G__cpp_%.cxx: $(CINTTMP) $(IOSENUM)
 	$(CINTTMP) -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
-            -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRDLLSTL) -I$(CINTDIRL) \
-            -c-1 -A -Z0 $(filter %.h,$^)
+	   -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRDLLSTL) -I$(CINTDIRL) \
+	   -c-1 -A -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
 
-$(CINTDIRDLLINC)/G__cpp_%.cxx: $(ORDER_) $(CINTTMP)
+$(CINTDIRDLLINC)/G__cpp_%.cxx: $(CINTTMP) $(IOSENUM)
 	$(CINTTMP) -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
-            -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRDLLSTL) -I$(CINTDIRL) \
-            -c-1 -A -Z0 $(filter %.h,$^)
+	   -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRDLLSTL) -I$(CINTDIRL) \
+	   -c-1 -A -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
 
-$(CINTDIRL)/G__c_%.c: $(ORDER_) $(CINTTMP)
+$(CINTDIRL)/G__c_%.c: $(CINTTMP) $(IOSENUM)
 	$(CINTTMP) -K -w1 -z$(notdir $*) -n$@ -D__MAKECINT__ -DG__MAKECINT \
-        -c-2 -Z0 $(filter %.h,$^)
+	   -c-2 -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
 
 $(CINTDIRL)/G__c_%.o: CINTCFLAGS += -I. -DG__SYSTYPES_H
-#$(CINTDIRL)/G__c_%.o: $(CINTDIRL)/G__c_%.c
-#	$(CC) $(OPT) $(CINTCFLAGS) -I. $(CXXOUT)$@ -c $<
 
 ##### posix special treatment
 $(CINTDIRL)/posix/exten.o: $(CINTDIRL)/posix/exten.c
@@ -170,8 +152,8 @@ $(CINTDIRL)/posix/exten.o: $(CINTDIRL)/posix/exten.c
 
 $(CINTDIRL)/G__c_posix.c: $(CINTDIRDLLS)/sys/types.h cint/lib/posix/exten.h
 
-$(CINTDIRDLLS)/posix.$(SOEXT): $(CINTDIRL)/G__c_posix.o metautils/src/stlLoader_posix.o \
-	                      $(CINTDIRL)/posix/exten.o
+$(CINTDIRDLLS)/posix.$(SOEXT): $(CINTDIRL)/G__c_posix.o \
+   metautils/src/stlLoader_posix.o $(CINTDIRL)/posix/exten.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ "$^"
 
 $(CINTDIRDLLS)/sys/types.h: $(CINTDIRL)/posix/mktypes$(EXEEXT)
@@ -184,15 +166,16 @@ $(CINTDIRL)/posix/mktypes$(EXEEXT): $(CINTDIRL)/posix/mktypes.c
 ##### posix special treatment - END
 
 ##### ipc special treatment
-$(CINTDIRDLLS)/sys/ipc.$(SOEXT): $(CINTDIRL)/G__c_ipc.o metautils/src/stlLoader_ipc.o
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $^
+$(CINTDIRDLLS)/sys/ipc.$(SOEXT): $(CINTDIRL)/G__c_ipc.o \
+   metautils/src/stlLoader_ipc.o
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ "$^"
 ##### ipc special treatment - END
 
 ##### dictionaries
 $(CINTDIRDLLSTL)/rootcint_%.cxx: $(ROOTCINTTMPEXE)
 	$(ROOTCINTTMP) -f $@ -c \
-	$(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) $(subst multi,,${*:2=}) \
-	metautils/src/${*:2=}Linkdef.h
+	   $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) $(subst multi,,${*:2=}) \
+	   metautils/src/${*:2=}Linkdef.h
 
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDIRDLLSTL)/rootcint_%.o,$(CINTDICTDLLS)): CINTCXXFLAGS += -I.
 
@@ -208,9 +191,6 @@ endif
 ##### dictionaries - END
 
 ##### clean
-.PHONY: distclean-cintdlls clean-cintdlls
-clean:: clean-cintdlls
-distclean:: distclean-cintdlls
 
 # remove only .o, .dll, .$(SOEXT)
 clean-cintdlls:
@@ -222,6 +202,8 @@ clean-cintdlls:
 	  $(CINTDIRL)/posix/exten.o $(CINTDIRSTL)/posix.dll \
 	  $(CINTDIRL)/posix/G__c_posix.o
 
+clean:: clean-cintdlls
+
 # remove generated code, too.
 distclean-cintdlls: clean-cintdlls
 	@(for cintdll in $(CINTDLLNAMES); do \
@@ -230,4 +212,7 @@ distclean-cintdlls: clean-cintdlls
 	  metautils/src/stlLoader_$${cintdll}.*; done)
 	@rm -f $(ALLCINTDLLS) \
 	  $(CINTDIRL)/posix/G__c_posix.* $(CINTDIRL)/posix/mktypes$(EXEEXT)
+
+distclean:: distclean-cintdlls
+
 ##### clean - END
