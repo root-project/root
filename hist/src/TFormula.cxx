@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.124 2006/08/25 10:07:34 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.125 2006/08/28 07:42:11 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2761,7 +2761,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
 }
 
 //------------------------------------------------------------------------------
-TString TFormula::GetExpFormula() const
+TString TFormula::GetExpFormula(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*Reconstruct the formula expression from*-*-*-*-*-*-*-*-*-*-*
 //*-*              the internal TFormula member variables
@@ -2772,7 +2772,14 @@ TString TFormula::GetExpFormula() const
 //*-*   instance. This function can be used to get an expanded version of the
 //*-*   expression originally assigned to the TFormula instance, i.e. that
 //*-*   the string returned by GetExpFormula() doesn't depend on other
-//*-*   TFormula object names
+//*-*   TFormula object names.
+//*-*
+//*-*  if option contains "p" the returned string will contain the formula
+//*-*  expression with symbolic parameters, eg [0] replaced by the actual value
+//*-*  of the parameter. Example:
+//*-*  if expression in formula is: "[0]*(x>-[1])+[2]*exp(-[3]*x)"
+//*-*  and parameters are 3.25,-4.01,4.44,-0.04, GetExpFormula("p") will return:
+//*-*   "(3.25*(x>+4.01))+(4.44*exp(+0.04*x))"
 
    if (fNoper>0) {
       TString* tab=new TString[fNoper];
@@ -2884,6 +2891,21 @@ TString TFormula::GetExpFormula() const
       if (spos > 0) ret = tab[spos-1];
       delete[] tab;
       delete[] ismulti;
+      
+      //if option "p" is specified, return the real values of parameters instead of [0]
+      TString opt = option;
+      opt.ToLower();
+      if (opt.Contains("p")) {
+         char pb[10];
+         char pbv[100];
+         for (j=0;j<fNpar;j++) {
+            sprintf(pb,"[%d]",j);
+            sprintf(pbv,"%g",fParams[j]);
+            ret.ReplaceAll(pb,pbv);
+         }
+         ret.ReplaceAll("--","+");
+         ret.ReplaceAll("+-","-");
+      }
       return ret;
    } else{
       TString ret="";

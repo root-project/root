@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.31 2005/08/10 12:47:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.32 2006/05/16 16:50:02 couet Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -229,7 +229,7 @@ public:
    virtual Int_t       GetNdim() const {return fNdim;}
    virtual Int_t       GetNpar() const {return fNpar;}
    virtual Int_t       GetNumber() const {return fNumber;}
-   virtual TString     GetExpFormula() const;
+   virtual TString     GetExpFormula(Option_t *option="") const;
    Double_t            GetParameter(Int_t ipar) const;
    Double_t            GetParameter(const char *name) const;
    virtual Double_t   *GetParameters() const {return fParams;}
