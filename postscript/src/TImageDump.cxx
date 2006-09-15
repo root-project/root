@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.18 2006/05/31 07:48:56 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.19 2006/09/13 16:24:54 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -484,7 +484,7 @@ void TImageDump::DrawPS(Int_t, Float_t *, Float_t *)
 void TImageDump::NewPage()
 {
    // Start new page. This function initialize the pad conversion
-   // coefficients and ouput the <svg> directive which is close later in the
+   // coefficients and output the directive which is close later in the
    // the function Close.
 
    if (!gPad) {

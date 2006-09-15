@@ -76,6 +76,8 @@
 #include "THashTable.h"
 #include "TPluginManager.h"
 #include "TFile.h"
+#include "TEnv.h"
+#include "TStyle.h"
 
 #ifndef WIN32
 #   include <X11/Xlib.h>
@@ -107,6 +109,9 @@ Bool_t TASImage::fgInit = kFALSE;
 static ASFontManager *gFontManager = 0;
 static unsigned long kAllPlanes = ~0;
 THashTable *TASImage::fgPlugList = new THashTable(50);
+
+// default icon paths
+static char *gIconPaths[7] = {0, 0, 0, 0, 0, 0, 0};
 
 ///////////////////////////// alphablending macros ///////////////////////////////
 typedef struct {
@@ -325,6 +330,40 @@ TASImage::~TASImage()
 }
 
 //______________________________________________________________________________
+static void init_icon_paths()
+{
+   // sets icons paths
+
+   const char *icons = "/icons";
+#ifdef R__WIN32
+      icons = "\\icons";
+#endif 
+
+   TString homeIcons = gSystem->HomeDirectory();
+   homeIcons += icons;
+
+   TString rootIcons = gSystem->Getenv("ROOTSYS");
+   rootIcons += icons;
+
+   TString guiIcons = gEnv->GetValue("Gui.IconPath", "");
+
+   gIconPaths[0] = ".";
+   gIconPaths[1] = StrDup(homeIcons.Data());
+   gIconPaths[2] = StrDup(rootIcons.Data());
+   gIconPaths[3] = StrDup(guiIcons.Data());
+
+#ifdef ROOTICONPATH
+   gIconPaths[4] = ROOTICONPATH;
+#endif
+
+#ifdef EXTRAICONPATH
+   gIconPaths[5] = EXTRAICONPATH;
+#endif
+
+   gIconPaths[6] = "";
+}
+
+//______________________________________________________________________________
 void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
 {
    // Read specified image file. The file type is determined by
@@ -333,8 +372,11 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    // a file. If the filename ends with extension consisting of digits
    // only, it will attempt to find the file with this extension stripped
    // off. On success this extension will be used to load subimage from
-   // the file with that number. Subimage is supported only for XCF, GIF, BMP, 
-   // ICO and CUR files.
+   // the file with that number. Subimage is supported for GIF files
+   // (ICO, BMP, CUR, TIFF, XCF to be supported in futute).
+   //  For example, 
+   //    i1 = TImage::Open("anim.gif.0"); // read the first subimage
+   //    i4 = TImage::Open("anim.gif.3"); // read the forth subimage
    //
    // It is also possible to put XPM raw string (see also SetImageBuffer) as
    // the first input parameter ("filename"), such string  is returned by
@@ -349,11 +391,38 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
       return;
    }
 
-   ASImage *image = file2ASImage(filename, 0, SCREEN_GAMMA, GetImageCompression(), 0);
+   if (!gIconPaths[0]) {
+      init_icon_paths();
+   }
 
-   if (!image) {  // try to read it via plugin
-      TString ext = strrchr(filename, '.') + 1;
+   ASImageImportParams iparams;
+   iparams.flags = 0;
+   iparams.width = 0;
+   iparams.height = 0;
+   iparams.filter = SCL_DO_ALL;
+   iparams.gamma = SCREEN_GAMMA;
+   iparams.gamma_table = NULL;
+   iparams.compression = GetImageCompression();
+   iparams.format = ASA_ASImage;
+   iparams.search_path = gIconPaths;
+   iparams.subimage = 0;
+   iparams.return_animation_delay = -1;
 
+   TString ext = strrchr(filename, '.') + 1;
+   ASImage *image = 0;
+   TString fname = filename;
+
+   if (!ext.IsNull() && ext.IsDigit()) { // read subimage
+      iparams.subimage = ext.Atoi();
+      fname = fname(0, fname.Length() - ext.Length() - 1);
+      ext = strrchr(fname.Data(), '.') + 1;
+   }
+
+   image = file2ASImage_extra(fname.Data(), &iparams);
+
+   if (image) { // it's OK
+      goto end;
+   } else {  // try to read it via plugin
       if (ext.IsNull()) {
          return;
       }
@@ -381,10 +450,10 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
 
       if (plug) {
          if (plug->InheritsFrom(TASImagePlugin::Class())) {
-            image = ((TASImagePlugin*)plug)->File2ASImage(filename);
+            image = ((TASImagePlugin*)plug)->File2ASImage(fname.Data());
             if (image) goto end;
          }
-         bitmap = plug->ReadFile(filename, w, h);
+         bitmap = plug->ReadFile(fname.Data(), w, h);
          if (bitmap) {
             image = bitmap2asimage(bitmap, w, h, 0, 0);
          }
@@ -395,7 +464,7 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    }
 
 end:
-   fName.Form("%s.", gSystem->BaseName(filename));
+   fName.Form("%s.", gSystem->BaseName(fname.Data()));
 
    DestroyImage();
    delete fScaledImage;
@@ -854,6 +923,10 @@ void TASImage::Draw(Option_t *option)
       Int_t h = 64;
       w = (fImage->width > 64) ? fImage->width : w;
       h = (fImage->height > 64) ? fImage->height : h;
+
+      Float_t cx = 1./gStyle->GetScreenFactor();
+      w = Int_t(w*cx) + 4;
+      h = Int_t(h*cx) + 28;
       TString rname = GetName();
       rname.ReplaceAll(".", "");
       new TCanvas(rname.Data(), Form("%s (%d x %d)", rname.Data(),
