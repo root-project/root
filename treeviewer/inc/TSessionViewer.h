@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.33 2006/07/04 10:16:52 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.34 2006/09/11 23:45:24 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -640,6 +640,7 @@ public:
    void     ShowStatus();
    void     StartupMessage(char *msg, Bool_t stat, Int_t curr, Int_t total);
    void     StartViewer();
+   void     Terminate();
 
    ClassDef(TSessionViewer, 0) // Session Viewer
 };

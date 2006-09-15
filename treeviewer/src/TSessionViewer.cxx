@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.71 2006/08/10 13:54:10 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.72 2006/09/11 23:45:24 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -4199,12 +4199,11 @@ void TSessionViewer::OnListTreeDoubleClicked(TGListTreeItem *entry, Int_t /*btn*
 }
 
 //______________________________________________________________________________
-void TSessionViewer::CloseWindow()
+void TSessionViewer::Terminate()
 {
-   // Close main Session Viewer window.
+   // Terminate Session : save configuration, clean temporary files and close
+   // Proof connections.
 
-   if (fAutoSave)
-      WriteConfiguration();
    // clean-up temporary files
    TString pathtmp;
    pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectFile);
@@ -4219,10 +4218,21 @@ void TSessionViewer::CloseWindow()
    TIter next(fSessions);
    TSessionDescription *desc = 0;
    while ((desc = (TSessionDescription *)next())) {
-      if (desc->fConnected && desc->fAttached &&
-          desc->fProof && desc->fProof->IsValid())
+      if (desc->fAttached && desc->fProof && 
+          desc->fProof->IsValid())
          desc->fProof->Detach();
    }
+   // Save configuration
+   if (fAutoSave)
+      WriteConfiguration();
+}
+
+//______________________________________________________________________________
+void TSessionViewer::CloseWindow()
+{
+   // Close main Session Viewer window.
+
+   Terminate();
    fSessions->Delete();
    if (fSessionItem)
       fSessionHierarchy->DeleteChildren(fSessionItem);
@@ -4903,7 +4913,9 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
 
                   case kFileQuit:
-                     CloseWindow();
+                     Terminate();
+                     if (!gApplication->ReturnFromRun())
+                        delete this;
                      gApplication->Terminate(0);
                      break;
 
