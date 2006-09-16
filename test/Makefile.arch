@@ -512,13 +512,16 @@ ExeSuf        = .exe
 DllSuf        = dll
 OutPutOpt     = -out:
 CXX           = cl
+ifneq ($(findstring debug, $(strip $(shell $(ROOTCONFIG) --config))),)
+CXXOPT        = -Z7
+LDOPT         = -debug
+else
 CXXOPT        = -O2
-#CXXOPT        = -Z7
+LDOPT         = -opt:ref
+endif
 CXXFLAGS      = $(CXXOPT) -nologo -I$(shell $(ROOTCONFIG) --incdir) -FIw32pragma.h
 LD            = link
-LDOPT         = -opt:ref
-#LDOPT         = -debug
-LDFLAGS       = $(LDOPT) -pdb:none -nologo
+LDFLAGS       = $(LDOPT) -nologo
 SOFLAGS       = -DLL
 
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
