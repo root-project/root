@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.28 2006/08/10 06:33:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.29 2006/08/22 14:12:05 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -210,7 +210,6 @@ Bool_t TSelector::IsStandardDraw(const char *selec)
          if (cl && (cl->InheritsFrom("TProofDraw") ||
                     cl->InheritsFrom("TSelectorDraw")))
             stdselec = kTRUE;
-         SafeDelete(cl);
       }
    }
 
