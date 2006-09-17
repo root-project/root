@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.26 2006/03/21 05:20:34 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.27 2006/07/19 18:01:38 pcanal Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -55,6 +55,7 @@ public:
    virtual Int_t          GetDimension() const = 0;
    virtual TH1           *GetHistogram() const = 0;
    virtual Int_t          GetNfill() const = 0;
+   virtual Long64_t       GetEntries(const char *) = 0;
    virtual Long64_t       GetSelectedRows() const = 0;
    virtual TTreeFormula  *GetSelect() const = 0;
    virtual TTreeFormula  *GetVar1() const = 0;

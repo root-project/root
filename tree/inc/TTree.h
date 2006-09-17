@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.90 2006/07/13 05:31:49 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.91 2006/07/26 13:36:43 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -252,6 +252,7 @@ public:
            Long64_t        GetDebugMin()  const { return fDebugMin; }
    TDirectory             *GetDirectory() const { return fDirectory; }
    virtual Long64_t        GetEntries() const   { return fEntries; }
+   virtual Long64_t        GetEntries(const char *selection);
    virtual Long64_t        GetEntriesFast() const   { return fEntries; }
    virtual Long64_t        GetEntriesFriend() const;
    virtual Long64_t        GetEstimate() const { return fEstimate; }

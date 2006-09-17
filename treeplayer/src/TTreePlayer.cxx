@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.227 2006/09/13 05:08:35 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.228 2006/09/14 05:27:45 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -257,6 +257,7 @@
 #include "TEnv.h"
 #include "THLimitsFinder.h"
 #include "TSelectorDraw.h"
+#include "TSelectorEntries.h"
 #include "TPluginManager.h"
 #include "TObjString.h"
 #include "TTreeProxyGenerator.h"
@@ -1083,6 +1084,25 @@ Long64_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *s
       fHistogram->Fit(formula,option,goption);
    }
    return nsel;
+}
+
+//______________________________________________________________________________
+Long64_t TTreePlayer::GetEntries(const char *selection)
+{
+   // Return the number of entries matching the selection.
+   // Return -1 in case of errors.
+   //
+   // If the selection uses any arrays or containers, we return the number
+   // of entries where at least one element match the selection.
+   // GetEntries is implemented using the selector class TSelectorEntries,
+   // which can be used directly (see code in TTreePlayer::GetEntries) for
+   // additional option.
+   // If SetEventList was used on the TTree or TChain, only that subset
+   // of entries will be considered.
+
+   TSelectorEntries s(selection);
+   fTree->Process(&s); 
+   return s.GetSelectedRows();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.11 2006/05/23 04:47:42 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.12 2006/08/06 07:15:00 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -51,7 +51,7 @@ protected:
    Int_t          fDimension;      //  Dimension of the current expression
    Long64_t       fSelectedRows;   //  Number of selected entries
    Long64_t       fOldEstimate;    //  value of Tree fEstimate when selector is called
-   Int_t          fForceRead;      //  Forec Read flag
+   Int_t          fForceRead;      //  Force Read flag
    Int_t          fNbins[4];       //  Number of bins per dimension
    Double_t       fVmin[4];        //  Minima of varexp columns
    Double_t       fVmax[4];        //  Maxima of varexp columns

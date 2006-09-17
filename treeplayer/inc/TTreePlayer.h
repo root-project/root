@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.35 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.36 2006/07/20 21:54:08 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -80,6 +80,7 @@ public:
                          Option_t *goption ,Long64_t nentries, Long64_t firstentry);
    virtual Int_t     GetDimension() const {return fDimension;}
    TH1              *GetHistogram() const {return fHistogram;}
+   virtual Long64_t  GetEntries(const char *selection);
    virtual Long64_t  GetEntriesToProcess(Long64_t firstentry, Long64_t nentries) const;
    virtual Int_t     GetNfill() const {return fSelector->GetNfill();}
    const char       *GetScanFileName() const {return fScanFileName;}

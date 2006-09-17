@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.301 2006/09/08 06:56:24 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.302 2006/09/13 05:08:34 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3487,6 +3487,27 @@ TFile* TTree::GetCurrentFile() const
       return 0;
    }
    return fDirectory->GetFile();
+}
+
+//______________________________________________________________________________
+Long64_t TTree::GetEntries(const char *selection)
+{
+   // Return the number of entries matching the selection.
+   // Return -1 in case of errors.
+   //
+   // If the selection uses any arrays or containers, we return the number
+   // of entries where at least one element match the selection.
+   // GetEntries is implemented using the selector class TSelectorEntries,
+   // which can be used directly (see code in TTreePlayer::GetEntries) for
+   // additional option.
+   // If SetEventList was used on the TTree or TChain, only that subset
+   // of entries will be considered.
+
+   GetPlayer();
+   if (fPlayer) {
+      return fPlayer->GetEntries(selection);
+   }
+   return -1;
 }
 
 //______________________________________________________________________________
