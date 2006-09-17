@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.15 2006/09/14 17:39:29 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.16 2006/09/15 10:23:07 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -267,7 +267,7 @@ void TGeoElementRN::FillPopulation(TObjArray *population, Double_t precision, Do
 // retrieved via the method TGeoElementRN::Ratio().
 // The precision represent the minimum cumulative branching ratio for 
 // which decay products are still taken into account.
-  TGeoElementRN *elem;
+   TGeoElementRN *elem;
    TGeoElemIter next(this, precision);
    TGeoBatemanSol s(this);
    s.Normalize(factor);
@@ -954,6 +954,8 @@ TGeoBatemanSol::TGeoBatemanSol(TGeoElementRN *elem)
                 fCsize(10),
                 fNcoeff(0),
                 fFactor(1.),
+                fTmin(0.),
+                fTmax(0.),
                 fCoeff(NULL)
 {
 // Default ctor.
@@ -974,6 +976,8 @@ TGeoBatemanSol::TGeoBatemanSol(const TObjArray *chain)
                 fCsize(0),
                 fNcoeff(0),
                 fFactor(1.),
+                fTmin(0.),
+                fTmax(0.),
                 fCoeff(NULL)
 {
 // Default ctor.
@@ -996,6 +1000,8 @@ TGeoBatemanSol::TGeoBatemanSol(const TGeoBatemanSol& other)
                 fCsize(other.fCsize),
                 fNcoeff(other.fNcoeff),
                 fFactor(other.fFactor),
+                fTmin(other.fTmin),
+                fTmax(other.fTmax),
                 fCoeff(NULL)
 {
 // Copy constructor.
@@ -1031,6 +1037,8 @@ TGeoBatemanSol& TGeoBatemanSol::operator=(const TGeoBatemanSol& other)
    fCsize = other.fCsize;
    fNcoeff = other.fNcoeff;
    fFactor = other.fFactor;
+   fTmin = other.fTmin;
+   fTmax = other.fTmax;
    if (fCsize) {
       fCoeff = new BtCoef_t[fCsize];
       for (Int_t i=0; i<fNcoeff; i++) {

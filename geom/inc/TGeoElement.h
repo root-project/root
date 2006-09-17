@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.9 2006/09/14 17:22:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.10 2006/09/15 10:23:07 brun Exp $
 // Author: Andrei Gheata   17/06/04
 // Added support for radionuclides: Mihaela Gheata 24/08/2006
 /*************************************************************************
@@ -231,9 +231,11 @@ private:
    Int_t                    fCsize;           // Size of the array of coefficients
    Int_t                    fNcoeff;          // Number of coefficients
    Double_t                 fFactor;          // Constant factor that applies to all coefficients
+   Double_t                 fTmin;            // Minimum value of the time interval
+   Double_t                 fTmax;            // Maximum value of the time interval
    BtCoef_t                *fCoeff;           //[fNcoeff] Array of coefficients
 public:
-   TGeoBatemanSol() : TObject(), TAttLine(), TAttFill(), TAttMarker(), fElem(NULL), fElemTop(NULL), fCsize(0), fNcoeff(0), fFactor(1.), fCoeff(NULL) {}
+   TGeoBatemanSol() : TObject(), TAttLine(), TAttFill(), TAttMarker(), fElem(NULL), fElemTop(NULL), fCsize(0), fNcoeff(0), fFactor(1.), fTmin(0.), fTmax(0), fCoeff(NULL) {}
    TGeoBatemanSol(TGeoElementRN *elem);
    TGeoBatemanSol(const TObjArray *chain);
    TGeoBatemanSol(const TGeoBatemanSol& other);
@@ -244,11 +246,13 @@ public:
    
    Double_t                 Concentration(Double_t time) const;
    virtual void             Draw(Option_t *option="");
-   void                     GetCoeff(Int_t i, Double_t &cn, Double_t &lambda) {cn=fCoeff[i].cn; lambda=fCoeff[i].lambda;}
+   void                     GetCoeff(Int_t i, Double_t &cn, Double_t &lambda) const {cn=fCoeff[i].cn; lambda=fCoeff[i].lambda;}
+   void                     GetRange(Double_t &tmin, Double_t &tmax) const {tmin=fTmin; tmax=fTmax;}
    TGeoElementRN           *GetElement()    const {return fElem;}
    TGeoElementRN           *GetTopElement() const {return fElemTop;}
    Int_t                    GetNcoeff()     const  {return fNcoeff;}
    virtual void             Print(Option_t *option = "") const;
+   void                     SetRange(Double_t tmin=0., Double_t tmax=0.) {fTmin=tmin; fTmax=tmax;}
    void                     SetFactor(Double_t factor) {fFactor = factor;}
    void                     FindSolution(const TObjArray *array);
    void                     Normalize(Double_t factor);
