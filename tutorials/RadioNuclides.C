@@ -74,6 +74,7 @@ void RadioNuclides()
    decaymat->Print();
    TObjArray *vect = new TObjArray();
    TCanvas *c1 = new TCanvas("c1","C14 decay", 800,600);
+   c1->SetGrid();
    mat->FillMaterialEvolution(vect);
    DrawPopulation(vect, c1, 0, 1.4e12);
    TLatex *tex = new TLatex(8.35e11,0.564871,"C_{N^{14}_{7}}");
@@ -100,7 +101,8 @@ void RadioNuclides()
    pt->Draw();
    c1->Modified();
    vect->Clear();
-   TCanvas *c2 = new TCanvas("c2","Mixture decay", 800,800);
+   TCanvas *c2 = new TCanvas("c2","Mixture decay", 1000,800);
+   c2->SetGrid();
    mix->FillMaterialEvolution(vect);
    DrawPopulation(vect, c2, 0.01, 1000., kTRUE);
    tex = new TLatex(0.019,0.861,"C_{Ca^{53}_{20}}");
