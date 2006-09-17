@@ -1,0 +1,45 @@
+from os import environ, pathsep, sep, system
+from os.path import dirname
+from sys import platform
+
+Import('env')
+
+def genreflex(target, source, env):
+  system(env['prefix']+sep+'bin'+sep+'genreflex ' +
+         source[0].get_abspath() +
+         ' -s' + dirname(source[0].get_abspath()) + sep + 'selection.xml' +
+         ' -o' + target[0].get_abspath() +
+         ' --quiet' +
+         ' -I' + env['prefix']+sep+'include')
+
+env['BUILDERS']['Genreflex'] = Builder(action=genreflex, suffix='_rflx.cpp', src_suffix='.h')
+
+Program('test_Reflex_generate.cxx', CPPPATH=[env['prefix']+sep+'inc'], LIBS=['Reflex'], LIBPATH=[env['prefix']+sep+'lib'])
+
+if env['cppunit'] :
+  
+  incd = [ env['prefix']+sep+'include', env['cppunit']+sep+'include' ]
+  libd = [ env['prefix']+sep+'lib',     env['cppunit']+sep+'lib' ]
+  libs = ['Reflex', 'cppunit']
+
+  Program('test_Reflex_unit.cxx'       , CPPPATH=incd+['..'], LIBS=libs, LIBPATH=libd)
+  Program('test_ReflexBuilder_unit.cxx', CPPPATH=incd, LIBS=libs, LIBPATH=libd)
+  Program('test_Reflex_simple1.cxx'    , CPPPATH=incd, LIBS=libs, LIBPATH=libd)
+  Program('test_Reflex_simple2.cxx'    , CPPPATH=incd, LIBS=libs, LIBPATH=libd)
+
+else :
+
+  print 'scons: WARNING: CppUnit library not found, no CppUnit tests will be compiled'
+
+if env['gccxml'] :
+
+  env.SharedLibrary('test_ReflexRflx', env.Genreflex('testDict1/Reflex.h'), CPPPATH=[env['prefix']+sep+'include'], LIBS=['Reflex'], LIBPATH=[env['prefix']+sep+'lib'], SHLINKFLAGS='$LINKFLAGS -bundle')
+
+  env.SharedLibrary('test_Class2DictRflx', env.Genreflex('testDict2/Class2Dict'), CPPPATH=[env['prefix']+sep+'include'], LIBS=['Reflex'], LIBPATH=[env['prefix']+sep+'lib'], SHLINKFLAGS='$LINKFLAGS -bundle')
+  
+
+else :
+
+  print 'scons: WARNING: No gccxml executable found, either pass option "gccxml" to scons invocation or put gccxml into you PATH'
+  print 'scons: WARNING: No dictionary libraries can be created without gccxml, some tests will fail to run without dictionaries'
+

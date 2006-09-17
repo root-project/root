@@ -1,0 +1,70 @@
+from sys import platform
+from os import walk, curdir, sep, chmod
+from os.path import dirname, join
+from glob import glob
+from py_compile import compile
+
+Import('env')
+
+dest_dir = env['prefix']+sep+'lib'+sep+'python'+sep
+
+# move the source to the target and empty the source list
+def exchg(target, source, env):
+  target = source
+  source = []
+  return target,source
+
+# custom builder for the gccxmlpath.py file
+def build_gccxmlpath_py(target, source, env):
+  f = open(target[0].get_abspath() ,'w')
+  f.write("gccxmlpath='%s'\n" % env['gccxml'])
+  f.close()
+
+# custom builder for byte compilation
+def py_compile(target, source, env):
+  compile(source[0].get_abspath())
+
+# custom builder for the genreflex wrapper script
+def build_genreflex_exe(target, source, env):
+  f = open(target[0].get_abspath(),'w')
+  if platform == 'win32' :
+    f.write('@echo off\n')
+    f.write('python %s\lib\python\genreflex\genreflex.py \%*\n' % env['prefix'])
+  else :
+    f.write('#!/bin/sh\n')
+    f.write('eval "python %s/lib/python/genreflex/genreflex.py $*"\n' % env['prefix'])
+  f.close()
+  chmod(target[0].get_abspath(),0755)
+
+# attach the builders to the environment
+env['BUILDERS']['GccxmlpathPy'] = Builder(action=build_gccxmlpath_py, emitter=exchg)
+env['BUILDERS']['GenreflexExe'] = Builder(action=build_genreflex_exe, emitter=exchg)
+env['BUILDERS']['PyCompile'] = Builder(action=py_compile, suffix='.pyc', src_suffix='.py')
+
+#
+# Building starts here
+#
+
+# generate the genreflex wrapper script
+genreflexe = env['prefix']+sep+'bin'+sep+'genreflex'
+if platform == 'win32' : genreflexe += '.bat'
+env.GenreflexExe(genreflexe)
+
+#produce a list of all python files in the python tree
+py_files = []
+for root,d,f in walk('.') : py_files += glob(root+sep+'*.py')
+
+# remove not necessary files from the list
+py_files.remove('./genreflex/genreflex-rootcint.py')
+
+# install all python files found 
+map( lambda x: env.Install(dest_dir+sep+dirname(x), x), py_files)
+
+# if the gccxml option was give, produce the gccxmlpath.py file
+if env['gccxml'] : py_files.append(curdir+sep+env.GccxmlpathPy(dest_dir+sep+'genreflex'+sep+'gccxmlpath.py')[0].get_abspath()[len(dest_dir):])
+
+# compile the python files
+map( lambda x : env.PyCompile(x), [join(dest_dir,x) for x in py_files])
+
+
+#i,o,e = popen3('python setup.py install --home=%s' % env['prefix'])

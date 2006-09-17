@@ -1,2 +1,4 @@
 *_rflx.cpp
 Class2Dict.xml
+.scons*
+*.os
