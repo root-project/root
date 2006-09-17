@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.91 2006/06/23 11:55:15 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.92 2006/09/15 10:23:07 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -610,11 +610,14 @@ void TGeoPainter::DrawBatemanSol(TGeoBatemanSol *sol, Option_t *option)
 // Draw the time evolution of a radionuclide.
    Int_t ncoeff = sol->GetNcoeff();
    if (!ncoeff) return;
-   Double_t tlo, thi;
+   Double_t tlo=0., thi=0.;
    Double_t cn=0., lambda=0.;
    Int_t i;
+   sol->GetRange(tlo, thi);
+   Bool_t autorange = (thi==0.)?kTRUE:kFALSE;
+   
    // Try to find the optimum range in time.
-   tlo = 0.;
+   if (autorange) tlo = 0.;
    sol->GetCoeff(0, cn, lambda);
    Double_t lambdamin = lambda;
    TString formula = "";
@@ -625,11 +628,13 @@ void TGeoPainter::DrawBatemanSol(TGeoBatemanSol *sol, Option_t *option)
       if (lambda < lambdamin &&
           lambda > 0.) lambdamin = lambda;
    }
-   thi = 10./lambdamin;
+   if (autorange) thi = 10./lambdamin;
    formula += ";time[s]";
-   formula += Form(";N_%s/N_%s_0",sol->GetElement()->GetName(),sol->GetTopElement()->GetName());
+   formula += Form(";Concentration_of_%s",sol->GetElement()->GetName());
    // Create a function
    TF1 *func = new TF1(Form("conc%s",sol->GetElement()->GetName()), formula.Data(), tlo,thi);
+   func->SetMinimum(1.e-3);
+   func->SetMaximum(1.25*TMath::Max(sol->Concentration(tlo), sol->Concentration(thi)));
    func->SetLineColor(sol->GetLineColor());
    func->SetLineStyle(sol->GetLineStyle());
    func->SetLineWidth(sol->GetLineWidth());
