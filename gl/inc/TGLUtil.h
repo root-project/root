@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.29 2006/06/13 15:43:39 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.30 2006/08/31 13:42:14 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -826,6 +826,11 @@ class TGLUtil
 {
 private:
    static UInt_t fgDrawQuality;
+
+protected:
+   TGLUtil(const TGLUtil&) {} // copy constructor
+   TGLUtil& operator=(const TGLUtil& glu) // assignment operator
+     {if(this!=&glu) {} return *this;}
 
 public:
    virtual ~TGLUtil() { }
