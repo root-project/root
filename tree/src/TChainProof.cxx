@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.7 2006/07/05 17:24:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.8 2006/08/06 07:15:00 rdm Exp $
 // Author: Marek Biskup   10/3/2005
 
 /*************************************************************************
@@ -873,6 +873,14 @@ Long64_t TChainProof::GetEntries() const
    // the number of entries in the TDSet that it holds.
 
    return (fTree ? fTree->GetMaxEntryLoop() : (Long64_t)(-1));  // this was used for holding the total number of entries
+}
+
+//______________________________________________________________________________
+Long64_t TChainProof::GetEntries(const char *sel)
+{
+   // See TTree::GetEntries(const char *selection)
+
+   return (fTree ? fTree->GetEntries(sel) : (Long64_t)(-1));
 }
 
 //______________________________________________________________________________

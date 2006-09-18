@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.6 2006/07/04 10:23:52 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.7 2006/07/04 23:45:50 rdm Exp $
 // Author: Marek Biskup   10/12/2004
 
 /*************************************************************************
@@ -103,6 +103,7 @@ public:
            Long64_t     GetDebugMin()  const {return fDebugMin;}
    TDirectory          *GetDirectory() const {return fDirectory;}
    virtual Long64_t     GetEntries() const;
+   virtual Long64_t     GetEntries(const char *sel);
    virtual Long64_t     GetEntriesFast() const   {return fEntries;}
    virtual Long64_t     GetEntriesFriend() const;
    virtual Long64_t     GetEstimate() const { return fEstimate; }

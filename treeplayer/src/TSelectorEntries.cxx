@@ -1,8 +1,24 @@
-#define TSelectorEntries_cxx
-// The class definition in TSelectorEntries.h has been generated automatically
-// by the ROOT utility TTree::MakeSelector(). This class is derived
-// from the ROOT class TSelector. For more information on the TSelector
-// framework see $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.63 2006/08/06 07:15:01 rdm Exp $
+// Author: Philippe Canal 09/06/2006
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TSelectorEntries                                                     //
+//                                                                      //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+// The class is derived from the ROOT class TSelector. For more
+// information on the TSelector framework see
+// $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.
 
 // The following methods are defined in this file:
 //    Begin():        called everytime a loop on the tree starts,
@@ -27,6 +43,7 @@
 #include "TTreeFormula.h"
 #include "TSelectorScalar.h"
 
+//______________________________________________________________________________
 TSelectorEntries::TSelectorEntries(TTree *tree, const char *selection) : 
    fChain(tree), fSelect(0), fSelectedRows(0), fSelectMultiple(kFALSE) 
 { 
@@ -37,6 +54,7 @@ TSelectorEntries::TSelectorEntries(TTree *tree, const char *selection) :
    }
 }
 
+//______________________________________________________________________________
 TSelectorEntries::TSelectorEntries(const char *selection) : 
    fSelect(0), fSelectedRows(0), fSelectMultiple(kFALSE) 
 { 
@@ -45,6 +63,7 @@ TSelectorEntries::TSelectorEntries(const char *selection) :
    TSelectorEntries::SetSelection(selection);
 }
 
+//______________________________________________________________________________
 TSelectorEntries::~TSelectorEntries() 
 {
    // Destructor.
@@ -52,6 +71,7 @@ TSelectorEntries::~TSelectorEntries()
    delete fSelect; fSelect = 0;
 }
 
+//______________________________________________________________________________
 void TSelectorEntries::Begin(TTree *tree)
 {
    // The Begin() function is called at the start of the query.
@@ -62,6 +82,7 @@ void TSelectorEntries::Begin(TTree *tree)
    fChain = tree;
 }
 
+//______________________________________________________________________________
 void TSelectorEntries::SlaveBegin(TTree *tree)
 {
    // The SlaveBegin() function is called after the Begin() function.
@@ -86,7 +107,7 @@ void TSelectorEntries::SlaveBegin(TTree *tree)
 }
 
 //______________________________________________________________________________
-void TSelectorEntries::Init(TTree *tree)
+void TSelectorEntries::Init(TTree * /* tree */)
 {
    // The Init() function is called when the selector needs to initialize
    // a new tree or chain. Typically here the branch addresses and branch
@@ -107,7 +128,8 @@ Bool_t TSelectorEntries::Notify()
    return kTRUE;
 }
 
-Bool_t TSelectorEntries::Process(Long64_t entry)
+//______________________________________________________________________________
+Bool_t TSelectorEntries::Process(Long64_t /* entry */)
 {
    // The Process() function is called for each entry in the tree (or possibly
    // keyed object in the case of PROOF) to be processed. The entry argument
@@ -161,6 +183,7 @@ Bool_t TSelectorEntries::Process(Long64_t entry)
    return kTRUE;
 }
 
+//______________________________________________________________________________
 void TSelectorEntries::SetSelection(const char *selection)
 {
    if (!fInput) {
@@ -174,6 +197,7 @@ void TSelectorEntries::SetSelection(const char *selection)
    cselection->SetTitle(selection);
 }
 
+//______________________________________________________________________________
 void TSelectorEntries::SlaveTerminate()
 {
    // The SlaveTerminate() function is called after all entries or objects
@@ -183,6 +207,7 @@ void TSelectorEntries::SlaveTerminate()
    fOutput->Add(new TSelectorScalar("fSelectedRows",fSelectedRows));
 }
 
+//______________________________________________________________________________
 void TSelectorEntries::Terminate()
 {
    // The Terminate() function is the last function to be called during

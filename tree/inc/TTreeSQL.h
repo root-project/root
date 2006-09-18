@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeSQL.h,v 1.3 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeSQL.h,v 1.4 2006/05/13 19:21:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -85,6 +85,7 @@ public:
    virtual Int_t          Fill();
    virtual Int_t          GetEntry(Long64_t entry=0, Int_t getall=0);
    virtual Long64_t       GetEntries()    const;
+   virtual Long64_t       GetEntries(const char *sel) { return TTree::GetEntries(sel); }
    virtual Long64_t       GetEntriesFast()const;
            TString        GetTableName(){ return fTable; }
    virtual Long64_t       LoadTree(Long64_t entry);
