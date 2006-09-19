@@ -15,6 +15,7 @@ class genDictionary(object) :
     self.classes    = []
     self.namespaces = []
     self.typeids    = []
+    self.fktypeids  = []
     self.files      = {}
     self.typedefs   = []
     self.basictypes = []
@@ -26,6 +27,7 @@ class genDictionary(object) :
     self.hfile      = os.path.normpath(hfile).replace(os.sep,'/')
     self.pool       = opts.get('pool',False)
     self.quiet      = opts.get('quiet',False)
+    self.resolvettd = opts.get('resolvettd',True)
     self.xref       = {}
     self.xrefinv    = {}
     self.cppClassSelect    = {}
@@ -43,6 +45,7 @@ class genDictionary(object) :
     self.generated_shadow_classes = []
     self.selectionname      = 'ROOT::Reflex::Selection'
     self.unnamedNamespaces = []
+    self.globalNamespaceID = ''
     # The next is to avoid a known problem with gccxml that it generates a
     # references to id equal '_0' which is not defined anywhere
     self.xref['_0'] = {'elem':'Unknown', 'attrs':{'id':'_0','name':''}, 'subelems':[]}
@@ -82,10 +85,12 @@ class genDictionary(object) :
     elif name == 'FundamentalType' :
       self.basictypes.append(normalizeFragment(attrs['name']))
 #----------------------------------------------------------------------------------
-  def findUnnamedNamespace(self):
+  def findSpecialNamespace(self):
     for ns in self.namespaces:
       if ns['name'].find('.') != -1:
         self.unnamedNamespaces.append(ns['id'])
+      elif ns['name'] == '::' :
+        self.globalNamespaceID = ns['id']
 #----------------------------------------------------------------------------------
 # This function is not used anymore, because it had a problem with templated types
 # showing up as members of a scope in the gccxml generated output. If gccxml puts
@@ -143,7 +148,7 @@ class genDictionary(object) :
           if funname in dir(self):
             self.__class__.__dict__[funname](self, self.genTypeName(cid)[cppsellen:], cid)
     self.tryCppSelections()
-    self.findUnnamedNamespace()
+    self.findSpecialNamespace()
 #----------------------------------------------------------------------------------
   def tryCppSelections(self):
     for c in self.classes:
@@ -244,6 +249,43 @@ class genDictionary(object) :
         return self.xref[m]['attrs']['type']
     return None
 #----------------------------------------------------------------------------------
+  def resolveTypedefName( self, name ) :
+    notname = ['*','<','>',',',':',' ']
+    for td in self.typedefs :
+      tdname = self.genTypeName(td['id'])
+      f = name.find(tdname)
+      if f != -1 :
+        g = f + len(tdname)
+        if (f == 0 or name[f-1] in notname) and (g == len(tdname) or name[g] in notname) :
+          defname = self.genTypeName(td['type'])
+          if defname[len(defname)-1] == '>' : defname += ' '
+          name = self.resolveTypedefName(name.replace(tdname, defname, 1))
+    return name
+#----------------------------------------------------------------------------------
+  def genFakeTypedef( self, cid, name ) :
+    nid = cid+'f'
+    while nid in self.fktypeids : nid += 'f'
+    catt = self.xref[cid]['attrs']
+    attrs = {'name':name,'id':nid,'type':catt['id'],'context':self.globalNamespaceID}
+    for i in ['location','file','line'] : attrs[i] = catt[i]
+    self.typedefs.append(attrs)
+    self.xref[attrs['id']] = {'elem':'Typedef', 'attrs':attrs, 'subelems':[]}
+    self.fktypeids.append(nid)
+#----------------------------------------------------------------------------------
+  def resolveSelectorTypedefs( self, sltor ):
+    newselector = []
+    for sel in sltor :
+      if not sel.has_key('used'):
+        attrs = sel['attrs']
+        for n in ['name', 'pattern']:
+          if attrs.has_key(n) and attrs[n].find('<') != -1 :
+            newname = self.resolveTypedefName(attrs[n])
+            if newname != attrs[n]:
+              sel['attrs']['o_'+n] = attrs[n]
+              sel['attrs'][n] = newname
+              newselector.append(sel)
+    return newselector
+#----------------------------------------------------------------------------------
   def selclasses(self, sel, deep) :
     selec = []
     if sel :
@@ -267,6 +309,19 @@ class genDictionary(object) :
             catt = c['attrs']
             catt['extra'] = match[0]
             if catt not in selec : selec.append(catt)
+      if self.resolvettd :
+        newselector = self.resolveSelectorTypedefs( self.selector.sel_classes )
+        if newselector:
+          for c in self.classes:
+            match = self.selector.matchclassTD( self.genTypeName(c['id']), self.files[c['file']]['name'], newselector )
+            if match[0] and not match[1] :
+              n = 'name'
+              if 'pattern' in match[0] : n = 'pattern'
+              if not self.quiet:
+                print '--->> genreflex: INFO: Replacing selection %s "%s" with "%s"' % ( n, match[0]['o_'+n], match[0][n] )
+              c['extra'] = match[0]
+              if c not in selec : selec.append(c)
+              if n == 'name' : self.genFakeTypedef(c['id'], match[0]['o_name'])
       return self.autosel (selec)
     else : self.selector = None
     local = filter(self.filefilter, self.classes)
@@ -837,6 +892,7 @@ class genDictionary(object) :
     return 'type'+id
 #----------------------------------------------------------------------------------
   def genAllTypes(self) :
+    self.typeids += self.fktypeids
     c = '  Type type_void = TypeBuilder("void");\n'
     for id in self.typeids :      
       c += '  Type type%s = ' % id

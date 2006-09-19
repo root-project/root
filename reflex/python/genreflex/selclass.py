@@ -49,23 +49,25 @@ class selClass :
       raise 
     f.close()
 #----------------------------------------------------------------------------------
+  def genNName(self, name ):
+    n_name = string.join(name.split())         
+    for e in [ ['long long unsigned int', 'unsigned long long'],
+               ['long long int',          'long long'],
+               ['unsigned short int',     'unsigned short'],
+               ['short unsigned int',     'unsigned short'],
+               ['short int',              'short'],
+               ['long unsigned int',      'unsigned long'],
+               ['unsigned long int',      'unsigned long'],
+               ['long int',               'long'],
+               ['std::string',            'std::basic_string<char>']] :
+      n_name = n_name.replace(e[0],e[1])
+    n_name = n_name.replace(' ','')
+    return n_name
+#----------------------------------------------------------------------------------
   def start_element(self, name, attrs):
     if name in ('class','struct'):
       self.classes.append({'attrs':attrs, 'fields':[], 'methods':[]})
-      if 'name' in attrs :
-        n_name = string.join(attrs['name'].split())         
-        for e in [ ['long long unsigned int', 'unsigned long long'],
-                   ['long long int',          'long long'],
-                   ['unsigned short int',     'unsigned short'],
-                   ['short unsigned int',     'unsigned short'],
-                   ['short int',              'short'],
-                   ['long unsigned int',      'unsigned long'],
-                   ['unsigned long int',      'unsigned long'],
-                   ['long int',               'long'],
-                   ['std::string',            'std::basic_string<char>']] :
-          n_name = n_name.replace(e[0],e[1])
-        n_name = n_name.replace(' ','')
-        attrs['n_name'] = n_name
+      if 'name' in attrs : attrs['n_name'] = self.genNName(attrs['name'])
     elif name in ('function','operator'):
       self.functions.append({'attrs':attrs})
       if 'name' in attrs :  attrs['name'] = attrs['name'].replace(' ','')
@@ -89,12 +91,18 @@ class selClass :
       self.classes   = self.sel_classes
       self.functions = self.sel_functions
 #----------------------------------------------------------------------------------
+  def matchclassTD(self, clname, fname, sltor) :
+    clname = clname.replace(' ','')
+    for s in sltor :
+      if 'name' in s['attrs'] : s['attrs']['n_name'] = self.genNName(s['attrs']['name'])
+    return self.selclass(clname, fname, sltor), self.excclass(clname, fname)
+#----------------------------------------------------------------------------------
   def matchclass(self, clname, fname ) :
     clname = clname.replace(' ','')
-    return self.selclass(clname, fname), self.excclass(clname, fname)
+    return self.selclass(clname, fname, self.sel_classes), self.excclass(clname, fname)
 #----------------------------------------------------------------------------------
-  def selclass(self, clname, fname ) :
-    for c in self.sel_classes :
+  def selclass(self, clname, fname, sltor ) :
+    for c in sltor :
       attrs = c['attrs']
       if 'n_name' in attrs and attrs['n_name'] == clname :  c['used'] = 1; return attrs
       if 'pattern' in attrs and matchpattern(clname,attrs['pattern']) : return attrs

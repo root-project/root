@@ -78,6 +78,8 @@ class genreflex:
          Add end-of-line comments in data and functions members as a property called "comment" \n
       --no_membertypedefs
          Disable the definition of class member typedefs \n
+      --no_templatetypedefs
+         Disable resolving of typedefs in template parameters for selection names. E.g. std::vector<MYINT>.
       --fail_on_warnings
          The genreflex command fails (retuns the value 1) if any warning message is issued \n
       --gccxmlpath=<path>
@@ -114,7 +116,7 @@ class genreflex:
       opts, args = getopt.getopt(options, 'ho:s:c:I:U:D:PC', \
       ['help','debug=', 'output=','selection_file=','pool','deep','gccxmlpath=',
        'capabilities=','rootmap=','rootmap-lib=','comments','no_membertypedefs',
-       'fail_on_warnings', 'quiet', 'reflex', 'split'])
+       'fail_on_warnings', 'quiet', 'reflex', 'split','no_templatetypedefs'])
     except getopt.GetoptError, e:
       print "--->> genreflex: ERROR:",e
       self.usage(2)
@@ -126,6 +128,8 @@ class genreflex:
     for o, a in opts:
       if o in ('-h', '--help'):
         self.help()
+      if o in ('--no_templatetypedefs',):
+        self.opts['resolvettd'] = 0
       if o in ('--debug',):
         self.opts['debug'] = a
       if o in ('-o', '--output'):
