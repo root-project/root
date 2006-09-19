@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.25 2006/05/17 09:37:20 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.26 2006/05/26 09:27:12 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -2361,7 +2361,8 @@ void TMultiDimFit::MakeCandidates()
 
    // The temporary array to store the powers in. We don't need to
    // initialize this array however.
-   Int_t *powers = new Int_t[fNVariables * fMaxFunctions];
+   fMaxFuncNV = fNVariables * fMaxFunctions;
+   Int_t *powers = new Int_t[fMaxFuncNV];
 
    // store of `control variables'
    Double_t* control  = new Double_t[fMaxFunctions];
@@ -2445,7 +2446,8 @@ void TMultiDimFit::MakeCandidates()
    Int_t *order = new Int_t[fMaxFunctions];
    for (i = 0; i < fMaxFunctions; i++)
       order[i] = i;
-   fPowers = new Int_t[fMaxFunctions * fNVariables];
+   fMaxFuncNV = fMaxFunctions * fNVariables;
+   fPowers = new Int_t[fMaxFuncNV];
 
    for (i = 0; i < fMaxFunctions; i++) {
       Double_t x = control[i];
@@ -3642,7 +3644,8 @@ void TMultiDimFit::SetPowers(const Int_t* powers, Int_t terms)
    fMaxFunctions   = terms;
    fMaxTerms       = terms;
    fMaxStudy       = terms;
-   fPowers         = new Int_t[fMaxFunctions * fNVariables];
+   fMaxFuncNV      = fMaxFunctions * fNVariables;
+   fPowers         = new Int_t[fMaxFuncNV];
    Int_t i, j;
    for (i = 0; i < fMaxFunctions; i++)
       for(j = 0; j < fNVariables; j++)

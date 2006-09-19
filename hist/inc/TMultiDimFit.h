@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.6 2005/09/05 10:02:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.7 2006/05/17 09:37:20 couet Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 #ifndef ROOT_TMultiDimFit
@@ -69,13 +69,14 @@ protected:
    Int_t        fMaxFunctions;         // max number of functions
    Int_t       *fFunctionCodes;        // [fMaxFunctions] acceptance code
    Int_t        fMaxStudy;             // max functions to study
+   Int_t        fMaxFuncNV;            // fMaxFunctions*fNVariables
 
    TMatrixD     fOrthFunctions;        // As above, but orthogonalised
    TVectorD     fOrthFunctionNorms;    // Norm of the evaluated functions
 
 
    Int_t       *fMaxPowersFinal;       // [fNVariables] maximum powers from fit;
-   Int_t       *fPowers;               // [fMaxFunctions*fNVariables]
+   Int_t       *fPowers;               // [fMaxFuncNV] where fMaxFuncNV = fMaxFunctions*fNVariables
    Int_t       *fPowerIndex;           // [fMaxTerms] Index of accepted powers
 
    TVectorD     fResiduals;            // Vector of the final residuals
@@ -207,7 +208,7 @@ public:
    void             SetPowerLimit(Double_t limit=1e-3);
    virtual void     SetPowers(const Int_t *powers, Int_t terms);
 
-   ClassDef(TMultiDimFit,1) // Multi dimensional fit class
+   ClassDef(TMultiDimFit,2) // Multi dimensional fit class
 }
 ;
 #endif
