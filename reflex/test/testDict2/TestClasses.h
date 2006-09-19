@@ -1,3 +1,5 @@
+#include <list>
+
 
 namespace {
    class ForwardedUnnamedType;
@@ -259,10 +261,27 @@ class BadDictionary {
 
 }; // namespace testclasses
 
+namespace testclasses2 {
+
+   template < class T > class WithTypedefMemberT {
+      T m_t;
+   };
+
+}
+
+typedef int MYINT;
+typedef float MYFLOAT;
 
 // template instances
 namespace {
    struct _testclasses_instances {
+      
+      std::vector<MYINT> m_v0;
+      std::vector<MYFLOAT> m_v1;
+
+      std::list<MYINT> m_l0;
+      std::list<MYFLOAT> m_l1;
+      
       struct A {};
       _testclasses_instances() {
          A a;
@@ -275,5 +294,7 @@ namespace {
       testclasses::ConvOp::ConversionOperatorT<int> m1;
       testclasses::WithTypedefMemberT<testclasses::MyVector> m2;
       testclasses::WithTypedefMemberT<testclasses::MyInt> m3;
+      testclasses2::WithTypedefMemberT<testclasses::MyVector> m4;
+      testclasses2::WithTypedefMemberT<testclasses::MyInt> m5;
    };
 }

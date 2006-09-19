@@ -1,5 +1,7 @@
 <lcgdict>
-  <class name="testclases::WithTypedefMemberT<MyVector>"/>
+  <class name="testclasses::WithTypedefMemberT<testclasses::MyVector>"/>
+  <class name="testclasses2::WithTypedefMemberT<testclasses::MyVector>"/>
+  <class name="testclasses2::WithTypedefMemberT<testclasses::MyInt>"/>
   <class pattern="classVec*"/>
   <class pattern="Class*"/>
   <class pattern="Bla::*"/>
@@ -36,8 +38,12 @@
   <class name="std::string"/>
   <class name="std::map<std::string,double>"/>
 
-  <class name="std::vector<const A*>"/>
-
   <class name="std::vector<int>"/>
+
+  <class name="std::vector<MYINT>"/>
+  <class name="std::vector<MYFLOAT>"/>
+
+  <class pattern="std::list<MYFLOAT*>"/>
+  <class pattern="std::list<MYINT*>"/>
  
 </lcgdict>

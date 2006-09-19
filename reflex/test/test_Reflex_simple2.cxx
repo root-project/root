@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.30 2006/09/14 12:57:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.31 2006/09/14 14:36:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -182,6 +182,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( unloadType );
   CPPUNIT_TEST( iterateVector );
   CPPUNIT_TEST( testClasses );
+ CPPUNIT_TEST( testTemplateTypedefs );
 
   CPPUNIT_TEST( unloadLibrary );
   CPPUNIT_TEST( shutdown );
@@ -216,6 +217,7 @@ public:
   void unloadType();
   void iterateVector();
   void testClasses();
+  void testTemplateTypedefs();
 
   void unloadLibrary();
   void shutdown() { Reflex::Shutdown(); }
@@ -1363,6 +1365,20 @@ void ReflexSimple2Test::testClasses() {
 
 }
 
+
+void ReflexSimple2Test::testTemplateTypedefs() {
+
+   const Type & t0 = Type::ByName("testclasses2::WithTypedefMemberT<testclasses::MyInt>");
+   CPPUNIT_ASSERT( t0 );
+   CPPUNIT_ASSERT( t0.IsTypedef());
+   
+   const Type & t01 = t0.ToType();
+   CPPUNIT_ASSERT( t01 );
+   CPPUNIT_ASSERT( t01.IsClass());
+   CPPUNIT_ASSERT( t01 == t0.FinalType());
+   CPPUNIT_ASSERT_EQUAL(std::string("WithTypedefMemberT<int>"), t01.Name());
+   
+}
 
 
 void ReflexSimple2Test::unloadLibrary() {
