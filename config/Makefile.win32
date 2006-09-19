@@ -33,8 +33,8 @@ else
 endif
 
 ifeq ($(VC_MAJOR),14)
-  BLDCXXFLAGS+= -EHa
-  BLDCFLAGS  += -EHa
+  BLDCXXFLAGS+= -EHa -W3
+  BLDCFLAGS  += -EHa -W3
   DEBUGFLAGS  = -Zi
 
   ifeq (yes,$(WINRTDEBUG))

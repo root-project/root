@@ -1,4 +1,4 @@
-/* @(#)build/win:$Name:  $:$Id: w32pragma.h,v 1.4 2006/03/23 10:31:21 rdm Exp $ */
+/* @(#)build/win:$Name:  $:$Id: w32pragma.h,v 1.5 2006/05/17 22:12:24 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -31,6 +31,23 @@
 #pragma warning (disable: 4996)
 /* "new behavior: elements default initialized" */
 #pragma warning (disable: 4351)
+/* local static not thread safe */
+#pragma warning (disable: 4640)
+/*forcing int to bool (performance warning) */
+#pragma warning (disable: 4800)
+/* truncation from double to float */
+#pragma warning (disable: 4305)
+/* signed unsigned mismatch */
+#pragma warning (disable: 4018)
+/* truncation of constant value */
+#pragma warning (disable: 4309)
+/* check op precedence for error */
+#pragma warning (disable: 4554)
+
+/* function is hidden */
+#pragma warning (3: 4266)
+/* loop control variable is used outside the for-loop scope */
+#pragma warning (3: 4289)
 
 #define WIN32 1
 #define _WINDOWS 1
