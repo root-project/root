@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.19 2006/08/11 08:23:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.20 2006/08/14 10:43:46 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -330,6 +330,7 @@ TGeoPNEntry::TGeoPNEntry()
 {
 // Default constructor
    fNode = 0;
+   fMatrix = 0;
 }
 
 //_____________________________________________________________________________
@@ -337,7 +338,14 @@ TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
             :TNamed(name, path)
 {
 // Default constructor
+   if (!gGeoManager || !gGeoManager->IsClosed() || !gGeoManager->cd(path)) {
+      TString errmsg("Cannot define a physical node link without a closed geometry and a valid path !");
+      Error("ctor", errmsg.Data());
+      throw errmsg;
+      return;
+   }   
    fNode = 0;
+   fMatrix = 0;
 }
 
 //_____________________________________________________________________________
@@ -351,3 +359,11 @@ void TGeoPNEntry::SetPhysicalNode(TGeoPhysicalNode *node)
    fNode = node;   
 }
    
+//_____________________________________________________________________________
+void TGeoPNEntry::SetMatrix(TGeoHMatrix *mat)
+{
+// Set the additional matrix for this node entry. The matrix has to be created 
+// with 'new' by user and becomes owned by TGeo.
+   fMatrix = mat;
+   if (fMatrix) fMatrix->RegisterYourself();
+}
