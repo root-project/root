@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.65 2006/05/11 15:50:52 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.66 2006/07/12 14:01:32 couet Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -986,6 +986,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
          np = 0;
       }
    }
+   SetLineStyle(linestylesav);
+   SetLineWidth(linewidthsav);
 }
 
 //______________________________________________________________________________
@@ -1045,6 +1047,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
          np = 0;
       }
    }
+   SetLineStyle(linestylesav);
+   SetLineWidth(linewidthsav);
 }
 
 
