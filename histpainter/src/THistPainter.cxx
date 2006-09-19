@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.266 2006/09/13 15:33:31 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.267 2006/09/14 15:06:26 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -6160,7 +6160,7 @@ void THistPainter::RecalculateRange()
          if (ymax <ymax_aid) ymax = ymax_aid;
       }
    } else if ( Hoption.Proj ==2) {
-      if (Hparam.ymin <= -90 | Hparam.ymax >=90) {
+      if (Hparam.ymin <= -90 || Hparam.ymax >=90) {
          Warning("Mercator Projection", "Latitude out of range %f or %f", Hparam.ymin, Hparam.ymax);
          Hoption.Proj = 0;
       } else {
