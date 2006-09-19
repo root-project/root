@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.8 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.9 2006/09/18 15:13:51 pcanal Exp $
 // Author: Marek Biskup   10/3/2005
 
 /*************************************************************************
@@ -876,11 +876,12 @@ Long64_t TChainProof::GetEntries() const
 }
 
 //______________________________________________________________________________
-Long64_t TChainProof::GetEntries(const char *sel)
+Long64_t TChainProof::GetEntries(const char *)
 {
    // See TTree::GetEntries(const char *selection)
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   return (fTree ? fTree->GetEntries(sel) : (Long64_t)(-1));
+   return Long64_t(-1);
 }
 
 //______________________________________________________________________________
