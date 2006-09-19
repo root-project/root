@@ -32,6 +32,7 @@ options="                    \
    enable_builtin_freetype   \
    enable_builtin_pcre       \
    enable_builtin_zlib       \
+   enable_castor             \
    enable_cern               \
    enable_chirp              \
    enable_cintex             \
@@ -117,6 +118,7 @@ PGSQL            \
 QTDIR            \
 SAPDB            \
 RFIO             \
+CASTOR           \
 GFAL             \
 GSL              \
 CERNLIB          \
@@ -823,6 +825,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-freetype   Built included libfreetype, or use system libfreetype
   builtin-pcre       Built included libpcre, or use system libpcre
   builtin-zlib       Built included libz, or use system libz
+  castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   cern               CERNLIB usage, build h2root and g2root
   chirp              Chirp support (Condor remote I/O), requires libchirp_client
   cintex             Build the libCintex Reflex interface library
@@ -852,7 +855,7 @@ enable/disable options, prefix with either --enable- or --disable-
   qt                 Qt graphics backend, requires libqt >= 3
   qtgsi              GSI's Qt integration, requires libqt >= 3
   reflex             Build the libReflex dictionary library
-  rfio               CASTOR support, requires libshift from CASTOR >= 1.5.2
+  rfio               RFIO support, requires libshift from CASTOR >= 1.5.2
   roofit             Build the libRooFit advanced fitting package
   rpath              Set run-time library load path on executables
   ruby               Ruby ROOT bindings, requires ruby >= 1.8
@@ -874,6 +877,8 @@ with options, prefix with --with-, enables corresponding support
   afs                AFS support, location of AFS distribution
   alien-incdir       AliEn support, location of gapiUI.h
   alien-libdir       AliEn support, location of libapiUI
+  castor-incdir      CASTOR support, location of stager_api.h
+  castor-libdir      CASTOR support, location of libshift
   cern-libdir        HBOOK converter, location of CERNLIB libraries
   chirp-incdir       Chirp support, location of chirp_client.h
   chirp-libdir       Chirp support, location of libchirp_client
@@ -916,8 +921,8 @@ with options, prefix with --with-, enables corresponding support
   ruby-libdir        Ruby support, location of libruby
   sapdb-incdir       SapDB support, location of sql.h
   sapdb-libdir       SapDB support, location of libsqlod
-  shift-incdir       CASTOR support, location of stager_api.h
-  shift-libdir       CASTOR support, location of libshift
+  shift-incdir       RFIO support, location of rfio_api.h
+  shift-libdir       RFIO support, location of libshift
   srp                Secure Remote Passwd support, location of SRP distribution
   srp-incdir         SRP support, location header of t_server.h
   srp-libdir         SRP support, location header of libsrp.a
@@ -1054,6 +1059,8 @@ if test $# -gt 0 ; then
       --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
       --with-afterimage-incdir=*) afterimageincdir=$optarg; enable_builtin_afterimage=no ;;
       --with-afterimage-libdir=*) afterimagelibdir=$optarg; enable_builtin_afterimage=no ;;
+      --with-castor-incdir=*)  castorsincdir=$optarg ; enable_castor="yes"  ;;
+      --with-castor-libdir=*)  castorlibdir=$optarg  ; enable_castor="yes"  ;;
       --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
       --with-chirp-incdir=*)   chirpincdir=$optarg   ; enable_chirp="yes"   ;;
       --with-chirp-libdir=*)   chirplibdir=$optarg   ; enable_chirp="yes"   ;;
@@ -1782,11 +1789,11 @@ check_explicit "$enable_qt" "$enable_qt_explicit" \
 
 ######################################################################
 #
-### echo %%% CASTOR Support - Third party libraries
+### echo %%% RFIO Support - Third party libraries
 #
 # (See http://castor.web.cern.ch/castor/)
 #
-# Check for rfio_api.h, stager_api.h for CASTOR 2 and libshift.a
+# Check for rfio_api.h of CASTOR 2 and libshift.a
 #
 shiftold=""
 if test ! "x$enable_rfio" = "xno" ; then
@@ -1809,25 +1816,6 @@ if test ! "x$enable_rfio" = "xno" ; then
             shiftold="yes"
             result "no"
             result "### Found old version of libshift, please uprade to >=1.5.2"
-        fi
-    fi
-
-    check_header "stager_api.h" "$keepincdir" $RFIO $RFIO/include $RFIO/h \
-	/cern/pro/include /cern/new/include /cern/old/include \
-	/opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
-	/usr/local/include/shift /usr/include /usr/local/include
-    stagerinc=$found_hdr
-
-    if test ! "x$stagerinc" = "x"; then
-        shiftcflags=-DR__CASTOR2
-        # check for Castor >= 2.1
-        message "Checking for Castor version >= 2.1"
-        castor_version=`grep "define BASEVERSION" $shiftincdir/patchlevel.h | sed 's/^.*"\([0-9]\.[0-9]\.[0-9]\)"/\1/' | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
-        if test $castor_version -lt 2001; then
-            shiftincdir=""
-            result "no"
-        else
-            result "ok"
         fi
     fi
 
@@ -1865,6 +1853,93 @@ if test ! "x$enable_rfio" = "xno" ; then
     fi
 fi
 check_explicit "$enable_rfio" "$enable_rfio_explicit" \
+     "Explicitly required Castor dependencies not fulfilled"
+
+######################################################################
+#
+### echo %%% CASTOR Support - Third party libraries
+#
+# (See http://castor.web.cern.ch/castor/)
+#
+# Check for rfio_api.h, stager_api.h for CASTOR 2 and libshift.a
+#
+castorold=""
+if test ! "x$enable_castor" = "xno" ; then
+    # Check for Castor include and library
+    keepincdir=$castorincdir
+    check_header "rfio_api.h" "$castorincdir" $CASTOR $CASTOR/include $CASTOR/h \
+	/cern/pro/include /cern/new/include /cern/old/include \
+	/opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
+	/usr/local/include/shift /usr/include /usr/local/include
+    castorinc=$found_hdr
+    castorincdir=$found_dir
+
+    if test ! "x$castorincdir" = "x"; then
+        message "Checking whether rfio_fchmod declared in $castorinc"
+	logmsg "grep rfio_fchmod $castorincdir/$castorinc"
+        if `grep rfio_fchmod $castorincdir/$castorinc >> $logfile 2>&1` ; then
+            result "yes"
+        else
+            castorincdir=""
+            castorold="yes"
+            result "no"
+            result "### Found old version of libshift, please uprade to >=1.5.2"
+        fi
+    fi
+
+    check_header "stager_api.h" "$keepincdir" $CASTOR $CASTOR/include $CASTOR/h \
+	/cern/pro/include /cern/new/include /cern/old/include \
+	/opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
+	/usr/local/include/shift /usr/include /usr/local/include
+    stagerinc=$found_hdr
+
+    if test ! "x$stagerinc" = "x"; then
+        castorcflags=-DR__CASTOR2
+        # check for Castor >= 2.1
+        message "Checking for Castor version >= 2.1"
+        castor_version=`grep "define BASEVERSION" $castorincdir/patchlevel.h | sed 's/^.*"\([0-9]\.[0-9]\.[0-9]\)"/\1/' | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
+        if test $castor_version -lt 2001; then
+            castorincdir=""
+            result "no"
+        else
+            result "ok"
+        fi
+    fi
+
+    check_library "libshift shiftmd shift" "$enable_shared" "$castorlibdir" \
+	$CASTOR $CASTOR/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
+	/opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
+	/usr/local/lib/shift /usr/lib /usr/local/lib
+    castorlib=$found_lib
+    castorlibdir=$found_dir
+
+    if test "x$castorincdir" = "x" || test "x$castorlib" = "x"; then
+        enable_castor="no"
+    else
+        case $platform in
+           linux)      castorlib="$castorlib -lnsl"
+		for i in "" -ladns ; do
+		    echo "extern rfio_fchmod(); int main() { rfio_fchmod(); return 0; }" > conftest.c
+		    logmsg "Checking if we can link against $castorlib"
+		    logmsg "gcc conftest.c $castorlibdir $castorlib $i -o conftest"
+		    gcc conftest.c $castorlibdir $castorlib $i -o conftest >> $logfile 2>&1
+		    if test $? -eq 0 ; then
+			castorlib="$castorlib $i" ;
+			break ;
+		    else
+			logmsg "Failed program was:"
+			cat conftest.c >> $logfile
+		    fi
+		done
+		rm -f conftest.c conftest
+		;;
+           solaris)    castorlib="$castorlib -lposix4" ;;
+           win32)      castorincdir="$castorincdir $castorincdir/../win32"
+                       castorlib="$castorlib WSock32.lib Ws2_32.lib" ;;
+        esac
+    fi
+fi
+check_explicit "$enable_castor" "$enable_castor_explicit" \
      "Explicitly required Castor dependencies not fulfilled"
 
 ######################################################################
@@ -3704,6 +3779,7 @@ fi
 if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_alien"   = "xyes" && pkglist="$pkglist root-plugin-alien"
     test "x$enable_asimage" = "xyes" && pkglist="$pkglist root-plugin-asimage"
+    test "x$enable_castor"  = "xyes" && pkglist="$pkglist root-plugin-castor"
     test "x$enable_cern"    = "xyes" && pkglist="$pkglist root-plugin-hbook"
     test "x$enable_chirp"   = "xyes" && pkglist="$pkglist root-plugin-chirp"
     test "x$enable_clarens" = "xyes" && pkglist="$pkglist libroot-clarens"
@@ -3728,7 +3804,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_qt"      = "xyes" && pkglist="$pkglist root-plugin-qt"
     test "x$enable_roofit"  = "xyes" && pkglist="$pkglist libroot-roofit"
     test "x$enable_ruby"    = "xyes" && pkglist="$pkglist libroot-ruby"
-    test "x$enable_rfio"    = "xyes" && pkglist="$pkglist root-plugin-castor"
+    test "x$enable_rfio"    = "xyes" && pkglist="$pkglist root-plugin-rfio"
     test "x$enable_sapdb"   = "xyes" && pkglist="$pkglist root-plugin-maxdb"
     test "x$enable_srp"     = "xyes" && pkglist="$pkglist root-plugin-srp"
     test "x$enable_venus"   = "xyes" && pkglist="$pkglist root-plugin-venus"
@@ -3965,6 +4041,10 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildxrd@|$buildxrd|"                \
     -e "s|@cernlibdir@|$cernlibdir|"            \
     -e "s|@cernlibs@|$cernlib|"                 \
+    -e "s|@castorincdir@|$castorincdir|"        \
+    -e "s|@castorlib@|$castorlib|"              \
+    -e "s|@castorlibdir@|$castorlibdir|"        \
+    -e "s|@castorcflags@|$castorcflags|"        \
     -e "s|@chirpincdir@|$chirpincdir|"          \
     -e "s|@chirplib@|$chirplib|"                \
     -e "s|@chirplibdir@|$chirplibdir|"          \
@@ -4122,7 +4202,8 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildsapdb@|$enable_sapdb|"          \
     -e "s|@buildqt@|$enable_qt|"                \
     -e "s|@buildqtgsi@|$enable_qtgsi|"          \
-    -e "s|@buildshift@|$enable_rfio|"           \
+    -e "s|@buildrfio@|$enable_rfio|"            \
+    -e "s|@buildcastor@|$enable_castor|"        \
     -e "s|@builddcap@|$enable_dcache|"          \
     -e "s|@buildfftw3@|$enable_fftw3|"          \
     -e "s|@buildgfal@|$enable_gfal|"            \

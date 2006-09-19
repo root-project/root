@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TCastorFile.h,v 1.3 2006/07/10 13:01:12 rdm Exp $
+// @(#)root/castor:$Name:  $:$Id: TCastorFile.h,v 1.4 2006/07/24 16:26:28 rdm Exp $
 // Author: Fons Rademakers  17/09/2003 + Giulia Taurelli  29/06/2006
 
 /*************************************************************************

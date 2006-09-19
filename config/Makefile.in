@@ -101,11 +101,17 @@ QTLIB          := @qtlib@
 QTINCDIR       := $(filter-out /usr/include, @qtincdir@)
 QTMOCEXE       := @qtmocexe@
 
-BUILDSHIFT     := @buildshift@
+BUILDRFIO      := @buildrfio@
 SHIFTLIBDIR    := @shiftlibdir@
 SHIFTLIB       := @shiftlib@
 SHIFTINCDIR    := $(filter-out /usr/include, @shiftincdir@)
 SHIFTCFLAGS    := @shiftcflags@
+
+BUILDCASTOR    := @buildcastor@
+CASTORLIBDIR   := @castorlibdir@
+CASTORCLILIB   := @castorlib@
+CASTORINCDIR   := $(filter-out /usr/include, @castorincdir@)
+CASTORCFLAGS   := @castorcflags@
 
 BUILDDCAP      := @builddcap@
 DCAPLIBDIR     := @dcaplibdir@

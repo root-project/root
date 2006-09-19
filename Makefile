@@ -93,8 +93,11 @@ endif
 ifeq ($(BUILDODBC),yes)
 MODULES      += odbc
 endif
-ifeq ($(BUILDSHIFT),yes)
+ifeq ($(BUILDRFIO),yes)
 MODULES      += rfio
+endif
+ifeq ($(BUILDCASTOR),yes)
+MODULES      += castor
 endif
 ifeq ($(BUILDDCAP),yes)
 MODULES      += dcache
@@ -207,7 +210,7 @@ endif
 -include MyModules.mk   # allow local modules
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-MODULES      += unix winnt x11 x11ttf win32gdk gl rfio thread \
+MODULES      += unix winnt x11 x11ttf win32gdk gl rfio castor thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd proof dcache chirp hbook alien asimage \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
