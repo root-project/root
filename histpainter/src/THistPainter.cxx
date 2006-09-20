@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.267 2006/09/14 15:06:26 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.268 2006/09/19 12:18:37 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -6532,6 +6532,8 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
       return;
    }
    c->cd();
+   c->SetLogy(padsav->GetLogz());
+   c->SetLogx(padsav->GetLogx()); 
 
    // Draw slice corresponding to mouse position
    TH1D *hp = ((TH2*)fH)->ProjectionX("_px", biny1, biny2);
@@ -6584,7 +6586,9 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
       return;
    }
    c->cd();
-
+   c->SetLogy(padsav->GetLogz());
+   c->SetLogx(padsav->GetLogy());
+  
    // Draw slice corresponding to mouse position
    TH1D *hp = ((TH2*)fH)->ProjectionY("_py", binx1, binx2);
    hp->SetFillColor(38);
