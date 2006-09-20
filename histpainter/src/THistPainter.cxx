@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.268 2006/09/19 12:18:37 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.269 2006/09/20 11:46:13 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1978,6 +1978,7 @@ void THistPainter::PaintBar(Option_t *)
       if (ymax < gPad->GetUymin()) continue;
       if (ymax > gPad->GetUymax()) ymax = gPad->GetUymax();
       if (ymin < gPad->GetUymin()) ymin = gPad->GetUymin();
+      if (gStyle->GetHistMinimumZero() && ymin < 0) ymin=0;
       w    = (xmax-xmin)*width;
       xmin += offset*(xmax-xmin);
       xmax = xmin + w;
