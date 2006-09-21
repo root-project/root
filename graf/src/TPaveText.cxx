@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.26 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.27 2006/07/09 05:27:54 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TStyle.h"
 #include "TPaveText.h"
 #include "TPaveLabel.h"
 #include "TVirtualPad.h"
@@ -48,7 +49,7 @@ TPaveText::TPaveText(): TPave(), TAttText()
 
 //______________________________________________________________________________
 TPaveText::TPaveText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_t *option)
-           :TPave(x1,y1,x2,y2,4,option), TAttText(22,0,1,62,0)
+           :TPave(x1,y1,x2,y2,4,option), TAttText(22,0,gStyle->GetTextColor(),gStyle->GetTextFont(),0)
 {
    // pavetext normal constructor.
    //
@@ -903,5 +904,21 @@ void TPaveText::Streamer(TBuffer &R__b)
 
    } else {
       TPaveText::Class()->WriteBuffer(R__b,this);
+   }
+}
+
+//______________________________________________________________________________
+void TPaveText::UseCurrentStyle()
+{
+   // Replace current attributes by current style.
+
+   if (gStyle->IsReading()) {
+      SetTextFont(gStyle->GetTextFont());
+      SetTextSize(gStyle->GetTextSize());
+      SetTextColor(gStyle->GetTextColor());
+   } else {
+      gStyle->SetTextColor(GetTextColor());
+      gStyle->SetTextFont(GetTextFont());
+      gStyle->SetTextSize(GetTextSize());
    }
 }

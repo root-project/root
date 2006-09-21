@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.6 2006/05/23 04:47:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.7 2006/07/03 16:10:44 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -75,6 +75,7 @@ public:
    virtual void     SetAllWith(const char *text, Option_t *option, Double_t value); // *MENU*
    virtual void     SetLabel(const char *label) {fLabel = label;} // *MENU*
    virtual void     SetMargin(Float_t margin=0.05) {fMargin=margin;} // *MENU*
+   virtual void     UseCurrentStyle();
 
    ClassDef(TPaveText,2)  //PaveText. A Pave with several lines of text.
 };
