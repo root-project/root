@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.302 2006/09/13 05:08:34 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.303 2006/09/17 19:08:13 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -5181,7 +5181,11 @@ void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
       if (strcmp(bname,"*")) { //Regexp gives wrong result for [] in name
-         if (strcmp(bname,branch->GetName()) && s.Index(re) == kNPOS) continue;
+         TString longname; 
+         longname.Form("%s.%s",GetName(),branch->GetName());
+         if (strcmp(bname,branch->GetName()) 
+             && longname != bname
+             && s.Index(re) == kNPOS) continue;
       }
       nb++;
       if (status) branch->ResetBit(kDoNotProcess);
