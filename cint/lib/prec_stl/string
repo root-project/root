@@ -12,7 +12,7 @@
 #pragma link off global PREC_STL_STRING;
 #pragma link C++ nestedtypedef;
 #pragma link C++ nestedclass;
-#if defined(G__HP_aCC) || defined(G__SUNPRO_C)
+#if defined(G__HP_aCC) || defined(G__SUNPRO_CC)
 #pragma mask_newdelete 0x1c;
 #else
 #pragma mask_newdelete 0x10;
@@ -169,7 +169,11 @@ class string {
   typedef const char* const_iterator;
 #endif
 
+# if defined(G__GNUC_VER) && (G__GNUC_VER>=3000) && !defined(G__INTEL_COMPILER)
+  static const size_t npos = -1;
+#else
   enum { npos=-1 };
+#endif
   string() ;
   //string(size_t size,capacity cap) ;
   string(const string& str) ;

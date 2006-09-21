@@ -272,6 +272,12 @@ int G__IncludePathInfo::Next() {
 using namespace std;
 #endif
 #endif
+
+#if defined(__GNUC__) && __GNUC__ >= 3
+#define G__HAVE_CXA_DEMANGLE
+#include <cxxabi.h>
+#endif
+
 /*********************************************************************
 * G__DemangleClassname
 *********************************************************************/
@@ -292,6 +298,7 @@ static int G__DemangleClassname(char *buf,const char *orig)
   tagnum = G__defined_tagname(buf,2);
   if(-1!=tagnum) return(1);
 
+#ifndef G__HAVE_CXA_DEMANGLE
   /* try Q25abcde4hijk -> abcde::hijk 
    * this works for classes in enclosed scope in g++ 2.96 */
   int n=0;
@@ -319,32 +326,14 @@ static int G__DemangleClassname(char *buf,const char *orig)
   }
   tagnum = G__defined_tagname(buf,2);
   if(-1!=tagnum) return(1);
-
-  /* try N5abcde4hijkE -> abcde::hijk 
-   * this works for classes in enclosed scope in g++ 3.x */
-  totallen=0;
-  ox = 1;
-  buf[0]=0;
-  for(;;) {
-    len=0;
-    while(isdigit(orig[ox])){
-      len = len*10 + orig[ox]-'0';
-      ++ox; 
-    }
-    if(buf[0]) {
-      strcat(buf,"::");
-      totallen += (2+len);
-    }
-    else {
-      totallen=len;
-    }
-    strcat(buf,orig+ox);
-    buf[totallen] = 0;
-    ox += len;
-    if(!isdigit(orig[ox])) break;
-  }
+#else
+  int status = 0;
+  char* cxaname=::abi::__cxa_demangle(orig, 0, 0, &status);
+  strcpy(buf, cxaname);
+  free(cxaname);    
   tagnum = G__defined_tagname(buf,2);
   if(-1!=tagnum) return(1);
+#endif
 
   /* Give up and settle with G__exception */
   return(0);
@@ -376,12 +365,15 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
     // VC++ has problem in typeid(x).name(), so every thrown exception is
     // translated to G__exception.
     sprintf(buf,"new G__exception(\"%s\")",x.what());
+    G__fprinterr(G__serr,"Exception: %s\n",x.what());
 #else
     char buf2[G__ONELINE];
     if(G__DemangleClassname(buf2,typeid(x).name())) {
       sprintf(buf,"new %s(*(%s*)%ld)",buf2,buf2,(long)(&x));
+      G__fprinterr(G__serr,"Exception %s: %s\n", buf2, x.what());
     }
     else {
+      // why buf2?!
       sprintf(buf,"new G__exception(\"%s\",\"%s\")",x.what(),buf2);
     }
 #endif

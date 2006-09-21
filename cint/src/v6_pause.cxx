@@ -2539,7 +2539,11 @@ int G__process_cmd(char *line,char *prompt,int *more,int *err
       G__more(G__sout,"Evaluation:  s [expr]  : step into expression (no declaration/loop/condition)\n");
       G__more(G__sout,"Evaluation:  S [expr]  : step over expression (no declaration/loop/condition)\n");
       G__more(G__sout,"             {[statements]} : evaluate statement (any kind)\n");
+#ifndef G__ROOT
       G__more(G__sout,"             x [file]  : load [file] and evaluate {statements} in the file\n");
+#else
+      G__more(G__sout,"             x [file]  : load [file] and execute function [file](wo extension)\n");
+#endif
       G__more(G__sout,"             X [file]  : load [file] and execute function [file](wo extension)\n");
       G__more(G__sout,"             E <[file]>: open editor and evaluate {statements} in the file\n");
       G__more(G__sout,"Load/Unload: L [file]  : load [file]\n");

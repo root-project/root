@@ -34,7 +34,7 @@ typedef struct __dirstream DIR;
 struct dirent {
   long d_ino;                /* inode number */
   /* off_t d_off; */         /* offset to this dirent */
-#ifndef G__CYGWIN
+#if !defined(__CYGWIN__) && !defined(G__CYGWIN)
   unsigned short d_reclen;   /* length of record */
 #endif
   /* char d_namelen; */      /* length of d_name */
@@ -110,6 +110,9 @@ extern	void seekdir();
 #else /* _NO_PROTO */
 extern void seekdir(DIR *, long);
 #endif  
+
+#elif defined(__CYGWIN__) || defined(G__CYGWIN)
+extern void seekdir (DIR*, off_t);
 
 #else
 extern void seekdir(DIR* dir,long loc);
@@ -256,9 +259,10 @@ extern int fchown(int fd,uid_t owner,gid_t group);
 extern int fchdir(int fd);
 #endif
 
-#if !defined(G__SUN) && !defined(G__CYGWIN)
-#elif !(defined(G__APPLE) || defined(__APPLE__))
+#if !(defined(G__APPLE) || defined(__APPLE__))
+#if !(defined(G__CYGWIN) || defined(__CYGWIN__))
 extern char *get_current_dir_name(void);
+#endif
 extern pid_t getpgid(pid_t pid);
 #endif
 extern char *getwd(char *buf);

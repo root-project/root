@@ -156,12 +156,12 @@ public:
   pointer address(reference _X) const ;
   const_pointer address(const_reference _X) const;
 #else
-#if !defined(G__BORLAND) && !defined(G__SUNPRO_C)
+#if !defined(G__BORLAND) && !defined(G__SUNPRO_CC)
   pointer address(T& _X) const ;
   const_pointer address(const T& _X) const;
 #endif
 #endif
-#if !defined(G__BORLAND) && !defined(G__SUNPRO_C)
+#if !defined(G__BORLAND) && !defined(G__SUNPRO_CC)
   pointer allocate(size_type _N, const void *);
 #else
   pointer allocate(size_type _N, void *);
@@ -172,7 +172,7 @@ public:
 #else
   void deallocate(T *_P, size_type); //???
 #endif
-#if !defined(G__BORLAND) && !defined(G__SUNPRO_C)
+#if !defined(G__BORLAND) && !defined(G__SUNPRO_CC)
   void construct(pointer _P, const T& _V);
   void destroy(pointer _P);
   size_type max_size() const;

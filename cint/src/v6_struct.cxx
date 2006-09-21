@@ -548,6 +548,8 @@ int G__defined_tagname(const char *tagname,int noerror)
              ) {
       env_tagnum = -1;
       tagname += 5;
+      if (!*tagname) // "std::"
+         return -1;
     }
 #endif
     else {

@@ -12,7 +12,7 @@
 #pragma link off global PREC_STL_MULTIMAP;
 #pragma link C++ nestedtypedef;
 #pragma link C++ nestedclass;
-#if defined(G__HP_aCC) || defined(G__SUNPRO_C)
+#if defined(G__HP_aCC) || defined(G__SUNPRO_CC)
 #pragma mask_newdelete 0x1c;
 #else
 #pragma mask_newdelete 0x10;
@@ -88,7 +88,7 @@ class multimap {
 #if defined(G__VISUAL) && (G__MSC_VER>=1300)
 #elif defined(G__VISUAL)
 	: public _Bidit<T,difference_type> 
-#elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
+#elif defined(G__SUNPRO_CC) || defined(G__BORLANDCC5)
 #elif (G__GNUC_VER>=3001)
 #elif defined(G__INTEL_COMPILER)
 #elif defined(G__KCC)
@@ -132,7 +132,7 @@ class multimap {
 #if defined(G__VISUAL) && (G__MSC_VER>=1300)
 #elif defined(G__VISUAL)
 	: public _Bidit<T,difference_type> 
-#elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
+#elif defined(G__SUNPRO_CC) || defined(G__BORLANDCC5)
 #elif (G__GNUC_VER>=3001)
 #elif defined(G__INTEL_COMPILER)
 #elif defined(G__KCC)

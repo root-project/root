@@ -12,7 +12,7 @@
 #pragma link off global PREC_STL_VECTOR;
 #pragma link C++ nestedtypedef;
 #pragma link C++ nestedclass;
-#if defined(G__HP_aCC) || defined(G__SUNPRO_C)
+#if defined(G__HP_aCC) || defined(G__SUNPRO_CC)
 #pragma mask_newdelete 0x1c;
 #else
 #pragma mask_newdelete 0x10;
@@ -329,7 +329,7 @@ class vector {
   class reverse_iterator 
 #if defined(G__VISUAL) 
 	: public _Ranit<T,difference_type>
-#elif !defined(G__SUNPRO_C) && !defined(G__INTEL_COMPILER) && !defined(G__KCC) && !defined(G__AIX) && !defined(G__ALPHA)
+#elif !defined(G__SUNPRO_CC) && !defined(G__INTEL_COMPILER) && !defined(G__KCC) && !defined(G__AIX) && !defined(G__ALPHA)
     	: public std::random_access_iterator<T,difference_type>
 #endif
 	{
