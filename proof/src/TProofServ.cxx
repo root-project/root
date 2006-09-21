@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.137 2006/08/16 14:50:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.138 2006/09/07 09:27:25 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -4047,28 +4047,21 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          {
             TString dir;
             (*mess) >> dir;
-            char *dataSetDirPath;
+            TString dataSetDirPath;
             void *dataSetDir;
             if (dir.Length())
                if (strstr(dir, "public") == dir)
                   // list user own public datasets
-                  dataSetDirPath =
-                     gSystem->ExpandPathName(Form("%s/%s/public/",
-                                                  kPROOF_WorkDir,
-                                                  kPROOF_DataSetDir));
+                  dataSetDirPath = fDataSetDir + "/public/";
                else {
                   char *userName = (char *)malloc(strlen(dir));
                   strcpy(userName, dir.Data() + 1); //dir starts with '~'
                   strtok(userName, "/");
-                  dataSetDirPath =
-                     gSystem->ExpandPathName(Form("~%s/proof/%s/public/",
-                                                  userName,
-                                                  kPROOF_DataSetDir));
+                  dataSetDirPath = fWorkDir + "/../" + userName + "/" +
+                                     kPROOF_DataSetDir + "/public/";
                }
             else
-               dataSetDirPath = Form("%s/%s",
-                                     gSystem->ExpandPathName(kPROOF_WorkDir),
-                                     kPROOF_DataSetDir);
+               dataSetDirPath = fDataSetDir;
             if ((dataSetDir = gSystem->OpenDirectory(dataSetDirPath))) {
                TRegexp rg(".*.root"); //check that it is a root file
                TList *fileList = new TList();
@@ -4195,29 +4188,23 @@ TList *TProofServ::GetDataSet(const char *name)
 {
    // Utility function used in various methods for user dataset upload.
 
-   const char *fileListPath;
+   TString fileListPath;
    if (strchr(name, '~') == name) {
       char *nameCopy = new char[strlen(name)];
       strcpy(nameCopy, name + 1);
       char *userName = strtok(nameCopy, "/");
       if (strcmp(strtok(0, "/"), "public"))
          return 0;
-      fileListPath =
-        gSystem->ExpandPathName(Form("~%s/proof/%s/public/%s.root",
-                                     userName,
-                                     kPROOF_DataSetDir,
-                                     strtok(0, "/")));
+      fileListPath = fWorkDir + "/../" + userName + "/" 
+                     + kPROOF_DataSetDir + "/public/";
       delete[] nameCopy;
    } else if (strchr(name, '/') && strstr(name, "public") != name) {
       Printf("Dataset name should be of form [[~user/]public/]dataset");
       return 0;
    } else
-      fileListPath = Form("%s/%s/%s.root",
-                          gSystem->ExpandPathName(kPROOF_WorkDir),
-                          kPROOF_DataSetDir,
-                          name);
+      fileListPath = fDataSetDir + "/" + name + ".root";
    TList *fileList = 0;
-   if (gSystem->AccessPathName(fileListPath, kFileExists) == kFALSE) {
+   if (gSystem->AccessPathName(fileListPath.Data(), kFileExists) == kFALSE) {
       TFile *f = TFile::Open(fileListPath);
       f->cd();
       fileList = (TList *) f->Get("fileList");
