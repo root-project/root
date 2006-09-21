@@ -19,6 +19,7 @@ public:
    void SetData( int data )
    {
       fData = data;
+      return;
    }
 
    void ByValue( SimpleClass )
