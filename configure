@@ -1059,7 +1059,7 @@ if test $# -gt 0 ; then
       --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
       --with-afterimage-incdir=*) afterimageincdir=$optarg; enable_builtin_afterimage=no ;;
       --with-afterimage-libdir=*) afterimagelibdir=$optarg; enable_builtin_afterimage=no ;;
-      --with-castor-incdir=*)  castorsincdir=$optarg ; enable_castor="yes"  ;;
+      --with-castor-incdir=*)  castorincdir=$optarg  ; enable_castor="yes"  ;;
       --with-castor-libdir=*)  castorlibdir=$optarg  ; enable_castor="yes"  ;;
       --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
       --with-chirp-incdir=*)   chirpincdir=$optarg   ; enable_chirp="yes"   ;;
