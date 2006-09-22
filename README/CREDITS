@@ -499,6 +499,10 @@ N: Xavier Prudent
 E: prudent@lapp.in2p3.fr
 D: contributed to TMVA classes
 
+N: Gilles Quemener
+E: quemener@lpsc.in2p3.fr
+D: contributed to TMultiDimFit::EvalError function
+
 N: Sven Ravndal
 E: Sven.Ravndal@dresdner-bank.com
 D: initial event generator interface
