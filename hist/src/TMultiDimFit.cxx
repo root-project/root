@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.26 2006/05/26 09:27:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.27 2006/09/19 12:38:03 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -1803,6 +1803,8 @@ TMultiDimFit::TMultiDimFit()
    fMaxPowers               = 0;
    fMaxPowersFinal          = 0;
 
+   fBinVarX                 = 100;
+   fBinVarY                 = 100;
    fHistograms              = 0;
    fHistogramMask           = 0;
    fPowerIndex              = 0;
@@ -1880,6 +1882,8 @@ TMultiDimFit::TMultiDimFit(Int_t dimension,
 
    fIsUserFunction         = kFALSE;
 
+   fBinVarX                = 100;
+   fBinVarY                = 100;
    fHistograms             = 0;
    fHistogramMask          = 0;
 
@@ -2176,7 +2180,7 @@ void TMultiDimFit::Clear(Option_t *option)
 
 
 //____________________________________________________________________
-Double_t TMultiDimFit::Eval(const Double_t *x, const Double_t* coeff)
+Double_t TMultiDimFit::Eval(const Double_t *x, const Double_t* coeff) const
 {
    // Evaluate parameterization at point x. Optional argument coeff is
    // a vector of coefficients for the parameterisation, fNCoefficients
@@ -2203,7 +2207,40 @@ Double_t TMultiDimFit::Eval(const Double_t *x, const Double_t* coeff)
 
 
 //____________________________________________________________________
-Double_t TMultiDimFit::EvalControl(const Int_t *iv)
+Double_t TMultiDimFit::EvalError(const Double_t *x, const Double_t* coeff) const
+{
+   // Evaluate parameterization error at point x. Optional argument coeff is
+   // a vector of coefficients for the parameterisation, fNCoefficients
+   // elements long.
+   Double_t returnValue = 0;
+   Double_t term        = 0;
+   Int_t    i, j;
+
+   for (i = 0; i < fNCoefficients; i++) {
+     //     cout << "Error coef " << i << " -> " << fCoefficientsRMS(i) << endl;
+   }
+   for (i = 0; i < fNCoefficients; i++) {
+      // Evaluate the ith term in the expansion
+      term = (coeff ? coeff[i] : fCoefficientsRMS(i));
+      for (j = 0; j < fNVariables; j++) {
+         // Evaluate the factor (polynomial) in the j-th variable.
+         Int_t    p  =  fPowers[fPowerIndex[i] * fNVariables + j];
+         Double_t y  =  1 + 2. / (fMaxVariables(j) - fMinVariables(j))
+            * (x[j] - fMaxVariables(j));
+         term        *= EvalFactor(p,y);
+	 //	 cout << "i,j " << i << ", " << j << "  "  << p << "  " << y << "  " << EvalFactor(p,y) << "  " << term << endl;
+      }
+      // Add this term to the final result
+      returnValue += term*term;
+      //      cout << " i = " << i << " value = " << returnValue << endl;
+   }
+   returnValue = sqrt(returnValue);
+   return returnValue;
+}
+
+
+//____________________________________________________________________
+Double_t TMultiDimFit::EvalControl(const Int_t *iv) const
 {
    // PRIVATE METHOD:
    // Calculate the control parameter from the passed powers
@@ -2217,7 +2254,7 @@ Double_t TMultiDimFit::EvalControl(const Int_t *iv)
 }
 
 //____________________________________________________________________
-Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x)
+Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x) const
 {
    // PRIVATE METHOD:
    // Evaluate function with power p at variable value x
@@ -2862,7 +2899,7 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
          if (!fHistograms->FindObject(Form("x_%d_orig",i)))
             fHistograms->Add(new TH1D(Form("x_%d_orig",i),
             Form("Original variable # %d",i),
-            100, fMinVariables(i),
+            fBinVarX, fMinVariables(i),
             fMaxVariables(i)));
    }
 
@@ -2871,7 +2908,7 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
       SETBIT(fHistogramMask,HIST_DORIG);
       if (!fHistograms->FindObject("d_orig"))
          fHistograms->Add(new TH1D("d_orig", "Original Quantity",
-         100, fMinQuantity, fMaxQuantity));
+         fBinVarX, fMinQuantity, fMaxQuantity));
    }
 
    // Histograms of normalized variables
@@ -2881,7 +2918,7 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
          if (!fHistograms->FindObject(Form("x_%d_norm",i)))
             fHistograms->Add(new TH1D(Form("x_%d_norm",i),
             Form("Normalized variable # %d",i),
-            100, -1,1));
+            fBinVarX, -1,1));
    }
 
    // Histogram of shifted dependent variable
@@ -2889,7 +2926,7 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
       SETBIT(fHistogramMask,HIST_DSHIF);
       if (!fHistograms->FindObject("d_shifted"))
          fHistograms->Add(new TH1D("d_shifted", "Shifted Quantity",
-         100, fMinQuantity - fMeanQuantity,
+         fBinVarX, fMinQuantity - fMeanQuantity,
          fMaxQuantity - fMeanQuantity));
    }
 
@@ -2900,8 +2937,8 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
          if (!fHistograms->FindObject(Form("res_x_%d",i)))
             fHistograms->Add(new TH2D(Form("res_x_%d",i),
             Form("Computed residual versus x_%d", i),
-            100, -1,    1,
-            35,
+            fBinVarX, -1,    1,
+            fBinVarY,
             fMinQuantity - fMeanQuantity,
             fMaxQuantity - fMeanQuantity));
    }
@@ -2912,10 +2949,10 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
       if (!fHistograms->FindObject("res_d"))
          fHistograms->Add(new TH2D("res_d",
          "Computed residuals vs Quantity",
-         100,
+         fBinVarX,
          fMinQuantity - fMeanQuantity,
          fMaxQuantity - fMeanQuantity,
-         35,
+         fBinVarY,
          fMinQuantity - fMeanQuantity,
          fMaxQuantity - fMeanQuantity));
    }
@@ -2926,7 +2963,7 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
       if (!fHistograms->FindObject("res_train"))
          fHistograms->Add(new TH1D("res_train",
          "Computed residuals over training sample",
-         100, fMinQuantity - fMeanQuantity,
+         fBinVarX, fMinQuantity - fMeanQuantity,
          fMaxQuantity - fMeanQuantity));
 
    }
@@ -2935,7 +2972,7 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
       if (!fHistograms->FindObject("res_test"))
          fHistograms->Add(new TH1D("res_test",
          "Distribution of residuals from test",
-         100,fMinQuantity - fMeanQuantity,
+         fBinVarX,fMinQuantity - fMeanQuantity,
          fMaxQuantity - fMeanQuantity));
    }
 }
@@ -3296,6 +3333,15 @@ void TMultiDimFit::MakeRealCode(const char *filename,
    for (i = 0; i < fNCoefficients; i++)
       outFile << (i != 0 ? "," : "") << endl
       << "  " << fCoefficients(i) << flush;
+   outFile << endl << " };" << endl << endl;
+
+   // Assignment to error coefficients vector.
+   outFile << "// Assignment to error coefficients vector." << endl;
+   outFile << cv_qual << "double " << prefix
+      << "gCoefficientRMS[] = {" << flush;
+   for (i = 0; i < fNCoefficients; i++)
+      outFile << (i != 0 ? "," : "") << endl
+      << "  " << fCoefficientsRMS(i) << flush;
    outFile << endl << " };" << endl << endl;
 
    // Assignment to powers vector.

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.7 2006/05/17 09:37:20 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.8 2006/09/19 12:38:03 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 #ifndef ROOT_TMultiDimFit
@@ -105,6 +105,8 @@ protected:
 
    TList*       fHistograms;           // List of histograms
    Byte_t       fHistogramMask;        // Bit pattern of hisograms used
+   Int_t        fBinVarX;              // Number of bin in independent variables
+   Int_t        fBinVarY;              // Number of bin in dependent variables
 
    TVirtualFitter* fFitter;            //! Fit object (MINUIT)
 
@@ -113,8 +115,8 @@ protected:
    Bool_t       fIsUserFunction;       // Flag for user defined function
    Bool_t       fIsVerbose;            //
 
-   virtual Double_t EvalFactor(Int_t p, Double_t x);
-   virtual Double_t EvalControl(const Int_t *powers);
+   virtual Double_t EvalFactor(Int_t p, Double_t x) const;
+   virtual Double_t EvalControl(const Int_t *powers) const;
    virtual void     MakeCoefficientErrors();
    virtual void     MakeCorrelation();
    virtual Double_t MakeGramSchmidt(Int_t function);
@@ -140,7 +142,8 @@ public:
    virtual void     Browse(TBrowser* b);
    virtual void     Clear(Option_t *option=""); // *MENU*
    virtual void     Draw(Option_t * ="d") { }
-   virtual Double_t Eval(const Double_t *x, const Double_t *coeff=0);
+   virtual Double_t Eval(const Double_t *x, const Double_t *coeff=0) const;
+   virtual Double_t EvalError(const Double_t *x, const Double_t *coeff=0) const;
    virtual void     FindParameterization(Option_t* option=""); // *MENU*
    virtual void     Fit(Option_t *option=""); // *MENU*
 
@@ -198,6 +201,8 @@ public:
    virtual void     MakeMethod(const Char_t* className="MDF", Option_t* option=""); // *MENU*
    virtual void     Print(Option_t *option="ps") const; // *MENU*
 
+   void             SetBinVarX(Int_t nbbinvarx) {fBinVarX = nbbinvarx;}
+   void             SetBinVarY(Int_t nbbinvary) {fBinVarY = nbbinvary;} 
    void             SetMaxAngle(Double_t angle=0);
    void             SetMaxFunctions(Int_t n) { fMaxFunctions = n; }
    void             SetMaxPowers(const Int_t *powers);
