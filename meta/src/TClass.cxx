@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.196 2006/09/08 06:56:24 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.197 2006/09/08 20:12:33 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -3557,7 +3557,11 @@ void TClass::SetUnloaded()
    // class's code has been removed (unloaded) from the process's memory
 
    delete fIsA; fIsA = 0;
+   // Disable the autoloader while calling SetClassInfo, to prevent
+   // the library from being reloaded!
+   int autoload_old = G__set_class_autoloading(0); 
    gInterpreter->SetClassInfo(this,kTRUE);
+   G__set_class_autoloading(autoload_old);
    fDeclFileName = 0;
    fDeclFileLine = 0;
    fImplFileName = 0;
