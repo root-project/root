@@ -31,28 +31,28 @@ int CompareResults(TMultiDimFit *fit)
    
    // the right coefficients
   double GoodCoeffs[] = {
-  -2.57988,
-  43.2694,
-  13.2747,
-  13.4143,
-  13.3844,
-  13.4842,
-  13.3206,
-  13.3148,
-  4.4177,
-  -3.93429,
-  4.60247,
-  -4.07129,
-  -3.99255,
-  4.51781,
-  3.45324,
-  -4.15551,
-  4.75041,
-  4.28688,
-  -3.85046,
-  -4.0053,
-  4.3955,
-  3.59419};
+  -4.70776,
+  43.3519,
+  13.5699,
+  13.3169,
+  13.5708,
+  13.5311,
+  13.6633,
+  13.2718,
+  -4.21843,
+  4.65398,
+  4.5217,
+  -4.01994,
+  4.57828,
+  -4.11152,
+  3.68617,
+  -4.37356,
+  4.62783,
+  4.26708,
+  -3.98121,
+  -3.52323,
+  4.55097
+};
 
 // Good Powers
   int GoodPower[] = {
@@ -64,26 +64,26 @@ int CompareResults(TMultiDimFit *fit)
   2,  2,  1,  1,
   2,  1,  1,  2,
   2,  1,  2,  1,
-  1,  1,  1,  3,
   1,  2,  1,  2,
   1,  1,  3,  1,
-  1,  2,  2,  1,
+  1,  1,  1,  3,
   1,  1,  2,  2,
   1,  3,  1,  1,
+  1,  2,  2,  1,
   1,  2,  2,  2,
   2,  2,  1,  2,
   2,  1,  3,  1,
   2,  1,  1,  3,
   2,  1,  2,  2,
   2,  2,  2,  1,
-  2,  3,  1,  1,
-  2,  2,  2,  2};
+  2,  3,  1,  1
+};
 
   Int_t nc = fit->GetNCoefficients();
   Int_t nv = fit->GetNVariables();
   const Int_t *powers = fit->GetPowers();
   const Int_t *pindex = fit->GetPowerIndex();
-  if (nc != 22) return 1;
+  if (nc != 21) return 1;
   const TVectorD *coeffs = fit->GetCoefficients();
   int k = 0;
   for (Int_t i=0;i<nc;i++) {
@@ -97,9 +97,9 @@ int CompareResults(TMultiDimFit *fit)
   // now test the result of the generated function
   gROOT->ProcessLine(".L MDF.C");
   Double_t x[]    = {5,5,5,5};
-  Double_t refMDF = 43.4507;
+  Double_t refMDF = 43.386;
   Double_t rMDF   = MDF(x);
-  if (TMath::Abs(rMDF -43.4507) > 1e-4) return 4;
+  if (TMath::Abs(rMDF -refMDF) > 1e-2) return 4;
   return 0;     
 }
 
