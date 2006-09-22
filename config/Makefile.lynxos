@@ -35,7 +35,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB)
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm -ltermcap -lbsd
 CRYPTLIBS     = -lcrypt
 

@@ -36,7 +36,7 @@ SOEXT         = so
 # System libraries:
 SYSLIBS       = -lstdc++ -lm $(OSTHREADLIBDIR) $(OSTHREADLIB)
 X11LIBDIR     = -L/usr/X11R6/lib
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11 -lstdc++
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11 -lstdc++
 CILIBS        = -lm -ltermcap -lstdc++
 
 # Fortran:

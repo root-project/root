@@ -32,7 +32,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -lPW -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB)
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm -ltermcap -lbsd -lgen -ldl
 
 # Fortran:
