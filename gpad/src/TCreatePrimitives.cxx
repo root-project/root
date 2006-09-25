@@ -34,6 +34,7 @@
 #include "TVirtualPad.h"
 #include "TCreatePrimitives.h"
 #include "TROOT.h"
+#include "TSystem.h"
 
 //______________________________________________________________________________
 TCreatePrimitives::TCreatePrimitives()
@@ -494,6 +495,7 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
          gROOT->SetEditorMode();
          break;
       }
+      gSystem->ProcessEvents();
       for (i=0;i<kTMAX;i++) atext[i] = ' ';
       atext[kTMAX-1] = 0;
       lentext = kTMAX;
