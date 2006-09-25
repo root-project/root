@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.234 2006/08/22 18:27:02 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.235 2006/08/24 18:51:57 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -866,6 +866,8 @@ void TPad::Close(Option_t *)
          fCanvas->ClearPadSave();
       if (fCanvas->GetSelectedPad() == this)
          fCanvas->SetSelectedPad(0);
+      if (fCanvas->GetClickSelectedPad() == this)
+         fCanvas->SetClickSelectedPad(0);
    }
 
    fMother = 0;
