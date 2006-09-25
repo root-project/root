@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.197 2006/09/08 20:12:33 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.198 2006/09/22 21:16:23 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -467,8 +467,6 @@ TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
    fClassMenuList  = new TList();
    fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList, this));
    fContextMenuTitle = "";
-
-   fClassEditors  = new TList();
 }
 
 //______________________________________________________________________________
@@ -517,8 +515,6 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
    fClassMenuList  = new TList();
    fContextMenuTitle = "";
    fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList, this));
-
-   fClassEditors  = new TList();
 
    if (!fClassInfo) {
       SetBit(kLoading);
@@ -604,7 +600,6 @@ void TClass::Init(const char *name, Version_t cversion,
    fProperty       = -1;
    fInterStreamer  = 0;
    fClassMenuList  = 0;
-   fClassEditors   = 0;
    fContextMenuTitle = "";
 
    ResetInstanceCount();
@@ -734,8 +729,6 @@ void TClass::Init(const char *name, Version_t cversion,
    fClassMenuList = new TList();
    fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList,this));
 
-   fClassEditors = new TList();
-
    Int_t stl = TClassEdit::IsSTLCont(GetName(), 0);
 
    if ( stl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
@@ -770,7 +763,6 @@ TClass::TClass(const TClass& cl) :
   fClassInfo(cl.fClassInfo),
   fContextMenuTitle(cl.fContextMenuTitle),
   fClassMenuList(cl.fClassMenuList),
-  fClassEditors(cl.fClassEditors),
   fTypeInfo(cl.fTypeInfo),
   fShowMembers(cl.fShowMembers),
   fStreamer(cl.fStreamer),
@@ -820,7 +812,6 @@ TClass& TClass::operator=(const TClass& cl)
       fClassInfo=cl.fClassInfo;
       fContextMenuTitle=cl.fContextMenuTitle;
       fClassMenuList=cl.fClassMenuList;
-      fClassEditors=cl.fClassEditors;
       fTypeInfo=cl.fTypeInfo;
       fShowMembers=cl.fShowMembers;
       fStreamer=cl.fStreamer;
@@ -890,10 +881,6 @@ TClass::~TClass()
    if (fClassMenuList)
       fClassMenuList->Delete();
    delete fClassMenuList; fClassMenuList=0;
-
-   if (fClassEditors)
-      fClassEditors->Delete();
-   delete fClassEditors; fClassEditors=0;
 
    if ( fInterStreamer ) delete ((G__CallFunc*)fInterStreamer);
    fInterStreamer=0;
