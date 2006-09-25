@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.8 2006/06/23 15:19:21 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.9 2006/07/26 13:36:42 rdm Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -19,10 +19,6 @@
 //  Base editor's attribute frame - a service class.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif
@@ -30,85 +26,93 @@
 class TVirtualPad;
 class TCanvas;
 class TGLabel;
+class TGToolTip;
 class TList;
 class TGTab;
+class TGedEditor;
 
+class TGedFrame : public TGCompositeFrame
+{
+public:
+   // Inner class to store information for each extra tab.
+   class TGedSubFrame : public TObject {
+   public:
+      TString            fName;
+      TGCompositeFrame  *fFrame;
 
-class TGedFrame : public TGCompositeFrame, public TGWidget {
+      TGedSubFrame(TString n,  TGCompositeFrame* f) : fName(n), fFrame(f) {}
+   };
 
+private:
+   TGedFrame(const TGedFrame&);            // Not implemented
+   TGedFrame& operator=(const TGedFrame&); // Not implemented
+   
 protected:
-   TObject      *fModel;         //selected object, if exists
-   TVirtualPad  *fPad;           //selected pad, if exists
-   Bool_t        fInit;          //init flag for setting signals/slots
-   Bool_t        fAvoidSignal;   //flag for executing slots
-   TGTab        *fTab;           //pointer to the parent tab
+   Bool_t          fInit;        // init flag for setting signals/slots
+   TGedEditor     *fGedEditor;   // manager of this frame 
+   TClass         *fModelClass;  // class corresponding to instantiated GedFrame
+   TGLayoutHints  *fLayoutHints; // defines how this frame is added to fGedEditor
+   Bool_t          fAvoidSignal; // flag for executing slots
+
+   TList          *fExtraTabs;   // addtional tabs in ged editor
+   Int_t           fPriority;    // location in GedEditor
 
    virtual void MakeTitle(const char *title);
 
-private:
-   TGedFrame(const TGedFrame&);             // not implemented
-   TGedFrame& operator=(const TGedFrame&);  // not implemented
-
 public:
-   TGedFrame(const TGWindow *p, Int_t id,
+   TGedFrame(const TGWindow *p = 0,
              Int_t width = 140, Int_t height = 30,
              UInt_t options = kChildFrame,
              Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGedFrame();
 
-   TObject          *GetModel() const { return fModel;}
-   TVirtualPad      *GetPad() const { return fPad;}
-   virtual Option_t *GetDrawOption() const;
-   virtual void      RecursiveRemove(TObject *obj);
-   virtual void      Refresh();
-   virtual void      SetActive(Bool_t active = kTRUE);
-   virtual void      SetDrawOption(Option_t *option="");
-   virtual void      SetModel(TVirtualPad *pad, TObject *obj, Int_t event) = 0;
    virtual void      Update();
+
+   virtual Option_t *GetDrawOption() const;
+
+   virtual TGLayoutHints* GetLayoutHints();
+
+   TClass*           GetModelClass()              { return fModelClass;  }
+   Int_t             GetPriority()                { return fPriority;    }
+   TList*            GetExtraTabs()               { return fExtraTabs;   }
+   TGedEditor*       GetGedEditor()               { return fGedEditor;   }
+   virtual void      AddExtraTab(TGedSubFrame* sf);
+
+   virtual void      Refresh(TObject *model);
+   virtual void      SetDrawOption(Option_t *option="");
+   virtual Bool_t    AcceptModel(TObject*) { return kTRUE; }
+   void              SetModelClass(TClass* mcl)   { fModelClass = mcl; }
+   virtual void      SetModel(TObject* obj) = 0;
+   virtual void      SetGedEditor(TGedEditor* ed) { fGedEditor = ed; } 
+   virtual void      ActivateBaseClassEditors(TClass* cl);
 
    ClassDef(TGedFrame, 0); //base editor's frame
 };
 
-
-// The GUI editors and corresponding canvases will be registered
-// in the list TClass::fClassEditors via the class TGedElement
-
-class TGedElement : public TObject {
-
-private:
-   TGedElement(const TGedElement&);             // not implemented
-   TGedElement& operator=(const TGedElement&);  // not implemented
-
-public:
-   TGedElement(): fGedFrame(0), fCanvas(0) { }
-
-   TGedFrame  *fGedFrame;   //object editor
-   TObject    *fCanvas;     //connected canvas (0 if disconnected)
-
-   ClassDef(TGedElement, 0); //editor element
-};
-
-
 class TGedNameFrame : public TGedFrame {
-
-protected:
-   TGLabel          *fLabel;      //label of attribute frame
-   TGCompositeFrame *f1, *f2;     //container frames
-
 private:
    TGedNameFrame(const TGedNameFrame&);            // not implemented
    TGedNameFrame& operator=(const TGedNameFrame&); // not implemented
 
+protected:
+   TGLabel          *fLabel;      //label of attribute frame
+   TGCompositeFrame *f1, *f2;     //container frames
+   TGToolTip        *fTip; 	  //tool tip associated with button
+
 public:
-   TGedNameFrame(const TGWindow *p, Int_t id,
-                 Int_t width = 140, Int_t height = 30,
+   TGedNameFrame(const TGWindow *p =0 ,
+                 Int_t width = 170, Int_t height = 30,
                  UInt_t options = kChildFrame,
                  Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGedNameFrame();
 
-   virtual void  SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual Bool_t   HandleButton(Event_t *event);
+   virtual Bool_t   HandleCrossing(Event_t *event);
+   
+   virtual void     SetModel(TObject* obj);
 
-   ClassDef(TGedNameFrame,0)  //frame showing the selected object name
+   ClassDef(TGedNameFrame,0)      //frame showing the selected object name
 };
 
 #endif
+

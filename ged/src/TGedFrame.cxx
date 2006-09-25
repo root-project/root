@@ -1,6 +1,6 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.12 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.13 2006/07/26 13:36:42 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
-
+ 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -18,33 +18,34 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
+#include "TGedEditor.h"
 #include "TGClient.h"
 #include "TG3DLine.h"
 #include "TCanvas.h"
 #include "TGLabel.h"
+#include "TGToolTip.h"
 #include "TGTab.h"
 #include <snprintf.h>
 
 
 ClassImp(TGedFrame)
 
-
 //______________________________________________________________________________
-TGedFrame::TGedFrame(const TGWindow *p, Int_t id, Int_t width,
-                           Int_t height, UInt_t options, Pixel_t back)
-   : TGCompositeFrame(p, width, height, options, back), TGWidget(id)
+TGedFrame::TGedFrame(const TGWindow *p, Int_t width,
+                        Int_t height, UInt_t options, Pixel_t back)
+      : TGCompositeFrame(p, width, height, options, back),
+        fInit(kTRUE),
+        fGedEditor(0),
+        fModelClass(0),
+        fLayoutHints(0),
+        fAvoidSignal(kFALSE),
+        fExtraTabs(0),
+        fPriority(50)
 {
    // Constructor of the base GUI attribute frame.
 
-   fPad    = 0;
-   fModel  = 0;
-   fInit   = kTRUE;
-   fAvoidSignal = kFALSE;
-
-   Associate(p);
-   fTab = (TGTab*)p->GetParent()->GetParent();
-
-//   gROOT->GetListOfCleanups()->Add(this);
+   fName = "";
+   SetCleanup(kDeepCleanup);
 }
 
 //______________________________________________________________________________
@@ -52,8 +53,27 @@ TGedFrame::~TGedFrame()
 {
    // Destructor of the base GUI attribute frame.
 
-//   gROOT->GetListOfCleanups()->Remove(this);
+   if (fExtraTabs) {
+      TGedSubFrame* sf;
+      TIter next(fExtraTabs);
+      while ((sf = (TGedSubFrame*) next()) != 0) {
+         delete sf->fFrame;
+         fExtraTabs->Remove(sf);
+         delete sf;
+      }
+      delete fExtraTabs;
+   }
+   delete fLayoutHints;
 
+   // Destructor of TGCompositeFrame will do the rest.
+}
+
+//______________________________________________________________________________
+void TGedFrame::Update()
+{
+   // Update the current pad when an attribute is changed via GUI.
+
+   fGedEditor->Update(this);
 }
 
 //______________________________________________________________________________
@@ -61,14 +81,26 @@ Option_t *TGedFrame::GetDrawOption() const
 {
    // Get draw options of the selected object.
 
-   if (!fPad) return "";
+   if (!fGedEditor->GetPad()) return "";
 
-   TListIter next(fPad->GetListOfPrimitives());
+   TListIter next(fGedEditor->GetPad()->GetListOfPrimitives());
    TObject *obj;
    while ((obj = next())) {
-      if (obj == fModel) return next.GetOption();
+      if (obj == fGedEditor->GetModel()) return next.GetOption();
    }
    return "";
+}
+
+//______________________________________________________________________________
+TGLayoutHints* TGedFrame::GetLayoutHints()
+{
+   // Get layout hints with which is added to TGedEditor frame.
+
+   if (fLayoutHints == 0){
+      fLayoutHints = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2);
+      fLayoutHints->AddReference();
+   }
+   return fLayoutHints;
 }
 
 //______________________________________________________________________________
@@ -88,41 +120,21 @@ void TGedFrame::MakeTitle(const char *title)
 }
 
 //______________________________________________________________________________
-void TGedFrame::SetActive(Bool_t active)
+void TGedFrame::AddExtraTab(TGedSubFrame* sf)
 {
-   // Set active GUI attribute frames related to the selected object.
-
-   if (active)
-      ((TGCompositeFrame*)GetParent())->ShowFrame(this);
-   else
-      ((TGCompositeFrame*)GetParent())->HideFrame(this);
-
-// no need to call for every single editor Layout of TGMainFrame
-//   ((TGMainFrame*)GetMainFrame())->Layout();
-
-   // to avoid that the user changes options on a deactivated Tab
-   if (fTab->IsEnabled(fTab->GetCurrent()))
-      fTab->SetTab(fTab->GetCurrent());
-   else
-      fTab->SetTab(0);
+  // Adds tab container to list of extra tabs.
+  
+   if (fExtraTabs == 0) fExtraTabs = new TList();
+   fExtraTabs->Add(sf);
+   sf->fFrame->SetCleanup(kDeepCleanup);
 }
 
 //______________________________________________________________________________
-void TGedFrame::RecursiveRemove(TObject* /*obj*/)
-{
-   // Remove references to fModel in case the fModel is being deleted
-   // Deactivate attribute frames if they point to obj
-
-//   if (fModel != obj ) return;
-//      SetModel(fPad,0,0);
-}
-
-//______________________________________________________________________________
-void TGedFrame::Refresh()
+void TGedFrame::Refresh(TObject* model)
 {
    // Refresh the GUI info about the object attributes.
 
-   SetModel(fPad, fModel, 0);
+   SetModel(model);
 }
 
 //______________________________________________________________________________
@@ -132,38 +144,43 @@ void TGedFrame::SetDrawOption(Option_t *option)
    // the drawing style and is stored in the option field of the
    // TObjOptLink supporting a TPad's primitive list (TList).
 
-   if (!fPad || !option) return;
+   if (!fGedEditor->GetPad() || !option) return;
 
-   TListIter next(fPad->GetListOfPrimitives());
-   delete fPad->FindObject("Tframe");
+   TListIter next(fGedEditor->GetPad()->GetListOfPrimitives());
+   delete fGedEditor->GetPad()->FindObject("Tframe");
    TObject *obj;
    while ((obj = next())) {
-      if (obj == fModel) {
+      if (obj == fGedEditor->GetModel()) {
          next.SetOption(option);
-         fPad->Modified();
-         fPad->Update();
+         fGedEditor->GetPad()->Modified();
+         fGedEditor->GetPad()->Update();
          return;
       }
    }
 }
 
 //______________________________________________________________________________
-void TGedFrame::Update()
+void TGedFrame::ActivateBaseClassEditors(TClass* cl)
 {
-   // Update the current pad when an attribute is changed via GUI.
+   // Provide list of editors for base-classes.
+   // In this class we return all classed with editors found via recursive
+   // descent into list of base classes.
+   // Override to control which editors are actually shown (see TH2Editor).
 
-   if (fPad) {
-      fPad->Modified();
-      fPad->Update();
+   // printf("%s::FillListOfBaseEditors %s\n", IsA()->GetName(), cl->GetName());
+   if (cl->GetListOfBases()->IsEmpty() == kFALSE) {
+      fGedEditor->ActivateEditors(cl->GetListOfBases(), kTRUE);
    }
 }
 
 //______________________________________________________________________________
-TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
-                             Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t width,
+                              Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Create the frame containing the selected object name.
+
+   fPriority = 0;
 
    f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
                                             kFixedWidth      |
@@ -174,7 +191,8 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
                 new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    AddFrame(f1, new TGLayoutHints(kLHintsTop));
 
-   f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   f2 = new TGCompositeFrame(this, 140, 20, kHorizontalFrame |
+                                            kFixedWidth);
    fLabel = new TGLabel(f2, "");
    f2->AddFrame(fLabel, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
@@ -183,42 +201,61 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
    Pixel_t color;
    gClient->GetColorByName("#ff0000", color);
    fLabel->SetTextColor(color, kFALSE);
+
+   // create tool tip with delay 300 ms
+   fTip = new TGToolTip(fClient->GetDefaultRoot(), this, "TGedNameFrame", 500);
+  
+   AddInput(kEnterWindowMask | kLeaveWindowMask | kKeyPressMask | kButtonPressMask);
 }
 
 //______________________________________________________________________________
 TGedNameFrame::~TGedNameFrame()
 {
-   // Destructor of the name frame.
+   // Destructor.
 
-   TGFrameElement *el;
-   TIter next(GetList());
-
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-   }
-   Cleanup();
+   delete fTip;
 }
 
 //______________________________________________________________________________
-void TGedNameFrame::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+Bool_t TGedNameFrame::HandleCrossing(Event_t *event)
 {
-   // Slot connected to Selected() signal of TCanvas.
+   // Handle mouse crossing event for tooltip.
 
-   fModel = obj;
-   fPad = pad;
+   if (event->fType == kEnterNotify)
+      fTip->Reset();
+   else
+      fTip->Hide();
 
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGedNameFrame::HandleButton(Event_t *event)
+{
+   // Handle mouse button event.
+
+   if (fTip) fTip->Hide();
+  
+   return kFALSE;
+}
+
+
+//______________________________________________________________________________
+void TGedNameFrame::SetModel(TObject* obj)
+{
+   // Sets text for the label.
+ 
    TString string;
 
    if (obj == 0) {
-      SetActive(kFALSE);
+      fLabel->SetText(new TGString("Object not selected"));
       return;
-   }
-
-   string.Append(fModel->GetName());
+   } 
+   string.Append(obj->GetName());
    string.Append("::");
-   string.Append(fModel->ClassName());
+   string.Append(obj->ClassName());
+   
    fLabel->SetText(new TGString(string));
-
-   SetActive();
+   string = Form("Name: '%s'; Title: '%s'; Class: '%s'", obj->GetName(), obj->GetTitle(), obj->ClassName());
+   fTip->SetText(string);
 }
