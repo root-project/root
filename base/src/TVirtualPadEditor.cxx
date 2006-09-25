@@ -87,10 +87,12 @@ void TVirtualPadEditor::SetPadEditorName(const char *name)
 //______________________________________________________________________________
 void TVirtualPadEditor::ShowEditor()
 {
-   // Show the pad editor. Static method.
+   // Show the global pad editor. Static method.
 
-   if (!fgPadEditor) GetPadEditor();
-   fgPadEditor->SetGlobal(kTRUE);
+   if (!fgPadEditor) {
+      GetPadEditor();
+      fgPadEditor->SetGlobal(kTRUE);
+   }
    fgPadEditor->Show();
 }
 
@@ -110,7 +112,6 @@ void TVirtualPadEditor::Terminate()
 
    if (!fgPadEditor) return;
 
-   fgPadEditor->DeleteEditors();
    delete fgPadEditor;
    fgPadEditor = 0;
 }

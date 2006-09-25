@@ -24,6 +24,8 @@
 #include "TString.h"
 #endif
 
+class TCanvas;
+
 class TVirtualPadEditor {
 
 protected:
@@ -45,11 +47,11 @@ public:
    virtual void     TextAttributes(Int_t ,Float_t ,Int_t ,Int_t ,Float_t ) { }
 
    virtual void     Build() { }
+   virtual void     Show() { }
    virtual void     Hide() { }
    virtual Bool_t   IsGlobal() const = 0;
-   virtual void     DeleteEditors() { }
    virtual void     SetGlobal(Bool_t) { }
-   virtual void     Show() { }
+   virtual TCanvas* GetCanvas() const = 0;
 
    // methods related to the new editor interface
 
