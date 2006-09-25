@@ -124,6 +124,7 @@
 
 #include "TH2Editor.h"
 #include "TGedFrame.h"
+#include "TGedEditor.h"
 #include "TGComboBox.h"
 #include "TGTextEntry.h"
 #include "TGToolTip.h"
@@ -174,14 +175,15 @@ enum ETH2Wid {
 };
 
 //______________________________________________________________________________
-TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
-                         Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+TH2Editor::TH2Editor(const TGWindow *p, Int_t width,
+                     Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back),
+     fHist(0),
+     fBin(0),
+     fBinHist(0)
 {
    // Constructor of histogram attribute GUI.
 
-   fHist = 0;
-   
    MakeTitle("Title");
 
    // Histogram title  
@@ -191,6 +193,7 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    fTitle->SetToolTipText("Enter the histogram title string");
    AddFrame(fTitle, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
    
+
    // 2D or 3D Plot?
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fDimGroup = new TGHButtonGroup(f2,"Plot");
@@ -198,8 +201,8 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    fDim->SetToolTipText("A 2-d plot of the histogram is dawn");
    fDim0 = new TGRadioButton(fDimGroup,"3-D",kDIM_COMPLEX);
    fDim0->SetToolTipText("A 3-d plot of the histogram is dawn");
-   fDimGroup->SetLayoutHints(new TGLayoutHints(kLHintsLeft ,-2,3,3,-7),fDim);
-   fDimGroup->SetLayoutHints(new TGLayoutHints(kLHintsLeft ,16,-1,3,-7),fDim0);   
+   fDimGroup->SetLayoutHints(fDimlh=new TGLayoutHints(kLHintsLeft ,-2,3,3,-7),fDim);
+   fDimGroup->SetLayoutHints(fDim0lh=new TGLayoutHints(kLHintsLeft ,16,-1,3,-7),fDim0);   
    fDimGroup->Show();
    fDimGroup->ChangeOptions(kFitWidth|kChildFrame|kHorizontalFrame);
    f2->AddFrame(fDimGroup, new TGLayoutHints(kLHintsTop, 4, 1, 0, 0));
@@ -364,38 +367,18 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    f38->AddFrame(f21, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
    AddFrame(f38, new TGLayoutHints(kLHintsTop));
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//             REBIN TAB
-//
-////////////////////////////////////////////////////////////////////////////////
+   CreateBinTab();
+}
 
-   fTab = (TGTab *)(p->GetParent()->GetParent());
-/*   while (fTab->GetNumberOfTabs()>1) {
-     if (!fTab->IsEnabled(1)) fTab->SetEnabled(1);
-     fTab->RemoveTab(1);
-   }*/
-   fBinContainer = fTab->AddTab("Binning");
-   fBin = new TGCompositeFrame(fBinContainer, 80, 20, kVerticalFrame);
+//______________________________________________________________________________
+void TH2Editor::CreateBinTab()
+{
+   // Create the Binning tab.
+   fBin = new TGVerticalFrame();
+   AddExtraTab(new TGedSubFrame(TString("Binning"), fBin));
 
-   TGCompositeFrame *fNameBin2 = new TGCompositeFrame(fBin, 145, 10, 
-                                                            kHorizontalFrame | 
-                                                            kFixedWidth      | 
-                                                            kOwnBackground);
-   fNameBin2->AddFrame(new TGLabel(fNameBin2,"Name"), 
-                       new TGLayoutHints(kLHintsLeft, 1, 1, 5, 0));
-   fNameBin2->AddFrame(new TGHorizontal3DLine(fNameBin2), 
-                       new TGLayoutHints(kLHintsExpandX, 5, 5, 12, 7));
-   fBin->AddFrame(fNameBin2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-
-   fNameLabel2 = new TGLabel(fBin, "");
-   Pixel_t color;
-   gClient->GetColorByName("#ff0000", color);
-   fNameLabel2->SetTextColor(color, kFALSE);
-   fBin->AddFrame(fNameLabel2, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-
-   // Editor for rebinning a histogram which does NOT derive from an Ntuple
    
+   // Editor for rebinning a histogram which does NOT derive from an Ntuple
    fBinXCont = new TGCompositeFrame(fBin, 80, 20, kVerticalFrame);
    TGCompositeFrame *title1 = new TGCompositeFrame(fBinXCont, 145, 10, 
                                                               kHorizontalFrame | 
@@ -514,7 +497,7 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    fBinXCont1->AddFrame(f28, new TGLayoutHints(kLHintsTop, 0, 7, 2, 4));
 
    TGCompositeFrame *f29 = new TGCompositeFrame(fBinXCont1, 80, 20, 
-                                                            kHorizontalFrame);
+                                                kHorizontalFrame);
    TGLabel *xOffsetLbl = new TGLabel(f29, "BinOffset:");
    f29->AddFrame(xOffsetLbl, new TGLayoutHints(kLHintsLeft, 7, 1, 2, 1));
    fXOffsetNumberEntry = new TGNumberEntryField(f29, kXBINOFFSET, 0.0,  
@@ -677,8 +660,6 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    f20->AddFrame(fDelaydraw, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
    fBin->AddFrame(f20, new TGLayoutHints(kLHintsTop, 2, 1, 5, 3)); 
    
-   fBinContainer->AddFrame(fBin, new TGLayoutHints(kLHintsTop));
- 
    fXBinOffsetSld->SetRange(0,100);
    fXBinOffsetSld->SetPosition(0);
    fXOffsetNumberEntry->SetNumber(0.0000);
@@ -690,70 +671,21 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    fCancel->SetState(kButtonDisabled);  
    fApply->SetState(kButtonDisabled);
 
-   fBinHist=0;
-  
-   fTab->MapSubwindows();
-   fTab->Layout();
-   fTab->MapWindow();
-   
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   ((TGMainFrame*)GetMainFrame())->Layout();
-   
-   TClass *cl = TH2::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
 TH2Editor::~TH2Editor()
 {
-   // Destructor of TH2 editor.
+   // Destructor.
 
    // children of TGButonGroup are not deleted 
    delete fDim;
    delete fDim0;
+   delete fDimlh;
+   delete fDim0lh;
 
-   TGFrameElement *el, *el1, *el2;
-   TIter nextBinCont(fBinContainer->GetList());
-   while ((el = (TGFrameElement *)nextBinCont())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
-         TIter next1(((TGCompositeFrame *)el->fFrame)->GetList());
-         while ((el1 = (TGFrameElement *)next1())) {
-            if (!strcmp(el1->fFrame->ClassName(), "TGCompositeFrame")) {
-               TIter next2(((TGCompositeFrame *)el1->fFrame)->GetList());
-               while ((el2 = (TGFrameElement *)next2())) {
-                  if (!strcmp(el2->fFrame->ClassName(), "TGCompositeFrame"))
-                     ((TGCompositeFrame *)el2->fFrame)->Cleanup();
-               }
-               ((TGCompositeFrame *)el1->fFrame)->Cleanup();
-            }
-         }
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-      }
-   }
-   fBinContainer->Cleanup();
-
-   TIter next(GetList());
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
-         TIter next1(((TGCompositeFrame *)el->fFrame)->GetList());
-         while ((el1 = (TGFrameElement *)next1())) {
-            if (!strcmp(el1->fFrame->ClassName(), "TGCompositeFrame"))
-               ((TGCompositeFrame *)el1->fFrame)->Cleanup();
-         }
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-      }
-   }
-   Cleanup();
-   
    if (fBinHist) delete fBinHist;
    fBinHist = 0;
-   
 }
 
 //______________________________________________________________________________
@@ -829,31 +761,22 @@ void TH2Editor::ConnectSignals2Slots()
 } 
 
 //______________________________________________________________________________
-void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+Bool_t TH2Editor::AcceptModel(TObject* obj)
 {
-   // Pick up the values of current histogram attributes.
+   // Check if object is able to configure with this editor.
 
    if (obj == 0 || !obj->InheritsFrom(TH2::Class()) || 
        (!strcmp(((TH2 *)obj)->GetName(),"htemp") && 
-       ((TH2*)obj)->GetEntries() == 0)) {  // htemp is an empty histogram
-
-      SetActive(kFALSE);
-      for (Int_t i=0; i < fTab->GetNumberOfTabs(); i++){
-         if (fTab->GetTabContainer(i)==fBinContainer 
-             /*|| fTab->GetTabContainer(i)==fFitContainer*/) {
-            fTab->GetTabContainer(i)->UnmapWindow();
-            fTab->GetTabTab(i)->UnmapWindow();
-            fTab->SetEnabled(i,kFALSE);
-//    fTab->SetTab(0);
-         }
-      }
-      return;                 
+        ((TH2*)obj)->GetEntries() == 0)) {  // htemp is an empty histogram
+      return kFALSE;                 
    }
-/*   if (obj == 0 || !obj->InheritsFrom("TH2")) {
-      SetActive(kFALSE);
-      fTab->SetEnabled(1,kFALSE);
-      return;
-   }      */
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TH2Editor::SetModel(TObject* obj)
+{
+   // Pick up the values of current histogram attributes.
 
    fAvoidSignal = kTRUE;
    if (fBinHist && (obj != fHist)) {
@@ -869,25 +792,13 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       fHist->Add(fBinHist);
       delete fBinHist; 
       fBinHist = 0;
-      if (fPad) {
-         fPad->Modified(); 
-         fPad->Update();
+      if (fGedEditor->GetPad()) {
+         fGedEditor->GetPad()->Modified(); 
+         fGedEditor->GetPad()->Update();
       }
    }
   
-   fModel = obj;
-   fPad = pad;
-   fHist = (TH2*) fModel;
-   
-   if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
-   gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
-
-   //set the selected object name on Binning tab
-   TString string;
-   string.Append(fModel->GetName());
-   string.Append("::");
-   string.Append(fModel->ClassName());
-   fNameLabel2->SetText(new TGString(string));
+   fHist = (TH2*) obj;
 
    const char *text = fHist->GetTitle();
    fTitle->SetText(text);
@@ -1070,8 +981,8 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fContLevels->SetIntNumber(fHist->GetContour());
    fContLevels1->SetIntNumber(fHist->GetContour());
 
-   fFrameColor->SetColor(TColor::Number2Pixel(fPad->GetFrameFillColor()));
-   fFramePattern->SetPattern(fPad->GetFrameFillStyle());
+   fFrameColor->SetColor(TColor::Number2Pixel(fGedEditor->GetPad()->GetFrameFillColor()));
+   fFramePattern->SetPattern(fGedEditor->GetPad()->GetFrameFillStyle());
 
    TTreePlayer *player = (TTreePlayer*)TVirtualTreePlayer::GetCurrentPlayer();
    
@@ -1127,27 +1038,11 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
                                   fHist->GetXaxis()->GetBinWidth(1));
    fYOffsetNumberEntry->SetLimits(TGNumberFormat::kNELLimitMinMax, 0, 
                                   fHist->GetYaxis()->GetBinWidth(1));
-
-   for (Int_t i=1; i < fTab->GetNumberOfTabs(); i++) {
-      if (fTab->GetTabContainer(i)==fBinContainer 
-          /*|| fTab->GetTabContainer(i)==fFitContainer*/) {
-         fTab->GetTabContainer(i)->MapWindow(); 
-         fTab->GetTabTab(i)->MapWindow();    
-         fTab->SetEnabled(i, kTRUE);  
-      } else fTab->SetEnabled(i,kFALSE); 
-   }
-   if (!fTab->IsEnabled(fTab->GetCurrent())) fTab->SetTab(0);
-
-//   Layout();
-   fTab->Layout();   
+   if (!fGedEditor->GetTab()->IsEnabled(fGedEditor->GetTab()->GetCurrent())) fGedEditor->GetTab()->SetTab(0);
 
    if (fInit) ConnectSignals2Slots();
-   fTab->SetEnabled(1, kTRUE); 
-   SetActive(kTRUE);
+   fGedEditor->GetTab()->SetEnabled(1, kTRUE); 
    fAvoidSignal = kFALSE;     
-
-   if (gPad) gPad->GetVirtCanvas()->SetCursor(kPointer);
-   gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
 }
   
 //______________________________________________________________________________
@@ -1691,7 +1586,7 @@ void TH2Editor::DoBinReleased()
       if (divy[0]==2) fBinYSlider->SetPosition(2);
       if (divx[0]==2 && divy[0]==2) return;
       // delete the histogram which is on the screen
-      fPad->cd();
+      fGedEditor->GetPad()->cd();
       fHist->Reset();
       fHist->SetBins(nx,fBinHist->GetXaxis()->GetXmin(),
                      fBinHist->GetXaxis()->GetXmax(),
@@ -1701,7 +1596,7 @@ void TH2Editor::DoBinReleased()
       fHist->ResetBit(TH1::kCanRebin);
       fHist->Rebin2D(divx[numx], divy[numy]);
 
-      fModel=fHist;
+      //fModel=fHist;
 
       if (divx[0]!=2) {
          TAxis* xaxis = fHist->GetXaxis();
@@ -1730,9 +1625,9 @@ void TH2Editor::DoBinReleased()
       if (fApply->GetState()==kButtonDisabled) fApply->SetState(kButtonUp);
       Update();
    }
-//   fPad->GetCanvas()->Selected(fPad, fHist,  0);      
-   fModel = fHist;
-   Refresh();
+//   fGedEditor->GetPad()->GetCanvas()->Selected(fGedEditor->GetPad(), fHist,  0);      
+   // fModel = fHist;
+   Refresh(fHist);
 }
 
 //______________________________________________________________________________
@@ -1786,7 +1681,7 @@ void TH2Editor::DoBinMoved()
    if (maxy==1) maxy=2;
    if (fDelaydraw->GetState()==kButtonUp){
       // delete the histogram which is on the screen
-      fPad->cd();
+      fGedEditor->GetPad()->cd();
       fHist->Reset();
       fHist->SetBins(nx,fBinHist->GetXaxis()->GetXmin(),
                      fBinHist->GetXaxis()->GetXmax(),
@@ -1795,7 +1690,7 @@ void TH2Editor::DoBinMoved()
       fHist->Add(fBinHist);
       fHist->ResetBit(TH1::kCanRebin);
       fHist->Rebin2D(divx[numx], divy[numy]);
-      fModel=fHist;
+      //fModel=fHist;
       if (divx[0]!=2) {
          TAxis* xaxis = fHist->GetXaxis();
          Double_t xBinWidth = xaxis->GetBinWidth(1);
@@ -1875,9 +1770,9 @@ void TH2Editor::DoBinLabel()
       if (fDelaydraw->GetState()==kButtonUp) DoBinMoved();
       else DoBinReleased(); 
    } 
-//   fPad->GetCanvas()->Selected(fPad, fHist,  0);   
-   fModel = fHist;
-   Refresh();
+//   fGedEditor->GetPad()->GetCanvas()->Selected(fGedEditor->GetPad(), fHist,  0);   
+//   fModel = fHist;
+   Refresh(fHist);
 }
 
 //______________________________________________________________________________
@@ -1923,7 +1818,7 @@ void TH2Editor::DoCancel()
    // Slot connected to the Cancel Button in the Rebinned histogram Window.
    
    if (fBinHist) {
-      fPad->cd();
+      fGedEditor->GetPad()->cd();
       fHist->Reset();
       fHist->SetBins(fBinHist->GetXaxis()->GetNbins(),
                      fBinHist->GetXaxis()->GetXmin(),
@@ -1943,10 +1838,10 @@ void TH2Editor::DoCancel()
       if (divx[0]!=2) fBinXSlider->SetPosition(1);
       if (divy[0]!=2) fBinYSlider->SetPosition(1);
       // Consigning the new Histogram to all other Editors
-//      fPad->GetCanvas()->Selected(fPad, fHist,  0);
+//      fGedEditor->GetPad()->GetCanvas()->Selected(fGedEditor->GetPad(), fHist,  0);
       Update();    
-      fModel = fHist;
-      Refresh();
+      //  fModel = fHist;
+      Refresh(fHist);
    }
 }
 
@@ -2398,16 +2293,16 @@ void TH2Editor::DoSliderXMoved()
       Float_t ymin,ymax,xleft,xright;
       xleft = xaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
       xright =  xaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
-      ymin  = fPad->GetUymin();
-      ymax  = fPad->GetUymax();
-      px1   = fPad->XtoAbsPixel(xleft);
-      py1   = fPad->YtoAbsPixel(ymin);
-      px2   = fPad->XtoAbsPixel(xright);
-      py2   = fPad->YtoAbsPixel(ymax);
-      fPad->GetCanvas()->FeedbackMode(kTRUE);
-      fPad->cd();
-      fPad->SetLineWidth(1);
-      fPad->SetLineColor(2);
+      ymin  = fGedEditor->GetPad()->GetUymin();
+      ymax  = fGedEditor->GetPad()->GetUymax();
+      px1   = fGedEditor->GetPad()->XtoAbsPixel(xleft);
+      py1   = fGedEditor->GetPad()->YtoAbsPixel(ymin);
+      px2   = fGedEditor->GetPad()->XtoAbsPixel(xright);
+      py2   = fGedEditor->GetPad()->YtoAbsPixel(ymax);
+      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      fGedEditor->GetPad()->cd();
+      fGedEditor->GetPad()->SetLineWidth(1);
+      fGedEditor->GetPad()->SetLineColor(2);
       gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
       gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       fPx1old = px1;
@@ -2422,9 +2317,9 @@ void TH2Editor::DoSliderXMoved()
                 fCoordsCombo->GetSelected()==kCOORDS_CAR) {
       // 3D plot
       Float_t p1[3], p2[3], p3[3], p4[3], p5[3], p6[3], p7[3], p8[3];
-      fPad->GetCanvas()->FeedbackMode(kTRUE); 
-      fPad->cd();
-      TView *fView = fPad->GetView();
+      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
+      fGedEditor->GetPad()->cd();
+      TView *fView = fGedEditor->GetPad()->GetView();
       Double_t *rmin = fView->GetRmin();
       Double_t *rmax = fView->GetRmax();
       p1[0] = p4[0] = p5[0] = p8[0] = 
@@ -2435,8 +2330,8 @@ void TH2Editor::DoSliderXMoved()
       p5[1] = p6[1] = p7[1] = p8[1] = rmax[1];
       p1[2] = p2[2] = p5[2] = p6[2] = rmin[2];
       p3[2] = p4[2] = p7[2] = p8[2] = rmax[2];
-      fPad->SetLineWidth(1);
-      fPad->SetLineColor(2);
+      fGedEditor->GetPad()->SetLineWidth(1);
+      fGedEditor->GetPad()->SetLineColor(2);
       PaintBox3D(fP2oldx, fP3oldx, fP7oldx, fP6oldx);
       PaintBox3D(fP1oldx, fP4oldx, fP8oldx, fP5oldx);
       PaintBox3D(p2, p3, p7, p6);
@@ -2480,27 +2375,27 @@ void TH2Editor::DoSliderXPressed()
    Float_t ymin,ymax,xleft,xright;
    if (fDelaydraw->GetState()==kButtonDown && fDim->GetState()==kButtonDown) {
       // 2D Plot 
-      if (!fPad) return;
-      fPad->cd();
-      fPad->GetCanvas()->FeedbackMode(kFALSE);
-      fPad->SetLineWidth(1);
-      fPad->SetLineColor(2);
+      if (!fGedEditor->GetPad()) return;
+      fGedEditor->GetPad()->cd();
+      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kFALSE);
+      fGedEditor->GetPad()->SetLineWidth(1);
+      fGedEditor->GetPad()->SetLineColor(2);
       xleft  = xaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
       xright =  xaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
-      ymin  = fPad->GetUymin();
-      ymax  = fPad->GetUymax();
-      fPx1old = fPad->XtoAbsPixel(xleft);
-      fPy1old = fPad->YtoAbsPixel(ymin);
-      fPx2old = fPad->XtoAbsPixel(xright);
-      fPy2old = fPad->YtoAbsPixel(ymax);
+      ymin  = fGedEditor->GetPad()->GetUymin();
+      ymax  = fGedEditor->GetPad()->GetUymax();
+      fPx1old = fGedEditor->GetPad()->XtoAbsPixel(xleft);
+      fPy1old = fGedEditor->GetPad()->YtoAbsPixel(ymin);
+      fPx2old = fGedEditor->GetPad()->XtoAbsPixel(xright);
+      fPy2old = fGedEditor->GetPad()->YtoAbsPixel(ymax);
       gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
    } else if (fDelaydraw->GetState()==kButtonDown && 
               fDim0->GetState()==kButtonDown && 
               fCoordsCombo->GetSelected()==kCOORDS_CAR) {
       // 3D plot
-      if (!fPad) return;
-      fPad->cd();
-      TView *fView = fPad->GetView();
+      if (!fGedEditor->GetPad()) return;
+      fGedEditor->GetPad()->cd();
+      TView *fView = fGedEditor->GetPad()->GetView();
       Double_t *rmin = fView->GetRmin();
       Double_t *rmax = fView->GetRmax();
       fP1oldx[0] = fP4oldx[0] = fP5oldx[0] = fP8oldx[0] = 
@@ -2511,9 +2406,9 @@ void TH2Editor::DoSliderXPressed()
       fP5oldx[1] = fP6oldx[1] = fP7oldx[1] = fP8oldx[1] = rmax[1];
       fP1oldx[2] = fP2oldx[2] = fP5oldx[2] = fP6oldx[2] = rmin[2]; 
       fP3oldx[2] = fP4oldx[2] = fP7oldx[2] = fP8oldx[2] = rmax[2];
-      fPad->GetCanvas()->FeedbackMode(kTRUE); 
-      fPad->SetLineWidth(1);
-      fPad->SetLineColor(2);
+      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
+      fGedEditor->GetPad()->SetLineWidth(1);
+      fGedEditor->GetPad()->SetLineColor(2);
       PaintBox3D(fP2oldx, fP3oldx, fP7oldx, fP6oldx);
       PaintBox3D(fP1oldx, fP4oldx, fP8oldx, fP5oldx);
    }
@@ -2575,16 +2470,16 @@ void TH2Editor::DoSliderYMoved()
       Float_t xmin,xmax,ybottom,ytop;
       ybottom = yaxis->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));
       ytop = yaxis->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
-      xmin = fPad->GetUxmin();
-      xmax = fPad->GetUxmax();
-      px1  = fPad->XtoAbsPixel(xmin);
-      py1  = fPad->YtoAbsPixel(ybottom);
-      px2  = fPad->XtoAbsPixel(xmax);
-      py2  = fPad->YtoAbsPixel(ytop);
-      fPad->GetCanvas()->FeedbackMode(kTRUE);
-      fPad->cd();
-      fPad->SetLineWidth(1);
-      fPad->SetLineColor(2);
+      xmin = fGedEditor->GetPad()->GetUxmin();
+      xmax = fGedEditor->GetPad()->GetUxmax();
+      px1  = fGedEditor->GetPad()->XtoAbsPixel(xmin);
+      py1  = fGedEditor->GetPad()->YtoAbsPixel(ybottom);
+      px2  = fGedEditor->GetPad()->XtoAbsPixel(xmax);
+      py2  = fGedEditor->GetPad()->YtoAbsPixel(ytop);
+      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      fGedEditor->GetPad()->cd();
+      fGedEditor->GetPad()->SetLineWidth(1);
+      fGedEditor->GetPad()->SetLineColor(2);
       gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
       gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       fPx1old = px1;
@@ -2599,9 +2494,9 @@ void TH2Editor::DoSliderYMoved()
               fCoordsCombo->GetSelected()==kCOORDS_CAR) {
       // 3D plot
       Float_t p1[3], p2[3], p3[3], p4[3], p5[3], p6[3], p7[3], p8[3];
-      fPad->GetCanvas()->FeedbackMode(kTRUE); 
-      fPad->cd();
-      TView *fView = fPad->GetView();
+      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
+      fGedEditor->GetPad()->cd();
+      TView *fView = fGedEditor->GetPad()->GetView();
       Double_t *rmin = fView->GetRmin();
       Double_t *rmax = fView->GetRmax();
       p1[0] = p2[0] = p3[0] = p4[0] = rmin[0];
@@ -2612,8 +2507,8 @@ void TH2Editor::DoSliderYMoved()
             yaxis->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
       p1[2] = p2[2] = p5[2] = p6[2] = rmin[2];
       p3[2] = p4[2] = p7[2] = p8[2] = rmax[2];
-      fPad->SetLineWidth(1);
-      fPad->SetLineColor(2);
+      fGedEditor->GetPad()->SetLineWidth(1);
+      fGedEditor->GetPad()->SetLineColor(2);
       PaintBox3D(fP2oldy, fP3oldy, fP7oldy, fP6oldy);
       PaintBox3D(fP1oldy, fP4oldy, fP8oldy, fP5oldy);
       PaintBox3D(p2, p3, p7, p6);
@@ -2657,26 +2552,26 @@ void TH2Editor::DoSliderYPressed()
    Float_t xmin,xmax,ytop,ybottom;
    if (fDelaydraw->GetState()==kButtonDown && fDim->GetState()==kButtonDown) {
       // 2D plot:
-      if (!fPad) return;
-      fPad->cd();
-      fPad->GetCanvas()->FeedbackMode(kFALSE);
-      fPad->SetLineWidth(1);
-      fPad->SetLineColor(2);
+      if (!fGedEditor->GetPad()) return;
+      fGedEditor->GetPad()->cd();
+      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kFALSE);
+      fGedEditor->GetPad()->SetLineWidth(1);
+      fGedEditor->GetPad()->SetLineColor(2);
       ybottom = yaxis->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));
       ytop =  yaxis->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
-      xmin  = fPad->GetUxmin();
-      xmax  = fPad->GetUxmax();
-      fPx1old   = fPad->XtoAbsPixel(xmin);
-      fPy1old   = fPad->YtoAbsPixel(ybottom);
-      fPx2old   = fPad->XtoAbsPixel(xmax);
-      fPy2old   = fPad->YtoAbsPixel(ytop);
+      xmin  = fGedEditor->GetPad()->GetUxmin();
+      xmax  = fGedEditor->GetPad()->GetUxmax();
+      fPx1old   = fGedEditor->GetPad()->XtoAbsPixel(xmin);
+      fPy1old   = fGedEditor->GetPad()->YtoAbsPixel(ybottom);
+      fPx2old   = fGedEditor->GetPad()->XtoAbsPixel(xmax);
+      fPy2old   = fGedEditor->GetPad()->YtoAbsPixel(ytop);
       gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
    }  else if (fDelaydraw->GetState()==kButtonDown && 
                fDim0->GetState()==kButtonDown && 
                fCoordsCombo->GetSelected()==kCOORDS_CAR) {
       // 3D plot
-      if (!fPad) return;
-      fPad->cd();
+      if (!fGedEditor->GetPad()) return;
+      fGedEditor->GetPad()->cd();
       TView *fView = gPad->GetView();
       Double_t *rmin = fView->GetRmin();
       Double_t *rmax = fView->GetRmax();
@@ -2688,9 +2583,9 @@ void TH2Editor::DoSliderYPressed()
                  yaxis->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
       fP1oldy[2] = fP2oldy[2] = fP5oldy[2] = fP6oldy[2] = rmin[2]; 
       fP3oldy[2] = fP4oldy[2] = fP7oldy[2] = fP8oldy[2] = rmax[2];
-      fPad->GetCanvas()->FeedbackMode(kTRUE); 
-      fPad->SetLineWidth(1);
-      fPad->SetLineColor(2);
+      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
+      fGedEditor->GetPad()->SetLineWidth(1);
+      fGedEditor->GetPad()->SetLineColor(2);
       PaintBox3D(fP2oldy, fP3oldy, fP7oldy, fP6oldy);
       PaintBox3D(fP1oldy, fP4oldy, fP8oldy, fP5oldy);
    }
@@ -2748,9 +2643,9 @@ void TH2Editor::DoFillColor(Pixel_t color)
 {
    // Slot connected to the fill area color.
 
-   if (fAvoidSignal || !fPad) return;
-   fPad->cd();
-   fPad->SetFrameFillColor(TColor::GetColor(color));
+   if (fAvoidSignal || !fGedEditor->GetPad()) return;
+   fGedEditor->GetPad()->cd();
+   fGedEditor->GetPad()->SetFrameFillColor(TColor::GetColor(color));
    Update();
 }
 
@@ -2759,9 +2654,9 @@ void TH2Editor::DoFillPattern(Style_t pattern)
 {
    // Slot connected to the fill area pattern.
 
-   if (fAvoidSignal || !fPad) return;
-   fPad->cd();
-   fPad->SetFrameFillStyle(pattern);
+   if (fAvoidSignal || !fGedEditor->GetPad()) return;
+   fGedEditor->GetPad()->cd();
+   fGedEditor->GetPad()->SetFrameFillStyle(pattern);
    Update();
 }
 
@@ -2907,10 +2802,10 @@ void TH2Editor::PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4)
 {
    // Paint a square in 3D.
 
-   fPad->PaintLine3D(p1, p2);
-   fPad->PaintLine3D(p2, p3);
-   fPad->PaintLine3D(p3, p4);
-   fPad->PaintLine3D(p4, p1);
+   fGedEditor->GetPad()->PaintLine3D(p1, p2);
+   fGedEditor->GetPad()->PaintLine3D(p2, p3);
+   fGedEditor->GetPad()->PaintLine3D(p3, p4);
+   fGedEditor->GetPad()->PaintLine3D(p4, p1);
 }
 //______________________________________________________________________________
 Int_t* TH2Editor::Dividers(Int_t n)
@@ -2944,3 +2839,9 @@ Int_t* TH2Editor::Dividers(Int_t n)
    return div;
 }   
    
+void TH2Editor::ActivateBaseClassEditors(TClass* /*cl*/)
+{
+   // Skip TH1Editor in building list of editors in fGedEditor.   
+
+   fGedEditor->ActivateEditors(TH1::Class()->GetListOfBases(), kTRUE);
+}

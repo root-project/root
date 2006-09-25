@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,v 1.13 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,v 1.14 2006/06/23 15:19:21 antcheva Exp $
 // Author: Carsten Hof 16/08/04
 
 /*************************************************************************
@@ -19,10 +19,6 @@
 //  Editor changing histogram attributes (Type, Coords, Error, Style)   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
@@ -52,17 +48,17 @@ class TH1Editor : public TGedFrame {
 protected:
    TH1                 *fHist;            // histogram object
    Bool_t               fSameOpt;         // flag for option "same"
-   TGTab               *fTab;             // Pointer to the Tab Parent
    TGCompositeFrame    *fBin;             // Contains the Binning Widgets
-   TGCompositeFrame    *fBinContainer;    // Container for fBin
    Int_t                fTitlePrec;       // font precision level
    TGTextEntry         *fTitle;           // histogram title input field
    TGHButtonGroup      *fDimGroup;        // Radiobuttongroup to change 2D <-> 3D-Plot
    TGRadioButton       *fDim;             // 2D-Plot RadioButton
    TGRadioButton       *fDim0;            // 3D-Plot RadioButton
-   TGComboBox	         *fTypeCombo;       // histogram type combo box
-   TGComboBox 	        *fCoordsCombo;     // Coordinate System combo box
-   TGComboBox 	        *fErrorCombo;      // Error combo box
+   TGLayoutHints       *fDimlh;           // layout hints for 2D-Plot RadioButton
+   TGLayoutHints       *fDim0lh;          // layout hints for 3D-Plot RadioButton
+   TGComboBox	       *fTypeCombo;       // histogram type combo box
+   TGComboBox 	       *fCoordsCombo;     // Coordinate System combo box
+   TGComboBox 	       *fErrorCombo;      // Error combo box
    TGCheckButton       *fHistOnOff;       // Draw a simple histogram with default options
    TGCheckButton       *fAddMarker;       // Draw a Marker on top of each bin
    TGCheckButton       *fAddB;            // Draw a Bar Chart
@@ -98,7 +94,6 @@ protected:
    TGCheckButton       *fDelaydraw;       // Delayed drawing of the new axis range
    TGTextButton        *fApply;           // Apply-Button to accept the rebinned histogram
    TGTextButton        *fCancel;          // Cancel-Button to reprobate the rebinned histogram
-   TGLabel             *fNameLabel;       // selected object name on the Binning tab
 
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);       // builts the Type ComboBox
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);     // builts the Coordinate ComboBox
@@ -106,7 +101,9 @@ protected:
    static  TGComboBox *BuildHistAddComboBox(TGFrame *parent, Int_t id);        // builts the Add ComboBox
    static  TGComboBox *BuildPercentComboBox(TGFrame *parent, Int_t id);        // builts the ComboBox for setting the Bar options bar1,..., bar4
 
-   virtual void ConnectSignals2Slots();   // connect the signals to the slots
+   virtual void  ConnectSignals2Slots();   // connect the signals to the slots
+   void CreateBinTab();                           // Creates the Bin Tab (part of the SetGedEditor)
+
 
 private:
    Bool_t               fMake;            // Veto Variable
@@ -136,16 +133,17 @@ private:
    TString              GetHistErrorLabel();      // Get the histogram Error type (E1, .., E4)
    TString              GetHistAddLabel();        // Get the histogram addon (smooth line, simple line, ..)
    void ChangeErrorCombo(Int_t i);
-   void CreateBinTab();                           // Creates the Bin Tab (part of the constructor)
 
 
 public:
-   TH1Editor(const TGWindow *p, Int_t id,
+   TH1Editor(const TGWindow *p = 0, 
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TH1Editor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+
+   virtual Bool_t AcceptModel(TObject* model);
+   virtual void   SetModel(TObject* obj);
 
    virtual void DoTitle(const char *text);
    virtual void DoAddMarker(Bool_t on);

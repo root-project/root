@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,v 1.11 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,v 1.12 2006/06/23 15:19:21 antcheva Exp $
 // Author: Carsten Hof 08/08/04
 
 /*************************************************************************
@@ -19,10 +19,6 @@
 //  Editor changing histogram attributes                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
@@ -53,10 +49,8 @@ class TH2Editor : public TGedFrame {
 
 protected:
    TH2                 *fHist;            // histogram object
-   TGTab               *fTab;             // Pointer to the Tab Parent
    TGCompositeFrame    *fBin;             // Contains the Binning Widgets
    TGCompositeFrame    *fFit;             // Contains the Fitting Widgets
-   TGCompositeFrame    *fBinContainer;             // Container for fBin
    TGTextEntry         *fTitle;           // histogram title input field
    TGComboBox          *fTypeCombo;       // histogram type combo box
    TGComboBox          *fCoordsCombo;     // Coordinate System combo box
@@ -67,6 +61,8 @@ protected:
    TGHButtonGroup      *fDimGroup;        // Radiobuttongroup to change 2D <-> 3D-Plot
    TGRadioButton       *fDim;             // 2D-Plot RadioButton
    TGRadioButton       *fDim0;            // 3D-Plot RadioButton
+   TGLayoutHints       *fDimlh;           // layout hints for 2D-Plot RadioButton
+   TGLayoutHints       *fDim0lh;          // layout hints for 3D-Plot RadioButton
    TGCompositeFrame    *f3;               // Frame that contains Histogram Type-ComboBox
    TGCompositeFrame    *f4;               // Frame that contains Histogram Coord-ComboBox
    TGCompositeFrame    *f5;               // Frame that contains Histogram Contour-ComboBox
@@ -118,21 +114,20 @@ protected:
    TGCheckButton       *fDelaydraw;       // Delayed drawing of the new axis range
    TGColorSelect       *fFrameColor;      // Select the Frame Color
    TGedPatternSelect   *fFramePattern;    // Select the Frame Pattern Style
-   TGLabel             *fNameLabel2;      // selected object name on the Binning tab
 
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistContComboBox(TGFrame* parent, Int_t id);
 
-   virtual void ConnectSignals2Slots();
-
+   virtual void   ConnectSignals2Slots();
+   void           CreateBinTab();       // Creates the Bin Tab (part of the SetGedEditor)
 private:
    void PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4);
    TString GetHistTypeLabel();
    TString GetHistCoordsLabel();
    TString GetHistContLabel();
    TString GetHistAdditiveLabel();
-/*   virtual void DisconnectAllSlots();   */
+
    Int_t     fPx1old,
              fPy1old,
              fPx2old,
@@ -157,14 +152,16 @@ private:
    Double_t  fOldXOffset;      // saves the old x offset of the histogram
    Double_t  fOldYOffset;      // saves the old y offset of the histogram
 
-
 public:
-   TH2Editor(const TGWindow *p, Int_t id,
-               Int_t width = 140, Int_t height = 30,
-               UInt_t options = kChildFrame,
-               Pixel_t back = GetDefaultFrameBackground());
+   TH2Editor(const TGWindow *p = 0, 
+             Int_t width = 140, Int_t height = 30,
+             UInt_t options = kChildFrame,
+             Pixel_t back = GetDefaultFrameBackground());
    virtual ~TH2Editor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+
+   virtual Bool_t AcceptModel(TObject* model);
+   virtual void   SetModel(TObject* obj);
+   virtual void   ActivateBaseClassEditors(TClass* cl);
 
    virtual void DoTitle(const char *text);
    virtual void DoHistView();
@@ -207,7 +204,9 @@ public:
    virtual void DoYAxisRange();
    virtual void DoFillColor(Pixel_t);
    virtual void DoFillPattern(Style_t);
+
    Int_t* Dividers(Int_t n);
+
    ClassDef(TH2Editor,0)  // TH2 editor
 };
 
