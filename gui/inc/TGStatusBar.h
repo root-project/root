@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.15 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.16 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -33,8 +33,6 @@ class TGStatusBar : public TGHorizontalFrame {
 friend class TGStatusBarPart;
 
 private:
-   static TGLayoutHints *fgHints; // hints to add parts (kLHintsTop|kLHintsLeft,0,0,0,0)
-
    TGStatusBar(const TGStatusBar&);            // not implemented
    TGStatusBar& operator=(const TGStatusBar&); // not implemented
 

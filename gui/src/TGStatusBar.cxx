@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.20 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.21 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -35,7 +35,6 @@
 
 const TGFont  *TGStatusBar::fgDefaultFont = 0;
 TGGC          *TGStatusBar::fgDefaultGC = 0;
-TGLayoutHints *TGStatusBar::fgHints = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 0, 0);
 
 
 class TGStatusBarPart : public TGHorizontalFrame {
@@ -114,7 +113,7 @@ TGStatusBar::TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
    fYt = max_ascent;
 
    fStatusPart[0] = new TGStatusBarPart(this, ht, fYt);
-   AddFrame(fStatusPart[0], fgHints);
+   AddFrame(fStatusPart[0]);
    Resize(w, ht + 5);
 
    //fEditDisabled = kEditDisableLayout;
@@ -259,7 +258,7 @@ void TGStatusBar::SetParts(Int_t *parts, Int_t npart)
    int tot = 0;
    for (i = 0; i < npart; i++) {
       fStatusPart[i] = new TGStatusBarPart(this, fHeight, fYt);
-      AddFrame(fStatusPart[i], fgHints);
+      AddFrame(fStatusPart[i]);
       fParts[i] = parts[i];
       tot += parts[i];
       if (tot > 100)
@@ -301,7 +300,7 @@ void TGStatusBar::SetParts(Int_t npart)
    int tot = 0;
    for (i = 0; i < npart; i++) {
       fStatusPart[i] = new TGStatusBarPart(this, fHeight, fYt);
-      AddFrame(fStatusPart[i], fgHints);
+      AddFrame(fStatusPart[i]);
       fParts[i] = sz;
       tot += sz;
    }
