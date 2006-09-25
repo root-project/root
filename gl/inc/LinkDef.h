@@ -48,11 +48,8 @@
 #pragma link C++ class TGLSAViewer;
 #pragma link C++ class TGLSAFrame;
 
-#pragma link C++ class TGLColorEditor;
-#pragma link C++ class TGLGeometryEditor;
-#pragma link C++ class TGLClipEditor;
-#pragma link C++ class TGLLightEditor;
-#pragma link C++ class TGLGuideEditor;
+#pragma  link C++  class TGLPShapeObj;
+
 
 #pragma link C++ class TGLOutput;
 
@@ -66,6 +63,7 @@
 #pragma link C++ class TGLCylinder;
 #pragma link C++ class TGLSphere;
 #pragma link C++ class TGLViewerEditor;
+#pragma link C++ class TGLPShapeObjEditor;
 
 #pragma link C++ class TGLSelectionBuffer;
 #pragma link C++ class TGLPlotCoordinates;
