@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.138 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.139 2006/08/01 10:54:37 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -107,7 +107,7 @@ UInt_t      TGFrame::fgUserColor = 0;
 const TGFont *TGGroupFrame::fgDefaultFont = 0;
 const TGGC   *TGGroupFrame::fgDefaultGC = 0;
 
-TGLayoutHints *TGCompositeFrame::fgDefaultHints = new TGLayoutHints;
+TGLayoutHints *TGCompositeFrame::fgDefaultHints = 0;
 
 static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
                                          "All files",   "*",
@@ -1008,6 +1008,8 @@ void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
    // added to different composite frames but still need to be deleted by
    // the user.
 
+   if (!fgDefaultHints)
+      fgDefaultHints = new TGLayoutHints;
    TGFrameElement *nw = new TGFrameElement(f, l ? l : fgDefaultHints);
    fList->Add(nw);
 
