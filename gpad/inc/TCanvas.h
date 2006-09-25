@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.39 2006/08/22 18:26:23 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.40 2006/08/24 18:51:57 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -76,6 +76,7 @@ protected:
    Int_t         fSelectedY;       //!Y of selected object
    TString       fSelectedOpt;     //!Drawing option of selected object
    TPad         *fSelectedPad;     //!Pad containing currently selected object
+   TPad         *fClickSelectedPad;//!Pad containing currently click-selected object
    TPad         *fPadSave;         //!Pointer to saved pad in HandleInput
    TCanvasImp   *fCanvasImp;       //!Window system specific canvas implementation
    TContextMenu *fContextMenu;     //!Context menu pointer
@@ -158,6 +159,7 @@ public:
    Int_t             GetSelectedY() const {return fSelectedY;}
    Option_t         *GetSelectedOpt() const {return fSelectedOpt.Data();}
    TVirtualPad      *GetSelectedPad() const { return fSelectedPad; }
+   TVirtualPad      *GetClickSelectedPad() const { return fClickSelectedPad; }
    Bool_t            GetShowEventStatus() const { return TestBit(kShowEventStatus); }
    Bool_t            GetShowToolBar() const { return TestBit(kShowToolBar); }
    Bool_t            GetShowEditor() const { return TestBit(kShowEditor); }
@@ -211,6 +213,7 @@ public:
    void              SetSelected(TObject *obj);
    void              SetClickSelected(TObject *obj) { fClickSelected = obj; }
    void              SetSelectedPad(TPad *pad) { fSelectedPad = pad; }
+   void              SetClickSelectedPad(TPad *pad) { fClickSelectedPad = pad; }
    void              Show() { fCanvasImp->Show(); }
    virtual void      Size(Float_t xsizeuser=0, Float_t ysizeuser=0);
    void              SetBatch(Bool_t batch=kTRUE);

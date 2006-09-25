@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.116 2006/08/22 18:26:23 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.117 2006/08/24 18:51:57 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -155,6 +155,7 @@ void TCanvas::Constructor()
    fSelected      = 0;
    fClickSelected = 0;
    fSelectedPad   = 0;
+   fClickSelectedPad = 0;
    fPadSave       = 0;
    SetBit(kAutoExec);
    SetBit(kShowEditor);
@@ -436,6 +437,7 @@ void TCanvas::Init()
    fSelectedX       = 0;
    fSelectedY       = 0;
    fSelectedPad     = 0;
+   fClickSelectedPad= 0;
    fPadSave         = 0;
    fEvent           = -1;
    fEventX          = -1;
@@ -627,6 +629,7 @@ void TCanvas::Clear(Option_t *option)
    fSelected      = 0;
    fClickSelected = 0;
    fSelectedPad   = 0;
+   fClickSelectedPad = 0;
 }
 
 
@@ -1365,6 +1368,7 @@ TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
    if ((fEvent == kButton1Down) || (fEvent == kButton2Down) || (fEvent == kButton3Down)) {
       if (fSelected && !fSelected->InheritsFrom("TView")) {
          fClickSelected = fSelected;
+         fClickSelectedPad = fSelectedPad;
          Selected(fSelectedPad, fSelected, fEvent);  // emit signal
          fSelectedX = px;
          fSelectedY = py;
