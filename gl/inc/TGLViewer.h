@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.29 2006/04/10 09:23:31 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.30 2006/08/23 14:39:40 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -74,7 +74,8 @@ class TContextMenu;
 // For embedded (pad) GL this viewer is created directly by plugin      //
 // manager. For standalone the derived TGLSAViewer is.                  //
 //////////////////////////////////////////////////////////////////////////
-    
+
+
 class TGLViewer : public TVirtualViewer3D
 {
    RQ_OBJECT("TGLViewer")
@@ -94,6 +95,7 @@ public:
    enum EAxesType  { kAxesNone, kAxesEdge, kAxesOrigin };
 
 private:
+protected:
    // TODO: Consider what to push up to protected, pull out to TGLScene
    // TGLCamera or other external helpers
 
@@ -242,6 +244,7 @@ public:
                              Double_t center[3], Double_t hRotate, Double_t vRotate);
    void ToggleLight(ELight light);
    void SetLight(ELight light, Bool_t on);
+   UInt_t  GetLightState(){return fLightState;}
    void GetGuideState(EAxesType & axesType, Bool_t & referenceOn, Double_t referencePos[3]) const;
    void SetGuideState(EAxesType axesType, Bool_t referenceOn, const Double_t referencePos[3]);
    void GetClipState(EClipType type, Double_t data[6]) const;
@@ -282,7 +285,7 @@ public:
    void SetPadEditor(TGLViewerEditor *ed){fPadEditor = ed;}
 
    ClassDef(TGLViewer,0) // GL viewer generic base class
-};
+      };
 
 //______________________________________________________________________________
 inline void TGLViewer::GetClipState(EClipType type, Double_t data[6]) const
@@ -325,5 +328,28 @@ class TGLRedrawTimer : public TTimer
       }
       Bool_t Notify() { TurnOff(); fViewer.RequestDraw(fRedrawLOD); return kTRUE; }
 };
+
+
+
+// 
+// Wrapper class for TGLPhysicalShape class editor
+//
+
+class TGLPShapeObj : public TObject
+{
+public:
+   TGLPhysicalShape *fPShape;
+   TGLViewer        *fViewer;
+
+   TGLPShapeObj() : TObject(), fPShape(0), fViewer(0) {}
+   TGLPShapeObj(TGLPhysicalShape* sh,TGLViewer* v) :
+      TObject() {fPShape = sh; fViewer = v; }
+   virtual ~TGLPShapeObj() {}
+
+   virtual const char* GetName() const { return "Selected"; }
+
+   ClassDef(TGLPShapeObj, 0); // This object wraps TGLPhysicalShape (not a TObject) so 
+};
+
 
 #endif // ROOT_TGLViewer
