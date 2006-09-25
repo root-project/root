@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.8 2006/05/23 04:47:36 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.9 2006/07/26 13:36:42 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
@@ -30,53 +30,81 @@
 #include "TVirtualPadEditor.h"
 #endif
 
+#include "TMap.h"
+
 class TCanvas;
 class TGCanvas;
 class TGTab;
+class TGTabElement;
 class TVirtualPad;
 class TGedFrame;
-class TGedElement;
+class TGedNameFrame;
 
-class TGedEditor : public TVirtualPadEditor, public TGMainFrame {
+class TGedTabInfo;
+
+class TGedEditor : public TVirtualPadEditor, public TGMainFrame
+{
+private:
+   TGedEditor(const TGedEditor&);            // Not implemented
+   TGedEditor& operator=(const TGedEditor&); // Not implemented
 
 protected:
+   TMap              fFrameMap;         //global map of available frames
+   TMap              fExclMap;          //map of excluded editors for selected model
+   TList             fGedFrames;        //list visible of frames 
+
    TGCanvas         *fCan;              //provides scroll bars
    TGTab            *fTab;              //tab widget holding the editor
+
+   TList             fCreatedTabs;      //list of created tabs
+   TList             fVisibleTabs;      //list ofcurrently used tabs
    TGCompositeFrame *fTabContainer;     //main tab container
-   TGCompositeFrame *fStyle;            //style tab container frame
+
    TObject          *fModel;            //selected object
    TVirtualPad      *fPad;              //selected pad
    TCanvas          *fCanvas;           //canvas related to the editor
    TClass           *fClass;            //class of the selected object
-   Int_t             fWid;              //widget id
    Bool_t            fGlobal;           //true if editor is global
 
-   virtual void GetEditors();
-   virtual void GetClassEditor(TClass *cl);
-   virtual void GetBaseClassEditor(TClass *cl);
-
-private:
-   TGedEditor(const TGedEditor&);              // not implemented
-   TGedEditor& operator=(const TGedEditor&);   // not implemented
+   void              ConfigureGedFrames();
 
 public:
    TGedEditor(TCanvas* canvas = 0);
    virtual ~TGedEditor();
 
+   void          PrintFrameStat();
+   virtual void  Update(TGedFrame* frame = 0);
+   void          ReinitWorkspace();
+   void          ActivateEditor (TClass* cl, Bool_t recurse);
+   void          ActivateEditors(TList* bcl, Bool_t recurse);
+   void          ExcludeClassEditor(TClass* cl, Bool_t recurse = kFALSE);
+   void          InsertGedFrame(TGedFrame* f);
+
+   TGCanvas*                 GetTGCanvas() const { return fCan; }
+   TGTab*                    GetTab()      const { return fTab; }
+   virtual TGCompositeFrame* GetEditorTab(const Text_t* name);
+   virtual TGedTabInfo*      GetEditorTabInfo(const Text_t* name);
+   virtual TGCompositeFrame* CreateEditorTabSubFrame(const Text_t* name, TGedFrame* owner);
+
+   virtual TCanvas*          GetCanvas() const { return fCanvas; }
+   virtual TVirtualPad*      GetPad()    const { return fPad; }
+   virtual TObject*          GetModel()  const { return fModel; }
+
+public:
+
    virtual void   CloseWindow();
    virtual void   ConnectToCanvas(TCanvas *c);
-   virtual void   DeleteEditors();
-   virtual void   DisconnectEditors(TCanvas *canvas);
-   TCanvas       *GetCanvas() const { return fCanvas; }
-   virtual Bool_t IsGlobal() const { return fGlobal; }
+   virtual void   DisconnectFromCanvas();
+   virtual Bool_t IsGlobal() const  { return fGlobal; } 
    virtual void   Hide();
+   virtual void   GlobalClosed();
    virtual void   SetCanvas(TCanvas *c);
-   virtual void   SetGlobal(Bool_t global) { fGlobal = global; }
+   virtual void   SetGlobal(Bool_t global);
+   virtual void   GlobalSetModel(TVirtualPad *, TObject *, Int_t);
    virtual void   SetModel(TVirtualPad* pad, TObject* obj, Int_t event);
    virtual void   Show();
    virtual void   RecursiveRemove(TObject* obj);
-
-   ClassDef(TGedEditor,0)  //new editor
+   ClassDef(TGedEditor,0) 
 };
 
 #endif
