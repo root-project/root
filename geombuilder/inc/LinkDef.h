@@ -1,4 +1,4 @@
-// @(#)$Name:  $:$Id: LinkDef.h,v 1.4 2006/07/12 10:25:34 brun Exp $
+// @(#)$Name:  $:$Id: LinkDef.h,v 1.5 2006/07/14 20:00:52 brun Exp $
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -47,5 +47,7 @@
 #pragma link C++ class TGeoMatrixDialog;
 #pragma link C++ class TGeoMediumDialog;
 #pragma link C++ class TGeoMaterialDialog;
+#pragma link C++ class TGeoGedFrame;
+#pragma link C++ class TGedElement;
 
 #endif
