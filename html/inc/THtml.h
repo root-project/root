@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.27 2006/08/21 16:02:48 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.28 2006/08/22 14:07:21 rdm Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -78,11 +78,14 @@ protected:
    TString        fSourcePrefix;    // prefix to relative source path
    TString        fSourceDir;       // source path
    TString        fOutputDir;       // output directory
+   TString        fDotDir;          // directory of GraphViz's dot binary
+   Int_t          fFoundDot;        // whether dot is accessible (-1 dunno, 1 yes, 0 no)
    TString        fLine;            // current line
    UInt_t         fLineNo;          // current line number
    TString        fLineExpanded;    // current line with links
    TString        fLineStripped;    // current line without surrounding spaces
    TClass        *fCurrentClass;    // current class context of sources being parsed
+   TString        fCurrentFile;     // current source / header file name
    std::map<std::string /*method name*/, Int_t > fMethodNames;     // current class's method names
    EDocContext    fDocContext;      // current context of parsed sources for documenting
    std::list<EParseContext> fParseContext; // current context of parsed sources
@@ -93,11 +96,8 @@ protected:
    char           fEsc;             // char to mark the next character must be written "as is"
    Int_t          fHierarchyLines;  // counter for no. lines in hierarchy
    TString        fClassFilter;     // filter used for buidling known classes
-   Int_t          fNumberOfClasses; // Number of known classes
-   const char   **fClassNames;      // Names of known classes
-   Int_t          fNumberOfFileNames;// Number of names of files for known classes
-   char         **fFileNames;       // Names of files for known classes
-   std::list<std::string> fModules; // Names of modules
+   THashList      fClasses;         // known classes
+   THashList      fModules;         // known modules
    std::map<TClass*,std::string> fGuessedDeclFileNames; // names of additional decl file names
    std::map<TClass*,std::string> fGuessedImplFileNames; // names of additional impl file names
    static std::set<std::string>  fgKeywords; // C++ keywords
@@ -108,28 +108,34 @@ protected:
    virtual void BeautifyLine(std::ostream &srcOut, const char* relpath = "../");
    void    Class2Html(Bool_t force=kFALSE);
    void    ClassDescription(ofstream &out);
+   Bool_t  ClassDotCharts(ofstream & out);
    void    ClassHtmlTree(ofstream &out, TClass *classPtr, ETraverse dir=kBoth, int depth=1);
    void    ClassTree(TVirtualPad *canvas, TClass *classPtr, Bool_t force=kFALSE);
    Bool_t  CopyHtmlFile(const char *sourceName, const char *destName="");
-   void    CreateIndex(const char **classNames, Int_t numberOfClasses);
-   void    CreateIndexByTopic(char **filenames, Int_t numberOfNames);
-   void    CreateHierarchy(const char **classNames, Int_t numberOfClasses);
+   Bool_t  CreateDotClassChartInh(const char* filename);
+   Bool_t  CreateDotClassChartInhMem(const char* filename);
+   Bool_t  CreateDotClassChartIncl(const char* filename);
+   Bool_t  CreateDotClassChartLib(const char* filename);
+   void    CreateIndex();
+   void    CreateIndexByTopic();
+   void    CreateHierarchy();
+   Bool_t  CreateHierarchyDot();
    void    CreateListOfTypes();
    void    CreateListOfClasses(const char* filter);
    void    CreateSourceOutputStream(std::ofstream& out, const char* extension, TString& filename);
-   void    DescendHierarchy(ofstream &out, TClass* basePtr, 
-                  const char **classNames, Int_t numberOfClasses, 
-                  Int_t maxLines=0, Int_t depth=1);
+   void    DescendHierarchy(ofstream &out, TClass* basePtr, Int_t maxLines=0, Int_t depth=1);
    void    ExpandKeywords(ostream& out, const char* line);
    void    ExpandKeywords(TString& text);
    void    ExpandPpLine(ostream &out);
    Bool_t  ExtractComments(const TString &lineExpandedStripped, 
                            Bool_t &foundClassDescription,
                            const char* classDescrTag, TString& comment);
-   TClass *GetClass(const char *name, Bool_t load=kFALSE);
+   TClass *GetClass(const char *name);
    const char   *GetFileName(const char *filename);
    void    GetSourceFileName(TString& filename);
    void    GetHtmlFileName(TClass *classPtr, TString& filename);
+   virtual void GetModuleName(TString& module, const char* filename) const;
+   Bool_t  HaveDot();
    Bool_t  IsModified(TClass *classPtr, const Int_t type);
    static Bool_t  IsName(UChar_t c);
    static Bool_t  IsWord(UChar_t c);
@@ -147,12 +153,15 @@ protected:
    void    LocateMethodsInHeaderInline(ofstream & out);
    void    LocateMethodsInHeaderClassDecl(ofstream & out);
 
+   void    MakeClass(void* cdi, Bool_t force=kFALSE);
    void    NameSpace2FileName(TString &name);
    void    ReplaceSpecialChars(ostream &out, const char c);
    void    ReplaceSpecialChars(ostream &out, const char *string);
    void    ReplaceSpecialChars(TString& text, Ssiz_t &pos);
+   Bool_t  RunDot(const char* filename, std::ostream* outMap = 0);
    void    SortNames(const char **strings, Int_t num, Bool_t type=0);
    char   *StrDup(const char *s1, Int_t n = 1);
+   static Bool_t Strip(TString& s);
    virtual void WriteMethod(std::ostream & out, TString& ret, 
                             TString& name, TString& params,
                             const char* file, TString& anchor,
@@ -183,8 +192,9 @@ public:
    void          SetSourcePrefix(const char *prefix) { fSourcePrefix = prefix; }
    void          SetSourceDir(const char *dir) { fSourceDir = dir; }
    void          SetOutputDir(const char *dir) { fOutputDir = dir; }
+   void          SetDotDir(const char* dir) { fDotDir = dir; fFoundDot = -1; }
    void          SetXwho(const char *xwho) { fXwho = xwho; }
-   virtual void  WriteHtmlHeader(ofstream & out, const char *title, const char* dir="", TClass *cls=0);
+   virtual void  WriteHtmlHeader(ofstream &out, const char *title, const char* dir="", TClass *cls=0);
    virtual void  WriteHtmlFooter(ofstream &out, const char *dir="", const char *lastUpdate="",
                                  const char *author="", const char *copyright="");
 

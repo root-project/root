@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.118 2006/08/30 15:22:33 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.119 2006/08/31 13:28:36 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include <list>
 #include <vector>
 #include <algorithm>
+#include <sstream>
 
 THtml *gHtml = 0;
 
@@ -75,6 +76,7 @@ Overview:
   <li><a href="#syntax:beginhtml"><tt>BEGIN<!-- -->_HTML</tt> <tt>END<!-- -->_HTML</tt>: include 'raw' HTML</a></li>
   </ol></li>
   <li><a href="#CSSJS">Style sheet, JavaScript</a></li>
+  <li><a href="#charts">Class Charts</a></li>
   <li><a href="#usage">Usage</a></li>
   <li><a href="#confvar">Configuration variables</a></li>
 </ol>
@@ -336,7 +338,19 @@ demand by calling <a href="#THtml:CreateJavascript">CreateJavascript()</a>
 and <a href="#THtml:CreateStyleSheet">CreateStyleSheet()</a>, respectively.</p>
 
 
-<h3><a name="usage">IV. Usage</a></h3>
+<h3><a name="charts">IV. Class Charts</a></h3>
+THtml can generate a number of graphical representations for a class, which
+are displayed as a tabbed set of imaged ontop of the class description.
+It can show the inheritance, inherited and hidden members, directly and 
+indirectly included files, and library dependencies.
+
+These graphs are generated using the <a href="http://www.graphviz.org/">Graphviz</a>
+package. You can install it from <a href="http://www.graphviz.org">http://www.graphviz.org</a>.
+You can either put it into your $PATH, or tell THtml where to find it by calling
+<a href="#THtml:SetDotDir">SetDotDir()</a>.
+
+
+<h3><a name="usage">V. Usage</a></h3>
 These are typical things people do with THtml:
 <pre>
     root[] <a href="http://root.cern.ch/root/html/THtml.html">THtml</a> html;                // create a <a href="http://root.cern.ch/root/html/THtml.html">THtml</a> object
@@ -350,7 +364,7 @@ file or macro, use:
 </pre>
 
 
-<h3><a name="confvar">V. Configuration variables</a></h3>
+<h3><a name="confvar">VI. Configuration variables</a></h3>
 
 <p>Here is a list of all configuration variables that are known to THtml.
 You can set them in your .rootrc file, see 
@@ -379,16 +393,13 @@ You can set them in your .rootrc file, see
 
 ClassImp(THtml)
 //______________________________________________________________________________
-THtml::THtml(): fCurrentClass(0), fDocContext(kIgnore), 
-   fHierarchyLines(0), fNumberOfClasses(0), fClassNames(0), fNumberOfFileNames(0), fFileNames(0)
+THtml::THtml(): fFoundDot(-1), fCurrentClass(0), fDocContext(kIgnore), 
+                fEscFlag(kFALSE), fHierarchyLines(0)
 {
    // Create a THtml object.
    // In case output directory does not exist an error
    // will be printed and gHtml stays 0 also zombie bit will be set.
 
-   fEscFlag = kFALSE;
-   fClassNames = 0;
-   fFileNames = 0;
    SetEscape();
 
    // get prefix for source directory
@@ -404,6 +415,8 @@ THtml::THtml(): fCurrentClass(0), fDocContext(kIgnore),
        gEnv->GetValue("Root.Html.XWho",
                       "http://consult.cern.ch/xwho/people?");
 
+   fClasses.SetOwner();
+   fModules.SetOwner();
    Int_t st;
    Long64_t sSize;
    Long_t sId, sFlags, sModtime;
@@ -502,9 +515,8 @@ THtml::~THtml()
 {
 // Default destructor
 
-   delete []fClassNames;
-   delete []fFileNames;
-
+   fClasses.Clear();
+   fModules.Clear();
    if (gHtml == this) {
       gROOT->GetListOfSpecials()->Remove(gHtml);
       gHtml = 0;
@@ -777,6 +789,72 @@ namespace {
       const TMethod* fMeth; // my method
    };
    const TClass* TMethodWrapper::fgClass = 0;
+
+   class TModuleDocInfo;
+   //____________________________________________________________________
+   //
+   // Cache doc info for all known classes
+   //
+   class TClassDocInfo: public TObject {
+   public:
+      // initialize the object
+      TClassDocInfo(TClass* cl, const char* filename): 
+         fClass(cl), fModule(0), fHtmlFileName(filename), fSelected(kTRUE) { }
+      virtual ~TClassDocInfo() {}
+
+      TClass* GetClass() const { return fClass; }
+      virtual const char* GetName() const { return fClass ? fClass->GetName() : "(UNKNOWN)"; }
+      const char* GetHtmlFileName() const { return fHtmlFileName; }
+
+      void SetModule(TModuleDocInfo* module) { fModule = module; }
+      TModuleDocInfo* GetModule() const { return fModule; }
+
+      void SetSelected(Bool_t sel = kTRUE) { fSelected = sel; }
+      Bool_t IsSelected() const { return fSelected; }
+
+      ULong_t Hash() const { return fClass ? fClass->Hash() : (ULong_t)-1; }
+
+      Bool_t IsSortable() const { return kTRUE; }
+      Int_t Compare(const TObject* obj) const { return fClass ? fClass->Compare(obj) : obj < this; }
+
+   private:
+      TClassDocInfo();
+      TClass* fClass; // class represented by this info object
+      TModuleDocInfo* fModule; // module this class is in
+      TString fHtmlFileName; // name of the HTML doc file
+      Bool_t fSelected; // selected fro doc output
+   };
+
+   //____________________________________________________________________
+   //
+   // Cache doc info for all known modules
+   //
+   class TModuleDocInfo: public TNamed {
+   public:
+      TModuleDocInfo(const char* name, const char* doc = ""): 
+         TNamed(name, doc) {}
+      virtual ~TModuleDocInfo() {}
+
+      void SetDoc(const char* doc) { SetTitle(doc); }
+      const char* GetDoc() const { return GetTitle(); }
+
+      void AddClass(TClassDocInfo* cl) { fClasses.Add(cl); }
+      TList* GetClasses() { return &fClasses; }
+
+      std::ostringstream& Stream() { return fStream; }
+
+   private:
+      TList   fClasses;
+      std::ostringstream fStream;
+   };
+
+   // map of lib name to map of module names contained in lib, and their library dependencies
+   class MapModuleDepMap: public std::map<std::string, std::set<std::string> > {
+   public:
+      MapModuleDepMap() {}
+   };
+   typedef std::map<std::string, MapModuleDepMap > LibDep_t;
+   LibDep_t setLibDeps;
 }
 
 
@@ -911,7 +989,7 @@ void THtml::Class2Html(Bool_t force)
    fParseContext.push_back(kCode);
    fDocContext = kIgnore;
 
-   if (IsModified(fCurrentClass, kSource) || force) {
+   if (force || IsModified(fCurrentClass, kSource)) {
 
       // open class file
       ofstream classFile;
@@ -984,13 +1062,13 @@ void THtml::Class2Html(Bool_t force)
 
          if (headerFileName)
             classFile << " - <a href=\"src/" << classFileName
-                      << ".h.html\"" << classFile << ">header file</a>";
+                      << ".h.html\">header file</a>";
 
          if (sourceFileName)
             classFile << " - <a href=\"src/" << classFileName
-                      << ".cxx.html\"" << classFile << ">source file</a>";
+                      << ".cxx.html\">source file</a>";
 
-         if (!IsNamespace(fCurrentClass)) {
+         if (!IsNamespace(fCurrentClass) && !HaveDot()) {
             // make a link to the inheritance tree (postscript)
             classFile << " - <a href=\"" << classFileName << "_Tree.pdf\"";
             classFile << ">inheritance tree (.pdf)</a>";
@@ -1064,8 +1142,9 @@ void THtml::Class2Html(Bool_t force)
 
 
          // create an html inheritance tree
-         if (!IsNamespace(fCurrentClass)) 
-            ClassHtmlTree(classFile, fCurrentClass);
+         if (!IsNamespace(fCurrentClass))
+            if (!ClassDotCharts(classFile))
+               ClassHtmlTree(classFile, fCurrentClass);
 
          // loop to get a pointers to method names
          TList methodNames[3];
@@ -1395,15 +1474,16 @@ void THtml::BeautifyLine(std::ostream &sOut, const char* relpath /*="../"*/)
       return;
    }
 
-   TSubString stripSubExpanded = fLineExpanded.Strip(TString::kBoth);
+   TString stripSubExpanded(fLineExpanded);
+   Bool_t stripped = Strip(stripSubExpanded);
    TString lineExpandedDotDot(stripSubExpanded);
 
    // adjust relative path
    TString replWithRelPath("=\"");
    replWithRelPath += relpath;
    lineExpandedDotDot.ReplaceAll("=\"./", replWithRelPath);
-   if (stripSubExpanded.Start() > 0)
-      sOut << fLineExpanded(0,stripSubExpanded.Start());
+   if (stripped)
+      sOut << fLineExpanded(0, fLineExpanded.Index(stripSubExpanded));
    for (Int_t i = 0; i < lineExpandedDotDot.Length(); ++i)
       switch (lineExpandedDotDot[i]) {
          case '/':
@@ -1501,7 +1581,7 @@ TMethod* THtml::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret, T
    if (ret.Length()) {
       while (ret.Length() && (IsName(ret[ret.Length() - 1]) || ret[ret.Length()-1] == ':'))
          ret.Remove(ret.Length() - 1, 1);
-      ret = ret.Strip(TString::kBoth);
+      Strip(ret);
       Bool_t didSomething = kTRUE;
       while (didSomething) {
          didSomething = kFALSE;
@@ -1518,7 +1598,7 @@ TMethod* THtml::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret, T
             ret.Remove(0, 8);
          }
       } // while replacing static, virtual, inline
-      ret = ret.Strip(TString::kBoth);
+      Strip(ret);
    }
 
    // extract parameters
@@ -1751,7 +1831,7 @@ Bool_t THtml::ExtractComments(const TString &lineExpandedStripped,
          TString lineAllOneCharStripped(lineAllOneChar.Strip(TString::kTrailing, c));
          if (lineAllOneCharStripped.BeginsWith("//") || lineAllOneCharStripped.BeginsWith("/*"))
             lineAllOneCharStripped.Remove(0, 2);
-         lineAllOneCharStripped.Strip(TString::kBoth);
+         Strip(lineAllOneCharStripped);
          if (!lineAllOneCharStripped.Length())
             commentLine.Remove(0);
       }
@@ -1815,6 +1895,7 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
    //     fMethodNames are searched for.
 
    TString sourceFileName(filename);
+   fCurrentFile = filename;
    GetSourceFileName(sourceFileName);
    if (!sourceFileName.Length()) {
       Error("LocateMethods", "Can't find source file '%s' for class %s!", 
@@ -1877,10 +1958,12 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
       // replace class names etc
       fLineExpanded = fLine;
       ExpandKeywords(fLineExpanded);
-      fLineStripped = fLine.Strip(TString::kBoth);
+      fLineStripped = fLine;
+      Strip(fLineStripped);
 
       // remove leading and trailing spaces
-      TString lineExpandedStripped(fLineExpanded.Strip(TString::kBoth));
+      TString lineExpandedStripped(fLineExpanded);
+      Strip(lineExpandedStripped);
 
       if (!ExtractComments(lineExpandedStripped, foundClassDescription, 
                            descriptionStr, prevComment)) {
@@ -1888,6 +1971,11 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
 
          // write previous method
          if (methodName.Length() && !wroteMethodNowWaitingForOpenBlock) {
+            if (!foundClassDescription && lookForClassDescr) {
+               // no class description - close it
+               out << "</div>" << std::endl;
+               lookForClassDescr = kFALSE;
+            }
             WriteMethod(out, methodRet, methodName, methodParam, 
                gSystem->BaseName(srcHtmlOutName), anchor, 
                prevComment, codeOneLiner);
@@ -1975,6 +2063,7 @@ void THtml::LocateMethods(std::ofstream & out, const char* filename,
    fParseContext.clear();
    fParseContext.push_back(kCode);
    fDocContext = kIgnore;
+   fCurrentFile = "";
 }
 
 //______________________________________________________________________________
@@ -2050,7 +2139,9 @@ void THtml::ClassDescription(ofstream & out)
    out << "<hr />" << endl;
    out << "<!--DESCRIPTION-->";
    out << "<div class=\"classdescr\">";
-   out << "<h2><a name=\"" << fCurrentClass->GetName();
+   TString anchor(fCurrentClass->GetName());
+   NameSpace2FileName(anchor);
+   out << "<h2><a name=\"" << anchor;
    out << ":description\">Class Description</a></h2>" << endl;
 
    // create an array of method names
@@ -2078,6 +2169,482 @@ void THtml::ClassDescription(ofstream & out)
       fSourceInfo[kInfoAuthor], fSourceInfo[kInfoCopyright]);
 }
 
+
+//______________________________________________________________________________
+Bool_t THtml::HaveDot() {
+   // Check whether dot is available in $PATH or in the directory set 
+   // by SetDotPath()
+
+   if (fFoundDot != -1) 
+      return (Bool_t)fFoundDot;
+
+   Info("HaveDot", "Checking for Graphviz (dot)...");
+   TString runDot("dot");
+   if (fDotDir.Length())
+      gSystem->PrependPathName(fDotDir, runDot);
+   runDot += " -V";
+   if (gDebug > 3)
+      Info("HaveDot", "Running: %s", runDot.Data());
+   if (gSystem->Exec(runDot)) {
+      fFoundDot = 0;
+      return kFALSE;
+   }
+   fFoundDot = 1;
+   return kTRUE;
+
+}
+
+//______________________________________________________________________________
+Bool_t THtml::RunDot(const char* filename, std::ostream* outMap /* =0 */) {
+// Run filename".dot", creating filename".gif", and - if outMap is !=0,
+// filename".map", which gets then included literally into outMap.
+
+   if (!HaveDot()) 
+      return kFALSE;
+
+   TString runDot("dot");
+   if (fDotDir.Length())
+      gSystem->PrependPathName(fDotDir, runDot);
+   runDot += " -q1 -Tgif -o";
+   runDot += filename;
+   runDot += ".gif ";
+   if (outMap) {
+      runDot += "-Tcmap -o";
+      runDot += filename;
+      runDot += ".map ";
+   }
+   runDot += filename;
+   runDot += ".dot";
+
+   if (gDebug > 3)
+      Info("RunDot", "Running: %s", runDot.Data());
+   Int_t retDot = gSystem->Exec(runDot);
+   if (gDebug < 4 && !retDot)
+      gSystem->Unlink(Form("%s.dot", filename));
+
+   if (!retDot && outMap) {
+      *outMap << "<map name=\"Map" << gSystem->BaseName(filename) << "\">" << endl;
+      ifstream inmap(Form("%s.map", filename));
+      std::string line;
+      while (inmap && !inmap.eof()) {
+         std::getline(inmap, line);
+         *outMap << line << endl;
+      }
+      *outMap << "</map>" << endl;
+      inmap.close();
+      if (gDebug < 7)
+         gSystem->Unlink(Form("%s.map", filename));
+   }
+
+   if (retDot) {
+      Error("RunDot", "Error running %s!", runDot.Data());
+      fFoundDot = 0;
+      return kFALSE;
+   }
+
+   return kTRUE;
+}
+
+
+//______________________________________________________________________________
+Bool_t THtml::CreateDotClassChartInh(const char* filename) {
+// Build the class tree for one class in GraphViz/Dot format
+//
+//
+// Input: filename - output dot file incl. path
+
+   ofstream outdot(filename);
+   outdot << "strict digraph G {" << endl
+      << "rankdir=RL;" << endl
+      << "compound=true;" << endl
+      << "constraint=false;" << endl
+      << "ranksep=0.1;" << endl
+      << "nodesep=0;" << endl
+      << "size=\"16,20\";" << endl
+      << "ratio=compress;" << endl
+      << "\"" << fCurrentClass->GetName() << "\";" << endl;
+
+   std::stringstream ssDep;
+   std::list<TClass*> writeBasesFor;
+   writeBasesFor.push_back(fCurrentClass);
+   Bool_t haveBases = fCurrentClass->GetListOfBases() && 
+      fCurrentClass->GetListOfBases()->GetSize();
+   if (haveBases) {
+      outdot << "{" << endl
+            << "  node [shape=plaintext,fontsize=10];" << endl;
+      while (!writeBasesFor.empty()) {
+         TClass* cl = writeBasesFor.front();
+         writeBasesFor.pop_front();
+         if (cl != fCurrentClass) {
+            outdot << "  \"" << cl->GetName() << "\"";
+            TClassDocInfo* cdi = (TClassDocInfo*) fClasses.FindObject(cl->GetName());
+            if (cdi)
+               outdot << " [URL=\"" << cdi->GetHtmlFileName() << "\"]";
+            outdot << ";" << endl;
+         }
+         if (cl->GetListOfBases() && cl->GetListOfBases()->GetSize()) {
+            ssDep << "  \"" << cl->GetName() << "\" -> {";
+            TIter iBase(cl->GetListOfBases());
+            TBaseClass* base = 0;
+            while ((base = (TBaseClass*)iBase())) {
+               ssDep << " \"" << base->GetName() << "\";";
+               writeBasesFor.push_back(base->GetClassPointer());
+            }
+            ssDep << "}" << endl;
+         }
+      }
+      outdot << "}" << endl; // cluster
+   }
+
+   std::set<TClass*> derivesFromMe;
+   TIter iClass(&fClasses);
+   TClassDocInfo* cdi = 0;
+   while ((cdi = (TClassDocInfo*) iClass())) {
+      TClass* cl = cdi->GetClass();
+      if (!cl) continue;
+      if (cl != fCurrentClass && cl->InheritsFrom(fCurrentClass))
+         derivesFromMe.insert(cl);
+   }
+   outdot << "{" << endl
+      << "  node [shape=plaintext,fontsize=10];" << endl;
+   for (std::set<TClass*>::iterator iDerived = derivesFromMe.begin();
+      iDerived != derivesFromMe.end(); ++iDerived) {
+      TClassDocInfo* cdi = (TClassDocInfo*) fClasses.FindObject((*iDerived)->GetName());
+      if (cdi)
+         outdot << "  node [URL=\"" << cdi->GetHtmlFileName() << "\"];" << endl;
+      outdot << "  \"" << (*iDerived)->GetName() << "\";" << endl;
+
+      TIter iBaseOfDerived((*iDerived)->GetListOfBases());
+      TBaseClass* baseDerived = 0;
+      while ((baseDerived = (TBaseClass*) iBaseOfDerived())) {
+         TClass* clBaseDerived = baseDerived->GetClassPointer();
+         if (clBaseDerived->InheritsFrom(fCurrentClass))
+            ssDep << "\"" << (*iDerived)->GetName() << "\" -> \""
+               << clBaseDerived->GetName() << "\";" << endl;
+      }
+   }
+   outdot << "}" << endl; // cluster
+
+   outdot << ssDep.str();
+
+   outdot << "}" << endl; // digraph
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t THtml::CreateDotClassChartInhMem(const char* filename) {
+// Build the class tree of inherited members for one class in GraphViz/Dot format
+//
+// Input: filename - output dot file incl. path
+
+   ofstream outdot(filename);
+   outdot << "strict digraph G {" << endl
+      << "ratio=auto;" << endl
+      << "rankdir=RL;" << endl
+      << "compound=true;" << endl
+      << "constraint=false;" << endl
+      << "ranksep=0.1;" << endl
+      << "nodesep=0;" << endl;
+
+   std::stringstream ssDep;
+
+   std::list<TClass*> writeBasesFor;
+   writeBasesFor.push_back(fCurrentClass);
+   while (!writeBasesFor.empty()) {
+      TClass* cl = writeBasesFor.front();
+      writeBasesFor.pop_front();
+
+      TString htmlFileName;
+      TClassDocInfo* cdi = (TClassDocInfo*) fClasses.FindObject(cl->GetName());
+      if (cdi)
+         htmlFileName = cdi->GetHtmlFileName();
+
+      outdot << "subgraph \"cluster" << cl->GetName() << "\" {" << endl
+            << "  color=lightgray;" << endl
+            << "  label=\"" << cl->GetName() << "\";" << endl;
+      if (cl != fCurrentClass)
+         outdot << "  URL=\"" << htmlFileName << "\"" << endl;
+
+      outdot << "  node [style=filled,width=0.7,height=0.15,shape=plaintext,fixedsize=true,fontsize=10];" << endl;
+
+      Bool_t haveMembers = (cl->GetListOfDataMembers() && cl->GetListOfDataMembers()->GetSize());
+      Bool_t haveFuncs = cl->GetListOfMethods() && cl->GetListOfMethods()->GetSize();
+
+      if (haveMembers) {
+         outdot << "subgraph \"clusterData" << cl->GetName() << "\" {" << endl
+            << "  color=white;" << endl
+            << "  label=\"\";" << endl
+            << "  \"nodeToCluster" << cl->GetName() << "\" [height=0,width=0,style=invis];" << endl;
+         if (!haveFuncs)
+            outdot << "\"nodeFromCluster" << cl->GetName() << "\" [style=invis,width=0,height=0];" << endl;
+
+         TIter iDM(cl->GetListOfDataMembers());
+         TDataMember* dm = 0;
+         while ((dm = (TDataMember*) iDM())) {
+            TString name(dm->GetName());
+            NameSpace2FileName(name);
+            outdot << "\"" << cl->GetName() << "::" << dm->GetName() << "\" [label=\""
+               << dm->GetName() << "\"";
+            if (dm->Property() & kIsPrivate)
+               outdot << ",color=\"#FFCCCC\"";
+            else if (dm->Property() & kIsProtected)
+               outdot << ",color=\"#FFFF77\"";
+            else
+               outdot << ",color=\"#CCFFCC\"";
+            outdot << "];" << endl;
+         }
+         outdot << "}" << endl; // cluster data
+      }
+      if (haveFuncs) {
+         outdot << "subgraph \"clusterFunc" << cl->GetName() << "\" {" << endl
+            << "  color=white;" << endl
+            << "  label=\"\";" << endl;
+
+         if (!haveMembers)
+            outdot << "  \"nodeToCluster" << cl->GetName() << "\" [height=0,width=0,style=invis];" << endl;
+         outdot << "\"nodeFromCluster" << cl->GetName() << "\" [style=invis,width=0,height=0];" << endl;
+
+         TIter iMeth(cl->GetListOfMethods());
+         TMethod* meth = 0;
+         while ((meth = (TMethod*) iMeth())) {
+            TString name(meth->GetName());
+            NameSpace2FileName(name);
+            outdot << "\"" << cl->GetName() << "::" << meth->GetName() << "\" [label=\""
+               << meth->GetName() << "\"";
+            if (cl != fCurrentClass && 
+               fCurrentClass->GetMethodAny(meth->GetName()))
+               outdot << ",color=\"#777777\"";
+            else if (meth->Property() & kIsPrivate)
+               outdot << ",color=\"#FFCCCC\"";
+            else if (meth->Property() & kIsProtected)
+               outdot << ",color=\"#FFFF77\"";
+            else
+               outdot << ",color=\"#CCFFCC\"";
+            outdot << "];" << endl;
+         }
+         if (haveMembers)
+            ssDep << "  \"nodeToCluster" << cl->GetName() << "\" -> \"nodeFromCluster" 
+               << cl->GetName() << "\" [style=invis];" << endl;
+         outdot << "}" << endl; // cluster func
+      } else if (!haveMembers) {
+         // neither data members nor func memebrs
+         outdot << "  \"nodeToCluster" << cl->GetName() << "\" [height=0,width=0,style=invis];" << endl;
+         outdot << "\"nodeFromCluster" << cl->GetName() << "\" [style=invis,width=0,height=0];" << endl;
+      }
+      outdot << "}" << endl; // cluster class
+
+      if (cl->GetListOfBases() && cl->GetListOfBases()->GetSize()) {
+         TIter iBase(cl->GetListOfBases());
+         TBaseClass* base = 0;
+         while ((base = (TBaseClass*)iBase())) {
+            ssDep << "  \"nodeFromCluster" << cl->GetName() << "\" -> "
+                  << " \"nodeToCluster" << base->GetName() << "\" [ltail=\"cluster" << cl->GetName() 
+                  << "\",lhead=\"cluster" << base->GetName() << "\"";
+            if (base != cl->GetListOfBases()->First())
+               ssDep << ",weight=0";
+            ssDep << "];" << endl;
+            writeBasesFor.push_back(base->GetClassPointer());
+         }
+      }
+   }
+
+   outdot << ssDep.str();
+
+   outdot << "}" << endl; // digraph
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t THtml::CreateDotClassChartIncl(const char* filename) {
+// Build the include dependency graph for one class in 
+// GraphViz/Dot format
+//
+// Input: filename - output dot file incl. path
+
+   std::map<std::string, std::string> filesToParse;
+   std::list<std::string> listFilesToParse;
+   const char* declFileName = GetDeclFileName(fCurrentClass);
+   const char* implFileName = GetImplFileName(fCurrentClass);
+   if (declFileName && strlen(declFileName)) {
+      char* real = gSystem->Which(fSourceDir, declFileName, kReadPermission);
+      if (real) {
+         filesToParse[declFileName] = real;
+         listFilesToParse.push_back(declFileName);
+         delete real;
+      }
+   }
+   if (implFileName && strlen(implFileName)) {
+      char* real = gSystem->Which(fSourceDir, implFileName, kReadPermission);
+      if (real) {
+         filesToParse[implFileName] = real;
+         listFilesToParse.push_back(implFileName);
+         delete real;
+      }
+   }
+
+   ofstream outdot(filename);
+   outdot << "strict digraph G {" << endl
+      << "ratio=compress;" << endl
+      << "rankdir=TB;" << endl
+      << "concentrate=true;" << endl
+      << "ranksep=0;" << endl
+      << "nodesep=0;" << endl
+      << "size=\"8,10\";" << endl
+      << "node [fontsize=20,shape=plaintext];" << endl;
+
+   for (std::list<std::string>::iterator iFile = listFilesToParse.begin();
+      iFile != listFilesToParse.end(); ++iFile) {
+      ifstream in(filesToParse[*iFile].c_str());
+      std::string line;
+      while (in && !in.eof()) {
+         std::getline(in, line);
+         size_t pos = 0;
+         while (line[pos] == ' ' || line[pos] == '\t') ++pos;
+         if (line[pos] != '#') continue;
+         ++pos;
+         while (line[pos] == ' ' || line[pos] == '\t') ++pos;
+         if (line.compare(pos, 8, "include ") != 0) continue;
+         pos += 8;
+         while (line[pos] == ' ' || line[pos] == '\t') ++pos;
+         if (line[pos] != '"' && line[pos] != '<') 
+            continue;
+         char delim = line[pos];
+         if (delim == '<') delim = '>';
+         ++pos;
+         line.erase(0, pos);
+         pos = 0;
+         pos = line.find(delim);
+         if (pos == std::string::npos) continue;
+         line.erase(pos);
+         if (filesToParse.find(line) == filesToParse.end()) {
+            char* filename = gSystem->Which(fSourceDir, line.c_str(), kReadPermission);
+            if (!filename) continue;
+            listFilesToParse.push_back(line);
+            filesToParse[line] = filename;
+            delete filename;
+            if (*iFile == implFileName || *iFile == declFileName)
+               outdot << "\"" << *iFile << "\" [style=filled,fillcolor=lightgray];" << endl;
+         }
+         outdot << "\"" << *iFile << "\" -> \"" << line << "\";" << endl;
+      }
+   }
+
+   outdot << "}" << endl; // digraph
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t THtml::CreateDotClassChartLib(const char* filename) {
+// Build the library dependency graph for one class in 
+// GraphViz/Dot format
+//
+// Input: filename - output dot file incl. path
+
+   ofstream outdot(filename);
+   outdot << "strict digraph G {" << endl
+      << "ratio=auto;" << endl
+      << "rankdir=RL;" << endl
+      << "compound=true;" << endl
+      << "constraint=false;" << endl
+      << "ranksep=0.7;" << endl
+      << "nodesep=0.3;" << endl
+      << "size=\"8,8\";" << endl
+      << "ratio=compress;" << endl;
+
+   TString libs(fCurrentClass->GetSharedLibs());
+   outdot << "\"All Libraries\" [URL=\"LibraryDependencies.html\",shape=box,rank=max,fillcolor=lightgray,style=filled];" << endl;
+
+   if (libs.Length()) {
+      TString firstLib(libs);
+      Ssiz_t end = firstLib.Index(' ');
+      if (end != kNPOS) {
+         firstLib.Remove(end, firstLib.Length());
+         libs.Remove(0, end + 1);
+      } else libs = "";
+      Ssiz_t posExt = firstLib.First(".");
+      if (posExt != kNPOS)
+         firstLib.Remove(posExt, firstLib.Length());
+      outdot << "\"All Libraries\" -> \"" << firstLib << "\" [style=invis];" << endl;
+      outdot << "\"" << firstLib << "\" -> {" << endl;
+
+      if (firstLib != "libCore")
+         libs += " libCore";
+      if (firstLib != "libCint")
+         libs += " libCint";
+      TString thisLib;
+      for (Ssiz_t pos = 0; pos < libs.Length(); ++pos)
+         if (libs[pos] != ' ')
+            thisLib += libs[pos];
+         else if (thisLib.Length()) {
+            Ssiz_t posExt = thisLib.First(".");
+            if (posExt != kNPOS)
+               thisLib.Remove(posExt, thisLib.Length());
+            outdot << " \"" << thisLib << "\";";
+            thisLib = "";
+         }
+      // remaining lib
+      if (thisLib.Length()) {
+         Ssiz_t posExt = thisLib.First(".");
+         if (posExt != kNPOS)
+            thisLib.Remove(posExt, thisLib.Length());
+         outdot << " \"" << thisLib << "\";";
+         thisLib = "";
+      }
+      outdot << "}" << endl; // dependencies
+   } else
+      outdot << "\"No rlibmap information avaliable.\"" << endl;
+
+   outdot << "}" << endl; // digraph
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t THtml::ClassDotCharts(ofstream & out)
+{
+// This function builds the class charts for one class in GraphViz/Dot format,
+// i.e. the inheritance diagram, the include dependencies, and the library
+// dependency.
+//
+// Input: out      - output file stream
+
+   if (!HaveDot()) 
+      return kFALSE;
+
+   TString title(fCurrentClass->GetName());
+   NameSpace2FileName(title);
+
+   TString filename(title);
+   gSystem->ExpandPathName(fOutputDir);
+   gSystem->PrependPathName(fOutputDir, filename);
+
+   if (!CreateDotClassChartInh(filename + "_Inh.dot") ||
+      !RunDot(filename + "_Inh", &out))
+   return kFALSE;
+
+   if (CreateDotClassChartInhMem(filename + "_InhMem.dot"))
+      RunDot(filename + "_InhMem", &out);
+
+   if (CreateDotClassChartIncl(filename + "_Incl.dot"))
+      RunDot(filename + "_Incl", &out);
+
+   if (CreateDotClassChartLib(filename + "_Lib.dot"))
+      RunDot(filename + "_Lib", &out);
+
+   out << "<div class=\"imgformattabs\">" << endl
+       << "<a id=\"img" << title << "_Inh\" class=\"imgformattabsel\" href=\"javascript:SetImg('Charts','" << title << "_Inh.gif');\">Inheritance</a>" << endl
+       << "<a id=\"img" << title << "_InhMem\" class=\"imgformattab\" href=\"javascript:SetImg('Charts','" << title << "_InhMem.gif');\">Inherited Members</a>" << endl
+       << "<a id=\"img" << title << "_Incl\" class=\"imgformattab\" href=\"javascript:SetImg('Charts','" << title << "_Incl.gif');\">Includes</a>" << endl
+       << "<a id=\"img" << title << "_Lib\" class=\"imgformattab\" href=\"javascript:SetImg('Charts','" << title << "_Lib.gif');\">Libraries</a><br/>" << endl
+       << "</div>" << endl
+       << "<img id=\"Charts\" alt=\"Class Charts\" class=\"formatsel\" usemap=\"#Map" << title << "_Inh\" src=\"" << title << "_Inh.gif\"/>" << endl;
+
+   return kTRUE;
+}
+
 //______________________________________________________________________________
 void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
                           ETraverse dir, int depth)
@@ -2095,7 +2662,8 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
       out << "<!--INHERITANCE TREE-->" << endl;
 
       // draw class tree into nested tables recursively
-      out << "<table><tr><td width=\"10%\"></td><td width=\"70%\">Inheritance Chart:</td></tr>";
+      out << "<table><tr><td width=\"10%\"></td><td width=\"70%\">"
+          << "<a href=\"ClassHierarchy.html\">Inheritance Chart</a>:</td></tr>";
       out << "<tr class=\"inhtree\"><td width=\"10%\"></td><td width=\"70%\">";
 
       out << "<table class=\"inhtree\"><tr><td>" << endl;
@@ -2137,7 +2705,7 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
       }
       if (!first) {
          out << "</tr></table></td>" << endl; // put it in additional row in table
-         out << "<td>&lt;-</td>";
+         out << "<td>&larr;</td>";
       }
    }
 
@@ -2148,10 +2716,12 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
    const char *className = classPtr->GetName();
    TString htmlFile;
    GetHtmlFileName(classPtr, htmlFile);
+   TString anchor(className);
+   NameSpace2FileName(anchor);
 
    if (dir == kUp) {
       if (htmlFile) {
-         out << "<center><tt><a name=\"" << className;
+         out << "<center><tt><a name=\"" << anchor;
          out << "\" href=\"" << htmlFile << "\">";
          ReplaceSpecialChars(out, className);
          out << "</a></tt></center>" << endl;
@@ -2161,7 +2731,7 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
 
    if (dir == kBoth) {
       if (htmlFile.Length()) {
-         out << "<center><big><b><tt><a name=\"" << className;
+         out << "<center><big><b><tt><a name=\"" << anchor;
          out << "\" href=\"" << htmlFile << "\">";
          ReplaceSpecialChars(out, className);
          out << "</a></tt></b></big></center>" << endl;
@@ -2181,7 +2751,7 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
 
       out << "<td><table><tr>" << endl;
       fHierarchyLines = 0;
-      DescendHierarchy(out,classPtr,fClassNames,fNumberOfClasses,10);
+      DescendHierarchy(out,classPtr,10);
 
       out << "</tr></table>";
       if (dir==kBoth && fHierarchyLines>=10)
@@ -2331,10 +2901,10 @@ void THtml::Convert(const char *filename, const char *title,
 
 
       // remove leading spaces
-      // fLine = fLine.Strip(TString::kBoth);
       fLineExpanded = fLine;
       ExpandKeywords(fLineExpanded);
-      fLineStripped = fLine.Strip(TString::kBoth);
+      fLineStripped = fLine;
+      Strip(fLineStripped);
 
       if ((fParseContext.back() == kBeginEndHtml 
          || fParseContext.back() == kBeginEndHtmlInCComment))
@@ -2393,64 +2963,50 @@ Bool_t THtml::CopyHtmlFile(const char *sourceName, const char *destName)
 //   NOTE: The destination directory is always fOutputDir
 //
 
-   Bool_t ret = kFALSE;
-   Int_t check = 0;
-
    // source file name
    char *tmp1 = gSystem->Which(fSourceDir, sourceName, kReadPermission);
-   char *sourceFile = StrDup(tmp1, 16);
+   if (!tmp1) {
+      Error("Copy", "Can't copy file '%s' to '%s/%s' - can't find source file!", sourceName,
+            fOutputDir.Data(), destName);
+      return kFALSE;
+   }
 
-   if (tmp1)
-      delete[]tmp1;
-   tmp1 = 0;
+   TString sourceFile(tmp1);
+   delete[]tmp1;
 
-   if (sourceFile) {
-
-      // destination file name
-      char *tmpstr = 0;
-      if (!*destName)
-         tmpstr = StrDup(GetFileName(sourceFile), 16);
-      else
-         tmpstr = StrDup(GetFileName(destName), 16);
-      destName = tmpstr;
-
-      gSystem->ExpandPathName(fOutputDir);
-      tmp1 = gSystem->ConcatFileName(fOutputDir, destName);
-      char *filename = StrDup(tmp1, 16);
-
-      if (tmp1)
-         delete[]tmp1;
-      tmp1 = 0;
-
-      // Get info about a file
-      Long64_t sSize, dSize;
-      Long_t sId, sFlags, sModtime;
-      Long_t dId, dFlags, dModtime;
-      sModtime = 0;
-      dModtime = 0;
-      if (!(check =
-           gSystem->GetPathInfo(sourceFile, &sId, &sSize, &sFlags,
-                                &sModtime)))
-         check = gSystem->GetPathInfo(filename, &dId, &dSize, &dFlags,
-                                  &dModtime);
-
-      if ((sModtime != dModtime) || check)
-         gSystem->CopyFile(sourceFile, filename, kTRUE);
-
-      delete[]filename;
-      delete[]tmpstr;
-      delete[]sourceFile;
-   } else
-      Error("Copy", "Can't copy file '%s' to '%s' directory !", sourceName,
+   if (!sourceFile.Length()) {
+      Error("Copy", "Can't copy file '%s' to '%s' directory - source file name invalid!", sourceName,
             fOutputDir.Data());
+      return kFALSE;
+   }
 
-   return (ret);
+   // destination file name
+   TString destFile;
+   if (!destName || !*destName)
+      destFile = GetFileName(sourceFile);
+   else
+      destFile = GetFileName(destName);
+
+   gSystem->ExpandPathName(fOutputDir);
+   gSystem->PrependPathName(fOutputDir, destFile);
+
+   // Get info about a file
+   Long64_t size;
+   Long_t id, flags, sModtime, dModtime;
+   sModtime = 0;
+   dModtime = 0;
+   if (gSystem->GetPathInfo(sourceFile, &id, &size, &flags, &sModtime)
+      || gSystem->GetPathInfo(destFile, &id, &size, &flags, &dModtime)
+      || sModtime > dModtime)
+      gSystem->CopyFile(sourceFile, destFile, kTRUE);
+
+   return kTRUE;
 }
 
 
 
 //______________________________________________________________________________
-void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
+void THtml::CreateIndex()
 {
 // Create an index
 //
@@ -2459,49 +3015,52 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
 //        numberOfClasses - number of elements
 //
 
-   Int_t i = 0;
-
-   gSystem->ExpandPathName(fOutputDir);
-   char *tmp1 = gSystem->ConcatFileName(fOutputDir, "ClassIndex.html");
-   char *filename = StrDup(tmp1);
-
-   if (tmp1)
-      delete[]tmp1;
-   tmp1 = 0;
-
    // create CSS file, we need it
    CreateStyleSheet();
    CreateJavascript();
 
+   gSystem->ExpandPathName(fOutputDir);
+   TString filename("ClassIndex.html");
+   gSystem->PrependPathName(fOutputDir, filename);
+
    // open indexFile file
    ofstream indexFile;
-   indexFile.open(filename, ios::out);
+   indexFile.open(filename.Data(), ios::out);
 
    if (indexFile.good()) {
 
-      Printf(formatStr, "", fCounter.Data(), filename);
+      Printf(formatStr, "", fCounter.Data(), filename.Data());
 
       // write indexFile header
       WriteHtmlHeader(indexFile, "Class Index");
 
       indexFile << "<h1>Index</h1>" << endl;
 
-      if (fModules.size()) {
+      if (fModules.GetSize()) {
          indexFile << "<div id=\"indxModules\"><h4>Modules</h4>" << endl;
          // find index chars
-         sort_strlist_stricmp(fModules);
-         for (std::list<std::string>::iterator iModule = fModules.begin(); 
-            iModule != fModules.end(); ++iModule) {
-            indexFile << "<a href=\"" << *iModule << "_Index.html\">" << *iModule << "</a>" << endl;
-         }
+         fModules.Sort();
+         TIter iModule(&fModules);
+         TModuleDocInfo* module = 0;
+         while ((module = (TModuleDocInfo*) iModule()))
+            indexFile << "<a href=\"" << module->GetName() << "_Index.html\">" 
+                      << module->GetName() << "</a>" << endl;
          indexFile << "</div><br />" << endl;
       }
 
       std::vector<std::string> indexChars;
-      if (numberOfClasses > 10) {
+      if (fClasses.GetSize() > 10) {
+         std::vector<std::string> classNames;
+         {
+            TIter iClass(&fClasses);
+            TClassDocInfo* cdi = 0;
+            while ((cdi = (TClassDocInfo*)iClass()))
+               classNames.push_back(cdi->GetName());
+         }
+
          indexFile << "<div id=\"indxShortX\"><h4>Jump to</h4>" << endl;
          // find index chars
-         GetIndexChars(classNames, (Int_t)numberOfClasses, 50 /*sections*/, indexChars);
+         GetIndexChars(classNames, 50 /*sections*/, indexChars);
          for (UInt_t iIdxEntry = 0; iIdxEntry < indexChars.size(); ++iIdxEntry) {
             indexFile << "<a href=\"#idx" << iIdxEntry << "\">" << indexChars[iIdxEntry] 
                       << "</a>" << endl;
@@ -2543,32 +3102,34 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
 
       // loop on all classes
       UInt_t currentIndexEntry = 0;
-      for (i = 0; i < numberOfClasses; i++) {
+      TIter iClass(&fClasses);
+      TClassDocInfo* cdi = 0;
+      Int_t i = 0;
+      while ((cdi = (TClassDocInfo*)iClass())) {
          // get class
-         fCurrentClass = GetClass((const char *) classNames[i]);
+         fCurrentClass = cdi->GetClass();
          if (fCurrentClass == 0) {
-            Warning("THtml::CreateIndex", "skipping class %s\n", classNames[i]);
+            Warning("THtml::CreateIndex", "skipping class %s\n", cdi->GetName());
             continue;
          }
 
-         indexFile << "<li class=\"idxl" << i%2 << "\"><tt>";
+         indexFile << "<li class=\"idxl" << (i++)%2 << "\"><tt>";
          if (currentIndexEntry < indexChars.size()
-            && !strncmp(indexChars[currentIndexEntry].c_str(), classNames[i], 
+            && !strncmp(indexChars[currentIndexEntry].c_str(), cdi->GetName(), 
                         indexChars[currentIndexEntry].length()))
             indexFile << "<a name=\"idx" << currentIndexEntry++ << "\"></a>" << endl;
 
-         TString htmlFile;
-         GetHtmlFileName(fCurrentClass, htmlFile);
+         TString htmlFile(cdi->GetHtmlFileName());
          if (htmlFile.Length()) {
             indexFile << "<a name=\"";
-            indexFile << classNames[i];
+            indexFile << cdi->GetName();
             indexFile << "\" href=\"";
             indexFile << htmlFile;
             indexFile << "\">";
-            ReplaceSpecialChars(indexFile, classNames[i]);
+            ReplaceSpecialChars(indexFile, cdi->GetName());
             indexFile << "</a>";
          } else
-            ReplaceSpecialChars(indexFile, classNames[i]);
+            ReplaceSpecialChars(indexFile, cdi->GetName());
 
 
          // write title
@@ -2592,16 +3153,14 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
       indexFile.close();
 
    } else
-      Error("MakeIndex", "Can't open file '%s' !", filename);
+      Error("MakeIndex", "Can't open file '%s' !", filename.Data());
 
-   if (filename)
-      delete[]filename;
    fCurrentClass = 0;
 }
 
 
 //______________________________________________________________________________
-void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames)
+void THtml::CreateIndexByTopic()
 {
 // It creates several index files
 //
@@ -2611,140 +3170,128 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames)
 //        maxLen        - maximum length of a single name
 //
 
-   ofstream outputFile;
-   char *filename = 0;
-   Int_t i;
-   UInt_t currentIndexEntry = 0;
-   Int_t firstIdxEntry = 0;
-   std::vector<std::string> indexChars;
-   fModules.clear();
+   gSystem->ExpandPathName(fOutputDir);
+
+   const char* title = "LibraryDependencies";
+   TString filename(title);
+   gSystem->PrependPathName(fOutputDir, filename);
+
+   std::ofstream libDepDotFile(filename + ".dot");
+   libDepDotFile << "strict digraph G {" << endl
+                 << "ratio=auto;" << endl
+                 << "rankdir=TB;" << endl
+                 << "compound=true;" << endl
+                 << "constraint=false;" << endl
+                 << "ranksep=1;" << endl
+                 << "nodesep=0.3;" << endl
+                 << "size=\"8,8\";" << endl
+                 << "ratio=compress;" << endl;
 
 
-   for (i = 0; i < numberOfNames; i++) {
-      if (!filename) {
+   TModuleDocInfo* module = 0;
+   TIter iModule(&fModules);
+   fModules.Sort();
 
-         // create a filename
-         gSystem->ExpandPathName(fOutputDir);
-         char *tmp1 = gSystem->ConcatFileName(fOutputDir, fileNames[i]);
-         filename = StrDup(tmp1, 16);
-
-         if (tmp1)
-            delete[]tmp1;
-         tmp1 = 0;
-
-         // look for first _ in basename
-         char *underlinePtr = strrchr(filename, '/');
-         if (!underlinePtr)
-            underlinePtr=strchr(filename,'_');
-            else underlinePtr=strchr(underlinePtr,'_');
-         *underlinePtr = 0;
-
-         char modulename[1024];
-         strcpy(modulename, GetFileName(filename));
-
-         char htmltitle[1024];
-         strcpy(htmltitle, "Index of ");
-         strcat(htmltitle, modulename);
-         strcat(htmltitle, " classes");
-
-         strcat(filename, "_Index.html");
-
-         // open a file
-         outputFile.open(filename, ios::out);
-
-         // check if it's OK
-         if (outputFile.good()) {
-            fModules.push_back(modulename);
-            Printf(formatStr, "", fCounter.Data(), filename);
-
-            // write outputFile header
-            WriteHtmlHeader(outputFile, htmltitle);
-            outputFile << "<h2>" << htmltitle << "</h2>" << endl;
-
-            std::list<std::string> classNames;
-            // add classes until end of module
-            char *classname = strrchr(fileNames[i], '/');
-            if (!classname)
-               classname=strchr(fileNames[i],'_');
-            else classname=strchr(classname,'_');
-
-            for (int j=i; j < numberOfNames;) {
-               classNames.push_back(classname + 1);
-
-               // first base name
-               // look for first _ in basename
-               char *first = strrchr(fileNames[j], '/');
-               if (!first)
-                  first=strchr(fileNames[j],'_');
-                  else first=strchr(first,'_');
-               if (first)
-                  *first = 0;
-
-               // second base name
-               char *second = 0;
-               if (j < (numberOfNames - 1)) {
-                  second = strrchr(fileNames[j + 1], '/');
-                  if (!second)
-                     second=strchr(fileNames[j + 1],'_');
-                     else second=strchr(second,'_');
-                  if (second)
-                     *second = 0;
-               }
-               // check and close the file if necessary
-               Bool_t nextDiffers = (!first || !second || strcmp(fileNames[j], fileNames[j + 1]));
-               if (first)
-                  *first = '_';
-               if (second)
-                  *second = '_';
-               if (nextDiffers) break;
-
-               ++j;
-               classname = strrchr(fileNames[j], '/');
-               if (!classname)
-                  classname=strchr(fileNames[j],'_');
-               else classname=strchr(classname,'_');
-            }
-
-            if (classNames.size() > 10) {
-               outputFile << "<div id=\"indxShortX\"><h4>Jump to</h4>" << endl;
-               UInt_t numSections = classNames.size() / 10;
-               if (numSections < 10) numSections = 10;
-               if (numSections > 50) numSections = 50;
-               // find index chars
-               GetIndexChars(classNames, numSections, indexChars);
-               for (UInt_t iIdxEntry = 0; iIdxEntry < indexChars.size(); ++iIdxEntry) {
-                  outputFile << "<a href=\"#idx" << iIdxEntry << "\">" << indexChars[iIdxEntry] 
-                             << "</a>" << endl;
-               }
-               outputFile << "</div><br />" << endl;
-            }
-            outputFile << "<ul id=\"indx\">" << endl;
-            currentIndexEntry = 0;
-
-         } else
-            Error("MakeIndex", "Can't open file '%s' !", filename);
-         delete[]filename;
-         firstIdxEntry = i;
+   std::stringstream sstrCluster;
+   std::stringstream sstrDeps;
+   while ((module = (TModuleDocInfo*)iModule())) {
+      std::vector<std::string> indexChars;
+      TString filename(module->GetName());
+      filename += "_Index.html";
+      gSystem->PrependPathName(fOutputDir, filename);
+      ofstream outputFile(filename.Data());
+      if (!outputFile.good()) {
+         Error("MakeIndex", "Can't open file '%s' !", filename.Data());
+         continue;
       }
-      // get a class
-      char *classname = strrchr(fileNames[i], '/');
-      if (!classname)
-         classname=strchr(fileNames[i],'_');
-         else classname=strchr(classname,'_');
-      TClass *classPtr =
-          GetClass((const char *) classname + 1);
-      if (classPtr) {
+      Printf(formatStr, "", fCounter.Data(), filename.Data());
+
+      TString htmltitle("Index of ");
+      htmltitle += module->GetName();
+      htmltitle += " classes";
+      WriteHtmlHeader(outputFile, htmltitle);
+      outputFile << "<h2>" << htmltitle << "</h2>" << endl;
+
+      std::list<std::string> classNames;
+      {
+         TIter iClass(module->GetClasses());
+         TClassDocInfo* cdi = 0;
+         while ((cdi = (TClassDocInfo*) iClass())) {
+            classNames.push_back(cdi->GetName());
+
+            TString libs(cdi->GetClass()->GetSharedLibs());
+            Ssiz_t posDepLibs = libs.Index(' ');
+            TString thisLib(libs);
+            if (posDepLibs != kNPOS)
+               thisLib.Remove(posDepLibs, thisLib.Length());
+            Ssiz_t posExt = thisLib.First('.');
+            if (posExt != kNPOS)
+               thisLib.Remove(posExt, thisLib.Length());
+
+            if (!thisLib.Length())
+               continue;
+
+            // allocate entry, even if no dependencies
+            std::set<std::string>& setDep = setLibDeps[thisLib.Data()][module->GetName()];
+
+            if (posDepLibs != kNPOS) {
+               std::string lib;
+               for(Ssiz_t pos = posDepLibs + 1; libs[pos]; ++pos) {
+                  if (libs[pos] == ' ') {
+                     if (thisLib.Length() && lib.length()) {
+                        size_t posExt = lib.find('.');
+                        if (posExt != std::string::npos)
+                           lib.erase(posExt);
+                        setDep.insert(lib);
+                     }
+                     lib.erase();
+                  } else 
+                     lib += libs[pos];
+               }
+               if (lib.length() && thisLib.Length()) {
+                  size_t posExt = lib.find('.');
+                  if (posExt != std::string::npos)
+                     lib.erase(posExt);
+                  setDep.insert(lib);
+               }
+            } // if dependencies
+         } // while next class in module
+      } // just a scope block
+
+      if (classNames.size() > 10) {
+         outputFile << "<div id=\"indxShortX\"><h4>Jump to</h4>" << endl;
+         UInt_t numSections = classNames.size() / 10;
+         if (numSections < 10) numSections = 10;
+         if (numSections > 50) numSections = 50;
+         // find index chars
+         GetIndexChars(classNames, numSections, indexChars);
+         for (UInt_t iIdxEntry = 0; iIdxEntry < indexChars.size(); ++iIdxEntry) {
+            outputFile << "<a href=\"#idx" << iIdxEntry << "\">" << indexChars[iIdxEntry] 
+                       << "</a>" << endl;
+         }
+         outputFile << "</div><br />" << endl;
+      }
+      outputFile << "<ul id=\"indx\">" << endl;
+
+      TIter iClass(module->GetClasses());
+      TClassDocInfo* cdi = 0;
+      UInt_t count = 0;
+      UInt_t currentIndexEntry = 0;
+      while ((cdi = (TClassDocInfo*) iClass())) {
+         TClass *classPtr = cdi->GetClass();
+         if (!classPtr) {
+            Error("MakeIndex", "Unknown class '%s' !", cdi->GetName());
+            continue;
+         }
 
          // write a classname to an index file
-         outputFile << "<li class=\"idxl" << (i-firstIdxEntry)%2 << "\"><tt>";
+         outputFile << "<li class=\"idxl" << (count++)%2 << "\"><tt>";
          if (currentIndexEntry < indexChars.size()
-            && !strncmp(indexChars[currentIndexEntry].c_str(), classname + 1, 
+            && !strncmp(indexChars[currentIndexEntry].c_str(), cdi->GetName(), 
                         indexChars[currentIndexEntry].length()))
             outputFile << "<a name=\"idx" << currentIndexEntry++ << "\"></a>" << endl;
 
-         TString htmlFile; 
-         GetHtmlFileName(classPtr, htmlFile);
-
+         TString htmlFile(cdi->GetHtmlFileName());
          if (htmlFile.Length()) {
             outputFile << "<a name=\"";
             outputFile << classPtr->GetName();
@@ -2763,152 +3310,272 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames)
          outputFile << "\"></a>";
          ReplaceSpecialChars(outputFile, classPtr->GetTitle());
          outputFile << "</li>" << endl;
-      } else
-         Error("MakeIndex", "Unknown class '%s' !",
-               strchr(fileNames[i], '_') + 1);
-
-
-      // first base name
-      // look for first _ in basename
-      char *first = strrchr(fileNames[i], '/');
-      if (!first)
-         first=strchr(fileNames[i],'_');
-         else first=strchr(first,'_');
-      if (first)
-         *first = 0;
-
-      // second base name
-      char *second = 0;
-      if (i < (numberOfNames - 1)) {
-         second = strrchr(fileNames[i + 1], '/');
-         if (!second)
-            second=strchr(fileNames[i + 1],'_');
-            else second=strchr(second,'_');
-         if (second)
-            *second = 0;
-      }
-      // check and close the file if necessary
-      if (!first || !second || strcmp(fileNames[i], fileNames[i + 1])) {
-
-         if (outputFile.good()) {
-
-            outputFile << "</ul>" << endl;
-
-            // write outputFile footer
-            TDatime date;
-            WriteHtmlFooter(outputFile, "", date.AsString());
-
-            // close file
-            outputFile.close();
-
-            filename = 0;
-         } else
-            Error("MakeIndex", "Corrupted file '%s' !", filename);
       }
 
-      if (first)
-         *first = '_';
-      if (second)
-         *second = '_';
+
+      outputFile << "</ul>" << endl;
+
+      // write outputFile footer
+      TDatime date;
+      WriteHtmlFooter(outputFile, "", date.AsString());
+   } // while next module
+
+   // libCint is missing as we don't have class doc for it
+   // We need it for dependencies nevertheless, so add it by hand.
+   sstrCluster << "subgraph clusterlibCint {" << endl
+      << "style=filled;" << endl
+      << "color=lightgray;" << endl
+      << "label=\"libCint\";" << endl
+      << "node [style=filled,color=white]" << endl
+      << "\"CINT\";" << endl
+      << "}" << endl;
+
+   for (LibDep_t::iterator iLibDep = setLibDeps.begin(); iLibDep != setLibDeps.end(); ++iLibDep) {
+      if (!iLibDep->first.length()) 
+         continue;
+      sstrCluster << "subgraph cluster" << iLibDep->first << " {" << endl
+         << "style=filled;" << endl
+         << "color=lightgray;" << endl
+         << "label=\"" << iLibDep->first << "\";" << endl;
+
+      for (std::map<std::string, std::set<std::string> >::iterator iModule = iLibDep->second.begin();
+         iModule != iLibDep->second.end(); ++iModule) {
+         sstrCluster << "node [style=filled,color=white,URL=\"" << iModule->first << "_Index.html\"];" << endl
+            << "\"" << iModule->first << "\";";
+
+         // GetSharedLib doesn't mention libCore or libCint; add them by hand
+         if (iLibDep->first != "libCore")
+            sstrDeps << "\"" << iModule->first << "\" -> \"BASE\" [lhead=clusterlibCore];" << endl;
+         sstrDeps << "\"" << iModule->first << "\" -> \"CINT\" [lhead=clusterlibCint];" << endl;
+
+         for (std::set<std::string>::iterator iLib = iModule->second.begin();
+            iLib != iModule->second.end(); ++iLib) {
+            const std::map<std::string, std::set<std::string> >& modDep = setLibDeps[*iLib];
+            std::map<std::string, std::set<std::string> >::const_iterator iModDep = modDep.begin();
+            const std::string& mod = iModDep->first;
+            sstrDeps << "\"" << iModule->first << "\" -> \"" << mod << "\" [lhead=cluster" << *iLib << "];" << endl;
+         }
+      } // for modules in lib
+      sstrCluster << endl 
+         << "}" << endl;
+   } // for libs
+
+   libDepDotFile << sstrCluster.str() << endl
+      << sstrDeps.str();
+   libDepDotFile << "}" << endl;
+   libDepDotFile.close();
+
+   ofstream out(filename + ".html");
+   if (!out.good()) {
+      Error("CreateIndexByTopic", "Can't open file '%s.html' !",
+            filename.Data());
+      return;
    }
+
+   Printf(formatStr, "", fCounter.Data(), (filename + ".html").Data());
+   // write out header
+   WriteHtmlHeader(out, "Library Dependencies");
+   out << "<h1>Library Dependencies</h1>" << endl;
+
+   // check for a search engine
+   const char *searchEngine =
+       gEnv->GetValue("Root.Html.SearchEngine", "");
+
+   // if exists ...
+   if (*searchEngine) {
+
+      // create link to search engine page
+      out << "<h2><a href=\"" << searchEngine
+          << "\">Search the Class Reference Guide</a></h2>" << endl;
+   }
+
+   RunDot(filename, &out);
+
+   out << "<img alt=\"Library Dependencies\" class=\"formatsel\" usemap=\"#Map" << title << "\" src=\"" << title << ".gif\"/>" << endl;
+
+   // write out footer
+   TDatime date;
+   WriteHtmlFooter(out, "", date.AsString());
 }
 
+
 //______________________________________________________________________________
-void THtml::CreateHierarchy(const char **classNames, Int_t numberOfClasses)
+Bool_t THtml::CreateHierarchyDot()
 {
 // Create a hierarchical class list
 // The algorithm descends from the base classes and branches into
 // all derived classes. Mixing classes are displayed several times.
 //
-// Input: classNames      - pointer to an array of class names
-//        numberOfClasses - number of elements
 //
-   Int_t i=0;
 
+   const char* title = "ClassHierarchy";
    gSystem->ExpandPathName(fOutputDir);
-   char *filename = gSystem->ConcatFileName(fOutputDir, "ClassHierarchy.html");
+   TString filename(title);
+   gSystem->PrependPathName(fOutputDir, filename);
 
    // open out file
-   ofstream out;
-   out.open(filename, ios::out);
+   ofstream dotout(filename + ".dot");
 
-   if (out.good()) {
+   if (!dotout.good()) {
+      Error("CreateHierarchy", "Can't open file '%s.dot' !",
+            filename.Data());
+      return kFALSE;
+   }
 
-      Printf(formatStr, "", fCounter.Data(), filename);
+   dotout << "digraph G {" << endl
+          << "ratio=auto;" << endl
+          << "rankdir=RL;" << endl;
 
-      // write out header
-      WriteHtmlHeader(out, "Class Hierarchy");
-      out << "<h1>Class Hierarchy</h1>" << endl;
+   // loop on all classes
+   TClassDocInfo* cdi = 0;
+   TIter iClass(&fClasses);
+   while ((cdi = (TClassDocInfo*)iClass())) {
 
-      // check for a search engine
-      const char *searchEngine =
-          gEnv->GetValue("Root.Html.SearchEngine", "");
-
-      // if exists ...
-      if (*searchEngine) {
-
-         // create link to search engine page
-         out << "<h2><a href=\"" << searchEngine
-             << "\">Search the Class Reference Guide</a></h2>" << endl;
+      TClass *cl = cdi->GetClass();
+      if (cl == 0) {
+         Warning("THtml::CreateHierarchy", "skipping class %s\n", cdi->GetName());
+         continue;
       }
 
-      // loop on all classes
-      for (i = 0; i < numberOfClasses; i++) {
-
-         // get class
-         TClass *basePtr = GetClass((const char *) classNames[i]);
-         if (basePtr == 0) {
-            Warning("THtml::CreateHierarchy", "skipping class %s\n", classNames[i]);
-            continue;
+      // Find immediate base classes
+      TList *bases = cl->GetListOfBases();
+      if (bases && !bases->IsEmpty()) {
+         dotout << "\"" << cdi->GetName() << "\" -> { ";
+         TIter iBase(bases);
+         TBaseClass* base = 0;
+         while ((base = (TBaseClass*) iBase())) {
+            // write out current class
+            if (base != bases->First())
+               dotout << "; ";
+            dotout << "\"" << base->GetName() << "\"";
          }
+         dotout << "};" << endl;
+      } else 
+         // write out current class - no bases
+         dotout << "\"" << cdi->GetName() << "\";" << endl;
 
-         // Find basic base classes
-         TList *bases = basePtr->GetListOfBases();
-         if (bases && bases->IsEmpty()){
+   }
 
-            out << "<hr />" << endl;
+   dotout << "}";
+   dotout.close();
 
-            out << "<table><tr><td><ul><li><tt>";
-            TString htmlFile;
-            GetHtmlFileName(basePtr, htmlFile);
-            if (htmlFile.Length()) {
-               out << "<a name=\"";
-               out << classNames[i];
-               out << "\" href=\"";
-               out << htmlFile;
-               out << "\">";
-               ReplaceSpecialChars(out, classNames[i]);
-               out << "</a>";
-            } else {
-               ReplaceSpecialChars(out, classNames[i]);
-            }
+   ofstream out(filename + ".html");
+   if (!out.good()) {
+      Error("CreateHierarchy", "Can't open file '%s.html' !",
+            filename.Data());
+      return kFALSE;
+   }
 
-            // find derived classes
-            out << "</tt></li></ul></td>";
-            fHierarchyLines = 0;
-            DescendHierarchy(out,basePtr,classNames,numberOfClasses);
+   Printf(formatStr, "", fCounter.Data(), (filename + ".html").Data());
+   // write out header
+   WriteHtmlHeader(out, "Class Hierarchy");
+   out << "<h1>Class Hierarchy</h1>" << endl;
 
-            out << "</tr></table>" << endl;
-         }
-      }
+   // check for a search engine
+   const char *searchEngine =
+       gEnv->GetValue("Root.Html.SearchEngine", "");
 
-      // write out footer
-      TDatime date;
-      WriteHtmlFooter(out, "", date.AsString());
+   // if exists ...
+   if (*searchEngine) {
 
-      // close file
-      out.close();
+      // create link to search engine page
+      out << "<h2><a href=\"" << searchEngine
+          << "\">Search the Class Reference Guide</a></h2>" << endl;
+   }
 
-   } else
-      Error("CreateHierarchy", "Can't open file '%s' !", filename);
+   RunDot(filename, &out);
 
-   if (filename)
-      delete[]filename;
+   out << "<img usemap=\"#Map" << title << "\" src=\"" << title << ".gif\"/>" << endl;
+   // write out footer
+   TDatime date;
+   WriteHtmlFooter(out, "", date.AsString());
+   return kTRUE;
 }
 
 //______________________________________________________________________________
-void THtml::DescendHierarchy(ofstream & out, TClass* basePtr,
-  const char **classNames, Int_t numberOfClasses, Int_t maxLines, Int_t depth)
+void THtml::CreateHierarchy()
+{
+// Create a hierarchical class list
+// The algorithm descends from the base classes and branches into
+// all derived classes. Mixing classes are displayed several times.
+//
+//
+
+   if (CreateHierarchyDot()) return;
+
+   gSystem->ExpandPathName(fOutputDir);
+   TString filename("ClassHierarchy.html");
+   gSystem->PrependPathName(fOutputDir, filename);
+
+   // open out file
+   ofstream out(filename);
+
+   if (!out.good()) {
+      Error("CreateHierarchy", "Can't open file '%s' !", filename.Data());
+      return;
+   }
+
+   Printf(formatStr, "", fCounter.Data(), filename.Data());
+
+   // write out header
+   WriteHtmlHeader(out, "Class Hierarchy");
+   out << "<h1>Class Hierarchy</h1>" << endl;
+
+   // check for a search engine
+   const char *searchEngine =
+       gEnv->GetValue("Root.Html.SearchEngine", "");
+
+   // if exists ...
+   if (*searchEngine) {
+
+      // create link to search engine page
+      out << "<h2><a href=\"" << searchEngine
+          << "\">Search the Class Reference Guide</a></h2>" << endl;
+   }
+
+   // loop on all classes
+   TClassDocInfo* cdi = 0;
+   TIter iClass(&fClasses);
+   while ((cdi = (TClassDocInfo*)iClass())) {
+
+      // get class
+      TClass *basePtr = cdi->GetClass();
+      if (basePtr == 0) {
+         Warning("THtml::CreateHierarchy", "skipping class %s\n", cdi->GetName());
+         continue;
+      }
+
+      // Find basic base classes
+      TList *bases = basePtr->GetListOfBases();
+      if (bases && !bases->IsEmpty()) { 
+         out << "<hr />" << endl;
+
+         out << "<table><tr><td><ul><li><tt>";
+         if (cdi->GetHtmlFileName()) {
+            out << "<a name=\"" << cdi->GetName() << "\" href=\""
+                << cdi->GetHtmlFileName() << "\">";
+            ReplaceSpecialChars(out, cdi->GetName());
+            out << "</a>";
+         } else {
+            ReplaceSpecialChars(out, cdi->GetName());
+         }
+
+         // find derived classes
+         out << "</tt></li></ul></td>";
+         fHierarchyLines = 0;
+         DescendHierarchy(out,basePtr);
+
+         out << "</tr></table>" << endl;
+      }
+   }
+
+   // write out footer
+   TDatime date;
+   WriteHtmlFooter(out, "", date.AsString());
+}
+
+//______________________________________________________________________________
+void THtml::DescendHierarchy(ofstream & out, TClass* basePtr, Int_t maxLines, Int_t depth)
 {
 // Descend hierarchy recursively
 // loop over all classes and look for classes with base class basePtr
@@ -2919,10 +3586,13 @@ void THtml::DescendHierarchy(ofstream & out, TClass* basePtr,
          return;
       }
 
-   Int_t numClasses=0;
-   for (Int_t j = 0; j < numberOfClasses && (!maxLines || fHierarchyLines<maxLines); j++) {
+   UInt_t numClasses = 0;
 
-      TClass *classPtr = GetClass((const char *) classNames[j]);
+   TClassDocInfo* cdi = 0;
+   TIter iClass(&fClasses);
+   while ((cdi = (TClassDocInfo*)iClass()) && (!maxLines || fHierarchyLines<maxLines)) {
+
+      TClass *classPtr = cdi->GetClass();
       if (!classPtr) continue;
 
       // find base classes with same name as basePtr
@@ -2933,7 +3603,7 @@ void THtml::DescendHierarchy(ofstream & out, TClass* basePtr,
       if (!inheritFrom) continue;
 
       if (!numClasses)
-         out << "<td>&lt;-</td><td><table><tr>" << endl;
+         out << "<td>&larr;</td><td><table><tr>" << endl;
       else
          out << "</tr><tr>"<<endl;
       fHierarchyLines++;
@@ -2944,18 +3614,14 @@ void THtml::DescendHierarchy(ofstream & out, TClass* basePtr,
           << "\">";
       out << "<table><tr><td>" << endl;
 
-      TString htmlFile;
-      GetHtmlFileName(classPtr, htmlFile);
+      TString htmlFile(cdi->GetHtmlFileName());
       if (htmlFile.Length()) {
-         out << "<center><tt><a name=\"";
-         out << classNames[j];
-         out << "\" href=\"";
-         out << htmlFile;
-         out << "\">";
-         ReplaceSpecialChars(out, classNames[j]);
+         out << "<center><tt><a name=\"" << cdi->GetName() << "\" href=\""
+             << htmlFile << "\">";
+         ReplaceSpecialChars(out, cdi->GetName());
          out << "</a></tt></center>";
       } else {
-         ReplaceSpecialChars(out, classNames[j]);
+         ReplaceSpecialChars(out, cdi->GetName());
       }
       // write title
       // commented out for now because it reduces overview
@@ -2973,7 +3639,7 @@ void THtml::DescendHierarchy(ofstream & out, TClass* basePtr,
       */
 
       out << "</td>" << endl;
-      DescendHierarchy(out,classPtr,classNames,numberOfClasses,maxLines, depth+1);
+      DescendHierarchy(out,classPtr,maxLines, depth+1);
       out << "</tr></table></td>" << endl;
 
    }  // loop over all classes
@@ -2981,6 +3647,42 @@ void THtml::DescendHierarchy(ofstream & out, TClass* basePtr,
       out << "</tr></table></td>" << endl;
    else
       out << "<td></td>" << endl;
+}
+
+//______________________________________________________________________________
+void THtml::GetModuleName(TString& modulename, const char* filename) const 
+{
+   // Returns the module a class with filename belongs to.
+   // For ROOT, this is determined by MODULE/src/*.cxx or MODULE/inc/*.h. 
+   // Math/GenVector (MATHCORE) and Math/Matrix (SMATRIX) get special
+   // treatment.
+   // All classes not fitting into this layout are assigned to the
+   // module USER.
+
+   modulename = filename;
+   const char* posSlash = strchr(filename, '/');
+   const char *srcdir = 0;
+   if (posSlash) {
+      // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
+      srcdir = strstr(posSlash, "/src/");
+      
+      // if impl is unset, check for decl and see if it matches
+      // format "base/inc/TROOT.h" - in which case it's not a USER
+      // class, but a BASE class.
+      if (!srcdir) srcdir=strstr(posSlash, "/inc/");
+   } else srcdir = 0;
+
+   if (srcdir && srcdir == posSlash) {
+      modulename.Remove(srcdir - filename, modulename.Length());
+      modulename.ToUpper();
+   } else {
+      if (posSlash && !strncmp(posSlash,"/Math/GenVector/", 16))
+         modulename = "MATHCORE";
+      else if (posSlash && !strncmp(posSlash,"/Math/Matrix", 12))
+         modulename = "SMATRIX";
+      else
+         modulename = "USER_";
+   }
 }
 
 
@@ -2997,19 +3699,13 @@ void THtml::CreateListOfClasses(const char* filter)
    Int_t totalNumberOfClasses = gClassTable->Classes();
 
    // allocate memory
-   if (fClassNames) delete [] fClassNames;
-   if (fFileNames) delete [] fFileNames;
-   fClassNames = new const char *[totalNumberOfClasses];
-   fFileNames = new char *[totalNumberOfClasses];
+   fClasses.Clear();
+   fModules.Clear();
 
    fClassFilter = filter;
 
    // start from begining
    gClassTable->Init();
-
-   // get class names
-   fNumberOfClasses = 0;
-   fNumberOfFileNames = 0;
 
    TString reg = filter;
    TRegexp re(reg, kTRUE);
@@ -3019,8 +3715,6 @@ void THtml::CreateListOfClasses(const char* filter)
       // get class name
       const char *cname = gClassTable->Next();
       TString s = cname;
-      if (filter && filter[0] && strcmp(filter,"*") && s.Index(re) == kNPOS)
-         continue;
 
       // This is a hack for until after Cint and Reflex are one.
       if (strstr(cname, "__gnu_cxx::")) continue;
@@ -3090,42 +3784,26 @@ void THtml::CreateListOfClasses(const char* filter)
           && !strstr(cname,"Reflex::") && !strstr(cname,"Cintex::"))
          continue;
 
-      fClassNames[fNumberOfClasses] = cname;
-      
-      fFileNames[fNumberOfFileNames] = StrDup(impname, strlen(fClassNames[fNumberOfClasses])+2);
-      char* posSlash = strchr(fFileNames[fNumberOfFileNames], '/');
-      
-      char *srcdir = 0;
-      if (posSlash) {
-         // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
-         srcdir = strstr(posSlash, "/src/");
-         
-         // if impl is unset, check for decl and see if it matches
-         // format "base/inc/TROOT.h" - in which case it's not a USER
-         // class, but a BASE class.
-         if (!srcdir) srcdir=strstr(posSlash, "/inc/");
-      } else srcdir = 0;
-      if (srcdir && srcdir == posSlash) {
-         strcpy(srcdir, "_");
-         for (char *t = fFileNames[fNumberOfFileNames];
-              (t[0] = toupper(t[0])); t++);
-         strcat(srcdir, fClassNames[fNumberOfClasses]);
-      } else {
-         if (posSlash && !strncmp(posSlash,"/Math/GenVector/", 16))
-            strcpy(fFileNames[fNumberOfFileNames], "MATHCORE_");
-         else if (posSlash && !strncmp(posSlash,"/Math/Matrix", 12))
-            strcpy(fFileNames[fNumberOfFileNames], "SMATRIX_");
-         else
-            strcpy(fFileNames[fNumberOfFileNames], "USER_");
-         strcat(fFileNames[fNumberOfFileNames], fClassNames[fNumberOfClasses]);
+      TString htmlfilename;
+      GetHtmlFileName(classPtr, htmlfilename);
+      TClassDocInfo* cdi = new TClassDocInfo(classPtr, htmlfilename.Data());
+      cdi->SetSelected(!(filter && filter[0] && strcmp(filter,"*") && s.Index(re) == kNPOS));
+      fClasses.Add(cdi);
+
+      TString modulename;
+      GetModuleName(modulename, impname);
+      TModuleDocInfo* module = (TModuleDocInfo*) fModules.FindObject(modulename);
+      if (!module) {
+         module = new TModuleDocInfo(modulename);
+         fModules.Add(module);
       }
-      fNumberOfFileNames++;
-      fNumberOfClasses++;
+      if (module) {
+         module->AddClass(cdi);
+         cdi->SetModule(module);
+      }
    }
 
-   // quick sort
-   SortNames(fClassNames, fNumberOfClasses, kCaseInsensitive);
-   SortNames((const char **) fFileNames, fNumberOfFileNames);
+   fClasses.Sort();
 
    Info("CreateListOfClasses", "Initializing list of known classes - DONE.");
 
@@ -3303,7 +3981,28 @@ void THtml::CreateJavascript() {
       << "   }" << endl
       << "   UpdateCookie();" << endl
       << "}" << endl
-      << "" << endl;
+      << "function SetImg(name, file) {" << endl
+      << "   var img=document.getElementById(name);" << endl
+      << "   var src=img.src;" << endl
+      << "   var posFile=src.lastIndexOf('/');" << endl
+      << "   var oldFile=src.substr(posFile+1);" << endl
+      << "   src=src.substr(0,posFile+1);" << endl
+      << "   src+=file;" << endl
+      << "   img.src=src;" << endl
+      << "   if (img.useMap) {" << endl
+      << "      var usemapFile=file;" << endl
+      << "      var posUsemapExt=usemapFile.lastIndexOf('.');" << endl
+      << "      if (posUsemapExt!=-1) usemapFile=usemapFile.substr(0,posUsemapExt);" << endl
+      << "      img.useMap=\"Map\"+usemapFile;" << endl
+      << "   }" << endl
+      << "   var posExt=oldFile.lastIndexOf('.');" << endl
+      << "   oldFile=oldFile.substr(0,posExt);" << endl
+      << "   document.getElementById(\"img\"+oldFile).className=\"imgformattab\";" << endl
+      << "   posExt=file.lastIndexOf('.');" << endl
+      << "   file=file.substr(0,posExt);" << endl
+      << "   document.getElementById(\"img\"+file).className=\"imgformattabsel\";" << endl
+      << "}" << endl;
+
    delete []outFile;
 }
 
@@ -3329,7 +4028,6 @@ void THtml::CreateStyleSheet() {
          << "   text-decoration: none;" << std::endl
          << "}" << std::endl
          << "a:visited {" << std::endl
-         << "/*   color: #551a8b;*/" << std::endl
          << "   color: #5500cc;" << std::endl
          << "}" << std::endl
          << "a:active {" << std::endl
@@ -3555,7 +4253,54 @@ void THtml::CreateStyleSheet() {
          << "   top: -5em;" << std::endl
          << "   z-index: 2;" << std::endl
          << "}" << std::endl
-         << std::endl;
+         << "div.imgformattabs " << std::endl
+         << "{" << std::endl
+         << "   padding-left: 1em;" << std::endl
+         << "}" << std::endl
+         << "" << std::endl
+         << "img.formatsel" << std::endl
+         << "{" << std::endl
+         << "   border: solid 2px Black;" << std::endl
+         << "}" << std::endl
+         << "a.imgformattab {" << std::endl
+         << "   border-top: solid 1px Gray;" << std::endl
+         << "   border-left: solid 1px Gray;" << std::endl
+         << "   border-right: solid 1px Gray;" << std::endl
+         << "   border-bottom: solid 0px Black;" << std::endl
+         << "   color: #777777;" << std::endl
+         << "   background-color: #dddddd;" << std::endl
+         << "   padding: 0px 0.4em 1px 0.4em;" << std::endl
+         << "   position: relative;" << std::endl
+         << "   top: +0px;" << std::endl
+         << "}" << std::endl
+         << "* html a.imgformattab { /* IE only, fix pos bug */" << std::endl
+         << "   top: -1px;" << std::endl
+         << "}" << std::endl
+         << "a.imgformattab:hover {" << std::endl
+         << "   background-color: White;" << std::endl
+         << "}" << std::endl
+         << "a.imgformattabsel {" << std::endl
+         << "   border-top: solid 2px Black;" << std::endl
+         << "   border-left: solid 2px Black;" << std::endl
+         << "   border-right: solid 2px Black;" << std::endl
+         << "   border-bottom: solid 3px White;" << std::endl
+         << "   padding: 2px 0.4em 1px 0.4em;" << std::endl
+         << "   position: relative;" << std::endl
+         << "   top: 0px;" << std::endl
+         << "   background-color: White;" << std::endl
+         << "   color: Black;" << std::endl
+         << "}" << std::endl
+         << "* html a.imgformattabsel { /* IE only, fix pos bug */" << std::endl
+         << "   top: -1px;" << std::endl
+         << "}" << std::endl
+         << "a.imgformattabsel:hover {" << std::endl
+         << "   background-color: White;" << std::endl
+         << "}" << std::endl
+         << "a.imgformattabsel:active {" << std::endl
+         << "   color: Black;" << std::endl
+         << "   border: solid 2px Black;" << std::endl
+         << "   border-bottom: solid 3px White;" << std::endl
+         << "}" << std::endl;
    }
    delete []outFile;
 }
@@ -3641,11 +4386,20 @@ void THtml::ExpandKeywords(TString& keyword)
 
       if (!IsWord(keyword[i])){
          if (fParseContext.back() != kBeginEndHtml && fParseContext.back() != kBeginEndHtmlInCComment) {
+            Bool_t haveHtmlEscapedChar = fParseContext.back() == kString && i > 2 &&
+               keyword[i] == '\'' && keyword[i-1] == ';';
+            if (haveHtmlEscapedChar) {
+               Ssiz_t posBegin = i - 2;
+               while (posBegin > 0 && IsWord(keyword[posBegin])) 
+                  --posBegin;
+               haveHtmlEscapedChar = posBegin > 0 && 
+                  keyword[posBegin] == '&' && keyword[posBegin - 1] == '\'';
+            }
             Bool_t closeString = fParseContext.back() == kString && 
                ( keyword[i] == '"' || keyword[i] == '\'' 
                  && (i > 1 && keyword[i - 2] == '\'' 
-                 || i > 2 && keyword[i - 2] == '\\' && (i > 1 && keyword[i - 3] == '\'')))
-               && i > 0 && keyword[i - 1] != '\\';
+                 || i > 2 && keyword[i - 2] == '\\' && (i > 1 && keyword[i - 3] == '\''))
+                 || haveHtmlEscapedChar);
             if (!fEscFlag)
                if (fParseContext.back() == kCode || fParseContext.back() == kCComment)
                   if (keyword.Length() > i + 1 && keyword[i] == '"' || 
@@ -4153,7 +4907,7 @@ void THtml::GetHtmlFileName(TClass * classPtr, TString& filename)
 }
 
 //______________________________________________________________________________
-TClass *THtml::GetClass(const char *name1, Bool_t load)
+TClass *THtml::GetClass(const char *name1)
 {
 //*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      =================================
@@ -4167,12 +4921,16 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
       if (ret) return 0;
    }
 
-   TClass *cl=gROOT->GetClass(name1, load);
+   TClassDocInfo* cdi = (TClassDocInfo*)fClasses.FindObject(name1);
+   if (!cdi) return 0;
+   TClass *cl=cdi->GetClass();
    // hack to get rid of prec_stl types
    // TClassEdit checks are far too slow...
+   /*
    if (cl && GetDeclFileName(cl) &&
        strstr(GetDeclFileName(cl),"prec_stl/"))
       cl = 0;
+   */
    if (cl && GetDeclFileName(cl) && GetDeclFileName(cl)[0])
       return cl;
    return 0;
@@ -4210,8 +4968,6 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
 //         FALSE    - if file is up to date
 //
 
-   Bool_t ret = kTRUE;
-
    TString sourceFile;
    TString classname(classPtr->GetName());
    TString filename;
@@ -4220,7 +4976,7 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
    switch (type) {
    case kSource:
       if (classPtr->GetImplFileLine()) {
-         sourceFile = GetDeclFileName(classPtr);
+         sourceFile = GetImplFileName(classPtr);
          GetSourceFileName(sourceFile);
       } else {
          sourceFile = GetDeclFileName(classPtr);
@@ -4232,7 +4988,10 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
       filename = classname;
       NameSpace2FileName(filename);
       gSystem->PrependPathName(dir, filename);
-      filename += ".cxx.html";
+      if (classPtr->GetImplFileLine())
+         filename += ".cxx.html";
+      else
+         filename += ".h.html";
       break;
 
    case kInclude:
@@ -4259,15 +5018,14 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
    }
 
    // Get info about a file
-   Long64_t sSize, dSize;
-   Long_t sId, sFlags, sModtime;
-   Long_t dId, dFlags, dModtime;
+   Long64_t size;
+   Long_t id, flags, sModtime, dModtime;
 
-   if (!(gSystem->GetPathInfo(sourceFile, &sId, &sSize, &sFlags, &sModtime)))
-      if (!(gSystem->GetPathInfo(filename, &dId, &dSize, &dFlags, &dModtime)))
-         ret = (sModtime > dModtime) ? kTRUE : kFALSE;
+   if (!(gSystem->GetPathInfo(sourceFile, &id, &size, &flags, &sModtime)))
+      if (!(gSystem->GetPathInfo(filename, &id, &size, &flags, &dModtime)))
+         return (sModtime > dModtime);
 
-   return (ret);
+   return kTRUE;
 }
 
 
@@ -4328,17 +5086,18 @@ void THtml::MakeAll(Bool_t force, const char *filter)
 // If force=kTRUE, all classes passing the filter will be processed.
 //
 
-   Int_t i;
-
-   TString reg = filter;
-   TRegexp re(reg, kTRUE);
-
    MakeIndex(filter);
 
    // CreateListOfClasses(filter); already done by MakeIndex
-   for (i = 0; i < fNumberOfClasses; i++) {
-      fCounter.Form("%5d", fNumberOfClasses - i);
-      MakeClass((char *) fClassNames[i], force);
+   TClassDocInfo* classinfo = 0;
+   TIter iClassInfo(&fClasses);
+   UInt_t count = 0;
+
+   while ((classinfo = (TClassDocInfo*)iClassInfo())) {
+      if (!classinfo->IsSelected()) 
+         continue;
+      fCounter.Form("%5d", fClasses.GetSize() - count++);
+      MakeClass(classinfo, force);
    }
 
    fCounter.Remove(0);
@@ -4353,30 +5112,52 @@ void THtml::MakeClass(const char *className, Bool_t force)
 //
 // Input: className - name of the class to process
 //
+   if (!fClasses.GetSize())
+      CreateListOfClasses("*");
 
-   if (!fClassNames) CreateListOfClasses("*"); // calls gROOT->GetClass(...,true) for each available class
-   fCurrentClass = GetClass(className);
-
-   if (fCurrentClass) {
-      TString htmlFile;
-      GetHtmlFileName(fCurrentClass, htmlFile);
-      if (htmlFile.Length()
-          && (htmlFile.BeginsWith("http://")
-              || htmlFile.BeginsWith("https://")
-              || gSystem->IsAbsoluteFileName(htmlFile))
-          ) {
-         htmlFile.Remove(0);
-         //printf("CASE skipped, class=%s, htmlFile=%s\n",className,htmlFile);
-      }
-      if (htmlFile.Length()) {
-         Class2Html(force);
-         MakeTree(className, force);
-      } else
-         Printf(formatStr, "-skipped-", fCounter.Data(), className);
-   } else
+   TClassDocInfo* cdi = (TClassDocInfo*)fClasses.FindObject(className);
+   if (!cdi) {
       if (!TClassEdit::IsStdClass(className)) // stl classes won't be available, so no warning
          Error("MakeClass", "Unknown class '%s' !", className);
+      return;
+   }
 
+   MakeClass(cdi, force);
+}
+
+//______________________________________________________________________________
+void THtml::MakeClass(void *cdi_void, Bool_t force)
+{
+// Make HTML files for a single class
+//
+//
+// Input: cdi - doc info for class to process
+//
+   if (!fClasses.GetSize())
+      CreateListOfClasses("*");
+
+   TClassDocInfo* cdi = (TClassDocInfo*) cdi_void;
+   fCurrentClass = cdi->GetClass();
+
+   if (!fCurrentClass) {
+      if (!TClassEdit::IsStdClass(cdi->GetName())) // stl classes won't be available, so no warning
+         Error("MakeClass", "Unknown class '%s' !", cdi->GetName());
+      return;
+   }
+   TString htmlFile(cdi->GetHtmlFileName());
+   if (htmlFile.Length()
+       && (htmlFile.BeginsWith("http://")
+           || htmlFile.BeginsWith("https://")
+           || gSystem->IsAbsoluteFileName(htmlFile))
+       ) {
+      htmlFile.Remove(0);
+      //printf("CASE skipped, class=%s, htmlFile=%s\n",className,htmlFile);
+   }
+   if (htmlFile.Length()) {
+      Class2Html(force);
+      MakeTree(cdi->GetName(), force);
+   } else
+      Printf(formatStr, "-skipped-", fCounter.Data(), cdi->GetName());
 }
 
 
@@ -4392,11 +5173,11 @@ void THtml::MakeIndex(const char *filter)
    CreateListOfTypes();
 
    // create an index
-   CreateIndexByTopic(fFileNames, fNumberOfFileNames);
-   CreateIndex(fClassNames, fNumberOfClasses);
+   CreateIndexByTopic();
+   CreateIndex();
 
    // create a class hierarchy
-   CreateHierarchy(fClassNames, fNumberOfClasses);
+   CreateHierarchy();
 }
 
 
@@ -4440,12 +5221,14 @@ void THtml::MakeTree(const char *className, Bool_t force)
           ) {
          htmlFile.Remove(0);
       }
-      if (htmlFile.Length()) {
-         // make a class tree
-         ClassTree(psCanvas, classPtr, force);
-         htmlFile.Remove(0);
-      } else
-         Printf(formatStr, "-skipped-", "", className);
+      if (!HaveDot())
+         // class tree only if no dot, otherwise it's part of charts
+         if (htmlFile.Length()) {
+            // make a class tree
+            ClassTree(psCanvas, classPtr, force);
+            htmlFile.Remove(0);
+         } else
+            Printf(formatStr, "-skipped-", "", className);
 
    } else
       Error("MakeTree", "Unknown class '%s' !", className);
@@ -4583,6 +5366,23 @@ char *THtml::StrDup(const char *s1, Int_t n)
    }
 
    return (str);
+}
+
+//______________________________________________________________________________
+Bool_t THtml::Strip(TString& str) {
+   // strips ' ' and tabs from both sides of str
+   Bool_t changed = str[0] == ' ' || str[0] == '\t';
+   changed |= str[str.Length()] == ' ' || str[str.Length()] == '\t';
+   if (!changed) return kFALSE;
+   Ssiz_t i = 0;
+   while (str[i] == ' ' || str[i] == '\t')
+      ++i;
+   str.Remove(0,i);
+   i = str.Length() - 1;
+   while (i >= 0 && (str[i] == ' ' || str[i] == '\t'))
+      --i;
+   str.Remove(i + 1, str.Length());
+   return kTRUE;
 }
 
 //______________________________________________________________________________
