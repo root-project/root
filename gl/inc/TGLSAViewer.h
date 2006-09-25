@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.13 2006/06/29 12:16:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.14 2006/08/23 14:39:40 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -26,9 +26,7 @@ class TGPopupMenu;
 class TGLSAFrame;
 class TGTab;
 
-class TGLGeometryEditor;
-class TGLViewerEditor;
-class TGLColorEditor;
+class TGedEditor;
 class TGLRenderArea; // Remove - replace with TGLManager
 
 //////////////////////////////////////////////////////////////////////////
@@ -46,8 +44,8 @@ class TGLRenderArea; // Remove - replace with TGLManager
 class TGLSAViewer : public TGLViewer {
 public:
    enum EGLSACommands { kGLHelpAbout, kGLHelpViewer, kGLXOY,
-      kGLXOZ, kGLZOY, kGLPerspYOZ, kGLPerspXOZ, kGLPerspXOY, 
-      kGLSaveEPS, kGLSavePDF, kGLSavePNG, kGLSaveGIF, 
+      kGLXOZ, kGLZOY, kGLPerspYOZ, kGLPerspXOZ, kGLPerspXOY,
+      kGLSaveEPS, kGLSavePDF, kGLSavePNG, kGLSaveGIF,
       kGLSaveJPG, kGLSaveAS, kGLCloseViewer, kGLQuitROOT};
 
 private:
@@ -58,13 +56,10 @@ private:
    TGPopupMenu       *fCameraMenu;
    TGPopupMenu       *fHelpMenu;
    TGLRenderArea     *fGLArea;
-   // Tabs
+   // Ged
    TGCompositeFrame  *fLeftVerticalFrame;
-   TGTab             *fEditorTab;
-   TGLViewerEditor   *fGLEd;
-   TGTab             *fObjEdTab;
-   TGLColorEditor    *fColorEd;
-   TGLGeometryEditor *fGeomEd;
+   TGedEditor        *fGedEditor;
+   TGLPShapeObj      *fPShapeWrap;   
    
    TString            fDirName;
    Int_t              fTypeIdx;
@@ -92,24 +87,22 @@ protected:
    // Overloadable 
    virtual void PostSceneBuildSetup(Bool_t resetCameras);
    virtual void SelectionChanged(); // *SIGNAL*
-   virtual void ClipChanged();      // *SIGNAL*
 
 public:
    TGLSAViewer(TVirtualPad * pad);
    TGLSAViewer(TGFrame * parent, TVirtualPad * pad);
    ~TGLSAViewer();
 
+   virtual const char* GetName() const { return "Pupil"; }
+
    void   Show();
    void   Close();
 
    // GUI events - editors, frame etc
-   void   ProcessGUIEvent(Int_t id);
    Bool_t ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t);
-
-   TGLSAFrame* GetFrame()     const { return fFrame; }
-   TGTab*      GetEditorTab() const { return fEditorTab; }
 
    ClassDef(TGLSAViewer, 0) // Standalone GL viewer
 };
 
 #endif
+ 
