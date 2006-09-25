@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.cxx,v 1.10 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.cxx,v 1.11 2006/06/23 15:19:22 antcheva Exp $
 // Author: Ilka Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 
 
 #include "TCurlyLineEditor.h"
+#include "TGedEditor.h"
 #include "TGComboBox.h"
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
@@ -46,9 +47,9 @@ enum ECurlyLineWid {
 };
 
 //______________________________________________________________________________
-TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
+TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t width,
                            Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of CurlyLine GUI.
 
@@ -132,26 +133,12 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
    fEndYEntry->GetNumberEntry()->SetToolTipText("Set end point Y coordinate of curly line.");
    fEndYFrame->AddFrame(fEndYEntry, new TGLayoutHints(kLHintsLeft, 5, 1, 1, 1));
 
-   TClass *cl = TCurlyLine::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
 TCurlyLineEditor::~TCurlyLineEditor()
 {
    // Destructor of CurlyLine editor.
-
-   TGFrameElement *el;
-   TIter next(GetList());
-
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-   }
-   Cleanup();
 }
 
 //______________________________________________________________________________
@@ -178,19 +165,9 @@ void TCurlyLineEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TCurlyLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TCurlyLineEditor::SetModel(TObject* obj)
 {
    // Pick up the used curly line attributes.
-
-   fModel = 0;
-   fPad = 0;
-   if (obj == 0 || !obj->InheritsFrom(TCurlyLine::Class())) {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
 
    if (obj->InheritsFrom("TCurlyArc")) {
       HideFrame(fStartXFrame);
@@ -199,7 +176,7 @@ void TCurlyLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       HideFrame(fEndYFrame);
    }
 
-   fCurlyLine = (TCurlyLine *)fModel;
+   fCurlyLine = (TCurlyLine *)obj;
    fAvoidSignal = kTRUE;
 
    Double_t val = fCurlyLine->GetAmplitude();
@@ -226,8 +203,16 @@ void TCurlyLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       fIsWavy->SetState(kButtonUp);
 
    if (fInit) ConnectSignals2Slots();
-   SetActive();
    fAvoidSignal = kFALSE;
+}
+
+//______________________________________________________________________________
+void TCurlyLineEditor::ActivateBaseClassEditors(TClass* cl)
+{
+   // Add editors to fGedFrame and exclude TLineEditor.
+
+   fGedEditor->ExcludeClassEditor(TAttFill::Class());
+   TGedFrame::ActivateBaseClassEditors(cl);
 }
 
 //______________________________________________________________________________

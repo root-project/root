@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TLineEditor.cxx,v 1.2 2006/04/25 16:15:07 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TLineEditor.cxx,v 1.3 2006/06/23 15:19:22 antcheva Exp $
 // Author: Ilka  Antcheva 24/04/06
 
 /*************************************************************************
@@ -44,9 +44,9 @@ enum ELineWid {
 
 
 //______________________________________________________________________________
-TLineEditor::TLineEditor(const TGWindow *p, Int_t id, Int_t width,
+TLineEditor::TLineEditor(const TGWindow *p, Int_t width,
                            Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of line GUI.
 
@@ -112,27 +112,12 @@ TLineEditor::TLineEditor(const TGWindow *p, Int_t id, Int_t width,
    fHorizontal = new TGCheckButton(f7,"Horizontal",kLine_HORIZONTAL);
    fHorizontal->SetToolTipText("Set horizontal");
    f7->AddFrame(fHorizontal, new TGLayoutHints(kLHintsTop, 5, 1, 0, 0));
-
-   TClass *cl = TLine::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
 TLineEditor::~TLineEditor()
 {
    // Destructor of line editor.
-
-   TGFrameElement *el;
-   TIter next(GetList());
-
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-   }
-   Cleanup();
 }
 
 //______________________________________________________________________________
@@ -155,22 +140,11 @@ void TLineEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TLineEditor::SetModel(TObject* obj)
 {
    // Pick up the used line attributes.
 
-   fModel = 0;
-   fPad = 0;
-
-   if (obj == 0 || !obj->InheritsFrom(TLine::Class())) {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
-
-   fLine = (TLine *)fModel;
+   fLine = (TLine *)obj;
    fAvoidSignal = kTRUE;
 
    Float_t val = fLine->GetX1();
@@ -192,7 +166,7 @@ void TLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    else fVertical->SetState(kButtonUp, kFALSE);
 
    if (fInit) ConnectSignals2Slots();
-   SetActive();
+
    fAvoidSignal = kFALSE;
 }
 

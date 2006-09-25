@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.18 2006/05/30 11:46:35 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.19 2006/06/23 15:19:22 antcheva Exp $
 // Author: Carsten Hof   16/08/04
 
 /*************************************************************************
@@ -63,14 +63,13 @@ enum EGraphWid {
 
 //______________________________________________________________________________
 
-TGraphEditor::TGraphEditor(const TGWindow *p, Int_t id, Int_t width,
+TGraphEditor::TGraphEditor(const TGWindow *p, Int_t width,
                          Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of graph editor.
 
    fGraph = 0;
-
    // TextEntry to change the title
    MakeTitle("Title");
 
@@ -96,7 +95,7 @@ TGraphEditor::TGraphEditor(const TGWindow *p, Int_t id, Int_t width,
    fShape3 = new TGRadioButton(fgr,"Fill area",kSHAPE_FILL);        // option F
    fShape3->SetToolTipText("A fill area is drawn");
 
-   fgr->SetLayoutHints(new TGLayoutHints(kLHintsLeft, 0,3,0,0), fShape1);
+   fgr->SetLayoutHints(fShape1lh=new TGLayoutHints(kLHintsLeft, 0,3,0,0), fShape1);
    fgr->Show();
    fgr->ChangeOptions(kFitWidth|kChildFrame|kVerticalFrame);
    f2->AddFrame(fgr, new TGLayoutHints(kLHintsLeft, 4, 0, 0, 0));
@@ -122,17 +121,6 @@ TGraphEditor::TGraphEditor(const TGWindow *p, Int_t id, Int_t width,
    fWidthCombo->Resize(91, 20);
    f3->AddFrame(fWidthCombo, new TGLayoutHints(kLHintsLeft, 7, 1, 1, 1));
    fWidthCombo->Associate(f3);
-
-   // initialises the window layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGraph::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -140,22 +128,14 @@ TGraphEditor::TGraphEditor(const TGWindow *p, Int_t id, Int_t width,
 TGraphEditor::~TGraphEditor()
 {
    // Destructor of graph editor.
-
+  
    // children of TGButonGroup are not deleted
    delete fShape;
    delete fShape0;
    delete fShape1;
    delete fShape2;
    delete fShape3;
-
-   TGFrameElement *el;
-   TIter next(GetList());
-
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-   }
-   Cleanup();
+   delete fShape1lh;
 }
 
 //______________________________________________________________________________
@@ -175,21 +155,11 @@ void TGraphEditor::ConnectSignals2Slots()
 
 //______________________________________________________________________________
 
-void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGraphEditor::SetModel(TObject* obj)
 {
    // Pick up the used values of graph attributes.
 
-   fModel = 0;
-   fPad = 0;
-
-   if (obj == 0 || !obj->InheritsFrom(TGraph::Class())) {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
-   fGraph = (TGraph *)fModel;
+   fGraph = (TGraph *)obj;
    fAvoidSignal = kTRUE;
 
    // set the Title TextEntry
@@ -248,7 +218,6 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fWidthCombo->Select(TMath::Abs(Int_t(fGraph->GetLineWidth()/100)), kFALSE);
 
    if (fInit) ConnectSignals2Slots();
-   SetActive();  // activates this Editor
    fAvoidSignal = kFALSE;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TArrowEditor.cxx,v 1.10 2006/04/25 08:14:20 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TArrowEditor.cxx,v 1.11 2006/06/23 15:19:22 antcheva Exp $
 // Author: Ilka Antcheva   20/10/04
 
 /*************************************************************************
@@ -41,9 +41,9 @@ enum EArrowWid {
 
 
 //______________________________________________________________________________
-TArrowEditor::TArrowEditor(const TGWindow *p, Int_t id, Int_t width,
+TArrowEditor::TArrowEditor(const TGWindow *p, Int_t width,
                            Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of arrow GUI.
 
@@ -87,12 +87,6 @@ TArrowEditor::TArrowEditor(const TGWindow *p, Int_t id, Int_t width,
 
    TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
-
-   TClass *cl = TArrow::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -125,22 +119,11 @@ void TArrowEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TArrowEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TArrowEditor::SetModel(TObject* obj)
 {
    // Pick up the used arrow attributes.
 
-   fModel = 0;
-   fPad = 0;
-
-   if (obj == 0 || !obj->InheritsFrom(TArrow::Class())) {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
-
-   fArrow = (TArrow *)fModel;
+   fArrow = (TArrow *)obj;
    fAvoidSignal = kTRUE;
 
    Int_t id = GetShapeEntry(fArrow->GetDrawOption());
@@ -154,7 +137,6 @@ void TArrowEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fAngleEntry->SetNumber(deg);
 
    if (fInit) ConnectSignals2Slots();
-   SetActive();
    fAvoidSignal = kFALSE;
 }
 

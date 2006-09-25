@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.h,v 1.4 2004/12/15 20:18:25 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.h,v 1.5 2004/12/16 09:04:49 brun Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -42,13 +42,13 @@ protected:
    virtual void ConnectSignals2Slots();
  
 public:
-   TAttFillEditor(const TGWindow *p, Int_t id,
+   TAttFillEditor(const TGWindow *p = 0, 
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
    virtual ~TAttFillEditor(); 
 
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject* obj);
    virtual void   DoFillColor(Pixel_t color);
    virtual void   DoFillPattern(Style_t color);
            

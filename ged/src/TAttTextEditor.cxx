@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.8 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.9 2006/06/23 15:19:22 antcheva Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 
 
 #include "TAttTextEditor.h"
+#include "TGedEditor.h"
 #include "TGColorSelect.h"
 #include "TGColorDialog.h"
 #include "TGComboBox.h"
@@ -45,11 +46,12 @@ enum ETextWid {
 };
 
 //______________________________________________________________________________
-TAttTextEditor::TAttTextEditor(const TGWindow *p, Int_t id, Int_t width,
+TAttTextEditor::TAttTextEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of text attributes GUI.
+   fPriority = 3;
 
    fAttText = 0;
 
@@ -70,47 +72,20 @@ TAttTextEditor::TAttTextEditor(const TGWindow *p, Int_t id, Int_t width,
    fAlignCombo = BuildTextAlignComboBox(this, kFONT_ALIGN);
    fAlignCombo->Resize(137, 20);
    AddFrame(fAlignCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
-
-   TClass *cl = TAttText::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
-
 }
 
 //______________________________________________________________________________
 TAttTextEditor::~TAttTextEditor()
 {
    // Destructor of text editor.
-
-   TGFrameElement *el;
-   TIter next(GetList());
-   
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-   }
-   Cleanup();
 }
 
 //______________________________________________________________________________
-void TAttTextEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TAttTextEditor::SetModel(TObject* obj)
 {
    // Pick up the values of used text attributes.
 
-   fModel = 0;
-   fPad = 0;
-
-   if (obj == 0 || !obj->InheritsFrom(TAttText::Class())) {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
-
-   fAttText = dynamic_cast<TAttText *>(fModel);
+   fAttText = dynamic_cast<TAttText *>(obj);
    fAvoidSignal = kTRUE;
 
    fTypeCombo->Select(fAttText->GetTextFont() / 10);
@@ -118,14 +93,14 @@ void TAttTextEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    Float_t s = fAttText->GetTextSize();
    Float_t dy;
 
-   if (obj->InheritsFrom("TPaveLabel")) {
+   if (obj->InheritsFrom(TPaveLabel::Class())) {
       TBox *pl = (TBox*)obj;
       dy = s * (pl->GetY2() - pl->GetY1());
    }
    else
-      dy = s * (fPad->GetY2() - fPad->GetY1());
+      dy = s * (fGedEditor->GetPad()->GetY2() - fGedEditor->GetPad()->GetY1());
 
-   Int_t size = fPad->YtoPixel(0.0) - fPad->YtoPixel(dy);
+   Int_t size = fGedEditor->GetPad()->YtoPixel(0.0) - fGedEditor->GetPad()->YtoPixel(dy);
    if (size > 50) size = 50;
    if (size < 0)  size = 0;
    fSizeCombo->Select(size, kFALSE);
@@ -136,7 +111,6 @@ void TAttTextEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    Pixel_t p = TColor::Number2Pixel(c);
    fColorSelect->SetColor(p, kFALSE);
 
-   SetActive();
    fAvoidSignal = kFALSE;
 }
 
@@ -145,32 +119,31 @@ Bool_t TAttTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
    // Process message.
 
-   if(!fModel) return kTRUE;
+   if(!fGedEditor || !fGedEditor->GetModel()) return kTRUE;
 
    Bool_t b = kFALSE;
 
    if (GET_MSG(msg) == kC_COLORSEL && GET_SUBMSG(msg) == kCOL_SELCHANGED) {
       fAttText->SetTextColor(TColor::GetColor(parm2));
       b = kTRUE;
-      SendMessage(fMsgWindow, msg, parm1, parm2);
+      // SendMessage(fMsgWindow, msg, parm1, parm2);
    }
 
    if (GET_MSG(msg) == kC_COMMAND && GET_SUBMSG(msg) == kCM_COMBOBOX) {
 
       if (parm1 == kFONT_SIZE) {
-
-         Float_t dy = fPad->AbsPixeltoY(0) - fPad->AbsPixeltoY(parm2);
+         TVirtualPad* pad = fGedEditor->GetPad();
+         Float_t dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(parm2);
          Float_t textSize;
 
-         if (fModel->InheritsFrom("TPaveLabel")) {
-            TBox *pl = (TBox*) fModel;
+         if (fGedEditor->GetModel()->InheritsFrom(TPaveLabel::Class())) {
+            TBox *pl = (TBox*)fGedEditor->GetModel();
             textSize = dy/(pl->GetY2() - pl->GetY1());
          }
          else
-            textSize = dy/(fPad->GetY2() - fPad->GetY1());
+            textSize = dy/(pad->GetY2() - pad->GetY1());
 
          fAttText->SetTextSize(textSize);
-         
          b = kTRUE;
       } else if (parm1 == kFONT_STYLE) {
          Int_t fontPrec = fAttText->GetTextFont()%10;
@@ -178,7 +151,7 @@ Bool_t TAttTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          b = kTRUE;
       } else if (parm1 == kFONT_ALIGN) {
          fAttText->SetTextAlign(parm2);
-         b = true;
+         b = kTRUE;
       }
    }
 

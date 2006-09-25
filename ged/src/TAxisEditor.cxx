@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.12 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.13 2006/06/23 15:19:22 antcheva Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 
 #include "TAxisEditor.h"
 #include "TGedFrame.h"
+#include "TGedEditor.h"
 #include "TGColorSelect.h"
 #include "TGColorDialog.h"
 #include "TGComboBox.h"
@@ -81,16 +82,16 @@ enum EAxisWid {
 
 
 //______________________________________________________________________________
-TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
+TAxisEditor::TAxisEditor(const TGWindow *p, Int_t width,
                          Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+  : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of axis attribute GUI.
    
    fAxis = 0;
    
    MakeTitle("Axis");
-
+ 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fAxisColor = new TGColorSelect(f2, 0, kCOL_AXIS);
    f2->AddFrame(fAxisColor, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
@@ -230,38 +231,12 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
    fDecimal = new TGCheckButton(this, "Decimal labels' part", kAXIS_LBLDEC);
    fDecimal->SetToolTipText("Draw the decimal part of labels");
    AddFrame(fDecimal, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 3, 1, 3, 0));
-
-   MapSubwindows();
-   Layout();
-   MapWindow();
-      
-   TClass *cl = TAxis::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
 TAxisEditor::~TAxisEditor()
 {
-   // Destructor of axis editor.
-
-   TGFrameElement *el;
-   TIter next(GetList());
-   
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
-         TGFrameElement *el1;
-         TIter next1(((TGCompositeFrame *)el->fFrame)->GetList());
-         while ((el1 = (TGFrameElement *)next1())) {
-            if (!strcmp(el1->fFrame->ClassName(), "TGCompositeFrame"))
-               ((TGCompositeFrame *)el1->fFrame)->Cleanup();
-         }
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-      }
-   }
-   Cleanup();
+  // Destructor of axis editor.
 }
 
 //______________________________________________________________________________
@@ -303,22 +278,10 @@ void TAxisEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TAxisEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TAxisEditor::SetModel(TObject* obj)
 {
    // Pick up the used values of axis attributes.
-   
-   fModel = 0;
-   fPad = 0;
-
-   if (obj == 0 || !obj->InheritsFrom(TAxis::Class())) {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
-
-   fAxis = (TAxis *)fModel;
+   fAxis = (TAxis *)obj;
    fAvoidSignal = kTRUE;
 
    Color_t c = fAxis->GetAxisColor();
@@ -333,9 +296,10 @@ void TAxisEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fDiv2->SetNumber((div/100) % 100);
    fDiv3->SetNumber((div/10000) % 100);
    
-   if ((!strcmp(fAxis->GetName(),"xaxis") && fPad->GetLogx()) ||
-       (!strcmp(fAxis->GetName(),"yaxis") && fPad->GetLogy()) ||
-       (!strcmp(fAxis->GetName(),"zaxis") && fPad->GetLogz())) 
+
+   if ((!strcmp(fAxis->GetName(),"xaxis") && fGedEditor->GetPad()->GetLogx()) ||
+       (!strcmp(fAxis->GetName(),"yaxis") && fGedEditor->GetPad()->GetLogy()) ||
+       (!strcmp(fAxis->GetName(),"zaxis") && fGedEditor->GetPad()->GetLogz())) 
 
       fLogAxis->SetState(kButtonDown);
    else fLogAxis->SetState(kButtonUp);
@@ -405,7 +369,6 @@ void TAxisEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    else    fDecimal->SetState(kButtonUp);
    
    if (fInit) ConnectSignals2Slots();
-   SetActive();
    fAvoidSignal = kFALSE;
 }
 
@@ -467,7 +430,7 @@ void TAxisEditor::DoLogAxis()
 
    if (fAvoidSignal) return;
 
-   gPad = fPad;
+   gPad = fGedEditor->GetPad();
       
    if (fLogAxis->GetState() == kButtonDown) {
 

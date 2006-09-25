@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TLineEditor.h,v 1.1 2006/04/25 08:14:20 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TLineEditor.h,v 1.2 2006/04/25 16:15:07 antcheva Exp $
 // Author: Ilka  Antcheva 24/04/06
 
 /*************************************************************************
@@ -45,13 +45,13 @@ protected:
    virtual void   ConnectSignals2Slots();
 
 public:
-   TLineEditor(const TGWindow *p, Int_t id,
+   TLineEditor(const TGWindow *p = 0, 
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TLineEditor();
 
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject* obj);
    virtual void   DoStartPoint();
    virtual void   DoEndPoint();
    virtual void   DoLineVertical();

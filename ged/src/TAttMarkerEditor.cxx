@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.9 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.10 2006/06/23 15:19:22 antcheva Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -44,9 +44,9 @@ enum EMarkerWid {
 };
 
 //______________________________________________________________________________
-TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t id, Int_t width,
+TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t width,
                                    Int_t height,UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of marker attributes GUI.
 
@@ -71,27 +71,12 @@ TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t id, Int_t width,
    f2->AddFrame(fMarkerSize, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fMarkerSize->Associate(this);
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-
-   TClass *cl = TAttMarker::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
 TAttMarkerEditor::~TAttMarkerEditor()
 {
    // Destructor of marker editor.
-
-   TGFrameElement *el;
-   TIter next(GetList());
-   
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-   }
-   Cleanup();
 }
 
 //______________________________________________________________________________
@@ -107,24 +92,12 @@ void TAttMarkerEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TAttMarkerEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TAttMarkerEditor::SetModel(TObject* obj)
 {
    // Pick up the values of used marker attributes.
-
-   fModel = 0;
-   fPad = 0;
-
-   if (obj == 0 || !obj->InheritsFrom(TAttMarker::Class()))
-   {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
    fAvoidSignal = kTRUE;
 
-   fAttMarker = dynamic_cast<TAttMarker *>(fModel);
+   fAttMarker = dynamic_cast<TAttMarker *>(obj);
 
    Style_t marker = fAttMarker->GetMarkerStyle();
    if (marker==1 || marker==6 || marker==7) {
@@ -142,7 +115,6 @@ void TAttMarkerEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fColorSelect->SetColor(p);
 
    if (fInit) ConnectSignals2Slots();
-   SetActive();
    fAvoidSignal = kFALSE;
 }
 

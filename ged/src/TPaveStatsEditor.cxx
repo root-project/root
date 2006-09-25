@@ -56,9 +56,9 @@ enum EPaveStatsWid {
 
 
 //______________________________________________________________________________
-TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t id, Int_t width,
-                               Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t width, Int_t height, 
+   UInt_t options, Pixel_t back) : 
+   TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of TPaveStats GUI.
 
@@ -129,37 +129,12 @@ TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t id, Int_t width,
    f4->AddFrame(f6, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
 
    AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TPaveStats::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
 TPaveStatsEditor::~TPaveStatsEditor()
 { 
-   // Destructor of fill editor.
-
-   TGFrameElement *el, *el1;
-   TIter next(GetList());
-   
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
-         TIter next1(((TGCompositeFrame *)el->fFrame)->GetList());
-         while ((el1 = (TGFrameElement *)next1())) {
-            if (!strcmp(el1->fFrame->ClassName(), "TGCompositeFrame"))
-               ((TGCompositeFrame *)el1->fFrame)->Cleanup();
-         }
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-      }
-   }
-   Cleanup();
+  // Destructor of fill editor.
 }
 
 //______________________________________________________________________________
@@ -190,22 +165,11 @@ void TPaveStatsEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TPaveStatsEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TPaveStatsEditor::SetModel(TObject* obj)
 {
    // Set GUI widgets according to the used TPaveStats attributes.
 
-   fModel = 0;
-   fPad = 0;
-
-   if (obj == 0 || !obj->InheritsFrom(TPaveStats::Class())) {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
-
-   fPaveStats = (TPaveStats *)fModel;
+   fPaveStats = (TPaveStats *)obj;
    fAvoidSignal = kTRUE;
    
    Int_t stat = fPaveStats->GetOptStat();
@@ -255,7 +219,7 @@ void TPaveStatsEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    else fProbability->SetState(kButtonUp);
 
    if (fInit) ConnectSignals2Slots();
-   SetActive();
+
    fAvoidSignal = kFALSE;
 }
 

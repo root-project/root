@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.h,v 1.7 2006/04/13 13:22:31 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.h,v 1.8 2006/06/23 15:19:21 antcheva Exp $
 // Author: Carsten Hof 28/07/04
 
 /*************************************************************************
@@ -49,6 +49,7 @@ protected:
    TGRadioButton       *fShape1;      // set simple poly-line between every graph point
    TGRadioButton       *fShape2;      // set graph draw mode to bar chart
    TGRadioButton       *fShape3;      // set graph draw mode to fill area
+   TGLayoutHints       *fShape1lh;    // layout-hints for fShape1
    TGCheckButton       *fMarkerOnOff; // set Marker visible/unvisible
    TGLineWidthComboBox *fWidthCombo;  // Exclusion zone width 
    TGCheckButton       *fExSide;      // set the exclusion zone side
@@ -56,12 +57,12 @@ protected:
    virtual void ConnectSignals2Slots();
 
 public:
-   TGraphEditor(const TGWindow *p, Int_t id,
+   TGraphEditor(const TGWindow *p = 0, 
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGraphEditor();
-   virtual void SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void SetModel(TObject* obj);
 
    // slots related to graph attributes
    virtual void DoShape();

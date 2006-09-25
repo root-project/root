@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.11 2006/06/21 15:40:23 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.12 2006/06/23 15:19:22 antcheva Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -31,6 +31,8 @@
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TClass.h"
+#include "TVirtualPad.h"
+#include "TGedEditor.h"
 
 ClassImp(TAttFillEditor)
 
@@ -41,11 +43,13 @@ enum EFillWid {
 
 
 //______________________________________________________________________________
-TAttFillEditor::TAttFillEditor(const TGWindow *p, Int_t id, Int_t width,
+TAttFillEditor::TAttFillEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of fill attributes GUI.
+
+   fPriority = 2;
 
    fAttFill = 0;
    
@@ -59,28 +63,12 @@ TAttFillEditor::TAttFillEditor(const TGWindow *p, Int_t id, Int_t width,
    f2->AddFrame(fPatternSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fPatternSelect->Associate(this);
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-
-
-   TClass *cl = TAttFill::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
 TAttFillEditor::~TAttFillEditor()
 { 
-   // Destructor of fill editor.
-
-   TGFrameElement *el;
-   TIter next(GetList());
-   
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-   }
-   Cleanup(); 
+  // Destructor of fill editor.
 }
 
 //______________________________________________________________________________
@@ -94,22 +82,11 @@ void TAttFillEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TAttFillEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TAttFillEditor::SetModel(TObject* obj)
 {
    // Pick up the used fill attributes.
 
-   fModel = 0;
-   fPad = 0;
-
-   if (obj == 0 || !obj->InheritsFrom(TAttFill::Class()) || obj->InheritsFrom("TCurlyLine")) {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
-   
-   fAttFill = dynamic_cast<TAttFill *>(fModel);
+   fAttFill = dynamic_cast<TAttFill *>(obj);
    fAvoidSignal = kTRUE;
    
    Color_t c = fAttFill->GetFillColor();
@@ -120,7 +97,6 @@ void TAttFillEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fPatternSelect->SetPattern(s, kFALSE);
 
    if (fInit) ConnectSignals2Slots();
-   SetActive();
    fAvoidSignal = kFALSE;
 }
 
@@ -143,3 +119,4 @@ void TAttFillEditor::DoFillPattern(Style_t pattern)
    fAttFill->SetFillStyle(pattern);
    Update();
 }
+

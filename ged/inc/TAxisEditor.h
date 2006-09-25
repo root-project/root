@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.h,v 1.2 2004/06/25 17:13:23 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.h,v 1.3 2004/06/30 13:04:44 brun Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************
@@ -72,12 +72,12 @@ protected:
    virtual void ConnectSignals2Slots();
 
 public:
-   TAxisEditor(const TGWindow *p, Int_t id,
+   TAxisEditor(const TGWindow *p = 0, 
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TAxisEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject* obj);
    // slots related to axis attributes
    virtual void   DoTickLength();
    virtual void   DoAxisColor(Pixel_t color);

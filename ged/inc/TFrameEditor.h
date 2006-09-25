@@ -42,20 +42,20 @@ protected:
    TGRadioButton       *fBmode;            // set sinken frame border mode
    TGRadioButton       *fBmode0;           // set no border
    TGRadioButton       *fBmode1;           // set raised frame border mode
+   TGLayoutHints       *fBmodelh;          // layout hints for border mode buttons
    TGLineWidthComboBox *fBsize;            // set frame border size
-   Bool_t               fInit;             // init flag 
    TGCompositeFrame    *f3;                // container frame;  
    
    virtual void ConnectSignals2Slots();
  
 public:
-   TFrameEditor(const TGWindow *p, Int_t id,
+   TFrameEditor(const TGWindow *p =0,
                 Int_t width = 140, Int_t height = 30,
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());
    virtual ~TFrameEditor(); 
 
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject* obj);
    virtual void   DoBorderMode();
    virtual void   DoBorderSize(Int_t size);
            

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.h $
+// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.h,v 1.2 2006/01/30 17:42:05 rdm Exp $
 // Author: Ilka  Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -50,13 +50,14 @@ protected:
    virtual void   ConnectSignals2Slots();
 
 public:
-   TCurlyLineEditor(const TGWindow *p, Int_t id,
+   TCurlyLineEditor(const TGWindow *p = 0 , 
                 Int_t width = 140, Int_t height = 30,
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());
    virtual ~TCurlyLineEditor();
 
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject* obj);
+   virtual void   ActivateBaseClassEditors(TClass* cl);
    virtual void   DoStartXY();
    virtual void   DoEndXY();
    virtual void   DoAmplitude();

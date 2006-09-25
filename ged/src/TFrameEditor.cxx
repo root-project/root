@@ -45,14 +45,14 @@ enum EFrameWid {
 
 
 //______________________________________________________________________________
-TFrameEditor::TFrameEditor(const TGWindow *p, Int_t id, Int_t width,
+TFrameEditor::TFrameEditor(const TGWindow *p, Int_t width,
                            Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of TFrame editor GUI.
 
-   fFrame = 0;
-   
+   fFrame = 0;   
+
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGButtonGroup *bgr = new TGButtonGroup(f2,3,1,3,0, "Frame Border Mode");
    bgr->SetRadioButtonExclusive(kTRUE);
@@ -63,7 +63,8 @@ TFrameEditor::TFrameEditor(const TGWindow *p, Int_t id, Int_t width,
    fBmode1 = new TGRadioButton(bgr, " Raised", 79);
    fBmode1->SetToolTipText("Set a raised border of the frame");
    bgr->SetButton(79, kTRUE);
-   bgr->SetLayoutHints(new TGLayoutHints(kLHintsLeft, 0,0,3,0), fBmode);
+   fBmodelh = new TGLayoutHints(kLHintsLeft, 0,0,3,0);
+   bgr->SetLayoutHints(fBmodelh, fBmode);
    bgr->Show();
    bgr->ChangeOptions(kFitWidth|kChildFrame|kVerticalFrame);
    f2->AddFrame(bgr, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 1, 0, 0));
@@ -77,18 +78,6 @@ TFrameEditor::TFrameEditor(const TGWindow *p, Int_t id, Int_t width,
    f3->AddFrame(fBsize, new TGLayoutHints(kLHintsLeft, 13, 1, 0, 0));
    fBsize->Associate(this);
    AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TFrame::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
-   
-   fInit = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -100,21 +89,7 @@ TFrameEditor::~TFrameEditor()
    delete fBmode;
    delete fBmode0;
    delete fBmode1;
-
-   TGFrameElement *el, *el1;
-   TIter next(GetList());
-   
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
-         TIter next1(((TGCompositeFrame *)el->fFrame)->GetList());
-         while ((el1 = (TGFrameElement *)next1())) {
-            if (!strcmp(el1->fFrame->ClassName(), "TGCompositeFrame"))
-               ((TGCompositeFrame *)el1->fFrame)->Cleanup();
-         }
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-      }
-   }
-   Cleanup();
+   delete fBmodelh;
 }
 
 //______________________________________________________________________________
@@ -131,23 +106,13 @@ void TFrameEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TFrameEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TFrameEditor::SetModel(TObject* obj)
 {
    // Pick up the frame attributes.
 
-   fModel = 0;
-   fPad = 0;
-
-   if (obj == 0 || !obj->InheritsFrom("TFrame")) {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
-
-   fFrame = (TFrame *)fModel;
+   fFrame = (TFrame *)obj;
    
+   fAvoidSignal = kTRUE;
    Int_t par;
 
    par = fFrame->GetBorderMode();
@@ -159,9 +124,10 @@ void TFrameEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    if (par < 1) par = 1;
    if (par > 16) par = 16;
    fBsize->Select(par, kFALSE);
+
+   fAvoidSignal = kFALSE;
    
    if (fInit) ConnectSignals2Slots();
-   SetActive();
 }
 
 //______________________________________________________________________________

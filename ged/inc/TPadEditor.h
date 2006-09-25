@@ -25,7 +25,7 @@
 #endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
+#endif 
 
 class TGColorSelect;
 class TGCheckButton;
@@ -52,19 +52,22 @@ protected:
    TGRadioButton       *fBmode;            // set sinken pad border mode
    TGRadioButton       *fBmode0;           // set no pad border
    TGRadioButton       *fBmode1;           // set raised pad border mode
+   TGLayoutHints       *fBmodelh;          // layout hints for border mode buttons
    TGLineWidthComboBox *fBsize;            // set pad border size
    TGButtonGroup       *fBgroup;           // button group of border mode
       
    virtual void ConnectSignals2Slots();
  
 public:
-   TPadEditor(const TGWindow *p, Int_t id,
+   TPadEditor(const TGWindow *p = 0, 
               Int_t width = 140, Int_t height = 30,
               UInt_t options = kChildFrame,
               Pixel_t back = GetDefaultFrameBackground());
    virtual ~TPadEditor(); 
 
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject* obj);
+   virtual void   ActivateBaseClassEditors(TClass* cl);
+
    virtual void   DoEditable(Bool_t on);
    virtual void   DoCrosshair(Bool_t on);
    virtual void   DoFixedAspectRatio(Bool_t on);

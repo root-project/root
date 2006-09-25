@@ -32,6 +32,7 @@
 //End_Html
 
 #include "TPadEditor.h"
+#include "TGedEditor.h"
 #include "TGClient.h"
 #include "TGButton.h"
 #include "TGComboBox.h"
@@ -61,9 +62,9 @@ enum EPadWid {
 
 
 //______________________________________________________________________________
-TPadEditor::TPadEditor(const TGWindow *p, Int_t id, Int_t width,
+TPadEditor::TPadEditor(const TGWindow *p, Int_t width,
                        Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of TPad editor GUI.
 
@@ -125,8 +126,8 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t id, Int_t width,
    fBmode0->SetToolTipText("Set no border of the pad/canvas");
    fBmode1 = new TGRadioButton(fBgroup, " Raised border", 79);
    fBmode1->SetToolTipText("Set a raised border of the pad/canvas");
-   fBgroup->SetLayoutHints(new TGLayoutHints(kLHintsLeft, 0,0,3,0), fBmode);
-   fBgroup->Show();
+   fBmodelh = new TGLayoutHints(kLHintsLeft, 0,0,3,0);
+   fBgroup->SetLayoutHints(fBmodelh, fBmode);
    fBgroup->ChangeOptions(kFitWidth|kChildFrame|kVerticalFrame);
    f6->AddFrame(fBgroup, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 1, 0, 0));
    AddFrame(f6, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
@@ -140,12 +141,6 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t id, Int_t width,
    fBsize->Associate(this);
    AddFrame(f7, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
-   TClass *cl = TPad::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
-   
    fInit = kTRUE;
 }
 
@@ -154,27 +149,11 @@ TPadEditor::~TPadEditor()
 { 
    // Destructor of fill editor.
 
-
-   // children of TGButonGroup are not deleted 
+   // children of TGButonGroup are not deleted
    delete fBmode;
    delete fBmode0;
    delete fBmode1;
-   
-   TGFrameElement *el;
-   TIter next(GetList());
-   
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
-         TGFrameElement *el1;
-         TIter next1(((TGCompositeFrame *)el->fFrame)->GetList());
-         while ((el1 = (TGFrameElement *)next1())) {
-            if (!strcmp(el1->fFrame->ClassName(), "TGCompositeFrame"))
-               ((TGCompositeFrame *)el1->fFrame)->Cleanup();
-         }
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-      }
-   }
-   Cleanup();
+   delete fBmodelh;
 }
 
 //______________________________________________________________________________
@@ -198,22 +177,11 @@ void TPadEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TPadEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TPadEditor::SetModel(TObject* obj)
 {
    // Pick up the used fill attributes.
 
-   fModel = 0;
-   fPad = 0;
-
-   if (obj == 0 || !obj->InheritsFrom(TPad::Class())) {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
-
-   fPadPointer = (TPad *)fModel;
+   fPadPointer = (TPad *)obj;
    fAvoidSignal = kTRUE;
    Bool_t on;
 
@@ -275,8 +243,17 @@ void TPadEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fBsize->Select(par);
    
    if (fInit) ConnectSignals2Slots();
-   SetActive();
+
    fAvoidSignal = kFALSE;
+}
+
+//______________________________________________________________________________
+void TPadEditor::ActivateBaseClassEditors(TClass* cl)
+{
+   // Add editors to fGedFrame and exclude TLineEditor.
+
+   fGedEditor->ExcludeClassEditor(TAttLine::Class());
+   TGedFrame::ActivateBaseClassEditors(cl);
 }
 
 //______________________________________________________________________________

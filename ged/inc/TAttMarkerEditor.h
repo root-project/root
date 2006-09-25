@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.h,v 1.2 2004/06/25 17:13:23 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.h,v 1.3 2005/10/17 10:20:00 brun Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************
@@ -44,13 +44,13 @@ protected:
    virtual void        ConnectSignals2Slots();
 
 public:
-   TAttMarkerEditor(const TGWindow *p, Int_t id,
+   TAttMarkerEditor(const TGWindow *p = 0,
                     Int_t width = 140, Int_t height = 30,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
    virtual ~TAttMarkerEditor();
 
-   virtual void     SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void     SetModel(TObject* obj);
    virtual void     DoMarkerColor(Pixel_t color);
    virtual void     DoMarkerSize();
    virtual void     DoMarkerStyle(Style_t style);

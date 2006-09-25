@@ -58,13 +58,13 @@ protected:
    virtual void ConnectSignals2Slots();
    
 public:
-   TPaveStatsEditor(const TGWindow *p, Int_t id,
+  TPaveStatsEditor(const TGWindow *p=0,
                     Int_t width = 140, Int_t height = 30,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
    virtual ~TPaveStatsEditor(); 
 
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject* obj);
    virtual void   DoStatOptions();
    virtual void   DoFitOptions();
    virtual void   SetValuesON(Bool_t on);

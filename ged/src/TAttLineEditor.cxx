@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.10 2006/06/21 15:40:23 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.11 2006/06/23 15:19:22 antcheva Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TVirtualPad.h"
 #include "TClass.h"
 #include "TGraph.h"
+#include "TGedEditor.h"
 
 ClassImp(TAttLineEditor)
 
@@ -45,14 +46,15 @@ enum ELineWid {
 
 
 //______________________________________________________________________________
-TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t id, Int_t width,
+TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of line attributes GUI.
+   fPriority = 1;
 
    fAttLine = 0;
-   
+
    MakeTitle("Line");
 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
@@ -71,27 +73,12 @@ TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t id, Int_t width,
    fWidthCombo->Resize(91, 20);
    f2->AddFrame(fWidthCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
    fWidthCombo->Associate(this);
-
-   TClass *cl = TAttLine::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
 TAttLineEditor::~TAttLineEditor()
 {
    // Destructor of line editor.
-
-   TGFrameElement *el;
-   TIter next(GetList());
-   
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-   }
-   Cleanup();
 }
 
 //______________________________________________________________________________
@@ -107,27 +94,16 @@ void TAttLineEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TAttLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TAttLineEditor::SetModel(TObject* obj)
 {
    // Pick up the used line attributes.
 
-   fModel = 0;
-   fPad = 0;
-
-   if (!obj || !obj->InheritsFrom(TAttLine::Class()) || obj->InheritsFrom(TVirtualPad::Class())) {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
-   
-   fAttLine = dynamic_cast<TAttLine *>(fModel);
+   fAttLine = dynamic_cast<TAttLine*>(obj);
    fAvoidSignal = kTRUE;
 
    fStyleCombo->Select(fAttLine->GetLineStyle());
 
-   if (fModel->InheritsFrom(TGraph::Class())) {
+   if (obj->InheritsFrom(TGraph::Class())) {
       fWidthCombo->Select(TMath::Abs(fAttLine->GetLineWidth()%100));
    } else {
       fWidthCombo->Select(fAttLine->GetLineWidth());
@@ -138,7 +114,7 @@ void TAttLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fColorSelect->SetColor(p);
 
    if (fInit) ConnectSignals2Slots();
-   SetActive();
+
    fAvoidSignal = kFALSE;
 }
 
@@ -170,7 +146,7 @@ void TAttLineEditor::DoLineWidth(Int_t width)
    // Slot connected to the line width.
 
    if (fAvoidSignal) return;
-   if (fModel->InheritsFrom(TGraph::Class())) {
+     if (dynamic_cast<TGraph*>(fAttLine)) {
       Int_t graphLineWidth = 100*Int_t(fAttLine->GetLineWidth()/100);
       if (graphLineWidth >= 0) {
          fAttLine->SetLineWidth(graphLineWidth+width);

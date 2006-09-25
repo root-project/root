@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.h $
+// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.h,v 1.3 2006/01/30 17:42:05 rdm Exp $
 // Author: Ilka  Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -45,13 +45,13 @@ protected:
    TGComboBox    *BuildOptionComboBox(TGFrame* parent, Int_t id);
 
 public:
-   TCurlyArcEditor(const TGWindow *p, Int_t id,
+   TCurlyArcEditor(const TGWindow *p = 0,
                 Int_t width = 140, Int_t height = 30,
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());
    virtual ~TCurlyArcEditor();
 
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject* obj);
    virtual void   DoRadius();
    virtual void   DoPhimin();
    virtual void   DoPhimax();

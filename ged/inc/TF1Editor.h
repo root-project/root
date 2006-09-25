@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:$:$Id:$
+// @(#)root/ged:$Name:  $:$Id: TF1Editor.h,v 1.4 2006/07/10 13:18:57 rdm Exp $
 // Author: Ilka Antcheva 21/03/06
 
 /*************************************************************************
@@ -55,10 +55,10 @@ protected:
    virtual void ConnectSignals2Slots();   //connect signals to slots
 
 public:
-   TF1Editor(const TGWindow *p, Int_t id, Int_t width = 140, Int_t height = 30,
+   TF1Editor(const TGWindow *p = 0,  Int_t width = 140, Int_t height = 30,
              UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
    virtual ~TF1Editor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject* obj);
    virtual void   DoParameterSettings();
    virtual void   DoXPoints();
    virtual void   DoSliderXMoved();

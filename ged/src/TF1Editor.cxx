@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:$:$Id:$
+// @(#)root/ged:$Name:  $:$Id: TF1Editor.cxx,v 1.4 2006/07/10 13:18:57 rdm Exp $
 // Author: Ilka Antcheva 21/03/06
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TF1Editor.h"
+#include "TGedEditor.h"
 #include "TH1.h"
 #include "TGedFrame.h"
 #include "TGTextEntry.h"
@@ -41,10 +42,9 @@ enum ETF1Wid {
    kTF1_PAR,  kTF1_DRW
 };
 
-//______________________________________________________________________________
-TF1Editor::TF1Editor(const TGWindow *p, Int_t id, Int_t width, Int_t height,
+TF1Editor::TF1Editor(const TGWindow *p, Int_t width, Int_t height,
                      UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of TF1 editor.
 
@@ -111,34 +111,12 @@ TF1Editor::TF1Editor(const TGWindow *p, Int_t id, Int_t width, Int_t height,
    fSldMaxX->Resize(65,20);
    f6->AddFrame(fSldMaxX, new TGLayoutHints(kLHintsLeft, 4, 0, 0, 0));
    AddFrame(f6, new TGLayoutHints(kLHintsTop, 3, 3, 5, 0));
-
-   TClass *cl = TF1::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
 TF1Editor::~TF1Editor()
 {
    // Destructor of TF1 editor.
-
-   TGFrameElement *el;
-   TIter next(GetList());
-
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
-         TGFrameElement *el1;
-         TIter next1(((TGCompositeFrame *)el->fFrame)->GetList());
-         while ((el1 = (TGFrameElement *)next1())) {
-            if (!strcmp(el1->fFrame->ClassName(), "TGCompositeFrame"))
-               ((TGCompositeFrame *)el1->fFrame)->Cleanup();
-         }
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-      }
-   }
-   Cleanup();
 }
 
 //______________________________________________________________________________
@@ -158,22 +136,15 @@ void TF1Editor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TF1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TF1Editor::SetModel(TObject* obj)
 {
    // Pick up the function parameters and options.
-
-   fModel = 0;
-   fPad = 0;
-
    if (obj == 0 || !obj->InheritsFrom(TF1::Class()) ||
        obj->InheritsFrom("TF2") || obj->InheritsFrom("TF3")) {
-      SetActive(kFALSE);
       return;
    }
-
-   fModel = obj;
-   fPad = pad;
-   TF1 *fF1 = (TF1*)fModel;
+   
+   TF1 *fF1 = (TF1*)obj;
    fAvoidSignal = kTRUE;
 
    const char *text = fF1->GetTitle();
@@ -200,7 +171,6 @@ void TF1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fSldMaxX->SetNumber(x->GetBinUpEdge(nxbinmax));
 
    if (fInit) ConnectSignals2Slots();
-   SetActive(kTRUE);
    fAvoidSignal = kFALSE;
 }
 
@@ -209,12 +179,12 @@ void TF1Editor::DoParameterSettings()
 {
    // Slot connected to the function parameter(s) settings.
 
-   TF1 *fF1 = (TF1*)fModel;
+   TF1 *fF1 = (TF1*)fGedEditor->GetModel();
    TGMainFrame *main =  (TGMainFrame *)GetMainFrame();
    Double_t rmin = fSldMinX->GetNumber();
    Double_t rmax = fSldMaxX->GetNumber();
-   new TFunctionParametersDialog(gClient->GetDefaultRoot(), main,
-                                 fF1, fPad, rmin, rmax);
+   new TFunctionParametersDialog(gClient->GetDefaultRoot(), main, 
+                                 fF1, fGedEditor->GetPad(), rmin, rmax);
 
 }
 
@@ -224,7 +194,7 @@ void TF1Editor::DoXPoints()
    // Slot connected to the number of points setting.
 
    if (fAvoidSignal) return;
-   TF1 *fF1 = (TF1*)fModel;
+   TF1 *fF1 = (TF1*)fGedEditor->GetModel();
    Double_t rmin, rmax;
    fF1->GetRange(rmin, rmax);
    fF1->SetRange(fSldMinX->GetNumber(), fSldMaxX->GetNumber());
@@ -242,11 +212,11 @@ void TF1Editor::DoSliderXMoved()
    // Slot connected to the x-Slider range for function redrawing.
 
    if (fAvoidSignal) return;
-   TF1 *fF1 = (TF1*)fModel;
+   TF1 *fF1 = (TF1*)fGedEditor->GetModel();
    fF1->SetNpx((Int_t)fNXpoints->GetNumber());
    TAxis *x = fF1->GetHistogram()->GetXaxis();
-
-   fPad->cd();
+   
+   fGedEditor->GetPad()->cd();
    if (fDrawMode->GetState() == kButtonDown) {
       TString opt = fF1->GetDrawOption();
       opt.ToUpper();
@@ -282,10 +252,10 @@ void TF1Editor::DoSliderXPressed()
 
    if (fAvoidSignal || (fDrawMode->GetState() == kButtonDown)) return;
 
-   TF1 *fF1 = (TF1*)fModel;
+   TF1 *fF1 = (TF1*)fGedEditor->GetModel();
    fF1->SetNpx((Int_t)fNXpoints->GetNumber());
    TAxis *x = fF1->GetHistogram()->GetXaxis();
-   fPad->cd();
+   fGedEditor->GetPad()->cd();
    TString opt = fF1->GetDrawOption();
    opt.ToUpper();
    if (!opt.Contains("SAME"))
@@ -308,11 +278,10 @@ void TF1Editor::DoSliderXReleased()
    // Slot connected to the x-Slider.
 
    if (fAvoidSignal || (fDrawMode->GetState() == kButtonDown)) return;
-   TF1 *fF1 = (TF1*)fModel;
+   TF1 *fF1 = (TF1*)fGedEditor->GetModel();
    fF1->SetNpx((Int_t)fNXpoints->GetNumber());
    TAxis *x = fF1->GetHistogram()->GetXaxis();
-
-   fPad->cd();
+   fGedEditor->GetPad()->cd();
    TString opt = fF1->GetDrawOption();
    opt.ToUpper();
    if (!opt.Contains("SAME"))
@@ -336,7 +305,7 @@ void TF1Editor::DoXRange()
    // Slot connected to min/max settings of the slider range.
 
    if (fAvoidSignal) return;
-   TF1 *fF1 = (TF1*)fModel;
+   TF1 *fF1 = (TF1*)fGedEditor->GetModel();
    TAxis *x = fF1->GetHistogram()->GetXaxis();
    Int_t nx = x->GetNbins();
    Double_t width = x->GetBinWidth(1);

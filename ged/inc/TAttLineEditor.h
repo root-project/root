@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.h,v 1.1 2004/06/18 15:55:00 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.h,v 1.2 2004/06/25 17:13:23 brun Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -43,13 +43,13 @@ protected:
    virtual void   ConnectSignals2Slots();
 
 public:
-   TAttLineEditor(const TGWindow *p, Int_t id,
+   TAttLineEditor(const TGWindow *p = 0, 
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
    virtual ~TAttLineEditor();
 
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject* obj);
    virtual void   DoLineColor(Pixel_t color);
    virtual void   DoLineStyle(Int_t style);
    virtual void   DoLineWidth(Int_t width);

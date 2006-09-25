@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TArrowEditor.h,v 1.4 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TArrowEditor.h,v 1.5 2006/04/25 08:14:20 antcheva Exp $
 // Author: Ilka  Antcheva 20/10/04
 
 /*************************************************************************
@@ -44,13 +44,13 @@ protected:
    Int_t          GetShapeEntry(Option_t *opt);
 
 public:
-   TArrowEditor(const TGWindow *p, Int_t id,
+   TArrowEditor(const TGWindow *p = 0, 
                 Int_t width = 140, Int_t height = 30,
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());
    virtual ~TArrowEditor();
 
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject* obj);
    virtual void   DoAngle();
    virtual void   DoOption(Int_t id);
    virtual void   DoSize();

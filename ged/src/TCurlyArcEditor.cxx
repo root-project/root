@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.cxx,v 1.9 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.cxx,v 1.10 2006/06/23 15:19:22 antcheva Exp $
 // Author: Ilka Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -43,9 +43,9 @@ enum ECurlyArcWid {
 };
 
 //______________________________________________________________________________
-TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t id, Int_t width,
+TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t width,
                            Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of CurlyArc GUI.
 
@@ -113,33 +113,19 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t id, Int_t width,
    fCenterYEntry->GetNumberEntry()->SetToolTipText("Set center Y coordinate.");
    f7->AddFrame(fCenterYEntry, new TGLayoutHints(kLHintsLeft, 7, 1, 1, 1));
 
-   TClass *cl = TCurlyArc::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
 TCurlyArcEditor::~TCurlyArcEditor()
 {
    // Destructor of CurlyArc editor.
-
-   TGFrameElement *el;
-   TIter next(GetList());
-
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
-         ((TGCompositeFrame *)el->fFrame)->Cleanup();
-   }
-   Cleanup();
 }
 
 //______________________________________________________________________________
 void TCurlyArcEditor::ConnectSignals2Slots()
 {
    // Connect signals to slots.
-
+ 
    fCenterXEntry->Connect("ValueSet(Long_t)", "TCurlyArcEditor", this, "DoCenterXY()");
    (fCenterXEntry->GetNumberEntry())->Connect("ReturnPressed()", "TCurlyArcEditor", this, "DoCenterXY()");
    fCenterYEntry->Connect("ValueSet(Long_t)", "TCurlyArcEditor", this, "DoCenterXY()");
@@ -155,21 +141,11 @@ void TCurlyArcEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TCurlyArcEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TCurlyArcEditor::SetModel(TObject* obj)
 {
    // Pick up the used curly arc attributes.
 
-   fModel = 0;
-   fPad = 0;
-   if (obj == 0 || !obj->InheritsFrom(TCurlyArc::Class())) {
-      SetActive(kFALSE);
-      return;
-   }
-
-   fModel = obj;
-   fPad = pad;
-
-   fCurlyArc = (TCurlyArc *)fModel;
+   fCurlyArc = (TCurlyArc *)obj;
    fAvoidSignal = kTRUE;
 
    Double_t val = fCurlyArc->GetRadius();
@@ -188,7 +164,7 @@ void TCurlyArcEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fCenterYEntry->SetNumber(val);
 
    if (fInit) ConnectSignals2Slots();
-   SetActive();
+
    fAvoidSignal = kFALSE;
 }
 
