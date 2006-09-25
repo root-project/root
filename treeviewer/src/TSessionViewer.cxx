@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.72 2006/09/11 23:45:24 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.73 2006/09/15 08:55:49 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -312,7 +312,8 @@ void TSessionServerFrame::SettingsChanged()
 
    TGTextEntry *sender = dynamic_cast<TGTextEntry*>((TQObject*)gTQSender);
    Bool_t issync = (fSync->GetState() == kButtonDown);
-   if ((strcmp(fViewer->GetActDesc()->GetName(), fTxtName->GetText())) ||
+   if ((fViewer->GetActDesc()->fLocal) ||
+       (strcmp(fViewer->GetActDesc()->GetName(), fTxtName->GetText())) ||
        (strcmp(fViewer->GetActDesc()->fAddress.Data(), fTxtAddress->GetText())) ||
        (strcmp(fViewer->GetActDesc()->fConfigFile.Data(), fTxtConfig->GetText())) ||
        (strcmp(fViewer->GetActDesc()->fUserName.Data(), fTxtUsrName->GetText())) ||
@@ -733,6 +734,16 @@ void TSessionServerFrame::OnBtnAddClicked()
 void TSessionServerFrame::Update(TSessionDescription* desc)
 {
    // Update fields with values from session description desc.
+
+   if (desc->fLocal) {
+      fTxtName->SetText("");
+      fTxtAddress->SetText("");
+      fNumPort->SetIntNumber(1093);
+      fTxtConfig->SetText("");
+      fTxtUsrName->SetText("");
+      fLogLevel->SetIntNumber(0);
+      return;
+   }
 
    fTxtName->SetText(desc->fName);
    fTxtAddress->SetText(desc->fAddress);
@@ -3377,9 +3388,15 @@ void TSessionViewer::ReadConfiguration(const char *filename)
    }
    fSessionHierarchy->ClearHighlighted();
    fSessionHierarchy->OpenItem(fSessionItem);
-   fSessionHierarchy->OpenItem(item);
-   fSessionHierarchy->HighlightItem(item);
-   fSessionHierarchy->SetSelected(item);
+   if (fActDesc == localdesc) {
+      fSessionHierarchy->HighlightItem(fSessionItem);
+      fSessionHierarchy->SetSelected(fSessionItem);
+   }
+   else {
+      fSessionHierarchy->OpenItem(item);
+      fSessionHierarchy->HighlightItem(item);
+      fSessionHierarchy->SetSelected(item);
+   }
    fClient->NeedRedraw(fSessionHierarchy);
 }
 
@@ -3389,20 +3406,158 @@ void TSessionViewer::UpdateListOfProofs()
    // Update list of existing Proof sessions.
 
    // get list of proof sessions
+   Bool_t found = kFALSE;
    TGListTreeItem *item = 0;
    TSeqCollection *proofs = gROOT->GetListOfProofs();
+   TSessionDescription *desc = 0;
+   TSessionDescription *newdesc;
    if (proofs) {
       TObject *o = proofs->First();
-      if (o && dynamic_cast<TVirtualProofMgr *>(o))
+      if (o && dynamic_cast<TVirtualProofMgr *>(o)) {
+         TVirtualProofMgr *mgr = dynamic_cast<TVirtualProofMgr *>(o);
+         if (mgr->QuerySessions("L")) {
+            TIter nxd(mgr->QuerySessions("L"));
+            TVirtualProofDesc *d = 0;
+            TVirtualProof *p = 0;
+            while ((d = (TVirtualProofDesc *)nxd())) {
+               TIter nexts(fSessions);
+               // check if session is already in the list
+               found = kFALSE;
+               while ((desc = (TSessionDescription *)nexts())) {
+                  if ((desc->fTag == d->GetName()) ||
+                      (desc->fName == d->GetTitle())) {
+                     p = d->GetProof();
+                     if (p) {
+                        desc->fConnected  = kTRUE;
+                        desc->fAttached   = kTRUE;
+                        desc->fProof      = p;
+                        desc->fProofMgr   = mgr;
+                        item = fSessionHierarchy->FindChildByData(fSessionItem,
+                                                                  desc);
+                        if (item) {
+                           item->SetPictures(fProofCon, fProofCon);
+                           if (item == fSessionHierarchy->GetSelected()) {
+                              fActDesc->fProof->Connect("Progress(Long64_t,Long64_t)",
+                                       "TSessionQueryFrame", fQueryFrame,
+                                       "Progress(Long64_t,Long64_t)");
+                              fActDesc->fProof->Connect("StopProcess(Bool_t)",
+                                       "TSessionQueryFrame", fQueryFrame,
+                                       "IndicateStop(Bool_t)");
+                              fActDesc->fProof->Connect(
+                                 "ResetProgressDialog(const char*, Int_t,Long64_t,Long64_t)",
+                                 "TSessionQueryFrame", fQueryFrame,
+                                 "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
+                              // enable timer used for status bar icon's animation
+                              EnableTimer();
+                              // change status bar right icon to connected pixmap
+                              ChangeRightLogo("monitor01.xpm");
+                              // do not animate yet
+                              SetChangePic(kFALSE);
+                              // connect to signal "query result ready"
+                              fActDesc->fProof->Connect("QueryResultReady(char *)",
+                                       "TSessionViewer", this, "QueryResultReady(char *)");
+                              // display connection information on status bar
+                              TString msg;
+                              msg.Form("PROOF Cluster %s ready", fActDesc->fName.Data());
+                              fStatusBar->SetText(msg.Data(), 1);
+                              UpdateListOfPackages();
+                              fSessionFrame->UpdatePackages();
+                              fSessionFrame->UpdateListOfDataSets();
+                              fPopupSrv->DisableEntry(kSessionConnect);
+                              fSessionMenu->DisableEntry(kSessionConnect);
+                              fPopupSrv->EnableEntry(kSessionDisconnect);
+                              fSessionMenu->EnableEntry(kSessionDisconnect);
+                              fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonUp);
+                              fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
+                              fSessionFrame->SetLogLevel(fActDesc->fLogLevel);
+                              // update session information frame
+                              fSessionFrame->ProofInfos();
+                              fSessionFrame->GetTab()->ShowFrame(
+                                 fSessionFrame->GetTab()->GetTabTab("Options"));
+                              if (fActFrame != fSessionFrame) {
+                                 fV2->HideFrame(fActFrame);
+                                 fV2->ShowFrame(fSessionFrame);
+                                 fActFrame = fSessionFrame;
+                              }
+                           }
+                        }
+                     }
+                     if (desc->fLogLevel < 0)
+                        desc->fLogLevel = 0;
+                     found = kTRUE;
+                     break;
+                  }
+               }
+               if (found) continue;
+               p = d->GetProof();
+               newdesc = new TSessionDescription();
+               // and fill informations from Proof session
+               newdesc->fTag       = d->GetName();
+               newdesc->fName      = d->GetTitle();
+               newdesc->fAddress   = d->GetTitle();
+               newdesc->fConnected = kFALSE;
+               newdesc->fAttached  = kFALSE;
+               newdesc->fProofMgr  = mgr;
+               p = d->GetProof();
+               if (p) {
+                  newdesc->fConnected  = kTRUE;
+                  newdesc->fAttached   = kTRUE;
+                  newdesc->fAddress    = p->GetMaster();
+                  newdesc->fConfigFile = p->GetConfFile();
+                  newdesc->fUserName   = p->GetUser();
+                  newdesc->fPort       = p->GetPort();
+                  newdesc->fLogLevel   = p->GetLogLevel();
+                  newdesc->fProof      = p;
+                  newdesc->fProof->Connect("Progress(Long64_t,Long64_t)",
+                           "TSessionQueryFrame", fQueryFrame,
+                           "Progress(Long64_t,Long64_t)");
+                  newdesc->fProof->Connect("StopProcess(Bool_t)",
+                           "TSessionQueryFrame", fQueryFrame,
+                           "IndicateStop(Bool_t)");
+                  newdesc->fProof->Connect(
+                           "ResetProgressDialog(const char*, Int_t,Long64_t,Long64_t)",
+                           "TSessionQueryFrame", fQueryFrame,
+                           "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
+                  // enable timer used for status bar icon's animation
+                  EnableTimer();
+                  // change status bar right icon to connected pixmap
+                  ChangeRightLogo("monitor01.xpm");
+                  // do not animate yet
+                  SetChangePic(kFALSE);
+                  // connect to signal "query result ready"
+                  newdesc->fProof->Connect("QueryResultReady(char *)",
+                           "TSessionViewer", this, "QueryResultReady(char *)");
+               }
+               newdesc->fQueries    = new TList();
+               newdesc->fPackages   = new TList();
+               if (newdesc->fLogLevel < 0)
+                  newdesc->fLogLevel = 0;
+               newdesc->fActQuery   = 0;
+               newdesc->fLocal = kFALSE;
+               newdesc->fSync = kFALSE;
+               newdesc->fAutoEnable = kFALSE;
+               newdesc->fNbHistos = 0;
+               // add new session description in list tree
+               if (p)
+                  item = fSessionHierarchy->AddItem(fSessionItem, newdesc->fName.Data(),
+                           fProofCon, fProofCon);
+               else
+                  item = fSessionHierarchy->AddItem(fSessionItem, newdesc->fName.Data(),
+                           fProofDiscon, fProofDiscon);
+               fSessionHierarchy->SetToolTipItem(item, "Proof Session");
+               item ->SetUserData(newdesc);
+               // and in our session description list
+               fSessions->Add(newdesc);
+            }
+         }
          return;
+      }
       TIter nextp(proofs);
       TVirtualProof *proof;
-      TSessionDescription *newdesc;
       // loop over existing Proof sessions
       while ((proof = (TVirtualProof *)nextp())) {
          TIter nexts(fSessions);
-         TSessionDescription *desc = 0;
-         Bool_t found = kFALSE;
+         found = kFALSE;
          // check if session is already in the list
          while ((desc = (TSessionDescription *)nexts())) {
             if (desc->fProof == proof) {
@@ -3620,6 +3775,7 @@ void TSessionViewer::Build()
 
    char line[120];
    fActDesc = 0;
+   fActFrame = 0;
    fLogWindow = 0;
    fBusy = kFALSE;
    fAutoSave = kTRUE;
@@ -3826,7 +3982,6 @@ void TSessionViewer::Build()
    fServerFrame = new TSessionServerFrame(fV2, 350, 310);
    fSessions = new TList;
    ReadConfiguration();
-   UpdateListOfProofs();
    fServerFrame->Build(this);
    fV2->AddFrame(fServerFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
          kLHintsExpandY, 2, 0, 1, 2));
@@ -3871,8 +4026,15 @@ void TSessionViewer::Build()
          kLHintsExpandY));
 
    // if description available, update server infos frame
-   if (fActDesc)
-      fServerFrame->Update(fActDesc);
+   if (fActDesc) {
+      if (!fActDesc->fLocal) {
+         fServerFrame->Update(fActDesc);
+      }
+      else {
+         fServerFrame->SetAddEnabled();
+         fServerFrame->SetConnectEnabled(kFALSE);
+      }
+   }
 
    //--- Status Bar ------------------------------------------------------------
    int parts[] = { 36, 49, 15 };
@@ -3923,7 +4085,8 @@ void TSessionViewer::Build()
    fV2->HideFrame(fInputFrame);
    fQueryFrame->GetQueryEditFrame()->OnNewQueryMore();
    fActFrame = fServerFrame;
-   Resize(GetDefaultSize());
+   UpdateListOfProofs();
+   Resize(610, 420);
 }
 
 //______________________________________________________________________________
@@ -4006,6 +4169,8 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          }
          fSessionFrame->GetTab()->HideFrame(
                fSessionFrame->GetTab()->GetTabTab("Options"));
+         fServerFrame->SetAddEnabled();
+         fServerFrame->SetConnectEnabled(kFALSE);
       }
       // proof session not connected
       if ((!fActDesc->fLocal) && (!fActDesc->fAttached) &&
