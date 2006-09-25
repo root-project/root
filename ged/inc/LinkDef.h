@@ -14,7 +14,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class TGedElement;
 #pragma link C++ class TGedFrame;
 #pragma link C++ class TGedNameFrame;
 #pragma link C++ class TArrowEditor;
