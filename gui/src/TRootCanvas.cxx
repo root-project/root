@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.104 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.105 2006/07/04 09:24:43 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -633,9 +633,9 @@ void TRootCanvas::Close()
 {
    // Called via TCanvasImp interface by TCanvas.
 
-   if (fEditor) fEditor->DeleteEditors();
-   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
-      TVirtualPadEditor::Terminate();
+   TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
+   if(gged && gged->GetCanvas() == fCanvas)
+      gged->Hide();
 
    gVirtualX->CloseWindow();
 }
@@ -645,9 +645,9 @@ void TRootCanvas::ReallyDelete()
 {
    // Really delete the canvas and this GUI.
 
-   if (fEditor) fEditor->DeleteEditors();
-   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
-      TVirtualPadEditor::Terminate();
+   TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
+   if(gged && gged->GetCanvas() == fCanvas)
+      gged->Hide();
 
    TVirtualPad *savepad = gPad;
    gPad = 0;        // hide gPad from CINT
@@ -861,14 +861,11 @@ again:
                      PrintCanvas();
                      break;
                   case kFileCloseCanvas:
-                     if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
-                        TVirtualPadEditor::Terminate();
                      SendCloseMessage();
                      break;
                   case kFileQuit:
                      if (!gApplication->ReturnFromRun()) {
-                        if (fEditor) fEditor->DeleteEditors();
-                        if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
+                        if ((TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
                            TVirtualPadEditor::Terminate();
                         delete this;
                      }
@@ -914,7 +911,6 @@ again:
                   // Handle View menu items...
                   case kViewEditor:
                      fCanvas->ToggleEditor();
-                     if (!fEditor) CreateEditor();
                      break;
                   case kViewToolbar:
                      fCanvas->ToggleToolBar();
@@ -1342,14 +1338,16 @@ void TRootCanvas::ShowEditor(Bool_t show)
 
    if (show) {
       if (!fEditor) CreateEditor();
-      if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0) {
-            TVirtualPadEditor::HideEditor();
+      TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
+      if(gged && gged->GetCanvas() == fCanvas){
+         gged->Hide();
       }
       if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
          ShowFrame(fHorizontal1);
          h = h + s;
       }
       fMainFrame->ShowFrame(fEditorFrame);
+      fEditor->Show();
       fViewMenu->CheckEntry(kViewEditor);
       w = w + e;
    } else {
@@ -1357,6 +1355,7 @@ void TRootCanvas::ShowEditor(Bool_t show)
          HideFrame(fHorizontal1);
          h = h - s;
       }
+      if (fEditor) fEditor->Hide();
       fMainFrame->HideFrame(fEditorFrame);
       fViewMenu->UnCheckEntry(kViewEditor);
       w = w - e;
@@ -1371,15 +1370,11 @@ void TRootCanvas::CreateEditor()
 {
    // Create embedded editor.
 
-   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0) {
-      TVirtualPadEditor::HideEditor();
-   }
-
    fEditorFrame->SetEditDisabled(kEditEnable);
    fEditorFrame->SetEditable();
    gPad = Canvas();
    // next two lines are related to the old editor
-   TString show = gEnv->GetValue("Canvas.ShowEditor","false");
+   Int_t show = gEnv->GetValue("Canvas.ShowEditor", 0);
    gEnv->SetValue("Canvas.ShowEditor","true");
    fEditor = TVirtualPadEditor::LoadEditor();
    fEditor->SetGlobal(kFALSE);
@@ -1387,7 +1382,7 @@ void TRootCanvas::CreateEditor()
    fEditorFrame->SetEditable(kFALSE);
 
    // next line is related to the old editor
-   if (show == "false") gEnv->SetValue("Canvas.ShowEditor","false");
+   if (show == 0) gEnv->SetValue("Canvas.ShowEditor","false");
 }
 
 //______________________________________________________________________________
