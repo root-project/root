@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoPconEditor.cxx,v 1.5 2006/07/12 10:25:34 brun Exp $
+// @(#):$Name:  $:$Id: TGeoPconEditor.cxx,v 1.6 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -46,9 +46,9 @@ enum ETGeoPconWid {
 };
 
 //______________________________________________________________________________
-TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for polycone editor
    fShape   = 0;
@@ -63,7 +63,6 @@ TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t id, Int_t width,
    fIsModified = kFALSE;
    fIsShapeEditable = kFALSE;
 
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
    fLHsect = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0,0,2,2);
       
    // TextEntry for shape name
@@ -144,17 +143,6 @@ TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t id, Int_t width,
    fUndo->Associate(this);
    AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoPcon::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -172,17 +160,6 @@ TGeoPconEditor::~TGeoPconEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoPcon::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -200,16 +177,14 @@ void TGeoPconEditor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoPconEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoPconEditor::SetModel(TObject* obj)
 {
    // Connect to a given pcon.
    if (obj == 0 || (obj->IsA() != TGeoPcon::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoPcon*)fModel;
+   fShape = (TGeoPcon*)obj;
    const char *sname = fShape->GetName();
    if (!strcmp(sname, fShape->ClassName())) fShapeName->SetText("-no_name");
    else fShapeName->SetText(sname);
@@ -482,7 +457,8 @@ ClassImp(TGeoPconSection)
 TGeoPconSection::TGeoPconSection(const TGWindow *p, UInt_t w, UInt_t h, Int_t id)
                 :TGCompositeFrame(p,w,h,kHorizontalFrame | kFixedWidth)
 {
-// Ctor.
+   // Constructor.
+
    fNumber = id;
    TGTextEntry *nef;
    // Label with number

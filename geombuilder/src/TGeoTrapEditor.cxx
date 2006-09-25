@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTrapEditor.cxx,v 1.1 2006/07/12 10:25:34 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTrapEditor.cxx,v 1.2 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -47,9 +47,9 @@ enum ETGeoTrapWid {
 };
 
 //______________________________________________________________________________
-TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for para editor
    fShape   = 0;
@@ -58,8 +58,6 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t id, Int_t width,
    fIsModified = kFALSE;
    fIsShapeEditable = kTRUE;
 
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
-      
    // TextEntry for shape name
    MakeTitle("Name");
    fShapeName = new TGTextEntry(this, new TGTextBuffer(50), kTRAP_NAME);
@@ -193,17 +191,6 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t id, Int_t width,
    fUndo->Associate(this);
    AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoTrap::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -217,17 +204,6 @@ TGeoTrapEditor::~TGeoTrapEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoTrap::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -259,16 +235,14 @@ void TGeoTrapEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TGeoTrapEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoTrapEditor::SetModel(TObject* obj)
 {
    // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTrap::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoTrap*)fModel;
+   fShape = (TGeoTrap*)obj;
    fH1i = fShape->GetH1();
    fBl1i = fShape->GetBl1();
    fTl1i = fShape->GetTl1();
@@ -534,9 +508,9 @@ enum ETGeoGtraWid {
 //End_Html
 
 //______________________________________________________________________________
-TGeoGtraEditor::TGeoGtraEditor(const TGWindow *p, Int_t id, Int_t width,
-                                   Int_t height, UInt_t options, Pixel_t back)
-   : TGeoTrapEditor(p, id, width, height, options, back)
+TGeoGtraEditor::TGeoGtraEditor(const TGWindow *p, Int_t width,
+                               Int_t height, UInt_t options, Pixel_t back)
+   : TGeoTrapEditor(p, width, height, options, back)
 {
    // Constructor for gtra editor
    fTwisti = 0;
@@ -553,16 +527,6 @@ TGeoGtraEditor::TGeoGtraEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    TGeoTabManager::MoveFrame(fDFrame, this);
    TGeoTabManager::MoveFrame(fBFrame, this);
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoGtra::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
    fETwist->Connect("ValueSet(Long_t)", "TGeoGtraEditor", this, "DoTwist()");
    nef->Connect("TextChanged(const char *)", "TGeoGtraEditor", this, "DoModified()");
 }
@@ -577,30 +541,17 @@ TGeoGtraEditor::~TGeoGtraEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoGtra::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
-void TGeoGtraEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoGtraEditor::SetModel(TObject* obj)
 {
    // Connect to a given twisted trapezoid.
    if (obj == 0 || (obj->IsA()!=TGeoGtra::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoTrap*)fModel;
+   fShape = (TGeoTrap*)obj;
    fH1i = fShape->GetH1();
    fBl1i = fShape->GetBl1();
    fTl1i = fShape->GetTl1();

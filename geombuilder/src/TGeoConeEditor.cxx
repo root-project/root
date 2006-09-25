@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoConeEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoConeEditor.cxx,v 1.4 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -48,9 +48,9 @@ enum ETGeoConeWid {
 };
 
 //______________________________________________________________________________
-TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for volume editor
    fShape   = 0;
@@ -59,8 +59,6 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t id, Int_t width,
    fIsModified = kFALSE;
    fIsShapeEditable = kTRUE;
 
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
-      
    // TextEntry for shape name
    MakeTitle("Name");
    fShapeName = new TGTextEntry(this, new TGTextBuffer(50), kCONE_NAME);
@@ -152,17 +150,6 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t id, Int_t width,
    fUndo->Associate(this);
    AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoCone::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -176,17 +163,6 @@ TGeoConeEditor::~TGeoConeEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoCone::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -211,16 +187,14 @@ void TGeoConeEditor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoConeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoConeEditor::SetModel(TObject* obj)
 {
    // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoCone::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoCone*)fModel;
+   fShape = (TGeoCone*)obj;
    fRmini1 = fShape->GetRmin1();
    fRmini2 = fShape->GetRmin2();
    fRmaxi1 = fShape->GetRmax1();
@@ -402,9 +376,9 @@ enum ETGeoConeSegWid {
 };
 
 //______________________________________________________________________________
-TGeoConeSegEditor::TGeoConeSegEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoConeSegEditor::TGeoConeSegEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-                 : TGeoConeEditor(p, id, width, height, options | kVerticalFrame, back)
+                 : TGeoConeEditor(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for cone segment editor
    fLock = kFALSE;
@@ -440,17 +414,6 @@ TGeoConeSegEditor::TGeoConeSegEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    TGeoTabManager::MoveFrame(fDFrame, this);
    TGeoTabManager::MoveFrame(fBFrame, this);
-   
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoConeSeg::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -464,17 +427,6 @@ TGeoConeSegEditor::~TGeoConeSegEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoConeSeg::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -494,16 +446,14 @@ void TGeoConeSegEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TGeoConeSegEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoConeSegEditor::SetModel(TObject* obj)
 {
    // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoConeSeg::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoCone*)fModel;
+   fShape = (TGeoCone*)obj;
    fRmini1 = fShape->GetRmin1();
    fRmaxi1 = fShape->GetRmax1();
    fRmini2 = fShape->GetRmin2();

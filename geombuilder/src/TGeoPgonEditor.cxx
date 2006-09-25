@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoPgonEditor.cxx,v 1.1 2006/07/12 10:25:34 brun Exp $
+// @(#):$Name:  $:$Id: TGeoPgonEditor.cxx,v 1.2 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -46,26 +46,15 @@ enum ETGeoPgonWid {
 };
 
 //______________________________________________________________________________
-TGeoPgonEditor::TGeoPgonEditor(const TGWindow *p, Int_t id, Int_t width,
-                                   Int_t height, UInt_t options, Pixel_t back)
-   : TGeoPconEditor(p, id, width, height, options | kVerticalFrame, back)
+TGeoPgonEditor::TGeoPgonEditor(const TGWindow *p, Int_t width,
+                               Int_t height, UInt_t options, Pixel_t back)
+   : TGeoPconEditor(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for polycone editor
    fNedgesi = 0;
    CreateEdges();
    TGeoTabManager::MoveFrame(fDFrame, this);
    TGeoTabManager::MoveFrame(fBFrame, this);
-   
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoPgon::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
    fENedges->Connect("ValueSet(Long_t)", "TGeoPgonEditor", this, "DoNedges()");
    fENedges->GetNumberEntry()->Connect("TextChanged(const char *)", "TGeoPgonEditor", this, "DoModified()");
 }
@@ -81,30 +70,17 @@ TGeoPgonEditor::~TGeoPgonEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoPgon::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
-void TGeoPgonEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoPgonEditor::SetModel(TObject* obj)
 {
    // Connect to a given pcon.
    if (obj == 0 || (obj->IsA()!=TGeoPgon::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoPcon*)fModel;
+   fShape = (TGeoPcon*)obj;
    const char *sname = fShape->GetName();
    if (!strcmp(sname, fShape->ClassName())) fShapeName->SetText("-no_name");
    else fShapeName->SetText(sname);

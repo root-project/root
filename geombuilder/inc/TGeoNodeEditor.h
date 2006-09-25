@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoNodeEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoNodeEditor.h,v 1.2 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -23,8 +23,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoNode;
@@ -39,12 +39,12 @@ class TGPictureButton;
 class TGCheckButton;
 class TGeoTabManager;
 
-class TGeoNodeEditor : public TGedFrame {
+class TGeoNodeEditor : public TGeoGedFrame {
 
 protected:
 
    TGeoNode            *fNode;              // Node object
-   TGeoTabManager      *fTabMgr;            // Tab manager
+
    Bool_t               fIsEditable;        // Flag that the medium can be changed
    TGTextEntry         *fNodeName;          // Node name text entry
    TGNumberEntry       *fNodeNumber;        // Copy number 
@@ -67,12 +67,12 @@ protected:
    virtual void   ConnectSignals2Slots();   // Connect the signals to the slots
 
 public:
-   TGeoNodeEditor(const TGWindow *p, Int_t id,               
+   TGeoNodeEditor(const TGWindow *p = 0,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoNodeEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoEditMother();
    void           DoEditVolume();

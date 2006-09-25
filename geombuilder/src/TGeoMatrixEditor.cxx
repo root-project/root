@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoMatrixEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoMatrixEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -36,9 +36,9 @@ enum ETGeoMatrixWid {
 };
 
 //______________________________________________________________________________
-TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for translation editor
    fTranslation   = 0;
@@ -108,17 +108,6 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t id, Int_t 
    AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));  
    fUndo->SetSize(fCancel->GetSize());
    fApply->SetSize(fCancel->GetSize());
-   
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoTranslation::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -132,17 +121,6 @@ TGeoTranslationEditor::~TGeoTranslationEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoTranslation::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -164,16 +142,14 @@ void TGeoTranslationEditor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoTranslationEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoTranslationEditor::SetModel(TObject* obj)
 {
    // Connect to the new matrix.
    if (obj == 0 || (obj->IsA()!=TGeoTranslation::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fTranslation = (TGeoTranslation*)fModel;
+   fTranslation = (TGeoTranslation*)obj;
    fDxi = fTranslation->GetTranslation()[0];
    fDyi = fTranslation->GetTranslation()[1];
    fDzi = fTranslation->GetTranslation()[2];
@@ -301,9 +277,9 @@ void TGeoTranslationEditor::DoDz()
 ClassImp(TGeoRotationEditor)
 
 //______________________________________________________________________________
-TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for rotation editor
    fRotation   = 0;
@@ -406,17 +382,6 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));  
    fUndo->SetSize(fCancel->GetSize());
    fApply->SetSize(fCancel->GetSize());
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoRotation::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -430,17 +395,6 @@ TGeoRotationEditor::~TGeoRotationEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoRotation::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -460,16 +414,14 @@ void TGeoRotationEditor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoRotationEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoRotationEditor::SetModel(TObject* obj)
 {
    // Connect to the selected rotation.
    if (obj == 0 || (obj->IsA()!=TGeoRotation::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fRotation = (TGeoRotation*)fModel;
+   fRotation = (TGeoRotation*)obj;
    fRotation->GetAngles(fPhii, fThetai, fPsii);
    const char *sname = fRotation->GetName();
    if (!strcmp(sname, fRotation->ClassName())) fRotName->SetText("no_name");
@@ -622,9 +574,9 @@ void TGeoRotationEditor::DoUndo()
 ClassImp(TGeoCombiTransEditor)
 
 //______________________________________________________________________________
-TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for combi matrix editor
    fCombi   = 0;
@@ -767,17 +719,6 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t id, Int_t wi
    AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));  
    fUndo->SetSize(fCancel->GetSize());
    fApply->SetSize(fCancel->GetSize());
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoCombiTrans::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -791,17 +732,6 @@ TGeoCombiTransEditor::~TGeoCombiTransEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoCombiTrans::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -827,16 +757,14 @@ void TGeoCombiTransEditor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoCombiTransEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoCombiTransEditor::SetModel(TObject* obj)
 {
    // Connect to the selected combi matrix.
    if (obj == 0 || (obj->IsA()!=TGeoCombiTrans::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fCombi = (TGeoCombiTrans*)fModel;
+   fCombi = (TGeoCombiTrans*)obj;
    TGeoRotation *rot = fCombi->GetRotation();
    if (rot) rot->GetAngles(fPhii, fThetai, fPsii);
    const char *sname = fCombi->GetName();

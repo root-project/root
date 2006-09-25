@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoPconEditor.h,v 1.3 2006/07/12 10:25:34 brun Exp $
+// @(#):$Name:  $:$Id: TGeoPconEditor.h,v 1.4 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -22,8 +22,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoPcon;
@@ -38,7 +38,7 @@ class TGCheckButton;
 class TGCanvas;
 class TString;
 
-class TGeoPconEditor : public TGedFrame {
+class TGeoPconEditor : public TGeoGedFrame {
 
 protected:
    Int_t                fNsecti;            // Initial number of sections
@@ -53,7 +53,7 @@ protected:
    TGeoPcon            *fShape;             // Shape object
    Bool_t               fIsModified;        // Flag that volume was modified
    Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
-   TGeoTabManager      *fTabMgr;            // Tab manager
+
    TGLayoutHints       *fLHsect;            // Layout hints for sections
    TGTextEntry         *fShapeName;         // Shape name text entry
    TGNumberEntry       *fENz;               // Number entry for nsections
@@ -72,12 +72,12 @@ protected:
    void         UpdateSections();
    virtual void CreateEdges() {;}
 public:
-   TGeoPconEditor(const TGWindow *p, Int_t id,               
+   TGeoPconEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoPconEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
    
    void           DoModified();
    void           DoName();

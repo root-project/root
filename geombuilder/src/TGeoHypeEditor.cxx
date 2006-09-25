@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoHypeEditor.cxx,v 1.1 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoHypeEditor.cxx,v 1.2 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -47,9 +47,9 @@ enum ETGeoHypeWid {
 };
 
 //______________________________________________________________________________
-TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for Hype editor
    fShape   = 0;
@@ -58,8 +58,6 @@ TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t id, Int_t width,
    fIsModified = kFALSE;
    fIsShapeEditable = kTRUE;
 
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
-      
    // TextEntry for shape name
    MakeTitle("Name");
    fShapeName = new TGTextEntry(this, new TGTextBuffer(50), kHYPE_NAME);
@@ -145,17 +143,6 @@ TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t id, Int_t width,
    fUndo->Associate(this);
    AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoHype::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -169,17 +156,6 @@ TGeoHypeEditor::~TGeoHypeEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoHype::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -204,16 +180,14 @@ void TGeoHypeEditor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoHypeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoHypeEditor::SetModel(TObject* obj)
 {
    // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoHype::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoHype*)fModel;
+   fShape = (TGeoHype*)obj;
    fRini = fShape->GetRmin();
    fRouti = fShape->GetRmax();
    fDzi = fShape->GetDz();

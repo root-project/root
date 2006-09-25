@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoParaEditor.cxx,v 1.1 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoParaEditor.cxx,v 1.2 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -47,9 +47,9 @@ enum ETGeoParaWid {
 };
 
 //______________________________________________________________________________
-TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for para editor
    fShape   = 0;
@@ -58,8 +58,6 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t id, Int_t width,
    fIsModified = kFALSE;
    fIsShapeEditable = kTRUE;
 
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
-      
    // TextEntry for shape name
    MakeTitle("Name");
    fShapeName = new TGTextEntry(this, new TGTextBuffer(50), kPARA_NAME);
@@ -157,17 +155,6 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t id, Int_t width,
    fUndo->Associate(this);
    AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoPara::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -181,17 +168,6 @@ TGeoParaEditor::~TGeoParaEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoPara::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -218,16 +194,14 @@ void TGeoParaEditor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoParaEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoParaEditor::SetModel(TObject* obj)
 {
    // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoPara::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoPara*)fModel;
+   fShape = (TGeoPara*)obj;
    fXi = fShape->GetX();
    fYi = fShape->GetY();
    fZi = fShape->GetZ();

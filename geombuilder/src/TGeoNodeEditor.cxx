@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoNodeEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoNodeEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -36,14 +36,13 @@ enum ETGeoNodeWid {
 };
 
 //______________________________________________________________________________
-TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for node editor
    
    fNode   = 0;
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
    fIsEditable = kTRUE;
    Pixel_t color;
       
@@ -129,17 +128,6 @@ TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t id, Int_t width,
    fUndo->Associate(this);
    AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoNode::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -153,17 +141,6 @@ TGeoNodeEditor::~TGeoNodeEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoNode::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -184,16 +161,14 @@ void TGeoNodeEditor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoNodeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t /*event*/)
+void TGeoNodeEditor::SetModel(TObject* obj)
 {
    // Connect to a editable object.
    if (obj == 0 || !obj->InheritsFrom(TGeoNode::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fNode = (TGeoNode*)fModel;
+   fNode = (TGeoNode*)obj;
    const char *sname = fNode->GetName();
    fNodeName->SetText(sname);
 

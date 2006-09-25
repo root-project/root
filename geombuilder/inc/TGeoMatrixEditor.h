@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoMatrixEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -23,8 +23,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoTranslation;
@@ -38,7 +38,7 @@ class TGTextButton;
 class TGRadioButton;
 class TString;
 
-class TGeoTranslationEditor : public TGedFrame {
+class TGeoTranslationEditor : public TGeoGedFrame {
 
 protected:
 
@@ -60,12 +60,12 @@ protected:
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
 
 public:
-   TGeoTranslationEditor(const TGWindow *p, Int_t id,               
+   TGeoTranslationEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoTranslationEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoDx();
    void           DoDy();
@@ -88,7 +88,7 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TGeoRotationEditor : public TGedFrame {
+class TGeoRotationEditor : public TGeoGedFrame {
 
 protected:
 
@@ -117,12 +117,12 @@ protected:
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
 
 public:
-   TGeoRotationEditor(const TGWindow *p, Int_t id,               
+   TGeoRotationEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoRotationEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoRotPhi();
    void           DoRotTheta();
@@ -146,7 +146,7 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TGeoCombiTransEditor : public TGedFrame {
+class TGeoCombiTransEditor : public TGeoGedFrame {
 
 protected:
 
@@ -181,12 +181,12 @@ protected:
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
 
 public:
-   TGeoCombiTransEditor(const TGWindow *p, Int_t id,               
+   TGeoCombiTransEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoCombiTransEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoDx();
    void           DoDy();

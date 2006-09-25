@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.5 2006/07/12 10:25:34 brun Exp $
+// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.6 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -48,6 +48,7 @@
 */   
 
 #include "TVirtualPad.h"
+#include "TCanvas.h"
 #include "TBaseClass.h"
 #include "TGTab.h"
 #include "TG3DLine.h"
@@ -82,7 +83,7 @@
 #include "TView.h"
 
 #include "TGeoManagerEditor.h"
-
+#include "TGedEditor.h"
 
 ClassImp(TGeoManagerEditor)
 
@@ -106,14 +107,16 @@ enum ETGeoVolumeWid {
 };
 
 //______________________________________________________________________________
-TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t id, Int_t width,
-                                   Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
+                                     Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for manager editor.
    fGeometry = gGeoManager;
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
-   
+   fTabMgr   = 0;
+   fTab      = 0;
+   fConnectedCanvas = 0;
+
    fIsModified = kFALSE;   
    TGCompositeFrame *f1;
    TGLabel *label;
@@ -597,16 +600,9 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t id, Int_t width,
    
    fCategories->Resize(163,370);
    AddFrame(fCategories, new TGLayoutHints(kLHintsLeft, 0, 0, 4, 4));
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
 
-   TClass *cl = TGeoVolume::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
+   fVolumeTab = new TGVerticalFrame();
+   AddExtraTab(new TGedSubFrame(TString("Volume"), fVolumeTab));
 }
 
 //______________________________________________________________________________
@@ -616,32 +612,82 @@ TGeoManagerEditor::~TGeoManagerEditor()
    TGCompositeFrame *cont;
    cont = (TGCompositeFrame*)fCategories->GetItem("General")->GetContainer();
    TGeoTabManager::Cleanup(cont);
+   fCategories->GetItem("General")->SetCleanup(0);
    cont = (TGCompositeFrame*)fCategories->GetItem("Shapes")->GetContainer();
    TGeoTabManager::Cleanup(cont);
+   fCategories->GetItem("Shapes")->SetCleanup(0);
    cont = (TGCompositeFrame*)fCategories->GetItem("Volumes")->GetContainer();
    TGeoTabManager::Cleanup(cont);
+   fCategories->GetItem("Volumes")->SetCleanup(0);
    cont = (TGCompositeFrame*)fCategories->GetItem("Materials")->GetContainer();
    TGeoTabManager::Cleanup(cont);
+   fCategories->GetItem("Materials")->SetCleanup(0);
    cont = (TGCompositeFrame*)fCategories->GetItem("Media")->GetContainer();
    TGeoTabManager::Cleanup(cont);
+   fCategories->GetItem("Media")->SetCleanup(0);
    cont = (TGCompositeFrame*)fCategories->GetItem("Matrices")->GetContainer();
    TGeoTabManager::Cleanup(cont);
+   fCategories->GetItem("Matrices")->SetCleanup(0);
+
+   delete fExportOption[0]; delete fExportOption[1];
+
    Cleanup();   
 
    if (fTabMgr) {
       fTabMgr->GetVolumeTab()->Cleanup();
       delete fTabMgr;
    }   
-   TClass *cl = TGeoManager::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
+}
+
+//______________________________________________________________________________
+void TGeoManagerEditor::SetGedEditor(TGedEditor* ed)
+{
+   // Set the parent editor, set the tab and dissconnect editor from
+   // the canvas.
+
+   TGedFrame::SetGedEditor(ed);
+   fTab = fGedEditor->GetTab();
+   TCanvas* edCanvas = ed->GetCanvas();
+   fGedEditor->DisconnectFromCanvas();
+   if (edCanvas != fConnectedCanvas) {
+      DisconnectSelected();
+      if (edCanvas)
+         ConnectSelected(edCanvas);
+      fConnectedCanvas = edCanvas;
+   }
+}
+
+//______________________________________________________________________________
+void TGeoManagerEditor::SelectedSlot(TVirtualPad* /*pad*/, TObject* obj, Int_t event)
+{
+   // Connected to TCanvas::Selected. TGeoManagerEditor takes this
+   // function from TGedEditor and only uses it if obj is a TGeoVolume.
+
+   if (event == kButton1 && obj->InheritsFrom(TGeoVolume::Class())) {
+      TGeoVolume* v = (TGeoVolume*) obj;
+      fTabMgr->SetVolTabEnabled();
+      fTabMgr->SetTab();
+      fTabMgr->GetVolumeEditor(v);
+      v->Draw();
+   }
+}
+
+void TGeoManagerEditor::ConnectSelected(TCanvas *c)
+{
+   // Connect to TCanvas::Selected.
+
+   c->Connect("Selected(TVirtualPad*,TObject*,Int_t)", "TGeoManagerEditor",
+              this, "SelectedSlot(TVirtualPad*,TObject*,Int_t)");
+}
+
+void TGeoManagerEditor::DisconnectSelected()
+{
+   // Disconnect from TCanvas::Selected.
+
+   if (fConnectedCanvas)
+      Disconnect(fConnectedCanvas, "Selected(TVirtualPad*,TObject*,Int_t)",
+                 this, "SelectedSlot(TVirtualPad*,TObject*,Int_t)");
+
 }
 
 //______________________________________________________________________________
@@ -700,16 +746,10 @@ void TGeoManagerEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TGeoManagerEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t /*event*/)
+void TGeoManagerEditor::SetModel(TObject* obj)
 {
    // Refresh editor according the selected obj.
-   if (obj == 0 || !obj->InheritsFrom(TGeoManager::Class())) {
-      SetActive(kFALSE);
-      return;                 
-   } 
-   fModel = obj;
-   fPad = pad;
-   fGeometry = (TGeoManager*)fModel;
+   fGeometry = (TGeoManager*)obj;
    fManagerName->SetText(fGeometry->GetName());
    fManagerTitle->SetText(fGeometry->GetTitle());
    fMatrixName->SetText(Form("matrix%i", fGeometry->GetListOfMatrices()->GetEntries()));
@@ -750,9 +790,12 @@ void TGeoManagerEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t /*event*/
    
    fTab->SetTab(0);
    fCategories->Layout();
-   
+   if (fTabMgr == 0) {
+      fTabMgr = TGeoTabManager::GetMakeTabManager(fGedEditor);
+      fTabMgr->fVolumeTab  = fVolumeTab;
+   }
    if (fInit) ConnectSignals2Slots();
-   SetActive();
+   // SetActive();
 }
 
 //______________________________________________________________________________
@@ -1129,7 +1172,7 @@ void TGeoManagerEditor::DoEditShape()
    if (!fSelectedShape) return;
    fTabMgr->GetShapeEditor(fSelectedShape);
    fSelectedShape->Draw();
-   fPad->GetView()->ShowAxis();
+   fTabMgr->GetPad()->GetView()->ShowAxis();
 }
 
 //______________________________________________________________________________

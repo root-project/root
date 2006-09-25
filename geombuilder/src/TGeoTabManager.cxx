@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.5 2006/06/24 08:26:42 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.6 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TVirtualPad.h"
-#include "TGedFrame.h"
+#include "TGeoGedFrame.h"
 #include "TGTab.h"
 #include "TGLabel.h"
 #include "TGComboBox.h"
@@ -33,38 +33,39 @@
 #include "TGeoMaterial.h"
 #include "TGeoMatrix.h"
 
+#include "TGedEditor.h"
 #include "TGeoTabManager.h"
+
+TMap TGeoTabManager::fgEditorToMgrMap;
 
 ClassImp(TGeoTabManager)
 
 //______________________________________________________________________________
-TGeoTabManager::TGeoTabManager(TVirtualPad *pad, TGTab *tab)
+TGeoTabManager::TGeoTabManager(TGedEditor *ged)
 {
 // Ctor.
-   fPad = pad;
-   fTab = tab;
+   fGedEditor = ged;
+   fPad = ged->GetPad();
+   fTab = ged->GetTab();
    fVolume = 0;
    fShapePanel = 0;
    fMediumPanel = 0;
    fMaterialPanel = 0;
    fMatrixPanel = 0;
-   CreateTabs();
-   fTab->MapSubwindows();
-   fTab->Layout();
-   fTab->MapWindow();
-   TClass *cl = TGeoTabManager::Class();
-   cl->GetEditorList()->Add(this);
+   fVolumeTab = 0;
+   fgEditorToMgrMap.Add(ged, this);
 }   
 
 //______________________________________________________________________________
 TGeoTabManager::~TGeoTabManager()
 {
 // Dtor.
+   fgEditorToMgrMap.Remove(fGedEditor);
    if (fShapePanel) delete fShapePanel;
    if (fMaterialPanel) delete fMaterialPanel;
    if (fMatrixPanel) delete fMatrixPanel;
    if (fMediumPanel) delete fMediumPanel;
-}   
+}
 
 //______________________________________________________________________________
 void TGeoTabManager::Cleanup(TGCompositeFrame *frame)
@@ -85,21 +86,11 @@ void TGeoTabManager::Cleanup(TGCompositeFrame *frame)
 }   
 
 //______________________________________________________________________________
-void TGeoTabManager::CreateTabs()
-{
-// Create all needed tab elements.
-   fVolumeCont = fTab->AddTab("Volume");   
-   fVolumeTab = new TGCompositeFrame(fVolumeCont, 110, 30, kVerticalFrame);
-   fVolumeCont->AddFrame(fVolumeTab, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
-   fTab->SetEnabled(GetTabIndex(),kFALSE);
-}
-
-//______________________________________________________________________________
 void TGeoTabManager::GetShapeEditor(TGeoShape *shape)
 {
 // Get editor for a shape.
    if (!shape) return;
-   if (!fShapePanel) fShapePanel = new TGeoTransientPanel("Shape", shape);
+   if (!fShapePanel) fShapePanel = new TGeoTransientPanel(fGedEditor, "Shape", shape);
    else {
       fShapePanel->SetModel(shape);   
       fShapePanel->Show();
@@ -113,7 +104,9 @@ void TGeoTabManager::GetVolumeEditor(TGeoVolume *volume)
    if (!volume || !fVolumeTab) return;
    GetEditors(TAttLine::Class());
    GetEditors(TGeoVolume::Class());
-   SetModel(volume, 0);
+   fVolumeTab->MapSubwindows();
+   fVolumeTab->Layout();
+   SetModel(volume);
 }
    
 //______________________________________________________________________________
@@ -121,9 +114,9 @@ void TGeoTabManager::GetMatrixEditor(TGeoMatrix *matrix)
 {
 // Get editor for a matrix.
    if (!matrix) return;
-   if (!fMatrixPanel) fMatrixPanel = new TGeoTransientPanel("Matrix", matrix);
+   if (!fMatrixPanel) fMatrixPanel = new TGeoTransientPanel(fGedEditor, "Matrix", matrix);
    else {
-      fMatrixPanel->SetModel(matrix);   
+      fMatrixPanel->SetModel(matrix);
       fMatrixPanel->Show();
    }   
 }
@@ -133,9 +126,9 @@ void TGeoTabManager::GetMediumEditor(TGeoMedium *medium)
 {
 // Get editor for a medium.
    if (!medium) return;
-   if (!fMediumPanel) fMediumPanel = new TGeoTransientPanel("Medium", medium);
+   if (!fMediumPanel) fMediumPanel = new TGeoTransientPanel(fGedEditor, "Medium", medium);
    else {
-      fMediumPanel->SetModel(medium);   
+      fMediumPanel->SetModel(medium);
       fMediumPanel->Show();
    }   
 }
@@ -145,9 +138,9 @@ void TGeoTabManager::GetMaterialEditor(TGeoMaterial *material)
 {
 // Get editor for a material.
    if (!material) return;
-   if (!fMaterialPanel) fMaterialPanel = new TGeoTransientPanel("Material", material);
+   if (!fMaterialPanel) fMaterialPanel = new TGeoTransientPanel(fGedEditor, "Material", material);
    else {
-      fMaterialPanel->SetModel(material);   
+      fMaterialPanel->SetModel(material);
       fMaterialPanel->Show();
    }   
 }
@@ -156,60 +149,35 @@ void TGeoTabManager::GetMaterialEditor(TGeoMaterial *material)
 void TGeoTabManager::GetEditors(TClass *cl)
 {
 // Get editor for a class.
-   // Look in TClass::GetEditorList() for any object deriving from TGedFrame,
-   static Int_t icount = 0;
-   TGCompositeFrame *style = fVolumeTab;   
-   TGedElement *ge;
-   TList *list = cl->GetEditorList();
-   TIter next1(list);
-   // Iterate existing editors for class "cl"
-   while ((ge = (TGedElement *) next1())) {
-      // check if the editor ge->fGedframe is already in the list of style
-      if (ge->fCanvas != (TObject*)fPad->GetCanvas()) continue;
-      TGedFrame *f = ge->fGedFrame;
-      TList *l = style->GetList();
-      TGFrameElement *fr;
-      TIter next(l);
-      // Iterate all ged frames in style
-      while ((fr = (TGFrameElement *) next())) 
-         if (fr->fFrame->InheritsFrom(f->ClassName())) return;
-   }
-   TClass *class2, *class3;
-   class2 = gROOT->GetClass(Form("%sEditor",cl->GetName()));
+   // Look in fVolumeTab for any object deriving from TGedFrame,
+
+   TClass *class2 = gROOT->GetClass(Form("%sEditor",cl->GetName()));
    if (class2 && class2->InheritsFrom(TGedFrame::Class())) {
-      list = style->GetList();
       TGFrameElement *fr;
-      TIter next(list);
+      TIter next(fVolumeTab->GetList());
       while ((fr = (TGFrameElement *) next())) if (fr->fFrame->IsA() == class2) return;
-      gROOT->ProcessLine(Form("((TGCompositeFrame *)0x%lx)->AddFrame(new %s((TGWindow *)0x%lx, %d),\
-                           new TGLayoutHints(kLHintsTop | kLHintsExpandX,0, 0, 2, 2))",\
-                           (Long_t)style, class2->GetName(), (Long_t)style, 3000+icount));
-      class3 = (TClass*)gROOT->GetListOfClasses()->FindObject(cl->GetName());
-      TIter next3(class3->GetEditorList());
-      while ((ge = (TGedElement *)next3())) {
-         if (!strcmp(ge->fGedFrame->ClassName(), class2->GetName()) && (ge->fCanvas == 0)) {
-            ge->fCanvas = (TObject*)fPad->GetCanvas();
-         }
-      }
+      TGedFrame* gfr = reinterpret_cast<TGedFrame*>(class2->New());
+      gfr->ReparentWindow(fVolumeTab);
+      fVolumeTab->AddFrame(gfr, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
+      gfr->SetModelClass(cl);
+      gfr->SetGedEditor(fGedEditor);
+      gfr->MapSubwindows();
    }
 }
 
 //______________________________________________________________________________
-TGeoTabManager *TGeoTabManager::GetMakeTabManager(TVirtualPad *pad, TGTab *tab)
+TGeoTabManager *TGeoTabManager::GetMakeTabManager(TGedEditor *ged)
 {
 // Static method to return the tab manager currently appended to the pad or create one 
 // if not existing.
-   if (!pad) return NULL;
-   // search for a tab manager in the list of primitives appended to ther pad
-   TClass *cl = TGeoTabManager::Class();
-   TIter next(cl->GetEditorList());
-   TGeoTabManager *tabmgr;
-   while ((tabmgr=(TGeoTabManager*)next())) {
-      if (tabmgr->GetPad()==pad /*&& tabmgr->GetTab()==tab*/) return tabmgr;
+   if (!ged) return NULL;
+   TPair *pair = (TPair*) fgEditorToMgrMap.FindObject(ged);
+   if (pair) {
+      return (TGeoTabManager*) pair->Value();
+   } else {
+      TGeoTabManager *tabmgr = new TGeoTabManager(ged); // added to fgEditorToMgrMap in ctor
+      return tabmgr;
    }
-   // tab manager not found -> create one
-   tabmgr = new TGeoTabManager(pad,tab);
-   return tabmgr;
 }   
 
 //______________________________________________________________________________
@@ -251,7 +219,7 @@ void TGeoTabManager::SetVolTabEnabled(Bool_t flag)
 }
 
 //______________________________________________________________________________
-void TGeoTabManager::SetModel(TObject *model, Int_t event)
+void TGeoTabManager::SetModel(TObject *model)
 {
 // Send the SetModel signal to all editors in the tab TYPE.
    TGCompositeFrame *tab = fVolumeTab;
@@ -260,10 +228,9 @@ void TGeoTabManager::SetModel(TObject *model, Int_t event)
    TIter next(tab->GetList());
    while ((el = (TGFrameElement *) next())) {
       if ((el->fFrame)->InheritsFrom(TGedFrame::Class())) {
-         ((TGedFrame *)(el->fFrame))->SetModel(fPad, model, event);
+         ((TGedFrame *)(el->fFrame))->SetModel(model);
       }   
    }
-   tab->MapSubwindows();
 }      
 
 //______________________________________________________________________________
@@ -723,10 +690,11 @@ void TGeoMatrixDialog::ConnectSignalsToSlots()
 ClassImp(TGeoTransientPanel)
 
 //______________________________________________________________________________
-TGeoTransientPanel::TGeoTransientPanel(const char *name, TObject *obj)
+TGeoTransientPanel::TGeoTransientPanel(TGedEditor* ged, const char *name, TObject *obj)
                    :TGMainFrame(gClient->GetRoot(),175,20)
 {
 // Transient panel ctor.
+   fGedEditor = ged;
    fModel = obj;
    fCan = new TGCanvas(this, 170, 100);
    fTab = new TGTab(fCan->GetViewPort(), 10, 10);
@@ -774,44 +742,25 @@ void TGeoTransientPanel::CloseWindow()
 void TGeoTransientPanel::GetEditors(TClass *cl)
 {
 // Get editor for a class.
-   // Look in TClass::GetEditorList() for any object deriving from TGedFrame,
-   static Int_t icount = 0;
-   TGedElement *ge;
-   TList *list = cl->GetEditorList();
-   TIter next1(list);
-   while ((ge = (TGedElement *) next1())) {
-      // check if the editor ge->fGedframe is already in the list of style
-      if (ge->fCanvas != (TObject*)gPad->GetCanvas()) continue;
-      TGedFrame *f = ge->fGedFrame;
-      TList *l = fStyle->GetList();
-      TGFrameElement *fr;
-      TIter next(l);
-      while ((fr = (TGFrameElement *) next())) 
-         if (fr->fFrame->InheritsFrom(f->ClassName())) return;
-   }
-   TClass *class2, *class3;
-   class2 = gROOT->GetClass(Form("%sEditor",cl->GetName()));
+   // Look in fStyle for any object deriving from TGedFrame,
+
+   TClass *class2 = gROOT->GetClass(Form("%sEditor",cl->GetName()));
    if (class2 && class2->InheritsFrom(TGedFrame::Class())) {
-      list = fStyle->GetList();
       TGFrameElement *fr;
-      TIter next(list);
+      TIter next(fStyle->GetList());
       while ((fr = (TGFrameElement *) next()))
          if (fr->fFrame->IsA() == class2) return;
-      gROOT->ProcessLine(Form("((TGCompositeFrame *)0x%lx)->AddFrame(new %s((TGWindow *)0x%lx, %d),\
-                              new TGLayoutHints(kLHintsTop | kLHintsExpandX,0, 0, 2, 2))",\
-                              (Long_t)fStyle, class2->GetName(), (Long_t)fStyle, 3000+icount));
-      class3 = (TClass*)gROOT->GetListOfClasses()->FindObject(cl->GetName());
-      TIter next3(class3->GetEditorList());
-      while ((ge = (TGedElement *)next3())) {
-         if (!strcmp(ge->fGedFrame->ClassName(), class2->GetName()) && (ge->fCanvas == 0)) {
-            ge->fCanvas = (TObject*)gPad->GetCanvas();
-         }
-      }
+      TGedFrame* gfr = reinterpret_cast<TGedFrame*>(class2->New());
+      gfr->ReparentWindow(fStyle);
+      fStyle->AddFrame(gfr, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
+      gfr->SetModelClass(cl);
+      gfr->SetGedEditor(fGedEditor);
+      gfr->MapSubwindows();
    }
 }
 
 //______________________________________________________________________________
-void TGeoTransientPanel::SetModel(TObject *model, Int_t event)
+void TGeoTransientPanel::SetModel(TObject *model)
 {
 // Update the editors in the main tab to reflect the selected object.
    if (!model) return;
@@ -821,7 +770,7 @@ void TGeoTransientPanel::SetModel(TObject *model, Int_t event)
    TIter next(fStyle->GetList());
    while ((el = (TGFrameElement *) next())) {
       if ((el->fFrame)->InheritsFrom(TGedFrame::Class())) {
-         ((TGedFrame *)(el->fFrame))->SetModel(gPad, model, event);
+         ((TGedFrame *)(el->fFrame))->SetModel(model);
       }   
    }
    Resize(fTabContainer->GetDefaultWidth()+30, fTabContainer->GetDefaultHeight()+65);

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoManagerEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -23,8 +23,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoManager;
@@ -51,6 +51,8 @@ protected:
 
    TGeoManager         *fGeometry;          // Selected geometry manager
    TGeoTabManager      *fTabMgr;            // Tab manager
+   TGTab               *fTab;               // TGTab of GedEditor
+   TGCompositeFrame    *fVolumeTab;         // Tab of Volume tab
    Bool_t               fIsModified;        // Flag that manager was modified
    TGShutter           *fCategories;        // Categories shutter
    TGTextEntry         *fManagerName;       // Name text entry
@@ -108,6 +110,7 @@ protected:
    TGCompositeFrame    *f5;                 // Parent frame for media editing
    TGCompositeFrame    *f6;                 // Parent frame for matrices editing
    TGCompositeFrame    *f7;                 // Parent frame for closing geometry
+   TCanvas             *fConnectedCanvas;   // Canvas connected to SelectedSlot()
 
    virtual void ConnectSignals2Slots();     // Connect the signals to the slots
    void           ShowSelectShape(Bool_t show=kTRUE);
@@ -117,13 +120,18 @@ protected:
    void           ShowSelectMatrix(Bool_t show=kTRUE);
 
 public:
-   TGeoManagerEditor(const TGWindow *p, Int_t id,               
+   TGeoManagerEditor(const TGWindow *p = 0,
                     Int_t width = 140, Int_t height = 30,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoManagerEditor();
    static void    LoadLib() {;}
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetGedEditor(TGedEditor* ed);
+   virtual void   SetModel(TObject *obj);
+
+   virtual void   SelectedSlot(TVirtualPad* pad, TObject* obj, Int_t event);
+   void           ConnectSelected(TCanvas *c);
+   void           DisconnectSelected();
 
    void           DoName();
    void           DoCreateBox();

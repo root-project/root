@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoMaterialEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -22,8 +22,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoMaterial;
@@ -35,7 +35,7 @@ class TGComboBox;
 class TGTextButton;
 class TString;
 
-class TGeoMaterialEditor : public TGedFrame {
+class TGeoMaterialEditor : public TGeoGedFrame {
 
 protected:
 
@@ -46,7 +46,7 @@ protected:
    TGeoMaterial        *fMaterial;          // Material object
    Bool_t               fIsModified;        // Flag that material was modified
    Bool_t               fIsMaterialEditable;  // Flag that the material can be changed
-   TGeoTabManager      *fTabMgr;            // Tab manager
+
    TGTextEntry         *fMaterialName;      // Material name text entry
    TGNumberEntry       *fMatA;              // Number entry for A
    TGNumberEntry       *fMatZ;              // Number entry for Z
@@ -60,12 +60,12 @@ protected:
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
 
 public:
-   TGeoMaterialEditor(const TGWindow *p, Int_t id,               
+   TGeoMaterialEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoMaterialEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoA();
    void           DoZ();

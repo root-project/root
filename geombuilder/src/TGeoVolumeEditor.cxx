@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoVolumeEditor.cxx,v 1.5 2006/06/25 07:34:59 brun Exp $
+// @(#):$Name:  $:$Id: TGeoVolumeEditor.cxx,v 1.6 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -55,6 +55,7 @@
 #include "TGShutter.h"
 #include "TG3DLine.h"
 #include "TGeoTabManager.h"
+#include "TGedEditor.h"
 
 ClassImp(TGeoVolumeEditor)
 
@@ -67,9 +68,9 @@ enum ETGeoVolumeWid {
 };
 
 //______________________________________________________________________________
-TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for volume editor.
    fGeometry = 0;
@@ -79,7 +80,6 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t id, Int_t width,
    fIsAssembly = kFALSE;
    fIsDivided = kFALSE;
    
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
    // TGShutter for categories
    fCategories = new TGShutter(this, kSunkenFrame | kFixedHeight);
    TGCompositeFrame *container, *f1;
@@ -365,17 +365,6 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t id, Int_t width,
 
    fCategories->Resize(163,340);
    AddFrame(fCategories, new TGLayoutHints(kLHintsLeft, 0, 0, 4, 4));
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoVolume::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -385,24 +374,20 @@ TGeoVolumeEditor::~TGeoVolumeEditor()
    TGCompositeFrame *cont;
    cont = (TGCompositeFrame*)fCategories->GetItem("Properties")->GetContainer();
    TGeoTabManager::Cleanup(cont);
+   fCategories->GetItem("Properties")->SetCleanup(0);
    cont = (TGCompositeFrame*)fCategories->GetItem("Daughters")->GetContainer();
    TGeoTabManager::Cleanup(cont);
+   fCategories->GetItem("Daughters")->SetCleanup(0);
    cont = (TGCompositeFrame*)fCategories->GetItem("Visualization")->GetContainer();
    TGeoTabManager::Cleanup(cont);
+   fCategories->GetItem("Visualization")->SetCleanup(0);
    cont = (TGCompositeFrame*)fCategories->GetItem("Division")->GetContainer();
    TGeoTabManager::Cleanup(cont);
-   Cleanup();   
+   fCategories->GetItem("Division")->SetCleanup(0);
 
-   TClass *cl = TGeoVolume::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
+   delete fBView[0]; delete fBView[1]; delete fBView[2];
+   delete fBDiv [0]; delete fBDiv [1]; delete fBDiv [2];
+   Cleanup();
 }
 
 //______________________________________________________________________________
@@ -438,16 +423,14 @@ void TGeoVolumeEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TGeoVolumeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t /*event*/)
+void TGeoVolumeEditor::SetModel(TObject* obj)
 {
    // Connect to the picked volume.
    if (obj == 0 || !obj->InheritsFrom(TGeoVolume::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fVolume = (TGeoVolume*)fModel;
+   fVolume = (TGeoVolume*)obj;
    fGeometry = fVolume->GetGeoManager();
    const char *vname = fVolume->GetName();
    fVolumeName->SetText(vname);
@@ -467,7 +450,10 @@ void TGeoVolumeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t /*event*/)
    if (!fVolume->GetNdaughters() || fVolume->GetFinder()) {
       fEditMatrix->SetEnabled(kFALSE);
       fRemoveNode->SetEnabled(kFALSE);
-   }   
+   } else {
+      fEditMatrix->SetEnabled(kTRUE);
+      fRemoveNode->SetEnabled(kTRUE);
+   }      
    if (!fSelectedVolume) fAddNode->SetEnabled(kFALSE);   
    if (fVolume->IsAssembly()) {
       fBSelShape->SetEnabled(kFALSE);
@@ -514,6 +500,15 @@ void TGeoVolumeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t /*event*/)
    if (fInit) ConnectSignals2Slots();
    SetActive();
    if (GetParent()==fTabMgr->GetVolumeTab()) fTab->Layout();
+}
+
+//______________________________________________________________________________
+void TGeoVolumeEditor::ActivateBaseClassEditors(TClass* cl)
+{
+   // Add editors to fGedFrame and exclude TLineEditor.
+
+   fGedEditor->ExcludeClassEditor(TAttFill::Class());
+   TGedFrame::ActivateBaseClassEditors(cl);
 }
 
 //______________________________________________________________________________
@@ -565,6 +560,8 @@ void TGeoVolumeEditor::DoSelectVolume()
    fSelectedVolume = (TGeoVolume*)TGeoVolumeDialog::GetSelected();
    if (fSelectedVolume) fLSelVolume->SetText(fSelectedVolume->GetName());
    else fSelectedVolume = vol;
+   if (fSelectedVolume)
+      fAddNode->SetEnabled(kTRUE);
 }
 
 
@@ -605,12 +602,9 @@ void TGeoVolumeEditor::DoAddNode()
    fCopyNumber->SetNumber(nd+1);
    if (fSelectedMatrix) fEditMatrix->SetEnabled(kTRUE);
    fRemoveNode->SetEnabled(kTRUE);
-   fSelectedVolume = 0;
-   fSelectedMatrix = 0;
-   fLSelVolume->SetText("Select volume");
-   fLSelMatrix->SetText("Select matrix");
-   fAddNode->SetEnabled(kFALSE);   
    fGeometry->SetTopVisible();
+   fEditMatrix->SetEnabled(kTRUE);
+   fRemoveNode->SetEnabled(kTRUE);
    Update();
 }
 

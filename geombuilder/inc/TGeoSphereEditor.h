@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoSphereEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoSphereEditor.h,v 1.2 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -22,8 +22,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoSphere;
@@ -37,7 +37,7 @@ class TGTextButton;
 class TGCheckButton;
 class TString;
 
-class TGeoSphereEditor : public TGedFrame {
+class TGeoSphereEditor : public TGeoGedFrame {
 
 protected:
 
@@ -52,7 +52,7 @@ protected:
    Bool_t          fIsModified;        // Flag that volume was modified
    Bool_t          fIsShapeEditable;   // Flag that the shape can be changed
    Bool_t          fLock;              // Lock
-   TGeoTabManager *fTabMgr;            // Tab manager
+
    TGTextEntry    *fShapeName;         // Shape name text entry
    TGNumberEntry  *fERmin;             // Number entry for rmin
    TGNumberEntry  *fERmax;             // Number entry for rmax
@@ -70,12 +70,12 @@ protected:
    Bool_t       IsDelayed() const;   
 
 public:
-   TGeoSphereEditor(const TGWindow *p, Int_t id,               
+   TGeoSphereEditor(const TGWindow *p = 0,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoSphereEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoRmin();
    void           DoRmax();

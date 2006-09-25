@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoMaterialEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoMaterialEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -38,9 +38,9 @@ enum ETGeoMaterialWid {
 };
 
 //______________________________________________________________________________
-TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for material editor.
    fMaterial   = 0;
@@ -50,8 +50,6 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t id, Int_t width,
    fIsModified = kFALSE;
    fIsMaterialEditable = kTRUE;
 
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
-      
    // TextEntry for material name
    MakeTitle("Name");
    fMaterialName = new TGTextEntry(this, new TGTextBuffer(50), kMATERIAL_NAME);
@@ -131,17 +129,6 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fCancel->GetSize());
    fApply->SetSize(fCancel->GetSize());
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoMaterial::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -155,17 +142,6 @@ TGeoMaterialEditor::~TGeoMaterialEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoMaterial::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -185,16 +161,14 @@ void TGeoMaterialEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TGeoMaterialEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoMaterialEditor::SetModel(TObject* obj)
 {
    // Connect to the selected material.
    if (obj == 0 || !(obj->InheritsFrom(TGeoMaterial::Class()))) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fMaterial = (TGeoMaterial*)fModel;
+   fMaterial = (TGeoMaterial*)obj;
    fAi = (Int_t)fMaterial->GetA();
    fZi = (Int_t)fMaterial->GetZ();
    fDensityi = fMaterial->GetDensity();

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoMediumEditor.cxx,v 1.2 2006/06/19 14:58:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoMediumEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -40,15 +40,14 @@ enum ETGeoMediumWid {
 };
 
 //______________________________________________________________________________
-TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for medium editor   
    fMedium   = 0;
    fIsEditable = kFALSE;
    fIsModified = kFALSE;
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
    Pixel_t color;
    TGLabel *label;
       
@@ -204,17 +203,6 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t id, Int_t width,
    f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
    AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));  
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoMedium::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -230,17 +218,6 @@ TGeoMediumEditor::~TGeoMediumEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoMedium::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -265,16 +242,14 @@ void TGeoMediumEditor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoMediumEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoMediumEditor::SetModel(TObject* obj)
 {
    // Connect to the selected object.
    if (obj == 0 || !(obj->IsA()==TGeoMedium::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fMedium = (TGeoMedium*)fModel;
+   fMedium = (TGeoMedium*)obj;
    const char *sname = fMedium->GetName();
    if (!strcmp(sname, fMedium->ClassName())) fMedName->SetText("");
    else fMedName->SetText(sname);

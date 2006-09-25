@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBBoxEditor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBBoxEditor.cxx,v 1.4 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -48,11 +48,12 @@ enum ETGeoBBoxWid {
 };
 
 //______________________________________________________________________________
-TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t id, Int_t width,
-                                   Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
+                               Int_t height, UInt_t options, Pixel_t back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for volume editor
+   // Constructor for volume editor.
+
    fShape   = 0;
    fDxi = fDyi = fDzi = 0.0;
    memset(fOrigi, 0, 3*sizeof(Double_t));
@@ -60,8 +61,6 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t id, Int_t width,
    fIsModified = kFALSE;
    fIsShapeEditable = kFALSE;
 
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
-      
    // TextEntry for shape name
    MakeTitle("Name");
    fShapeName = new TGTextEntry(this, new TGTextBuffer(50), kBOX_NAME);
@@ -166,23 +165,13 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t id, Int_t width,
    fUndo->Associate(this);
    AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoBBox::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
 TGeoBBoxEditor::~TGeoBBoxEditor()
 {
-// Destructor
+   // Destructor.
+
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -190,23 +179,13 @@ TGeoBBoxEditor::~TGeoBBoxEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoBBox::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
 void TGeoBBoxEditor::ConnectSignals2Slots()
 {
    // Connect signals to slots.
+
    fApply->Connect("Clicked()", "TGeoBBoxEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoBBoxEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoBBoxEditor", this, "DoModified()");
@@ -227,16 +206,14 @@ void TGeoBBoxEditor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoBBoxEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoBBoxEditor::SetModel(TObject* obj)
 {
    // Update editor for a new selected box.
    if (obj == 0 || (obj->IsA()!=TGeoBBox::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoBBox*)fModel;
+      return;
+   }
+   fShape = (TGeoBBox*)obj;
    fDxi = fShape->GetDX();
    fDyi = fShape->GetDY();
    fDzi = fShape->GetDZ();

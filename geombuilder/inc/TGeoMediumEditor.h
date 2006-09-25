@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoMediumEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -23,8 +23,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoMedium;
@@ -39,12 +39,12 @@ class TGPictureButton;
 class TGCheckButton;
 class TGLabel;
 
-class TGeoMediumEditor : public TGedFrame {
+class TGeoMediumEditor : public TGeoGedFrame {
 
 protected:
 
    TGeoMedium          *fMedium;            // Medium object
-   TGeoTabManager      *fTabMgr;            // Tab manager
+
    Bool_t               fIsEditable;        // Flag that the medium can be changed
    Bool_t               fIsModified;        // Modified flag
    TGTextEntry         *fMedName;           // Medium name text entry
@@ -68,12 +68,12 @@ protected:
    virtual void   ConnectSignals2Slots();   // Connect the signals to the slots
 
 public:
-   TGeoMediumEditor(const TGWindow *p, Int_t id,               
+   TGeoMediumEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoMediumEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoEditMaterial();
    void           DoSelectMaterial();

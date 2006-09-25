@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.h,v 1.3 2006/06/24 08:26:42 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.h,v 1.4 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -24,6 +24,8 @@
 #include "TObject.h"
 #endif
 
+#include "TMap.h"
+
 class TVirtualPad;
 class TClass;
 
@@ -36,6 +38,8 @@ class TGListTree;
 class TGListTreeItem;
 class TGCanvas;
 
+class TGedEditor;
+
 class TGeoShape;
 class TGeoVolume;
 class TGeoMedium;
@@ -46,8 +50,9 @@ class TGeoTreeDialog;
 class TGeoTransientPanel;
 
 class TGeoTabManager : public TObject {
-
+  friend class TGeoManagerEditor;
 private:
+   TGedEditor          *fGedEditor;         // Parent editor
    TVirtualPad         *fPad;               // Pad to which this applies
    TGTab               *fTab;               // Parent tab
    TGeoVolume          *fVolume;            // Edited volume
@@ -56,22 +61,22 @@ private:
    TGeoTransientPanel  *fMaterialPanel;     // Panel for editing materials
    TGeoTransientPanel  *fMatrixPanel;       // Panel for editing matrices
    TGCompositeFrame    *fVolumeTab;         // Volume tab
-   TGCompositeFrame    *fVolumeCont;        // Volume tab container
 
-   void                CreateTabs();
+   static TMap         fgEditorToMgrMap;    // Map from ged-editor to associated tab-manager
+
    void                GetEditors(TClass *cl);
 public:
-   TGeoTabManager(TVirtualPad *pad, TGTab *tab);
+   TGeoTabManager(TGedEditor *ged);
    virtual ~TGeoTabManager();
 
-   static TGeoTabManager *GetMakeTabManager(TVirtualPad *pad, TGTab *tab); 
+   static TGeoTabManager *GetMakeTabManager(TGedEditor *ged); 
    static void         Cleanup(TGCompositeFrame *frame);  
    TVirtualPad        *GetPad() const {return fPad;}
    TGTab              *GetTab() const {return fTab;}
    Int_t               GetTabIndex() const;
    static void         MoveFrame(TGCompositeFrame *fr, TGCompositeFrame *p);
    void                SetVolTabEnabled(Bool_t flag=kTRUE);
-   void                SetModel(TObject *model, Int_t event=0);
+   void                SetModel(TObject *model);
    void                SetTab();
    
    void                GetShapeEditor(TGeoShape *shape);
@@ -80,10 +85,8 @@ public:
    void                GetMediumEditor(TGeoMedium *medium);
    void                GetMaterialEditor(TGeoMaterial *material);
 
-
-   TGCompositeFrame   *GetVolumeTab()    const {return fVolumeTab;}
-   TGCompositeFrame   *GetVolumeCont()   const {return fVolumeCont;}
-   TGeoVolume         *GetVolume() const   {return fVolume;}
+   TGCompositeFrame   *GetVolumeTab() const {return fVolumeTab;}
+   TGeoVolume         *GetVolume() const {return fVolume;}
 
    ClassDef(TGeoTabManager, 0)   // Tab manager for geometry editors
 };
@@ -199,6 +202,7 @@ public:
 };
 
 class TGeoTransientPanel : public TGMainFrame {
+   TGedEditor       *fGedEditor;        // ged-editor steering this panel
    TGCanvas         *fCan;              // TGCanvas containing a TGTab
    TGTab            *fTab;              //tab widget holding the editor
    TGCompositeFrame *fTabContainer;     //main tab container
@@ -207,7 +211,7 @@ class TGeoTransientPanel : public TGMainFrame {
    TGTextButton     *fClose;            //close button
    
 public:
-   TGeoTransientPanel(const char *name, TObject *obj);
+   TGeoTransientPanel(TGedEditor* ged, const char *name, TObject *obj);
    virtual ~TGeoTransientPanel();
    
    virtual void        CloseWindow();
@@ -220,7 +224,7 @@ public:
    void                GetEditors(TClass *cl);
    virtual void        Hide();
    virtual void        Show();
-   void                SetModel(TObject *model, Int_t event=0);
+   void                SetModel(TObject *model);
 
    ClassDef(TGeoTransientPanel, 0)   // List-Tree based dialog
 };

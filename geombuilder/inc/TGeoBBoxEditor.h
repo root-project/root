@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBBoxEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBBoxEditor.h,v 1.2 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -22,8 +22,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoBBox;
@@ -36,7 +36,7 @@ class TGTextButton;
 class TGCheckButton;
 class TString;
 
-class TGeoBBoxEditor : public TGedFrame {
+class TGeoBBoxEditor : public TGeoGedFrame {
 
 protected:
 
@@ -48,7 +48,6 @@ protected:
    TGeoBBox            *fShape;             // Shape object
    Bool_t               fIsModified;        // Flag that volume was modified
    Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
-   TGeoTabManager      *fTabMgr;            // Tab manager
    TGTextEntry         *fShapeName;         // Shape name text entry
    TGNumberEntry       *fBoxDx;             // Number entry for box DX
    TGNumberEntry       *fBoxDy;             // Number entry for box DY
@@ -60,16 +59,16 @@ protected:
    TGTextButton        *fUndo;              // Undo-Button
    TGCheckButton       *fDelayed;           // Check button for delayed draw
 
-   virtual void ConnectSignals2Slots();   // Connect the signals to the slots
+   virtual void ConnectSignals2Slots();     // Connect the signals to the slots
    Bool_t       IsDelayed() const;   
 
 public:
-   TGeoBBoxEditor(const TGWindow *p, Int_t id,               
+   TGeoBBoxEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoBBoxEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoDx();
    void           DoDy();

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoPgonEditor.h,v 1.1 2006/07/12 10:25:34 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -38,12 +38,12 @@ protected:
    virtual void CreateEdges();
 
 public:
-   TGeoPgonEditor(const TGWindow *p, Int_t id,               
+   TGeoPgonEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoPgonEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
    
    void           DoNedges();
    virtual void   DoApply();

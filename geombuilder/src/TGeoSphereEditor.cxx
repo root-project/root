@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoSphereEditor.cxx,v 1.5 2006/06/24 08:30:18 brun Exp $
+// @(#):$Name:  $:$Id: TGeoSphereEditor.cxx,v 1.6 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -49,9 +49,9 @@ enum ETGeoSphereWid {
 };
 
 //______________________________________________________________________________
-TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for sphere editor
    fShape   = 0;
@@ -61,8 +61,6 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t id, Int_t width,
    fIsShapeEditable = kTRUE;
    fLock = kFALSE;
 
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
-      
    // TextEntry for shape name
    MakeTitle("Name");
    fShapeName = new TGTextEntry(this, new TGTextBuffer(50), kSPHERE_NAME);
@@ -178,17 +176,6 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t id, Int_t width,
    fUndo->Associate(this);
    AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoSphere::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -202,17 +189,6 @@ TGeoSphereEditor::~TGeoSphereEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoSphere::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -235,16 +211,14 @@ void TGeoSphereEditor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoSphereEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoSphereEditor::SetModel(TObject* obj)
 {
    // Connect to a given sphere.
    if (obj == 0 || (obj->IsA()!=TGeoSphere::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoSphere*)fModel;
+   fShape = (TGeoSphere*)obj;
    fRmini = fShape->GetRmin();
    fRmaxi = fShape->GetRmax();
    fPhi1i = fShape->GetPhi1();

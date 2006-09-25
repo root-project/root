@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTrd2Editor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTrd2Editor.h,v 1.2 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -22,8 +22,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoTrd2;
@@ -36,7 +36,7 @@ class TGTextButton;
 class TGCheckButton;
 class TString;
 
-class TGeoTrd2Editor : public TGedFrame {
+class TGeoTrd2Editor : public TGeoGedFrame {
 
 protected:
 
@@ -49,7 +49,7 @@ protected:
    TGeoTrd2            *fShape;             // Shape object
    Bool_t               fIsModified;        // Flag that volume was modified
    Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
-   TGeoTabManager      *fTabMgr;            // Tab manager
+
    TGTextEntry         *fShapeName;         // Shape name text entry
    TGNumberEntry       *fEDx1;              // Number entry for  DX1
    TGNumberEntry       *fEDx2;              // Number entry for  DX2 
@@ -64,12 +64,12 @@ protected:
    Bool_t       IsDelayed() const;   
 
 public:
-   TGeoTrd2Editor(const TGWindow *p, Int_t id,               
+   TGeoTrd2Editor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoTrd2Editor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoDx1();
    void           DoDx2();

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoConeEditor.h,v 1.2 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoConeEditor.h,v 1.3 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -22,8 +22,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoCone;
@@ -37,7 +37,7 @@ class TGTextButton;
 class TGCheckButton;
 class TString;
 
-class TGeoConeEditor : public TGedFrame {
+class TGeoConeEditor : public TGeoGedFrame {
 
 protected:
 
@@ -50,7 +50,6 @@ protected:
    TGeoCone       *fShape;             // Shape object
    Bool_t          fIsModified;        // Flag that volume was modified
    Bool_t          fIsShapeEditable;   // Flag that the shape can be changed
-   TGeoTabManager *fTabMgr;            // Tab manager
    TGTextEntry    *fShapeName;         // Shape name text entry
    TGNumberEntry  *fERmin1;            // Number entry for rmin1
    TGNumberEntry  *fERmin2;            // Number entry for rmin2
@@ -67,12 +66,12 @@ protected:
    Bool_t       IsDelayed() const;   
 
 public:
-   TGeoConeEditor(const TGWindow *p, Int_t id,               
+   TGeoConeEditor(const TGWindow *p = 0,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoConeEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoRmin1();
    void           DoRmin2();
@@ -111,12 +110,12 @@ protected:
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
 
 public:
-   TGeoConeSegEditor(const TGWindow *p, Int_t id,               
+   TGeoConeSegEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoConeSegEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoPhi();
    void           DoPhi1();

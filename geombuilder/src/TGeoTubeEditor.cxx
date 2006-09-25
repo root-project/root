@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.5 2006/06/24 08:30:18 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.6 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -48,9 +48,9 @@ enum ETGeoTubeWid {
 };
 
 //______________________________________________________________________________
-TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for tube editor
    fShape   = 0;
@@ -59,8 +59,6 @@ TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t id, Int_t width,
    fIsModified = kFALSE;
    fIsShapeEditable = kTRUE;
 
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
-      
    // TextEntry for shape name
    MakeTitle("Name");
    fShapeName = new TGTextEntry(this, new TGTextBuffer(50), kTUBE_NAME);
@@ -127,17 +125,6 @@ TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t id, Int_t width,
    fUndo->Associate(this);
    AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
-   
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoTube::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -151,17 +138,6 @@ TGeoTubeEditor::~TGeoTubeEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoTube::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -182,16 +158,14 @@ void TGeoTubeEditor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoTubeEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoTubeEditor::SetModel(TObject* obj)
 {
    // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTube::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoTube*)fModel;
+   fShape = (TGeoTube*)obj;
    fRmini = fShape->GetRmin();
    fRmaxi = fShape->GetRmax();
    fDzi = fShape->GetDz();
@@ -329,9 +303,9 @@ enum ETGeoTubeSegWid {
 };
 
 //______________________________________________________________________________
-TGeoTubeSegEditor::TGeoTubeSegEditor(const TGWindow *p, Int_t id, Int_t width,
-                                   Int_t height, UInt_t options, Pixel_t back)
-                 : TGeoTubeEditor(p, id, width, height, options | kVerticalFrame, back)
+TGeoTubeSegEditor::TGeoTubeSegEditor(const TGWindow *p, Int_t width,
+                                     Int_t height, UInt_t options, Pixel_t back)
+  : TGeoTubeEditor(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for tube segment editor
    fLock = kFALSE;
@@ -367,17 +341,6 @@ TGeoTubeSegEditor::TGeoTubeSegEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    TGeoTabManager::MoveFrame(fDFrame, this);
    TGeoTabManager::MoveFrame(fBFrame, this);
-   
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoTubeSeg::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -391,17 +354,6 @@ TGeoTubeSegEditor::~TGeoTubeSegEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoTubeSeg::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -421,16 +373,14 @@ void TGeoTubeSegEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
-void TGeoTubeSegEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoTubeSegEditor::SetModel(TObject* obj)
 {
    // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTubeSeg::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoTube*)fModel;
+   fShape = (TGeoTube*)obj;
    fRmini = fShape->GetRmin();
    fRmaxi = fShape->GetRmax();
    fDzi = fShape->GetDz();
@@ -580,9 +530,9 @@ enum ETGeoCtubSegWid {
 };
 
 //______________________________________________________________________________
-TGeoCtubEditor::TGeoCtubEditor(const TGWindow *p, Int_t id, Int_t width,
+TGeoCtubEditor::TGeoCtubEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
-               : TGeoTubeSegEditor(p, id, width, height, options, back)
+  : TGeoTubeSegEditor(p, width, height, options, back)
 {
    // Constructor for cut tube editor
    MakeTitle("Theta/phi low");
@@ -647,17 +597,6 @@ TGeoCtubEditor::TGeoCtubEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 2));
    TGeoTabManager::MoveFrame(fDFrame, this);
    TGeoTabManager::MoveFrame(fBFrame, this);
-   
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoCtub::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -671,30 +610,17 @@ TGeoCtubEditor::~TGeoCtubEditor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-
-   TClass *cl = TGeoCtub::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
-void TGeoCtubEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoCtubEditor::SetModel(TObject* obj)
 {
    // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoCtub::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoTube*)fModel;
+   fShape = (TGeoTube*)obj;
    fRmini = fShape->GetRmin();
    fRmaxi = fShape->GetRmax();
    fDzi = fShape->GetDz();

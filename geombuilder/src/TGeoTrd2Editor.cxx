@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTrd2Editor.cxx,v 1.3 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTrd2Editor.cxx,v 1.4 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -47,9 +47,9 @@ enum ETGeoTrd2Wid {
 };
 
 //______________________________________________________________________________
-TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t id, Int_t width,
+TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
+   : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor for trd2 editor
    fShape   = 0;
@@ -58,8 +58,6 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t id, Int_t width,
    fIsModified = kFALSE;
    fIsShapeEditable = kFALSE;
 
-   fTabMgr = TGeoTabManager::GetMakeTabManager(gPad, fTab);
-      
    // TextEntry for shape name
    MakeTitle("Name");
    fShapeName = new TGTextEntry(this, new TGTextBuffer(50), kTRD2_NAME);
@@ -151,17 +149,6 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t id, Int_t width,
    fUndo->Associate(this);
    AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
    fUndo->SetSize(fApply->GetSize());
-
-   // Initialize layout
-   MapSubwindows();
-   Layout();
-   MapWindow();
-
-   TClass *cl = TGeoTrd2::Class();
-   TGedElement *ge = new TGedElement;
-   ge->fGedFrame = this;
-   ge->fCanvas = 0;
-   cl->GetEditorList()->Add(ge);
 }
 
 //______________________________________________________________________________
@@ -175,16 +162,6 @@ TGeoTrd2Editor::~TGeoTrd2Editor()
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
    Cleanup();   
-   TClass *cl = TGeoTrd2::Class();
-   TIter next1(cl->GetEditorList()); 
-   TGedElement *ge;
-   while ((ge=(TGedElement*)next1())) {
-      if (ge->fGedFrame==this) {
-         cl->GetEditorList()->Remove(ge);
-         delete ge;
-         next1.Reset();
-      }
-   }      
 }
 
 //______________________________________________________________________________
@@ -209,16 +186,14 @@ void TGeoTrd2Editor::ConnectSignals2Slots()
 
 
 //______________________________________________________________________________
-void TGeoTrd2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
+void TGeoTrd2Editor::SetModel(TObject* obj)
 {
    // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTrd2::Class())) {
       SetActive(kFALSE);
       return;                 
    } 
-   fModel = obj;
-   fPad = pad;
-   fShape = (TGeoTrd2*)fModel;
+   fShape = (TGeoTrd2*)obj;
    fDxi1 = fShape->GetDx1();
    fDxi2 = fShape->GetDx2();
    fDyi1 = fShape->GetDy1();

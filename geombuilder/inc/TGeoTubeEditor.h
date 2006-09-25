@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTubeEditor.h,v 1.2 2006/06/23 16:00:13 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTubeEditor.h,v 1.3 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -22,8 +22,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoTube;
@@ -36,7 +36,7 @@ class TGTextButton;
 class TGCheckButton;
 class TString;
 
-class TGeoTubeEditor : public TGedFrame {
+class TGeoTubeEditor : public TGeoGedFrame {
 
 protected:
 
@@ -47,7 +47,7 @@ protected:
    TGeoTube       *fShape;             // Shape object
    Bool_t          fIsModified;        // Flag that volume was modified
    Bool_t          fIsShapeEditable;   // Flag that the shape can be changed
-   TGeoTabManager *fTabMgr;            // Tab manager
+
    TGTextEntry    *fShapeName;         // Shape name text entry
    TGNumberEntry  *fERmin;             // Number entry for rmin
    TGNumberEntry  *fERmax;             // Number entry for rmax
@@ -62,12 +62,12 @@ protected:
    Bool_t       IsDelayed() const;   
 
 public:
-   TGeoTubeEditor(const TGWindow *p, Int_t id,               
+   TGeoTubeEditor(const TGWindow *p = 0,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoTubeEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoRmin();
    void           DoRmax();
@@ -104,12 +104,12 @@ protected:
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
 
 public:
-   TGeoTubeSegEditor(const TGWindow *p, Int_t id,               
+   TGeoTubeSegEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoTubeSegEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoPhi();
    void           DoPhi1();
@@ -141,12 +141,12 @@ protected:
    TGNumberEntry   *fEPhhi;             // Number entry for phhi
 
 public:
-   TGeoCtubEditor(const TGWindow *p, Int_t id,               
+   TGeoCtubEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoCtubEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoThlo();
    void           DoPhlo();

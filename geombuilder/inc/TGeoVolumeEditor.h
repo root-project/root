@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoVolumeEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoVolumeEditor.h,v 1.2 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -23,8 +23,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoManager;
@@ -45,12 +45,11 @@ class TGShutter;
 class TGShutterItem;
 class TGeoTabManager;
 
-class TGeoVolumeEditor : public TGedFrame {
+class TGeoVolumeEditor : public TGeoGedFrame {
 
 protected:
 
    TGeoManager         *fGeometry;          // Selected geometry manager
-   TGeoTabManager      *fTabMgr;            // Tab manager
    TGeoVolume          *fVolume;            // Volume object
    Bool_t               fIsModified;        // Flag that volume was modified
    Bool_t               fIsAssembly;        // Flag that the volume is an assembly
@@ -95,12 +94,13 @@ protected:
    virtual void ConnectSignals2Slots();     // Connect the signals to the slots
 
 public:
-   TGeoVolumeEditor(const TGWindow *p, Int_t id,               
+   TGeoVolumeEditor(const TGWindow *p = 0,
                     Int_t width = 140, Int_t height = 30,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoVolumeEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
+   virtual void   ActivateBaseClassEditors(TClass* cl);
 
    void           DoAddNode();
    void           DoVolumeName();

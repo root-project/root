@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTrapEditor.h,v 1.1 2006/07/12 10:25:34 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTrapEditor.h,v 1.2 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -22,8 +22,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoTrap;
@@ -36,7 +36,7 @@ class TGTextButton;
 class TGCheckButton;
 class TString;
 
-class TGeoTrapEditor : public TGedFrame {
+class TGeoTrapEditor : public TGeoGedFrame {
 
 protected:
 
@@ -52,7 +52,7 @@ protected:
    TGeoTrap            *fShape;             // Shape object
    Bool_t               fIsModified;        // Flag that volume was modified
    Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
-   TGeoTabManager      *fTabMgr;            // Tab manager
+
    TGTextEntry         *fShapeName;         // Shape name text entry
    TGNumberEntry       *fEH1;               // Number entry for  H1 
    TGNumberEntry       *fEBl1;              // Number entry for  Bl1
@@ -73,12 +73,12 @@ protected:
    Bool_t       IsDelayed() const;   
 
 public:
-   TGeoTrapEditor(const TGWindow *p, Int_t id,               
+   TGeoTrapEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoTrapEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoH1();
    void           DoBl1();
@@ -105,12 +105,12 @@ protected:
    TGNumberEntry       *fETwist;            // Number entry for  H1 
    
 public:
-   TGeoGtraEditor(const TGWindow *p, Int_t id,               
+   TGeoGtraEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoGtraEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
   
    void           DoTwist();
    virtual void   DoApply();

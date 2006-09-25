@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoTorusEditor.h,v 1.1 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -22,8 +22,8 @@
 #ifndef ROOT_TGButton
 #include "TGWidget.h"
 #endif
-#ifndef ROOT_TGedFrame
-#include "TGedFrame.h"
+#ifndef ROOT_TGeoGedFrame
+#include "TGeoGedFrame.h"
 #endif
 
 class TGeoTorus;
@@ -36,7 +36,7 @@ class TGTextButton;
 class TGCheckButton;
 class TString;
 
-class TGeoTorusEditor : public TGedFrame {
+class TGeoTorusEditor : public TGeoGedFrame {
 
 protected:
 
@@ -49,7 +49,7 @@ protected:
    TGeoTorus           *fShape;             // Shape object
    Bool_t               fIsModified;        // Flag that volume was modified
    Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
-   TGeoTabManager      *fTabMgr;            // Tab manager
+
    TGTextEntry         *fShapeName;         // Shape name text entry
    TGNumberEntry       *fER;                // Number entry for  R
    TGNumberEntry       *fERmin;             // Number entry for  Rmin
@@ -64,12 +64,12 @@ protected:
    Bool_t       IsDelayed() const;   
 
 public:
-   TGeoTorusEditor(const TGWindow *p, Int_t id,               
+   TGeoTorusEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoTorusEditor();
-   virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetModel(TObject *obj);
 
    void           DoR();
    void           DoRmin();
