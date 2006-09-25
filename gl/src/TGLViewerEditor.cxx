@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "TGedEditor.h"
 #include "TGNumberEntry.h"
 #include "TGButtonGroup.h"
 #include "TVirtualGL.h"
@@ -16,117 +17,55 @@
 
 ClassImp(TGLViewerEditor)
 
+
 //A lot of raw pointers/naked new-expressions - good way to discredit C++ (or C++ programmer :) ) :(
 //ROOT has system to cleanup - I'll try to use it
 
 //______________________________________________________________________________
-TGLViewerEditor::TGLViewerEditor(const TGWindow *p, Int_t id, Int_t width, Int_t height, UInt_t options, Pixel_t back)
-                  : TGedFrame(p, id, width, height, options | kVerticalFrame, back),
-                    fGuidesTabEl(0),
-                    fClipTabEl(0),
-                    fGuidesFrame(0),
-                    fClipFrame(0),
-                    fLightFrame(0),
-                    fTopLight(0),
-                    fRightLight(0),
-                    fBottomLight(0),
-                    fLeftLight(0),
-                    fFrontLight(0),
-                    fAxesContainer(0),
-                    fAxesNone(0),
-                    fAxesEdge(0),
-                    fAxesOrigin(0),
-                    fRefContainer(0),
-                    fReferenceOn(0),
-                    fReferencePosX(0),
-                    fReferencePosY(0),
-                    fReferencePosZ(0),
-                    fCurrentClip(kClipNone),
-                    fTypeButtons(0),
-                    fPlanePropFrame(0),
-                    fPlaneProp(),
-                    fBoxPropFrame(0),
-                    fBoxProp(),
-                    fEdit(0),
-                    fApplyButton(0),
-                    fViewer(0),
-                    fIsInPad(kTRUE)
+TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, UInt_t options, Pixel_t back) :
+   TGedFrame(p,  width, height, options | kVerticalFrame, back),
+   fGuidesFrame(0), 
+   fClipFrame(0),
+   fLightFrame(0),
+   fTopLight(0),
+   fRightLight(0),
+   fBottomLight(0),
+   fLeftLight(0),
+   fFrontLight(0),
+   fAxesContainer(0),
+   fAxesNone(0),
+   fAxesEdge(0),
+   fAxesOrigin(0),
+   fRefContainer(0),
+   fReferenceOn(0),
+   fReferencePosX(0),
+   fReferencePosY(0),
+   fReferencePosZ(0),
+   fCurrentClip(kClipNone),
+   fTypeButtons(0),
+   fPlanePropFrame(0),
+   fPlaneProp(),
+   fBoxPropFrame(0),
+   fBoxProp(),
+   fEdit(0),
+   fApplyButton(0),
+   fViewer(0),
+   fIsInPad(kTRUE)
 {
-   // Create tabs.
-   
+  //  Constructor.
+
    CreateLightsTab();
    CreateGuidesTab();
    CreateClippingTab();
-
-   fTab->Layout();
-   fTab->MapSubwindows();
-   //Register editor
-   TGedElement *ged = new TGedElement;
-   ged->fGedFrame = this;
-   ged->fCanvas = 0;
-   TGLViewer::Class()->GetEditorList()->Add(ged);
 }
 
-
 //______________________________________________________________________________
-TGLViewerEditor::TGLViewerEditor(const TGWindow *p)
-                  : TGedFrame(p, 0, 140, 30, kChildFrame | kVerticalFrame, GetDefaultFrameBackground()),
-                    fGuidesTabEl(0),
-                    fClipTabEl(0),
-                    fGuidesFrame(0),
-                    fClipFrame(0),
-                    fLightFrame(0),
-                    fTopLight(0),
-                    fRightLight(0),
-                    fBottomLight(0),
-                    fLeftLight(0),
-                    fFrontLight(0),
-                    fAxesContainer(0),
-                    fAxesNone(0),
-                    fAxesEdge(0),
-                    fAxesOrigin(0),
-                    fRefContainer(0),
-                    fReferenceOn(0),
-                    fReferencePosX(0),
-                    fReferencePosY(0),
-                    fReferencePosZ(0),
-                    fCurrentClip(kClipNone),
-                    fTypeButtons(0),
-                    fPlanePropFrame(0),
-                    fPlaneProp(),
-                    fBoxPropFrame(0),
-                    fBoxProp(),
-                    fEdit(0),
-                    fApplyButton(0),
-                    fViewer(0),
-                    fIsInPad(kFALSE)
-{
-   // Constructor. Create tabs.
-   
-   CreateLightsTab();
-   CreateGuidesTab();
-   CreateClippingTab();
 
-   fTab->Layout();
-   fTab->MapSubwindows();
-}
-
-
-//______________________________________________________________________________
 TGLViewerEditor::~TGLViewerEditor()
 {
    // Destructor.
-   
-   SetCleanup(kDeepCleanup);
-   Cleanup();
 
-   fGuidesFrame->SetCleanup(kDeepCleanup);
-   fGuidesFrame->Cleanup();
-
-   fClipFrame->SetCleanup(kDeepCleanup);
-   fClipFrame->Cleanup();
 }
-
 
 //______________________________________________________________________________
 void TGLViewerEditor::ConnectSignals2Slots()
@@ -159,47 +98,40 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-
 //______________________________________________________________________________
-void TGLViewerEditor::SetModel(TVirtualPad *pad, TObject *obj, Int_t)
+void TGLViewerEditor::SetModel(TObject* obj)
 {
    // Sets model or disables/hides viewer.
 
    fViewer = 0;
-   fModel = 0;
-   fPad = 0;
-
-   if (!obj || !obj->InheritsFrom(TGLViewer::Class())) {
-      SetActive(kFALSE);
-      fGuidesTabEl->UnmapWindow();
-      fGuidesFrame->UnmapWindow();
-      fClipTabEl->UnmapWindow();
-      fClipFrame->UnmapWindow();
-      fTab->SetTab(0);
-      return;
-   } else {
-      fGuidesTabEl->MapWindow();
-      fGuidesFrame->MapWindow();
-      fClipTabEl->MapWindow();
-      fClipFrame->MapWindow();
-   }
-
+  
    fViewer = static_cast<TGLViewer *>(obj);
-   if (fIsInPad)
-      fViewer->SetPadEditor(this);
-   fModel = obj;
-   fPad = pad;
-   //Set guides controls' values
+   fIsInPad = (fViewer->GetDev() != -1);
+
    SetGuides();
-   //Set clipping control values
    SetCurrentClip();
 
    if (fInit)
       ConnectSignals2Slots();
 
-   SetActive();
-}
 
+   // read lights
+   UInt_t ls =  fViewer->GetLightState();
+   if(ls & TGLViewer::kLightTop)
+      fTopLight->SetState(kButtonDown);
+
+   if(ls & TGLViewer::kLightRight)
+      fRightLight->SetState(kButtonDown);
+
+   if(ls & TGLViewer::kLightBottom)
+      fBottomLight->SetState(kButtonDown);
+
+   if(ls & TGLViewer::kLightLeft)
+      fLeftLight->SetState(kButtonDown);
+
+   if(ls & TGLViewer::kLightFront)
+      fFrontLight->SetState(kButtonDown);
+}
 
 //______________________________________________________________________________
 void TGLViewerEditor::DoButton()
@@ -208,7 +140,6 @@ void TGLViewerEditor::DoButton()
    
    fViewer->ToggleLight(TGLViewer::ELight(((TGButton *) gTQSender)->WidgetId()));
 }
-
 
 //______________________________________________________________________________
 void TGLViewerEditor::UpdateViewerGuides()
@@ -229,14 +160,13 @@ void TGLViewerEditor::UpdateViewerGuides()
    UpdateReferencePos();
 }
 
-
 //______________________________________________________________________________
 void TGLViewerEditor::CreateLightsTab()
 {
    //Creates "Lights" tab.
 
    fLightFrame = new TGGroupFrame(this, "Light sources:", kLHintsTop | kLHintsCenterX);
-   fLightFrame->SetCleanup(kDeepCleanup);
+
    fLightFrame->SetTitlePos(TGGroupFrame::kLeft);
    AddFrame(fLightFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));//-
 
@@ -244,15 +174,10 @@ void TGLViewerEditor::CreateLightsTab()
    fLightFrame->SetLayoutManager(ml);
 
    fTopLight = new TGCheckButton(fLightFrame, "Top", TGLViewer::kLightTop);
-   fTopLight->SetState(kButtonDown);
    fRightLight = new TGCheckButton(fLightFrame, "Right", TGLViewer::kLightRight);
-   fRightLight->SetState(kButtonDown);
    fBottomLight = new TGCheckButton(fLightFrame, "Bottom", TGLViewer::kLightBottom);
-   fBottomLight->SetState(kButtonDown);
    fLeftLight = new TGCheckButton(fLightFrame, "Left", TGLViewer::kLightLeft);
-   fLeftLight->SetState(kButtonDown);
    fFrontLight = new TGCheckButton(fLightFrame, "Front", TGLViewer::kLightFront);
-   fFrontLight->SetState(kButtonDown);
 
    fLightFrame->AddFrame(fTopLight);
    fLightFrame->AddFrame(fRightLight);
@@ -261,39 +186,25 @@ void TGLViewerEditor::CreateLightsTab()
    fLightFrame->AddFrame(fFrontLight);
 }
 
-
 //______________________________________________________________________________
 void TGLViewerEditor::CreateGuidesTab()
 {
    // Create "Guides" tab.
-   
-   fGuidesFrame = fTab->AddTab("Guides");
-   fGuidesTabEl = fTab->GetTabTab("Guides");
+   fGuidesFrame = new TGVerticalFrame();
+   AddExtraTab(new TGedSubFrame(TString("Guides"), fGuidesFrame));
 
-   TGCompositeFrame *nameBin = new TGCompositeFrame(fGuidesFrame, 145, 10, kHorizontalFrame | kFixedWidth | kOwnBackground);
-   nameBin->SetCleanup(kDeepCleanup);
-   nameBin->AddFrame(new TGLabel(nameBin,"Name"), new TGLayoutHints(kLHintsLeft, 1, 1, 5, 0));
-   nameBin->AddFrame(new TGHorizontal3DLine(nameBin), new TGLayoutHints(kLHintsExpandX, 5, 5, 12, 7));
-
-   fGuidesFrame->AddFrame(nameBin, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-   TGLabel *nameLabel = new TGLabel(fGuidesFrame, "TGLViewer::TGLViewer");
-   Pixel_t color;
-   gClient->GetColorByName("#ff0000", color);
-   nameLabel->SetTextColor(color, kFALSE);
-   fGuidesFrame->AddFrame(nameLabel, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-
+   // axes  
    fAxesContainer = new TGButtonGroup(fGuidesFrame, "Axes");
-   fAxesContainer->SetCleanup(kDeepCleanup);
-
    fAxesNone = new TGRadioButton(fAxesContainer, "None");
    fAxesEdge = new TGRadioButton(fAxesContainer, "Edge");
    fAxesOrigin = new TGRadioButton(fAxesContainer, "Origin");
-
    fGuidesFrame->AddFrame(fAxesContainer, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+  
+
    //Reference container
    fRefContainer = new TGGroupFrame(fGuidesFrame, "Reference Marker");
-   fRefContainer->SetCleanup(kDeepCleanup);
    fGuidesFrame->AddFrame(fRefContainer, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+ 
    //Reference options
    fReferenceOn = new TGCheckButton(fRefContainer, "Show");
    fRefContainer->AddFrame(fReferenceOn, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
@@ -309,7 +220,7 @@ void TGLViewerEditor::CreateGuidesTab()
    fRefContainer->AddFrame(fReferencePosY, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
 
    label = new TGLabel(fRefContainer, "Z");
-   fRefContainer->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 3, 3));
+   fRefContainer->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 3, 3));  
    fReferencePosZ = new TGNumberEntry(fRefContainer, 0.0, 8);
    fRefContainer->AddFrame(fReferencePosZ, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
 }
@@ -322,29 +233,14 @@ namespace
    };
 }
 
-
 //______________________________________________________________________________
 void TGLViewerEditor::CreateClippingTab()
 {
    // Create GUI controls - clip type (none/plane/box) and plane/box properties.
-   
-   fClipFrame = fTab->AddTab("Clipping");
-   fClipTabEl = fTab->GetTabTab("Clipping");
-   //
-   TGCompositeFrame *nameBin = new TGCompositeFrame(fClipFrame, 145, 10, kHorizontalFrame | kFixedWidth | kOwnBackground);
-   nameBin->SetCleanup(kDeepCleanup);
-   nameBin->AddFrame(new TGLabel(nameBin,"Name"), new TGLayoutHints(kLHintsLeft, 1, 1, 5, 0));
-   nameBin->AddFrame(new TGHorizontal3DLine(nameBin), new TGLayoutHints(kLHintsExpandX, 5, 5, 12, 7));
-
-   fClipFrame->AddFrame(nameBin, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-   TGLabel *nameLabel = new TGLabel(fClipFrame, "TGLViewer::TGLViewer");
-   Pixel_t color;
-   gClient->GetColorByName("#ff0000", color);
-   nameLabel->SetTextColor(color, kFALSE);
-   fClipFrame->AddFrame(nameLabel, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   fClipFrame = new TGVerticalFrame();
+   AddExtraTab(new TGedSubFrame(TString("Clipping"), fClipFrame));
 
    fTypeButtons = new TGButtonGroup(fClipFrame, "Clip Type");
-   fTypeButtons->SetCleanup(kDeepCleanup);
    new TGRadioButton(fTypeButtons, "None");
    new TGRadioButton(fTypeButtons, "Plane");
    new TGRadioButton(fTypeButtons, "Box");
@@ -356,7 +252,7 @@ void TGLViewerEditor::CreateClippingTab()
 
    // Plane properties
    fPlanePropFrame = new TGCompositeFrame(fClipFrame);
-   fPlanePropFrame->SetCleanup(kDeepCleanup);
+   //fPlanePropFrame->SetCleanup(kDeepCleanup);
    fClipFrame->AddFrame(fPlanePropFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
 
    static const char * const planeStr[] = { "aX + ", "bY +", "cZ + ", "d = 0" };
@@ -370,7 +266,6 @@ void TGLViewerEditor::CreateClippingTab()
 
    // Box properties
    fBoxPropFrame = new TGCompositeFrame(fClipFrame);
-   fBoxPropFrame->SetCleanup(kDeepCleanup);
    fClipFrame->AddFrame(fBoxPropFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
 
    static const char * const boxStr[] = {"Center X", "Center Y", "Center Z", "Length X", "Length Y", "Length Z" };
@@ -381,12 +276,12 @@ void TGLViewerEditor::CreateClippingTab()
       fBoxProp[i] = new TGNumberEntry(fBoxPropFrame, 1., 8);
       fBoxPropFrame->AddFrame(fBoxProp[i], new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
    }
-
+	
    // Apply button
    fApplyButton = new TGTextButton(fClipFrame, "Apply", kApplyId);
    fClipFrame->AddFrame(fApplyButton, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-}
 
+}
 
 //______________________________________________________________________________
 void TGLViewerEditor::UpdateReferencePos()
@@ -399,7 +294,6 @@ void TGLViewerEditor::UpdateReferencePos()
    fReferencePosZ->SetState(fReferenceOn->IsDown());
 }
 
-
 //______________________________________________________________________________
 void TGLViewerEditor::ClipValueChanged()
 {
@@ -407,7 +301,6 @@ void TGLViewerEditor::ClipValueChanged()
    
    fApplyButton->SetState(kButtonUp);
 }
-
 
 //______________________________________________________________________________
 void TGLViewerEditor::ClipTypeChanged(Int_t id)
@@ -430,8 +323,9 @@ void TGLViewerEditor::ClipTypeChanged(Int_t id)
    if (gGLManager && fIsInPad)
       gGLManager->MarkForDirectCopy(fViewer->GetDev(), kTRUE);
    fViewer->RequestDraw();
-}
 
+   fGedEditor->Layout();
+}
 
 //______________________________________________________________________________
 void TGLViewerEditor::UpdateViewerClip()
@@ -455,17 +349,20 @@ void TGLViewerEditor::UpdateViewerClip()
    fViewer->RequestDraw();
 }
 
-
 //______________________________________________________________________________
 void TGLViewerEditor::SetCurrentClip()
 {
    // Set current (active) GUI clip type from 'type'.
-
    Bool_t edit = kFALSE;
    fViewer->GetCurrentClip(fCurrentClip, edit);
    fEdit->SetDown(edit);
    fApplyButton->SetState(kButtonDisabled);
 
+
+   // Button ids run from 1
+   if (TGButton *btn = fTypeButtons->GetButton(fCurrentClip+1)){
+      btn->SetDown();
+   }
    switch(fCurrentClip) {
    case(kClipNone):
       fTypeButtons->SetButton(1);
@@ -500,7 +397,6 @@ void TGLViewerEditor::SetCurrentClip()
    fViewer->RequestDraw();
 }
 
-
 //______________________________________________________________________________
 void TGLViewerEditor::SetGuides()
 {
@@ -521,7 +417,6 @@ void TGLViewerEditor::SetGuides()
    fReferencePosZ->SetNumber(referencePos[2]);
    UpdateReferencePos();
 }
-
 
 //______________________________________________________________________________
 void TGLViewerEditor::HideClippingGUI()

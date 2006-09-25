@@ -16,7 +16,7 @@ class TGNumberEntry;
 class TGButtonGroup;
 class TGroupFrame;
 class TGRadioButton;
-class TGTabElement;
+// class TGTabElement;
 class TGButton;
 class TGLViewer;
 class TGTab;
@@ -24,8 +24,6 @@ class TGTab;
 class TGLViewerEditor : public TGedFrame {
 private:
    //Pointers to manipulate with tabs
-   TGTabElement     *fGuidesTabEl;
-   TGTabElement     *fClipTabEl;
    TGCompositeFrame *fGuidesFrame;
    TGCompositeFrame *fClipFrame;
    //"Lights" tab's controls 
@@ -60,7 +58,7 @@ private:
    TGButton         *fApplyButton;
    //Model
    TGLViewer        *fViewer;
-   Bool_t	         fIsInPad;
+   Bool_t	     fIsInPad;
 
    void ConnectSignals2Slots();
    
@@ -72,16 +70,14 @@ private:
    void CreateClippingTab();
    
 public:
-   TGLViewerEditor(const TGWindow *p, Int_t id,
+   TGLViewerEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-         
-   TGLViewerEditor(const TGWindow *p);
                    
    ~TGLViewerEditor();
 
-   void SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void SetModel(TObject* obj);
    void SetGuides();
    void SetCurrentClip();
    //Lights manipulation
