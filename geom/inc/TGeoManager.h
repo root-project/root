@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.79 2006/05/02 18:25:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.80 2006/05/23 04:47:36 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -142,16 +142,17 @@ private :
    THashList            *fHashPNE;          //-> hash list of phisical node entries
 //--- private methods
 
-   void                   BuildCache(Bool_t dummy=kFALSE, Bool_t nodeid=kFALSE);
-   void                   BuildIdArray();
-   TGeoNode              *FindInCluster(Int_t *cluster, Int_t nc);
-   Int_t                  GetTouchedCluster(Int_t start, Double_t *point, Int_t *check_list,
-                                            Int_t ncheck, Int_t *result);
-   Bool_t                 IsLoopingVolumes() const     {return fLoopVolumes;}
-   void                   Init();
-   void                   SetLoopVolumes(Bool_t flag=kTRUE) {fLoopVolumes=flag;}
-   void                   SafetyOverlaps();
-   void                   Voxelize(Option_t *option = 0);
+   void                  BuildCache(Bool_t dummy=kFALSE, Bool_t nodeid=kFALSE);
+   void                  BuildIdArray();
+   TGeoNode             *FindInCluster(Int_t *cluster, Int_t nc);
+   Int_t                 GetTouchedCluster(Int_t start, Double_t *point, Int_t *check_list,
+                                           Int_t ncheck, Int_t *result);
+   Bool_t                IsLoopingVolumes() const     {return fLoopVolumes;}
+   void                  Init();
+   void                  SetLoopVolumes(Bool_t flag=kTRUE) {fLoopVolumes=flag;}
+   void                  SafetyOverlaps();
+   void                  UpdateElements();
+   void                  Voxelize(Option_t *option = 0);
 
 public:
    // constructors

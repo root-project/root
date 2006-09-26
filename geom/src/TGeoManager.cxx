@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.158 2006/06/11 12:56:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.159 2006/07/09 05:27:53 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -5406,11 +5406,48 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    if (!gGeoManager) return 0;
    if (!gROOT->GetListOfGeometries()->FindObject(gGeoManager)) gROOT->GetListOfGeometries()->Add(gGeoManager);
    if (!gROOT->GetListOfBrowsables()->FindObject(gGeoManager)) gROOT->GetListOfBrowsables()->Add(gGeoManager);
+   gGeoManager->UpdateElements();
    return gGeoManager;
 }
 
 //___________________________________________________________________________
+void TGeoManager::UpdateElements()
+{
+// Update element flags when geometry is loaded from a file.
+   if (!fElementTable) return;
+   TIter next(fMaterials);
+   TGeoMaterial *mat;
+   TGeoMixture *mix;
+   TGeoElement *elem, *elem_table;
+   Int_t i, nelem;
+   while ((mat=(TGeoMaterial*)next())) {
+      if (mat->IsMixture()) {
+         mix = (TGeoMixture*)mat;
+         nelem = mix->GetNelements();
+         for (i=0; i<nelem; i++) {
+            elem = mix->GetElement(i);
+            elem_table = fElementTable->GetElement(elem->Z());
+            if (elem != elem_table) {
+               elem_table->SetDefined(elem->IsDefined());
+               elem_table->SetUsed(elem->IsUsed());
+            } else {
+               elem_table->SetDefined();
+            }
+         }   
+      } else {
+         elem = mat->GetElement();
+         elem_table = fElementTable->GetElement(elem->Z());
+         if (elem != elem_table) {
+            elem_table->SetDefined(elem->IsDefined());
+            elem_table->SetUsed(elem->IsUsed());
+         } else {
+            elem_table->SetUsed();
+         }   
+      }
+   }
+}         
 
+//___________________________________________________________________________
 Int_t *TGeoManager::GetIntBuffer(Int_t length)
 {
 // Get a temporary buffer of Int_t*
