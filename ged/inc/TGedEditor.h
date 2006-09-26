@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.9 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.10 2006/09/25 13:31:54 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
@@ -104,7 +104,8 @@ public:
    virtual void   SetModel(TVirtualPad* pad, TObject* obj, Int_t event);
    virtual void   Show();
    virtual void   RecursiveRemove(TObject* obj);
-   ClassDef(TGedEditor,0) 
+
+   ClassDef(TGedEditor,0)  // ROOT graphics editor
 };
 
 #endif
