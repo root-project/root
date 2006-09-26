@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.23 2006/08/29 13:16:13 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.24 2006/09/25 13:43:21 rdm Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -22,7 +22,6 @@
 #include "TGFrame.h"
 #include "TGLabel.h"
 #include "TGMenu.h"
-#include "TGTab.h"
 #include "TGSplitter.h"
 #include "TColor.h"
 
