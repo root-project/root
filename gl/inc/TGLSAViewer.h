@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.14 2006/08/23 14:39:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.15 2006/09/25 13:43:21 rdm Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -24,7 +24,6 @@ class TGFrame;
 class TGCompositeFrame;
 class TGPopupMenu;
 class TGLSAFrame;
-class TGTab;
 
 class TGedEditor;
 class TGLRenderArea; // Remove - replace with TGLManager
@@ -93,13 +92,17 @@ public:
    TGLSAViewer(TGFrame * parent, TVirtualPad * pad);
    ~TGLSAViewer();
 
-   virtual const char* GetName() const { return "Pupil"; }
+   virtual const char* GetName() const { return "GLViewer"; }
 
    void   Show();
    void   Close();
 
    // GUI events - editors, frame etc
    Bool_t ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t);
+
+   TGLSAFrame*       GetFrame() const { return fFrame; }
+   TGCompositeFrame* GetLeftVerticalFrame() const { return fLeftVerticalFrame; }
+   TGedEditor*       GetGedEditor() const { return fGedEditor; }
 
    ClassDef(TGLSAViewer, 0) // Standalone GL viewer
 };
