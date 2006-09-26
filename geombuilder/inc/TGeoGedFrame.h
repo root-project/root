@@ -29,19 +29,4 @@ public:
    ClassDef(TGeoGedFrame, 0)
 };
 
-class TGedElement : public TObject {
-
-private:
-   TGedElement(const TGedElement&);             // not implemented
-   TGedElement& operator=(const TGedElement&);  // not implemented
-
-public:
-   TGedElement(): fGedFrame(0), fCanvas(0) { }
-
-   TGedFrame  *fGedFrame;   //object editor
-   TObject    *fCanvas;     //connected canvas (0 if disconnected)
-
-   ClassDef(TGedElement, 0); //editor element
-};
-
 #endif
