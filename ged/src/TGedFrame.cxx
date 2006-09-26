@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.13 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.14 2006/09/25 13:32:57 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
  
 /*************************************************************************
@@ -24,7 +24,8 @@
 #include "TCanvas.h"
 #include "TGLabel.h"
 #include "TGToolTip.h"
-#include "TGTab.h"
+#include "TGCanvas.h"
+#include "TGScrollBar.h"
 #include <snprintf.h>
 
 
@@ -191,8 +192,7 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t width,
                 new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    AddFrame(f1, new TGLayoutHints(kLHintsTop));
 
-   f2 = new TGCompositeFrame(this, 140, 20, kHorizontalFrame |
-                                            kFixedWidth);
+   f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame | kFixedWidth);
    fLabel = new TGLabel(f2, "");
    f2->AddFrame(fLabel, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
@@ -230,7 +230,7 @@ Bool_t TGedNameFrame::HandleCrossing(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TGedNameFrame::HandleButton(Event_t *event)
+Bool_t TGedNameFrame::HandleButton(Event_t */*event*/)
 {
    // Handle mouse button event.
 
@@ -238,7 +238,6 @@ Bool_t TGedNameFrame::HandleButton(Event_t *event)
   
    return kFALSE;
 }
-
 
 //______________________________________________________________________________
 void TGedNameFrame::SetModel(TObject* obj)
@@ -258,4 +257,15 @@ void TGedNameFrame::SetModel(TObject* obj)
    fLabel->SetText(new TGString(string));
    string = Form("Name: '%s'; Title: '%s'; Class: '%s'", obj->GetName(), obj->GetTitle(), obj->ClassName());
    fTip->SetText(string);
+
+   // Resize label-frame to a reasonable width.
+   {
+      TGCanvas     *canvas = fGedEditor->GetTGCanvas();
+      TGVScrollBar *vsb    = canvas->GetVScrollbar();
+      
+      Int_t hscrollw = (vsb && vsb->IsMapped()) ? vsb->GetWidth() : 0;
+      Int_t labwidth = TMath::Min(fLabel->GetDefaultSize().fWidth,
+                                  canvas->GetWidth() - 10 - hscrollw);
+      f2->SetWidth(TMath::Max(labwidth, 80));
+   }
 }
