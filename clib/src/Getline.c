@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.32 2005/04/18 16:05:48 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.33 2006/03/28 16:35:00 brun Exp $ */
 /* Author: */
 
 /*
@@ -238,7 +238,7 @@ char   *Getlinem(int mode, const char *prompt); /* allows reading char by char *
 void    Gl_config(const char *which, int value); /* set some options */
 void    Gl_setwidth(int w);          /* specify width of screen */
 void    Gl_windowchanged();          /* call after SIGWINCH signal */
-void    Gl_histinit(char *file);     /* read entries from old histfile */
+void    Gl_histinit(char *file); /* read entries from old histfile */
 void    Gl_histadd(char *buf);       /* adds entries to hist */
 
 int             (*Gl_in_hook)(char *buf) = 0;
@@ -1344,18 +1344,39 @@ gl_tab(char *buf, int offset, int *loc)
 #endif
 
 static int      hist_pos = 0, hist_last = 0;
-static char    *hist_buf[HIST_SIZE];
+static int      num_hist_size = HIST_SIZE, num_hist_save = HIST_SAVE;
+static char   **hist_buf = 0; //[HIST_SIZE];
 
 static void
 hist_init()
 {
     int i;
 
-    if (gl_savehist) return;
+    if (hist_buf != 0) 
+       return;
 
+    i = num_hist_size;
+    if (i == 0) 
+       i = 1;
+    hist_buf = malloc(i * sizeof(char*));
     hist_buf[0] = "";
-    for (i=1; i < HIST_SIZE; i++)
+    for (i=1; i < num_hist_size; i++)
         hist_buf[i] = (char *)0;
+}
+
+void
+Gl_histsize(int size, int save)
+{
+   num_hist_size = size;
+   if (num_hist_size < 0)
+      num_hist_size = 0;
+   num_hist_save = save;
+   if (num_hist_save > num_hist_size)
+      num_hist_save = -1;
+   if (num_hist_save < 0)
+      num_hist_save = 4 * num_hist_size / 5;
+   if (num_hist_size == 0)
+      num_hist_save = 0;
 }
 
 void
@@ -1369,7 +1390,8 @@ Gl_histinit(char *file)
 
    hist_init();
 
-   if (!strcmp(file, "-")) return;
+   if (!strcmp(file, "-") || num_hist_size == 0)
+      return;
 
    sprintf(gl_histfile, "%s", file);
 
@@ -1394,6 +1416,9 @@ Gl_histadd(char *buf)
     char *p = buf;
     int len;
 
+    if (num_hist_size == 0)
+       return;
+
     while (*p == ' ' || *p == '\t' || *p == '\n')
         p++;
     if (*p) {
@@ -1404,7 +1429,7 @@ Gl_histadd(char *buf)
             strncmp(prev, buf, len) != 0) {
             hist_buf[hist_last] = hist_save(buf);
             prev = hist_buf[hist_last];
-            hist_last = (hist_last + 1) % HIST_SIZE;
+            hist_last = (hist_last + 1) % num_hist_size;
             if (hist_buf[hist_last] && *hist_buf[hist_last]) {
                 free(hist_buf[hist_last]);
             }
@@ -1420,9 +1445,9 @@ Gl_histadd(char *buf)
                    fclose(fp);
                }
 
-               /* if more than HIST_SIZE lines, safe last HIST_SAVE commands
+               /* if more than num_hist_size lines, safe last num_hist_save commands
                   and delete the rest */
-               if (gl_savehist > HIST_SIZE) {
+               if (gl_savehist > num_hist_size) {
                   FILE *ftmp;
                   char tname[L_tmpnam];
                   char line[BUFSIZ];
@@ -1435,7 +1460,7 @@ Gl_histadd(char *buf)
                      while (fgets(line, BUFSIZ, fp)) {
                         nline++;
                         gl_savehist = 1;  /* prevent from becoming 0 */
-                        if (nline > HIST_SIZE-HIST_SAVE) {
+                        if (nline > num_hist_size-num_hist_save) {
                            gl_savehist++;
                            fprintf(ftmp, "%s", line);
                         }
@@ -1466,11 +1491,15 @@ hist_prev()
 /* loads previous hist entry into input buffer, sticks on first */
 {
     char *p = 0;
-    int   next = (hist_pos - 1 + HIST_SIZE) % HIST_SIZE;
+    int   next;
+    
+    if (num_hist_size > 0) {
+       next = (hist_pos - 1 + num_hist_size) % num_hist_size;
 
-    if (hist_buf[hist_pos] != 0 && next != hist_last) {
-        hist_pos = next;
-        p = hist_buf[hist_pos];
+       if (hist_buf[hist_pos] != 0 && next != hist_last) {
+           hist_pos = next;
+           p = hist_buf[hist_pos];
+       }
     }
     if (p == 0) {
         p = "";
@@ -1485,8 +1514,8 @@ hist_next()
 {
     char *p = 0;
 
-    if (hist_pos != hist_last) {
-        hist_pos = (hist_pos+1) % HIST_SIZE;
+    if (num_hist_size > 0 && hist_pos != hist_last) {
+        hist_pos = (hist_pos+1) % num_hist_size;
         p = hist_buf[hist_pos];
     }
     if (p == 0) {

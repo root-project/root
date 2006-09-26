@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.145 2006/06/21 16:18:26 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.146 2006/09/19 16:15:47 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -169,6 +169,13 @@ Rint.Logon:              rootlogon.C
 Rint.Logoff:             rootlogoff.C
 # Record session commands, set to "-" to turn off command recording.
 Rint.History:            $(HOME)/.root_hist
+# History file size, once HistSize is reached remove all but HistSave entries,
+# set to 0 to turn off command recording.
+# Can be overridden by environment variable ROOT_HIST=size[:save],
+# the ":save" part is optional.
+# Rint.HistSize:         500
+# Set to -1 for sensible default (80% of HistSize), set to 0 to disable history.
+# Rint.HistSave:         400
 
 # ACLiC customization.
 # ACLiC.Linkdef specifies the suffix that will be added to the script name to

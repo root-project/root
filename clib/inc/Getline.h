@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.h,v 1.6 2004/02/05 10:05:06 brun Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.h,v 1.7 2006/03/28 16:35:00 brun Exp $ */
 /* Author: */
 
 /*************************************************************************
@@ -25,6 +25,7 @@ char *Getlinem(EGetLineMode mode, const char *prompt);
 void Gl_config(const char *which, int value);
 void Gl_setwidth(int width);
 void Gl_windowchanged();
+void Gl_histsize(int size, int save);
 void Gl_histinit(char *file);
 void Gl_histadd(char *buf);
 int  Gl_eof();
