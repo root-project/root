@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.43 2006/07/20 07:23:35 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.44 2006/09/15 15:16:57 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -884,7 +884,7 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
 //
 // In case the function lies below (above) the data point, ey is ey_low (ey_high).
 //
-//  thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphasymmerrors
+//  thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphAsymmErrors
 //            University of Washington
 //            February 3, 2004
 //
@@ -933,11 +933,14 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
 
       exh = gr->GetErrorXhigh(bin);
       exl = gr->GetErrorXlow(bin);
-      ey  = gr->GetErrorY(bin);
+      if (fsum < 0)
+         ey = gr->GetErrorYhigh(bin);
+      else
+         ey = gr->GetErrorYlow(bin);
       if (exl < 0) exl = 0;
       if (exh < 0) exh = 0;
       if (ey < 0)  ey  = 0;
-      if (exh > 0 && exl > 0) {
+      if (exh > 0 || exl > 0) {
          //Without the "variance method", we had the 6 next lines instead
          // of the line above.
           //xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
