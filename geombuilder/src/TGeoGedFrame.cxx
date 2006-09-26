@@ -1,3 +1,6 @@
+// @(#)root/geombuilder:$Name:  $:$Id: TProof.h,v 1.88 2006/08/06 07:15:00 rdm Exp $
+// Author: Matevz Tadel   25/09/2006
+
 #include "TGeoGedFrame.h"
 #include "TGeoTabManager.h"
 #include "TGedEditor.h"

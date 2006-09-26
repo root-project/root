@@ -1,8 +1,10 @@
+// @(#)root/gl:$Name:  $:$Id: TProof.h,v 1.88 2006/08/06 07:15:00 rdm Exp $
+// Author: Matevz Tadel   25/09/2006
+
 #include <cstring>
 
 #include "TGLPShapeObjEditor.h"
 #include "TGedEditor.h"
-
 
 #include "TG3DLine.h"
 #include "TGButton.h"
@@ -64,11 +66,11 @@ Bool_t TGLMatView::HandleExpose(Event_t *event)
 ClassImp(TGLPShapeObjEditor)
 
 enum EGeometry {
-      kCenterX, 
-      kCenterY, 
-      kCenterZ, 
-      kScaleX, 
-      kScaleY, 
+      kCenterX,
+      kCenterY,
+      kCenterZ,
+      kScaleX,
+      kScaleY,
       kScaleZ,
       kTot
 };
@@ -84,7 +86,7 @@ enum EApplyButtonIds {
       kTBRight,
       kTBBottom,
       kTBLeft,
-      kTBFront,            
+      kTBFront,
       kTBa1,
       kTBGuide
 };
@@ -106,32 +108,31 @@ enum EGLEditorIdent {
 //______________________________________________________________________________
 TGLPShapeObjEditor::TGLPShapeObjEditor(const TGWindow *p,  Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p,  width, height, options | kVerticalFrame, back),
-
      fLb(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 2, 3, 3), //button
      fLe(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 0, 0, 3, 3), //entries
      fLl(kLHintsLeft, 0, 8, 6, 0), // labels
-     fLs(kLHintsTop | kLHintsCenterX, 2, 2, 0, 0),  ///sliders     
+     fLs(kLHintsTop | kLHintsCenterX, 2, 2, 0, 0),  ///sliders
      fIsActive(kTRUE), fGeoFrame(0),fGeoApplyButton(0),
-      fColorFrame(0),
+     fColorFrame(0),
      fRedSlider(0), fGreenSlider(0), fBlueSlider(0), fAlphaSlider(0), fShineSlider(0),
      fColorApplyButton(0), fColorApplyFamily(0),
      fIsLight(kFALSE), fRGBA(),
      fGLWin(0),
      fPShapeObj(0)
 {
-  // Constructor of TGLPhysicalShape editor GUI.
+   // Constructor of TGLPhysicalShape editor GUI.
 
    fRGBA[12] = 0.f, fRGBA[13] = 0.f, fRGBA[14] = 0.f;
    fRGBA[15] = 1.f, fRGBA[16] = 60.f;
 
    CreateColorControls();
    CreateGeoControls();
-} 
+}
 
 //______________________________________________________________________________
 TGLPShapeObjEditor::~TGLPShapeObjEditor()
 {
-   // Destroy color editor GUI component
+   // Destroy color editor GUI component.
    delete fMatView;
    gVirtualGL->DeleteContext(fCtx);
 }
@@ -139,8 +140,8 @@ TGLPShapeObjEditor::~TGLPShapeObjEditor()
 //______________________________________________________________________________
 void TGLPShapeObjEditor::SetModel(TObject* obj)
 {
-   //Sets model or disables/hides viewer
- 
+   // Sets model or disables/hides viewer.
+
    fPShapeObj = 0;
 
    fPShapeObj = static_cast<TGLPShapeObj *>(obj);
@@ -153,7 +154,7 @@ void TGLPShapeObjEditor::SetModel(TObject* obj)
 //______________________________________________________________________________
 void TGLPShapeObjEditor::SetCenter(const Double_t *c)
 {
-   // Set internal center data from 3 component 'c'
+   // Set internal center data from 3 component 'c'.
 
    fGeoApplyButton->SetState(kButtonDisabled);
    fGeomData[kCenterX]->SetNumber(c[0]);
@@ -164,7 +165,7 @@ void TGLPShapeObjEditor::SetCenter(const Double_t *c)
 //______________________________________________________________________________
 void TGLPShapeObjEditor::SetScale(const Double_t *s)
 {
-   // Set internal scale data from 3 component 'c'
+   // Set internal scale data from 3 component 'c'.
 
    fGeomData[kScaleX]->SetNumber(s[0]);
    fGeomData[kScaleY]->SetNumber(s[1]);
@@ -175,7 +176,7 @@ void TGLPShapeObjEditor::SetScale(const Double_t *s)
 void TGLPShapeObjEditor::GeoDisable()
 {
    // Disable "Apply" button.
-   
+
    fIsActive = kFALSE;
    fGeoApplyButton->SetState(kButtonDisabled);
 }
@@ -195,7 +196,7 @@ void TGLPShapeObjEditor::DoGeoButton()
       fPShapeObj->fViewer->SetSelectedGeom(trans,scale);
       if (wid == kTBa1) {
          fGeoApplyButton->SetState(kButtonDisabled);
-      } 
+      }
    }
 }
 
@@ -203,7 +204,7 @@ void TGLPShapeObjEditor::DoGeoButton()
 void TGLPShapeObjEditor::GetObjectData(Double_t *center, Double_t *scale)
 {
    // Extract the GUI object data, return center in 3 component 'center'
-   // scale in 3 component 'scale'
+   // scale in 3 component 'scale'.
 
    center[0] = fGeomData[kCenterX]->GetNumber();
    center[1] = fGeomData[kCenterY]->GetNumber();
@@ -216,7 +217,7 @@ void TGLPShapeObjEditor::GetObjectData(Double_t *center, Double_t *scale)
 //______________________________________________________________________________
 void TGLPShapeObjEditor::GeoValueSet(Long_t)
 {
-   // Process setting of value in edit box - activate 'Apply' button
+   // Process setting of value in edit box - activate 'Apply' button.
 
    if (!fIsActive)return;
    fGeoApplyButton->SetState(kButtonUp);
@@ -225,17 +226,18 @@ void TGLPShapeObjEditor::GeoValueSet(Long_t)
 //______________________________________________________________________________
 void TGLPShapeObjEditor::CreateGeoControls()
 {
-   // Create GUI for setting scale and position. 
+   // Create GUI for setting scale and position.
+
    fGeoFrame = new TGVerticalFrame();
    AddExtraTab(new TGedSubFrame(TString("Geometry"), fGeoFrame));
-   
+
    TGLabel *label=0;
    // postion containers
    TGGroupFrame* container = new TGGroupFrame(fGeoFrame, "Object position:");
    container->SetTitlePos(TGGroupFrame::kLeft);
-   fGeoFrame->AddFrame(container, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 8, 8, 3, 3));//- 
-   TGLayoutHints lh =  TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 0, 0, 0, 0); 
-   
+   fGeoFrame->AddFrame(container, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 8, 8, 3, 3));//-
+   TGLayoutHints lh =  TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 0, 0, 0, 0);
+
    TGHorizontalFrame* hf;
 
    hf = new TGHorizontalFrame(container);
@@ -243,7 +245,7 @@ void TGLPShapeObjEditor::CreateGeoControls()
    hf->AddFrame(label, new TGLayoutHints(fLl));
    fGeomData[kCenterX] = new TGNumberEntry(hf, 0.0, 8, kNExc);
    hf->AddFrame(fGeomData[kCenterX], new TGLayoutHints(fLe));
-   fGeomData[kCenterX]->Connect("ValueSet(Long_t)", "TGLPShapeObjEditor", 
+   fGeomData[kCenterX]->Connect("ValueSet(Long_t)", "TGLPShapeObjEditor",
                                 this, "GeoValueSet(Long_t)");
    container->AddFrame(hf, new TGLayoutHints(lh));
 
@@ -252,18 +254,18 @@ void TGLPShapeObjEditor::CreateGeoControls()
    hf->AddFrame(label, new TGLayoutHints(fLl));
    fGeomData[kCenterY] = new TGNumberEntry(hf, 0.0, 8, kNEyc);
    hf->AddFrame(fGeomData[kCenterY], new TGLayoutHints(fLe));
-   fGeomData[kCenterY]->Connect("ValueSet(Long_t)", "TGLPShapeObjEditor", 
+   fGeomData[kCenterY]->Connect("ValueSet(Long_t)", "TGLPShapeObjEditor",
                                 this, "GeoValueSet(Long_t)");
    container->AddFrame(hf, new TGLayoutHints(lh));
-  
+
    hf = new TGHorizontalFrame(container);
    hf->AddFrame(new TGLabel(hf, "Z:"), new TGLayoutHints(fLl));
    fGeomData[kCenterZ] = new TGNumberEntry(hf, 1.0, 8, kNEzc);
    hf->AddFrame(fGeomData[kCenterZ], new TGLayoutHints(fLe));
-   fGeomData[kCenterZ]->Connect("ValueSet(Long_t)", "TGLPShapeObjEditor", 
+   fGeomData[kCenterZ]->Connect("ValueSet(Long_t)", "TGLPShapeObjEditor",
                                 this, "GeoValueSet(Long_t)");
    container->AddFrame(hf, new TGLayoutHints(lh));
-     
+
    // Create object scale GUI
    TGGroupFrame* osf = new TGGroupFrame(fGeoFrame, "Object scale:", kLHintsTop | kLHintsCenterX);
    osf->SetTitlePos(TGGroupFrame::kLeft);
@@ -273,7 +275,7 @@ void TGLPShapeObjEditor::CreateGeoControls()
    hf->AddFrame(new TGLabel(hf, "X:"),new TGLayoutHints(fLl));
    fGeomData[kScaleX] = new TGNumberEntry(hf, 1.0, 5, kNExs);
    hf->AddFrame(fGeomData[kScaleX], new TGLayoutHints(fLe));
-   fGeomData[kScaleX]->Connect("ValueSet(Long_t)", "TGLPShapeObjEditor", 
+   fGeomData[kScaleX]->Connect("ValueSet(Long_t)", "TGLPShapeObjEditor",
                                this, "GeoValueSet(Long_t)");
    osf->AddFrame(hf, new TGLayoutHints(lh));
 
@@ -281,7 +283,7 @@ void TGLPShapeObjEditor::CreateGeoControls()
    hf->AddFrame(new TGLabel(hf, "Y:"),new TGLayoutHints(fLl));
    fGeomData[kScaleY] = new TGNumberEntry(hf, 1.0, 5, kNEys);
    hf->AddFrame(fGeomData[kScaleY], new TGLayoutHints(fLe));
-   fGeomData[kScaleY]->Connect("ValueSet(Long_t)", "TGLPShapeObjEditor", 
+   fGeomData[kScaleY]->Connect("ValueSet(Long_t)", "TGLPShapeObjEditor",
                                this, "GeoValueSet(Long_t)");
    osf->AddFrame(hf, new TGLayoutHints(lh));
 
@@ -289,18 +291,18 @@ void TGLPShapeObjEditor::CreateGeoControls()
    hf->AddFrame(new TGLabel(hf, "Z:"),new TGLayoutHints(fLl));
    fGeomData[kScaleZ] = new TGNumberEntry(hf, 1.0, 5, kNEzs);
    hf->AddFrame(fGeomData[kScaleZ], new TGLayoutHints(fLe));
-   fGeomData[kScaleZ]->Connect("ValueSet(Long_t)", "TGLPShapeObjEditor", 
+   fGeomData[kScaleZ]->Connect("ValueSet(Long_t)", "TGLPShapeObjEditor",
                                this, "GeoValueSet(Long_t)");
    osf->AddFrame(hf, new TGLayoutHints(lh));
-   
+
    hf = new TGHorizontalFrame(osf);
    fGeomData[kScaleX]->SetLimits(TGNumberFormat::kNELLimitMin, 0.1);
    fGeomData[kScaleY]->SetLimits(TGNumberFormat::kNELLimitMin, 0.1);
    fGeomData[kScaleZ]->SetLimits(TGNumberFormat::kNELLimitMin, 0.1);
    osf->AddFrame(hf, new TGLayoutHints(lh));
-   
+
    //create button
-   
+
    fGeoApplyButton = new TGTextButton(fGeoFrame, "Modify object", kTBa1);
    fGeoFrame->AddFrame(fGeoApplyButton, new TGLayoutHints(fLb));
    fGeoApplyButton->SetState(kButtonDisabled);
@@ -440,7 +442,8 @@ void TGLPShapeObjEditor::CreateMaterialView()
 //______________________________________________________________________________
 void TGLPShapeObjEditor::CreateColorRadioButtons()
 {
-   // Create Diffuse/Ambient/Specular/Emissive radio buttons and sub-frames
+   // Create Diffuse/Ambient/Specular/Emissive radio buttons and sub-frames.
+
    TGGroupFrame *partFrame = new TGGroupFrame(fColorFrame, "Color components:", kLHintsTop | kLHintsCenterX);
    fColorFrame->AddFrame(partFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 2, 0, 2, 2));
 
@@ -476,10 +479,10 @@ void TGLPShapeObjEditor::CreateColorRadioButtons()
 //______________________________________________________________________________
 void TGLPShapeObjEditor::CreateColorSliders()
 {
-   // Create GUI for setting light color. 
+   // Create GUI for setting light color.
 
    UInt_t sw = 120; //fColorFrame->GetDefalutWidth();,
-   
+
    // Create Red/Green/BlueAlpha/Shine sliders
    fColorFrame->AddFrame(new TGLabel(fColorFrame, "Red :"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 0, 0, 0));
    fRedSlider = new TGHSlider(fColorFrame, sw, kSlider1 | kScaleBoth, kHSr);
@@ -489,7 +492,7 @@ void TGLPShapeObjEditor::CreateColorSliders()
    fColorFrame->AddFrame(fRedSlider, new TGLayoutHints(fLs));
 
 
-   fColorFrame->AddFrame(new TGLabel(fColorFrame, "Green :"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 0, 0, 0));  
+   fColorFrame->AddFrame(new TGLabel(fColorFrame, "Green :"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 0, 0, 0));
    fGreenSlider = new TGHSlider(fColorFrame, sw, kSlider1 | kScaleBoth, kHSg);
    fGreenSlider->Connect("PositionChanged(Int_t)", "TGLPShapeObjEditor", this, "DoColorSlider(Int_t)");
    fGreenSlider->SetRange(0, 100);
@@ -509,7 +512,7 @@ void TGLPShapeObjEditor::CreateColorSliders()
    fShineSlider->Connect("PositionChanged(Int_t)", "TGLPShapeObjEditor", this, "DoColorSlider(Int_t)");
    fShineSlider->SetRange(0, 128);
    fColorFrame->AddFrame(fShineSlider, new TGLayoutHints(fLs));
-  
+
 }
 
 //______________________________________________________________________________
@@ -530,6 +533,7 @@ void TGLPShapeObjEditor::SetColorSlidersPos()
 Bool_t TGLPShapeObjEditor::HandleContainerNotify(Event_t * /*event*/)
 {
    // Handle resize event.
+
    DrawSphere();
    return kTRUE;
 }
@@ -565,8 +569,8 @@ void TGLPShapeObjEditor::DrawSphere()const
 //______________________________________________________________________________
 void TGLPShapeObjEditor::CreateColorControls()
 {
-   // Create widgets to chhos colors componnet and its RGBA values on fGedEditor model or
-   // family it belongs to.
+   // Create widgets to chhos colors componnet and its RGBA values on fGedEditor
+   // model or family it belongs to.
 
    fColorFrame = this;
    CreateMaterialView();
@@ -575,7 +579,7 @@ void TGLPShapeObjEditor::CreateColorControls()
 
    CreateColorSliders();
 
-   
+
    //apply button creation
    fColorApplyButton = new TGTextButton(fColorFrame, "Apply", kTBa);
    fColorFrame->AddFrame(fColorApplyButton, new TGLayoutHints(fLb));
