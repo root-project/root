@@ -1,4 +1,4 @@
-// @(#)root/geombuilder:$Name:  $:$Id: TProof.h,v 1.88 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/geombuilder:$Name:  $:$Id: TGeoGedFrame.h,v 1.3 2006/09/26 13:44:56 rdm Exp $
 // Author: Matevz Tadel   25/09/2006
 
 #ifndef ROOT_TGeoGedFrame
@@ -15,8 +15,8 @@ class TVirtualPad;
 class TGeoGedFrame : public TGedFrame {
 
 protected:
-   TGTab          *fTab;
-   TGeoTabManager *fTabMgr;
+   TGTab          *fTab;           //tab of the ged-editor
+   TGeoTabManager *fTabMgr;        //tab manager corresponding to ged-editor
    TVirtualPad    *fPad;           //selected pad, if exists
 
 public:
@@ -29,7 +29,7 @@ public:
    virtual void SetActive(Bool_t active = kTRUE);
    virtual void Update();
 
-   ClassDef(TGeoGedFrame, 0)
+   ClassDef(TGeoGedFrame, 0) // Common base-class for geombuilder editors.
 };
 
 #endif
