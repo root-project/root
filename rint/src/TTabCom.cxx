@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.40 2006/05/18 21:23:27 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.41 2006/05/19 07:40:18 brun Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -1100,9 +1100,9 @@ Bool_t TTabCom::IsDirectory(const char fileName[])
    //
    ///////////////////////////////////////////////////////
 
-   Long_t flags = 0;
-   gSystem->GetPathInfo(fileName, 0, (Long_t*)0, &flags, 0);
-   return (int) flags & 1;
+   FileStat_t stat;
+   gSystem->GetPathInfo(fileName, stat);
+   return R_ISDIR(stat.fMode);
 }
 
 //______________________________________________________________________________
