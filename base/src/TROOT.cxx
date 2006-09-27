@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.187 2006/08/10 21:56:21 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.188 2006/08/22 18:25:32 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1095,8 +1095,11 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
 
    } else if ( strstr(name,"std::") != 0 ) {
 
-      // Let's try without the std::
-      return GetClass( TClassEdit::ResolveTypedef(name,kTRUE).c_str(), load );
+      // Let's try without the std:: in the template parameters.
+      TString rname( TClassEdit::ResolveTypedef(name,kTRUE) );
+      if (rname != name) {
+         return GetClass( rname, load );
+      }
    }
 
    if (!strcmp(name, "long long")||!strcmp(name,"unsigned long long"))
