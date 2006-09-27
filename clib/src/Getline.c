@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.33 2006/03/28 16:35:00 brun Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.34 2006/09/26 14:05:25 rdm Exp $ */
 /* Author: */
 
 /*
@@ -352,10 +352,10 @@ static void     search_forw(int s);     /* look forw for current string */
 #endif
 
 #if defined(__linux__) && defined(__powerpc__)
-#   define R__PPCLINUX      // = linux on PPC(64)
+#   define R__PPCLINUX      /* = linux on PPC(64) */
 #endif
 #if defined(__linux__) && defined(__alpha__)
-#   define R__ALPHALINUX    // = linux on Alpha
+#   define R__ALPHALINUX    /* = linux on Alpha */
 #endif
 
 #if defined(TIOCGETP) && !defined(__sgi) && !defined(R__PPCLINUX) && \
@@ -457,7 +457,7 @@ gl_char_init()                  /* turn off input echo */
 #ifdef MSDOS
     gl_intrc = 'C' - '@';
     gl_quitc = 'Q' - '@';
-//    gl_suspc = ltch.t_suspc;
+/*    gl_suspc = ltch.t_suspc; */
 #endif /* MSDOS */
 
 #ifdef vms
@@ -525,10 +525,10 @@ int pause_()
  else {
    chLastChar = 0;
    while (chLastChar == 0) {
-     if (!ReadConsoleInput(hConsoleInput,       // handle of a console input buffer
-                           &pirBuffer,          // address of the buffer for read data
-                           1,                   // number of records to read
-                           &cRead               // address of number of records read
+     if (!ReadConsoleInput(hConsoleInput,       /* handle of a console input buffer    */
+                           &pirBuffer,          /* address of the buffer for read data */
+                           1,                   /* number of records to read           */
+                           &cRead               /* address of number of records read   */
         )) return 0;
 
      if (pirBuffer.EventType == KEY_EVENT  && KeyEvent->bKeyDown == TRUE){
@@ -538,7 +538,7 @@ int pause_()
               OemToCharBuff((char const *)&chLastChar,(char *)&chLastChar,1);
          else
               chLastChar = - (KeyEvent->wVirtualScanCode);
-//            chLastChar = - (KeyEvent->wVirtualKeyCode);
+/*            chLastChar = - (KeyEvent->wVirtualKeyCode); */
      }
    }
  }
@@ -1345,7 +1345,7 @@ gl_tab(char *buf, int offset, int *loc)
 
 static int      hist_pos = 0, hist_last = 0;
 static int      num_hist_size = HIST_SIZE, num_hist_save = HIST_SAVE;
-static char   **hist_buf = 0; //[HIST_SIZE];
+static char   **hist_buf = 0; /* [HIST_SIZE] */
 
 static void
 hist_init()
