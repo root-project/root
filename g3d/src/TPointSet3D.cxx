@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPointSet3D.cxx,v 1.4 2006/05/09 19:08:44 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPointSet3D.cxx,v 1.5 2006/08/23 14:39:40 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -42,6 +42,10 @@ TPointSet3D& TPointSet3D::operator=(const TPointSet3D& tp3)
    if(this!=&tp3) {
       ClearIds();
       TPolyMarker3D::operator=(tp3);
+      fOwnIds = kFALSE;
+      fIds.Expand(tp3.fIds.GetSize());
+      for (Int_t i=0; i<tp3.fIds.GetSize(); ++i)
+         fIds.AddAt(tp3.fIds.At(i), i);
    }
    return *this;
 }
@@ -85,27 +89,9 @@ void TPointSet3D::SetPointId(Int_t n, TObject* id)
    // Set id of point n.
 
    if (n >= fN) return;
-   if (fN > fNIds) {
-      TObject** idarr = new TObject* [fN];
-      if (fIds && fNIds) {
-         memcpy(idarr, fIds, fNIds*sizeof(TObject*));
-         memset(idarr+fNIds, 0, (fN-fNIds)*sizeof(TObject*));
-         delete [] fIds;
-      }
-      fIds  = idarr;
-      fNIds = fN;
-   }
-   fIds[n] = id;
-}
-
-//______________________________________________________________________________
-TObject* TPointSet3D::GetPointId(Int_t n) const
-{
-   // Get id of point n.
-   // If n is out of range 0 is returned.
-
-   if (n < 0 || n >= fNIds) return 0;
-   return fIds[n];
+   if (fN > fIds.GetSize())
+      fIds.Expand(fN);
+   fIds.AddAt(id, n);
 }
 
 //______________________________________________________________________________
@@ -113,13 +99,11 @@ void TPointSet3D::ClearIds()
 {
    // Clears the id-array. If ids are owned the TObjects are deleted.
 
-   if (fNIds <= 0) return;
    if (fOwnIds) {
-      for (Int_t i=0; i<fNIds; ++i)
-         if (fIds[i]) delete fIds[i];
+      for (Int_t i=0; i<fIds.GetSize(); ++i)
+         delete GetPointId(i);
    }
-   delete [] fIds;
-   fNIds = 0;
+   fIds.Expand(0);
 }
 
 //______________________________________________________________________________
@@ -133,9 +117,37 @@ void TPointSet3D::PointSelected(Int_t n)
    //  b) extend this class to include TExec or some other kind of callback.
 
    TObject* id = GetPointId(n);
-   Bool_t idok = (id != 0 && fFakeIds == kFALSE);
    printf("TPointSet3D::PointSelected n=%d, id=(%s*)0x%lx\n",
-          n, idok ? id->IsA()->GetName() : "void", (ULong_t)id);
-   if (idok)
+          n, id ? id->IsA()->GetName() : "void", (ULong_t)id);
+   if (id)
       id->Print();
+}
+
+//______________________________________________________________________________
+void TPointSet3D::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TPointSet3D.
+
+   if (R__b.IsReading()) {
+      TPointSet3D::Class()->ReadBuffer(R__b, this);
+      if (fOwnIds) {
+         Int_t n;
+         R__b >> n;
+         for (Int_t i=0; i<n; ++i) {
+            TObject* o = (TObject*) R__b.ReadObjectAny(TObject::Class());
+            if (gDebug > 0) printf("Read[%2d]: ", i); o->Print();
+         }
+      }
+   } else {
+      TPointSet3D::Class()->WriteBuffer(R__b, this);
+      if (fOwnIds) {
+         R__b << fIds.GetEntries();
+         TObject* o;
+         TIter next(&fIds);
+         while ((o = next())) {
+            if (gDebug > 0) printf("Writing: "); o->Print();
+            R__b.WriteObjectAny(o, TObject::Class());
+         }
+      }
+   }
 }

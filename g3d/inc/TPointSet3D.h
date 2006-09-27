@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPointSet3D.h,v 1.2 2006/04/07 09:20:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPointSet3D.h,v 1.3 2006/08/23 14:39:40 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -20,32 +20,27 @@
 #include "TAttBBox.h"
 #endif
 
+#include "TRefArray.h"
+
 class TPointSet3D : public TPolyMarker3D, public TAttBBox
 {
 protected:
-   TObject** fIds;    //!User-provided point identifications
-   Int_t     fNIds;   //!Number of allocated entries for user-ids
-   Bool_t    fOwnIds; //!Flag specifying id-objects are owned by the point-set
-   Bool_t    fFakeIds;//!Flag specifying ids are not TObject*
+   Bool_t    fOwnIds; //Flag specifying id-objects are owned by the point-set
+   TRefArray fIds;    //User-provided point identifications
 
    TPointSet3D& operator=(const TPointSet3D&);
 
 public:
    TPointSet3D() :
-      TPolyMarker3D(), fIds(0), fNIds(0),
-      fOwnIds(kFALSE), fFakeIds(kFALSE) { fName = "TPointSet3D"; }
+      TPolyMarker3D(), fOwnIds(kFALSE) { fName = "TPointSet3D"; }
    TPointSet3D(Int_t n, Marker_t m=1, Option_t *opt="") :
-      TPolyMarker3D(n, m, opt), fIds(0), fNIds(0),
-      fOwnIds(kFALSE), fFakeIds(kFALSE) { fName = "TPointSet3D"; }
+      TPolyMarker3D(n, m, opt), fOwnIds(kFALSE) { fName = "TPointSet3D"; }
    TPointSet3D(Int_t n, Float_t *p, Marker_t m=1, Option_t *opt="") :
-      TPolyMarker3D(n, p, m, opt), fIds(0), fNIds(0),
-      fOwnIds(kFALSE), fFakeIds(kFALSE) { fName = "TPointSet3D"; }
+      TPolyMarker3D(n, p, m, opt), fOwnIds(kFALSE) { fName = "TPointSet3D"; }
    TPointSet3D(Int_t n, Double_t *p, Marker_t m=1, Option_t *opt="") :
-      TPolyMarker3D(n, p, m, opt), fIds(0), fNIds(0),
-      fOwnIds(kFALSE), fFakeIds(kFALSE) { fName = "TPointSet3D"; }
+      TPolyMarker3D(n, p, m, opt), fOwnIds(kFALSE) { fName = "TPointSet3D"; }
    TPointSet3D(const TPointSet3D &ps) :
-      TPolyMarker3D(ps), TAttBBox(), fIds(0), fNIds(0),
-      fOwnIds(kFALSE), fFakeIds(kFALSE) { fName = "TPointSet3D"; }
+      TPolyMarker3D(ps), TAttBBox(ps), fOwnIds(kFALSE), fIds(ps.fIds) {}
 
    virtual ~TPointSet3D();
 
@@ -53,13 +48,11 @@ public:
 
    void     SetPointId(TObject* id);
    void     SetPointId(Int_t n, TObject* id);
-   TObject* GetPointId(Int_t n) const;
+   TObject* GetPointId(Int_t n) const { return fIds.At(n); }
    void     ClearIds();
 
    Bool_t GetOwnIds() const    { return fOwnIds; }
    void   SetOwnIds(Bool_t o)  { fOwnIds = o; }
-   Bool_t GetFakeIds() const   { return fFakeIds; }
-   void   SetFakeIds(Bool_t f) { fFakeIds = f; }
 
    virtual void PointSelected(Int_t n);
 
