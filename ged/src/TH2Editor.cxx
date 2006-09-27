@@ -374,9 +374,7 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t width,
 void TH2Editor::CreateBinTab()
 {
    // Create the Binning tab.
-   fBin = new TGVerticalFrame();
-   AddExtraTab(new TGedSubFrame(TString("Binning"), fBin));
-
+   fBin = CreateEditorTabSubFrame("Binning");
    
    // Editor for rebinning a histogram which does NOT derive from an Ntuple
    fBinXCont = new TGCompositeFrame(fBin, 80, 20, kVerticalFrame);

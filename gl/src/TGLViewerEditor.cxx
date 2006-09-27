@@ -190,8 +190,7 @@ void TGLViewerEditor::CreateLightsTab()
 void TGLViewerEditor::CreateGuidesTab()
 {
    // Create "Guides" tab.
-   fGuidesFrame = new TGVerticalFrame();
-   AddExtraTab(new TGedSubFrame(TString("Guides"), fGuidesFrame));
+   fGuidesFrame = CreateEditorTabSubFrame("Guides");
 
    // axes  
    fAxesContainer = new TGButtonGroup(fGuidesFrame, "Axes");
@@ -237,8 +236,7 @@ namespace
 void TGLViewerEditor::CreateClippingTab()
 {
    // Create GUI controls - clip type (none/plane/box) and plane/box properties.
-   fClipFrame = new TGVerticalFrame();
-   AddExtraTab(new TGedSubFrame(TString("Clipping"), fClipFrame));
+   fClipFrame = CreateEditorTabSubFrame("Clipping");
 
    fTypeButtons = new TGButtonGroup(fClipFrame, "Clip Type");
    new TGRadioButton(fTypeButtons, "None");

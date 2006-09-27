@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TProof.h,v 1.88 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPShapeObjEditor.cxx,v 1.2 2006/09/26 13:44:56 rdm Exp $
 // Author: Matevz Tadel   25/09/2006
 
 #include <cstring>
@@ -226,10 +226,9 @@ void TGLPShapeObjEditor::GeoValueSet(Long_t)
 //______________________________________________________________________________
 void TGLPShapeObjEditor::CreateGeoControls()
 {
-   // Create GUI for setting scale and position.
+   // Create GUI for setting scale and position. 
 
-   fGeoFrame = new TGVerticalFrame();
-   AddExtraTab(new TGedSubFrame(TString("Geometry"), fGeoFrame));
+   fGeoFrame = CreateEditorTabSubFrame("Geometry");
 
    TGLabel *label=0;
    // postion containers

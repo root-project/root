@@ -350,8 +350,7 @@ void TH1Editor::CreateBinTab()
 {
    // Create binning tab.
 
-   fBin = new TGVerticalFrame();
-   AddExtraTab(new TGedSubFrame(TString("Binning"), fBin));
+   fBin = CreateEditorTabSubFrame("Binning");
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fBin, 145, 10, 
                                                          kHorizontalFrame | 
