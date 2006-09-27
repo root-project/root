@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.10 2006/09/25 13:31:54 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.11 2006/09/26 06:42:42 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
@@ -68,6 +68,8 @@ protected:
 
    void              ConfigureGedFrames();
 
+   static TGedEditor *fgFrameCreator; 
+
 public:
    TGedEditor(TCanvas* canvas = 0);
    virtual ~TGedEditor();
@@ -84,13 +86,11 @@ public:
    TGTab*                    GetTab()      const { return fTab; }
    virtual TGCompositeFrame* GetEditorTab(const Text_t* name);
    virtual TGedTabInfo*      GetEditorTabInfo(const Text_t* name);
-   virtual TGCompositeFrame* CreateEditorTabSubFrame(const Text_t* name, TGedFrame* owner);
 
    virtual TCanvas*          GetCanvas() const { return fCanvas; }
    virtual TVirtualPad*      GetPad()    const { return fPad; }
    virtual TObject*          GetModel()  const { return fModel; }
 
-public:
 
    virtual void   CloseWindow();
    virtual void   ConnectToCanvas(TCanvas *c);
@@ -104,6 +104,9 @@ public:
    virtual void   SetModel(TVirtualPad* pad, TObject* obj, Int_t event);
    virtual void   Show();
    virtual void   RecursiveRemove(TObject* obj);
+
+   static TGedEditor* GetFrameCreator();
+   static void SetFrameCreator(TGedEditor* e);
 
    ClassDef(TGedEditor,0)  // ROOT graphics editor
 };

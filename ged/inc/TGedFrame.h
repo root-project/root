@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.9 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.10 2006/09/25 13:32:57 rdm Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -77,6 +77,7 @@ public:
    TList*            GetExtraTabs()               { return fExtraTabs;   }
    TGedEditor*       GetGedEditor()               { return fGedEditor;   }
    virtual void      AddExtraTab(TGedSubFrame* sf);
+   virtual TGVerticalFrame* CreateEditorTabSubFrame(const Text_t* name);
 
    virtual void      Refresh(TObject *model);
    virtual void      SetDrawOption(Option_t *option="");

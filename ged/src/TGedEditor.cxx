@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.26 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.31 2006/09/25 13:31:54 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -43,6 +43,23 @@ public:
 
 
 ClassImp(TGedEditor)
+
+TGedEditor* TGedEditor::fgFrameCreator = 0;
+
+//______________________________________________________________________________
+TGedEditor* TGedEditor::GetFrameCreator()
+{
+   // Returns TGedEditor that currently creates TGedFrames.
+   return fgFrameCreator;
+}
+
+//______________________________________________________________________________
+void TGedEditor::SetFrameCreator(TGedEditor* e)
+{
+   // Set the TGedEditor that currently creates TGedFrames.
+   fgFrameCreator = e;
+}
+
 //______________________________________________________________________________
 TGedEditor::TGedEditor(TCanvas* canvas) :
    TGMainFrame(gClient->GetRoot(), 175, 20),
@@ -171,20 +188,6 @@ TGedTabInfo* TGedEditor::GetEditorTabInfo(const Text_t* name)
    fCreatedTabs.Add(ti);
 
    return ti;
-}
-
-//______________________________________________________________________________
-TGCompositeFrame* TGedEditor::CreateEditorTabSubFrame(const Text_t* name,
-                                                      TGedFrame* owner)
-{
-   // Create a vertical frame to be used by 'owner' in extra tab 'name'.
-   // The new frame is registered into the sub-frame listo of 'owner'.
-
-   TGCompositeFrame* tabcont  = GetEditorTab(name);
-
-   TGCompositeFrame* newframe = new TGVerticalFrame(tabcont);
-   owner->AddExtraTab(new TGedFrame::TGedSubFrame(TString(name), newframe));
-   return newframe;
 }
 
 //______________________________________________________________________________
@@ -472,10 +475,13 @@ void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
       edClass = gROOT->GetClass(Form("%sEditor", cl->GetName()));
 
       if (edClass && edClass->InheritsFrom(TGedFrame::Class())) {
+         TGWindow *exroot = (TGWindow*) fClient->GetRoot();
+         fClient->SetRoot(fTabContainer);
+         fgFrameCreator = this;
          frame = reinterpret_cast<TGedFrame*>(edClass->New());
-         frame->ReparentWindow(fTabContainer);
          frame->SetModelClass(cl);
-         frame->SetGedEditor(this);
+         fgFrameCreator = 0;
+         fClient->SetRoot(exroot);
       }
       fFrameMap.Add(cl, frame);
    } else {
@@ -501,8 +507,6 @@ void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
                // locate the composite frame on created tabs
                TGedTabInfo* ti = GetEditorTabInfo(subf->fName);
                ti->fContainer->AddFrame(subf->fFrame);
-               if(! pair)
-                  subf->fFrame->ReparentWindow(ti->fContainer);
                fVisibleTabs.Add(ti);
             }
          }

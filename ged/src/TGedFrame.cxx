@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.14 2006/09/25 13:32:57 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.15 2006/09/26 08:05:44 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
  
 /*************************************************************************
@@ -33,7 +33,7 @@ ClassImp(TGedFrame)
 
 //______________________________________________________________________________
 TGedFrame::TGedFrame(const TGWindow *p, Int_t width,
-                        Int_t height, UInt_t options, Pixel_t back)
+                     Int_t height, UInt_t options, Pixel_t back)
       : TGCompositeFrame(p, width, height, options, back),
         fInit(kTRUE),
         fGedEditor(0),
@@ -46,6 +46,7 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t width,
    // Constructor of the base GUI attribute frame.
 
    fName = "";
+   fGedEditor = TGedEditor::GetFrameCreator();
    SetCleanup(kDeepCleanup);
 }
 
@@ -128,6 +129,19 @@ void TGedFrame::AddExtraTab(TGedSubFrame* sf)
    if (fExtraTabs == 0) fExtraTabs = new TList();
    fExtraTabs->Add(sf);
    sf->fFrame->SetCleanup(kDeepCleanup);
+}
+
+//______________________________________________________________________________
+TGVerticalFrame* TGedFrame::CreateEditorTabSubFrame(const Text_t* name)
+{
+   // Create a vertical frame to be used by 'owner' in extra tab 'name'.
+   // The new frame is registered into the sub-frame list.
+
+   TGCompositeFrame* tabcont  = fGedEditor->GetEditorTab(name);
+
+   TGVerticalFrame* newframe = new TGVerticalFrame(tabcont);
+   AddExtraTab(new TGedFrame::TGedSubFrame(TString(name), newframe));
+   return newframe;
 }
 
 //______________________________________________________________________________
