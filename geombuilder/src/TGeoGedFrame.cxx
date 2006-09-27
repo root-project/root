@@ -1,4 +1,4 @@
-// @(#)root/geombuilder:$Name:  $:$Id: TProof.h,v 1.88 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/geombuilder:$Name:  $:$Id: TGeoGedFrame.cxx,v 1.2 2006/09/26 13:44:56 rdm Exp $
 // Author: Matevz Tadel   25/09/2006
 
 #include "TGeoGedFrame.h"
@@ -14,15 +14,7 @@ TGeoGedFrame::TGeoGedFrame(const TGWindow *p, Int_t width, Int_t height,
                            UInt_t options, Pixel_t back) :
   TGedFrame(p, width, height, options, back),
   fTab(0), fTabMgr(0), fPad(0)
-{}
-
-//______________________________________________________________________________
-void TGeoGedFrame::SetGedEditor(TGedEditor* ed)
 {
-   // Here we deactivate the passed TGedEditor and create TabManager.
-
-   TGedFrame::SetGedEditor(ed);
-
    fTab = fGedEditor->GetTab();
    fPad = fGedEditor->GetPad();
    fTabMgr = TGeoTabManager::GetMakeTabManager(fGedEditor);

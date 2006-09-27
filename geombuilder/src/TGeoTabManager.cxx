@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.6 2006/07/14 20:00:52 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.7 2006/09/25 13:45:17 rdm Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -156,11 +156,15 @@ void TGeoTabManager::GetEditors(TClass *cl)
       TGFrameElement *fr;
       TIter next(fVolumeTab->GetList());
       while ((fr = (TGFrameElement *) next())) if (fr->fFrame->IsA() == class2) return;
+      TGClient *client = fGedEditor->GetClient();
+      TGWindow *exroot = (TGWindow*) client->GetRoot();
+      client->SetRoot(fVolumeTab);
+      TGedEditor::SetFrameCreator(fGedEditor);
       TGedFrame* gfr = reinterpret_cast<TGedFrame*>(class2->New());
-      gfr->ReparentWindow(fVolumeTab);
-      fVolumeTab->AddFrame(gfr, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
       gfr->SetModelClass(cl);
-      gfr->SetGedEditor(fGedEditor);
+      TGedEditor::SetFrameCreator(0);
+      client->SetRoot(exroot);
+      fVolumeTab->AddFrame(gfr, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
       gfr->MapSubwindows();
    }
 }
@@ -750,11 +754,15 @@ void TGeoTransientPanel::GetEditors(TClass *cl)
       TIter next(fStyle->GetList());
       while ((fr = (TGFrameElement *) next()))
          if (fr->fFrame->IsA() == class2) return;
+      TGClient *client = fGedEditor->GetClient();
+      TGWindow *exroot = (TGWindow*) client->GetRoot();
+      client->SetRoot(fStyle);
+      TGedEditor::SetFrameCreator(fGedEditor);
       TGedFrame* gfr = reinterpret_cast<TGedFrame*>(class2->New());
-      gfr->ReparentWindow(fStyle);
-      fStyle->AddFrame(gfr, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
       gfr->SetModelClass(cl);
-      gfr->SetGedEditor(fGedEditor);
+      TGedEditor::SetFrameCreator(0);
+      client->SetRoot(exroot);
+      fStyle->AddFrame(gfr, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
       gfr->MapSubwindows();
    }
 }

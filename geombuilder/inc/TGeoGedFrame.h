@@ -1,4 +1,4 @@
-// @(#)root/geombuilder:$Name:  $:$Id: TGeoGedFrame.h,v 1.3 2006/09/26 13:44:56 rdm Exp $
+// @(#)root/geombuilder:$Name:  $:$Id: TGeoGedFrame.h,v 1.4 2006/09/27 08:42:45 rdm Exp $
 // Author: Matevz Tadel   25/09/2006
 
 #ifndef ROOT_TGeoGedFrame
@@ -25,7 +25,6 @@ public:
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());
 
-   virtual void SetGedEditor(TGedEditor* ed);
    virtual void SetActive(Bool_t active = kTRUE);
    virtual void Update();
 

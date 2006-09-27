@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.6 2006/07/14 20:00:52 brun Exp $
+// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.7 2006/09/25 13:45:17 rdm Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -601,8 +601,18 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fCategories->Resize(163,370);
    AddFrame(fCategories, new TGLayoutHints(kLHintsLeft, 0, 0, 4, 4));
 
-   fVolumeTab = new TGVerticalFrame();
-   AddExtraTab(new TGedSubFrame(TString("Volume"), fVolumeTab));
+   fVolumeTab = CreateEditorTabSubFrame("Volume");
+
+   // Set the fTab and dissconnect editor from the canvas.
+   fTab = fGedEditor->GetTab();
+   TCanvas* edCanvas = fGedEditor->GetCanvas();
+   fGedEditor->DisconnectFromCanvas();
+   if (edCanvas != fConnectedCanvas) {
+      DisconnectSelected();
+      if (edCanvas)
+         ConnectSelected(edCanvas);
+      fConnectedCanvas = edCanvas;
+   }
 }
 
 //______________________________________________________________________________
@@ -637,24 +647,6 @@ TGeoManagerEditor::~TGeoManagerEditor()
       fTabMgr->GetVolumeTab()->Cleanup();
       delete fTabMgr;
    }   
-}
-
-//______________________________________________________________________________
-void TGeoManagerEditor::SetGedEditor(TGedEditor* ed)
-{
-   // Set the parent editor, set the tab and dissconnect editor from
-   // the canvas.
-
-   TGedFrame::SetGedEditor(ed);
-   fTab = fGedEditor->GetTab();
-   TCanvas* edCanvas = ed->GetCanvas();
-   fGedEditor->DisconnectFromCanvas();
-   if (edCanvas != fConnectedCanvas) {
-      DisconnectSelected();
-      if (edCanvas)
-         ConnectSelected(edCanvas);
-      fConnectedCanvas = edCanvas;
-   }
 }
 
 //______________________________________________________________________________

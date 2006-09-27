@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoManagerEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoManagerEditor.h,v 1.2 2006/09/25 13:45:17 rdm Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -126,7 +126,6 @@ public:
                     Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoManagerEditor();
    static void    LoadLib() {;}
-   virtual void   SetGedEditor(TGedEditor* ed);
    virtual void   SetModel(TObject *obj);
 
    virtual void   SelectedSlot(TVirtualPad* pad, TObject* obj, Int_t event);
