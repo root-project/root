@@ -1,6 +1,6 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.15 2006/09/26 08:05:44 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.16 2006/09/27 08:45:42 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
- 
+
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -125,7 +125,7 @@ void TGedFrame::MakeTitle(const char *title)
 void TGedFrame::AddExtraTab(TGedSubFrame* sf)
 {
   // Adds tab container to list of extra tabs.
-  
+
    if (fExtraTabs == 0) fExtraTabs = new TList();
    fExtraTabs->Add(sf);
    sf->fFrame->SetCleanup(kDeepCleanup);
@@ -218,7 +218,7 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t width,
 
    // create tool tip with delay 300 ms
    fTip = new TGToolTip(fClient->GetDefaultRoot(), this, "TGedNameFrame", 500);
-  
+
    AddInput(kEnterWindowMask | kLeaveWindowMask | kKeyPressMask | kButtonPressMask);
 }
 
@@ -227,6 +227,7 @@ TGedNameFrame::~TGedNameFrame()
 {
    // Destructor.
 
+   fLayoutHints = 0; // will be deleted via deep-cleanup of tab-containers
    delete fTip;
 }
 
@@ -249,7 +250,7 @@ Bool_t TGedNameFrame::HandleButton(Event_t */*event*/)
    // Handle mouse button event.
 
    if (fTip) fTip->Hide();
-  
+
    return kFALSE;
 }
 
@@ -257,17 +258,17 @@ Bool_t TGedNameFrame::HandleButton(Event_t */*event*/)
 void TGedNameFrame::SetModel(TObject* obj)
 {
    // Sets text for the label.
- 
+
    TString string;
 
    if (obj == 0) {
       fLabel->SetText(new TGString("Object not selected"));
       return;
-   } 
+   }
    string.Append(obj->GetName());
    string.Append("::");
    string.Append(obj->ClassName());
-   
+
    fLabel->SetText(new TGString(string));
    string = Form("Name: '%s'; Title: '%s'; Class: '%s'", obj->GetName(), obj->GetTitle(), obj->ClassName());
    fTip->SetText(string);
@@ -276,7 +277,7 @@ void TGedNameFrame::SetModel(TObject* obj)
    {
       TGCanvas     *canvas = fGedEditor->GetTGCanvas();
       TGVScrollBar *vsb    = canvas->GetVScrollbar();
-      
+
       Int_t hscrollw = (vsb && vsb->IsMapped()) ? vsb->GetWidth() : 0;
       Int_t labwidth = TMath::Min(fLabel->GetDefaultSize().fWidth,
                                   canvas->GetWidth() - 10 - hscrollw);
