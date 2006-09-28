@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.199 2006/09/25 13:27:35 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.200 2006/09/28 16:43:20 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -771,24 +771,24 @@ TClass::TClass(const TClass& cl) :
   fGlobalIsA(cl.fGlobalIsA),
   fIsAMethod(cl.fIsAMethod),
   fNew(cl.fNew),
-  fNewArray(cl.fNewArray), 
+  fNewArray(cl.fNewArray),
   fDelete(cl.fDelete),
   fDeleteArray(cl.fDeleteArray),
   fDestructor(cl.fDestructor),
   fSizeof(cl.fSizeof),
   fVersionUsed(cl.fVersionUsed),
-  fProperty(cl.fProperty), 
+  fProperty(cl.fProperty),
   fInterStreamer(cl.fInterStreamer),
   fOffsetStreamer(cl.fOffsetStreamer),
   fStreamerType(cl.fStreamerType),
   fCurrentInfo(cl.fCurrentInfo),
-  fRefStart(cl.fRefStart) 
-{ 
+  fRefStart(cl.fRefStart)
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TClass& TClass::operator=(const TClass& cl) 
+TClass& TClass::operator=(const TClass& cl)
 {
    //assignement operator
    if(this!=&cl) {
@@ -816,23 +816,23 @@ TClass& TClass::operator=(const TClass& cl)
       fShowMembers=cl.fShowMembers;
       fStreamer=cl.fStreamer;
       fSharedLibs=cl.fSharedLibs;
-      fIsA=cl.fIsA; 
+      fIsA=cl.fIsA;
       fGlobalIsA=cl.fGlobalIsA;
       fIsAMethod=cl.fIsAMethod;
       fNew=cl.fNew;
-      fNewArray=cl.fNewArray; 
+      fNewArray=cl.fNewArray;
       fDelete=cl.fDelete;
       fDeleteArray=cl.fDeleteArray;
       fDestructor=cl.fDestructor;
       fSizeof=cl.fSizeof;
       fVersionUsed=cl.fVersionUsed;
-      fProperty=cl.fProperty; 
+      fProperty=cl.fProperty;
       fInterStreamer=cl.fInterStreamer;
       fOffsetStreamer=cl.fOffsetStreamer;
       fStreamerType=cl.fStreamerType;
       fCurrentInfo=cl.fCurrentInfo;
       fRefStart=cl.fRefStart;
-   } 
+   }
    return *this;
 }
 
@@ -1476,9 +1476,9 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
       while (t.Next(0)) {
          if (t.Tagnum() == base_tagnum) {
             if ((t.Property() & G__BIT_ISVIRTUALBASE) != 0) {
-               ::Warning ("TClass::GetBaseClassOffset",
-                  "Can't handle virtual base class %s of %s",
-                  cl->GetName(), GetName());
+               Warning ("GetBaseClassOffset",
+                        "can't handle virtual base class %s of %s",
+                        cl->GetName(), GetName());
                break;
             }
             return t.Offset();
@@ -1675,7 +1675,7 @@ TDataMember *TClass::GetDataMember(const char *datamember) const
       if (len >= size_buffer - 2) {
          if (strncmp(memb, dm->GetName(), len) == 0)
             return dm;
-      } else 
+      } else
          if (strcmp(memb, dm->GetName()) == 0)
             return dm;
    return 0;
@@ -1725,7 +1725,7 @@ TRealData* TClass::GetRealData(const char* name) const
    if (rd) {
       return rd;
    }
-   
+
    std::string givenName(name);
 
    // Try ignoring the array dimensions.
@@ -3564,7 +3564,7 @@ void TClass::SetUnloaded()
    delete fIsA; fIsA = 0;
    // Disable the autoloader while calling SetClassInfo, to prevent
    // the library from being reloaded!
-   int autoload_old = G__set_class_autoloading(0); 
+   int autoload_old = G__set_class_autoloading(0);
    gInterpreter->SetClassInfo(this,kTRUE);
    G__set_class_autoloading(autoload_old);
    fDeclFileName = 0;
@@ -3772,7 +3772,7 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
 }
 
 //______________________________________________________________________________
-void TClass::AdoptReferenceProxy(TVirtualRefProxy* proxy)  
+void TClass::AdoptReferenceProxy(TVirtualRefProxy* proxy)
 {
    // Adopt the Reference proxy pointer to indicate that this class
    // represents a reference.
