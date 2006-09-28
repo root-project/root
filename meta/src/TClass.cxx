@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.198 2006/09/22 21:16:23 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.199 2006/09/25 13:27:35 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1466,6 +1466,24 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
          }
       }
       return -1;
+   }
+
+   // Using GetListOfBases doesn't work with virtual inheritance,
+   // because it only includes direct bases.
+   if (cl->GetClassInfo()) {
+      long base_tagnum = cl->GetClassInfo()->Tagnum();
+      G__BaseClassInfo t(*GetClassInfo());
+      while (t.Next(0)) {
+         if (t.Tagnum() == base_tagnum) {
+            if ((t.Property() & G__BIT_ISVIRTUALBASE) != 0) {
+               ::Warning ("TClass::GetBaseClassOffset",
+                  "Can't handle virtual base class %s of %s",
+                  cl->GetName(), GetName());
+               break;
+            }
+            return t.Offset();
+         }
+      }
    }
 
    TClass     *c;
