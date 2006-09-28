@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.119 2006/08/31 13:28:36 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.120 2006/09/25 08:58:56 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2617,30 +2617,60 @@ Bool_t THtml::ClassDotCharts(ofstream & out)
    TString title(fCurrentClass->GetName());
    NameSpace2FileName(title);
 
-   TString filename(title);
    gSystem->ExpandPathName(fOutputDir);
-   gSystem->PrependPathName(fOutputDir, filename);
 
-   if (!CreateDotClassChartInh(filename + "_Inh.dot") ||
-      !RunDot(filename + "_Inh", &out))
+   TString dir("inh");
+   gSystem->PrependPathName(fOutputDir, dir);
+   gSystem->MakeDirectory(dir);
+
+   dir = "inhmem";
+   gSystem->PrependPathName(fOutputDir, dir);
+   gSystem->MakeDirectory(dir);
+
+   dir = "incl";
+   gSystem->PrependPathName(fOutputDir, dir);
+   gSystem->MakeDirectory(dir);
+
+   dir = "lib";
+   gSystem->PrependPathName(fOutputDir, dir);
+   gSystem->MakeDirectory(dir);
+
+   TString filenameInh(title);
+   gSystem->PrependPathName("inh", filenameInh);
+   gSystem->PrependPathName(fOutputDir, filenameInh);
+   filenameInh += "_Inh";
+   if (!CreateDotClassChartInh(filenameInh + ".dot") ||
+      !RunDot(filenameInh, &out))
    return kFALSE;
 
-   if (CreateDotClassChartInhMem(filename + "_InhMem.dot"))
-      RunDot(filename + "_InhMem", &out);
+   TString filenameInhMem(title);
+   gSystem->PrependPathName("inhmem", filenameInhMem);
+   gSystem->PrependPathName(fOutputDir, filenameInhMem);
+   filenameInhMem += "_InhMem";
+   if (CreateDotClassChartInhMem(filenameInhMem + ".dot"))
+      RunDot(filenameInhMem, &out);
 
-   if (CreateDotClassChartIncl(filename + "_Incl.dot"))
-      RunDot(filename + "_Incl", &out);
+   TString filenameIncl(title);
+   gSystem->PrependPathName("incl", filenameIncl);
+   gSystem->PrependPathName(fOutputDir, filenameIncl);
+   filenameIncl += "_Incl";
+   if (CreateDotClassChartIncl(filenameIncl + ".dot"))
+      RunDot(filenameIncl, &out);
 
-   if (CreateDotClassChartLib(filename + "_Lib.dot"))
-      RunDot(filename + "_Lib", &out);
+   TString filenameLib(title);
+   gSystem->PrependPathName("lib", filenameLib);
+   gSystem->PrependPathName(fOutputDir, filenameLib);
+   filenameLib += "_Lib";
+   if (CreateDotClassChartLib(filenameLib + ".dot"))
+      RunDot(filenameLib, &out);
 
    out << "<div class=\"imgformattabs\">" << endl
-       << "<a id=\"img" << title << "_Inh\" class=\"imgformattabsel\" href=\"javascript:SetImg('Charts','" << title << "_Inh.gif');\">Inheritance</a>" << endl
-       << "<a id=\"img" << title << "_InhMem\" class=\"imgformattab\" href=\"javascript:SetImg('Charts','" << title << "_InhMem.gif');\">Inherited Members</a>" << endl
-       << "<a id=\"img" << title << "_Incl\" class=\"imgformattab\" href=\"javascript:SetImg('Charts','" << title << "_Incl.gif');\">Includes</a>" << endl
-       << "<a id=\"img" << title << "_Lib\" class=\"imgformattab\" href=\"javascript:SetImg('Charts','" << title << "_Lib.gif');\">Libraries</a><br/>" << endl
+       << "<a id=\"img" << title << "_Inh\" class=\"imgformattabsel\" href=\"javascript:SetImg('Charts','inh/" << title << "_Inh.gif');\">Inheritance</a>" << endl
+       << "<a id=\"img" << title << "_InhMem\" class=\"imgformattab\" href=\"javascript:SetImg('Charts','inhmem/" << title << "_InhMem.gif');\">Inherited Members</a>" << endl
+       << "<a id=\"img" << title << "_Incl\" class=\"imgformattab\" href=\"javascript:SetImg('Charts','incl/" << title << "_Incl.gif');\">Includes</a>" << endl
+       << "<a id=\"img" << title << "_Lib\" class=\"imgformattab\" href=\"javascript:SetImg('Charts','lib/" << title << "_Lib.gif');\">Libraries</a><br/>" << endl
        << "</div>" << endl
-       << "<img id=\"Charts\" alt=\"Class Charts\" class=\"formatsel\" usemap=\"#Map" << title << "_Inh\" src=\"" << title << "_Inh.gif\"/>" << endl;
+       << "<img id=\"Charts\" alt=\"Class Charts\" class=\"formatsel\" usemap=\"#Map" << title << "_Inh\" src=\"inh/" << title << "_Inh.gif\"/>" << endl;
 
    return kTRUE;
 }
@@ -3981,27 +4011,36 @@ void THtml::CreateJavascript() {
       << "   }" << endl
       << "   UpdateCookie();" << endl
       << "}" << endl
-      << "function SetImg(name, file) {" << endl
-      << "   var img=document.getElementById(name);" << endl
-      << "   var src=img.src;" << endl
-      << "   var posFile=src.lastIndexOf('/');" << endl
-      << "   var oldFile=src.substr(posFile+1);" << endl
-      << "   src=src.substr(0,posFile+1);" << endl
-      << "   src+=file;" << endl
-      << "   img.src=src;" << endl
-      << "   if (img.useMap) {" << endl
-      << "      var usemapFile=file;" << endl
-      << "      var posUsemapExt=usemapFile.lastIndexOf('.');" << endl
-      << "      if (posUsemapExt!=-1) usemapFile=usemapFile.substr(0,posUsemapExt);" << endl
-      << "      img.useMap=\"Map\"+usemapFile;" << endl
-      << "   }" << endl
-      << "   var posExt=oldFile.lastIndexOf('.');" << endl
-      << "   oldFile=oldFile.substr(0,posExt);" << endl
-      << "   document.getElementById(\"img\"+oldFile).className=\"imgformattab\";" << endl
-      << "   posExt=file.lastIndexOf('.');" << endl
-      << "   file=file.substr(0,posExt);" << endl
-      << "   document.getElementById(\"img\"+file).className=\"imgformattabsel\";" << endl
-      << "}" << endl;
+      << "function SetImg(name, file) {" << std::endl
+      << "   var img=document.getElementById(name);" << std::endl
+      << "   var src=img.src;" << std::endl
+      << "   var posFile=src.lastIndexOf('/');" << std::endl
+      << "   var numSlashes=file.split('/').length - 1;" << std::endl
+      << "   for (var i=0; i<numSlashes; i++)" << std::endl
+      << "     posFile=src.lastIndexOf('/',posFile - 1);" << std::endl
+      << "   var oldFile=src.substr(posFile+1);" << std::endl
+      << "   src=src.substr(0,posFile+1);" << std::endl
+      << "   src+=file;" << std::endl
+      << "   img.src=src;" << std::endl
+      << "   if (img.useMap) {" << std::endl
+      << "      var usemapFile=file;" << std::endl
+      << "      var posUsemapExt=usemapFile.lastIndexOf('.');" << std::endl
+      << "      if (posUsemapExt!=-1) usemapFile=usemapFile.substr(0,posUsemapExt);" << std::endl
+      << "      var posUsemapDir=usemapFile.lastIndexOf('/');" << std::endl
+      << "      if (posUsemapDir!=-1) usemapFile=usemapFile.substr(posUsemapDir+1);" << std::endl
+      << "      img.useMap=\"Map\"+usemapFile;" << std::endl
+      << "   }" << std::endl
+      << "   var posExt=oldFile.lastIndexOf('.');" << std::endl
+      << "   oldFile=oldFile.substr(0,posExt);" << std::endl
+      << "   var posDir=oldFile.lastIndexOf('/');" << std::endl
+      << "   if (posDir!=-1) oldFile=oldFile.substr(posDir + 1);" << std::endl
+      << "   document.getElementById(\"img\"+oldFile).className=\"imgformattab\";" << std::endl
+      << "   posExt=file.lastIndexOf('.');" << std::endl
+      << "   file=file.substr(0,posExt);" << std::endl
+      << "   posDir=file.lastIndexOf('/');" << std::endl
+      << "   if (posDir!=-1) file=file.substr(posDir + 1);" << std::endl
+      << "   document.getElementById(\"img\"+file).className=\"imgformattabsel\";" << std::endl
+      << "}" << std::endl;
 
    delete []outFile;
 }
