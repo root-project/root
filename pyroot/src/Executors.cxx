@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.19 2006/07/01 21:19:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.20 2006/09/28 19:59:12 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -18,7 +18,6 @@
 #include "Api.h"
 
 // Standard
-#include <malloc.h>
 #include <utility>
 #include <Riostream.h>
 

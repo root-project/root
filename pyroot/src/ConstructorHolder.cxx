@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.9 2006/07/01 21:19:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.10 2006/09/28 19:59:12 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -16,7 +16,6 @@
 #include "Api.h"
 
 // Standard
-#include <malloc.h>
 #include <string>
 
 
