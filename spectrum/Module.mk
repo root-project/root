@@ -7,27 +7,27 @@ MODDIR       := spectrum
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
-SPECTRUMDIR       := $(MODDIR)
-SPECTRUMDIRS      := $(SPECTRUMDIR)/src
-SPECTRUMDIRI      := $(SPECTRUMDIR)/inc
+SPECTRUMDIR  := $(MODDIR)
+SPECTRUMDIRS := $(SPECTRUMDIR)/src
+SPECTRUMDIRI := $(SPECTRUMDIR)/inc
 
-##### libSPECTRUM #####
-SPECTRUML         := $(MODDIRI)/LinkDef.h
-SPECTRUMDS        := $(MODDIRS)/G__Spectrum.cxx
-SPECTRUMDO        := $(SPECTRUMDS:.cxx=.o)
-SPECTRUMDH        := $(SPECTRUMDS:.cxx=.h)
+##### libSpectrum #####
+SPECTRUML    := $(MODDIRI)/LinkDef.h
+SPECTRUMDS   := $(MODDIRS)/G__Spectrum.cxx
+SPECTRUMDO   := $(SPECTRUMDS:.cxx=.o)
+SPECTRUMDH   := $(SPECTRUMDS:.cxx=.h)
 
-SPECTRUMH         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-SPECTRUMS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-SPECTRUMO         := $(SPECTRUMS:.cxx=.o)
+SPECTRUMH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+SPECTRUMS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+SPECTRUMO    := $(SPECTRUMS:.cxx=.o)
 
-SPECTRUMDEP       := $(SPECTRUMO:.o=.d) $(SPECTRUMDO:.o=.d)
+SPECTRUMDEP  := $(SPECTRUMO:.o=.d) $(SPECTRUMDO:.o=.d)
 
-SPECTRUMLIB       := $(LPATH)/libSpectrum.$(SOEXT)
+SPECTRUMLIB  := $(LPATH)/libSpectrum.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SPECTRUMH))
-ALLLIBS     += $(SPECTRUMLIB)
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SPECTRUMH))
+ALLLIBS      += $(SPECTRUMLIB)
 
 # include all dependency files
 INCLUDEFILES += $(SPECTRUMDEP)
@@ -36,18 +36,18 @@ INCLUDEFILES += $(SPECTRUMDEP)
 include/%.h:    $(SPECTRUMDIRI)/%.h
 		cp $< $@
 
-$(SPECTRUMLIB):      $(SPECTRUMO) $(SPECTRUMDO) $(ORDER_) $(MAINLIBS) $(SPECTRUMLIBDEP)
+$(SPECTRUMLIB): $(SPECTRUMO) $(SPECTRUMDO) $(ORDER_) $(MAINLIBS) $(SPECTRUMLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libSpectrum.$(SOEXT) $@ "$(SPECTRUMO) $(SPECTRUMDO)" \
 		   "$(SPECTRUMLIBEXTRA)"
 
-$(SPECTRUMDS):       $(SPECTRUMH) $(SPECTRUML) $(ROOTCINTTMPEXE)
+$(SPECTRUMDS):  $(SPECTRUMH) $(SPECTRUML) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SPECTRUMH) $(SPECTRUML)
 
-all-spectrum:        $(SPECTRUMLIB)
+all-spectrum:   $(SPECTRUMLIB)
 
-map-spectrum:        $(RLIBMAP)
+map-spectrum:   $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(SPECTRUMLIB) \
 		   -d $(SPECTRUMLIBDEP) -c $(SPECTRUML)
 
@@ -58,7 +58,7 @@ clean-spectrum:
 
 clean::         clean-spectrum
 
-distclean-spectrum:  clean-spectrum
+distclean-spectrum: clean-spectrum
 		@rm -f $(SPECTRUMDEP) $(SPECTRUMDS) $(SPECTRUMDH) $(SPECTRUMLIB)
 
 distclean::     distclean-spectrum

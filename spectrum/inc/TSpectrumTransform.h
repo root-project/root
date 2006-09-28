@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrumTransform.h,v 1.13 2006/09/25 10:02:38 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrumTransform.h,v 1.1 2006/09/28 19:29:30 brun Exp $
 // Author: Miroslav Morhac   25/09/06
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #endif
 
 class TSpectrumTransform :  public TNamed {
+
 protected:
    Int_t     fSize;                      //length of transformed data
    Int_t     fTransformType;             //type of transformation (Haar, Walsh, Cosine, Sine, Fourier, Hartley, Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar)
@@ -37,7 +38,6 @@ protected:
    Int_t     fXmax;                      //last channel of filtered or enhanced region
    Float_t   fFilterCoeff;               //value set in the filtered region
    Float_t   fEnhanceCoeff;              //multiplication coefficient applied in enhanced region;
-   
 
 public:
    enum {
@@ -71,14 +71,14 @@ protected:
    void                Walsh(float *working_space,Int_t num);
 
 public:
-   void                Enhance(const float *source, float *destVector); 
-   void                FilterZonal(const float *source, float *destVector); 
+   void                Enhance(const float *source, float *destVector);
+   void                FilterZonal(const float *source, float *destVector);
    void                SetDirection(Int_t direction);
-   void                SetEnhanceCoeff(Float_t enhanceCoeff);   
+   void                SetEnhanceCoeff(Float_t enhanceCoeff);
    void                SetFilterCoeff(Float_t filterCoeff);
    void                SetRegion(Int_t xmin, Int_t xmax);
    void                SetTransformType(Int_t transType, Int_t degree);
-   void                Transform(const float *source, float *destVector); 
+   void                Transform(const float *source, float *destVector);
 
    ClassDef(TSpectrumTransform,1)  //Spectrum Transformer, it calculates classic orthogonal 1D transforms
 };
