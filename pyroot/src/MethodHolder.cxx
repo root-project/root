@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.48 2006/06/13 06:39:05 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.49 2006/07/01 21:19:55 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -266,13 +266,18 @@ Int_t PyROOT::TMethodHolder::GetPriority()
    while ( TMethodArg* arg = (TMethodArg*)nextarg() ) {
       G__TypeInfo ti( arg->GetFullTypeName() );
 
+   // the following numbers are made up and may cause problems in specific
+   // situations: use <obj>.<meth>.disp() for choice of exact dispatch
       if ( ! ti.IsValid() )
-         priority -= 1000;    // class is gibberish
+         priority -= 10000;   // class is gibberish
       else if ( (ti.Property() & (kIsClass|kIsStruct)) && ! ti.IsLoaded() )
-         priority -= 100;     // class is known, but no dictionary available
+         priority -= 1000;    // class is known, but no dictionary available
       else if ( TClassEdit::CleanType( ti.TrueName(), 1 ) == "void*" )
-         priority -= 10;      // void* shouldn't be too greedy
-
+         priority -= 100;     // void* shouldn't be too greedy
+      else if ( TClassEdit::CleanType( ti.TrueName(), 1 ) == "float" )
+         priority -= 30;      // double preferred over float (no float in python)
+      else if ( TClassEdit::CleanType( ti.TrueName(), 1 ) == "double" )
+         priority -= 10;      // char, int, long preferred over double
    }
 
    return priority;
@@ -387,6 +392,11 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self )
    TempLevelGuard_t g;
 
    PyObject* result = 0;
+
+#ifndef R__WIN32              // G__return isn't for API use on Windows
+// TODO: get this into an API to cleanup/init on fresh call
+   G__return = G__RETURN_NON;
+#endif
 
    if ( Utility::gSignalPolicy == Utility::kFast ) {
    // bypasses ROOT try block (i.e. segfaults will abort)

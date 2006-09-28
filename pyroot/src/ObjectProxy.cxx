@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.10 2006/03/23 06:20:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.11 2006/04/19 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -81,19 +81,22 @@ namespace {
       if ( pyobj->fFlags & ObjectProxy::kIsReference )
          clName.append( "*" );
 
-      PyObject* name = PyObject_CallMethod( (PyObject*)pyobj,
-         const_cast< char* >( "GetName" ), const_cast< char* >( "" ) );
+   // need to prevent accidental derefs when just printing (usually unsafe)
+      if ( ! PyObject_HasAttrString( (PyObject*)pyobj, const_cast< char* >( "__deref__" ) ) ) {
+         PyObject* name = PyObject_CallMethod( (PyObject*)pyobj,
+            const_cast< char* >( "GetName" ), const_cast< char* >( "" ) );
 
-      if ( name ) {
-         if ( PyString_GET_SIZE( name ) != 0 ) {
-            PyObject* repr = PyString_FromFormat( "<ROOT.%s object (\"%s\") at %p>",
-               clName.c_str(), PyString_AS_STRING( name ), pyobj->fObject );
+         if ( name ) {
+            if ( PyString_GET_SIZE( name ) != 0 ) {
+               PyObject* repr = PyString_FromFormat( "<ROOT.%s object (\"%s\") at %p>",
+                  clName.c_str(), PyString_AS_STRING( name ), pyobj->fObject );
+               Py_DECREF( name );
+               return repr;
+            }
             Py_DECREF( name );
-            return repr;
-         }
-         Py_DECREF( name );
-      } else
-         PyErr_Clear();
+         } else
+            PyErr_Clear();
+      }
 
    // get here if object has no method GetName() or name = ""
       return PyString_FromFormat( const_cast< char* >( "<ROOT.%s object at %p>" ),

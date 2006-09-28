@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.45 2006/07/04 04:38:49 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.46 2006/07/07 12:23:21 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -443,8 +443,9 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       return pyns;
    }
 
-   if ( ! klass ) {   // if so, all options have been exhausted: it doesn't exist
-      if ( ! scope && fullname.find( "ROOT::" ) == std::string::npos ) {
+   if ( ! klass ) {   // if so, all options have been exhausted: it doesn't exist as such
+      if ( ! scope && fullname.find( "std::" ) == std::string::npos && // catch special cases
+           fullname.find( "ROOT::" ) == std::string::npos ) {          // not already in ROOT::
       // final attempt, for convenience, the "ROOT" namespace isn't required, try again ...
          PyObject* rtns = PyObject_GetAttrString( gRootModule, const_cast< char* >( "ROOT" ) );
          PyObject* pyclass = PyObject_GetAttrString( rtns, (char*)fullname.c_str() );

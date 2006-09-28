@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.18 2006/04/19 06:20:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.19 2006/07/01 21:19:55 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -18,6 +18,7 @@
 #include "Api.h"
 
 // Standard
+#include <malloc.h>
 #include <utility>
 #include <Riostream.h>
 
@@ -212,7 +213,7 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( G__CallFunc* func, void* 
 // ... which must be copied to retain ownership, then released
    void* result2 = result1;
    if ( fClass->GetClassInfo() && fClass->GetClassInfo()->Linkage() != -1 ) {
-      result2 = new char[ fClass->Size() ];
+      result2 = malloc( fClass->Size() );
       memcpy( result2, result1, fClass->Size() );
    }
    G__pop_tempobject();            // doesn't call dtor

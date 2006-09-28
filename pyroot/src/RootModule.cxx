@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name: v5-12-00 $:$Id: RootModule.cxx,v 1.26 2006/07/01 21:19:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.27 2006/08/01 12:37:59 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -259,7 +259,7 @@ namespace {
          PyObject* nattr = PyObject_GetAttrString( pyname, "__name__" );
          if ( nattr )
             pyname = nattr;
-         pyname = PyObject_Str(	pyname );
+         pyname = PyObject_Str( pyname );
          Py_XDECREF( nattr );
       } else {
          Py_INCREF( pyname );

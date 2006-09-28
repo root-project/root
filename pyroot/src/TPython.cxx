@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.15 2006/06/14 13:52:01 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.16 2006/06/16 18:18:04 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -161,12 +161,27 @@ void TPython::LoadMacro( const char* name )
 
       if ( ! PySequence_Contains( old, value ) ) {
       // collect classes
-         if ( PyClass_Check( value ) ||
-              PyObject_HasAttrString( value, const_cast< char* >( "__bases__" ) ) ) {
-         // force class creation
-            PyObject* str = PyObject_Str( value );
-            gROOT->GetClass( PyString_AS_STRING( str ) );
-            Py_DECREF( str );
+         if ( PyClass_Check( value ) || PyObject_HasAttrString( value, (char*)"__bases__" ) ) {
+         // get full class name (including module)
+            PyObject* pyModName = PyObject_GetAttrString( value, (char*)"__module__" );
+            PyObject* pyClName  = PyObject_GetAttrString( value, (char*)"__name__" );
+
+            if ( PyErr_Occurred() )
+               PyErr_Clear();
+
+            if ( pyModName && pyClName &&\
+                 PyString_Check( pyModName ) && PyString_Check( pyClName ) ) {
+            // build full, qualified name
+               std::string fullname = PyString_AS_STRING( pyModName );
+               fullname += '.';
+               fullname += PyString_AS_STRING( pyClName );
+
+            // force class creation
+               gROOT->GetClass( fullname.c_str() );
+            }
+
+            Py_XDECREF( pyClName );
+            Py_XDECREF( pyModName );
          }
       }
 

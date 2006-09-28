@@ -1,8 +1,8 @@
 from __future__ import generators
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.41 2006/06/13 06:39:05 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.42 2006/08/14 00:23:27 rdm Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 07/12/06
+# Last: 09/22/06
 
 """PyROOT user module.
 
@@ -14,13 +14,20 @@ from __future__ import generators
 
 """
 
-## system modules
+__version__ = '5.0.0'
+__author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
+
+
+### system and interpreter setup ------------------------------------------------
 import os, sys, time
 import string as pystring
 
 ## there's no version_info in 1.5.2
 if sys.version[0:3] < '2.2':
     raise ImportError, 'Python Version 2.2 or above is required.'
+
+## 2.2 has 10 instructions as default, > 2.3 has 100 ... make same
+sys.setcheckinterval( 100 )
 
 ## readline support, if available
 try:
@@ -60,11 +67,12 @@ except:
  # module readline typically doesn't exist on non-Unix platforms
    pass
 
-## remove DISPLAY variable in batch mode as not confuse early ROOT calls
+## remove DISPLAY variable in batch mode as to not confuse early ROOT calls
 if hasattr(sys,'argv') and '-b' in sys.argv and os.environ.has_key( 'DISPLAY' ):
-    del os.environ[ 'DISPLAY' ]       
+   del os.environ[ 'DISPLAY' ]       
 
-## load PyROOT C++ extension module, special case for linux and Sun
+
+### load PyROOT C++ extension module, special case for linux and Sun ------------
 needsGlobal =  ( 0 <= pystring.find( sys.platform, 'linux' ) ) or\
                ( 0 <= pystring.find( sys.platform, 'sunos' ) )
 if needsGlobal:
@@ -72,34 +80,21 @@ if needsGlobal:
    dlflags = sys.getdlopenflags()
    sys.setdlopenflags( 0x100 | 0x2 )    # RTLD_GLOBAL | RTLD_NOW
 
-from libPyROOT import *
+import libPyROOT as _root
 
 # reset dl flags if needed
 if needsGlobal:
    sys.setdlopenflags( dlflags )
 del needsGlobal
 
-## choose interactive-favoured policies
-SetMemoryPolicy( kMemoryHeuristics )
-SetSignalPolicy( kSignalSafe )
 
-## normally, you'll want a ROOT application; don't init any further if
-## one pre-exists from some C++ code somewhere
-c = MakeRootClass( 'PyROOT::TPyROOTApplication' )
-if c.CreatePyROOTApplication():
-   c.InitROOTGlobals()
-   c.InitCINTMessageCallback();
-del c
-
-## 2.2 has 10 instructions as default, 2.3 has 100 ... make same
-sys.setcheckinterval( 100 )
+### choose interactive-favoured policies ----------------------------------------
+_root.SetMemoryPolicy( _root.kMemoryHeuristics )
+_root.SetSignalPolicy( _root.kSignalSafe )
 
 
 ### data ________________________________________________________________________
-__version__ = '4.2.0'
-__author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
-
-__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'gVirtualX',
+__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter',
                     'AddressOf', 'MakeNullPointer', 'Template', 'std' ]
 __all__         = []                         # purposedly empty
 
@@ -131,9 +126,9 @@ class Template:
             arg = pystring.join(
                map( lambda x: pystring.strip(x), pystring.split(arg,',') ), ',' )
          newargs.append( arg )
-      return MakeRootTemplateClass( *newargs )
+      return _root.MakeRootTemplateClass( *newargs )
 
-sys.modules[ 'libPyROOT' ].Template = Template
+_root.Template = Template
 
 
 ### scope place holder for STL classes ------------------------------------------
@@ -144,15 +139,15 @@ class std:
    for name in stlclasses:
       exec '%(name)s = Template( "std::%(name)s" )' % { 'name' : name }
 
-   string = MakeRootClass( 'string' )
+   string = _root.MakeRootClass( 'string' )
 
-sys.modules[ 'libPyROOT' ].std = std
+_root.std = std
 
 
 ### special cases for gPad, gVirtualX (are C++ macro's) -------------------------
 class _ExpandMacroFunction( object ):
    def __init__( self, klass, func ):
-      c = MakeRootClass( klass )
+      c = _root.MakeRootClass( klass )
       self.func = getattr( c, func )
 
    def __getattr__( self, what ):
@@ -166,8 +161,8 @@ class _ExpandMacroFunction( object ):
          return 1
       return 0
 
-gPad      = _ExpandMacroFunction( "TVirtualPad", "Pad" )
-gVirtualX = _ExpandMacroFunction( "TVirtualX",   "Instance" )
+_root.gPad      = _ExpandMacroFunction( "TVirtualPad", "Pad" )
+_root.gVirtualX = _ExpandMacroFunction( "TVirtualX",   "Instance" )
 
 
 ### special case pythonization --------------------------------------------------
@@ -179,7 +174,7 @@ def _TTree__iter__( self ):
     yield self                  # TODO: not sure how to do this w/ C-API ...
     i += 1
 
-MakeRootClass( "TTree" ).__iter__    = _TTree__iter__
+_root.MakeRootClass( "TTree" ).__iter__    = _TTree__iter__
 
 
 ### RINT command emulation ------------------------------------------------------
@@ -214,7 +209,7 @@ TPad or TPad.cd, etc."""
          execfile( fn, __main__.__dict__, __main__.__dict__ )
          return
       elif cmd == '.L':
-         return gSystem.Load( arg )
+         return _root.gSystem.Load( arg )
       elif cmd == '.cd' and arg:
          os.chdir( arg )
          return
@@ -237,13 +232,13 @@ if not __builtins__.has_key( '__IPYTHON__' ):
    sys.excepthook = _excepthook
 else:
  # IPython's FakeModule hack otherwise prevents usage of python from CINT
-   gROOT.ProcessLine( 'TPython::Exec( "" )' )
+   _root.gROOT.ProcessLine( 'TPython::Exec( "" )' )
    sys.modules[ '__main__' ].__builtins__ = __builtins__
 
 
 ### call EndOfLineAction after each interactive command (to update display etc.)
 def _displayhook( v ):
-   gInterpreter.EndOfLineAction()
+   _root.gInterpreter.EndOfLineAction()
    return _orig_dhook( v )
 
 _orig_dhook = sys.displayhook
@@ -252,7 +247,7 @@ sys.displayhook = _displayhook
 
 ### helper to prevent GUIs from starving
 def _processRootEvents( controller ):
-   global gSystem
+   gSystem = _root.gSystem
 
    while controller.keeppolling:
       try:
@@ -266,14 +261,13 @@ def _processRootEvents( controller ):
 class ModuleFacade( object ):
    def __init__( self, module ):
       self.__dict__[ 'module' ]    = module
-      self.__dict__[ 'libmodule' ] = sys.modules[ 'libPyROOT' ]
 
     # store already available ROOT objects to prevent spurious lookups
       for name in self.module.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:
-          self.__dict__[ name ] = getattr( self.module, name )
+         self.__dict__[ name ] = getattr( _root, name )
 
       for name in std.stlclasses:
-          exec 'self.%(name)s = std.%(name)s' % { 'name' : name }
+         setattr( _root, name, getattr( std, name ) )
 
       self.__dict__[ '__doc__'  ] = self.module.__doc__
       self.__dict__[ '__name__' ] = self.module.__name__
@@ -286,20 +280,22 @@ class ModuleFacade( object ):
     # to allow assignments to ROOT globals such as ROOT.gDebug
       if not name in self.__dict__:
          try:
-          # assignment to an existing ROOT global
-            setattr( self.__class__, name, GetRootGlobal( name ) )
+          # assignment to an existing ROOT global (establishes proxy)
+            setattr( self.__class__, name, _root.GetRootGlobal( name ) )
          except LookupError:
           # allow a few limited cases where new globals can be set
-            tcnv = { int         : 'int %s = %d;',
+            tcnv = { bool        : 'bool %s = %d;',
+                     int         : 'int %s = %d;',
                      long        : 'long %s = %d;',
                      float       : 'double %s = %f;',
                      str         : 'string %s = "%s";' }
             try:
-               gROOT.ProcessLine( tcnv[ type(value) ] % (name,value) );
-               setattr( self.__class__, name, GetRootGlobal( name ) )
+               _root.gROOT.ProcessLine( tcnv[ type(value) ] % (name,value) );
+               setattr( self.__class__, name, _root.GetRootGlobal( name ) )
             except KeyError:
-               pass
+               pass           # can still assign normally, to the module
 
+    # actual assignment through descriptor, or normal python way
       super( self.__class__, self ).__setattr__( name, value )
 
    def __getattr1( self, name ):
@@ -310,30 +306,23 @@ class ModuleFacade( object ):
          caller = sys.modules[ sys._getframe( 1 ).f_globals[ '__name__' ] ]
 
          for name in self.module.__pseudo__all__:
-            caller.__dict__[ name ] = getattr( self.module, name )
-
-         self.libmodule.gPad = gPad
+            caller.__dict__[ name ] = getattr( _root, name )
 
        # make the dictionary of the calling module ROOT lazy
-         self.module.SetRootLazyLookup( caller.__dict__ )
+         _root.SetRootLazyLookup( caller.__dict__ )
 
-       # all bets are off with import *, so follow -b flag
-         self.__doGUIThread()
+       # all bets are off with import *, so follow application flags
+         self.__finalSetup()
 
        # done with this version of __getattr__, move to general one
          self.__class__.__getattr__ = self.__class__.__getattr2
 
        # the actual __all__ is empty
-         self.__dict__[ '__all__' ] = self.module.__all__
          return self.module.__all__
-
-      elif name == 'gROOT':
-       # yield gROOT without starting GUI thread just yet
-         return self.module.gROOT
 
       elif name[0] != '_':
        # first request for non-private (i.e. presumable ROOT) entity
-         self.__doGUIThread()
+         self.__finalSetup()
 
        # done with this version of __getattr__, move to general one
          self.__class__.__getattr__ = self.__class__.__getattr2
@@ -342,12 +331,23 @@ class ModuleFacade( object ):
    def __getattr2( self, name ):
     # this is the "running" getattr, which is simpler
 
+      if name == '__all__':
+       # secondary "from ROOT import *", simpler but same as before
+         caller = sys.modules[ sys._getframe( 1 ).f_globals[ '__name__' ] ]
+
+         for name in self.module.__pseudo__all__:
+            caller.__dict__[ name ] = getattr( _root, name )
+
+         _root.SetRootLazyLookup( caller.__dict__ )
+
+         return self.module.__all__
+
     # lookup into ROOT (which may cause python-side enum/class/global creation)
-      attr = self.libmodule.LookupRootEntity( name )
+      attr = _root.LookupRootEntity( name )
 
     # the call above will raise AttributeError as necessary; so if we get here,
     # attr is valid: cache as appropriate, so we don't come back
-      if type(attr) == PropertyProxy:
+      if type(attr) == _root.PropertyProxy:
           setattr( self.__class__, name, attr )        # descriptor
           return getattr( self, name )
       else:
@@ -357,9 +357,16 @@ class ModuleFacade( object ):
     # reaching this point means failure ...
       raise AttributeError( name )
 
-   def __doGUIThread( self ):
-    # root thread to prevent GUIs from starving, as needed
-      if not self.keeppolling and not self.module.gROOT.IsBatch():
+   def __finalSetup( self ):
+    # normally, you'll want a ROOT application; don't init any further if
+    # one pre-exists from some C++ code somewhere
+      c = _root.MakeRootClass( 'PyROOT::TPyROOTApplication' )
+      if c.CreatePyROOTApplication():
+         c.InitROOTGlobals()
+         c.InitCINTMessageCallback();
+
+    # root thread, if needed, to prevent GUIs from starving, as needed
+      if not self.keeppolling and not _root.gROOT.IsBatch():
          import threading
          self.__dict__[ 'keeppolling' ] = 1
          self.__dict__[ 'thread' ] = \
@@ -388,7 +395,7 @@ def cleanup():
       facade.thread.join( 3. )                         # arbitrary
 
  # destroy ROOT module
-   del facade.libmodule
+   del facade.module._root
    del sys.modules[ 'libPyROOT' ]
    del facade.module
 

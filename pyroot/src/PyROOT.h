@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyROOT.h,v 1.6 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyROOT.h,v 1.7 2006/08/14 00:21:56 rdm Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_PYROOT_H
@@ -38,11 +38,17 @@
 // backwards compatibility, pre python 2.5
 #if PY_VERSION_HEX < 0x02050000
 typedef int Py_ssize_t;
-#define PY_SSIZE_T_FORMAT "%d"
-#define PY_SSIZE_T_MAX INT_MAX
-#define PY_SSIZE_T_MIN INT_MIN
+# define PY_SSIZE_T_FORMAT "%d"
+# if !defined(PY_SSIZE_T_MIN)
+#  define PY_SSIZE_T_MAX INT_MAX
+#  define PY_SSIZE_T_MIN INT_MIN
+# endif
 #else
-#define PY_SSIZE_T_FORMAT "%zd"
+# ifdef R__MACOSX
+#  define PY_SSIZE_T_FORMAT "%uzd"
+# else
+#  define PY_SSIZE_T_FORMAT "%zd"
+# endif
 #endif
 
 #endif // !PYROOT_PYROOT_H

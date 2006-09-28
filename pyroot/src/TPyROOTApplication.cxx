@@ -62,10 +62,11 @@ PyROOT::TPyROOTApplication::TPyROOTApplication(
       ProcessLine( "#define ROOT_TError 0", kTRUE );
       ProcessLine( "#define ROOT_TGenericClassInfo 0", kTRUE );
 
-   // the following libs are also useful to have, make sure they are loaded...
-      gROOT->LoadClass("TMinuit",     "Minuit");
-      gROOT->LoadClass("TPostScript", "Postscript");
-      gROOT->LoadClass("THtml",       "Html");
+   // following RINT, these are now commented out (rely on auto-loading)
+   //   // the following libs are also useful to have, make sure they are loaded...
+   //      gROOT->LoadClass("TMinuit",     "Minuit");
+   //      gROOT->LoadClass("TPostScript", "Postscript");
+   //      gROOT->LoadClass("THtml",       "Html");
    }
 
 // save current interpreter context
