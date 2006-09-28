@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.18 2006/06/04 12:35:37 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.19 2006/08/15 13:27:24 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -43,6 +43,12 @@
 #if (defined(__linux) || defined(__APPLE__)) && defined(__i386__) && \
      defined(__GNUC__)
 #define R__USEASMSWAP
+#endif
+
+//Big bug in inline byte swapping code with Intel's icc
+#if defined(__INTEL_COMPILER)
+//#if defined(__INTEL_COMPILER_BUILD_DATE) && __INTEL_COMPILER_BUILD_DATE <= 20060816
+#undef R__USEASMSWAP
 #endif
 
 #if defined(R__USEASMSWAP) && !defined(__CINT__)
