@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.11 2006/07/26 14:42:10 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.12 2006/08/05 20:04:47 brun Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -62,6 +62,8 @@ public:
 
    XrdProofUI() { fUid = -1; fGid = -1; }
    ~XrdProofUI() { }
+
+   void Reset() { fUser = ""; fHomeDir = ""; fUid = -1; fGid = -1; }
 };
 
 class XrdBuffer;

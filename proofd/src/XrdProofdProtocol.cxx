@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.18 2006/08/05 20:04:47 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.21 2006/08/06 20:28:56 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -767,18 +767,13 @@ XrdProofdProtocol::XrdProofdProtocol()
    : XrdProtocol("xproofd protocol handler"), fProtLink(this)
 {
    // Protocol constructor
-
-   // Init local vars
-   fLink      = 0;
-   fArgp      = 0;
-   fClientID  = 0;
-   fPClient   = 0;
-   fClient    = 0;
-   fAuthProt  = 0;
-   fBuff      = 0;
-   fTopClient = 0;
-   fSuperUser = 0;
-   fSrvType   = kXPD_TopMaster;
+   fLink = 0;
+   fArgp = 0;
+   fClientID = 0;
+   fPClient = 0;
+   fClient = 0;
+   fAuthProt = 0;
+   fBuff = 0;
 
    // Instantiate a Proofd protocol object
    Reset();
@@ -929,32 +924,36 @@ void XrdProofdProtocol::Reset()
 {
    // Reset static and local vars
 
-   fStatus = 0;
-   fArgp   = 0;
-   fLink   = 0;
-
-   // Magic numbers cut & pasted from Xrootd
-   fhcMax  = 28657;
-   fhcNext = 21;
-   fhcNow  = 13;
-   fhcPrev = 13;
-
-   // Default mode is query
-   fPClient = 0;
-
-   // This will be the unique client identifier
-   if (fClientID)
-      delete[] fClientID;
-   fClientID = 0;
-
-   fClient = 0;
+   // Init local vars
+   fLink      = 0;
+   fArgp      = 0;
+   fStatus    = 0;
+   SafeDelArray(fClientID);
+   fUI.Reset();
+   fCapVer    = 0;
+   fSrvType   = kXPD_TopMaster;
+   fTopClient = 0;
+   fSuperUser = 0;
+   fPClient   = 0;
+   fCID       = -1;
+   fClient    = 0;
+   SafeDelete(fClient);
    if (fAuthProt) {
       fAuthProt->Delete();
       fAuthProt = 0;
    }
    memset(&fEntity, 0, sizeof(fEntity));
-
+   fTopClient = 0;
    fSuperUser = 0;
+   fBuff      = 0;
+   fBlen      = 0;
+   fBlast     = 0;
+   // Magic numbers cut & pasted from Xrootd
+   fhcPrev    = 13;
+   fhcMax     = 28657;
+   fhcNext    = 21;
+   fhcNow     = 13;
+   fhalfBSize = 0;
 }
 
 //______________________________________________________________________________
@@ -1592,38 +1591,43 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
       }
    }
 
-   if (!proofsrv) {
+   if (pmgr) {
 
-      if (fSrvType == kXPD_TopMaster) {
-         // Loop over servers sessions associated to this client and update
-         // their attached client vectors
-         if (pmgr && pmgr->fProofServs.size() > 0) {
-            XrdProofServProxy *psrv = 0;
-            int is = 0;
-            for (is = 0; is < (int) pmgr->fProofServs.size(); is++) {
-               if ((psrv = pmgr->fProofServs.at(is))) {
-                  // Release CIDs in attached sessions: loop over attached clients
-                  XrdClientID *cid = 0;
-                  int ic = 0;
-                  for (ic = 0; ic < (int) psrv->fClients.size(); ic++) {
-                     if ((cid = psrv->fClients.at(ic))) {
-                        if (cid->fP == this)
-                           cid->Reset();
+      if (!proofsrv) {
+
+         // Reset the corresponding client slot in the list of this client
+         // Count the remaining top clients
+         int nc = 0;
+         int ic = 0;
+         for (ic = 0; ic < (int) pmgr->fClients.size(); ic++) {
+            if (this == pmgr->fClients.at(ic))
+               pmgr->fClients[ic] = 0;
+            else if (pmgr->fClients.at(ic) && pmgr->fClients.at(ic)->fTopClient)
+               nc++;
+         }
+
+         // If top master ...
+         if (fSrvType == kXPD_TopMaster) {
+            // Loop over servers sessions associated to this client and update
+            // their attached client vectors
+            if (pmgr->fProofServs.size() > 0) {
+               XrdProofServProxy *psrv = 0;
+               int is = 0;
+               for (is = 0; is < (int) pmgr->fProofServs.size(); is++) {
+                  if ((psrv = pmgr->fProofServs.at(is))) {
+                     // Release CIDs in attached sessions: loop over attached clients
+                     XrdClientID *cid = 0;
+                     int ic = 0;
+                     for (ic = 0; ic < (int) psrv->fClients.size(); ic++) {
+                        if ((cid = psrv->fClients.at(ic))) {
+                           if (cid->fP == this)
+                              cid->Reset();
+                        }
                      }
                   }
                }
             }
-         }
 
-         // Reset the corresponding client slot in the list of this client
-         if (pmgr) {
-            int ic = 0, nc = 0;
-            for (ic = 0; ic < (int) pmgr->fClients.size(); ic++) {
-               if (this == pmgr->fClients.at(ic))
-                  pmgr->fClients[ic] = 0;
-               else if (pmgr->fClients.at(ic) && pmgr->fClients.at(ic)->fTopClient)
-                  nc++;
-            }
             // If no more clients schedule a shutdown at the PROOF session
             // by the sending the appropriate information
             if (nc <= 0 && pmgr->fProofServs.size() > 0) {
@@ -1641,81 +1645,79 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
                   }
                }
             }
+
+         } else {
+
+            // We cannot continue if the top master went away: we cleanup the session
+            if (pmgr->fProofServs.size() > 0) {
+               XrdProofServProxy *psrv = 0;
+               int is = 0;
+               for (is = 0; is < (int) pmgr->fProofServs.size(); is++) {
+                  if ((psrv = pmgr->fProofServs.at(is))) {
+
+                     TRACEP(REQ, "Recycle: found: " << psrv << " (v:" << psrv->IsValid() <<
+                                 ",t:"<<psrv->fSrvType << ",nc:"<<psrv->fClients.size()<<")");
+
+                     XrdOucMutexHelper xpmh(psrv->Mutex());
+
+                     // Send a terminate signal to the proofserv
+                     if (TerminateProofServ(psrv) != 0)
+                        // Try hard kill
+                        KillProofServ(psrv, 1);
+
+                     // Reset instance
+                     psrv->Reset();
+                  }
+               }
+            }
          }
+
       } else {
 
-         // We cannot continue if the top master went away: we cleanup the session
-         if (pmgr && pmgr->fProofServs.size() > 0) {
+         // Internal connection: we need to remove this instance from the list
+         // of proxy servers and to notify the attached clients. 
+         // Loop over servers sessions associated to this client and locate
+         // the one corresponding to this proofserv instance
+         if (pmgr->fProofServs.size() > 0) {
             XrdProofServProxy *psrv = 0;
             int is = 0;
             for (is = 0; is < (int) pmgr->fProofServs.size(); is++) {
-                if ((psrv = pmgr->fProofServs.at(is))) {
+               if ((psrv = pmgr->fProofServs.at(is)) && (psrv->fLink == fLink)) {
 
-                   TRACEP(REQ, "Recycle: found: " << psrv << " (v:" << psrv->IsValid() <<
-                               ",t:"<<psrv->fSrvType << ",nc:"<<psrv->fClients.size()<<")");
+               TRACEP(REQ, "Recycle: found: " << psrv << " (v:" << psrv->IsValid() <<
+                           ",t:"<<psrv->fSrvType << ",nc:"<<psrv->fClients.size()<<")");
 
+                  XrdOucMutexHelper xpmh(psrv->Mutex());
 
-                   XrdOucMutexHelper xpmh(psrv->Mutex());
-
-                   // Send a terminate signal to the proofserv
-                   if (TerminateProofServ(psrv) != 0)
-                      // Try hard kill
-                      KillProofServ(psrv, 1);
-
-                   // Reset instance
-                   psrv->Reset();
-                }
-            }
-         }
-      }
-
-   } else {
-
-      // Internal connection: we need to remove this instance from the list
-      // of proxy servers and to notify the attached clients. 
-      // Loop over servers sessions associated to this client and locate
-      // the one corresponding to this proofserv instance
-      if (pmgr && pmgr->fProofServs.size() > 0) {
-         XrdProofServProxy *psrv = 0;
-         int is = 0;
-         for (is = 0; is < (int) pmgr->fProofServs.size(); is++) {
-            if ((psrv = pmgr->fProofServs.at(is)) && (psrv->fLink == fLink)) {
-
-            TRACEP(REQ, "Recycle: found: " << psrv << " (v:" << psrv->IsValid() <<
-                        ",t:"<<psrv->fSrvType << ",nc:"<<psrv->fClients.size()<<")");
-
-               XrdOucMutexHelper xpmh(psrv->Mutex());
-
-               // Tell other attached clients, if any, that this session is gone
-               if (psrv->fClients.size() > 0) {
-                  char msg[512] = {0};
-                  snprintf(msg, 512, "Recycle: session: %s terminated by peer",
-                                      psrv->Tag());
-                  int len = strlen(msg);
-                  int ic = 0;
-                  XrdProofdProtocol *p = 0;
-                  for (ic = 0; ic < (int) psrv->fClients.size(); ic++) {
-                     // Send message
-                     if ((p = psrv->fClients.at(ic)->fP)) {
-                        unsigned short sid;
-                        p->fResponse.GetSID(sid);
-                        p->fResponse.Set(psrv->fClients.at(ic)->fSid);
-                        p->fResponse.Send(kXR_attn, kXPD_errmsg, msg, len);
-                        p->fResponse.Set(sid);
+                  // Tell other attached clients, if any, that this session is gone
+                  if (psrv->fClients.size() > 0) {
+                     char msg[512] = {0};
+                     snprintf(msg, 512, "Recycle: session: %s terminated by peer",
+                                         psrv->Tag());
+                     int len = strlen(msg);
+                     int ic = 0;
+                     XrdProofdProtocol *p = 0;
+                     for (ic = 0; ic < (int) psrv->fClients.size(); ic++) {
+                        // Send message
+                        if ((p = psrv->fClients.at(ic)->fP)) {
+                           unsigned short sid;
+                           p->fResponse.GetSID(sid);
+                           p->fResponse.Set(psrv->fClients.at(ic)->fSid);
+                           p->fResponse.Send(kXR_attn, kXPD_errmsg, msg, len);
+                           p->fResponse.Set(sid);
+                        }
                      }
                   }
+
+                  // Send a terminate signal to the proofserv
+                  KillProofServ(psrv);
+
+                  // Reset instance
+                  psrv->Reset();
                }
-
-
-               // Send a terminate signal to the proofserv
-               KillProofServ(psrv);
-
-               // Reset instance
-               psrv->Reset();
             }
          }
       }
-
    }
 
    // Set fields to starting point (debugging mostly)
