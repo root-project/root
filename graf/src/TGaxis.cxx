@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.91 2006/05/31 09:13:43 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.92 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "THLimitsFinder.h"
 #include "TColor.h"
 #include "TClass.h"
+#include "TTimeStamp.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
 const Int_t kHori = BIT(9); //defined in TPad
@@ -709,10 +710,14 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             struct tm tp;
             struct tm* tptest;
             time_t timeoffsettest;
+            // get timezone offset for the current location
+            Int_t  zoneoffset = TTimeStamp::GetZoneOffset();
+            // convert offset in hours
+            zoneoffset /= 3600;
             tp.tm_year  = yy-1900;
             tp.tm_mon   = mm-1;
             tp.tm_mday  = dd;
-            tp.tm_hour  = hh;
+            tp.tm_hour  = hh - zoneoffset;
             tp.tm_min   = mi;
             tp.tm_sec   = ss;
             tp.tm_isdst = -1; //daylight saving time is only used on Windows(see mktime man pages)
