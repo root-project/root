@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.145 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.146 2006/09/04 00:45:03 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1647,15 +1647,15 @@ int  TWinNTSystem::MakeDirectory(const char *name)
    if (helper) {
       return helper->MakeDirectory(name);
    }
-
+   const char *proto = (strstr(name, "file:///")) ? "file://" : "file:";
 #ifdef WATCOM
    // It must be as follows
    if (!name) return 0;
-   return ::mkdir(StripOffProto(name, "file:"));
+   return ::mkdir(StripOffProto(name, proto));
 #else
    // but to be in line with TUnixSystem I did like this
    if (!name) return 0;
-   return ::_mkdir(StripOffProto(name, "file:"));
+   return ::_mkdir(StripOffProto(name, proto));
 #endif
 }
 
@@ -1779,7 +1779,8 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
       return helper->OpenDirectory(fdir);
    }
 
-   const char *dir = StripOffProto(fdir, "file:");
+   const char *proto = (strstr(fdir, "file:///")) ? "file://" : "file:";
+   const char *dir = StripOffProto(fdir, proto);
 
    char *entry = new char[strlen(dir)+3];
    struct _stati64 finfo;
@@ -2074,7 +2075,8 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
    if (mode==kExecutePermission)
       // cannot test on exe - use read instead
       mode=kReadPermission;
-   if (::_access(StripOffProto(path, "file:"), mode) == 0)
+   const char *proto = (strstr(path, "file:///")) ? "file://" : "file:";
+   if (::_access(StripOffProto(path, proto), mode) == 0)
       return kFALSE;
    fLastErrorString = GetError();
    return kTRUE;
@@ -2138,7 +2140,8 @@ int TWinNTSystem::GetPathInfo(const char *path, FileStat_t &buf)
    struct _stati64 sbuf;
 
    // Remove trailing backslashes
-   char *newpath = StrDup(StripOffProto(path, "file:"));
+   const char *proto = (strstr(path, "file:///")) ? "file://" : "file:";
+   char *newpath = StrDup(StripOffProto(path, proto));
    int l = strlen(newpath);
    while (l > 1) {
       if (newpath[--l] != '\\' || newpath[--l] != '/') {
