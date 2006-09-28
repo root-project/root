@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.h,v 1.4 2006/02/10 23:43:51 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.h,v 1.5 2006/04/17 21:21:59 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -43,6 +43,7 @@ class TTreeCloner {
    UInt_t    *fBasketNum;        //[fMaxBaskets] index of the basket within the branch.
 
    Long64_t  *fBasketSeek;       //[fMaxBaskets] list of basket position to be read.
+   Long64_t  *fBasketEntry;      //[fMaxBaskets] list of basket start entries.
    Int_t     *fBasketIndex;      //[fMaxBaskets] ordered list of basket indices to be written.
 
    UShort_t   fPidOffset;        //Offset to be added to the copied key/basket.
@@ -53,7 +54,8 @@ class TTreeCloner {
    enum ECloneMethod {
       kDefault             = 0,
       kSortBasketsByBranch = 1,
-      kSortBasketsByOffset = 2
+      kSortBasketsByOffset = 2,
+      kSortBasketsByEntry  = 3
    };
    
 public:

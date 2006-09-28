@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.8 2006/04/17 21:21:59 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.9 2006/07/06 17:42:59 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -42,6 +42,7 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
    fBasketBranchNum(new UInt_t[fMaxBaskets]),
    fBasketNum(new UInt_t[fMaxBaskets]),
    fBasketSeek(new Long64_t[fMaxBaskets]),
+   fBasketEntry(new Long64_t[fMaxBaskets]),
    fBasketIndex(new Int_t[fMaxBaskets]),
    fCloneMethod(TTreeCloner::kDefault),
    fToStartEntries(0)
@@ -52,8 +53,13 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
    TString opt(method);
    opt.ToLower();
    if (opt.Contains("sortbasketsbybranch")) {
+      //::Info("TTreeCloner::TTreeCloner","use: kSortBasketsByBranch");
       fCloneMethod = TTreeCloner::kSortBasketsByBranch;
+   } else if (opt.Contains("sortbasketsbyentry")) {
+      //::Info("TTreeCloner::TTreeCloner","use: kSortBasketsByEntry");
+      fCloneMethod = TTreeCloner::kSortBasketsByEntry;
    } else {
+      //::Info("TTreeCloner::TTreeCloner","use: kSortBasketsByOffset");
       fCloneMethod = TTreeCloner::kSortBasketsByOffset;
    }
    if (fToTree) fToStartEntries = fToTree->GetEntries();
@@ -81,6 +87,7 @@ TTreeCloner::~TTreeCloner()
    delete [] fBasketBranchNum;
    delete [] fBasketNum;
    delete [] fBasketSeek;
+   delete [] fBasketEntry;
    delete [] fBasketIndex;
 }
 
@@ -213,7 +220,8 @@ UInt_t TTreeCloner::CollectBranches()
                                       fToTree->GetListOfBranches());
 
    if (fFromTree->GetBranchRef()) {
-      numBasket += CollectBranches(fFromTree->GetBranchRef(),fToTree->BranchRef());
+      fToTree->BranchRef();
+      numBasket += CollectBranches(fFromTree->GetBranchRef(),fToTree->GetBranchRef());
    }
    return numBasket;
 }
@@ -231,6 +239,7 @@ void TTreeCloner::CollectBaskets()
          fBasketBranchNum[bi] = i;
          fBasketNum[bi] = b;
          fBasketSeek[bi] = from->GetBasketSeek(b);
+         fBasketEntry[bi] = from->GetBasketEntry()[b];
          fBasketIndex[bi] = bi;
       }
    }
@@ -322,6 +331,9 @@ void TTreeCloner::SortBaskets()
    switch (fCloneMethod) {
       case kSortBasketsByBranch:
          // nothing to do, it is already sorted.
+         break;
+      case kSortBasketsByEntry:
+         TMath::Sort( fMaxBaskets, fBasketEntry, fBasketIndex, kFALSE );
          break;
       case kSortBasketsByOffset:
       default:

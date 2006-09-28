@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.303 2006/09/17 19:08:13 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.304 2006/09/21 15:56:10 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2062,7 +2062,6 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    // -- Create a clone of this tree and copy nentries.
    //
    // By default copy all entries.
-   // The option parameter is reserved for future use.
    // Note that only active branches are copied.
    // The compression level of the cloned tree is set to the destination file's
    // compression level.
@@ -2077,11 +2076,15 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    // If 'option' contains the word 'fast' and nentries is -1 and no branch
    // is disabled, the clone will be done without unzipping or unstreaming
    // the baskets (i.e., a direct copy of the raw bytes on disk).
+   // If 'option' also contains 'SortBasketsByEntry' the branches' baskets
+   // will be reordered so that they are in the order they will be read
+   // when processing the full tree.
    // If 'option' also contains 'SortBasketsByBranch', the branches' baskets
    // will be reordered so that for each branch, all its baskets will be
    // stored contiguously.  Typically this will increase the performance when
    // reading a low number of branches (2 to 5) but will decrease the performance
    // when reading more branches (or the full entry).
+   // By default the order will be the order in which they were originally written.
    //
    // For examples of CloneTree, see tutorials:
    //
