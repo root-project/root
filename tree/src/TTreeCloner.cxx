@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.9 2006/07/06 17:42:59 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.10 2006/09/28 17:37:55 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TTree.h"
 #include "TTreeCloner.h"
 #include "TFile.h"
+#include "TLeafB.h"
 #include "TLeafI.h"
 #include "TLeafL.h"
 
@@ -166,6 +167,13 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to)
          } else if (fromleaf_gen->IsA()==TLeafL::Class()) {
             TLeafL *fromleaf = (TLeafL*)from->GetListOfLeaves()->At(i);
             TLeafL *toleaf   = (TLeafL*)to->GetListOfLeaves()->At(i);
+            if (fromleaf->GetMaximum() > toleaf->GetMaximum()) 
+               toleaf->SetMaximum( fromleaf->GetMaximum() );
+            if (fromleaf->GetMinimum() < toleaf->GetMinimum()) 
+               toleaf->SetMinimum( fromleaf->GetMinimum() );
+         } else if (fromleaf_gen->IsA()==TLeafB::Class()) {
+            TLeafB *fromleaf = (TLeafB*)from->GetListOfLeaves()->At(i);
+            TLeafB *toleaf   = (TLeafB*)to->GetListOfLeaves()->At(i);
             if (fromleaf->GetMaximum() > toleaf->GetMaximum()) 
                toleaf->SetMaximum( fromleaf->GetMaximum() );
             if (fromleaf->GetMinimum() < toleaf->GetMinimum()) 
