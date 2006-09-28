@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.61 2006/08/28 14:43:47 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.62 2006/09/04 15:33:35 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -201,6 +201,16 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    sprintf(defhist, "%s.root_hist", gSystem->HomeDirectory());
 #endif
    logon = gEnv->GetValue("Rint.History", defhist);
+   int hist_size = gEnv->GetValue("Rint.HistorySize", 500);
+   int hist_save = gEnv->GetValue("Rint.HistorySave", 400);
+   const char *envHist = gSystem->Getenv("ROOT_HIST");
+   if (envHist) {
+      hist_size = atoi(envHist);
+      envHist = strchr(envHist, ':');
+      if (envHist)
+         hist_save = atoi(envHist+1);
+   }
+   Gl_histsize(hist_size, hist_save);
    Gl_histinit((char *)logon);
    Gl_windowchanged();
 
