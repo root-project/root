@@ -268,7 +268,11 @@ extern pid_t getpgid(pid_t pid);
 extern char *getwd(char *buf);
 
 #if (defined(G__APPLE) || defined(__APPLE__))
+#if __DARWIN_UNIX03
+extern pid_t setpgrp(void);
+#else
 extern int setpgrp(pid_t _pid,pid_t _pgrp);
+#endif
 #elif defined(G__SUN) || defined(__sun)
 extern long setpgrp(void);
 #elif defined(G__FBSD)||defined(__FreeBSD__)||defined(G__OBSD)||defined(__OpenBSD__)||((defined(G__alpha)||defined(__alpha))&&defined(G__GNUC))||((defined(G__alpha)||defined(__alpha))&&defined(G__GNUC))

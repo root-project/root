@@ -142,7 +142,11 @@ $(CINTDIRDLLINC)/G__cpp_%.cxx: $(CINTTMP) $(IOSENUM)
 
 $(CINTDIRL)/G__c_%.c: $(CINTTMP) $(IOSENUM)
 	$(CINTTMP) -K -w1 -z$(notdir $*) -n$@ -D__MAKECINT__ -DG__MAKECINT \
-	   -c-2 -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
+	   $(MACOSX64) -c-2 -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
+
+ifeq ($(ARCH),macosx64)
+$(CINTDIRL)/G__c_posix.c: MACOSX64 = -D__DARWIN_UNIX03
+endif
 
 $(CINTDIRL)/G__c_%.o: CINTCFLAGS += -I. -DG__SYSTYPES_H
 
