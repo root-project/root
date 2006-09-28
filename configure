@@ -921,8 +921,8 @@ with options, prefix with --with-, enables corresponding support
   ruby-libdir        Ruby support, location of libruby
   sapdb-incdir       SapDB support, location of sql.h
   sapdb-libdir       SapDB support, location of libsqlod
-  shift-incdir       RFIO support, location of rfio_api.h
-  shift-libdir       RFIO support, location of libshift
+  rfio-incdir        RFIO support, location of rfio_api.h
+  rfio-libdir        RFIO support, location of librfio or libshift
   srp                Secure Remote Passwd support, location of SRP distribution
   srp-incdir         SRP support, location header of t_server.h
   srp-libdir         SRP support, location header of libsrp.a
@@ -1104,6 +1104,9 @@ if test $# -gt 0 ; then
       --with-ruby-libdir=*)    rubylibdir=$optarg    ; enable_ruby="yes"    ;;
       --with-sapdb-incdir=*)   sapdbincdir=$optarg   ; enable_sapdb="yes"   ;;
       --with-sapdb-libdir=*)   sapdblibdir=$optarg   ; enable_sapdb="yes"   ;;
+      --with-rfio-incdir=*)    shiftincdir=$optarg   ; enable_rfio="yes"    ;;
+      --with-rfio-libdir=*)    shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
+      # leave --with-shift-* for backward compatibility, use --with-rfio-* instead
       --with-shift-incdir=*)   shiftincdir=$optarg   ; enable_rfio="yes"    ;;
       --with-shift-libdir=*)   shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
@@ -1793,7 +1796,7 @@ check_explicit "$enable_qt" "$enable_qt_explicit" \
 #
 # (See http://http://savannah.cern.ch/files/?group=castor)
 #
-# Check for rfio_api.h of CASTOR 2 and libshift.a
+# Check for rfio_api.h of CASTOR 2 and librfio or libshift
 #
 shiftold=""
 if test ! "x$enable_rfio" = "xno" ; then
@@ -1819,7 +1822,8 @@ if test ! "x$enable_rfio" = "xno" ; then
         fi
     fi
 
-    check_library "libshift shiftmd shift" "$enable_shared" "$shiftlibdir" \
+    check_library "librfio libshift shiftmd shift" "$enable_shared" \
+	"$shiftlibdir" \
 	$RFIO $RFIO/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
 	/opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
 	/usr/local/lib/shift /usr/lib /usr/local/lib
@@ -1853,7 +1857,7 @@ if test ! "x$enable_rfio" = "xno" ; then
     fi
 fi
 check_explicit "$enable_rfio" "$enable_rfio_explicit" \
-     "Explicitly required Castor dependencies not fulfilled"
+     "Explicitly required RFIO dependencies not fulfilled"
 
 ######################################################################
 #
@@ -1861,7 +1865,7 @@ check_explicit "$enable_rfio" "$enable_rfio_explicit" \
 #
 # (See http://savannah.cern.ch/files/?group=castor)
 #
-# Check for rfio_api.h, stager_api.h for CASTOR 2 and libshift.a
+# Check for rfio_api.h, stager_api.h for CASTOR 2 and libshift
 #
 castorold=""
 if test ! "x$enable_castor" = "xno" ; then
