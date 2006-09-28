@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.310 2006/09/14 12:46:33 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.311 2006/09/15 15:16:57 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -33,7 +33,6 @@
 #include "TObjString.h"
 #include "TError.h"
 #include "TVirtualFFT.h"
-#include "TSpectrum.h"
 
 //______________________________________________________________________________
 //                     The H I S T O G R A M   Classes
@@ -6711,8 +6710,8 @@ TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
 //  with the estimated background.
 //
 
-   TSpectrum s;
-   return s.Background(this,niter,option);
+   
+   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum::StaticBackground((TH1*)0x%x,%d,\"%s\")",this,niter,option));
 }
 
 //______________________________________________________________________________
@@ -6725,8 +6724,7 @@ Int_t TH1::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
    //note the difference in the default value for option compared to TSpectrum::Search
    //option="" by default (instead of "goff")
    
-   TSpectrum s;
-   return s.Search(this,sigma,option,threshold);
+   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum::StaticSearch((TH1*)0x%x,%g,\"%s\",%g)",this,sigma,option,threshold));
 }
    
 

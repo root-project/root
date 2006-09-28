@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.48 2006/06/28 13:11:47 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.cxx,v 1.49 2006/09/11 21:01:06 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -5563,3 +5563,24 @@ source[i]=h-&gt;GetBinContent(i + 1);</p>
 
 <!-- */
 // --> End_Html
+
+
+// STATIC functions (called by TH1)
+
+//_______________________________________________________________________________
+Int_t TSpectrum::StaticSearch(const TH1 *hist, Double_t sigma, Option_t *option, Double_t threshold)
+{
+   //static function, interface to TSpectrum::Search
+   
+   TSpectrum s;
+   return s.Search(hist,sigma,option,threshold);
+}
+
+//_______________________________________________________________________________
+TH1 *TSpectrum::StaticBackground(const TH1 *hist,Int_t niter, Option_t *option)
+{
+   //static function, interface to TSpectrum::Background
+   
+   TSpectrum s;
+   return s.Background(hist,niter,option);
+}

@@ -1,4 +1,4 @@
-/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.21 2006/01/17 16:47:02 brun Exp $ */
+/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.22 2006/05/17 06:59:24 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -57,8 +57,6 @@
 #pragma link C++ class TProfile-;
 #pragma link C++ class TProfile2D-;
 #pragma link C++ class TProfile3D+;
-#pragma link C++ class TSpectrum+;
-#pragma link C++ class TSpectrum2+;
 #pragma link C++ class TUtilHist;
 #pragma link C++ class TVirtualHistPainter+;
 

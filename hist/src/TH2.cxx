@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.97 2006/07/03 12:12:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.98 2006/08/28 13:34:52 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -21,7 +21,6 @@
 #include "THLimitsFinder.h"
 #include "TError.h"
 #include "TObjString.h"
-#include "TSpectrum2.h"
 
 
 ClassImp(TH2)
@@ -2285,11 +2284,11 @@ Int_t TH2::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
    //the function finds peaks in this histogram where the width is > sigma
    //and the peak maximum greater than threshold*maximum bin content of this.
    //for more detauils see TSpectrum::Search.
-   //note the difference in the default value for option compared to TSpectrum::Search
+   //note the difference in the default value for option compared to TSpectrum2::Search
    //option="" by default (instead of "goff")
    
-   TSpectrum2 s;
-   return s.Search(this,sigma,option,threshold);
+   
+   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum2::StaticSearch((TH1*)0x%x,%g,\"%s\",%g)",this,sigma,option,threshold));
 }
    
 

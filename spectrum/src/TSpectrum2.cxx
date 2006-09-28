@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.14 2006/05/17 16:37:26 couet Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2.cxx,v 1.15 2006/06/28 13:11:49 brun Exp $
 // Author: Miroslav Morhac   17/01/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -3377,3 +3377,15 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
 
 <!-- */
 // --> End_Html
+
+
+// STATIC functions (called by TH1)
+
+//_______________________________________________________________________________
+Int_t TSpectrum2::StaticSearch(const TH1 *hist, Double_t sigma, Option_t *option, Double_t threshold)
+{
+   //static function, interface to TSpectrum2::Search
+   
+   TSpectrum2 s;
+   return s.Search(hist,sigma,option,threshold);
+}
