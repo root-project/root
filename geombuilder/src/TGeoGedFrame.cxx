@@ -1,4 +1,4 @@
-// @(#)root/geombuilder:$Name:  $:$Id: TGeoGedFrame.cxx,v 1.2 2006/09/26 13:44:56 rdm Exp $
+// @(#)root/geombuilder:$Name:  $:$Id: TGeoGedFrame.cxx,v 1.3 2006/09/27 08:48:18 rdm Exp $
 // Author: Matevz Tadel   25/09/2006
 
 #include "TGeoGedFrame.h"
@@ -15,6 +15,7 @@ TGeoGedFrame::TGeoGedFrame(const TGWindow *p, Int_t width, Int_t height,
   TGedFrame(p, width, height, options, back),
   fTab(0), fTabMgr(0), fPad(0)
 {
+// Constructor.
    fTab = fGedEditor->GetTab();
    fPad = fGedEditor->GetPad();
    fTabMgr = TGeoTabManager::GetMakeTabManager(fGedEditor);
