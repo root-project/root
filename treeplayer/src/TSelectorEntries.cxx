@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.63 2006/08/06 07:15:01 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorEntries.cxx,v 1.2 2006/09/18 15:13:51 pcanal Exp $
 // Author: Philippe Canal 09/06/2006
 
 /*************************************************************************
@@ -186,6 +186,7 @@ Bool_t TSelectorEntries::Process(Long64_t /* entry */)
 //______________________________________________________________________________
 void TSelectorEntries::SetSelection(const char *selection)
 {
+   //set the selection expression
    if (!fInput) {
       fInput = new TList;
    }

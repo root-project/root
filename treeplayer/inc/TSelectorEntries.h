@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorEntries.h,v 1.1 2006/09/17 19:06:35 pcanal Exp $
 // Author: Philippe Canal 09/06/2006
 
 /*************************************************************************
@@ -58,7 +58,7 @@ public :
    virtual void     SlaveTerminate();
    virtual void     Terminate();
 
-   ClassDef(TSelectorEntries,1);
+   ClassDef(TSelectorEntries,1); //A specialized TSelector for TTree::GetEntries(selection)
 };
 
 #endif
