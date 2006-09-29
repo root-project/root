@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.139 2006/08/01 10:54:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.140 2006/09/25 08:18:39 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -782,6 +782,8 @@ TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fLayoutBroken  = kFALSE;
    fMustCleanup   = kNoCleanup;
    fMapSubwindows = fParent->IsMapSubwindows();
+   if (!fgDefaultHints)
+      fgDefaultHints = new TGLayoutHints;
 
    if (fOptions & kHorizontalFrame)
       SetLayoutManager(new TGHorizontalLayout(this));
@@ -804,8 +806,11 @@ TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *par
    fLayoutBroken  = kFALSE;
    fMustCleanup   = kNoCleanup;
    fMapSubwindows = fParent->IsMapSubwindows();
+   if (!fgDefaultHints)
+      fgDefaultHints = new TGLayoutHints;
 
    SetLayoutManager(new TGVerticalLayout(this));
+
    SetWindowName();
 }
 
@@ -1008,8 +1013,6 @@ void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
    // added to different composite frames but still need to be deleted by
    // the user.
 
-   if (!fgDefaultHints)
-      fgDefaultHints = new TGLayoutHints;
    TGFrameElement *nw = new TGFrameElement(f, l ? l : fgDefaultHints);
    fList->Add(nw);
 
