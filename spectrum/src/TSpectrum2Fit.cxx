@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2Fit.cxx,v 1.7 2006/25/09 09:42:23 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2Fit.cxx,v 1.1 2006/09/28 19:19:52 brun Exp $
 // Author: Miroslav Morhac   25/09/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -29,12 +29,8 @@
 //                                                                         //
 //____________________________________________________________________________
 
-/////////////////////  September 2006
-
 #include "TSpectrum2Fit.h"
 #include "TMath.h"
-
-//#define PEAK_WINDOW 1024
 
 ClassImp(TSpectrum2Fit)  
     
@@ -45,33 +41,33 @@ TSpectrum2Fit::TSpectrum2Fit() :TNamed("Spectrum2Fit", "Miroslav Morhac peak fit
    fNPeaks = 0;      
    fPositionInitX   = 0;
    fPositionCalcX   = 0;   
-   fPositionErrX   = 0;   
-   fFixPositionX   = 0;   
+   fPositionErrX    = 0;   
+   fFixPositionX    = 0;   
    fPositionInitY   = 0;
    fPositionCalcY   = 0;   
-   fPositionErrY   = 0;   
-   fFixPositionY   = 0;      
-   fPositionInitX1   = 0;
-   fPositionCalcX1   = 0;   
+   fPositionErrY    = 0;   
+   fFixPositionY    = 0;      
+   fPositionInitX1  = 0;
+   fPositionCalcX1  = 0;   
    fPositionErrX1   = 0;   
    fFixPositionX1   = 0;     
-   fPositionInitY1   = 0;
-   fPositionCalcY1   = 0;   
+   fPositionInitY1  = 0;
+   fPositionCalcY1  = 0;   
    fPositionErrY1   = 0;   
    fFixPositionY1   = 0;          
    fAmpInit   = 0;   
    fAmpCalc   = 0;   
-   fAmpErr   = 0;   
-   fFixAmp   = 0;     
+   fAmpErr    = 0;   
+   fFixAmp    = 0;     
    fAmpInitX1   = 0;   
    fAmpCalcX1   = 0;   
-   fAmpErrX1   = 0;   
-   fFixAmpX1   = 0;        
+   fAmpErrX1    = 0;   
+   fFixAmpX1    = 0;        
    fAmpInitY1   = 0;   
    fAmpCalcY1   = 0;   
-   fAmpErrY1   = 0;   
-   fFixAmpY1   = 0;           
-   fVolume   = 0;   
+   fAmpErrY1    = 0;   
+   fFixAmpY1    = 0;           
+   fVolume      = 0;   
    fVolumeErr   = 0;      
 }   
 //______________________________________________________________________________
@@ -200,9 +196,11 @@ Arial'><o:p></o:p></span></p>
    fAyInit = 0;
    fFixAy = true;
 }
+
 //______________________________________________________________________________
 TSpectrum2Fit::~TSpectrum2Fit() 
 {
+   // destructor
    delete [] fPositionInitX;   
    delete [] fPositionCalcX;   
    delete [] fPositionErrX;
@@ -237,6 +235,7 @@ TSpectrum2Fit::~TSpectrum2Fit()
 
 
 /////////////////BEGINNING OF AUXILIARY FUNCTIONS USED BY FITTING FUNCTIONS//////////////////////////
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Erfc(Double_t x) 
 {   
 //////////////////////////////////////////////////////////////////////////////
@@ -263,6 +262,8 @@ Double_t TSpectrum2Fit::Erfc(Double_t x)
       c = 1. - c;
    return (c);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derfc(Double_t x) 
 {  
 //////////////////////////////////////////////////////////////////////////////
@@ -288,8 +289,11 @@ Double_t TSpectrum2Fit::Derfc(Double_t x)
        2. * a * Erfc(a);
    return (c);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Ourpowl(Double_t a, Int_t pw)
-{                               //power function
+{                               
+   //power function
    Double_t c;
    c = 1;
    if (pw > 0)
@@ -336,8 +340,8 @@ void TSpectrum2Fit::StiefelInversion(Double_t **a, Int_t size)
    do {
       normk = 0;
       
-          //calculation of rk and norm
-          for (i = 0; i < size; i++) {
+         //calculation of rk and norm
+      for (i = 0; i < size; i++) {
          a[i][size + 2] = -a[i][size]; //rk=-C
          for (j = 0; j < size; j++) {
             a[i][size + 2] += a[i][j] * a[j][size + 1]; //A*xk-C
@@ -345,18 +349,18 @@ void TSpectrum2Fit::StiefelInversion(Double_t **a, Int_t size)
          normk += a[i][size + 2] * a[i][size + 2]; //calculation normk
       }
       
-          //calculation of sk
-          if (k != 0) {
+      //calculation of sk
+      if (k != 0) {
          sk = normk / normk_old;
       }
       
-          //calculation of uk
-          for (i = 0; i < size; i++) {
+      //calculation of uk
+      for (i = 0; i < size; i++) {
          a[i][size + 3] = -a[i][size + 2] + sk * a[i][size + 3]; //uk=-rk+sk*uk-1
       }
       
-          //calculation of lambdak
-          lambdak = 0;
+      //calculation of lambdak
+      lambdak = 0;
       for (i = 0; i < size; i++) {
          for (j = 0, b = 0; j < size; j++) {
             b += a[i][j] * a[j][size + 3]; //A*uk
@@ -375,6 +379,8 @@ void TSpectrum2Fit::StiefelInversion(Double_t **a, Int_t size)
    } while (k < size && TMath::Abs(normk) > 1e-50); //computer zero
    return;
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Shape2(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                             const Double_t *parameter, Double_t sigmax,
                             Double_t sigmay, Double_t ro, Double_t a0, Double_t ax,
@@ -482,6 +488,8 @@ Double_t TSpectrum2Fit::Shape2(Int_t numOfFittedPeaks, Double_t x, Double_t y,
    vx = vx + a0 + ax * x + ay * y;
    return (vx);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Deramp2(Double_t x, Double_t y, Double_t x0, Double_t y0,
                             Double_t sigmax, Double_t sigmay, Double_t ro,
                             Double_t txy, Double_t sxy, Double_t bx, Double_t by) 
@@ -532,6 +540,8 @@ Double_t TSpectrum2Fit::Deramp2(Double_t x, Double_t y, Double_t x0, Double_t y0
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derampx(Double_t x, Double_t x0, Double_t sigmax, Double_t tx,
                              Double_t sx, Double_t bx) 
 {  
@@ -577,6 +587,8 @@ Double_t TSpectrum2Fit::Derampx(Double_t x, Double_t x0, Double_t sigmax, Double
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Deri02(Double_t x, Double_t y, Double_t a, Double_t x0,
                             Double_t y0, Double_t sigmax, Double_t sigmay,
                             Double_t ro, Double_t txy, Double_t sxy, Double_t bx,
@@ -635,6 +647,8 @@ Double_t TSpectrum2Fit::Deri02(Double_t x, Double_t y, Double_t a, Double_t x0,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derderi02(Double_t x, Double_t y, Double_t a, Double_t x0,
                               Double_t y0, Double_t sigmax, Double_t sigmay,
                               Double_t ro) 
@@ -731,6 +745,8 @@ Double_t TSpectrum2Fit::Derj02(Double_t x, Double_t y, Double_t a, Double_t x0,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derderj02(Double_t x, Double_t y, Double_t a, Double_t x0,
                                Double_t y0, Double_t sigmax, Double_t sigmay,
                                Double_t ro) 
@@ -769,6 +785,8 @@ Double_t TSpectrum2Fit::Derderj02(Double_t x, Double_t y, Double_t a, Double_t x
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Deri01(Double_t x, Double_t ax, Double_t x0, Double_t sigmax,
                             Double_t tx, Double_t sx, Double_t bx) 
 {  
@@ -817,6 +835,8 @@ Double_t TSpectrum2Fit::Deri01(Double_t x, Double_t ax, Double_t x0, Double_t si
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derderi01(Double_t x, Double_t ax, Double_t x0,
                                Double_t sigmax) 
 {  
@@ -847,6 +867,8 @@ Double_t TSpectrum2Fit::Derderi01(Double_t x, Double_t ax, Double_t x0,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Dersigmax(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                                const Double_t *parameter, Double_t sigmax,
                                Double_t sigmay, Double_t ro, Double_t txy,
@@ -937,6 +959,8 @@ Double_t TSpectrum2Fit::Dersigmax(Int_t numOfFittedPeaks, Double_t x, Double_t y
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derdersigmax(Int_t numOfFittedPeaks, Double_t x,
                                   Double_t y, const Double_t *parameter,
                                   Double_t sigmax, Double_t sigmay,
@@ -996,6 +1020,8 @@ Double_t TSpectrum2Fit::Derdersigmax(Int_t numOfFittedPeaks, Double_t x,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Dersigmay(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                                const Double_t *parameter, Double_t sigmax,
                                Double_t sigmay, Double_t ro, Double_t txy,
@@ -1086,6 +1112,8 @@ Double_t TSpectrum2Fit::Dersigmay(Int_t numOfFittedPeaks, Double_t x, Double_t y
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derdersigmay(Int_t numOfFittedPeaks, Double_t x,
                                   Double_t y, const Double_t *parameter,
                                   Double_t sigmax, Double_t sigmay,
@@ -1145,6 +1173,8 @@ Double_t TSpectrum2Fit::Derdersigmay(Int_t numOfFittedPeaks, Double_t x,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derro(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                            const Double_t *parameter, Double_t sx, Double_t sy,
                            Double_t r) 
@@ -1188,6 +1218,8 @@ Double_t TSpectrum2Fit::Derro(Int_t numOfFittedPeaks, Double_t x, Double_t y,
    }
    return (vx);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Dertxy(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                             const Double_t *parameter, Double_t sigmax,
                             Double_t sigmay, Double_t bx, Double_t by) 
@@ -1226,6 +1258,8 @@ Double_t TSpectrum2Fit::Dertxy(Int_t numOfFittedPeaks, Double_t x, Double_t y,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Dersxy(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                             const Double_t *parameter, Double_t sigmax,
                             Double_t sigmay) 
@@ -1257,6 +1291,8 @@ Double_t TSpectrum2Fit::Dersxy(Int_t numOfFittedPeaks, Double_t x, Double_t y,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Dertx(Int_t numOfFittedPeaks, Double_t x,
                            const Double_t *parameter, Double_t sigmax,
                            Double_t bx) 
@@ -1291,6 +1327,8 @@ Double_t TSpectrum2Fit::Dertx(Int_t numOfFittedPeaks, Double_t x,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derty(Int_t numOfFittedPeaks, Double_t x,
                            const Double_t *parameter, Double_t sigmax,
                            Double_t bx) 
@@ -1325,6 +1363,8 @@ Double_t TSpectrum2Fit::Derty(Int_t numOfFittedPeaks, Double_t x,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Dersx(Int_t numOfFittedPeaks, Double_t x,
                            const Double_t *parameter, Double_t sigmax) 
 {  
@@ -1353,6 +1393,8 @@ Double_t TSpectrum2Fit::Dersx(Int_t numOfFittedPeaks, Double_t x,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Dersy(Int_t numOfFittedPeaks, Double_t x,
                            const Double_t *parameter, Double_t sigmax) 
 {  
@@ -1381,6 +1423,8 @@ Double_t TSpectrum2Fit::Dersy(Int_t numOfFittedPeaks, Double_t x,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derbx(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                            const Double_t *parameter, Double_t sigmax,
                            Double_t sigmay, Double_t txy, Double_t tx, Double_t bx,
@@ -1438,6 +1482,8 @@ Double_t TSpectrum2Fit::Derbx(Int_t numOfFittedPeaks, Double_t x, Double_t y,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derby(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                            const Double_t *parameter, Double_t sigmax,
                            Double_t sigmay, Double_t txy, Double_t ty, Double_t bx,
@@ -1495,6 +1541,8 @@ Double_t TSpectrum2Fit::Derby(Int_t numOfFittedPeaks, Double_t x, Double_t y,
    }
    return (r1);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Volume(Double_t a, Double_t sx, Double_t sy, Double_t ro) 
 {  
 //////////////////////////////////////////////////////////////////////////////////
@@ -1518,6 +1566,8 @@ Double_t TSpectrum2Fit::Volume(Double_t a, Double_t sx, Double_t sy, Double_t ro
    r = 2 * a * pi * sx * sy * r;
    return (r);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derpa2(Double_t sx, Double_t sy, Double_t ro) 
 {  
 //////////////////////////////////////////////////////////////////////////////////
@@ -1541,6 +1591,8 @@ Double_t TSpectrum2Fit::Derpa2(Double_t sx, Double_t sy, Double_t ro)
    r = 2 * pi * sx * sy * r;
    return (r);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derpsigmax(Double_t a, Double_t sy, Double_t ro) 
 {  
 //////////////////////////////////////////////////////////////////////////////////
@@ -1565,6 +1617,8 @@ Double_t TSpectrum2Fit::Derpsigmax(Double_t a, Double_t sy, Double_t ro)
    r = a * 2 * pi * sy * r;
    return (r);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derpsigmay(Double_t a, Double_t sx, Double_t ro) 
 {  
 //////////////////////////////////////////////////////////////////////////////////
@@ -1589,6 +1643,8 @@ Double_t TSpectrum2Fit::Derpsigmay(Double_t a, Double_t sx, Double_t ro)
    r = a * 2 * pi * sx * r;
    return (r);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrum2Fit::Derpro(Double_t a, Double_t sx, Double_t sy, Double_t ro) 
 {  
 //////////////////////////////////////////////////////////////////////////////////
@@ -1616,8 +1672,8 @@ Double_t TSpectrum2Fit::Derpro(Double_t a, Double_t sx, Double_t sy, Double_t ro
 
 
 /////////////////END OF AUXILIARY FUNCTIONS USED BY FITTING FUNCTION fit2//////////////////////////
-    
 /////////////////FITTING FUNCTION WITHOUT MATRIX INVERSION///////////////////////////////////////
+//______________________________________________________________________________
 void TSpectrum2Fit::FitAwmi(Float_t **source) 
 {
 /////////////////////////////////////////////////////////////////////////////
@@ -4115,7 +4171,7 @@ style=3D'font-size:10.0pt'><o:p>&nbsp;</o:p></span></p>
       }
       
           //filling vectors
-          alpha = fAlpha;
+      alpha = fAlpha;
       chi_opt = 0, pw = fPower - 2;
       for (i1 = fXmin; i1 <= fXmax; i1++) {
          for (i2 = fYmin; i2 <= fYmax; i2++) {
@@ -4796,12 +4852,12 @@ style=3D'font-size:10.0pt'><o:p>&nbsp;</o:p></span></p>
             working_space[2 * shift + j] = 0; //der[j]
       }
       
-          //calculate chi_opt
-          chi2 = chi_opt;
+      //calculate chi_opt
+      chi2 = chi_opt;
       chi_opt = TMath::Sqrt(TMath::Abs(chi_opt));
       
-          //calculate new parameters
-          regul_cycle = 0;
+      //calculate new parameters
+      regul_cycle = 0;
       for (j = 0; j < size; j++) {
          working_space[4 * shift + j] = working_space[shift + j]; //temp_xk[j]=xk[j]
       }
@@ -6696,14 +6752,13 @@ o:p></span></p>
          }
       }
       
-          //filling working matrix
-          alpha = fAlpha;
+      //filling working matrix
+      alpha = fAlpha;
       chi_opt = 0;
       for (i1 = fXmin; i1 <= fXmax; i1++) {
          for (i2 = fYmin; i2 <= fYmax; i2++) {
-            
-                //calculation of gradient vector
-                for (j = 0, k = 0; j < fNPeaks; j++) {
+            //calculation of gradient vector
+            for (j = 0, k = 0; j < fNPeaks; j++) {
                if (fFixAmp[j] == false) {
                   working_space[2 * shift + k] =
                       Deramp2((Double_t) i1, (Double_t) i2,
@@ -6971,12 +7026,12 @@ o:p></span></p>
          working_space[2 * shift + i] = working_matrix[i][size + 1]; //der
       }
       
-          //calculate chi_opt
-          chi2 = chi_opt;
+      //calculate chi_opt
+      chi2 = chi_opt;
       chi_opt = TMath::Sqrt(TMath::Abs(chi_opt));
       
-          //calculate new parameters
-          regul_cycle = 0;
+      //calculate new parameters
+      regul_cycle = 0;
       for (j = 0; j < size; j++) {
          working_space[4 * shift + j] = working_space[shift + j]; //temp_xk[j]=xk[j]
       }
@@ -8191,6 +8246,7 @@ void TSpectrum2Fit::SetFitParameters(Int_t xmin,Int_t xmax,Int_t ymin,Int_t ymax
    fXmin=xmin,fXmax=xmax,fYmin=ymin,fYmax=ymax,fNumberIterations=numberIterations,fAlpha=alpha,fStatisticType=statisticType,fAlphaOptim=alphaOptim,fPower=power,fFitTaylor=fitTaylor;
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_t sigmaY, Bool_t fixSigmaY, Double_t ro, Bool_t fixRo, const Float_t *positionInitX, const Bool_t *fixPositionX, const Float_t *positionInitY, const Bool_t *fixPositionY, const Float_t *positionInitX1, const Bool_t *fixPositionX1, const Float_t *positionInitY1, const Bool_t *fixPositionY1, const Float_t *ampInit, const Bool_t *fixAmp, const Float_t *ampInitX1, const Bool_t *fixAmpX1, const Float_t *ampInitY1, const Bool_t *fixAmpY1)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8273,6 +8329,7 @@ void TSpectrum2Fit::SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_
    }
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double_t axInit, Bool_t fixAx, Double_t ayInit, Bool_t fixAy)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8295,6 +8352,7 @@ void TSpectrum2Fit::SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Doubl
    fFixAy = fixAy;    
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::SetTailParameters(Double_t tInitXY, Bool_t fixTxy, Double_t tInitX, Bool_t fixTx, Double_t tInitY, Bool_t fixTy, Double_t bInitX, Bool_t fixBx, Double_t bInitY, Bool_t fixBy, Double_t sInitXY, Bool_t fixSxy, Double_t sInitX, Bool_t fixSx, Double_t sInitY, Bool_t fixSy)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8336,6 +8394,7 @@ void TSpectrum2Fit::SetTailParameters(Double_t tInitXY, Bool_t fixTxy, Double_t 
    fFixSy = fixSy;              
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::GetPositions(Float_t *positionsX, Float_t *positionsY, Float_t *positionsX1, Float_t *positionsY1)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8355,6 +8414,7 @@ void TSpectrum2Fit::GetPositions(Float_t *positionsX, Float_t *positionsY, Float
    }
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::GetPositionErrors(Float_t *positionErrorsX, Float_t *positionErrorsY, Float_t *positionErrorsX1, Float_t *positionErrorsY1)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8375,6 +8435,7 @@ void TSpectrum2Fit::GetPositionErrors(Float_t *positionErrorsX, Float_t *positio
    }
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::GetAmplitudes(Float_t *amplitudes, Float_t *amplitudesX1, Float_t *amplitudesY1)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8393,6 +8454,7 @@ void TSpectrum2Fit::GetAmplitudes(Float_t *amplitudes, Float_t *amplitudesX1, Fl
    }
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::GetAmplitudeErrors(Float_t *amplitudeErrors, Float_t *amplitudeErrorsX1, Float_t *amplitudeErrorsY1)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8411,6 +8473,7 @@ void TSpectrum2Fit::GetAmplitudeErrors(Float_t *amplitudeErrors, Float_t *amplit
    }
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::GetVolumes(Float_t *volumes)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8424,6 +8487,7 @@ void TSpectrum2Fit::GetVolumes(Float_t *volumes)
    }
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::GetVolumeErrors(Float_t *volumeErrors)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8437,6 +8501,7 @@ void TSpectrum2Fit::GetVolumeErrors(Float_t *volumeErrors)
    }
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::GetSigmaX(Double_t &sigmaX, Double_t &sigmaErrX)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8450,6 +8515,7 @@ void TSpectrum2Fit::GetSigmaX(Double_t &sigmaX, Double_t &sigmaErrX)
    sigmaErrX=fSigmaErrX;
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::GetSigmaY(Double_t &sigmaY, Double_t &sigmaErrY)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8463,6 +8529,7 @@ void TSpectrum2Fit::GetSigmaY(Double_t &sigmaY, Double_t &sigmaErrY)
    sigmaErrY=fSigmaErrY;
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::GetRo(Double_t &ro, Double_t &roErr)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8475,6 +8542,8 @@ void TSpectrum2Fit::GetRo(Double_t &ro, Double_t &roErr)
    ro=fRoCalc;
    roErr=fRoErr;
 }
+
+//______________________________________________________________________________
 void TSpectrum2Fit::GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Double_t &ax, Double_t &axErr, Double_t &ay, Double_t &ayErr)
 {
 //////////////////////////////////////////////////////////////////////////////
@@ -8497,6 +8566,7 @@ void TSpectrum2Fit::GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Doubl
    ayErr = fAyErr;    
 }
 
+//______________________________________________________________________________
 void TSpectrum2Fit::GetTailParameters(Double_t &txy, Double_t &txyErr, Double_t &tx, Double_t &txErr, Double_t &ty, Double_t &tyErr, Double_t &bx, Double_t &bxErr, Double_t &by, Double_t &byErr, Double_t &sxy, Double_t &sxyErr, Double_t &sx, Double_t &sxErr, Double_t &sy, Double_t &syErr)
 {
 //////////////////////////////////////////////////////////////////////////////

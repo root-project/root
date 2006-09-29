@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2Transform.cxx,v 1.7 2006/09/25 09:42:23 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2Transform.cxx,v 1.1 2006/09/28 19:19:52 brun Exp $
 // Author: Miroslav Morhac   25/09/06
 
 //__________________________________________________________________________
@@ -253,7 +253,7 @@ void TSpectrum2Transform::BitReverse(Float_t *working_space, Int_t num)
    for (i = 1; i <= num; i++) {
       ib = i - 1;
       il = 1;
-    lab9:ibd = ib / 2;
+      lab9: ibd = ib / 2;
       ipower[il - 1] = 1;
       if (ib == (ibd * 2))
          ipower[il - 1] = 0;
@@ -262,7 +262,7 @@ void TSpectrum2Transform::BitReverse(Float_t *working_space, Int_t num)
       ib = ibd;
       il = il + 1;
       goto lab9;
-    lab10:ip = 1;
+      lab10: ip = 1;
       ifac = num;
       for (i1 = 1; i1 <= il; i1++) {
          ifac = ifac / 2;
@@ -357,13 +357,12 @@ void TSpectrum2Transform::Fourier(Float_t *working_space, Int_t num, Int_t hartl
       working_space[j - 1 + num] = working_space[i - 1 + num];
       working_space[i - 1] = val1;
       working_space[i - 1 + num] = val2;
-    lab55:k = n2;
-    lab60:if (k >= j)
-         goto lab65;
+      lab55: k = n2;
+      lab60: if (k >= j) goto lab65;
       j = j - k;
       k = k / 2;
       goto lab60;
-    lab65:j = j + k;
+      lab65: j = j + k;
    }
    a = num;
    a = TMath::Sqrt(a);
@@ -424,7 +423,7 @@ void TSpectrum2Transform::BitReverseHaar(Float_t *working_space, Int_t shift, In
    for (i = 1; i <= num; i++) {
       ib = i - 1;
       il = 1;
-    lab9:ibd = ib / 2;
+      lab9:  ibd = ib / 2;
       ipower[il - 1] = 1;
       if (ib == (ibd * 2))
          ipower[il - 1] = 0;
@@ -433,7 +432,7 @@ void TSpectrum2Transform::BitReverseHaar(Float_t *working_space, Int_t shift, In
       ib = ibd;
       il = il + 1;
       goto lab9;
-    lab10:ip = 1;
+      lab10:  ip = 1;
       ifac = num;
       for (i1 = 1; i1 <= il; i1++) {
          ifac = ifac / 2;

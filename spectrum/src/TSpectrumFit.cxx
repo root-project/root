@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrumFit.cxx,v 1.32 2006/25/09 14:10:03 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrumFit.cxx,v 1.1 2006/09/28 19:19:52 brun Exp $
 // Author: Miroslav Morhac   25/09/06
 
 //__________________________________________________________________________
@@ -706,6 +706,8 @@ Double_t TSpectrumFit::Derpsigma(Double_t a, Double_t t, Double_t b)
    }
    return (r);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrumFit::Derpt(Double_t a, Double_t sigma, Double_t b) 
 {  
 //////////////////////////////////////////////////////////////////////////////////
@@ -730,6 +732,8 @@ Double_t TSpectrumFit::Derpt(Double_t a, Double_t sigma, Double_t b)
    }
    return (r);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrumFit::Derpb(Double_t a, Double_t sigma, Double_t t, Double_t b) 
 {  
 //////////////////////////////////////////////////////////////////////////////////
@@ -753,8 +757,11 @@ Double_t TSpectrumFit::Derpb(Double_t a, Double_t sigma, Double_t t, Double_t b)
    }
    return (r);
 }
+
+//______________________________________________________________________________
 Double_t TSpectrumFit::Ourpowl(Double_t a, Int_t pw)
-{                               //power function
+{                               
+   //power function
    Double_t c;
    c = 1;
    if (pw > 0)
@@ -2377,12 +2384,12 @@ FR'>}<o:p></o:p></span></p>
             working_space[2 * shift + j] = 0;        //der[j]
       }
       
-          //calculate chi_opt
-          chi2 = chi_opt;
+      //calculate chi_opt
+      chi2 = chi_opt;
       chi_opt = TMath::Sqrt(TMath::Abs(chi_opt));
       
-          //calculate new parameters
-          regul_cycle = 0;
+      //calculate new parameters
+      regul_cycle = 0;
       for (j = 0; j < rozmer; j++) {
          working_space[4 * shift + j] = working_space[shift + j];        //temp_xk[j]=xk[j]
       }
@@ -2953,18 +2960,18 @@ void TSpectrumFit::StiefelInversion(Double_t **a, Int_t size)
          normk += a[i][size + 2] * a[i][size + 2];        //calculation normk
       }
       
-          //calculation of sk
-          if (k != 0) {
+      //calculation of sk
+      if (k != 0) {
          sk = normk / normk_old;
       }
       
-          //calculation of uk
+      //calculation of uk
       for (i = 0; i < size; i++) {
          a[i][size + 3] = -a[i][size + 2] + sk * a[i][size + 3];        //uk=-rk+sk*uk-1
       }
       
-          //calculation of lambdak
-          lambdak = 0;
+      //calculation of lambdak
+      lambdak = 0;
       for (i = 0; i < size; i++) {
          for (j = 0, b = 0; j < size; j++) {
             b += a[i][j] * a[j][size + 3];        //A*uk
@@ -3634,8 +3641,8 @@ o:p></span></p>
          }
       }
       
-          //filling working matrix
-          alpha = fAlpha;
+      //filling working matrix
+      alpha = fAlpha;
       chi_opt = 0;
       for (i = fXmin; i <= fXmax; i++) {
          
@@ -3761,12 +3768,12 @@ o:p></span></p>
          working_space[2 * shift + i] = working_matrix[i][rozmer + 1];        //der
       }
       
-          //calculate chi_opt
-          chi2 = chi_opt;
+      //calculate chi_opt
+      chi2 = chi_opt;
       chi_opt = TMath::Sqrt(TMath::Abs(chi_opt));
       
-          //calculate new parameters
-          regul_cycle = 0;
+      //calculate new parameters
+      regul_cycle = 0;
       for (j = 0; j < rozmer; j++) {
          working_space[4 * shift + j] = working_space[shift + j];        //temp_xk[j]=xk[j]
       }

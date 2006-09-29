@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrumTransform.cxx,v 1.32 2006/09/25 14:10:03 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrumTransform.cxx,v 1.1 2006/09/28 19:19:52 brun Exp $
 // Author: Miroslav Morhac   25/09/06
 
 //__________________________________________________________________________
@@ -343,13 +343,12 @@ void TSpectrumTransform::Fourier(float *working_space, int num, int hartley,
       working_space[j - 1 + num] = working_space[i - 1 + num];
       working_space[i - 1] = val1;
       working_space[i - 1 + num] = val2;
-    lab55:k = n2;
-    lab60:if (k >= j)
-         goto lab65;
+      lab55: k = n2;
+      lab60: if (k >= j) goto lab65;
       j = j - k;
       k = k / 2;
       goto lab60;
-    lab65:j = j + k;
+      lab65: j = j + k;
    }
    a = num;
    a = TMath::Sqrt(a);
@@ -410,7 +409,7 @@ void TSpectrumTransform::BitReverseHaar(float *working_space, int shift, int num
    for (i = 1; i <= num; i++) {
       ib = i - 1;
       il = 1;
-    lab9:ibd = ib / 2;
+      lab9: ibd = ib / 2;
       ipower[il - 1] = 1;
       if (ib == (ibd * 2))
          ipower[il - 1] = 0;
@@ -419,7 +418,7 @@ void TSpectrumTransform::BitReverseHaar(float *working_space, int shift, int num
       ib = ibd;
       il = il + 1;
       goto lab9;
-    lab10:ip = 1;
+      lab10: ip = 1;
       ifac = num;
       for (i1 = 1; i1 <= il; i1++) {
          ifac = ifac / 2;
@@ -3282,7 +3281,7 @@ void TSpectrumTransform::SetTransformType(Int_t transType, Int_t degree)
 //         -transType - type of transform (Haar, Walsh, Cosine, Sine, Fourier, Hartley, Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar)
 //         -degree - degree of mixed transform, applies only for Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar transforms
 //////////////////////////////////////////////////////////////////////////////      
-  Int_t j, n;
+   Int_t j, n;
    j = 0;
    n = 1;
    for (; n < fSize;) {
