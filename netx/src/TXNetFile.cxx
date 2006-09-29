@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.40 2006/09/07 09:27:25 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.41 2006/09/11 08:20:41 brun Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -197,8 +197,7 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
             Info("CreateXClient", "remote file could not be open");
 
          // If the server is a rootd we need to create a TNetFile
-         isRootd = (fClient->GetClientConn()->GetServerType() ==
-                    XrdClientConn::kSTRootd);
+         isRootd = (fClient->GetClientConn()->GetServerType() == kSTRootd);
 
          if (isRootd) {
             if (fgRootdBC) {

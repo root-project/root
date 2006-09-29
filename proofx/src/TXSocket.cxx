@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.17 2006/07/26 14:48:02 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.18 2006/08/05 20:04:47 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1500,9 +1500,6 @@ void TXSocket::InitEnvs()
    Int_t garbCollTh = gEnv->GetValue("XProof.StartGarbageCollectorThread",
                                       DFLT_STARTGARBAGECOLLECTORTHREAD);
    EnvPutInt(NAME_STARTGARBAGECOLLECTORTHREAD, garbCollTh);
-
-   // PROOF needs a separate thread for reading
-   EnvPutInt(NAME_GOASYNC, 1);
 
    // Max number of retries on first connect
    Int_t maxRetries = gEnv->GetValue("XProof.FirstConnectMaxCnt",5);

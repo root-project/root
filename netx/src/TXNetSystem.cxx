@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.11 2006/06/30 14:35:03 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.12 2006/06/30 14:36:02 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -94,7 +94,7 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
    } else {
       if (fgRootdBC) {
          Bool_t isRootd =
-            (fClientAdmin->GetClientConn()->GetServerType() == XrdClientConn::kSTRootd);
+            (fClientAdmin->GetClientConn()->GetServerType() == kSTRootd);
          Int_t sd = fClientAdmin->GetClientConn()->GetOpenSockFD();
          if (isRootd && sd > -1) {
             //

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.8 2006/06/07 14:17:18 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.9 2006/07/31 10:27:48 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -265,7 +265,7 @@ bool XrdProofPhyConn::GetAccessToSrv()
       // Now we can start the reader thread in the physical connection, if needed
       fPhyConn->StartReader();
       fPhyConn->SetTTL(DLBD_TTL);// = DLBD_TTL;
-      fPhyConn->fServerType = kBase;
+      fPhyConn->fServerType = kSTBaseXrootd;
       break;
 
    case kSTError:

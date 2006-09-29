@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.12 2006/06/08 09:16:45 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.13 2006/07/26 14:28:58 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -682,7 +682,7 @@ bool XrdProofConn::GetAccessToSrv()
       // Now we can start the reader thread in the physical connection, if needed
       fPhyConn->StartReader();
       fPhyConn->SetTTL(DLBD_TTL);// = DLBD_TTL;
-      fPhyConn->fServerType = kBase;
+      fPhyConn->fServerType = kSTBaseXrootd;
       break;
 
    case kSTProofd:
@@ -722,7 +722,7 @@ int XrdProofConn::WriteRaw(const void *buf, int len)
    // Low level write call
 
    if (fgConnMgr)
-      return fgConnMgr->WriteRaw(fLogConnID, buf, len);
+      return fgConnMgr->WriteRaw(fLogConnID, buf, len, 0);
 
    // No connection open
    return -1;
@@ -747,7 +747,7 @@ XrdProofConn::ESrvType XrdProofConn::DoHandShake()
    // kind of server is there at the other side
 
    // Nothing to do if already connected
-   if (fPhyConn->fServerType == kBase) {
+   if (fPhyConn->fServerType == kSTBaseXrootd) {
 
       TRACE(REQ,"XrdProofConn::DoHandShake: already connected to a PROOF server "<<URLTAG);
       return kSTXProofd;

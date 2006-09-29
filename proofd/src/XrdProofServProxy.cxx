@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.6 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.7 2006/08/05 20:04:47 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -28,6 +28,9 @@ static const char *TraceID = " ";
 #define TRACEID TraceID
 #ifndef SafeDelete
 #define SafeDelete(x) { if (x) { delete x; x = 0; } }
+#endif
+#ifndef SafeDelArray
+#define SafeDelArray(x) { if (x) { delete[] x; x = 0; } }
 #endif
 
 //__________________________________________________________________________
@@ -76,7 +79,7 @@ XrdProofServProxy::~XrdProofServProxy()
 
    // Unix socket
    SafeDelete(fUNIXSock);
-   SafeDelete(fUNIXSockPath);
+   SafeDelArray(fUNIXSockPath);
 }
 
 //__________________________________________________________________________
@@ -118,7 +121,7 @@ void XrdProofServProxy::Reset()
    ClearWorkers();
    // Unix socket
    SafeDelete(fUNIXSock);
-   SafeDelete(fUNIXSockPath);
+   SafeDelArray(fUNIXSockPath);
 }
 
 //__________________________________________________________________________
