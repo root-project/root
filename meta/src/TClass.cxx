@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.200 2006/09/28 16:43:20 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.201 2006/09/28 23:29:00 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1471,7 +1471,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
    // Using GetListOfBases doesn't work with virtual inheritance,
    // because it only includes direct bases.
    if (cl->GetClassInfo()) {
-      long base_tagnum = cl->GetClassInfo()->Tagnum();
+      Long_t base_tagnum = cl->GetClassInfo()->Tagnum();
       G__BaseClassInfo t(*GetClassInfo());
       while (t.Next(0)) {
          if (t.Tagnum() == base_tagnum) {
