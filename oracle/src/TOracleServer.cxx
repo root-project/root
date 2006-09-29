@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.14 2006/09/05 13:37:08 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.15 2006/09/29 10:55:58 brun Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -73,7 +73,7 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
       fHost = url.GetHost();
       fDB   = conn_str;
       fPort = url.GetPort();
-      fPort = (fPort) ? fPort : 1521;
+      fPort = (fPort>0) ? fPort : 1521;
       return;
       
    } CatchError("TOracleServer")

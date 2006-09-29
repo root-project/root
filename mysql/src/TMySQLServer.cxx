@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.17 2006/07/17 12:36:49 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.18 2006/08/30 12:55:09 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -105,13 +105,16 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
       optarr->Delete();
       delete optarr;
    }
+   
+   Int_t port = 3306;
+   if (url.GetPort()>0) port = url.GetPort();
 
-   if (mysql_real_connect(fMySQL, url.GetHost(), uid, pw, dbase, url.GetPort(), 
+   if (mysql_real_connect(fMySQL, url.GetHost(), uid, pw, dbase, port, 
                          (socket.Length()>0) ? socket.Data() : 0 , client_flag)) {
       fType = "MySQL";
       fHost = url.GetHost();
       fDB   = dbase;
-      fPort = url.GetPort();
+      fPort = port;
    } else {
       SetError(mysql_errno(fMySQL), mysql_error(fMySQL), "TMySQLServer");
       MakeZombie();
