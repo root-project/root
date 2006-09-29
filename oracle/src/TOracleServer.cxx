@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.13 2006/06/25 18:43:24 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.14 2006/09/05 13:37:08 brun Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -462,12 +462,26 @@ Int_t TOracleServer::Shutdown()
 //______________________________________________________________________________
 const char *TOracleServer::ServerInfo()
 {
-   // Return server info.
-   // NOT IMPLEMENTED.
+   // Return Oracle server version info.
    
    CheckConnect("ServerInfo", 0);
 
-   return "Oracle";
+   fInfo = "Oracle";
+   TSQLStatement* stmt = Statement("select * from v$version");
+   if (stmt!=0) {
+       stmt->EnableErrorOutput(kFALSE); 
+       if (stmt->Process()) {
+          fInfo = ""; 
+          stmt->StoreResult();
+          while (stmt->NextResultRow()) {
+             if (fInfo.Length()>0) fInfo += "\n";
+             fInfo += stmt->GetString(0);
+          }
+       }
+       delete stmt;
+   }
+
+   return fInfo.Data();
 }
 
 //______________________________________________________________________________

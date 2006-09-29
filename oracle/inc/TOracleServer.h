@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TOracleServer.h,v 1.3 2006/05/22 08:55:30 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TOracleServer.h,v 1.4 2006/06/02 14:02:03 brun Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -34,6 +34,7 @@ class TOracleServer : public TSQLServer {
 private:
    Environment  *fEnv;    // environment of Oracle access
    Connection   *fConn;   // connection to Oracle server
+   TString       fInfo;  // info string with Oracle version information
 
 public:
    TOracleServer(const char *db, const char *uid, const char *pw);
