@@ -1972,6 +1972,7 @@ extern G__EXPORT int G__setTMPDIR G__P((char* badname));
 extern G__EXPORT void G__setPrerun G__P((int prerun));
 extern G__EXPORT int G__readline G__P((FILE *fp,char *line,char *argbuf,int *argn,char *arg[]));
 extern G__EXPORT int G__getFuncNow G__P((void));
+extern G__EXPORT G__value G__getfunction G__P((char *item,int *known3,int memfunc_flag));
 extern FILE* G__getIfileFp G__P((void));
 extern G__EXPORT void G__incIfileLineNumber G__P((void));
 extern G__EXPORT struct G__input_file* G__get_ifile G__P((void));

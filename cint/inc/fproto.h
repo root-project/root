@@ -184,7 +184,6 @@ int G__fgetc G__P((void));
 long G__op1_operator_detail G__P((int opr,G__value *val));
 long G__op2_operator_detail G__P((int opr,G__value *lval,G__value *rval));
 int G__explicit_fundamental_typeconv G__P((char* funcname,int hash,struct G__param *libp,G__value *presult3));
-G__value G__getfunction G__P((char *item,int *known3,int memfunc_flag));
 int G__special_func G__P((G__value *result7,char *funcname,struct G__param *libp,int hash));
 int G__library_func G__P((G__value *result7,char *funcname,struct G__param *libp,int hash));
 char *G__charformatter G__P((int ifmt,struct G__param *libp,char *result));
