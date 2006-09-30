@@ -251,7 +251,11 @@ $(STRESSG):     $(STRESSGO)
 		@echo "$@ done"
 
 $(STRESSSP):    $(STRESSSPO)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libSpectrum.lib $(OutPutOpt)$@
+else
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lSpectrum $(OutPutOpt)$@
+endif
 		@echo "$@ done"
 
 $(STRESSVEC):   $(STRESSVECO)
