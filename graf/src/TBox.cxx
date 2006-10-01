@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.24 2006/05/24 16:44:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.25 2006/07/03 16:10:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -160,6 +160,9 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
 void TBox::Draw(Option_t *option)
 {
    // Draw this box with its current attributes.
+   // if the box has no fill style (ie fill style=0), the box contour is drawn
+   // if the box has a fill style, the box contour is not drawn by default.
+   // to force the contour to be drawn, specify option "l"
 
    AppendPad(option);
 
@@ -544,22 +547,29 @@ void TBox::ls(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TBox::Paint(Option_t *)
+void TBox::Paint(Option_t *option)
 {
    // Paint this box with its current attributes.
 
-   PaintBox(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2));
+   PaintBox(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2),option);
 }
 
 //______________________________________________________________________________
-void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *)
+void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
 {
    // Draw this box with new coordinates.
 
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill area attributes only if necessary
 
-   gPad->PaintBox(x1,y1,x2,y2);
+   if (option) {
+      TString opt = option;
+      opt.ToLower();
+      if (opt.Contains("l")) gPad->PaintBox(x1,y1,x2,y2,"l");
+      else                   gPad->PaintBox(x1,y1,x2,y2);
+   } else {
+      gPad->PaintBox(x1,y1,x2,y2);
+   }
 }
 
 //______________________________________________________________________________
