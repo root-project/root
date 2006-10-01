@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.235 2006/08/24 18:51:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.236 2006/09/25 13:29:31 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2757,6 +2757,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
    // Paint box in CurrentPad World coordinates.
    //
    // if option[0] = 's' the box is forced to be paint with style=0
+   // if option[0] = 'l' the box contour is drawn
 
    if (!gPad->IsBatch()) {
       Int_t px1 = XtoPixel(x1);
@@ -2813,6 +2814,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
          } else {
             gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
          }
+         if (option[0] == 'l') gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kHollow);
       } else {
          gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kHollow);
          if (option[0] == 's') gVirtualX->SetFillStyle(style0);
