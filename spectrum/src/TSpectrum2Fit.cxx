@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2Fit.cxx,v 1.1 2006/09/28 19:19:52 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2Fit.cxx,v 1.2 2006/09/29 15:51:52 brun Exp $
 // Author: Miroslav Morhac   25/09/2006
 
 /////////////////////////////////////////////////////////////////////////////

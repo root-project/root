@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.cxx,v 1.49 2006/09/11 21:01:06 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.cxx,v 1.1 2006/09/28 19:19:52 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -136,11 +136,11 @@ TH1 *TSpectrum::Background(const TH1 * h, int numberIterations, Option_t * optio
 //                
 //   Function parameters:
 //   -h: input 1-d histogram
-//   -numberIterations, (default value = 2)
+//   -numberIterations, (default value = 20)
 //      Increasing numberIterations make the result smoother and lower.
 //   -option: may contain one of the following options
 //      - to set the direction parameter
-//        "BackDecreasingWindow". By default the direction is BackIncreasingWindow
+//        "BackIncreasingWindow". By default the direction is BackDecreasingWindow
 //      - filterOrder-order of clipping filter,  (default "BackOrder2"                         
 //                  -possible values= "BackOrder4"                          
 //                                    "BackOrder6"                          
@@ -154,8 +154,8 @@ TH1 *TSpectrum::Background(const TH1 * h, int numberIterations, Option_t * optio
 //                                    "BackSmoothing11"                       
 //                                    "BackSmoothing13"                       
 //                                    "BackSmoothing15"                        
-//      - "nocompton"- if selected the estimation of Compton edge
-//                  will be not be included   (by default the compton estimation is set)
+//      - "Compton" if selected the estimation of Compton edge
+//                  will be included.
 //      - "same" : if this option is specified, the resulting background
 //                 histogram is superimposed on the picture in the current pad.
 //
@@ -175,8 +175,8 @@ TH1 *TSpectrum::Background(const TH1 * h, int numberIterations, Option_t * optio
    opt.ToLower();
    
    //set options
-   Int_t direction = kBackIncreasingWindow;
-   if (opt.Contains("backdecreasingwindow")) direction = kBackDecreasingWindow;
+   Int_t direction = kBackDecreasingWindow;
+   if (opt.Contains("backincreasingwindow")) direction = kBackIncreasingWindow;
    Int_t filterOrder = kBackOrder2;
    if (opt.Contains("backorder4")) filterOrder = kBackOrder4;
    if (opt.Contains("backorder6")) filterOrder = kBackOrder6;
@@ -190,8 +190,8 @@ TH1 *TSpectrum::Background(const TH1 * h, int numberIterations, Option_t * optio
    if (opt.Contains("backsmoothing11")) smoothWindow = kBackSmoothing11;
    if (opt.Contains("backsmoothing13")) smoothWindow = kBackSmoothing13;
    if (opt.Contains("backsmoothing15")) smoothWindow = kBackSmoothing15;
-   Bool_t compton = kTRUE;
-   if (opt.Contains("nocompton")) compton = kFALSE;
+   Bool_t compton = kFALSE;
+   if (opt.Contains("compton")) compton = kTRUE;
 
    Int_t first = h->GetXaxis()->GetFirst();
    Int_t last  = h->GetXaxis()->GetLast();
@@ -254,21 +254,22 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option, Doub
 //       threshold*highest_peak are discarded.  0<threshold<1              //
 //                                                                         //
 //   By default, the background is removed before deconvolution.           //
-//   Specify "noBackground" to not remove the background.                  //
+//   Specify the option "nobackground" to not remove the background.       //                //
 //                                                                         //
-//   By default the source spectrum is replaced by a new spectrum          //
-//   calculated using the Markov chain method.                             //
-//   Specify "noMarkov" to not apply the Markov algorithm.                 //
+//   By specifying the option "Markov" one can trigger an alternative      //
+//   algorithm using the Markov chain method.                              //
+//   Note that by default the source spectrum is replaced by a new spectrum//          //
 //                                                                         //
-//   if option does not include "goff" (goff is the default), then         //
-//   a polymarker object is created and added to the list of functions of  //
-//   the histogram. The histogram is drawn with the specified option and   //
-//   the polymarker object drawn on top of the histogram.                  //
+//   By default a polymarker object is created and added to the list of    //
+//   functions of the histogram. The histogram is drawn with the specified //
+//   option and the polymarker object drawn on top of the histogram.       //
 //   The polymarker coordinates correspond to the npeaks peaks found in    //
 //   the histogram.                                                        //
 //   A pointer to the polymarker object can be retrieved later via:        //
 //    TList *functions = hin->GetListOfFunctions();                        //
 //    TPolyMarker *pm = (TPolyMarker*)functions->FindObject("TPolyMarker") //
+//   Specify the option "goff" to disable the storage and drawing of the   //
+//   polymarker.                                                           //
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
        
@@ -289,10 +290,10 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option, Doub
       background = kFALSE;
       opt.ReplaceAll("nobackground","");
    }
-   Bool_t markov = kTRUE;
-   if (opt.Contains("nomarkov")) {
-      markov = kFALSE;
-      opt.ReplaceAll("nomarkov","");
+   Bool_t markov = kFALSE;
+   if (opt.Contains("markov")) {
+      markov = kTRUE;
+      opt.ReplaceAll("markov","");
    }
    if (dimension == 1) {
       Int_t first = hin->GetXaxis()->GetFirst();
@@ -309,9 +310,6 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option, Doub
       }
       npeaks = SearchHighRes(source, dest, size, sigma, 100*threshold, background, fgIterations, markov, fgAverageWindow);
 
-      //TH1 * hnew = (TH1 *) hin->Clone("markov");
-      //for (i = 0; i < size; i++)
-      //   hnew->SetBinContent(i + 1, source[i]);
       for (i = 0; i < npeaks; i++) {
          bin = first + Int_t(fPositionX[i] + 0.5);
          fPositionX[i] = hin->GetBinCenter(bin);
