@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.121 2006/09/28 20:12:33 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.122 2006/10/02 14:35:49 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -4041,7 +4041,7 @@ void THtml::CreateJavascript() {
       << "      if (posUsemapExt!=-1) usemapFile=usemapFile.substr(0,posUsemapExt);" << std::endl
       << "      var posUsemapDir=usemapFile.lastIndexOf('/');" << std::endl
       << "      if (posUsemapDir!=-1) usemapFile=usemapFile.substr(posUsemapDir+1);" << std::endl
-      << "      img.useMap=\"Map\"+usemapFile;" << std::endl
+      << "      img.useMap=\"#Map\"+usemapFile;" << std::endl
       << "   }" << std::endl
       << "   var posExt=oldFile.lastIndexOf('.');" << std::endl
       << "   oldFile=oldFile.substr(0,posExt);" << std::endl
