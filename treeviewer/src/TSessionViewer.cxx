@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.73 2006/09/15 08:55:49 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.74 2006/09/25 09:15:58 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -3406,7 +3406,8 @@ void TSessionViewer::UpdateListOfProofs()
    // Update list of existing Proof sessions.
 
    // get list of proof sessions
-   Bool_t found = kFALSE;
+   Bool_t found  = kFALSE;
+   Bool_t exists = kFALSE;
    TGListTreeItem *item = 0;
    TSeqCollection *proofs = gROOT->GetListOfProofs();
    TSessionDescription *desc = 0;
@@ -3420,65 +3421,75 @@ void TSessionViewer::UpdateListOfProofs()
             TVirtualProofDesc *d = 0;
             TVirtualProof *p = 0;
             while ((d = (TVirtualProofDesc *)nxd())) {
-               TIter nexts(fSessions);
-               // check if session is already in the list
-               found = kFALSE;
-               while ((desc = (TSessionDescription *)nexts())) {
+               TIter nextfs(fSessions);
+               // check if session exists in the list
+               while ((desc = (TSessionDescription *)nextfs())) {
                   if ((desc->fTag == d->GetName()) ||
                       (desc->fName == d->GetTitle())) {
-                     p = d->GetProof();
-                     if (p) {
-                        desc->fConnected  = kTRUE;
-                        desc->fAttached   = kTRUE;
-                        desc->fProof      = p;
-                        desc->fProofMgr   = mgr;
-                        item = fSessionHierarchy->FindChildByData(fSessionItem,
-                                                                  desc);
-                        if (item) {
-                           item->SetPictures(fProofCon, fProofCon);
-                           if (item == fSessionHierarchy->GetSelected()) {
-                              fActDesc->fProof->Connect("Progress(Long64_t,Long64_t)",
-                                       "TSessionQueryFrame", fQueryFrame,
-                                       "Progress(Long64_t,Long64_t)");
-                              fActDesc->fProof->Connect("StopProcess(Bool_t)",
-                                       "TSessionQueryFrame", fQueryFrame,
-                                       "IndicateStop(Bool_t)");
-                              fActDesc->fProof->Connect(
-                                 "ResetProgressDialog(const char*, Int_t,Long64_t,Long64_t)",
-                                 "TSessionQueryFrame", fQueryFrame,
-                                 "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
-                              // enable timer used for status bar icon's animation
-                              EnableTimer();
-                              // change status bar right icon to connected pixmap
-                              ChangeRightLogo("monitor01.xpm");
-                              // do not animate yet
-                              SetChangePic(kFALSE);
-                              // connect to signal "query result ready"
-                              fActDesc->fProof->Connect("QueryResultReady(char *)",
-                                       "TSessionViewer", this, "QueryResultReady(char *)");
-                              // display connection information on status bar
-                              TString msg;
-                              msg.Form("PROOF Cluster %s ready", fActDesc->fName.Data());
-                              fStatusBar->SetText(msg.Data(), 1);
-                              UpdateListOfPackages();
-                              fSessionFrame->UpdatePackages();
-                              fSessionFrame->UpdateListOfDataSets();
-                              fPopupSrv->DisableEntry(kSessionConnect);
-                              fSessionMenu->DisableEntry(kSessionConnect);
-                              fPopupSrv->EnableEntry(kSessionDisconnect);
-                              fSessionMenu->EnableEntry(kSessionDisconnect);
-                              fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonUp);
-                              fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
-                              fSessionFrame->SetLogLevel(fActDesc->fLogLevel);
-                              // update session information frame
-                              fSessionFrame->ProofInfos();
-                              fSessionFrame->GetTab()->ShowFrame(
-                                 fSessionFrame->GetTab()->GetTabTab("Options"));
-                              if (fActFrame != fSessionFrame) {
-                                 fV2->HideFrame(fActFrame);
-                                 fV2->ShowFrame(fSessionFrame);
-                                 fActFrame = fSessionFrame;
-                              }
+                     exists = kTRUE;
+                     break;
+                  }
+               }
+               TIter nexts(fSessions);
+               found = kFALSE;
+               p = d->GetProof();
+               while ((desc = (TSessionDescription *)nexts())) {
+                  if (desc->fConnected && desc->fAttached)
+                     continue;
+                  if (p && (exists && ((desc->fTag == d->GetName()) ||
+                      (desc->fName == d->GetTitle())) ||
+                      (!exists && (desc->fAddress == p->GetMaster())))) {
+                     desc->fConnected  = kTRUE;
+                     desc->fAttached   = kTRUE;
+                     desc->fProof      = p;
+                     desc->fProofMgr   = mgr;
+                     desc->fTag        = d->GetName();
+                     item = fSessionHierarchy->FindChildByData(fSessionItem,
+                                                               desc);
+                     if (item) {
+                        item->SetPictures(fProofCon, fProofCon);
+                        if (item == fSessionHierarchy->GetSelected()) {
+                           fActDesc->fProof->Connect("Progress(Long64_t,Long64_t)",
+                                    "TSessionQueryFrame", fQueryFrame,
+                                    "Progress(Long64_t,Long64_t)");
+                           fActDesc->fProof->Connect("StopProcess(Bool_t)",
+                                    "TSessionQueryFrame", fQueryFrame,
+                                    "IndicateStop(Bool_t)");
+                           fActDesc->fProof->Connect(
+                              "ResetProgressDialog(const char*, Int_t,Long64_t,Long64_t)",
+                              "TSessionQueryFrame", fQueryFrame,
+                              "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
+                           // enable timer used for status bar icon's animation
+                           EnableTimer();
+                           // change status bar right icon to connected pixmap
+                           ChangeRightLogo("monitor01.xpm");
+                           // do not animate yet
+                           SetChangePic(kFALSE);
+                           // connect to signal "query result ready"
+                           fActDesc->fProof->Connect("QueryResultReady(char *)",
+                                    "TSessionViewer", this, "QueryResultReady(char *)");
+                           // display connection information on status bar
+                           TString msg;
+                           msg.Form("PROOF Cluster %s ready", fActDesc->fName.Data());
+                           fStatusBar->SetText(msg.Data(), 1);
+                           UpdateListOfPackages();
+                           fSessionFrame->UpdatePackages();
+                           fSessionFrame->UpdateListOfDataSets();
+                           fPopupSrv->DisableEntry(kSessionConnect);
+                           fSessionMenu->DisableEntry(kSessionConnect);
+                           fPopupSrv->EnableEntry(kSessionDisconnect);
+                           fSessionMenu->EnableEntry(kSessionDisconnect);
+                           fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonUp);
+                           fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
+                           fSessionFrame->SetLogLevel(fActDesc->fLogLevel);
+                           // update session information frame
+                           fSessionFrame->ProofInfos();
+                           fSessionFrame->GetTab()->ShowFrame(
+                              fSessionFrame->GetTab()->GetTabTab("Options"));
+                           if (fActFrame != fSessionFrame) {
+                              fV2->HideFrame(fActFrame);
+                              fV2->ShowFrame(fSessionFrame);
+                              fActFrame = fSessionFrame;
                            }
                         }
                      }
@@ -4397,7 +4408,19 @@ void TSessionViewer::CloseWindow()
 {
    // Close main Session Viewer window.
 
-   Terminate();
+   // clean-up temporary files
+   TString pathtmp;
+   pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectFile);
+   if (!gSystem->AccessPathName(pathtmp)) {
+      gSystem->Unlink(pathtmp);
+   }
+   pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectCmd);
+   if (!gSystem->AccessPathName(pathtmp)) {
+      gSystem->Unlink(pathtmp);
+   }
+   // Save configuration
+   if (fAutoSave)
+      WriteConfiguration();
    fSessions->Delete();
    if (fSessionItem)
       fSessionHierarchy->DeleteChildren(fSessionItem);
