@@ -2068,13 +2068,13 @@ if test ! "x$enable_cern" = "xno"; then
 	/opt/cern/new/lib /opt/cern/old/lib /usr/local/cern/pro/lib \
 	/usr/local/cern/new/lib /usr/local/cern/old/lib /usr/lib \
 	/usr/lib/cern /usr/local/lib /usr/local/lib/cern"
-    check_library "libpacklib packmd packlib" "$enable_shared" "${cernlibdir}" \
-	$cernlibdirs
+    check_library "libpacklib_noshift libpacklib packmd packlib" \
+	"$enable_shared" "${cernlibdir}" $cernlibdirs
     packlib=$found_lib
     packlibdir=$found_dir
 
-    check_library "libkernlib kernmd kernlib" "$enable_shared" "${cernlibdir}" \
-	$cernlibdirs
+    check_library "libkernlib_noshift libkernlib kernmd kernlib" \
+	"$enable_shared" "${cernlibdir}" $cernlibdirs
     kernlib=$found_lib
     kernlibdir=$found_dir
 
