@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.74 2006/09/25 09:15:58 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.75 2006/10/02 13:27:01 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -1937,6 +1937,25 @@ void TSessionFrame::OnCommandLine()
 }
 
 //______________________________________________________________________________
+void TSessionFrame::SetLocal(Bool_t local)
+{
+   if (local) {
+      fBtnGetQueries->SetState(kButtonDisabled);
+      fBtnShowLog->SetState(kButtonDisabled);
+      fTab->HideFrame(fTab->GetTabTab("Options"));
+      fTab->HideFrame(fTab->GetTabTab("Packages"));
+      fTab->HideFrame(fTab->GetTabTab("DataSets"));
+   }
+   else {
+      fBtnGetQueries->SetState(kButtonUp);
+      fBtnShowLog->SetState(kButtonUp);
+      fTab->ShowFrame(fTab->GetTabTab("Options"));
+      fTab->ShowFrame(fTab->GetTabTab("Packages"));
+      fTab->ShowFrame(fTab->GetTabTab("DataSets"));
+   }
+}
+
+//______________________________________________________________________________
 void TSessionFrame::ShutdownSession()
 {
    // Shutdown current session
@@ -3484,8 +3503,7 @@ void TSessionViewer::UpdateListOfProofs()
                            fSessionFrame->SetLogLevel(fActDesc->fLogLevel);
                            // update session information frame
                            fSessionFrame->ProofInfos();
-                           fSessionFrame->GetTab()->ShowFrame(
-                              fSessionFrame->GetTab()->GetTabTab("Options"));
+                           fSessionFrame->SetLocal(kFALSE);
                            if (fActFrame != fSessionFrame) {
                               fV2->HideFrame(fActFrame);
                               fV2->ShowFrame(fSessionFrame);
@@ -4178,8 +4196,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
             UpdateListOfPackages();
             fSessionFrame->UpdateListOfDataSets();
          }
-         fSessionFrame->GetTab()->HideFrame(
-               fSessionFrame->GetTab()->GetTabTab("Options"));
+         fSessionFrame->SetLocal();
          fServerFrame->SetAddEnabled();
          fServerFrame->SetConnectEnabled(kFALSE);
       }
@@ -4198,8 +4215,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
             fV2->ShowFrame(fSessionFrame);
             fActFrame = fSessionFrame;
          }
-         fSessionFrame->GetTab()->ShowFrame(
-               fSessionFrame->GetTab()->GetTabTab("Options"));
+         fSessionFrame->SetLocal(kFALSE);
       }
       fSessionFrame->SetLogLevel(fActDesc->fLogLevel);
       fServerFrame->SetLogLevel(fActDesc->fLogLevel);

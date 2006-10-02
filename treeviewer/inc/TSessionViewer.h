@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.34 2006/09/11 23:45:24 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.35 2006/09/15 08:55:48 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -337,6 +337,7 @@ public:
    void     OnMultipleSelection(Bool_t on);
    void     OnStartupEnable(Bool_t on);
    void     ProofInfos();
+   void     SetLocal(Bool_t local = kTRUE);
    void     ShutdownSession();
    void     UpdatePackages();
    void     OnBtnUploadDSet();

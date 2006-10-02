@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.28 2006/08/01 20:23:47 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.29 2006/08/03 12:42:26 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -78,10 +78,12 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    // and offers the possibility to create new ones by executing macros
    // directly from the associate file container.
 
+   Pixel_t backgnd;
    if (!p || !main) return;
    SetCleanup(kDeepCleanup);
+   fClient->GetColorByName("#D0EED0", backgnd);
    AddFrame(new TGLabel(this, new TGHotString("List of Chains in Memory :")),
-            new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5) );
+            new TGLayoutHints(kLHintsLeft, 5, 5, 7, 2) );
 
    // Add TGListView used to show objects in memory
    fListView = new TGListView(this, 300, 100);
@@ -103,13 +105,18 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    fName = new TGTextEntry(frmSel, fNameBuf);
    fName->Resize(200, fName->GetDefaultHeight());
    fName->Associate(this);
+   fName->SetEnabled(kFALSE);
+   fName->ChangeBackground(backgnd);
    frmSel->AddFrame(fName, new TGLayoutHints(kLHintsLeft | kLHintsCenterY | kLHintsExpandX, 5, 5, 5, 5));
    AddFrame(frmSel, new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
+
+   AddFrame(new TGLabel(this, "Double-click on the macro to be executed to create a new Chain:"),
+            new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 2));
 
    // Add TGListview / TGFileContainer to allow user to execute Macros
    // for the creation of new TChains / TDSets
    TGListView* lv = new TGListView(this, 300, 100);
-   AddFrame(lv,new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 5, 5, 5, 5));
+   AddFrame(lv,new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 5, 5, 2, 5));
 
    Pixel_t white;
    gClient->GetColorByName("white",white);
