@@ -2469,7 +2469,9 @@ if test ! "x$enable_python" = "xno" ; then
                   python2.3/Python.h python2.2/Python.h Python.h" \
                   "$pythonincdir" $pythonhdrdirs
     pythoninc=$found_hdr
-    pythonincdir=`dirname $found_dir/$found_hdr`
+    if test ! "x$pythoninc" = "x"; then
+       pythonincdir=`dirname $found_dir/$found_hdr`
+    fi
     if test "x$platform" = "xwin32"; then
        if test ! "x$pythonincdir" = "x" ; then
           pythonincdir=`cygpath -m $pythonincdir`
