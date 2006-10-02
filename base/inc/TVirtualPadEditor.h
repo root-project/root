@@ -49,6 +49,7 @@ public:
    virtual void     Build() { }
    virtual void     Show() { }
    virtual void     Hide() { }
+   virtual void     DeleteEditors() { }
    virtual Bool_t   IsGlobal() const = 0;
    virtual void     SetGlobal(Bool_t) { }
    virtual TCanvas* GetCanvas() const = 0;
