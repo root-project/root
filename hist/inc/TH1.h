@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.80 2006/08/17 09:30:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.81 2006/08/28 13:34:52 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -322,7 +322,7 @@ public:
    virtual void     SetXTitle(const char *title) {fXaxis.SetTitle(title);}
    virtual void     SetYTitle(const char *title) {fYaxis.SetTitle(title);}
    virtual void     SetZTitle(const char *title) {fZaxis.SetTitle(title);}
-   virtual TH1     *ShowBackground(Int_t niter=2, Option_t *option="same"); // *MENU*
+   virtual TH1     *ShowBackground(Int_t niter=20, Option_t *option="same"); // *MENU*
    virtual Int_t    ShowPeaks(Double_t sigma=2, Option_t *option="", Double_t threshold=0.05); // *MENU*
    virtual void     Smooth(Int_t ntimes=1, Int_t firstbin=-1, Int_t lastbin=-1); // *MENU*
    static  void     SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes=1);
