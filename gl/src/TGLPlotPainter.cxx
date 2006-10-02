@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.4 2006/08/31 13:42:14 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.5 2006/08/31 16:03:10 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -312,7 +312,7 @@ void TGLPlotPainter::DrawSections()const
          const TGLEnableGuard  lineSmooth(GL_LINE_SMOOTH);
          glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
          glDepthMask(GL_FALSE);
-         DrawSectionX();
+         DrawSectionXOZ();
          //Draw z-levels
          const TGLEnableGuard stippleGuard(GL_LINE_STIPPLE);//[1-1]
          const UShort_t stipple = 0x5555;
@@ -355,7 +355,7 @@ void TGLPlotPainter::DrawSections()const
          const TGLEnableGuard lineSmooth(GL_LINE_SMOOTH);
          glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
          glDepthMask(GL_FALSE);
-         DrawSectionY();
+         DrawSectionYOZ();
          //Draw z-levels
          const TGLEnableGuard stippleGuard(GL_LINE_STIPPLE);//[1-1]
          glLineStipple(1, 0x5555);
@@ -398,7 +398,7 @@ void TGLPlotPainter::DrawSections()const
          const TGLEnableGuard lineSmooth(GL_LINE_SMOOTH);
          glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
          glDepthMask(GL_FALSE);
-         DrawSectionZ();
+         DrawSectionXOY();
          glDepthMask(GL_TRUE);
       }
    }

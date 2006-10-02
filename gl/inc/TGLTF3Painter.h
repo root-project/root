@@ -52,9 +52,9 @@ private:
 
    void    SetSurfaceColor()const;
 
-   void    DrawSectionX()const;
-   void    DrawSectionY()const;
-   void    DrawSectionZ()const;
+   void    DrawSectionXOZ()const;
+   void    DrawSectionYOZ()const;
+   void    DrawSectionXOY()const;
 
    ClassDef(TGLTF3Painter, 0) // GL TF3 painter.
 };

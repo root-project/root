@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.4 2006/08/31 13:42:14 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.5 2006/08/31 16:03:10 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -98,9 +98,9 @@ protected:
    //
    void             MoveSection(Int_t px, Int_t py);
    void             DrawSections()const;
-   virtual void     DrawSectionX()const = 0;
-   virtual void     DrawSectionY()const = 0;
-   virtual void     DrawSectionZ()const = 0;
+   virtual void     DrawSectionXOZ()const = 0;
+   virtual void     DrawSectionYOZ()const = 0;
+   virtual void     DrawSectionXOY()const = 0;
 
    virtual void     InitGL()const = 0;
    virtual void     ClearBuffers()const = 0;

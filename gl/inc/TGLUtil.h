@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.30 2006/08/31 13:42:14 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.31 2006/09/18 11:44:42 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -1003,7 +1003,7 @@ public:
 
    void   SetContours(const std::vector<Double_t> *contours);
 
-   Bool_t EnableTexture()const;
+   Bool_t EnableTexture(Int_t mode)const;
    void   DisableTexture()const;
 
    Double_t       GetTexCoord(Double_t z)const;

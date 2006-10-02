@@ -230,19 +230,19 @@ void TGLTF3Painter::SetSurfaceColor()const
 }
 
 //______________________________________________________________________________
-void TGLTF3Painter::DrawSectionX()const
+void TGLTF3Painter::DrawSectionXOZ()const
 {
    //XOZ parallel section.
 }
 
 //______________________________________________________________________________
-void TGLTF3Painter::DrawSectionY()const
+void TGLTF3Painter::DrawSectionYOZ()const
 {
    //YOZ parallel section.
 }
 
 //______________________________________________________________________________
-void TGLTF3Painter::DrawSectionZ()const
+void TGLTF3Painter::DrawSectionXOY()const
 {
    //XOY parallel section
 }

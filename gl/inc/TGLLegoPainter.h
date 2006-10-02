@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.h,v 1.3 2006/06/19 09:10:25 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.h,v 1.4 2006/08/31 13:42:14 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -90,9 +90,9 @@ private:
 
    void         SetLegoColor()const;
 
-   void         DrawSectionX()const;
-   void         DrawSectionY()const;
-   void         DrawSectionZ()const;
+   void         DrawSectionXOZ()const;
+   void         DrawSectionYOZ()const;
+   void         DrawSectionXOY()const;
 
    Bool_t       ClampZ(Double_t &zVal)const;
    Bool_t       PreparePalette()const;

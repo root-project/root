@@ -79,9 +79,9 @@ private:
    Bool_t InitGeometrySpherical();
 
    void   DrawProjections()const;
-   void   DrawSectionX()const;
-   void   DrawSectionY()const;
-   void   DrawSectionZ()const;
+   void   DrawSectionXOZ()const;
+   void   DrawSectionYOZ()const;
+   void   DrawSectionXOY()const;
 
    void   ClampZ(Double_t &zVal)const;
 

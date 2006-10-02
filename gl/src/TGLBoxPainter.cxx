@@ -5,6 +5,7 @@
 #include "TStyle.h"
 #include "TMath.h"
 #include "TH1.h"
+#include "TH3.h"
 
 #include "TGLOrthoCamera.h"
 #include "TGLBoxPainter.h"
@@ -16,6 +17,9 @@ ClassImp(TGLBoxPainter)
 //______________________________________________________________________________
 TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLOrthoCamera *cam, TGLPlotCoordinates *coord, Int_t ctx)
                   : TGLPlotPainter(hist, cam, coord, ctx, kTRUE),
+                    fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
+                    fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),
+                    fXOYSlice("XOY", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOY),
                     fType(kBox)
 {
    // Normal constructor.
@@ -248,7 +252,7 @@ void TGLBoxPainter::DrawPlot()const
    if (!fSelectionPass && fType != kBox1) {
       glDisable(GL_POLYGON_OFFSET_FILL);//0]
       TGLDisableGuard lightGuard(GL_LIGHTING);//[2 - 2]
-      glColor4d(0., 0., 0., 0.2);
+      glColor4d(0., 0., 0., 0.4);
       glPolygonMode(GL_FRONT, GL_LINE);//[3
 
       const TGLEnableGuard blendGuard(GL_BLEND);//[4-4] + 1]
@@ -297,7 +301,7 @@ void TGLBoxPainter::SetPlotColor()const
 {
    // Set boxes color.
 
-   Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.2f};
+   Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.25f};
 
    if (fHist->GetFillColor() != kWhite)
       if (const TColor *c = gROOT->GetColor(fHist->GetFillColor()))
@@ -311,128 +315,33 @@ void TGLBoxPainter::SetPlotColor()const
 
 
 //______________________________________________________________________________
-void TGLBoxPainter::DrawSectionX()const
+void TGLBoxPainter::DrawSectionXOZ()const
 {
    // Draw XOZ parallel section.
 
    if (fSelectionPass)
       return;
-   const Int_t yBin = fYAxis->FindBin(fXOZSectionPos / fCoord->GetYScale());
-
-   if (yBin && yBin < fYAxis->GetNbins() + 1) {
-      glColor4d(0., 0., 0., 0.6);
-
-      for (Int_t ir = fCoord->GetFirstXBin(), e = fCoord->GetLastXBin(); ir <= e; ++ir) {
-         for (Int_t kr = fCoord->GetFirstZBin(), e1 = fCoord->GetLastZBin(); kr <= e1; ++kr) {
-            Double_t width = fHist->GetBinContent(ir, yBin, kr) / fMinMaxVal.second;
-            if (!width)
-               continue;
-
-            glBegin(GL_LINE_LOOP);
-            glVertex3d(fCoord->GetXScale() * (fXAxis->GetBinLowEdge(ir) / 2 + 
-                       fXAxis->GetBinUpEdge(ir) / 2 - width * fXAxis->GetBinWidth(ir) / 2),  
-                       fXOZSectionPos, fCoord->GetZScale() * (fZAxis->GetBinLowEdge(kr) / 2 + 
-                       fZAxis->GetBinUpEdge(kr) / 2 - width * fZAxis->GetBinWidth(kr) / 2));
-            glVertex3d(fCoord->GetXScale() * (fXAxis->GetBinLowEdge(ir) / 2 + 
-                       fXAxis->GetBinUpEdge(ir) / 2 - width * fXAxis->GetBinWidth(ir) / 2),  
-                       fXOZSectionPos, fCoord->GetZScale() * (fZAxis->GetBinLowEdge(kr) / 2 + 
-                       fZAxis->GetBinUpEdge(kr) / 2 + width * fZAxis->GetBinWidth(kr) / 2));
-            glVertex3d(fCoord->GetXScale() * (fXAxis->GetBinLowEdge(ir) / 2 + 
-                       fXAxis->GetBinUpEdge(ir) / 2 + width * fXAxis->GetBinWidth(ir) / 2), 
-                       fXOZSectionPos, fCoord->GetZScale() * (fZAxis->GetBinLowEdge(kr) / 2 + 
-                       fZAxis->GetBinUpEdge(kr) / 2 + width * fZAxis->GetBinWidth(kr) / 2));
-            glVertex3d(fCoord->GetXScale() * (fXAxis->GetBinLowEdge(ir) / 2 + 
-                       fXAxis->GetBinUpEdge(ir) / 2 + width * fXAxis->GetBinWidth(ir) / 2), 
-                       fXOZSectionPos, fCoord->GetZScale() * (fZAxis->GetBinLowEdge(kr) / 2 + 
-                       fZAxis->GetBinUpEdge(kr) / 2 - width * fZAxis->GetBinWidth(kr) / 2));
-            glEnd();
-         }
-      }
-   }
+   fXOZSlice.DrawSlice(fXOZSectionPos / fCoord->GetYScale());
 }
 
 
 //______________________________________________________________________________
-void TGLBoxPainter::DrawSectionY()const
+void TGLBoxPainter::DrawSectionYOZ()const
 {
    // Draw YOZ parallel section.
-
-   const Int_t xBin = fXAxis->FindBin(fYOZSectionPos / fCoord->GetXScale());
-
-   if (xBin && xBin < fXAxis->GetNbins() + 1) {
-      glColor4d(0., 0., 0., 0.6);
-
-      for (Int_t jr = fCoord->GetFirstYBin(), e = fCoord->GetLastYBin(); jr <= e; ++jr) {
-         for (Int_t kr = fCoord->GetFirstZBin(), e1 = fCoord->GetLastZBin(); kr <= e1; ++kr) {
-            Double_t width = fHist->GetBinContent(xBin, jr, kr) / fMinMaxVal.second;
-            if (!width)
-               continue;
-
-            glBegin(GL_LINE_LOOP);
-            glVertex3d(fYOZSectionPos, fCoord->GetYScale() * (fYAxis->GetBinLowEdge(jr) / 2 + 
-                       fYAxis->GetBinUpEdge(jr) / 2 - width * fYAxis->GetBinWidth(jr) / 2), 
-                       fCoord->GetZScale() * (fZAxis->GetBinLowEdge(kr) / 2 + 
-                       fZAxis->GetBinUpEdge(kr) / 2 - width * fZAxis->GetBinWidth(kr) / 2));
-            glVertex3d(fYOZSectionPos, fCoord->GetYScale() * (fYAxis->GetBinLowEdge(jr) / 2 + 
-                       fYAxis->GetBinUpEdge(jr) / 2 - width * fYAxis->GetBinWidth(jr) / 2), 
-                       fCoord->GetZScale() * (fZAxis->GetBinLowEdge(kr) / 2 + 
-                       fZAxis->GetBinUpEdge(kr) / 2 + width * fZAxis->GetBinWidth(kr) / 2));
-            glVertex3d(fYOZSectionPos, fCoord->GetYScale() * (fYAxis->GetBinLowEdge(jr) / 2 + 
-                       fYAxis->GetBinUpEdge(jr) / 2 + width * fYAxis->GetBinWidth(jr) / 2), 
-                       fCoord->GetZScale() * (fZAxis->GetBinLowEdge(kr) / 2 + 
-                       fZAxis->GetBinUpEdge(kr) / 2 + width * fZAxis->GetBinWidth(kr) / 2));
-            glVertex3d(fYOZSectionPos, fCoord->GetYScale() * (fYAxis->GetBinLowEdge(jr) / 2 + 
-                       fYAxis->GetBinUpEdge(jr) / 2 + width * fYAxis->GetBinWidth(jr) / 2),
-                       fCoord->GetZScale() * (fZAxis->GetBinLowEdge(kr) / 2 + 
-                       fZAxis->GetBinUpEdge(kr) / 2 - width * fZAxis->GetBinWidth(kr) / 2));
-            glEnd();
-         }
-      }
-   }
+   if (fSelectionPass)
+      return;
+   fYOZSlice.DrawSlice(fYOZSectionPos / fCoord->GetXScale());
 }
 
 
 //______________________________________________________________________________
-void TGLBoxPainter::DrawSectionZ()const
+void TGLBoxPainter::DrawSectionXOY()const
 {
    // Draw XOY parallel section.
-
-   const Int_t zBin = fZAxis->FindBin(fXOYSectionPos / fCoord->GetZScale());
-
-   if (zBin && zBin < fZAxis->GetNbins() + 1) {
-      glColor4d(0., 0., 0., 0.6);
-
-      for (Int_t ir = fCoord->GetFirstXBin(), e = fCoord->GetLastXBin(); ir <= e; ++ir) {
-         for (Int_t jr = fCoord->GetFirstYBin(), e1 = fCoord->GetLastYBin(); jr <= e1; ++jr) {
-            Double_t width = fHist->GetBinContent(ir, jr, zBin) / fMinMaxVal.second;
-            if (!width)
-               continue;
-
-            glBegin(GL_LINE_LOOP);
-            glVertex3d(fCoord->GetXScale() * (fXAxis->GetBinLowEdge(ir) / 2 + 
-                       fXAxis->GetBinUpEdge(ir) / 2 + width * fXAxis->GetBinWidth(ir) / 2),
-                       fCoord->GetYScale() * (fYAxis->GetBinLowEdge(jr) / 2 + 
-                       fYAxis->GetBinUpEdge(jr) / 2 + width * fYAxis->GetBinWidth(jr) / 2),
-                       fXOYSectionPos);
-            glVertex3d(fCoord->GetXScale() * (fXAxis->GetBinLowEdge(ir) / 2 + 
-                       fXAxis->GetBinUpEdge(ir) / 2 + width * fXAxis->GetBinWidth(ir) / 2),
-                       fCoord->GetYScale() * (fYAxis->GetBinLowEdge(jr) / 2 + 
-                       fYAxis->GetBinUpEdge(jr) / 2 - width * fYAxis->GetBinWidth(jr) / 2),
-                       fXOYSectionPos);
-            glVertex3d(fCoord->GetXScale() * (fXAxis->GetBinLowEdge(ir) / 2 + 
-                       fXAxis->GetBinUpEdge(ir) / 2 - width * fXAxis->GetBinWidth(ir) / 2), 
-                       fCoord->GetYScale() * (fYAxis->GetBinLowEdge(jr) / 2 + 
-                       fYAxis->GetBinUpEdge(jr) / 2 - width * fYAxis->GetBinWidth(jr) / 2),
-                       fXOYSectionPos);
-            glVertex3d(fCoord->GetXScale() * (fXAxis->GetBinLowEdge(ir) / 2 + 
-                       fXAxis->GetBinUpEdge(ir) / 2 - width * fXAxis->GetBinWidth(ir) / 2),
-                       fCoord->GetYScale() * (fYAxis->GetBinLowEdge(jr) / 2 + 
-                       fYAxis->GetBinUpEdge(jr) / 2 + width * fYAxis->GetBinWidth(jr) / 2),
-                       fXOYSectionPos);
-            glEnd();
-         }
-      }
-   }
+   if (fSelectionPass)
+      return;
+   fXOYSlice.DrawSlice(fXOYSectionPos / fCoord->GetZScale());
 }
 
 
@@ -443,4 +352,292 @@ Bool_t TGLBoxPainter::HasSections()const
    
    return fXOZSectionPos > fBackBox.Get3DBox()[0].Y() || fYOZSectionPos> fBackBox.Get3DBox()[0].X() ||
           fXOYSectionPos > fBackBox.Get3DBox()[0].Z();
+}
+
+ClassImp(TGLTH3Slice)
+
+//______________________________________________________________________________
+TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TGLPlotCoordinates *coord,
+                         const TGLPlotBox *box, ESliceAxis axis)
+               : TNamed(name, name),
+                 fAxisType(axis),
+                 fAxis(0),
+                 fCoord(coord),
+                 fBox(box),
+                 fSliceWidth(1),
+                 fHist(hist)
+{
+   //Ctor.
+   fAxis = fAxisType == kXOZ ? fHist->GetYaxis() : fAxisType == kYOZ ? fHist->GetXaxis() : fHist->GetZaxis();
+}
+
+//______________________________________________________________________________
+void TGLTH3Slice::SetSliceWidth(Int_t width)
+{
+   if (width <= 0)
+      return;
+   
+   if (fAxis->GetLast() - fAxis->GetFirst() + 1 <= width)
+      fSliceWidth = fAxis->GetLast() - fAxis->GetFirst() + 1;
+   else
+      fSliceWidth = width;
+}
+
+//______________________________________________________________________________
+void TGLTH3Slice::DrawSlice(Double_t pos)const
+{
+   const Int_t bin = fAxis->FindBin(pos);
+ //  TGLDisableGuard depthGuard(GL_DEPTH_TEST);
+
+   if (bin && bin < fAxis->GetNbins() + 1) {
+      Int_t low = 1, up = 2;
+      if (bin - fSliceWidth + 1 >= fAxis->GetFirst()) {
+         low = bin - fSliceWidth + 1;
+         up  = bin + 1;
+      } else {
+         low = fAxis->GetFirst();
+         up  = bin + (fSliceWidth - (bin - fAxis->GetFirst() + 1)) + 1;
+      }
+      
+      Double_t min = 0., max =0.;
+      FindMinMax(min, max, low, up);
+
+      if (!PreparePalette(min, max))
+         return;
+
+      PrepareTexCoords();
+
+      if (fPalette.EnableTexture(GL_REPLACE)) {
+         const TGLDisableGuard lightGuard(GL_LIGHTING);   
+         DrawSliceTextured(pos);
+         fPalette.DisableTexture();
+         //highlight bins in a slice.
+         //DrawSliceFrame(low, up);
+      }
+   }   
+}
+
+void TGLTH3Slice::FindMinMax(Double_t &min, Double_t &max, Int_t low, Int_t up)const
+{
+   min = 0.;
+   switch (fAxisType) {
+   case kXOZ:
+      fTexCoords.resize(fCoord->GetNXBins() * fCoord->GetNZBins());
+      fTexCoords.SetRowLen(fCoord->GetNXBins());
+      for (Int_t level = low; level < up; ++ level)
+         min += fHist->GetBinContent(fCoord->GetFirstXBin(), level, fCoord->GetFirstZBin());
+      max = min;
+      for (Int_t j = fCoord->GetFirstZBin(), jt = 0, ej = fCoord->GetLastZBin(); j <= ej; ++j, ++jt) {
+         for (Int_t i = fCoord->GetFirstXBin(), it = 0, ei = fCoord->GetLastXBin(); i <= ei; ++i, ++it) {
+            Double_t val = 0.;
+            for (Int_t level = low; level < up; ++ level)
+               val += fHist->GetBinContent(i, level, j);
+            max = TMath::Max(max, val);
+            min = TMath::Min(min, val);
+            fTexCoords[jt][it] = val;
+         }
+      }
+      break;
+   case kYOZ:
+      fTexCoords.resize(fCoord->GetNYBins() * fCoord->GetNZBins());
+      fTexCoords.SetRowLen(fCoord->GetNYBins());
+      for (Int_t level = low; level < up; ++ level)
+         min += fHist->GetBinContent(level, fCoord->GetFirstYBin(), fCoord->GetFirstZBin());
+      max = min;
+      for (Int_t j = fCoord->GetFirstZBin(), jt = 0, ej = fCoord->GetLastZBin(); j <= ej; ++j, ++jt) {
+         for (Int_t i = fCoord->GetFirstYBin(), it = 0, ei = fCoord->GetLastYBin(); i <= ei; ++i, ++it) {
+            Double_t val = 0.;
+            for (Int_t level = low; level < up; ++ level)
+               val += fHist->GetBinContent(level, i, j);
+            max = TMath::Max(max, val);
+            min = TMath::Min(min, val);
+            fTexCoords[jt][it] = val;
+         }
+      }
+      break;
+   case kXOY:
+      fTexCoords.resize(fCoord->GetNXBins() * fCoord->GetNYBins());
+      fTexCoords.SetRowLen(fCoord->GetNYBins());
+      for (Int_t level = low; level < up; ++ level)
+         min += fHist->GetBinContent(fCoord->GetFirstXBin(), fCoord->GetFirstYBin(), level);
+      max = min;
+      for (Int_t i = fCoord->GetFirstXBin(), ir = 0, ei = fCoord->GetLastXBin(); i <= ei; ++i, ++ir) {
+         for (Int_t j = fCoord->GetFirstYBin(), jr = 0, ej = fCoord->GetLastYBin(); j <= ej; ++j, ++jr) {
+            Double_t val = 0.;
+            for (Int_t level = low; level < up; ++ level)
+               val += fHist->GetBinContent(i, j, level);
+            max = TMath::Max(max, val);
+            min = TMath::Min(min, val);
+            fTexCoords[ir][jr] = val;
+         }
+      }
+      break;
+   }
+}
+
+Bool_t TGLTH3Slice::PreparePalette(Double_t min, Double_t max)const
+{
+   //Initialize color palette.
+   UInt_t paletteSize = ((TH1 *)fHist)->GetContour();
+   if (!paletteSize && !(paletteSize = gStyle->GetNumberContours()))
+      paletteSize = 20;
+
+   return fPalette.GeneratePalette(paletteSize, Rgl::Range_t(min, max));
+}
+
+void TGLTH3Slice::PrepareTexCoords()const
+{
+   switch (fAxisType) {
+   case kXOZ:
+      for (Int_t j = 0, ej = fCoord->GetNZBins(); j < ej; ++j)
+         for (Int_t i = 0, ei = fCoord->GetNXBins(); i < ei; ++i)
+            fTexCoords[j][i] = fPalette.GetTexCoord(fTexCoords[j][i]);
+      break;
+   case kYOZ:
+      for (Int_t j = 0, ej = fCoord->GetNZBins(); j < ej; ++j)
+         for (Int_t i = 0, ei = fCoord->GetNYBins(); i < ei; ++i)
+            fTexCoords[j][i] = fPalette.GetTexCoord(fTexCoords[j][i]);
+      break;
+   case kXOY:
+      for (Int_t i = 0, ei = fCoord->GetNXBins(); i < ei; ++i)
+         for (Int_t j = 0, ej = fCoord->GetNYBins(); j < ej; ++j)
+            fTexCoords[i][j] = fPalette.GetTexCoord(fTexCoords[i][j]);
+      break;
+   }
+}
+
+void TGLTH3Slice::DrawSliceTextured(Double_t pos)const
+{
+   const Double_t xScale = fCoord->GetXScale();
+   const Double_t yScale = fCoord->GetYScale();
+   const Double_t zScale = fCoord->GetZScale();
+   const TAxis *xA = fHist->GetXaxis();
+   const TAxis *yA = fHist->GetYaxis();
+   const TAxis *zA = fHist->GetZaxis();
+
+   switch (fAxisType) {
+   case kXOZ:
+      pos *= yScale;
+      for (Int_t j = fCoord->GetFirstZBin(), jt = 0, ej = fCoord->GetLastZBin(); j < ej; ++j, ++jt) {
+         for (Int_t i = fCoord->GetFirstXBin(), it = 0, ei = fCoord->GetLastXBin(); i < ei; ++i, ++it) {
+            const Double_t xMin = xA->GetBinCenter(i) * xScale;
+            const Double_t xMax = xA->GetBinCenter(i + 1) * xScale;
+            const Double_t zMin = zA->GetBinCenter(j) * zScale;
+            const Double_t zMax = zA->GetBinCenter(j + 1) * zScale;
+            glBegin(GL_POLYGON);
+            glTexCoord1d(fTexCoords[jt][it]);
+            glVertex3d(xMin, pos, zMin);
+            glTexCoord1d(fTexCoords[jt + 1][it]);
+            glVertex3d(xMin, pos, zMax);
+            glTexCoord1d(fTexCoords[jt + 1][it + 1]);
+            glVertex3d(xMax, pos, zMax);
+            glTexCoord1d(fTexCoords[jt][it + 1]);
+            glVertex3d(xMax, pos, zMin);
+            glEnd();
+         }
+      }
+      break;
+   case kYOZ:
+      pos *= xScale;
+      for (Int_t j = fCoord->GetFirstZBin(), jt = 0, ej = fCoord->GetLastZBin(); j < ej; ++j, ++jt) {
+         for (Int_t i = fCoord->GetFirstYBin(), it = 0, ei = fCoord->GetLastYBin(); i < ei; ++i, ++it) {
+            const Double_t yMin = yA->GetBinCenter(i) * yScale;
+            const Double_t yMax = yA->GetBinCenter(i + 1) * yScale;
+            const Double_t zMin = zA->GetBinCenter(j) * zScale;
+            const Double_t zMax = zA->GetBinCenter(j + 1) * zScale;
+            glBegin(GL_POLYGON);
+            glTexCoord1d(fTexCoords[jt][it]);
+            glVertex3d(pos, yMin, zMin);
+            glTexCoord1d(fTexCoords[jt][it + 1]);
+            glVertex3d(pos, yMax, zMin);
+            glTexCoord1d(fTexCoords[jt + 1][it + 1]);
+            glVertex3d(pos, yMax, zMax);
+            glTexCoord1d(fTexCoords[jt + 1][it]);
+            glVertex3d(pos, yMin, zMax);
+            glEnd();
+         }
+      }
+      break;
+   case kXOY:
+      pos *= zScale;
+      for (Int_t j = fCoord->GetFirstXBin(), jt = 0, ej = fCoord->GetLastXBin(); j < ej; ++j, ++jt) {
+         for (Int_t i = fCoord->GetFirstYBin(), it = 0, ei = fCoord->GetLastYBin(); i < ei; ++i, ++it) {
+            const Double_t xMin = xA->GetBinCenter(j) * xScale;
+            const Double_t xMax = xA->GetBinCenter(j + 1) * xScale;
+            const Double_t yMin = yA->GetBinCenter(i) * yScale;
+            const Double_t yMax = yA->GetBinCenter(i + 1) * yScale;
+            glBegin(GL_POLYGON);
+            glTexCoord1d(fTexCoords[jt + 1][it]);
+            glVertex3d(xMax, yMin, pos);
+            glTexCoord1d(fTexCoords[jt + 1][it + 1]);
+            glVertex3d(xMax, yMax, pos);
+            glTexCoord1d(fTexCoords[jt][it + 1]);
+            glVertex3d(xMin, yMax, pos);
+            glTexCoord1d(fTexCoords[jt][it]);
+            glVertex3d(xMin, yMin, pos);
+            glEnd();
+         }
+      }
+      break;
+   }
+}
+
+namespace {
+
+   void DrawBoxOutline(Double_t xMin, Double_t xMax, Double_t yMin, 
+                       Double_t yMax, Double_t zMin, Double_t zMax)
+   {
+      glBegin(GL_LINE_LOOP);
+      glVertex3d(xMin, yMin, zMin);
+      glVertex3d(xMax, yMin, zMin);
+      glVertex3d(xMax, yMax, zMin);
+      glVertex3d(xMin, yMax, zMin);
+      glEnd();
+
+      glBegin(GL_LINE_LOOP);
+      glVertex3d(xMin, yMin, zMax);
+      glVertex3d(xMax, yMin, zMax);
+      glVertex3d(xMax, yMax, zMax);
+      glVertex3d(xMin, yMax, zMax);
+      glEnd();
+
+      glBegin(GL_LINES);
+      glVertex3d(xMin, yMin, zMin);
+      glVertex3d(xMin, yMin, zMax);
+      glVertex3d(xMax, yMin, zMin);
+      glVertex3d(xMax, yMin, zMax);
+      glVertex3d(xMax, yMax, zMin);
+      glVertex3d(xMax, yMax, zMax);
+      glVertex3d(xMin, yMax, zMin);
+      glVertex3d(xMin, yMax, zMax);
+      glEnd();
+   }
+
+}
+
+void TGLTH3Slice::DrawSliceFrame(Int_t low, Int_t up)const
+{
+   glColor3d(1., 0., 0.);
+   const TGLVertex3 *box = fBox->Get3DBox();
+   
+   switch (fAxisType) {
+   case kXOZ:
+      DrawBoxOutline(box[0].X(), box[1].X(),
+                     fAxis->GetBinLowEdge(low) * fCoord->GetYScale(), 
+                     fAxis->GetBinUpEdge(up - 1) * fCoord->GetYScale(),
+                     box[0].Z(), box[4].Z());
+      break;
+   case kYOZ:
+      DrawBoxOutline(fAxis->GetBinLowEdge(low) * fCoord->GetXScale(), 
+                     fAxis->GetBinUpEdge(up - 1) * fCoord->GetXScale(),
+                     box[0].Y(), box[2].Y(),
+                     box[0].Z(), box[4].Z());
+      break;
+   case kXOY:
+      DrawBoxOutline(box[0].X(), box[1].X(),
+                     box[0].Y(), box[2].Y(),
+                     fAxis->GetBinLowEdge(low) * fCoord->GetZScale(), 
+                     fAxis->GetBinUpEdge(up - 1) * fCoord->GetZScale());
+      break;
+   }
 }

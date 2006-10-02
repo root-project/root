@@ -74,6 +74,7 @@
 #pragma link C++ class TGLBoxPainter;
 #pragma link C++ class TGLTF3Painter;
 #pragma link C++ class TGLPlotBox;
+#pragma link C++ class TGLTH3Slice;
 
 #ifndef _WIN32
 #pragma link C++ class TX11GL;

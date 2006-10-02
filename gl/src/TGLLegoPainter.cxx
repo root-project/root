@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.3 2006/06/19 09:10:25 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.4 2006/08/31 13:42:14 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -481,7 +481,7 @@ void TGLLegoPainter::DrawLegoCartesian()const
    const Int_t addJ = frontPoint == 2 || frontPoint == 3 ? 1 : (jInit = nY - 1, jrInit = fCoord->GetLastYBin(), -1);
 
    if (fLegoType == kColorLevel && !fSelectionPass)
-      if (!PreparePalette() || !fPalette.EnableTexture())
+      if (!PreparePalette() || !fPalette.EnableTexture(GL_MODULATE))
          fLegoType = kColorSimple;         
 
    for(Int_t i = iInit, ir = irInit; addI > 0 ? i < nX : i >= 0; i += addI, ir += addI) {
@@ -570,7 +570,7 @@ void TGLLegoPainter::DrawLegoPolar()const
    Double_t points[4][2] = {};
 
    if (fLegoType == kColorLevel && !fSelectionPass)
-      if (!PreparePalette() || !fPalette.EnableTexture())
+      if (!PreparePalette() || !fPalette.EnableTexture(GL_MODULATE))
          fLegoType = kColorSimple;         
 
    for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
@@ -662,7 +662,7 @@ void TGLLegoPainter::DrawLegoCylindrical()const
    legoR *= fCoord->GetXScale();
 
    if (fLegoType == kColorLevel && !fSelectionPass)
-      if (!PreparePalette() || !fPalette.EnableTexture())
+      if (!PreparePalette() || !fPalette.EnableTexture(GL_MODULATE))
          fLegoType = kColorSimple;         
 
    for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
@@ -758,7 +758,7 @@ void TGLLegoPainter::DrawLegoSpherical()const
    const Double_t sc = 1 - legoR;
 
    if (fLegoType == kColorLevel && !fSelectionPass)
-      if (!PreparePalette() || !fPalette.EnableTexture())
+      if (!PreparePalette() || !fPalette.EnableTexture(GL_MODULATE))
          fLegoType = kColorSimple;         
 
    for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
@@ -891,7 +891,7 @@ void TGLLegoPainter::ClearBuffers()const
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::DrawSectionX()const
+void TGLLegoPainter::DrawSectionXOZ()const
 {
    //XOZ plane parallel section.
    Int_t binY = -1;
@@ -926,7 +926,7 @@ void TGLLegoPainter::DrawSectionX()const
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::DrawSectionY()const
+void TGLLegoPainter::DrawSectionYOZ()const
 {
    //YOZ plane parallel section.
    Int_t binX = -1;
@@ -961,7 +961,7 @@ void TGLLegoPainter::DrawSectionY()const
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::DrawSectionZ()const
+void TGLLegoPainter::DrawSectionXOY()const
 {
    //Empty. No such sections for lego.
 }

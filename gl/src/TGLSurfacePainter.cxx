@@ -136,9 +136,9 @@ void TGLSurfacePainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       
       if (HasSections()) {
          fSectionPass = kTRUE;
-         DrawSectionX();
-         DrawSectionY();
-         DrawSectionZ();
+         DrawSectionXOZ();
+         DrawSectionYOZ();
+         DrawSectionXOY();
          fXOZSectionPos = frame[0].Y();
          fYOZSectionPos = frame[0].X();
          fXOYSectionPos = frame[0].Z();
@@ -220,7 +220,7 @@ void TGLSurfacePainter::SetNormals()
 void TGLSurfacePainter::SetSurfaceColor()const
 {
    //Set color for surface.
-   Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.65f};
+   Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.35f};
 
    if (fHist->GetFillColor() != kWhite && fType != kSurf1 && fType != kSurf2 && fType != kSurf5)
       if (const TColor *c = gROOT->GetColor(fHist->GetFillColor()))
@@ -269,7 +269,7 @@ void TGLSurfacePainter::DrawPlot()const
    if (Textured() && !fSelectionPass) {
       if (!PreparePalette())
          fType = kSurf1;
-      if (fType != kSurf3 && !fPalette.EnableTexture())
+      if (fType != kSurf3 && !fPalette.EnableTexture(GL_MODULATE))
          fType = kSurf1;
    }
 
@@ -338,7 +338,7 @@ void TGLSurfacePainter::DrawPlot()const
       glDepthMask(GL_TRUE);
    }
 
-   if (fType == kSurf3 && !fSelectionPass && fPalette.EnableTexture()) {
+   if (fType == kSurf3 && !fSelectionPass && fPalette.EnableTexture(GL_MODULATE)) {
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       DrawContoursProjection();
@@ -753,7 +753,7 @@ void TGLSurfacePainter::DrawProjections()const
 }  
 
 //______________________________________________________________________________
-void TGLSurfacePainter::DrawSectionX()const
+void TGLSurfacePainter::DrawSectionXOZ()const
 {
    // Draw section X.
 
@@ -803,7 +803,7 @@ void TGLSurfacePainter::DrawSectionX()const
 }
 
 //______________________________________________________________________________
-void TGLSurfacePainter::DrawSectionY()const
+void TGLSurfacePainter::DrawSectionYOZ()const
 {
    // Draw section Y.
 
@@ -854,7 +854,7 @@ void TGLSurfacePainter::DrawSectionY()const
 }
 
 //______________________________________________________________________________
-void TGLSurfacePainter::DrawSectionZ()const
+void TGLSurfacePainter::DrawSectionXOY()const
 {
    // Draw section Z.
 

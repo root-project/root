@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.28 2006/07/11 16:37:19 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.29 2006/08/31 13:42:14 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -1863,7 +1863,7 @@ void TGLLevelPalette::SetContours(const std::vector<Double_t> *cont)
 }
 
 //______________________________________________________________________________
-Bool_t TGLLevelPalette::EnableTexture()const
+Bool_t TGLLevelPalette::EnableTexture(Int_t mode)const
 {
    //Enable 1D texture
    glEnable(GL_TEXTURE_1D);
@@ -1877,7 +1877,7 @@ Bool_t TGLLevelPalette::EnableTexture()const
    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, fTexels.size() / 4, 0,
                 GL_RGBA, GL_UNSIGNED_BYTE, &fTexels[0]);
-   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GLint(mode));
 
    return kTRUE;
 }
