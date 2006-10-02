@@ -487,9 +487,10 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    // if the file extension is unknown, the type argument will be used
    // to determine the file type. The quality and compression is derived from
    // the TAttImage values.
-   // The size of the image in the file is independent of the actually
-   // displayed size and zooming factor on the screen. This function
-   // writes always the original image with its size in the file
+   // It's posiible to write image into an animated GIF file by specifying file name as
+   // "myfile.gif+" of "myfile.gif+NN", where NN is delay of displaying 
+   // subimages during animation in 10ms seconds units.
+   // If NN is ommitted the delay between subimages is zero.
 
    if (!IsValid()) {
       Error("WriteImage", "no image loaded");
@@ -524,6 +525,7 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    UInt_t aquality;
    EImageQuality quality = GetImageQuality();
    MapQuality(quality, aquality);
+   TString fname = file;
 
    ASImageExportParams parms;
    switch (type) {
@@ -556,6 +558,27 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
       parms.gif.dither = 0;
       parms.gif.opaque_threshold = 0;
       break;
+   case kAnimGif:
+   {
+      parms.gif.type = atype;
+      parms.gif.flags = EXPORT_ALPHA | EXPORT_APPEND;
+      parms.gif.dither = 0;
+      parms.gif.opaque_threshold = 0;
+
+      s += 4; // skip "gif+" 
+      int delay = atoi(s);
+
+      if (delay < 0) {
+         delay = 0;
+      }
+      parms.gif.animate_delay = delay;
+
+      int i1 = fname.Index("gif+");
+      if (i1 != kNPOS) { // 
+         fname = fname(0, i1 + 3);
+      }  
+      break;
+   }
    case kTiff:
       parms.tiff.type = atype;
       parms.tiff.flags = EXPORT_ALPHA;
@@ -570,7 +593,7 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
       return;
    }
 
-   if (!ASImage2file(fScaledImage ? fScaledImage->fImage : fImage, 0, file, atype, &parms))
+   if (!ASImage2file(fScaledImage ? fScaledImage->fImage : fImage, 0, fname.Data(), atype, &parms))
       Error("WriteImage", "error writing file %s", file);
 }
 
@@ -604,6 +627,8 @@ TImage::EImageFileTypes TASImage::GetFileType(const char *ext)
       return kCur;
    if (s == "gif")
       return kGif;
+   if (s.Contains("gif+"))
+      return kAnimGif;
    if (s == "tiff")
       return kTiff;
    if (s == "xbm")
@@ -647,6 +672,8 @@ void TASImage::MapFileTypes(EImageFileTypes &type, UInt_t &astype, Bool_t toas)
          case kCur:
             astype = ASIT_Cur; break;
          case kGif:
+            astype = ASIT_Gif; break;
+         case kAnimGif:
             astype = ASIT_Gif; break;
          case kTiff:
             astype = ASIT_Tiff; break;

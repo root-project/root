@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.236 2006/09/25 13:29:31 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.237 2006/10/01 16:51:14 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3812,6 +3812,7 @@ void TPad::Print(const char *filename) const
    //   if filename starts with a dot, the padname is added in front
    //   if filename contains .eps, an Encapsulated Postscript file is produced
    //   if filename contains .gif, a GIF file is produced
+   //   if filename contains .gif+NN, an animated GIF file is produced
    //   if filename contains .C or .cxx, a C++ macro file is produced
    //   if filename contains .root, a Root file is produced
    //   if filename contains .xml,  a XML file is produced
@@ -3858,6 +3859,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    //               "pdf" - a PDF file is produced
    //               "svg" - a SVG file is produced
    //               "gif" - a GIF file is produced
+   //               "gif+NN" - an animated GIF file is produced, where NN is delay in 10ms units
    //               "xpm" - a XPM file is produced
    //               "png" - a PNG file is produced
    //               "jpg" - a JPEG file is produced
@@ -3931,6 +3933,17 @@ void TPad::Print(const char *filenam, Option_t *option)
    //      c1.Print("file.ps");  // actually print canvas to file
    //    }// end loop
    //    c1.Print("file.ps]");   // No actual print, just close.
+   //
+   // It's posiible to Print pad into an animated GIF file by specifying file name as
+   // "myfile.gif+" of "myfile.gif+NN" , where NN is delay of displaying subimages 
+   // during animation in 10ms units. If NN is ommitted the delay between subimages is zero.
+   // 
+   //    for (int i=0; i<10; ++i) {
+   //      // fill canvas for context i
+   //      // ...
+   //
+   //      c1.Print("file.gif+5");  // print canvas to GIF file with 50ms delays
+   //    }// end loop
 
    TString psname;
    char *filename = gSystem->ExpandPathName(filenam);
@@ -3961,7 +3974,10 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    // Save pad/canvas in alternative formats
    TImage::EImageFileTypes gtype = TImage::kUnknown;
-   if (strstr(opt, "gif")) {
+   if (strstr(opt, "gif+")) {
+      gtype = TImage::kAnimGif;
+      image = kTRUE;
+   } else if (strstr(opt, "gif")) {
       gtype = TImage::kGif;
       image = kTRUE;
    } else if (strstr(opt, "png")) {
@@ -4100,38 +4116,6 @@ void TPad::Print(const char *filenam, Option_t *option)
       return;
    }
 
-   //==============Save pad/canvas as an image file in batch mode===============
-   if (image) {
-      gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
-
-      TPad *padsav = (TPad*)gPad;
-      cd();
-      TVirtualPS *psave = gVirtualPS;
-
-      if (!gVirtualPS) {
-         // Plugin Postscript/SVG driver
-         TPluginHandler *h;
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "image"))) {
-            if (h->LoadPlugin() == -1)
-               return;
-            h->ExecPlugin(0);
-         }
-      }
-      if (gVirtualPS) {
-         gVirtualPS->Open(psname);
-         gVirtualPS->SetBit(kPrintingPS);
-         //gVirtualPS->NewPage();
-         Paint();
-
-         // close image
-         delete gVirtualPS;
-      }
-
-      gVirtualPS = psave;
-      padsav->cd();
-      return;
-   }
-
    //==============Save pad/canvas as a Postscript file=========================
 
    // in case we read directly from a Root file and the canvas
@@ -4173,6 +4157,12 @@ void TPad::Print(const char *filenam, Option_t *option)
             if (h->LoadPlugin() == -1) return;
             h->ExecPlugin(0);
          }
+      } else if (image) {
+         // Plugin TImageDump driver
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "image"))) {
+            if (h->LoadPlugin() == -1) return;
+            h->ExecPlugin(0);
+         }
       } else {
          if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "ps"))) {
             if (h->LoadPlugin() == -1) return;
@@ -4180,15 +4170,15 @@ void TPad::Print(const char *filenam, Option_t *option)
          }
       }
 
-      // Create a new Postscript or PDF file
+      // Create a new Postscript, PDF or image file
       gVirtualPS->SetName(psname);
       gVirtualPS->Open(psname,pstype);
       gVirtualPS->SetBit(kPrintingPS);
       if (!copenb) {
-         if (!strstr(opt,"pdf"))gVirtualPS->NewPage();
+         if (!strstr(opt,"pdf")) gVirtualPS->NewPage();
          Paint();
       }
-      if (noScreen)  GetCanvas()->SetBatch(kFALSE);
+      if (noScreen) GetCanvas()->SetBatch(kFALSE);
       if (!gSystem->AccessPathName(psname)) Info("Print", "%s file %s has been created", opt, psname.Data());
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
@@ -4199,7 +4189,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          gVirtualPS = 0;
       }
    } else {
-      // Append to existing Postscript or PDF file
+      // Append to existing Postscript, PDF or GIF file
       if (!ccloseb) {
          gVirtualPS->NewPage();
          Paint();
@@ -4563,6 +4553,7 @@ void TPad::SaveAs(const char *filename)
    //   if filename contains .pdf, a PDF file is produced
    //   if filename contains .svg, a SVG file is produced
    //   if filename contains .gif, a GIF file is produced
+   //   if filename contains .gif+NN, an  animated GIF file is produced
    //   if filename contains .xpm, a XPM file is produced
    //   if filename contains .png, a PNG file is produced
    //   if filename contains .jpg, a JPEG file is produced
@@ -4589,6 +4580,8 @@ void TPad::SaveAs(const char *filename)
 
    if (psname.EndsWith(".gif"))
       Print(psname,"gif");
+   else if (psname.Contains(".gif+"))
+      Print(psname,"gif+");
    else if (psname.EndsWith(".C") || psname.EndsWith(".cxx") || psname.EndsWith(".cpp"))
       Print(psname,"cxx");
    else if (psname.EndsWith(".root"))

@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.19 2006/09/13 16:24:54 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.20 2006/09/15 15:12:48 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -103,10 +103,13 @@ void TImageDump::Close(Option_t *)
 {
    // Close a image file
 
-   if (!fImage) return;
+   // if fType == 114 - do not write image
+   if (!fImage || (fType == 114)) {
+      return;
+   }
 
-   if (fType == 112) fImage->Flip(90);
-   if (fType < 114) fImage->WriteImage(GetName());
+   //if (fType == 112) fImage->Flip(90);
+   fImage->WriteImage(GetName());
 }
 
 //______________________________________________________________________________
@@ -483,20 +486,9 @@ void TImageDump::DrawPS(Int_t, Float_t *, Float_t *)
 //______________________________________________________________________________
 void TImageDump::NewPage()
 {
-   // Start new page. This function initialize the pad conversion
-   // coefficients and output the directive which is close later in the
-   // the function Close.
+   // nothing 
 
-   if (!gPad) {
-      return;
-   }
-
-   delete fImage;
-
-   UInt_t w = (UInt_t)gPad->XtoPixel(gPad->GetX2());
-   UInt_t h = (UInt_t)gPad->YtoPixel(gPad->GetY1());
-
-   fImage = new TImage(w, h);
+   return;
 }
 
 //______________________________________________________________________________

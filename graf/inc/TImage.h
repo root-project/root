@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.14 2006/05/28 20:07:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.15 2006/07/21 09:15:46 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -69,7 +69,8 @@ public:
       kFits,
       kTga,
       kXml,
-      kUnknown
+      kUnknown,
+      kAnimGif
    };
 
    enum EText3DType {
