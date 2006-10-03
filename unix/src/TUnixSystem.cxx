@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.156 2006/08/31 13:40:56 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.157 2006/09/04 00:45:03 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3440,6 +3440,7 @@ int TUnixSystem::UnixFilestat(const char *fpath, FileStat_t &buf)
    // not be stat'ed.
 
    const char *path = StripOffProto(fpath, "file:");
+   buf.fIsLink = kFALSE;
 
 #if defined(R__SEEK64)
    struct stat64 sbuf;
