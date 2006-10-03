@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.88 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.89 2006/10/03 13:26:20 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -121,6 +121,7 @@ const char* const kCP     = "copy";
 const char* const kRM     = "delete";
 const char* const kLS     = "dir";
 const char* const kUNTAR  = "...";
+const char* const kUNTAR2 = "...";
 const char* const kGUNZIP = "gunzip";
 #endif
 
