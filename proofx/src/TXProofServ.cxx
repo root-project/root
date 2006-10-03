@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.12 2006/08/05 20:04:47 brun Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.13 2006/10/03 13:28:29 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -30,6 +30,7 @@
    typedef long off_t;
 #endif
 #include <sys/types.h>
+#include <netinet/in.h>
 
 #include "TXProofServ.h"
 #include "TEnv.h"
