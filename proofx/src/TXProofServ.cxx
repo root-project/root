@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.11 2006/07/26 14:28:58 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.12 2006/08/05 20:04:47 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 // TXProofServ                                                          //
 //                                                                      //
 // TXProofServ is the XRD version of the PROOF server. It differs from  //
-// TXProofServ only for the underlying connection technology             //
+// TXProofServ only for the underlying connection technology            //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -29,35 +29,13 @@
    #include <io.h>
    typedef long off_t;
 #endif
-#include <errno.h>
-#include <time.h>
-#include <fcntl.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <netinet/in.h>
-
-#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
-    (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
-     (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))
-#include <sys/file.h>
-#define lockf(fd, op, sz)   flock((fd), (op))
-#ifndef F_LOCK
-#define F_LOCK             (LOCK_EX | LOCK_NB)
-#endif
-#ifndef F_ULOCK
-#define F_ULOCK             LOCK_UN
-#endif
-#endif
 
 #include "TXProofServ.h"
-#include "TDSetProxy.h"
 #include "TEnv.h"
 #include "TError.h"
 #include "TException.h"
-#include "TFile.h"
 #include "TInterpreter.h"
-#include "TKey.h"
-#include "TMessage.h"
 #include "TPerfStats.h"
 #include "TProofDebug.h"
 #include "TProof.h"
@@ -66,46 +44,22 @@
 #include "TProofQueryResult.h"
 #include "TRegexp.h"
 #include "TROOT.h"
-#include "TSelector.h"
-#include "TSlave.h"
-#include "TSocket.h"
-#include "TStopwatch.h"
-#include "TSysEvtHandler.h"
 #include "TSystem.h"
-#include "TTimeStamp.h"
-#include "TUrl.h"
-#include "TTree.h"
 #include "TPluginManager.h"
-#include "TObjString.h"
 #include "TXSocketHandler.h"
 #include "TXUnixSocket.h"
 #include "compiledata.h"
 #include "TProofResourcesStatic.h"
 #include "TProofNodeInfo.h"
-#include "TTimer.h"
-#include "TMutex.h"
-
 #include "XProofProtocol.h"
 
 #include <XrdClient/XrdClientConst.hh>
 #include <XrdClient/XrdClientEnv.hh>
 
-#ifndef R__WIN32
-const char* const kCP     = "/bin/cp -f";
-const char* const kRM     = "/bin/rm -rf";
-const char* const kLS     = "/bin/ls -l";
-const char* const kUNTAR  = "%s -c %s/%s | (cd %s; tar xf -)";
-const char* const kGUNZIP = "gunzip";
-#else
-const char* const kCP     = "copy";
-const char* const kRM     = "delete";
-const char* const kLS     = "dir";
-const char* const kUNTAR  = "...";
-const char* const kGUNZIP = "gunzip";
-#endif
 
 // debug hook
 static volatile Int_t gProofServDebug = 1;
+
 
 //----- Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
@@ -533,7 +487,7 @@ void TXProofServ::HandleUrgentData()
       case TProof::kShutdownInterrupt:
          Info("HandleUrgentData", "Shutdown Interrupt");
 
-         // When retuning for here connection are closed 
+         // When retuning for here connection are closed
          HandleTermination();
 
          break;
