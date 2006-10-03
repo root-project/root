@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.21 2006/08/06 20:28:56 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.22 2006/09/28 23:23:45 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -265,10 +265,11 @@ static int GetUserInfo(const char *usr, XrdProofUI &ui)
    struct passwd *ppw = 0;
    char buf[2048];
 #if defined(__sun)
-   if ((ppw = getpwnam_r(usr, &pw, buf, sizeof(buf))) != 0) {
+   ppw = getpwnam_r(usr, &pw, buf, sizeof(buf));
 #else
-   if (getpwnam_r(usr, &pw, buf, sizeof(buf), &ppw) == 0) {
+   getpwnam_r(usr, &pw, buf, sizeof(buf), &ppw);
 #endif
+   if (ppw) {
       // Fill output
       ui.fUid = (int) pw.pw_uid;
       ui.fGid = (int) pw.pw_gid;
@@ -297,10 +298,11 @@ static int GetUserInfo(int uid, XrdProofUI &ui)
    struct passwd *ppw = 0;
    char buf[2048];
 #if defined(__sun)
-   if ((ppw = getpwuid_r((uid_t)uid, &pw, buf, sizeof(buf))) != 0) {
+   ppw = getpwuid_r((uid_t)uid, &pw, buf, sizeof(buf));
 #else
-   if (getpwuid_r((uid_t)uid, &pw, buf, sizeof(buf), &ppw) == 0) {
+   getpwuid_r((uid_t)uid, &pw, buf, sizeof(buf), &ppw);
 #endif
+   if (ppw) {
       // Fill output
       ui.fUid = uid;
       ui.fGid = (int) pw.pw_gid;
