@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.17 2006/09/05 17:13:15 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.18 2006/09/08 20:54:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -136,7 +136,7 @@ ROOT::Reflex::TypeName::ByTypeInfo( const std::type_info & ti ) {
 void ROOT::Reflex::TypeName::HideName() {
 //-------------------------------------------------------------------------------
 // Append the string " @HIDDEN@" to a type name.
-   if ( fName[fName.length()] != '@' ) {
+   if ( fName.length() == 0 || fName[fName.length()-1] != '@' ) {
       sTypes().erase(&fName);
       fName += " @HIDDEN@";
       sTypes()[&fName] = this;
