@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.139 2006/09/21 10:40:16 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.140 2006/10/03 13:27:53 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3563,7 +3563,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
 //______________________________________________________________________________
 Int_t TProofServ::HandleCache(TMessage *mess)
 {
-   // Handle here all cache and package requests
+   // Handle here all cache and package requests.
 
    PDB(kGlobal, 1)
       Info("HandleCache", "Enter");
@@ -3672,22 +3672,20 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
          }
 
+         fPackageLock->Unlock();
+
          if (status) {
             // Notify the upper level
             notm.Reset();
             notm << TString(Form("%s: failure building %s ...", noth.Data(), package.Data())) << notln;
             fSocket->Send(notm);
-         }
-
-         fPackageLock->Unlock();
-         // if built successful propagate to slaves
-         if (!status) {
+         } else {
+            // if built successful propagate to slaves
             if (IsMaster())
                fProof->BuildPackage(package);
 
             PDB(kPackage, 1)
-               Info("HandleCache",
-                    "package %s successfully built", package.Data());
+               Info("HandleCache", "package %s successfully built", package.Data());
          }
          break;
       case TProof::kLoadPackage:
@@ -3708,31 +3706,40 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
          // check for SETUP.C and execute
          if (!gSystem->AccessPathName(pdir + "/PROOF-INF/SETUP.C")) {
-            gROOT->Macro("PROOF-INF/SETUP.C");
+            Int_t err = 0;
+            gROOT->Macro("PROOF-INF/SETUP.C", &err);
+            if (err > TInterpreter::kNoError && err <= TInterpreter::kFatal)
+               status = -1;
          }
 
          gSystem->ChangeDirectory(ocwd);
 
-         // create link to package in working directory
-         gSystem->Symlink(pdir, package);
+         if (status) {
 
-         // add package to list of include directories to be searched
-         // by ACliC
-         gSystem->AddIncludePath(TString("-I") + package);
+            // Notify the upper level
+            notm.Reset();
+            notm << TString(Form("%s: failure loading %s ...", noth.Data(), package.Data())) << notln;
+            fSocket->Send(notm);
 
-         // add package to list of include directories to be searched
-         // by CINT
-         gROOT->ProcessLine(TString(".include ") + package);
+         } else {
 
-         // if successful add to list and propagate to slaves
-         if (!status) {
+            // create link to package in working directory
+            gSystem->Symlink(pdir, package);
+
+            // add package to list of include directories to be searched
+            // by ACliC
+            gSystem->AddIncludePath(TString("-I") + package);
+
+            // add package to list of include directories to be searched by CINT
+            gROOT->ProcessLine(TString(".include ") + package);
+
+            // if successful add to list and propagate to slaves
             fEnabledPackages->Add(new TObjString(package));
             if (IsMaster())
                fProof->LoadPackage(package);
 
             PDB(kPackage, 1)
-               Info("HandleCache",
-                    "package %s successfully loaded", package.Data());
+               Info("HandleCache", "package %s successfully loaded", package.Data());
          }
          break;
       case TProof::kShowEnabledPackages:
