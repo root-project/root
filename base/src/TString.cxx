@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.53 2006/08/22 17:19:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.54 2006/08/23 08:46:26 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1706,7 +1706,7 @@ TObjArray *TString::Tokenize(const TString &delim) const
 #endif
 
 //______________________________________________________________________________
-void TString::Form(const char *fmt, va_list ap)
+void TString::FormImp(const char *fmt, va_list ap)
 {
    // Formats a string using a printf style format descriptor.
    // Existing string contents will be overwritten.
@@ -1745,7 +1745,7 @@ void TString::Form(const char *va_(fmt), ...)
 
    va_list ap;
    va_start(ap, va_(fmt));
-   Form(va_(fmt), ap);
+   FormImp(va_(fmt), ap);
    va_end(ap);
 }
 
@@ -1759,7 +1759,7 @@ TString TString::Format(const char *va_(fmt), ...)
    va_list ap;
    va_start(ap, va_(fmt));
    TString str;
-   str.Form(va_(fmt), ap);
+   str.FormImp(va_(fmt), ap);
    va_end(ap);
    return str;
 }

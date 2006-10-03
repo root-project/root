@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.48 2006/08/30 12:53:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.49 2006/08/30 12:56:49 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -202,7 +202,7 @@ private:
 
    void           Clone();          // Make self a distinct copy
    void           Clone(Ssiz_t nc); // Make self a distinct copy w. capacity nc
-   void           Form(const char *fmt, va_list ap);
+   void           FormImp(const char *fmt, va_list ap);
 
 protected:
    char          *fData;          // ref. counted data (TStringRef is in front)
