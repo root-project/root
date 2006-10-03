@@ -154,7 +154,7 @@ $(CINTDIRL)/G__c_%.o: CINTCFLAGS += -I. -DG__SYSTYPES_H
 $(CINTDIRL)/posix/exten.o: $(CINTDIRL)/posix/exten.c
 	$(CC) $(OPT) $(CINTCFLAGS) -I. $(CXXOUT)$@ -c $<
 
-$(CINTDIRL)/G__c_posix.c: $(CINTDIRDLLS)/sys/types.h cint/lib/posix/exten.h
+$(CINTDIRL)/G__c_posix.c: $(CINTDIRDLLS)/sys/types.h cint/lib/posix/exten.h cint/lib/posix/posix.h
 
 $(CINTDIRDLLS)/posix.$(SOEXT): $(CINTDIRL)/G__c_posix.o \
    metautils/src/stlLoader_posix.o $(CINTDIRL)/posix/exten.o
