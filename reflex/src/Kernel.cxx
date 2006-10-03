@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.19 2006/09/05 17:13:15 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.20 2006/09/14 13:38:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -345,15 +345,6 @@ const std::string & ROOT::Reflex::Reflex::Argv0() {
    static std::string str = "REFLEX";
    return str;
 }
-
-
-//-------------------------------------------------------------------------------
-size_t ROOT::Reflex::NPos() {
-//-------------------------------------------------------------------------------
-   static size_t m = -1;
-   return m;
-}
-
 
 //-------------------------------------------------------------------------------
 namespace {
