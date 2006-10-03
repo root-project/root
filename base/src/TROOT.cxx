@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.188 2006/08/22 18:25:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.189 2006/09/27 17:36:14 pcanal Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1750,7 +1750,7 @@ Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
 }
 
 //______________________________________________________________________________
-Long_t TROOT::Macro(const char *filename, int *error)
+Long_t TROOT::Macro(const char *filename, Int_t *error)
 {
    // Execute a macro in the interpreter. Equivalent to the command line
    // command ".x filename". If the filename has "+" or "++" appended

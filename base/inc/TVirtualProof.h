@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.37 2006/07/31 08:20:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.38 2006/08/06 07:15:00 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -76,13 +76,13 @@ public:
    };
 
 private:
-   static TProof_t              fgProofHook; // Hook to TProof constructor
+   static TProof_t              fgProofHook;  // Hook to TProof constructor
 
 protected:
    TString                      fDataPoolUrl; // Default data pool entry point URL
-   TVirtualProofMgr::EServType  fServType;  // Type of server: proofd, XrdProofd
-   TVirtualProofMgr            *fManager;   // Manager to which this session belongs (if any)
-   EQueryMode                   fQueryMode; // default query mode
+   TVirtualProofMgr::EServType  fServType;    // Type of server: proofd, XrdProofd
+   TVirtualProofMgr            *fManager;     // Manager to which this session belongs (if any)
+   EQueryMode                   fQueryMode;   // default query mode
 
    TVirtualProof() : fServType(TVirtualProofMgr::kXProofd), fManager(0), fQueryMode(kSync) { }
 

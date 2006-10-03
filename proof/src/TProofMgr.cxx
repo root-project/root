@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.6 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.7 2006/06/21 16:18:26 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -34,12 +34,15 @@ extern "C" {
    TVirtualProofMgr *GetTProofMgr(const char *url, Int_t l, const char *al)
    { return ((TVirtualProofMgr *) new TProofMgr(url, l, al)); }
 }
+
 class TProofMgrInit {
 public:
    TProofMgrInit() {
       TVirtualProofMgr::SetTProofMgrHook(&GetTProofMgr);
-}};
+   }
+};
 static TProofMgrInit gproofmgr_init;
+
 
 //______________________________________________________________________________
 TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)

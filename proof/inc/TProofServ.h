@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.42 2006/07/03 09:33:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.43 2006/07/26 14:28:58 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -42,6 +42,7 @@
 
 class TProof;
 class TProofPlayer;
+class TProofLockPath;
 class TSocket;
 class TList;
 class TDSetElement;
@@ -54,8 +55,7 @@ class TMutex;
 // For backward compatibility
 typedef Int_t (*OldProofServAuthSetup_t)(TSocket *, Bool_t, Int_t,
                                          TString &, TString &, TString &);
-class TList;
-class TProofLockPath;
+
 
 class TProofServ : public TApplication {
 
@@ -77,10 +77,10 @@ private:
    TString       fCacheDir;         //directory containing cache of user files
    TString       fQueryDir;         //directory containing query results and status
    TString       fDataSetDir;       //directory containing info about known data sets
-   TProofLockPath *fPackageLock;     //package dir locker
-   TProofLockPath *fCacheLock;       //cache dir locker
-   TProofLockPath *fQueryLock;       //query dir locker
-   TProofLockPath *fDataSetLock;     //dataset dir locker
+   TProofLockPath *fPackageLock;    //package dir locker
+   TProofLockPath *fCacheLock;      //cache dir locker
+   TProofLockPath *fQueryLock;      //query dir locker
+   TProofLockPath *fDataSetLock;    //dataset dir locker
    TString       fArchivePath;      //default archive path
    TSocket      *fSocket;           //socket connection to client
    TProof       *fProof;            //PROOF talking to slave servers

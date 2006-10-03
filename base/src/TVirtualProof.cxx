@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.6 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.7 2006/08/28 13:35:32 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -38,9 +38,11 @@ TVirtualProof *TVirtualProof::Open(const char *cluster, const char *conffile,
    // Start a PROOF session on a specific cluster. If cluster is 0 (the
    // default) then the PROOF Session Viewer GUI pops up and 0 is returned.
    // If cluster is "" (empty string) then we connect to a PROOF session
-   // on the localhost ("proof://localhost"). The appropriate instance of
-   // TVirtualProofMgr is created, if not yet existing. The instantiated
-   // TProof object is returned.
+   // on the localhost ("proof://localhost"). Via conffile a specific
+   // PROOF config file in the confir directory can be specified.
+   // Use loglevel to set the default loging level for debugging.
+   // The appropriate instance of TVirtualProofMgr is created, if not
+   // yet existing. The instantiated TProof object is returned.
    // Use TProof::cd() to switch between PROOF sessions.
    // For more info on PROOF see the TProof ctor.
 
