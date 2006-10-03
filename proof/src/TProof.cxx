@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.157 2006/08/10 10:33:04 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.158 2006/08/10 14:14:47 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -69,6 +69,7 @@
 #include "Getline.h"
 #include "TProofNodeInfo.h"
 #include "TProofResourcesStatic.h"
+#include "TInterpreter.h"
 
 #include "TRandom.h"
 #include "TRegexp.h"
@@ -321,11 +322,13 @@ TProof::~TProof()
    SafeDelete(fActiveSlaves);
    SafeDelete(fInactiveSlaves);
    SafeDelete(fUniqueSlaves);
+   SafeDelete(fAllUniqueSlaves);
    SafeDelete(fNonUniqueMasters);
    SafeDelete(fBadSlaves);
    SafeDelete(fAllMonitor);
    SafeDelete(fActiveMonitor);
    SafeDelete(fUniqueMonitor);
+   SafeDelete(fAllUniqueMonitor);
    SafeDelete(fSlaveInfo);
    SafeDelete(fChains);
    SafeDelete(fPlayer);
@@ -333,6 +336,8 @@ TProof::~TProof()
    SafeDelete(fWaitingSlaves);
    SafeDelete(fAvailablePackages);
    SafeDelete(fEnabledPackages);
+   SafeDelete(fEnabledPackagesOnClient);
+   SafeDelete(fPackageLock);
 
    // remove file with redirected logs
    if (!IsMaster()) {
@@ -472,12 +477,41 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fActiveSlaves     = new TList;
    fInactiveSlaves   = new TList;
    fUniqueSlaves     = new TList;
+   fAllUniqueSlaves  = new TList;
    fNonUniqueMasters = new TList;
    fBadSlaves        = new TList;
    fAllMonitor       = new TMonitor;
    fActiveMonitor    = new TMonitor;
    fUniqueMonitor    = new TMonitor;
+   fAllUniqueMonitor = new TMonitor;
    fCurrentMonitor   = 0;
+
+   fPackageLock             = 0;
+   fEnabledPackagesOnClient = 0;
+   if (!IsMaster()) {
+      fPackageDir = kPROOF_WorkDir;
+      gSystem->ExpandPathName(fPackageDir);
+      if (gSystem->AccessPathName(fPackageDir)) {
+         if (gSystem->MakeDirectory(fPackageDir) == -1) {
+            Error("Init", "failure creating directory %s", fPackageDir.Data());
+            return 0;
+         }
+      }
+      fPackageDir += TString("/") + kPROOF_PackDir;
+      if (gSystem->AccessPathName(fPackageDir)) {
+         if (gSystem->MakeDirectory(fPackageDir) == -1) {
+            Error("Init", "failure creating directory %s", fPackageDir.Data());
+            return 0;
+         }
+      }
+
+      UserGroup_t *ug = gSystem->GetUserInfo();
+      fPackageLock = new TProofLockPath(Form("%s%s", kPROOF_PackageLockFile, ug->fUser.Data()));
+      delete ug;
+
+      fEnabledPackagesOnClient = new TList;
+      fEnabledPackagesOnClient->SetOwner();
+   }
 
    // Master may want parallel startup
    Bool_t parallelStartup = kFALSE;
@@ -885,6 +919,7 @@ void TProof::Close(Option_t *opt)
 
       fActiveSlaves->Clear("nodelete");
       fUniqueSlaves->Clear("nodelete");
+      fAllUniqueSlaves->Clear("nodelete");
       fNonUniqueMasters->Clear("nodelete");
       fBadSlaves->Clear("nodelete");
       fSlaves->Delete();
@@ -976,14 +1011,19 @@ void TProof::FindUniqueSlaves()
 
    fUniqueSlaves->Clear();
    fUniqueMonitor->RemoveAll();
+   fAllUniqueSlaves->Clear();
+   fAllUniqueMonitor->RemoveAll();
    fNonUniqueMasters->Clear();
 
    TIter next(fActiveSlaves);
 
    while (TSlave *sl = dynamic_cast<TSlave*>(next())) {
       if (fImage == sl->fImage) {
-         if (sl->GetSlaveType() == TSlave::kMaster)
+         if (sl->GetSlaveType() == TSlave::kMaster) {
             fNonUniqueMasters->Add(sl);
+            fAllUniqueSlaves->Add(sl);
+            fAllUniqueMonitor->Add(sl->GetSocket());
+         }
          continue;
       }
 
@@ -1000,6 +1040,8 @@ void TProof::FindUniqueSlaves()
                   add = kTRUE;
                } else if (sl2->GetSlaveType() == TSlave::kMaster) {
                   fNonUniqueMasters->Add(sl);
+                  fAllUniqueSlaves->Add(sl);
+                  fAllUniqueMonitor->Add(sl->GetSocket());
                } else {
                   Error("FindUniqueSlaves", "TSlave is neither Master nor Slave");
                   R__ASSERT(0);
@@ -1011,16 +1053,21 @@ void TProof::FindUniqueSlaves()
 
       if (add) {
          fUniqueSlaves->Add(sl);
+         fAllUniqueSlaves->Add(sl);
          fUniqueMonitor->Add(sl->GetSocket());
+         fAllUniqueMonitor->Add(sl->GetSocket());
          if (replace_slave) {
             fUniqueSlaves->Remove(replace_slave);
+            fAllUniqueSlaves->Remove(replace_slave);
             fUniqueMonitor->Remove(replace_slave->GetSocket());
+            fAllUniqueMonitor->Remove(replace_slave->GetSocket());
          }
       }
    }
 
    // will be actiavted in Collect()
    fUniqueMonitor->DeActivateAll();
+   fAllUniqueMonitor->DeActivateAll();
 }
 
 //______________________________________________________________________________
@@ -1285,9 +1332,10 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
    if (!IsValid()) return;
 
    TList *slaves = 0;
-   if (list == kAll)    slaves = fSlaves;
-   if (list == kActive) slaves = fActiveSlaves;
-   if (list == kUnique) slaves = fUniqueSlaves;
+   if (list == kAll)       slaves = fSlaves;
+   if (list == kActive)    slaves = fActiveSlaves;
+   if (list == kUnique)    slaves = fUniqueSlaves;
+   if (list == kAllUnique) slaves = fAllUniqueSlaves;
 
    if (slaves->GetSize() == 0) return;
 
@@ -1435,9 +1483,10 @@ Int_t TProof::Broadcast(const TMessage &mess, ESlaves list)
    // the message was successfully sent to. Returns -1 in case of error.
 
    TList *slaves = 0;
-   if (list == kAll)    slaves = fSlaves;
-   if (list == kActive) slaves = fActiveSlaves;
-   if (list == kUnique) slaves = fUniqueSlaves;
+   if (list == kAll)       slaves = fSlaves;
+   if (list == kActive)    slaves = fActiveSlaves;
+   if (list == kUnique)    slaves = fUniqueSlaves;
+   if (list == kAllUnique) slaves = fAllUniqueSlaves;
 
    return Broadcast(mess, slaves);
 }
@@ -1526,9 +1575,10 @@ Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, ESlaves list)
    // Returns -1 in case of error.
 
    TList *slaves = 0;
-   if (list == kAll)    slaves = fSlaves;
-   if (list == kActive) slaves = fActiveSlaves;
-   if (list == kUnique) slaves = fUniqueSlaves;
+   if (list == kAll)       slaves = fSlaves;
+   if (list == kActive)    slaves = fActiveSlaves;
+   if (list == kUnique)    slaves = fUniqueSlaves;
+   if (list == kAllUnique) slaves = fAllUniqueSlaves;
 
    return BroadcastRaw(buffer, length, slaves);
 }
@@ -1581,9 +1631,10 @@ Int_t TProof::Collect(ESlaves list, Long_t timeout)
    // which means wait forever).
 
    TMonitor *mon = 0;
-   if (list == kAll)    mon = fAllMonitor;
-   if (list == kActive) mon = fActiveMonitor;
-   if (list == kUnique) mon = fUniqueMonitor;
+   if (list == kAll)       mon = fAllMonitor;
+   if (list == kActive)    mon = fActiveMonitor;
+   if (list == kUnique)    mon = fUniqueMonitor;
+   if (list == kAllUnique) mon = fAllUniqueMonitor;
 
    mon->ActivateAll();
 
@@ -1839,7 +1890,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   // so that it is available in TSelectors for monitoring
                   fPlayer->AddInput(new TNamed("PROOF_QueryTag",
                                     Form("%s:%s",pq->GetTitle(),pq->GetName())));
- 
+
                } else {
                   PDB(kGlobal,2)
                      Info("Collect:kPROOF_OUTPUTOBJECT","query result missing");
@@ -2351,9 +2402,10 @@ Int_t TProof::Ping(ESlaves list)
    // Ping PROOF slaves. Returns the number of slaves that responded.
 
    TList *slaves = 0;
-   if (list == kAll)    slaves = fSlaves;
-   if (list == kActive) slaves = fActiveSlaves;
-   if (list == kUnique) slaves = fUniqueSlaves;
+   if (list == kAll)       slaves = fSlaves;
+   if (list == kActive)    slaves = fActiveSlaves;
+   if (list == kUnique)    slaves = fUniqueSlaves;
+   if (list == kAllUnique) slaves = fAllUniqueSlaves;
 
    if (slaves->GetSize() == 0) return 0;
 
@@ -3528,19 +3580,7 @@ void TProof::ShowCache(Bool_t all)
       mess2 << Int_t(kShowSubCache) << all;
       Broadcast(mess2, fNonUniqueMasters);
 
-      // make list of unique slaves (which will include
-      // unique slave on submasters)
-      TList allunique;
-      Int_t i;
-      for (i = 0; i < fUniqueSlaves->GetSize(); i++) {
-         TSlave* sl = dynamic_cast<TSlave*>(fUniqueSlaves->At(i));
-         if (sl) allunique.Add(sl);
-      }
-      for (i = 0; i < fNonUniqueMasters->GetSize(); i++) {
-         TSlave* sl = dynamic_cast<TSlave*>(fNonUniqueMasters->At(i));
-         if (sl) allunique.Add(sl);
-      }
-      Collect(&allunique);
+      Collect(kAllUnique);
    } else {
       Collect(kUnique);
    }
@@ -3561,21 +3601,7 @@ void TProof::ClearCache()
    mess2 << Int_t(kClearSubCache);
    Broadcast(mess2, fNonUniqueMasters);
 
-   // make list of unique slaves (which will include
-   // unique slave on submasters
-   TList allunique;
-   Int_t i;
-   for (i = 0; i<fUniqueSlaves->GetSize(); i++) {
-      TSlave* sl =
-         dynamic_cast<TSlave*>(fUniqueSlaves->At(i));
-      if (sl) allunique.Add(sl);
-   }
-   for (i = 0; i<fNonUniqueMasters->GetSize(); i++) {
-      TSlave* sl =
-         dynamic_cast<TSlave*>(fNonUniqueMasters->At(i));
-      if (sl) allunique.Add(sl);
-   }
-   Collect(&allunique);
+   Collect(kAllUnique);
 
    // clear file map so files get send again to remote nodes
    fFileMap.clear();
@@ -3599,19 +3625,7 @@ void TProof::ShowPackages(Bool_t all)
       mess2 << Int_t(kShowSubPackages) << all;
       Broadcast(mess2, fNonUniqueMasters);
 
-      // make list of unique slaves (which will include
-      // unique slave on submasters
-      TList allunique;
-      Int_t i;
-      for (i = 0; i < fUniqueSlaves->GetSize(); i++) {
-         TSlave* sl = dynamic_cast<TSlave*>(fUniqueSlaves->At(i));
-         if (sl) allunique.Add(sl);
-      }
-      for (i = 0; i < fNonUniqueMasters->GetSize(); i++) {
-         TSlave* sl = dynamic_cast<TSlave*>(fNonUniqueMasters->At(i));
-         if (sl) allunique.Add(sl);
-      }
-      Collect(&allunique);
+      Collect(kAllUnique);
    } else {
       Collect(kUnique);
    }
@@ -3701,19 +3715,7 @@ Int_t TProof::DisablePackage(const char *package)
    mess2 << Int_t(kDisableSubPackage) << pac;
    Broadcast(mess2, fNonUniqueMasters);
 
-   // make list of unique slaves (which will include
-   // unique slave on submasters)
-   TList allunique;
-   Int_t i;
-   for (i = 0; i < fUniqueSlaves->GetSize(); i++) {
-      TSlave* sl = dynamic_cast<TSlave*>(fUniqueSlaves->At(i));
-      if (sl) allunique.Add(sl);
-   }
-   for (i = 0; i < fNonUniqueMasters->GetSize(); i++) {
-      TSlave* sl = dynamic_cast<TSlave*>(fNonUniqueMasters->At(i));
-      if (sl) allunique.Add(sl);
-   }
-   Collect(&allunique);
+   Collect(kAllUnique);
 
    return fStatus;
 }
@@ -3733,19 +3735,7 @@ Int_t TProof::DisablePackages()
    mess2 << Int_t(kDisableSubPackages);
    Broadcast(mess2, fNonUniqueMasters);
 
-   // make list of unique slaves (which will include
-   // unique slave on submasters)
-   TList allunique;
-   Int_t i;
-   for (i = 0; i < fUniqueSlaves->GetSize(); i++) {
-      TSlave* sl = dynamic_cast<TSlave*>(fUniqueSlaves->At(i));
-      if (sl) allunique.Add(sl);
-   }
-   for (i = 0; i < fNonUniqueMasters->GetSize(); i++) {
-      TSlave* sl = dynamic_cast<TSlave*>(fNonUniqueMasters->At(i));
-      if (sl) allunique.Add(sl);
-   }
-   Collect(&allunique);
+   Collect(kAllUnique);
 
    return fStatus;
 }
@@ -3770,6 +3760,9 @@ Int_t TProof::BuildPackage(const char *package)
       pac.Remove(pac.Length()-4);
    pac = gSystem->BaseName(pac);
 
+   if (BuildPackageOnClient(pac) == -1)
+      return -1;
+
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kBuildPackage) << pac;
    Broadcast(mess, kUnique);
@@ -3778,21 +3771,64 @@ Int_t TProof::BuildPackage(const char *package)
    mess2 << Int_t(kBuildSubPackage) << pac;
    Broadcast(mess2, fNonUniqueMasters);
 
-      // make list of unique slaves (which will include
-   // unique slave on submasters)
-   TList allunique;
-   Int_t i;
-   for (i = 0; i < fUniqueSlaves->GetSize(); i++) {
-      TSlave* sl = dynamic_cast<TSlave*>(fUniqueSlaves->At(i));
-      if (sl) allunique.Add(sl);
-   }
-   for (i = 0; i < fNonUniqueMasters->GetSize(); i++) {
-      TSlave* sl = dynamic_cast<TSlave*>(fNonUniqueMasters->At(i));
-      if (sl) allunique.Add(sl);
-   }
-   Collect(&allunique);
+   Collect(kAllUnique);
 
    return fStatus;
+}
+
+//______________________________________________________________________________
+Int_t TProof::BuildPackageOnClient(const TString &package)
+{
+   // Build specified package on the client. Executes the PROOF-INF/BUILD.sh
+   // script if it exists on the client.
+   // Returns 0 in case of success and -1 in case of error.
+   // The code is equivalent to the one in TProofServ.cxx (TProof::kBuildPackage
+   // case). Keep in sync in case of changes.
+
+   if (!IsMaster()) {
+      Int_t status = 0;
+      TString pdir, ocwd;
+      fPackageLock->Lock();
+      // check that package and PROOF-INF directory exists
+      pdir = fPackageDir + "/" + package;
+      if (gSystem->AccessPathName(pdir)) {
+         Error("BuildPackageOnClient", "package %s does not exist",
+               package.Data());
+         fPackageLock->Unlock();
+         return -1;
+      } else if (gSystem->AccessPathName(pdir + "/PROOF-INF")) {
+         Error("BuildPackageOnClient", "package %s does not have a PROOF-INF directory",
+               package.Data());
+         fPackageLock->Unlock();
+         return -1;
+      }
+
+      PDB(kPackage, 1)
+         Info("BuildPackageOnCLient",
+              "package %s exists and has PROOF-INF directory", package.Data());
+
+      ocwd = gSystem->WorkingDirectory();
+      gSystem->ChangeDirectory(pdir);
+
+      // check for BUILD.sh and execute
+      if (!gSystem->AccessPathName(pdir + "/PROOF-INF/BUILD.sh")) {
+         if (gSystem->Exec("PROOF-INF/BUILD.sh")) {
+            Error("BuildPackageOnClient", "building package %s on the client failed", package.Data());
+            status = -1;
+         }
+      } else {
+         PDB(kPackage, 1)
+            Info("BuildPackageOnCLient",
+                 "package %s exists but has no PROOF-INF/BUILD.sh script", package.Data());
+      }
+
+      gSystem->ChangeDirectory(ocwd);
+
+      fPackageLock->Unlock();
+
+      return status;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -3815,12 +3851,93 @@ Int_t TProof::LoadPackage(const char *package)
       pac.Remove(pac.Length()-4);
    pac = gSystem->BaseName(pac);
 
+   if (LoadPackageOnClient(pac) == -1)
+      return -1;
+
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kLoadPackage) << pac;
    Broadcast(mess);
    Collect();
 
    return fStatus;
+}
+
+//______________________________________________________________________________
+Int_t TProof::LoadPackageOnClient(const TString &package)
+{
+   // Load specified package in the client. Executes the PROOF-INF/SETUP.C
+   // script on the client. Returns 0 in case of success and -1 in case of error.
+   // The code is equivalent to the one in TProofServ.cxx (TProof::kLoadPackage
+   // case). Keep in sync in case of changes.
+
+   if (!IsMaster()) {
+      Int_t status = 0;
+      TString pdir, ocwd;
+      // If already loaded don't do it again
+      if (fEnabledPackagesOnClient->FindObject(package)) {
+         Info("LoadPackageOnClient",
+              "package %s already loaded", package.Data());
+         return 0;
+      }
+
+      // always follows BuildPackage so no need to check for PROOF-INF
+      pdir = fPackageDir + "/" + package;
+
+      ocwd = gSystem->WorkingDirectory();
+      gSystem->ChangeDirectory(pdir);
+
+      // check for SETUP.C and execute
+      if (!gSystem->AccessPathName(pdir + "/PROOF-INF/SETUP.C")) {
+         Int_t err = 0;
+         gROOT->Macro("PROOF-INF/SETUP.C", &err);
+         if (err > TInterpreter::kNoError && err <= TInterpreter::kFatal)
+            status = -1;
+      } else {
+         PDB(kPackage, 1)
+            Info("LoadPackageOnCLient",
+                 "package %s exists but has no PROOF-INF/SETUP.C script", package.Data());
+      }
+
+      gSystem->ChangeDirectory(ocwd);
+
+      if (!status) {
+         // create link to package in working directory
+
+         fPackageLock->Lock();
+
+         FileStat_t stat;
+         Int_t st = gSystem->GetPathInfo(package, stat);
+         // check if symlink, if so unlink, if not give error
+         // NOTE: GetPathnfo() returns 1 in case of symlink that does not point to
+         // existing file or to a directory, but if fIsLink is true the symlink exists
+         if (stat.fIsLink)
+            gSystem->Unlink(package);
+         else if (st == 0) {
+            Error("LoadPackageOnClient", "cannot create symlink %s in %s on client, "
+                  "another item with same name already exists", package.Data(), ocwd.Data());
+            fPackageLock->Unlock();
+            return -1;
+         }
+         gSystem->Symlink(pdir, package);
+
+         fPackageLock->Unlock();
+
+         // add package to list of include directories to be searched by ACliC
+         gSystem->AddIncludePath(TString("-I") + package);
+
+         // add package to list of include directories to be searched by CINT
+         gROOT->ProcessLine(TString(".include ") + package);
+
+         fEnabledPackagesOnClient->Add(new TObjString(package));
+         PDB(kPackage, 1)
+            Info("LoadPackageOnClient",
+                 "package %s successfully loaded", package.Data());
+      } else
+         Error("LoadPackageOnClient", "loading package %s on client failed", package.Data());
+
+      return status;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -3928,12 +4045,24 @@ Int_t TProof::UploadPackage(const char *tpar, EUploadPackageOpt opt)
       return -1;
    }
 
-   // Strategy: get md5 of package and check if it is different from the
+   // Strategy:
+   // On the client:
+   // get md5 of package and check if it is different
+   // from the one stored in the local package directory. If it is lock
+   // the package directory and copy the package, unlock the directory.
+   // On the masters:
+   // get md5 of package and check if it is different from the
    // one stored on the remote node. If it is different lock the remote
-   // package directory and use TFTP to ftp the package to the remote node,
-   // unlock the directory.
+   // package directory and use TFTP or SendFile to ftp the package to the
+   // remote node, unlock the directory.
 
    TMD5 *md5 = TMD5::FileChecksum(par);
+
+   if (UploadPackageOnClient(par, opt, md5) == -1) {
+      delete md5;
+      return -1;
+   }
+
    TMessage mess(kPROOF_CHECKFILE);
    mess << TString("+")+TString(gSystem->BaseName(par)) << (*md5);
    TMessage mess2(kPROOF_CHECKFILE);
@@ -4012,6 +4141,100 @@ Int_t TProof::UploadPackage(const char *tpar, EUploadPackageOpt opt)
    }
 
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, TMD5 *md5)
+{
+   // Upload a package on the client in ~/proof/packages.
+   // The 'opt' allows to specify whether the .PAR should be just unpacked
+   // in the exiting dir (opt = kUntar, default) or a remove of the existing
+   // directory should be executed (opt = kRemoveOld), thereby triggering a full
+   // re-build. The option if effective only for PROOF protocol > 8 .
+   // Returns 0 in case of success and -1 in case of error.
+
+   // Strategy:
+   // get md5 of package and check if it is different
+   // from the one stored in the local package directory. If it is lock
+   // the package directory and copy the package, unlock the directory.
+
+   Int_t status = 0;
+
+   if (!IsMaster()) {
+      // the fPackageDir directory exists (has been created in Init())
+
+      // create symlink to the par file in the fPackageDir (needed by
+      // master in case we run on the localhost)
+      fPackageLock->Lock();
+
+      TString lpar = fPackageDir + "/" + gSystem->BaseName(par);
+      FileStat_t stat;
+      Int_t st = gSystem->GetPathInfo(lpar, stat);
+      // check if symlink, if so unlink, if not give error
+      // NOTE: GetPathnfo() returns 1 in case of symlink that does not point to
+      // existing file, but if fIsLink is true the symlink exists
+      if (stat.fIsLink)
+         gSystem->Unlink(lpar);
+      else if (st == 0) {
+         Error("UploadPackageOnClient", "cannot create symlink %s on client, "
+               "another item with same name already exists",
+               lpar.Data());
+         fPackageLock->Unlock();
+         return -1;
+      }
+      if (!gSystem->IsAbsoluteFileName(par)) {
+         TString fpar = par;
+         gSystem->Symlink(gSystem->PrependPathName(gSystem->WorkingDirectory(), fpar), lpar);
+      } else
+         gSystem->Symlink(par, lpar);
+      // TODO: On Windows need to copy instead of symlink
+
+      // compare md5
+      TString packnam = par(0, par.Length() - 4);  // strip off ".par"
+      packnam = gSystem->BaseName(packnam);        // strip off path
+      TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
+      TMD5 *md5local = TMD5::ReadChecksum(md5f);
+      if (!md5local || (*md5) != (*md5local)) {
+         // if not, unzip and untar package in package directory
+         Int_t st = 0;
+         if ((opt & TVirtualProof::kRemoveOld)) {
+            // remove any previous package directory with same name
+            st = gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
+                               packnam.Data()));
+            if (st)
+               Error("UploadPackageOnClient", "failure executing: %s %s/%s",
+                     kRM, fPackageDir.Data(), packnam.Data());
+         }
+         // find gunzip
+         char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP,
+                                       kExecutePermission);
+         if (gunzip) {
+            // untar package
+            st = gSystem->Exec(Form(kUNTAR2, gunzip, par.Data(), fPackageDir.Data()));
+            if (st)
+               Error("Uploadpackage", "failure executing: %s",
+                     Form(kUNTAR2, gunzip, par.Data(), fPackageDir.Data()));
+            delete [] gunzip;
+         } else
+            Error("UploadPackageOnClient", "%s not found", kGUNZIP);
+
+         // check that fPackageDir/packnam now exists
+         if (gSystem->AccessPathName(fPackageDir + "/" + packnam, kWritePermission)) {
+            // par file did not unpack itself in the expected directory, failure
+            Error("UploadPackageOnClient",
+                  "package %s did not unpack into %s/%s", par.Data(), fPackageDir.Data(),
+                  packnam.Data());
+            status = -1;
+         } else {
+            // store md5 in package/PROOF-INF/md5.txt
+            TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
+            TMD5::WriteChecksum(md5f, md5);
+         }
+      }
+      fPackageLock->Unlock();
+      delete md5local;
+   }
+   return status;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.87 2006/07/31 08:20:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.88 2006/08/06 07:15:00 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -71,6 +71,7 @@ class TProofInterruptHandler;
 class TProofPlayer;
 class TProofPlayerRemote;
 class TProofProgressDialog;
+class TProofLockPath;
 class TCondor;
 class TTree;
 class TDrawFeedback;
@@ -94,19 +95,35 @@ class TVirtualMutex;
 // 10 -> 11: new merging strategy
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol = 11;            // protocol version number
-const Int_t       kPROOF_Port     = 1093;          // IANA registered PROOF port
-const char* const kPROOF_ConfFile = "proof.conf";  // default config file
-const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
-const char* const kPROOF_WorkDir  = "~/proof";     // default working directory
-const char* const kPROOF_CacheDir = "cache";       // file cache dir, under WorkDir
-const char* const kPROOF_PackDir  = "packages";    // package dir, under WorkDir
-const char* const kPROOF_QueryDir = "queries";     // query dir, under WorkDir
-const char* const kPROOF_DataSetDir      = "datasets";
+const Int_t       kPROOF_Protocol        = 11;            // protocol version number
+const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
+const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
+const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
+const char* const kPROOF_WorkDir         = "~/proof";     // default working directory
+const char* const kPROOF_CacheDir        = "cache";       // file cache dir, under WorkDir
+const char* const kPROOF_PackDir         = "packages";    // package dir, under WorkDir
+const char* const kPROOF_QueryDir        = "queries";     // query dir, under WorkDir
+const char* const kPROOF_DataSetDir      = "datasets";    // dataset dir, under WorkDir
 const char* const kPROOF_CacheLockFile   = "/tmp/proof-cache-lock-";   // cache lock file
 const char* const kPROOF_PackageLockFile = "/tmp/proof-package-lock-"; // package lock file
 const char* const kPROOF_QueryLockFile   = "/tmp/proof-query-lock-";   // query lock file
 const char* const kPROOF_DataSetLockFile = "/tmp/proof-dataset-lock-"; // dataset lock file
+
+#ifndef R__WIN32
+const char* const kCP     = "/bin/cp -f";
+const char* const kRM     = "/bin/rm -rf";
+const char* const kLS     = "/bin/ls -l";
+const char* const kUNTAR  = "%s -c %s/%s | (cd %s; tar xf -)";
+const char* const kUNTAR2 = "%s -c %s | (cd %s; tar xf -)";
+const char* const kGUNZIP = "gunzip";
+#else
+const char* const kCP     = "copy";
+const char* const kRM     = "delete";
+const char* const kLS     = "dir";
+const char* const kUNTAR  = "...";
+const char* const kGUNZIP = "gunzip";
+#endif
+
 R__EXTERN TVirtualMutex *gProofMutex;
 
 
@@ -246,14 +263,14 @@ private:
       kListEnabledPackages = 20
    };
    enum EProofDataSetCommands {
-      kUploadDataSet       = 1,     //Upload a dataset
-      kCheckDataSetName,            //Check wheter dataset of this name exists
-      kGetDataSets,                 //List datasets saved on  the master node
-      kCreateDataSet,               //Save a TList object as a dataset
-      kGetDataSet,                  //Get a TList of TFileInfo objects
-      kVerifyDataSet,               //Try open all files from a dataset and report results
-      kRemoveDataSet,               //Remove a dataset but leave files belonging to it
-      kAppendDataSet                //Add new files to an existing dataset
+      kUploadDataSet       = 1,  //Upload a dataset
+      kCheckDataSetName    = 2,  //Check wheter dataset of this name exists
+      kGetDataSets         = 3,  //List datasets saved on  the master node
+      kCreateDataSet       = 4,  //Save a TList object as a dataset
+      kGetDataSet          = 5,  //Get a TList of TFileInfo objects
+      kVerifyDataSet       = 6,  //Try open all files from a dataset and report results
+      kRemoveDataSet       = 7,  //Remove a dataset but leave files belonging to it
+      kAppendDataSet       = 8   //Add new files to an existing dataset
    };
    enum ESendFileOpt {
       kAscii               = 0x0,
@@ -266,60 +283,66 @@ private:
       kDeactivateWorker    = 2
    };
 
-   Bool_t          fValid;          //is this a valid proof object
-   TString         fMaster;         //master server ("" if a master); used in the browser
-   TString         fWorkDir;        //current work directory on remote servers
-   Int_t           fLogLevel;       //server debug logging level
-   Int_t           fStatus;         //remote return status (part of kPROOF_LOGDONE)
-   TList          *fSlaveInfo;      //!list returned by kPROOF_GETSLAVEINFO
-   Bool_t          fMasterServ;     //true if we are a master server
-   Bool_t          fSendGroupView;  //if true send new group view
-   TList          *fActiveSlaves;   //list of active slaves (subset of all slaves)
-   TList          *fInactiveSlaves; //list of inactive slaves (good but not used for processing)
-   TList          *fUniqueSlaves;   //list of all active slaves with unique file systems
+   Bool_t          fValid;           //is this a valid proof object
+   TString         fMaster;          //master server ("" if a master); used in the browser
+   TString         fWorkDir;         //current work directory on remote servers
+   Int_t           fLogLevel;        //server debug logging level
+   Int_t           fStatus;          //remote return status (part of kPROOF_LOGDONE)
+   TList          *fSlaveInfo;       //!list returned by kPROOF_GETSLAVEINFO
+   Bool_t          fMasterServ;      //true if we are a master server
+   Bool_t          fSendGroupView;   //if true send new group view
+   TList          *fActiveSlaves;    //list of active slaves (subset of all slaves)
+   TList          *fInactiveSlaves;  //list of inactive slaves (good but not used for processing)
+   TList          *fUniqueSlaves;    //list of all active slaves with unique file systems
+   TList          *fAllUniqueSlaves;  //list of all active slaves with unique file systems, including all submasters
    TList          *fNonUniqueMasters; //list of all active masters with a nonunique file system
-   TMonitor       *fActiveMonitor;  //monitor activity on all active slave sockets
-   TMonitor       *fUniqueMonitor;  //monitor activity on all unique slave sockets
-   TMonitor       *fCurrentMonitor; //caurrently active monitor
-   Long64_t        fBytesRead;      //bytes read by all slaves during the session
-   Float_t         fRealTime;       //realtime spent by all slaves during the session
-   Float_t         fCpuTime;        //CPU time spent by all slaves during the session
-   TSignalHandler *fIntHandler;     //interrupt signal handler (ctrl-c)
-   TPluginHandler *fProgressDialog; //progress dialog plugin
+   TMonitor       *fActiveMonitor;   //monitor activity on all active slave sockets
+   TMonitor       *fUniqueMonitor;   //monitor activity on all unique slave sockets
+   TMonitor       *fAllUniqueMonitor; //monitor activity on all unique slave sockets, including all submasters
+   TMonitor       *fCurrentMonitor;  //currently active monitor
+   Long64_t        fBytesRead;       //bytes read by all slaves during the session
+   Float_t         fRealTime;        //realtime spent by all slaves during the session
+   Float_t         fCpuTime;         //CPU time spent by all slaves during the session
+   TSignalHandler *fIntHandler;      //interrupt signal handler (ctrl-c)
+   TPluginHandler *fProgressDialog;  //progress dialog plugin
    Bool_t          fProgressDialogStarted; //indicates if the progress dialog is up
-   TProofPlayer   *fPlayer;         //current player
-   TList          *fFeedback;       //list of names to be returned as feedback
-   TList          *fChains;         //chains with this proof set
+   TProofPlayer   *fPlayer;          //current player
+   TList          *fFeedback;        //list of names to be returned as feedback
+   TList          *fChains;          //chains with this proof set
    struct MD5Mod_t {
-      TMD5   fMD5;                  //file's md5
-      Long_t fModtime;              //file's modification time
+      TMD5   fMD5;                   //file's md5
+      Long_t fModtime;               //file's modification time
    };
    typedef std::map<TString, MD5Mod_t> FileMap_t;
-   FileMap_t       fFileMap;        //map keeping track of a file's md5 and mod time
-   TDSet          *fDSet;           //current TDSet being validated
+   FileMap_t       fFileMap;         //map keeping track of a file's md5 and mod time
+   TDSet          *fDSet;            //current TDSet being validated
 
-   Bool_t          fIdle;           //on clients, true if no PROOF jobs running
-   Bool_t          fSync;           //true if type of currently processed query is sync
+   Bool_t          fIdle;            //on clients, true if no PROOF jobs running
+   Bool_t          fSync;            //true if type of currently processed query is sync
 
-   Bool_t          fRedirLog;       //redirect received log info
-   TString         fLogFileName;    //name of the temp file for redirected logs
-   FILE           *fLogFileW;       //temp file to redirect logs
-   FILE           *fLogFileR;       //temp file to read redirected logs
+   Bool_t          fRedirLog;        //redirect received log info
+   TString         fLogFileName;     //name of the temp file for redirected logs
+   FILE           *fLogFileW;        //temp file to redirect logs
+   FILE           *fLogFileR;        //temp file to read redirected logs
    Bool_t          fLogToWindowOnly; //send log to window only
 
-   TList          *fWaitingSlaves;  //stores a TPair of the slaves's TSocket and TMessage
-   TList          *fQueries;        //list of TProofQuery objects
-   Int_t           fOtherQueries;   //number of queries in list from previous sessions
-   Int_t           fDrawQueries;    //number of draw queries during this sessions
-   Int_t           fMaxDrawQueries; //max number of draw queries kept
-   Int_t           fSeqNum;         //Remote sequential # of the last query submitted
+   TList          *fWaitingSlaves;   //stores a TPair of the slaves's TSocket and TMessage
+   TList          *fQueries;         //list of TProofQuery objects
+   Int_t           fOtherQueries;    //number of queries in list from previous sessions
+   Int_t           fDrawQueries;     //number of draw queries during this sessions
+   Int_t           fMaxDrawQueries;  //max number of draw queries kept
+   Int_t           fSeqNum;          //Remote sequential # of the last query submitted
 
-   Int_t           fSessionID;      //Remote ID of the session
+   Int_t           fSessionID;       //remote ID of the session
 
-   Bool_t          fEndMaster;      //true for a master in direct contact only with workers
+   Bool_t          fEndMaster;       //true for a master in direct contact only with workers
+
+   TString         fPackageDir;      //package directory (used on client)
+   TProofLockPath *fPackageLock;     //package lock
+   TList          *fEnabledPackagesOnClient; //list of packages enabled on client
 
 protected:
-   enum ESlaves { kAll, kActive, kUnique };
+   enum ESlaves { kAll, kActive, kUnique, kAllUnique };
 
    TUrl            fUrl;            //Url of the master
    TString         fConfFile;       //file containing config information
@@ -335,7 +358,7 @@ protected:
    TList          *fAvailablePackages; //list of available packages
    TList          *fEnabledPackages;   //list of enabled packages
 
-   static TSemaphore *fgSemaphore;  //semaphore to control no of parallel startup threads
+   static TSemaphore *fgSemaphore;   //semaphore to control no of parallel startup threads
 
 private:
    TProof(const TProof &);           // not implemented
@@ -361,9 +384,12 @@ private:
    Int_t    SetParallelSilent(Int_t nodes);
    void     RecvLogFile(TSocket *s, Int_t size);
    Int_t    BuildPackage(const char *package);
+   Int_t    BuildPackageOnClient(const TString &package);
    Int_t    LoadPackage(const char *package);
+   Int_t    LoadPackageOnClient(const TString &package);
    Int_t    UnloadPackage(const char *package);
    Int_t    UnloadPackages();
+   Int_t    UploadPackageOnClient(const TString &package, EUploadPackageOpt opt, TMD5 *md5);
    Int_t    DisablePackage(const char *package);
    Int_t    DisablePackages();
 
