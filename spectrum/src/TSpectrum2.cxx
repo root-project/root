@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2.cxx,v 1.15 2006/06/28 13:11:49 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2.cxx,v 1.1 2006/09/28 19:19:52 brun Exp $
 // Author: Miroslav Morhac   17/01/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -83,6 +83,9 @@ style='font-size:16.0pt'><a href="http://www.fu.sav.sk/nph/projects/ProcFunc/">h
 #include "TMath.h"
 #define PEAK_WINDOW 1024
 
+Int_t TSpectrum2::fgIterations    = 3;
+Int_t TSpectrum2::fgAverageWindow = 3;
+
 ClassImp(TSpectrum2)  
 
 //______________________________________________________________________________
@@ -135,18 +138,63 @@ TSpectrum2::~TSpectrum2()
 
 
 //______________________________________________________________________________
-const char *TSpectrum2::Background(const TH1 * h, int number_of_iterations,
+void TSpectrum2::SetAverageWindow(Int_t w)
+{
+  // static function: Set average window of searched peaks
+  // see TSpectrum2::SearchHighRes
+   
+   fgAverageWindow = w;
+}
+
+//______________________________________________________________________________
+void TSpectrum2::SetDeconIterations(Int_t n)
+{
+  // static function: Set max number of decon iterations in deconvolution operation
+  // see TSpectrum2::SearchHighRes
+   
+   fgIterations = n;
+}
+
+
+//______________________________________________________________________________
+TH1 *TSpectrum2::Background(const TH1 * h, int number_of_iterations,
                                    Option_t * option) 
 {
 /////////////////////////////////////////////////////////////////////////////
-//   ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
-//   This function calculates background spectrum from source in h.        //
-//   The result is placed in the vector pointed by spectrum pointer.       //
-//                                                                         //
-//   Function parameters:                                                  //
-//   spectrum:  pointer to the vector of source spectrum                   //
-//   size:      length of spectrum and working space vectors               //
-//   number_of_iterations, for details we refer to manual                  //
+//   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
+//   This function calculates the background spectrum in the input histogram h.
+//   The background is returned as a histogram. 
+//                
+//   Function parameters:
+//   -h: input 2-d histogram
+//   -numberIterations, (default value = 20)
+//      Increasing numberIterations make the result smoother and lower.
+//   -option: may contain one of the following options
+//      - to set the direction parameter
+//        "BackIncreasingWindow". By default the direction is BackDecreasingWindow
+//      - filterOrder-order of clipping filter,  (default "BackOrder2"                         
+//                  -possible values= "BackOrder4"                          
+//                                    "BackOrder6"                          
+//                                    "BackOrder8"                           
+//      - "nosmoothing"- if selected, the background is not smoothed
+//           By default the background is smoothed.
+//      - smoothWindow-width of smoothing window, (default is "BackSmoothing3")         
+//                  -possible values= "BackSmoothing5"                        
+//                                    "BackSmoothing7"                       
+//                                    "BackSmoothing9"                        
+//                                    "BackSmoothing11"                       
+//                                    "BackSmoothing13"                       
+//                                    "BackSmoothing15"                        
+//      - "Compton" if selected the estimation of Compton edge
+//                  will be included.
+//      - "same" : if this option is specified, the resulting background
+//                 histogram is superimposed on the picture in the current pad.
+//
+//  NOTE that the background is only evaluated in the current range of h.
+//  ie, if h has a bin range (set via h->GetXaxis()->SetRange(binmin,binmax),
+//  the returned histogram will be created with the same number of bins
+//  as the input histogram h, but only bins from binmin to binmax will be filled
+//  with the estimated background.
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
    Error("Background","function not yet implemented: h=%s, iter=%d, option=%sn"
@@ -172,29 +220,38 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
                              Option_t * option, Double_t threshold) 
 {   
 /////////////////////////////////////////////////////////////////////////////
-//   ONE-DIMENSIONAL PEAK SEARCH FUNCTION                                  //
+//   TWO-DIMENSIONAL PEAK SEARCH FUNCTION                                  //
 //   This function searches for peaks in source spectrum in hin            //
 //   The number of found peaks and their positions are written into        //
 //   the members fNpeaks and fPositionX.                                   //
+//   The search is performed in the current histogram range.               //
 //                                                                         //
 //   Function parameters:                                                  //
 //   hin:       pointer to the histogram of source spectrum                //
 //   sigma:   sigma of searched peaks, for details we refer to manual      //
-//            Note that sigma is in number of bins                         //
 //   threshold: (default=0.05)  peaks with amplitude less than             //
-//       threshold*highest_peak are discarded.                             //
+//       threshold*highest_peak are discarded.  0<threshold<1              //
 //                                                                         //
-//   if option is not equal to "goff" (goff is the default), then          //
-//   a polymarker object is created and added to the list of functions of  //
-//   the histogram. The histogram is drawn with the specified option and   //
-//   the polymarker object drawn on top of the histogram.                  //
+//   By default, the background is removed before deconvolution.           //
+//   Specify the option "nobackground" to not remove the background.       //                //
+//                                                                         //
+//   By specifying the option "Markov" one can trigger an alternative      //
+//   algorithm using the Markov chain method.                              //
+//   Note that by default the source spectrum is replaced by a new spectrum//          //
+//                                                                         //
+//   By default a polymarker object is created and added to the list of    //
+//   functions of the histogram. The histogram is drawn with the specified //
+//   option and the polymarker object drawn on top of the histogram.       //
 //   The polymarker coordinates correspond to the npeaks peaks found in    //
 //   the histogram.                                                        //
 //   A pointer to the polymarker object can be retrieved later via:        //
 //    TList *functions = hin->GetListOfFunctions();                        //
 //    TPolyMarker *pm = (TPolyMarker*)functions->FindObject("TPolyMarker") //
+//   Specify the option "goff" to disable the storage and drawing of the   //
+//   polymarker.                                                           //
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
+
    if (hin == 0)
       return 0;
    Int_t dimension = hin->GetDimension();
@@ -203,6 +260,19 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
       return 0;
    }
 
+   TString opt = option;
+   opt.ToLower();
+   Bool_t background = kTRUE;
+   if (opt.Contains("nobackground")) {
+      background = kFALSE;
+      opt.ReplaceAll("nobackground","");
+   }
+   Bool_t markov = kFALSE;
+   if (opt.Contains("markov")) {
+      markov = kTRUE;
+      opt.ReplaceAll("markov","");
+   }
+   
    Int_t sizex = hin->GetXaxis()->GetNbins();
    Int_t sizey = hin->GetYaxis()->GetNbins();
    Int_t i, j, binx,biny, npeaks;
@@ -217,7 +287,7 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
    }
    //npeaks = SearchHighRes(source, dest, sizex, sizey, sigma, 100*threshold, kTRUE, 3, kTRUE, 10);
    //the smoothing option is used for 1-d but not for 2-d histograms
-   npeaks = SearchHighRes(source, dest, sizex, sizey, sigma, 100*threshold, kTRUE, 3, kFALSE, 3);
+   npeaks = SearchHighRes(source, dest, sizex, sizey, sigma, 100*threshold,  background, fgIterations, markov, fgAverageWindow);
 
    //The logic in the loop should be improved to use the fact
    //that fPositionX,Y give a precise position inside a bin.
@@ -235,7 +305,7 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
    delete [] source;
    delete [] dest;
       
-   if (strstr(option, "goff"))
+   if (opt.Contains("goff"))
       return npeaks;
    if (!npeaks) return 0;
    TPolyMarker * pm = (TPolyMarker*)hin->GetListOfFunctions()->FindObject("TPolyMarker");
@@ -3388,4 +3458,13 @@ Int_t TSpectrum2::StaticSearch(const TH1 *hist, Double_t sigma, Option_t *option
    
    TSpectrum2 s;
    return s.Search(hist,sigma,option,threshold);
+}
+
+//_______________________________________________________________________________
+TH1 *TSpectrum2::StaticBackground(const TH1 *hist,Int_t niter, Option_t *option)
+{
+   //static function, interface to TSpectrum2::Background
+   
+   TSpectrum2 s;
+   return s.Background(hist,niter,option);
 }

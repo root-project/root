@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.98 2006/08/28 13:34:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.99 2006/09/28 19:19:52 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2267,14 +2267,14 @@ void TH2::SetShowProjectionY(Int_t nbins)
 }
 
 //______________________________________________________________________________
-TH1 *TH2::ShowBackground(Int_t /*niter*/, Option_t * /*option*/)
+TH1 *TH2::ShowBackground(Int_t niter, Option_t *option)
 {
 //   This function calculates the background spectrum in this histogram.
 //   The background is returned as a histogram. 
 //   to be implemented (may be)
    
-   Warning("ShowBackground","Function not implemented for 2-d and 3-d histograms");
-   return 0;
+   
+   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum2::StaticBackground((TH1*)0x%x,%d,\"%s\")",this,niter,option));
 }
 
 //______________________________________________________________________________

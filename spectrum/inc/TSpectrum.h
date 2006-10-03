@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.h,v 1.1 2006/09/28 19:29:30 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.h,v 1.2 2006/10/02 10:58:42 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -68,7 +68,7 @@ public:
    Int_t               Search1HighRes(float *source,float *destVector, Int_t ssize,float sigma, Double_t threshold,bool backgroundRemove,Int_t deconIterations,bool markov, Int_t averWindow);   
 
    static Int_t        StaticSearch(const TH1 *hist, Double_t sigma=2, Option_t *option="goff", Double_t threshold=0.05);
-   static TH1         *StaticBackground(const TH1 *hist,Int_t niter=2, Option_t *option="");
+   static TH1         *StaticBackground(const TH1 *hist,Int_t niter=20, Option_t *option="");
 
    ClassDef(TSpectrum,3)  //Peak Finder, background estimator, Deconvolution
 };

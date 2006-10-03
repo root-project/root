@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.39 2006/05/16 16:50:02 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.40 2006/06/26 09:46:38 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -96,7 +96,7 @@ public:
    virtual void     Reset(Option_t *option="");
    virtual void     SetShowProjectionX(Int_t nbins);  // *MENU*
    virtual void     SetShowProjectionY(Int_t nbins);  // *MENU*
-   virtual TH1     *ShowBackground(Int_t niter=2, Option_t *option="same");
+   virtual TH1     *ShowBackground(Int_t niter=20, Option_t *option="same");
    virtual Int_t    ShowPeaks(Double_t sigma=2, Option_t *option="", Double_t threshold=0.05); // *MENU*
            
    ClassDef(TH2,4)  //2-Dim histogram base class
