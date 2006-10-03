@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.138 2006/09/07 09:27:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.139 2006/09/21 10:40:16 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -85,19 +85,6 @@
 #include "TTimer.h"
 #include "TMutex.h"
 
-#ifndef R__WIN32
-const char* const kCP     = "/bin/cp -f";
-const char* const kRM     = "/bin/rm -rf";
-const char* const kLS     = "/bin/ls -l";
-const char* const kUNTAR  = "%s -c %s/%s | (cd %s; tar xf -)";
-const char* const kGUNZIP = "gunzip";
-#else
-const char* const kCP     = "copy";
-const char* const kRM     = "delete";
-const char* const kLS     = "dir";
-const char* const kUNTAR  = "...";
-const char* const kGUNZIP = "gunzip";
-#endif
 
 // global proofserv handle
 TProofServ *gProofServ;
@@ -644,7 +631,7 @@ void TProofServ::GetOptions(Int_t *argc, char **argv)
 
    // Confdir
    if (!(gSystem->Getenv("ROOTCONFDIR"))) {
-      Fatal("GetOptions", "Must specify a config directory");
+      Fatal("GetOptions", "ROOTCONFDIR shell variable not set");
       exit(1);
    }
    fConfDir = gSystem->Getenv("ROOTCONFDIR");
@@ -879,11 +866,13 @@ void TProofServ::HandleSocketInput()
             else
                sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
-            // copy file to cache
+            // copy file to cache if not a PAR file
             if (size > 0) {
-               fCacheLock->Lock();
-               gSystem->Exec(Form("%s %s %s", kCP, name, fCacheDir.Data()));
-               fCacheLock->Unlock();
+               if (strncmp(fPackageDir, name, fPackageDir.Length())) {
+                  fCacheLock->Lock();
+                  gSystem->Exec(Form("%s %s %s", kCP, name, fCacheDir.Data()));
+                  fCacheLock->Unlock();
+               }
             }
             if (IsMaster() && fw == 1)
                fProof->SendFile(name, bin);
@@ -1212,7 +1201,6 @@ void TProofServ::HandleSocketInputDuringProcess()
 
          // Handle file checking request
          HandleCheckFile(mess);
-
          break;
 
       case kPROOF_SENDFILE:
@@ -1892,7 +1880,7 @@ void TProofServ::Setup()
       gSystem->MakeDirectory(fCacheDir);
 
    fCacheLock =
-      new TProofLockPath(Form("%s%s",kPROOF_CacheLockFile,fUser.Data()));
+      new TProofLockPath(Form("%s%s", kPROOF_CacheLockFile, fUser.Data()));
 
    // check and make sure "packages" directory exists
    fPackageDir = fWorkDir;
@@ -1901,7 +1889,7 @@ void TProofServ::Setup()
       gSystem->MakeDirectory(fPackageDir);
 
    fPackageLock =
-      new TProofLockPath(Form("%s%s",kPROOF_PackageLockFile,fUser.Data()));
+      new TProofLockPath(Form("%s%s", kPROOF_PackageLockFile, fUser.Data()));
 
    // host first name
    TString host = gSystem->HostName();
@@ -3419,11 +3407,12 @@ void TProofServ::HandleLibIncPath(TMessage *mess)
 //______________________________________________________________________________
 void TProofServ::HandleCheckFile(TMessage *mess)
 {
-   // Handle file checling request
+   // Handle file checking request.
 
    TString filenam;
    TMD5    md5;
    UInt_t  opt = TVirtualProof::kUntar;
+
    // Parse message
    (*mess) >> filenam >> md5;
    if ((mess->BufferSize() > mess->Length()) && (fProtocol > 8))
@@ -3449,7 +3438,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
                      kRM, fPackageDir.Data(), packnam.Data());
          }
          // find gunzip...
-         char *gunzip = gSystem->Which(gSystem->Getenv("PATH"),kGUNZIP,
+         char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP,
                                        kExecutePermission);
          if (gunzip) {
             // untar package
@@ -3461,8 +3450,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
                           filenam.Data(), fPackageDir.Data()));
             delete [] gunzip;
          } else
-            Error("HandleCheckFile", "%s not found",
-                  kGUNZIP);
+            Error("HandleCheckFile", "%s not found", kGUNZIP);
          // check that fPackageDir/packnam now exists
          if (gSystem->AccessPathName(fPackageDir + "/" + packnam, kWritePermission)) {
             // par file did not unpack itself in the expected directory, failure
@@ -3486,7 +3474,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
          err = kTRUE;
       }
 
-      // Note: Originally an fPackageLock->Unlock() call was made at the
+      // Note: Originally an fPackageLock->Unlock() call was made
       // after the if-else statement below. With multilevel masters,
       // submasters still check to make sure the package exists with
       // the correct md5 checksum and need to do a read lock there.
@@ -4195,7 +4183,7 @@ TList *TProofServ::GetDataSet(const char *name)
       char *userName = strtok(nameCopy, "/");
       if (strcmp(strtok(0, "/"), "public"))
          return 0;
-      fileListPath = fWorkDir + "/../" + userName + "/" 
+      fileListPath = fWorkDir + "/../" + userName + "/"
                      + kPROOF_DataSetDir + "/public/";
       delete[] nameCopy;
    } else if (strchr(name, '/') && strstr(name, "public") != name) {
