@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootcintrule.pri,v 1.16 2006/03/21 03:49:48 fine Exp $
+# $Id: rootcintrule.pri,v 1.18 2006/09/09 20:44:53 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -54,6 +54,11 @@
 # 4. Run "make"
 #
 # -----------------------------------------------
+
+# define whether the current QMake is from Qt4 distribution
+
+MYVERSION = $$[QMAKE_VERSION] 
+ISQT4 = $$find(MYVERSION, ^[2-9])
 
 win32 {
   # Required to use dynamic_cast
