@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.31 2006/05/08 13:16:56 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.32 2006/05/30 07:06:50 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -655,7 +655,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.31 2006/05/08 13:16:56 antcheva Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.137 2006/09/07 00:23:30 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -1051,7 +1051,30 @@ void  TGQt::CopyPixmap(int wid, int xpos, int ypos)
       }
    }
 }
-
+//______________________________________________________________________________
+void TGQt::CopyPixmap(const QPixmap &src, Int_t xpos, Int_t ypos) 
+{
+   // Copy the pixmap p at the position xpos, ypos in the current window.
+   if (fSelectedWindow )
+   {
+      // fprintf(stderr,"x=%d,y=%d: %d %d %d %d\n",xpos,ypos,sr.x(),sr.y(),sr.width(),sr.height());
+      QPaintDevice *dst = fSelectedBuffer ? fSelectedBuffer : fSelectedWindow;
+      bool isPainted = dst->paintingActive ();
+      if (isPainted) End();
+#if QT_VERSION < 0x40000
+      QRect sr = src.rect();
+      bitBlt ( dst,QPoint(xpos,ypos),&src,sr,Qt::CopyROP ); // bool ignoreMask )
+#else /* QT_VERSION */
+      {
+        QPainter paint(dst);
+        paint.setCompositionMode(QPainter::CompositionMode_Source);
+        paint.drawPixmap(xpos,ypos,src);
+      }
+     //  ----  !!!!  bitBlt ( dst,QPoint(xpos,ypos),src,sr,QPainter::CompositionMode_Source); // bool ignoreMask )
+#endif /* QT_VERSION */
+      if (isPainted) Begin();
+   }
+}
 //______________________________________________________________________________
 void TGQt::CreateOpenGLContext(int wid)
 {
