@@ -2,7 +2,7 @@
 //
 // This script is a slightly modified version of hsum.C
 // It produces an animated gif file. See comments below
-
+// It can be run in batch mode too.
   gROOT->Reset();
 
   c1 = new TCanvas("c1","The HSUM example",200,10,600,400);
@@ -22,7 +22,8 @@
   s1->SetFillColor(42);
   s2->SetFillColor(46);
   TSlider *slider = 0;
-
+  gSystem->Unlink("hsumanim.gif"); // delete old file
+  
 // Fill histograms randomly
   gRandom->SetSeed();
   const Int_t kUPDATE = 500;
@@ -51,33 +52,15 @@
         if (slider) slider->SetRange(0,Float_t(i)/10000.);
         c1->Modified();
         c1->Update();
-        char gif[24];
-        sprintf(gif, "hsumanim_%.3d.gif", gifcnt++);
-        c1->SaveAs(gif);
+        c1->Print("hsumanim.gif+");
      }
   }
   slider->SetRange(0,1);
   total->Draw("sameaxis"); // to redraw axis hidden by the fill area
   c1->Modified();
-  c1->SaveAs("hsumanim_019.gif");
+  c1->Print("hsumanim.gif+");
   
-  //make an animated gif file using "gifsicle" or "convert". Comment/uncomment
-  //the corresponding lines to test one or the other.
-  
-  //for information about gifsicle, see http://www.lcdf.org/~eddietwo/gifsicle/
-  //gSystem->Exec("gifsicle -O2 --delay=10 --loop=5 hsum*.gif > anim.gif");
-
-  //for information about convert, see http://www.imagemagick.org/script/command-line-options.php
-  gSystem->Exec("convert hsum*.gif anim.gif");
-
-  //remove the gif files.
-  gSystem->Exec("rm -f hsum*.gif");
-  
-  //You can view the animated file anim.gif with Netscape/IE
-  //or with gifview as shown below (finish by typing "q" in the window)
-  //for more info about gifsicle, gifview, see above url or do
-  // gifsicle --help     gifview --help
-  gSystem->Exec("gifview -a anim.gif");
+  //You can view the animated file hsumanim.gif with Netscape/IE or mozilla
   
   gBenchmark->Show("hsum");
 }
