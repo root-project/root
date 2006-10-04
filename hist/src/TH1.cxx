@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.311 2006/09/15 15:16:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.312 2006/09/28 19:19:52 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1036,173 +1036,722 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
    return -2;
 }
 
-//______________________________________________________________________________
-Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
+//___________________________________________________________________________
+Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
 {
-   //The Chi2 (Pearson's) test for differences between h and this histogram.
-   //a small value of prob indicates a significant difference between the distributions
-   //
-   //if constraint=1 the algorithm riuns on the two histograms normalized to 1.
-   //constraint=0 is the default.
-   //any additional constraints on the data lower the number of degrees of freedom
-   //(i.e. increase constraint to more positive values) in accordance with
-   //their number
-   //
-   ///options:
-   //  "O" : overflows included
-   //  "U" : underflows included
-   //  by default underflows and overflows are not included
-   //
-   //  "P"        : print information about number of degrees of freedom and the value of chi2
-   //  "Chi2"     : the function returns the Chisquare instead of the probability
-   //  "Chi2/ndf" : the function returns the Chi2/ndf
-   //  if none of the options "Chi2" or "Chi2/ndf" is specified, the function returns
-   //  the Pearson test, ie probability.
-   //
-   // NOTE1: If the x axis has a bin range defined via TAxis::SetRange,
-   //       only the bins in this range are used for the test.
-   //
-   // NOTE2: This function calls TH1::Chi2TestX. In case you need to return
-   // the probability or/and chisquare and/or ndf, you should call Chi2TestX directly.
+
+//Begin_Html <!--
+/* -->
+<html>
+<body>
+
+<h1> <IMG  WIDTH="50" HEIGHT="44" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$"> test for comparison weighted and unweighted histograms</h1>
+ <p>
+Function:
+ Returns p-value. Other return values are specified by the 3rd parameter <br>
+ Parameters:
+<ul>
+<li>h2 - the second histogram</li>
+<li>option </li>
+<ul>
+<li>"UU" = experiment experiment comparison (unweighted-unweighted)</li>
+<li>"UW" = experiment MC comparison (unweighted-weighted). Note that the first histogram should be unweighted </li>
+<li>"WW" = MC MC comparison (weighted-weighted)</li>
+<li>"NORM" = to be used when one or both of the histograms is scaled (unweighted-unweighted)</li>
+<li>by default underflows and overlows are not included</li>
+<ul>
+<li>"OF" = overflows included</li>
+<li>"UF" = underflows included</li>
+</ul>
+<li>"P" = print chi2, ndf, p_value, igood</li>
+<li>"CHI2" = returns chi2 instead of p-value</li>
+<li>"CHI2/NDF" = returns chi2/ndf</li>
+</ul>
+<li>res: not empty - computes normalized residuals and returns them in this array</li>
+</ul>
+</p>
+<br>
+   The current implementation is based on the papers "<IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$"> test for comparison
+ of weighted and unweighted histograms" in Proceedings of PHYSTAT05 and
+ "Comparison weighted and unweighted histograms", arXiv:physics/0605123  by N.Gagunashvili. This function has been implemented
+ by Daniel Haertl in August 2006.
+
+<h2>Introduction</h2>
+
+A frequently used technique in data analysis is the comparison of histograms. 
+First suggested by Pearson [1]  the <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$">  test of
+ homogeneity   is  used widely  for  comparing usual (unweighted)  histograms.
+This paper describes the implementation  modified <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$">   tests
+ for comparison of weighted and unweighted  histograms and two weighted
+ histograms [2] as well as usual Pearson's <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$"> test for
+comparison two usual (unweighted) histograms.  
+
+<h2>Overview</h2>
+
+Comparison of two histograms expect hypotheses that  two histograms
+ represent the identical distributions. To make a decision <I>p</I>-value should be calculated. The  hypotheses of identity is rejected  if <I>p</I>-value is lower then
+ some significance  level. Traditionally  significance  levels 0.1, 0.05 and 0.01 are  used.
+ The  comparison   procedure should  include an  analysis of the residuals
+ which is often helpful in identifying the bins of histograms responsible
+ for a significant overall <i>X<sup>2</sup></i> value.  Residuals are the difference between
+bin contents and expected bin contents. Most convenient for analysis are the 
+ normalized residuals. If hypotheses of  identity are valid then normalized
+residuals  are approximately independent and identically distributed
+ random variables  having  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_standard.png"  ALT="normal">  distribution. Analysis of
+ residuals expect test of above mentioned properties of residuals.     
+Notice that indirectly the analysis of residuals increase the power of <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$"> test.
+
+<h2>Methods of comparison</h2>
+
+<h3><IMG  WIDTH="50" HEIGHT="44" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$"> test for comparison two (unweighted) histograms</h3>
+ 
+ Let us consider two  histograms with the  same
+ binning and the  number of bins equal to <I>r</I>.
+Let us denote the number of events in the <I>i</I>th bin in the first histogram as 
+<i>n<sub>i</sub></i> and as  <i>m<sub>i</sub></i> in the second one. The total number of events in the
+ first histogram is equal to <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Nsum.png"  ALT="$N=\sum_{i=1}^{r}{n_i}$">   ,  
+and   <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Msum.png"  ALT="$M=\sum_{i=1}^{r}{m_i}$">  in the second histogram.
+
+The  hypothesis of identity (homogeneity) [3] is that the
+ two histograms represent random  values with  identical distributions.  
+  It is equivalent that there  exist  <I>r</I> constants
+ <I>p<sub>1</sub>,...,p<sub>r</sub></I>,
+ such that  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_p_i_sum.png"  ALT=" $\sum_{i=1}^{r} p_i=1$"> , 
+ and the probability  of  belonging  to the  <i>i</i>th bin for some  measured value
+ in both experiments is  equal to <i>p<sub>i</sub></i>.
+ The number of events in the <i>i</i>th bin is a random variable
+ with a distribution  approximated  by a  Poisson probability distribution
+  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Npoisson.png"  ALT="$e^{-Np_i}(Np_i)^{n_i}/n_i!$ "> for the first histogram and with 
+distribution <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Mpoisson.png"  ALT="$e^{-Mp_i}(Mp_i)^{m_i}/m_i!$ "> for the second histogram.
+ If the hypothesis of homogeneity is valid, then the  maximum likelihood
+estimator of  <i>p<sub>i</sub>, i=1,...,r</i>,  is
+
+<BR><P></P>
+<DIV ALIGN="CENTER"> 
+ <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_ratio.png"  ALT="\hat{p}_i= \frac{n_{i}+m_{i}}{N+M}">
+</DIV>
+and then
+
+<BR><P></P>
+<DIV ALIGN="CENTER"> 
+ <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_m1.png"  ALT="X^2=\sum_{i=1}^{r}{\frac{(n_{i}-N\hat{p}_i)^2}{N\hat{p}_i}}
++\sum_{i=1}^{r}{\frac{(m_{i}-M\hat{p}_i)^2}{M\hat{p}_i}} =\frac{1}{MN} \sum_{i=1}^{r}{\frac{(Mn_i-Nm_i)^2}{n_i+m_i}}"><IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_m12.png"  ALT="X^2=\sum_{i=1}^{r}{\frac{(n_{i}-N\hat{p}_i)^2}{N\hat{p}_i}}
++\sum_{i=1}^{r}{\frac{(m_{i}-M\hat{p}_i)^2}{M\hat{p}_i}} =\frac{1}{MN} \sum_{i=1}^{r}{\frac{(Mn_i-Nm_i)^2}{n_i+m_i}}">
+</DIV>
+has approximately a <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2r.png"  ALT=" $\chi^2_{(r-1)}$"> distribution [3].
+
+
+The  comparison   procedure  can include an  analysis of the residuals which
+ is often helpful in identifying the bins of histograms responsible for a 
+significant overall <i>X<sup>2</sup></i> value. Most convenient for analysis are the 
+ adjusted (normalized) residuals [4]
+
+
+<BR><P></P>
+<DIV ALIGN="CENTER">
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_res1.png"  ALT="$r_i=\frac{n_{i}-N\hat{p}_i}{\sqrt{N\hat{p}_i}\sqrt{(1-N/(N+M))(1-(n_i+m_i)/(N+M))}}$".
+</DIV>
+ If hypotheses of  homogeneity are valid then 
+residuals <i>r<sub>i</sub></i> are approximately independent and identically distributed
+ random variables  having   <IMG ALIGN="MIDDLE" BORDER="0" SRC="chi2_standard.png"  ALT="$\mathcal{N}(0,1)$"> distribution. 
+
+The application of the  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$"> test has restrictions related to the
+  value of the expected frequencies <i>Np<sub>i</sub>, Mp<sub>i</sub>, i=1,...,r</i>.   
+A conservative rule formulated in [5]  is that all
+ the expectations  must be 1 or greater for both histograms. In  practical cases when  expected frequencies are not known the estimated expected  frequencies
+ <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_MpNp.png"  ALT=" $M\hat{p}_i$, $N\hat{p}_i, i=1,...,r$">  can be used.  
+
+
+<h3>Unweighted and weighted histograms comparison</h3>
+
+
+A simple  modification of the  ideas described above can be used for the
+ comparison of the usual (unweighted) and 
+weighted histograms. Let us denote the number of events in the <i>i</i>th bin in the unweighted histogram as
+<i>n<sub>i</sub></i> and  the common weight of events in the <i>i</i>th bin of the
+weighted histogram as <i>w<sub>i</sub></i>. The total number of events in the
+ unweighted histogram is equal to <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Nsum.png"  ALT="$N=\sum_{i=1}^{r}{n_i}$"> and  the total
+ weight of events in the weighted histogram is equal
+ to  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Wsum.png"  ALT=" $W=\sum_{i=1}^{r}{w_i}$">.
+
+ Let us formulate the hypothesis of identity of an unweighted histogram 
+to a weighted histogram so that  there  exist  <i>r</i> constants <i>p<sub>1</sub>,...,p<sub>r</sub></i>,
+ such that <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_p_i_sum.png"  ALT="$\sum_{i=1}^{r} p_i=1$>, and the probability  of  belonging  to the  <i>i</i>th bin for some  measured value
+  is  equal to <i>p<sub>i</sub></i> for the  unweighted histogram and expectation value of weight <i>w<sub>i</sub></i> equal to <i>Wp<sub>i</sub></i> for the  weighted histogram.
+The number of events in the <i>i</i>th bin is a random
+variable  with distribution  approximated  by the  Poisson probability distribution
+  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Npoisson.png"  ALT="$e^{-Np_i}(Np_i)^{n_i}/n_i!$ "> for the  unweighted  histogram.
+The weight <i>w<sub>i</sub></i> is a random variable with a distribution approximated  by 
+ the normal probability  distribution  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_standardw.png"  ALT=" $ \mathcal{N}(Wp_i,\sigma_i^2)$ ">, where
+  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_sigma.png"  ALT=" $\sigma_i^2$ ">  is the  variance of the  weight  <i>w<sub>i</sub></i>.  
+ If we replace the variance  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_sigma.png"  ALT=" $\sigma_i^2$ "> with estimate <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_s.png"  ALT=" $s_i^2$ "> (sum of squares of weights of events in the <i>i</i>th bin) and 
+ the hypothesis of identity is valid, then the   maximum likelihood
+estimator of  <i>p<sub>i</sub>,i=1,...,r</i>,  is
+<BR><P></P>
+<DIV ALIGN="CENTER">
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_ratio2.png"  ALT="\hat{p}_i= \frac{Ww_i-Ns_i^2+\sqrt{(Ww_i-Ns_i^2)^2+4W^2s_i^2n_i}}{2W^2} ">.
+</DIV>
+We may then use the test statistic
+<BR><P></P>
+<DIV ALIGN="CENTER">
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_m2.png"  ALT="X^2=\sum_{i=1}^{r}{\frac{(n_{i}-N\hat{p}_i)^2}{N\hat{p}_i}}
++\sum_{i=1}^{r}{\frac{(w_{i}-W\hat{p}_i)^2}{s_i^2}}">
+</DIV>
+and it   has approximately a   <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2r.png"  ALT=" $\chi^2_{(r-1)}$">  distribution [2].
+
+
+
+This  test, as well as the  original one [3], has a restriction
+ on the expected frequencies. The expected frequencies 
+  recommended for the  weighted histogram  is  more than 25.
+The value of the  minimal expected frequency can be decreased down to 10 for
+ the case when the weights of the events are close to constant.
+In the case of a weighted histogram if the number of events is unknown, then we can apply this recommendation for the equivalent number of events as
+
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_neq.png"  ALT="$n_i^{equiv}={w_i^2}/{s_i^2} \, \text{.}$">.
+ The minimal   expected frequency for an  unweighted histogram must be 1. 
+Notice that any usual (unweighted)  histogram can be considered as a weighted histogram with events that have constant weights equal to 1.
+
+The  variance <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_z.png"  ALT="$z_i^2$">  of the difference between the weight <i>w<sub>i</sub></i> and the estimated expectation value of the weight is  approximately  equal to:
+<BR><P></P>
+<DIV ALIGN="CENTER">
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_zfor1.png"  ALT="$z_i^2=Var(w_{i}-W\hat{p}_i)=N\hat{p}_i(1-N\hat{p}_i)\biggl(\frac{Ws_i^2}
+{\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2\\
++\frac{s_i^2}{4}\biggl(1+\frac{Ns_i^2-w_iW}
+{\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2$"> 
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_zfor2.png"  ALT="$z_i^2=Var(w_{i}-W\hat{p}_i)=N\hat{p}_i(1-N\hat{p}_i)\biggl(\frac{Ws_i^2}
+{\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2\\
++\frac{s_i^2}{4}\biggl(1+\frac{Ns_i^2-w_iW}
+{\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2$"> 
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_zfor3.png"  ALT="$z_i^2=Var(w_{i}-W\hat{p}_i)=N\hat{p}_i(1-N\hat{p}_i)\biggl(\frac{Ws_i^2}
+{\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2\\
++\frac{s_i^2}{4}\biggl(1+\frac{Ns_i^2-w_iW}
+{\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2$">. 
+</DIV>
+The  residuals
+<BR><P></P>
+<DIV ALIGN="CENTER"> 
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_res2.png"  ALT="r_i=\frac{w_{i}-W\hat{p}_i}{z_i}">
+</DIV>
+have approximately a normal distribution with mean equal to 0 and
+ standard deviation  equal to 1.
+
+<h3>Two weighted histograms comparison</h3>
+
+Let us denote the  common  weight of events of the <i>i</i>th bin in the first histogram as
+<i>w<sub>1i</sub></i> and as <i>w<sub>2i</sub></i>  in the second one. The total  weight of events in the
+ first histogram is equal to <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_W1sum.png"  ALT="$W_1=\sum_{i=1}^{r}{w_{1i}}$">,
+and <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_W2sum.png"  ALT="$W_2=\sum_{i=1}^{r}{w_{2i}}$">  in the second histogram.
+
+ Let us formulate the hypothesis of
+ identity of   weighted histograms  so that  there  exist  <i>r</i> constants <i>p<sub>1</sub>,...,p<sub>r</sub></i>,
+ such that   <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_p_i_sum.png"  ALT="$\sum_{i=1}^{r} p_i=1$">, and  also  expectation value of weight <i>w<sub>1i</sub></i> equal to <i>W<sub>1</sub>p<sub>i</sub></i> and expectation value of weight <i>w<sub>2i</sub></i> equal to <i>W<sub>2</sub>p<sub>i</sub></i>.
+Weights in both the histograms are random variables with  distributions which
+ can be
+ approximated by a normal probability distribution <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_standard_w1.png", ALT="$\mathcal{N}(W_1p_i,\sigma_{1i}^2)$">
+ for the first histogram and by a distribution 
+ <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_standard_w2.png", ALT="$\mathcal{N}(W_2p_i,\sigma_{2i}^2)$">   for the second.  Here  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_sigma1.png", ALT="$\sigma_{1i}^2$ ">  and  
+ <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_sigma2.png", ALT="$\sigma_{2i}^2$ ">  are the  variances of  <i>w<sub>1i</sub></i> and <i>w<sub>2i</sub></i> with estimators  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_s1.png", ALT="$s_{1i}^2$ "> 
+ and <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_s2.png", ALT="$s_{2i}^2$ "> respectively. If the hypothesis of identity is valid,
+ then  the  maximum likelihood  and Least  Square Method  estimator 
+ of  <i>p<sub>i</sub>,i=1,...,r</i>,  is
+<BR><P></P>
+<DIV ALIGN="CENTER">
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_ratio3.png", ALT="\hat{p}_i=\frac{w_{1i}W_1/s_{1i}^2+w_{2i}W_2 /s_{2i}^2}{W_1^2/s_{1i}^2+W_2^2/s_{2i}^2} "> .
+</DIV>
+We may then use the test statistic
+<BR><P></P>
+<DIV ALIGN="CENTER">
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_m3.png", ALT="X^2=\sum_{i=1}^{r}{\frac{(w_{1i}-W_1\hat{p}_i)^2}{s_{1i}^2}}
++\sum_{i=1}^{r}{\frac{(w_{2i}-W_2\hat{p}_i)^2}{s_{2i}^2}}=\sum _{i=1}^{r}{\frac{(W_1w_{2i}-W_2w_{1i})^2}{W_1^2s_{2i}^2+W_2^2s_{1i}^2}}">
+
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_m32.png", ALT="X^2=\sum_{i=1}^{r}{\frac{(w_{1i}-W_1\hat{p}_i)^2}{s_{1i}^2}}
++\sum_{i=1}^{r}{\frac{(w_{2i}-W_2\hat{p}_i)^2}{s_{2i}^2}}=\sum _{i=1}^{r}{\frac{(W_1w_{2i}-W_2w_{1i})^2}{W_1^2s_{2i}^2+W_2^2s_{1i}^2}}">
+</DIV>
+and it   has approximately a <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2r.png"  ALT=" $\chi^2_{(r-1)}$">  distribution [2]. The normalized or studentised residuals [6]
+
+<BR><P></P>
+<DIV ALIGN="CENTER">
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_res3.png", ALT=" r_i=\frac{w_{1i}-W_1\hat{p}_i}{s_{1i}\sqrt{1-1/(1+W_2^2s_{1i}^2/W_1^2s_{2i}^2)}} ">
+</DIV>
+have approximately a normal distribution with mean equal to 0 and
+ standard deviation 1. A recommended minimal expected frequency is  equal to 10 for the proposed test.
+
+
+
+<h2>Numerical examples</h2>
+
+
+The method described herein is now  illustrated with an example.
+We take a  distribution
+<BR><P></P>
+<DIV ALIGN="CENTER">
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_example_formula.png", ALT="\phi(x)=\frac{2}{(x-10)^2+1}+\frac{1}{(x-14)^2+1}  "> &nbsp &nbsp &nbsp &nbsp  (1)
+</DIV>
+ defined on the interval [4,16].  Events distributed 
+according to the formula (1) are simulated  to create the unweighted
+ histogram.
+ Uniformly  distributed events are simulated for the  weighted histogram 
+ with  weights calculated by  formula (1).
+ Each histogram has the same  number of bins: 20.    
+ Fig. 1 shows the result of comparison of the  unweighted histogram with
+200 events  (minimal expected frequency equal to one) and the weighted histogram with 500 events (minimal expected frequency equal to 25)
+<BR><P></P>
+<DIV ALIGN="CENTER">
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_plot1.jpg", ALT="fig1"> 
+</DIV>
+<div>
+<caption align=left> Fig 1. An example of comparison of the unweighted histogram with 200 events
+ and the  weighted histogram with 500 events: a) unweighted histogram;
+ b) weighted
+ histogram; c) normalized residuals plot; d) normal Q-Q plot of residuals.
+</caption>
+</div>
+<BR><P></P>
+ The value of the test statistic
+<i>X<sup>2</sup></i> is equal to 21.09 with <i>p</i>-value equal to 0.33, therefore the
+ hypothesis
+ of  identity of the two histograms  can be accepted for 0.05 significant level.  The behavior of the
+ normalized residuals  plot (see Fig. 1c) and the  normal Q-Q plot (see Fig. 1d) of  residuals  are
+ regular and we cannot identify the  outliers or bins with a big influence on
+ <i>X<sup>2</sup></i>.<br>
+  <br> 
+The second example presented the same two histograms but 17 events was added to
+ content of bin number 15 in unweighted histogram.
+ Fig. 2 shows the result of comparison of the  unweighted histogram with
+217 events  (minimal expected frequency equal to one) and the weighted histogram with 500 events (minimal expected frequency equal to 25)
+<BR><P></P>
+<DIV ALIGN="CENTER">
+<IMG ALIGN="MIDDLE" BORDER="0" SRC="chi2_plot2.jpg", ALT="fig1_bad">
+</DIV>
+<div>
+<caption align=left> Fig 2. An example of comparison of the unweighted histogram with 217 events
+ and the  weighted histogram with 500 events: a) unweighted histogram;
+ b) weighted
+ histogram; c) normalized residuals plot; d) normal Q-Q plot of residuals.
+</caption>
+</div>
+<BR><P></P>
+ The value of the test statistic
+<i>X<sup>2</sup></i> is equal to 32.33 with <i>p</i>-value equal to 0.029, therefore the
+ hypothesis
+ of  identity of the two histograms  is  rejected for 0.05 significant level. The behavior of the
+ normalized residuals  plot (see Fig. 2c) and the  normal Q-Q plot (see Fig. 2d) of  residuals  are not
+ regular and we can identify the  outlier or bin with a big influence on
+ <i>X<sup>2</sup></i>.
+
+<h2>References</h2>
+[1] Pearson, K., 1904. On the Theory of Contingency and Its Relation to Association
+ and Normal Correlation. Drapers' Co. Memoirs, Biometric Series No. 1, London.<br> 
+<br>
+[2] Gagunashvili, N., 2006. <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$">  test for comparison of weighted and
+ unweighted histograms. 
+ Statistical  Problems in Particle Physics, Astrophysics and Cosmology,   Proceedings of PHYSTAT05, Oxford, UK, 12-15 September 2005, Imperial College Press, London, 43-44.<br>
+&nbsp &nbsp Gagunashvili,N., Comparison of weighted and unweighted histograms, arXiv:physics/0605123, 2006.<br> 
+ <br>
+[3] Cramer, H., 1946. Mathematical methods of statistics. Princeton University Press, Princeton.<br>
+<br> 
+[4] Haberman, S.J., 1973. The analysis of residuals in cross-classified tables. Biometrics 29, 205-220.<br>
+<br>
+[5] Lewontin, R.C. and  Felsenstein, J., 1965.  The robustness of homogeneity test
+in 2 &times N tables. Biometrics 21, 19-33. <br>
+<br>
+[6] Seber,  G.A.F., Lee,  A.J., 2003,  Linear Regression Analysis. John Wiley & Sons Inc., New York.<br>
+<body>
+</html>
+<!--*/
+// -->End_Html
 
    Double_t chi2 = 0;
-   Int_t ndf = 0;
-
+   Int_t ndf = 0, igood = 0;
+   
    TString opt = option;
    opt.ToUpper();
-
-   Double_t prob = Chi2TestX(h,chi2,ndf,option,constraint);
-
-   if (opt.Contains("P")){
-      Printf("Chi2 = %f, Prob = %g, NDF = %d\n", chi2,prob,ndf);
+   
+   Double_t prob = Chi2TestX(h2,chi2,ndf,igood,option,res);
+   
+   if(opt.Contains("P")) {
+      printf("Chi2 = %f, Prob = %g, NDF = %d, igood = %d\n", chi2,prob,ndf,igood);
    }
-   if (opt.Contains("CHI2/NDF")){
+   if(opt.Contains("CHI2/NDF")) {
       if (ndf == 0) return 0;
       return chi2/ndf;
    }
-   if (opt.Contains("CHI2")){
+   if(opt.Contains("CHI2")) {
       return chi2;
    }
-
+   
    return prob;
 }
 
-//______________________________________________________________________________
-Double_t TH1::Chi2TestX(const TH1 *h, Double_t &chi2, Int_t &ndf, Option_t *option, Int_t constraint) const
+//___________________________________________________________________________
+Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood, Option_t *option,  Double_t *res) const
 {
-   //The Chi2 (Pearson's) test for differences between h and this histogram.
-   //a small value of prob indicates a significant difference between the distributions
+   // The computation routine of the Chisquare test. For the method description,
+   // see Chi2Test() function.
+   // Returns p-value
+   // parameters:
+   //  - h2-second histogram 
+   //  - option:
+   //     "UU" = experiment experiment comparison (unweighted-unweighted)
+   //     "UW" = experiment MC comparison (unweighted-weighted). Note that the first
+   //           histogram should be unweighted
+   //     "WW" = MC MC comparison (weighted-weighted)
    //
-   //if constraint=1 the algorithm riuns on the two histograms normalized to 1.
-   //constraint=0 is the default.
-   //any additional constraints on the data lower the number of degrees of freedom
-   //(i.e. increase constraint to more positive values) in accordance with
-   //their number
+   //     "NORM" = if one or both histograms is scaled
    //
-   // The function returns the probability as the return value
-   // and the value of the chi2 and ndf as arguments.
+   //     "OF" = overflows included
+   //     "UF" = underflows included
+   //         by default underflows and overlows are not included
    //
-   ///options:
-   //  "O" : overflows included
-   //  "U" : underflows included
-   //  by default underflows and overflows are not included
-   //
-   // NOTE: If the x axis has a bin range defined via TAxis::SetRange,
-   //       only the bins in this range are used for the test.
-   //
-   // algorithm taken from "Numerical Recipes in C++"
-   // implementation by Anna Kreshuk
-   //
-   //  A good description of the Chi2test can be seen at:
-   //     http://www.itl.nist.gov/div898/handbook/eda/section3/eda35f.htm
-   //  See also TH1::KolmogorovTest (including NOTE2)
+   //  - igood:  
+   //       igood=0 - no problems
+   //        For unweighted unweighted  comparison               
+   //       igood=1'There is bin in 1st hist with low then 1 exp number of event
+   //       igood=2'There is bin in 2nd  hist with low then 1 exp number of events'
+   //        For  unweighted weighted  comparison
+   //       igood=1'There is bin in 1st hist with low then 1 exp number of events'
+   //       igood=2'There is bin in 2nd  hist with low then 10 eff number of events'
+   //        For  weighted weighted  comparison 
+   //       igood=1'There is bin in 1st  hist with low then 10 eff number of events'
+   //       igood=2'There is bin in 2nd  hist with low then 10 eff number of events'
+   //  - chi2 - chisquare of the test
+   //  - ndf  - number of degrees of freedom (important, when both histograms have the same
+   //         empty bins)
+   //  - res -  normalized residuals for further analysis
+  
 
-   Int_t i, i_start, i_end;
+   Int_t i, j, k;
+   Int_t i_start, i_end;
+   Int_t j_start, j_end;
+   Int_t k_start, k_end;
+
+   Double_t bin1, bin2;
+   Double_t err1,err2;
+   Double_t sum1=0, sum2=0;
+   
    chi2 = 0;
    ndf = 0;
-
+   
    TString opt = option;
    opt.ToUpper();
-
-   TAxis *axis1 = this->GetXaxis();
-   TAxis *axis2 = h->GetXaxis();
-
-   Int_t nbins1 = axis1->GetNbins();
-   Int_t nbins2 = axis2->GetNbins();
-
+   
+   TAxis *xaxis1 = this->GetXaxis();
+   TAxis *xaxis2 = h2->GetXaxis();
+   TAxis *yaxis1 = this->GetYaxis();
+   TAxis *yaxis2 = h2->GetYaxis();
+   TAxis *zaxis1 = this->GetZaxis();
+   TAxis *zaxis2 = h2->GetZaxis();
+   
+   Int_t nbinx1 = xaxis1->GetNbins();
+   Int_t nbinx2 = xaxis2->GetNbins();
+   Int_t nbiny1 = yaxis1->GetNbins();
+   Int_t nbiny2 = yaxis2->GetNbins();
+   Int_t nbinz1 = zaxis1->GetNbins();
+   Int_t nbinz2 = zaxis2->GetNbins();
+   
    //check dimensions
-   if (this->GetDimension()!=1 || h->GetDimension()!=1){
-      Error("Chi2TestX","for 1-d only");
+   if (this->GetDimension() != h2->GetDimension() ){
+      Error("ChistatTestX","Histograms have different dimensions.");
       return 0;
    }
-
+   
    //check number of channels
-   if (nbins1 != nbins2){
-      Error("Chi2TestX","different number of channels");
-      return 0;
+   if (nbinx1 != nbinx2) {
+      Error("ChistatTestX","different number of x channels");
    }
-
-   //see options
-
-   i_start = 1;
-   i_end = nbins1;
-   if (fXaxis.TestBit(TAxis::kAxisRange)) {
-      i_start = fXaxis.GetFirst();
-      i_end   = fXaxis.GetLast();
+   if (nbiny1 != nbiny2) {
+      Error("ChistatTestX","different number of y channels");
    }
-
-   ndf = i_end-i_start-constraint;
-
-
-   if(opt.Contains("O")) {
-      i_end = nbins1+1;
-      ndf++;
+   if (nbinz1 != nbinz2) {
+      Error("ChistatTestX","different number of z channels");
    }
-   if(opt.Contains("U")) {
-      i_start = 0;
-      ndf++;
-   }
+   
+   //check for ranges
+   i_start = j_start = k_start = 1;
+   i_end = nbinx1;
+   j_end = nbiny1;
+   k_end = nbinz1;
 
-   //Compute the normalisation factor
-   Double_t sum1=0, sum2=0;
-   for (i=i_start; i<=i_end; i++){
-      sum1 += this->GetBinContent(i);
-      sum2 += h->GetBinContent(i);
+   if (xaxis1->TestBit(TAxis::kAxisRange)) {
+      i_start = xaxis1->GetFirst();
+      i_end   = xaxis1->GetLast();
    }
-   //check that the histograms are not empty
-   if (sum1 == 0 || sum2 == 0){
-      Error("Chi2TestX","one of the histograms is empty");
-      return 0;
+   if (yaxis1->TestBit(TAxis::kAxisRange)) {
+      j_start = yaxis1->GetFirst();
+      j_end   = yaxis1->GetLast();
    }
-   if (!constraint) {sum1 = sum2 = 1;}
-
-   Double_t bin1, bin2, err1, err2, temp;
-   for (i=i_start; i<=i_end; i++){
-      bin1 = this->GetBinContent(i)/sum1;
-      bin2 = h->GetBinContent(i)/sum2;
-      if (bin1 ==0 && bin2==0){
-         --ndf; //no data means one less degree of freedom
-      } else {
-
-         temp  = bin1-bin2;
-         err1=this->GetBinError(i);
-         err2=h->GetBinError(i);
-         if (err1 == 0 && err2 == 0){
-            Error("Chi2Test", "bins with non-zero content and zero error");
-            return 0;
+   if (zaxis1->TestBit(TAxis::kAxisRange)) {
+      k_start = zaxis1->GetFirst();
+      k_end   = zaxis1->GetLast();
+   }
+   
+   ndf = (i_end - i_start + 1)*(j_end - j_start + 1)*(k_end - k_start + 1) - 1;
+   
+   if (opt.Contains("OF")) {
+      i_end = ++nbinx1;
+      j_end = ++nbiny1;
+      k_end = ++nbinz1;
+      ndf += nbinx1 + nbiny1 + nbinz1;
+   }
+   
+   if (opt.Contains("UF")) {
+      i_start = j_start = k_start = 0;
+      ndf += nbinx1 + nbiny1 + nbinz1;
+   }
+   
+  //small number of events diagnostics
+   for(i=i_start; i<=i_end; i++) {
+      for (j=j_start; j<=j_end; j++) {
+         for (k=k_start; k<=k_end; k++) {
+            bin1 = this->GetBinContent(i,j,k);
+            bin2 = h2->GetBinContent(i,j,k);
+            if (!opt.Contains("UU") && bin2 <= 0){
+               Error("ChistatTestX","Hist2: zero events in bin (%d,%d,%d)\n", i,j,k);
+               return 0;
+            }
+            if (opt.Contains("WW") && bin1 <= 0){
+               Error("ChistatTestX","Hist1: zero events in bin (%d,%d,%d)\n", i,j,k);
+               return 0;
+            }
          }
-         err1*=err1;
-         err2*=err2;
-         err1/=sum1*sum1;
-         err2/=sum2*sum2;
-         chi2+=temp*temp/(err1+err2);
       }
    }
+   
+   //get number of events in histogramm
+   if (opt.Contains("UU") && opt.Contains("NORM")) {
+      for (i=i_start; i<=i_end; i++) {
+	 for (j=j_start; j<=j_end; j++) {
+	    for (k=k_start; k<=k_end; k++) {
+	       bin1 = this->GetBinContent(i,j,k);
+	       bin2 = h2->GetBinContent(i,j,k);
+	       err1 = this->GetBinError(i,j,k);
+	       err2 = h2->GetBinError(i,j,k);
+	       if (err1==0) continue;            //otherwise divison by zero
+	       if (err2==0) continue;
+               bin1 *= bin1/(err1*err1);
+               bin2 *= bin2/(err2*err2);
+               bin1 += 0.5;
+               bin2 += 0.5;
+               bin1 = Int_t(bin1);
+               bin2 = Int_t(bin2);
+               bin1 = Double_t(bin1);
+               bin2 = Double_t(bin2);
+	       sum1 += bin1;
+	       sum2 += bin2;
+	    }
+	 }
+      }
+   } else {
+      for (i=i_start; i<=i_end; i++) {
+	 for (j=j_start; j<=j_end; j++) {
+	    for (k=k_start; k<=k_end; k++) {
+	       sum1 += this->GetBinContent(i,j,k);
+	       sum2 += h2->GetBinContent(i,j,k);
+	    }
+	 }
+      }
+   }
+   
+   //checks that the histograms are not empty
+   if (sum1 == 0 || sum2 == 0) {
+      Error("ChistatTestX","one of the histograms is empty");
+      return 0;
+   }
+   
+   //THE TEST
+   Int_t m=0, n=0;
+   
+   //Experiment - experiment comparison
+   if (opt.Contains("UU")) {
+      Double_t sum = sum1 + sum2;
+      Double_t binsum,temp1,temp2,correc;
+      for (i=i_start; i<=i_end; i++) {
+         for (j=j_start; j<=j_end; j++) {
+            for (k=k_start; k<=k_end; k++) {
+               bin1 = this->GetBinContent(i,j,k);
+               bin2 = h2->GetBinContent(i,j,k);
 
-   Double_t prob = TMath::Prob(chi2, ndf);
+               if (bin1 == 0 || bin2 == 0) {
+                  --ndf;  //no data means one degree of freedom less
+	       } else {
+		  if (opt.Contains("NORM")) {
+		     err1 = this->GetBinError(i,j,k);
+		     err2 = h2->GetBinError(i,j,k);
+		     bin1 *= bin1/(err1*err1);
+		     bin2 *= bin2/(err2*err2);
+                     //avoid rounding errors
+                     bin1 += 0.5;
+                     bin2 += 0.5;
+                     bin1 = Int_t(bin1);
+                     bin2 = Int_t(bin2);
+                     bin1 = Double_t(bin1);
+                     bin2 = Double_t(bin2);
+		  }
 
-   return prob;
+                  binsum = bin1 + bin2;
+                  temp1 = binsum*sum1/sum;
+                  temp2 = binsum*sum2/sum;
+                  
+                  if (res)
+                     res[i-i_start] = (bin1-temp1)/TMath::Sqrt(temp1);
+		  
+                  if (temp1 < 1) m++;
+                  if (temp2 < 1) n++;
+                  
+                  //Habermann correction for residuals
+                  correc = (1-sum1/sum)*(1-binsum/sum);
+                  if (res) {
+                     res[i-i_start] /= TMath::Sqrt(correc);
+                  }
 
+                  temp1 = sum2*bin1-sum1*bin2;
+                  chi2 += temp1*temp1/binsum;
+	       }
+	    }
+	 }
+      }
+      chi2 /= sum1*sum2;
+      if (m) {
+         igood = 1;
+         printf("There is bin in Hist1 with less than 1 exp number of events.\n");
+      }
+      if (n) {
+         igood = 2;
+         printf("There is bin in Hist2 with less than 1 exp number of events.\n");
+      }
+      
+      Double_t prob = TMath::Prob(chi2,ndf);
+      return prob;
+   }
+   
+   //Experiment - MC comparison
+   if (opt.Contains("UW")) {
+      Double_t var1,var2;
+      Double_t probb,temp,temp1,temp2;
+      for (i=i_start; i<=i_end; i++) {
+         for (j=j_start; j<=j_end; j++) {
+            for (k=k_start; k<=k_end; k++) {
+               Int_t x=0, y=0;
+               bin1 = this->GetBinContent(i,j,k);
+               bin2 = h2->GetBinContent(i,j,k);
+               err2 = h2->GetBinError(i,j,k);
+
+	       err1 *= err1;
+	       err2 *= err2;
+	       
+	       var1 = sum2*bin2 - sum1*err2;
+	       var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
+               
+	       while (var1*var1+bin1 == 0 || var1+var2 == 0) {
+		  sum1++;
+		  bin1++;
+		  x++;
+		  y=1;
+		  var1 = sum2*bin2 - sum1*err2;
+		  var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
+	       }
+               
+	       var2 = TMath::Sqrt(var2);
+               
+	       while (var1+var2 == 0) {
+		  sum1++;
+		  bin1++;
+		  x++;
+		  y=1;
+		  var1 = sum2*bin2 - sum1*err2;
+		  var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
+		  while (var1*var1+bin1 == 0 || var1+var2 == 0) {
+		     sum1++;
+		     bin1++;
+		     x++;
+		     y=1;
+		     var1 = sum2*bin2 - sum1*err2;
+		     var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
+		  }
+		  var2 = TMath::Sqrt(var2);
+	       }
+               
+	       probb = (var1+var2)/(2*sum2*sum2);
+	       temp1 = probb * sum1;
+	       temp2 = probb * sum2;
+               
+	       if (temp1 < 1) m++;
+	       if (bin2*bin2/err2 < 10) n++;
+               
+	       temp = bin1 - temp1;
+	       chi2 += temp*temp/temp1;
+	       temp = bin2 - temp2;
+	       chi2 += temp*temp/err2;
+	       
+	       temp1 = sum2*err2/var2;
+	       temp2 = 1 + (sum1*err2 - sum2*bin2)/var2;
+	       temp2 = temp1*temp1*sum1*probb*(1-probb) + temp2*temp2*err2/4;
+	       if (res)
+		 res[i-i_start] = temp/TMath::Sqrt(temp2);
+	       
+	       //if (y) this->SetBinContent(i,j,k,bin1-x);
+	    }
+	 }
+      }
+      
+      if (m) {
+         igood = 1;
+         printf("There is bin in Hist1 with less than 1 exp number of events.\n");
+      }
+      if (n) {
+         igood = 2;
+         printf("There is bin in Hist2 with less than 10 eff number of events.\n");
+      }
+      
+      Double_t prob = TMath::Prob(chi2,ndf);
+      
+      return prob;
+   }
+   
+   //MC - MC comarison
+   if (opt.Contains("WW")) {
+      Double_t temp,temp1,temp2,temp3;
+      for (i=i_start; i<=i_end; i++) {
+         for (j=j_start; j<=j_end; j++) {
+            for (k=k_start; k<=k_end; k++) {
+               bin1 = this->GetBinContent(i,j,k);
+               bin2 = h2->GetBinContent(i,j,k);
+               err1 = this->GetBinError(i,j,k);
+               err2 = h2->GetBinError(i,j,k);
+               err1 *= err1;
+               err2 *= err2;
+               
+               temp  = sum1*sum1*err2 + sum2*sum2*err1;
+               temp1 = sum2*bin1 - sum1*bin2;
+               chi2 += temp1*temp1/temp;
+               
+               temp2 = bin1*sum1*err2 + bin2*sum2*err1;
+               temp2 *= sum1/temp;
+               temp2 = bin1-temp2;
+               temp3 = sum1*sum1 / (sum1*sum1/err1 + sum2*sum2/err2);
+               if (res)
+                  res[i-i_start] = temp2/TMath::Sqrt(err1-temp3);               
+               
+               bin1 *= bin1/err1;
+               bin2 *= bin2/err2;
+               if (bin1 < 10) m++;
+               if (bin2 < 10) n++;
+            }
+         }
+      }
+      if (m) {
+         igood = 1;
+         printf("There is bin in Hist1 with less than 10 eff number of events.\n");
+      }
+      if (n) {
+         igood = 2;
+         printf("There is bin in Hist2 with less than 10 eff number of events.\n");
+      }
+      Double_t prob = TMath::Prob(chi2,ndf);
+      return prob;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
