@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.312 2006/09/28 19:19:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.313 2006/10/04 09:23:02 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1039,13 +1039,12 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
 //___________________________________________________________________________
 Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
 {
-
 //Begin_Html <!--
 /* -->
 <html>
 <body>
 
-<h1> <IMG  WIDTH="50" HEIGHT="44" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$"> test for comparison weighted and unweighted histograms</h1>
+<h1> <IMG  WIDTH="50" HEIGHT="44" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$"> test for comparing weighted and unweighted histograms</h1>
  <p>
 Function:
  Returns p-value. Other return values are specified by the 3rd parameter <br>
@@ -1071,7 +1070,7 @@ Function:
 </ul>
 </p>
 <br>
-   The current implementation is based on the papers "<IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$"> test for comparison
+   The current implementation is based on the papers "<IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$"> test for comparison
  of weighted and unweighted histograms" in Proceedings of PHYSTAT05 and
  "Comparison weighted and unweighted histograms", arXiv:physics/0605123  by N.Gagunashvili. This function has been implemented
  by Daniel Haertl in August 2006.
@@ -1079,11 +1078,11 @@ Function:
 <h2>Introduction</h2>
 
 A frequently used technique in data analysis is the comparison of histograms. 
-First suggested by Pearson [1]  the <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$">  test of
+First suggested by Pearson [1]  the <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$">  test of
  homogeneity   is  used widely  for  comparing usual (unweighted)  histograms.
-This paper describes the implementation  modified <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$">   tests
+This paper describes the implementation  modified <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$">   tests
  for comparison of weighted and unweighted  histograms and two weighted
- histograms [2] as well as usual Pearson's <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$"> test for
+ histograms [2] as well as usual Pearson's <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$"> test for
 comparison two usual (unweighted) histograms.  
 
 <h2>Overview</h2>
@@ -1097,48 +1096,48 @@ Comparison of two histograms expect hypotheses that  two histograms
 bin contents and expected bin contents. Most convenient for analysis are the 
  normalized residuals. If hypotheses of  identity are valid then normalized
 residuals  are approximately independent and identically distributed
- random variables  having  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_standard.png"  ALT="normal">  distribution. Analysis of
+ random variables  having  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_standard.png"  ALT="normal">  distribution. Analysis of
  residuals expect test of above mentioned properties of residuals.     
-Notice that indirectly the analysis of residuals increase the power of <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$"> test.
+Notice that indirectly the analysis of residuals increase the power of <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$"> test.
 
 <h2>Methods of comparison</h2>
 
-<h3><IMG  WIDTH="50" HEIGHT="44" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$"> test for comparison two (unweighted) histograms</h3>
+<h3><IMG  WIDTH="50" HEIGHT="44" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$"> test for comparison two (unweighted) histograms</h3>
  
  Let us consider two  histograms with the  same
  binning and the  number of bins equal to <I>r</I>.
 Let us denote the number of events in the <I>i</I>th bin in the first histogram as 
 <i>n<sub>i</sub></i> and as  <i>m<sub>i</sub></i> in the second one. The total number of events in the
- first histogram is equal to <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Nsum.png"  ALT="$N=\sum_{i=1}^{r}{n_i}$">   ,  
-and   <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Msum.png"  ALT="$M=\sum_{i=1}^{r}{m_i}$">  in the second histogram.
+ first histogram is equal to <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Nsum.png"  ALT="$N=\sum_{i=1}^{r}{n_i}$">   ,  
+and   <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Msum.png"  ALT="$M=\sum_{i=1}^{r}{m_i}$">  in the second histogram.
 
 The  hypothesis of identity (homogeneity) [3] is that the
  two histograms represent random  values with  identical distributions.  
   It is equivalent that there  exist  <I>r</I> constants
  <I>p<sub>1</sub>,...,p<sub>r</sub></I>,
- such that  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_p_i_sum.png"  ALT=" $\sum_{i=1}^{r} p_i=1$"> , 
+ such that  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_p_i_sum.png"  ALT=" $\sum_{i=1}^{r} p_i=1$"> , 
  and the probability  of  belonging  to the  <i>i</i>th bin for some  measured value
  in both experiments is  equal to <i>p<sub>i</sub></i>.
  The number of events in the <i>i</i>th bin is a random variable
  with a distribution  approximated  by a  Poisson probability distribution
-  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Npoisson.png"  ALT="$e^{-Np_i}(Np_i)^{n_i}/n_i!$ "> for the first histogram and with 
-distribution <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Mpoisson.png"  ALT="$e^{-Mp_i}(Mp_i)^{m_i}/m_i!$ "> for the second histogram.
+  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Npoisson.png"  ALT="$e^{-Np_i}(Np_i)^{n_i}/n_i!$ "> for the first histogram and with 
+distribution <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Mpoisson.png"  ALT="$e^{-Mp_i}(Mp_i)^{m_i}/m_i!$ "> for the second histogram.
  If the hypothesis of homogeneity is valid, then the  maximum likelihood
 estimator of  <i>p<sub>i</sub>, i=1,...,r</i>,  is
 
 <BR><P></P>
 <DIV ALIGN="CENTER"> 
- <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_ratio.png"  ALT="\hat{p}_i= \frac{n_{i}+m_{i}}{N+M}">
+ <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_ratio.png"  ALT="\hat{p}_i= \frac{n_{i}+m_{i}}{N+M}">
 </DIV>
 and then
 
 <BR><P></P>
 <DIV ALIGN="CENTER"> 
- <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_m1.png"  ALT="X^2=\sum_{i=1}^{r}{\frac{(n_{i}-N\hat{p}_i)^2}{N\hat{p}_i}}
-+\sum_{i=1}^{r}{\frac{(m_{i}-M\hat{p}_i)^2}{M\hat{p}_i}} =\frac{1}{MN} \sum_{i=1}^{r}{\frac{(Mn_i-Nm_i)^2}{n_i+m_i}}"><IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_m12.png"  ALT="X^2=\sum_{i=1}^{r}{\frac{(n_{i}-N\hat{p}_i)^2}{N\hat{p}_i}}
+ <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_m1.png"  ALT="X^2=\sum_{i=1}^{r}{\frac{(n_{i}-N\hat{p}_i)^2}{N\hat{p}_i}}
++\sum_{i=1}^{r}{\frac{(m_{i}-M\hat{p}_i)^2}{M\hat{p}_i}} =\frac{1}{MN} \sum_{i=1}^{r}{\frac{(Mn_i-Nm_i)^2}{n_i+m_i}}"><IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_m12.png"  ALT="X^2=\sum_{i=1}^{r}{\frac{(n_{i}-N\hat{p}_i)^2}{N\hat{p}_i}}
 +\sum_{i=1}^{r}{\frac{(m_{i}-M\hat{p}_i)^2}{M\hat{p}_i}} =\frac{1}{MN} \sum_{i=1}^{r}{\frac{(Mn_i-Nm_i)^2}{n_i+m_i}}">
 </DIV>
-has approximately a <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2r.png"  ALT=" $\chi^2_{(r-1)}$"> distribution [3].
+has approximately a <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2r.png"  ALT=" $\chi^2_{(r-1)}$"> distribution [3].
 
 
 The  comparison   procedure  can include an  analysis of the residuals which
@@ -1149,17 +1148,17 @@ significant overall <i>X<sup>2</sup></i> value. Most convenient for analysis are
 
 <BR><P></P>
 <DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_res1.png"  ALT="$r_i=\frac{n_{i}-N\hat{p}_i}{\sqrt{N\hat{p}_i}\sqrt{(1-N/(N+M))(1-(n_i+m_i)/(N+M))}}$".
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_res1.png"  ALT="$r_i=\frac{n_{i}-N\hat{p}_i}{\sqrt{N\hat{p}_i}\sqrt{(1-N/(N+M))(1-(n_i+m_i)/(N+M))}}$".
 </DIV>
  If hypotheses of  homogeneity are valid then 
 residuals <i>r<sub>i</sub></i> are approximately independent and identically distributed
- random variables  having   <IMG ALIGN="MIDDLE" BORDER="0" SRC="chi2_standard.png"  ALT="$\mathcal{N}(0,1)$"> distribution. 
+ random variables  having   <IMG ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_standard.png"  ALT="$\mathcal{N}(0,1)$"> distribution. 
 
-The application of the  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$"> test has restrictions related to the
+The application of the  <IMG  WIDTH="50" HEIGHT="44" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$"> test has restrictions related to the
   value of the expected frequencies <i>Np<sub>i</sub>, Mp<sub>i</sub>, i=1,...,r</i>.   
 A conservative rule formulated in [5]  is that all
  the expectations  must be 1 or greater for both histograms. In  practical cases when  expected frequencies are not known the estimated expected  frequencies
- <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_MpNp.png"  ALT=" $M\hat{p}_i$, $N\hat{p}_i, i=1,...,r$">  can be used.  
+ <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_MpNp.png"  ALT=" $M\hat{p}_i$, $N\hat{p}_i, i=1,...,r$">  can be used.  
 
 
 <h3>Unweighted and weighted histograms comparison</h3>
@@ -1170,34 +1169,34 @@ A simple  modification of the  ideas described above can be used for the
 weighted histograms. Let us denote the number of events in the <i>i</i>th bin in the unweighted histogram as
 <i>n<sub>i</sub></i> and  the common weight of events in the <i>i</i>th bin of the
 weighted histogram as <i>w<sub>i</sub></i>. The total number of events in the
- unweighted histogram is equal to <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Nsum.png"  ALT="$N=\sum_{i=1}^{r}{n_i}$"> and  the total
+ unweighted histogram is equal to <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Nsum.png"  ALT="$N=\sum_{i=1}^{r}{n_i}$"> and  the total
  weight of events in the weighted histogram is equal
- to  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Wsum.png"  ALT=" $W=\sum_{i=1}^{r}{w_i}$">.
+ to  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Wsum.png"  ALT=" $W=\sum_{i=1}^{r}{w_i}$">.
 
  Let us formulate the hypothesis of identity of an unweighted histogram 
 to a weighted histogram so that  there  exist  <i>r</i> constants <i>p<sub>1</sub>,...,p<sub>r</sub></i>,
- such that <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_p_i_sum.png"  ALT="$\sum_{i=1}^{r} p_i=1$>, and the probability  of  belonging  to the  <i>i</i>th bin for some  measured value
+ such that <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_p_i_sum.png"  ALT="$\sum_{i=1}^{r} p_i=1$>, and the probability  of  belonging  to the  <i>i</i>th bin for some  measured value
   is  equal to <i>p<sub>i</sub></i> for the  unweighted histogram and expectation value of weight <i>w<sub>i</sub></i> equal to <i>Wp<sub>i</sub></i> for the  weighted histogram.
 The number of events in the <i>i</i>th bin is a random
 variable  with distribution  approximated  by the  Poisson probability distribution
-  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_Npoisson.png"  ALT="$e^{-Np_i}(Np_i)^{n_i}/n_i!$ "> for the  unweighted  histogram.
+  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Npoisson.png"  ALT="$e^{-Np_i}(Np_i)^{n_i}/n_i!$ "> for the  unweighted  histogram.
 The weight <i>w<sub>i</sub></i> is a random variable with a distribution approximated  by 
- the normal probability  distribution  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_standardw.png"  ALT=" $ \mathcal{N}(Wp_i,\sigma_i^2)$ ">, where
-  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_sigma.png"  ALT=" $\sigma_i^2$ ">  is the  variance of the  weight  <i>w<sub>i</sub></i>.  
- If we replace the variance  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_sigma.png"  ALT=" $\sigma_i^2$ "> with estimate <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_s.png"  ALT=" $s_i^2$ "> (sum of squares of weights of events in the <i>i</i>th bin) and 
+ the normal probability  distribution  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_standardw.png"  ALT=" $ \mathcal{N}(Wp_i,\sigma_i^2)$ ">, where
+  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_sigma.png"  ALT=" $\sigma_i^2$ ">  is the  variance of the  weight  <i>w<sub>i</sub></i>.  
+ If we replace the variance  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_sigma.png"  ALT=" $\sigma_i^2$ "> with estimate <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_s.png"  ALT=" $s_i^2$ "> (sum of squares of weights of events in the <i>i</i>th bin) and 
  the hypothesis of identity is valid, then the   maximum likelihood
 estimator of  <i>p<sub>i</sub>,i=1,...,r</i>,  is
 <BR><P></P>
 <DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_ratio2.png"  ALT="\hat{p}_i= \frac{Ww_i-Ns_i^2+\sqrt{(Ww_i-Ns_i^2)^2+4W^2s_i^2n_i}}{2W^2} ">.
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_ratio2.png"  ALT="\hat{p}_i= \frac{Ww_i-Ns_i^2+\sqrt{(Ww_i-Ns_i^2)^2+4W^2s_i^2n_i}}{2W^2} ">.
 </DIV>
 We may then use the test statistic
 <BR><P></P>
 <DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_m2.png"  ALT="X^2=\sum_{i=1}^{r}{\frac{(n_{i}-N\hat{p}_i)^2}{N\hat{p}_i}}
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_m2.png"  ALT="X^2=\sum_{i=1}^{r}{\frac{(n_{i}-N\hat{p}_i)^2}{N\hat{p}_i}}
 +\sum_{i=1}^{r}{\frac{(w_{i}-W\hat{p}_i)^2}{s_i^2}}">
 </DIV>
-and it   has approximately a   <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2r.png"  ALT=" $\chi^2_{(r-1)}$">  distribution [2].
+and it   has approximately a   <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2r.png"  ALT=" $\chi^2_{(r-1)}$">  distribution [2].
 
 
 
@@ -1208,22 +1207,22 @@ The value of the  minimal expected frequency can be decreased down to 10 for
  the case when the weights of the events are close to constant.
 In the case of a weighted histogram if the number of events is unknown, then we can apply this recommendation for the equivalent number of events as
 
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_neq.png"  ALT="$n_i^{equiv}={w_i^2}/{s_i^2} \, \text{.}$">.
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_neq.png"  ALT="$n_i^{equiv}={w_i^2}/{s_i^2} \, \text{.}$">.
  The minimal   expected frequency for an  unweighted histogram must be 1. 
 Notice that any usual (unweighted)  histogram can be considered as a weighted histogram with events that have constant weights equal to 1.
 
-The  variance <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_z.png"  ALT="$z_i^2$">  of the difference between the weight <i>w<sub>i</sub></i> and the estimated expectation value of the weight is  approximately  equal to:
+The  variance <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_z.png"  ALT="$z_i^2$">  of the difference between the weight <i>w<sub>i</sub></i> and the estimated expectation value of the weight is  approximately  equal to:
 <BR><P></P>
 <DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_zfor1.png"  ALT="$z_i^2=Var(w_{i}-W\hat{p}_i)=N\hat{p}_i(1-N\hat{p}_i)\biggl(\frac{Ws_i^2}
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_zfor1.png"  ALT="$z_i^2=Var(w_{i}-W\hat{p}_i)=N\hat{p}_i(1-N\hat{p}_i)\biggl(\frac{Ws_i^2}
 {\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2\\
 +\frac{s_i^2}{4}\biggl(1+\frac{Ns_i^2-w_iW}
 {\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2$"> 
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_zfor2.png"  ALT="$z_i^2=Var(w_{i}-W\hat{p}_i)=N\hat{p}_i(1-N\hat{p}_i)\biggl(\frac{Ws_i^2}
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_zfor2.png"  ALT="$z_i^2=Var(w_{i}-W\hat{p}_i)=N\hat{p}_i(1-N\hat{p}_i)\biggl(\frac{Ws_i^2}
 {\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2\\
 +\frac{s_i^2}{4}\biggl(1+\frac{Ns_i^2-w_iW}
 {\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2$"> 
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_zfor3.png"  ALT="$z_i^2=Var(w_{i}-W\hat{p}_i)=N\hat{p}_i(1-N\hat{p}_i)\biggl(\frac{Ws_i^2}
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_zfor3.png"  ALT="$z_i^2=Var(w_{i}-W\hat{p}_i)=N\hat{p}_i(1-N\hat{p}_i)\biggl(\frac{Ws_i^2}
 {\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2\\
 +\frac{s_i^2}{4}\biggl(1+\frac{Ns_i^2-w_iW}
 {\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2$">. 
@@ -1231,7 +1230,7 @@ The  variance <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_z.png"  ALT="$z_i^2$">  
 The  residuals
 <BR><P></P>
 <DIV ALIGN="CENTER"> 
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_res2.png"  ALT="r_i=\frac{w_{i}-W\hat{p}_i}{z_i}">
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_res2.png"  ALT="r_i=\frac{w_{i}-W\hat{p}_i}{z_i}">
 </DIV>
 have approximately a normal distribution with mean equal to 0 and
  standard deviation  equal to 1.
@@ -1240,39 +1239,39 @@ have approximately a normal distribution with mean equal to 0 and
 
 Let us denote the  common  weight of events of the <i>i</i>th bin in the first histogram as
 <i>w<sub>1i</sub></i> and as <i>w<sub>2i</sub></i>  in the second one. The total  weight of events in the
- first histogram is equal to <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_W1sum.png"  ALT="$W_1=\sum_{i=1}^{r}{w_{1i}}$">,
-and <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_W2sum.png"  ALT="$W_2=\sum_{i=1}^{r}{w_{2i}}$">  in the second histogram.
+ first histogram is equal to <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_W1sum.png"  ALT="$W_1=\sum_{i=1}^{r}{w_{1i}}$">,
+and <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_W2sum.png"  ALT="$W_2=\sum_{i=1}^{r}{w_{2i}}$">  in the second histogram.
 
  Let us formulate the hypothesis of
  identity of   weighted histograms  so that  there  exist  <i>r</i> constants <i>p<sub>1</sub>,...,p<sub>r</sub></i>,
- such that   <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_p_i_sum.png"  ALT="$\sum_{i=1}^{r} p_i=1$">, and  also  expectation value of weight <i>w<sub>1i</sub></i> equal to <i>W<sub>1</sub>p<sub>i</sub></i> and expectation value of weight <i>w<sub>2i</sub></i> equal to <i>W<sub>2</sub>p<sub>i</sub></i>.
+ such that   <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_p_i_sum.png"  ALT="$\sum_{i=1}^{r} p_i=1$">, and  also  expectation value of weight <i>w<sub>1i</sub></i> equal to <i>W<sub>1</sub>p<sub>i</sub></i> and expectation value of weight <i>w<sub>2i</sub></i> equal to <i>W<sub>2</sub>p<sub>i</sub></i>.
 Weights in both the histograms are random variables with  distributions which
  can be
- approximated by a normal probability distribution <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_standard_w1.png", ALT="$\mathcal{N}(W_1p_i,\sigma_{1i}^2)$">
+ approximated by a normal probability distribution <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_standard_w1.png", ALT="$\mathcal{N}(W_1p_i,\sigma_{1i}^2)$">
  for the first histogram and by a distribution 
- <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_standard_w2.png", ALT="$\mathcal{N}(W_2p_i,\sigma_{2i}^2)$">   for the second.  Here  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_sigma1.png", ALT="$\sigma_{1i}^2$ ">  and  
- <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_sigma2.png", ALT="$\sigma_{2i}^2$ ">  are the  variances of  <i>w<sub>1i</sub></i> and <i>w<sub>2i</sub></i> with estimators  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_s1.png", ALT="$s_{1i}^2$ "> 
- and <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_s2.png", ALT="$s_{2i}^2$ "> respectively. If the hypothesis of identity is valid,
+ <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_standard_w2.png", ALT="$\mathcal{N}(W_2p_i,\sigma_{2i}^2)$">   for the second.  Here  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_sigma1.png", ALT="$\sigma_{1i}^2$ ">  and  
+ <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_sigma2.png", ALT="$\sigma_{2i}^2$ ">  are the  variances of  <i>w<sub>1i</sub></i> and <i>w<sub>2i</sub></i> with estimators  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_s1.png", ALT="$s_{1i}^2$ "> 
+ and <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_s2.png", ALT="$s_{2i}^2$ "> respectively. If the hypothesis of identity is valid,
  then  the  maximum likelihood  and Least  Square Method  estimator 
  of  <i>p<sub>i</sub>,i=1,...,r</i>,  is
 <BR><P></P>
 <DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_ratio3.png", ALT="\hat{p}_i=\frac{w_{1i}W_1/s_{1i}^2+w_{2i}W_2 /s_{2i}^2}{W_1^2/s_{1i}^2+W_2^2/s_{2i}^2} "> .
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_ratio3.png", ALT="\hat{p}_i=\frac{w_{1i}W_1/s_{1i}^2+w_{2i}W_2 /s_{2i}^2}{W_1^2/s_{1i}^2+W_2^2/s_{2i}^2} "> .
 </DIV>
 We may then use the test statistic
 <BR><P></P>
 <DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_m3.png", ALT="X^2=\sum_{i=1}^{r}{\frac{(w_{1i}-W_1\hat{p}_i)^2}{s_{1i}^2}}
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_m3.png", ALT="X^2=\sum_{i=1}^{r}{\frac{(w_{1i}-W_1\hat{p}_i)^2}{s_{1i}^2}}
 +\sum_{i=1}^{r}{\frac{(w_{2i}-W_2\hat{p}_i)^2}{s_{2i}^2}}=\sum _{i=1}^{r}{\frac{(W_1w_{2i}-W_2w_{1i})^2}{W_1^2s_{2i}^2+W_2^2s_{1i}^2}}">
 
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_m32.png", ALT="X^2=\sum_{i=1}^{r}{\frac{(w_{1i}-W_1\hat{p}_i)^2}{s_{1i}^2}}
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_m32.png", ALT="X^2=\sum_{i=1}^{r}{\frac{(w_{1i}-W_1\hat{p}_i)^2}{s_{1i}^2}}
 +\sum_{i=1}^{r}{\frac{(w_{2i}-W_2\hat{p}_i)^2}{s_{2i}^2}}=\sum _{i=1}^{r}{\frac{(W_1w_{2i}-W_2w_{1i})^2}{W_1^2s_{2i}^2+W_2^2s_{1i}^2}}">
 </DIV>
-and it   has approximately a <IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2r.png"  ALT=" $\chi^2_{(r-1)}$">  distribution [2]. The normalized or studentised residuals [6]
+and it   has approximately a <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2r.png"  ALT=" $\chi^2_{(r-1)}$">  distribution [2]. The normalized or studentised residuals [6]
 
 <BR><P></P>
 <DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_res3.png", ALT=" r_i=\frac{w_{1i}-W_1\hat{p}_i}{s_{1i}\sqrt{1-1/(1+W_2^2s_{1i}^2/W_1^2s_{2i}^2)}} ">
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_res3.png", ALT=" r_i=\frac{w_{1i}-W_1\hat{p}_i}{s_{1i}\sqrt{1-1/(1+W_2^2s_{1i}^2/W_1^2s_{2i}^2)}} ">
 </DIV>
 have approximately a normal distribution with mean equal to 0 and
  standard deviation 1. A recommended minimal expected frequency is  equal to 10 for the proposed test.
@@ -1286,7 +1285,7 @@ The method described herein is now  illustrated with an example.
 We take a  distribution
 <BR><P></P>
 <DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_example_formula.png", ALT="\phi(x)=\frac{2}{(x-10)^2+1}+\frac{1}{(x-14)^2+1}  "> &nbsp &nbsp &nbsp &nbsp  (1)
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_example_formula.png", ALT="\phi(x)=\frac{2}{(x-10)^2+1}+\frac{1}{(x-14)^2+1}  "> &nbsp &nbsp &nbsp &nbsp  (1)
 </DIV>
  defined on the interval [4,16].  Events distributed 
 according to the formula (1) are simulated  to create the unweighted
@@ -1298,7 +1297,7 @@ according to the formula (1) are simulated  to create the unweighted
 200 events  (minimal expected frequency equal to one) and the weighted histogram with 500 events (minimal expected frequency equal to 25)
 <BR><P></P>
 <DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="chi2_plot1.jpg", ALT="fig1"> 
+<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_plot1.jpg", ALT="fig1"> 
 </DIV>
 <div>
 <caption align=left> Fig 1. An example of comparison of the unweighted histogram with 200 events
@@ -1322,7 +1321,7 @@ The second example presented the same two histograms but 17 events was added to
 217 events  (minimal expected frequency equal to one) and the weighted histogram with 500 events (minimal expected frequency equal to 25)
 <BR><P></P>
 <DIV ALIGN="CENTER">
-<IMG ALIGN="MIDDLE" BORDER="0" SRC="chi2_plot2.jpg", ALT="fig1_bad">
+<IMG ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_plot2.jpg", ALT="fig1_bad">
 </DIV>
 <div>
 <caption align=left> Fig 2. An example of comparison of the unweighted histogram with 217 events
@@ -1344,7 +1343,7 @@ The second example presented the same two histograms but 17 events was added to
 [1] Pearson, K., 1904. On the Theory of Contingency and Its Relation to Association
  and Normal Correlation. Drapers' Co. Memoirs, Biometric Series No. 1, London.<br> 
 <br>
-[2] Gagunashvili, N., 2006. <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="chi2_chi2.png"  ALT="$\chi^2$">  test for comparison of weighted and
+[2] Gagunashvili, N., 2006. <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$">  test for comparison of weighted and
  unweighted histograms. 
  Statistical  Problems in Particle Physics, Astrophysics and Cosmology,   Proceedings of PHYSTAT05, Oxford, UK, 12-15 September 2005, Imperial College Press, London, 43-44.<br>
 &nbsp &nbsp Gagunashvili,N., Comparison of weighted and unweighted histograms, arXiv:physics/0605123, 2006.<br> 
