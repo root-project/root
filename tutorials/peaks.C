@@ -1,4 +1,3 @@
-// Example to illustrate the peak finder (class TSpectrum).
 // This script generates a random number of gaussian peaks
 // on top of a linear background.
 // The position of the peaks is found via TSpectrum and injected
@@ -58,10 +57,10 @@ void peaks(Int_t np=10) {
    TH1F *h2 = (TH1F*)h->Clone("h2");
    //Use TSpectrum to find the peak candidates
    TSpectrum *s = new TSpectrum(2*npeaks);
-   Int_t nfound = s->Search(h,2,"");
+   Int_t nfound = s->Search(h,2,"",0.10);
    printf("Found %d candidate peaks to fit\n",nfound);
    //Estimate background using TSpectrum::Background
-   TH1 *hb = s->Background(h,4,"same");
+   TH1 *hb = s->Background(h,20,"same");
    c1->Update();
    if (np <0) return;
 
