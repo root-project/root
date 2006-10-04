@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.313 2006/10/04 09:23:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.314 2006/10/04 13:43:07 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -6017,8 +6017,10 @@ Double_t TH1::GetMean(Int_t axis) const
       Int_t ax[3] = {2,4,7};
       return stats[ax[axis-1]]/stats[0];
    } else {
+      // mean error = RMS / sqrt( Neff )
       Double_t rms = GetRMS(axis-10);
-      return (rms/TMath::Sqrt(stats[0]));
+      Double_t neff = GetEffectiveEntries(); 
+      return ( neff > 0 ? rms/TMath::Sqrt(neff) : 0. ); 
    }
 }
 
@@ -6071,8 +6073,12 @@ Double_t TH1::GetRMS(Int_t axis) const
    rms2 = TMath::Abs(stats[axm+1]/stats[0] -x*x);
    if (axis<10)
       return TMath::Sqrt(rms2);
-   else
-      return TMath::Sqrt(rms2/(2*stats[0]));
+   else { 
+      // The right formula for RMS error is 
+      // formula valid for only gaussian distribution ( 4-th momentum =  )
+      Double_t neff = GetEffectiveEntries();
+      return ( neff > 0 ? TMath::Sqrt(rms2/(2*neff) ) : 0. );
+   }
 }
 
 //______________________________________________________________________________
@@ -6087,6 +6093,10 @@ Double_t TH1::GetRMSError(Int_t axis) const
    //  call the static function TH1::StatOverflows(kTRUE) before filling
    //  the histogram.
    //  Value returned is standard deviation of sample standard deviation.
+   //  Note that it is an approximated value which is valid only in the case that the 
+   //  original data distribution is Normal. The correct one would require  
+   //  the 4-th momentum value, which cannot be accuratly estimated from an histogram since 
+   //  the x-information for all entries is not kept.  
 
    return GetRMS(axis+10);
 }
