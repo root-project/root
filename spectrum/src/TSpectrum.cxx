@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.cxx,v 1.1 2006/09/28 19:19:52 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.cxx,v 1.2 2006/10/02 10:58:42 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -256,8 +256,8 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option, Doub
 //   By default, the background is removed before deconvolution.           //
 //   Specify the option "nobackground" to not remove the background.       //                //
 //                                                                         //
-//   By specifying the option "Markov" one can trigger an alternative      //
-//   algorithm using the Markov chain method.                              //
+//   By default the "Markov" chain algorithm is used.                      //
+//   Specify the option "noMarkov" to disable this algorithm               //
 //   Note that by default the source spectrum is replaced by a new spectrum//          //
 //                                                                         //
 //   By default a polymarker object is created and added to the list of    //
@@ -290,10 +290,10 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option, Doub
       background = kFALSE;
       opt.ReplaceAll("nobackground","");
    }
-   Bool_t markov = kFALSE;
-   if (opt.Contains("markov")) {
-      markov = kTRUE;
-      opt.ReplaceAll("markov","");
+   Bool_t markov = kTRUE;
+   if (opt.Contains("nomarkov")) {
+      markov = kFALSE;
+      opt.ReplaceAll("nomarkov","");
    }
    if (dimension == 1) {
       Int_t first = hin->GetXaxis()->GetFirst();
