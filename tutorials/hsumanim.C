@@ -1,8 +1,8 @@
 {
 //
-// This script is a slightly modified version of hsum.C
-// It produces an animated gif file. See comments below
-// It can be run in batch mode too.
+// This script is a slightly modified version of hsum.C.
+// When run in batch mode, it produces an animated gif file.
+
   gROOT->Reset();
 
   c1 = new TCanvas("c1","The HSUM example",200,10,600,400);
@@ -52,13 +52,16 @@
         if (slider) slider->SetRange(0,Float_t(i)/10000.);
         c1->Modified();
         c1->Update();
-        c1->Print("hsumanim.gif+");
+        if (gROOT->IsBatch()) {
+           c1->Print("hsumanim.gif+");
+           printf("i = %d\n", i);
+        }
      }
   }
   slider->SetRange(0,1);
   total->Draw("sameaxis"); // to redraw axis hidden by the fill area
   c1->Modified();
-  c1->Print("hsumanim.gif+");
+  if (gROOT->IsBatch()) c1->Print("hsumanim.gif+");
   
   //You can view the animated file hsumanim.gif with Netscape/IE or mozilla
   
