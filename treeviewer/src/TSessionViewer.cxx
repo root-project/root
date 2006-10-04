@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.75 2006/10/02 13:27:01 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.76 2006/10/02 14:27:25 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -1063,10 +1063,10 @@ void TSessionFrame::Build(TSessionViewer *gui)
 
    frmdataset->AddFrame(frmBut3, new TGLayoutHints(kLHintsLeft | kLHintsCenterY |
          kLHintsExpandY, 5, 5, 5, 0));
-      
+
    fFE->AddFrame(frmdataset, new TGLayoutHints(kLHintsLeft | kLHintsTop |
          kLHintsExpandX | kLHintsExpandY));
-   
+
    // add "Options" tab element
    tf = fTab->AddTab("Options");
    fFD = new TGCompositeFrame(tf, 100, 100, kVerticalFrame);
@@ -1309,7 +1309,7 @@ void TSessionFrame::UpdateListOfDataSets()
          while ((dsetname = (TObjString *)nextdset())) {
             if (!fDataSetTree->FindItemByObj(fDataSetTree->GetFirstItem(), dsetname)) {
                // add the dataset in the tree
-               dsetitem = fDataSetTree->AddItem(fDataSetTree->GetFirstItem(), 
+               dsetitem = fDataSetTree->AddItem(fDataSetTree->GetFirstItem(),
                                         dsetname->GetName(), dsetname);
                // ask for the list of files in the dataset
                TList *dsetfilelist = fViewer->GetActDesc()->fProof->GetDataSet(
@@ -1319,7 +1319,7 @@ void TSessionFrame::UpdateListOfDataSets()
                   while ((dsetfilename = (TFileInfo *)nextdsetfile())) {
                      if (! fDataSetTree->FindItemByObj(dsetitem, dsetfilename)) {
                         // if not already in, add the file name in the tree
-                        fDataSetTree->AddItem(dsetitem, 
+                        fDataSetTree->AddItem(dsetitem,
                            dsetfilename->GetFirstUrl()->GetUrl(),
                            dsetfilename, dseticon, dseticon);
                      }
@@ -1351,7 +1351,7 @@ void TSessionFrame::OnBtnRemoveDSet()
       // Dataset itself
       obj = (TObjString *)item->GetUserData();
    }
-   else if (item->GetParent()->GetParent() == fDataSetTree->GetFirstItem()) { 
+   else if (item->GetParent()->GetParent() == fDataSetTree->GetFirstItem()) {
       // One file of the dataset
       obj = (TObjString *)item->GetParent()->GetUserData();
    }
@@ -1380,7 +1380,7 @@ void TSessionFrame::OnBtnVerifyDSet()
       // Dataset itself
       obj = (TObjString *)item->GetUserData();
    }
-   else if (item->GetParent()->GetParent() == fDataSetTree->GetFirstItem()) { 
+   else if (item->GetParent()->GetParent() == fDataSetTree->GetFirstItem()) {
       // One file of the dataset
       obj = (TObjString *)item->GetParent()->GetUserData();
    }
@@ -1939,6 +1939,8 @@ void TSessionFrame::OnCommandLine()
 //______________________________________________________________________________
 void TSessionFrame::SetLocal(Bool_t local)
 {
+   // Switch widgets status/visibility for local/remote sessions.
+
    if (local) {
       fBtnGetQueries->SetState(kButtonDisabled);
       fBtnShowLog->SetState(kButtonDisabled);
@@ -1958,7 +1960,7 @@ void TSessionFrame::SetLocal(Bool_t local)
 //______________________________________________________________________________
 void TSessionFrame::ShutdownSession()
 {
-   // Shutdown current session
+   // Shutdown current session.
 
    // do nothing if connection in progress
    if (fViewer->IsBusy())
@@ -4410,7 +4412,7 @@ void TSessionViewer::Terminate()
    TIter next(fSessions);
    TSessionDescription *desc = 0;
    while ((desc = (TSessionDescription *)next())) {
-      if (desc->fAttached && desc->fProof && 
+      if (desc->fAttached && desc->fProof &&
           desc->fProof->IsValid())
          desc->fProof->Detach();
    }
@@ -4629,7 +4631,7 @@ void TSessionViewer::ResetSession()
          kMBYes | kMBNo | kMBCancel, &result);
    if (result == kMBYes) {
       // reset the session
-      TVirtualProof::Reset(fActDesc->fAddress.Data(), 
+      TVirtualProof::Reset(fActDesc->fAddress.Data(),
                            fActDesc->fUserName.Data());
       // reset connected flag
       fActDesc->fAttached = kFALSE;
