@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.2 2006/10/05 16:12:43 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.3 2006/10/05 16:36:22 brun Exp $
 // Author:Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -84,7 +84,7 @@
 //                                                                      //
 // Begin_Html                                                           //
 /*
-<img src="gif/TGraphEditor.gif">
+<img src="gif/TFitEditor.gif">
 */
 //End_Html
 //////////////////////////////////////////////////////////////////////////
