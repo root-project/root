@@ -100,7 +100,7 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 #   <cfg_file>          path alternative config file
 #                       [$ROOTSYS/proof/etc/proof.conf]
 #   <user_cfg_opt>      if "yes": enable user private config files at
-#                       $HOME/.proof.conf or $HOME/.<usr_def>, where
+#                       $HOME/.proof.conf or $HOME/.<usr_cfg>, where
 #                       <usr_cfg> is the second argument to
 #                       TProof::Open("<master>","<usr_cfg>") ["no"]
 #   <max_workers>       Maximum number of workers to be assigned to user
@@ -113,7 +113,7 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 #                                     N = 10 (available workers), n = 4:
 #                                     1st (session): 1-4, 2nd: 5-8,
 #                                     3rd: 9,10,1,2, 4th: 3-6, ...
-#                         "random"    random choice (a worker is not
+#                       "random"      random choice (a worker is not
 #                                     assigned twice)
 # xpd.resource static [<cfg_file>] [ucfg:<user_cfg_opt>]  [wmx:<max_workers>] [selopt:<selection_mode>]
 # xpd.resource static ~/.proof.test.conf wmx:2 selopt:random
