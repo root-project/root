@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.1 2006/10/05 15:06:48 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.2 2006/10/05 16:12:43 brun Exp $
 // Author:Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -917,7 +917,8 @@ void TFitEditor::DoFit()
 
    fParentPad->cd();
    fParentPad->GetCanvas()->SetCursor(kWatch);
-   Double_t xmin, xmax;
+   Double_t xmin = 0;
+   Double_t xmax = 0;
    switch (fType) {
       case kObjectHisto: {
          TH1 *h1 = (TH1*)fFitObject;
@@ -1317,7 +1318,8 @@ void TFitEditor::DoSliderXPressed()
    fParentPad->GetCanvas()->FeedbackMode(kFALSE);
    fParentPad->SetLineWidth(1);
    fParentPad->SetLineColor(2);
-   Float_t xleft, xright;
+   Float_t xleft = 0;
+   Double_t xright = 0;
    switch (fType) {
       case kObjectHisto: {
          //hist 1dim
@@ -1359,7 +1361,8 @@ void TFitEditor::DoSliderXMoved()
    // Slot connected to range settings on x-axis. 
    
    Int_t px1,py1,px2,py2;
-   Float_t xleft, xright;
+   Float_t xleft = 0;
+   Double_t xright = 0;
    switch (fType) {
       case kObjectHisto: {
          xleft  = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
