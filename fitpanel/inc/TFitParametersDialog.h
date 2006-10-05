@@ -1,5 +1,5 @@
-// @(#)root/fitpanel:$Name:$:$Id:$
-// Author:Ilka Antcheva, Lorenzo Moneta 03/10/06
+// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.h,v 1.1 2006/10/05 15:06:48 brun Exp $
+// Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************
  * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *

@@ -1,7 +1,7 @@
-// @(#)root/ged:$Name:  $:$Id: LinkDef.h,v 1.0 2003/11/25 
+// @(#)root/fitpanel:$Name:  $:$Id: LinkDef.h,v 1.0 2003/11/25
 
 /*************************************************************************
- * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

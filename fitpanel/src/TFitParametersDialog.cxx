@@ -1,5 +1,5 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.1 2006/10/05 15:06:48 brun Exp $
-// Author:Ilka Antcheva, Lorenzo Moneta 03/10/06
+// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.2 2006/10/05 16:12:43 brun Exp $
+// Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************
  * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
@@ -77,14 +77,14 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       fFunc->GetParLimits(i, fPmin[i], fPmax[i]);
       fPval[i] = fFunc->GetParameter(i);
       fPerr[i] = fFunc->GetParError(i);
-      if (TMath::Abs(fPval[i]) > 1E-16) 
-         fPstp[i] = 0.3*TMath::Abs(fPval[i]); 
-      else 
-         fPstp[i] = 0.1; 
-      if (fPmin[i] >= fPmax[i] ) { 
-         fPmin[i] = fPval[i] - 10*fPstp[i]; 
-         fPmax[i] = fPval[i] + 10*fPstp[i]; 
-      } 
+      if (TMath::Abs(fPval[i]) > 1E-16)
+         fPstp[i] = 0.3*TMath::Abs(fPval[i]);
+      else
+         fPstp[i] = 0.1;
+      if (fPmin[i] >= fPmax[i] ) {
+         fPmin[i] = fPval[i] - 10*fPstp[i];
+         fPmax[i] = fPval[i] + 10*fPstp[i];
+      }
    }
    fParNam = new TGTextEntry*[fNP];
    fParFix = new TGCheckButton*[fNP];
@@ -398,10 +398,10 @@ void TFitParametersDialog::DoBound(Bool_t on)
    fHasChanges = kTRUE;
    for (Int_t i = 0; i < fNP; i++ ) {
       if (id == kBND*fNP+i) {
-         if (fParVal[i]->GetNumber() != 0) { 
-            if (on) 
+         if (fParVal[i]->GetNumber() != 0) {
+            if (on)
                fFunc->SetParLimits(i, fPmin[i], fPmax[i] );
-            else 
+            else
                // free parameters t.b.d
                fFunc->SetParLimits(i, 0.,0. );
          }

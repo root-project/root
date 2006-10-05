@@ -1,8 +1,8 @@
-// @(#)root/ged:$Name:$:$Id:$
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.1 2006/10/05 15:06:48 brun Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -83,9 +83,9 @@ protected:
    TGCheckButton       *fNoDrawing;        // switch on/off 'no drawing' option
    TGCheckButton       *fDrawSame;         // switch on/off fit function drawing
    TGTextButton        *fDrawAdvanced;     // opens a dialog for advanced draw options
-   TGDoubleHSlider     *fSliderX;          // slider to set fit range along x-axis 
-   TGDoubleHSlider     *fSliderY;          // slider to set fit range along y-axis 
-   TGDoubleHSlider     *fSliderZ;          // slider to set fit range along z-axis 
+   TGDoubleHSlider     *fSliderX;          // slider to set fit range along x-axis
+   TGDoubleHSlider     *fSliderY;          // slider to set fit range along y-axis
+   TGDoubleHSlider     *fSliderZ;          // slider to set fit range along z-axis
    TGNumberEntry       *fRobustValue;      // contains robust value for linear fit
    TGRadioButton       *fOptDefault;       // set default printing mode
    TGRadioButton       *fOptVerbose;       // set printing mode to 'Verbose'
@@ -104,7 +104,7 @@ protected:
    TString              fFitOption;        // fitting options
    TString              fDrawOption;       // graphics option for drawing
    TF1                 *fFitFunc;          // function used for fitting
-   
+
    Int_t     fPx1old,
              fPy1old,
              fPx2old,
@@ -123,15 +123,15 @@ public:
    TFitEditor(const TVirtualPad* pad, const TObject *obj);
    virtual ~TFitEditor();
 
-   virtual void   CloseWindow(); 
+   virtual void   CloseWindow();
    virtual void   DoAddtoList();
    virtual void   DoAdvancedOptions();
    virtual void   DoAllWeights1();
    virtual void   DoClose();
    virtual void   DoDrawSame();
    virtual void   DoFit();
-   virtual void   DoEnteredFunction();   
-   virtual void   DoFunction(Int_t sel);   
+   virtual void   DoEnteredFunction();
+   virtual void   DoFunction(Int_t sel);
    virtual void   DoImproveResults();
    virtual void   DoBestErrors();
    virtual void   DoIntegral();
@@ -157,7 +157,7 @@ public:
    virtual void   DoSliderZReleased();
    virtual void   DoUserDialog();
    virtual void   DoUseRange();
-   
+
    virtual void   SetFunction(const char *function);
    virtual void   RecursiveRemove(TObject* obj);
 

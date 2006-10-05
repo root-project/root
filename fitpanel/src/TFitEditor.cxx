@@ -1,8 +1,8 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.3 2006/10/05 16:36:22 brun Exp $
-// Author:Ilka Antcheva, Lorenzo Moneta 10/08/2006
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.4 2006/10/05 17:51:40 brun Exp $
+// Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -112,8 +112,8 @@
 
 
 enum EFitPanel {
-   kFP_FLIST, kFP_GAUS,  kFP_GAUSN, kFP_EXPO,  kFP_LAND,  kFP_LANDN,  
-   kFP_POL0,  kFP_POL1,  kFP_POL2,  kFP_POL3,  kFP_POL4,  kFP_POL5,  
+   kFP_FLIST, kFP_GAUS,  kFP_GAUSN, kFP_EXPO,  kFP_LAND,  kFP_LANDN,
+   kFP_POL0,  kFP_POL1,  kFP_POL2,  kFP_POL3,  kFP_POL4,  kFP_POL5,
    kFP_POL6,  kFP_POL7,  kFP_POL8,  kFP_POL9,  kFP_USER,
    kFP_NONE,  kFP_ADD,   kFP_CONV,  kFP_FILE,  kFP_PARS,  kFP_RBUST,
    kFP_INTEG, kFP_IMERR, kFP_USERG, kFP_ADDLS, kFP_ALLE1, kFP_IFITR, kFP_NOCHI,
@@ -141,10 +141,10 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    fFitOption   ("R"),
    fDrawOption  (""),
    fFitFunc     (0)
-  
+
 {
    // Constructor of fit editor.
-   
+
    TString name = obj->GetName();
    name.Append("::");
    name.Append(obj->ClassName());
@@ -166,12 +166,12 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    fTab->Associate(this);
    fTabContainer = fTab->AddTab("General");
    fGeneral = new TGCompositeFrame(fTabContainer, 10, 10, kVerticalFrame);
-   fTabContainer->AddFrame(fGeneral, new TGLayoutHints(kLHintsTop | 
+   fTabContainer->AddFrame(fGeneral, new TGLayoutHints(kLHintsTop |
                                                        kLHintsExpandX,
                                                        5, 5, 2, 2));
 
    TGGroupFrame *gf1 = new TGGroupFrame(fGeneral, "Function", kFitWidth);
-   TGCompositeFrame *tf1 = new TGCompositeFrame(gf1, 350, 26, 
+   TGCompositeFrame *tf1 = new TGCompositeFrame(gf1, 350, 26,
                                                 kHorizontalFrame);
    TGVerticalFrame *tf11 = new TGVerticalFrame(tf1);
    TGLabel *label1 = new TGLabel(tf11,"Predefined:");
@@ -179,7 +179,7 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    fFuncList = BuildFunctionList(tf11, kFP_FLIST);
    fFuncList->Resize(100, 20);
    fFuncList->Select(1, kFALSE);
-   
+
    TGListBox *lb = fFuncList->GetListBox();
    lb->Resize(lb->GetWidth(), 200);
    tf11->AddFrame(fFuncList, new TGLayoutHints(kLHintsNormal, 0, 0, 5, 0));
@@ -197,54 +197,54 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    fConv->SetToolTipText("Convolution (not implemented yet)");
    fConv->SetState(kButtonDisabled);
    bgr->SetLayoutHints(new TGLayoutHints(kLHintsLeft,0,5,3,-10),fNone);
-   bgr->SetLayoutHints(new TGLayoutHints(kLHintsLeft,10,5,3,-10),fAdd);   
-   bgr->SetLayoutHints(new TGLayoutHints(kLHintsLeft,10,0,3,-10),fConv);   
+   bgr->SetLayoutHints(new TGLayoutHints(kLHintsLeft,10,5,3,-10),fAdd);
+   bgr->SetLayoutHints(new TGLayoutHints(kLHintsLeft,10,0,3,-10),fConv);
    bgr->Show();
    bgr->ChangeOptions(kFitWidth | kHorizontalFrame);
    tf1->AddFrame(bgr, new TGLayoutHints(kLHintsNormal, 15, 0, 3, 0));
 
    gf1->AddFrame(tf1, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
 
-   TGCompositeFrame *tf2 = new TGCompositeFrame(gf1, 350, 26, 
+   TGCompositeFrame *tf2 = new TGCompositeFrame(gf1, 350, 26,
                                                 kHorizontalFrame);
-   fEnteredFunc = new TGTextEntry(tf2, new TGTextBuffer(50), kFP_FILE); 
+   fEnteredFunc = new TGTextEntry(tf2, new TGTextBuffer(50), kFP_FILE);
    fEnteredFunc->SetMaxLength(250);
    fEnteredFunc->SetAlignment(kTextLeft);
    fEnteredFunc->SetToolTipText("Enter file_name/function_name or a function expression");
    fEnteredFunc->Resize(250,fEnteredFunc->GetDefaultHeight());
-   tf2->AddFrame(fEnteredFunc, new TGLayoutHints(kLHintsLeft    | 
-                                                 kLHintsCenterY | 
+   tf2->AddFrame(fEnteredFunc, new TGLayoutHints(kLHintsLeft    |
+                                                 kLHintsCenterY |
                                                  kLHintsExpandX, 2, 2, 2, 2));
-   gf1->AddFrame(tf2, new TGLayoutHints(kLHintsNormal | 
+   gf1->AddFrame(tf2, new TGLayoutHints(kLHintsNormal |
                                         kLHintsExpandX, 0, 0, 2, 0));
 
    TGHorizontalFrame *s1 = new TGHorizontalFrame(gf1);
    TGLabel *label21 = new TGLabel(s1, "Selected: ");
-   s1->AddFrame(label21, new TGLayoutHints(kLHintsNormal | 
+   s1->AddFrame(label21, new TGLayoutHints(kLHintsNormal |
                                            kLHintsCenterY, 2, 2, 2, 0));
    TGHorizontal3DLine *hlines = new TGHorizontal3DLine(s1);
    s1->AddFrame(hlines, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX));
    gf1->AddFrame(s1, new TGLayoutHints(kLHintsExpandX));
 
-   TGCompositeFrame *tf4 = new TGCompositeFrame(gf1, 350, 26, 
+   TGCompositeFrame *tf4 = new TGCompositeFrame(gf1, 350, 26,
                                                 kHorizontalFrame);
-   TGTextLBEntry *txt = (TGTextLBEntry *)fFuncList->GetSelectedEntry(); 
+   TGTextLBEntry *txt = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
    fSelLabel = new TGLabel(tf4, Form("%s", txt->GetTitle()));
-   tf4->AddFrame(fSelLabel, new TGLayoutHints(kLHintsNormal | 
+   tf4->AddFrame(fSelLabel, new TGLayoutHints(kLHintsNormal |
                                               kLHintsCenterY, 0, 6, 2, 0));
 
    gClient->GetColorByName("#336666", color);
    fSelLabel->SetTextColor(color, kFALSE);
-   TGCompositeFrame *tf5 = new TGCompositeFrame(tf4, 120, 20, 
+   TGCompositeFrame *tf5 = new TGCompositeFrame(tf4, 120, 20,
                                                 kHorizontalFrame | kFixedWidth);
    fSetParam = new TGTextButton(tf5, "Set Parameters...", kFP_PARS);
-   tf5->AddFrame(fSetParam, new TGLayoutHints(kLHintsRight   | 
+   tf5->AddFrame(fSetParam, new TGLayoutHints(kLHintsRight   |
                                               kLHintsCenterY |
                                               kLHintsExpandX));
    fSetParam->SetToolTipText("Open a dialog for parameter(s) settings");
-   tf4->AddFrame(tf5, new TGLayoutHints(kLHintsRight | 
+   tf4->AddFrame(tf5, new TGLayoutHints(kLHintsRight |
                                         kLHintsTop, 5, 0, 2, 2));
-   gf1->AddFrame(tf4, new TGLayoutHints(kLHintsNormal | 
+   gf1->AddFrame(tf4, new TGLayoutHints(kLHintsNormal |
                                              kLHintsExpandX, 5, 0, 0, 0));
 
    fGeneral->AddFrame(gf1, new TGLayoutHints(kLHintsExpandX, 5, 5, 0, 0));
@@ -256,12 +256,12 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    // 'method' sub-group
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
    TGLabel *label4 = new TGLabel(h1, "Method");
-   h1->AddFrame(label4, new TGLayoutHints(kLHintsNormal | 
+   h1->AddFrame(label4, new TGLayoutHints(kLHintsNormal |
                                           kLHintsCenterY, 2, 2, 0, 0));
    TGHorizontal3DLine *hline1 = new TGHorizontal3DLine(h1);
    h1->AddFrame(hline1, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX));
    gf->AddFrame(h1, new TGLayoutHints(kLHintsExpandX));
-   
+
    TGHorizontalFrame *h2 = new TGHorizontalFrame(gf);
    TGVerticalFrame *v1 = new TGVerticalFrame(h2);
    fMethodList = BuildMethodList(v1, kFP_MLIST);
@@ -293,12 +293,12 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    fLinearFit->Associate(this);
    fLinearFit->SetToolTipText("Perform Linear fitter if selected");
    v1->AddFrame(fLinearFit, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
-   
+
    TGHorizontalFrame *v1h = new TGHorizontalFrame(v1);
    TGLabel *label41 = new TGLabel(v1h, "Robust:");
-   v1h->AddFrame(label41, new TGLayoutHints(kLHintsNormal | 
+   v1h->AddFrame(label41, new TGLayoutHints(kLHintsNormal |
                                             kLHintsCenterY, 25, 5, 5, 2));
-   fRobustValue = new TGNumberEntry(v1h, 1., 5, kFP_RBUST, 
+   fRobustValue = new TGNumberEntry(v1h, 1., 5, kFP_RBUST,
                                     TGNumberFormat::kNESRealTwo,
                                     TGNumberFormat::kNEAPositive,
                                     TGNumberFormat::kNELLimitMinMax,0.,1.);
@@ -314,10 +314,10 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    h2->AddFrame(v1, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    TGVerticalFrame *v2 = new TGVerticalFrame(h2);
-   TGCompositeFrame *v21 = new TGCompositeFrame(v2, 120, 20, 
+   TGCompositeFrame *v21 = new TGCompositeFrame(v2, 120, 20,
                                                 kHorizontalFrame | kFixedWidth);
    fUserButton = new TGTextButton(v21, "User-Defined...", kFP_MUSR);
-   v21->AddFrame(fUserButton, new TGLayoutHints(kLHintsRight   | 
+   v21->AddFrame(fUserButton, new TGLayoutHints(kLHintsRight   |
                                                 kLHintsCenterY |
                                                 kLHintsExpandX));
    fUserButton->SetToolTipText("Open a dialog for entering a user-defined method");
@@ -335,7 +335,7 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    // 'fit option' sub-group
    TGHorizontalFrame *h3 = new TGHorizontalFrame(gf);
    TGLabel *label5 = new TGLabel(h3, "Fit Options");
-   h3->AddFrame(label5, new TGLayoutHints(kLHintsNormal | 
+   h3->AddFrame(label5, new TGLayoutHints(kLHintsNormal |
                                           kLHintsCenterY, 2, 2, 0, 0));
    TGHorizontal3DLine *hline2 = new TGHorizontal3DLine(h3);
    h3->AddFrame(hline2, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX));
@@ -347,7 +347,7 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    fIntegral->Associate(this);
    fIntegral->SetToolTipText("'I'- use integral of function instead of value in bin center");
    v3->AddFrame(fIntegral, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
-   
+
    fBestErrors = new TGCheckButton(v3, "Best errors", kFP_IMERR);
    fBestErrors->Associate(this);
    fBestErrors->SetToolTipText("'E'- better errors estimation using Minos technique");
@@ -384,7 +384,7 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    // 'draw option' sub-group
    TGHorizontalFrame *h5 = new TGHorizontalFrame(gf);
    TGLabel *label6 = new TGLabel(h5, "Draw Options");
-   h5->AddFrame(label6, new TGLayoutHints(kLHintsNormal | 
+   h5->AddFrame(label6, new TGLayoutHints(kLHintsNormal |
                                           kLHintsCenterY, 2, 2, 2, 2));
    TGHorizontal3DLine *hline3 = new TGHorizontal3DLine(h5);
    h5->AddFrame(hline3, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX));
@@ -411,10 +411,10 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    h6->AddFrame(v5, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    TGVerticalFrame *v6 = new TGVerticalFrame(h6);
-   TGCompositeFrame *v61 = new TGCompositeFrame(v6, 120, 20, 
+   TGCompositeFrame *v61 = new TGCompositeFrame(v6, 120, 20,
                                                 kHorizontalFrame | kFixedWidth);
    fDrawAdvanced = new TGTextButton(v61, "Advanced...", kFP_DADVB);
-   v61->AddFrame(fDrawAdvanced, new TGLayoutHints(kLHintsRight   | 
+   v61->AddFrame(fDrawAdvanced, new TGLayoutHints(kLHintsRight   |
                                                   kLHintsCenterY |
                                                   kLHintsExpandX));
    fDrawAdvanced->SetToolTipText("Open a dialog for advanced draw options");
@@ -429,7 +429,7 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    // 'draw option' sub-group
    TGHorizontalFrame *h7 = new TGHorizontalFrame(gf);
    TGLabel *label7 = new TGLabel(h7, "Print Options");
-   h7->AddFrame(label7, new TGLayoutHints(kLHintsNormal | 
+   h7->AddFrame(label7, new TGLayoutHints(kLHintsNormal |
                                           kLHintsCenterY, 2, 2, 2, 2));
    TGHorizontal3DLine *hline4 = new TGHorizontal3DLine(h7);
    h7->AddFrame(hline4, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX));
@@ -455,7 +455,7 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
 
    gf->AddFrame(h8, new TGLayoutHints(kLHintsExpandX, 20, 0, 1, 1));
 
-   fGeneral->AddFrame(gf, new TGLayoutHints(kLHintsExpandX | 
+   fGeneral->AddFrame(gf, new TGLayoutHints(kLHintsExpandX |
                                             kLHintsExpandY, 5, 5, 0, 0));
    // sliders
    switch (fType) {
@@ -481,11 +481,11 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
          break;
       }
    }
-   
+
    if (fDim > 0) {
       TGHorizontalFrame *sf1 = new TGHorizontalFrame(fGeneral);
       TGLabel *label7 = new TGLabel(sf1, "X:");
-      sf1->AddFrame(label7, new TGLayoutHints(kLHintsLeft | 
+      sf1->AddFrame(label7, new TGLayoutHints(kLHintsLeft |
                                               kLHintsCenterY, 0, 5, 0, 0));
       fSliderX = new TGDoubleHSlider(sf1, 1, 0);
       sf1->AddFrame(fSliderX, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
@@ -547,7 +547,7 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    if (fDim > 1) {
       TGHorizontalFrame *sf2 = new TGHorizontalFrame(fGeneral);
       TGLabel *label8 = new TGLabel(sf2, "Y:");
-      sf2->AddFrame(label8, new TGLayoutHints(kLHintsLeft | 
+      sf2->AddFrame(label8, new TGLayoutHints(kLHintsLeft |
                                               kLHintsCenterY, 0, 5, 0, 0));
       fSliderY = new TGDoubleHSlider(sf2, 1, 0);
       fSliderY->SetScale(5);
@@ -589,7 +589,7 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    if (fDim > 2) {
       TGHorizontalFrame *sf3 = new TGHorizontalFrame(fGeneral);
       TGLabel *label9 = new TGLabel(sf3, "Z:");
-      sf3->AddFrame(label9, new TGLayoutHints(kLHintsLeft | 
+      sf3->AddFrame(label9, new TGLayoutHints(kLHintsLeft |
                                               kLHintsCenterY, 0, 5, 0, 0));
       fSliderZ = new TGDoubleHSlider(sf3, 1, 0);
       fSliderZ->SetScale(5);
@@ -632,30 +632,30 @@ TFitEditor::TFitEditor(const TVirtualPad* pad, const TObject *obj) :
    // 'Minimization' tab
    fTabContainer = fTab->AddTab("Minimization");
    fMinimization = new TGCompositeFrame(fTabContainer, 10, 10, kVerticalFrame);
-   fTabContainer->AddFrame(fMinimization, new TGLayoutHints(kLHintsTop | 
-                                                            kLHintsExpandX, 
+   fTabContainer->AddFrame(fMinimization, new TGLayoutHints(kLHintsTop |
+                                                            kLHintsExpandX,
                                                             5, 5, 2, 2));
    fTab->SetEnabled(1, kFALSE);
-   
+
    TGHorizontalFrame *cf1 = new TGHorizontalFrame(this, 250, 20, kFixedWidth);
    cf1->SetCleanup(kDeepCleanup);
    fFitButton = new TGTextButton(cf1, "&Fit", kFP_FIT);
    fFitButton->Associate(this);
-   cf1->AddFrame(fFitButton, new TGLayoutHints(kLHintsTop | 
+   cf1->AddFrame(fFitButton, new TGLayoutHints(kLHintsTop |
                                                kLHintsExpandX, 2, 2, 2, 2));
 
    fResetButton = new TGTextButton(cf1, "&Reset", kFP_RESET);
    fResetButton->Associate(this);
-   cf1->AddFrame(fResetButton, new TGLayoutHints(kLHintsTop | 
+   cf1->AddFrame(fResetButton, new TGLayoutHints(kLHintsTop |
                                                  kLHintsExpandX, 3, 2, 2, 2));
 
    fCloseButton = new TGTextButton(cf1, "&Close", kFP_CLOSE);
    fCloseButton->Associate(this);
-   cf1->AddFrame(fCloseButton, new TGLayoutHints(kLHintsTop | 
+   cf1->AddFrame(fCloseButton, new TGLayoutHints(kLHintsTop |
                                                  kLHintsExpandX, 3, 2, 2, 2));
-   AddFrame(cf1, new TGLayoutHints(kLHintsBottom | 
+   AddFrame(cf1, new TGLayoutHints(kLHintsBottom |
                                    kLHintsRight, 0, 5, 5, 5));
-   
+
    MapSubwindows();
    TGDimension size = GetDefaultSize();
    Resize(size);
@@ -690,9 +690,9 @@ TFitEditor::~TFitEditor()
 void TFitEditor::Init()
 {
    // Initialize the user interface.
-   
+
    // list of predefined functions
-   fFuncList->Connect("Selected(Int_t)", "TFitEditor", this, "DoFunction(Int_t)"); 
+   fFuncList->Connect("Selected(Int_t)", "TFitEditor", this, "DoFunction(Int_t)");
    // entered formula or function name
    fEnteredFunc->Connect("ReturnPressed()", "TFitEditor", this, "DoEnteredFunction()");
    // set parameters dialog
@@ -701,21 +701,21 @@ void TFitEditor::Init()
    fNone->Connect("Toggled(Bool_t)","TFitEditor", this, "DoNoOperation(Bool_t)");
    fAdd->Connect("Toggled(Bool_t)","TFitEditor", this, "DoAddition(Bool_t)");
 
-   // fit options 
+   // fit options
    fIntegral->Connect("Toggled(Bool_t)","TFitEditor",this,"DoIntegral()");
    fBestErrors->Connect("Toggled(Bool_t)","TFitEditor",this,"DoBestErrors()");
    fUseRange->Connect("Toggled(Bool_t)","TFitEditor",this,"DoUseRange()");
    fAdd2FuncList->Connect("Toggled(Bool_t)","TFitEditor",this,"DoAddtoList()");
    fAllWeights1->Connect("Toggled(Bool_t)","TFitEditor",this,"DoAllWeights1()");
    fImproveResults->Connect("Toggled(Bool_t)","TFitEditor",this,"DoImproveResults()");
-   
+
    // linear fit
    fLinearFit->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLinearFit()");
    fNoChi2->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoChi2()");
    fRobustValue->Connect("ValueSet(Long_t)", "TFitEditor", this, "DoRobust()");
-   (fRobustValue->GetNumberEntry())->Connect("ReturnPressed()", "TFitEditor", 
+   (fRobustValue->GetNumberEntry())->Connect("ReturnPressed()", "TFitEditor",
                                               this, "DoRobust()");
-   
+
    // draw options
    fNoStoreDrawing->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoStoreDrawing()");
    fNoDrawing->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoDrawing()");
@@ -727,36 +727,36 @@ void TFitEditor::Init()
    fOptQuiet->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
 
    // fit method
-   fMethodList->Connect("Selected(Int_t)", "TFitEditor", this, "DoMethod(Int_t)"); 
+   fMethodList->Connect("Selected(Int_t)", "TFitEditor", this, "DoMethod(Int_t)");
 
    // fit, reset, close buttons
    fFitButton->Connect("Clicked()", "TFitEditor", this, "DoFit()");
    fResetButton->Connect("Clicked()", "TFitEditor", this, "DoReset()");
    fCloseButton->Connect("Clicked()", "TFitEditor", this, "DoClose()");
-   
+
    // user method button
    fUserButton->Connect("Clicked()", "TFitEditor", this, "DoUserDialog()");
    // advanced draw options
    fDrawAdvanced->Connect("Clicked()", "TFitEditor", this, "DoAdvancedOptions()");
-   
+
    // range sliders
 //   fXmin = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
 //   fXmax = fXaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
 
    if (fDim > 0) {
-      fSliderX->Connect("PositionChanged()","TFitEditor",this, "DoSliderXMoved()");  
-      fSliderX->Connect("Pressed()","TFitEditor",this, "DoSliderXPressed()"); 
-      fSliderX->Connect("Released()","TFitEditor",this, "DoSliderXReleased()");     
+      fSliderX->Connect("PositionChanged()","TFitEditor",this, "DoSliderXMoved()");
+      fSliderX->Connect("Pressed()","TFitEditor",this, "DoSliderXPressed()");
+      fSliderX->Connect("Released()","TFitEditor",this, "DoSliderXReleased()");
    }
    if (fDim > 1) {
-      fSliderY->Connect("PositionChanged()","TFitEditor",this, "DoSliderYMoved()");  
-      fSliderY->Connect("Pressed()","TFitEditor",this, "DoSliderYPressed()"); 
-      fSliderY->Connect("Released()","TFitEditor",this, "DoSliderYReleased()");     
+      fSliderY->Connect("PositionChanged()","TFitEditor",this, "DoSliderYMoved()");
+      fSliderY->Connect("Pressed()","TFitEditor",this, "DoSliderYPressed()");
+      fSliderY->Connect("Released()","TFitEditor",this, "DoSliderYReleased()");
    }
    if (fDim > 2) {
-      fSliderZ->Connect("PositionChanged()","TFitEditor",this, "DoSliderZMoved()");  
-      fSliderZ->Connect("Pressed()","TFitEditor",this, "DoSliderZPressed()"); 
-      fSliderZ->Connect("Released()","TFitEditor",this, "DoSliderZReleased()");     
+      fSliderZ->Connect("PositionChanged()","TFitEditor",this, "DoSliderZMoved()");
+      fSliderZ->Connect("Pressed()","TFitEditor",this, "DoSliderZPressed()");
+      fSliderZ->Connect("Released()","TFitEditor",this, "DoSliderZReleased()");
    }
    if (!gROOT->GetSelectedPrimitive())
       gROOT->SetSelectedPrimitive(fFitObject);
@@ -840,7 +840,7 @@ void TFitEditor::CloseWindow()
 //______________________________________________________________________________
 void TFitEditor::RecursiveRemove(TObject* obj)
 {
-   // When obj is deleted, clear fFitObject if fFitObject = obj.  
+   // When obj is deleted, clear fFitObject if fFitObject = obj.
 
    if (obj == fFitObject) fFitObject = 0;
 }
@@ -893,7 +893,7 @@ void TFitEditor::DoClose()
 void TFitEditor::DoDrawSame()
 {
    // Slot connected to 'same' draw option.
-   
+
    fFitOption.ToUpper();
    if (fDrawOption.Contains("SAME"))
       return;
@@ -910,7 +910,7 @@ void TFitEditor::DoFit()
    if (!fParentPad) return;
    if (!fFitFunc) {
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                   "Error", Form("Function with name '%s' does not exist", 
+                   "Error", Form("Function with name '%s' does not exist",
                    fFunction.Data()), kMBIconExclamation, kMBClose, 0);
       return;
       }
@@ -941,21 +941,21 @@ void TFitEditor::DoFit()
             gxmax = gx[npoints-1];
             Double_t err0 = gr->GetErrorX(0);
             Double_t errn = gr->GetErrorX(npoints-1);
-            if (err0 > 0) 
+            if (err0 > 0)
                gxmin -= 2*err0;
-            if (errn > 0) 
+            if (errn > 0)
                gxmax += 2*errn;
             for (Int_t i=0; i<npoints; i++) {
-               if (gx[i] < xmin) 
+               if (gx[i] < xmin)
                   gxmin = gx[i];
-               if (gx[i] > xmax) 
+               if (gx[i] > xmax)
                   gxmax = gx[i];
             }
             if (xmin < gxmin) xmin = gxmin;
             if (xmax > gxmax) xmax = gxmax;
          }
          fFitFunc->SetRange(xmin,xmax);
-         gr->Fit(fFitFunc, (char*)fFitOption.Data(), 
+         gr->Fit(fFitFunc, (char*)fFitOption.Data(),
                 (char*)fDrawOption.Data());
          break;
       }
@@ -994,7 +994,7 @@ Int_t TFitEditor::CheckFunctionString(const char *fname)
 void TFitEditor::DoAddition(Bool_t on)
 {
    // Slot connected to addition of predefined functions.
-   
+
    static Bool_t first = kFALSE;
    TString s = fEnteredFunc->GetText();
    if (on) {
@@ -1014,11 +1014,11 @@ void TFitEditor::DoAddition(Bool_t on)
 void TFitEditor::DoNoOperation(Bool_t on)
 {
    // Slot connected to NOP of predefined functions.
-   
+
    TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
    if (on) {
       fEnteredFunc->SetText(te->GetTitle());
-   }    
+   }
    fFunction = fEnteredFunc->GetText();
    fSelLabel->SetText(fFunction.Data());
    ((TGCompositeFrame *)fSelLabel->GetParent())->Layout();
@@ -1040,11 +1040,11 @@ void TFitEditor::DoFunction(Int_t)
       fEnteredFunc->SetText(s.Data());
    }
    fFunction = fEnteredFunc->GetText();
-   
+
    // create TF1 with the passed string. Delete previous one if existing
-   if (fFitFunc) delete fFitFunc; 
+   if (fFitFunc) delete fFitFunc;
    fFitFunc = new TF1("fitFunc",fFunction.Data(),fXmin,fXmax);
-   
+
    if (fFunction.Contains("pol"))
       fLinearFit->SetState(kButtonDown);
    else
@@ -1072,13 +1072,13 @@ void TFitEditor::DoEnteredFunction()
    if (ok != 0) {
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
                    "Error...", "Verify the entered function string!",
-                   kMBIconStop,kMBOk, 0);   
+                   kMBIconStop,kMBOk, 0);
    }
-   
+
    fFunction = fEnteredFunc->GetText();
-   if (fFitFunc) delete fFitFunc; 
+   if (fFitFunc) delete fFitFunc;
    fFitFunc = new TF1("fitFunc",fFunction.Data(),fXmin,fXmax);
-   
+
    fSelLabel->SetText(fFunction.Data());
    ((TGCompositeFrame *)fSelLabel->GetParent())->Layout();
    if (fFunction.Contains("++")) {
@@ -1098,7 +1098,7 @@ void TFitEditor::DoImproveResults()
 
    if (fImproveResults->GetState() == kButtonDown)
       fFitOption += 'M';
-   else if (fFitOption.Contains('M')) 
+   else if (fFitOption.Contains('M'))
       fFitOption.ReplaceAll('M', "");
 }
 
@@ -1109,7 +1109,7 @@ void TFitEditor::DoBestErrors()
 
    if (fBestErrors->GetState() == kButtonDown)
       fFitOption += 'E';
-   else if (fFitOption.Contains('E')) 
+   else if (fFitOption.Contains('E'))
       fFitOption.ReplaceAll('E', "");
 }
 
@@ -1120,7 +1120,7 @@ void TFitEditor::DoIntegral()
 
    if (fIntegral->GetState() == kButtonDown)
       fFitOption += 'I';
-   else if (fFitOption.Contains('I')) 
+   else if (fFitOption.Contains('I'))
       fFitOption.ReplaceAll('I', "");
 }
 
@@ -1144,9 +1144,9 @@ void TFitEditor::DoLinearFit()
 void TFitEditor::DoMethod(Int_t id)
 {
    // Slot connected to fit method settings.
-   
+
    if (id == kFP_MCHIS) {
-      if (fFitOption.Contains('L')) 
+      if (fFitOption.Contains('L'))
          fFitOption.ReplaceAll('L', "");
    } else {
       fFitOption += 'L';
@@ -1160,9 +1160,9 @@ void TFitEditor::DoNoChi2()
 
    if (fNoChi2->GetState() == kButtonDown)
       fFitOption += 'C';
-   else if (fFitOption.Contains('C')) 
+   else if (fFitOption.Contains('C'))
       fFitOption.ReplaceAll('C', "");
-   
+
    if (fLinearFit->GetState() == kButtonUp)
       fLinearFit->SetState(kButtonDown);
 }
@@ -1174,7 +1174,7 @@ void TFitEditor::DoNoDrawing()
 
    if (fNoDrawing->GetState() == kButtonDown)
       fFitOption += '0';
-   else if (fFitOption.Contains('0')) 
+   else if (fFitOption.Contains('0'))
       fFitOption.ReplaceAll('0', "");
 }
 
@@ -1185,9 +1185,9 @@ void TFitEditor::DoNoStoreDrawing()
 
    if (fNoStoreDrawing->GetState() == kButtonDown)
       fFitOption += 'N';
-   else if (fFitOption.Contains('N')) 
+   else if (fFitOption.Contains('N'))
       fFitOption.ReplaceAll('N', "");
-   
+
    if (fNoDrawing->GetState() == kButtonUp)
       fNoDrawing->SetState(kButtonDown);
 }
@@ -1285,7 +1285,7 @@ void TFitEditor::DoRobust()
    // Slot connected to robust setting of linear fit.
 
    if (fType != kObjectGraph) return;
-   
+
    fRobustValue->SetState(kTRUE);
    if (fFitOption.Contains("ROB")) {
       Int_t pos = fFitOption.Index("=");
@@ -1304,14 +1304,14 @@ void TFitEditor::DoSetParameters()
       printf("SetParamters - create fit function %s\n",fFunction.Data());
       fFitFunc = new TF1("fitFunc",Form("%s",fFunction.Data()), fXmin, fXmax);
    }
-   new TFitParametersDialog(gClient->GetDefaultRoot(), GetMainFrame(), 
+   new TFitParametersDialog(gClient->GetDefaultRoot(), GetMainFrame(),
                             fFitFunc, fParentPad, fXmin, fXmax);
 }
 
 //______________________________________________________________________________
 void TFitEditor::DoSliderXPressed()
 {
-   // Slot connected to range settings on x-axis. 
+   // Slot connected to range settings on x-axis.
 
    if (!fParentPad) return;
    fParentPad->cd();
@@ -1358,8 +1358,8 @@ void TFitEditor::DoSliderXPressed()
 //______________________________________________________________________________
 void TFitEditor::DoSliderXMoved()
 {
-   // Slot connected to range settings on x-axis. 
-   
+   // Slot connected to range settings on x-axis.
+
    Int_t px1,py1,px2,py2;
    Float_t xleft = 0;
    Double_t xright = 0;
@@ -1367,7 +1367,7 @@ void TFitEditor::DoSliderXMoved()
       case kObjectHisto: {
          xleft  = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
          xright = fXaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
-         break; 
+         break;
       }
       case kObjectGraph: {
          // graph
@@ -1421,7 +1421,7 @@ void TFitEditor::DoSliderXMoved()
 //______________________________________________________________________________
 void TFitEditor::DoSliderXReleased()
 {
-   // Slot connected to range settings on x-axis. 
+   // Slot connected to range settings on x-axis.
 
    fParentPad->Modified();
    fParentPad->Update();
@@ -1430,7 +1430,7 @@ void TFitEditor::DoSliderXReleased()
 //______________________________________________________________________________
 void TFitEditor::DoSliderYPressed()
 {
-   // Slot connected to range settings on y-axis. 
+   // Slot connected to range settings on y-axis.
 
    switch (fType) {
       case kObjectHisto: {
@@ -1472,7 +1472,7 @@ void TFitEditor::DoSliderYPressed()
 //______________________________________________________________________________
 void TFitEditor::DoSliderYMoved()
 {
-   // Slot connected to range settings on y-axis. 
+   // Slot connected to range settings on y-axis.
 
    switch (fType) {
       case kObjectHisto: {
@@ -1519,7 +1519,7 @@ void TFitEditor::DoSliderYMoved()
 //______________________________________________________________________________
 void TFitEditor::DoSliderYReleased()
 {
-   // Slot connected to range settings on y-axis. 
+   // Slot connected to range settings on y-axis.
 
    fParentPad->Modified();
    fParentPad->Update();
@@ -1528,21 +1528,21 @@ void TFitEditor::DoSliderYReleased()
 //______________________________________________________________________________
 void TFitEditor::DoSliderZPressed()
 {
-   // Slot connected to range settings on z-axis. 
-   
+   // Slot connected to range settings on z-axis.
+
 }
 
 //______________________________________________________________________________
 void TFitEditor::DoSliderZMoved()
 {
-   // Slot connected to range settings on z-axis. 
+   // Slot connected to range settings on z-axis.
 
 }
 
 //______________________________________________________________________________
 void TFitEditor::DoSliderZReleased()
 {
-   // Slot connected to range settings on z-axis. 
+   // Slot connected to range settings on z-axis.
 
 }
 
