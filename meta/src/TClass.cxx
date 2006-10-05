@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.201 2006/09/28 23:29:00 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.202 2006/09/25 13:27:35 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1437,10 +1437,12 @@ TClass *TClass::GetBaseClass(const TClass *cl)
 }
 
 //______________________________________________________________________________
-Int_t TClass::GetBaseClassOffset(const TClass *cl)
+Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
 {
    // Return data member offset to the base class "cl".
    // Returns -1 in case "cl" is not a base class.
+   // Returns -2 if cl is a base class, but we can't find the offset
+   // because it's virtual.
    // Takes care of multiple inheritance.
 
    // check if class name itself is equal to classname
@@ -1460,30 +1462,13 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
             TStreamerBase *base = (TStreamerBase*)element;
             TClass *baseclass = base->GetClassPointer();
             if (!baseclass) return -1;
-            Int_t subOffset = baseclass->GetBaseClassOffset(cl);
+            Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
+            if (subOffset == -2) return -2;
             if (subOffset != -1) return offset+subOffset;
             offset += baseclass->Size();
          }
       }
       return -1;
-   }
-
-   // Using GetListOfBases doesn't work with virtual inheritance,
-   // because it only includes direct bases.
-   if (cl->GetClassInfo()) {
-      Long_t base_tagnum = cl->GetClassInfo()->Tagnum();
-      G__BaseClassInfo t(*GetClassInfo());
-      while (t.Next(0)) {
-         if (t.Tagnum() == base_tagnum) {
-            if ((t.Property() & G__BIT_ISVIRTUALBASE) != 0) {
-               Warning ("GetBaseClassOffset",
-                        "can't handle virtual base class %s of %s",
-                        cl->GetName(), GetName());
-               break;
-            }
-            return t.Offset();
-         }
-      }
    }
 
    TClass     *c;
@@ -1502,13 +1487,45 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
       //use kTRUE.
       c = inh->GetClassPointer(kTRUE); // kFALSE);
       if (c) {
-         if (cl == c) return inh->GetDelta();
-         off = c->GetBaseClassOffset(cl);
+         if (cl == c) {
+            if ((inh->Property() & G__BIT_ISVIRTUALBASE) != 0)
+               return -2;
+            return inh->GetDelta();
+         }
+         off = c->GetBaseClassOffsetRecurse(cl);
+         if (off == -2) return -2;
          if (off != -1) return off + inh->GetDelta();
       }
       lnk = lnk->Next();
    }
    return -1;
+}
+
+//______________________________________________________________________________
+Int_t TClass::GetBaseClassOffset(const TClass *cl)
+{
+   // Return data member offset to the base class "cl".
+   // Returns -1 in case "cl" is not a base class.
+   // Takes care of multiple inheritance.
+
+   Int_t offset = GetBaseClassOffsetRecurse (cl);
+   if (offset == -2) {
+      // Can we get the offset from CINT?
+      if (cl->GetClassInfo()) {
+         Long_t base_tagnum = cl->GetClassInfo()->Tagnum();
+         G__BaseClassInfo t(*GetClassInfo());
+         while (t.Next(0)) {
+            if (t.Tagnum() == base_tagnum) {
+               if ((t.Property() & G__BIT_ISVIRTUALBASE) != 0) {
+                  break;
+               }
+               return t.Offset();
+            }
+         }
+      }
+      offset = -1;
+   }
+   return offset;
 }
 
 //______________________________________________________________________________

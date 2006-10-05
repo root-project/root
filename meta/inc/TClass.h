@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.66 2006/08/04 20:58:52 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.67 2006/09/25 13:27:35 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -121,6 +121,7 @@ private:
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *GetClassMethod(const char *name, const char *signature);
+   Int_t              GetBaseClassOffsetRecurse(const TClass *base);
    TStreamerInfo     *GetCurrentStreamerInfo() {
       if (fCurrentInfo) return fCurrentInfo;
       else return (fCurrentInfo=(TStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
