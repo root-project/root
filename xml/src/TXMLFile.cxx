@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.21 2006/06/23 06:25:59 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.22 2006/06/27 14:36:28 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -286,7 +286,7 @@ void TXMLFile::InitXmlFile(Bool_t create)
    fClassIndex->Reset(0);
 
    if (create) {
-      fDoc = fXML->NewDoc(0);
+      fDoc = fXML->NewDoc();
       XMLNodePointer_t fRootNode = fXML->NewChild(0, 0, xmlio::Root, 0);
       fXML->DocSetRootElement(fDoc, fRootNode);
    } else {
@@ -582,8 +582,8 @@ Bool_t TXMLFile::ReadFromFile()
    if (fDoc==0) return kFALSE;
 
    XMLNodePointer_t fRootNode = fXML->DocGetRootElement(fDoc);
-
-   if (fRootNode==0) {
+   
+   if ((fRootNode==0) || !fXML->ValidateVersion(fDoc)) {
       fXML->FreeDoc(fDoc);
       fDoc=0;
       return kFALSE;
@@ -633,27 +633,6 @@ Bool_t TXMLFile::ReadFromFile()
       }
 
    ReadKeysList(this, fRootNode);
-
-/*
-   XMLNodePointer_t keynode = fXML->GetChild(fRootNode);
-   fXML->SkipEmpty(keynode);
-   while (keynode!=0) {
-      XMLNodePointer_t next = fXML->GetNext(keynode);
-
-      if (strcmp(xmlio::Xmlkey, fXML->GetNodeName(keynode))==0) {
-         fXML->UnlinkNode(keynode);
-
-         TKeyXML* key = new TKeyXML(this, ++fKeyCounter, keynode);
-         AppendKey(key);
-
-         if (gDebug>2)
-            Info("ReadFromFile","Add key %s from node %s",key->GetName(), fXML->GetNodeName(keynode));
-      }
-
-      keynode = next;
-      fXML->SkipEmpty(keynode);
-   }
-*/
 
    fXML->CleanNode(fRootNode);
    
@@ -983,6 +962,55 @@ void TXMLFile::SetUseNamespaces(Bool_t iUseNamespaces)
 
    if (IsWritable() && (GetListOfKeys()->GetSize()==0))
       TXMLSetup::SetUseNamespaces(iUseNamespaces);
+}
+
+//______________________________________________________________________________
+Bool_t TXMLFile::AddXmlComment(const char* comment)
+{
+   // Add comment line on the top of the xml document 
+   // This line can only be seen in xml editor and cannot be accessed later 
+   // with TXMLFile methods
+   
+   if (!IsWritable() || (fXML==0)) return kFALSE;
+   
+   return fXML->AddDocComment(fDoc, comment);
+}
+
+
+//______________________________________________________________________________
+Bool_t TXMLFile::AddXmlStyleSheet(const char* href, 
+                                  const char* type,
+                                  const char* title,
+                                  int alternate,
+                                  const char* media,
+                                  const char* charset)
+{
+   // Adds style sheet definition on the top of xml document
+   // Creates <?xml-stylesheet alternate="yes" title="compact" href="small-base.css" type="text/css"?>
+   // Attributes href and type must be supplied, 
+   //  other attributes: title, alternate, media, charset are optional
+   // if alternate==0, attribyte alternate="no" will be created,
+   // if alternate>0, attribute alternate="yes"
+   // if alternate<0, attribute will not be created
+   // This style sheet definition cannot be later access with TXMLFile methods.
+
+   if (!IsWritable() || (fXML==0)) return kFALSE;
+    
+   return fXML->AddDocStyleSheet(fDoc, href,type,title,alternate,media,charset);
+}                                  
+
+//______________________________________________________________________________
+Bool_t TXMLFile::AddXmlLine(const char* line)
+{
+   // Add just one line on the top of xml document
+   // For instance, line can contain special xml processing instructions
+   // Line should has correct xml syntax that later it can be decoded by xml parser
+   // To be parsed later by TXMLFile again, this line should contain either
+   // xml comments or xml processing instruction
+   
+   if (!IsWritable() || (fXML==0)) return kFALSE;
+
+   return fXML->AddDocRawLine(fDoc, line); 
 }
 
 //______________________________________________________________________________

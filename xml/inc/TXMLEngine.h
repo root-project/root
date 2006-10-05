@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.11 2006/05/30 12:59:30 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.12 2006/06/22 08:21:22 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -50,6 +50,24 @@ class TXMLEngine : public TObject {
       const char*       GetNSReference(XMLNsPointer_t ns);
       void              AddChild(XMLNodePointer_t parent, XMLNodePointer_t child);
       void              AddChildFirst(XMLNodePointer_t parent, XMLNodePointer_t child);
+      Bool_t            AddComment(XMLNodePointer_t parent, const char* comment);
+      Bool_t            AddDocComment(XMLDocPointer_t xmldoc, const char* comment);
+      Bool_t            AddRawLine(XMLNodePointer_t parent, const char* line);
+      Bool_t            AddDocRawLine(XMLDocPointer_t xmldoc, const char* line);
+      Bool_t            AddStyleSheet(XMLNodePointer_t parent, 
+                                      const char* href, 
+                                      const char* type = "text/css",
+                                      const char* title = 0,
+                                      int alternate = -1,
+                                      const char* media = 0,
+                                      const char* charset = 0);
+      Bool_t            AddDocStyleSheet(XMLDocPointer_t xmldoc, 
+                                      const char* href, 
+                                      const char* type = "text/css",
+                                      const char* title = 0,
+                                      int alternate = -1,
+                                      const char* media = 0,
+                                      const char* charset = 0);
       void              UnlinkNode(XMLNodePointer_t node);
       void              FreeNode(XMLNodePointer_t xmlnode);
       void              UnlinkFreeNode(XMLNodePointer_t xmlnode);
@@ -58,17 +76,18 @@ class TXMLEngine : public TObject {
       XMLNodePointer_t  GetChild(XMLNodePointer_t xmlnode);
       XMLNodePointer_t  GetParent(XMLNodePointer_t xmlnode);
       XMLNodePointer_t  GetNext(XMLNodePointer_t xmlnode);
-      void              ShiftToNext(XMLNodePointer_t &xmlnode);
-      Bool_t            IsEmptyNode(XMLNodePointer_t) { return kFALSE; } // obsolete, should not be used
-      void              SkipEmpty(XMLNodePointer_t &) {}                 // obsolete, should not be used
+      void              ShiftToNext(XMLNodePointer_t &xmlnode, bool tonode = true);
+      Bool_t            IsEmptyNode(XMLNodePointer_t xmlnode);
+      void              SkipEmpty(XMLNodePointer_t &xmlnode);
       void              CleanNode(XMLNodePointer_t xmlnode);
-      XMLDocPointer_t   NewDoc(const char* version = 0);
+      XMLDocPointer_t   NewDoc(const char* version = "1.0");
       void              AssignDtd(XMLDocPointer_t xmldoc, const char* dtdname, const char* rootname);
       void              FreeDoc(XMLDocPointer_t xmldoc);
       void              SaveDoc(XMLDocPointer_t xmldoc, const char* filename, Int_t layout = 1);
       void              DocSetRootElement(XMLDocPointer_t xmldoc, XMLNodePointer_t xmlnode);
       XMLNodePointer_t  DocGetRootElement(XMLDocPointer_t xmldoc);
       XMLDocPointer_t   ParseFile(const char* filename);
+      Bool_t            ValidateVersion(XMLDocPointer_t doc, const char* version = 0);
       Bool_t            ValidateDocument(XMLDocPointer_t, Bool_t = kFALSE) { return kFALSE; } // obsolete
       void              SaveSingleNode(XMLNodePointer_t xmlnode, TString* res, Int_t layout = 1);
       XMLNodePointer_t  ReadSingleNode(const char* src);

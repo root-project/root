@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.14 2006/06/22 08:21:22 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.15 2006/06/27 14:36:28 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -109,6 +109,15 @@ public:
    virtual void      SetStoreStreamerInfos(Bool_t iConvert = kTRUE);
    virtual void      SetUsedDtd(Bool_t use = kTRUE);
    virtual void      SetUseNamespaces(Bool_t iUseNamespaces = kTRUE);
+   
+   Bool_t            AddXmlComment(const char* comment);
+   Bool_t            AddXmlStyleSheet(const char* href, 
+                                      const char* type = "text/css",
+                                      const char* title = 0,
+                                      int alternate = -1,
+                                      const char* media = 0,
+                                      const char* charset = 0);
+   Bool_t            AddXmlLine(const char* line);                                   
 
    TXMLEngine*       XML() { return fXML; } 
 
