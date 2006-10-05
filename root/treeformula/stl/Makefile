@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log mapvector.root
 
 # Set the list of target to make while testing.  By default, mytest is the only target added.  If
 #  the name of the target is changed in the rules then the name should be changed accordingly in
 #  this list.
 
-TEST_TARGETS += embedstl pair  stlString
+TEST_TARGETS += embedstl pair  stlString mapvector
 #stlBrowse
 
 # Searched for Rules.mk in roottest/scripts
@@ -69,3 +69,12 @@ pair: pair.log
 
 embedstl: embedstl.log
 	$(TestDiff)
+
+mapvector.root: mapvector_C.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l mapvector.C+ > mapvector_root.build 2>&1
+
+mapvector.log: mapvector.root
+
+mapvector: mapvector.log
+	$(TestDiff)
+
