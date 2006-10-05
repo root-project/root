@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.3 2005/09/19 18:14:01 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.4 2006/05/26 14:26:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -37,6 +37,9 @@
 
 #pragma link C++ namespace ROOT::Math::Integration;
 #pragma link C++ class ROOT::Math::Integrator+;
+
+#pragma link C++ namespace ROOT::Math::Minim1D;
+#pragma link C++ class ROOT::Math::Minimizer1D+;
 
 
 #pragma link C++ class ROOT::Math::Interpolator+;

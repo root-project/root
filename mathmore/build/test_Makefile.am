@@ -1,19 +1,19 @@
-# @(#)root/mathcore:$Name:  $:$Id: test_Makefile.am,v 1.1 2005/09/18 17:33:47 brun Exp $
+# @(#)root/mathcore:$Name:  $:$Id: test_Makefile.am,v 1.1 2005/09/21 09:34:04 moneta Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .
 #
 
-check_PROGRAMS =  testRootFinder 
+check_PROGRAMS =  testRootFinder  testDerivation testIntegration
 
 # skip other tests since they depend on ROOT lib
 #testInterpolation  testDerivation testIntegration
 
 # testInterpolation_SOURCES =  testInterpolation.cxx
 
-# testDerivation_SOURCES =  testDerivation.cxx
+testDerivation_SOURCES =  testDerivation.cxx
 
-# testIntegration_SOURCES =  testIntegration.cxx
+testIntegration_SOURCES =  testIntegration.cxx
 
 testRootFinder_SOURCES =  testRootFinder.cxx
 
@@ -23,11 +23,11 @@ INCLUDES = -I$(top_srcdir)/inc
 # testInterpolation_LDADD =  $(top_builddir)/src/libMathCore.la
 # testInterpolation_LDFLAGS = @GSL_LDFLAGS@
 
-# testDerivation_LDADD =  $(top_builddir)/src/libMathCore.la
-# testDerivation_LDFLAGS = @GSL_LDFLAGS@
+testDerivation_LDADD =  $(top_builddir)/src/libMathCore.la
+testDerivation_LDFLAGS = @GSL_LDFLAGS@
 
-# testIntegration_LDADD =  $(top_builddir)/src/libMathCore.la
-# testIntegration_LDFLAGS = @GSL_LDFLAGS@
+testIntegration_LDADD =  $(top_builddir)/src/libMathCore.la
+testIntegration_LDFLAGS = @GSL_LDFLAGS@
 
 testRootFinder_LDADD =  $(top_builddir)/src/libMathMore.la
 testRootFinder_LDFLAGS = @GSL_LDFLAGS@

@@ -1,7 +1,7 @@
 #include "Math/Polynomial.h"
 #include "Math/Integrator.h"
 #include "Math/WrappedFunction.h"
-#include "TF1.h"
+//#include "TF1.h"
 #include <iostream>
 
 
@@ -20,6 +20,10 @@ double exactIntegral ( const std::vector<double> & par, double a, double b) {
   func->SetParameters(p);
 
   return (*func)(b)-(*func)(a); 
+}
+
+double singularFunction(double x) { 
+   return 1./sqrt(x);
 }
 
 
@@ -68,6 +72,18 @@ void testIntegration() {
   std::cout << "Result      " << ig.Integral( 0, 3) << " +/- " << ig.Error() << std::endl; 
  
 
+  // test error 
+  typedef double ( * FreeFunc ) ( double);
+
+  std::cout << "Testing a singular function" << std::endl;
+  ROOT::Math::WrappedFunction<FreeFunc> wf(&singularFunction); 
+  ig.SetFunction(wf); 
+  double r = ig.Integral(0,1); 
+  if (ig.Status() != 0) 
+     std::cout << "Error integrating a singular function " << std::endl; 
+  else 
+     std::cout << "Result      " << r << " +/- " << ig.Error() << std::endl; 
+  
  
 }
 

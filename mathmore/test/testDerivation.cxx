@@ -1,7 +1,7 @@
 #include "Math/Polynomial.h"
 #include "Math/Derivator.h"
 #include "Math/WrappedFunction.h"
-#include "TF1.h"
+//#include "TF1.h"
 #include <iostream>
 
 

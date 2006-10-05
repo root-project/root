@@ -37,8 +37,9 @@ void testDiff(TH1D & h1, TH1D & h2, const std::string & name="") {
   double chi2; 
   int ndf; 
   if (h1.GetEntries() == 0 && h2.GetEntries() == 0) return; 
-  double prob = h1.Chi2TestX(&h2,chi2,ndf,""); 
-  std::cout << " Test " << name << " chi2 = " << chi2 << " ndf " << ndf << " prob = " << prob << std::endl; 
+  int igood; 
+  double prob = h1.Chi2TestX(&h2,chi2,ndf,igood,""); 
+  std::cout << " Test " << name << " chi2 = " << chi2 << " ndf " << ndf << " prob = " << prob << std::endl << " igood = " << igood; 
 
   std::string cname="c1_" + name; 
   std::string ctitle="Test of " + name; 

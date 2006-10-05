@@ -42,9 +42,11 @@ MATHMOREDH1  := $(MODDIRI)/Math/ProbFuncMathMore.h \
 		$(MODDIRI)/Math/GSLRootFinderDeriv.h \
 		$(MODDIRI)/Math/RootFinderAlgorithms.h \
 		$(MODDIRI)/Math/Integrator.h \
+		$(MODDIRI)/Math/Minimizer1D.h \
 		$(MODDIRI)/Math/Chebyshev.h  \
 		$(MODDIRI)/Math/Random.h \
-		$(MODDIRI)/Math/GSLRndmEngines.h
+		$(MODDIRI)/Math/GSLRndmEngines.h \
+		$(MODDIRS)/GSLError.h
 
 MATHMOREH    := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
 MATHMORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
@@ -78,7 +80,7 @@ $(MATHMORELIB): $(MATHMOREO) $(MATHMOREDO) $(ORDER_) $(MAINLIBS)
 
 $(MATHMOREDS):  $(MATHMOREDH1) $(MATHMOREL) $(MATHMORELINC) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(MATHMOREDH1) $(MATHMOREL)
+		$(ROOTCINTTMP)  -f  $@ -c $(MATHMOREDH1)  $(MATHMOREL)
 
 all-mathmore:   $(MATHMORELIB)
 
@@ -101,3 +103,4 @@ distclean::     distclean-mathmore
 
 ##### extra rules ######
 $(MATHMOREO): CXXFLAGS += $(GSLFLAGS)
+$(MATHMOREDO): CXXFLAGS += $(GSLFLAGS)

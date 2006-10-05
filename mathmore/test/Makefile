@@ -17,7 +17,7 @@ CXXFLAGS += -g
 ifeq ($(PLATFORM),win32)
 EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib" "$(ROOTSYS)/lib/libMathCore.lib" $(GSLLIBS)
 else
-EXTRALIBS        = -lMathMore -lMathCore $(GSLLIBS)
+EXTRALIBS        = -lMathMore -lMathCore $(GSLLIBDIR) $(GSLLIBS)
 endif
 
 ifneq ($(CLHEPBASE),)
@@ -41,6 +41,10 @@ ROOTFINDEROBJ      = testRootFinder.$(ObjSuf)
 ROOTFINDERSRC      = testRootFinder.$(SrcSuf)
 ROOTFINDER         = testRootFinder$(ExeSuf)
 
+MINIMIZATION1DOBJ      = testMinimization1D.$(ObjSuf)
+MINIMIZATION1DSRC      = testMinimization1D.$(SrcSuf)
+MINIMIZATION1D         = testMinimization1D$(ExeSuf)
+
 INTERPOLATIONOBJ      = testInterpolation.$(ObjSuf)
 INTERPOLATIONSRC      = testInterpolation.$(SrcSuf)
 INTERPOLATION         = testInterpolation$(ExeSuf)
@@ -56,10 +60,10 @@ RANDOMDIST         = testRandomDist$(ExeSuf)
 
 
 OBJS          = $(CHEBYSHEVOBJ) $(DERIVATIONOBJ) $(INTEGRATIONOBJ) $(ROOTFINDEROBJ) \
-                  $(INTERPOLATIONOBJ) $(RANDOMOBJ) $(RANDOMDISTOBJ)
+                  $(MINIMIZATION1DOBJ) $(INTERPOLATIONOBJ)  $(RANDOMOBJ) $(RANDOMDISTOBJ)
 
 PROGRAMS      = $(CHEBYSHEV)  $(DERIVATION) $(INTEGRATION) $(ROOTFINDER) \
-                  $(INTERPOLATION) $(RANDOM) $(RANDOMDIST)
+                  $(MINIMIZATION1D) $(INTERPOLATION) $(RANDOM) $(RANDOMDIST)
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -80,6 +84,10 @@ $(INTEGRATION): $(INTEGRATIONOBJ)
 		@echo "$@ done"
 
 $(ROOTFINDER):  $(ROOTFINDEROBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(MINIMIZATION1D):  $(MINIMIZATION1DOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
