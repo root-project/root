@@ -1,4 +1,4 @@
-// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.cxx,v 1.1 2006/06/26 16:17:05 rdm Exp $
+// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.cxx,v 1.2 2006/10/05 16:10:22 rdm Exp $
 // Author: Andreas Peters   5/10/2005
 
 /*************************************************************************
@@ -157,7 +157,7 @@ void TMonaLisaWriter::Init(const char *monid, const char* monsubid,
    }
 
    char *apmon_config[1] =
-      { ((monserver == 0) ? gSystem->Getenv("APMON_CONFIG") : (char *) monserver) };
+      { ((monserver == 0) ? (char *) gSystem->Getenv("APMON_CONFIG") : (char *) monserver) };
    if (apmon_config[0] == 0) {
       Error("TMonaLisaWriter",
             "Disabling apmon monitoring since env variable APMON_CONFIG was not found and the monitoring server is not specified in the constructor!");
@@ -453,9 +453,13 @@ Bool_t TMonaLisaWriter::SendProcessingProgress(Double_t nevent, Double_t nbytes,
    TMonaLisaValue *valrealtime = new TMonaLisaValue("realtime",fStopwatch.RealTime());
    TMonaLisaValue *valcputime =  new TMonaLisaValue("cputime",fStopwatch.CpuTime());
 
-   Double_t totmem = (Double_t)TStopwatch::GetTotalMemory();
-   Double_t rssmem = (Double_t)TStopwatch::GetResidentMemory();
-   Double_t shdmem = (Double_t)TStopwatch::GetSharedMemory();
+   // This info should come from TSystem (to be fixed) -- rdm
+   //Double_t totmem = (Double_t)TStopwatch::GetTotalMemory();
+   //Double_t rssmem = (Double_t)TStopwatch::GetResidentMemory();
+   //Double_t shdmem = (Double_t)TStopwatch::GetSharedMemory();
+   Double_t totmem = 0.;
+   Double_t rssmem = 0.;
+   Double_t shdmem = 0.;
 
    TMonaLisaValue *valtotmem = new TMonaLisaValue("totmem",totmem);
    TMonaLisaValue *valrssmem = new TMonaLisaValue("rssmem",rssmem);
