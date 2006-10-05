@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.22 2006/02/23 18:55:30 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.23 2006/05/19 07:30:04 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -520,7 +520,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
    const char *dmTitle = "Emulation";
 
    TDataType *dt = gROOT->GetType(dmType);
-   if (dt) {  // found a basic type
+   if (dt && dt->GetType() > 0 ) {  // found a basic type 
       Int_t dsize,dtype;
       dtype = dt->GetType();
       dsize = dt->Size();
@@ -576,7 +576,9 @@ static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string
    // and emulated TClass.
 
    TStreamerInfo *i = (TStreamerInfo*)gROOT->GetClass("pair<const int,int>")->GetStreamerInfo()->Clone();
-   i->SetName(Form("pair<%s,%s>",fname.c_str(),sname.c_str()));
+   std::string pname = "pair<"+fname+","+sname;
+   pname += (pname[pname.length()-1]=='>') ? " >" : ">";
+   i->SetName(pname.c_str());
    i->SetClass(0);
    i->GetElements()->Clear();
    TStreamerElement *fel = R__CreateEmulatedElement("first", fname.c_str(), 0);  
