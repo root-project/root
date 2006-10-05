@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.54 2006/08/23 08:46:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.55 2006/10/03 21:51:46 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1687,23 +1687,6 @@ TObjArray *TString::Tokenize(const TString &delim) const
 
    return arr;
 }
-
-// Once ported everywhere to be moved to Varargs.h
-#if !defined(R__VA_COPY)
-#  if defined(__GNUC__)
-#     define R__VA_COPY(to, from) __va_copy((to), (from))
-#  elif defined(__va_copy)
-#     define R__VA_COPY(to, from) __va_copy((to), (from))
-#  elif defined(va_copy)
-#     define R__VA_COPY(to, from) va_copy((to), (from))
-#  elif defined (R__VA_COPY_AS_ARRAY)
-#     define R__VA_COPY(to, from) memmove((to), (from), sizeof(va_list))
-#  elif defined(_WIN32) && _MSC_VER < 1310
-#     define R__VA_COPY(to, from) (*(to) = *(from))
-#  else
-#     define R__VA_COPY(to, from) ((to) = (from))
-#  endif
-#endif
 
 //______________________________________________________________________________
 void TString::FormImp(const char *fmt, va_list ap)

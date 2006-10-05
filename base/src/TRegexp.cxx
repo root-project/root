@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.11 2003/07/18 13:21:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.12 2005/11/16 20:04:11 pcanal Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -21,11 +21,11 @@
 //   '['             // start a character class                         //
 //   ']'             // end a character class                           //
 //   '^'             // negates character class if 1st character        //
-//   '*'             // Kleene closure (matches 0 or more)              // 
+//   '*'             // Kleene closure (matches 0 or more)              //
 //   '+'             // Positive closure (1 or more)                    //
 //   '?'             // Optional closure (0 or 1)                       //
 //                                                                      //
-//   Standard classes like [:alnum:], [:alpha:], etc. are not supported,// 
+//   Standard classes like [:alnum:], [:alpha:], etc. are not supported,//
 //   only [a-zA-Z], [^ntf] and so on.                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -265,3 +265,59 @@ TSubString TString::operator()(const TRegexp& r) const
    return (*this)(r,0);
 }
 
+//__________________________________________________________________________________
+Int_t TString::Tokenize(TString &tok, Int_t from, const TString &delim) const
+{
+   // Search for tokens delimited by regular expression 'delim' (default " ")
+   // in this string; search starts at 'from' and the token is returned in 'tok'.
+   // Returns the next position after the delimiter, or -1 when there are no more
+   // tokens to be analyzed.
+   // This method allows to loop over tokens in this way:
+   //
+   //    TString myl = "tok1 tok2|tok3";
+   //    TString tok;
+   //    int from = 0;
+   //    while ((from = myl.Tokenize(tok, from, "[ |]") != -1) {
+   //       if (!tok.IsNull()) {
+   //          // Analyse tok
+   //          ...
+   //       }
+   //    }
+   //
+   // more convenient of the other Tokenize method when saving the tokens is not
+   // needed.
+   //
+   // Warning: it may return empty tokens (e.g. in cases like "::"), so
+   // the token length must always be checked.
+
+   // Reset the token
+   tok = "";
+
+   // Make sure inputs make sense
+   Int_t len = Length();
+   if (len <= 0 || from < 0 || from > (len - 1))
+      return -1;
+
+   TRegexp rg(delim);
+
+   // Find delimiter
+   Int_t ext = 0;
+   Int_t pos = Index(rg, &ext, from);
+
+   // Assign to token
+   if (pos == kNPOS || pos > from) {
+      Int_t last = (pos != kNPOS) ? (pos - 1) : len;
+      tok = (*this)(from, last-from+1);
+   }
+
+   Int_t next = pos + ext;
+   if (pos == kNPOS) {
+      if (tok.Length() > 0)
+         // So we can analize the last one
+         next = len;
+      else
+         next = pos;
+   }
+
+   return next;
+}
