@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.2 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.3 2005/12/09 16:24:34 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -61,10 +61,13 @@ public:
 
    void         Reset();
    TMap        *Next();
+   Bool_t       Remove(TMap *map);
    const char  *GetTURL(const char *name) const;
+   const char  *GetLFN() const;
    void         Print(Option_t *opt) const;
    TFile       *OpenFile(const char *filename) const;
    TList       *GetEventList() const { return fEventList; }
+   Bool_t       OverlapCollection(TAlienCollection *comparator);
 
    TDSet       *GetDataset(const char *type, const char *objname = "*", const char *dir = "/");
    TGridResult *GetGridResult(const char *filename="", Bool_t publicaccess=kFALSE);

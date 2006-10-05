@@ -108,9 +108,6 @@ endif
 ifeq ($(BUILDCHIRP),yes)
 MODULES      += chirp
 endif
-ifeq ($(BUILDALIEN),yes)
-MODULES      += alien
-endif
 ifeq ($(BUILDASIMAGE),yes)
 MODULES      += asimage
 endif
@@ -191,6 +188,9 @@ else
 MODULES      += xrootd netx
 endif
 endif
+ifeq ($(BUILDALIEN),yes)
+MODULES      += alien
+endif
 ifeq ($(BUILDCLARENS),yes)
 MODULES      += clarens
 endif
@@ -212,9 +212,9 @@ endif
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32gdk gl rfio castor thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
-                rootx rootd proofd proof dcache chirp hbook alien asimage \
+                rootx rootd proofd proof dcache chirp hbook asimage \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
-                qt qtroot qtgsi xrootd netx proofx clarens peac oracle \
+                qt qtroot qtgsi xrootd netx proofx alien clarens peac oracle \
                 xmlparser mathcore mathmore reflex cintex roofit minuit2 \
                 monalisa fftw odbc
 MODULES      := $(sort $(MODULES))   # removes duplicates

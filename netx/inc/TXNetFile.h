@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.9 2006/06/01 09:50:28 brun Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.10 2006/06/09 13:38:46 rdm Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -63,7 +63,6 @@ class TXNetFile : public TNetFile {
 friend class TXNetSystem;
 
 private:
-
    // Members
    XrdClient     *fClient;       // Handle to the client object
    Long64_t       fSize;         // File size
@@ -95,18 +94,20 @@ public:
    TXNetFile() : TNetFile() { fClient = 0; fSize = 0; fIsRootd = 0;
                               fInitMtx = 0; }
    TXNetFile(const char *url, Option_t *option = "", const char* fTitle = "",
-             Int_t compress = 1, Int_t netopt = -1, Bool_t parallelopen = kFALSE);
+             Int_t compress = 1, Int_t netopt = -1, Bool_t parallelopen = kFALSE,
+             const char *logicalurl = 0);
+
    virtual ~TXNetFile();
 
-   virtual void   Close(const Option_t *opt ="");
-   virtual void   Flush();
-   TFile::EAsyncOpenStatus GetAsyncOpenStatus();
-   virtual Bool_t IsOpen() const;
-   virtual Bool_t ReadBuffer(char *buf, Int_t len);
-   virtual Bool_t ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf);
-   virtual Int_t  ReOpen(const Option_t *mode);
-   Long64_t       Size(void);
-   virtual Bool_t WriteBuffer(const char *buffer, Int_t BufferLength);
+   virtual void     Close(const Option_t *opt ="");
+   virtual void     Flush();
+   virtual TFile::EAsyncOpenStatus GetAsyncOpenStatus();
+   virtual Bool_t   IsOpen() const;
+   virtual Bool_t   ReadBuffer(char *buf, Int_t len);
+   virtual Bool_t   ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf);
+   virtual Int_t    ReOpen(const Option_t *mode);
+   virtual Long64_t Size(void);
+   virtual Bool_t   WriteBuffer(const char *buffer, Int_t BufferLength);
 
    ClassDef(TXNetFile,0) // TFile implementation to deal with new xrootd server.
 };

@@ -115,8 +115,8 @@ GUIBLDLIBDEP        = $(GUILIB) $(GRAFLIB)
 GUIBLDLIBEXTRA      = lib/libGui.lib lib/libGraf.lib
 FOAMLIBDEP          = $(HISTLIB)
 FOAMLIBEXTRA        = lib/libHist.lib
-ALIENLIBDEP         = $(XMLLIB)
-ALIENLIBEXTRA       = lib/libXMLIO.lib
+ALIENLIBDEP         = $(XMLLIB) $(NETXLIB)
+ALIENLIBEXTRA       = lib/libXMLIO.lib lib/libNetx.lib
 ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
                       $(MINUITLIB) $(HTMLLIB)
 ROOFITLIBEXTRA      = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
@@ -232,8 +232,8 @@ GUIBLDLIBDEP        = $(GUILIB) $(GRAFLIB)
 GUIBLDLIBEXTRA      = -Llib -lGui -lGraf
 FOAMLIBDEP          = $(HISTLIB)
 FOAMLIBEXTRA        = -Llib -lHist
-ALIENLIBDEP         = $(XMLLIB)
-ALIENLIBEXTRA       = -Llib -lXMLIO
+ALIENLIBDEP         = $(XMLLIB) $(NETXLIB)
+ALIENLIBEXTRA       = -Llib -lXMLIO -lNetx
 ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
                       $(MINUITLIB) $(HTMLLIB)
 ROOFITLIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lHtml

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.41 2006/09/11 08:20:41 brun Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.42 2006/09/29 08:17:21 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -60,10 +60,12 @@ ClassImp(TXNetFile);
 Bool_t TXNetFile::fgInitDone = kFALSE;
 Bool_t TXNetFile::fgRootdBC = kTRUE;
 
+
 //_____________________________________________________________________________
 TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
-                     Int_t compress, Int_t netopt, Bool_t parallelopen) :
-                     TNetFile(url, ftitle, compress, kFALSE)
+                     Int_t compress, Int_t netopt, Bool_t parallelopen,
+                     const char *logicalurl) :
+            TNetFile((logicalurl ? logicalurl : url), ftitle, compress, kFALSE)
 {
    // Create a TXNetFile object. A TXNetFile object is the same as a TNetFile
    // (from which the former derives) except that the protocol is extended to
@@ -96,7 +98,6 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
    //      "root://server1:port1[,server2:port2,...]/pathfile?checkenv"
    //
    TUrl urlnoanchor(url);
-
    // Set debug level
    EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", -1));
 
@@ -539,7 +540,7 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    if ( nr > 0 ) {
 
       if (gDebug > 1)
-	 Info("ReadBuffers", "%lld bytes of data read from a list of %d buffers", 
+	 Info("ReadBuffers", "%lld bytes of data read from a list of %d buffers",
  	      nr, nbuf);
 
       // Where should we leave the offset ?
@@ -755,7 +756,6 @@ void TXNetFile::Close(const Option_t *opt)
 void TXNetFile::Flush()
 {
    // Flushes un-written data.
-
    if (IsZombie()) {
       Error("Flush", "Flush is not possible because object is"
             " in 'zombie' state");

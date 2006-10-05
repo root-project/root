@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.16 2006/02/03 14:50:25 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.17 2006/05/26 16:55:04 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -178,6 +178,7 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
       // export this UI to all POSIX functions like gapi_dir_xxx gapi_job_xxx
       fGc->SetGapiUI(fGc);
    }
+   delete gurl;
 }
 
 //______________________________________________________________________________
@@ -280,6 +281,7 @@ TGridResult *TAlien::Command(const char *command, bool interactive, UInt_t strea
 
          for (Int_t column = 0 ; column < (fGc->GetStreamColumns(stream)); column++) {
             TMap *gmap = new TMap();
+	    gmap->SetOwner(kTRUE);
             for (Int_t row=0; row < fGc->GetStreamRows(stream,column); row++) {
                gmap->Add((TObject*)(new TObjString(fGc->GetStreamFieldKey(stream,column,row))),
                          (TObject*)(new TObjString(fGc->GetStreamFieldValue(stream,column,row))));

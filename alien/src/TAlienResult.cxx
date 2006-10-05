@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.11 2005/12/09 18:36:52 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.12 2006/05/19 07:30:04 brun Exp $
 // Author: Fons Rademakers   23/5/2002
 
 /*************************************************************************
@@ -32,6 +32,17 @@
 ClassImp(TAlienResult)
 
 //______________________________________________________________________________
+TAlienResult::~TAlienResult()
+{
+   // Cleanup object.
+
+   TIter next(this);
+   while (TMap * obj = (TMap *) next()) {
+      obj->DeleteAll();
+   }
+}
+
+//______________________________________________________________________________
 void TAlienResult::DumpResult()
 {
    // Dump result set.
@@ -39,12 +50,13 @@ void TAlienResult::DumpResult()
    cout << "BEGIN DUMP" << endl;
    TIter next(this);
    TMap *map;
-   while ((map = (TMap*) next())) {
+   while ((map = (TMap *) next())) {
       TIter next2(map->GetTable());
       TPair *pair;
-      while ((pair = (TPair*) next2())) {
-         TObjString *keyStr = dynamic_cast<TObjString*>(pair->Key());
-         TObjString* valueStr = dynamic_cast<TObjString*>(pair->Value());
+      while ((pair = (TPair *) next2())) {
+         TObjString *keyStr = dynamic_cast < TObjString * >(pair->Key());
+         TObjString *valueStr =
+             dynamic_cast < TObjString * >(pair->Value());
 
          if (keyStr) {
             cout << "Key: " << keyStr->GetString() << "   ";
@@ -62,11 +74,26 @@ void TAlienResult::DumpResult()
 //______________________________________________________________________________
 const char *TAlienResult::GetFileName(UInt_t i) const
 {
-   //return a file name
+   //Return a file name.
+
    if (At(i)) {
-      TObjString* entry;
-      if ((entry=(TObjString*)((TMap*)At(i))->GetValue("name"))) {
+      TObjString *entry;
+      if ((entry = (TObjString *) ((TMap *) At(i))->GetValue("name"))) {
          return entry->GetName();
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+const TEventList *TAlienResult::GetEventList(UInt_t i) const
+{
+   // Return the event list, if evtlist was defined as a tag.
+
+   if (At(i)) {
+      TEventList *entry;
+      if ((entry = (TEventList *) ((TMap *) At(i))->GetValue("evlist"))) {
+         return entry;
       }
    }
    return 0;
@@ -75,13 +102,15 @@ const char *TAlienResult::GetFileName(UInt_t i) const
 //______________________________________________________________________________
 const char *TAlienResult::GetFileNamePath(UInt_t i) const
 {
-   //return file name path
+   // Return file name path.
+
    if (At(i)) {
-      TObjString* entry;
-      if ((entry=(TObjString*)((TMap*)At(i))->GetValue("name"))) {
-         TObjString* path;
-         if ((path=(TObjString*)((TMap*)At(i))->GetValue("path"))) {
-            fFilePath = TString(path->GetName()) + TString(entry->GetName());
+      TObjString *entry;
+      if ((entry = (TObjString *) ((TMap *) At(i))->GetValue("name"))) {
+         TObjString *path;
+         if ((path = (TObjString *) ((TMap *) At(i))->GetValue("path"))) {
+            fFilePath =
+                TString(path->GetName()) + TString(entry->GetName());
             return fFilePath;
          }
       }
@@ -92,10 +121,11 @@ const char *TAlienResult::GetFileNamePath(UInt_t i) const
 //______________________________________________________________________________
 const char *TAlienResult::GetPath(UInt_t i) const
 {
-   //return path
+   // Return path.
+
    if (At(i)) {
-      TObjString* entry;
-      if ((entry=(TObjString*)((TMap*)At(i))->GetValue("path"))) {
+      TObjString *entry;
+      if ((entry = (TObjString *) ((TMap *) At(i))->GetValue("path"))) {
          return entry->GetName();
       }
    }
@@ -103,12 +133,13 @@ const char *TAlienResult::GetPath(UInt_t i) const
 }
 
 //______________________________________________________________________________
-const char *TAlienResult::GetKey(UInt_t i, const char* key) const
+const char *TAlienResult::GetKey(UInt_t i, const char *key) const
 {
-   //return the key
+   // Return the key.
+
    if (At(i)) {
-      TObjString* entry;
-      if ((entry=(TObjString*)((TMap*)At(i))->GetValue(key))) {
+      TObjString *entry;
+      if ((entry = (TObjString *) ((TMap *) At(i))->GetValue(key))) {
          return entry->GetName();
       }
    }
@@ -116,19 +147,20 @@ const char *TAlienResult::GetKey(UInt_t i, const char* key) const
 }
 
 //______________________________________________________________________________
-Bool_t TAlienResult::SetKey(UInt_t i, const char* key, const char* value)
+Bool_t TAlienResult::SetKey(UInt_t i, const char *key, const char *value)
 {
-   //set the key
+   // Set the key.
+
    if (At(i)) {
-      TPair* entry;
-      if ((entry=(TPair*)((TMap*)At(i))->FindObject(key))) {
-         TObject* val = ((TMap*)At(i))->Remove((TObject*) entry->Key());
+      TPair *entry;
+      if ((entry = (TPair *) ((TMap *) At(i))->FindObject(key))) {
+         TObject *val = ((TMap *) At(i))->Remove((TObject *) entry->Key());
          if (val) {
             delete val;
          }
       }
-      ((TMap*)At(i))->Add((TObject*) (new TObjString(key)),
-                          (TObject*) (new TObjString(value)));
+      ((TMap *) At(i))->Add((TObject *) (new TObjString(key)),
+                            (TObject *) (new TObjString(value)));
       return kTRUE;
    }
    return kFALSE;
@@ -137,29 +169,30 @@ Bool_t TAlienResult::SetKey(UInt_t i, const char* key, const char* value)
 //______________________________________________________________________________
 TList *TAlienResult::GetFileInfoList() const
 {
-   //return a file info list
-   TList* newfileinfolist = new TList();
+   // Return a file info list.
+
+   TList *newfileinfolist = new TList();
 
    newfileinfolist->SetOwner(kTRUE);
 
-   for (Int_t i = 0; i< GetSize(); i++) {
+   for (Int_t i = 0; i < GetSize(); i++) {
 
       Long64_t size = -1;
-      if (GetKey(i,"size"))
-         size = atol (GetKey(i,"size"));
+      if (GetKey(i, "size"))
+         size = atol(GetKey(i, "size"));
 
-      const char* md5  = GetKey(i,"md5");
-      const char* uuid = GetKey(i,"guid");
-      const char* msd  = GetKey(i,"msd");
+      const char *md5 = GetKey(i, "md5");
+      const char *uuid = GetKey(i, "guid");
+      const char *msd = GetKey(i, "msd");
 
       if (md5 && !strlen(md5))
-         md5=0;
+         md5 = 0;
       if (uuid && !strlen(uuid))
-         uuid=0;
+         uuid = 0;
       if (msd && !strlen(msd))
-         msd=0;
+         msd = 0;
 
-      TString turl = GetKey(i,"turl");
+      TString turl = GetKey(i, "turl");
 
       if (msd) {
          TUrl urlturl(turl);
@@ -169,47 +202,57 @@ TList *TAlienResult::GetFileInfoList() const
          urlturl.SetOptions(options);
          turl = urlturl.GetUrl();
       }
-      Info("GetFileInfoList","Adding Url %s with Msd %s\n",turl.Data(),msd);
-      newfileinfolist->Add (new TFileInfo(turl, size, uuid, md5));
+      Info("GetFileInfoList", "Adding Url %s with Msd %s\n", turl.Data(),
+           msd);
+      newfileinfolist->Add(new TFileInfo(turl, size, uuid, md5));
    }
    return newfileinfolist;
 }
 
 //______________________________________________________________________________
-void TAlienResult::Print(Option_t * /*wildcard*/, Option_t *option) const
+void TAlienResult::Print(Option_t * /*wildcard */ , Option_t * option) const
 {
-   //print the AlienResult info
-   Long64_t totaldata=0;
-   Int_t totalfiles=0;
+   // Print the AlienResult info.
 
-   if (TString(option) != TString("all") ) {
+   Long64_t totaldata = 0;
+   Int_t totalfiles = 0;
+
+   if (TString(option) != TString("all")) {
       // the default print out format is for a query
-      for (Int_t i = 0; i< GetSize(); i++) {
-         if (TString(option) == TString("l") ) {
-            printf("( %06d ) LFN: %-80s   Size[Bytes]: %10s   GUID: %s\n",i,GetKey(i,"lfn"),GetKey(i,"size"),GetKey(i,"guid"));
+      for (Int_t i = 0; i < GetSize(); i++) {
+         if (TString(option) == TString("l")) {
+            printf("( %06d ) LFN: %-80s   Size[Bytes]: %10s   GUID: %s\n",
+                   i, GetKey(i, "lfn"), GetKey(i, "size"), GetKey(i,
+                                                                  "guid"));
          } else {
-            printf("( %06d ) LFN: .../%-48s   Size[Bytes]: %10s   GUID: %s\n",i,gSystem->BaseName(GetKey(i,"lfn")),GetKey(i,"size"),GetKey(i,"guid"));
+            printf("( %06d ) LFN: .../%-48s   Size[Bytes]: %10s   GUID: %s\n",
+                   i, gSystem->BaseName(GetKey(i, "lfn")), GetKey(i, "size"),
+                   GetKey(i, "guid"));
          }
          if (GetKey(i, "size")) {
-            totaldata += atol(GetKey(i,"size"));
+            totaldata += atol(GetKey(i, "size"));
             totalfiles++;
          }
       }
       printf("------------------------------------------------------------\n");
-      printf("-> Result contains %.02f MB in %d Files.\n",totaldata/1024./1024.,totalfiles);
+      printf("-> Result contains %.02f MB in %d Files.\n",
+             totaldata / 1024. / 1024., totalfiles);
    } else {
       TIter next(this);
       TMap *map;
-      Int_t i=1;
-      while ((map = (TMap*) next())) {
+      Int_t i = 1;
+      while ((map = (TMap *) next())) {
          TIter next2(map->GetTable());
          TPair *pair;
          printf("------------------------------------------------------------\n");
-         while ((pair = (TPair*) next2())) {
-            TObjString *keyStr = dynamic_cast<TObjString*>(pair->Key());
-            TObjString* valueStr = dynamic_cast<TObjString*>(pair->Value());
+         while ((pair = (TPair *) next2())) {
+            TObjString *keyStr =
+                dynamic_cast < TObjString * >(pair->Key());
+            TObjString *valueStr =
+                dynamic_cast < TObjString * >(pair->Value());
             if (keyStr && valueStr)
-               printf("( %06d ) [ -%16s ]  = %s\n",i,keyStr->GetName(),valueStr->GetName());
+               printf("( %06d ) [ -%16s ]  = %s\n", i, keyStr->GetName(),
+                      valueStr->GetName());
          }
          i++;
       }
@@ -217,8 +260,9 @@ void TAlienResult::Print(Option_t * /*wildcard*/, Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TAlienResult::Print(Option_t *option) const
+void TAlienResult::Print(Option_t * option) const
 {
-   //print the AlienResult info
+   // Print the AlienResult info.
+
    Print("", option);
 }

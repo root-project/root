@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.h,v 1.8 2005/12/09 16:24:34 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.h,v 1.9 2005/12/09 18:36:52 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -33,15 +33,17 @@ private:
    mutable TString fFilePath;  // file path
 
 public:
-   virtual void DumpResult();
+   virtual ~TAlienResult();
 
+   virtual void DumpResult();
    virtual const char *GetFileName(UInt_t i) const;             // returns the file name of list item i
    virtual const char *GetFileNamePath(UInt_t i) const;         // returns the full path + file name of list item i
+   virtual const TEventList *GetEventList(UInt_t i) const;      // returns an event list, if it is defined
    virtual const char *GetPath(UInt_t i) const;                 // returns the file path of list item i
    virtual const char *GetKey(UInt_t i, const char *key) const; // returns the key value of list item i
    virtual Bool_t      SetKey(UInt_t i, const char *key, const char *value); // set the key value of list item i
    virtual TList      *GetFileInfoList() const;                 // returns a new allocated List of TFileInfo Objects
-   void                Print(Option_t *option="") const;
+   void                Print(Option_t *option = "") const;
    void                Print(Option_t *wildcard, Option_t *option) const;
 
    ClassDef(TAlienResult,0)  // Alien query result set

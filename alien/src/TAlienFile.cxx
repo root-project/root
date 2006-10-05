@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.20 2006/05/27 20:31:54 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.21 2006/05/31 09:58:31 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -14,12 +14,17 @@
 // TAlienFile                                                           //
 //                                                                      //
 // A TAlienFile is like a normal TFile except that it reads and writes  //
-// its data via an AliEn service.                                       //
+// it's data via TXNetFile and gets authorization and the TXNetFile     //
+// URL from an alien service.                                           //
+//                                                                      //
 // Filenames are standard URL format with protocol "alien".             //
 // The following are valid TAlienFile URL's:                            //
 //                                                                      //
 //    alien:///alice/cern.ch/user/p/peters/test.root                    //
-//    alien://alien.cern.ch/alice/cern.ch/user/p/peters/test.root       //
+//    /alien/alice/cern.ch/user/p/peters/test.root                      //
+//                                                                      //
+//    - notice that URLs like /alien/alice... are converted internally  //
+//      to alien://alice...                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -35,17 +40,22 @@
 #include "TSystem.h"
 #include "TVirtualMutex.h"
 #include "TProcessUUID.h"
-#include "TArchiveFile.h"
 #include "TUrl.h"
+#include "TError.h"
 
 ClassImp(TAlienFile)
 
+#define MAX_FILE_IMAGES 16
+
 //______________________________________________________________________________
-TAlienFile::TAlienFile(const char *url, Option_t *option,
-                       const char *ftitle, Int_t compress,Bool_t parallelopen)
+TAlienFile::TAlienFile(const char *purl, Option_t * option,
+                       const char *ftitle, Int_t compress,
+                       Bool_t parallelopen, const char *lurl,
+                       const char *authz) :
+   TXNetFile(purl, option, ftitle, -1, compress, parallelopen, lurl)
 {
    // Create an Alien File Object. An AliEn File is the same as a TFile
-   // except that it is being accessed via an Alien service. The url
+   // except that its real tranfer URL is resolved via an Alien service. The url
    // argument must be of the form: alien:/[machine]/path/file.root
    // Using the option access, another access protocol (PFN) can be
    // specified for an LFN e.g.:
@@ -54,100 +64,49 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
    //     "alien:///alice/test.root?&se=Alice::CERN::Storage"
    // The default SE is specified by the enviroment variable alien_CLOSE_SE
    //
-   // The URL option "?locate=1" can be appended to a URL to use the TAlienFile
-   // interface to locate a file which is accessed by a logical file name.
-   // The file name is replaced by an TURL containing the file catalogue
-   // authorization envelope. This can be used f.e. to get file access authorization
-   // through a client to be used on a PROOF cluster reading data from
-   // authorization-envelope enabled xrootd servers. The "locate" option
-   // enforces only the retrieval of the access envelope but does not
-   // create a physical connection to an xrootd server.
+   // If you read a file, the closest file image to alien_CLOSE_SE is taken.
+   // If the file cannot opened from the closest image, the next image is tried,
+   // until there is no image location left to be tried.
    //
    // If the file specified in the URL does not exist, is not accessable
    // or can not be created the kZombie bit will be set in the TAlienFile
    // object. Use IsZombie() to see if the file is accessable.
    // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
+   //
+   // Warning: TAlienFile objects should only be created through the factory functions:
+   //    TFile::Open("alien://...");
+   // or
+   //    TAlienFile::Open("alien://...");
+   //
+   // Don't use "new TAlienFile" directly unless you know, what you are doing
+   //
 
-   fSubFileHandle=0;
-   fUrl = TUrl(url);
-
-   TUrl lUrl(url);
-
-   TString name(TString("alien://")+TString(lUrl.GetFile()));
-   SetName(name);
-   TFile::TFile(name, "NET", ftitle, compress);
-
-   fOption = option;
-
-   TString newurl = AccessURL(lUrl.GetUrl(), fOption, ftitle, compress);
-   Bool_t lLocate = kFALSE;
-   // get the options and check if this is just to prelocate the file ....
-   TString urloptions=lUrl.GetOptions();
-   TObjArray *objOptions = urloptions.Tokenize("&");
-   for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
-      TString loption = ((TObjString*)objOptions->At(n))->GetName();
-      TObjArray *objTags = loption.Tokenize("=");
-      if (objTags->GetEntries() == 2) {
-         TString key   =  ((TObjString*)objTags->At(0))->GetName();
-         TString value =  ((TObjString*)objTags->At(1))->GetName();
-         if ( (key == "locate") && (value == "1") ) {
-            lLocate=kTRUE;
-         }
-      }
-      delete objTags;
-   }
-   delete objOptions;
-
-   if (lLocate) {
-      SetName(newurl);
-      return;
-   }
-
-   TUrl nUrl(newurl.Data());
-   TString oldopt;
-   TString newopt;
-
-   if (newurl == "")
-      goto zombie;
-
-   oldopt = lUrl.GetOptions();
-
-   newopt = nUrl.GetOptions();
-
-   // add the original options from the alien URL
-   nUrl.SetOptions(newopt + TString("&") + oldopt + TString("&"));
-
-   if (parallelopen) {
-      fSubFileHandle = TFile::AsyncOpen(nUrl.GetUrl(), fOption, ftitle, compress);
-      return;
-   } else {
-      fSubFile = TFile::Open(nUrl.GetUrl(), fOption, ftitle, compress);
-   }
-
-   if ((!fSubFile) || (fSubFile->IsZombie())) {
-      Error("TAlienFile", "cannot open %s!", url);
-      goto zombie;
-   }
-
-   nUrl.SetOptions("");
-   fSubFile->SetName(nUrl.GetUrl());
-   fSubFile->SetTitle(name);
-
-   Init(kFALSE);
-   return;
-
-zombie:
-   // error in file opening occured, make this object a zombie
-   MakeZombie();
-   gDirectory = gROOT;
-   return;
+   TUrl logicalurl(lurl);
+   fLfn = logicalurl.GetFile();
+   fAuthz = authz;
 }
 
 //______________________________________________________________________________
-TString TAlienFile::AccessURL(const char *url, Option_t *option,
-                              const char *, Int_t)
+TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
+                             const char *ftitle, Int_t compress,
+                             Bool_t parallelopen)
 {
+
+   if (!gGrid) {
+      ::Error("TAlienFileAccess", "No GRID connection available!");
+      return 0;
+   }
+   TUrl lUrl(url);
+
+   TString name(TString("alien://") + TString(lUrl.GetFile()));
+   TString fAName = name;
+   TString fAOption = option;
+   TUrl fAUrl;
+   Bool_t fAWritable;
+   fAWritable = kFALSE;
+   TString authz;
+
    // Access a URL.
 
    TString stmp;
@@ -159,27 +118,27 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
    TUrl purl(url);
 
    // find out the storage element and the lfn from the given url
-   TString storageelement="";
+   TString storageelement;
+   storageelement = "";
    TString file = purl.GetFile();
 
-   Bool_t publicaccess=kFALSE;
+   Bool_t publicaccess = kFALSE;
    storageelement = gSystem->Getenv("alien_CLOSE_SE");
 
    // get the options and set the storage element
-   TString urloptions=purl.GetOptions();
+   TString urloptions = purl.GetOptions();
    TObjArray *objOptions = urloptions.Tokenize("&");
    for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
-      TString loption = ((TObjString*)objOptions->At(n))->GetName();
+      TString loption = ((TObjString *) objOptions->At(n))->GetName();
       TObjArray *objTags = loption.Tokenize("=");
       if (objTags->GetEntries() == 2) {
-         TString key   =  ((TObjString*)objTags->At(0))->GetName();
-         TString value =  ((TObjString*)objTags->At(1))->GetName();
-         if ( (key == "se") || (key == "SE") || (key == "Se") ) {
+         TString key = ((TObjString *) objTags->At(0))->GetName();
+         TString value = ((TObjString *) objTags->At(1))->GetName();
+         if (!key.CompareTo("se", TString::kIgnoreCase)) {
             storageelement = value;
          }
-         if ((key == "publicaccess") || (key == "PublicAccess") ||
-             (key == "PUBLICACCESS")) {
-            if (atoi( value.Data()))
+         if (!key.CompareTo("publicaccess")) {
+            if (atoi(value.Data()))
                publicaccess = kTRUE;
          }
       }
@@ -187,61 +146,62 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
    }
    delete objOptions;
 
-   fOption = option;
-   fOption.ToUpper();
-   fSubFile = 0;
+   fAOption = option;
+   fAOption.ToUpper();
 
-   TObjString* urlStr=0;
-   TObjString* authzStr=0;
+   TObjString *urlStr = 0;
+   TObjString *authzStr = 0;
+   TObjString *seStr = 0;
 
    TString command;
+   TString repcommand;
+   TIterator *iter = 0;
+   TObject *object = 0;
 
-   TIterator* iter = 0;
-   TObject* object = 0;
-
-   TGridResult* result;
-   TAlienResult* alienResult;
-   TList* list;
+   TGridResult *result;
+   TAlienResult *alienResult;
+   TList *list;
 
    TString stringurl;
    TString anchor;
-   TObjArray* tokens;
-   anchor="";
+   TObjArray *tokens;
+   anchor = "";
 
    TString newurl;
-   if (fOption == "NEW")
-      fOption = "CREATE";
+   if (fAOption == "NEW")
+      fAOption = "CREATE";
 
-   create = (fOption == "CREATE") ? kTRUE : kFALSE;
-   recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
-   update = (fOption == "UPDATE") ? kTRUE : kFALSE;
-   read = (fOption == "READ") ? kTRUE : kFALSE;
+   create = (fAOption == "CREATE") ? kTRUE : kFALSE;
+   recreate = (fAOption == "RECREATE") ? kTRUE : kFALSE;
+   update = (fAOption == "UPDATE") ? kTRUE : kFALSE;
+   read = (fAOption == "READ") ? kTRUE : kFALSE;
 
    if (!create && !recreate && !update && !read) {
       read = kTRUE;
-      fOption = "READ";
+      fAOption = "READ";
    }
 
    if (create || recreate || update) {
-      fWritable=kTRUE;
+      fAWritable = kTRUE;
    }
 
    if (recreate) {
-      fOption = "CREATE";
+      fAOption = "CREATE";
       create = kTRUE;
    }
-
    /////////////////////////////////////////////////////////////////////////////////////////
    // first get an active Grid connection
 
    if (!gGrid) {
       // no TAlien existing ....
-      Error("TAlienFile", "no active GRID connection found");
-      goto zombie2;
+      ::Error("TAlienFile::Open", "no active GRID connection found");
+      fAUrl = "";
+      return 0;
    } else {
       if ((strcmp(gGrid->GetGrid(), "alien"))) {
-         Error("TAlienFile", "you don't have an active <alien> grid!");
-         goto zombie2;
+         ::Error("TAlienFile::Open", "you don't have an active <alien> grid!");
+         fAUrl = "";
+         return 0;
       }
    }
 
@@ -270,96 +230,207 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
 
    command += file;
 
-   if (fWritable) {
+   if (fAWritable) {
       // append the storage element environment variable
       command += " ";
       command += storageelement;
    }
 
-   fLfn = file;
-   result = gGrid->Command(command.Data(),kFALSE,TAlien::kOUTPUT);
-   alienResult = dynamic_cast<TAlienResult*>(result);
-   list = dynamic_cast<TList*>(alienResult);
-   if (!list) {
-      if (result) {
+   TString fALfn = file;
+
+   int imagenr = 0;
+
+   do {
+      imagenr++;
+      repcommand = command;
+      if (!fAWritable) {
+         // in the read case, try all image locations
+         if (storageelement != "") {
+            repcommand += " ";
+            repcommand += storageelement;
+         } else {
+            repcommand += " ";
+            repcommand += "unknown";
+         }
+         repcommand += " 0 ";
+         repcommand += imagenr;
+      }
+
+      result = gGrid->Command(repcommand.Data(), kFALSE, TAlien::kOUTPUT);
+      alienResult = dynamic_cast < TAlienResult * >(result);
+      list = dynamic_cast < TList * >(alienResult);
+      if (!list) {
+
+         if (seStr)
+            ::Error("TAlienFile::Open",
+                    "cannot get the access envelope for %s and image %u in SE <%s>",
+                    purl.GetUrl(), imagenr, seStr->GetName());
+         else
+            ::Error("TAlienFile::Open",
+                    "cannot get the access envelope for %s and image %u",
+                    purl.GetUrl(), imagenr);
+         fAUrl = "";
+         if (result) {
+            delete result;
+         }
+         return 0;
+      }
+
+      iter = list->MakeIterator();
+      object = 0;
+
+      Bool_t imageeof = kFALSE;
+
+      while ((object = iter->Next()) != 0) {
+         TMap *map = dynamic_cast < TMap * >(object);
+
+         TObject *urlObject = map->GetValue("url");
+         urlStr = dynamic_cast < TObjString * >(urlObject);
+
+         TObject *authzObject = map->GetValue("envelope");
+         authzStr = dynamic_cast < TObjString * >(authzObject);
+
+         TObject *seObject = map->GetValue("se");
+         seStr = dynamic_cast < TObjString * >(seObject);
+
+         if (map->GetValue("eof")) {
+            imageeof = kTRUE;
+            // there is only one result line .... in case it is at all ....
+         }
+         break;
+      }
+
+      if ((!urlStr) || (!authzStr)) {
+         if (fAWritable) {
+            ::Error("TAlienFile::Open",
+                    "didn't get the authorization to write %s",
+                    purl.GetUrl());
+         } else {
+            ::Error("TAlienFile::Open",
+                    "didn't get the authorization to read %s from location %u",
+                    purl.GetUrl(), imagenr);
+         }
+
+         ::Info("TAlienFile::Open",
+                "Command::Stdout !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+         gGrid->Stdout();
+         ::Info("TAlienFile::Open",
+                "Command::Stderr !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+         gGrid->Stderr();
+         ::Info("TAlienFile::Open",
+                "End of Output   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+         delete iter;
          delete result;
-      }
-      Error("TAlienFile", "cannot get the access envelope for %s",purl.GetUrl());
-      goto zombie2;
-   }
-
-   iter = list->MakeIterator();
-   object = 0;
-
-   while ((object = iter->Next()) != 0) {
-      TMap* map = dynamic_cast<TMap*>(object);
-
-      TObject* urlObject = map->GetValue("url");
-      urlStr = dynamic_cast<TObjString*>(urlObject);
-
-      TObject* authzObject = map->GetValue("envelope");
-      authzStr = dynamic_cast<TObjString*>(authzObject);
-
-      // there is only one result line .... in case it is at all ....
-      break;
-   }
-
-   if ((!urlStr) || (!authzStr)) {
-      if (fWritable) {
-         Error("TAlienFile", "didn't get the authorization to write %s",purl.GetUrl());
-      } else {
-         Error("TAlienFile", "didn't get the authorization to read %s",purl.GetUrl());
+         fAUrl = "";
+         if (!imageeof) {
+            continue;
+         } else {
+            // if the service signals eof, it makes no sense to check more replicas
+            ::Error("TAlienFile::Open",
+                    "No more images to try - giving up");
+            return 0;
+         }
       }
 
-      Info("TAlienFile","Command::Stdout !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-      gGrid->Stdout();
-      Info("TAlienFile","Command::Stderr !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-      gGrid->Stderr();
-      Info("TAlienFile","End of Output   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
       delete iter;
-      delete result;
-      goto zombie2;
-   }
 
-   delete iter;
-   delete result;
+      authz = authzStr->GetName();
+      stringurl = urlStr->GetName();
 
-   fAuthz = authzStr->GetName();
-   stringurl = urlStr->GetName();
+      tokens = stringurl.Tokenize("#");
 
-   tokens = stringurl.Tokenize("#");
-
-   if (tokens->GetEntries() == 2) {
-     anchor = ((TObjString*)tokens->At(1))->GetName();
-   }
-   urlStr->SetString(((TObjString*)tokens->At(0))->GetName());
-   if (tokens) {
-     delete tokens;
-   }
-
-
-   newurl = urlStr->GetName();
-   stmp = purl.GetAnchor();
-   newurl += TString("?&authz=");
-   newurl += authzStr->GetName();
-   if (stmp != "") {
-      newurl += "#";
-      newurl += purl.GetAnchor();
-   } else {
-      if (anchor.Length()) {
-         newurl += "#";
-         newurl += anchor;
+      if (tokens->GetEntries() == 2) {
+         anchor = ((TObjString *) tokens->At(1))->GetName();
+         urlStr->SetString(((TObjString *) tokens->At(0))->GetName());
       }
-      //=======
-      //      newurl += "#";
-      //      newurl += purl.GetAnchor();
-      //>>>>>>> 1.17
-   }
-   return newurl;
 
-zombie2:
-   // error in file opening occured, make this object a zombie
-   return "";
+      if (tokens) {
+         delete tokens;
+      }
+
+      newurl = urlStr->GetName();
+      stmp = purl.GetAnchor();
+      newurl += TString("?&authz=");
+      newurl += authzStr->GetName();
+
+      if (!fAWritable) {
+         if (seStr)
+            ::Info("TAlienFile::Open", "Accessing image %u of %s in SE <%s>",
+                   imagenr, purl.GetUrl(), seStr->GetName());
+         else
+            ::Info("TAlienFile::Open", "Accessing image %u of %s", imagenr, purl.GetUrl());
+      }
+      // the treatement of ZIP files is done in the following way:
+      // LFNs in AliEn pointint to files in ZIP archives don't contain the .zip suffix in the file name
+      // to tell TArchiveFile about the ZIP nature, we add to the URL options 'zip=<member>'
+      // This options are not visible in the file name, they are passed through TXNetFile to TNetFile to TArchiveFile
+
+      if (stmp != "") {
+         newurl += "#";
+         newurl += purl.GetAnchor();
+         TString lUrlfile = lUrl.GetFile();
+         TString lUrloption;
+         lUrloption = "zip=";
+         lUrloption += purl.GetAnchor();
+         lUrl.SetFile(lUrlfile);
+         lUrl.SetOptions(lUrloption);
+      } else {
+         if (anchor.Length()) {
+            newurl += "#";
+            newurl += anchor;
+            TString lUrlfile = lUrl.GetFile();
+            TString lUrloption;
+            lUrloption = "zip=";
+            lUrloption += anchor;
+            lUrl.SetFile(lUrlfile);
+            //      lUrl.SetAnchor(anchor);
+            lUrl.SetOptions(lUrloption);
+         }
+      }
+
+      fAUrl = TUrl(newurl);
+
+      // append the original options
+      TString oldopt;
+      TString newopt;
+
+      if (TString(fAUrl.GetUrl()) == "") {
+         // error in file opening occured
+         return 0;
+      }
+
+      TUrl nUrl = fAUrl;
+      TUrl oUrl(url);
+
+      oldopt = oUrl.GetOptions();
+      newopt = nUrl.GetOptions();
+
+      // add the original options from the alien URL
+      nUrl.SetOptions(newopt + TString("&") + oldopt + TString("&"));
+
+      fAUrl = nUrl;
+      delete result;
+      TAlienFile *alienfile =
+          new TAlienFile(fAUrl.GetUrl(), fAOption, ftitle, compress,
+                         parallelopen, lUrl.GetUrl(), authz);
+      if (alienfile->IsZombie()) {
+         delete alienfile;
+         if (fAWritable) {
+            // for the moment we support only 1 try during writing - no alternative locations
+            break;
+         }
+         continue;
+      } else {
+         return alienfile;
+      }
+   } while (imagenr < MAX_FILE_IMAGES);
+
+   if (!fAWritable) {
+      ::Error("TAlienFile::Open",
+              "Couldn't open any of the file images of %s", lUrl.GetUrl());
+   }
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -367,97 +438,51 @@ TAlienFile::~TAlienFile()
 {
    // TAlienFile file dtor.
 
-   R__LOCKGUARD2(gROOTMutex);
-   if (fSubFile) {
+   if (IsOpen()) {
       Close();
-
-      gROOT->GetListOfFiles()->Remove(fSubFile);
-      gROOT->GetUUIDs()->RemoveUUID(fSubFile->GetUniqueID());
-      SafeDelete(fSubFile);
    }
-   //   gROOT->GetListOfFiles()->Remove(this);
-   //   gROOT->GetUUIDs()->RemoveUUID(this->GetUniqueID());
-
-   fSubFile = 0;
-   gFile = 0;
-   gDirectory = gROOT;
    if (gDebug)
       Info("~TAlienFile", "dtor called for %s", GetName());
 }
 
 //______________________________________________________________________________
-Bool_t TAlienFile::ReadBuffer(char *buf, Int_t len)
-{
-   // Read specified byte range.
-   // Returns kTRUE in case of error.
-
-   if (fSubFile)
-      return fSubFile->ReadBuffer(buf, len);
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TAlienFile::WriteBuffer(const char *buf, Int_t len)
-{
-   // Write specified byte range.
-   // Returns kTRUE in case of error.
-
-   if (fSubFile)
-      return fSubFile->WriteBuffer(buf, len);
-   return kTRUE;
-}
-
-
-//______________________________________________________________________________
-void TAlienFile::Seek(Long64_t offset, ERelativeTo pos)
-{
-   // Seek into file.
-
-   if (fSubFile) {
-      fSubFile->Seek(offset, pos);
-   }
-}
-
-//______________________________________________________________________________
-void TAlienFile::Close(Option_t *option)
+void TAlienFile::Close(Option_t * option)
 {
    // Close file.
 
-   if (fOption == "READ")
+   if (fOption == "READ") {
+      TXNetFile::Close(option);
       return;
-
+   }
    // set GCLIENT_EXTRA_ARG environment
-   gSystem->Setenv("GCLIENT_EXTRA_ARG",fAuthz.Data());
+   gSystem->Setenv("GCLIENT_EXTRA_ARG", fAuthz.Data());
 
    // commit the envelope
    TString command("commit ");
 
-   command += (Long_t)fSubFile->GetSize();
+   command += (Long_t) GetSize();
    command += " ";
    command += fLfn;
 
-   if (fSubFile) {
-     fSubFile->Close(option);
-   }
-
-   TGridResult* result = gGrid->Command(command, kFALSE,TAlien::kOUTPUT);
-   TAlienResult* alienResult = dynamic_cast<TAlienResult*>(result);
-   TList* list = dynamic_cast<TList*>(alienResult);
+   TGridResult *result = gGrid->Command(command, kFALSE, TAlien::kOUTPUT);
+   TAlienResult *alienResult = dynamic_cast < TAlienResult * >(result);
+   TList *list = dynamic_cast < TList * >(alienResult);
    if (!list) {
       if (result) {
          delete result;
       }
       Error("Close", "cannot commit envelope for %s", fLfn.Data());
    }
-   TIterator* iter = list->MakeIterator();
-   TObject* object = 0;
+   TIterator *iter = list->MakeIterator();
+   TObject *object = 0;
    if (fWritable) {
       while ((object = iter->Next()) != 0) {
-         TMap* map = dynamic_cast<TMap*>(object);
-         TObject* commitObject = map->GetValue(fLfn.Data());
+         TMap *map = dynamic_cast < TMap * >(object);
+         TObject *commitObject = map->GetValue(fLfn.Data());
          if (commitObject) {
-            TObjString* commitStr = dynamic_cast<TObjString*>(commitObject);
-            if (!(strcmp(commitStr->GetName(),"1"))) {
+            TObjString *commitStr =
+                dynamic_cast < TObjString * >(commitObject);
+            if (!(strcmp(commitStr->GetName(), "1"))) {
                // the file has been committed
                break;
             }
@@ -472,30 +497,5 @@ void TAlienFile::Close(Option_t *option)
    }
 
    gSystem->Unsetenv("GCLIENT_EXTRA_ARG");
-}
-
-//______________________________________________________________________________
-void TAlienFile::Init(Bool_t /*create*/)
-{
-   // Initialize an Alien file.
-
-   gFile=this;
-   if (fSubFileHandle) {
-      fSubFile = TFile::Open(fSubFileHandle);
-      fSubFileHandle=0;
-      if ((!fSubFile) || (fSubFile->IsZombie())) {
-         Error("TAlienFile", "cannot open %s!", GetName());
-         gFile = 0;
-         gDirectory = gROOT;
-         MakeZombie();
-         return;
-      }
-   }
-   {
-      R__LOCKGUARD2(gROOTMutex);
-      //     gROOT->GetListOfFiles()->Remove(fSubFile);
-      //     gROOT->GetUUIDs()->RemoveUUID(fSubFile->GetUniqueID());
-      //     gROOT->GetListOfFiles()->Add(this);
-      //     gROOT->GetUUIDs()->AddUUID(fUUID,this);
-   }
+   TXNetFile::Close(option);
 }

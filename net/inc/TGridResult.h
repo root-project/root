@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.7 2005/12/09 16:24:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.8 2005/12/09 18:36:52 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -27,11 +27,15 @@
 #include "TList.h"
 #endif
 
+#ifndef ROOT_TEventList
+#include "TEventList.h"
+#endif
+
 
 class TGridResult : public TList {
 
 public:
-   TGridResult() : TList() { }
+   TGridResult() : TList() { SetOwner(kTRUE); }
    virtual ~TGridResult() { }
 
    virtual const char *GetFileName(UInt_t) const
@@ -40,6 +44,8 @@ public:
       { MayNotUse("GetFileNamePath"); return 0; }
    virtual const char *GetPath(UInt_t) const
       { MayNotUse("GetPath"); return 0; }
+   virtual const TEventList *GetEventList(UInt_t) const
+      { MayNotUse("GetEventList"); return 0; }
    virtual const char *GetKey(UInt_t, const char*) const
       { MayNotUse("GetKey"); return 0; }
    virtual Bool_t      SetKey(UInt_t, const char*, const char*)
