@@ -127,6 +127,9 @@ KRB5AUTHLIBDEP      = $(ROOTAUTHLIB)
 KRB5AUTHLIBEXTRA    = lib/libRootAuth.lib
 QTGSILIBDEP         = $(GUILIB) $(GPADLIB)
 QTGSILIBEXTRA       = lib/libGui.lib lib/libGpad.lib
+FITPANELLIBDEP      = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB)
+FITPANELLIBEXTRA    = lib/libGui.lib lib/libGpad.lib lib/libHist.lib \
+                      lib/libGraf.lib lib/libTree.lib 
 
 else
 
@@ -243,5 +246,7 @@ KRB5AUTHLIBDEP      = $(ROOTAUTHLIB)
 KRB5AUTHLIBEXTRA    = -Llib -lRootAuth
 QTGSILIBDEP         = $(GUILIB) $(GPADLIB)
 QTGSILIBEXTRA       = -Llib -lGui -lGpad
+FITPANELLIBDEP      = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB)
+FITPANELLIBEXTRA    = -Llib -lGui -lGpad -lHist -lGraf -lTree 
 
 endif

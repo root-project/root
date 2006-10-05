@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TUtilPad.cxx,v 1.4 2004/09/15 14:56:35 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TUtilPad.cxx,v 1.5 2005/02/04 13:07:16 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TDrawPanelHist.h"
 #include "TInspectCanvas.h"
 #include "TVirtualPadEditor.h"
+#include "TPluginManager.h"
 
 Int_t TUtilPad::fgPanelVersion = 0;
 
@@ -50,6 +51,7 @@ void TUtilPad::DrawPanel(const TVirtualPad *pad, const TObject *obj)
 // interface to the TDrawPanelHist
    
    const char *editor = gEnv->GetValue("Plugin.TVirtualPadEditor","");
+
    if (fgPanelVersion == 0 && strstr(editor,"TGedEditor")) {
       //new interface by Carsten Hof
       //gROOT->ProcessLine(Form("TVirtualPadEditor::ShowEditor();"));
@@ -75,14 +77,27 @@ void TUtilPad::FitPanel(const TVirtualPad *pad, const TObject *obj)
 {
 // interface to the TFitPanel
    
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   TFitPanel *R__fitpanel = (TFitPanel*)lc->FindObject("R__fitpanel");
-   if (!R__fitpanel) {
-      new TFitPanel("R__fitpanel","Fit Panel",300,400,pad,obj);
-      return;
+   if (fgPanelVersion == 0) {
+
+      // new interface (default)
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TFitEditor"))) {
+      if (h->LoadPlugin() == -1)
+         return;
+      h->ExecPlugin(2, pad, obj);
+      }
+   } else {
+   
+      // old FitPanel - use TUtilPad::SetPanelVersion(1)
+      TList *lc = (TList*)gROOT->GetListOfCanvases();
+      TFitPanel *R__fitpanel = (TFitPanel*)lc->FindObject("R__fitpanel");
+      if (!R__fitpanel) {
+         new TFitPanel("R__fitpanel","Fit Panel",300,400,pad,obj);
+         return;
+      }
+      R__fitpanel->SetDefaults();
+      R__fitpanel->Show();
    }
-   R__fitpanel->SetDefaults();
-   R__fitpanel->Show();
 }
 
 //______________________________________________________________________________
@@ -90,14 +105,24 @@ void TUtilPad::FitPanelGraph(const TVirtualPad *pad, const TObject *obj)
 {
 // interface to the TFitPanelGraph
    
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   TFitPanelGraph *R__fitpanel = (TFitPanelGraph*)lc->FindObject("R__fitpanelgraph");
-   if (!R__fitpanel) { 
-      new TFitPanelGraph("R__fitpanelgraph","Fit Panel",300,400,pad,obj);
-      return;
+   if (fgPanelVersion == 0) {
+      TPluginHandler *h;
+      h = gROOT->GetPluginManager()->FindHandler("TFitEditor");
+      if (h->LoadPlugin() == -1)
+         return;
+      h->ExecPlugin(2, pad, obj);
+   } else {
+
+   // old FitPanel - use TUtilPad::SetPanelVersion(1)
+      TList *lc = (TList*)gROOT->GetListOfCanvases();
+      TFitPanelGraph *R__fitpanel = (TFitPanelGraph*)lc->FindObject("R__fitpanelgraph");
+      if (!R__fitpanel) { 
+         new TFitPanelGraph("R__fitpanelgraph","Fit Panel",300,400,pad,obj);
+         return;
+      }
+      R__fitpanel->SetDefaults(); 
+      R__fitpanel->Show();
    }
-   R__fitpanel->SetDefaults(); 
-   R__fitpanel->Show();
 }
 
 //______________________________________________________________________________

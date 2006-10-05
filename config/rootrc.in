@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.147 2006/09/26 14:05:25 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.148 2006/10/05 14:56:24 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -524,6 +524,7 @@ Plugin.TVirtualFFT:     fftwc2c TFFTComplex     FFTW   "TFFTComplex(Int_t, Int_t
 +Plugin.TVirtualFFT:    fftwc2r TFFTComplexReal FFTW   "TFFTComplexReal(Int_t,Int_t *, Bool_t)"
 +Plugin.TVirtualFFT:    fftwr2c TFFTRealComplex FFTW   "TFFTRealComplex(Int_t,Int_t *, Bool_t)"
 +Plugin.TVirtualFFT:    fftwr2r TFFTReal        FFTW   "TFFTReal(Int_t, Int_t *,Bool_t)"
+Plugin.TFitEditor         *  TFitEditor       FitPanel "TFitEditor(const TVirtualPad*, const TObject*)"
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.
