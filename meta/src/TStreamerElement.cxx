@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.86 2006/02/22 19:52:08 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.87 2006/03/06 22:58:18 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TRef.h"
 #include "Api.h"
 #include "TInterpreter.h"
+#include "TError.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -96,7 +97,7 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
       TString sbits(comma2+1,right-comma2-1);
       sscanf(sbits.Data(),"%d",&nbits);
       if (nbits < 2 || nbits > 32) {
-         printf("illegal specification for the number of bits; %d. reset to 32\n",nbits);
+         ::Error("GetRange","Illegal specification for the number of bits; %d. reset to 32.",nbits);
          nbits = 32;
       }
       right = comma2;
@@ -1444,7 +1445,16 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
          if (info.IsValid() && info.Property()&G__BIT_ISENUM) {
             if (isPointer) fCtype += TStreamerInfo::kOffsetP;
          } else {
-            if(strcmp(sopen,"string")) printf ("UNKNOW type, sopen=%s\n",sopen);
+            if(strcmp(sopen,"string")) {
+               // This case can happens when 'this' is a TStreamerElement for
+               // a STL container containing something for which we do not have
+               // a TStreamerInfo (This happens in particular is the collection 
+               // objects themselves are always empty) and we do not have the
+               // dictionary/shared library for the container.
+               if (GetClassPointer() && GetClassPointer()->IsLoaded()) {
+                  Warning("TStreamerSTL","For %s we could not find any information about the type %s",fTypeName.Data(),sopen);
+               }
+            }
          }
       }
    }
