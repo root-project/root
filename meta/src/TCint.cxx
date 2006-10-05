@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.124 2006/07/17 19:19:11 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.125 2006/09/04 15:33:35 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -608,7 +608,9 @@ Bool_t TCint::CheckClassInfo(const char *name)
    // In case of templates the idea is that everything between the outer
    // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
 
-   char *classname = StrDup(name);
+   char *classname = new char[strlen(name)*2];
+   strcpy(classname,name);
+
    char *current = classname;
    while (*current) {
 
@@ -644,12 +646,14 @@ Bool_t TCint::CheckClassInfo(const char *name)
       *current = ':';
       current += 2;
    }
-   delete [] classname;
+   strcpy(classname,name);
 
-   Int_t tagnum = G__defined_tagname(name, 2);
+   Int_t tagnum = G__defined_tagname(classname, 2); // This function might modify the name (to add space between >>).
    if (tagnum >= 0) return kTRUE;
    G__TypedefInfo t(name);
    if (t.IsValid() && !(t.Property()&G__BIT_ISFUNDAMENTAL)) return kTRUE;
+
+   delete [] classname;
    return kFALSE;
 }
 
