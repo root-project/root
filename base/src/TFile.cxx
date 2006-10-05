@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.187 2006/08/31 09:44:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.188 2006/09/11 08:11:05 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -51,7 +51,6 @@
 #include "TVirtualMonitoring.h"
 #include "TVirtualMutex.h"
 
-
 TFile *gFile;                 //Pointer to current file
 
 
@@ -73,25 +72,26 @@ TFile::TFile() : TDirectory(), fInfoCache(0)
 {
    // File default Constructor.
 
-   fD             = -1;
-   fFree          = 0;
-   fWritten       = 0;
-   fSumBuffer     = 0;
-   fSum2Buffer    = 0;
-   fClassIndex    = 0;
-   fProcessIDs    = 0;
-   fNProcessIDs   = 0;
-   fOffset        = 0;
-   fArchive       = 0;
-   fCacheRead     = 0;
-   fCacheWrite    = 0;
-   fArchiveOffset = 0;
-   fReadCalls     = 0;
-   fIsRootFile    = kTRUE;
-   fIsArchive     = kFALSE;
-   fInitDone      = kFALSE;
-   fMustFlush     = kTRUE;
-   fAsyncHandle   = 0;
+   fD               = -1;
+   fFree            = 0;
+   fWritten         = 0;
+   fSumBuffer       = 0;
+   fSum2Buffer      = 0;
+   fClassIndex      = 0;
+   fProcessIDs      = 0;
+   fNProcessIDs     = 0;
+   fOffset          = 0;
+   fArchive         = 0;
+   fCacheRead       = 0;
+   fCacheWrite      = 0;
+   fArchiveOffset   = 0;
+   fReadCalls       = 0;
+   fNoAnchorInName  = kFALSE;
+   fIsRootFile      = kTRUE;
+   fIsArchive       = kFALSE;
+   fInitDone        = kFALSE;
+   fMustFlush       = kTRUE;
+   fAsyncHandle     = 0;
    fAsyncOpenStatus = kAOSNotAsync;
    SetBit(kBinaryFile, kTRUE);
 
@@ -231,8 +231,16 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
 
-   // store original name and title
-   SetName(fname1);
+   // store name without the options as name and title
+   TString sfname1 = fname1;
+   fNoAnchorInName = kFALSE;
+   if (sfname1.Index("?") != kNPOS) {
+      TString s = sfname1(0, sfname1.Index("?"));
+      SetName(s);
+	   fNoAnchorInName = kTRUE;
+   } else
+      SetName(fname1);
+
    SetTitle(ftitle);
 
    // accept also URL like "file:..." syntax
@@ -464,8 +472,9 @@ void TFile::Init(Bool_t create)
       if (fIsArchive) return;
 
       // Make sure the anchor is in the name
-      if (!strchr(GetName(),'#'))
-         SetName(Form("%s#%s", GetName(), fArchive->GetMemberName()));
+      if (!fNoAnchorInName)
+	      if (!strchr(GetName(),'#'))
+	         SetName(Form("%s#%s", GetName(), fArchive->GetMemberName()));
 
       if (fArchive->SetCurrentMember() != -1)
          fArchiveOffset = fArchive->GetMemberFilePosition();
@@ -814,7 +823,6 @@ void TFile::DrawMap(const char *keys, Option_t *option)
 void TFile::Flush()
 {
    // Synchronize a file's in-core and on-disk states.
-
    if (IsOpen() && fWritable) {
       FlushWriteCache();
       if (SysSync(fD) < 0) {
@@ -1245,6 +1253,7 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 
       while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
          ResetErrno();
+
       if (siz < 0) {
          SysError("ReadBuffer", "error reading from file %s", GetName());
          return kTRUE;
@@ -2131,7 +2140,7 @@ void TFile::SetReadStreamerInfo(Bool_t readinfo)
    // by the file have not yet been loaded.
    // if fgReadInfo is false, one can still read the StreamerInfo with
    //    myfile.ReadStreamerInfo();
-   
+
    fgReadInfo = readinfo;
 }
 

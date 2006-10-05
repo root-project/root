@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TArchiveFile.cxx,v 1.3 2005/05/31 13:30:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TArchiveFile.cxx,v 1.4 2006/06/09 01:21:43 rdm Exp $
 // Author: Fons Rademakers   30/6/04
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "TPluginManager.h"
 #include "TROOT.h"
 #include "TObjArray.h"
+#include "TObjString.h"
 #include "TError.h"
 #include "TUrl.h"
 
@@ -141,8 +142,35 @@ Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member
 
    TUrl u(url, kTRUE);
 
-   archive   = "";
-   member    = "";
+   archive = "";
+   member  = "";
+
+   // get the options and see, if the archive was specified by an option
+   TString urloptions = u.GetOptions();
+   TObjArray *objOptions = urloptions.Tokenize("&");
+   for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
+
+      TString loption = ((TObjString*)objOptions->At(n))->GetName();
+      TObjArray *objTags = loption.Tokenize("=");
+      if (objTags->GetEntries() == 2) {
+
+         TString key   = ((TObjString*)objTags->At(0))->GetName();
+         TString value = ((TObjString*)objTags->At(1))->GetName();
+
+         if (!key.CompareTo("zip", TString::kIgnoreCase)) {
+	         archive = u.GetFile();
+            archive += ".zip";
+	         member = value;
+         }
+      }
+      delete objTags;
+   }
+   delete objOptions;
+
+   if (member != "") {
+      // member set by an option
+      return kTRUE;
+   }
 
    if (!strlen(u.GetAnchor())) {
       archive = u.GetFile();

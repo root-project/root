@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.55 2006/08/11 20:25:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.56 2006/09/11 08:11:04 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -36,7 +36,6 @@ class TFileCacheRead;
 class TFileCacheWrite;
 
 class TFile : public TDirectory {
-  friend class TAlienFile;
   friend class TDirectory;
 
 public:
@@ -73,6 +72,7 @@ protected:
    TFileCacheWrite *fCacheWrite;     //!Pointer to the write cache (if any)
    Long64_t         fArchiveOffset;  //!Offset at which file starts in archive
    Bool_t           fIsArchive;      //!True if this is a pure archive file
+   Bool_t           fNoAnchorInName; //!True if we don't want to force the anchor to be appended to the file name
    Bool_t           fIsRootFile;     //!True is this is a ROOT file, raw file otherwise
    Bool_t           fInitDone;       //!True if the file has been initialized
    Bool_t           fMustFlush;      //!True if the file buffers must be flushed
