@@ -71,7 +71,7 @@ embedstl: embedstl.log
 	$(TestDiff)
 
 mapvector.root: mapvector_C.$(DllSuf)
-	$(CMDECHO) root.exe -q -b -l mapvector.C+ > mapvector_root.build 2>&1
+	$(CMDECHO) root.exe -q -b -l mapvector.C+ > mapvector_root.build.log 2>&1
 
 mapvector.log: mapvector.root
 
