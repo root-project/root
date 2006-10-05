@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.15 2006/09/25 13:43:21 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.16 2006/09/26 08:06:49 rdm Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -93,6 +93,8 @@ public:
    ~TGLSAViewer();
 
    virtual const char* GetName() const { return "GLViewer"; }
+
+   virtual void RefreshPadEditor(TObject* changed=0);
 
    void   Show();
    void   Close();

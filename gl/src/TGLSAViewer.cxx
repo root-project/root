@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.24 2006/09/25 13:43:21 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.25 2006/09/26 08:07:18 rdm Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TGSplitter.h"
 #include "TColor.h"
 
+#include "TVirtualPad.h"
 #include "TGedEditor.h"
 #include "TRootEmbeddedCanvas.h"
 #include "TString.h"
@@ -195,7 +196,7 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fFrame->SetCleanup(kDeepCleanup);
    fLeftVerticalFrame->GetList()->AddFirst(fe);
 
-   fGedEditor->SetModel(fPad, this, kButton1);
+   fGedEditor->SetModel(fPad, this, kButton1Down);
    Show();
 }  
 
@@ -245,7 +246,7 @@ TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
    fFrame->SetCleanup(kDeepCleanup);
    fLeftVerticalFrame->GetList()->AddFirst(fe);
 
-   fGedEditor->SetModel(fPad, this, kButton1);
+   fGedEditor->SetModel(fPad, this, kButton1Down);
    Show();
 }
 
@@ -262,6 +263,14 @@ TGLSAViewer::~TGLSAViewer()
    delete fFileSaveMenu;
    delete fFileMenu;
    delete fFrame;
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::RefreshPadEditor(TObject* changed)
+{
+   if (changed == 0 || fGedEditor->GetModel() == changed) {
+      fGedEditor->SetModel(fPad, fGedEditor->GetModel(), kButton1Down);
+   }
 }
 
 //______________________________________________________________________________
@@ -360,7 +369,7 @@ void TGLSAViewer::Show()
 {
    // Show the viewer
    fFrame->MapRaised();
-   fGedEditor->SetModel(fPad, this, 0);
+   fGedEditor->SetModel(fPad, this, kButton1Down);
    RequestDraw();
 }
 
@@ -512,10 +521,10 @@ void TGLSAViewer::SelectionChanged()
 
    if (selected) {
       fPShapeWrap->fPShape = selected;
-      fGedEditor->SetModel(fPad, fPShapeWrap, kButton1);
+      fGedEditor->SetModel(fPad, fPShapeWrap, kButton1Down);
    } else {
       fPShapeWrap->fPShape = 0;
-      fGedEditor->SetModel(fPad, this, kButton1); 
+      fGedEditor->SetModel(fPad, this, kButton1Down);
    }
 }
 

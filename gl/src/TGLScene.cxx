@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.42 2006/05/08 14:01:30 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.43 2006/08/23 14:39:40 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -444,11 +444,8 @@ void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
          }
          // No clip - default single side lighting,
          // front polygons, cull (BACK) faces ok
-         if (sceneFlags.Style() == TGLDrawFlags::kFill) {
-            glClearColor(0.0, 0.0, 0.0, 1.0); // Black background for fill
-         } else {
-            glClearColor(1.0, 1.0, 1.0, 1.0); // White background for outline
-            reqFullDraws = 2;                 // Outline needs two full draws
+         if (sceneFlags.Style() == TGLDrawFlags::kOutline) {
+            reqFullDraws = 2;   // Outline needs two full draws
          }
 
          break;
@@ -456,7 +453,6 @@ void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
       case (TGLDrawFlags::kWireFrame): {
          glDisable(GL_LIGHTING);
          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-         glClearColor(0.0, 0.0, 0.0, 1.0); // Black
          break;
       }
       default: {

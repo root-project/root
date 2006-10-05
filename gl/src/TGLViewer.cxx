@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.52 2006/08/23 14:39:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.53 2006/08/23 15:32:48 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -98,6 +98,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fAction(kCameraNone), fLastPos(0,0), fActiveButtonID(0),
    fDrawFlags(TGLDrawFlags::kFill, TGLDrawFlags::kLODHigh),
    fRedrawTimer(0),
+   fClearColor(1),
    fLightState(kLightMask), // All on
    fAxesType(kAxesNone),
    fReferenceOn(kFALSE),
@@ -111,6 +112,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fGLWindow(0),
    fGLDevice(-1),
    fPadEditor(0),
+   fIgnoreSizesOnUpdate(kFALSE),
    fResetCamerasOnUpdate(kTRUE),
    fResetCamerasOnNextUpdate(kFALSE),
    fResetCameraOnDoubleClick(kTRUE)
@@ -145,6 +147,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fAction(kCameraNone), fLastPos(0,0), fActiveButtonID(0),
    fDrawFlags(TGLDrawFlags::kFill, TGLDrawFlags::kLODHigh),
    fRedrawTimer(0),
+   fClearColor(1),
    fLightState(kLightMask), // All on
    fAxesType(kAxesNone),
    fReferenceOn(kFALSE),
@@ -158,6 +161,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fGLWindow(0),
    fGLDevice(fPad->GetGLDevice()),
    fPadEditor(0),
+   fIgnoreSizesOnUpdate(kFALSE),
    fResetCamerasOnUpdate(kTRUE),
    fResetCamerasOnNextUpdate(kFALSE),
    fResetCameraOnDoubleClick(kTRUE)
@@ -502,8 +506,8 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
             if (!box.IsEmpty()) {
                // Test transformed box with camera
                box.Transform(TGLMatrix(buffer.fLocalMaster));
-               Bool_t ofInterest = CurrentCamera().OfInterest
-                  (box, logical ? logical->IgnoreSizeForOfInterest() : kTRUE);
+               Bool_t ignoreSize = fIgnoreSizesOnUpdate || !logical || logical->IgnoreSizeForOfInterest();
+               Bool_t ofInterest = CurrentCamera().OfInterest(box, ignoreSize);
 
                // For external PID request children if physical of interest
                if (addChildren &&!fInternalPIDs) {
@@ -886,6 +890,21 @@ void TGLViewer::ResetCurrentCamera()
 }
 
 //______________________________________________________________________________
+void TGLViewer::UpdateScene()
+{
+   // Force a scene update.
+   // Code segments taken from protected RebuildScene().
+
+   // We are going to rebuild the scene - ensure any pending redraw timer cancelled now
+   fRedrawTimer->Stop();
+
+   // Pretend the update request came from outside.
+   fInternalRebuild = kFALSE;
+
+   fPad->Paint();
+}
+
+//______________________________________________________________________________
 void TGLViewer::SetupLights()
 {
    // Setup lights for current scene bounding box
@@ -1137,18 +1156,13 @@ void TGLViewer::PreDraw()
       InitGL();
    }
 
-
-   if (fGLDevice != -1) {
-      //Clear color must be canvas's background color
-      Color_t ci = gPad->GetFillColor();
-      TColor *color = gROOT->GetColor(ci);
-      Float_t sc[3] = {1.f, 1.f, 1.f};
-
-      if (color)
-         color->GetRGB(sc[0], sc[1], sc[2]);
-
-      glClearColor(sc[0], sc[1], sc[2], 1.);
-   }
+   // For embedded gl clear color must be pad's background color.
+   Color_t ci = (fGLDevice != -1) ? gPad->GetFillColor() : fClearColor;
+   TColor *color = gROOT->GetColor(ci);
+   Float_t sc[3] = {1.f, 1.f, 1.f};
+   if (color)
+      color->GetRGB(sc[0], sc[1], sc[2]);
+   glClearColor(sc[0], sc[1], sc[2], 1.);
 
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1798,7 +1812,12 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
                   if (!fContextMenu) {
                      fContextMenu = new TContextMenu("glcm", "GL Viewer Context Menu");
                   }
-                  selected->InvokeContextMenu(*fContextMenu, event->fX, event->fY);
+                  Int_t    x, y;
+                  Window_t childdum;
+                  gVirtualX->TranslateCoordinates(fGLWindow->GetId(),
+				  gClient->GetDefaultRoot()->GetId(),
+				  event->fX, event->fY, x, y, childdum);
+                  selected->InvokeContextMenu(*fContextMenu, x, y);
                   // MT-TODO: Find a way to request redraw after dialog has finished.
                }
             } else {
@@ -1916,16 +1935,28 @@ Bool_t TGLViewer::HandleKey(Event_t *event)
    case kKey_R:
    case kKey_r:
       fDrawFlags.SetStyle(TGLDrawFlags::kFill);
+      if (fClearColor == 0) {
+         fClearColor = 1; // Black
+         RefreshPadEditor(this);
+      }
       redraw = kTRUE;
       break;
    case kKey_W:
    case kKey_w:
       fDrawFlags.SetStyle(TGLDrawFlags::kWireFrame);
+      if (fClearColor == 0) {
+         fClearColor = 1; // Black
+         RefreshPadEditor(this);
+      }
       redraw = kTRUE;
       break;
    case kKey_T:
    case kKey_t:
       fDrawFlags.SetStyle(TGLDrawFlags::kOutline);
+      if (fClearColor == 1) {
+         fClearColor = 0; // White
+         RefreshPadEditor(this);
+      }
       redraw = kTRUE;
       break;
    case kKey_V:

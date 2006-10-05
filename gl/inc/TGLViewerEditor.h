@@ -16,7 +16,7 @@ class TGNumberEntry;
 class TGButtonGroup;
 class TGroupFrame;
 class TGRadioButton;
-// class TGTabElement;
+class TGColorSelect;
 class TGButton;
 class TGLViewer;
 class TGTab;
@@ -33,6 +33,14 @@ private:
    TGButton         *fBottomLight;
    TGButton         *fLeftLight;
    TGButton         *fFrontLight;
+
+   TGColorSelect    *fClearColor;
+   TGCheckButton    *fIgnoreSizesOnUpdate;
+   TGCheckButton    *fResetCamerasOnUpdate;
+   TGCheckButton    *fResetCameraOnDoubleClick;
+   TGTextButton     *fUpdateScene;
+   TGTextButton     *fCameraHome;
+
    //"Guides" tab's controls
    TGButtonGroup    *fAxesContainer;
    TGRadioButton    *fAxesNone;
@@ -82,6 +90,12 @@ public:
    void SetCurrentClip();
    //Lights manipulation
    void DoButton();
+   void DoClearColor(Pixel_t color);
+   void DoIgnoreSizesOnUpdate();
+   void DoResetCamerasOnUpdate();
+   void DoResetCameraOnDoubleClick();
+   void DoUpdateScene();
+   void DoCameraHome();
    //Axis manipulation
    void UpdateViewerGuides();
    void UpdateReferencePos();

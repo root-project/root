@@ -3,9 +3,11 @@
 #include "TGedEditor.h"
 #include "TGNumberEntry.h"
 #include "TGButtonGroup.h"
+#include "TGColorSelect.h"
 #include "TVirtualGL.h"
 #include "TG3DLine.h"
 #include "TGButton.h"
+#include "TColor.h"
 #include "TString.h"
 #include "TGLabel.h"
 #include "TClass.h"
@@ -32,6 +34,12 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    fBottomLight(0),
    fLeftLight(0),
    fFrontLight(0),
+   fClearColor(0),
+   fIgnoreSizesOnUpdate(0),
+   fResetCamerasOnUpdate(0),
+   fResetCameraOnDoubleClick(0),
+   fUpdateScene(0),
+   fCameraHome(0),
    fAxesContainer(0),
    fAxesNone(0),
    fAxesEdge(0),
@@ -77,6 +85,13 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fBottomLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
    fLeftLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
    fFrontLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
+
+   fClearColor->Connect("ColorSelected(Pixel_t)", "TGLViewerEditor", this, "DoClearColor(Pixel_t)");
+   fIgnoreSizesOnUpdate->Connect("Toggled(Bool_t)", "TGLViewerEditor", this, "DoIgnoreSizesOnUpdate()");
+   fResetCamerasOnUpdate->Connect("Toggled(Bool_t)", "TGLViewerEditor", this, "DoResetCamerasOnUpdate()");
+   fResetCameraOnDoubleClick->Connect("Toggled(Bool_t)", "TGLViewerEditor", this, "DoResetCameraOnDoubleClick()");
+   fUpdateScene->Connect("Pressed()", "TGLViewerEditor", this, "DoUpdateScene()");
+   fCameraHome->Connect("Pressed()", "TGLViewerEditor", this, "DoCameraHome()");
 
    fAxesContainer->Connect("Pressed(Int_t)", "TGLViewerEditor", this, "UpdateViewerGuides()");
    fReferenceOn->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerGuides()");
@@ -131,6 +146,11 @@ void TGLViewerEditor::SetModel(TObject* obj)
 
    if(ls & TGLViewer::kLightFront)
       fFrontLight->SetState(kButtonDown);
+
+   fClearColor->SetColor(TColor::Number2Pixel(fViewer->GetClearColor()), kFALSE);
+   fIgnoreSizesOnUpdate->SetState(fViewer->GetIgnoreSizesOnUpdate() ? kButtonDown : kButtonUp);
+   fResetCamerasOnUpdate->SetState(fViewer->GetResetCamerasOnUpdate() ? kButtonDown : kButtonUp);
+   fResetCameraOnDoubleClick->SetState(fViewer->GetResetCameraOnDoubleClick() ? kButtonDown : kButtonUp);
 }
 
 //______________________________________________________________________________
@@ -139,6 +159,58 @@ void TGLViewerEditor::DoButton()
    // Lights radio button was clicked.
    
    fViewer->ToggleLight(TGLViewer::ELight(((TGButton *) gTQSender)->WidgetId()));
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoClearColor(Pixel_t color)
+{
+   // Clear-color was changed.
+
+   fViewer->SetClearColor(Color_t(TColor::GetColor(color)));
+   fViewer->RequestDraw();
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoIgnoreSizesOnUpdate()
+{
+   // ResetCamerasOnUpdate was toggled.
+
+   fViewer->SetIgnoreSizesOnUpdate(fIgnoreSizesOnUpdate->IsOn());
+   if (fIgnoreSizesOnUpdate->IsOn())
+      fViewer->UpdateScene();
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoResetCamerasOnUpdate()
+{
+   // ResetCamerasOnUpdate was toggled.
+
+   fViewer->SetResetCamerasOnUpdate(fResetCamerasOnUpdate->IsOn());
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoResetCameraOnDoubleClick()
+{
+   // ResetCameraOnDoubleClick was toggled.
+
+   fViewer->SetResetCameraOnDoubleClick(fResetCameraOnDoubleClick->IsOn());
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoUpdateScene()
+{
+   // ResetCameraOnDoubleClick was toggled.
+
+   fViewer->UpdateScene();
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoCameraHome()
+{
+   // ResetCameraOnDoubleClick was toggled.
+
+   fViewer->ResetCurrentCamera();
+   fViewer->RequestDraw();
 }
 
 //______________________________________________________________________________
@@ -184,6 +256,30 @@ void TGLViewerEditor::CreateLightsTab()
    fLightFrame->AddFrame(fBottomLight);
    fLightFrame->AddFrame(fLeftLight);
    fLightFrame->AddFrame(fFrontLight);
+
+   {
+      TGHorizontalFrame* hf = new TGHorizontalFrame(this);
+      TGLabel* lab = new TGLabel(hf, "Clear color");
+      hf->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 12, 1, 3));
+      fClearColor = new TGColorSelect(hf, 0, -1);
+      hf->AddFrame(fClearColor, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
+      AddFrame(hf, new TGLayoutHints(kLHintsLeft, 2, 1, 1, 1));
+   }
+
+   MakeTitle("Update behaviour");
+   fIgnoreSizesOnUpdate  = new TGCheckButton(this, "Ignore sizes");
+   fIgnoreSizesOnUpdate->SetToolTipText("Ignore bounding-box sizes on scene update");
+   AddFrame(fIgnoreSizesOnUpdate, new TGLayoutHints(kLHintsLeft, 4, 1, 1, 1));
+   fResetCamerasOnUpdate = new TGCheckButton(this, "Reset on update");
+   fResetCamerasOnUpdate->SetToolTipText("Reset camera on scene update");
+   AddFrame(fResetCamerasOnUpdate, new TGLayoutHints(kLHintsLeft, 4, 1, 1, 1));
+   fResetCameraOnDoubleClick = new TGCheckButton(this, "Reset on dbl-click");
+   fResetCameraOnDoubleClick->SetToolTipText("Reset cameras on double-click");
+   AddFrame(fResetCameraOnDoubleClick, new TGLayoutHints(kLHintsLeft, 4, 1, 1, 1));
+   fUpdateScene = new TGTextButton(this, "Update Scene");
+   AddFrame(fUpdateScene, new TGLayoutHints(kLHintsLeft|kLHintsExpandX, 4, 1, 1, 1));
+   fCameraHome = new TGTextButton(this, "Camera Home");
+   AddFrame(fCameraHome, new TGLayoutHints(kLHintsLeft|kLHintsExpandX, 4, 1, 1, 1));
 }
 
 //______________________________________________________________________________

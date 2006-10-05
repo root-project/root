@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.30 2006/08/23 14:39:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.31 2006/09/25 13:40:46 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -149,6 +149,7 @@ protected:
    // In future it will be shaped between multiple viewers
    TGLScene       fScene;          //! the GL scene - owned by viewer at present
    TGLRect        fViewport;       //! viewport - drawn area
+   Color_t        fClearColor;     //! clear-color
    UInt_t         fLightState;     //! light states (on/off) mask
    EAxesType      fAxesType;       //! axes type
    Bool_t         fReferenceOn;    //! reference marker on?
@@ -201,7 +202,8 @@ protected:
    TClass*          FindDirectRendererClass(TClass* cls);
    TGLLogicalShape* AttemptDirectRenderer(TObject* id);
 
-   // Camera-reset behaviour
+   // Updata/camera-reset behaviour
+   Bool_t           fIgnoreSizesOnUpdate;      // ignore sizes of bounding-boxes on update
    Bool_t           fResetCamerasOnUpdate;     // reposition camera on each update
    Bool_t           fResetCamerasOnNextUpdate; // reposition camera on next update
    Bool_t           fResetCameraOnDoubleClick; // reposition camera on double-click
@@ -232,7 +234,11 @@ public:
    virtual void   ResetCameras()                { SetupCameras(kTRUE); }
    virtual void   ResetCamerasAfterNextUpdate() { fResetCamerasOnNextUpdate = kTRUE; }
 
+   virtual void   RefreshPadEditor(TObject* changed=0) {}
+
    Int_t   GetDev()const{return fGLDevice;}
+   Color_t GetClearColor() const             { return fClearColor; }
+   void    SetClearColor(Color_t col)        { fClearColor = col; }
    Bool_t  GetSmartRefresh() const           { return fSmartRefresh; }
    void    SetSmartRefresh(Bool_t smart_ref) { fSmartRefresh = smart_ref; }
 
@@ -266,7 +272,10 @@ public:
    Bool_t DoSelect(const TGLRect & rect); // Window coords origin top left
    void   ApplySelection();
 
-   // Camera-reset
+   // Update/camera-reset
+   void   UpdateScene();
+   Bool_t GetIgnoreSizesOnUpdate() const        { return fIgnoreSizesOnUpdate; }
+   void   SetIgnoreSizesOnUpdate(Bool_t v)      { fIgnoreSizesOnUpdate = v; }
    void   ResetCurrentCamera();
    Bool_t GetResetCamerasOnUpdate() const       { return fResetCamerasOnUpdate; }
    void   SetResetCamerasOnUpdate(Bool_t v)     { fResetCamerasOnUpdate = v; }
@@ -285,7 +294,7 @@ public:
    void SetPadEditor(TGLViewerEditor *ed){fPadEditor = ed;}
 
    ClassDef(TGLViewer,0) // GL viewer generic base class
-      };
+};
 
 //______________________________________________________________________________
 inline void TGLViewer::GetClipState(EClipType type, Double_t data[6]) const
