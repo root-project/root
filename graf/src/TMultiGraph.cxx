@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.33 2006/07/08 20:28:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.34 2006/09/15 15:16:57 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -142,6 +142,26 @@ void TMultiGraph::Add(TGraph *graph, Option_t *chopt)
    if (!fGraphs) fGraphs = new TList();
    graph->SetBit(kMustCleanup);
    fGraphs->Add(graph,chopt);
+}
+
+
+//______________________________________________________________________________
+void TMultiGraph::Add(TMultiGraph *multigraph, Option_t *chopt)
+{
+   // add all the graphs in "multigraph" to the list of graphs.
+
+   TList *graphlist = multigraph->GetListOfGraphs();
+   if (!graphlist) return;
+
+   if (!fGraphs) fGraphs = new TList();
+   
+   TGraph *gr;
+   gr = (TGraph*)graphlist->First();
+   fGraphs->Add(gr,chopt);
+   for(Int_t i = 0; i < graphlist->GetSize(); i++){
+      gr = (TGraph*)graphlist->After(gr);
+      fGraphs->Add(gr,chopt);
+   }
 }
 
 
