@@ -1,4 +1,4 @@
-// @(#)root/monalisa:$Name:$:$Id:$
+// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.h,v 1.1 2006/06/26 16:17:05 rdm Exp $
 // Author: Andreas Peters   5/10/2005
 
 /*************************************************************************
@@ -79,19 +79,27 @@ class TMonaLisaWriter : public TVirtualMonitoringWriter {
 
 private:
    ApMon     *fApmon;            //! connection to MonaLisa
-   char      *fJobId;            //! job id
-   char      *fSubJobId;         //! sub job id
+   TString    fJobId;            //! job id
+   TString    fSubJobId;         //! sub job id
    TString    fHostname;         //! hostname of MonaLisa server
    Int_t      fPid;              //! process id
    Bool_t     fInitialized;      // true if initialized
    Bool_t     fVerbose;          // verbocity
    time_t     fLastSendTime;     // timestamp of the last send command for file reads
    time_t     fLastProgressTime; // timestamp of the last send command for player process
+   time_t     fReportInterval;   // interval after which to send the latest value
    TStopwatch fStopwatch;        // cpu time measurement
 
 public:
    TMonaLisaWriter(const char *monid = 0, const char *montag = 0,
                    const char *monserver = 0);
+
+   TMonaLisaWriter(const char *monid , const char* monsubid , const char *montag,
+                   const char *monserver );
+
+   void Init(const char *monid , const char* monsubid , const char *montag,
+                   const char *monserver );
+
    virtual ~TMonaLisaWriter();
 
    ApMon *GetApMon() const { return fApmon; }

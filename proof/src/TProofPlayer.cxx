@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.90 2006/08/08 21:27:14 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.91 2006/08/10 10:33:04 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -57,6 +57,7 @@
 #ifndef R__TH1MERGEFIXED
 #include "TH1.h"
 #endif
+#include "TVirtualMonitoring.h"
 
 // Timeout exception
 #define kPEX_STOPPED  1001
@@ -663,7 +664,18 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
    }
 
+   if (gMonitoringWriter)
+      gMonitoringWriter->SendProcessingStatus("STARTED",kTRUE);
+
    PDB(kLoop,1) Info("Process","Looping over Process()");
+
+   // get the byte read counter at the beginning of processing
+   Long64_t readbytesatstart = 0;
+   readbytesatstart = TFile::GetFileBytesRead();
+   // force the first monitoring info
+   if (gMonitoringWriter)
+      gMonitoringWriter->SendProcessingProgress(0,0,kTRUE);
+
 
    // Loop over range
    gAbort = kFALSE;
@@ -701,13 +713,21 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          if (fSelector->GetAbort() == TSelector::kAbortProcess) break;
       }
 
-      if (ok)
+      if (ok) {
          fEventsProcessed++;
+         if (gMonitoringWriter)
+            gMonitoringWriter->SendProcessingProgress(fEventsProcessed,TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
+      }
 
       gSystem->DispatchOneEvent(kTRUE);
       if (!ok || gROOT->IsInterrupted()) break;
    }
    PDB(kGlobal,2) Info("Process","%lld events processed",fEventsProcessed);
+
+   if (gMonitoringWriter) {
+      gMonitoringWriter->SendProcessingProgress(fEventsProcessed,TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
+      gMonitoringWriter->SendProcessingStatus("DONE");
+   }
 
    // Stop active timers
    if (fStopTimer != 0)

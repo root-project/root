@@ -1,4 +1,4 @@
-// @(#)root/monalisa:$Name:$:$Id:$
+// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.cxx,v 1.1 2006/06/26 16:17:05 rdm Exp $
 // Author: Andreas Peters   5/10/2005
 
 /*************************************************************************
@@ -33,14 +33,24 @@
 #include "TGrid.h"
 #include "TFile.h"
 #include "TUrl.h"
+#include "TStopwatch.h"
 #include "Riostream.h"
 
 
 ClassImp(TMonaLisaWriter)
 
 //______________________________________________________________________________
-TMonaLisaWriter::TMonaLisaWriter(const char *monid, const char *montag,
-                     const char *monserver)
+TMonaLisaWriter::TMonaLisaWriter(const char *monid, const char *monsubid,
+                                 const char *montag, const char *monserver)
+{
+   // Create MonaLisa write object.
+
+   Init(monid,monsubid,montag,monserver);
+}
+
+//______________________________________________________________________________
+void TMonaLisaWriter::Init(const char *monid, const char* monsubid,
+                           const char *montag, const char *monserver)
 {
    // Creates a TMonaLisaWriter object to send monitoring information to a
    // MonaLisa server using the MonaLisa ApMon package (libapmoncpp.so/UDP
@@ -136,11 +146,18 @@ TMonaLisaWriter::TMonaLisaWriter(const char *monid, const char *montag,
 
    fVerbose = kFALSE;           // no verbosity as default
 
-   fLastSendTime = time(NULL);
-   fLastProgressTime = time(NULL);
+   fLastSendTime = time(0);
+   fLastProgressTime = time(0);
+   fReportInterval = 5; // default interval is 5
+   if (gSystem->Getenv("APMON_INTERVAL")) {
+      fReportInterval = atoi(gSystem->Getenv("APMON_INTERVAL"));
+      if (fReportInterval < 1)
+         fReportInterval =1;
+      Info("TMonaLisaWriter","Setting APMON Report Interval to %d seconds",fReportInterval);
+   }
 
    char *apmon_config[1] =
-      { ((monserver == 0) ? getenv("APMON_CONFIG") : (char *) monserver) };
+      { ((monserver == 0) ? gSystem->Getenv("APMON_CONFIG") : (char *) monserver) };
    if (apmon_config[0] == 0) {
       Error("TMonaLisaWriter",
             "Disabling apmon monitoring since env variable APMON_CONFIG was not found and the monitoring server is not specified in the constructor!");
@@ -164,16 +181,16 @@ TMonaLisaWriter::TMonaLisaWriter(const char *monid, const char *montag,
    TString clustername="ROOT_";
 
    if (montag == 0) {
-     if (getenv("PROOF_SITE")) {
-       clustername+=(getenv("PROOF_SITE"));
-     } else if (getenv("GRID_SITE")) {
-       clustername+=(getenv("GRID_SITE"));
-     } else if (getenv("LCG_SITE")) {
-       clustername+=(getenv("LCG_SITE"));
-     } else if (getenv("ALIEN_SITE")) {
-       clustername+=(getenv("ALIEN_SITE"));
+     if (gSystem->Getenv("PROOF_SITE")) {
+       clustername+=(gSystem->Getenv("PROOF_SITE"));
+     } else if (gSystem->Getenv("GRID_SITE")) {
+       clustername+=(gSystem->Getenv("GRID_SITE"));
+     } else if (gSystem->Getenv("LCG_SITE")) {
+       clustername+=(gSystem->Getenv("LCG_SITE"));
+     } else if (gSystem->Getenv("ALIEN_SITE")) {
+       clustername+=(gSystem->Getenv("ALIEN_SITE"));
      } else {
-       clustername+=TString("none");
+       clustername += TString("none");
      }
      SetName(clustername);
      SetTitle(clustername);
@@ -186,34 +203,38 @@ TMonaLisaWriter::TMonaLisaWriter(const char *monid, const char *montag,
    fPid = gSystem->GetPid();
 
    if (monid == 0) {
-      if (getenv("PROOF_QUERY_ID"))
-         fJobId = getenv("PROOF_JOB_ID");
-      else if (getenv("GRID_JOB_ID"))
-         fJobId = getenv("GRID_JOB_ID");
-      else if (getenv("LCG_JOB_ID"))
-         fJobId = getenv("LCG_JOB_ID");
-      else if (getenv("ALIEN_MASTERJOBID"))
-         fJobId = getenv("ALIEN_MASTERJOBID");
-      else if (getenv("ALIEN_PROC_ID"))
-         fJobId = getenv("ALIEN_PROC_ID");
+      if (gSystem->Getenv("PROOF_QUERY_ID"))
+         fJobId = gSystem->Getenv("PROOF_QUERY_ID");
+      else if (gSystem->Getenv("GRID_JOB_ID"))
+         fJobId = gSystem->Getenv("GRID_JOB_ID");
+      else if (gSystem->Getenv("LCG_JOB_ID"))
+         fJobId = gSystem->Getenv("LCG_JOB_ID");
+      else if (gSystem->Getenv("ALIEN_MASTERJOBID"))
+         fJobId = gSystem->Getenv("ALIEN_MASTERJOBID");
+      else if (gSystem->Getenv("ALIEN_PROC_ID"))
+         fJobId = gSystem->Getenv("ALIEN_PROC_ID");
       else
          fJobId = "-no-job-id";
-
-      if (getenv("PROOF_PROC_ID")) {
-         fSubJobId = getenv("PROOF_PROC_ID");
-      } else if (getenv("ALIEN_PROC_ID")) {
-         fSubJobId = getenv("ALIEN_PROC_ID");
-      } else {
-         fSubJobId = fJobId;
-      }
    } else {
-      fJobId = (char *) monid;
-      fSubJobId = (char *) monid;
+      fJobId = monid;
    }
 
+   if (monsubid == 0) {
+     if (gSystem->Getenv("PROOF_PROC_ID")) {
+       fSubJobId = gSystem->Getenv("PROOF_PROC_ID");
+     } else if (gSystem->Getenv("ALIEN_PROC_ID")) {
+       fSubJobId = gSystem->Getenv("ALIEN_PROC_ID");
+     } else {
+       fSubJobId = fJobId;
+     }
+   } else {
+     fSubJobId = monsubid;
+   }
+
+
    if (fVerbose)
-      Info("Initialized for ML Server <%s> - Setting ClusterID <%s> JobID <%s>\n",
-           apmon_config[0], fName.Data() ,fJobId);
+      Info("Initialized for ML Server <%s> - Setting ClusterID <%s> JobID <%s> SubID <%s>\n",
+           apmon_config[0], fName.Data() ,fJobId.Data(),fSubJobId.Data());
 
    fInitialized = kTRUE;
 
@@ -221,10 +242,21 @@ TMonaLisaWriter::TMonaLisaWriter(const char *monid, const char *montag,
 }
 
 //______________________________________________________________________________
+TMonaLisaWriter::TMonaLisaWriter(const char *monid, const char *montag,
+				                     const char *monserver)
+{
+   // Create a MonaLisa writer object.
+
+   Init(monid,monid,montag,monserver);
+}
+
+//______________________________________________________________________________
 TMonaLisaWriter::~TMonaLisaWriter()
 {
    // Cleanup.
 
+   if (gMonitoringWriter == this)
+      gMonitoringWriter = 0;
 }
 
 //______________________________________________________________________________
@@ -384,7 +416,7 @@ Bool_t TMonaLisaWriter::SendProcessingStatus(const char *status, Bool_t restartt
    TMonaLisaText *valhost = new TMonaLisaText("hostname",fHostname);
    valuelist->Add(valhost);
 
-   TMonaLisaText *valsid = new TMonaLisaText("subid", fSubJobId);
+   TMonaLisaText *valsid = new TMonaLisaText("subid", fSubJobId.Data());
    valuelist->Add(valsid);
 
    // send it to monalisa
@@ -399,8 +431,8 @@ Bool_t TMonaLisaWriter::SendProcessingProgress(Double_t nevent, Double_t nbytes,
 {
    // Send the procesing progress to MonaLisa.
 
-   if ((!force) && ( (time(NULL)-fLastProgressTime) < 1)) {
-     // if the progress is not forced, we send maximum < 1 per second!
+   if (!force && (time(0)-fLastProgressTime) < fReportInterval) {
+     // if the progress is not forced, we send maximum < fReportInterval per second!
      return kFALSE;
    }
 
@@ -420,38 +452,63 @@ Bool_t TMonaLisaWriter::SendProcessingProgress(Double_t nevent, Double_t nbytes,
    TMonaLisaValue *valbyte =     new TMonaLisaValue("processedbytes", nbytes);
    TMonaLisaValue *valrealtime = new TMonaLisaValue("realtime",fStopwatch.RealTime());
    TMonaLisaValue *valcputime =  new TMonaLisaValue("cputime",fStopwatch.CpuTime());
-   TMonaLisaText *valsid = new TMonaLisaText("subid", fSubJobId);
+
+   Double_t totmem = (Double_t)TStopwatch::GetTotalMemory();
+   Double_t rssmem = (Double_t)TStopwatch::GetResidentMemory();
+   Double_t shdmem = (Double_t)TStopwatch::GetSharedMemory();
+
+   TMonaLisaValue *valtotmem = new TMonaLisaValue("totmem",totmem);
+   TMonaLisaValue *valrssmem = new TMonaLisaValue("rssmem",rssmem);
+   TMonaLisaValue *valshdmem = new TMonaLisaValue("shdmem",shdmem);
+
+   TMonaLisaText *valsid = new TMonaLisaText("subid", fSubJobId.Data());
    valuelist->Add(valsid);
    valuelist->Add(valevent);
    valuelist->Add(valbyte);
    valuelist->Add(valrealtime);
    valuelist->Add(valcputime);
+   valuelist->Add(valtotmem);
+   valuelist->Add(valrssmem);
+   valuelist->Add(valshdmem);
 
-   TString strevents="";
-   strevents+=nevent;
-   TString strbytes="";
-   strbytes+=nbytes;
-   TString strcpu="";
-   strcpu+=fStopwatch.RealTime();
-   TString strreal="";
-   strreal+=fStopwatch.CpuTime();
+   TString      strevents="";
+   strevents += nevent;
+   TString      strbytes="";
+   strbytes  += nbytes;
+   TString      strcpu="";
+   strcpu    += fStopwatch.CpuTime();
+   TString      strreal="";
+   strreal   += fStopwatch.RealTime();
+   TString      strtotmem="";
+   strtotmem += totmem;
+   TString      strrssmem="";
+   strrssmem += rssmem;
+   TString      strshdmem="";
+   strshdmem += shdmem;
+
    fStopwatch.Continue();
 
-   TMonaLisaText *textevent = new TMonaLisaText("events_str", strevents.Data());
-   TMonaLisaText *textbyte  = new TMonaLisaText("readbytes_str", strbytes.Data());
-   TMonaLisaText *textcpu   = new TMonaLisaText("realtime_str", strcpu.Data());
-   TMonaLisaText *textreal  = new TMonaLisaText("cputime_str", strreal.Data());
+   TMonaLisaText *textevent   = new TMonaLisaText("events_str", strevents.Data());
+   TMonaLisaText *textbyte    = new TMonaLisaText("processedbytes_str", strbytes.Data());
+   TMonaLisaText *textreal    = new TMonaLisaText("realtime_str", strreal.Data());
+   TMonaLisaText *textcpu     = new TMonaLisaText("cputime_str", strcpu.Data());
+   TMonaLisaText *texttotmem  = new TMonaLisaText("totmem_str", strtotmem.Data());
+   TMonaLisaText *textrssmem  = new TMonaLisaText("rssmem_str", strrssmem.Data());
+   TMonaLisaText *textshdmem  = new TMonaLisaText("shdmem_str", strshdmem.Data());
    valuelist->Add(textevent);
    valuelist->Add(textbyte);
    valuelist->Add(textcpu);
    valuelist->Add(textreal);
+   valuelist->Add(texttotmem);
+   valuelist->Add(textrssmem);
+   valuelist->Add(textshdmem);
 
    TMonaLisaText *valhost = new TMonaLisaText("hostname",fHostname);
    valuelist->Add(valhost);
 
    // send it to monalisa
    success = SendParameters(valuelist);
-   fLastProgressTime = time(NULL);
+   fLastProgressTime = time(0);
    delete valuelist;
    return success;
 }
@@ -461,7 +518,7 @@ Bool_t TMonaLisaWriter::SendFileReadProgress(TFile* file, Bool_t force)
 {
    // Send the fileread progress to MonaLisa.
 
-   if ((!force) && ( (time(NULL)-fLastSendTime) < 1)) {
+   if (!force && (time(0)-fLastSendTime) < fReportInterval) {
       // if the progress is not forced, we send maximum < 1 per second!
       return kFALSE;
    }
@@ -488,7 +545,7 @@ Bool_t TMonaLisaWriter::SendFileReadProgress(TFile* file, Bool_t force)
    valuelist->Add(valstrread);
    TMonaLisaText *valhost = new TMonaLisaText("hostname",fHostname);
    valuelist->Add(valhost);
-   TMonaLisaText *valsid = new TMonaLisaText("subid", fSubJobId);
+   TMonaLisaText *valsid = new TMonaLisaText("subid", fSubJobId.Data());
    valuelist->Add(valsid);
    TMonaLisaText *valdest = new TMonaLisaText("destname",file->GetEndpointUrl()->GetHost());
    valuelist->Add(valdest);
@@ -501,7 +558,7 @@ Bool_t TMonaLisaWriter::SendFileReadProgress(TFile* file, Bool_t force)
 
    // send it to monalisa
    success = SendParameters(valuelist);
-   fLastSendTime = time(NULL);
+   fLastSendTime = time(0);
    delete valuelist;
    return success;
 }
@@ -568,9 +625,9 @@ Bool_t TMonaLisaWriter::SendParameters(TList *valuelist)
 
       if (fVerbose)
          Info("SendParameters", "n: %d name: %s identifier %s ...,",
-              apmon_nparams, GetName(), fJobId);
+              apmon_nparams, GetName(), fJobId.Data());
 
-      ((ApMon *) fApmon)->sendParameters((char *) GetName(), fJobId,
+      ((ApMon *) fApmon)->sendParameters((char *) GetName(), (char*)fJobId.Data(),
                                          apmon_nparams, apmon_params,
                                          apmon_types, apmon_values);
 
