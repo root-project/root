@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.304 2006/09/21 15:56:10 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.305 2006/09/28 17:37:55 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -5146,11 +5146,23 @@ void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
    //    T.setBranchStatus("e",1);
    //    T.GetEntry(i);
    //
-   //  WARNING!!
-   //  If your Tree has been created in split mode with a parent branch "parent",
+   //  WARNING! WARNING! WARNING!
+   //  SetBranchStatus is matching the branch based on regular expression match 
+   //  of the branch 'name' and not on the branch hierarchy!
+   //  In order to be able to selectively enable a top level object that is 'split' 
+   //  you need to make sure the name of the top level branch is prefixed to the 
+   //  sub-branches' name(by adding a dot ('.') at the end of the Branch creation 
+   //  and use the corresponding regular expression. 
+   //
+   //  I.e If your Tree has been created in split mode with a parent branch "parent."
+   //  (note the trailing dot).
    //     T.SetBranchStatus("parent",1);
    //  will not activate the sub-branches of "parent". You should do:
-   //     T.SetBranchStatus("parent*",1);
+   //     T.SetBranchStatus("parent*",1); 
+   //
+   //  Without the trailing dot in the branch creation you have no choice but to
+   //  call SetBranchStatus explicitly for each of the sub branches.
+   //
    //
    //  An alternative to this function is to read directly and only
    //  the interesting branches. Example:
