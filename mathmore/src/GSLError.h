@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.h,v 1.2 2006/06/16 10:34:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLError.h,v 1.1 2006/10/05 15:23:42 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -48,7 +48,7 @@ namespace ROOT {
       public: 
          
          GSLError() { 
-               gsl_set_error_handler(&ROOT::Math::GSLError::Handler);
+               gsl_set_error_handler(&GSLError::Handler);
             // set a new handler for GSL 
          }
 
