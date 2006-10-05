@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.22 2006/09/28 23:23:45 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.23 2006/10/03 15:17:06 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -280,7 +280,10 @@ static int GetUserInfo(const char *usr, XrdProofUI &ui)
    }
 
    // Failure
-   return ((int) -errno);
+   if (errno != 0)
+      return ((int) -errno);
+   else
+      return -ENOENT;
 }
 
 //__________________________________________________________________________
@@ -313,7 +316,10 @@ static int GetUserInfo(int uid, XrdProofUI &ui)
    }
 
    // Failure
-   return ((int) -errno);
+   if (errno != 0)
+      return ((int) -errno);
+   else
+      return -ENOENT;
 }
 
 //__________________________________________________________________________
