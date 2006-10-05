@@ -6688,6 +6688,11 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
   int dtorflag=0;
 #endif
 
+  if (G__p_ifunc->allifunc == G__MAXIFUNC) {
+     G__fprinterr(G__serr, "Attempt to add function %s failed - ifunc_table overflow!\n",
+         funcname);
+     return 0;
+  }
   G__func_now=G__p_ifunc->allifunc;
 
 #ifndef G__OLDIMPLEMENTATION2027
