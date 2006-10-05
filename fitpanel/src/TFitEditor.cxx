@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:$:$Id:$
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.1 2006/10/05 15:06:48 brun Exp $
 // Author:Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -886,7 +886,7 @@ void TFitEditor::DoClose()
 {
    // Close the fit panel.
 
-   TTimer::SingleShot(50, "TFitEditor", this, "CloseWindow()");
+   TTimer::SingleShot(150, "TFitEditor", this, "CloseWindow()");
 }
 
 //______________________________________________________________________________
