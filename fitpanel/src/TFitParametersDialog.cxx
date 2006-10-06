@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.2 2006/10/05 16:12:43 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.3 2006/10/05 21:33:21 rdm Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************
@@ -276,7 +276,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
 
    fUpdate = new TGCheckButton(this, "&Immediate preview", kUPDATE);
    fUpdate->SetToolTipText("Immediate function redrawing");
-   fUpdate->SetState(kButtonDown);
+   fUpdate->SetState(kButtonDisabled);
    AddFrame(fUpdate, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5, 5, 5, 5));
    fUpdate->Connect("Toggled(Bool_t)", "TFitParametersDialog", this, "HandleButtons(Bool_t)");
 
