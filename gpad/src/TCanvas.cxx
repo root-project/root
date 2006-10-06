@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.117 2006/08/24 18:51:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.118 2006/09/25 13:28:22 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1105,6 +1105,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       break;
 
    case kButton1Motion:
+   case 8://8 == kButton1Motion + shift modifier
       if (fSelected) {
          gPad = fSelectedPad;
 

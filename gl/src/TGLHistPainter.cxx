@@ -106,11 +106,11 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       case kMouseMotion:
          gPad->SetCursor(kRotate);
          break;
-      case kButton2Down:
+      case 7://kButton2Down://+ shift modifier
          fGLPainter->StartPan(px, py);
          gGLManager->MarkForDirectCopy(glContext, kTRUE);
          break;
-      case kButton2Motion:
+      case 8://kButton2Motion://+shift modifier
          gGLManager->PanObject(fGLPainter.get(), px, py);
          gGLManager->PaintSingleObject(fGLPainter.get());
          break;
