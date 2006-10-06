@@ -57,7 +57,7 @@ private:
    void   DrawSliceTextured(Double_t pos)const;
    void   DrawSliceFrame(Int_t low, Int_t up)const;
 
-   ClassDef(TGLTH3Slice, 0)
+   ClassDef(TGLTH3Slice, 0) // TH3 slice
 };
 
 class TGLBoxPainter : public TGLPlotPainter {

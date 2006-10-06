@@ -374,6 +374,8 @@ TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TGLPlotCoor
 //______________________________________________________________________________
 void TGLTH3Slice::SetSliceWidth(Int_t width)
 {
+   // Set Slice width.
+
    if (width <= 0)
       return;
    
@@ -386,6 +388,8 @@ void TGLTH3Slice::SetSliceWidth(Int_t width)
 //______________________________________________________________________________
 void TGLTH3Slice::DrawSlice(Double_t pos)const
 {
+   // Draw slice.
+
    const Int_t bin = fAxis->FindBin(pos);
  //  TGLDisableGuard depthGuard(GL_DEPTH_TEST);
 
@@ -419,6 +423,8 @@ void TGLTH3Slice::DrawSlice(Double_t pos)const
 
 void TGLTH3Slice::FindMinMax(Double_t &min, Double_t &max, Int_t low, Int_t up)const
 {
+   // Find minimum and maximum.
+
    min = 0.;
    switch (fAxisType) {
    case kXOZ:
@@ -487,6 +493,8 @@ Bool_t TGLTH3Slice::PreparePalette(Double_t min, Double_t max)const
 
 void TGLTH3Slice::PrepareTexCoords()const
 {
+   // Prepare TexCoords.
+
    switch (fAxisType) {
    case kXOZ:
       for (Int_t j = 0, ej = fCoord->GetNZBins(); j < ej; ++j)
@@ -508,6 +516,8 @@ void TGLTH3Slice::PrepareTexCoords()const
 
 void TGLTH3Slice::DrawSliceTextured(Double_t pos)const
 {
+   // Draw slice textured.
+
    const Double_t xScale = fCoord->GetXScale();
    const Double_t yScale = fCoord->GetYScale();
    const Double_t zScale = fCoord->GetZScale();
@@ -617,6 +627,8 @@ namespace {
 
 void TGLTH3Slice::DrawSliceFrame(Int_t low, Int_t up)const
 {
+   // Draw slice frame.
+
    glColor3d(1., 0., 0.);
    const TGLVertex3 *box = fBox->Get3DBox();
    
