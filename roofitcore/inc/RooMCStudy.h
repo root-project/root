@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.rdl,v 1.15 2005/02/23 15:09:40 wverkerke Exp $
+ *    File: $Id: RooMCStudy.rdl,v 1.16 2005/02/25 14:22:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,7 @@
 
 #include "TList.h"
 #include "RooFitCore/RooArgSet.hh"
+#include <list>
 class RooAbsPdf;
 class RooDataSet ;
 class RooAbsData ;
@@ -25,6 +26,7 @@ class RooAbsGenContext ;
 class RooFitResult ;
 class RooPlot ;
 class RooRealVar ;
+class RooAbsMCStudyModule ;
 
 class RooMCStudy {
 public:
@@ -40,6 +42,10 @@ public:
 	     const RooArgSet& projDeps=RooArgSet()) ;
   virtual ~RooMCStudy() ;
   
+  // Method to add study modules
+  void addModule(RooAbsMCStudyModule& module) ;
+
+
   // Run methods
   Bool_t generateAndFit(Int_t nSamples, Int_t nEvtPerSample=0, Bool_t keepGenData=kFALSE, const char* asciiFilePat=0) ;
   Bool_t generate(Int_t nSamples, Int_t nEvtPerSample=0, Bool_t keepGenData=kFALSE, const char* asciiFilePat=0) ;
@@ -62,6 +68,10 @@ public:
                      const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
                      const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
                      const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
+  RooPlot* plotParam(const char* paramName, const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
+                     const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
+                     const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
+                     const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
   RooPlot* plotNLL(const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
                      const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
                      const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
@@ -75,29 +85,36 @@ public:
                      const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
                      const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
 
+
   RooPlot* plotNLL(Double_t lo, Double_t hi, Int_t nBins=100) ;
   RooPlot* plotError(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins=100) ;
   RooPlot* plotPull(const RooRealVar& param, Double_t lo=-3.0, Double_t hi=3.0, Int_t nbins=25, Bool_t fitGauss=kFALSE) ;
     
 protected:
 
+  friend class RooAbsMCStudyModule ;
+
   RooPlot* makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList& cmdList, Bool_t symRange=kFALSE) const ;
 
   Bool_t run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData, const char* asciiFilePat) ;
   Bool_t fitSample(RooAbsData* genSample) ;
+  RooFitResult* doFit(RooAbsData* genSample) ;	
+
   void calcPulls() ;
     
-  RooAbsPdf*        _genModel ;    // Generator model 
-  RooAbsGenContext* _genContext ;  // Generator context 
-  RooArgSet*        _genParams ;   // List of fit parameters
-  const RooDataSet* _genProtoData ;// Generator prototype data set
-  RooArgSet         _projDeps ;    // List of projected dependents in fit
+  RooDataSet*       _genSample ;       // Currently generated sample 
+  RooAbsPdf*        _genModel ;        // Generator model 
+  RooAbsGenContext* _genContext ;      // Generator context 
+  RooArgSet*        _genInitParams ;   // List of originalgenerator parameters
+  RooArgSet*        _genParams ;       // List of actual generator parameters
+  const RooDataSet* _genProtoData ;    // Generator prototype data set
+  RooArgSet         _projDeps ;        // List of projected dependents in fit
 
   RooArgSet    _dependents ;    // List of dependents 
   RooArgSet    _allDependents ; // List of generate + prototype dependents
   RooAbsPdf*   _fitModel ;      // Fit model 
   RooArgSet*   _fitInitParams ; // List of initial values of fit parameters
-  RooArgSet*   _fitParams ;     // List of fit parameters
+  RooArgSet*   _fitParams ;     // List of actual fit parameters
   RooRealVar*  _nllVar ;
   
   TList       _genDataList ;    // List of generated data sample
@@ -113,7 +130,14 @@ protected:
   Bool_t      _canAddFitResults ; // Allow adding of external fit results?
   Bool_t      _verboseGen       ; // Verbose generation?
 
+  std::list<RooAbsMCStudyModule*> _modList ; // List of additional study modules ;
+
+  // Utilities for modules ;
+  RooFitResult* refit(RooAbsData* genSample=0) ;
+  void resetFitParams() ;
+
 private:
+
   RooMCStudy(const RooMCStudy&) ;
 	
   ClassDef(RooMCStudy,0) // Monte Carlo study manager

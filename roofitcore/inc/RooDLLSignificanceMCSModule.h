@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.rdl,v 1.13 2005/12/08 13:19:55 wverkerke Exp $
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,45 +13,40 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_HTML
-#define ROO_HTML
 
-#include "THtml.h"
-#include "TString.h"
-#include "TList.h"
+#ifndef ROO_DELTA_LL_SIGNIFICANCE_MCS_MODULE
+#define ROO_DELTA_LL_SIGNIFICANCE_MCS_MODULE
 
-#include <fstream>
+#include "RooFitCore/RooAbsMCStudyModule.hh"
+#include <string>
 
-class RooHtml : public THtml {
+class RooDLLSignificanceMCSModule : public RooAbsMCStudyModule {
 public:
-  inline RooHtml(const char *version) : _version(version), _hfColor("#FFCC00") { };
-  inline virtual ~RooHtml() { };
 
-  virtual void WriteHtmlHeader(ofstream &out, const char *title, const char* dir="",TClass* cls=0);
-  virtual void  WriteHtmlFooter(ofstream &out, const char *dir="", const char *lastUpdate="",
-				const char *author="", const char *copyright="");
+  RooDLLSignificanceMCSModule(const RooRealVar& param, Double_t nullHypoValue=0) ;
+  RooDLLSignificanceMCSModule(const char* parName, Double_t nullHypoValue=0) ;
+  RooDLLSignificanceMCSModule(const RooDLLSignificanceMCSModule& other) ;
+  virtual ~RooDLLSignificanceMCSModule() ;
 
-  inline const char *getVersion() const { return _version.Data(); }
-  void MakeIndexNew(const char *filter="*");
-  
-  void addTopic(const char* tag, const char* description) ;
-  void MakeIndexOfTopics() ;
+  Bool_t initializeInstance() ; 
 
-  void setHeaderColor(const char* string) { _hfColor = string ; }
-  
-protected:
-  TString _version;
-  TString _hfColor ;
+  Bool_t initializeRun(Int_t /*numSamples*/) ; 
+  RooDataSet* finalizeRun() ;
 
-  TList _topicTagList ;
-  TList _topicDescList ;
-
-  char* getClassGroup(const char* fileName) ;
-
+  Bool_t processAfterFit(Int_t /*sampleNum*/)  ;
+	
 private:
-  RooHtml(const RooHtml&) ;
 
-  ClassDef(RooHtml,0) // Convert Roo classes to HTML web pages
-};
+  std::string _parName ;
+  RooDataSet* _data ;
+  RooRealVar* _nll0h ;
+  RooRealVar* _dll0h ;
+  RooRealVar* _sig0h ;
+  Double_t    _nullValue ;
+
+  ClassDef(RooDLLSignificanceMCSModule,0) // MCStudy module to calculate Delta(-logL) significance w.r.t given null hypothesis
+} ;
+
 
 #endif
+

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.cc,v 1.30 2005/06/20 15:44:54 wverkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.31 2006/03/06 21:29:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,7 +33,7 @@
 #include "RooFitCore/RooFit.hh"
 
 #include "RooFitCore/RooMCStudy.hh"
-#include "RooFitCore/RooMCStudy.hh"
+#include "RooFitCore/RooAbsMCStudyModule.hh"
 
 #include "RooFitCore/RooGenContext.hh"
 #include "RooFitCore/RooAbsPdf.hh"
@@ -150,9 +150,8 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   }
   
   _genContext = _genModel->genContext(_dependents,_genProtoData,0,_verboseGen) ;
-  RooArgSet* tmp = _genModel->getParameters(&_dependents) ;
-  _genParams = (RooArgSet*) tmp->snapshot(kFALSE) ;
-  delete tmp ;
+  _genParams = _genModel->getParameters(&_dependents) ;
+  _genInitParams = (RooArgSet*) _genParams->snapshot(kFALSE) ;
   
   // Store list of parameters and save initial values separately
   _fitParams = _fitModel->getParameters(&_dependents) ;
@@ -177,6 +176,16 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   // Append proto variables to allDependents
   if (_genProtoData) {
     _allDependents.add(*_genProtoData->get(),kTRUE) ;
+  }
+
+  // Call module initializers
+  list<RooAbsMCStudyModule*>::iterator iter ;
+  for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
+    Bool_t ok = (*iter)->doInitializeInstance(*this) ;
+    if (!ok) {
+      cout << "RooMCStudy::ctor: removing study module " << (*iter)->GetName() << " from analysis chain because initialization failed" << endl ;
+      iter = _modList.erase(iter) ;
+    }
   }
   
 }
@@ -224,7 +233,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   
   _genContext = genModel.genContext(dependents,genProtoData,0,_verboseGen) ;
   RooArgSet* tmp = genModel.getParameters(&dependents) ;
-  _genParams = (RooArgSet*) tmp->snapshot(kFALSE) ;
+  _genInitParams = (RooArgSet*) tmp->snapshot(kFALSE) ;
   delete tmp ;
   
   // Store list of parameters and save initial values separately
@@ -251,6 +260,17 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   if (genProtoData) {
     _allDependents.add(*genProtoData->get(),kTRUE) ;
   }
+
+  // Call module initializers
+  list<RooAbsMCStudyModule*>::iterator iter ;
+  for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
+    Bool_t ok = (*iter)->doInitializeInstance(*this) ;
+    if (!ok) {
+      cout << "RooMCStudy::ctor: removing study module " << (*iter)->GetName() << " from analysis chain because initialization failed" << endl ;
+      iter = _modList.erase(iter) ;
+    }
+  }
+  
 }
 
 
@@ -263,10 +283,21 @@ RooMCStudy::~RooMCStudy()
   _fitResList.Delete() ;
   _fitOptList.Delete() ;
   delete _fitParData ;
+  delete _fitInitParams ;
   delete _fitParams ;
+  delete _genInitParams ;
   delete _genParams ;
   delete _genContext ;
   delete _nllVar ;
+}
+
+
+
+void RooMCStudy::addModule(RooAbsMCStudyModule& module) 
+{
+  // Method to add study modules
+  module.doInitializeInstance(*this) ;
+  _modList.push_back(&module) ;        
 }
 
 
@@ -284,7 +315,12 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
   // When fitting only, data sets may optionally be read from ascii files, using the same file
   // pattern.
   //
-  
+
+  list<RooAbsMCStudyModule*>::iterator iter ;
+  for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
+    (*iter)->initializeRun(nSamples) ;
+  }  
+
   while(nSamples--) {
     
     cout << "RooMCStudy::run: " ;
@@ -293,16 +329,28 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
     if (fit) cout << "fitting " ;
     cout << "sample " << nSamples << endl ;
     
-    RooDataSet* genSample = 0;
+    _genSample = 0;
     Bool_t existingData = kFALSE ;
     if (generate) {
       // Generate sample
       Int_t nEvt(nEvtPerSample) ;
-      
+
+      // Reset generator parameters to initial values
+      *_genParams = *_genInitParams ;
+
+      // Call module before-generation hook
+      list<RooAbsMCStudyModule*>::iterator iter ;
+      for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
+	(*iter)->processBeforeGen(nSamples) ;
+      }  
+
+      // Calculate the number of (extended) events for this run
       if (_extendedGen) {
+	_nExpGen = _genModel->expectedEvents(&_dependents) ;
 	nEvt = RooRandom::randomGenerator()->Poisson(nEvtPerSample==0?_nExpGen:nEvtPerSample) ;
       }
       
+      // Optional randomization of protodata for this run
       if (_randProto && _genProtoData && _genProtoData->numEntries()!=nEvt) {
 	cout << "RooMCStudy: (Re)randomizing event order in prototype dataset (Nevt=" << nEvt << ")" << endl ;
           Int_t* newOrder = _genModel->randomizeProtoOrder(_genProtoData->numEntries(),nEvt) ;
@@ -310,44 +358,64 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
           delete[] newOrder ;
       }
       
-      genSample = _genContext->generate(nEvt) ;
+      // Actual generation of events
+      _genSample = _genContext->generate(nEvt) ;
       
     } else if (asciiFilePat && &asciiFilePat) {
+
       // Load sample from ASCII file
       char asciiFile[1024] ;
       sprintf(asciiFile,asciiFilePat,nSamples) ;
       RooArgList depList(_allDependents) ;
-      genSample = RooDataSet::read(asciiFile,depList,"q") ;      
+      _genSample = RooDataSet::read(asciiFile,depList,"q") ;      
       
     } else {
       
       // Load sample from internal list
-      genSample = (RooDataSet*) _genDataList.At(nSamples) ;
+      _genSample = (RooDataSet*) _genDataList.At(nSamples) ;
       existingData = kTRUE ;
-      if (!genSample) {
+      if (!_genSample) {
    	cout << "RooMCStudy::run: WARNING: Sample #" << nSamples << " not loaded, skipping" << endl ;
    	continue ;
       }
     }
+
+    // Call module between generation and fitting hook
+    list<RooAbsMCStudyModule*>::iterator iter ;
+    for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
+      (*iter)->processBetweenGenAndFit(nSamples) ;
+    }  
     
-    if (fit) fitSample(genSample) ;
+    if (fit) fitSample(_genSample) ;
+
+    // Call module between generation and fitting hook
+    for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
+      (*iter)->processAfterFit(nSamples) ;
+    }  
     
     // Optionally write to ascii file
     if (generate && asciiFilePat && *asciiFilePat) {
       char asciiFile[1024] ;
       sprintf(asciiFile,asciiFilePat,nSamples) ;
-      genSample->write(asciiFile) ;
+      _genSample->write(asciiFile) ;
     }
     
     // Add to list or delete
     if (!existingData) {
       if (keepGenData) {
-	_genDataList.Add(genSample) ;
+	_genDataList.Add(_genSample) ;
       } else {
-	delete genSample ;
+	delete _genSample ;
       }
     }
   }
+
+  for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
+    RooDataSet* auxData = (*iter)->finalizeRun() ;
+    if (auxData) {
+      _fitParData->merge(auxData) ;
+    }
+  }  
 
   _canAddFitResults = kFALSE ;
   if (fit) calcPulls() ;
@@ -436,23 +504,17 @@ Bool_t RooMCStudy::fit(Int_t nSamples, TList& dataSetList)
 
 
 
-
-Bool_t RooMCStudy::fitSample(RooAbsData* genSample) 
-{  
-  // Fit given dataset with fit model. If fit
-  // converges (TMinuit status code zero)
-  // The fit results are appended to the fit results
-  // dataset
-  //
-  // If the fit option "r" is supplied, the RooFitResult
-  // objects will always be saved, regardless of the
-  // fit status. RooFitResults objects can be retrieved
-  // later via fitResult().
-  //  
-  
-  // Reset all fit parameters to their initial values  
+void RooMCStudy::resetFitParams()
+{
   *_fitParams = *_fitInitParams ;
-  
+}
+
+
+
+RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
+{
+  // Perform actual fit according to specifications
+
   // Fit model to data set
   TString fitOpt2(_fitOptions) ; fitOpt2.Append("r") ;
   
@@ -484,6 +546,45 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
     fr = (RooFitResult*) _fitModel->fitTo(*data,fitOptList) ;
   }
 
+  if (_binGenData) delete data ;
+
+  return fr ;
+}
+
+
+
+RooFitResult* RooMCStudy::refit(RooAbsData* genSample) 
+{
+  if (!genSample) {
+    genSample = _genSample ;
+  }
+
+  RooFitResult* fr = doFit(genSample) ;
+    
+  return fr ;
+}
+
+
+
+Bool_t RooMCStudy::fitSample(RooAbsData* genSample) 
+{  
+  // Fit given dataset with fit model. If fit
+  // converges (TMinuit status code zero)
+  // The fit results are appended to the fit results
+  // dataset
+  //
+  // If the fit option "r" is supplied, the RooFitResult
+  // objects will always be saved, regardless of the
+  // fit status. RooFitResults objects can be retrieved
+  // later via fitResult().
+  //  
+  
+  // Reset all fit parameters to their initial values  
+  resetFitParams() ;
+
+  // Perform actual fit
+  RooFitResult* fr = doFit(genSample) ;
+
   // If fit converged, store parameters and NLL
   Bool_t ok = (fr->status()==0) ;
   if (ok) {
@@ -506,9 +607,7 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
   } else {
     delete fr ;
   }
-  
-  if (_binGenData) delete data ;
-  
+    
   return !ok ;
 }
 
@@ -557,7 +656,7 @@ void RooMCStudy::calcPulls()
     TString name(par->GetName()), title(par->GetTitle()) ;
     name.Append("pull") ;
     title.Append(" Pull") ;
-    RooAbsReal* genParOrig = (RooAbsReal*)_genParams->find(par->GetName()) ;
+    RooAbsReal* genParOrig = (RooAbsReal*)_genInitParams->find(par->GetName()) ;
     if (genParOrig) {
       RooAbsReal* genPar = (RooAbsReal*) genParOrig->Clone("truth") ;
       RooPullVar pull(name,title,*par,*genPar) ;
@@ -658,6 +757,33 @@ RooPlot* RooMCStudy::plotParamOn(RooPlot* frame, const RooCmdArg& arg1, const Ro
   return frame ;
 }
 
+
+
+RooPlot* RooMCStudy::plotParam(const char* paramName, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
+   			       const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) 
+{
+  // Plot the distribution of the fitted value of the given parameter on a newly created frame.
+  //
+  // This function accepts the following optional arguments
+  // FrameRange(double lo, double hi) -- Set range of frame to given specification
+  // FrameBins(int bins)              -- Set default number of bins of frame to given number
+  // Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
+  //                                     for list of allowed arguments
+  //
+  // If no frame specifications are given, the AutoRange() feature will be used to set the range
+  // Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
+
+
+  // Find parameter in fitParDataSet
+  RooRealVar* param = static_cast<RooRealVar*>(_fitParData->get()->find(paramName)) ;
+  if (!param) {
+    cout << "RooMCStudy::plotParam: ERROR: no parameter defined with name " << paramName << endl ;  
+    return 0 ;
+  }
+
+  // Forward to implementation below
+  return plotParam(*param,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+}
 
 
 RooPlot* RooMCStudy::plotParam(const RooRealVar& param, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 

@@ -12,5 +12,7 @@
 #pragma link C++ class Roo* ;
 #pragma link off class RooErrorHandler ;
 #pragma link off class RooNag ;
+#pragma link C++ class RooRandomizeParamMCSModule::UniParam ;
+#pragma link C++ class RooRandomizeParamMCSModule::GausParam ;
 
 #endif

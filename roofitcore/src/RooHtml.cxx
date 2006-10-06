@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.cc,v 1.20 2006/08/19 00:41:56 bondioli Exp $
+ *    File: $Id: RooHtml.cc,v 1.20 2006/08/31 14:22:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,7 +49,7 @@ const char   *formatStr      = "%12s %5s %s";
 ClassImp(RooHtml)
   ;
 
-void RooHtml::WriteHtmlHeader(ofstream &out, const char *title, TClass* /*cls*/)
+void RooHtml::WriteHtmlHeader(ofstream &out, const char *title, const char* dir/*=""*/, TClass* /*cls*/)
 {
   // Write a custom html header for RooFit class documentation to the specified output stream.  
 
