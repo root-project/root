@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TUtilPad.cxx,v 1.5 2005/02/04 13:07:16 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TUtilPad.cxx,v 1.6 2006/10/05 15:06:48 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -82,9 +82,9 @@ void TUtilPad::FitPanel(const TVirtualPad *pad, const TObject *obj)
       // new interface (default)
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TFitEditor"))) {
-      if (h->LoadPlugin() == -1)
-         return;
-      h->ExecPlugin(2, pad, obj);
+         if (h->LoadPlugin() == -1)
+            return;
+         h->ExecPlugin(2, pad, obj);
       }
    } else {
    
@@ -106,11 +106,14 @@ void TUtilPad::FitPanelGraph(const TVirtualPad *pad, const TObject *obj)
 // interface to the TFitPanelGraph
    
    if (fgPanelVersion == 0) {
+
+      // new interface (default)
       TPluginHandler *h;
-      h = gROOT->GetPluginManager()->FindHandler("TFitEditor");
-      if (h->LoadPlugin() == -1)
-         return;
-      h->ExecPlugin(2, pad, obj);
+      if ((h = gROOT->GetPluginManager()->FindHandler("TFitEditor"))) {
+         if (h->LoadPlugin() == -1)
+            return;
+         h->ExecPlugin(2, pad, obj);
+      }
    } else {
 
    // old FitPanel - use TUtilPad::SetPanelVersion(1)
