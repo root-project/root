@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.159 2006/07/09 05:27:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.160 2006/09/26 13:44:50 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2052,6 +2052,50 @@ Bool_t TGeoManager::cd(const char *path)
    }
    return kTRUE;
 }
+
+//_____________________________________________________________________________
+Bool_t TGeoManager::CheckPath(const char *path) const
+{
+// Check if a geometry path is valid without changing the state of the manager.
+   Int_t length = strlen(path);
+   if (!length) return kFALSE;
+   TString spath = path;
+   TGeoVolume *vol;
+   // Check first occurance of a '/'
+   Int_t ind1 = spath.Index("/");
+   if (ind1<0) {
+      // No '/' so we check directly the path against the name of the top
+      if (strcmp(path,fTopNode->GetName())) return kFALSE;
+      return kTRUE;
+   }   
+   Int_t ind2 = ind1;
+   Bool_t end = kFALSE;
+   if (ind1>0) ind1 = -1;   // no trailing '/'
+   else ind2 = spath.Index("/", ind1+1);
+   if (ind2<0) ind2 = length;
+   TString name(spath(ind1+1, ind2-ind1-1));
+   if (name==fTopNode->GetName()) {
+      if (ind2>=length-1) return kTRUE;
+      ind1 = ind2;
+   } else return kFALSE;  
+   TGeoNode *node = fTopNode;
+   // Deeper than just top level
+   while (!end) {
+      ind2 = spath.Index("/", ind1+1);
+      if (ind2<0) {
+         ind2 = length;
+         end  = kTRUE;
+      }
+      vol = node->GetVolume();
+      name = spath(ind1+1, ind2-ind1-1);
+      node = vol->GetNode(name.Data());
+      if (!node) return kFALSE;
+      if (ind2>=length-1) return kTRUE;
+      ind1 = ind2;
+   }
+   return kTRUE;
+}
+
 //_____________________________________________________________________________
 Int_t TGeoManager::CountNodes(const TGeoVolume *vol, Int_t nlevels, Int_t option)
 {
@@ -4805,6 +4849,7 @@ TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char 
 {
 // Creates an aligneable object with unique name corresponding to a path
 // and adds it to the list of alignables.
+   if (!CheckPath(path)) return NULL;
    if (!fHashPNE) fHashPNE = new THashList(256,3);
    TGeoPNEntry *entry = GetAlignableEntry(unique_name);
    if (entry) {

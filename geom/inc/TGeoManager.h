@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.80 2006/05/23 04:47:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.81 2006/09/26 13:44:50 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -174,6 +174,7 @@ public:
    void                   Browse(TBrowser *b);
    void                   SetVisibility(TObject *obj, Bool_t vis);
    virtual Bool_t         cd(const char *path=""); // *MENU*
+   Bool_t                 CheckPath(const char *path) const;
    void                   CdNode(Int_t nodeid);
    void                   CdDown(Int_t index);
    void                   CdUp();

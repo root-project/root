@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.20 2006/08/14 10:43:46 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.21 2006/09/19 14:37:13 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -338,7 +338,7 @@ TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
             :TNamed(name, path)
 {
 // Default constructor
-   if (!gGeoManager || !gGeoManager->IsClosed() || !gGeoManager->cd(path)) {
+   if (!gGeoManager || !gGeoManager->IsClosed() || !gGeoManager->CheckPath(path)) {
       TString errmsg("Cannot define a physical node link without a closed geometry and a valid path !");
       Error("ctor", errmsg.Data());
       throw errmsg;
