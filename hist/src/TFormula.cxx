@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.126 2006/09/15 12:33:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.127 2006/09/15 15:16:57 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2867,13 +2867,16 @@ TString TFormula::GetExpFormula(Option_t *option) const
             // to trim them.
             for(int i=0, depth=0;i<funcname.Length();++i) {
                switch (funcname[i]) {
-                  case '<': ++depth; break;
-                  case '>': --depth; break;
-                  case ' ': if (depth==0) {
-                               funcname.Remove(0,i+1);
-                               i = funcname.Length();
-                               break;
-                            }
+                  case '<':
+                     ++depth; break;
+                  case '>':
+                     --depth; break;
+                  case ' ':
+                     if (depth==0) {
+                        funcname.Remove(0,i+1);
+                        i = funcname.Length();
+                        break;
+                     }
                }
             }
             Ssiz_t ind = funcname.First('(');

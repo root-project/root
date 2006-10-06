@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.314 2006/10/04 13:43:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.315 2006/10/04 16:32:30 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1520,14 +1520,14 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    //get number of events in histogramm
    if (opt.Contains("UU") && opt.Contains("NORM")) {
       for (i=i_start; i<=i_end; i++) {
-	 for (j=j_start; j<=j_end; j++) {
-	    for (k=k_start; k<=k_end; k++) {
-	       bin1 = this->GetBinContent(i,j,k);
-	       bin2 = h2->GetBinContent(i,j,k);
-	       err1 = this->GetBinError(i,j,k);
-	       err2 = h2->GetBinError(i,j,k);
-	       if (err1==0) continue;            //otherwise divison by zero
-	       if (err2==0) continue;
+         for (j=j_start; j<=j_end; j++) {
+            for (k=k_start; k<=k_end; k++) {
+               bin1 = this->GetBinContent(i,j,k);
+               bin2 = h2->GetBinContent(i,j,k);
+               err1 = this->GetBinError(i,j,k);
+               err2 = h2->GetBinError(i,j,k);
+               if (err1==0) continue;            //otherwise divison by zero
+               if (err2==0) continue;
                bin1 *= bin1/(err1*err1);
                bin2 *= bin2/(err2*err2);
                bin1 += 0.5;
@@ -1536,19 +1536,19 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                bin2 = Int_t(bin2);
                bin1 = Double_t(bin1);
                bin2 = Double_t(bin2);
-	       sum1 += bin1;
-	       sum2 += bin2;
-	    }
-	 }
+               sum1 += bin1;
+               sum2 += bin2;
+            }
+         }
       }
    } else {
       for (i=i_start; i<=i_end; i++) {
-	 for (j=j_start; j<=j_end; j++) {
-	    for (k=k_start; k<=k_end; k++) {
-	       sum1 += this->GetBinContent(i,j,k);
-	       sum2 += h2->GetBinContent(i,j,k);
-	    }
-	 }
+         for (j=j_start; j<=j_end; j++) {
+            for (k=k_start; k<=k_end; k++) {
+               sum1 += this->GetBinContent(i,j,k);
+               sum2 += h2->GetBinContent(i,j,k);
+            }
+         }
       }
    }
    
@@ -1573,12 +1573,12 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
                if (bin1 == 0 || bin2 == 0) {
                   --ndf;  //no data means one degree of freedom less
-	       } else {
-		  if (opt.Contains("NORM")) {
-		     err1 = this->GetBinError(i,j,k);
-		     err2 = h2->GetBinError(i,j,k);
-		     bin1 *= bin1/(err1*err1);
-		     bin2 *= bin2/(err2*err2);
+               } else {
+                  if (opt.Contains("NORM")) {
+                     err1 = this->GetBinError(i,j,k);
+                     err2 = h2->GetBinError(i,j,k);
+                     bin1 *= bin1/(err1*err1);
+                     bin2 *= bin2/(err2*err2);
                      //avoid rounding errors
                      bin1 += 0.5;
                      bin2 += 0.5;
@@ -1586,7 +1586,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                      bin2 = Int_t(bin2);
                      bin1 = Double_t(bin1);
                      bin2 = Double_t(bin2);
-		  }
+                  }
 
                   binsum = bin1 + bin2;
                   temp1 = binsum*sum1/sum;
@@ -1594,7 +1594,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   
                   if (res)
                      res[i-i_start] = (bin1-temp1)/TMath::Sqrt(temp1);
-		  
+  
                   if (temp1 < 1) m++;
                   if (temp2 < 1) n++;
                   
@@ -1606,9 +1606,9 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
                   temp1 = sum2*bin1-sum1*bin2;
                   chi2 += temp1*temp1/binsum;
-	       }
-	    }
-	 }
+               }
+            }
+         }
       }
       chi2 /= sum1*sum2;
       if (m) {
@@ -1636,62 +1636,62 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                bin2 = h2->GetBinContent(i,j,k);
                err2 = h2->GetBinError(i,j,k);
 
-	       err1 *= err1;
-	       err2 *= err2;
-	       
-	       var1 = sum2*bin2 - sum1*err2;
-	       var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
+               err1 *= err1;
+               err2 *= err2;
+       
+               var1 = sum2*bin2 - sum1*err2;
+               var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
                
-	       while (var1*var1+bin1 == 0 || var1+var2 == 0) {
-		  sum1++;
-		  bin1++;
-		  x++;
-		  y=1;
-		  var1 = sum2*bin2 - sum1*err2;
-		  var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
-	       }
+               while (var1*var1+bin1 == 0 || var1+var2 == 0) {
+                  sum1++;
+                  bin1++;
+                  x++;
+                  y=1;
+                  var1 = sum2*bin2 - sum1*err2;
+                  var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
+               }
                
-	       var2 = TMath::Sqrt(var2);
+               var2 = TMath::Sqrt(var2);
                
-	       while (var1+var2 == 0) {
-		  sum1++;
-		  bin1++;
-		  x++;
-		  y=1;
-		  var1 = sum2*bin2 - sum1*err2;
-		  var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
-		  while (var1*var1+bin1 == 0 || var1+var2 == 0) {
-		     sum1++;
-		     bin1++;
-		     x++;
-		     y=1;
-		     var1 = sum2*bin2 - sum1*err2;
-		     var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
-		  }
-		  var2 = TMath::Sqrt(var2);
-	       }
+               while (var1+var2 == 0) {
+                  sum1++;
+                  bin1++;
+                  x++;
+                  y=1;
+                  var1 = sum2*bin2 - sum1*err2;
+                  var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
+                  while (var1*var1+bin1 == 0 || var1+var2 == 0) {
+                     sum1++;
+                     bin1++;
+                     x++;
+                     y=1;
+                     var1 = sum2*bin2 - sum1*err2;
+                     var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
+                  }
+                  var2 = TMath::Sqrt(var2);
+               }
                
-	       probb = (var1+var2)/(2*sum2*sum2);
-	       temp1 = probb * sum1;
-	       temp2 = probb * sum2;
+               probb = (var1+var2)/(2*sum2*sum2);
+               temp1 = probb * sum1;
+               temp2 = probb * sum2;
                
-	       if (temp1 < 1) m++;
-	       if (bin2*bin2/err2 < 10) n++;
+               if (temp1 < 1) m++;
+               if (bin2*bin2/err2 < 10) n++;
                
-	       temp = bin1 - temp1;
-	       chi2 += temp*temp/temp1;
-	       temp = bin2 - temp2;
-	       chi2 += temp*temp/err2;
-	       
-	       temp1 = sum2*err2/var2;
-	       temp2 = 1 + (sum1*err2 - sum2*bin2)/var2;
-	       temp2 = temp1*temp1*sum1*probb*(1-probb) + temp2*temp2*err2/4;
-	       if (res)
-		 res[i-i_start] = temp/TMath::Sqrt(temp2);
-	       
-	       //if (y) this->SetBinContent(i,j,k,bin1-x);
-	    }
-	 }
+               temp = bin1 - temp1;
+               chi2 += temp*temp/temp1;
+               temp = bin2 - temp2;
+               chi2 += temp*temp/err2;
+ 
+               temp1 = sum2*err2/var2;
+               temp2 = 1 + (sum1*err2 - sum2*bin2)/var2;
+               temp2 = temp1*temp1*sum1*probb*(1-probb) + temp2*temp2*err2/4;
+               if (res)
+                  res[i-i_start] = temp/TMath::Sqrt(temp2);
+       
+               //if (y) this->SetBinContent(i,j,k,bin1-x);
+            }
+         }
       }
       
       if (m) {
