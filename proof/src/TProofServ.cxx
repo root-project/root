@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.140 2006/10/03 13:27:53 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.141 2006/10/03 14:03:11 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -454,7 +454,7 @@ TProofServ::~TProofServ()
 Int_t TProofServ::CatMotd()
 {
    // Print message of the day (in fConfDir/etc/proof/motd). The motd
-   // is not shown more than once a dat. If the file fConfDir/etc/proof/noproof
+   // is not shown more than once a day. If the file fConfDir/etc/proof/noproof
    // exists, show its contents and close the connection.
 
    TString lastname;
@@ -501,6 +501,8 @@ Int_t TProofServ::CatMotd()
       }
    }
 
+   if (lasttime)
+      gSystem->Unlink(last);
    Int_t fd = creat(last, 0600);
    close(fd);
    delete [] last;
