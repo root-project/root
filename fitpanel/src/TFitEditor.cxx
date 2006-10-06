@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.4 2006/10/05 17:51:40 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.5 2006/10/05 21:33:21 rdm Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -988,7 +988,7 @@ Int_t TFitEditor::CheckFunctionString(const char *fname)
       return form->Compile();
    }
    return -1;
- }
+}
 
 //______________________________________________________________________________
 void TFitEditor::DoAddition(Bool_t on)
