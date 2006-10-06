@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.10 2006/09/28 17:37:55 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.11 2006/09/28 18:08:51 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -50,6 +50,42 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
 {
    // Constructor.  This object would transfer the data from
    // 'from' to 'to' using the method indicated in method.
+   //
+   // The value of the parameter 'method' determines in which 
+   // order the branches' baskets are written to the output file.
+   //
+   // When a TTree is filled the data is stored in the individual
+   // branches' basket.  Each basket is written individually to 
+   // the disk as soon as it is full.  In consequence the baskets 
+   // of branches that contain 'large' data chunk are written to
+   // the disk more often.
+   //
+   // There is currently 3 supported sorting order:
+   //    SortBasketsByOffset (the default)
+   //    SortBasketsByBranch
+   //    SortBasketsByEntry
+   //
+   // When using SortBasketsByOffset the baskets are written in
+   // the output file in the same order as in the original file
+   // (i.e. the basket are sorted on their offset in the original
+   // file; Usually this also means that the baskets are sorted
+   // on the index/number of the _last_ entry they contain)
+   // 
+   // When using SortBasketsByBranch all the baskets of each 
+   // individual branches are stored contiguously.  This tends to 
+   // optimize reading speed when reading a small number (1->5) of 
+   // branches, since all their baskets will be clustered together 
+   // instead of being spread across the file.  However it might
+   // decrease the performance when reading more branches (or the full 
+   // entry).
+   // 
+   // When using SortBasketsByEntry the baskets with the lowest
+   // starting entry are written first.  (i.e. the baskets are 
+   // sorted on the index/number of the first entry they contain). 
+   // This means that on the file the baskets will be in the order
+   // in which they will be needed when reading the whole tree
+   // sequentially.
+   //
 
    TString opt(method);
    opt.ToLower();

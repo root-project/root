@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.305 2006/09/28 17:37:55 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.306 2006/10/05 17:04:30 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2076,15 +2076,35 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    // If 'option' contains the word 'fast' and nentries is -1 and no branch
    // is disabled, the clone will be done without unzipping or unstreaming
    // the baskets (i.e., a direct copy of the raw bytes on disk).
-   // If 'option' also contains 'SortBasketsByEntry' the branches' baskets
-   // will be reordered so that they are in the order they will be read
-   // when processing the full tree.
-   // If 'option' also contains 'SortBasketsByBranch', the branches' baskets
-   // will be reordered so that for each branch, all its baskets will be
-   // stored contiguously.  Typically this will increase the performance when
-   // reading a low number of branches (2 to 5) but will decrease the performance
-   // when reading more branches (or the full entry).
-   // By default the order will be the order in which they were originally written.
+   //
+   // When 'fast' is specified, 'option' can also contains a 
+   // sorting order for the baskets in the output file.    
+   //
+   // There is currently 3 supported sorting order:
+   //    SortBasketsByOffset (the default)
+   //    SortBasketsByBranch
+   //    SortBasketsByEntry
+   //
+   // When using SortBasketsByOffset the baskets are written in
+   // the output file in the same order as in the original file
+   // (i.e. the basket are sorted on their offset in the original
+   // file; Usually this also means that the baskets are sorted
+   // on the index/number of the _last_ entry they contain)
+   // 
+   // When using SortBasketsByBranch all the baskets of each 
+   // individual branches are stored contiguously.  This tends to 
+   // optimize reading speed when reading a small number (1->5) of 
+   // branches, since all their baskets will be clustered together 
+   // instead of being spread across the file.  However it might
+   // decrease the performance when reading more branches (or the full 
+   // entry).
+   // 
+   // When using SortBasketsByEntry the baskets with the lowest
+   // starting entry are written first.  (i.e. the baskets are 
+   // sorted on the index/number of the first entry they contain). 
+   // This means that on the file the baskets will be in the order
+   // in which they will be needed when reading the whole tree
+   // sequentially.
    //
    // For examples of CloneTree, see tutorials:
    //

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.144 2006/07/26 14:18:37 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.145 2006/08/06 07:15:00 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1546,12 +1546,34 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
    // unzipping or unstreaming the baskets (i.e., a direct copy of the raw
    // bytes on disk).
    //
-   // If 'option' also contains 'SortBasketsByBranch', for each
-   // original tree, the branches' baskets will be reordered so that
-   // for each branch, all its baskets will be stored contiguously.
-   // Typically this will increase the performance when reading a small
-   // number of branches (2 to 5), but will decrease the performance when
-   // reading more branches (or the full entry).
+   // When 'fast' is specified, 'option' can also contains a 
+   // sorting order for the baskets in the output file.    
+   //
+   // There is currently 3 supported sorting order:
+   //    SortBasketsByOffset (the default)
+   //    SortBasketsByBranch
+   //    SortBasketsByEntry
+   //
+   // When using SortBasketsByOffset the baskets are written in
+   // the output file in the same order as in the original file
+   // (i.e. the basket are sorted on their offset in the original
+   // file; Usually this also means that the baskets are sorted
+   // on the index/number of the _last_ entry they contain)
+   // 
+   // When using SortBasketsByBranch all the baskets of each 
+   // individual branches are stored contiguously.  This tends to 
+   // optimize reading speed when reading a small number (1->5) of 
+   // branches, since all their baskets will be clustered together 
+   // instead of being spread across the file.  However it might
+   // decrease the performance when reading more branches (or the full 
+   // entry).
+   // 
+   // When using SortBasketsByEntry the baskets with the lowest
+   // starting entry are written first.  (i.e. the baskets are 
+   // sorted on the index/number of the first entry they contain). 
+   // This means that on the file the baskets will be in the order
+   // in which they will be needed when reading the whole tree
+   // sequentially.
    //
    // IMPORTANT Note 1: AUTOMATIC FILE OVERFLOW
    // -----------------------------------------
