@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Varargs.h,v 1.3 2005/03/13 15:05:31 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Varargs.h,v 1.4 2006/10/05 21:06:35 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,7 +32,9 @@
    };
 
 #else
-
+#   ifndef __CINT__ 	 
+#   include <stdarg.h>
+#   endif
 #   if defined(sparc) && !defined(__GNUG__) && !defined(__CC_SUN21__) && !defined(__SVR4)
 #      define va_(arg) __builtin_va_alist
 #   else
