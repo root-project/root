@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.18 2006/08/05 20:04:47 brun Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.19 2006/09/29 08:17:21 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -654,7 +654,7 @@ Int_t TXSocket::PostPipe(TSocket *s)
    }
 
    if (gDebug > 2)
-      Printf("TXSocket::PostPipe: %s: %p: pipe posted", fgLoc.Data(), s);
+      ::Info("TXSocket::PostPipe", "%s: %p: pipe posted", fgLoc.Data(), s);
 
    // We are done
    return 0;
@@ -683,7 +683,7 @@ Int_t TXSocket::CleanPipe(TSocket *s)
    TXSocket::fgReadySock.Remove(s);
 
    if (gDebug > 2)
-      Printf("TXSocket::CleanPipe: %s: %p: pipe cleaned", fgLoc.Data(), s);
+      ::Info("TXSocket::CleanPipe", "%s: %p: pipe cleaned", fgLoc.Data(), s);
 
    // We are done
    return 0;
@@ -713,7 +713,7 @@ Int_t TXSocket::FlushPipe(TSocket *s)
 
    // Notify
    if (gDebug > 0)
-      Printf("TXSocket::ResetPipe: %s: %p: pipe flushed", fgLoc.Data(), s);
+      ::Info("TXSocket::ResetPipe", "%s: %p: pipe flushed", fgLoc.Data(), s);
 
    // We are done
    return 0;
@@ -881,9 +881,9 @@ Bool_t TXSocket::Create()
    }
 
    // Notify failure
-   Printf("TXSocket::Create:"
-          "problems creating or attaching to a remote server (%s)",
-          ((fConn->fLastErrMsg.length() > 0) ? fConn->fLastErrMsg.c_str() : "-"));
+   Error("Create:",
+         "problems creating or attaching to a remote server (%s)",
+         ((fConn->fLastErrMsg.length() > 0) ? fConn->fLastErrMsg.c_str() : "-"));
    return kFALSE;
 }
 
@@ -936,7 +936,7 @@ Int_t TXSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
    }
 
    // Failure notification (avoid using the handler: we may be exiting)
-   Printf("TXSocket::SendRaw: problems sending data to server");
+   Error("SendRaw", "problems sending data to server");
 
    return -1;
 }
@@ -986,7 +986,7 @@ Bool_t TXSocket::Ping(Bool_t)
    SafeDelete(xrsp);
 
    // Failure notification (avoid using the handler: we may be exiting)
-   Printf("TXSocket::Ping: problems sending ping to server");
+   Error("Ping", "problems sending ping to server");
 
    return res;
 }
@@ -1222,7 +1222,7 @@ Int_t TXSocket::SendInterrupt(Int_t type)
    }
 
    // Failure notification (avoid using the handler: we may be exiting)
-   Printf("TXSocket::SendInterrupt: problems sending interrupt to server");
+   Error("SendInterrupt", "problems sending interrupt to server");
    return -1;
 }
 
@@ -1456,7 +1456,7 @@ void TXSocket::DumpReadySock()
    TObject *o = 0;
    while ((o = nxs()))
       buf += Form(" %p",o);
-   Printf("TXSocket::DumpReadySock: %s: list content: %s", fgLoc.Data(), buf.Data());
+   ::Info("TXSocket::DumpReadySock", "%s: list content: %s", fgLoc.Data(), buf.Data());
 
 }
 

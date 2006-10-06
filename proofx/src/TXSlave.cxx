@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.9 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.10 2006/08/05 20:04:47 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -202,8 +202,8 @@ void TXSlave::Init(const char *host, Int_t stype)
 
    // The socket may not be valid
    if (!(fSocket->IsValid())) {
-      Error("Init", "some severe error occurred while opening"
-                        " the connection at %s - exit", url.GetUrl(kTRUE));
+      Error("Init", "some severe error occurred while opening "
+                    "the connection at %s - exit", url.GetUrl(kTRUE));
       SafeDelete(fSocket);
       return;
    }
@@ -275,8 +275,8 @@ Int_t TXSlave::SetupServ(Int_t, const char *)
 
    // protocols less than 4 are incompatible
    if (fProtocol < 4) {
-      Error("SetupServ", "incompatible PROOF versions (remote version"
-                      " must be >= 4, is %d)", fProtocol);
+      Error("SetupServ", "incompatible PROOF versions (remote version "
+                         "must be >= 4, is %d)", fProtocol);
       SafeDelete(fSocket);
       fValid = kFALSE;
       return -1;
@@ -357,7 +357,8 @@ void TXSlave::StopProcess(Bool_t abort, Int_t timeout)
 Int_t TXSlave::GetProofdProtocol(TSocket *s)
 {
    // Find out the remote proofd protocol version.
-   // Returns -1 in case of error
+   // Returns -1 in case of error.
+
    Int_t rproto = -1;
 
    UInt_t cproto = 0;
@@ -437,7 +438,7 @@ Bool_t TXSlave::HandleError(const void *)
 {
    // Handle error on the input socket
 
-   Printf("TXSlave::HandleError: %p: got called ... fProof: %p", this, fProof);
+   Info("HandleError", "%p: got called ... fProof: %p", this, fProof);
 
    // Interrupt underlying socket operations
    ((TXSocket *)fSocket)->SetInterrupt();
@@ -455,12 +456,12 @@ Bool_t TXSlave::HandleError(const void *)
       TMonitor *mon = fProof->fCurrentMonitor;
 
       if (gDebug > 2)
-         Printf("TXSlave::HandleError %p: proof: %p, mon: %p", this, fProof, mon);
+         Info("HandleError", "%p: proof: %p, mon: %p", this, fProof, mon);
 
       if (mon && mon->GetListOfActives()->FindObject(fSocket)) {
          // Synchronous collection in TProof
          if (gDebug > 2)
-            Printf("TXSlave::HandleError %p: deactivating from monitor %p", this, mon);
+            Info("HandleError", "%p: deactivating from monitor %p", this, mon);
          mon->DeActivate(fSocket);
       }
       // Update lists:
@@ -473,7 +474,7 @@ Bool_t TXSlave::HandleError(const void *)
          if (gProofServ)
             gProofServ->GetSocket()->Send(m);
          else
-            Printf("Warning in TXSlave::HandleError %p: global reference to TProofServ missing");
+            Warning("HandleError", "%p: global reference to TProofServ missing");
          // The session is gone
          ((TXSocket *)fSocket)->SetSessionID(-1);
          fProof->MarkBad(this);
@@ -486,7 +487,7 @@ Bool_t TXSlave::HandleError(const void *)
             mgr->ShutdownSession(fProof);
       }
    } else {
-      Printf("Warning in TXSlave::HandleError %p: reference to PROOF missing", this);
+      Warning("HandleError", "%p: reference to PROOF missing", this);
    }
 
    // Post semaphore to wake up anybody waiting; send as many posts as needed
@@ -498,7 +499,7 @@ Bool_t TXSlave::HandleError(const void *)
    }
 
    if (gDebug > 0)
-      Printf("TXSlave::HandleError: %p: DONE ... ", this);
+      Info("HandleError", "%p: DONE ... ", this);
 
    // We are done
    return kTRUE;
