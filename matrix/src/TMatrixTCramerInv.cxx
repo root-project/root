@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixTCramerInv.cxx,v 1.5 2006/07/28 10:50:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixTCramerInv.cxx,v 1.6 2006/08/01 15:59:14 pcanal Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Jan 2004
 
 /*************************************************************************
@@ -44,7 +44,6 @@ Bool_t TMatrixTCramerInv::Inv2x2(TMatrixT<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 2 || m.GetNcols() != 2 || m.GetRowLwb() != m.GetColLwb()) {
       Error("Inv2x2","matrix should be square 2x2");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -58,7 +57,6 @@ Bool_t TMatrixTCramerInv::Inv2x2(TMatrixT<Element> &m,Double_t *determ)
    const Double_t s = 1./det;
    if ( det == 0 ) {
       Error("Inv2x2","matrix is singular");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -77,7 +75,6 @@ Bool_t TMatrixTCramerInv::Inv3x3(TMatrixT<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 3 || m.GetNcols() != 3 || m.GetRowLwb() != m.GetColLwb()) {
       Error("Inv3x3","matrix should be square 3x3");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -116,7 +113,6 @@ Bool_t TMatrixTCramerInv::Inv3x3(TMatrixT<Element> &m,Double_t *determ)
 
    if ( det == 0 || tmp == 0) {
       Error("Inv3x3","matrix is singular");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -165,7 +161,6 @@ Bool_t TMatrixTCramerInv::Inv4x4(TMatrixT<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 4 || m.GetNcols() != 4 || m.GetRowLwb() != m.GetColLwb()) {
       Error("Inv4x4","matrix should be square 4x4");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -236,7 +231,6 @@ Bool_t TMatrixTCramerInv::Inv4x4(TMatrixT<Element> &m,Double_t *determ)
 
    if ( det == 0 ) {
       Error("Inv4x4","matrix is singular");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -304,7 +298,6 @@ Bool_t TMatrixTCramerInv::Inv5x5(TMatrixT<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 5 || m.GetNcols() != 5 || m.GetRowLwb() != m.GetColLwb()) {
       Error("Inv5x5","matrix should be square 5x5");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -448,7 +441,6 @@ Bool_t TMatrixTCramerInv::Inv5x5(TMatrixT<Element> &m,Double_t *determ)
 
    if ( det == 0 ) {
       Error("Inv5x5","matrix is singular");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -538,7 +530,6 @@ Bool_t TMatrixTCramerInv::Inv6x6(TMatrixT<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 6 || m.GetNcols() != 6 || m.GetRowLwb() != m.GetColLwb()) {
       Error("Inv6x6","matrix should be square 6x6");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -912,7 +903,6 @@ Bool_t TMatrixTCramerInv::Inv6x6(TMatrixT<Element> &m,Double_t *determ)
 
    if ( det == 0 ) {
       Error("Inv6x6","matrix is singular");
-      m.Invalidate();
       return kFALSE;
    }
 

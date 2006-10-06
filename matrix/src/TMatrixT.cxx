@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.20 2006/06/02 05:11:20 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.21 2006/08/30 12:54:13 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -116,8 +116,6 @@ TMatrixT<Element>::TMatrixT(EMatrixCreatorsOp1 op,const TMatrixT<Element> &proto
 // Example: TMatrixT<Element> a(10,12); ...; TMatrixT<Element> b(TMatrixT::kTransposed, a);
 // Supported operations are: kZero, kUnit, kTransposed, kInverted and kAtA.
 
-   this->Invalidate();
-
    R__ASSERT(prototype.IsValid());
 
    switch(op) {
@@ -168,8 +166,6 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
 // Constructor of matrix applying a specific operation to two prototypes.
 // Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
 // Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
-
-   this->Invalidate();
 
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
@@ -228,8 +224,6 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
 // Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
 // Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
 
-   this->Invalidate();
-
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
 
@@ -287,8 +281,6 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
 // Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
 // Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
 
-   this->Invalidate();
-
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
 
@@ -345,8 +337,6 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
 // Constructor of matrix applying a specific operation to two prototypes.
 // Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
 // Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
-
-   this->Invalidate();
 
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
@@ -475,6 +465,15 @@ void TMatrixT<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t
 // Allocate new matrix. Arguments are number of rows, columns, row
 // lowerbound (0 default) and column lowerbound (0 default).
 
+   this->fIsOwner = kTRUE;
+   this->fTol     = std::numeric_limits<Element>::epsilon();
+   fElements      = 0;
+   this->fNrows   = 0;
+   this->fNcols   = 0;
+   this->fRowLwb  = 0;
+   this->fColLwb  = 0;
+   this->fNelems  = 0;
+
    if (no_rows < 0 || no_cols < 0)
    {
       Error("Allocate","no_rows=%d no_cols=%d",no_rows,no_cols);
@@ -488,8 +487,6 @@ void TMatrixT<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t
    this->fRowLwb  = row_lwb;
    this->fColLwb  = col_lwb;
    this->fNelems  = this->fNrows*this->fNcols;
-   this->fIsOwner = kTRUE;
-   this->fTol     = std::numeric_limits<Element>::epsilon();
 
    if (this->fNelems > 0) {
       fElements = New_m(this->fNelems);
@@ -513,13 +510,11 @@ void TMatrixT<Element>::Plus(const TMatrixT<Element> &a,const TMatrixT<Element> 
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("Plus","this->GetMatrixArray() == a.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("Plus","this->GetMatrixArray() == b.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
    }
@@ -549,13 +544,11 @@ void TMatrixT<Element>::Plus(const TMatrixT<Element> &a,const TMatrixTSym<Elemen
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("Plus","this->GetMatrixArray() == a.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("Plus","this->GetMatrixArray() == b.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
    }
@@ -585,13 +578,11 @@ void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixT<Element>
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("Plus","this->GetMatrixArray() == a.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("Plus","this->GetMatrixArray() == b.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
    }
@@ -621,13 +612,11 @@ void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixTSym<Eleme
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("Minus","this->GetMatrixArray() == a.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("Minus","this->GetMatrixArray() == b.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
    }
@@ -652,19 +641,16 @@ void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixT<Element> 
    if (gMatrixCheck) {
       if (a.GetNcols() != b.GetNrows() || a.GetColLwb() != b.GetRowLwb()) {
          Error("Mult","A rows and B columns incompatible");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("Mult","this->GetMatrixArray() == a.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("Mult","this->GetMatrixArray() == b.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
    }
@@ -706,19 +692,16 @@ void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixT<Elemen
       R__ASSERT(b.IsValid());
       if (a.GetNcols() != b.GetNrows() || a.GetColLwb() != b.GetRowLwb()) {
          Error("Mult","A rows and B columns incompatible");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("Mult","this->GetMatrixArray() == a.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("Mult","this->GetMatrixArray() == b.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
    }
@@ -761,19 +744,16 @@ void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixTSym<Elemen
       R__ASSERT(b.IsValid());
       if (a.GetNcols() != b.GetNrows() || a.GetColLwb() != b.GetRowLwb()) {
          Error("Mult","A rows and B columns incompatible");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("Mult","this->GetMatrixArray() == a.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("Mult","this->GetMatrixArray() == b.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
    }
@@ -816,19 +796,16 @@ void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixTSym<Ele
       R__ASSERT(b.IsValid());
       if (a.GetNcols() != b.GetNrows() || a.GetColLwb() != b.GetRowLwb()) {
          Error("Mult","A rows and B columns incompatible");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("Mult","this->GetMatrixArray() == a.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("Mult","this->GetMatrixArray() == b.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
    }
@@ -870,19 +847,16 @@ void TMatrixT<Element>::TMult(const TMatrixT<Element> &a,const TMatrixT<Element>
       R__ASSERT(b.IsValid());
       if (a.GetNrows() != b.GetNrows() || a.GetRowLwb() != b.GetRowLwb()) {
          Error("TMult","A rows and B columns incompatible");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("TMult","this->GetMatrixArray() == a.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("TMult","this->GetMatrixArray() == b.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
    }
@@ -923,19 +897,16 @@ void TMatrixT<Element>::TMult(const TMatrixT<Element> &a,const TMatrixTSym<Eleme
       R__ASSERT(b.IsValid());
       if (a.GetNrows() != b.GetNrows() || a.GetRowLwb() != b.GetRowLwb()) {
          Error("TMult","A rows and B columns incompatible");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("TMult","this->GetMatrixArray() == a.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("TMult","this->GetMatrixArray() == b.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
    }
@@ -976,19 +947,16 @@ void TMatrixT<Element>::MultT(const TMatrixT<Element> &a,const TMatrixT<Element>
 
       if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
          Error("MultT","A rows and B columns incompatible");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("MultT","this->GetMatrixArray() == a.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("MultT","this->GetMatrixArray() == b.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
    }
@@ -1030,19 +998,16 @@ void TMatrixT<Element>::MultT(const TMatrixTSym<Element> &a,const TMatrixT<Eleme
       R__ASSERT(b.IsValid());
       if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
          Error("MultT","A rows and B columns incompatible");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("MultT","this->GetMatrixArray() == a.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("MultT","this->GetMatrixArray() == b.GetMatrixArray()");
-         this->Invalidate();
          return;
       }
    }
@@ -1083,13 +1048,11 @@ TMatrixT<Element> &TMatrixT<Element>::Use(Int_t row_lwb,Int_t row_upb,
       if (row_upb < row_lwb)
       {
          Error("Use","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
-         this->Invalidate();
          return *this;
       }
       if (col_upb < col_lwb)
       {
          Error("Use","col_upb=%d < col_lwb=%d",col_upb,col_lwb);
-         this->Invalidate();
          return *this;
       }
    }
@@ -1121,27 +1084,22 @@ TMatrixTBase<Element> &TMatrixT<Element>::GetSub(Int_t row_lwb,Int_t row_upb,Int
       R__ASSERT(this->IsValid());
       if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
          Error("GetSub","row_lwb out of bounds");
-         target.Invalidate();
          return target;
       }
       if (col_lwb < this->fColLwb || col_lwb > this->fColLwb+this->fNcols-1) {
          Error("GetSub","col_lwb out of bounds");
-         target.Invalidate();
          return target;
       }
       if (row_upb < this->fRowLwb || row_upb > this->fRowLwb+this->fNrows-1) {
          Error("GetSub","row_upb out of bounds");
-         target.Invalidate();
          return target;
       }
       if (col_upb < this->fColLwb || col_upb > this->fColLwb+this->fNcols-1) {
          Error("GetSub","col_upb out of bounds");
-         target.Invalidate();
          return target;
       }
       if (row_upb < row_lwb || col_upb < col_lwb) {
          Error("GetSub","row_upb < row_lwb || col_upb < col_lwb");
-         target.Invalidate();
          return target;
       }
    }
@@ -1194,18 +1152,15 @@ TMatrixTBase<Element> &TMatrixT<Element>::SetSub(Int_t row_lwb,Int_t col_lwb,con
 
       if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
          Error("SetSub","row_lwb outof bounds");
-         this->Invalidate();
          return *this;
       }
       if (col_lwb < this->fColLwb || col_lwb > this->fColLwb+this->fNcols-1) {
          Error("SetSub","col_lwb outof bounds");
-         this->Invalidate();
          return *this;
       }
       if (row_lwb+source.GetNrows() > this->fRowLwb+this->fNrows ||
             col_lwb+source.GetNcols() > this->fColLwb+this->fNcols) {
          Error("SetSub","source matrix too large");
-         this->Invalidate();
          return *this;
       }
    }
@@ -1248,7 +1203,6 @@ TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t nrows,Int_t ncols,Int_t
    R__ASSERT(this->IsValid());
    if (!this->fIsOwner) {
       Error("ResizeTo(Int_t,Int_t)","Not owner of data array,cannot resize");
-      this->Invalidate();
       return *this;
    }
 
@@ -1312,7 +1266,6 @@ TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t row_lwb,Int_t row_upb,I
    R__ASSERT(this->IsValid());
    if (!this->fIsOwner) {
       Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
-      this->Invalidate();
       return *this;
    }
 
@@ -1421,11 +1374,12 @@ TMatrixT<Element> &TMatrixT<Element>::Invert(Double_t *det)
       TDecompLU::InvertLU(*dynamic_cast<TMatrixD *>(this),Double_t(this->fTol),det);
    else {
       TMatrixD tmp(*this);
-      TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
-      const Double_t *p1 = tmp.GetMatrixArray();
-            Element  *p2 = this->GetMatrixArray();
-      for (Int_t i = 0; i < this->GetNoElements(); i++)
-         p2[i] = p1[i];
+      if (TDecompLU::InvertLU(tmp,Double_t(this->fTol),det)) {
+         const Double_t *p1 = tmp.GetMatrixArray();
+               Element  *p2 = this->GetMatrixArray();
+         for (Int_t i = 0; i < this->GetNoElements(); i++)
+            p2[i] = p1[i];
+      }
    }
 
    return *this;
@@ -1446,12 +1400,10 @@ TMatrixT<Element> &TMatrixT<Element>::InvertFast(Double_t *det)
       {
          if (this->GetNrows() != this->GetNcols() || this->GetRowLwb() != this->GetColLwb()) {
              Error("Invert()","matrix should be square");
-             this->Invalidate();
          } else {
             Element *pM = this->GetMatrixArray();
             if (*pM == 0.) {
                Error("InvertFast","matrix is singular");
-               this->Invalidate();
                *det = 0;
             }
             else {
@@ -1493,11 +1445,12 @@ TMatrixT<Element> &TMatrixT<Element>::InvertFast(Double_t *det)
             TDecompLU::InvertLU(*dynamic_cast<TMatrixD *>(this),Double_t(this->fTol),det);
          else {
             TMatrixD tmp(*this);
-            TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
-            const Double_t *p1 = tmp.GetMatrixArray();
-                  Element  *p2 = this->GetMatrixArray();
-            for (Int_t i = 0; i < this->GetNoElements(); i++)
-               p2[i] = p1[i];
+            if (TDecompLU::InvertLU(tmp,Double_t(this->fTol),det)) {
+               const Double_t *p1 = tmp.GetMatrixArray();
+                     Element  *p2 = this->GetMatrixArray();
+               for (Int_t i = 0; i < this->GetNoElements(); i++)
+                  p2[i] = p1[i];
+            }
          }
          return *this;
       }
@@ -1548,7 +1501,6 @@ TMatrixT<Element> &TMatrixT<Element>::Transpose(const TMatrixT<Element> &source)
           this->fRowLwb != source.GetColLwb() || this->fColLwb != source.GetRowLwb())
       {
          Error("Transpose","matrix has wrong shape");
-         this->Invalidate();
          return *this;
       }
 
@@ -1586,7 +1538,6 @@ TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v,Ele
       R__ASSERT(v.IsValid());
       if (v.GetNoElements() < TMath::Max(this->fNrows,this->fNcols)) {
          Error("Rank1Update","vector too short");
-         this->Invalidate();
          return *this;
       }
    }
@@ -1616,13 +1567,11 @@ TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v1,co
       R__ASSERT(v2.IsValid());
       if (v1.GetNoElements() < this->fNrows) {
          Error("Rank1Update","vector v1 too short");
-         this->Invalidate();
          return *this;
       }
 
       if (v2.GetNoElements() < this->fNcols) {
          Error("Rank1Update","vector v2 too short");
-         this->Invalidate();
          return *this;
       }
    }
@@ -1692,7 +1641,6 @@ TMatrixT<Element> &TMatrixT<Element>::NormByColumn(const TVectorT<Element> &v,Op
       R__ASSERT(v.IsValid());
       if (v.GetNoElements() < this->fNrows) {
          Error("NormByColumn","vector shorter than matrix column");
-         this->Invalidate();
          return *this;
       }
    }
@@ -1709,8 +1657,12 @@ TMatrixT<Element> &TMatrixT<Element>::NormByColumn(const TVectorT<Element> &v,Op
       for ( ; mp < mp_last; pv++) {
          for (Int_t j = 0; j < this->fNcols; j++)
          {
-            R__ASSERT(*pv != 0.0);
-            *mp++ /= *pv;
+            if (*pv != 0.0)
+               *mp++ /= *pv;
+            else {
+               Error("NormbyColumn","vector element %d is zero",pv-v.GetMatrixArray());
+               mp++;
+            }
          }
       }
    } else {
@@ -1736,7 +1688,6 @@ TMatrixT<Element> &TMatrixT<Element>::NormByRow(const TVectorT<Element> &v,Optio
       R__ASSERT(v.IsValid());
       if (v.GetNoElements() < this->fNcols) {
          Error("NormByRow","vector shorter than matrix column");
-         this->Invalidate();
          return *this;
       }
    }
@@ -1753,8 +1704,12 @@ TMatrixT<Element> &TMatrixT<Element>::NormByRow(const TVectorT<Element> &v,Optio
    if (divide) {
       for ( ; mp < mp_last; pv = pv0 )
          for (Int_t j = 0; j < this->fNcols; j++) {
-            R__ASSERT(*pv != 0.0);
-            *mp++ /= *pv++;
+            if (*pv != 0.0)
+               *mp++ /= *pv++;
+            else {
+               Error("NormbyRow","vector element %d is zero",pv-pv0);
+               mp++;
+            }
          }
     } else {
        for ( ; mp < mp_last; pv = pv0 )
@@ -1773,7 +1728,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixT<Element> &source)
 
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator=(const TMatrixT &)","matrices not compatible");
-      this->Invalidate();
       return *this;
    }
 
@@ -1793,7 +1747,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTSym<Element> &sour
 
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator=(const TMatrixTSym &)","matrices not compatible");
-      this->Invalidate();
       return *this;
    }
 
@@ -1815,7 +1768,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTSparse<Element> &s
         this->GetNrows()  != source.GetNrows()  || this->GetNcols()  != source.GetNcols() ||
         this->GetRowLwb() != source.GetRowLwb() || this->GetColLwb() != source.GetColLwb()) {
       Error("operator=(const TMatrixTSparse &","matrices not compatible");
-      this->Invalidate();
       return *this;
    }
 
@@ -1855,7 +1807,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTLazy<Element> &laz
        lazy_constructor.GetColLwb() != this->GetColLwb()) {
       Error("operator=(const TMatrixTLazy&)", "matrix is incompatible with "
             "the assigned Lazy matrix");
-      this->Invalidate();
       return *this;
    }
 
@@ -1935,7 +1886,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator+=(const TMatrixT<Element> &source
 
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator+=(const TMatrixT &)","matrices not compatible");
-      this->Invalidate();
       return *this;
    }
 
@@ -1956,7 +1906,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator+=(const TMatrixTSym<Element> &sou
 
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator+=(const TMatrixTSym &)","matrices not compatible");
-      this->Invalidate();
       return *this;
    }
 
@@ -1977,7 +1926,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator-=(const TMatrixT<Element> &source
 
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator=-(const TMatrixT &)","matrices not compatible");
-      this->Invalidate();
       return *this;
    }
 
@@ -1998,7 +1946,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator-=(const TMatrixTSym<Element> &sou
 
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator=-(const TMatrixTSym &)","matrices not compatible");
-      this->Invalidate();
       return *this;
    }
 
@@ -2025,7 +1972,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixT<Element> &source
       if (this->fNcols != source.GetNrows() || this->fColLwb != source.GetRowLwb() ||
           this->fNcols != source.GetNcols() || this->fColLwb != source.GetColLwb()) {
          Error("operator*=(const TMatrixT &)","source matrix has wrong shape");
-         this->Invalidate();
          return *this;
       }
    }
@@ -2088,7 +2034,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTSym<Element> &sou
       R__ASSERT(source.IsValid());
       if (this->fNcols != source.GetNrows() || this->fColLwb != source.GetRowLwb()) {
          Error("operator*=(const TMatrixTSym &)","source matrix has wrong shape");
-         this->Invalidate();
          return *this;
       }
    }
@@ -2149,10 +2094,8 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTDiag_const<Elemen
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(diag.GetMatrix()->IsValid());
-      R__ASSERT(this->fNcols == diag.GetNdiags());
       if (this->fNcols != diag.GetNdiags()) {
          Error("operator*=(const TMatrixTDiag_const &)","wrong diagonal length");
-         this->Invalidate();
          return *this;
       }
    }
@@ -2183,7 +2126,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTDiag_const<Elemen
       R__ASSERT(diag.GetMatrix()->IsValid());
       if (this->fNcols != diag.GetNdiags()) {
          Error("operator/=(const TMatrixTDiag_const &)","wrong diagonal length");
-         this->Invalidate();
          return *this;
       }
    }
@@ -2194,8 +2136,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTDiag_const<Elemen
    while (mp < mp_last) {
       const Element *dp = diag.GetPtr();
       for (Int_t j = 0; j < this->fNcols; j++) {
-         R__ASSERT(*dp != 0.0);
-         *mp++ /= *dp;
+         if (*dp != 0.0)
+            *mp++ /= *dp;
+         else {
+            Error("operator/=","%d-diagonal element is zero",j);
+            mp++;
+         }
          dp += inc;
       }
    }
@@ -2217,7 +2163,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTColumn_const<Elem
       R__ASSERT(mt->IsValid());
       if (this->fNrows != mt->GetNrows()) {
          Error("operator*=(const TMatrixTColumn_const &)","wrong column length");
-         this->Invalidate();
          return *this;
       }
    }
@@ -2251,7 +2196,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTColumn_const<Elem
       R__ASSERT(mt->IsValid());
       if (this->fNrows != mt->GetNrows()) {
          Error("operator/=(const TMatrixTColumn_const &)","wrong column matrix");
-         this->Invalidate();
          return *this;
       }
    }
@@ -2263,9 +2207,14 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTColumn_const<Elem
    const Int_t inc = col.GetInc();
    while (mp < mp_last) {
       R__ASSERT(cp < endp);
-      R__ASSERT(*cp != 0.0);
-      for (Int_t j = 0; j < this->fNcols; j++)
-         *mp++ /= *cp;
+      if (*cp != 0.0) {
+         for (Int_t j = 0; j < this->fNcols; j++)
+            *mp++ /= *cp;
+      } else {
+         const Int_t icol = (cp-mt->GetMatrixArray())/inc;
+         Error("operator/=","%d-row of matrix column is zero",icol);
+         mp += this->fNcols;
+      }
       cp += inc;
    }
 
@@ -2286,7 +2235,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTRow_const<Element
       R__ASSERT(mt->IsValid());
       if (this->fNcols != mt->GetNcols()) {
          Error("operator*=(const TMatrixTRow_const &)","wrong row length");
-         this->Invalidate();
          return *this;
       }
    }
@@ -2320,7 +2268,6 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTRow_const<Element
  
    if (this->fNcols != mt->GetNcols()) {
       Error("operator/=(const TMatrixTRow_const &)","wrong row length");
-      this->Invalidate();
       return *this;
    }
 
@@ -2332,8 +2279,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTRow_const<Element
       const Element *rp = row.GetPtr();    // Row ptr
       for (Int_t j = 0; j < this->fNcols; j++) {
          R__ASSERT(rp < endp);
-         R__ASSERT(*rp != 0.0);
-         *mp++ /= *rp;
+         if (*rp != 0.0) {
+           *mp++ /= *rp;
+         } else {
+            Error("operator/=","%d-col of matrix row is zero",j);
+            mp++;
+         }
          rp += inc;
       }
    }
@@ -2530,7 +2481,6 @@ TMatrixT<Element> operator&&(const TMatrixT<Element> &source1,const TMatrixT<Ele
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator&&(const TMatrixT&,const TMatrixT&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2556,7 +2506,6 @@ TMatrixT<Element> operator&&(const TMatrixT<Element> &source1,const TMatrixTSym<
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator&&(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2590,7 +2539,6 @@ TMatrixT<Element> operator||(const TMatrixT<Element> &source1,const TMatrixT<Ele
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator||(const TMatrixT&,const TMatrixT&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2616,7 +2564,6 @@ TMatrixT<Element> operator||(const TMatrixT<Element> &source1,const TMatrixTSym<
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator||(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2651,7 +2598,6 @@ TMatrixT<Element> operator>(const TMatrixT<Element> &source1,const TMatrixT<Elem
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator|(const TMatrixT&,const TMatrixT&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2678,7 +2624,6 @@ TMatrixT<Element> operator>(const TMatrixT<Element> &source1,const TMatrixTSym<E
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator>(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2714,7 +2659,6 @@ TMatrixT<Element> operator>=(const TMatrixT<Element> &source1,const TMatrixT<Ele
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator>=(const TMatrixT&,const TMatrixT&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2741,7 +2685,6 @@ TMatrixT<Element> operator>=(const TMatrixT<Element> &source1,const TMatrixTSym<
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator>=(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2777,7 +2720,6 @@ TMatrixT<Element> operator<=(const TMatrixT<Element> &source1,const TMatrixT<Ele
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator<=(const TMatrixT&,const TMatrixT&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2804,7 +2746,6 @@ TMatrixT<Element> operator<=(const TMatrixT<Element> &source1,const TMatrixTSym<
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator<=(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2840,7 +2781,6 @@ TMatrixT<Element> operator<(const TMatrixT<Element> &source1,const TMatrixT<Elem
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator<(const TMatrixT&,const TMatrixT&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2865,7 +2805,6 @@ TMatrixT<Element> operator<(const TMatrixT<Element> &source1,const TMatrixTSym<E
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator<(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2901,7 +2840,6 @@ TMatrixT<Element> operator!=(const TMatrixT<Element> &source1,const TMatrixT<Ele
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator!=(const TMatrixT&,const TMatrixT&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2928,7 +2866,6 @@ TMatrixT<Element> operator!=(const TMatrixT<Element> &source1,const TMatrixTSym<
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
       Error("operator!=(const TMatrixT&,const TMatrixTSym&)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -2991,7 +2928,6 @@ TMatrixT<Element> &Add(TMatrixT<Element> &target,Element scalar,const TMatrixT<E
 
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("Add(TMatrixT &,Element,const TMatrixT &)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -3020,7 +2956,6 @@ TMatrixT<Element> &Add(TMatrixT<Element> &target,Element scalar,const TMatrixTSy
 
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("Add(TMatrixT &,Element,const TMatrixTSym &)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -3041,7 +2976,6 @@ TMatrixT<Element> &ElementMult(TMatrixT<Element> &target,const TMatrixT<Element>
 
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("ElementMult(TMatrixT &,const TMatrixT &)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -3062,7 +2996,6 @@ TMatrixT<Element> &ElementMult(TMatrixT<Element> &target,const TMatrixTSym<Eleme
 
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("ElementMult(TMatrixT &,const TMatrixTSym &)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -3083,7 +3016,6 @@ TMatrixT<Element> &ElementDiv(TMatrixT<Element> &target,const TMatrixT<Element> 
 
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("ElementDiv(TMatrixT &,const TMatrixT &)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -3091,8 +3023,14 @@ TMatrixT<Element> &ElementDiv(TMatrixT<Element> &target,const TMatrixT<Element> 
          Element *tp  = target.GetMatrixArray();
    const Element *ftp = tp+target.GetNoElements();
    while ( tp < ftp ) {
-      R__ASSERT(*sp != 0.0);
-      *tp++ /= *sp++;
+      if (*sp != 0.0)
+         *tp++ /= *sp++;
+      else {
+         const Int_t irow = (sp-source.GetMatrixArray())/source.GetNcols();
+         const Int_t icol = (sp-source.GetMatrixArray())%source.GetNcols();
+         Error("ElementDiv","source (%d,%d) is zero",irow,icol);
+         tp++;
+      }
    }
 
    return target;
@@ -3106,7 +3044,6 @@ TMatrixT<Element> &ElementDiv(TMatrixT<Element> &target,const TMatrixTSym<Elemen
 
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("ElementDiv(TMatrixT &,const TMatrixTSym &)","matrices not compatible");
-      target.Invalidate();
       return target;
    }
 
@@ -3114,8 +3051,14 @@ TMatrixT<Element> &ElementDiv(TMatrixT<Element> &target,const TMatrixTSym<Elemen
          Element *tp  = target.GetMatrixArray();
    const Element *ftp = tp+target.GetNoElements();
    while ( tp < ftp ) {
-      R__ASSERT(*sp != 0.0);
-      *tp++ /= *sp++;
+      if (*sp != 0.0)
+         *tp++ /= *sp++;
+      else {
+         const Int_t irow = (sp-source.GetMatrixArray())/source.GetNcols();
+         const Int_t icol = (sp-source.GetMatrixArray())%source.GetNcols();
+         Error("ElementDiv","source (%d,%d) is zero",irow,icol);
+         *tp++ = 0.0;
+      }
    }
 
    return target;

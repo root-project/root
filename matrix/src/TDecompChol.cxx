@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.21 2006/05/29 05:03:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.22 2006/06/02 05:11:20 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -104,8 +104,10 @@ Bool_t TDecompChol::Decompose()
 // Matrix A is decomposed in component U so that A = U^T*U^T
 // If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
 
-   if ( !TestBit(kMatrixSet) )
+   if ( !TestBit(kMatrixSet) ) {
+      Error("Decompose()","Matrix has not been set");
       return kFALSE;
+   }
 
    Int_t i,j,icol,irow;
    const Int_t     n  = fU.GetNrows();
@@ -155,13 +157,13 @@ const TMatrixDSym TDecompChol::GetMatrix()
 // Reconstruct the original matrix using the decomposition parts
 
    if (TestBit(kSingular)) {
-      TMatrixDSym tmp; tmp.Invalidate();
-      return tmp;
+      Error("GetMatrix()","Matrix is singular");
+      return TMatrixDSym();
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         TMatrixDSym tmp; tmp.Invalidate();
-         return tmp;
+         Error("GetMatrix()","Decomposition failed");
+         return TMatrixDSym();
       }
    }
 
@@ -199,19 +201,18 @@ Bool_t TDecompChol::Solve(TVectorD &b)
 
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
-      b.Invalidate();
+      Error("Solve()","Matrix is singular"); 
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b.Invalidate();
+         Error("Solve()","Decomposition failed");
          return kFALSE;
       }
    }
 
    if (fU.GetNrows() != b.GetNrows() || fU.GetRowLwb() != b.GetLwb()) {
       Error("Solve(TVectorD &","vector and matrix incompatible");
-      b.Invalidate();
       return kFALSE;
    }
 
@@ -227,7 +228,6 @@ Bool_t TDecompChol::Solve(TVectorD &b)
       if (pU[off_i+i] < fTol)
       {
          Error("Solve(TVectorD &b)","u[%d,%d]=%.4e < %.4e",i,i,pU[off_i+i],fTol);
-         b.Invalidate();
          return kFALSE;
       }
       Double_t r = pb[i];
@@ -260,12 +260,12 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
-      b->Invalidate();
+      Error("Solve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b->Invalidate();
+         Error("Solve()","Decomposition failed");
          return kFALSE;
       }
    }
@@ -273,7 +273,6 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
    if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb())
    {
       Error("Solve(TMatrixDColumn &cb","vector and matrix incompatible");
-      b->Invalidate();
       return kFALSE;
    }
 
@@ -291,7 +290,6 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
       if (pU[off_i+i] < fTol)
       {
          Error("Solve(TMatrixDColumn &cb)","u[%d,%d]=%.4e < %.4e",i,i,pU[off_i+i],fTol);
-         b->Invalidate();
          return kFALSE;
       }
       Double_t r = pcb[off_i2];
@@ -335,14 +333,13 @@ void TDecompChol::Det(Double_t &d1,Double_t &d2)
 }
 
 //______________________________________________________________________________
-void TDecompChol::Invert(TMatrixDSym &inv)
+Bool_t TDecompChol::Invert(TMatrixDSym &inv)
 {
 // For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
 
    if (inv.GetNrows() != GetNrows() || inv.GetRowLwb() != GetRowLwb()) {
       Error("Invert(TMatrixDSym &","Input matrix has wrong shape");
-      inv.Invalidate();
-      return;
+      return kFALSE;
    }
 
    inv.UnitMatrix();
@@ -355,12 +352,11 @@ void TDecompChol::Invert(TMatrixDSym &inv)
       status &= Solve(b);
    }
 
-   if (!status)
-      inv.Invalidate();
+   return status;
 }
 
 //______________________________________________________________________________
-TMatrixDSym TDecompChol::Invert()
+TMatrixDSym TDecompChol::Invert(Bool_t &status)
 {
 // For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
 
@@ -369,7 +365,7 @@ TMatrixDSym TDecompChol::Invert()
 
    TMatrixDSym inv(rowLwb,rowUpb);
    inv.UnitMatrix();
-   Invert(inv);
+   status = Invert(inv);
 
    return inv;
 }
@@ -421,8 +417,7 @@ TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b,const TVectorD &std)
 
    if (!AreCompatible(b,std)) {
       ::Error("NormalEqn","vectors b and std are not compatible");
-      TVectorD tmp; tmp.Invalidate();
-      return tmp;
+      return TVectorD();
    }
 
    TMatrixD mAw = A;

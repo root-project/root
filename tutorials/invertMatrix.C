@@ -87,7 +87,6 @@ void invertMatrix(Int_t msize=6)
 //
 
   cout << "2. Use .Invert(&det)" <<endl;
-  cout << "  If the determinant is < 2^-52 (="<<TMath::Power(2,-52)<<"), a warning is generated" <<endl;
 
   Double_t det2;
   TMatrixD H2 = H_square;

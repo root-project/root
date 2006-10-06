@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.10 2005/12/22 08:41:31 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.11 2006/05/17 06:22:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -59,8 +59,9 @@ public :
    virtual Bool_t   TransSolve (      TMatrixDColumn &b)      { return Solve(b); }
    virtual void     Det        (Double_t &d1,Double_t &d2);
 
-           void        Invert  (TMatrixDSym &inv);
-           TMatrixDSym Invert  ();
+           Bool_t      Invert  (TMatrixDSym &inv);
+           TMatrixDSym Invert  (Bool_t &status);
+           TMatrixDSym Invert  () { Bool_t status; return Invert(status); }
 
    void Print(Option_t *opt ="") const; // *MENU*
 

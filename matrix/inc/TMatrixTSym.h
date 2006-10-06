@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.h,v 1.7 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.h,v 1.8 2006/05/17 06:22:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -143,7 +143,6 @@ public:
    {
       if (!AreCompatible(*this,source)) {
          Error("operator=(const TMatrixTSym2 &)","matrices not compatible");
-         this->Invalidate();
          return *this;
       }
 
@@ -193,8 +192,14 @@ template <class Element> inline Element TMatrixTSym<Element>::operator()(Int_t r
    R__ASSERT(this->IsValid());
    const Int_t arown = rown-this->fRowLwb;
    const Int_t acoln = coln-this->fColLwb;
-   R__ASSERT(arown < this->fNrows && arown >= 0);
-   R__ASSERT(acoln < this->fNcols && acoln >= 0);
+   if (arown >= this->fNrows || arown < 0) {
+      Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
+      return 0.0;
+   }
+   if (acoln >= this->fNcols || acoln < 0) {
+      Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
+      return 0.0;
+   }
    return (fElements[arown*this->fNcols+acoln]);
 }
 
@@ -203,8 +208,14 @@ template <class Element> inline Element &TMatrixTSym<Element>::operator()(Int_t 
    R__ASSERT(this->IsValid());
    const Int_t arown = rown-this->fRowLwb;
    const Int_t acoln = coln-this->fColLwb;
-   R__ASSERT(arown < this->fNrows && arown >= 0);
-   R__ASSERT(acoln < this->fNcols && acoln >= 0);
+   if (arown >= this->fNrows || arown < 0) {
+      Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
+      return fElements[0];
+   }
+   if (acoln >= this->fNcols || acoln < 0) {
+      Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
+      return fElements[0];
+   }
    return (fElements[arown*this->fNcols+acoln]);
 }
 

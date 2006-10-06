@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.27 2006/06/02 05:11:20 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.28 2006/06/03 06:00:43 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -124,8 +124,10 @@ Bool_t TDecompLU::Decompose()
 // Matrix A is decomposed in components U and L so that P * A = U * L
 // If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
 
-   if ( !TestBit(kMatrixSet) )
+   if ( !TestBit(kMatrixSet) ) {
+      Error("Decompose()","Matrix has not been set");
       return kFALSE;
+   }
 
    Int_t nrZeros = 0;
    Bool_t ok;
@@ -146,13 +148,13 @@ const TMatrixD TDecompLU::GetMatrix()
 // Reconstruct the original matrix using the decomposition parts
 
    if (TestBit(kSingular)) {
-      TMatrixD tmp; tmp.Invalidate();
-      return tmp;
+      Error("GetMatrix()","Matrix is singular");
+      return TMatrixD();
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         TMatrixD tmp; tmp.Invalidate();
-         return tmp;
+         Error("GetMatrix()","Decomposition failed");
+         return TMatrixD();
       }
    }
 
@@ -229,19 +231,18 @@ Bool_t TDecompLU::Solve(TVectorD &b)
 
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
-      b.Invalidate();
+      Error("Solve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b.Invalidate();
+         Error("Solve()","Decomposition failed");
          return kFALSE;
       }
    }
 
    if (fLU.GetNrows() != b.GetNrows() || fLU.GetRowLwb() != b.GetLwb()) {
       Error("Solve(TVectorD &","vector and matrix incompatible");
-      b.Invalidate();
       return kFALSE;
    }
 
@@ -257,7 +258,6 @@ Bool_t TDecompLU::Solve(TVectorD &b)
       const Int_t off_i = i*n;
       if (TMath::Abs(pLU[off_i+i]) < fTol) {
          Error("Solve(TVectorD &b)","LU[%d,%d]=%.4e < %.4e",i,i,pLU[off_i+i],fTol);
-         b.Invalidate();
          return kFALSE;
       }
    }
@@ -298,19 +298,18 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
-      b->Invalidate();
+      Error("Solve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b->Invalidate();
+         Error("Solve()","Decomposition failed");
          return kFALSE;
       }
    }
 
    if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) {
       Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
-      b->Invalidate();
       return kFALSE;
    }
 
@@ -324,7 +323,6 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
       const Int_t off_i = i*n;
       if (TMath::Abs(pLU[off_i+i]) < fTol) {
          Error("Solve(TMatrixDColumn &cb)","LU[%d,%d]=%.4e < %.4e",i,i,pLU[off_i+i],fTol);
-         b->Invalidate();
          return kFALSE;
       }
    }
@@ -371,19 +369,18 @@ Bool_t TDecompLU::TransSolve(TVectorD &b)
 
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
-      b.Invalidate();
+      Error("TransSolve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b.Invalidate();
+         Error("TransSolve()","Decomposition failed");
          return kFALSE;
       }
    }
 
    if (fLU.GetNrows() != b.GetNrows() || fLU.GetRowLwb() != b.GetLwb()) {
       Error("TransSolve(TVectorD &","vector and matrix incompatible");
-      b.Invalidate();
       return kFALSE;
    }
 
@@ -399,7 +396,6 @@ Bool_t TDecompLU::TransSolve(TVectorD &b)
       const Int_t off_i = i*n;
       if (TMath::Abs(pLU[off_i+i]) < fTol) {
          Error("TransSolve(TVectorD &b)","LU[%d,%d]=%.4e < %.4e",i,i,pLU[off_i+i],fTol);
-         b.Invalidate();
          return kFALSE;
       }
    }
@@ -443,19 +439,18 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
-      b->Invalidate();
+      Error("TransSolve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b->Invalidate();
+         Error("TransSolve()","Decomposition failed");
          return kFALSE;
       }
    }
 
    if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) {
       Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
-      b->Invalidate();
       return kFALSE;
    }
 
@@ -471,7 +466,6 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
       const Int_t off_i = i*n;
       if (TMath::Abs(pLU[off_i+i]) < fTol) {
          Error("TransSolve(TMatrixDColumn &cb)","LU[%d,%d]=%.4e < %.4e",i,i,pLU[off_i+i],fTol);
-         b->Invalidate();
          return kFALSE;
       }
    }
@@ -523,7 +517,7 @@ void TDecompLU::Det(Double_t &d1,Double_t &d2)
 }
 
 //______________________________________________________________________________
-void TDecompLU::Invert(TMatrixD &inv)
+Bool_t TDecompLU::Invert(TMatrixD &inv)
 {
 // For a matrix A(m,m), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
 // (m x m) Ainv is returned .
@@ -531,16 +525,17 @@ void TDecompLU::Invert(TMatrixD &inv)
    if (inv.GetNrows()  != GetNrows()  || inv.GetNcols()  != GetNcols() ||
         inv.GetRowLwb() != GetRowLwb() || inv.GetColLwb() != GetColLwb()) {
       Error("Invert(TMatrixD &","Input matrix has wrong shape");
-      inv.Invalidate();
-      return;
+      return kFALSE;
    }
 
    inv.UnitMatrix();
-   MultiSolve(inv);
+   const Bool_t status = MultiSolve(inv);
+
+   return status;
 }
 
 //______________________________________________________________________________
-TMatrixD TDecompLU::Invert()
+TMatrixD TDecompLU::Invert(Bool_t &status)
 {
 // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
 // (n x m) Ainv is returned .
@@ -550,7 +545,7 @@ TMatrixD TDecompLU::Invert()
 
    TMatrixD inv(rowLwb,rowUpb,rowLwb,rowUpb);
    inv.UnitMatrix();
-   MultiSolve(inv);
+   status = MultiSolve(inv);
 
    return inv;
 }
@@ -779,7 +774,6 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
 
    if (lu.GetNrows() != lu.GetNcols() || lu.GetRowLwb() != lu.GetColLwb()) {
       ::Error("TDecompLU::InvertLU","matrix should be square");
-      lu.Invalidate();
       return kFALSE;
    }
 
@@ -799,7 +793,6 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
    if (!DecomposeLUCrout(lu,index,sign,tol,nrZeros) || nrZeros > 0) {
       if (isAllocatedI)
          delete [] index;
-      lu.Invalidate();
       ::Error("TDecompLU::InvertLU","matrix is singular, %d diag elements < tolerance of %.4e",nrZeros,tol);
       return kFALSE;
    }

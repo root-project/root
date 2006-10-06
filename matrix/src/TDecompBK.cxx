@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBK.cxx,v 1.6 2006/05/24 20:07:45 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBK.cxx,v 1.7 2006/05/29 05:03:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Sep 2004
 
 /*************************************************************************
@@ -124,8 +124,10 @@ Bool_t TDecompBK::Decompose()
 // Matrix A is decomposed in components U and D so that A = U*D*U^T
 // If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
 
-   if ( !TestBit(kMatrixSet) )
+   if ( !TestBit(kMatrixSet) ) {
+      Error("Decompose()","Matrix has not been set");
       return kFALSE;
+   }
 
    Bool_t ok = kTRUE;
 
@@ -330,19 +332,18 @@ Bool_t TDecompBK::Solve(TVectorD &b)
 
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
-      b.Invalidate();
+      Error("Solve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b.Invalidate();
+         Error("Solve()","Decomposition failed");
          return kFALSE;
       }
    }
 
    if (fU.GetNrows() != b.GetNrows() || fU.GetRowLwb() != b.GetLwb()) {
       Error("Solve(TVectorD &","vector and matrix incompatible");
-      b.Invalidate();
       return kFALSE;
    }
 
@@ -466,19 +467,18 @@ Bool_t TDecompBK::Solve(TMatrixDColumn &cb)
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
-      b->Invalidate();
+      Error("Solve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b->Invalidate();
+         Error("Solve()","Decomposition failed");
          return kFALSE;
       }
    }
 
    if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb()) {
       Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
-      b->Invalidate();
       return kFALSE;
    }
 
@@ -597,14 +597,13 @@ Bool_t TDecompBK::Solve(TMatrixDColumn &cb)
 }
 
 //______________________________________________________________________________
-void TDecompBK::Invert(TMatrixDSym &inv)
+Bool_t TDecompBK::Invert(TMatrixDSym &inv)
 {
 // For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
 
    if (inv.GetNrows() != GetNrows() || inv.GetRowLwb() != GetRowLwb()) {
       Error("Invert(TMatrixDSym &","Input matrix has wrong shape");
-      inv.Invalidate();
-      return;
+      return kFALSE;
    }
 
    inv.UnitMatrix();
@@ -617,12 +616,11 @@ void TDecompBK::Invert(TMatrixDSym &inv)
       status &= Solve(b);
    }
 
-   if (!status)
-      inv.Invalidate();
+   return status;
 }
 
 //______________________________________________________________________________
-TMatrixDSym TDecompBK::Invert()
+TMatrixDSym TDecompBK::Invert(Bool_t &status)
 {
 // For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
 
@@ -631,7 +629,7 @@ TMatrixDSym TDecompBK::Invert()
 
    TMatrixDSym inv(rowLwb,rowUpb);
    inv.UnitMatrix();
-   Invert(inv);
+   status = Invert(inv);
 
    return inv;
 }

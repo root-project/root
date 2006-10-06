@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.28 2006/05/24 20:07:45 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.29 2006/06/02 05:11:20 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -547,13 +547,13 @@ const TMatrixD TDecompSVD::GetMatrix()
 // Reconstruct the original matrix using the decomposition parts
 
    if (TestBit(kSingular)) {
-      TMatrixD tmp; tmp.Invalidate();
-      return tmp;
+      Error("GetMatrix()","Matrix is singular");
+      return TMatrixD();
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         TMatrixD tmp; tmp.Invalidate();
-         return tmp;
+         Error("GetMatrix()","Decomposition failed");
+         return TMatrixD();
       }
    }
 
@@ -606,12 +606,10 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
 
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
-      b.Invalidate();
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b.Invalidate();
          return kFALSE;
       }
    }
@@ -619,7 +617,6 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
    if (fU.GetNrows() != b.GetNrows() || fU.GetRowLwb() != b.GetLwb())
    {
       Error("Solve(TVectorD &","vector and matrix incompatible");
-      b.Invalidate();
       return kFALSE;
    }
 
@@ -665,12 +662,10 @@ Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
-      b->Invalidate();
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b->Invalidate();
          return kFALSE;
       }
    }
@@ -678,7 +673,6 @@ Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
    if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb())
    {
       Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
-      b->Invalidate();
       return kFALSE;
    }
 
@@ -720,26 +714,22 @@ Bool_t TDecompSVD::TransSolve(TVectorD &b)
 
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
-      b.Invalidate();
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b.Invalidate();
          return kFALSE;
       }
    }
 
    if (fU.GetNrows() != fV.GetNrows() || fU.GetRowLwb() != fV.GetRowLwb()) {
       Error("TransSolve(TVectorD &","matrix should be square");
-      b.Invalidate();
       return kFALSE;
    }
 
    if (fV.GetNrows() != b.GetNrows() || fV.GetRowLwb() != b.GetLwb())
    {
       Error("TransSolve(TVectorD &","vector and matrix incompatible");
-      b.Invalidate();
       return kFALSE;
    }
 
@@ -774,26 +764,22 @@ Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
-      b->Invalidate();
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b->Invalidate();
          return kFALSE;
       }
    }
 
    if (fU.GetNrows() != fV.GetNrows() || fU.GetRowLwb() != fV.GetRowLwb()) {
       Error("TransSolve(TMatrixDColumn &","matrix should be square");
-      b->Invalidate();
       return kFALSE;
    }
 
    if (fV.GetNrows() != b->GetNrows() || fV.GetRowLwb() != b->GetRowLwb())
    {
       Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
-      b->Invalidate();
       return kFALSE;
    }
 
@@ -856,7 +842,6 @@ void TDecompSVD::Det(Double_t &d1,Double_t &d2)
          fDet1 = 0.0;
          fDet2 = 0.0;
       } else {
-         R__ASSERT(fSig.IsValid());
          DiagProd(fSig,fTol,fDet1,fDet2);
       }
       SetBit(kDetermined);
@@ -866,7 +851,7 @@ void TDecompSVD::Det(Double_t &d1,Double_t &d2)
 }
 
 //______________________________________________________________________________
-void TDecompSVD::Invert(TMatrixD &inv)
+Bool_t TDecompSVD::Invert(TMatrixD &inv)
 {
 // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
 // The user should always supply a matrix of size (m x m) !
@@ -880,16 +865,17 @@ void TDecompSVD::Invert(TMatrixD &inv)
    if (inv.GetNrows()  != nRows  || inv.GetNcols()  != nRows ||
        inv.GetRowLwb() != rowLwb || inv.GetColLwb() != colLwb) {
       Error("Invert(TMatrixD &","Input matrix has wrong shape");
-      inv.Invalidate();
-      return;
+      return kFALSE;
    }
 
    inv.UnitMatrix();
-   MultiSolve(inv);
+   Bool_t status = MultiSolve(inv);
+
+   return status;
 }
 
 //______________________________________________________________________________
-TMatrixD TDecompSVD::Invert()
+TMatrixD TDecompSVD::Invert(Bool_t &status)
 {
 // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
 // (n x m) Ainv is returned .
@@ -899,7 +885,7 @@ TMatrixD TDecompSVD::Invert()
    const Int_t rowUpb = rowLwb+GetNrows()-1;
    TMatrixD inv(rowLwb,rowUpb,colLwb,colLwb+GetNrows()-1);
    inv.UnitMatrix();
-   MultiSolve(inv);
+   status = MultiSolve(inv);
    inv.ResizeTo(rowLwb,rowLwb+GetNcols()-1,colLwb,colLwb+GetNrows()-1);
 
    return inv;

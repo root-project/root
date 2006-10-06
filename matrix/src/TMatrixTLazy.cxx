@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTLazy.cxx,v 1.3 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTLazy.cxx,v 1.4 2006/05/22 04:53:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -38,7 +38,10 @@ template<class Element>
 THaarMatrixT<Element>::THaarMatrixT(Int_t order,Int_t no_cols)
     : TMatrixTLazy<Element>(1<<order, no_cols == 0 ? 1<<order : no_cols)
 {
-   R__ASSERT(order > 0 && no_cols >= 0);
+   if (order <= 0)
+      Error("THaarMatrixT","Haar order(%d) should be > 0",order);
+   if (no_cols < 0)
+      Error("THaarMatrixT","#cols(%d) in Haar should be >= 0",no_cols);
 }
 
 //______________________________________________________________________________
@@ -57,10 +60,18 @@ void MakeHaarMat(TMatrixT<Element> &m)
    R__ASSERT(m.IsValid());
    const Int_t no_rows = m.GetNrows();
    const Int_t no_cols = m.GetNcols();
-   R__ASSERT(no_rows >= no_cols && no_cols > 0);
+
+   if (no_rows < no_cols) {
+      Error("MakeHaarMat","#rows(%d) should be >= #cols(%d)",no_rows,no_cols);
+      return;
+   }
+   if (no_cols <= 0) {
+      Error("MakeHaarMat","#cols(%d) should be > 0",no_cols);
+      return;
+   }
 
    // It is easier to calculate a Haar matrix when the elements are stored
-   // column-wise . Since we are row-wise, the transposed Haar is calculted
+   // column-wise . Since we are row-wise, the transposed Haar is calculated
 
    TMatrixT<Element> mtr(no_cols,no_rows);
          Element *cp    = mtr.GetMatrixArray();
@@ -81,11 +92,11 @@ void MakeHaarMat(TMatrixT<Element> &m)
    while (cp < m_end && step_length > 0) {
       for (Int_t step_position = 0; cp < m_end && step_position < no_rows;
               step_position += 2*step_length, cp += no_rows) {
-        Element *ccp = cp+step_position;
-        for (j = 0; j < step_length; j++)
-           *ccp++ = norm_factor;
-        for (j = 0; j < step_length; j++)
-           *ccp++ = -norm_factor;
+         Element *ccp = cp+step_position;
+         for (j = 0; j < step_length; j++)
+            *ccp++ = norm_factor;
+         for (j = 0; j < step_length; j++)
+            *ccp++ = -norm_factor;
       }
       step_length /= 2;
       norm_factor *= TMath::Sqrt(2.0);
@@ -109,7 +120,10 @@ template<class Element>
 THilbertMatrixT<Element>::THilbertMatrixT(Int_t no_rows,Int_t no_cols)
     : TMatrixTLazy<Element>(no_rows,no_cols)
 {
-   R__ASSERT(no_rows > 0 && no_cols > 0);
+   if (no_rows <= 0)
+      Error("THilbertMatrixT","#rows(%d) in Hilbert should be > 0",no_rows);
+   if (no_cols <= 0)
+      Error("THilbertMatrixT","#cols(%d) in Hilbert should be > 0",no_cols);
 }
 
 //______________________________________________________________________________
@@ -117,7 +131,10 @@ template<class Element>
 THilbertMatrixT<Element>::THilbertMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
     : TMatrixTLazy<Element>(row_lwb,row_upb,col_lwb,col_upb)
 {
-   R__ASSERT(row_upb-row_lwb+1 > 0 && col_upb-col_lwb+1 > 0);
+   if (row_upb < row_lwb)
+      Error("THilbertMatrixT","row_upb(%d) in Hilbert should be >= row_lwb(%d)",row_upb,row_lwb);
+   if (col_upb < col_lwb)
+      Error("THilbertMatrixT","col_upb(%d) in Hilbert should be >= col_lwb(%d)",col_upb,col_lwb);
 }
 
 //______________________________________________________________________________
@@ -130,7 +147,15 @@ void MakeHilbertMat(TMatrixT<Element> &m)
    R__ASSERT(m.IsValid());
    const Int_t no_rows = m.GetNrows();
    const Int_t no_cols = m.GetNcols();
-   R__ASSERT(no_rows > 0 && no_cols > 0);
+
+   if (no_rows <= 0) {
+      Error("MakeHilbertMat","#rows(%d) should be > 0",no_rows);
+      return;
+   }
+   if (no_cols <= 0) {
+      Error("MakeHilbertMat","#cols(%d) should be > 0",no_cols);
+      return;
+   }
 
    Element *cp = m.GetMatrixArray();
    for (Int_t i = 0; i < no_rows; i++)
@@ -150,7 +175,8 @@ template<class Element>
 THilbertMatrixTSym<Element>::THilbertMatrixTSym(Int_t no_rows)
     : TMatrixTSymLazy<Element>(no_rows)
 {
-   R__ASSERT(no_rows > 0);
+   if (no_rows <= 0)
+      Error("THilbertMatrixTSym","#rows(%d) in Hilbert should be > 0",no_rows);
 }
 
 //______________________________________________________________________________
@@ -158,7 +184,8 @@ template<class Element>
 THilbertMatrixTSym<Element>::THilbertMatrixTSym(Int_t row_lwb,Int_t row_upb)
     : TMatrixTSymLazy<Element>(row_lwb,row_upb)
 {
-   R__ASSERT(row_upb-row_lwb+1 > 0);
+   if (row_upb < row_lwb)
+      Error("THilbertMatrixTSym","row_upb(%d) in Hilbert should be >= row_lwb(%d)",row_upb,row_lwb);
 }
 
 //______________________________________________________________________________
@@ -170,7 +197,10 @@ void MakeHilbertMat(TMatrixTSym<Element> &m)
 
    R__ASSERT(m.IsValid());
    const Int_t no_rows = m.GetNrows();
-   R__ASSERT(no_rows > 0);
+   if (no_rows <= 0) {
+      Error("MakeHilbertMat","#rows(%d) should be > 0",no_rows);
+      return;
+   }
 
    Element *cp = m.GetMatrixArray();
    for (Int_t i = 0; i < no_rows; i++)

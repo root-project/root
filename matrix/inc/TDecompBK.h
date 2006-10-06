@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBK.h,v 1.2 2005/12/22 08:41:31 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBK.h,v 1.3 2006/05/17 06:22:05 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Sep 2004
 
 /*************************************************************************
@@ -64,8 +64,9 @@ public :
    virtual void     Det        (Double_t &/*d1*/,Double_t &/*d2*/)
                                 { MayNotUse("Det(Double_t&,Double_t&)"); }
 
-   void        Invert  (TMatrixDSym &inv);
-   TMatrixDSym Invert  ();
+   Bool_t      Invert  (TMatrixDSym &inv);
+   TMatrixDSym Invert  (Bool_t &status);
+   TMatrixDSym Invert  () { Bool_t status; return Invert(status); }
 
    void        Print(Option_t *opt ="") const; // *MENU*
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.9 2006/05/23 04:47:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.10 2006/05/26 15:13:02 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -132,7 +132,6 @@ public:
    {
       if (!AreCompatible(*this,source)) {
          Error("operator=(const TVectorT2 &)","vectors not compatible");
-         this->Invalidate();
          return *this;
       }
 
@@ -200,7 +199,10 @@ template<class Element> inline const Element           &TVectorT<Element>::opera
 
    R__ASSERT(IsValid());
    const Int_t aind = ind-fRowLwb;
-   R__ASSERT(aind < fNrows && aind >= 0);
+   if (aind >= fNrows || aind < 0) {
+      Error("operator()","Request index(%d) outside vector range of %d - %d",ind,fRowLwb,fRowLwb+fNrows);
+      return fElements[0];
+   }
 
    return fElements[aind];
 }

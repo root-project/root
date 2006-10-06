@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.17 2006/07/17 05:54:35 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.18 2006/08/30 12:54:13 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -80,7 +80,7 @@ void TVectorT<Element>::Add(const TVectorT<Element> &v)
 
    if (gMatrixCheck && !AreCompatible(*this,v)) {
       Error("Add(TVectorT<Element> &)","vector's not compatible");
-      Invalidate();
+      return;
    }
 
    const Element *sp = v.GetMatrixArray();
@@ -99,7 +99,7 @@ void TVectorT<Element>::Add(const TVectorT<Element> &v1,const TVectorT<Element> 
    if (gMatrixCheck) {
       if ( !AreCompatible(*this,v1) && !AreCompatible(*this,v2)) {
          Error("Add(TVectorT<Element> &)","vectors not compatible");
-         Invalidate();
+         return;
       }
    }
 
@@ -145,12 +145,20 @@ void TVectorT<Element>::Allocate(Int_t nrows,Int_t row_lwb,Int_t init)
 // Allocate new vector. Arguments are number of rows and row
 // lowerbound (0 default).
 
-   R__ASSERT(nrows >= 0);
+   fIsOwner  = kTRUE;
+   fNrows    = 0;
+   fRowLwb   = 0;
+   fElements = 0;
+
+   if (nrows < 0)
+   {
+      Error("Allocate","nrows=%d",nrows);
+      return;
+   }
 
    MakeValid();
    fNrows   = nrows;
    fRowLwb  = row_lwb;
-   fIsOwner = kTRUE;
 
    fElements = New_m(fNrows);
    if (init)
@@ -251,9 +259,12 @@ TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Element va_(iv1), ...)
 // terminated by the string "END". Example:
 // TVectorT foo(1,3,0.0,1.0,1.5,"END");
 
-   const Int_t no_rows = upb-lwb+1;
-   R__ASSERT(no_rows);
-   Allocate(no_rows,lwb);
+   if (upb < lwb) {
+      Error("TVectorT(Int_t, Int_t, ...)","upb(%d) < lwb(%d)");
+      return;
+   }
+
+   Allocate(upb-lwb+1,lwb);
 
    va_list args;
    va_start(args,va_(iv1));             // Init 'args' to the beginning of
@@ -264,7 +275,7 @@ TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Element va_(iv1), ...)
       (*this)(i) = (Element)va_arg(args,Double_t);
 
    if (strcmp((char *)va_arg(args,char *),"END"))
-      Error("TVectorT(Int_t, Int_t, ...)", "argument list must be terminated by \"END\"");
+      Error("TVectorT(Int_t, Int_t, ...)","argument list must be terminated by \"END\"");
 
    va_end(args);
 }
@@ -280,7 +291,6 @@ TVectorT<Element> &TVectorT<Element>::ResizeTo(Int_t lwb,Int_t upb)
    R__ASSERT(IsValid());
    if (!fIsOwner) {
       Error("ResizeTo(lwb,upb)","Not owner of data array,cannot resize");
-      Invalidate();
       return *this;
    }
 
@@ -333,7 +343,10 @@ TVectorT<Element> &TVectorT<Element>::Use(Int_t lwb,Int_t upb,Element *data)
 {
 // Use the array data to fill the vector lwb..upb]
 
-   R__ASSERT(upb >= lwb);
+   if (upb < lwb) {
+      Error("Use","upb(%d) < lwb(%d)");
+      return *this;
+   }
 
    Clear();
    fNrows    = upb-lwb+1;
@@ -358,17 +371,14 @@ TVectorT<Element> &TVectorT<Element>::GetSub(Int_t row_lwb,Int_t row_upb,TVector
       R__ASSERT(IsValid());
       if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
          Error("GetSub","row_lwb out of bounds");
-         target.Invalidate();
          return target;
       }
       if (row_upb < fRowLwb || row_upb > fRowLwb+fNrows-1) {
          Error("GetSub","row_upb out of bounds");
-         target.Invalidate();
          return target;
       }
       if (row_upb < row_lwb) {
          Error("GetSub","row_upb < row_lwb");
-         target.Invalidate();
          return target;
       }
    }
@@ -412,12 +422,10 @@ TVectorT<Element> &TVectorT<Element>::SetSub(Int_t row_lwb,const TVectorT<Elemen
  
       if (row_lwb < fRowLwb && row_lwb > fRowLwb+fNrows-1) {
          Error("SetSub","row_lwb outof bounds");
-         Invalidate();
          return *this;
       }
       if (row_lwb+source.GetNrows() > fRowLwb+fNrows) {
          Error("SetSub","source vector too large");
-         Invalidate();
          return *this;
       }
    }
@@ -492,7 +500,10 @@ TVectorT<Element> &TVectorT<Element>::Sqrt()
    const Element * const fp = ep+fNrows;
    while (ep < fp) {
       R__ASSERT(*ep >= 0);
-      *ep = TMath::Sqrt(*ep);
+      if (*ep >= 0)
+         *ep = TMath::Sqrt(*ep);
+      else
+         Error("Sqrt()","v(%d) = %g < 0",ep-this->GetMatrixArray(),*ep);
       ep++;
    }
 
@@ -511,7 +522,10 @@ TVectorT<Element> &TVectorT<Element>::Invert()
    const Element * const fp = ep+fNrows;
    while (ep < fp) {
       R__ASSERT(*ep != 0.0);
-      *ep = 1./ *ep;
+      if (*ep != 0.0)
+         *ep = 1./ *ep;
+      else
+         Error("Invert()","v(%d) = %g",ep-this->GetMatrixArray(),*ep);
       ep++;
    }
 
@@ -526,7 +540,6 @@ TVectorT<Element> &TVectorT<Element>::SelectNonZeros(const TVectorT<Element> &se
 
    if (gMatrixCheck && !AreCompatible(*this,select)) {
       Error("SelectNonZeros(const TVectorT<Element> &","vector's not compatible");
-      Invalidate();
       return *this;
    }
 
@@ -663,7 +676,6 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TVectorT<Element> &source)
 
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator=(const TVectorT<Element> &)","vectors not compatible");
-      Invalidate();
       return *this;
    }
 
@@ -687,7 +699,6 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTRow_const<Element>
       R__ASSERT(mt->IsValid());
       if (mt->GetColLwb() != fRowLwb || mt->GetNcols() != fNrows) {
          Error("operator=(const TMatrixTRow_const &)","vector and row not compatible");
-         Invalidate();
          return *this;
       }
    }
@@ -719,7 +730,6 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTColumn_const<Eleme
       R__ASSERT(mt->IsValid());
       if (mt->GetRowLwb() != fRowLwb || mt->GetNrows() != fNrows) {
          Error("operator=(const TMatrixTColumn_const &)","vector and column not compatible");
-         Invalidate();
          return *this;
       }
    }
@@ -751,7 +761,6 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTDiag_const<Element
       R__ASSERT(mt->IsValid());
       if (md.GetNdiags() != fNrows) {
          Error("operator=(const TMatrixTDiag_const &)","vector and matrix-diagonal not compatible");
-        Invalidate();
         return *this;
       }
    }
@@ -784,7 +793,6 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTSparseRow_const<El
       R__ASSERT(mt->IsValid());
       if (mt->GetColLwb() != fRowLwb || mt->GetNcols() != fNrows) {
          Error("operator=(const TMatrixTSparseRow_const &)","vector and row not compatible");
-         Invalidate();
          return *this;
       }
    }
@@ -816,7 +824,6 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTSparseDiag_const<E
       R__ASSERT(mt->IsValid());
       if (md.GetNdiags() != fNrows) {
          Error("operator=(const TMatrixTSparseDiag_const &)","vector and matrix-diagonal not compatible");
-         Invalidate();
          return *this;
       }
    }
@@ -900,7 +907,6 @@ TVectorT<Element> &TVectorT<Element>::operator+=(const TVectorT<Element> &source
 
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator+=(const TVectorT<Element> &)","vector's not compatible");
-      Invalidate();
       return *this;
    }
 
@@ -921,7 +927,6 @@ TVectorT<Element> &TVectorT<Element>::operator-=(const TVectorT<Element> &source
 
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator-=(const TVectorT<Element> &)","vector's not compatible");
-      Invalidate();
       return *this;
    }
 
@@ -946,7 +951,6 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixT<Element> &a)
       R__ASSERT(a.IsValid());
       if (a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
          Error("operator*=(const TMatrixT &)","vector and matrix incompatible");
-         Invalidate();
          return *this;
       }
    }
@@ -954,7 +958,6 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixT<Element> &a)
    const Bool_t doResize = (fNrows != a.GetNrows() || fRowLwb != a.GetRowLwb());
    if (doResize && !fIsOwner) {
       Error("operator*=(const TMatrixT &)","vector has to be resized but not owner");
-      Invalidate();
       return *this;
    }
 
@@ -1015,7 +1018,6 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixTSparse<Element> &
       R__ASSERT(a.IsValid());
       if (a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
          Error("operator*=(const TMatrixTSparse &)","vector and matrix incompatible");
-         Invalidate();
          return *this;
       }
    }
@@ -1023,7 +1025,6 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixTSparse<Element> &
    const Bool_t doResize = (fNrows != a.GetNrows() || fRowLwb != a.GetRowLwb());
    if (doResize && !fIsOwner) {
       Error("operator*=(const TMatrixTSparse &)","vector has to be resized but not owner");
-      Invalidate();
       return *this;
    }
 
@@ -1080,7 +1081,6 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixTSym<Element> &a)
      R__ASSERT(a.IsValid());
      if (a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
         Error("operator*=(const TMatrixTSym &)","vector and matrix incompatible");
-        Invalidate();
         return *this;
      }
   }
@@ -1500,7 +1500,6 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,const TVectorT<E
 
    if (gMatrixCheck && !AreCompatible(target,source)) {
       Error("Add(TVectorT<Element> &,Element,const TVectorT<Element> &)","vector's are incompatible");
-      target.Invalidate();
       return target;
    }
 
@@ -1534,14 +1533,12 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
       R__ASSERT(a.IsValid());
       if (a.GetNrows() != target.GetNrows() || a.GetRowLwb() != target.GetLwb()) {
          Error("Add(TVectorT &,const TMatrixT &,const TVectorT &)","target vector and matrix are incompatible");
-         target.Invalidate();
          return target;
       }
 
       R__ASSERT(source.IsValid());
       if (a.GetNcols() != source.GetNrows() || a.GetColLwb() != source.GetLwb()) {
          Error("Add(TVectorT &,const TMatrixT &,const TVectorT &)","source vector and matrix are incompatible");
-         target.Invalidate();
          return target;
       }
    }
@@ -1615,7 +1612,6 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
       R__ASSERT(a.IsValid());
       if (a.GetNrows() != target.GetNrows() || a.GetRowLwb() != target.GetLwb()) {
          Error("Add(TVectorT &,const TMatrixT &,const TVectorT &)","target vector and matrix are incompatible");
-         target.Invalidate();
          return target;
       }
    }
@@ -1687,14 +1683,12 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
       R__ASSERT(a.IsValid());
       if (a.GetNrows() != target.GetNrows() || a.GetRowLwb() != target.GetLwb()) {
          Error("Add(TVectorT &,const TMatrixT &,const TVectorT &)","target vector and matrix are incompatible");
-         target.Invalidate();
          return target;
       }
 
       R__ASSERT(source.IsValid());
       if (a.GetNcols() != source.GetNrows() || a.GetColLwb() != source.GetLwb()) {
          Error("Add(TVectorT &,const TMatrixT &,const TVectorT &)","source vector and matrix are incompatible");
-         target.Invalidate();
          return target;
       }
    }
@@ -1765,7 +1759,6 @@ TVectorT<Element> &AddElemMult(TVectorT<Element> &target,Element scalar,
    if (gMatrixCheck && !(AreCompatible(target,source1) && AreCompatible(target,source1))) {
       Error("AddElemMult(TVectorT<Element> &,Element,const TVectorT<Element> &,const TVectorT<Element> &)",
              "vector's are incompatible");
-      target.Invalidate();
       return target;
    }
 
@@ -1800,7 +1793,6 @@ TVectorT<Element> &AddElemMult(TVectorT<Element> &target,Element scalar,
           AreCompatible(target,select) )) {
       Error("AddElemMult(TVectorT<Element> &,Element,const TVectorT<Element> &,const TVectorT<Element> &,onst TVectorT<Element> &)",
              "vector's are incompatible");
-      target.Invalidate();
       return target;
    }
 
@@ -1840,7 +1832,6 @@ TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
    if (gMatrixCheck && !(AreCompatible(target,source1) && AreCompatible(target,source1))) {
       Error("AddElemDiv(TVectorT<Element> &,Element,const TVectorT<Element> &,const TVectorT<Element> &)",
              "vector's are incompatible");
-      target.Invalidate();
       return target;
    }
 
@@ -1875,7 +1866,6 @@ TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
           AreCompatible(target,select) )) {
       Error("AddElemDiv(TVectorT<Element> &,Element,const TVectorT<Element> &,const TVectorT<Element> &,onst TVectorT<Element> &)",
              "vector's are incompatible");
-      target.Invalidate();
       return target;
    }
 
@@ -1913,7 +1903,6 @@ TVectorT<Element> &ElementMult(TVectorT<Element> &target,const TVectorT<Element>
 
    if (gMatrixCheck && !AreCompatible(target,source)) {
       Error("ElementMult(TVectorT<Element> &,const TVectorT<Element> &)","vector's are incompatible");
-      target.Invalidate();
       return target;
    }
 
@@ -1934,7 +1923,6 @@ TVectorT<Element> &ElementMult(TVectorT<Element> &target,const TVectorT<Element>
 
    if (gMatrixCheck && !(AreCompatible(target,source) && AreCompatible(target,select))) {
       Error("ElementMult(TVectorT<Element> &,const TVectorT<Element> &,const TVectorT<Element> &)","vector's are incompatible");
-      target.Invalidate();
       return target;
    }
 
@@ -1958,7 +1946,6 @@ TVectorT<Element> &ElementDiv(TVectorT<Element> &target,const TVectorT<Element> 
 
    if (gMatrixCheck && !AreCompatible(target,source)) {
       Error("ElementDiv(TVectorT<Element> &,const TVectorT<Element> &)","vector's are incompatible");
-      target.Invalidate();
       return target;
    }
 
@@ -1979,7 +1966,6 @@ TVectorT<Element> &ElementDiv(TVectorT<Element> &target,const TVectorT<Element> 
 
    if (gMatrixCheck && !AreCompatible(target,source)) {
       Error("ElementDiv(TVectorT<Element> &,const TVectorT<Element> &,const TVectorT<Element> &)","vector's are incompatible");
-      target.Invalidate();
       return target;
    }
 

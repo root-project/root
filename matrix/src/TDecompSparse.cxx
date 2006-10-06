@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.14 2006/05/24 20:07:45 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.15 2006/06/02 05:11:20 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -225,8 +225,10 @@ Bool_t TDecompSparse::Decompose()
 // Decomposition engine .
 // If the decomposition succeeds, bit kDecomposed is set .
 
-   if ( !TestBit(kMatrixSet) )
+   if ( !TestBit(kMatrixSet) ) {
+      Error("Decompose()","Matrix has not been set");
       return kFALSE;
+   }
 
    Int_t done = 0; Int_t tries = 0;
    do {
@@ -330,12 +332,12 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
 
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
-      b.Invalidate();
+      Error("Solve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b.Invalidate();
+         Error("Solve()","Decomposition failed");
          return kFALSE;
       }
    }
@@ -343,7 +345,6 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
    if (fNrows != b.GetNrows() || fRowLwb != b.GetLwb())
    {
       Error("Solve(TVectorD &","vector and matrix incompatible");
-      b.Invalidate();
       return kFALSE;
    }
    b.Shift(-fRowLwb); // make sure rowlwb = 0

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.5 2006/06/03 20:19:43 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.6 2006/08/30 12:54:13 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -149,7 +149,6 @@ void TMatrixTRow<Element>::operator=(const TMatrixTRow_const<Element> &mr)
 
    if (this->fMatrix->GetNcols() != mt->GetNcols() || this->fMatrix->GetColLwb() != mt->GetColLwb()) {
       Error("operator=(const TMatrixTRow_const &)", "matrix rows not compatible");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -171,7 +170,6 @@ void TMatrixTRow<Element>::operator=(const TVectorT<Element> &vec)
 
    if (this->fMatrix->GetColLwb() != vec.GetLwb() || this->fMatrix->GetNcols() != vec.GetNrows()) {
       Error("operator=(const TVectorT &)","vector length != matrix-row length");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -194,7 +192,6 @@ void TMatrixTRow<Element>::operator+=(const TMatrixTRow_const<Element> &r)
 
    if (this->fMatrix->GetColLwb() != mt->GetColLwb() || this->fMatrix->GetNcols() != mt->GetNcols()) {
       Error("operator+=(const TMatrixTRow_const &)","different row lengths");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -218,7 +215,6 @@ void TMatrixTRow<Element>::operator*=(const TMatrixTRow_const<Element> &r)
 
    if (this->fMatrix->GetColLwb() != mt->GetColLwb() || this->fMatrix->GetNcols() != mt->GetNcols()) {
       Error("operator*=(const TMatrixTRow_const &)","different row lengths");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -341,7 +337,6 @@ void TMatrixTColumn<Element>::operator=(const TMatrixTColumn_const<Element> &mc)
 
    if (this->fMatrix->GetNrows() != mt->GetNrows() || this->fMatrix->GetRowLwb() != mt->GetRowLwb()) {
       Error("operator=(const TMatrixTColumn_const &)", "matrix columns not compatible");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -362,7 +357,6 @@ void TMatrixTColumn<Element>::operator=(const TVectorT<Element> &vec)
 
    if (this->fMatrix->GetRowLwb() != vec.GetLwb() || this->fMatrix->GetNrows() != vec.GetNrows()) {
       Error("operator=(const TVectorT &)","vector length != matrix-column length");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -387,7 +381,6 @@ void TMatrixTColumn<Element>::operator+=(const TMatrixTColumn_const<Element> &mc
 
    if (this->fMatrix->GetRowLwb() != mt->GetRowLwb() || this->fMatrix->GetNrows() != mt->GetNrows()) {
       Error("operator+=(const TMatrixTColumn_const &)","different row lengths");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -411,7 +404,6 @@ void TMatrixTColumn<Element>::operator*=(const TMatrixTColumn_const<Element> &mc
 
    if (this->fMatrix->GetRowLwb() != mt->GetRowLwb() || this->fMatrix->GetNrows() != mt->GetNrows()) {
       Error("operator*=(const TMatrixTColumn_const &)","different row lengths");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -524,7 +516,6 @@ void TMatrixTDiag<Element>::operator=(const TMatrixTDiag_const<Element> &md)
 
    if (this->GetNdiags() != md.GetNdiags()) {
       Error("operator=(const TMatrixTDiag_const &)","diagonals not compatible");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -545,7 +536,6 @@ void TMatrixTDiag<Element>::operator=(const TVectorT<Element> &vec)
 
    if (this->fNdiag != vec.GetNrows()) {
       Error("operator=(const TVectorT &)","vector length != matrix-diagonal length");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -568,7 +558,6 @@ void TMatrixTDiag<Element>::operator+=(const TMatrixTDiag_const<Element> &md)
    R__ASSERT(mt->IsValid());
    if (this->fNdiag != md.GetNdiags()) {
       Error("operator=(const TMatrixTDiag_const &)","matrix-diagonal's different length");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -591,7 +580,6 @@ void TMatrixTDiag<Element>::operator*=(const TMatrixTDiag_const<Element> &md)
    R__ASSERT(mt->IsValid());
    if (this->fNdiag != md.GetNdiags()) {
       Error("operator*=(const TMatrixTDiag_const &)","matrix-diagonal's different length");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -701,7 +689,6 @@ void TMatrixTFlat<Element>::operator=(const TMatrixTFlat_const<Element> &mf)
    R__ASSERT(mt->IsValid());
    if (this->fMatrix->GetNoElements() != mt->GetNoElements()) {
       Error("operator=(const TMatrixTFlat_const &)","matrix lengths different");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -721,7 +708,6 @@ void TMatrixTFlat<Element>::operator=(const TVectorT<Element> &vec)
 
    if (this->fMatrix->GetNoElements() != vec.GetNrows()) {
       Error("operator=(const TVectorT &)","vector length != # matrix-elements");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -743,7 +729,6 @@ void TMatrixTFlat<Element>::operator+=(const TMatrixTFlat_const<Element> &mf)
    R__ASSERT(mt->IsValid());
    if (this->fMatrix->GetNoElements() != mt->GetNoElements()) {
       Error("operator+=(const TMatrixTFlat_const &)","matrices lengths different");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -765,7 +750,6 @@ void TMatrixTFlat<Element>::operator*=(const TMatrixTFlat_const<Element> &mf)
    R__ASSERT(mt->IsValid());
    if (this->fMatrix->GetNoElements() != mt->GetNoElements()) {
       Error("operator*=(const TMatrixTFlat_const &)","matrices lengths different");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -786,22 +770,47 @@ TMatrixTSub_const<Element>::TMatrixTSub_const(const TMatrixT<Element> &matrix,In
 
    R__ASSERT(matrix.IsValid());
 
-   R__ASSERT(row_upbs >= row_lwbs && col_upbs >= col_lwbs);
+   fRowOff    = 0;
+   fColOff    = 0;
+   fNrowsSub  = 0;
+   fNcolsSub  = 0;
+   fMatrix = &matrix;
+
+   if (row_upbs < row_lwbs) {
+      Error("TMatrixTSub_const","Request sub-matrix with row_upbs(%d) < row_lwbs(%d)",row_upbs,row_lwbs);
+      return;
+   }
+   if (col_upbs < col_lwbs) {
+      Error("TMatrixTSub_const","Request sub-matrix with col_upbs(%d) < col_lwbs(%d)",col_upbs,col_lwbs);
+      return;
+   }
+
    const Int_t rowLwb = matrix.GetRowLwb();
    const Int_t rowUpb = matrix.GetRowUpb();
    const Int_t colLwb = matrix.GetColLwb();
    const Int_t colUpb = matrix.GetColUpb();
-   R__ASSERT(row_lwbs >= rowLwb && row_lwbs <= rowUpb);
-   R__ASSERT(col_lwbs >= colLwb && col_lwbs <= colUpb);
-   R__ASSERT(row_upbs >= rowLwb && row_upbs <= rowUpb);
-   R__ASSERT(col_upbs >= colLwb && col_upbs <= colUpb);
+
+   if (row_lwbs < rowLwb || row_lwbs > rowUpb) {
+      Error("TMatrixTSub_const","Request row_lwbs sub-matrix(%d) outside matrix range of %d - %d",row_lwbs,rowLwb,rowUpb);
+      return;
+   }
+   if (col_lwbs < colLwb || col_lwbs > colUpb) {
+      Error("TMatrixTSub_const","Request col_lwbs sub-matrix(%d) outside matrix range of %d - %d",col_lwbs,colLwb,colUpb);
+      return;
+   }
+   if (row_upbs < rowLwb || row_upbs > rowUpb) {
+      Error("TMatrixTSub_const","Request row_upbs sub-matrix(%d) outside matrix range of %d - %d",row_upbs,rowLwb,rowUpb);
+      return;
+   }
+   if (col_upbs < colLwb || col_upbs > colUpb) {
+      Error("TMatrixTSub_const","Request col_upbs sub-matrix(%d) outside matrix range of %d - %d",col_upbs,colLwb,colUpb);
+      return;
+   }
 
    fRowOff    = row_lwbs-rowLwb;
    fColOff    = col_lwbs-colLwb;
    fNrowsSub  = row_upbs-row_lwbs+1;
    fNcolsSub  = col_upbs-col_lwbs+1;
- 
-   fMatrix = &matrix;
 }
 
 //______________________________________________________________________________
@@ -815,22 +824,47 @@ TMatrixTSub_const<Element>::TMatrixTSub_const(const TMatrixTSym<Element> &matrix
 
    R__ASSERT(matrix.IsValid());
 
-   R__ASSERT(row_upbs >= row_lwbs && col_upbs >= col_lwbs);
+   fRowOff    = 0;
+   fColOff    = 0;
+   fNrowsSub  = 0;
+   fNcolsSub  = 0;
+   fMatrix    = &matrix;
+
+   if (row_upbs < row_lwbs) {
+      Error("TMatrixTSub_const","Request sub-matrix with row_upbs(%d) < row_lwbs(%d)",row_upbs,row_lwbs);
+      return;
+   }
+   if (col_upbs < col_lwbs) {
+      Error("TMatrixTSub_const","Request sub-matrix with col_upbs(%d) < col_lwbs(%d)",col_upbs,col_lwbs);
+      return;
+   }
+
    const Int_t rowLwb = matrix.GetRowLwb();
    const Int_t rowUpb = matrix.GetRowUpb();
    const Int_t colLwb = matrix.GetColLwb();
    const Int_t colUpb = matrix.GetColUpb();
-   R__ASSERT(row_lwbs >= rowLwb && row_lwbs <= rowUpb);
-   R__ASSERT(col_lwbs >= colLwb && col_lwbs <= colUpb);
-   R__ASSERT(row_upbs >= rowLwb && row_upbs <= rowUpb);
-   R__ASSERT(col_upbs >= colLwb && col_upbs <= colUpb);
+
+   if (row_lwbs < rowLwb || row_lwbs > rowUpb) {
+      Error("TMatrixTSub_const","Request row_lwbs sub-matrix(%d) outside matrix range of %d - %d",row_lwbs,rowLwb,rowUpb);
+      return;
+   }
+   if (col_lwbs < colLwb || col_lwbs > colUpb) {
+      Error("TMatrixTSub_const","Request col_lwbs sub-matrix(%d) outside matrix range of %d - %d",col_lwbs,colLwb,colUpb);
+      return;
+   }
+   if (row_upbs < rowLwb || row_upbs > rowUpb) {
+      Error("TMatrixTSub_const","Request row_upbs sub-matrix(%d) outside matrix range of %d - %d",row_upbs,rowLwb,rowUpb);
+      return;
+   }
+   if (col_upbs < colLwb || col_upbs > colUpb) {
+      Error("TMatrixTSub_const","Request col_upbs sub-matrix(%d) outside matrix range of %d - %d",col_upbs,colLwb,colUpb);
+      return;
+   }
 
    fRowOff    = row_lwbs-rowLwb;
    fColOff    = col_lwbs-colLwb;
    fNrowsSub  = row_upbs-row_lwbs+1;
    fNcolsSub  = col_upbs-col_lwbs+1;
-
-   fMatrix = &matrix;
 }
 
 //______________________________________________________________________________
@@ -872,7 +906,6 @@ void TMatrixTSub<Element>::Rank1Update(const TVectorT<Element> &v,Element alpha)
 
    if (v.GetNoElements() < TMath::Max(this->fNrowsSub,this->fNcolsSub)) {
       Error("Rank1Update","vector too short");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -957,7 +990,6 @@ void TMatrixTSub<Element>::operator=(const TMatrixTSub_const<Element> &ms)
 
    if (this->GetNrows() != ms.GetNrows() || this->GetNcols() != ms.GetNcols()) {
      Error("operator=(const TMatrixTSub_const &)","sub matrices have different size");
-     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1012,7 +1044,6 @@ void TMatrixTSub<Element>::operator=(const TMatrixTBase<Element> &m)
 
    if (this->fNrowsSub != m.GetNrows() || this->fNcolsSub != m.GetNcols()) {
       Error("operator=(const TMatrixTBase<Element> &)","sub matrices and matrix have different size");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
    const Int_t row_lwbs = this->fRowOff+this->fMatrix->GetRowLwb();
@@ -1033,7 +1064,6 @@ void TMatrixTSub<Element>::operator+=(const TMatrixTSub_const<Element> &ms)
 
    if (this->GetNrows() != ms.GetNrows() || this->GetNcols() != ms.GetNcols()) {
       Error("operator+=(const TMatrixTSub_const &)","sub matrices have different size");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1083,7 +1113,6 @@ void TMatrixTSub<Element>::operator*=(const TMatrixTSub_const<Element> &ms)
 
    if (this->fNcolsSub != ms.GetNrows() || this->fNcolsSub != ms.GetNcols()) {
       Error("operator*=(const TMatrixTSub_const &)","source sub matrix has wrong shape");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1146,7 +1175,6 @@ void TMatrixTSub<Element>::operator+=(const TMatrixTBase<Element> &mt)
 
    if (this->GetNrows() != mt.GetNrows() || this->GetNcols() != mt.GetNcols()) {
       Error("operator+=(const TMatrixTBase<Element> &)","sub matrix and matrix have different size");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1171,7 +1199,6 @@ void TMatrixTSub<Element>::operator*=(const TMatrixT<Element> &source)
 
    if (this->fNcolsSub != source.GetNrows() || this->fNcolsSub != source.GetNcols()) {
       Error("operator*=(const TMatrixT<Element> &)","source matrix has wrong shape");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1230,7 +1257,6 @@ void TMatrixTSub<Element>::operator*=(const TMatrixTSym<Element> &source)
 
    if (this->fNcolsSub != source.GetNrows() || this->fNcolsSub != source.GetNcols()) {
       Error("operator*=(const TMatrixTSym<Element> &)","source matrix has wrong shape");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1330,7 +1356,12 @@ Element &TMatrixTSparseRow<Element>::operator()(Int_t i)
    R__ASSERT(this->fMatrix->IsValid());
 
    const Int_t acoln = i-this->fMatrix->GetColLwb();
-   R__ASSERT(acoln < this->fMatrix->GetNcols() && acoln >= 0);
+   if (acoln >= this->fMatrix->GetNcols() || acoln < 0) {
+      Error("operator()(Int_t","Requested element %d outside range : %d - %d",i,
+            this->fMatrix->GetColLwb(),this->fMatrix->GetColLwb()+this->fMatrix->GetNcols());
+      return (const_cast<Element*>(this->fDataPtr))[0];
+   }
+
    Int_t index = TMath::BinarySearch(this->fNindex,this->fColPtr,acoln);
    if (index >= 0 && this->fColPtr[index] == acoln)
       return (const_cast<Element*>(this->fDataPtr))[index];
@@ -1349,7 +1380,6 @@ Element &TMatrixTSparseRow<Element>::operator()(Int_t i)
          return (const_cast<Element*>(this->fDataPtr))[index];
       else {
          Error("operator()(Int_t","Insert row failed");
-         (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
          return (const_cast<Element*>(this->fDataPtr))[0];
       }
    }
@@ -1404,7 +1434,6 @@ void TMatrixTSparseRow<Element>::operator=(const TMatrixTSparseRow_const<Element
    R__ASSERT(mt->IsValid());
    if (this->fMatrix->GetColLwb() != mt->GetColLwb() || this->fMatrix->GetNcols() != mt->GetNcols()) {
       Error("operator=(const TMatrixTSparseRow_const &)","matrix rows not compatible");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1436,7 +1465,6 @@ void TMatrixTSparseRow<Element>::operator=(const TVectorT<Element> &vec)
 
    if (this->fMatrix->GetColLwb() != vec.GetLwb() || this->fMatrix->GetNcols() != vec.GetNrows()) {
       Error("operator=(const TVectorT &)","vector length != matrix-row length");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1464,7 +1492,6 @@ void TMatrixTSparseRow<Element>::operator+=(const TMatrixTSparseRow_const<Elemen
    R__ASSERT(mt->IsValid());
    if (this->fMatrix->GetColLwb() != mt->GetColLwb() || this->fMatrix->GetNcols() != mt->GetNcols()) {
       Error("operator+=(const TMatrixTRow_const &)","different row lengths");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1500,7 +1527,6 @@ void TMatrixTSparseRow<Element>::operator*=(const TMatrixTSparseRow_const<Elemen
    R__ASSERT(mt->IsValid());
    if (this->fMatrix->GetColLwb() != mt->GetColLwb() || this->fMatrix->GetNcols() != mt->GetNcols()) {
       Error("operator+=(const TMatrixTRow_const &)","different row lengths");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1563,7 +1589,11 @@ Element &TMatrixTSparseDiag<Element>::operator()(Int_t i)
 
    R__ASSERT(this->fMatrix->IsValid());
 
-   R__ASSERT(i < this->fNdiag && i >= 0);
+   if (i < 0 || i >= this->fNdiag) {
+      Error("operator()(Int_t","Requested element %d outside range : 0 - %d",i,this->fNdiag);
+      return (const_cast<Element*>(this->fDataPtr))[0];
+   }
+
    TMatrixTBase<Element> *mt = const_cast<TMatrixTBase<Element> *>(this->fMatrix);
    const Int_t *pR = mt->GetRowIndexArray();
    const Int_t *pC = mt->GetColIndexArray();
@@ -1587,8 +1617,7 @@ Element &TMatrixTSparseDiag<Element>::operator()(Int_t i)
          return (const_cast<Element*>(this->fDataPtr))[index];
       else {
          Error("operator()(Int_t","Insert row failed");
-         (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
-         return (const_cast<Element*>(this->fDataPtr))[index];
+         return (const_cast<Element*>(this->fDataPtr))[0];
       }
    }
 }
@@ -1639,7 +1668,6 @@ void TMatrixTSparseDiag<Element>::operator=(const TMatrixTSparseDiag_const<Eleme
    R__ASSERT(mt->IsValid());
    if (this->fNdiag != md.GetNdiags()) {
       Error("operator=(const TMatrixTSparseDiag_const &)","matrix-diagonal's different length");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1658,7 +1686,6 @@ void TMatrixTSparseDiag<Element>::operator=(const TVectorT<Element> &vec)
 
    if (this->fNdiag != vec.GetNrows()) {
       Error("operator=(const TVectorT &)","vector length != matrix-diagonal length");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1680,7 +1707,6 @@ void TMatrixTSparseDiag<Element>::operator+=(const TMatrixTSparseDiag_const<Elem
    R__ASSERT(mt->IsValid());
    if (this->fNdiag != md.GetNdiags()) {
       Error("operator+=(const TMatrixTSparseDiag_const &)","matrix-diagonal's different length");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 
@@ -1701,7 +1727,6 @@ void TMatrixTSparseDiag<Element>::operator*=(const TMatrixTSparseDiag_const<Elem
    R__ASSERT(mt->IsValid());
    if (this->fNdiag != md.GetNdiags()) {
       Error("operator*=(const TMatrixTSparseDiag_const &)","matrix-diagonal's different length");
-      (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
       return;
    }
 

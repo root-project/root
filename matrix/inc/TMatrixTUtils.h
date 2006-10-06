@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.h,v 1.4 2006/05/17 06:22:06 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.h,v 1.5 2006/05/23 04:47:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -133,10 +133,17 @@ public:
    inline       Int_t                  GetRowIndex() const { return fRowInd; }
    inline       Int_t                  GetInc     () const { return fInc; }
    inline const Element               *GetPtr     () const { return fPtr; }
-   inline const Element               &operator   ()(Int_t i) const { R__ASSERT(fMatrix->IsValid());
-                                                                      const Int_t acoln = i-fMatrix->GetColLwb();
-                                                                      R__ASSERT(acoln < fMatrix->GetNcols() && acoln >= 0);
-                                                                      return fPtr[acoln]; }
+   inline const Element               &operator   ()(Int_t i) const {
+      R__ASSERT(fMatrix->IsValid());
+      const Int_t acoln = i-fMatrix->GetColLwb();
+      if (acoln < fMatrix->GetNcols() && acoln >= 0)
+         return fPtr[acoln];
+      else {
+         Error("operator()","Request col(%d) outside matrix range of %d - %d",
+                            i,fMatrix->GetColLwb(),fMatrix->GetColLwb()+fMatrix->GetNcols());
+         return fPtr[0];
+      }
+   }
    inline const Element               &operator   [](Int_t i) const { return (*(const TMatrixTRow_const<Element> *)this)(i); }
 
    ClassDef(TMatrixTRow_const,0)  // Template of General Matrix Row Access class
@@ -152,14 +159,28 @@ public:
 
    inline Element *GetPtr() const { return const_cast<Element *>(this->fPtr); }
 
-   inline const Element &operator()(Int_t i) const { R__ASSERT(this->fMatrix->IsValid());
-                                                     const Int_t acoln = i-this->fMatrix->GetColLwb();
-                                                     R__ASSERT(acoln < this->fMatrix->GetNcols() && acoln >= 0);
-                                                     return this->fPtr[acoln]; }
-   inline       Element &operator()(Int_t i)       { R__ASSERT(this->fMatrix->IsValid());
-                                                     const Int_t acoln = i-this->fMatrix->GetColLwb();
-                                                     R__ASSERT(acoln < this->fMatrix->GetNcols() && acoln >= 0);
-                                                     return (const_cast<Element *>(this->fPtr))[acoln]; }
+   inline const Element &operator()(Int_t i) const {
+      R__ASSERT(this->fMatrix->IsValid());
+      const Int_t acoln = i-this->fMatrix->GetColLwb();
+      if (acoln < this->fMatrix->GetNcols() || acoln >= 0)
+         return (this->fPtr)[acoln];
+      else {
+         Error("operator()","Request col(%d) outside matrix range of %d - %d",
+                            i,this->fMatrix->GetColLwb(),this->fMatrix->GetColLwb()+this->fMatrix->GetNcols());
+         return (this->fPtr)[0];
+     }
+   }
+   inline       Element &operator()(Int_t i) {
+      R__ASSERT(this->fMatrix->IsValid());
+      const Int_t acoln = i-this->fMatrix->GetColLwb();
+      if (acoln < this->fMatrix->GetNcols() && acoln >= 0)
+         return (const_cast<Element *>(this->fPtr))[acoln];
+      else {
+         Error("operator()","Request col(%d) outside matrix range of %d - %d",
+                            i,this->fMatrix->GetColLwb(),this->fMatrix->GetColLwb()+this->fMatrix->GetNcols());
+         return (const_cast<Element *>(this->fPtr))[0];
+      }
+   }
    inline const Element &operator[](Int_t i) const { return (*(const TMatrixTRow<Element> *)this)(i); }
    inline       Element &operator[](Int_t i)       { return (*(      TMatrixTRow<Element> *)this)(i); }
 
@@ -207,11 +228,18 @@ public:
    inline       Int_t                   GetColIndex() const { return fColInd; }
    inline       Int_t                   GetInc     () const { return fInc; }
    inline const Element                *GetPtr     () const { return fPtr; }
-   inline const Element                &operator   ()(Int_t i) const { R__ASSERT(fMatrix->IsValid());
-                                                                       const Int_t arown = i-fMatrix->GetRowLwb();
-                                                                       R__ASSERT(arown < fMatrix->GetNrows() && arown >= 0);
-                                                                       return fPtr[arown*fInc]; }
-   inline const Element      &operator [](Int_t i) const { return (*(const TMatrixTColumn_const<Element> *)this)(i); }
+   inline const Element                &operator   ()(Int_t i) const {
+      R__ASSERT(fMatrix->IsValid());
+      const Int_t arown = i-fMatrix->GetRowLwb();
+      if (arown < fMatrix->GetNrows() && arown >= 0)
+         return fPtr[arown*fInc];
+      else {
+         Error("operator()","Request row(%d) outside matrix range of %d - %d",
+                            i,fMatrix->GetRowLwb(),fMatrix->GetRowLwb()+fMatrix->GetNrows());
+         return fPtr[0];
+      }
+   }
+   inline const Element                &operator [](Int_t i) const { return (*(const TMatrixTColumn_const<Element> *)this)(i); }
 
    ClassDef(TMatrixTColumn_const,0)  // Template of General Matrix Column Access class
 };
@@ -226,14 +254,31 @@ public:
 
    inline Element *GetPtr() const { return const_cast<Element *>(this->fPtr); }
  
-   inline const Element &operator()(Int_t i) const { R__ASSERT(this->fMatrix->IsValid());
-                                                     const Int_t arown = i-this->fMatrix->GetRowLwb();
-                                                     R__ASSERT(arown < this->fMatrix->GetNrows() && arown >= 0);
-                                                     return this->fPtr[arown]; }
-   inline       Element &operator()(Int_t i)       { R__ASSERT(this->fMatrix->IsValid());
-                                                     const Int_t arown = i-this->fMatrix->GetRowLwb();
-                                                     R__ASSERT(arown < this->fMatrix->GetNrows() && arown >= 0);
-                                                     return (const_cast<Element *>(this->fPtr))[arown*this->fInc]; }
+   inline const Element &operator()(Int_t i) const {
+      R__ASSERT(this->fMatrix->IsValid());
+      const Int_t arown = i-this->fMatrix->GetRowLwb();
+      if (arown < this->fMatrix->GetNrows() && arown >= 0)
+         return (this->fPtr)[arown*this->fInc];
+      else {
+         Error("operator()","Request row(%d) outside matrix range of %d - %d",
+                            i,this->fMatrix->GetRowLwb(),this->fMatrix->GetRowLwb()+this->fMatrix->GetNrows());
+         return (this->fPtr)[0];
+      }
+   }
+   inline       Element &operator()(Int_t i) {
+      R__ASSERT(this->fMatrix->IsValid());
+      const Int_t arown = i-this->fMatrix->GetRowLwb();
+      R__ASSERT(arown < this->fMatrix->GetNrows() && arown >= 0);
+      return (const_cast<Element *>(this->fPtr))[arown*this->fInc];
+
+      if (arown < this->fMatrix->GetNrows() && arown >= 0)
+         return (const_cast<Element *>(this->fPtr))[arown*this->fInc];
+      else {
+         Error("operator()","Request row(%d) outside matrix range of %d - %d",
+                            i,this->fMatrix->GetRowLwb(),this->fMatrix->GetRowLwb()+this->fMatrix->GetNrows());
+         return (const_cast<Element *>(this->fPtr))[0];
+      }
+   }
    inline const Element &operator[](Int_t i) const { return (*(const TMatrixTColumn<Element> *)this)(i); }
    inline       Element &operator[](Int_t i)       { return (*(      TMatrixTColumn<Element> *)this)(i); }
 
@@ -242,7 +287,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTColumn_const<Element> &c);
-   TMatrixTColumn<Element>& operator=(const TMatrixTColumn      <Element> &c) { operator=((TMatrixTColumn_const<Element> &)c); return *this;}
+   TMatrixTColumn<Element>& operator=(const TMatrixTColumn <Element> &c) { operator=((TMatrixTColumn_const<Element> &)c); return *this;}
    void operator=(const TVectorT            <Element> &vec);
 
    void operator+=(const TMatrixTColumn_const<Element> &c);
@@ -280,8 +325,15 @@ public:
    inline const TMatrixTBase<Element> *GetMatrix() const { return fMatrix; }
    inline const Element               *GetPtr   () const { return fPtr; }
    inline       Int_t                  GetInc   () const { return fInc; }
-   inline const Element               &operator ()(Int_t i) const { R__ASSERT(fMatrix->IsValid());
-                                                           R__ASSERT(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
+   inline const Element               &operator ()(Int_t i) const {
+      R__ASSERT(fMatrix->IsValid());
+      if (i < fNdiag && i >= 0)
+         return fPtr[i*fInc];
+      else {
+         Error("operator()","Request diagonal(%d) outside matrix range of 0 - %d",i,fNdiag);
+         return fPtr[0];
+      }
+   }
    inline const Element               &operator [](Int_t i) const { return (*(const TMatrixTDiag_const<Element> *)this)(i); }
 
    Int_t GetNdiags() const { return fNdiag; }
@@ -299,11 +351,24 @@ public:
 
    inline Element *GetPtr() const { return const_cast<Element *>(this->fPtr); }
 
-   inline const Element &operator()(Int_t i) const { R__ASSERT(this->fMatrix->IsValid());
-                                                     R__ASSERT(i < this->fNdiag && i >= 0); return this->fPtr[i*this->fInc]; }
-   inline       Element &operator()(Int_t i)       { R__ASSERT(this->fMatrix->IsValid());
-                                                     R__ASSERT(i < this->fNdiag && i >= 0);
-                                                     return (const_cast<Element *>(this->fPtr))[i*this->fInc]; }
+   inline const Element &operator()(Int_t i) const {
+      R__ASSERT(this->fMatrix->IsValid());
+      if (i < this->fNdiag && i >= 0)
+         return (this->fPtr)[i*this->fInc];
+      else {
+         Error("operator()","Request diagonal(%d) outside matrix range of 0 - %d",i,this->fNdiag);
+         return (this->fPtr)[0];
+      }
+   }
+   inline       Element &operator()(Int_t i) {
+      R__ASSERT(this->fMatrix->IsValid());
+      if (i < this->fNdiag && i >= 0)
+         return (const_cast<Element *>(this->fPtr))[i*this->fInc];
+      else {
+         Error("operator()","Request diagonal(%d) outside matrix range of 0 - %d",i,this->fNdiag);
+         return (const_cast<Element *>(this->fPtr))[0];
+      }
+   }
    inline const Element &operator[](Int_t i) const { return (*(const TMatrixTDiag<Element> *)this)(i); }
    inline       Element &operator[](Int_t i)       { return (*(      TMatrixTDiag *)this)(i); }
 
@@ -312,7 +377,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTDiag_const<Element> &d);
-   TMatrixTDiag<Element>& operator=(const TMatrixTDiag      <Element> &d) { operator=((TMatrixTDiag_const<Element> &)d); return *this;}
+   TMatrixTDiag<Element>& operator=(const TMatrixTDiag <Element> &d) { operator=((TMatrixTDiag_const<Element> &)d); return *this;}
    void operator=(const TVectorT          <Element> &vec);
 
    void operator+=(const TMatrixTDiag_const<Element> &d);
@@ -348,8 +413,15 @@ public:
 
    inline const TMatrixTBase<Element> *GetMatrix() const { return fMatrix; }
    inline const Element               *GetPtr   () const { return fPtr; }
-   inline const Element               &operator ()(Int_t i) const { R__ASSERT(fMatrix->IsValid());
-                                                            R__ASSERT(i >=0 && i < fNelems); return fPtr[i]; }
+   inline const Element               &operator ()(Int_t i) const {
+      R__ASSERT(fMatrix->IsValid());
+      if (i < fNelems && i >= 0)
+         return fPtr[i];
+      else {
+         Error("operator()","Request element(%d) outside matrix range of 0 - %d",i,fNelems);
+         return fPtr[0];
+      }
+   }
    inline const Element               &operator [](Int_t i) const { return (*(const TMatrixTFlat_const<Element> *)this)(i); }
 
    ClassDef(TMatrixTFlat_const,0)  // Template of General Matrix Flat Representation class
@@ -365,11 +437,24 @@ public:
 
    inline Element *GetPtr() const { return const_cast<Element *>(this->fPtr); }
 
-   inline const Element &operator()(Int_t i) const { R__ASSERT(this->fMatrix->IsValid());
-                                                     R__ASSERT(i >=0 && i < this->fNelems); return this->fPtr[i]; }
-   inline       Element &operator()(Int_t i)       { R__ASSERT(this->fMatrix->IsValid());
-                                                     R__ASSERT(i >=0 && i < this->fNelems);
-                                                     return (const_cast<Element *>(this->fPtr))[i]; }
+   inline const Element &operator()(Int_t i) const {
+      R__ASSERT(this->fMatrix->IsValid());
+      if (i < this->fNelems && i >= 0)
+         return (this->fPtr)[i];
+      else {
+         Error("operator()","Request element(%d) outside matrix range of 0 - %d",i,this->fNelems);
+         return (this->fPtr)[0];
+      }
+   }
+   inline       Element &operator()(Int_t i) {
+      R__ASSERT(this->fMatrix->IsValid());
+      if (i < this->fNelems && i >= 0)
+         return (const_cast<Element *>(this->fPtr))[i];
+      else {
+         Error("operator()","Request element(%d) outside matrix range of 0 - %d",i,this->fNelems);
+         return (const_cast<Element *>(this->fPtr))[0];
+      }
+   }
    inline const Element &operator[](Int_t i) const { return (*(const TMatrixTFlat<Element> *)this)(i); }
    inline       Element &operator[](Int_t i)       { return (*(      TMatrixTFlat<Element> *)this)(i); }
 
@@ -378,7 +463,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTFlat_const<Element> &f);
-   TMatrixTFlat<Element>& operator=(const TMatrixTFlat      <Element> &f) { operator=((TMatrixTFlat_const<Element> &)f); return *this;}
+   TMatrixTFlat<Element>& operator=(const TMatrixTFlat <Element> &f) { operator=((TMatrixTFlat_const<Element> &)f); return *this;}
    void operator=(const TVectorT          <Element> &vec);
 
    void operator+=(const TMatrixTFlat_const<Element> &f);
@@ -415,13 +500,21 @@ public:
    inline       Int_t                  GetColOff() const { return fColOff; }
    inline       Int_t                  GetNrows () const { return fNrowsSub; }
    inline       Int_t                  GetNcols () const { return fNcolsSub; }
-   inline const Element               &operator ()(Int_t rown,Int_t coln) const
-                                                     { R__ASSERT(fMatrix->IsValid());
-                                                       R__ASSERT(rown < fNrowsSub && rown >= 0);
-                                                       R__ASSERT(coln < fNcolsSub && coln >= 0);
-                                                       const Int_t index = (rown+fRowOff)*fMatrix->GetNcols()+coln+fColOff;
-                                                       const Element *ptr = fMatrix->GetMatrixArray();
-                                                       return ptr[index]; }
+   inline const Element               &operator ()(Int_t rown,Int_t coln) const {
+      R__ASSERT(fMatrix->IsValid());
+
+      const Element *ptr = fMatrix->GetMatrixArray();
+      if (rown >= fNrowsSub || rown < 0) {
+         Error("operator()","Request row(%d) outside matrix range of 0 - %d",rown,fNrowsSub);
+         return ptr[0];
+      }
+      if (coln >= fNcolsSub || coln < 0) {
+         Error("operator()","Request column(%d) outside matrix range of 0 - %d",coln,fNcolsSub);
+         return ptr[0];
+      }
+      const Int_t index = (rown+fRowOff)*fMatrix->GetNcols()+coln+fColOff;
+      return ptr[index];
+   }
 
    ClassDef(TMatrixTSub_const,0)  // Template of Sub Matrix Access class
 };
@@ -437,14 +530,21 @@ public:
    TMatrixTSub(TMatrixTSym<Element> &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
    TMatrixTSub(const TMatrixTSub<Element> &ms);
 
-   inline       Element &operator()(Int_t rown,Int_t coln)
-                                                     { R__ASSERT(this->fMatrix->IsValid());
-                                                       R__ASSERT(rown < this->fNrowsSub && rown >= 0);
-                                                       R__ASSERT(coln < this->fNcolsSub && coln >= 0);
-                                                       const Int_t index = (rown+this->fRowOff)*this->fMatrix->GetNcols()+
-                                                                            coln+this->fColOff;
-                                                       const Element *ptr = this->fMatrix->GetMatrixArray();
-                                                       return (const_cast<Element *>(ptr))[index]; }
+   inline Element &operator()(Int_t rown,Int_t coln) {
+      R__ASSERT(this->fMatrix->IsValid());
+
+      const Element *ptr = this->fMatrix->GetMatrixArray();
+      if (rown >= this->fNrowsSub || rown < 0) {
+         Error("operator()","Request row(%d) outside matrix range of 0 - %d",rown,this->fNrowsSub);
+         return (const_cast<Element *>(ptr))[0];
+      }
+      if (coln >= this->fNcolsSub || coln < 0) {
+         Error("operator()","Request column(%d) outside matrix range of 0 - %d",coln,this->fNcolsSub);
+         return (const_cast<Element *>(ptr))[0];
+      }
+      const Int_t index = (rown+this->fRowOff)*this->fMatrix->GetNcols()+coln+this->fColOff;
+      return (const_cast<Element *>(ptr))[index];
+   }
 
    void Rank1Update(const TVectorT<Element> &vec,Element alpha=1.0);
 
@@ -453,7 +553,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTSub_const<Element> &s);
-   TMatrixTSub<Element>& operator=(const TMatrixTSub      <Element> &s) { operator=((TMatrixTSub_const<Element> &)s); return *this;}
+   TMatrixTSub<Element>& operator=(const TMatrixTSub <Element> &s) { operator=((TMatrixTSub_const<Element> &)s); return *this;}
    void operator=(const TMatrixTBase     <Element> &m);
 
    void operator+=(const TMatrixTSub_const<Element> &s);
@@ -497,12 +597,19 @@ public:
    inline       Int_t                  GetRowIndex() const { return fRowInd; }
    inline       Int_t                  GetNindex  () const { return fNindex; }
 
-   inline Element operator()(Int_t i) const { R__ASSERT(fMatrix->IsValid());
-                                              const Int_t acoln = i-fMatrix->GetColLwb();
-                                              R__ASSERT(acoln < fMatrix->GetNcols() && acoln >= 0);
-                                              const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
-                                              if (index >= 0 && fColPtr[index] == acoln) return fDataPtr[index];
-                                              else                                       return 0.0; }
+   inline Element operator()(Int_t i) const {
+      R__ASSERT(fMatrix->IsValid());
+      const Int_t acoln = i-fMatrix->GetColLwb();
+      if (acoln < fMatrix->GetNcols() && acoln >= 0) {
+         const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
+         if (index >= 0 && fColPtr[index] == acoln) return fDataPtr[index];
+         else                                       return 0.0;
+      } else {
+         Error("operator()","Request col(%d) outside matrix range of %d - %d",
+                            i,fMatrix->GetColLwb(),fMatrix->GetColLwb()+fMatrix->GetNcols());
+         return 0.0;
+      }
+   }
    inline Element operator[](Int_t i) const { return (*(const TMatrixTSparseRow_const<Element> *)this)(i); }
 
    ClassDef(TMatrixTSparseRow_const,0)  // Template of Sparse Matrix Row Access class
@@ -517,12 +624,19 @@ public:
 
    inline Element *GetDataPtr() const { return const_cast<Element *>(this->fDataPtr); }
 
-   inline Element  operator()(Int_t i) const { R__ASSERT(this->fMatrix->IsValid());
-                                               const Int_t acoln = i-this->fMatrix->GetColLwb();
-                                               R__ASSERT(acoln < this->fMatrix->GetNcols() && acoln >= 0);
-                                               const Int_t index = TMath::BinarySearch(this->fNindex,this->fColPtr,acoln);
-                                               if (index >= 0 && this->fColPtr[index] == acoln) return this->fDataPtr[index];
-                                               else                                             return 0.0; }
+   inline Element  operator()(Int_t i) const {
+      R__ASSERT(this->fMatrix->IsValid());
+      const Int_t acoln = i-this->fMatrix->GetColLwb();
+      if (acoln < this->fMatrix->GetNcols() && acoln >= 0) {
+         const Int_t index = TMath::BinarySearch(this->fNindex,this->fColPtr,acoln);
+         if (index >= 0 && this->fColPtr[index] == acoln) return this->fDataPtr[index];
+         else                                             return 0.0;
+      } else {
+         Error("operator()","Request col(%d) outside matrix range of %d - %d",
+                            i,this->fMatrix->GetColLwb(),this->fMatrix->GetColLwb()+this->fMatrix->GetNcols());
+         return 0.0;
+      }
+   }
           Element &operator()(Int_t i);
    inline Element  operator[](Int_t i) const { return (*(const TMatrixTSparseRow<Element> *)this)(i); }
    inline Element &operator[](Int_t i)       { return (*(TMatrixTSparseRow<Element> *)this)(i); }
@@ -532,7 +646,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTSparseRow_const<Element> &r);
-   TMatrixTSparseRow<Element>& operator=(const TMatrixTSparseRow      <Element> &r) { operator=((TMatrixTSparseRow_const<Element> &)r); return *this;}
+   TMatrixTSparseRow<Element>& operator=(const TMatrixTSparseRow <Element> &r) { operator=((TMatrixTSparseRow_const<Element> &)r); return *this;}
    void operator=(const TVectorT               <Element> &vec);
 
    void operator+=(const TMatrixTSparseRow_const<Element> &r);
@@ -569,16 +683,23 @@ public:
    inline const Element               *GetDataPtr() const { return fDataPtr; }
    inline       Int_t                  GetNdiags () const { return fNdiag; }
 
-   inline Element operator ()(Int_t i) const { R__ASSERT(fMatrix->IsValid());
-                                               R__ASSERT(i < fNdiag && i >= 0);
-                                               const Int_t   * const pR = fMatrix->GetRowIndexArray();
-                                               const Int_t   * const pC = fMatrix->GetColIndexArray();
-                                               const Element * const pD = fMatrix->GetMatrixArray();
-                                               const Int_t sIndex = pR[i];
-                                               const Int_t eIndex = pR[i+1];
-                                               const Int_t index = TMath::BinarySearch(eIndex-sIndex,pC+sIndex,i)+sIndex;
-                                               if (index >= sIndex && pC[index] == i) return pD[index];
-                                               else                                   return 0.0; }
+   inline Element operator ()(Int_t i) const {
+      R__ASSERT(fMatrix->IsValid());
+      if (i < fNdiag && i >= 0) {
+         const Int_t   * const pR = fMatrix->GetRowIndexArray();
+         const Int_t   * const pC = fMatrix->GetColIndexArray();
+         const Element * const pD = fMatrix->GetMatrixArray();
+         const Int_t sIndex = pR[i];
+         const Int_t eIndex = pR[i+1];
+         const Int_t index = TMath::BinarySearch(eIndex-sIndex,pC+sIndex,i)+sIndex;
+         if (index >= sIndex && pC[index] == i) return pD[index];
+         else                                   return 0.0;
+      } else {
+         Error("operator()","Request diagonal(%d) outside matrix range of 0 - %d",i,fNdiag);
+         return 0.0;
+      }
+      return 0.0;
+   }
 
    inline Element operator [](Int_t i) const { return (*(const TMatrixTSparseRow_const<Element> *)this)(i); }
 
@@ -594,16 +715,23 @@ public:
 
    inline Element *GetDataPtr() const { return const_cast<Element *>(this->fDataPtr); }
 
-   inline       Element  operator()(Int_t i) const { R__ASSERT(this->fMatrix->IsValid());
-                                                     R__ASSERT(i < this->fNdiag && i >= 0);
-                                                     const Int_t   * const pR = this->fMatrix->GetRowIndexArray();
-                                                     const Int_t   * const pC = this->fMatrix->GetColIndexArray();
-                                                     const Element * const pD = this->fMatrix->GetMatrixArray();
-                                                     const Int_t sIndex = pR[i];
-                                                     const Int_t eIndex = pR[i+1];
-                                                     const Int_t index = TMath::BinarySearch(eIndex-sIndex,pC+sIndex,i)+sIndex;
-                                                     if (index >= sIndex && pC[index] == i) return pD[index];
-                                                     else                                   return 0.0; }
+   inline       Element  operator()(Int_t i) const {
+      R__ASSERT(this->fMatrix->IsValid());
+      if (i < this->fNdiag && i >= 0) {
+         const Int_t   * const pR = this->fMatrix->GetRowIndexArray();
+         const Int_t   * const pC = this->fMatrix->GetColIndexArray();
+         const Element * const pD = this->fMatrix->GetMatrixArray();
+         const Int_t sIndex = pR[i];
+         const Int_t eIndex = pR[i+1];
+         const Int_t index = TMath::BinarySearch(eIndex-sIndex,pC+sIndex,i)+sIndex;
+         if (index >= sIndex && pC[index] == i) return pD[index];
+         else                                   return 0.0;
+      } else {
+         Error("operator()","Request diagonal(%d) outside matrix range of 0 - %d",i,this->fNdiag);
+         return 0.0;
+      }
+      return 0.0;
+   }
                 Element &operator()(Int_t i);
    inline       Element  operator[](Int_t i) const { return (*(const TMatrixTSparseDiag<Element> *)this)(i); }
    inline       Element &operator[](Int_t i)       { return (*(TMatrixTSparseDiag<Element> *)this)(i); }
@@ -613,7 +741,7 @@ public:
    void operator*=(Element val);
 
    void operator=(const TMatrixTSparseDiag_const<Element> &d);
-   TMatrixTSparseDiag<Element>& operator=(const TMatrixTSparseDiag      <Element> &d) { operator=((TMatrixTSparseDiag_const<Element> &)d); return *this;}
+   TMatrixTSparseDiag<Element>& operator=(const TMatrixTSparseDiag <Element> &d) { operator=((TMatrixTSparseDiag_const<Element> &)d); return *this;}
    void operator=(const TVectorT                <Element> &vec);
 
    void operator+=(const TMatrixTSparseDiag_const<Element> &d);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixTSymCramerInv.cxx,v 1.4 2006/07/28 10:50:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixTSymCramerInv.cxx,v 1.5 2006/08/01 15:21:12 pcanal Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Oct 2004
 
 /*************************************************************************
@@ -44,7 +44,6 @@ Bool_t TMatrixTSymCramerInv::Inv2x2(TMatrixTSym<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 2) {
       Error("Inv2x2","matrix should be square 2x2");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -55,8 +54,10 @@ Bool_t TMatrixTSymCramerInv::Inv2x2(TMatrixTSym<Element> &m,Double_t *determ)
    if (determ)
       *determ = det;
 
-   if ( det == 0 )
+   if ( det == 0 ) {
+      Error("Inv2x2","matrix is singular");
       return kFALSE;
+   }
 
    const Double_t tmp1 =   pM[3] / det;
    pM[3] = pM[0] / det;
@@ -72,7 +73,6 @@ Bool_t TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 3) {
       Error("Inv3x3","matrix should be square 3x3");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -108,8 +108,10 @@ Bool_t TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<Element> &m,Double_t *determ)
       det = c02*c12-c01*c22;
    }
 
-   if ( det == 0 || tmp == 0)
+   if ( det == 0 || tmp == 0) {
+      Error("Inv3x3","matrix is singular");
       return kFALSE;
+   }
 
    Double_t s = tmp/det;
    if (determ)
@@ -156,7 +158,6 @@ Bool_t TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 4) {
       Error("Inv4x4","matrix should be square 4x4");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -210,8 +211,10 @@ Bool_t TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Element> &m,Double_t *determ)
    if (determ)
       *determ = det;
 
-   if ( det == 0 )
+   if ( det == 0 ) {
+      Error("Inv4x4","matrix is singular");
       return kFALSE;
+   }
 
    const Double_t oneOverDet = 1.0/det;
    const Double_t mn1OverDet = - oneOverDet;
@@ -279,7 +282,6 @@ Bool_t TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 5) {
       Error("Inv5x5","matrix should be square 5x5");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -386,8 +388,10 @@ Bool_t TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Element> &m,Double_t *determ)
    if (determ)
       *determ = det;
 
-   if ( det == 0 )
+   if ( det == 0 ) {
+      Error("Inv5x5","matrix is singular");
       return kFALSE;
+   }
 
    const Double_t oneOverDet = 1.0/det;
    const Double_t mn1OverDet = - oneOverDet;
@@ -473,7 +477,6 @@ Bool_t TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 6 || m.GetNcols() != 6 || m.GetRowLwb() != m.GetColLwb()) {
       Error("Inv6x6","matrix should be square 6x6");
-      m.Invalidate();
       return kFALSE;
    }
 
@@ -755,8 +758,10 @@ Bool_t TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<Element> &m,Double_t *determ)
    if (determ)
       *determ = det;
 
-   if ( det == 0 )
-      m.Invalidate();
+   if ( det == 0 ) {
+      Error("Inv6x6","matrix is singular");
+      return kFALSE;
+   }
 
    const Double_t oneOverDet = 1.0/det;
    const Double_t mn1OverDet = - oneOverDet;

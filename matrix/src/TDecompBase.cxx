@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.23 2006/05/29 05:03:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.24 2006/06/02 05:11:20 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -275,9 +275,6 @@ Bool_t TDecompBase::MultiSolve(TMatrixD &B)
       TMatrixDColumn b(B,icol);
       status &= Solve(b);
    }
-
-   if (!status)
-      B.Invalidate();
 
    return status;
 }

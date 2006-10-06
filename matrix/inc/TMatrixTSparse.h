@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.h,v 1.4 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.h,v 1.5 2006/05/17 06:22:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -215,14 +215,22 @@ inline Element TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln) const
 {
    R__ASSERT(this->IsValid());
    if (this->fNrowIndex > 0 && this->fRowIndex[this->fNrowIndex-1] == 0) {
-      Error("operator=()(Int_t,Int_t) const","row/col indices are not set");
-      printf("fNrowIndex = %d fRowIndex[fNrowIndex-1] = %d\n",this->fNrowIndex,this->fRowIndex[this->fNrowIndex-1]);
+      Error("operator()(Int_t,Int_t) const","row/col indices are not set");
+      Info("operator()","fNrowIndex = %d fRowIndex[fNrowIndex-1] = %d\n",this->fNrowIndex,this->fRowIndex[this->fNrowIndex-1]);
       return 0.0;
    }
    const Int_t arown = rown-this->fRowLwb;
    const Int_t acoln = coln-this->fColLwb;
-   R__ASSERT(arown < this->fNrows && arown >= 0);
-   R__ASSERT(acoln < this->fNcols && acoln >= 0);
+
+   if (arown >= this->fNrows || arown < 0) {
+      Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
+      return 0.0;
+   }
+   if (acoln >= this->fNcols || acoln < 0) {
+      Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
+      return 0.0;
+   }
+
    const Int_t sIndex = fRowIndex[arown];
    const Int_t eIndex = fRowIndex[arown+1];
    const Int_t index = TMath::BinarySearch(eIndex-sIndex,fColIndex+sIndex,acoln)+sIndex;

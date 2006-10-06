@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.8 2006/05/19 04:44:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.9 2006/06/06 05:16:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -453,19 +453,16 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::InsertRow(Int_t rown,Int_t coln,co
    if (gMatrixCheck) {
       if (arown >= fNrows || arown < 0) {
          Error("InsertRow","row %d out of matrix range",rown);
-         Invalidate();
          return *this;
       }
 
       if (acoln >= fNcols || acoln < 0) {
          Error("InsertRow","column %d out of matrix range",coln);
-         Invalidate();
          return *this;
       }
 
       if (acoln+nr >= fNcols || nr < 0) {
          Error("InsertRow","row length %d out of range",nr);
-         Invalidate();
          return *this;
       }
    }
@@ -621,7 +618,6 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::NormByDiag(const TVectorT<Element>
       const Int_t nMax = TMath::Max(fNrows,fNcols);
       if (v.GetNoElements() < nMax) {
          Error("NormByDiag","vector shorter than matrix diagonal");
-         Invalidate();
          return *this;
       }
    }
@@ -635,10 +631,19 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::NormByDiag(const TVectorT<Element>
 
    if (divide) {
       for (Int_t irow = 0; irow < fNrows; irow++) {
-         for (Int_t icol = 0; icol < fNcols; icol++) {
-            const Element val = TMath::Sqrt(TMath::Abs(pV[irow]*pV[icol]));
-            R__ASSERT(val != 0.0);
-            *mp++ /= val;
+         if (pV[irow] != 0.0) {
+            for (Int_t icol = 0; icol < fNcols; icol++) {
+               if (pV[icol] != 0.0) {
+                  const Element val = TMath::Sqrt(TMath::Abs(pV[irow]*pV[icol]));
+                  *mp++ /= val;
+               } else {
+                  Error("NormbyDiag","vector element %d is zero",icol);
+                  mp++;
+               }
+            }
+         } else {
+            Error("NormbyDiag","vector element %d is zero",irow);
+            mp += fNcols;
          }
       }
    } else {

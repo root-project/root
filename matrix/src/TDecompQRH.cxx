@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.20 2006/05/24 20:07:45 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.21 2006/06/02 05:11:20 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -138,8 +138,10 @@ Bool_t TDecompQRH::Decompose()
 //  "Householder betas".
 // If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
 
-   if ( !TestBit(kMatrixSet) )
+   if ( !TestBit(kMatrixSet) ) {
+      Error("Decompose()","Matrix has not been set");
       return kFALSE;
+   }
 
    const Int_t nRow   = this->GetNrows();
    const Int_t nCol   = this->GetNcols();
@@ -242,19 +244,18 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
 
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
-      b.Invalidate();
+      Error("Solve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b.Invalidate();
+         Error("Solve()","Decomposition failed");
          return kFALSE;
       }
    }
 
    if (fQ.GetNrows() != b.GetNrows() || fQ.GetRowLwb() != b.GetLwb()) {
       Error("Solve(TVectorD &","vector and matrix incompatible");
-      b.Invalidate();
       return kFALSE;
    }
 
@@ -282,7 +283,6 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
       if (TMath::Abs(pR[off_i+i]) < fTol)
       {
          Error("Solve(TVectorD &)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
-         b.Invalidate();
          return kFALSE;
       }
       pb[i] = r/pR[off_i+i];
@@ -300,12 +300,12 @@ Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
-      b->Invalidate();
+      Error("Solve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b->Invalidate();
+         Error("Solve()","Decomposition failed");
          return kFALSE;
       }
    }
@@ -313,7 +313,6 @@ Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
    if (fQ.GetNrows() != b->GetNrows() || fQ.GetRowLwb() != b->GetRowLwb())
    {
       Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
-      b->Invalidate();
       return kFALSE;
    }
 
@@ -343,7 +342,6 @@ Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
       if (TMath::Abs(pR[off_i+i]) < fTol)
       {
          Error("Solve(TMatrixDColumn &)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
-         b->Invalidate();
          return kFALSE;
       }
       pcb[off_i2] = r/pR[off_i+i];
@@ -360,25 +358,23 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
 
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
-      b.Invalidate();
+      Error("TransSolve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b.Invalidate();
+         Error("TransSolve()","Decomposition failed");
          return kFALSE;
       }
    }
 
    if (fQ.GetNrows() != fQ.GetNcols() || fQ.GetRowLwb() != fQ.GetColLwb()) {
       Error("TransSolve(TVectorD &","matrix should be square");
-      b.Invalidate();
       return kFALSE;
    }
 
    if (fR.GetNrows() != b.GetNrows() || fR.GetRowLwb() != b.GetLwb()) {
       Error("TransSolve(TVectorD &","vector and matrix incompatible");
-      b.Invalidate();
       return kFALSE;
    }
 
@@ -398,7 +394,6 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
       if (TMath::Abs(pR[off_i+i]) < fTol)
       {
          Error("TransSolve(TVectorD &)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
-         b.Invalidate();
          return kFALSE;
       }
       pb[i] = r/pR[off_i+i];
@@ -424,25 +419,23 @@ Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
-      b->Invalidate();
+      Error("TransSolve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {
       if (!Decompose()) {
-         b->Invalidate();
+         Error("TransSolve()","Decomposition failed");
          return kFALSE;
       }
    }
 
    if (fQ.GetNrows() != fQ.GetNcols() || fQ.GetRowLwb() != fQ.GetColLwb()) {
       Error("TransSolve(TMatrixDColumn &","matrix should be square");
-      b->Invalidate();
       return kFALSE;
    }
 
    if (fR.GetNrows() != b->GetNrows() || fR.GetRowLwb() != b->GetRowLwb()) {
       Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
-      b->Invalidate();
       return kFALSE;
    }
 
@@ -464,7 +457,6 @@ Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
       if (TMath::Abs(pR[off_i+i]) < fTol)
       {
          Error("TransSolve(TMatrixDColumn &)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
-         b->Invalidate();
          return kFALSE;
       }
       pcb[off_i2] = r/pR[off_i+i];
@@ -502,7 +494,7 @@ void TDecompQRH::Det(Double_t &d1,Double_t &d2)
 }
 
 //______________________________________________________________________________
-void TDecompQRH::Invert(TMatrixD &inv)
+Bool_t TDecompQRH::Invert(TMatrixD &inv)
 {
 // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
 // The user should always supply a matrix of size (m x m) !
@@ -512,16 +504,17 @@ void TDecompQRH::Invert(TMatrixD &inv)
    if (inv.GetNrows()  != GetNrows()  || inv.GetNcols()  != GetNrows() ||
        inv.GetRowLwb() != GetRowLwb() || inv.GetColLwb() != GetColLwb()) {
       Error("Invert(TMatrixD &","Input matrix has wrong shape");
-      inv.Invalidate();
-      return;
+      return kFALSE;
    }
 
    inv.UnitMatrix();
-   MultiSolve(inv);
+   const Bool_t status = MultiSolve(inv);
+
+   return status;
 }
 
 //______________________________________________________________________________
-TMatrixD TDecompQRH::Invert()
+TMatrixD TDecompQRH::Invert(Bool_t &status)
 {
 // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
 // (n x m) Ainv is returned .
@@ -531,7 +524,7 @@ TMatrixD TDecompQRH::Invert()
    const Int_t rowUpb = rowLwb+GetNrows()-1;
    TMatrixD inv(rowLwb,rowUpb,colLwb,colLwb+GetNrows()-1);
    inv.UnitMatrix();
-   MultiSolve(inv);
+   status = MultiSolve(inv);
    inv.ResizeTo(rowLwb,rowLwb+GetNcols()-1,colLwb,colLwb+GetNrows()-1);
 
    return inv;
