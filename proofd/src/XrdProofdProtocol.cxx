@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.23 2006/10/03 15:17:06 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.24 2006/10/05 13:04:10 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -87,6 +87,7 @@
 #include "XrdSys/XrdSysPriv.hh"
 #include "XrdOuc/XrdOucErrInfo.hh"
 #include "XrdOuc/XrdOucError.hh"
+#include "XrdOuc/XrdOucLogger.hh"
 #include "XrdOuc/XrdOucReqID.hh"
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdNet/XrdNet.hh"
@@ -110,6 +111,10 @@ static const char    *gTraceID = " ";
 // Static variables
 static XrdOucReqID   *XrdProofdReqID = 0;
 XrdOucRecMutex        gSysPrivMutex;
+
+// Loggers: we need two to avoid deadlocks
+static XrdOucLogger   gMainLogger;
+static XrdOucLogger   gForkLogger;
 
 //
 // Static area: general protocol managing section
@@ -979,7 +984,7 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    fgConfigDone = 1;
 
    // Copy out the special info we want to use at top level
-   fgEDest.logger(pi->eDest->logger());
+   fgEDest.logger(&gMainLogger);
    XrdProofdTrace = new XrdOucTrace(&fgEDest);
    fgSched        = pi->Sched;
    fgBPool        = pi->BPool;
@@ -3037,148 +3042,110 @@ int XrdProofdProtocol::Create()
       return rc;
    }
 
-   // Here we start the fork attempts: for some weird problem on SMP
-   // machines there is a non-zero probability for a deadlock situation
-   // in system mutexes. For that reasone we are ready to retry a few times.
-   // The semaphore seems to have solved the problem. We leave the retry
-   // structure in place in case of need.
-   int ntry = 1;
-   bool notdone = 1;
+   // Here we fork: for some weird problem on SMP machines there is a
+   // non-zero probability for a deadlock situation in system mutexes.
+   // The semaphore seems to have solved the problem.
+   if (fgForkSem.Wait(10) != 0) {
+      xps->Reset();
+      // Timeout acquire fork semaphore
+      fResponse.Send(kXR_ServerError, "timed-out acquiring fork semaphore");
+      return rc;
+   }
+
+   // Pipe to communicate status of setup
    int fp[2];
-   int setupOK = 0;
-   int pollRet = 0;
+   if (pipe(fp) != 0) {
+      xps->Reset();
+      // Failure creating UNIX socket
+      fResponse.Send(kXR_ServerError,
+                     "unable to create pipe for status-of-setup communication");
+      return rc;
+   }
+
+   // Fork an agent process to handle this session
    int pid = -1;
-   while (ntry-- && notdone) {
+   if (!(pid = fgSched->Fork("proofsrv"))) {
 
-      // This must be serialized
-      if (fgForkSem.Wait(5) != 0)
-         // Timed-out: retry if required, or quit
-         continue;
+      int setupOK = 0;
 
-      // Pipe to communicate status of setup
-      if (pipe(fp) != 0) {
-         xps->Reset();
-         // Failure creating UNIX socket
-         fResponse.Send(kXR_ServerError,
-                        "unable to create pipe for status-of-setup communication");
-         return rc;
-      }
+      // Change logger instance to avoid deadlocks
+      fgEDest.logger(&gForkLogger);
 
-      // Fork an agent process to handle this session
-      pid = -1;
-      if (!(pid = fgSched->Fork("proofsrv"))) {
-
-         int setupOK = 0;
-
-         // We set to the user environment
-         if (SetUserEnvironment(xps, fClientID) != 0) {
-            PRINT("Create: SetUserEnvironment did not return OK - EXIT");
-            write(fp[1], &setupOK, sizeof(setupOK));
-            close(fp[0]);
-            close(fp[1]);
-            exit(1);
-         }
-
-         char *argvv[5] = {0};
-
-         // We add our PID to be able to identify processes coming from us
-         char cpid[10] = {0};
-         sprintf(cpid, "%d", getppid());
-
-         // start server
-         argvv[0] = (char *)fgPrgmSrv;
-         argvv[1] = (char *)((fSrvType == kXPD_WorkerServer) ? "proofslave"
-                          : "proofserv");
-         argvv[2] = (char *)"xpd";
-         argvv[3] = (char *)cpid;
-         argvv[4] = 0;
-
-         // Set environment for proofserv
-         if (SetProofServEnv(this, psid, loglevel, cffile.c_str()) != 0) {
-            PRINT("Create: SetProofServEnv did not return OK - EXIT");
-            write(fp[1], &setupOK, sizeof(setupOK));
-            close(fp[0]);
-            close(fp[1]);
-            exit(1);
-         }
-
-         // Setup OK: now we go
-         setupOK = 1;
+      // We set to the user environment
+      if (SetUserEnvironment(xps, fClientID) != 0) {
+         PRINT("Create: SetUserEnvironment did not return OK - EXIT");
          write(fp[1], &setupOK, sizeof(setupOK));
-
-         // Cleanup
          close(fp[0]);
          close(fp[1]);
-
-         TRACE(REQ,"Create: fClientID: "<<fClientID<<
-                   ", uid: "<<getuid()<<", euid:"<<geteuid());
-
-         // Run the program
-         execv(fgPrgmSrv, argvv);
-
-         // We should not be here!!!
-         TRACEP(REQ, "Create: returned from execv: bad, bad sign !!!");
          exit(1);
       }
 
-      // Wakeup colleagues
-      fgForkSem.Post();
+      char *argvv[5] = {0};
 
-      // parent process
-      if (pid < 0) {
-         xps->Reset();
-         // Failure in forking
-         fResponse.Send(kXR_ServerError, "could not fork agent");
+      // We add our PID to be able to identify processes coming from us
+      char cpid[10] = {0};
+      sprintf(cpid, "%d", getppid());
+
+      // start server
+      argvv[0] = (char *)fgPrgmSrv;
+      argvv[1] = (char *)((fSrvType == kXPD_WorkerServer) ? "proofslave"
+                       : "proofserv");
+      argvv[2] = (char *)"xpd";
+      argvv[3] = (char *)cpid;
+      argvv[4] = 0;
+
+      // Set environment for proofserv
+      if (SetProofServEnv(this, psid, loglevel, cffile.c_str()) != 0) {
+         PRINT("Create: SetProofServEnv did not return OK - EXIT");
+         write(fp[1], &setupOK, sizeof(setupOK));
          close(fp[0]);
          close(fp[1]);
-         return rc;
+         exit(1);
       }
 
-      // Read status-of-setup from pipe
+      // Setup OK: now we go
+      setupOK = 1;
+      write(fp[1], &setupOK, sizeof(setupOK));
+
+      // Cleanup
+      close(fp[0]);
+      close(fp[1]);
+
+      TRACE(REQ,"Create: fClientID: "<<fClientID<<
+                ", uid: "<<getuid()<<", euid:"<<geteuid());
+
+      // Run the program
+      execv(fgPrgmSrv, argvv);
+
+      // We should not be here!!!
+      TRACEP(REQ, "Create: returned from execv: bad, bad sign !!!");
+      exit(1);
+   }
+
+   // Wakeup colleagues
+   fgForkSem.Post();
+
+   // parent process
+   if (pid < 0) {
+      xps->Reset();
+      // Failure in forking
+      fResponse.Send(kXR_ServerError, "could not fork agent");
+      close(fp[0]);
+      close(fp[1]);
+      return rc;
+   }
+
+   // Read status-of-setup from pipe
+   XrdOucString emsg;
+   int setupOK = 0;
+   if (read(fp[0], &setupOK, sizeof(setupOK)) != sizeof(setupOK)) {
       setupOK = 0;
-      struct pollfd fds_r;
-      fds_r.fd = fp[0];
-      fds_r.events = POLLIN;
-      pollRet = 0;
-      while ((pollRet = poll(&fds_r, 1, 2000)) < 0 &&
-             (errno == EINTR)) { }
-      if (pollRet > 0) {
-         if (read(fp[0], &setupOK, sizeof(setupOK)) != sizeof(setupOK)) {
-            xps->Reset();
-            fResponse.Send(kXR_ServerError, "problems receiving status-of-setup after forking");
-            close(fp[0]);
-            close(fp[1]);
-            return rc;
-         }
-         // We are done
-         notdone = 0;
-      } else if (pollRet == 0) {
-         // Got timeout: kill the process and retry, if not done too many times
-         close(fp[0]);
-         close(fp[1]);
-         if (KillProofServ(pid, 1) != 0) {
-            // Failed killing process: something starnge is going on: stop
-            // trying
-            xps->Reset();
-            fResponse.Send(kXR_ServerError,
-                           "time out after forking: process cannot be killed: stop retrying");
-            return rc;
-         }
-      }
-
-   } // retry loop
+      emsg += "problems receiving status-of-setup after forking";
+   }
 
    // Cleanup
    close(fp[0]);
    close(fp[1]);
-
-   // If we are not done we quit
-   if (notdone) {
-      xps->Reset();
-      fResponse.Send(kXR_ServerError,
-                     "could not fork the proofserv process: quitting");
-      return rc;
-   }
 
    // Notify to user
    if (setupOK == 1) {
@@ -3193,12 +3160,10 @@ int XrdProofdProtocol::Create()
          fResponse.Send(psid, fgSrvProtVers);
    } else {
       // Failure
+      emsg += ": failure setting up proofserv" ;
       xps->Reset();
-      if (pollRet != 0) {
-         fResponse.Send(kXR_ServerError, "failure setting up proofserv");
-      } else {
-         fResponse.Send(kXR_ServerError, "failure setting up proofserv - timeout reached");
-      }
+      KillProofServ(pid, 1);
+      fResponse.Send(kXR_ServerError, emsg.c_str());
       return rc;
    }
 
@@ -4325,7 +4290,7 @@ int XrdProofdProtocol::VerifyProcessByID(int pid, const char *pname)
          pids += (int) GetLong(line);
          pids += ":";
       }
-      fclose(fp);
+      pclose(fp);
    } else {
       // Error executing the command
       return -1;
@@ -4431,7 +4396,7 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
          if (KillProofServ(pid, 1) == 0)
             nk++;
       }
-      fclose(fp);
+      pclose(fp);
    } else {
       // Error executing the command
       return -1;
