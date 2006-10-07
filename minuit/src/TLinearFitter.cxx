@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.31 2006/08/10 10:30:04 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.32 2006/09/15 15:16:57 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -778,6 +778,7 @@ Int_t TLinearFitter::Eval()
    TVectorD coef(fNfunctions);
    coef=chol.Solve(fAtb, ok);
    if (!ok){
+      Error("Eval","Matrix inversion failed");
       fParams.Zero();
       fParCovar.Zero();
       fTValues.Zero();
@@ -2220,6 +2221,7 @@ Bool_t TLinearFitter::Linf()
    Bool_t ok;
    temp = chol.Solve(fAtb, ok);
    if (!ok){
+      Error("Linf","Matrix inversion failed");
       //fDesign.Print();
       fParams.Zero();
       return kFALSE;
