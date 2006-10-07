@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.50 2006/10/03 21:51:45 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.51 2006/10/05 21:04:38 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -376,7 +376,7 @@ public:
    void         ToLower();                              // Change self to lower-case
    void         ToUpper();                              // Change self to upper-case
    TObjArray   *Tokenize(const TString &delim) const;
-   Int_t        Tokenize(TString &tok, Int_t from, const TString &delim = " ") const;
+   Bool_t       Tokenize(TString &tok, Ssiz_t &from, const char *delim = " ") const;
 
    // Static member functions
    static Ssiz_t  InitialCapacity(Ssiz_t ic = 15);      // Initial allocation capacity

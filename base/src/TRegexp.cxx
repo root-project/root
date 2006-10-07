@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.12 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.13 2006/10/05 21:04:38 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -266,18 +266,19 @@ TSubString TString::operator()(const TRegexp& r) const
 }
 
 //__________________________________________________________________________________
-Int_t TString::Tokenize(TString &tok, Int_t from, const TString &delim) const
+Bool_t TString::Tokenize(TString &tok, Ssiz_t &from, const char *delim) const
 {
    // Search for tokens delimited by regular expression 'delim' (default " ")
    // in this string; search starts at 'from' and the token is returned in 'tok'.
-   // Returns the next position after the delimiter, or -1 when there are no more
-   // tokens to be analyzed.
+   // Returns in 'from' the next position after the delimiter.
+   // Returns kTRUE if a token is found, kFALSE if not or if some inconsistency
+   // occured.
    // This method allows to loop over tokens in this way:
    //
    //    TString myl = "tok1 tok2|tok3";
    //    TString tok;
-   //    int from = 0;
-   //    while ((from = myl.Tokenize(tok, from, "[ |]") != -1) {
+   //    Ssiz_t from = 0;
+   //    while (myl.Tokenize(tok, from, "[ |]")) {
    //       if (!tok.IsNull()) {
    //          // Analyse tok
    //          ...
@@ -290,13 +291,16 @@ Int_t TString::Tokenize(TString &tok, Int_t from, const TString &delim) const
    // Warning: it may return empty tokens (e.g. in cases like "::"), so
    // the token length must always be checked.
 
+   Bool_t found = kFALSE;
+
    // Reset the token
    tok = "";
 
    // Make sure inputs make sense
    Int_t len = Length();
-   if (len <= 0 || from < 0 || from > (len - 1))
-      return -1;
+   if (len <= 0 || from > (len - 1))
+      return found;
+   from = (from < 0) ? 0 : from;
 
    TRegexp rg(delim);
 
@@ -306,18 +310,23 @@ Int_t TString::Tokenize(TString &tok, Int_t from, const TString &delim) const
 
    // Assign to token
    if (pos == kNPOS || pos > from) {
-      Int_t last = (pos != kNPOS) ? (pos - 1) : len;
+      Ssiz_t last = (pos != kNPOS) ? (pos - 1) : len;
       tok = (*this)(from, last-from+1);
    }
+   found = kTRUE;
 
-   Int_t next = pos + ext;
+   // Update start-of-search index
+   from = pos + ext;
    if (pos == kNPOS) {
+      from = pos;
       if (tok.Length() > 0)
          // So we can analize the last one
-         next = len;
+         from = len;
       else
-         next = pos;
+         // Empty, last token
+         found = kFALSE;
    }
 
-   return next;
+   // Done
+   return found;
 }
