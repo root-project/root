@@ -3151,11 +3151,11 @@ G__value G__getvariable(char *item,int *known2
          * To get full struct member name path
          * when not found
          **************************************/
-        strcpy(result7,item);
+        strncpy(result7,item,ig2);
         result7[ig2++]='\0';
         result7[ig2++]='\0';
         tagname=result7;
-        membername=result7+ig2;
+        membername=item+ig2;
         flag=2;
       }
       break;
