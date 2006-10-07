@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.57 2006/07/04 17:36:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.58 2006/09/04 00:45:02 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -103,6 +103,7 @@ enum EFileModeMask {
    kS_IFMT   = 0170000,   // bitmask for the file type bitfields
    kS_IFSOCK = 0140000,   // socket
    kS_IFLNK  = 0120000,   // symbolic link
+   kS_IFOFF  = 0110000,   // offline file
    kS_IFREG  = 0100000,   // regular file
    kS_IFBLK  = 0060000,   // block device
    kS_IFDIR  = 0040000,   // directory
@@ -132,6 +133,7 @@ inline Bool_t R_ISREG(Int_t mode)  { return ((mode & kS_IFMT) == kS_IFREG); }
 inline Bool_t R_ISLNK(Int_t mode)  { return ((mode & kS_IFMT) == kS_IFLNK); }
 inline Bool_t R_ISFIFO(Int_t mode) { return ((mode & kS_IFMT) == kS_IFIFO); }
 inline Bool_t R_ISSOCK(Int_t mode) { return ((mode & kS_IFMT) == kS_IFSOCK); }
+inline Bool_t R_ISOFF(Int_t mode)  { return ((mode & kS_IFMT) == kS_IFOFF); }
 
 struct FileStat_t {
    Long_t   fDev;          // device id

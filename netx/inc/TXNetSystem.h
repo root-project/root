@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.3 2006/03/16 09:08:08 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.4 2006/06/30 14:35:03 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "XrdClient/XrdClientVector.hh"
 
 class XrdClientAdmin;
+class TXNetSystemConnectGuard;
 
 typedef XrdClientVector<XrdOucString> vecString;
 typedef XrdClientVector<bool>         vecBool;
@@ -44,18 +45,21 @@ typedef XrdClientVector<bool>         vecBool;
 
 class TXNetSystem : public TNetSystem {
 
+friend class TXNetSystemConnectGuard;
+
 private:
-   XrdClientAdmin *fClientAdmin;  // Handle to the client admin object
    Bool_t          fIsRootd;      // Nature of remote file server
    Bool_t          fIsXRootd;     // Nature of remote file server
    TString         fDir;          // Current directory
    void           *fDirp;         // Directory pointer
    vecString       fDirList;      // Buffer for directory content
    Bool_t          fDirListValid; // fDirList content valid ?
+   TString         fUrl;          // Initial url
 
    static Bool_t   fgInitDone;    // Avoid initializing more than once
    static Bool_t   fgRootdBC;     // Control rootd backward compatibility
 
+   XrdClientAdmin *Connect(const char *url); // Connect to server
    void           *GetDirPtr() const { return fDirp; }
    void            InitXrdClient();
    void            SaveEndPointUrl();
@@ -72,8 +76,27 @@ public:
    virtual Int_t       GetPathInfo(const char* path, FileStat_t &buf);
    virtual Int_t       MakeDirectory(const char* dir);
    virtual void       *OpenDirectory(const char* dir);
+   virtual int         Unlink(const char *path);
 
    ClassDef(TXNetSystem,0)   // System management class for xrootd servers
+};
+
+//
+// Simple guard class for connections
+//
+class TXNetSystemConnectGuard {
+
+private:
+   XrdClientAdmin *fClientAdmin;  // Handle to the client admin object
+
+public:
+   TXNetSystemConnectGuard(TXNetSystem *xn, const char *url);
+   ~TXNetSystemConnectGuard();
+
+   bool IsValid() const { return ((fClientAdmin) ? 1 : 0); } 
+
+   XrdClientAdmin *ClientAdmin() const { return fClientAdmin; }
+
 };
 
 #endif

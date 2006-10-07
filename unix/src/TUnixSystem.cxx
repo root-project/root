@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.157 2006/09/04 00:45:03 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.158 2006/10/03 13:29:25 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1331,6 +1331,10 @@ int TUnixSystem::Unlink(const char *name)
 {
    // Unlink, i.e. remove, a file or directory. Returns 0 when succesfull,
    // -1 in case of failure.
+
+   TSystem *helper = FindHelper(name);
+   if (helper)
+      return helper->Unlink(name);
 
    struct stat finfo;
    if (lstat(name, &finfo) < 0)

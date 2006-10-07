@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.12 2006/06/30 14:36:02 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.13 2006/09/29 08:17:21 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -48,11 +48,11 @@ TXNetSystem::TXNetSystem(Bool_t owner) : TNetSystem(owner)
    // Create system management class without connecting to server.
 
    SetTitle("(x)rootd system administration");
-   fClientAdmin = 0;
    fIsXRootd = kFALSE;
    fDir = "";
    fDirp = 0;
    fDirListValid = kFALSE;
+   fUrl = "";
 }
 
 //_____________________________________________________________________________
@@ -66,6 +66,7 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
    fDir = "";
    fDirp = 0;
    fDirListValid = kFALSE;
+   fUrl = url;
 
    // Set debug level
    EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", -1));
@@ -77,25 +78,41 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
    // Fill in user, host, port
    TNetSystem::InitRemoteEntity(url);
 
+   TXNetSystemConnectGuard cguard(this, url);
+   if (!cguard.IsValid()) {
+      Error("TXNetSystem","fatal error: connection creation failed.");
+      gSystem->Abort();
+   }
+
+   return;
+}
+
+//_____________________________________________________________________________
+XrdClientAdmin *TXNetSystem::Connect(const char *url)
+{
+   // Init a connection to the server.
+   // Returns a pointer to the appropriate instance of XrdClientAdmin or 0
+   // in case of failure.
+
    // We need a dummy filename after the server url to connect
    TString dummy = url;
    dummy += "/dummy";
 
-   fClientAdmin = new XrdClientAdmin(dummy);
+   XrdClientAdmin *cadm = new XrdClientAdmin(dummy);
 
-   if (!fClientAdmin) {
-      Error("TXNetSystem","fatal error: new object creation failed.");
-      gSystem->Abort();
+   if (!cadm) {
+      Error("Connect","fatal error: new object creation failed.");
+      return cadm;
    }
 
    // Try to connect to the server
-   if (fClientAdmin->Connect()) {
+   if (cadm->Connect()) {
       fIsXRootd = kTRUE;
    } else {
       if (fgRootdBC) {
          Bool_t isRootd =
-            (fClientAdmin->GetClientConn()->GetServerType() == kSTRootd);
-         Int_t sd = fClientAdmin->GetClientConn()->GetOpenSockFD();
+            (cadm->GetClientConn()->GetServerType() == kSTRootd);
+         Int_t sd = cadm->GetClientConn()->GetOpenSockFD();
          if (isRootd && sd > -1) {
             //
             // Create a TSocket on the open connection
@@ -111,16 +128,17 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
             Int_t rproto = TXNetFile::GetRootdProtocol(s);
             if (rproto < 0) {
                Error("TXNetSystem", "getting protocol of the rootd server");
-               return;
+               delete cadm;
+               return 0;
             }
             // Finalize TSocket initialization
             s->SetRemoteProtocol(rproto);
-            TUrl uut((fClientAdmin->GetClientConn()
+            TUrl uut((cadm->GetClientConn()
                              ->GetCurrentUrl()).GetUrl().c_str());
             TString uu;
             TXNetFile::FormUrl(uut,uu);
             if (gDebug > 2)
-               Info("TXNetSystem"," url: %s",uu.Data());
+               Info("Connect"," url: %s",uu.Data());
 
             s->SetUrl(uu.Data());
             s->SetService("rootd");
@@ -142,31 +160,29 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
             // Type of server
             fIsRootd = kTRUE;
 
+            delete cadm;
+
          } else {
-            Error("TXNetSystem", "some severe error occurred while opening"
+            Error("Connect", "some severe error occurred while opening"
                   " the connection at %s - exit", url);
-            return;
+            delete cadm;
+            return cadm;
          }
       } else {
-         Error("TXNetSystem",
+         Error("Connect",
                "while opening the connection at %s - exit", url);
-         return;
+         delete cadm;
+         return cadm;
       }
    }
 
-   return;
+   return cadm;
 }
 
 //_____________________________________________________________________________
 TXNetSystem::~TXNetSystem()
 {
    // Destructor
-
-#ifndef WIN32 
-   // pthread locking problem on windows at exit time...
-   if (fIsXRootd && fClientAdmin)
-      delete fClientAdmin;
-#endif
 }
 
 
@@ -184,18 +200,7 @@ void TXNetSystem::InitXrdClient()
    // Print the tag, if required (only once)
    if (gEnv->GetValue("XNet.PrintTAG",0) == 1)
      Info("TXNetFile","(C) 2005 SLAC TXNetSystem (eXtended TNetSystem) %s",
-	  gROOT->GetVersion());
-}
-
-//_____________________________________________________________________________
-void TXNetSystem::SaveEndPointUrl()
-{
-   // Save the end-point user, host, port
-
-   if (fClientAdmin->GetClientConn()) {
-      XrdClientUrlInfo eurl = fClientAdmin->GetClientConn()->GetCurrentUrl();
-      TNetSystem::InitRemoteEntity(eurl.GetUrl().c_str());
-   }
+         gROOT->GetVersion());
 }
 
 //_____________________________________________________________________________
@@ -205,20 +210,22 @@ void* TXNetSystem::OpenDirectory(const char* dir)
    // purpose) in case of success, 0 in case of error.
 
    if (fIsXRootd) {
-      // Extract the directory name
-      fDir = TUrl(dir).GetFile();
-      fDirp = (void*)&fDir;     // serves as directory pointer
-
-      vecString dirs;
-      vecBool existDirs;
-      XrdOucString s(fDir.Data());
-      dirs.Push_back(s);
       // Check if the directory exists
-      fClientAdmin->ExistDirs(dirs,existDirs);
-      // Save the end-point user, host, port
-      SaveEndPointUrl();
-      if (existDirs.GetSize()>0 && existDirs[0])
-         return fDirp;
+      TXNetSystemConnectGuard cg(this, dir);
+      if (cg.IsValid()) {
+         fUrl = dir;
+         // Extract the directory name
+         fDir = TUrl(dir).GetFile();
+         fDirp = (void*)&fDir;     // serves as directory pointer
+
+         vecString dirs;
+         vecBool existDirs;
+         XrdOucString s(fDir.Data());
+         dirs.Push_back(s);
+         cg.ClientAdmin()->ExistDirs(dirs, existDirs);
+         if (existDirs.GetSize()>0 && existDirs[0])
+            return fDirp;
+      }
       return 0;
    }
 
@@ -254,14 +261,16 @@ Int_t TXNetSystem::MakeDirectory(const char* dir)
    // Create a directory. Return 0 on success, -1 otherwise.
 
    if (fIsXRootd) {
-      // use default permissions 755 to create directory
-      Bool_t ok = fClientAdmin->Mkdir(TUrl(dir).GetFile(),7,5,5);
-      // Save the end-point user, host, port
-      SaveEndPointUrl();
-      return (ok ? 0 : -1);
+      TXNetSystemConnectGuard cg(this, dir);
+      if (cg.IsValid()) {
+         // use default permissions 755 to create directory
+         Bool_t ok = cg.ClientAdmin()->Mkdir(TUrl(dir).GetFile(),7,5,5);
+         return (ok ? 0 : -1);
+      }
    }
 
-   if (gDebug > 1) Info("MakeDirectory","Calling TNetSystem::MakeDirectory");
+   if (gDebug > 1)
+      Info("MakeDirectory","Calling TNetSystem::MakeDirectory");
    return TNetSystem::MakeDirectory(dir);     // for a rootd
 }
 
@@ -279,13 +288,14 @@ const char* TXNetSystem::GetDirEntry(void *dirp)
 
       // Only request new directory listing the first time called
       if (!fDirListValid) {
-         Bool_t ok = fClientAdmin->DirList(fDir,fDirList);
-         // Save the end-point user, host, port
-         SaveEndPointUrl();
-         if (ok)
-            fDirListValid = kTRUE;
-         else
-            return 0;
+         TXNetSystemConnectGuard cg(this, fUrl);
+         if (cg.IsValid()) {
+            Bool_t ok = cg.ClientAdmin()->DirList(fDir, fDirList);
+            if (ok)
+               fDirListValid = kTRUE;
+            else
+               return 0;
+         }
       }
 
       // Return entries one by one with each call of method
@@ -309,38 +319,39 @@ Int_t TXNetSystem::GetPathInfo(const char* path, FileStat_t &buf)
 
    if (fIsXRootd) {
 
-      Long_t id;
-      Long64_t size;
-      Long_t flags;
-      Long_t modtime;
+      TXNetSystemConnectGuard cg(this, path);
+      if (cg.IsValid()) {
 
-      // Extract the directory name
-      TString edir = TUrl(path).GetFile();
-      Bool_t ok = fClientAdmin->Stat(edir,id,size,flags,modtime);
+         Long_t id;
+         Long64_t size;
+         Long_t flags;
+         Long_t modtime;
 
-      // Save the end-point user, host, port
-      SaveEndPointUrl();
+         // Extract the directory name
+         TString edir = TUrl(path).GetFile();
+         Bool_t ok = cg.ClientAdmin()->Stat(edir.Data(),id,size,flags,modtime);
 
-      // Count offline files as inexistent 
-      ok &= !(flags & kXR_offline);
+         // Flag offline files
+         if (flags & kXR_offline) {
+            buf.fMode = kS_IFOFF;
+         } else if (ok) {
+            buf.fDev = (id >> 24);
+            buf.fIno = (id && 0x00FFFFFF);
+            buf.fUid = -1;       // not all information available in xrootd
+            buf.fGid = -1;       // not available
+            buf.fSize = size;
+            buf.fMtime = modtime;
 
-      if (ok) {
-         buf.fDev = (id >> 24);
-         buf.fIno = (id && 0x00FFFFFF);
-         buf.fUid = -1;       // not all information available in xrootd
-         buf.fGid = -1;       // not available
-         buf.fSize = size;
-         buf.fMtime = modtime;
+            if (flags == 0) buf.fMode = kS_IFREG;
+            if (flags & kXR_xset) buf.fMode = (kS_IFREG|kS_IXUSR|kS_IXGRP|kS_IXOTH);
+            if (flags & kXR_isDir) buf.fMode = kS_IFDIR;
+            if (flags & kXR_other) buf.fMode = kS_IFSOCK;
+            if (flags & kXR_readable) buf.fMode |= kS_IRUSR;
+            if (flags & kXR_writable) buf.fMode |= kS_IWUSR;
 
-         if (flags == 0) buf.fMode = kS_IFREG;
-         if (flags & kXR_xset) buf.fMode = (kS_IFREG|kS_IXUSR|kS_IXGRP|kS_IXOTH);
-         if (flags & kXR_isDir) buf.fMode = kS_IFDIR;
-         if (flags & kXR_other) buf.fMode = kS_IFSOCK;
-         if (flags & kXR_readable) buf.fMode |= kS_IRUSR;
-         if (flags & kXR_writable) buf.fMode |= kS_IWUSR;
-
-         buf.fIsLink = 0;     // not available
-         return 0;
+            buf.fIsLink = 0;     // not available
+            return 0;
+         }
       }
       return 1;
    }
@@ -359,9 +370,6 @@ Bool_t TXNetSystem::ConsistentWith(const char *path, void *dirptr)
    if (gDebug > 1)
       Info("ConsistenWith",
            "Calling TNetSystem::ConsistenWith for path: %s, dir: %p", path, dirptr);
-
-   // Save the end-point user, host, port
-   SaveEndPointUrl();
 
    return TNetSystem::ConsistentWith(path,dirptr);    // for a rootd
 }
@@ -389,3 +397,66 @@ Bool_t TXNetSystem::AccessPathName(const char *path, EAccessMode mode)
       Info("AccessPathName", "calling TNetSystem::AccessPathName");
    return TNetSystem::AccessPathName(path,mode);    // for a rootd
 }
+
+//_____________________________________________________________________________
+int TXNetSystem::Unlink(const char *path)
+{
+   // Unlink 'path' on the remote server system.
+   // Returns 0 on success, -1 otherwise.
+
+   if (fIsXRootd) {
+
+      TXNetSystemConnectGuard cg(this, path);
+      if (cg.IsValid()) {
+
+         Long_t id;
+         Long64_t size;
+         Long_t flags;
+         Long_t modtime;
+
+         // Extract the directory name
+         TString edir = TUrl(path).GetFile();
+         Bool_t ok = cg.ClientAdmin()->Stat(edir.Data(), id, size, flags, modtime);
+
+         // Flag offline files
+         if (ok && !(flags & kXR_offline)) {
+            if (flags & kXR_isDir)
+               ok = cg.ClientAdmin()->Rmdir(edir.Data());
+            else
+               ok = cg.ClientAdmin()->Rm(edir.Data());
+
+            // Done
+            return ((ok) ? 0 : -1);
+         }
+      }
+   }
+
+   if (gDebug > 1)
+      Info("AccessPathName", "calling TNetSystem::AccessPathName");
+   return -1;    // not implemented for rootd
+}
+
+
+//
+// Guard methods
+//
+//_____________________________________________________________________________
+TXNetSystemConnectGuard::TXNetSystemConnectGuard(TXNetSystem *xn, const char *url)
+                        : fClientAdmin(0)
+{
+   // Construct a guard object
+
+    if (xn)
+       // Connect
+       fClientAdmin = xn->Connect(url);
+}
+
+//_____________________________________________________________________________
+TXNetSystemConnectGuard::~TXNetSystemConnectGuard()
+{
+   // Destructor: close the connection
+
+   if (fClientAdmin)
+      delete fClientAdmin;
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.146 2006/09/04 00:45:03 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.147 2006/09/28 11:37:26 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2244,6 +2244,10 @@ int TWinNTSystem::Link(const char *from, const char *to)
 int TWinNTSystem::Unlink(const char *name)
 {
    // Unlink, i.e. remove, a file or directory.
+
+   TSystem *helper = FindHelper(name);
+   if (helper)
+      return helper->Unlink(name);
 
    struct _stati64 finfo;
 
