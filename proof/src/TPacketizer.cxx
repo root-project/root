@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.36 2006/07/26 14:18:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.37 2006/09/07 09:27:25 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -234,7 +234,6 @@ TPacketizer::TSlaveStat::TSlaveStat(TSlave *slave)
 
 ClassImp(TPacketizer)
 
-
 //______________________________________________________________________________
 TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
                          Long64_t num, TList *input)
@@ -405,13 +404,38 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 
    Reset();
 
-   // Heuristic for starting packet size
-   Int_t nslaves = fSlaveStats->GetSize();
-   if (nslaves > 0) {
-      fPacketSize = fTotalEntries / (20 * nslaves);
-      if ( fPacketSize < 1 ) fPacketSize = 1;
+   // Below we provide a possibility to change the way packet size is
+   // calculated or define the packet size directly.
+   // fPacketAsAFraction can be interpreted as follows:
+   // assuming all slaves have equal processing rate,
+   // packet size is (#events processed by 1 slave) / fPacketSizeAsAFraction.
+   // It substitutes 20 in the old formula to calculate the fPacketSize:
+   // fPacketSize = fTotalEntries / (20 * nslaves)
+   TObject *packetSizeManipulation;
+   if ((packetSizeManipulation =
+        input->FindObject("PROOF_PacketAsAFraction")) != 0) {
+      fPacketAsAFraction =
+         (dynamic_cast<TParameter<Long_t>*>(packetSizeManipulation))->GetVal();
+      Info("Process",
+           "Using Alternate fraction of query time as a packet Size: %d",
+           fPacketAsAFraction);
+   } else
+      fPacketAsAFraction = 20;
+
+   if ((packetSizeManipulation =
+        input->FindObject("PROOF_PacketSize")) != 0) {
+      fPacketSize =
+         (dynamic_cast<TParameter<Long_t>*>(packetSizeManipulation))->GetVal();
+      Info("Process","Using Alternate Packet Size: %d", fPacketSize);
    } else {
-      fPacketSize = 1;
+      // Heuristic for starting packet size
+      Int_t nslaves = fSlaveStats->GetSize();
+      if (nslaves > 0) {
+         fPacketSize = fTotalEntries / (fPacketAsAFraction * nslaves);
+         if ( fPacketSize < 1 ) fPacketSize = 1;
+      } else {
+         fPacketSize = 1;
+      }
    }
 
    PDB(kPacketizer,1) Info("TPacketizer", "Base Packetsize = %lld", fPacketSize);
@@ -424,7 +448,6 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 
    PDB(kPacketizer,1) Info("TPacketizer", "Return");
 }
-
 
 //______________________________________________________________________________
 TPacketizer::~TPacketizer()
@@ -470,7 +493,6 @@ TPacketizer::TFileStat *TPacketizer::GetNextUnAlloc(TFileNode *node)
    return file;
 }
 
-
 //______________________________________________________________________________
 TPacketizer::TFileNode *TPacketizer::NextUnAllocNode()
 {
@@ -492,7 +514,6 @@ TPacketizer::TFileNode *TPacketizer::NextUnAllocNode()
    return fn;
 }
 
-
 //______________________________________________________________________________
 void TPacketizer::RemoveUnAllocNode(TFileNode * node)
 {
@@ -500,7 +521,6 @@ void TPacketizer::RemoveUnAllocNode(TFileNode * node)
 
    fUnAllocated->Remove(node);
 }
-
 
 //______________________________________________________________________________
 TPacketizer::TFileStat *TPacketizer::GetNextActive()
@@ -517,7 +537,6 @@ TPacketizer::TFileStat *TPacketizer::GetNextActive()
 
    return file;
 }
-
 
 //______________________________________________________________________________
 TPacketizer::TFileNode *TPacketizer::NextActiveNode()
@@ -539,7 +558,6 @@ TPacketizer::TFileNode *TPacketizer::NextActiveNode()
    return fn;
 }
 
-
 //______________________________________________________________________________
 void TPacketizer::RemoveActive(TFileStat *file)
 {
@@ -558,7 +576,6 @@ void TPacketizer::RemoveActiveNode(TFileNode *node)
 
    fActive->Remove(node);
 }
-
 
 //______________________________________________________________________________
 void TPacketizer::Reset()
@@ -588,7 +605,6 @@ void TPacketizer::Reset()
       slstat->fCurFile = 0;
    }
 }
-
 
 //______________________________________________________________________________
 void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
@@ -813,7 +829,6 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
    }
 }
 
-
 //______________________________________________________________________________
 void TPacketizer::SplitEventList(TDSet *dset)
 {
@@ -858,7 +873,6 @@ void TPacketizer::SplitEventList(TDSet *dset)
    } while (el);
 }
 
-
 //______________________________________________________________________________
 Long64_t TPacketizer::GetEntriesProcessed(TSlave *slave) const
 {
@@ -872,7 +886,6 @@ Long64_t TPacketizer::GetEntriesProcessed(TSlave *slave) const
 
    return slstat->GetEntriesProcessed();
 }
-
 
 //______________________________________________________________________________
 TDSetElement* TPacketizer::CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num)
@@ -892,7 +905,6 @@ TDSetElement* TPacketizer::CreateNewPacket(TDSetElement* base, Long64_t first, L
    }
    return elem;
 }
-
 
 //______________________________________________________________________________
 TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
@@ -1022,7 +1034,6 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
    return slstat->fCurElem;
 }
-
 
 //______________________________________________________________________________
 Bool_t TPacketizer::HandleTimer(TTimer *)

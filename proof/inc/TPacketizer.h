@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.12 2005/07/09 04:03:23 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.17 2006/07/01 12:05:49 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -46,24 +46,32 @@ public:              // public because of Sun CC bug
    class TSlaveStat;
 
 private:
-   Long64_t       fProcessed;    // number of entries processed
-   TList         *fPackets;      // all processed packets
+   Long64_t  fProcessed;    // number of entries processed
+   TList    *fPackets;      // all processed packets
 
-   Long64_t       fTotalEntries; // total number of entries to be distributed
+   Long64_t  fTotalEntries; // total number of entries to be distributed
 
-   TList         *fFileNodes;    // nodes with files
-   TList         *fUnAllocated;  // nodes with unallocated files
-   TList         *fActive;       // nodes with unfinished files
-   TMap          *fSlaveStats;   // slave status, keyed by correspondig TSlave
-   TTimer        *fProgress;     // progress updates timer
+   TList    *fFileNodes;    // nodes with files
+   TList    *fUnAllocated;  // nodes with unallocated files
+   TList    *fActive;       // nodes with unfinished files
+   TMap     *fSlaveStats;   // slave status, keyed by correspondig TSlave
+   TTimer   *fProgress;     // progress updates timer
 
-   Long64_t       fPacketSize;   // global base packet size
-   Int_t          fMaxPerfIdx;   // maximum of our slaves' performance index
+   Long64_t  fPacketSize;   // global base packet size
+                                 // It can be set with PROOF_PacketSize
+                                 // parameter, in the input list.
+   Int_t     fMaxPerfIdx;   // maximum of our slaves' performance index
 
-   Int_t          fMaxSlaveCnt;  // maximum number of slaves per filenode
+   Int_t     fMaxSlaveCnt;  // maximum number of slaves per filenode
+   Int_t     fPacketAsAFraction; // used to calculate the packet size
+                                 // fPacketSize = fTotalEntries / (fPacketAsAFraction * nslaves)
+                                 // fPacketAsAFraction can be interpreted as follows:
+                                 // assuming all slaves have equal processing rate, packet size
+                                 // is (#events processed by 1 slave) / fPacketSizeAsAFraction.
+                                 // It can be set with PROOF_PacketAsAFraction in input list.
 
    TPacketizer();
-   TPacketizer(const TPacketizer&);    // no implementation, will generate
+   TPacketizer(const TPacketizer&);     // no implementation, will generate
    void operator=(const TPacketizer&);  // error on accidental usage
 
    virtual Bool_t HandleTimer(TTimer *timer);
