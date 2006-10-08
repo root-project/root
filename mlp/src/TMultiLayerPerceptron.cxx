@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.36 2006/05/11 09:42:41 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.37 2006/05/26 15:13:02 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -29,7 +29,17 @@
 // kSteepestDescent, kRibierePolak, kFletcherReeves and kBFGS.
 //
 // This implementation, written by C. Delaere, is *inspired* from
-// the mlpfit package from J.Schwindling et al.
+// the mlpfit package from J.Schwindling et al. with some extensions:
+//   * the algorithms are globally the same
+//   * in TMultilayerPerceptron, there is no limitation on the number of 
+//     layers/neurons, while MLPFIT was limited to 2 hidden layers
+//   * TMultilayerPerceptron allows you to save the network in a root file, and 
+//     provides more export functionnalities
+//   * TMultilayerPerceptron gives more flexibility regarding the normalization of 
+//     inputs/outputs
+//   * TMultilayerPerceptron provides, thanks to Andrea Bocci, the possibility to 
+//     use cross-entropy errors, which allows to train a network for pattern 
+//     classification based on Bayesian posterior probability.
 //
 ///////////////////////////////////////////////////////////////////////////
 //BEGIN_HTML <!--
